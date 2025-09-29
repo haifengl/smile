@@ -12,9 +12,9 @@ import java.util.stream.*;
 import static java.lang.foreign.ValueLayout.*;
 import static java.lang.foreign.MemoryLayout.PathElement.*;
 
-public class cblas_openblas_h {
+public class cblas_h {
 
-    cblas_openblas_h() {
+    cblas_h() {
         // Should not be called directly
     }
 
@@ -1232,599 +1232,599 @@ public class cblas_openblas_h {
      * typedef long ptrdiff_t
      * }
      */
-    public static final OfLong ptrdiff_t = cblas_openblas_h.C_LONG;
+    public static final OfLong ptrdiff_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef unsigned long size_t
      * }
      */
-    public static final OfLong size_t = cblas_openblas_h.C_LONG;
+    public static final OfLong size_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef int wchar_t
      * }
      */
-    public static final OfInt wchar_t = cblas_openblas_h.C_INT;
+    public static final OfInt wchar_t = cblas_h.C_INT;
     /**
      * {@snippet lang=c :
      * typedef long BLASLONG
      * }
      */
-    public static final OfLong BLASLONG = cblas_openblas_h.C_LONG;
+    public static final OfLong BLASLONG = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef unsigned long BLASULONG
      * }
      */
-    public static final OfLong BLASULONG = cblas_openblas_h.C_LONG;
+    public static final OfLong BLASULONG = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef unsigned char __u_char
      * }
      */
-    public static final OfByte __u_char = cblas_openblas_h.C_CHAR;
+    public static final OfByte __u_char = cblas_h.C_CHAR;
     /**
      * {@snippet lang=c :
      * typedef unsigned short __u_short
      * }
      */
-    public static final OfShort __u_short = cblas_openblas_h.C_SHORT;
+    public static final OfShort __u_short = cblas_h.C_SHORT;
     /**
      * {@snippet lang=c :
      * typedef unsigned int __u_int
      * }
      */
-    public static final OfInt __u_int = cblas_openblas_h.C_INT;
+    public static final OfInt __u_int = cblas_h.C_INT;
     /**
      * {@snippet lang=c :
      * typedef unsigned long __u_long
      * }
      */
-    public static final OfLong __u_long = cblas_openblas_h.C_LONG;
+    public static final OfLong __u_long = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef signed char __int8_t
      * }
      */
-    public static final OfByte __int8_t = cblas_openblas_h.C_CHAR;
+    public static final OfByte __int8_t = cblas_h.C_CHAR;
     /**
      * {@snippet lang=c :
      * typedef unsigned char __uint8_t
      * }
      */
-    public static final OfByte __uint8_t = cblas_openblas_h.C_CHAR;
+    public static final OfByte __uint8_t = cblas_h.C_CHAR;
     /**
      * {@snippet lang=c :
      * typedef short __int16_t
      * }
      */
-    public static final OfShort __int16_t = cblas_openblas_h.C_SHORT;
+    public static final OfShort __int16_t = cblas_h.C_SHORT;
     /**
      * {@snippet lang=c :
      * typedef unsigned short __uint16_t
      * }
      */
-    public static final OfShort __uint16_t = cblas_openblas_h.C_SHORT;
+    public static final OfShort __uint16_t = cblas_h.C_SHORT;
     /**
      * {@snippet lang=c :
      * typedef int __int32_t
      * }
      */
-    public static final OfInt __int32_t = cblas_openblas_h.C_INT;
+    public static final OfInt __int32_t = cblas_h.C_INT;
     /**
      * {@snippet lang=c :
      * typedef unsigned int __uint32_t
      * }
      */
-    public static final OfInt __uint32_t = cblas_openblas_h.C_INT;
+    public static final OfInt __uint32_t = cblas_h.C_INT;
     /**
      * {@snippet lang=c :
      * typedef long __int64_t
      * }
      */
-    public static final OfLong __int64_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __int64_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef unsigned long __uint64_t
      * }
      */
-    public static final OfLong __uint64_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __uint64_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef __int8_t __int_least8_t
      * }
      */
-    public static final OfByte __int_least8_t = cblas_openblas_h.C_CHAR;
+    public static final OfByte __int_least8_t = cblas_h.C_CHAR;
     /**
      * {@snippet lang=c :
      * typedef __uint8_t __uint_least8_t
      * }
      */
-    public static final OfByte __uint_least8_t = cblas_openblas_h.C_CHAR;
+    public static final OfByte __uint_least8_t = cblas_h.C_CHAR;
     /**
      * {@snippet lang=c :
      * typedef __int16_t __int_least16_t
      * }
      */
-    public static final OfShort __int_least16_t = cblas_openblas_h.C_SHORT;
+    public static final OfShort __int_least16_t = cblas_h.C_SHORT;
     /**
      * {@snippet lang=c :
      * typedef __uint16_t __uint_least16_t
      * }
      */
-    public static final OfShort __uint_least16_t = cblas_openblas_h.C_SHORT;
+    public static final OfShort __uint_least16_t = cblas_h.C_SHORT;
     /**
      * {@snippet lang=c :
      * typedef __int32_t __int_least32_t
      * }
      */
-    public static final OfInt __int_least32_t = cblas_openblas_h.C_INT;
+    public static final OfInt __int_least32_t = cblas_h.C_INT;
     /**
      * {@snippet lang=c :
      * typedef __uint32_t __uint_least32_t
      * }
      */
-    public static final OfInt __uint_least32_t = cblas_openblas_h.C_INT;
+    public static final OfInt __uint_least32_t = cblas_h.C_INT;
     /**
      * {@snippet lang=c :
      * typedef __int64_t __int_least64_t
      * }
      */
-    public static final OfLong __int_least64_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __int_least64_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef __uint64_t __uint_least64_t
      * }
      */
-    public static final OfLong __uint_least64_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __uint_least64_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef long __quad_t
      * }
      */
-    public static final OfLong __quad_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __quad_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef unsigned long __u_quad_t
      * }
      */
-    public static final OfLong __u_quad_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __u_quad_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef long __intmax_t
      * }
      */
-    public static final OfLong __intmax_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __intmax_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef unsigned long __uintmax_t
      * }
      */
-    public static final OfLong __uintmax_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __uintmax_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef unsigned long __dev_t
      * }
      */
-    public static final OfLong __dev_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __dev_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef unsigned int __uid_t
      * }
      */
-    public static final OfInt __uid_t = cblas_openblas_h.C_INT;
+    public static final OfInt __uid_t = cblas_h.C_INT;
     /**
      * {@snippet lang=c :
      * typedef unsigned int __gid_t
      * }
      */
-    public static final OfInt __gid_t = cblas_openblas_h.C_INT;
+    public static final OfInt __gid_t = cblas_h.C_INT;
     /**
      * {@snippet lang=c :
      * typedef unsigned long __ino_t
      * }
      */
-    public static final OfLong __ino_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __ino_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef unsigned long __ino64_t
      * }
      */
-    public static final OfLong __ino64_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __ino64_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef unsigned int __mode_t
      * }
      */
-    public static final OfInt __mode_t = cblas_openblas_h.C_INT;
+    public static final OfInt __mode_t = cblas_h.C_INT;
     /**
      * {@snippet lang=c :
      * typedef unsigned long __nlink_t
      * }
      */
-    public static final OfLong __nlink_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __nlink_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef long __off_t
      * }
      */
-    public static final OfLong __off_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __off_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef long __off64_t
      * }
      */
-    public static final OfLong __off64_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __off64_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef int __pid_t
      * }
      */
-    public static final OfInt __pid_t = cblas_openblas_h.C_INT;
+    public static final OfInt __pid_t = cblas_h.C_INT;
     /**
      * {@snippet lang=c :
      * typedef long __clock_t
      * }
      */
-    public static final OfLong __clock_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __clock_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef unsigned long __rlim_t
      * }
      */
-    public static final OfLong __rlim_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __rlim_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef unsigned long __rlim64_t
      * }
      */
-    public static final OfLong __rlim64_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __rlim64_t = smile.linalg.blas.cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef unsigned int __id_t
      * }
      */
-    public static final OfInt __id_t = cblas_openblas_h.C_INT;
+    public static final OfInt __id_t = cblas_h.C_INT;
     /**
      * {@snippet lang=c :
      * typedef long __time_t
      * }
      */
-    public static final OfLong __time_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __time_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef unsigned int __useconds_t
      * }
      */
-    public static final OfInt __useconds_t = cblas_openblas_h.C_INT;
+    public static final OfInt __useconds_t = cblas_h.C_INT;
     /**
      * {@snippet lang=c :
      * typedef long __suseconds_t
      * }
      */
-    public static final OfLong __suseconds_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __suseconds_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef long __suseconds64_t
      * }
      */
-    public static final OfLong __suseconds64_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __suseconds64_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef int __daddr_t
      * }
      */
-    public static final OfInt __daddr_t = cblas_openblas_h.C_INT;
+    public static final OfInt __daddr_t = cblas_h.C_INT;
     /**
      * {@snippet lang=c :
      * typedef int __key_t
      * }
      */
-    public static final OfInt __key_t = cblas_openblas_h.C_INT;
+    public static final OfInt __key_t = cblas_h.C_INT;
     /**
      * {@snippet lang=c :
      * typedef int __clockid_t
      * }
      */
-    public static final OfInt __clockid_t = cblas_openblas_h.C_INT;
+    public static final OfInt __clockid_t = cblas_h.C_INT;
     /**
      * {@snippet lang=c :
      * typedef void *__timer_t
      * }
      */
-    public static final AddressLayout __timer_t = cblas_openblas_h.C_POINTER;
+    public static final AddressLayout __timer_t = cblas_h.C_POINTER;
     /**
      * {@snippet lang=c :
      * typedef long __blksize_t
      * }
      */
-    public static final OfLong __blksize_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __blksize_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef long __blkcnt_t
      * }
      */
-    public static final OfLong __blkcnt_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __blkcnt_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef long __blkcnt64_t
      * }
      */
-    public static final OfLong __blkcnt64_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __blkcnt64_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef unsigned long __fsblkcnt_t
      * }
      */
-    public static final OfLong __fsblkcnt_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __fsblkcnt_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef unsigned long __fsblkcnt64_t
      * }
      */
-    public static final OfLong __fsblkcnt64_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __fsblkcnt64_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef unsigned long __fsfilcnt_t
      * }
      */
-    public static final OfLong __fsfilcnt_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __fsfilcnt_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef unsigned long __fsfilcnt64_t
      * }
      */
-    public static final OfLong __fsfilcnt64_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __fsfilcnt64_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef long __fsword_t
      * }
      */
-    public static final OfLong __fsword_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __fsword_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef long __ssize_t
      * }
      */
-    public static final OfLong __ssize_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __ssize_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef long __syscall_slong_t
      * }
      */
-    public static final OfLong __syscall_slong_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __syscall_slong_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef unsigned long __syscall_ulong_t
      * }
      */
-    public static final OfLong __syscall_ulong_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __syscall_ulong_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef __off64_t __loff_t
      * }
      */
-    public static final OfLong __loff_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __loff_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef char *__caddr_t
      * }
      */
-    public static final AddressLayout __caddr_t = cblas_openblas_h.C_POINTER;
+    public static final AddressLayout __caddr_t = cblas_h.C_POINTER;
     /**
      * {@snippet lang=c :
      * typedef long __intptr_t
      * }
      */
-    public static final OfLong __intptr_t = cblas_openblas_h.C_LONG;
+    public static final OfLong __intptr_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef unsigned int __socklen_t
      * }
      */
-    public static final OfInt __socklen_t = cblas_openblas_h.C_INT;
+    public static final OfInt __socklen_t = cblas_h.C_INT;
     /**
      * {@snippet lang=c :
      * typedef int __sig_atomic_t
      * }
      */
-    public static final OfInt __sig_atomic_t = cblas_openblas_h.C_INT;
+    public static final OfInt __sig_atomic_t = cblas_h.C_INT;
     /**
      * {@snippet lang=c :
      * typedef __int8_t int8_t
      * }
      */
-    public static final OfByte int8_t = cblas_openblas_h.C_CHAR;
+    public static final OfByte int8_t = cblas_h.C_CHAR;
     /**
      * {@snippet lang=c :
      * typedef __int16_t int16_t
      * }
      */
-    public static final OfShort int16_t = cblas_openblas_h.C_SHORT;
+    public static final OfShort int16_t = cblas_h.C_SHORT;
     /**
      * {@snippet lang=c :
      * typedef __int32_t int32_t
      * }
      */
-    public static final OfInt int32_t = cblas_openblas_h.C_INT;
+    public static final OfInt int32_t = cblas_h.C_INT;
     /**
      * {@snippet lang=c :
      * typedef __int64_t int64_t
      * }
      */
-    public static final OfLong int64_t = cblas_openblas_h.C_LONG;
+    public static final OfLong int64_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef __uint8_t uint8_t
      * }
      */
-    public static final OfByte uint8_t = cblas_openblas_h.C_CHAR;
+    public static final OfByte uint8_t = cblas_h.C_CHAR;
     /**
      * {@snippet lang=c :
      * typedef __uint16_t uint16_t
      * }
      */
-    public static final OfShort uint16_t = cblas_openblas_h.C_SHORT;
+    public static final OfShort uint16_t = cblas_h.C_SHORT;
     /**
      * {@snippet lang=c :
      * typedef __uint32_t uint32_t
      * }
      */
-    public static final OfInt uint32_t = cblas_openblas_h.C_INT;
+    public static final OfInt uint32_t = cblas_h.C_INT;
     /**
      * {@snippet lang=c :
      * typedef __uint64_t uint64_t
      * }
      */
-    public static final OfLong uint64_t = cblas_openblas_h.C_LONG;
+    public static final OfLong uint64_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef __int_least8_t int_least8_t
      * }
      */
-    public static final OfByte int_least8_t = cblas_openblas_h.C_CHAR;
+    public static final OfByte int_least8_t = cblas_h.C_CHAR;
     /**
      * {@snippet lang=c :
      * typedef __int_least16_t int_least16_t
      * }
      */
-    public static final OfShort int_least16_t = cblas_openblas_h.C_SHORT;
+    public static final OfShort int_least16_t = cblas_h.C_SHORT;
     /**
      * {@snippet lang=c :
      * typedef __int_least32_t int_least32_t
      * }
      */
-    public static final OfInt int_least32_t = cblas_openblas_h.C_INT;
+    public static final OfInt int_least32_t = cblas_h.C_INT;
     /**
      * {@snippet lang=c :
      * typedef __int_least64_t int_least64_t
      * }
      */
-    public static final OfLong int_least64_t = cblas_openblas_h.C_LONG;
+    public static final OfLong int_least64_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef __uint_least8_t uint_least8_t
      * }
      */
-    public static final OfByte uint_least8_t = cblas_openblas_h.C_CHAR;
+    public static final OfByte uint_least8_t = cblas_h.C_CHAR;
     /**
      * {@snippet lang=c :
      * typedef __uint_least16_t uint_least16_t
      * }
      */
-    public static final OfShort uint_least16_t = cblas_openblas_h.C_SHORT;
+    public static final OfShort uint_least16_t = cblas_h.C_SHORT;
     /**
      * {@snippet lang=c :
      * typedef __uint_least32_t uint_least32_t
      * }
      */
-    public static final OfInt uint_least32_t = cblas_openblas_h.C_INT;
+    public static final OfInt uint_least32_t = cblas_h.C_INT;
     /**
      * {@snippet lang=c :
      * typedef __uint_least64_t uint_least64_t
      * }
      */
-    public static final OfLong uint_least64_t = cblas_openblas_h.C_LONG;
+    public static final OfLong uint_least64_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef signed char int_fast8_t
      * }
      */
-    public static final OfByte int_fast8_t = cblas_openblas_h.C_CHAR;
+    public static final OfByte int_fast8_t = cblas_h.C_CHAR;
     /**
      * {@snippet lang=c :
      * typedef long int_fast16_t
      * }
      */
-    public static final OfLong int_fast16_t = cblas_openblas_h.C_LONG;
+    public static final OfLong int_fast16_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef long int_fast32_t
      * }
      */
-    public static final OfLong int_fast32_t = cblas_openblas_h.C_LONG;
+    public static final OfLong int_fast32_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef long int_fast64_t
      * }
      */
-    public static final OfLong int_fast64_t = cblas_openblas_h.C_LONG;
+    public static final OfLong int_fast64_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef unsigned char uint_fast8_t
      * }
      */
-    public static final OfByte uint_fast8_t = cblas_openblas_h.C_CHAR;
+    public static final OfByte uint_fast8_t = cblas_h.C_CHAR;
     /**
      * {@snippet lang=c :
      * typedef unsigned long uint_fast16_t
      * }
      */
-    public static final OfLong uint_fast16_t = cblas_openblas_h.C_LONG;
+    public static final OfLong uint_fast16_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef unsigned long uint_fast32_t
      * }
      */
-    public static final OfLong uint_fast32_t = cblas_openblas_h.C_LONG;
+    public static final OfLong uint_fast32_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef unsigned long uint_fast64_t
      * }
      */
-    public static final OfLong uint_fast64_t = cblas_openblas_h.C_LONG;
+    public static final OfLong uint_fast64_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef long intptr_t
      * }
      */
-    public static final OfLong intptr_t = cblas_openblas_h.C_LONG;
+    public static final OfLong intptr_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef unsigned long uintptr_t
      * }
      */
-    public static final OfLong uintptr_t = cblas_openblas_h.C_LONG;
+    public static final OfLong uintptr_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef __intmax_t intmax_t
      * }
      */
-    public static final OfLong intmax_t = cblas_openblas_h.C_LONG;
+    public static final OfLong intmax_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef __uintmax_t uintmax_t
      * }
      */
-    public static final OfLong uintmax_t = cblas_openblas_h.C_LONG;
+    public static final OfLong uintmax_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef uint16_t bfloat16
      * }
      */
-    public static final OfShort bfloat16 = cblas_openblas_h.C_SHORT;
+    public static final OfShort bfloat16 = cblas_h.C_SHORT;
     /**
      * {@snippet lang=c :
      * typedef int blasint
      * }
      */
-    public static final OfInt blasint = cblas_openblas_h.C_INT;
+    public static final OfInt blasint = cblas_h.C_INT;
     /**
      * {@snippet lang=c :
      * typedef __off_t off_t
      * }
      */
-    public static final OfLong off_t = cblas_openblas_h.C_LONG;
+    public static final OfLong off_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef __ssize_t ssize_t
      * }
      */
-    public static final OfLong ssize_t = cblas_openblas_h.C_LONG;
+    public static final OfLong ssize_t = cblas_h.C_LONG;
 
     private static class stdin$constants {
-        public static final AddressLayout LAYOUT = cblas_openblas_h.C_POINTER;
-        public static final MemorySegment SEGMENT = cblas_openblas_h.findOrThrow("stdin").reinterpret(LAYOUT.byteSize());
+        public static final AddressLayout LAYOUT = cblas_h.C_POINTER;
+        public static final MemorySegment SEGMENT = cblas_h.findOrThrow("stdin").reinterpret(LAYOUT.byteSize());
     }
 
     /**
@@ -1868,8 +1868,8 @@ public class cblas_openblas_h {
     }
 
     private static class stdout$constants {
-        public static final AddressLayout LAYOUT = cblas_openblas_h.C_POINTER;
-        public static final MemorySegment SEGMENT = cblas_openblas_h.findOrThrow("stdout").reinterpret(LAYOUT.byteSize());
+        public static final AddressLayout LAYOUT = cblas_h.C_POINTER;
+        public static final MemorySegment SEGMENT = cblas_h.findOrThrow("stdout").reinterpret(LAYOUT.byteSize());
     }
 
     /**
@@ -1913,8 +1913,8 @@ public class cblas_openblas_h {
     }
 
     private static class stderr$constants {
-        public static final AddressLayout LAYOUT = cblas_openblas_h.C_POINTER;
-        public static final MemorySegment SEGMENT = cblas_openblas_h.findOrThrow("stderr").reinterpret(LAYOUT.byteSize());
+        public static final AddressLayout LAYOUT = cblas_h.C_POINTER;
+        public static final MemorySegment SEGMENT = cblas_h.findOrThrow("stderr").reinterpret(LAYOUT.byteSize());
     }
 
     /**
@@ -1959,11 +1959,11 @@ public class cblas_openblas_h {
 
     private static class remove {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("remove");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("remove");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2017,12 +2017,12 @@ public class cblas_openblas_h {
 
     private static class rename {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("rename");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("rename");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2076,14 +2076,14 @@ public class cblas_openblas_h {
 
     private static class renameat {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("renameat");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("renameat");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2137,11 +2137,11 @@ public class cblas_openblas_h {
 
     private static class fclose {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("fclose");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("fclose");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2195,9 +2195,9 @@ public class cblas_openblas_h {
 
     private static class tmpfile {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_POINTER    );
+            cblas_h.C_POINTER    );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("tmpfile");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("tmpfile");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2251,11 +2251,11 @@ public class cblas_openblas_h {
 
     private static class tmpnam {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("tmpnam");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("tmpnam");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2309,11 +2309,11 @@ public class cblas_openblas_h {
 
     private static class tmpnam_r {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("tmpnam_r");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("tmpnam_r");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2367,12 +2367,12 @@ public class cblas_openblas_h {
 
     private static class tempnam {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("tempnam");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("tempnam");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2426,11 +2426,11 @@ public class cblas_openblas_h {
 
     private static class fflush {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("fflush");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("fflush");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2484,11 +2484,11 @@ public class cblas_openblas_h {
 
     private static class fflush_unlocked {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("fflush_unlocked");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("fflush_unlocked");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2542,12 +2542,12 @@ public class cblas_openblas_h {
 
     private static class fopen {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("fopen");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("fopen");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2601,13 +2601,13 @@ public class cblas_openblas_h {
 
     private static class freopen {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("freopen");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("freopen");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2661,12 +2661,12 @@ public class cblas_openblas_h {
 
     private static class fdopen {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("fdopen");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("fdopen");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2720,13 +2720,13 @@ public class cblas_openblas_h {
 
     private static class fmemopen {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_LONG,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("fmemopen");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("fmemopen");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2780,12 +2780,12 @@ public class cblas_openblas_h {
 
     private static class open_memstream {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("open_memstream");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("open_memstream");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2839,11 +2839,11 @@ public class cblas_openblas_h {
 
     private static class setbuf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("setbuf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("setbuf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2897,14 +2897,14 @@ public class cblas_openblas_h {
 
     private static class setvbuf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_LONG
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("setvbuf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("setvbuf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -2958,12 +2958,12 @@ public class cblas_openblas_h {
 
     private static class setbuffer {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_LONG
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("setbuffer");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("setbuffer");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3017,10 +3017,10 @@ public class cblas_openblas_h {
 
     private static class setlinebuf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("setlinebuf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("setlinebuf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3080,11 +3080,11 @@ public class cblas_openblas_h {
      */
     public static class fprintf {
         private static final FunctionDescriptor BASE_DESC = FunctionDescriptor.of(
-                cblas_openblas_h.C_INT,
-                cblas_openblas_h.C_POINTER,
-                cblas_openblas_h.C_POINTER
+                cblas_h.C_INT,
+                cblas_h.C_POINTER,
+                cblas_h.C_POINTER
             );
-        private static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("fprintf");
+        private static final MemorySegment ADDR = cblas_h.findOrThrow("fprintf");
 
         private final MethodHandle handle;
         private final FunctionDescriptor descriptor;
@@ -3153,10 +3153,10 @@ public class cblas_openblas_h {
      */
     public static class printf {
         private static final FunctionDescriptor BASE_DESC = FunctionDescriptor.of(
-                cblas_openblas_h.C_INT,
-                cblas_openblas_h.C_POINTER
+                cblas_h.C_INT,
+                cblas_h.C_POINTER
             );
-        private static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("printf");
+        private static final MemorySegment ADDR = cblas_h.findOrThrow("printf");
 
         private final MethodHandle handle;
         private final FunctionDescriptor descriptor;
@@ -3225,11 +3225,11 @@ public class cblas_openblas_h {
      */
     public static class sprintf {
         private static final FunctionDescriptor BASE_DESC = FunctionDescriptor.of(
-                cblas_openblas_h.C_INT,
-                cblas_openblas_h.C_POINTER,
-                cblas_openblas_h.C_POINTER
+                cblas_h.C_INT,
+                cblas_h.C_POINTER,
+                cblas_h.C_POINTER
             );
-        private static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("sprintf");
+        private static final MemorySegment ADDR = cblas_h.findOrThrow("sprintf");
 
         private final MethodHandle handle;
         private final FunctionDescriptor descriptor;
@@ -3292,13 +3292,13 @@ public class cblas_openblas_h {
 
     private static class vfprintf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("vfprintf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("vfprintf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3352,12 +3352,12 @@ public class cblas_openblas_h {
 
     private static class vprintf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("vprintf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("vprintf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3411,13 +3411,13 @@ public class cblas_openblas_h {
 
     private static class vsprintf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("vsprintf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("vsprintf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3477,12 +3477,12 @@ public class cblas_openblas_h {
      */
     public static class snprintf {
         private static final FunctionDescriptor BASE_DESC = FunctionDescriptor.of(
-                cblas_openblas_h.C_INT,
-                cblas_openblas_h.C_POINTER,
-                cblas_openblas_h.C_LONG,
-                cblas_openblas_h.C_POINTER
+                cblas_h.C_INT,
+                cblas_h.C_POINTER,
+                cblas_h.C_LONG,
+                cblas_h.C_POINTER
             );
-        private static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("snprintf");
+        private static final MemorySegment ADDR = cblas_h.findOrThrow("snprintf");
 
         private final MethodHandle handle;
         private final FunctionDescriptor descriptor;
@@ -3545,14 +3545,14 @@ public class cblas_openblas_h {
 
     private static class vsnprintf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_LONG,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("vsnprintf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("vsnprintf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3606,13 +3606,13 @@ public class cblas_openblas_h {
 
     private static class vdprintf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("vdprintf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("vdprintf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -3672,11 +3672,11 @@ public class cblas_openblas_h {
      */
     public static class dprintf {
         private static final FunctionDescriptor BASE_DESC = FunctionDescriptor.of(
-                cblas_openblas_h.C_INT,
-                cblas_openblas_h.C_INT,
-                cblas_openblas_h.C_POINTER
+                cblas_h.C_INT,
+                cblas_h.C_INT,
+                cblas_h.C_POINTER
             );
-        private static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("dprintf");
+        private static final MemorySegment ADDR = cblas_h.findOrThrow("dprintf");
 
         private final MethodHandle handle;
         private final FunctionDescriptor descriptor;
@@ -3745,11 +3745,11 @@ public class cblas_openblas_h {
      */
     public static class fscanf {
         private static final FunctionDescriptor BASE_DESC = FunctionDescriptor.of(
-                cblas_openblas_h.C_INT,
-                cblas_openblas_h.C_POINTER,
-                cblas_openblas_h.C_POINTER
+                cblas_h.C_INT,
+                cblas_h.C_POINTER,
+                cblas_h.C_POINTER
             );
-        private static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("fscanf");
+        private static final MemorySegment ADDR = cblas_h.findOrThrow("fscanf");
 
         private final MethodHandle handle;
         private final FunctionDescriptor descriptor;
@@ -3818,10 +3818,10 @@ public class cblas_openblas_h {
      */
     public static class scanf {
         private static final FunctionDescriptor BASE_DESC = FunctionDescriptor.of(
-                cblas_openblas_h.C_INT,
-                cblas_openblas_h.C_POINTER
+                cblas_h.C_INT,
+                cblas_h.C_POINTER
             );
-        private static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("scanf");
+        private static final MemorySegment ADDR = cblas_h.findOrThrow("scanf");
 
         private final MethodHandle handle;
         private final FunctionDescriptor descriptor;
@@ -3890,11 +3890,11 @@ public class cblas_openblas_h {
      */
     public static class sscanf {
         private static final FunctionDescriptor BASE_DESC = FunctionDescriptor.of(
-                cblas_openblas_h.C_INT,
-                cblas_openblas_h.C_POINTER,
-                cblas_openblas_h.C_POINTER
+                cblas_h.C_INT,
+                cblas_h.C_POINTER,
+                cblas_h.C_POINTER
             );
-        private static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("sscanf");
+        private static final MemorySegment ADDR = cblas_h.findOrThrow("sscanf");
 
         private final MethodHandle handle;
         private final FunctionDescriptor descriptor;
@@ -3959,29 +3959,29 @@ public class cblas_openblas_h {
      * typedef float _Float32
      * }
      */
-    public static final OfFloat _Float32 = cblas_openblas_h.C_FLOAT;
+    public static final OfFloat _Float32 = cblas_h.C_FLOAT;
     /**
      * {@snippet lang=c :
      * typedef double _Float64
      * }
      */
-    public static final OfDouble _Float64 = cblas_openblas_h.C_DOUBLE;
+    public static final OfDouble _Float64 = cblas_h.C_DOUBLE;
     /**
      * {@snippet lang=c :
      * typedef double _Float32x
      * }
      */
-    public static final OfDouble _Float32x = cblas_openblas_h.C_DOUBLE;
+    public static final OfDouble _Float32x = cblas_h.C_DOUBLE;
 
     private static class vfscanf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("vfscanf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("vfscanf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4035,12 +4035,12 @@ public class cblas_openblas_h {
 
     private static class vscanf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("vscanf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("vscanf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4094,13 +4094,13 @@ public class cblas_openblas_h {
 
     private static class vsscanf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("vsscanf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("vsscanf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4154,11 +4154,11 @@ public class cblas_openblas_h {
 
     private static class fgetc {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("fgetc");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("fgetc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4212,11 +4212,11 @@ public class cblas_openblas_h {
 
     private static class getc {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("getc");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("getc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4270,9 +4270,9 @@ public class cblas_openblas_h {
 
     private static class getchar {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT    );
+            cblas_h.C_INT    );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("getchar");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("getchar");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4326,11 +4326,11 @@ public class cblas_openblas_h {
 
     private static class getc_unlocked {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("getc_unlocked");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("getc_unlocked");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4384,9 +4384,9 @@ public class cblas_openblas_h {
 
     private static class getchar_unlocked {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT    );
+            cblas_h.C_INT    );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("getchar_unlocked");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("getchar_unlocked");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4440,11 +4440,11 @@ public class cblas_openblas_h {
 
     private static class fgetc_unlocked {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("fgetc_unlocked");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("fgetc_unlocked");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4498,12 +4498,12 @@ public class cblas_openblas_h {
 
     private static class fputc {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("fputc");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("fputc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4557,12 +4557,12 @@ public class cblas_openblas_h {
 
     private static class putc {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("putc");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("putc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4616,11 +4616,11 @@ public class cblas_openblas_h {
 
     private static class putchar {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("putchar");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("putchar");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4674,12 +4674,12 @@ public class cblas_openblas_h {
 
     private static class fputc_unlocked {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("fputc_unlocked");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("fputc_unlocked");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4733,12 +4733,12 @@ public class cblas_openblas_h {
 
     private static class putc_unlocked {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("putc_unlocked");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("putc_unlocked");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4792,11 +4792,11 @@ public class cblas_openblas_h {
 
     private static class putchar_unlocked {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("putchar_unlocked");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("putchar_unlocked");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4850,11 +4850,11 @@ public class cblas_openblas_h {
 
     private static class getw {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("getw");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("getw");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4908,12 +4908,12 @@ public class cblas_openblas_h {
 
     private static class putw {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("putw");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("putw");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -4967,13 +4967,13 @@ public class cblas_openblas_h {
 
     private static class fgets {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("fgets");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("fgets");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5027,14 +5027,14 @@ public class cblas_openblas_h {
 
     private static class __getdelim {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_LONG,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__getdelim");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__getdelim");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5088,14 +5088,14 @@ public class cblas_openblas_h {
 
     private static class getdelim {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_LONG,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("getdelim");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("getdelim");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5149,13 +5149,13 @@ public class cblas_openblas_h {
 
     private static class getline {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_LONG,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("getline");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("getline");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5209,12 +5209,12 @@ public class cblas_openblas_h {
 
     private static class fputs {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("fputs");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("fputs");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5268,11 +5268,11 @@ public class cblas_openblas_h {
 
     private static class puts {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("puts");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("puts");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5326,12 +5326,12 @@ public class cblas_openblas_h {
 
     private static class ungetc {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("ungetc");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("ungetc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5385,14 +5385,14 @@ public class cblas_openblas_h {
 
     private static class fread {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_LONG,
+            cblas_h.C_POINTER,
+            cblas_h.C_LONG,
+            cblas_h.C_LONG,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("fread");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("fread");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5446,14 +5446,14 @@ public class cblas_openblas_h {
 
     private static class fwrite {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_LONG,
+            cblas_h.C_POINTER,
+            cblas_h.C_LONG,
+            cblas_h.C_LONG,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("fwrite");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("fwrite");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5507,14 +5507,14 @@ public class cblas_openblas_h {
 
     private static class fread_unlocked {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_LONG,
+            cblas_h.C_POINTER,
+            cblas_h.C_LONG,
+            cblas_h.C_LONG,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("fread_unlocked");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("fread_unlocked");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5568,14 +5568,14 @@ public class cblas_openblas_h {
 
     private static class fwrite_unlocked {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_LONG,
+            cblas_h.C_POINTER,
+            cblas_h.C_LONG,
+            cblas_h.C_LONG,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("fwrite_unlocked");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("fwrite_unlocked");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5629,13 +5629,13 @@ public class cblas_openblas_h {
 
     private static class fseek {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_LONG,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("fseek");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("fseek");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5689,11 +5689,11 @@ public class cblas_openblas_h {
 
     private static class ftell {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_LONG,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("ftell");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("ftell");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5747,10 +5747,10 @@ public class cblas_openblas_h {
 
     private static class rewind {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("rewind");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("rewind");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5804,13 +5804,13 @@ public class cblas_openblas_h {
 
     private static class fseeko {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_LONG,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("fseeko");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("fseeko");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5864,11 +5864,11 @@ public class cblas_openblas_h {
 
     private static class ftello {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_LONG,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("ftello");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("ftello");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5922,12 +5922,12 @@ public class cblas_openblas_h {
 
     private static class fgetpos {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("fgetpos");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("fgetpos");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -5981,12 +5981,12 @@ public class cblas_openblas_h {
 
     private static class fsetpos {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("fsetpos");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("fsetpos");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6040,10 +6040,10 @@ public class cblas_openblas_h {
 
     private static class clearerr {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("clearerr");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("clearerr");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6097,11 +6097,11 @@ public class cblas_openblas_h {
 
     private static class feof {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("feof");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("feof");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6155,11 +6155,11 @@ public class cblas_openblas_h {
 
     private static class ferror {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("ferror");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("ferror");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6213,10 +6213,10 @@ public class cblas_openblas_h {
 
     private static class clearerr_unlocked {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("clearerr_unlocked");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("clearerr_unlocked");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6270,11 +6270,11 @@ public class cblas_openblas_h {
 
     private static class feof_unlocked {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("feof_unlocked");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("feof_unlocked");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6328,11 +6328,11 @@ public class cblas_openblas_h {
 
     private static class ferror_unlocked {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("ferror_unlocked");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("ferror_unlocked");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6386,10 +6386,10 @@ public class cblas_openblas_h {
 
     private static class perror {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("perror");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("perror");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6443,11 +6443,11 @@ public class cblas_openblas_h {
 
     private static class fileno {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("fileno");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("fileno");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6501,11 +6501,11 @@ public class cblas_openblas_h {
 
     private static class fileno_unlocked {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("fileno_unlocked");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("fileno_unlocked");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6559,11 +6559,11 @@ public class cblas_openblas_h {
 
     private static class pclose {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("pclose");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("pclose");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6617,12 +6617,12 @@ public class cblas_openblas_h {
 
     private static class popen {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("popen");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("popen");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6676,11 +6676,11 @@ public class cblas_openblas_h {
 
     private static class ctermid {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("ctermid");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("ctermid");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6734,10 +6734,10 @@ public class cblas_openblas_h {
 
     private static class flockfile {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("flockfile");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("flockfile");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6791,11 +6791,11 @@ public class cblas_openblas_h {
 
     private static class ftrylockfile {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("ftrylockfile");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("ftrylockfile");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6849,10 +6849,10 @@ public class cblas_openblas_h {
 
     private static class funlockfile {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("funlockfile");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("funlockfile");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6906,11 +6906,11 @@ public class cblas_openblas_h {
 
     private static class __uflow {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__uflow");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__uflow");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -6964,12 +6964,12 @@ public class cblas_openblas_h {
 
     private static class __overflow {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__overflow");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__overflow");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7023,11 +7023,11 @@ public class cblas_openblas_h {
 
     private static class cacos {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cacos");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cacos");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7081,11 +7081,11 @@ public class cblas_openblas_h {
 
     private static class __cacos {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__cacos");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__cacos");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7139,11 +7139,11 @@ public class cblas_openblas_h {
 
     private static class casin {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("casin");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("casin");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7197,11 +7197,11 @@ public class cblas_openblas_h {
 
     private static class __casin {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__casin");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__casin");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7255,11 +7255,11 @@ public class cblas_openblas_h {
 
     private static class catan {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("catan");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("catan");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7313,11 +7313,11 @@ public class cblas_openblas_h {
 
     private static class __catan {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__catan");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__catan");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7371,11 +7371,11 @@ public class cblas_openblas_h {
 
     private static class ccos {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("ccos");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("ccos");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7429,11 +7429,11 @@ public class cblas_openblas_h {
 
     private static class __ccos {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__ccos");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__ccos");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7487,11 +7487,11 @@ public class cblas_openblas_h {
 
     private static class csin {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("csin");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("csin");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7545,11 +7545,11 @@ public class cblas_openblas_h {
 
     private static class __csin {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__csin");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__csin");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7603,11 +7603,11 @@ public class cblas_openblas_h {
 
     private static class ctan {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("ctan");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("ctan");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7661,11 +7661,11 @@ public class cblas_openblas_h {
 
     private static class __ctan {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__ctan");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__ctan");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7719,11 +7719,11 @@ public class cblas_openblas_h {
 
     private static class cacosh {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cacosh");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cacosh");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7777,11 +7777,11 @@ public class cblas_openblas_h {
 
     private static class __cacosh {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__cacosh");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__cacosh");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7835,11 +7835,11 @@ public class cblas_openblas_h {
 
     private static class casinh {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("casinh");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("casinh");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7893,11 +7893,11 @@ public class cblas_openblas_h {
 
     private static class __casinh {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__casinh");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__casinh");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -7951,11 +7951,11 @@ public class cblas_openblas_h {
 
     private static class catanh {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("catanh");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("catanh");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8009,11 +8009,11 @@ public class cblas_openblas_h {
 
     private static class __catanh {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__catanh");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__catanh");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8067,11 +8067,11 @@ public class cblas_openblas_h {
 
     private static class ccosh {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("ccosh");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("ccosh");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8125,11 +8125,11 @@ public class cblas_openblas_h {
 
     private static class __ccosh {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__ccosh");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__ccosh");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8183,11 +8183,11 @@ public class cblas_openblas_h {
 
     private static class csinh {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("csinh");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("csinh");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8241,11 +8241,11 @@ public class cblas_openblas_h {
 
     private static class __csinh {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__csinh");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__csinh");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8299,11 +8299,11 @@ public class cblas_openblas_h {
 
     private static class ctanh {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("ctanh");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("ctanh");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8357,11 +8357,11 @@ public class cblas_openblas_h {
 
     private static class __ctanh {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__ctanh");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__ctanh");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8415,11 +8415,11 @@ public class cblas_openblas_h {
 
     private static class cexp {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cexp");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cexp");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8473,11 +8473,11 @@ public class cblas_openblas_h {
 
     private static class __cexp {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__cexp");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__cexp");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8531,11 +8531,11 @@ public class cblas_openblas_h {
 
     private static class clog {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("clog");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("clog");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8589,11 +8589,11 @@ public class cblas_openblas_h {
 
     private static class __clog {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__clog");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__clog");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8647,12 +8647,12 @@ public class cblas_openblas_h {
 
     private static class cpow {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cpow");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cpow");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8706,12 +8706,12 @@ public class cblas_openblas_h {
 
     private static class __cpow {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__cpow");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__cpow");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8765,11 +8765,11 @@ public class cblas_openblas_h {
 
     private static class csqrt {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("csqrt");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("csqrt");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8823,11 +8823,11 @@ public class cblas_openblas_h {
 
     private static class __csqrt {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__csqrt");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__csqrt");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8881,11 +8881,11 @@ public class cblas_openblas_h {
 
     private static class cabs {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cabs");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cabs");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8939,11 +8939,11 @@ public class cblas_openblas_h {
 
     private static class __cabs {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__cabs");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__cabs");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -8997,11 +8997,11 @@ public class cblas_openblas_h {
 
     private static class carg {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("carg");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("carg");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9055,11 +9055,11 @@ public class cblas_openblas_h {
 
     private static class __carg {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__carg");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__carg");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9113,11 +9113,11 @@ public class cblas_openblas_h {
 
     private static class conj {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("conj");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("conj");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9171,11 +9171,11 @@ public class cblas_openblas_h {
 
     private static class __conj {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__conj");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__conj");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9229,11 +9229,11 @@ public class cblas_openblas_h {
 
     private static class cproj {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cproj");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cproj");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9287,11 +9287,11 @@ public class cblas_openblas_h {
 
     private static class __cproj {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__cproj");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__cproj");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9345,11 +9345,11 @@ public class cblas_openblas_h {
 
     private static class cimag {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cimag");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cimag");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9403,11 +9403,11 @@ public class cblas_openblas_h {
 
     private static class __cimag {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__cimag");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__cimag");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9461,11 +9461,11 @@ public class cblas_openblas_h {
 
     private static class creal {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("creal");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("creal");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9519,11 +9519,11 @@ public class cblas_openblas_h {
 
     private static class __creal {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__creal");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__creal");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9577,11 +9577,11 @@ public class cblas_openblas_h {
 
     private static class cacosf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cacosf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cacosf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9635,11 +9635,11 @@ public class cblas_openblas_h {
 
     private static class __cacosf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__cacosf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__cacosf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9693,11 +9693,11 @@ public class cblas_openblas_h {
 
     private static class casinf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("casinf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("casinf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9751,11 +9751,11 @@ public class cblas_openblas_h {
 
     private static class __casinf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__casinf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__casinf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9809,11 +9809,11 @@ public class cblas_openblas_h {
 
     private static class catanf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("catanf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("catanf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9867,11 +9867,11 @@ public class cblas_openblas_h {
 
     private static class __catanf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__catanf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__catanf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9925,11 +9925,11 @@ public class cblas_openblas_h {
 
     private static class ccosf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("ccosf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("ccosf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -9983,11 +9983,11 @@ public class cblas_openblas_h {
 
     private static class __ccosf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__ccosf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__ccosf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10041,11 +10041,11 @@ public class cblas_openblas_h {
 
     private static class csinf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("csinf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("csinf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10099,11 +10099,11 @@ public class cblas_openblas_h {
 
     private static class __csinf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__csinf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__csinf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10157,11 +10157,11 @@ public class cblas_openblas_h {
 
     private static class ctanf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("ctanf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("ctanf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10215,11 +10215,11 @@ public class cblas_openblas_h {
 
     private static class __ctanf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__ctanf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__ctanf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10273,11 +10273,11 @@ public class cblas_openblas_h {
 
     private static class cacoshf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cacoshf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cacoshf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10331,11 +10331,11 @@ public class cblas_openblas_h {
 
     private static class __cacoshf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__cacoshf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__cacoshf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10389,11 +10389,11 @@ public class cblas_openblas_h {
 
     private static class casinhf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("casinhf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("casinhf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10447,11 +10447,11 @@ public class cblas_openblas_h {
 
     private static class __casinhf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__casinhf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__casinhf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10505,11 +10505,11 @@ public class cblas_openblas_h {
 
     private static class catanhf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("catanhf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("catanhf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10563,11 +10563,11 @@ public class cblas_openblas_h {
 
     private static class __catanhf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__catanhf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__catanhf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10621,11 +10621,11 @@ public class cblas_openblas_h {
 
     private static class ccoshf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("ccoshf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("ccoshf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10679,11 +10679,11 @@ public class cblas_openblas_h {
 
     private static class __ccoshf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__ccoshf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__ccoshf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10737,11 +10737,11 @@ public class cblas_openblas_h {
 
     private static class csinhf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("csinhf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("csinhf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10795,11 +10795,11 @@ public class cblas_openblas_h {
 
     private static class __csinhf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__csinhf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__csinhf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10853,11 +10853,11 @@ public class cblas_openblas_h {
 
     private static class ctanhf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("ctanhf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("ctanhf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10911,11 +10911,11 @@ public class cblas_openblas_h {
 
     private static class __ctanhf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__ctanhf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__ctanhf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -10969,11 +10969,11 @@ public class cblas_openblas_h {
 
     private static class cexpf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cexpf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cexpf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11027,11 +11027,11 @@ public class cblas_openblas_h {
 
     private static class __cexpf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__cexpf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__cexpf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11085,11 +11085,11 @@ public class cblas_openblas_h {
 
     private static class clogf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("clogf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("clogf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11143,11 +11143,11 @@ public class cblas_openblas_h {
 
     private static class __clogf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__clogf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__clogf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11201,12 +11201,12 @@ public class cblas_openblas_h {
 
     private static class cpowf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cpowf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cpowf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11260,12 +11260,12 @@ public class cblas_openblas_h {
 
     private static class __cpowf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__cpowf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__cpowf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11319,11 +11319,11 @@ public class cblas_openblas_h {
 
     private static class csqrtf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("csqrtf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("csqrtf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11377,11 +11377,11 @@ public class cblas_openblas_h {
 
     private static class __csqrtf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__csqrtf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__csqrtf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11435,11 +11435,11 @@ public class cblas_openblas_h {
 
     private static class cabsf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cabsf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cabsf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11493,11 +11493,11 @@ public class cblas_openblas_h {
 
     private static class __cabsf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__cabsf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__cabsf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11551,11 +11551,11 @@ public class cblas_openblas_h {
 
     private static class cargf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cargf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cargf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11609,11 +11609,11 @@ public class cblas_openblas_h {
 
     private static class __cargf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__cargf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__cargf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11667,11 +11667,11 @@ public class cblas_openblas_h {
 
     private static class conjf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("conjf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("conjf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11725,11 +11725,11 @@ public class cblas_openblas_h {
 
     private static class __conjf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__conjf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__conjf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11783,11 +11783,11 @@ public class cblas_openblas_h {
 
     private static class cprojf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cprojf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cprojf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11841,11 +11841,11 @@ public class cblas_openblas_h {
 
     private static class __cprojf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__cprojf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__cprojf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11899,11 +11899,11 @@ public class cblas_openblas_h {
 
     private static class cimagf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cimagf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cimagf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -11957,11 +11957,11 @@ public class cblas_openblas_h {
 
     private static class __cimagf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__cimagf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__cimagf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12015,11 +12015,11 @@ public class cblas_openblas_h {
 
     private static class crealf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("crealf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("crealf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12073,11 +12073,11 @@ public class cblas_openblas_h {
 
     private static class __crealf {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__crealf");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__crealf");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12133,28 +12133,28 @@ public class cblas_openblas_h {
      * typedef __time_t time_t
      * }
      */
-    public static final OfLong time_t = cblas_openblas_h.C_LONG;
+    public static final OfLong time_t = cblas_h.C_LONG;
     /**
      * {@snippet lang=c :
      * typedef __pid_t pid_t
      * }
      */
-    public static final OfInt pid_t = cblas_openblas_h.C_INT;
+    public static final OfInt pid_t = cblas_h.C_INT;
     /**
      * {@snippet lang=c :
      * typedef unsigned long __cpu_mask
      * }
      */
-    public static final OfLong __cpu_mask = cblas_openblas_h.C_LONG;
+    public static final OfLong __cpu_mask = cblas_h.C_LONG;
 
     private static class __sched_cpucount {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_LONG,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__sched_cpucount");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__sched_cpucount");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12208,11 +12208,11 @@ public class cblas_openblas_h {
 
     private static class __sched_cpualloc {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_LONG
+            cblas_h.C_POINTER,
+            cblas_h.C_LONG
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__sched_cpualloc");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__sched_cpualloc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12266,10 +12266,10 @@ public class cblas_openblas_h {
 
     private static class __sched_cpufree {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("__sched_cpufree");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("__sched_cpufree");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12323,12 +12323,12 @@ public class cblas_openblas_h {
 
     private static class sched_setparam {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("sched_setparam");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("sched_setparam");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12382,12 +12382,12 @@ public class cblas_openblas_h {
 
     private static class sched_getparam {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("sched_getparam");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("sched_getparam");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12441,13 +12441,13 @@ public class cblas_openblas_h {
 
     private static class sched_setscheduler {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("sched_setscheduler");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("sched_setscheduler");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12501,11 +12501,11 @@ public class cblas_openblas_h {
 
     private static class sched_getscheduler {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("sched_getscheduler");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("sched_getscheduler");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12559,9 +12559,9 @@ public class cblas_openblas_h {
 
     private static class sched_yield {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT    );
+            cblas_h.C_INT    );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("sched_yield");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("sched_yield");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12615,11 +12615,11 @@ public class cblas_openblas_h {
 
     private static class sched_get_priority_max {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("sched_get_priority_max");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("sched_get_priority_max");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12673,11 +12673,11 @@ public class cblas_openblas_h {
 
     private static class sched_get_priority_min {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("sched_get_priority_min");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("sched_get_priority_min");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12731,12 +12731,12 @@ public class cblas_openblas_h {
 
     private static class sched_rr_get_interval {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("sched_rr_get_interval");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("sched_rr_get_interval");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12790,10 +12790,10 @@ public class cblas_openblas_h {
 
     private static class openblas_set_num_threads {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("openblas_set_num_threads");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("openblas_set_num_threads");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12847,10 +12847,10 @@ public class cblas_openblas_h {
 
     private static class goto_set_num_threads {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("goto_set_num_threads");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("goto_set_num_threads");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12904,9 +12904,9 @@ public class cblas_openblas_h {
 
     private static class openblas_get_num_threads {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT    );
+            cblas_h.C_INT    );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("openblas_get_num_threads");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("openblas_get_num_threads");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -12960,9 +12960,9 @@ public class cblas_openblas_h {
 
     private static class openblas_get_num_procs {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT    );
+            cblas_h.C_INT    );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("openblas_get_num_procs");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("openblas_get_num_procs");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -13016,9 +13016,9 @@ public class cblas_openblas_h {
 
     private static class openblas_get_config {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_POINTER    );
+            cblas_h.C_POINTER    );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("openblas_get_config");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("openblas_get_config");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -13072,9 +13072,9 @@ public class cblas_openblas_h {
 
     private static class openblas_get_corename {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_POINTER    );
+            cblas_h.C_POINTER    );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("openblas_get_corename");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("openblas_get_corename");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -13128,13 +13128,13 @@ public class cblas_openblas_h {
 
     private static class openblas_setaffinity {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_LONG,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("openblas_setaffinity");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("openblas_setaffinity");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -13188,9 +13188,9 @@ public class cblas_openblas_h {
 
     private static class openblas_get_parallel {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_INT    );
+            cblas_h.C_INT    );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("openblas_get_parallel");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("openblas_get_parallel");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
     }
@@ -13352,16 +13352,16 @@ public class cblas_openblas_h {
 
     private static class cblas_sdsdot {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_FLOAT,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_sdsdot");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_sdsdot");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -13415,15 +13415,15 @@ public class cblas_openblas_h {
 
     private static class cblas_dsdot {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_DOUBLE,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dsdot");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dsdot");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -13477,15 +13477,15 @@ public class cblas_openblas_h {
 
     private static class cblas_sdot {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_FLOAT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_sdot");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_sdot");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -13539,15 +13539,15 @@ public class cblas_openblas_h {
 
     private static class cblas_ddot {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_DOUBLE,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_ddot");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_ddot");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -13601,15 +13601,15 @@ public class cblas_openblas_h {
 
     private static class cblas_cdotu {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_FLOAT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_cdotu");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_cdotu");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -13663,15 +13663,15 @@ public class cblas_openblas_h {
 
     private static class cblas_cdotc {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_FLOAT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_cdotc");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_cdotc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -13725,15 +13725,15 @@ public class cblas_openblas_h {
 
     private static class cblas_zdotu {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_DOUBLE,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zdotu");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zdotu");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -13787,15 +13787,15 @@ public class cblas_openblas_h {
 
     private static class cblas_zdotc {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_DOUBLE,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zdotc");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zdotc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -13849,15 +13849,15 @@ public class cblas_openblas_h {
 
     private static class cblas_cdotu_sub {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_cdotu_sub");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_cdotu_sub");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -13911,15 +13911,15 @@ public class cblas_openblas_h {
 
     private static class cblas_cdotc_sub {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_cdotc_sub");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_cdotc_sub");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -13973,15 +13973,15 @@ public class cblas_openblas_h {
 
     private static class cblas_zdotu_sub {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zdotu_sub");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zdotu_sub");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -14035,15 +14035,15 @@ public class cblas_openblas_h {
 
     private static class cblas_zdotc_sub {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zdotc_sub");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zdotc_sub");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -14097,13 +14097,13 @@ public class cblas_openblas_h {
 
     private static class cblas_sasum {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_FLOAT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_sasum");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_sasum");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -14157,13 +14157,13 @@ public class cblas_openblas_h {
 
     private static class cblas_dasum {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_DOUBLE,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dasum");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dasum");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -14217,13 +14217,13 @@ public class cblas_openblas_h {
 
     private static class cblas_scasum {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_FLOAT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_scasum");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_scasum");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -14277,13 +14277,13 @@ public class cblas_openblas_h {
 
     private static class cblas_dzasum {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_DOUBLE,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dzasum");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dzasum");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -14337,13 +14337,13 @@ public class cblas_openblas_h {
 
     private static class cblas_ssum {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_FLOAT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_ssum");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_ssum");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -14397,13 +14397,13 @@ public class cblas_openblas_h {
 
     private static class cblas_dsum {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_DOUBLE,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dsum");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dsum");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -14457,13 +14457,13 @@ public class cblas_openblas_h {
 
     private static class cblas_scsum {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_FLOAT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_scsum");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_scsum");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -14517,13 +14517,13 @@ public class cblas_openblas_h {
 
     private static class cblas_dzsum {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_DOUBLE,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dzsum");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dzsum");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -14577,13 +14577,13 @@ public class cblas_openblas_h {
 
     private static class cblas_snrm2 {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_FLOAT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_snrm2");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_snrm2");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -14637,13 +14637,13 @@ public class cblas_openblas_h {
 
     private static class cblas_dnrm2 {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_DOUBLE,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dnrm2");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dnrm2");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -14697,13 +14697,13 @@ public class cblas_openblas_h {
 
     private static class cblas_scnrm2 {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_FLOAT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_scnrm2");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_scnrm2");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -14757,13 +14757,13 @@ public class cblas_openblas_h {
 
     private static class cblas_dznrm2 {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_DOUBLE,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dznrm2");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dznrm2");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -14817,13 +14817,13 @@ public class cblas_openblas_h {
 
     private static class cblas_isamax {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_LONG,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_isamax");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_isamax");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -14877,13 +14877,13 @@ public class cblas_openblas_h {
 
     private static class cblas_idamax {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_LONG,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_idamax");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_idamax");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -14937,13 +14937,13 @@ public class cblas_openblas_h {
 
     private static class cblas_icamax {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_LONG,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_icamax");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_icamax");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -14997,13 +14997,13 @@ public class cblas_openblas_h {
 
     private static class cblas_izamax {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_LONG,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_izamax");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_izamax");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -15057,13 +15057,13 @@ public class cblas_openblas_h {
 
     private static class cblas_isamin {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_LONG,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_isamin");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_isamin");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -15117,13 +15117,13 @@ public class cblas_openblas_h {
 
     private static class cblas_idamin {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_LONG,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_idamin");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_idamin");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -15177,13 +15177,13 @@ public class cblas_openblas_h {
 
     private static class cblas_icamin {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_LONG,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_icamin");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_icamin");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -15237,13 +15237,13 @@ public class cblas_openblas_h {
 
     private static class cblas_izamin {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_LONG,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_izamin");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_izamin");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -15297,13 +15297,13 @@ public class cblas_openblas_h {
 
     private static class cblas_ismax {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_LONG,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_ismax");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_ismax");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -15357,13 +15357,13 @@ public class cblas_openblas_h {
 
     private static class cblas_idmax {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_LONG,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_idmax");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_idmax");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -15417,13 +15417,13 @@ public class cblas_openblas_h {
 
     private static class cblas_icmax {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_LONG,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_icmax");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_icmax");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -15477,13 +15477,13 @@ public class cblas_openblas_h {
 
     private static class cblas_izmax {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_LONG,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_izmax");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_izmax");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -15537,13 +15537,13 @@ public class cblas_openblas_h {
 
     private static class cblas_ismin {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_LONG,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_ismin");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_ismin");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -15597,13 +15597,13 @@ public class cblas_openblas_h {
 
     private static class cblas_idmin {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_LONG,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_idmin");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_idmin");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -15657,13 +15657,13 @@ public class cblas_openblas_h {
 
     private static class cblas_icmin {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_LONG,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_icmin");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_icmin");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -15717,13 +15717,13 @@ public class cblas_openblas_h {
 
     private static class cblas_izmin {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_LONG,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_LONG,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_izmin");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_izmin");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -15777,15 +15777,15 @@ public class cblas_openblas_h {
 
     private static class cblas_saxpy {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_saxpy");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_saxpy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -15839,15 +15839,15 @@ public class cblas_openblas_h {
 
     private static class cblas_daxpy {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_daxpy");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_daxpy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -15901,15 +15901,15 @@ public class cblas_openblas_h {
 
     private static class cblas_caxpy {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_caxpy");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_caxpy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -15963,15 +15963,15 @@ public class cblas_openblas_h {
 
     private static class cblas_zaxpy {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zaxpy");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zaxpy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -16025,14 +16025,14 @@ public class cblas_openblas_h {
 
     private static class cblas_scopy {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_scopy");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_scopy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -16086,14 +16086,14 @@ public class cblas_openblas_h {
 
     private static class cblas_dcopy {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dcopy");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dcopy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -16147,14 +16147,14 @@ public class cblas_openblas_h {
 
     private static class cblas_ccopy {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_ccopy");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_ccopy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -16208,14 +16208,14 @@ public class cblas_openblas_h {
 
     private static class cblas_zcopy {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zcopy");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zcopy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -16269,14 +16269,14 @@ public class cblas_openblas_h {
 
     private static class cblas_sswap {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_sswap");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_sswap");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -16330,14 +16330,14 @@ public class cblas_openblas_h {
 
     private static class cblas_dswap {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dswap");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dswap");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -16391,14 +16391,14 @@ public class cblas_openblas_h {
 
     private static class cblas_cswap {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_cswap");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_cswap");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -16452,14 +16452,14 @@ public class cblas_openblas_h {
 
     private static class cblas_zswap {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zswap");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zswap");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -16513,16 +16513,16 @@ public class cblas_openblas_h {
 
     private static class cblas_srot {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_srot");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_srot");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -16576,16 +16576,16 @@ public class cblas_openblas_h {
 
     private static class cblas_drot {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_drot");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_drot");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -16639,16 +16639,16 @@ public class cblas_openblas_h {
 
     private static class cblas_csrot {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_FLOAT
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_FLOAT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_csrot");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_csrot");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -16702,16 +16702,16 @@ public class cblas_openblas_h {
 
     private static class cblas_zdrot {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_DOUBLE
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_DOUBLE
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zdrot");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zdrot");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -16765,13 +16765,13 @@ public class cblas_openblas_h {
 
     private static class cblas_srotg {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_srotg");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_srotg");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -16825,13 +16825,13 @@ public class cblas_openblas_h {
 
     private static class cblas_drotg {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_drotg");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_drotg");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -16885,13 +16885,13 @@ public class cblas_openblas_h {
 
     private static class cblas_crotg {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_crotg");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_crotg");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -16945,13 +16945,13 @@ public class cblas_openblas_h {
 
     private static class cblas_zrotg {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zrotg");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zrotg");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -17005,15 +17005,15 @@ public class cblas_openblas_h {
 
     private static class cblas_srotm {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_srotm");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_srotm");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -17067,15 +17067,15 @@ public class cblas_openblas_h {
 
     private static class cblas_drotm {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_drotm");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_drotm");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -17129,14 +17129,14 @@ public class cblas_openblas_h {
 
     private static class cblas_srotmg {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_srotmg");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_srotmg");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -17190,14 +17190,14 @@ public class cblas_openblas_h {
 
     private static class cblas_drotmg {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_drotmg");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_drotmg");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -17251,13 +17251,13 @@ public class cblas_openblas_h {
 
     private static class cblas_sscal {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_sscal");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_sscal");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -17311,13 +17311,13 @@ public class cblas_openblas_h {
 
     private static class cblas_dscal {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dscal");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dscal");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -17371,13 +17371,13 @@ public class cblas_openblas_h {
 
     private static class cblas_cscal {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_cscal");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_cscal");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -17431,13 +17431,13 @@ public class cblas_openblas_h {
 
     private static class cblas_zscal {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zscal");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zscal");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -17491,13 +17491,13 @@ public class cblas_openblas_h {
 
     private static class cblas_csscal {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_csscal");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_csscal");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -17551,13 +17551,13 @@ public class cblas_openblas_h {
 
     private static class cblas_zdscal {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zdscal");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zdscal");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -17611,21 +17611,21 @@ public class cblas_openblas_h {
 
     private static class cblas_sgemv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_sgemv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_sgemv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -17679,21 +17679,21 @@ public class cblas_openblas_h {
 
     private static class cblas_dgemv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dgemv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dgemv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -17747,21 +17747,21 @@ public class cblas_openblas_h {
 
     private static class cblas_cgemv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_cgemv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_cgemv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -17815,21 +17815,21 @@ public class cblas_openblas_h {
 
     private static class cblas_zgemv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zgemv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zgemv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -17883,19 +17883,19 @@ public class cblas_openblas_h {
 
     private static class cblas_sger {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_sger");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_sger");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -17949,19 +17949,19 @@ public class cblas_openblas_h {
 
     private static class cblas_dger {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dger");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dger");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -18015,19 +18015,19 @@ public class cblas_openblas_h {
 
     private static class cblas_cgeru {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_cgeru");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_cgeru");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -18081,19 +18081,19 @@ public class cblas_openblas_h {
 
     private static class cblas_cgerc {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_cgerc");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_cgerc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -18147,19 +18147,19 @@ public class cblas_openblas_h {
 
     private static class cblas_zgeru {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zgeru");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zgeru");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -18213,19 +18213,19 @@ public class cblas_openblas_h {
 
     private static class cblas_zgerc {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zgerc");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zgerc");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -18279,18 +18279,18 @@ public class cblas_openblas_h {
 
     private static class cblas_strsv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_strsv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_strsv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -18344,18 +18344,18 @@ public class cblas_openblas_h {
 
     private static class cblas_dtrsv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dtrsv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dtrsv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -18409,18 +18409,18 @@ public class cblas_openblas_h {
 
     private static class cblas_ctrsv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_ctrsv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_ctrsv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -18474,18 +18474,18 @@ public class cblas_openblas_h {
 
     private static class cblas_ztrsv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_ztrsv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_ztrsv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -18539,18 +18539,18 @@ public class cblas_openblas_h {
 
     private static class cblas_strmv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_strmv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_strmv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -18604,18 +18604,18 @@ public class cblas_openblas_h {
 
     private static class cblas_dtrmv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dtrmv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dtrmv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -18669,18 +18669,18 @@ public class cblas_openblas_h {
 
     private static class cblas_ctrmv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_ctrmv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_ctrmv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -18734,18 +18734,18 @@ public class cblas_openblas_h {
 
     private static class cblas_ztrmv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_ztrmv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_ztrmv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -18799,17 +18799,17 @@ public class cblas_openblas_h {
 
     private static class cblas_ssyr {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_ssyr");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_ssyr");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -18863,17 +18863,17 @@ public class cblas_openblas_h {
 
     private static class cblas_dsyr {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dsyr");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dsyr");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -18927,17 +18927,17 @@ public class cblas_openblas_h {
 
     private static class cblas_cher {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_cher");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_cher");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -18991,17 +18991,17 @@ public class cblas_openblas_h {
 
     private static class cblas_zher {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zher");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zher");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -19055,19 +19055,19 @@ public class cblas_openblas_h {
 
     private static class cblas_ssyr2 {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_ssyr2");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_ssyr2");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -19121,19 +19121,19 @@ public class cblas_openblas_h {
 
     private static class cblas_dsyr2 {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dsyr2");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dsyr2");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -19187,19 +19187,19 @@ public class cblas_openblas_h {
 
     private static class cblas_cher2 {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_cher2");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_cher2");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -19253,19 +19253,19 @@ public class cblas_openblas_h {
 
     private static class cblas_zher2 {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zher2");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zher2");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -19319,23 +19319,23 @@ public class cblas_openblas_h {
 
     private static class cblas_sgbmv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_sgbmv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_sgbmv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -19389,23 +19389,23 @@ public class cblas_openblas_h {
 
     private static class cblas_dgbmv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dgbmv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dgbmv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -19459,23 +19459,23 @@ public class cblas_openblas_h {
 
     private static class cblas_cgbmv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_cgbmv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_cgbmv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -19529,23 +19529,23 @@ public class cblas_openblas_h {
 
     private static class cblas_zgbmv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zgbmv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zgbmv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -19599,21 +19599,21 @@ public class cblas_openblas_h {
 
     private static class cblas_ssbmv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_ssbmv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_ssbmv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -19667,21 +19667,21 @@ public class cblas_openblas_h {
 
     private static class cblas_dsbmv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dsbmv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dsbmv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -19735,19 +19735,19 @@ public class cblas_openblas_h {
 
     private static class cblas_stbmv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_stbmv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_stbmv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -19801,19 +19801,19 @@ public class cblas_openblas_h {
 
     private static class cblas_dtbmv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dtbmv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dtbmv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -19867,19 +19867,19 @@ public class cblas_openblas_h {
 
     private static class cblas_ctbmv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_ctbmv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_ctbmv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -19933,19 +19933,19 @@ public class cblas_openblas_h {
 
     private static class cblas_ztbmv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_ztbmv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_ztbmv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -19999,19 +19999,19 @@ public class cblas_openblas_h {
 
     private static class cblas_stbsv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_stbsv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_stbsv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -20065,19 +20065,19 @@ public class cblas_openblas_h {
 
     private static class cblas_dtbsv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dtbsv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dtbsv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -20131,19 +20131,19 @@ public class cblas_openblas_h {
 
     private static class cblas_ctbsv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_ctbsv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_ctbsv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -20197,19 +20197,19 @@ public class cblas_openblas_h {
 
     private static class cblas_ztbsv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_ztbsv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_ztbsv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -20263,17 +20263,17 @@ public class cblas_openblas_h {
 
     private static class cblas_stpmv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_stpmv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_stpmv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -20327,17 +20327,17 @@ public class cblas_openblas_h {
 
     private static class cblas_dtpmv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dtpmv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dtpmv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -20391,17 +20391,17 @@ public class cblas_openblas_h {
 
     private static class cblas_ctpmv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_ctpmv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_ctpmv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -20455,17 +20455,17 @@ public class cblas_openblas_h {
 
     private static class cblas_ztpmv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_ztpmv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_ztpmv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -20519,17 +20519,17 @@ public class cblas_openblas_h {
 
     private static class cblas_stpsv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_stpsv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_stpsv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -20583,17 +20583,17 @@ public class cblas_openblas_h {
 
     private static class cblas_dtpsv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dtpsv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dtpsv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -20647,17 +20647,17 @@ public class cblas_openblas_h {
 
     private static class cblas_ctpsv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_ctpsv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_ctpsv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -20711,17 +20711,17 @@ public class cblas_openblas_h {
 
     private static class cblas_ztpsv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_ztpsv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_ztpsv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -20775,20 +20775,20 @@ public class cblas_openblas_h {
 
     private static class cblas_ssymv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_ssymv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_ssymv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -20842,20 +20842,20 @@ public class cblas_openblas_h {
 
     private static class cblas_dsymv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dsymv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dsymv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -20909,20 +20909,20 @@ public class cblas_openblas_h {
 
     private static class cblas_chemv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_chemv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_chemv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -20976,20 +20976,20 @@ public class cblas_openblas_h {
 
     private static class cblas_zhemv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zhemv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zhemv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -21043,19 +21043,19 @@ public class cblas_openblas_h {
 
     private static class cblas_sspmv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_sspmv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_sspmv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -21109,19 +21109,19 @@ public class cblas_openblas_h {
 
     private static class cblas_dspmv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dspmv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dspmv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -21175,16 +21175,16 @@ public class cblas_openblas_h {
 
     private static class cblas_sspr {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_sspr");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_sspr");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -21238,16 +21238,16 @@ public class cblas_openblas_h {
 
     private static class cblas_dspr {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dspr");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dspr");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -21301,16 +21301,16 @@ public class cblas_openblas_h {
 
     private static class cblas_chpr {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_chpr");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_chpr");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -21364,16 +21364,16 @@ public class cblas_openblas_h {
 
     private static class cblas_zhpr {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zhpr");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zhpr");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -21427,18 +21427,18 @@ public class cblas_openblas_h {
 
     private static class cblas_sspr2 {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_sspr2");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_sspr2");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -21492,18 +21492,18 @@ public class cblas_openblas_h {
 
     private static class cblas_dspr2 {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dspr2");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dspr2");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -21557,18 +21557,18 @@ public class cblas_openblas_h {
 
     private static class cblas_chpr2 {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_chpr2");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_chpr2");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -21622,18 +21622,18 @@ public class cblas_openblas_h {
 
     private static class cblas_zhpr2 {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zhpr2");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zhpr2");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -21687,21 +21687,21 @@ public class cblas_openblas_h {
 
     private static class cblas_chbmv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_chbmv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_chbmv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -21755,21 +21755,21 @@ public class cblas_openblas_h {
 
     private static class cblas_zhbmv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zhbmv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zhbmv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -21823,19 +21823,19 @@ public class cblas_openblas_h {
 
     private static class cblas_chpmv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_chpmv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_chpmv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -21889,19 +21889,19 @@ public class cblas_openblas_h {
 
     private static class cblas_zhpmv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zhpmv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zhpmv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -21955,23 +21955,23 @@ public class cblas_openblas_h {
 
     private static class cblas_sgemm {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_sgemm");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_sgemm");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -22025,23 +22025,23 @@ public class cblas_openblas_h {
 
     private static class cblas_dgemm {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dgemm");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dgemm");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -22095,23 +22095,23 @@ public class cblas_openblas_h {
 
     private static class cblas_cgemm {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_cgemm");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_cgemm");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -22165,23 +22165,23 @@ public class cblas_openblas_h {
 
     private static class cblas_cgemm3m {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_cgemm3m");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_cgemm3m");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -22235,23 +22235,23 @@ public class cblas_openblas_h {
 
     private static class cblas_zgemm {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zgemm");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zgemm");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -22305,23 +22305,23 @@ public class cblas_openblas_h {
 
     private static class cblas_zgemm3m {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zgemm3m");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zgemm3m");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -22375,22 +22375,22 @@ public class cblas_openblas_h {
 
     private static class cblas_ssymm {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_ssymm");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_ssymm");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -22444,22 +22444,22 @@ public class cblas_openblas_h {
 
     private static class cblas_dsymm {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dsymm");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dsymm");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -22513,22 +22513,22 @@ public class cblas_openblas_h {
 
     private static class cblas_csymm {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_csymm");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_csymm");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -22582,22 +22582,22 @@ public class cblas_openblas_h {
 
     private static class cblas_zsymm {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zsymm");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zsymm");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -22651,20 +22651,20 @@ public class cblas_openblas_h {
 
     private static class cblas_ssyrk {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_ssyrk");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_ssyrk");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -22718,20 +22718,20 @@ public class cblas_openblas_h {
 
     private static class cblas_dsyrk {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dsyrk");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dsyrk");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -22785,20 +22785,20 @@ public class cblas_openblas_h {
 
     private static class cblas_csyrk {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_csyrk");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_csyrk");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -22852,20 +22852,20 @@ public class cblas_openblas_h {
 
     private static class cblas_zsyrk {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zsyrk");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zsyrk");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -22919,22 +22919,22 @@ public class cblas_openblas_h {
 
     private static class cblas_ssyr2k {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_ssyr2k");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_ssyr2k");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -22988,22 +22988,22 @@ public class cblas_openblas_h {
 
     private static class cblas_dsyr2k {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dsyr2k");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dsyr2k");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -23057,22 +23057,22 @@ public class cblas_openblas_h {
 
     private static class cblas_csyr2k {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_csyr2k");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_csyr2k");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -23126,22 +23126,22 @@ public class cblas_openblas_h {
 
     private static class cblas_zsyr2k {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zsyr2k");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zsyr2k");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -23195,21 +23195,21 @@ public class cblas_openblas_h {
 
     private static class cblas_strmm {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_strmm");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_strmm");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -23263,21 +23263,21 @@ public class cblas_openblas_h {
 
     private static class cblas_dtrmm {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dtrmm");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dtrmm");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -23331,21 +23331,21 @@ public class cblas_openblas_h {
 
     private static class cblas_ctrmm {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_ctrmm");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_ctrmm");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -23399,21 +23399,21 @@ public class cblas_openblas_h {
 
     private static class cblas_ztrmm {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_ztrmm");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_ztrmm");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -23467,21 +23467,21 @@ public class cblas_openblas_h {
 
     private static class cblas_strsm {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_strsm");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_strsm");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -23535,21 +23535,21 @@ public class cblas_openblas_h {
 
     private static class cblas_dtrsm {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dtrsm");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dtrsm");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -23603,21 +23603,21 @@ public class cblas_openblas_h {
 
     private static class cblas_ctrsm {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_ctrsm");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_ctrsm");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -23671,21 +23671,21 @@ public class cblas_openblas_h {
 
     private static class cblas_ztrsm {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_ztrsm");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_ztrsm");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -23739,22 +23739,22 @@ public class cblas_openblas_h {
 
     private static class cblas_chemm {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_chemm");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_chemm");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -23808,22 +23808,22 @@ public class cblas_openblas_h {
 
     private static class cblas_zhemm {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zhemm");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zhemm");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -23877,20 +23877,20 @@ public class cblas_openblas_h {
 
     private static class cblas_cherk {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_cherk");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_cherk");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -23944,20 +23944,20 @@ public class cblas_openblas_h {
 
     private static class cblas_zherk {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zherk");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zherk");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -24011,22 +24011,22 @@ public class cblas_openblas_h {
 
     private static class cblas_cher2k {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_cher2k");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_cher2k");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -24080,22 +24080,22 @@ public class cblas_openblas_h {
 
     private static class cblas_zher2k {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zher2k");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zher2k");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -24155,11 +24155,11 @@ public class cblas_openblas_h {
      */
     public static class cblas_xerbla {
         private static final FunctionDescriptor BASE_DESC = FunctionDescriptor.ofVoid(
-                cblas_openblas_h.C_INT,
-                cblas_openblas_h.C_POINTER,
-                cblas_openblas_h.C_POINTER
+                cblas_h.C_INT,
+                cblas_h.C_POINTER,
+                cblas_h.C_POINTER
             );
-        private static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_xerbla");
+        private static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_xerbla");
 
         private final MethodHandle handle;
         private final FunctionDescriptor descriptor;
@@ -24223,16 +24223,16 @@ public class cblas_openblas_h {
 
     private static class cblas_saxpby {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_saxpby");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_saxpby");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -24286,16 +24286,16 @@ public class cblas_openblas_h {
 
     private static class cblas_daxpby {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_daxpby");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_daxpby");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -24349,16 +24349,16 @@ public class cblas_openblas_h {
 
     private static class cblas_caxpby {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_caxpby");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_caxpby");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -24412,16 +24412,16 @@ public class cblas_openblas_h {
 
     private static class cblas_zaxpby {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zaxpby");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zaxpby");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -24475,18 +24475,18 @@ public class cblas_openblas_h {
 
     private static class cblas_somatcopy {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_somatcopy");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_somatcopy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -24540,18 +24540,18 @@ public class cblas_openblas_h {
 
     private static class cblas_domatcopy {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_domatcopy");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_domatcopy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -24605,18 +24605,18 @@ public class cblas_openblas_h {
 
     private static class cblas_comatcopy {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_comatcopy");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_comatcopy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -24670,18 +24670,18 @@ public class cblas_openblas_h {
 
     private static class cblas_zomatcopy {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zomatcopy");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zomatcopy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -24735,17 +24735,17 @@ public class cblas_openblas_h {
 
     private static class cblas_simatcopy {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_simatcopy");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_simatcopy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -24799,17 +24799,17 @@ public class cblas_openblas_h {
 
     private static class cblas_dimatcopy {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dimatcopy");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dimatcopy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -24863,17 +24863,17 @@ public class cblas_openblas_h {
 
     private static class cblas_cimatcopy {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_cimatcopy");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_cimatcopy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -24927,17 +24927,17 @@ public class cblas_openblas_h {
 
     private static class cblas_zimatcopy {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zimatcopy");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zimatcopy");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -24991,18 +24991,18 @@ public class cblas_openblas_h {
 
     private static class cblas_sgeadd {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_sgeadd");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_sgeadd");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -25056,18 +25056,18 @@ public class cblas_openblas_h {
 
     private static class cblas_dgeadd {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_DOUBLE,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_DOUBLE,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dgeadd");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dgeadd");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -25121,18 +25121,18 @@ public class cblas_openblas_h {
 
     private static class cblas_cgeadd {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_cgeadd");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_cgeadd");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -25186,18 +25186,18 @@ public class cblas_openblas_h {
 
     private static class cblas_zgeadd {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_zgeadd");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_zgeadd");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -25251,14 +25251,14 @@ public class cblas_openblas_h {
 
     private static class cblas_sbstobf16 {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_sbstobf16");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_sbstobf16");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -25312,14 +25312,14 @@ public class cblas_openblas_h {
 
     private static class cblas_sbdtobf16 {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_sbdtobf16");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_sbdtobf16");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -25373,14 +25373,14 @@ public class cblas_openblas_h {
 
     private static class cblas_sbf16tos {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_sbf16tos");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_sbf16tos");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -25434,14 +25434,14 @@ public class cblas_openblas_h {
 
     private static class cblas_dbf16tod {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_dbf16tod");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_dbf16tod");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -25495,15 +25495,15 @@ public class cblas_openblas_h {
 
     private static class cblas_sbdot {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_FLOAT,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_sbdot");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_sbdot");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -25557,21 +25557,21 @@ public class cblas_openblas_h {
 
     private static class cblas_sbgemv {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_sbgemv");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_sbgemv");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -25625,23 +25625,23 @@ public class cblas_openblas_h {
 
     private static class cblas_sbgemm {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT,
-            cblas_openblas_h.C_FLOAT,
-            cblas_openblas_h.C_POINTER,
-            cblas_openblas_h.C_INT
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT,
+            cblas_h.C_FLOAT,
+            cblas_h.C_POINTER,
+            cblas_h.C_INT
         );
 
-        public static final MemorySegment ADDR = cblas_openblas_h.findOrThrow("cblas_sbgemm");
+        public static final MemorySegment ADDR = cblas_h.findOrThrow("cblas_sbgemm");
 
         public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC, Linker.Option.critical(true));
     }
@@ -25709,7 +25709,7 @@ public class cblas_openblas_h {
     public static MemorySegment OPENBLAS_CHAR_CORENAME() {
         class Holder {
             static final MemorySegment OPENBLAS_CHAR_CORENAME
-                = cblas_openblas_h.LIBRARY_ARENA.allocateFrom("generic");
+                = cblas_h.LIBRARY_ARENA.allocateFrom("generic");
         }
         return Holder.OPENBLAS_CHAR_CORENAME;
     }
@@ -25721,7 +25721,7 @@ public class cblas_openblas_h {
     public static MemorySegment OPENBLAS_VERSION() {
         class Holder {
             static final MemorySegment OPENBLAS_VERSION
-                = cblas_openblas_h.LIBRARY_ARENA.allocateFrom(" OpenBLAS 0.3.20 ");
+                = cblas_h.LIBRARY_ARENA.allocateFrom(" OpenBLAS 0.3.20 ");
         }
         return Holder.OPENBLAS_VERSION;
     }
@@ -26264,7 +26264,7 @@ public class cblas_openblas_h {
     public static MemorySegment P_tmpdir() {
         class Holder {
             static final MemorySegment P_tmpdir
-                = cblas_openblas_h.LIBRARY_ARENA.allocateFrom("/tmp");
+                = cblas_h.LIBRARY_ARENA.allocateFrom("/tmp");
         }
         return Holder.P_tmpdir;
     }

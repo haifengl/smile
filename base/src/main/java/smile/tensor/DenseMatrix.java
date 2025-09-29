@@ -29,7 +29,7 @@ import static smile.linalg.Side.RIGHT;
 import static smile.linalg.Transpose.NO_TRANSPOSE;
 import static smile.linalg.Transpose.TRANSPOSE;
 import static smile.linalg.UPLO.LOWER;
-import static smile.linalg.blas.cblas_openblas_h.*;
+import static smile.linalg.blas.cblas_h.*;
 import static smile.linalg.lapack.clapack_h.*;
 
 /**
