@@ -30,7 +30,7 @@ import static smile.linalg.Transpose.NO_TRANSPOSE;
 import static smile.linalg.Transpose.TRANSPOSE;
 import static smile.linalg.UPLO.LOWER;
 import static smile.linalg.blas.cblas_openblas_h.*;
-import static smile.linalg.lapack.lapacke_h.*;
+import static smile.linalg.lapack.clapack_h.*;
 
 /**
  * A dense matrix is a matrix where a large proportion of its elements
@@ -629,26 +629,39 @@ public abstract class DenseMatrix implements Matrix {
         }
 
         DenseMatrix lu = copy();
-        DenseMatrix inv = eye(n);
-        int[] ipiv = new int[n];
+        DenseMatrix inv = eye(lu.n);
+        byte[] uplo = { lu.uplo.lapack() };
+        int[] n = { lu.n };
+        int[] lda = { lu.ld };
+        int[] ldb = { inv.ld };
+        int[] ipiv = new int[lu.n];
+        int[] info = { 0 };
+        MemorySegment uplo_ = MemorySegment.ofArray(uplo);
+        MemorySegment n_ = MemorySegment.ofArray(n);
+        MemorySegment lda_ = MemorySegment.ofArray(lda);
+        MemorySegment ldb_ = MemorySegment.ofArray(ldb);
         MemorySegment ipiv_ = MemorySegment.ofArray(ipiv);
+        MemorySegment info_ = MemorySegment.ofArray(info);
         if (isSymmetric()) {
-            int info = switch(scalarType()) {
-                case Float64 -> LAPACKE_dsysv(lu.layout().lapack(), uplo.lapack(), n, n, lu.memory, lu.ld, ipiv_, inv.memory, inv.ld);
-                case Float32 -> LAPACKE_ssysv(lu.layout().lapack(), uplo.lapack(), n, n, lu.memory, lu.ld, ipiv_, inv.memory, inv.ld);
+            Vector work = vector(lu.n * 64);
+            int[] lwork = new int[work.size()];
+            MemorySegment lwork_ = MemorySegment.ofArray(lwork);
+            switch(scalarType()) {
+                case Float64 -> dsysv_(uplo_, n_, n_, lu.memory, lda_, ipiv_, inv.memory, ldb_, work.memory, lwork_, info_);
+                case Float32 -> ssysv_(uplo_, n_, n_, lu.memory, lda_, ipiv_, inv.memory, ldb_, work.memory, lwork_, info_);
                 default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
             };
-            if (info != 0) {
-                throw new ArithmeticException("SYSV fails: " + info);
+            if (info[0] != 0) {
+                throw new ArithmeticException("SYSV fails: " + info[0]);
             }
         } else {
-            int info = switch(scalarType()) {
-                case Float64 -> LAPACKE_dgesv(lu.layout().lapack(), n, n, lu.memory, lu.ld, ipiv_, inv.memory, inv.ld);
-                case Float32 -> LAPACKE_sgesv(lu.layout().lapack(), n, n, lu.memory, lu.ld, ipiv_, inv.memory, inv.ld);
+            switch(scalarType()) {
+                case Float64 -> dgesv_(n_, n_, lu.memory, lda_, ipiv_, inv.memory, ldb_, info_);
+                case Float32 -> sgesv_(n_, n_, lu.memory, lda_, ipiv_, inv.memory, ldb_, info_);
                 default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
             };
-            if (info != 0) {
-                throw new ArithmeticException("GESV fails: " + info);
+            if (info[0] != 0) {
+                throw new ArithmeticException("GESV fails: " + info[0]);
             }
         }
 
@@ -662,21 +675,29 @@ public abstract class DenseMatrix implements Matrix {
      */
     public LU lu() {
         DenseMatrix lu = this;
-        int[] ipiv = new int[Math.min(m, n)];
+        int[] m = { lu.m };
+        int[] n = { lu.n };
+        int[] lda = { lu.ld };
+        int[] ipiv = new int[Math.min(lu.m, lu.n)];
+        int[] info = { 0 };
+        MemorySegment m_ = MemorySegment.ofArray(m);
+        MemorySegment n_ = MemorySegment.ofArray(n);
+        MemorySegment lda_ = MemorySegment.ofArray(lda);
         MemorySegment ipiv_ = MemorySegment.ofArray(ipiv);
-        int info = switch(scalarType()) {
-            case Float64 -> LAPACKE_dgetrf(lu.layout().lapack(), lu.m, lu.n, lu.memory, lu.ld, ipiv_);
-            case Float32 -> LAPACKE_sgetrf(lu.layout().lapack(), lu.m, lu.n, lu.memory, lu.ld, ipiv_);
+        MemorySegment info_ = MemorySegment.ofArray(info);
+        switch(scalarType()) {
+            case Float64 -> dgetrf_(m_, n_, lu.memory, lda_, ipiv_, info_);
+            case Float32 -> sgetrf_(m_, n_, lu.memory, lda_, ipiv_, info_);
             default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
         };
 
-        if (info < 0) {
+        if (info[0] < 0) {
             logger.error("LAPACK GETRF error code: {}", info);
-            throw new ArithmeticException("LAPACK GETRF error code: " + info);
+            throw new ArithmeticException("LAPACK GETRF error code: " + info[0]);
         }
 
         lu.uplo = null; // LU is not symmetric
-        return new LU(lu, ipiv, info);
+        return new LU(lu, ipiv, info[0]);
     }
 
     /**
@@ -693,15 +714,23 @@ public abstract class DenseMatrix implements Matrix {
         }
 
         DenseMatrix lu = this;
-        int info = switch(scalarType()) {
-            case Float64 -> LAPACKE_dpotrf(lu.layout().lapack(), lu.uplo.lapack(), lu.n, lu.memory, lu.ld);
-            case Float32 -> LAPACKE_spotrf(lu.layout().lapack(), lu.uplo.lapack(), lu.n, lu.memory, lu.ld);
+        byte[] uplo = { lu.uplo.lapack() };
+        int[] n = { lu.n };
+        int[] lda = { lu.ld };
+        int[] info = { 0 };
+        MemorySegment uplo_ = MemorySegment.ofArray(uplo);
+        MemorySegment n_ = MemorySegment.ofArray(n);
+        MemorySegment lda_ = MemorySegment.ofArray(lda);
+        MemorySegment info_ = MemorySegment.ofArray(info);
+        switch(scalarType()) {
+            case Float64 -> dpotrf_(uplo_, n_, lu.memory, lda_, info_);
+            case Float32 -> spotrf_(uplo_, n_, lu.memory, lda_, info_);
             default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
         };
 
-        if (info != 0) {
-            logger.error("LAPACK POTRF error code: {}", info);
-            throw new ArithmeticException("LAPACK POTRF error code: " + info);
+        if (info[0] != 0) {
+            logger.error("LAPACK POTRF error code: {}", info[0]);
+            throw new ArithmeticException("LAPACK POTRF error code: " + info[0]);
         }
 
         return new Cholesky(lu);
@@ -716,15 +745,26 @@ public abstract class DenseMatrix implements Matrix {
     public QR qr() {
         DenseMatrix qr = this;
         Vector tau = qr.vector(Math.min(m, n));
-        int info = switch(scalarType()) {
-            case Float64 -> LAPACKE_dgeqrf(qr.layout().lapack(), qr.m, qr.n, qr.memory, qr.ld, tau.memory);
-            case Float32 -> LAPACKE_sgeqrf(qr.layout().lapack(), qr.m, qr.n, qr.memory, qr.ld, tau.memory);
+        Vector work = vector(qr.n * 16);
+        int[] m = { qr.m };
+        int[] n = { qr.n };
+        int[] lda = { qr.ld };
+        int[] lwork = new int[work.size()];
+        int[] info = { 0 };
+        MemorySegment m_ = MemorySegment.ofArray(m);
+        MemorySegment n_ = MemorySegment.ofArray(n);
+        MemorySegment lda_ = MemorySegment.ofArray(lda);
+        MemorySegment lwork_ = MemorySegment.ofArray(lwork);
+        MemorySegment info_ = MemorySegment.ofArray(info);
+        switch(scalarType()) {
+            case Float64 -> dgeqrf_(m_, n_, qr.memory, lda_, tau.memory, work.memory, lwork_, info_);
+            case Float32 -> sgeqrf_(m_, n_, qr.memory, lda_, tau.memory, work.memory, lwork_, info_);
             default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
         };
 
-        if (info != 0) {
-            logger.error("LAPACK GEQRF error code: {}", info);
-            throw new ArithmeticException("LAPACK GEQRF error code: " + info);
+        if (info[0] != 0) {
+            logger.error("LAPACK GEQRF error code: {}", info[0]);
+            throw new ArithmeticException("LAPACK GEQRF error code: " + info[0]);
         }
 
         qr.uplo = null; // QR is not symmetric
@@ -773,45 +813,41 @@ public abstract class DenseMatrix implements Matrix {
     public SVD svd(boolean vectors) {
         int k = Math.min(m, n);
         Vector s = vector(k);
+        DenseMatrix A = this;
+        DenseMatrix U = vectors ? zeros(A.m, k) : zeros(1, 1);
+        DenseMatrix Vt = vectors ? zeros(k, A.n) : zeros(1, 1);
+        Vector work = vector(2*A.n*A.n + 6*A.n + 1);
+        byte[] jobz = { vectors ? SVDJob.COMPACT.lapack() : SVDJob.NO_VECTORS.lapack() };
+        int[] m = { A.m };
+        int[] n = { A.n };
+        int[] lda = { A.ld };
+        int[] lwork = { work.size() };
+        int[] iwork = new int[5*A.n  + 3];
+        int[] ldu = { U.ld };
+        int[] ldvt = { Vt.ld };
+        int[] info = { 0 };
+        MemorySegment m_ = MemorySegment.ofArray(m);
+        MemorySegment n_ = MemorySegment.ofArray(n);
+        MemorySegment lda_ = MemorySegment.ofArray(lda);
+        MemorySegment jobz_ = MemorySegment.ofArray(jobz);
+        MemorySegment info_ = MemorySegment.ofArray(info);
+        MemorySegment ldu_ = MemorySegment.ofArray(ldu);
+        MemorySegment ldvt_ = MemorySegment.ofArray(ldvt);
+        MemorySegment lwork_ = MemorySegment.ofArray(lwork);
+        MemorySegment iwork_ = MemorySegment.ofArray(iwork);
 
-        DenseMatrix W = this;
-        if (vectors) {
-            DenseMatrix U = zeros(m, k);
-            DenseMatrix VT = zeros(k, n);
+        switch(scalarType()) {
+            case Float64 -> dgesdd_(jobz_, m_, n_, A.memory, lda_, s.memory, U.memory, ldu_, Vt.memory, ldvt_, work.memory, lwork_, iwork_, info_);
+            case Float32 -> sgesdd_(jobz_, m_, n_, A.memory, lda_, s.memory, U.memory, ldu_, Vt.memory, ldvt_, work.memory, lwork_, iwork_, info_);
+            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+        };
 
-            int info = switch(scalarType()) {
-                case Float64 -> LAPACKE_dgesdd(W.layout().lapack(), SVDJob.COMPACT.lapack(), W.m, W.n,
-                        W.memory, W.ld, s.memory, U.memory, U.ld, VT.memory, VT.ld);
-                case Float32 -> LAPACKE_sgesdd(W.layout().lapack(), SVDJob.COMPACT.lapack(), W.m, W.n,
-                        W.memory, W.ld, s.memory, U.memory, U.ld, VT.memory, VT.ld);
-                default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
-            };
-
-            if (info != 0) {
-                logger.error("LAPACK GESDD with error code: {}", info);
-                throw new ArithmeticException("LAPACK GESDD with COMPACT error code: " + info);
-            }
-
-            return new SVD(s, U, VT.transpose());
-        } else {
-            DenseMatrix U = zeros(1, 1);
-            DenseMatrix VT = zeros(1, 1);
-
-            int info = switch(scalarType()) {
-                case Float64 -> LAPACKE_dgesdd(W.layout().lapack(), SVDJob.NO_VECTORS.lapack(), W.m, W.n,
-                        W.memory, W.ld, s.memory, U.memory, U.ld, VT.memory, VT.ld);
-                case Float32 -> LAPACKE_sgesdd(W.layout().lapack(), SVDJob.NO_VECTORS.lapack(), W.m, W.n,
-                        W.memory, W.ld, s.memory, U.memory, U.ld, VT.memory, VT.ld);
-                default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
-            };
-
-            if (info != 0) {
-                logger.error("LAPACK GESDD error code: {}", info);
-                throw new ArithmeticException("LAPACK GESDD with NO_VECTORS error code: " + info);
-            }
-
-            return new SVD(m, n, s);
+        if (info[0] != 0) {
+            logger.error("LAPACK GESDD with error code: {}", info[0]);
+            throw new ArithmeticException("LAPACK GESDD with COMPACT error code: " + info[0]);
         }
+
+        return vectors ? new SVD(s, U, Vt.transpose()) : new SVD(A.m, A.n, s);
     }
 
     /**
@@ -851,39 +887,65 @@ public abstract class DenseMatrix implements Matrix {
         }
 
         DenseMatrix eig = this;
+        byte[] uplo = { eig.uplo.lapack() };
+        byte[] vectors = { EVDJob.VECTORS.lapack() };
+        byte[] no_vectors = { EVDJob.NO_VECTORS.lapack() };
+        int[] n = { eig.n };
+        int[] lda = { eig.ld };
+        int[] info = { 0 };
+        MemorySegment uplo_ = MemorySegment.ofArray(uplo);
+        MemorySegment vectors_ = MemorySegment.ofArray(vectors);
+        MemorySegment no_vectors_ = MemorySegment.ofArray(no_vectors);
+        MemorySegment n_ = MemorySegment.ofArray(n);
+        MemorySegment lda_ = MemorySegment.ofArray(lda);
+        MemorySegment info_ = MemorySegment.ofArray(info);
         if (isSymmetric()) {
-            Vector w = vector(n);
-            int info = switch(scalarType()) {
-                case Float64 -> LAPACKE_dsyevd(eig.layout().lapack(), vr ? EVDJob.VECTORS.lapack() : EVDJob.NO_VECTORS.lapack(), eig.uplo.lapack(), n, eig.memory, eig.ld, w.memory);
-                case Float32 -> LAPACKE_ssyevd(eig.layout().lapack(), vr ? EVDJob.VECTORS.lapack() : EVDJob.NO_VECTORS.lapack(), eig.uplo.lapack(), n, eig.memory, eig.ld, w.memory);
+            Vector w = vector(eig.n);
+            Vector work = vector(2*eig.n*eig.n + 6*eig.n + 1);
+            int[] lwork = { work.size() };
+            int[] iwork = new int[5*eig.n  + 3];
+            int[] liwork = { iwork.length };
+            MemorySegment iwork_ = MemorySegment.ofArray(iwork);
+            MemorySegment lwork_ = MemorySegment.ofArray(lwork);
+            MemorySegment liwork_ = MemorySegment.ofArray(liwork);
+            switch(scalarType()) {
+                case Float64 -> dsyevd_(vr ? vectors_ : no_vectors_, uplo_, n_, eig.memory, lda_, w.memory, work.memory, lwork_, iwork_, liwork_, info_);
+                case Float32 -> ssyevd_(vr ? vectors_ : no_vectors_, uplo_, n_, eig.memory, lda_, w.memory, work.memory, lwork_, iwork_, liwork_, info_);
                 default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
             };
 
-            if (info != 0) {
-                logger.error("LAPACK SYEV error code: {}", info);
-                throw new ArithmeticException("LAPACK SYEV error code: " + info);
+            if (info[0] != 0) {
+                logger.error("LAPACK SYEV error code: {}", info[0]);
+                throw new ArithmeticException("LAPACK SYEV error code: " + info[0]);
             }
 
             eig.uplo = null; // Vr is not symmetric
             return new EVD(w, vr ? eig : null);
         } else {
-            Vector wr = vector(n);
-            Vector wi = vector(n);
-            DenseMatrix Vl = vl ? zeros(n, n) : zeros(1, 1);
-            DenseMatrix Vr = vr ? zeros(n, n) : zeros(1, 1);
-            int info = switch(scalarType()) {
-                case Float64 -> LAPACKE_dgeev(eig.layout().lapack(), vl ? EVDJob.VECTORS.lapack() : EVDJob.NO_VECTORS.lapack(),
-                        vr ? EVDJob.VECTORS.lapack() : EVDJob.NO_VECTORS.lapack(), n, eig.memory, eig.ld,
-                        wr.memory, wi.memory, Vl.memory, Vl.ld, Vr.memory, Vr.ld);
-                case Float32 -> LAPACKE_sgeev(eig.layout().lapack(), vl ? EVDJob.VECTORS.lapack() : EVDJob.NO_VECTORS.lapack(),
-                        vr ? EVDJob.VECTORS.lapack() : EVDJob.NO_VECTORS.lapack(), n, eig.memory, eig.ld,
-                        wr.memory, wi.memory, Vl.memory, Vl.ld, Vr.memory, Vr.ld);
+            Vector wr = vector(eig.n);
+            Vector wi = vector(eig.n);
+            DenseMatrix Vl = vl ? zeros(eig.n, eig.n) : zeros(1, 1);
+            DenseMatrix Vr = vr ? zeros(eig.n, eig.n) : zeros(1, 1);
+            Vector work = vector(4*eig.n);
+            int[] ldvl = { Vl.ld };
+            int[] ldvr = { Vr.ld };
+            int[] lwork = { work.size() };
+            MemorySegment ldvl_ = MemorySegment.ofArray(ldvl);
+            MemorySegment ldvr_ = MemorySegment.ofArray(ldvr);
+            MemorySegment lwork_ = MemorySegment.ofArray(lwork);
+            switch(scalarType()) {
+                case Float64 -> dgeev_(vl ? vectors_ : no_vectors_, vr ? vectors_ : no_vectors_,
+                        n_, eig.memory, lda_, wr.memory, wi.memory, Vl.memory, ldvl_, Vr.memory, ldvr_,
+                        work.memory, lwork_, info_);
+                case Float32 -> sgeev_(vl ? vectors_ : no_vectors_, vr ? vectors_ : no_vectors_,
+                        n_, eig.memory, lda_, wr.memory, wi.memory, Vl.memory, ldvl_, Vr.memory, ldvr_,
+                        work.memory, lwork_, info_);
                 default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
             };
 
-            if (info != 0) {
-                logger.error("LAPACK GEEV error code: {}", info);
-                throw new ArithmeticException("LAPACK GEEV error code: " + info);
+            if (info[0] != 0) {
+                logger.error("LAPACK GEEV error code: {}", info[0]);
+                throw new ArithmeticException("LAPACK GEEV error code: " + info[0]);
             }
 
             return new EVD(wr, wi, vl ? Vl : null, vr ? Vr : null);
