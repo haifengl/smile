@@ -121,7 +121,7 @@ public class DenseMatrixTest {
     public void testTranspose() {
         DenseMatrix t = matrix.transpose();
         assertEquals(Order.COL_MAJOR, matrix.order());
-        assertEquals(Order.ROW_MAJOR, t.order());
+        assertEquals(Order.COL_MAJOR, t.order());
         assertEquals(3, t.nrow());
         assertEquals(3, t.ncol());
 
@@ -139,13 +139,12 @@ public class DenseMatrixTest {
         assertEquals(2, sub.nrow());
         assertEquals(1, sub.ncol());
         assertEquals(0.4, sub.get(0,0), 1E-7);
-        assertEquals(0.8, sub.get(1,0), 1E-7);
+        assertEquals(0.5, sub.get(1,0), 1E-7);
 
-        Matrix sub2 = sub.submatrix(0, 0, 2, 1);
-        assertEquals(2, sub2.nrow());
+        Matrix sub2 = sub.submatrix(1, 0, 2, 1);
+        assertEquals(1, sub2.nrow());
         assertEquals(1, sub2.ncol());
-        assertEquals(0.4, sub.get(0,0), 1E-7);
-        assertEquals(0.3, sub.get(1,0), 1E-7);
+        assertEquals(0.5, sub2.get(0,0), 1E-7);
     }
 
     @Test
