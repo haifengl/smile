@@ -22,20 +22,20 @@ public enum ScalarType {
      * 8-bit quantized unsigned tensor type which represents a compressed
      * floating point tensor.
      */
-    QUInt8,
+    QUInt8(1),
     /**
      * 8-bit quantized signed tensor type which represents a compressed
      * floating point tensor.
      */
-    QInt8,
+    QInt8(1),
     /** 8-bit integer. */
-    Int8,
+    Int8(1),
     /** 16-bit integer. */
-    Int16,
+    Int16(2),
     /** 32-bit integer. */
-    Int32,
+    Int32(4),
     /** 64-bit integer. */
-    Int64,
+    Int64(8),
     /**
      * The bfloat16 (brain floating point) floating-point format occupies 16 bits.
      * This format is a shortened version of the 32-bit IEEE 754 single-precision
@@ -43,14 +43,31 @@ public enum ScalarType {
      * floating-point numbers by retaining 8 exponent bits, but supports only an
      * 8-bit precision rather than the 24-bit significand of the single precision.
      */
-    BFloat16,
+    BFloat16(2),
     /**
      * Half-precision floating-point number. It contains 5 exponent bits and 11
      * 11-bit precision (10 explicitly stored).
      */
-    Float16,
+    Float16(2),
     /** Single-precision floating-point number. */
-    Float32,
+    Float32(4),
     /** Double-precision floating-point number. */
-    Float64
+    Float64(8);
+
+    /** The scalar type size in bytes. */
+    private final int byteSize;
+
+    /**
+     * Constructor.
+     * @param byteSize the scalar type size in bytes.
+     */
+    ScalarType(int byteSize) {
+        this.byteSize = byteSize;
+    }
+
+    /**
+     * Returns the scalar type size in bytes.
+     * @return the scalar type size in bytes.
+     */
+    public int byteSize() { return byteSize; }
 }

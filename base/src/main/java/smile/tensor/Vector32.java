@@ -207,7 +207,7 @@ class Vector32 extends Vector implements Serializable {
     @Override
     public Vector slice(int from, int to) {
         int length = to - from;
-        long byteSize = memory.byteSize();
+        long byteSize = scalarType().byteSize();
         var slice = memory.asSlice(from * byteSize, length * byteSize);
         int m = nrow() > 1 ? length : 1;
         int n = nrow() > 1 ? 1 : length;

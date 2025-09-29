@@ -634,13 +634,11 @@ public abstract class DenseMatrix implements Matrix {
 
         DenseMatrix lu = copy();
         DenseMatrix inv = eye(lu.n);
-        byte[] uplo = { lu.uplo.lapack() };
         int[] n = { lu.n };
         int[] lda = { lu.ld };
         int[] ldb = { inv.ld };
         int[] ipiv = new int[lu.n];
         int[] info = { 0 };
-        MemorySegment uplo_ = MemorySegment.ofArray(uplo);
         MemorySegment n_ = MemorySegment.ofArray(n);
         MemorySegment lda_ = MemorySegment.ofArray(lda);
         MemorySegment ldb_ = MemorySegment.ofArray(ldb);
@@ -649,7 +647,9 @@ public abstract class DenseMatrix implements Matrix {
         if (isSymmetric()) {
             Vector work = vector(lu.n * 64);
             int[] lwork = new int[work.size()];
+            byte[] uplo = { lu.uplo.lapack() };
             MemorySegment lwork_ = MemorySegment.ofArray(lwork);
+            MemorySegment uplo_ = MemorySegment.ofArray(uplo);
             switch(scalarType()) {
                 case Float64 -> dsysv_(uplo_, n_, n_, lu.memory, lda_, ipiv_, inv.memory, ldb_, work.memory, lwork_, info_);
                 case Float32 -> ssysv_(uplo_, n_, n_, lu.memory, lda_, ipiv_, inv.memory, ldb_, work.memory, lwork_, info_);
@@ -891,13 +891,11 @@ public abstract class DenseMatrix implements Matrix {
         }
 
         DenseMatrix eig = this;
-        byte[] uplo = { eig.uplo.lapack() };
         byte[] vectors = { EVDJob.VECTORS.lapack() };
         byte[] no_vectors = { EVDJob.NO_VECTORS.lapack() };
         int[] n = { eig.n };
         int[] lda = { eig.ld };
         int[] info = { 0 };
-        MemorySegment uplo_ = MemorySegment.ofArray(uplo);
         MemorySegment vectors_ = MemorySegment.ofArray(vectors);
         MemorySegment no_vectors_ = MemorySegment.ofArray(no_vectors);
         MemorySegment n_ = MemorySegment.ofArray(n);
@@ -909,9 +907,11 @@ public abstract class DenseMatrix implements Matrix {
             int[] lwork = { work.size() };
             int[] iwork = new int[5*eig.n  + 3];
             int[] liwork = { iwork.length };
+            byte[] uplo = { eig.uplo.lapack() };
             MemorySegment iwork_ = MemorySegment.ofArray(iwork);
             MemorySegment lwork_ = MemorySegment.ofArray(lwork);
             MemorySegment liwork_ = MemorySegment.ofArray(liwork);
+            MemorySegment uplo_ = MemorySegment.ofArray(uplo);
             switch(scalarType()) {
                 case Float64 -> dsyevd_(vr ? vectors_ : no_vectors_, uplo_, n_, eig.memory, lda_, w.memory, work.memory, lwork_, iwork_, liwork_, info_);
                 case Float32 -> ssyevd_(vr ? vectors_ : no_vectors_, uplo_, n_, eig.memory, lda_, w.memory, work.memory, lwork_, iwork_, liwork_, info_);

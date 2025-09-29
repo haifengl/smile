@@ -196,7 +196,7 @@ public abstract class Vector extends DenseMatrix {
     static MemorySegment memory(float[] array, int offset, int length) {
         var memory = MemorySegment.ofArray(array);
         if (offset != 0 || length != array.length) {
-            long byteSize = memory.byteSize();
+            long byteSize = 4;
             memory = memory.asSlice(offset * byteSize, length * byteSize);
         }
         return memory;
@@ -213,7 +213,7 @@ public abstract class Vector extends DenseMatrix {
     static MemorySegment memory(double[] array, int offset, int length) {
         var memory = MemorySegment.ofArray(array);
         if (offset != 0 || length != array.length) {
-            long byteSize = memory.byteSize();
+            long byteSize = 8;
             memory = memory.asSlice(offset * byteSize, length * byteSize);
         }
         return memory;
