@@ -518,7 +518,7 @@ public class DenseMatrixTest {
 
         DenseMatrix a = DenseMatrix.of(A);
         a.withUplo(UPLO.LOWER);
-        EVD eig = a.eigen().sort();
+        EVD eig = a.copy().eigen().sort();
         assertArrayEquals(eigenValues, eig.wr().toArray(new double[0]), 1E-7);
 
         assertEquals(eigenVectors.length, eig.Vr().nrow());
@@ -529,7 +529,7 @@ public class DenseMatrixTest {
             }
         }
 
-        eig = a.eigen(false, false).sort();
+        eig = a.copy().eigen(false, false).sort();
         for (int i = 0; i < eigenValues.length; i++) {
             assertEquals(eigenValues[i], eig.wr().get(i), 1E-7);
         }
@@ -554,7 +554,7 @@ public class DenseMatrixTest {
         double[] eigenValues = {1.79171122, 0.31908143, 0.08920735f};
 
         DenseMatrix a = DenseMatrix.of(A);
-        EVD eig = a.eigen().sort();
+        EVD eig = a.copy().eigen().sort();
         assertArrayEquals(eigenValues, eig.wr().toArray(new double[0]), 1E-7);
 
         assertEquals(eigenVectors.length,    eig.Vr().nrow());
@@ -565,7 +565,7 @@ public class DenseMatrixTest {
             }
         }
 
-        eig = a.eigen(false, false).sort();
+        eig = a.copy().eigen(false, false).sort();
         for (int i = 0; i < eigenValues.length; i++) {
             assertEquals(eigenValues[i], eig.wr().get(i), 1E-7);
         }
