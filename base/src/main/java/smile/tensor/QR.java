@@ -178,7 +178,7 @@ public record QR(DenseMatrix qr, Vector tau) implements Serializable {
         MemorySegment lwork_ = MemorySegment.ofArray(lwork);
         MemorySegment info_ = MemorySegment.ofArray(info);
 
-        // query workspace size
+        // query workspace size for ORMQR
         switch(qr.scalarType()) {
             case Float64 -> dormqr_(left_, trans_, m_, n_, k_, qr.memory, lda_, tau.memory, B.memory, ldb_, work.memory, lwork_, info_);
             case Float32 -> sormqr_(left_, trans_, m_, n_, k_, qr.memory, lda_, tau.memory, B.memory, ldb_, work.memory, lwork_, info_);
@@ -190,7 +190,7 @@ public record QR(DenseMatrix qr, Vector tau) implements Serializable {
             throw new IllegalArgumentException("LAPACK ORMQR error code: " + info[0]);
         }
 
-        //
+        // execute ORMQR
         work = qr.vector((int) work.get(0));
         lwork[0] = work.size();
         switch(qr.scalarType()) {
