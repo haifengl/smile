@@ -111,7 +111,7 @@ class DenseMatrix64 extends DenseMatrix implements Serializable {
     @Override
     public DenseMatrix copy() {
         double[] data = array.clone();
-        return new DenseMatrix64(array, m, n, ld, uplo, diag);
+        return new DenseMatrix64(data, m, n, ld, uplo, diag);
     }
 
     @Override

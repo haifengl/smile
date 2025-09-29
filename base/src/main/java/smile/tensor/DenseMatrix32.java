@@ -111,7 +111,7 @@ class DenseMatrix32 extends DenseMatrix implements Serializable {
     @Override
     public DenseMatrix copy() {
         float[] data = array.clone();
-        return new DenseMatrix32(array, m, n, ld, uplo, diag);
+        return new DenseMatrix32(data, m, n, ld, uplo, diag);
     }
 
     @Override
