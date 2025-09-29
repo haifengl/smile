@@ -418,7 +418,7 @@ public abstract class DenseMatrix implements Matrix {
                                     ld, x.memory(), 1, beta, y.memory(), 1);
                         }
                     } else {
-                        cblas_dsymv(A.order().blas(), trans.blas(), m, alpha, A.memory(),
+                        cblas_dsymv(A.order().blas(), uplo.blas(), m, alpha, A.memory(),
                                 ld, x.memory(), 1, beta, y.memory(), 1);
                     }
                 } else {
@@ -438,7 +438,7 @@ public abstract class DenseMatrix implements Matrix {
                                     ld, x.memory(), 1, (float) beta, y.memory(), 1);
                         }
                     } else {
-                        cblas_ssymv(A.order().blas(), trans.blas(), m, (float) alpha, A.memory(),
+                        cblas_ssymv(A.order().blas(), uplo.blas(), m, (float) alpha, A.memory(),
                                 ld, x.memory(), 1, (float) beta, y.memory(), 1);
                     }
                 } else {
