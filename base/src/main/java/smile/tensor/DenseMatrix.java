@@ -749,17 +749,33 @@ public abstract class DenseMatrix implements Matrix {
     public QR qr() {
         DenseMatrix qr = this;
         Vector tau = qr.vector(Math.min(m, n));
-        Vector work = vector(qr.n * 16);
+        Vector work = vector(1);
         int[] m = { qr.m };
         int[] n = { qr.n };
         int[] lda = { qr.ld };
-        int[] lwork = new int[work.size()];
+        int[] lwork = { -1 };
         int[] info = { 0 };
         MemorySegment m_ = MemorySegment.ofArray(m);
         MemorySegment n_ = MemorySegment.ofArray(n);
         MemorySegment lda_ = MemorySegment.ofArray(lda);
         MemorySegment lwork_ = MemorySegment.ofArray(lwork);
         MemorySegment info_ = MemorySegment.ofArray(info);
+
+        // query workspace size for GEQRF
+        switch(scalarType()) {
+            case Float64 -> dgeqrf_(m_, n_, qr.memory, lda_, tau.memory, work.memory, lwork_, info_);
+            case Float32 -> sgeqrf_(m_, n_, qr.memory, lda_, tau.memory, work.memory, lwork_, info_);
+            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+        }
+
+        if (info[0] != 0) {
+            logger.error("LAPACK GEQRF error code: {}", info[0]);
+            throw new IllegalArgumentException("LAPACK GEQRF error code: " + info[0]);
+        }
+
+        // execute GEQRF
+        work = qr.vector((int) work.get(0));
+        lwork[0] = work.size();
         switch(scalarType()) {
             case Float64 -> dgeqrf_(m_, n_, qr.memory, lda_, tau.memory, work.memory, lwork_, info_);
             case Float32 -> sgeqrf_(m_, n_, qr.memory, lda_, tau.memory, work.memory, lwork_, info_);
