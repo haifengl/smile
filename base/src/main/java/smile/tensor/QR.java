@@ -152,7 +152,7 @@ public record QR(DenseMatrix qr, Vector tau) implements Serializable {
             throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", qr.nrow(), qr.nrow(), B.nrow(), B.ncol()));
         }
 
-        Vector work = qr.vector(qr.n);
+        Vector work = qr.vector(1);
         byte[] left = { LEFT.lapack() };
         byte[] upper = { UPPER.lapack() };
         byte[] trans = { NO_TRANSPOSE.lapack() };
@@ -163,7 +163,7 @@ public record QR(DenseMatrix qr, Vector tau) implements Serializable {
         int[] nrhs = { B.n };
         int[] lda = { qr.ld };
         int[] ldb = { B.ld };
-        int[] lwork = { work.size() };
+        int[] lwork = { -1 };
         int[] info = { 0 };
         MemorySegment left_ = MemorySegment.ofArray(left);
         MemorySegment upper_ = MemorySegment.ofArray(upper);
@@ -177,6 +177,22 @@ public record QR(DenseMatrix qr, Vector tau) implements Serializable {
         MemorySegment ldb_ = MemorySegment.ofArray(ldb);
         MemorySegment lwork_ = MemorySegment.ofArray(lwork);
         MemorySegment info_ = MemorySegment.ofArray(info);
+
+        // query workspace size
+        switch(qr.scalarType()) {
+            case Float64 -> dormqr_(left_, trans_, m_, n_, k_, qr.memory, lda_, tau.memory, B.memory, ldb_, work.memory, lwork_, info_);
+            case Float32 -> sormqr_(left_, trans_, m_, n_, k_, qr.memory, lda_, tau.memory, B.memory, ldb_, work.memory, lwork_, info_);
+            default -> throw new UnsupportedOperationException("Unsupported scala type: " + qr.scalarType());
+        }
+
+        if (info[0] != 0) {
+            logger.error("LAPACK ORMQR error code: {}", info[0]);
+            throw new IllegalArgumentException("LAPACK ORMQR error code: " + info[0]);
+        }
+
+        //
+        work = qr.vector((int) work.get(0));
+        lwork[0] = work.size();
         switch(qr.scalarType()) {
             case Float64 -> dormqr_(left_, trans_, m_, n_, k_, qr.memory, lda_, tau.memory, B.memory, ldb_, work.memory, lwork_, info_);
             case Float32 -> sormqr_(left_, trans_, m_, n_, k_, qr.memory, lda_, tau.memory, B.memory, ldb_, work.memory, lwork_, info_);
