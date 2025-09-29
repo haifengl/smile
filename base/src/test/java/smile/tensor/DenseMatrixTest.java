@@ -364,10 +364,10 @@ public class DenseMatrixTest {
 
         DenseMatrix a = DenseMatrix.of(A);
         LU lu = a.lu();
-        lu.solve(b);
-        assertEquals(x.length, b.length);
+        var result = lu.solve(b);
+        assertEquals(x.length, result.size());
         for (int i = 0; i < x.length; i++) {
-            assertEquals(x[i], b[i], 1E-7);
+            assertEquals(x[i], result.get(i), 1E-7);
         }
 
         double[][] B = {
@@ -421,10 +421,10 @@ public class DenseMatrixTest {
 
         DenseMatrix a = DenseMatrix.of(A);
         QR qr = a.qr();
-        double[] x2 = qr.solve(b).toArray(new double[0]);
-        assertEquals(x.length, x2.length);
+        var result = qr.solve(b);
+        assertEquals(x.length, result.size());
         for (int i = 0; i < x.length; i++) {
-            assertEquals(x[i], x2[i], 1E-7);
+            assertEquals(x[i], result.get(i), 1E-7);
         }
 
         double[][] B = {
@@ -472,10 +472,10 @@ public class DenseMatrixTest {
         double[] b = {0.5, 0.5, 0.5f};
         double[] x = {-0.2027027, 0.8783784, 0.4729730f};
 
-        cholesky.solve(b);
-        assertEquals(x.length, b.length);
+        var result = cholesky.solve(b);
+        assertEquals(x.length, result.size());
         for (int i = 0; i < x.length; i++) {
-            assertEquals(x[i], b[i], 1E-7);
+            assertEquals(x[i], result.get(i), 1E-7);
         }
 
         double[][] B = {
