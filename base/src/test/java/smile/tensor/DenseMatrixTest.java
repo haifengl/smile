@@ -18,7 +18,7 @@ package smile.tensor;
 
 import java.util.Arrays;
 import smile.math.MathEx;
-import smile.linalg.Layout;
+import smile.linalg.Order;
 import smile.linalg.UPLO;
 import static smile.linalg.Transpose.*;
 import org.junit.jupiter.api.*;
@@ -120,8 +120,8 @@ public class DenseMatrixTest {
     @Test
     public void testTranspose() {
         DenseMatrix t = matrix.transpose();
-        assertEquals(Layout.COL_MAJOR, matrix.layout());
-        assertEquals(Layout.ROW_MAJOR, t.layout());
+        assertEquals(Order.COL_MAJOR, matrix.order());
+        assertEquals(Order.ROW_MAJOR, t.order());
         assertEquals(3, t.nrow());
         assertEquals(3, t.ncol());
 

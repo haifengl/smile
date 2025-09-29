@@ -21,14 +21,10 @@ import smile.linalg.*;
 import smile.math.MathEx;
 import smile.stat.distribution.Distribution;
 import smile.stat.distribution.GaussianDistribution;
-
-import static smile.linalg.Layout.COL_MAJOR;
-import static smile.linalg.Layout.ROW_MAJOR;
-import static smile.linalg.Side.LEFT;
-import static smile.linalg.Side.RIGHT;
-import static smile.linalg.Transpose.NO_TRANSPOSE;
-import static smile.linalg.Transpose.TRANSPOSE;
-import static smile.linalg.UPLO.LOWER;
+import static smile.linalg.Order.*;
+import static smile.linalg.Side.*;
+import static smile.linalg.Transpose.*;
+import static smile.linalg.UPLO.*;
 import static smile.linalg.blas.cblas_h.*;
 import static smile.linalg.lapack.clapack_h.*;
 
@@ -83,11 +79,11 @@ public abstract class DenseMatrix implements Matrix {
             throw new IllegalArgumentException(String.format("Invalid matrix size: %d x %d", m, n));
         }
 
-        if (layout() == COL_MAJOR && ld < m) {
+        if (order() == COL_MAJOR && ld < m) {
             throw new IllegalArgumentException(String.format("Invalid leading dimension for COL_MAJOR: %d < %d", ld, m));
         }
 
-        if (layout() == ROW_MAJOR && ld < n) {
+        if (order() == ROW_MAJOR && ld < n) {
             throw new IllegalArgumentException(String.format("Invalid leading dimension for ROW_MAJOR: %d < %d", ld, n));
         }
 
@@ -183,7 +179,7 @@ public abstract class DenseMatrix implements Matrix {
      * Returns the matrix layout.
      * @return the matrix layout.
      */
-    public Layout layout() {
+    public Order order() {
         return COL_MAJOR;
     }
 
@@ -415,18 +411,18 @@ public abstract class DenseMatrix implements Matrix {
                 if (uplo != null) {
                     if (diag != null) {
                         if (alpha == 1.0 && beta == 0.0 && x == y) {
-                            cblas_dtrmv(A.layout().blas(), uplo.blas(), trans.blas(), diag.blas(), m,
+                            cblas_dtrmv(A.order().blas(), uplo.blas(), trans.blas(), diag.blas(), m,
                                     A.memory(), ld, y.memory(), 1);
                         } else {
-                            cblas_dgemv(A.layout().blas(), trans.blas(), m, n, alpha, A.memory(),
+                            cblas_dgemv(A.order().blas(), trans.blas(), m, n, alpha, A.memory(),
                                     ld, x.memory(), 1, beta, y.memory(), 1);
                         }
                     } else {
-                        cblas_dsymv(A.layout().blas(), trans.blas(), m, alpha, A.memory(),
+                        cblas_dsymv(A.order().blas(), trans.blas(), m, alpha, A.memory(),
                                 ld, x.memory(), 1, beta, y.memory(), 1);
                     }
                 } else {
-                    cblas_dgemv(A.layout().blas(), trans.blas(), m, n, alpha, A.memory(),
+                    cblas_dgemv(A.order().blas(), trans.blas(), m, n, alpha, A.memory(),
                             ld, x.memory(), 1, beta, y.memory(), 1);
                 }
                 break;
@@ -435,18 +431,18 @@ public abstract class DenseMatrix implements Matrix {
                 if (uplo != null) {
                     if (diag != null) {
                         if (alpha == 1.0 && beta == 0.0 && x == y) {
-                            cblas_strmv(A.layout().blas(), uplo.blas(), trans.blas(), diag.blas(), m,
+                            cblas_strmv(A.order().blas(), uplo.blas(), trans.blas(), diag.blas(), m,
                                     A.memory(), ld, y.memory(), 1);
                         } else {
-                            cblas_sgemv(A.layout().blas(), trans.blas(), m, n, (float) alpha, A.memory(),
+                            cblas_sgemv(A.order().blas(), trans.blas(), m, n, (float) alpha, A.memory(),
                                     ld, x.memory(), 1, (float) beta, y.memory(), 1);
                         }
                     } else {
-                        cblas_ssymv(A.layout().blas(), trans.blas(), m, (float) alpha, A.memory(),
+                        cblas_ssymv(A.order().blas(), trans.blas(), m, (float) alpha, A.memory(),
                                 ld, x.memory(), 1, (float) beta, y.memory(), 1);
                     }
                 } else {
-                    cblas_sgemv(A.layout().blas(), trans.blas(), m, n, (float) alpha, A.memory(),
+                    cblas_sgemv(A.order().blas(), trans.blas(), m, n, (float) alpha, A.memory(),
                             ld, x.memory(), 1, (float) beta, y.memory(), 1);
                 }
                 break;
@@ -486,30 +482,30 @@ public abstract class DenseMatrix implements Matrix {
 
         int m = C.nrow();
         int n = C.ncol();
-        if (A.isSymmetric() && transB == NO_TRANSPOSE && B.layout() == C.layout()) {
+        if (A.isSymmetric() && transB == NO_TRANSPOSE && B.order() == C.order()) {
             switch (C.scalarType()) {
                 case Float64:
-                    cblas_dsymm(C.layout().blas(), LEFT.blas(), A.uplo().blas(), m, n,
+                    cblas_dsymm(C.order().blas(), LEFT.blas(), A.uplo().blas(), m, n,
                         alpha, A.memory(), A.ld(), B.memory(), B.ld(),
                         beta, C.memory(), C.ld());
                 break;
                 case Float32:
-                   cblas_ssymm(C.layout().blas(), LEFT.blas(), A.uplo().blas(), m, n,
+                   cblas_ssymm(C.order().blas(), LEFT.blas(), A.uplo().blas(), m, n,
                         (float) alpha, A.memory(), A.ld(), B.memory(), B.ld(),
                         (float) beta, C.memory(), C.ld());
                    break;
                 default:
                     throw new UnsupportedOperationException("Unsupported ScalarType: " + A.scalarType());
             }
-        } else if (B.isSymmetric() && transA == NO_TRANSPOSE && A.layout() == C.layout()) {
+        } else if (B.isSymmetric() && transA == NO_TRANSPOSE && A.order() == C.order()) {
             switch (C.scalarType()) {
                 case Float64:
-                    cblas_dsymm(C.layout().blas(), RIGHT.blas(), B.uplo().blas(), m, n,
+                    cblas_dsymm(C.order().blas(), RIGHT.blas(), B.uplo().blas(), m, n,
                         alpha, B.memory(), B.ld(), A.memory(), A.ld(),
                         beta, C.memory(), C.ld());
                     break;
                 case Float32:
-                    cblas_ssymm(C.layout().blas(), RIGHT.blas(), B.uplo().blas(), m, n,
+                    cblas_ssymm(C.order().blas(), RIGHT.blas(), B.uplo().blas(), m, n,
                         (float) alpha, B.memory(), B.ld(), A.memory(), A.ld(),
                         (float) beta, C.memory(), C.ld());
                     break;
@@ -517,11 +513,11 @@ public abstract class DenseMatrix implements Matrix {
                     throw new UnsupportedOperationException("Unsupported ScalarType: " + A.scalarType());
             }
         } else {
-            if (C.layout() != A.layout()) {
+            if (C.order() != A.order()) {
                 transA = Transpose.flip(transA);
                 A = A.transpose();
             }
-            if (C.layout() != B.layout()) {
+            if (C.order() != B.order()) {
                 transB = Transpose.flip(transB);
                 B = B.transpose();
             }
@@ -529,12 +525,12 @@ public abstract class DenseMatrix implements Matrix {
 
             switch (C.scalarType()) {
                 case Float64:
-                    cblas_dgemm(C.layout().blas(), transA.blas(), transB.blas(), m, n, k,
+                    cblas_dgemm(C.order().blas(), transA.blas(), transB.blas(), m, n, k,
                         alpha, A.memory(), A.ld(), B.memory(), B.ld(),
                         beta, C.memory(), C.ld());
                     break;
                 case Float32:
-                    cblas_sgemm(C.layout().blas(), transA.blas(), transB.blas(), m, n, k,
+                    cblas_sgemm(C.order().blas(), transA.blas(), transB.blas(), m, n, k,
                         (float) alpha, A.memory(), A.ld(), B.memory(), B.ld(),
                         (float) beta, C.memory(), C.ld());
                     break;
@@ -621,8 +617,8 @@ public abstract class DenseMatrix implements Matrix {
      */
     public void ger(double alpha, Vector x, Vector y) {
         switch(scalarType()) {
-            case Float64 -> cblas_dger(layout().blas(), m, n, alpha, x.memory, 1, y.memory, 1, memory, ld);
-            case Float32 -> cblas_sger(layout().blas(), m, n, (float) alpha, x.memory, 1, y.memory, 1, memory, ld);
+            case Float64 -> cblas_dger(order().blas(), m, n, alpha, x.memory, 1, y.memory, 1, memory, ld);
+            case Float32 -> cblas_sger(order().blas(), m, n, (float) alpha, x.memory, 1, y.memory, 1, memory, ld);
             default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
         }
     }

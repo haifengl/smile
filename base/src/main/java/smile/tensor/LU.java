@@ -130,7 +130,7 @@ public record LU(DenseMatrix lu, int[] ipiv, int info) {
             throw new RuntimeException("The matrix is singular.");
         }
 
-        if (lu.layout() != B.layout()) {
+        if (lu.order() != B.order()) {
             throw new IllegalArgumentException("The matrix layout is inconsistent.");
         }
         if (lu.scalarType() != B.scalarType()) {

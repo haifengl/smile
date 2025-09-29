@@ -22,7 +22,6 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.lang.foreign.MemorySegment;
 import smile.linalg.Diag;
-import smile.linalg.Layout;
 import smile.linalg.UPLO;
 import smile.math.MathEx;
 
@@ -107,24 +106,6 @@ class DenseMatrix32 extends DenseMatrix implements Serializable {
     @Override
     public void div(int i, int j, double x) {
         array[offset(i, j)] /= (float) x;
-    }
-
-    @Override
-    public DenseMatrix transpose() {
-        return switch (layout()) {
-            case ROW_MAJOR -> new DenseMatrix32(array, n, m, ld, UPLO.flip(uplo), diag);
-            case COL_MAJOR -> new DenseMatrix32(array, n, m, ld, UPLO.flip(uplo), diag) {
-                @Override
-                public Layout layout() {
-                    return Layout.ROW_MAJOR;
-                }
-
-                @Override
-                int offset(int i, int j) {
-                    return i * ld + j;
-                }
-            };
-        };
     }
 
     @Override
