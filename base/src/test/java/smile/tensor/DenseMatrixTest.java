@@ -1065,7 +1065,7 @@ public class DenseMatrixTest {
         };
 
         DenseMatrix a = DenseMatrix.of(A);
-        DenseMatrix pinv = a.svd().pinv();
+        DenseMatrix pinv = a.copy().svd().pinv();
 
         DenseMatrix x = pinv.mm(a).mm(pinv);
         assertEquals(x, pinv);
