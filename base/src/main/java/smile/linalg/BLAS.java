@@ -19,7 +19,7 @@ package smile.linalg;
 import java.lang.foreign.MemorySegment;
 import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
-import static smile.linalg.blas.cblas_openblas_h.*;
+import static smile.linalg.blas.cblas_h.*;
 
 /**
  * Basic Linear Algebra Subprograms. BLAS is a specification that prescribes

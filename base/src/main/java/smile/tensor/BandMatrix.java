@@ -20,7 +20,7 @@ import java.lang.foreign.MemorySegment;
 import smile.math.MathEx;
 import smile.linalg.*;
 import static smile.linalg.Layout.*;
-import static smile.linalg.blas.cblas_openblas_h.*;
+import static smile.linalg.blas.cblas_h.*;
 
 /**
  * A band matrix is a sparse matrix, whose non-zero entries are confined to

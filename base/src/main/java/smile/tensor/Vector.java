@@ -18,7 +18,7 @@ package smile.tensor;
 
 import java.lang.foreign.MemorySegment;
 import java.util.Arrays;
-import static smile.linalg.blas.cblas_openblas_h.*;
+import static smile.linalg.blas.cblas_h.*;
 
 /**
  * Mathematical vector interface. Vectors are a specialized case of matrices.
