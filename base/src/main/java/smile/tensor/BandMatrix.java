@@ -19,7 +19,7 @@ package smile.tensor;
 import java.lang.foreign.MemorySegment;
 import smile.math.MathEx;
 import smile.linalg.*;
-import static smile.linalg.Layout.*;
+import static smile.linalg.Order.*;
 import static smile.linalg.blas.cblas_h.*;
 
 /**
@@ -222,7 +222,7 @@ public abstract class BandMatrix implements Matrix {
      * Returns the matrix layout.
      * @return the matrix layout.
      */
-    public Layout layout() {
+    public Order layout() {
         return COL_MAJOR;
     }
 

@@ -17,7 +17,7 @@
 package smile.linalg;
 
 /** Matrix layout. */
-public enum Layout {
+public enum Order {
     /** Row major layout. */
     ROW_MAJOR(101),
     /** Column major layout. */
@@ -29,7 +29,7 @@ public enum Layout {
     private final int lapack;
 
     /** Constructor. */
-    Layout(int value) {
+    Order(int value) {
         this.blas = value;
         this.lapack = value;
     }

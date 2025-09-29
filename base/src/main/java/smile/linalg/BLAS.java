@@ -555,7 +555,7 @@ public interface BLAS {
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param trans normal, transpose, or conjugate transpose
      *              operation on the matrix.
      * @param m the number of rows of the matrix A.
@@ -578,13 +578,13 @@ public interface BLAS {
      *           at least {@code (1 + (n - 1) * abs(incy))} otherwise.
      * @param incy the increment for the elements of y, which must not be zero.
      */
-    static void gemv(Layout layout, Transpose trans, int m, int n,
+    static void gemv(Order order, Transpose trans, int m, int n,
                      double alpha, double[] A, int lda, double[] x, int incx,
                      double beta, double[] y, int incy) {
         var A_ = MemorySegment.ofArray(A);
         var x_ = MemorySegment.ofArray(x);
         var y_ = MemorySegment.ofArray(y);
-        cblas_dgemv(layout.blas(), trans.blas(), m, n, alpha, A_, lda, x_, incx, beta, y_, incy);
+        cblas_dgemv(order.blas(), trans.blas(), m, n, alpha, A_, lda, x_, incx, beta, y_, incy);
     }
 
     /**
@@ -599,7 +599,7 @@ public interface BLAS {
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param trans normal, transpose, or conjugate transpose
      *              operation on the matrix.
      * @param m the number of rows of the matrix A.
@@ -622,13 +622,13 @@ public interface BLAS {
      *           at least {@code (1 + (n - 1) * abs(incy))} otherwise.
      * @param incy the increment for the elements of y, which must not be zero.
      */
-    static void gemv(Layout layout, Transpose trans, int m, int n,
+    static void gemv(Order order, Transpose trans, int m, int n,
                      double alpha, DoubleBuffer A, int lda, DoubleBuffer x, int incx,
                      double beta, DoubleBuffer y, int incy) {
         var A_ = MemorySegment.ofBuffer(A);
         var x_ = MemorySegment.ofBuffer(x);
         var y_ = MemorySegment.ofBuffer(y);
-        cblas_dgemv(layout.blas(), trans.blas(), m, n, alpha, A_, lda, x_, incx, beta, y_, incy);
+        cblas_dgemv(order.blas(), trans.blas(), m, n, alpha, A_, lda, x_, incx, beta, y_, incy);
     }
 
     /**
@@ -643,7 +643,7 @@ public interface BLAS {
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param trans normal, transpose, or conjugate transpose
      *              operation on the matrix.
      * @param m the number of rows of the matrix A.
@@ -666,10 +666,10 @@ public interface BLAS {
      *           at least {@code (1 + (n - 1) * abs(incy))} otherwise.
      * @param incy the increment for the elements of y, which must not be zero.
      */
-    static void gemv(Layout layout, Transpose trans, int m, int n,
+    static void gemv(Order order, Transpose trans, int m, int n,
                      double alpha, MemorySegment A, int lda, MemorySegment x, int incx,
                      double beta, MemorySegment y, int incy) {
-        cblas_dgemv(layout.blas(), trans.blas(), m, n, alpha, A, lda, x, incx, beta, y, incy);
+        cblas_dgemv(order.blas(), trans.blas(), m, n, alpha, A, lda, x, incx, beta, y, incy);
     }
 
     /**
@@ -684,7 +684,7 @@ public interface BLAS {
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param trans normal, transpose, or conjugate transpose
      *              operation on the matrix.
      * @param m the number of rows of the matrix A.
@@ -707,13 +707,13 @@ public interface BLAS {
      *           at least {@code (1 + (n - 1) * abs(incy))} otherwise.
      * @param incy the increment for the elements of y, which must not be zero.
      */
-    static void gemv(Layout layout, Transpose trans, int m, int n,
+    static void gemv(Order order, Transpose trans, int m, int n,
                      float alpha, float[] A, int lda, float[] x, int incx,
                      float beta, float[] y, int incy) {
         var A_ = MemorySegment.ofArray(A);
         var x_ = MemorySegment.ofArray(x);
         var y_ = MemorySegment.ofArray(y);
-        cblas_sgemv(layout.blas(), trans.blas(), m, n, alpha, A_, lda, x_, incx, beta, y_, incy);
+        cblas_sgemv(order.blas(), trans.blas(), m, n, alpha, A_, lda, x_, incx, beta, y_, incy);
     }
 
     /**
@@ -728,7 +728,7 @@ public interface BLAS {
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param trans normal, transpose, or conjugate transpose
      *              operation on the matrix.
      * @param m the number of rows of the matrix A.
@@ -751,13 +751,13 @@ public interface BLAS {
      *           at least {@code (1 + (n - 1) * abs(incy))} otherwise.
      * @param incy the increment for the elements of y, which must not be zero.
      */
-    static void gemv(Layout layout, Transpose trans, int m, int n,
+    static void gemv(Order order, Transpose trans, int m, int n,
                      float alpha, FloatBuffer A, int lda, FloatBuffer x, int incx,
                      float beta, FloatBuffer y, int incy) {
         var A_ = MemorySegment.ofBuffer(A);
         var x_ = MemorySegment.ofBuffer(x);
         var y_ = MemorySegment.ofBuffer(y);
-        cblas_sgemv(layout.blas(), trans.blas(), m, n, alpha, A_, lda, x_, incx, beta, y_, incy);
+        cblas_sgemv(order.blas(), trans.blas(), m, n, alpha, A_, lda, x_, incx, beta, y_, incy);
     }
 
     /**
@@ -772,7 +772,7 @@ public interface BLAS {
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param n the number of rows/columns of the symmetric matrix A.
@@ -786,12 +786,12 @@ public interface BLAS {
      * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
-    static void symv(Layout layout, UPLO uplo, int n, double alpha, double[] A, int lda,
+    static void symv(Order order, UPLO uplo, int n, double alpha, double[] A, int lda,
                      double[] x, int incx, double beta, double[] y, int incy) {
         var A_ = MemorySegment.ofArray(A);
         var x_ = MemorySegment.ofArray(x);
         var y_ = MemorySegment.ofArray(y);
-        cblas_dsymv(layout.blas(), uplo.blas(), n, alpha, A_, lda, x_, incx, beta, y_, incy);
+        cblas_dsymv(order.blas(), uplo.blas(), n, alpha, A_, lda, x_, incx, beta, y_, incy);
     }
 
     /**
@@ -806,7 +806,7 @@ public interface BLAS {
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param n the number of rows/columns of the symmetric matrix A.
@@ -820,12 +820,12 @@ public interface BLAS {
      * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
-    static void symv(Layout layout, UPLO uplo, int n, double alpha, DoubleBuffer A, int lda,
+    static void symv(Order order, UPLO uplo, int n, double alpha, DoubleBuffer A, int lda,
                      DoubleBuffer x, int incx, double beta, DoubleBuffer y, int incy) {
         var A_ = MemorySegment.ofBuffer(A);
         var x_ = MemorySegment.ofBuffer(x);
         var y_ = MemorySegment.ofBuffer(y);
-        cblas_dsymv(layout.blas(), uplo.blas(), n, alpha, A_, lda, x_, incx, beta, y_, incy);
+        cblas_dsymv(order.blas(), uplo.blas(), n, alpha, A_, lda, x_, incx, beta, y_, incy);
     }
 
     /**
@@ -840,7 +840,7 @@ public interface BLAS {
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param n the number of rows/columns of the symmetric matrix A.
@@ -854,9 +854,9 @@ public interface BLAS {
      * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
-    static void symv(Layout layout, UPLO uplo, int n, double alpha, MemorySegment A, int lda,
+    static void symv(Order order, UPLO uplo, int n, double alpha, MemorySegment A, int lda,
                      MemorySegment x, int incx, double beta, MemorySegment y, int incy) {
-        cblas_dsymv(layout.blas(), uplo.blas(), n, alpha, A, lda, x, incx, beta, y, incy);
+        cblas_dsymv(order.blas(), uplo.blas(), n, alpha, A, lda, x, incx, beta, y, incy);
     }
 
     /**
@@ -871,7 +871,7 @@ public interface BLAS {
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param n the number of rows/columns of the symmetric matrix A.
@@ -885,12 +885,12 @@ public interface BLAS {
      * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
-    static void symv(Layout layout, UPLO uplo, int n, float alpha, float[] A, int lda,
+    static void symv(Order order, UPLO uplo, int n, float alpha, float[] A, int lda,
                      float[] x, int incx, float beta, float[] y, int incy) {
         var A_ = MemorySegment.ofArray(A);
         var x_ = MemorySegment.ofArray(x);
         var y_ = MemorySegment.ofArray(y);
-        cblas_ssymv(layout.blas(), uplo.blas(), n, alpha, A_, lda, x_, incx, beta, y_, incy);
+        cblas_ssymv(order.blas(), uplo.blas(), n, alpha, A_, lda, x_, incx, beta, y_, incy);
     }
 
     /**
@@ -905,7 +905,7 @@ public interface BLAS {
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param n the number of rows/columns of the symmetric matrix A.
@@ -919,12 +919,12 @@ public interface BLAS {
      * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
-    static void symv(Layout layout, UPLO uplo, int n, float alpha, FloatBuffer A, int lda,
+    static void symv(Order order, UPLO uplo, int n, float alpha, FloatBuffer A, int lda,
                      FloatBuffer x, int incx, float beta, FloatBuffer y, int incy) {
         var A_ = MemorySegment.ofBuffer(A);
         var x_ = MemorySegment.ofBuffer(x);
         var y_ = MemorySegment.ofBuffer(y);
-        cblas_ssymv(layout.blas(), uplo.blas(), n, alpha, A_, lda, x_, incx, beta, y_, incy);
+        cblas_ssymv(order.blas(), uplo.blas(), n, alpha, A_, lda, x_, incx, beta, y_, incy);
     }
 
     /**
@@ -939,7 +939,7 @@ public interface BLAS {
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param n the number of rows/columns of the symmetric matrix A.
@@ -952,12 +952,12 @@ public interface BLAS {
      * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
-    static void spmv(Layout layout, UPLO uplo, int n, double alpha, double[] A,
+    static void spmv(Order order, UPLO uplo, int n, double alpha, double[] A,
                      double[] x, int incx, double beta, double[] y, int incy) {
         var A_ = MemorySegment.ofArray(A);
         var x_ = MemorySegment.ofArray(x);
         var y_ = MemorySegment.ofArray(y);
-        cblas_dspmv(layout.blas(), uplo.blas(), n, alpha, A_, x_, incx, beta, y_, incy);
+        cblas_dspmv(order.blas(), uplo.blas(), n, alpha, A_, x_, incx, beta, y_, incy);
     }
 
     /**
@@ -972,7 +972,7 @@ public interface BLAS {
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param n the number of rows/columns of the symmetric matrix A.
@@ -985,12 +985,12 @@ public interface BLAS {
      * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
-    static void spmv(Layout layout, UPLO uplo, int n, double alpha, DoubleBuffer A,
+    static void spmv(Order order, UPLO uplo, int n, double alpha, DoubleBuffer A,
                      DoubleBuffer x, int incx, double beta, DoubleBuffer y, int incy) {
         var A_ = MemorySegment.ofBuffer(A);
         var x_ = MemorySegment.ofBuffer(x);
         var y_ = MemorySegment.ofBuffer(y);
-        cblas_dspmv(layout.blas(), uplo.blas(), n, alpha, A_, x_, incx, beta, y_, incy);
+        cblas_dspmv(order.blas(), uplo.blas(), n, alpha, A_, x_, incx, beta, y_, incy);
     }
 
     /**
@@ -1005,7 +1005,7 @@ public interface BLAS {
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param n the number of rows/columns of the symmetric matrix A.
@@ -1018,12 +1018,12 @@ public interface BLAS {
      * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
-    static void spmv(Layout layout, UPLO uplo, int n, float alpha, float[] A,
+    static void spmv(Order order, UPLO uplo, int n, float alpha, float[] A,
                      float[] x, int incx, float beta, float[] y, int incy) {
         var A_ = MemorySegment.ofArray(A);
         var x_ = MemorySegment.ofArray(x);
         var y_ = MemorySegment.ofArray(y);
-        cblas_sspmv(layout.blas(), uplo.blas(), n, alpha, A_, x_, incx, beta, y_, incy);
+        cblas_sspmv(order.blas(), uplo.blas(), n, alpha, A_, x_, incx, beta, y_, incy);
     }
 
     /**
@@ -1038,7 +1038,7 @@ public interface BLAS {
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param n the number of rows/columns of the symmetric matrix A.
@@ -1051,12 +1051,12 @@ public interface BLAS {
      * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}
      * @param incy the increment for the elements of y, which must not be zero.
      */
-    static void spmv(Layout layout, UPLO uplo, int n, float alpha, FloatBuffer A,
+    static void spmv(Order order, UPLO uplo, int n, float alpha, FloatBuffer A,
                      FloatBuffer x, int incx, float beta, FloatBuffer y, int incy) {
         var A_ = MemorySegment.ofBuffer(A);
         var x_ = MemorySegment.ofBuffer(x);
         var y_ = MemorySegment.ofBuffer(y);
-        cblas_sspmv(layout.blas(), uplo.blas(), n, alpha, A_, x_, incx, beta, y_, incy);
+        cblas_sspmv(order.blas(), uplo.blas(), n, alpha, A_, x_, incx, beta, y_, incy);
     }
 
     /**
@@ -1069,7 +1069,7 @@ public interface BLAS {
      *     x := A'*x
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param trans normal, transpose, or conjugate transpose
@@ -1083,11 +1083,11 @@ public interface BLAS {
      *          at least {@code (1 + (m - 1) * abs(incx))} otherwise.
      * @param incx the increment for the elements of x, which must not be zero.
      */
-    static void trmv(Layout layout, UPLO uplo, Transpose trans, Diag diag,
+    static void trmv(Order order, UPLO uplo, Transpose trans, Diag diag,
                      int n, double[] A, int lda, double[] x, int incx) {
         var A_ = MemorySegment.ofArray(A);
         var x_ = MemorySegment.ofArray(x);
-        cblas_dtrmv(layout.blas(), uplo.blas(), trans.blas(), diag.blas(), n, A_, lda, x_, incx);
+        cblas_dtrmv(order.blas(), uplo.blas(), trans.blas(), diag.blas(), n, A_, lda, x_, incx);
     }
 
     /**
@@ -1100,7 +1100,7 @@ public interface BLAS {
      *     x := A'*x
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param trans normal, transpose, or conjugate transpose
@@ -1114,11 +1114,11 @@ public interface BLAS {
      *          at least {@code (1 + (m - 1) * abs(incx))} otherwise.
      * @param incx the increment for the elements of x, which must not be zero.
      */
-    static void trmv(Layout layout, UPLO uplo, Transpose trans, Diag diag,
+    static void trmv(Order order, UPLO uplo, Transpose trans, Diag diag,
                      int n, DoubleBuffer A, int lda, DoubleBuffer x, int incx) {
         var A_ = MemorySegment.ofBuffer(A);
         var x_ = MemorySegment.ofBuffer(x);
-        cblas_dtrmv(layout.blas(), uplo.blas(), trans.blas(), diag.blas(), n, A_, lda, x_, incx);
+        cblas_dtrmv(order.blas(), uplo.blas(), trans.blas(), diag.blas(), n, A_, lda, x_, incx);
     }
 
     /**
@@ -1131,7 +1131,7 @@ public interface BLAS {
      *     x := A'*x
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param trans normal, transpose, or conjugate transpose
@@ -1145,9 +1145,9 @@ public interface BLAS {
      *          at least {@code (1 + (m - 1) * abs(incx))} otherwise.
      * @param incx the increment for the elements of x, which must not be zero.
      */
-    static void trmv(Layout layout, UPLO uplo, Transpose trans, Diag diag,
+    static void trmv(Order order, UPLO uplo, Transpose trans, Diag diag,
                      int n, MemorySegment A, int lda, MemorySegment x, int incx) {
-        cblas_dtrmv(layout.blas(), uplo.blas(), trans.blas(), diag.blas(), n, A, lda, x, incx);
+        cblas_dtrmv(order.blas(), uplo.blas(), trans.blas(), diag.blas(), n, A, lda, x, incx);
     }
 
     /**
@@ -1160,7 +1160,7 @@ public interface BLAS {
      *     x := A'*x
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param trans normal, transpose, or conjugate transpose
@@ -1174,11 +1174,11 @@ public interface BLAS {
      *          at least {@code (1 + (m - 1) * abs(incx))} otherwise.
      * @param incx the increment for the elements of x, which must not be zero.
      */
-    static void trmv(Layout layout, UPLO uplo, Transpose trans, Diag diag,
+    static void trmv(Order order, UPLO uplo, Transpose trans, Diag diag,
                      int n, float[] A, int lda, float[] x, int incx) {
         var A_ = MemorySegment.ofArray(A);
         var x_ = MemorySegment.ofArray(x);
-        cblas_strmv(layout.blas(), uplo.blas(), trans.blas(), diag.blas(), n, A_, lda, x_, incx);
+        cblas_strmv(order.blas(), uplo.blas(), trans.blas(), diag.blas(), n, A_, lda, x_, incx);
     }
 
     /**
@@ -1191,7 +1191,7 @@ public interface BLAS {
      *     x := A'*x
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param trans normal, transpose, or conjugate transpose
@@ -1205,11 +1205,11 @@ public interface BLAS {
      *          at least {@code (1 + (m - 1) * abs(incx))} otherwise.
      * @param incx the increment for the elements of x, which must not be zero.
      */
-    static void trmv(Layout layout, UPLO uplo, Transpose trans, Diag diag,
+    static void trmv(Order order, UPLO uplo, Transpose trans, Diag diag,
                      int n, FloatBuffer A, int lda, FloatBuffer x, int incx) {
         var A_ = MemorySegment.ofBuffer(A);
         var x_ = MemorySegment.ofBuffer(x);
-        cblas_strmv(layout.blas(), uplo.blas(), trans.blas(), diag.blas(), n, A_, lda, x_, incx);
+        cblas_strmv(order.blas(), uplo.blas(), trans.blas(), diag.blas(), n, A_, lda, x_, incx);
     }
 
     /**
@@ -1222,7 +1222,7 @@ public interface BLAS {
      *     y := A'*x
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param trans normal, transpose, or conjugate transpose
@@ -1233,11 +1233,11 @@ public interface BLAS {
      * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
      */
-    static void tpmv(Layout layout, UPLO uplo, Transpose trans, Diag diag,
+    static void tpmv(Order order, UPLO uplo, Transpose trans, Diag diag,
                      int n, double[] A, double[] x, int incx) {
         var A_ = MemorySegment.ofArray(A);
         var x_ = MemorySegment.ofArray(x);
-        cblas_dtpmv(layout.blas(), uplo.blas(), trans.blas(), diag.blas(), n, A_, x_, incx);
+        cblas_dtpmv(order.blas(), uplo.blas(), trans.blas(), diag.blas(), n, A_, x_, incx);
     }
 
     /**
@@ -1250,7 +1250,7 @@ public interface BLAS {
      *     y := A'*x
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param trans normal, transpose, or conjugate transpose
@@ -1261,11 +1261,11 @@ public interface BLAS {
      * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
      */
-    static void tpmv(Layout layout, UPLO uplo, Transpose trans, Diag diag,
+    static void tpmv(Order order, UPLO uplo, Transpose trans, Diag diag,
                      int n, DoubleBuffer A, DoubleBuffer x, int incx) {
         var A_ = MemorySegment.ofBuffer(A);
         var x_ = MemorySegment.ofBuffer(x);
-        cblas_dtpmv(layout.blas(), uplo.blas(), trans.blas(), diag.blas(), n, A_, x_, incx);
+        cblas_dtpmv(order.blas(), uplo.blas(), trans.blas(), diag.blas(), n, A_, x_, incx);
     }
 
     /**
@@ -1278,7 +1278,7 @@ public interface BLAS {
      *     x := A'*x
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param trans normal, transpose, or conjugate transpose
@@ -1289,11 +1289,11 @@ public interface BLAS {
      * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
      */
-    static void tpmv(Layout layout, UPLO uplo, Transpose trans, Diag diag,
+    static void tpmv(Order order, UPLO uplo, Transpose trans, Diag diag,
                      int n, float[] A, float[] x, int incx) {
         var A_ = MemorySegment.ofArray(A);
         var x_ = MemorySegment.ofArray(x);
-        cblas_stpmv(layout.blas(), uplo.blas(), trans.blas(), diag.blas(), n, A_, x_, incx);
+        cblas_stpmv(order.blas(), uplo.blas(), trans.blas(), diag.blas(), n, A_, x_, incx);
     }
 
     /**
@@ -1306,7 +1306,7 @@ public interface BLAS {
      *     x := A'*x
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param trans normal, transpose, or conjugate transpose
@@ -1317,11 +1317,11 @@ public interface BLAS {
      * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
      */
-    static void tpmv(Layout layout, UPLO uplo, Transpose trans, Diag diag,
+    static void tpmv(Order order, UPLO uplo, Transpose trans, Diag diag,
                      int n, FloatBuffer A, FloatBuffer x, int incx) {
         var A_ = MemorySegment.ofBuffer(A);
         var x_ = MemorySegment.ofBuffer(x);
-        cblas_stpmv(layout.blas(), uplo.blas(), trans.blas(), diag.blas(), n, A_, x_, incx);
+        cblas_stpmv(order.blas(), uplo.blas(), trans.blas(), diag.blas(), n, A_, x_, incx);
     }
 
     /**
@@ -1336,7 +1336,7 @@ public interface BLAS {
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param trans normal, transpose, or conjugate transpose
      *              operation on the matrix.
      * @param m the number of rows of the matrix A.
@@ -1357,13 +1357,13 @@ public interface BLAS {
      *          at least {@code (1 + (n - 1) * abs(incy))} otherwise.
      * @param incy the increment for the elements of y, which must not be zero.
      */
-    static void gbmv(Layout layout, Transpose trans, int m, int n, int kl, int ku,
+    static void gbmv(Order order, Transpose trans, int m, int n, int kl, int ku,
                      double alpha, double[] A, int lda, double[] x, int incx,
                      double beta, double[] y, int incy) {
         var A_ = MemorySegment.ofArray(A);
         var x_ = MemorySegment.ofArray(x);
         var y_ = MemorySegment.ofArray(y);
-        cblas_dgbmv(layout.blas(), trans.blas(), m, n, kl, ku, alpha, A_, lda, x_, incx, beta, y_, incy);
+        cblas_dgbmv(order.blas(), trans.blas(), m, n, kl, ku, alpha, A_, lda, x_, incx, beta, y_, incy);
     }
 
     /**
@@ -1378,7 +1378,7 @@ public interface BLAS {
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param trans normal, transpose, or conjugate transpose
      *              operation on the matrix.
      * @param m the number of rows of the matrix A.
@@ -1399,13 +1399,13 @@ public interface BLAS {
      *          at least {@code (1 + (n - 1) * abs(incy))} otherwise.
      * @param incy the increment for the elements of y, which must not be zero.
      */
-    static void gbmv(Layout layout, Transpose trans, int m, int n, int kl, int ku,
+    static void gbmv(Order order, Transpose trans, int m, int n, int kl, int ku,
                      double alpha, DoubleBuffer A, int lda, DoubleBuffer x, int incx,
                      double beta, DoubleBuffer y, int incy) {
         var A_ = MemorySegment.ofBuffer(A);
         var x_ = MemorySegment.ofBuffer(x);
         var y_ = MemorySegment.ofBuffer(y);
-        cblas_dgbmv(layout.blas(), trans.blas(), m, n, kl, ku, alpha, A_, lda, x_, incx, beta, y_, incy);
+        cblas_dgbmv(order.blas(), trans.blas(), m, n, kl, ku, alpha, A_, lda, x_, incx, beta, y_, incy);
     }
 
     /**
@@ -1420,7 +1420,7 @@ public interface BLAS {
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param trans normal, transpose, or conjugate transpose
      *              operation on the matrix.
      * @param m the number of rows of the matrix A.
@@ -1441,13 +1441,13 @@ public interface BLAS {
      *          at least {@code (1 + (n - 1) * abs(incy))} otherwise.
      * @param incy the increment for the elements of y, which must not be zero.
      */
-    static void gbmv(Layout layout, Transpose trans, int m, int n, int kl, int ku,
+    static void gbmv(Order order, Transpose trans, int m, int n, int kl, int ku,
                      float alpha, float[] A, int lda, float[] x, int incx,
                      float beta, float[] y, int incy) {
         var A_ = MemorySegment.ofArray(A);
         var x_ = MemorySegment.ofArray(x);
         var y_ = MemorySegment.ofArray(y);
-        cblas_sgbmv(layout.blas(), trans.blas(), m, n, kl, ku, alpha, A_, lda, x_, incx, beta, y_, incy);
+        cblas_sgbmv(order.blas(), trans.blas(), m, n, kl, ku, alpha, A_, lda, x_, incx, beta, y_, incy);
     }
 
     /**
@@ -1462,7 +1462,7 @@ public interface BLAS {
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param trans normal, transpose, or conjugate transpose
      *              operation on the matrix.
      * @param m the number of rows of the matrix A.
@@ -1483,13 +1483,13 @@ public interface BLAS {
      *          at least {@code (1 + (n - 1) * abs(incy))} otherwise.
      * @param incy the increment for the elements of y, which must not be zero.
      */
-    static void gbmv(Layout layout, Transpose trans, int m, int n, int kl, int ku,
+    static void gbmv(Order order, Transpose trans, int m, int n, int kl, int ku,
                      float alpha, FloatBuffer A, int lda, FloatBuffer x, int incx,
                      float beta, FloatBuffer y, int incy) {
         var A_ = MemorySegment.ofBuffer(A);
         var x_ = MemorySegment.ofBuffer(x);
         var y_ = MemorySegment.ofBuffer(y);
-        cblas_sgbmv(layout.blas(), trans.blas(), m, n, kl, ku, alpha, A_, lda, x_, incx, beta, y_, incy);
+        cblas_sgbmv(order.blas(), trans.blas(), m, n, kl, ku, alpha, A_, lda, x_, incx, beta, y_, incy);
     }
 
     /**
@@ -1504,7 +1504,7 @@ public interface BLAS {
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param n the number of rows/columns of the symmetric band matrix A.
@@ -1519,13 +1519,13 @@ public interface BLAS {
      * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))},
      * @param incy the increment for the elements of y, which must not be zero.
      */
-    static void sbmv(Layout layout, UPLO uplo, int n, int k,
+    static void sbmv(Order order, UPLO uplo, int n, int k,
                      double alpha, double[] A, int lda, double[] x, int incx,
                      double beta, double[] y, int incy) {
         var A_ = MemorySegment.ofArray(A);
         var x_ = MemorySegment.ofArray(x);
         var y_ = MemorySegment.ofArray(y);
-        cblas_dsbmv(layout.blas(), uplo.blas(), n, k, alpha, A_, lda, x_, incx, beta, y_, incy);
+        cblas_dsbmv(order.blas(), uplo.blas(), n, k, alpha, A_, lda, x_, incx, beta, y_, incy);
     }
 
     /**
@@ -1540,7 +1540,7 @@ public interface BLAS {
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param n the number of rows/columns of the symmetric band matrix A.
@@ -1555,13 +1555,13 @@ public interface BLAS {
      * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))},
      * @param incy the increment for the elements of y, which must not be zero.
      */
-    static void sbmv(Layout layout, UPLO uplo, int n, int k,
+    static void sbmv(Order order, UPLO uplo, int n, int k,
                      double alpha, DoubleBuffer A, int lda, DoubleBuffer x, int incx,
                      double beta, DoubleBuffer y, int incy) {
         var A_ = MemorySegment.ofBuffer(A);
         var x_ = MemorySegment.ofBuffer(x);
         var y_ = MemorySegment.ofBuffer(y);
-        cblas_dsbmv(layout.blas(), uplo.blas(), n, k, alpha, A_, lda, x_, incx, beta, y_, incy);
+        cblas_dsbmv(order.blas(), uplo.blas(), n, k, alpha, A_, lda, x_, incx, beta, y_, incy);
     }
 
     /**
@@ -1576,7 +1576,7 @@ public interface BLAS {
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param n the number of columns of the symmetric band matrix A.
@@ -1591,13 +1591,13 @@ public interface BLAS {
      * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
-    static void sbmv(Layout layout, UPLO uplo, int n, int k,
+    static void sbmv(Order order, UPLO uplo, int n, int k,
                      float alpha, float[] A, int lda, float[] x, int incx,
                      float beta, float[] y, int incy) {
         var A_ = MemorySegment.ofArray(A);
         var x_ = MemorySegment.ofArray(x);
         var y_ = MemorySegment.ofArray(y);
-        cblas_ssbmv(layout.blas(), uplo.blas(), n, k, alpha, A_, lda, x_, incx, beta, y_, incy);
+        cblas_ssbmv(order.blas(), uplo.blas(), n, k, alpha, A_, lda, x_, incx, beta, y_, incy);
     }
 
     /**
@@ -1612,7 +1612,7 @@ public interface BLAS {
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param n the number of columns of the symmetric band matrix A.
@@ -1627,13 +1627,13 @@ public interface BLAS {
      * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
-    static void sbmv(Layout layout, UPLO uplo, int n, int k,
+    static void sbmv(Order order, UPLO uplo, int n, int k,
                      float alpha, FloatBuffer A, int lda, FloatBuffer x, int incx,
                      float beta, FloatBuffer y, int incy) {
         var A_ = MemorySegment.ofBuffer(A);
         var x_ = MemorySegment.ofBuffer(x);
         var y_ = MemorySegment.ofBuffer(y);
-        cblas_ssbmv(layout.blas(), uplo.blas(), n, k, alpha, A_, lda, x_, incx, beta, y_, incy);
+        cblas_ssbmv(order.blas(), uplo.blas(), n, k, alpha, A_, lda, x_, incx, beta, y_, incy);
     }
 
     /**
@@ -1642,7 +1642,7 @@ public interface BLAS {
      *     A := A + alpha*x*y'
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param m the number of rows of the matrix A.
      * @param n the number of columns of the matrix A.
      * @param alpha the scalar alpha.
@@ -1657,12 +1657,12 @@ public interface BLAS {
      *            parameter allows use of BLAS/LAPACK routines on a submatrix
      *            of a larger matrix.
      */
-    static void ger(Layout layout, int m, int n, double alpha, double[] x, int incx,
+    static void ger(Order order, int m, int n, double alpha, double[] x, int incx,
                     double[] y, int incy, double[] A, int lda) {
         var A_ = MemorySegment.ofArray(A);
         var x_ = MemorySegment.ofArray(x);
         var y_ = MemorySegment.ofArray(y);
-        cblas_dger(layout.blas(), m, n, alpha, x_, incx, y_, incy, A_, lda);
+        cblas_dger(order.blas(), m, n, alpha, x_, incx, y_, incy, A_, lda);
     }
 
     /**
@@ -1671,7 +1671,7 @@ public interface BLAS {
      *     A := A + alpha*x*y'
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param m the number of rows of the matrix A.
      * @param n the number of columns of the matrix A.
      * @param alpha the scalar alpha.
@@ -1686,12 +1686,12 @@ public interface BLAS {
      *            parameter allows use of BLAS/LAPACK routines on a submatrix
      *            of a larger matrix.
      */
-    static void ger(Layout layout, int m, int n, double alpha, DoubleBuffer x, int incx,
+    static void ger(Order order, int m, int n, double alpha, DoubleBuffer x, int incx,
                     DoubleBuffer y, int incy, DoubleBuffer A, int lda) {
         var A_ = MemorySegment.ofBuffer(A);
         var x_ = MemorySegment.ofBuffer(x);
         var y_ = MemorySegment.ofBuffer(y);
-        cblas_dger(layout.blas(), m, n, alpha, x_, incx, y_, incy, A_, lda);
+        cblas_dger(order.blas(), m, n, alpha, x_, incx, y_, incy, A_, lda);
     }
 
     /**
@@ -1700,7 +1700,7 @@ public interface BLAS {
      *     A := A + alpha*x*y'
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param m the number of rows of the matrix A.
      * @param n the number of columns of the matrix A.
      * @param alpha the scalar alpha.
@@ -1715,9 +1715,9 @@ public interface BLAS {
      *            parameter allows use of BLAS/LAPACK routines on a submatrix
      *            of a larger matrix.
      */
-    static void ger(Layout layout, int m, int n, double alpha, MemorySegment x, int incx,
+    static void ger(Order order, int m, int n, double alpha, MemorySegment x, int incx,
                     MemorySegment y, int incy, MemorySegment A, int lda) {
-        cblas_dger(layout.blas(), m, n, alpha, x, incx, y, incy, A, lda);
+        cblas_dger(order.blas(), m, n, alpha, x, incx, y, incy, A, lda);
     }
 
     /**
@@ -1726,7 +1726,7 @@ public interface BLAS {
      *     A := A + alpha*x*y'
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param m the number of rows of the matrix A.
      * @param n the number of columns of the matrix A.
      * @param alpha the scalar alpha.
@@ -1741,12 +1741,12 @@ public interface BLAS {
      *            parameter allows use of BLAS/LAPACK routines on a submatrix
      *            of a larger matrix.
      */
-    static void ger(Layout layout, int m, int n, float alpha, float[] x, int incx,
+    static void ger(Order order, int m, int n, float alpha, float[] x, int incx,
                     float[] y, int incy, float[] A, int lda) {
         var A_ = MemorySegment.ofArray(A);
         var x_ = MemorySegment.ofArray(x);
         var y_ = MemorySegment.ofArray(y);
-        cblas_sger(layout.blas(), m, n, alpha, x_, incx, y_, incy, A_, lda);
+        cblas_sger(order.blas(), m, n, alpha, x_, incx, y_, incy, A_, lda);
     }
 
     /**
@@ -1755,7 +1755,7 @@ public interface BLAS {
      *     A := A + alpha*x*y'
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param m the number of rows of the matrix A.
      * @param n the number of columns of the matrix A.
      * @param alpha the scalar alpha.
@@ -1770,12 +1770,12 @@ public interface BLAS {
      *            parameter allows use of BLAS/LAPACK routines on a submatrix
      *            of a larger matrix.
      */
-    static void ger(Layout layout, int m, int n, float alpha, FloatBuffer x, int incx,
+    static void ger(Order order, int m, int n, float alpha, FloatBuffer x, int incx,
                     FloatBuffer y, int incy, FloatBuffer A, int lda) {
         var A_ = MemorySegment.ofBuffer(A);
         var x_ = MemorySegment.ofBuffer(x);
         var y_ = MemorySegment.ofBuffer(y);
-        cblas_sger(layout.blas(), m, n, alpha, x_, incx, y_, incy, A_, lda);
+        cblas_sger(order.blas(), m, n, alpha, x_, incx, y_, incy, A_, lda);
     }
 
     /**
@@ -1784,7 +1784,7 @@ public interface BLAS {
      *     A := A + alpha*x*x'
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param n the number of columns of the matrix A.
@@ -1798,10 +1798,10 @@ public interface BLAS {
      *            parameter allows use of BLAS/LAPACK routines on a submatrix
      *            of a larger matrix.
      */
-    static void syr(Layout layout, UPLO uplo, int n, double alpha, double[] x, int incx, double[] A, int lda) {
+    static void syr(Order order, UPLO uplo, int n, double alpha, double[] x, int incx, double[] A, int lda) {
         var A_ = MemorySegment.ofArray(A);
         var x_ = MemorySegment.ofArray(x);
-        cblas_dsyr(layout.blas(), uplo.blas(), n, alpha, x_, incx, A_, lda);
+        cblas_dsyr(order.blas(), uplo.blas(), n, alpha, x_, incx, A_, lda);
     }
 
     /**
@@ -1810,7 +1810,7 @@ public interface BLAS {
      *     A := A + alpha*x*x'
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param n the number of columns of the matrix A.
@@ -1824,10 +1824,10 @@ public interface BLAS {
      *            parameter allows use of BLAS/LAPACK routines on a submatrix
      *            of a larger matrix.
      */
-    static void syr(Layout layout, UPLO uplo, int n, double alpha, DoubleBuffer x, int incx, DoubleBuffer A, int lda) {
+    static void syr(Order order, UPLO uplo, int n, double alpha, DoubleBuffer x, int incx, DoubleBuffer A, int lda) {
         var A_ = MemorySegment.ofBuffer(A);
         var x_ = MemorySegment.ofBuffer(x);
-        cblas_dsyr(layout.blas(), uplo.blas(), n, alpha, x_, incx, A_, lda);
+        cblas_dsyr(order.blas(), uplo.blas(), n, alpha, x_, incx, A_, lda);
     }
 
     /**
@@ -1836,7 +1836,7 @@ public interface BLAS {
      *     A := A + alpha*x*x'
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param n the number of columns of the matrix A.
@@ -1850,8 +1850,8 @@ public interface BLAS {
      *            parameter allows use of BLAS/LAPACK routines on a submatrix
      *            of a larger matrix.
      */
-    static void syr(Layout layout, UPLO uplo, int n, double alpha, MemorySegment x, int incx, MemorySegment A, int lda) {
-        cblas_dsyr(layout.blas(), uplo.blas(), n, alpha, x, incx, A, lda);
+    static void syr(Order order, UPLO uplo, int n, double alpha, MemorySegment x, int incx, MemorySegment A, int lda) {
+        cblas_dsyr(order.blas(), uplo.blas(), n, alpha, x, incx, A, lda);
     }
 
     /**
@@ -1860,7 +1860,7 @@ public interface BLAS {
      *     A := A + alpha*x*x'
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param n the number of columns of the matrix A.
@@ -1875,10 +1875,10 @@ public interface BLAS {
      *            parameter allows use of BLAS/LAPACK routines on a submatrix
      *            of a larger matrix.
      */
-    static void syr(Layout layout, UPLO uplo, int n, float alpha, float[] x, int incx, float[] A, int lda) {
+    static void syr(Order order, UPLO uplo, int n, float alpha, float[] x, int incx, float[] A, int lda) {
         var A_ = MemorySegment.ofArray(A);
         var x_ = MemorySegment.ofArray(x);
-        cblas_ssyr(layout.blas(), uplo.blas(), n, alpha, x_, incx, A_, lda);
+        cblas_ssyr(order.blas(), uplo.blas(), n, alpha, x_, incx, A_, lda);
     }
 
     /**
@@ -1887,7 +1887,7 @@ public interface BLAS {
      *     A := A + alpha*x*x'
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param n the number of columns of the matrix A.
@@ -1902,10 +1902,10 @@ public interface BLAS {
      *            parameter allows use of BLAS/LAPACK routines on a submatrix
      *            of a larger matrix.
      */
-    static void syr(Layout layout, UPLO uplo, int n, float alpha, FloatBuffer x, int incx, FloatBuffer A, int lda) {
+    static void syr(Order order, UPLO uplo, int n, float alpha, FloatBuffer x, int incx, FloatBuffer A, int lda) {
         var A_ = MemorySegment.ofBuffer(A);
         var x_ = MemorySegment.ofBuffer(x);
-        cblas_ssyr(layout.blas(), uplo.blas(), n, alpha, x_, incx, A_, lda);
+        cblas_ssyr(order.blas(), uplo.blas(), n, alpha, x_, incx, A_, lda);
     }
 
     /**
@@ -1914,7 +1914,7 @@ public interface BLAS {
      *     A := A + alpha*x*x'
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param n the number of columns of the matrix A.
@@ -1923,10 +1923,10 @@ public interface BLAS {
      * @param incx the increment for the elements of x, which must not be zero.
      * @param A the symmetric packed matrix.
      */
-    static void spr(Layout layout, UPLO uplo, int n, double alpha, double[] x, int incx, double[] A) {
+    static void spr(Order order, UPLO uplo, int n, double alpha, double[] x, int incx, double[] A) {
         var A_ = MemorySegment.ofArray(A);
         var x_ = MemorySegment.ofArray(x);
-        cblas_dspr(layout.blas(), uplo.blas(), n, alpha, x_, incx, A_);
+        cblas_dspr(order.blas(), uplo.blas(), n, alpha, x_, incx, A_);
     }
     /**
      * Performs the rank-1 update operation to symmetric packed matrix.
@@ -1934,7 +1934,7 @@ public interface BLAS {
      *     A := A + alpha*x*x'
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param n the number of columns of the matrix A.
@@ -1943,10 +1943,10 @@ public interface BLAS {
      * @param incx the increment for the elements of x, which must not be zero.
      * @param A the symmetric packed matrix.
      */
-    static void spr(Layout layout, UPLO uplo, int n, double alpha, DoubleBuffer x, int incx, DoubleBuffer A) {
+    static void spr(Order order, UPLO uplo, int n, double alpha, DoubleBuffer x, int incx, DoubleBuffer A) {
         var A_ = MemorySegment.ofBuffer(A);
         var x_ = MemorySegment.ofBuffer(x);
-        cblas_dspr(layout.blas(), uplo.blas(), n, alpha, x_, incx, A_);
+        cblas_dspr(order.blas(), uplo.blas(), n, alpha, x_, incx, A_);
     }
 
     /**
@@ -1955,7 +1955,7 @@ public interface BLAS {
      *     A := A + alpha*x*x'
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param n the number of columns of the matrix A.
@@ -1964,10 +1964,10 @@ public interface BLAS {
      * @param incx the increment for the elements of x, which must not be zero.
      * @param A the symmetric packed matrix.
      */
-    static void spr(Layout layout, UPLO uplo, int n, float alpha, float[] x, int incx, float[] A) {
+    static void spr(Order order, UPLO uplo, int n, float alpha, float[] x, int incx, float[] A) {
         var A_ = MemorySegment.ofArray(A);
         var x_ = MemorySegment.ofArray(x);
-        cblas_sspr(layout.blas(), uplo.blas(), n, alpha, x_, incx, A_);
+        cblas_sspr(order.blas(), uplo.blas(), n, alpha, x_, incx, A_);
     }
 
 
@@ -1977,7 +1977,7 @@ public interface BLAS {
      *     A := A + alpha*x*x'
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param n the number of columns of the matrix A.
@@ -1986,10 +1986,10 @@ public interface BLAS {
      * @param incx the increment for the elements of x, which must not be zero.
      * @param A the symmetric packed matrix.
      */
-    static void spr(Layout layout, UPLO uplo, int n, float alpha, FloatBuffer x, int incx, FloatBuffer A) {
+    static void spr(Order order, UPLO uplo, int n, float alpha, FloatBuffer x, int incx, FloatBuffer A) {
         var A_ = MemorySegment.ofBuffer(A);
         var x_ = MemorySegment.ofBuffer(x);
-        cblas_sspr(layout.blas(), uplo.blas(), n, alpha, x_, incx, A_);
+        cblas_sspr(order.blas(), uplo.blas(), n, alpha, x_, incx, A_);
     }
 
     /**
@@ -1998,7 +1998,7 @@ public interface BLAS {
      *     C := alpha*A*B + beta*C
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param transA normal, transpose, or conjugate transpose
      *               operation on the matrix A.
      * @param transB normal, transpose, or conjugate transpose
@@ -2016,13 +2016,13 @@ public interface BLAS {
      * @param C the matrix C.
      * @param ldc the leading dimension of C as declared in the caller.
      */
-    static void gemm(Layout layout, Transpose transA, Transpose transB, int m, int n, int k,
+    static void gemm(Order order, Transpose transA, Transpose transB, int m, int n, int k,
                      double alpha, double[] A, int lda, double[] B, int ldb,
                      double beta, double[] C, int ldc) {
         var A_ = MemorySegment.ofArray(A);
         var B_ = MemorySegment.ofArray(B);
         var C_ = MemorySegment.ofArray(C);
-        cblas_dgemm(layout.blas(), transA.blas(), transB.blas(), m, n, k, alpha, A_, lda, B_, ldb, beta, C_, ldc);
+        cblas_dgemm(order.blas(), transA.blas(), transB.blas(), m, n, k, alpha, A_, lda, B_, ldb, beta, C_, ldc);
     }
 
     /**
@@ -2031,7 +2031,7 @@ public interface BLAS {
      *     C := alpha*A*B + beta*C
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param transA normal, transpose, or conjugate transpose
      *               operation on the matrix A.
      * @param transB normal, transpose, or conjugate transpose
@@ -2049,13 +2049,13 @@ public interface BLAS {
      * @param C the matrix C.
      * @param ldc the leading dimension of C as declared in the caller.
      */
-    static void gemm(Layout layout, Transpose transA, Transpose transB, int m, int n, int k,
+    static void gemm(Order order, Transpose transA, Transpose transB, int m, int n, int k,
                      double alpha, DoubleBuffer A, int lda, DoubleBuffer B, int ldb,
                      double beta, DoubleBuffer C, int ldc) {
         var A_ = MemorySegment.ofBuffer(A);
         var B_ = MemorySegment.ofBuffer(B);
         var C_ = MemorySegment.ofBuffer(C);
-        cblas_dgemm(layout.blas(), transA.blas(), transB.blas(), m, n, k, alpha, A_, lda, B_, ldb, beta, C_, ldc);
+        cblas_dgemm(order.blas(), transA.blas(), transB.blas(), m, n, k, alpha, A_, lda, B_, ldb, beta, C_, ldc);
     }
 
     /**
@@ -2064,7 +2064,7 @@ public interface BLAS {
      *     C := alpha*A*B + beta*C
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param transA normal, transpose, or conjugate transpose
      *               operation on the matrix A.
      * @param transB normal, transpose, or conjugate transpose
@@ -2082,10 +2082,10 @@ public interface BLAS {
      * @param C the matrix C.
      * @param ldc the leading dimension of C as declared in the caller.
      */
-    static void gemm(Layout layout, Transpose transA, Transpose transB, int m, int n, int k,
+    static void gemm(Order order, Transpose transA, Transpose transB, int m, int n, int k,
                      double alpha, MemorySegment A, int lda, MemorySegment B, int ldb,
                      double beta, MemorySegment C, int ldc) {
-        cblas_dgemm(layout.blas(), transA.blas(), transB.blas(), m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
+        cblas_dgemm(order.blas(), transA.blas(), transB.blas(), m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
     }
 
     /**
@@ -2094,7 +2094,7 @@ public interface BLAS {
      *     C := alpha*A*B + beta*C
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param transA normal, transpose, or conjugate transpose
      *               operation on the matrix A.
      * @param transB normal, transpose, or conjugate transpose
@@ -2112,13 +2112,13 @@ public interface BLAS {
      * @param C the matrix C.
      * @param ldc the leading dimension of C as declared in the caller.
      */
-    static void gemm(Layout layout, Transpose transA, Transpose transB, int m, int n, int k,
+    static void gemm(Order order, Transpose transA, Transpose transB, int m, int n, int k,
                      float alpha, float[] A, int lda, float[] B, int ldb,
                      float beta, float[] C, int ldc) {
         var A_ = MemorySegment.ofArray(A);
         var B_ = MemorySegment.ofArray(B);
         var C_ = MemorySegment.ofArray(C);
-        cblas_sgemm(layout.blas(), transA.blas(), transB.blas(), m, n, k, alpha, A_, lda, B_, ldb, beta, C_, ldc);
+        cblas_sgemm(order.blas(), transA.blas(), transB.blas(), m, n, k, alpha, A_, lda, B_, ldb, beta, C_, ldc);
     }
 
     /**
@@ -2127,7 +2127,7 @@ public interface BLAS {
      *     C := alpha*A*B + beta*C
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param transA normal, transpose, or conjugate transpose
      *               operation on the matrix A.
      * @param transB normal, transpose, or conjugate transpose
@@ -2145,13 +2145,13 @@ public interface BLAS {
      * @param C the matrix C.
      * @param ldc the leading dimension of C as declared in the caller.
      */
-    static void gemm(Layout layout, Transpose transA, Transpose transB, int m, int n, int k,
+    static void gemm(Order order, Transpose transA, Transpose transB, int m, int n, int k,
                      float alpha, FloatBuffer A, int lda, FloatBuffer B, int ldb,
                      float beta, FloatBuffer C, int ldc) {
         var A_ = MemorySegment.ofBuffer(A);
         var B_ = MemorySegment.ofBuffer(B);
         var C_ = MemorySegment.ofBuffer(C);
-        cblas_sgemm(layout.blas(), transA.blas(), transB.blas(), m, n, k, alpha, A_, lda, B_, ldb, beta, C_, ldc);
+        cblas_sgemm(order.blas(), transA.blas(), transB.blas(), m, n, k, alpha, A_, lda, B_, ldb, beta, C_, ldc);
     }
 
     /**
@@ -2164,7 +2164,7 @@ public interface BLAS {
      *     C := alpha*B*A + beta*C
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param side  {@code C := alpha*A*B + beta*C} if side is left or
      *              {@code C := alpha*B*A + beta*C} if side is right.
      * @param uplo the upper or lower triangular part of the matrix A is
@@ -2181,13 +2181,13 @@ public interface BLAS {
      * @param C the matrix C.
      * @param ldc the leading dimension of C as declared in the caller.
      */
-    static void symm(Layout layout, Side side, UPLO uplo, int m, int n,
+    static void symm(Order order, Side side, UPLO uplo, int m, int n,
                      double alpha, double[] A, int lda, double[] B, int ldb,
                      double beta, double[] C, int ldc) {
         var A_ = MemorySegment.ofArray(A);
         var B_ = MemorySegment.ofArray(B);
         var C_ = MemorySegment.ofArray(C);
-        cblas_dsymm(layout.blas(), side.blas(), uplo.blas(), m, n, alpha, A_, lda, B_, ldb, beta, C_, ldc);
+        cblas_dsymm(order.blas(), side.blas(), uplo.blas(), m, n, alpha, A_, lda, B_, ldb, beta, C_, ldc);
     }
 
     /**
@@ -2200,7 +2200,7 @@ public interface BLAS {
      *     C := alpha*B*A + beta*C
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param side  {@code C := alpha*A*B + beta*C} if side is left or
      *              {@code C := alpha*B*A + beta*C} if side is right.
      * @param uplo the upper or lower triangular part of the matrix A is
@@ -2217,13 +2217,13 @@ public interface BLAS {
      * @param C the matrix C.
      * @param ldc the leading dimension of C as declared in the caller.
      */
-    static void symm(Layout layout, Side side, UPLO uplo, int m, int n,
+    static void symm(Order order, Side side, UPLO uplo, int m, int n,
                      double alpha, DoubleBuffer A, int lda, DoubleBuffer B, int ldb,
                      double beta, DoubleBuffer C, int ldc) {
         var A_ = MemorySegment.ofBuffer(A);
         var B_ = MemorySegment.ofBuffer(B);
         var C_ = MemorySegment.ofBuffer(C);
-        cblas_dsymm(layout.blas(), side.blas(), uplo.blas(), m, n, alpha, A_, lda, B_, ldb, beta, C_, ldc);
+        cblas_dsymm(order.blas(), side.blas(), uplo.blas(), m, n, alpha, A_, lda, B_, ldb, beta, C_, ldc);
     }
 
     /**
@@ -2236,7 +2236,7 @@ public interface BLAS {
      *     C := alpha*B*A + beta*C
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param side  {@code C := alpha*A*B + beta*C} if side is left or
      *              {@code C := alpha*B*A + beta*C} if side is right.
      * @param uplo the upper or lower triangular part of the matrix A is
@@ -2253,10 +2253,10 @@ public interface BLAS {
      * @param C the matrix C.
      * @param ldc the leading dimension of C as declared in the caller.
      */
-    static void symm(Layout layout, Side side, UPLO uplo, int m, int n,
+    static void symm(Order order, Side side, UPLO uplo, int m, int n,
                      double alpha, MemorySegment A, int lda, MemorySegment B, int ldb,
                      double beta, MemorySegment C, int ldc) {
-        cblas_dsymm(layout.blas(), side.blas(), uplo.blas(), m, n, alpha, A, lda, B, ldb, beta, C, ldc);
+        cblas_dsymm(order.blas(), side.blas(), uplo.blas(), m, n, alpha, A, lda, B, ldb, beta, C, ldc);
     }
 
     /**
@@ -2265,7 +2265,7 @@ public interface BLAS {
      *     C := alpha*A*B + beta*C
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param side  {@code C := alpha*A*B + beta*C} if side is left or
      *              {@code C := alpha*B*A + beta*C} if side is right.
      * @param uplo the upper or lower triangular part of the matrix A is
@@ -2282,13 +2282,13 @@ public interface BLAS {
      * @param C the matrix C.
      * @param ldc the leading dimension of C as declared in the caller.
      */
-    static void symm(Layout layout, Side side, UPLO uplo, int m, int n,
+    static void symm(Order order, Side side, UPLO uplo, int m, int n,
                      float alpha, float[] A, int lda, float[] B, int ldb,
                      float beta, float[] C, int ldc) {
         var A_ = MemorySegment.ofArray(A);
         var B_ = MemorySegment.ofArray(B);
         var C_ = MemorySegment.ofArray(C);
-        cblas_ssymm(layout.blas(), side.blas(), uplo.blas(), m, n, alpha, A_, lda, B_, ldb, beta, C_, ldc);
+        cblas_ssymm(order.blas(), side.blas(), uplo.blas(), m, n, alpha, A_, lda, B_, ldb, beta, C_, ldc);
     }
 
     /**
@@ -2297,7 +2297,7 @@ public interface BLAS {
      *     C := alpha*A*B + beta*C
      * }</pre>
      *
-     * @param layout matrix layout.
+     * @param order matrix order.
      * @param side  {@code C := alpha*A*B + beta*C} if side is left or
      *              {@code C := alpha*B*A + beta*C} if side is right.
      * @param uplo the upper or lower triangular part of the matrix A is
@@ -2314,12 +2314,12 @@ public interface BLAS {
      * @param C the matrix C.
      * @param ldc the leading dimension of C as declared in the caller.
      */
-    static void symm(Layout layout, Side side, UPLO uplo, int m, int n,
+    static void symm(Order order, Side side, UPLO uplo, int m, int n,
                      float alpha, FloatBuffer A, int lda, FloatBuffer B, int ldb,
                      float beta, FloatBuffer C, int ldc) {
         var A_ = MemorySegment.ofBuffer(A);
         var B_ = MemorySegment.ofBuffer(B);
         var C_ = MemorySegment.ofBuffer(C);
-        cblas_ssymm(layout.blas(), side.blas(), uplo.blas(), m, n, alpha, A_, lda, B_, ldb, beta, C_, ldc);
+        cblas_ssymm(order.blas(), side.blas(), uplo.blas(), m, n, alpha, A_, lda, B_, ldb, beta, C_, ldc);
     }
 }

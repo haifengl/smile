@@ -19,7 +19,7 @@ package smile.tensor;
 import java.lang.foreign.MemorySegment;
 import smile.math.MathEx;
 import smile.linalg.*;
-import static smile.linalg.Layout.*;
+import static smile.linalg.Order.*;
 import static smile.linalg.blas.cblas_h.*;
 
 /**
@@ -198,7 +198,7 @@ public abstract class SymmMatrix implements Matrix {
      * Returns the matrix layout.
      * @return the matrix layout.
      */
-    public Layout layout() {
+    public Order order() {
         return COL_MAJOR;
     }
 
@@ -245,8 +245,8 @@ public abstract class SymmMatrix implements Matrix {
     @Override
     public void mv(Transpose trans, double alpha, Vector x, double beta, Vector y) {
         switch(scalarType()) {
-            case Float64 -> cblas_dspmv(layout().blas(), uplo.blas(), n, alpha, memory, x.memory, 1, beta, y.memory, 1);
-            case Float32 -> cblas_sspmv(layout().blas(), uplo.blas(), n, (float) alpha, memory, x.memory, 1, (float) beta, y.memory, 1);
+            case Float64 -> cblas_dspmv(order().blas(), uplo.blas(), n, alpha, memory, x.memory, 1, beta, y.memory, 1);
+            case Float32 -> cblas_sspmv(order().blas(), uplo.blas(), n, (float) alpha, memory, x.memory, 1, (float) beta, y.memory, 1);
             default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
         }
     }
