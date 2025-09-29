@@ -136,21 +136,21 @@ public class DenseMatrixTest {
     @Test
     public void testSubmatrix() {
         DenseMatrix sub = matrix.submatrix(0, 1, 2, 2);
-        assertEquals(3, sub.nrow());
-        assertEquals(2, sub.ncol());
+        assertEquals(2, sub.nrow());
+        assertEquals(1, sub.ncol());
         assertEquals(0.4, sub.get(0,0), 1E-7);
-        assertEquals(0.8, sub.get(2,1), 1E-7);
+        assertEquals(0.8, sub.get(1,0), 1E-7);
 
-        Matrix sub2 = sub.submatrix(0, 0, 1, 1);
+        Matrix sub2 = sub.submatrix(0, 0, 2, 1);
         assertEquals(2, sub2.nrow());
-        assertEquals(2, sub2.ncol());
+        assertEquals(1, sub2.ncol());
         assertEquals(0.4, sub.get(0,0), 1E-7);
-        assertEquals(0.3, sub.get(1,1), 1E-7);
+        assertEquals(0.3, sub.get(1,0), 1E-7);
     }
 
     @Test
     public void testMvOffset() {
-        System.out.println("mv offfset ");
+        System.out.println("mv offset ");
         double[] d = new double[matrix.ncol() + matrix.nrow()];
         System.arraycopy(b, 0, d, 0, b.length);
         matrix.mv(Vector.column(d), 0, b.length);

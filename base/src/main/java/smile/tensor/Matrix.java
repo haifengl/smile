@@ -398,8 +398,8 @@ public interface Matrix extends Tensor {
      * @param outputOffset the offset of output vector in workspace.
      */
     default void mv(Vector work, int inputOffset, int outputOffset) {
-        Vector xb = work.slice(inputOffset, ncol());
-        Vector yb = work.slice(outputOffset, nrow());
+        Vector xb = work.slice(inputOffset, inputOffset + ncol());
+        Vector yb = work.slice(outputOffset, outputOffset + nrow());
         mv(NO_TRANSPOSE, 1.0, xb, 0.0, yb);
     }
 
