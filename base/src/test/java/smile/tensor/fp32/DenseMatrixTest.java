@@ -347,8 +347,8 @@ public class DenseMatrixTest {
         Vector b = Vector.column(B);
         DenseMatrix c = DenseMatrix.of(C);
 
-        assertEquals(b.tm(a), c);
-        assertEquals(b.transpose().mm(a), c);
+        assertTrue(MathEx.equals(b.tm(a).toArray(new float[0][]), C, 1E-4f));
+        assertTrue(MathEx.equals(b.transpose().mm(a).toArray(new float[0][]), C, 1E-4f));
     }
 
     @Test
@@ -365,10 +365,10 @@ public class DenseMatrixTest {
 
         DenseMatrix a = DenseMatrix.of(A);
         LU lu = a.lu();
-        lu.solve(b);
-        assertEquals(x.length, b.length);
+        var result = lu.solve(b);
+        assertEquals(x.length, result.size());
         for (int i = 0; i < x.length; i++) {
-            assertEquals(x[i], b[i], 1E-6f);
+            assertEquals(x[i], result.get(i), 1E-6f);
         }
 
         float[][] B = {
@@ -458,10 +458,10 @@ public class DenseMatrixTest {
         float[] b = {0.5f, 0.5f, 0.5f};
         float[] x = {-0.2027027f, 0.8783784f, 0.4729730f};
 
-        cholesky.solve(b);
-        assertEquals(x.length, b.length);
+        var result = cholesky.solve(b);
+        assertEquals(x.length, result.size());
         for (int i = 0; i < x.length; i++) {
-            assertEquals(x[i], b[i], 1E-6f);
+            assertEquals(x[i], result.get(i), 1E-6f);
         }
 
         float[][] B = {
@@ -599,11 +599,11 @@ public class DenseMatrixTest {
             }
         }
 
-        assertEquals(V.length, svd.Vt().nrow());
-        assertEquals(V[0].length, svd.Vt().ncol());
+        assertEquals(V.length, svd.Vt().ncol());
+        assertEquals(V[0].length, svd.Vt().nrow());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
-                assertEquals(Math.abs(V[i][j]), Math.abs(svd.Vt().get(i, j)), 1E-6f);
+                assertEquals(Math.abs(V[i][j]), Math.abs(svd.Vt().get(j, i)), 1E-6f);
             }
         }
     }
@@ -654,11 +654,11 @@ public class DenseMatrixTest {
             }
         }
 
-        assertEquals(V.length, svd.Vt().nrow());
-        assertEquals(V[0].length, svd.Vt().ncol());
+        assertEquals(V.length, svd.Vt().ncol());
+        assertEquals(V[0].length, svd.Vt().nrow());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
-                assertEquals(Math.abs(V[i][j]), Math.abs(svd.Vt().get(i, j)), 1E-4f);
+                assertEquals(Math.abs(V[i][j]), Math.abs(svd.Vt().get(j, i)), 1E-4f);
             }
         }
     }
@@ -708,11 +708,11 @@ public class DenseMatrixTest {
             }
         }
 
-        assertEquals(V.length, svd.Vt().nrow());
-        assertEquals(V[0].length, svd.Vt().ncol());
+        assertEquals(V.length, svd.Vt().ncol());
+        assertEquals(V[0].length, svd.Vt().nrow());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
-                assertEquals(Math.abs(V[i][j]), Math.abs(svd.Vt().get(i, j)), 1E-6f);
+                assertEquals(Math.abs(V[i][j]), Math.abs(svd.Vt().get(j, i)), 1E-6f);
             }
         }
     }
@@ -761,11 +761,11 @@ public class DenseMatrixTest {
             }
         }
 
-        assertEquals(V.length, svd.Vt().nrow());
-        assertEquals(V[0].length, svd.Vt().ncol());
+        assertEquals(V.length, svd.Vt().ncol());
+        assertEquals(V[0].length, svd.Vt().nrow());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
-                assertEquals(Math.abs(V[i][j]), Math.abs(svd.Vt().get(i, j)), 1E-4f);
+                assertEquals(Math.abs(V[i][j]), Math.abs(svd.Vt().get(j, i)), 1E-4f);
             }
         }
     }
@@ -813,11 +813,11 @@ public class DenseMatrixTest {
             }
         }
 
-        assertEquals(V.length, svd.Vt().nrow());
-        assertEquals(V[0].length, svd.Vt().ncol());
+        assertEquals(V.length, svd.Vt().ncol());
+        assertEquals(V[0].length, svd.Vt().nrow());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
-                assertEquals(Math.abs(V[i][j]), Math.abs(svd.Vt().get(i, j)), 1E-6f);
+                assertEquals(Math.abs(V[i][j]), Math.abs(svd.Vt().get(j, i)), 1E-6f);
             }
         }
     }
@@ -865,10 +865,10 @@ public class DenseMatrixTest {
             }
         }
 
-        assertEquals(V.length, svd.Vt().nrow());
+        assertEquals(V.length, svd.Vt().ncol());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
-                assertEquals(Math.abs(V[i][j]), Math.abs(svd.Vt().get(i, j)), 1E-4f);
+                assertEquals(Math.abs(V[i][j]), Math.abs(svd.Vt().get(j, i)), 1E-4f);
             }
         }
     }
@@ -914,10 +914,10 @@ public class DenseMatrixTest {
             }
         }
 
-        assertEquals(V.length, svd.Vt().nrow());
+        assertEquals(V.length, svd.Vt().ncol());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
-                assertEquals(Math.abs(V[i][j]), Math.abs(svd.Vt().get(i, j)), 1E-6f);
+                assertEquals(Math.abs(V[i][j]), Math.abs(svd.Vt().get(j, i)), 1E-6f);
             }
         }
     }
@@ -961,10 +961,10 @@ public class DenseMatrixTest {
             }
         }
 
-        assertEquals(V.length, svd.Vt().nrow());
+        assertEquals(V.length, svd.Vt().ncol());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
-                assertEquals(Math.abs(V[i][j]), Math.abs(svd.Vt().get(i, j)), 1E-6f);
+                assertEquals(Math.abs(V[i][j]), Math.abs(svd.Vt().get(j, i)), 1E-6f);
             }
         }
     }
@@ -1024,8 +1024,8 @@ public class DenseMatrixTest {
             }
         }
 
-        assertEquals(Vt[0].length, svd.Vt().nrow());
-        assertEquals(Vt.length, svd.Vt().ncol());
+        assertEquals(Vt.length, svd.Vt().nrow());
+        assertEquals(Vt[0].length, svd.Vt().ncol());
         for (int i = 0; i < Vt.length; i++) {
             for (int j = 0; j < Vt[i].length; j++) {
                 assertEquals(Math.abs(Vt[i][j]), Math.abs(svd.Vt().get(j, i)), 1E-5f);
@@ -1052,7 +1052,7 @@ public class DenseMatrixTest {
         };
 
         DenseMatrix a = DenseMatrix.of(A);
-        DenseMatrix pinv = a.svd().pinv();
+        DenseMatrix pinv = a.copy().svd().pinv();
 
         DenseMatrix x = pinv.mm(a).mm(pinv);
         assertEquals(x, pinv);

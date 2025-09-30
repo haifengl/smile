@@ -1037,8 +1037,8 @@ public class DenseMatrixTest {
             }
         }
 
-        assertEquals(Vt[0].length, svd.Vt().ncol());
         assertEquals(Vt.length, svd.Vt().nrow());
+        assertEquals(Vt[0].length, svd.Vt().ncol());
         for (int i = 0; i < Vt.length; i++) {
             for (int j = 0; j < Vt[i].length; j++) {
                 assertEquals(Math.abs(Vt[i][j]), Math.abs(svd.Vt().get(i, j)), 1E-6);
