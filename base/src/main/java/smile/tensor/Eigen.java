@@ -77,7 +77,8 @@ public interface Eigen {
         var z = A.vector(n);
         double lambda = power(A, v, z, p);
 
-        for (int iter = 1; iter <= maxIter; iter++) {
+        int iter = 1;
+        for (; iter <= maxIter; iter++) {
             double l = lambda;
             lambda = power(A, v, z, p);
 
@@ -86,14 +87,13 @@ public interface Eigen {
                 logger.trace("Largest eigenvalue after {} power iterations: {}", iter, lambda + p);
             }
 
-            if (eps < tol) {
-                logger.info("Largest eigenvalue after {} power iterations: {}", iter, lambda + p);
-                return lambda + p;
-            }
+            if (eps < tol) break;
         }
 
-        logger.info("Largest eigenvalue after {} power iterations: {}", maxIter, lambda + p);
-        logger.error("Power iteration exceeded the maximum number of iterations.");
+        if (iter == maxIter) {
+            logger.error("Power iteration exceeded the maximum number of iterations.");
+        }
+        logger.info("Largest eigenvalue after {} power iterations: {}", iter, lambda + p);
         return lambda + p;
     }
 
@@ -107,7 +107,7 @@ public interface Eigen {
             x.axpy(-p, y);
         }
 
-        double lambda = y.norm1();
+        double lambda = y.normInf();
         y.scale(1.0 / lambda);
         x.swap(y);
         return lambda;
