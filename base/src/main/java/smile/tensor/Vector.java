@@ -333,10 +333,10 @@ public abstract class Vector extends DenseMatrix {
      */
     public void axpy(double alpha, Vector y) {
         if (scalarType() != y.scalarType()) {
-            throw new UnsupportedOperationException("Different scala type: " + scalarType() + " != " + y.scalarType());
+            throw new IllegalArgumentException("Different scalar type: " + y.scalarType());
         }
         if (size() != y.size()) {
-            throw new UnsupportedOperationException("Different vector size: " + size() + " != "  + y.size());
+            throw new IllegalArgumentException("Different vector size: " + y.size());
         }
 
         switch(scalarType()) {
@@ -355,10 +355,10 @@ public abstract class Vector extends DenseMatrix {
      */
     public double dot(Vector y) {
         if (scalarType() != y.scalarType()) {
-            throw new UnsupportedOperationException("Different scala type: " + scalarType() + " != " + y.scalarType());
+            throw new IllegalArgumentException("Different scalar type: " + y.scalarType());
         }
         if (size() != y.size()) {
-            throw new UnsupportedOperationException("Different vector size: " + size() + " != "  + y.size());
+            throw new IllegalArgumentException("Different vector size: " + y.size());
         }
 
         return switch(scalarType()) {
@@ -419,6 +419,13 @@ public abstract class Vector extends DenseMatrix {
      * @param y Vector to be swapped.
      */
     public void swap(Vector y) {
+        if (scalarType() != y.scalarType()) {
+            throw new IllegalArgumentException("Different scalar type: " + y.scalarType());
+        }
+        if (size() != y.size()) {
+            throw new IllegalArgumentException("Different vector size: " + y.size());
+        }
+
         switch(scalarType()) {
             case Float64 -> cblas_dswap(size(), memory, 1, y.memory, 1);
             case Float32 -> cblas_sswap(size(), memory, 1, y.memory, 1);
