@@ -31,13 +31,8 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-public class Lanczos {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Lanczos.class);
-
-    /** Private constructor to prevent object creation. */
-    private Lanczos() {
-
-    }
+public interface Lanczos {
+    org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Lanczos.class);
 
     /**
      * Find k-largest approximate eigen pairs of a symmetric matrix by the
@@ -48,7 +43,7 @@ public class Lanczos {
      * This number cannot exceed the size of A.
      * @return eigen value decomposition.
      */
-    public static EVD eigen(Matrix A, int k) {
+    static EVD eigen(Matrix A, int k) {
         return eigen(A, k, 1.0E-8, 10 * A.nrow());
     }
 
@@ -63,7 +58,7 @@ public class Lanczos {
      * @param maxIter Maximum number of iterations.
      * @return eigen value decomposition.
      */
-    public static EVD eigen(Matrix A, int k, double kappa, int maxIter) {
+    static EVD eigen(Matrix A, int k, double kappa, int maxIter) {
         if (A.nrow() != A.ncol()) {
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrow(), A.ncol()));
         }
@@ -95,7 +90,7 @@ public class Lanczos {
         // wptr[2]             q[j-1]
         // wptr[3]             p
         // wptr[4]             p[j-1]
-        // wptr[5]             temporary worksapce
+        // wptr[5]             temporary workspace
         double[][] wptr = new double[6][n];
 
         // orthogonality estimate of Lanczos vectors at step j
