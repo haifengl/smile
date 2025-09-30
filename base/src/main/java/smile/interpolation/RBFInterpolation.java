@@ -137,12 +137,11 @@ public class RBFInterpolation {
         if (rbf instanceof GaussianRadialBasis) {
             G.withUplo(UPLO.LOWER);
             Cholesky cholesky = G.cholesky();
-            cholesky.solve(rhs);
+            w = cholesky.solve(rhs).toArray(new double[rhs.length]);
         } else {
             LU lu = G.lu();
-            lu.solve(rhs);
+            w = lu.solve(rhs).toArray(new double[rhs.length]);
         }
-        w = rhs;
     }
 
     /**
