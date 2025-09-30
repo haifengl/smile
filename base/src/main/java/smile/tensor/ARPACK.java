@@ -392,22 +392,24 @@ public interface ARPACK {
                 }
             }
 
-            return new SVD(s, U, V);
+            return new SVD(s, U, V.transpose());
         } else {
             DenseMatrix U = eigen.Vr();
             Vector Atu = A.vector(n);
             Vector u = A.vector(m);
-            DenseMatrix V = U.zeros(n, len);
+            DenseMatrix Vt = U.zeros(len, n);
             for (int j = 0; j < len; j++) {
-                u = V.column(j);
+                for (int i = 0; i < n; i++) {
+                    u.set(i, U.get(j, i));
+                }
                 A.tv(u, Atu);
 
                 for (int i = 0; i < n; i++) {
-                    V.set(i, j, Atu.get(i) / s.get(j));
+                    Vt.set(j, i, Atu.get(i) / s.get(j));
                 }
             }
 
-            return new SVD(s, U, V);
+            return new SVD(s, U, Vt);
         }
     }
 }
