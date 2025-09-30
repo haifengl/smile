@@ -152,7 +152,7 @@ public record LevenbergMarquardt(double[] parameters, double[] fittedValues, dou
             Vector s = svd.s();
             double s2 = s.dot(s);
             DenseMatrix U = svd.U();
-            DenseMatrix V = svd.V();
+            DenseMatrix Vt = svd.Vt();
             U.tv(r_, g_);
 
             for (double eps : epstab) {
@@ -162,7 +162,7 @@ public record LevenbergMarquardt(double[] parameters, double[] fittedValues, dou
                     gse[j] = g[j] / se;
                 }
 
-                V.mv(gse_, chg_);
+                Vt.tv(gse_, chg_);
 
                 for (int j = 0; j < d; j++) {
                     chg[j] *= norm[j];
@@ -318,7 +318,7 @@ public record LevenbergMarquardt(double[] parameters, double[] fittedValues, dou
             Vector s = svd.s();
             double s2 = s.dot(s);
             DenseMatrix U = svd.U();
-            DenseMatrix V = svd.V();
+            DenseMatrix Vt = svd.Vt();
             U.tv(r_, g_);
 
             for (double eps : epstab) {
@@ -328,7 +328,7 @@ public record LevenbergMarquardt(double[] parameters, double[] fittedValues, dou
                     gse[j] = g[j] / se;
                 }
 
-                V.mv(gse_, chg_);
+                Vt.tv(gse_, chg_);
 
                 for (int j = 0; j < d; j++) {
                     chg[j] *= norm[j];
