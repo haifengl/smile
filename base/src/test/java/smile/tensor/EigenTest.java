@@ -16,15 +16,17 @@
  */
 package smile.tensor;
 
-import smile.linalg.UPLO;
+import java.util.Arrays;
 import org.junit.jupiter.api.*;
+import smile.linalg.UPLO;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
  * @author Haifeng Li
  */
-public class LanczosTest {
+public class EigenTest {
     double[][] A = {
         {0.9000, 0.4000, 0.7000},
         {0.4000, 0.5000, 0.3000},
@@ -36,8 +38,8 @@ public class LanczosTest {
         {0.6240573, -0.44947578, -0.6391588}
     };
     double[] eigenValues = {1.7498382, 0.3165784, 0.1335834};
-
-    public LanczosTest() {
+    
+    public EigenTest() {
     }
 
     @BeforeAll
@@ -57,12 +59,46 @@ public class LanczosTest {
     }
 
     @Test
+    public void testPower() {
+        System.out.println("Power");
+        double[] v = new double[3];
+        Arrays.fill(v, 1.0);
+
+        DenseMatrix matrix = DenseMatrix.of(A);
+        double eigenvalue = Eigen.power(matrix, Vector.column(v));
+        assertEquals(eigenValues[0], eigenvalue, 1E-4);
+
+        double ratio = Math.abs(eigenVectors[0][0]/v[0]);
+        for (int i = 1; i < 3; i++) {
+            assertEquals(ratio, Math.abs(eigenVectors[i][0]/v[i]), 1E-4);
+        }
+
+        for (int i = 0; i < A.length; i++) {
+            for (int j = 0; j < A[i].length; j++) {
+                A[i][j] = -A[i][j];
+            }
+        }
+
+        Arrays.fill(v, 1.0);
+        matrix = DenseMatrix.of(A);
+        eigenvalue = Eigen.power(matrix, Vector.column(v), 0.22, 1E-4, 4);
+        assertEquals(-eigenValues[0], eigenvalue, 1E-3);
+
+        ratio = Math.abs(eigenVectors[0][0]/v[0]);
+        for (int i = 1; i < 3; i++) {
+            assertEquals(ratio, Math.abs(eigenVectors[i][0]/v[i]), 1E-3);
+        }
+    }
+
+    @Test
     public void testLanczos() {
-        System.out.println("eigen");
+        System.out.println("Lanczos(3)");
         DenseMatrix a = DenseMatrix.of(A);
         a.withUplo(UPLO.LOWER);
-        EVD result = Lanczos.eigen(a, 3);
-        assertEquals(result.wr(), Vector.column(eigenValues));
+        EVD result = Eigen.of(a, 3);
+        for (int i = 0; i < eigenValues.length; i++) {
+            assertEquals(eigenValues[i], result.wr().get(i), 1E-7);
+        }
 
         assertEquals(eigenVectors.length,    result.Vr().nrow());
         assertEquals(eigenVectors[0].length, result.Vr().ncol());
@@ -74,11 +110,11 @@ public class LanczosTest {
     }
 
     @Test
-    public void testEigen1() {
-        System.out.println("eigen1");
+    public void testLanczos1() {
+        System.out.println("Lanczos(1)");
         DenseMatrix a = DenseMatrix.of(A);
         a.withUplo(UPLO.LOWER);
-        EVD result = Lanczos.eigen(a, 1);
+        EVD result = Eigen.of(a, 1);
         assertEquals(eigenValues[0], result.wr().get(0), 1E-4);
 
         for (int i = 0; i < 3; i++) {
@@ -87,15 +123,16 @@ public class LanczosTest {
     }
 
     @Test
-    public void testEigen2() {
-        System.out.println("eigen2");
-        A = new double[500][500];
+    public void testLanczos2() {
+        System.out.println("Lanczos lambda = 2");
+        double[][] A = new double[500][500];
         A[0][0] = A[1][1] = A[2][2] = A[3][3] = 2.0;
-        for (int i = 4; i < 500; i++)
+        for (int i = 4; i < 500; i++) {
             A[i][i] = (500 - i) / 500.0;
+        }
         DenseMatrix a = DenseMatrix.of(A);
         a.withUplo(UPLO.LOWER);
-        EVD result = Lanczos.eigen(a, 6);
+        EVD result = Eigen.of(a, 6);
         assertEquals(2.0, result.wr().get(0), 1E-4);
         assertEquals(2.0, result.wr().get(1), 1E-4);
         assertEquals(2.0, result.wr().get(2), 1E-4);
