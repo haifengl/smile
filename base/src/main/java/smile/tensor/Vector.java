@@ -115,6 +115,11 @@ public abstract class Vector extends DenseMatrix {
     public abstract Vector slice(int from, int to);
 
     @Override
+    public Vector column(int j) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public Vector copy() {
         return copy(0, size());
     }

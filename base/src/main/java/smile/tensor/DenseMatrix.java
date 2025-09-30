@@ -273,15 +273,7 @@ public abstract class DenseMatrix implements Matrix {
      * @param j the column index.
      * @return the column.
      */
-    public Vector column(int j) {
-        Vector x = vector(m);
-
-        for (int i = 0; i < m; i++) {
-            x.set(i, get(i, j));
-        }
-
-        return x;
-    }
+    public abstract Vector column(int j);
 
     /**
      * Returns the matrix of selected rows. Negative index -i means the i-th row from the end.
