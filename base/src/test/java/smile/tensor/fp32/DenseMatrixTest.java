@@ -162,7 +162,7 @@ public class DenseMatrixTest {
     @Test
     public void testSubAx() {
         System.out.println("submatrix ax");
-        DenseMatrix sub = matrix.submatrix(1, 0, 2, 2);
+        DenseMatrix sub = matrix.submatrix(1, 0, 3, 3);
         Vector d = sub.mv(v);
         assertEquals(0.60f, d.get(0), 1E-6f);
         assertEquals(0.55f, d.get(1), 1E-6f);
@@ -1028,7 +1028,7 @@ public class DenseMatrixTest {
         assertEquals(Vt[0].length, svd.Vt().ncol());
         for (int i = 0; i < Vt.length; i++) {
             for (int j = 0; j < Vt[i].length; j++) {
-                assertEquals(Math.abs(Vt[i][j]), Math.abs(svd.Vt().get(j, i)), 1E-5f);
+                assertEquals(Math.abs(Vt[i][j]), Math.abs(svd.Vt().get(i, j)), 1E-5f);
             }
         }
     }

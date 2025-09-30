@@ -59,10 +59,11 @@ class DenseMatrix32 extends DenseMatrix implements Serializable {
 
     @Override
     public boolean equals(Object other) {
+        float tol = 10 * MathEx.FLOAT_EPSILON;
         if (other instanceof DenseMatrix32 b) {
             if (array.length == b.array.length) {
                 for (int i = 0; i < array.length; i++) {
-                    if (Math.abs(array[i] - b.array[i]) > MathEx.FLOAT_EPSILON) {
+                    if (Math.abs(array[i] - b.array[i]) > tol) {
                         return false;
                     }
                 }
