@@ -211,7 +211,7 @@ public interface ARPACK {
         }
 
         d = d.copy(0, nev);
-        V = V.columns(0, nev);
+        V = V.submatrix(0, 0, n, nev);
         EVD eig = new EVD(d, V);
         return eig.sort();
     }
@@ -340,7 +340,7 @@ public interface ARPACK {
 
         wr = wr.copy(0, nev);
         wi = wi.copy(0, nev);
-        V = V.columns(0, nev);
+        V = V.submatrix(0, 0, n, nev);
         EVD eig = new EVD(wr, wi, null, V);
         return eig.sort();
     }
