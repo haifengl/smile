@@ -30,7 +30,7 @@ public class BiconjugateGradientTest {
     };
     double[] b = {0.5, 0.5, 0.5};
 
-    double[] x = new double[b.length];
+    Vector x;
 
     public BiconjugateGradientTest() {
     }
@@ -49,8 +49,7 @@ public class BiconjugateGradientTest {
 
         DenseMatrix a = DenseMatrix.of(A);
         LU lu = a.lu();
-        x = b.clone();
-        lu.solve(x);
+        x = lu.solve(b);
     }
 
     @AfterEach
@@ -65,8 +64,8 @@ public class BiconjugateGradientTest {
         Vector result = matrix.vector(A.length);
         BiconjugateGradient.solve(matrix, Vector.column(b), result);
 
-        for (int i = 0; i < x.length; i++) {
-            assertEquals(x[i], result.get(i), 1E-7);
+        for (int i = 0; i < b.length; i++) {
+            assertEquals(x.get(i), result.get(i), 1E-7);
         }
     }
 
@@ -78,8 +77,8 @@ public class BiconjugateGradientTest {
         Vector result = sparse.vector(A.length);
         BiconjugateGradient.solve(sparse, Vector.column(b), result);
 
-        for (int i = 0; i < x.length; i++) {
-            assertEquals(x[i], result.get(i), 1E-7);
+        for (int i = 0; i < b.length; i++) {
+            assertEquals(x.get(i), result.get(i), 1E-7);
         }
     }
 }
