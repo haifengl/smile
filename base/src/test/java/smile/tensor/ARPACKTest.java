@@ -138,11 +138,11 @@ public class ARPACKTest {
             }
         }
 
-        assertEquals(n, svd.Vt().nrow());
-        assertEquals(k, svd.Vt().ncol());
+        assertEquals(k, svd.Vt().nrow());
+        assertEquals(n, svd.Vt().ncol());
         for (int j = 0; j < k; j++) {
             for (int i = 0; i < n; i++) {
-                assertEquals(Math.abs(Vt[i][j]), Math.abs(svd.Vt().get(i, j)), 1E-6);
+                assertEquals(Math.abs(Vt[j][i]), Math.abs(svd.Vt().get(j, i)), 1E-6);
             }
         }
 
@@ -162,11 +162,11 @@ public class ARPACKTest {
             }
         }
 
-        assertEquals(m, svd.Vt().nrow());
-        assertEquals(k, svd.Vt().ncol());
+        assertEquals(k, svd.Vt().nrow());
+        assertEquals(m, svd.Vt().ncol());
         for (int j = 0; j < k; j++) {
             for (int i = 0; i < m; i++) {
-                assertEquals(Math.abs(Ut[i][j]), Math.abs(svd.Vt().get(i, j)), 1E-6);
+                assertEquals(Math.abs(Ut[j][i]), Math.abs(svd.Vt().get(j, i)), 1E-6);
             }
         }
     }

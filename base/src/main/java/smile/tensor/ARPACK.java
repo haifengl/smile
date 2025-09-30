@@ -381,10 +381,9 @@ public interface ARPACK {
         if (m >= n) {
             DenseMatrix V = eigen.Vr();
             Vector Av = A.vector(m);
-            Vector v = A.vector(n);
             DenseMatrix U = V.zeros(m, len);
             for (int j = 0; j < len; j++) {
-                v = V.column(j);
+                var v = V.column(j);
                 A.mv(v, Av);
 
                 for (int i = 0; i < m; i++) {
@@ -396,12 +395,9 @@ public interface ARPACK {
         } else {
             DenseMatrix U = eigen.Vr();
             Vector Atu = A.vector(n);
-            Vector u = A.vector(m);
             DenseMatrix Vt = U.zeros(len, n);
             for (int j = 0; j < len; j++) {
-                for (int i = 0; i < n; i++) {
-                    u.set(i, U.get(j, i));
-                }
+                var u = U.column(j);
                 A.tv(u, Atu);
 
                 for (int i = 0; i < n; i++) {
