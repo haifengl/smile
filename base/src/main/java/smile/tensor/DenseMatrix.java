@@ -562,7 +562,7 @@ public abstract class DenseMatrix implements Matrix {
         }
 
         if (other instanceof DenseMatrix B) {
-            DenseMatrix C = zeros(nrow(), B.ncol());
+            DenseMatrix C = zeros(ncol(), B.ncol());
             mm(1.0, TRANSPOSE, this, NO_TRANSPOSE, B, 0.0, C);
             return C;
         }
@@ -893,7 +893,7 @@ public abstract class DenseMatrix implements Matrix {
             throw new ArithmeticException("LAPACK GESDD with COMPACT error code: " + info[0]);
         }
 
-        return vectors ? new SVD(s, U, Vt.transpose()) : new SVD(A.m, A.n, s);
+        return vectors ? new SVD(s, U, Vt) : new SVD(A.m, A.n, s);
     }
 
     /**
