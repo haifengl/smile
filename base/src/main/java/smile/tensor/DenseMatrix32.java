@@ -116,6 +116,11 @@ class DenseMatrix32 extends DenseMatrix implements Serializable {
     }
 
     @Override
+    public Vector column(int j) {
+        return Vector32.column(array, offset(0, j), m);
+    }
+
+    @Override
     public DenseMatrix submatrix(int i, int j, int k, int l) {
         if (i < 0 || i > m || k <= i || k > m || j < 0 || j > n || l <= j || l > n) {
             throw new IllegalArgumentException(String.format("Invalid submatrix range (%d:%d, %d:%d) of %d x %d", i, k, j, l, m, n));
