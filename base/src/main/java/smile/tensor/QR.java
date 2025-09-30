@@ -153,20 +153,18 @@ public record QR(DenseMatrix qr, Vector tau) implements Serializable {
         }
 
         Vector work = qr.vector(1);
-        byte[] left = { LEFT.lapack() };
-        byte[] upper = { UPPER.lapack() };
-        byte[] trans = { NO_TRANSPOSE.lapack() };
+        byte[] side = { LEFT.lapack() };
+        byte[] trans = { TRANSPOSE.lapack() };
         byte[] unit = { NON_UNIT.lapack() };
-        int[] m = { qr.m };
-        int[] n = { qr.n };
+        int[] m = { B.m };
+        int[] n = { B.n };
         int[] k = { Math.min(qr.m, qr.n) };
         int[] nrhs = { B.n };
         int[] lda = { qr.ld };
         int[] ldb = { B.ld };
         int[] lwork = { -1 };
         int[] info = { 0 };
-        MemorySegment left_ = MemorySegment.ofArray(left);
-        MemorySegment upper_ = MemorySegment.ofArray(upper);
+        MemorySegment side_ = MemorySegment.ofArray(side);
         MemorySegment trans_ = MemorySegment.ofArray(trans);
         MemorySegment unit_ = MemorySegment.ofArray(unit);
         MemorySegment m_ = MemorySegment.ofArray(m);
@@ -180,8 +178,8 @@ public record QR(DenseMatrix qr, Vector tau) implements Serializable {
 
         // query workspace size for ORMQR
         switch(qr.scalarType()) {
-            case Float64 -> dormqr_(left_, trans_, m_, n_, k_, qr.memory, lda_, tau.memory, B.memory, ldb_, work.memory, lwork_, info_);
-            case Float32 -> sormqr_(left_, trans_, m_, n_, k_, qr.memory, lda_, tau.memory, B.memory, ldb_, work.memory, lwork_, info_);
+            case Float64 -> dormqr_(side_, trans_, m_, n_, k_, qr.memory, lda_, tau.memory, B.memory, ldb_, work.memory, lwork_, info_);
+            case Float32 -> sormqr_(side_, trans_, m_, n_, k_, qr.memory, lda_, tau.memory, B.memory, ldb_, work.memory, lwork_, info_);
             default -> throw new UnsupportedOperationException("Unsupported scala type: " + qr.scalarType());
         }
 
@@ -194,8 +192,8 @@ public record QR(DenseMatrix qr, Vector tau) implements Serializable {
         work = qr.vector((int) work.get(0));
         lwork[0] = work.size();
         switch(qr.scalarType()) {
-            case Float64 -> dormqr_(left_, trans_, m_, n_, k_, qr.memory, lda_, tau.memory, B.memory, ldb_, work.memory, lwork_, info_);
-            case Float32 -> sormqr_(left_, trans_, m_, n_, k_, qr.memory, lda_, tau.memory, B.memory, ldb_, work.memory, lwork_, info_);
+            case Float64 -> dormqr_(side_, trans_, m_, n_, k_, qr.memory, lda_, tau.memory, B.memory, ldb_, work.memory, lwork_, info_);
+            case Float32 -> sormqr_(side_, trans_, m_, n_, k_, qr.memory, lda_, tau.memory, B.memory, ldb_, work.memory, lwork_, info_);
             default -> throw new UnsupportedOperationException("Unsupported scala type: " + qr.scalarType());
         }
 
@@ -204,9 +202,13 @@ public record QR(DenseMatrix qr, Vector tau) implements Serializable {
             throw new IllegalArgumentException("LAPACK ORMQR error code: " + info[0]);
         }
 
+        side[0] = UPPER.lapack();
+        trans[0] = NO_TRANSPOSE.lapack();
+        m[0] = qr.m;
+        n[0] = qr.n;
         switch(qr.scalarType()) {
-            case Float64 -> dtrtrs_(upper_, trans_, unit_, n_, nrhs_, qr.memory, lda_, B.memory, ldb_, info_);
-            case Float32 -> strtrs_(upper_, trans_, unit_, n_, nrhs_, qr.memory, lda_, B.memory, ldb_, info_);
+            case Float64 -> dtrtrs_(side_, trans_, unit_, n_, nrhs_, qr.memory, lda_, B.memory, ldb_, info_);
+            case Float32 -> strtrs_(side_, trans_, unit_, n_, nrhs_, qr.memory, lda_, B.memory, ldb_, info_);
             default -> throw new UnsupportedOperationException("Unsupported scala type: " + qr.scalarType());
         }
 
