@@ -54,10 +54,10 @@ import static smile.linalg.Transpose.TRANSPOSE;
  * @param n the number of columns of matrix.
  * @param s the singular values in descending order.
  * @param U the left singular vectors
- * @param V the right singular vectors.
+ * @param Vt the transpose of right singular vectors.
  * @author Haifeng Li
  */
-public record SVD(int m, int n, Vector s, DenseMatrix U, DenseMatrix V) {
+public record SVD(int m, int n, Vector s, DenseMatrix U, DenseMatrix Vt) {
     /**
      * Constructor.
      * @param m the number of rows of matrix.
@@ -72,10 +72,10 @@ public record SVD(int m, int n, Vector s, DenseMatrix U, DenseMatrix V) {
      * Constructor.
      * @param s the singular values in descending order.
      * @param U the left singular vectors
-     * @param V the right singular vectors.
+     * @param Vt the transpose of right singular vectors.
      */
-    public SVD(Vector s, DenseMatrix U, DenseMatrix V) {
-        this(U.m, V.m, s, U, V);
+    public SVD(Vector s, DenseMatrix U, DenseMatrix Vt) {
+        this(U.m, Vt.n, s, U, Vt);
     }
 
     /**
@@ -207,7 +207,7 @@ public record SVD(int m, int n, Vector s, DenseMatrix U, DenseMatrix V) {
             throw new UnsupportedOperationException("The operation cannot be called on a partial SVD.");
         }
 
-        if (V == null) {
+        if (Vt == null) {
             throw new IllegalStateException("The right singular vectors are not available.");
         }
 
@@ -217,10 +217,10 @@ public record SVD(int m, int n, Vector s, DenseMatrix U, DenseMatrix V) {
             return null;
         }
 
-        DenseMatrix N = V.zeros(n, nr);
+        DenseMatrix N = Vt.zeros(n, nr);
         for (int j = 0; j < nr; j++) {
             for (int i = 0; i < n; i++) {
-                N.set(i, j, V.get(i, n - j - 1));
+                N.set(i, j, Vt.get(n - j - 1, i));
             }
         }
         return N;
@@ -231,7 +231,7 @@ public record SVD(int m, int n, Vector s, DenseMatrix U, DenseMatrix V) {
      * @return the pseudo inverse.
      */
     public DenseMatrix pinv() {
-        if (U == null || V == null) {
+        if (U == null || Vt == null) {
             throw new IllegalStateException("The singular vectors are not available.");
         }
 
@@ -242,7 +242,7 @@ public record SVD(int m, int n, Vector s, DenseMatrix U, DenseMatrix V) {
             sigma.set(i, 1.0 / s.get(i));
         }
 
-        return adb(NO_TRANSPOSE, V, sigma, TRANSPOSE, U);
+        return adb(TRANSPOSE, Vt, sigma, TRANSPOSE, U);
     }
 
     /**
@@ -252,7 +252,7 @@ public record SVD(int m, int n, Vector s, DenseMatrix U, DenseMatrix V) {
      * @return the solution vector.
      */
     public Vector solve(double[] b) {
-        if (U == null || V == null) {
+        if (U == null || Vt == null) {
             throw new IllegalStateException("The singular vectors are not available.");
         }
 
@@ -273,7 +273,7 @@ public record SVD(int m, int n, Vector s, DenseMatrix U, DenseMatrix V) {
         for (int i = 0; i < r; i++) {
             Utb.set(i, Utb.get(i) / s.get(i));
         }
-        return V.mv(Utb);
+        return Vt.tv(Utb);
     }
 
     /**
@@ -283,7 +283,7 @@ public record SVD(int m, int n, Vector s, DenseMatrix U, DenseMatrix V) {
      * @return the solution vector.
      */
     public Vector solve(float[] b) {
-        if (U == null || V == null) {
+        if (U == null || Vt == null) {
             throw new IllegalStateException("The singular vectors are not available.");
         }
 
@@ -304,7 +304,7 @@ public record SVD(int m, int n, Vector s, DenseMatrix U, DenseMatrix V) {
         for (int i = 0; i < r; i++) {
             Utb.set(i, Utb.get(i) / s.get(i));
         }
-        return V.mv(Utb);
+        return Vt.tv(Utb);
     }
 
     /**
