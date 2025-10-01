@@ -16,7 +16,6 @@
  */
 package smile.tensor;
 
-import java.util.Arrays;
 import smile.math.MathEx;
 import smile.linalg.Order;
 import smile.linalg.UPLO;
@@ -84,7 +83,7 @@ public class DenseMatrixTest {
         assertEquals(0.0, matrix.get(0, 2), 1E-7);
         assertEquals(0.4, matrix.get(0, 1), 1E-7);
     }
-/*
+
     @Test
     public void testColMeans() {
         System.out.println("colMeans");
@@ -95,9 +94,9 @@ public class DenseMatrixTest {
         };
         double[] r = {-0.06067647, -0.12325383, 0.56076753f};
 
-        double[] result = DenseMatrix.of(A).colMeans();
+        Vector result = DenseMatrix.of(A).colMeans();
         for (int i = 0; i < r.length; i++) {
-            assertEquals(result[i], r[i], 1E-7);
+            assertEquals(r[i], result.get(i), 1E-7);
         }
     }
 
@@ -111,12 +110,12 @@ public class DenseMatrixTest {
         };
         double[] r = {0.4938100, -0.2617642, 0.1447914f};
 
-        double[] result = DenseMatrix.of(A).rowMeans();
+        Vector result = DenseMatrix.of(A).rowMeans();
         for (int i = 0; i < r.length; i++) {
-            assertEquals(result[i], r[i], 1E-7);
+            assertEquals(r[i], result.get(i), 1E-7);
         }
     }
-*/
+
     @Test
     public void testTranspose() {
         DenseMatrix t = matrix.transpose();
