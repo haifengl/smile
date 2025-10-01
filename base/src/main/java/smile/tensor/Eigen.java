@@ -211,14 +211,12 @@ public interface Eigen {
         // arrays used in the QL decomposition
         double[] ritz = new double[n + 1];
         // eigenvectors calculated in the QL decomposition
-        Matrix z = null;
+        DenseMatrix z = null;
 
         // First step of the Lanczos algorithm. It also does a step of extended
         // local re-orthogonalization.
         // get initial vector; default is random
-        Vector wptr3 = Vector.column(wptr[3]);
-        Vector wptr0 = Vector.column(wptr[0]);
-        double rnm = startv(0, A, q, wptr, wptr3, wptr0);
+        double rnm = startv(0, A, q, wptr);
 
         // normalize starting vector
         double t = 1.0 / rnm;
@@ -226,7 +224,7 @@ public interface Eigen {
         MathEx.scale(t, wptr[3]);
 
         // take the first step
-        A.mv(wptr3, wptr0);
+        A.mv(Vector.column(wptr[3]), Vector.column(wptr[0]));
         alf[0] = MathEx.dot(wptr[0], wptr[3]);
         MathEx.axpy(-alf[0], wptr[1], wptr[0]);
         t = MathEx.dot(wptr[0], wptr[3]);
@@ -280,7 +278,7 @@ public interface Eigen {
 
                 // restart if invariant subspace is found
                 if (0 == bet[j]) {
-                    rnm = startv(j, A, q, wptr, wptr3, wptr0);
+                    rnm = startv(j, A, q, wptr);
                     if (rnm < 0.0) {
                         rnm = 0.0;
                         break;
@@ -301,12 +299,12 @@ public interface Eigen {
                 t = 1.0 / rnm;
                 MathEx.scale(t, wptr[0], wptr[1]);
                 MathEx.scale(t, wptr[3]);
-                A.mv(wptr3, wptr0);
+                A.mv( Vector.column(wptr[3]), Vector.column(wptr[0]));
                 MathEx.axpy(-rnm, wptr[2], wptr[0]);
                 alf[j] = MathEx.dot(wptr[0], wptr[3]);
                 MathEx.axpy(-alf[j], wptr[1], wptr[0]);
 
-                // orthogonalize against initial lanczos vectors
+                // orthogonalize against initial Lanczos vectors
                 if (j <= 2 && (Math.abs(alf[j - 1]) > 4.0 * Math.abs(alf[j]))) {
                     ll = j;
                 }
@@ -416,7 +414,7 @@ public interface Eigen {
      * of operator can be found.
      * @param step starting index for a Lanczos run
      */
-    private static double startv(int step, Matrix A, double[][] q, double[][] wptr, Vector wptr3, Vector wptr0) {
+    private static double startv(int step, Matrix A, double[][] q, double[][] wptr) {
         // get initial vector; default is random
         double rnm = MathEx.dot(wptr[0], wptr[0]);
         double[] r = wptr[0];
@@ -430,7 +428,7 @@ public interface Eigen {
             System.arraycopy(wptr[0], 0, wptr[3], 0, n);
 
             // apply operator to put r in range (essential if m singular)
-            A.mv(wptr3, wptr0);
+            A.mv(Vector.column(wptr[3]), Vector.column(wptr[0]));
             System.arraycopy(wptr[0], 0, wptr[3], 0, n);
             rnm = MathEx.dot(wptr[0], wptr[3]);
             if (rnm > 0.0) {
@@ -515,7 +513,8 @@ public interface Eigen {
      * @param eta      state of orthogonality between r and prev. Lanczos vectors
      * @param oldeta   state of orthogonality between q and prev. Lanczos vectors
      */
-    private static double purge(int ll, double[][] Q, double[] r, double[] q, double[] ra, double[] qa, double[] eta, double[] oldeta, int step, double rnm, double tol, double eps, double reps) {
+    private static double purge(int ll, double[][] Q, double[] r, double[] q, double[] ra, double[] qa, double[] eta,
+                                double[] oldeta, int step, double rnm, double tol, double eps, double reps) {
         if (step < ll + 2) {
             return rnm;
         }
@@ -657,7 +656,7 @@ public interface Eigen {
     }
 
     /**
-     * Based on the input operation flag, stores to or retrieves from memory a vector.
+     * Stores vector s to q[j].
      * @param s contains the vector to be stored
      */
     private static void store(double[][] q, int j, double[] s) {
@@ -687,7 +686,7 @@ public interface Eigen {
      * @param e on input, it contains the subdiagonal elements of the tridiagonal
      * matrix, with e[0] arbitrary. On output, its contents are destroyed.
      */
-    private static void tql2(Matrix V, double[] d, double[] e) {
+    private static void tql2(DenseMatrix V, double[] d, double[] e) {
         int n = V.nrow();
         for (int i = 1; i < n; i++) {
             e[i - 1] = e[i];

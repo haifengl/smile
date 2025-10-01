@@ -64,8 +64,8 @@ public class EigenTest {
         double[] v = new double[3];
         Arrays.fill(v, 1.0);
 
-        DenseMatrix matrix = DenseMatrix.of(A);
-        double eigenvalue = Eigen.power(matrix, Vector.column(v));
+        DenseMatrix a = DenseMatrix.of(A);
+        double eigenvalue = Eigen.power(a, Vector.column(v));
         assertEquals(eigenValues[0], eigenvalue, 1E-4);
 
         double ratio = Math.abs(eigenVectors[0][0]/v[0]);
@@ -73,15 +73,16 @@ public class EigenTest {
             assertEquals(ratio, Math.abs(eigenVectors[i][0]/v[i]), 1E-4);
         }
 
+        double[][] B = new double[3][3];
         for (int i = 0; i < A.length; i++) {
             for (int j = 0; j < A[i].length; j++) {
-                A[i][j] = -A[i][j];
+                B[i][j] = -A[i][j];
             }
         }
 
         Arrays.fill(v, 1.0);
-        matrix = DenseMatrix.of(A);
-        eigenvalue = Eigen.power(matrix, Vector.column(v), 0.22, 1E-4, 4);
+        DenseMatrix b = DenseMatrix.of(B);
+        eigenvalue = Eigen.power(b, Vector.column(v), 0.22, 1E-4, 4);
         assertEquals(-eigenValues[0], eigenvalue, 1E-3);
 
         ratio = Math.abs(eigenVectors[0][0]/v[0]);
