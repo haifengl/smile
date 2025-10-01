@@ -19,7 +19,7 @@ package smile.plot.swing;
 import java.awt.Color;
 import java.util.Arrays;
 import smile.math.MathEx;
-import smile.math.matrix.SparseMatrix;
+import smile.tensor.SparseMatrix;
 
 /**
  * A graphical representation of sparse matrix data. Optionally, the values

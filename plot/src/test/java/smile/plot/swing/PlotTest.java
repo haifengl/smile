@@ -23,13 +23,13 @@ import java.util.stream.DoubleStream;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.*;
 import smile.data.DataFrame;
-import smile.io.Read;
 import smile.interpolation.BicubicInterpolation;
-import smile.math.matrix.Matrix;
-import smile.math.matrix.SparseMatrix;
+import smile.io.Paths;
+import smile.io.Read;
 import smile.stat.distribution.GaussianDistribution;
 import smile.stat.distribution.MultivariateGaussianDistribution;
-import smile.io.Paths;
+import smile.tensor.DenseMatrix;
+import smile.tensor.SparseMatrix;
 import static java.lang.Math.*;
 import static java.awt.Color.*;
 
@@ -155,7 +155,7 @@ public class PlotTest {
 
         double[] mu = {0.0, 0.0};
         double[][] v = { {1.0, 0.6}, {0.6, 2.0} };
-        var gauss = new MultivariateGaussianDistribution(mu, Matrix.of(v));
+        var gauss = new MultivariateGaussianDistribution(mu, DenseMatrix.of(v));
         var data = Stream.generate(gauss::rand).limit(10000).toArray(double[][]::new);
         var figure = Histogram3D.of(data, 50, false).figure();
         var pane = new FigurePane(figure);
