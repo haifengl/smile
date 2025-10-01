@@ -371,6 +371,44 @@ public abstract class DenseMatrix implements Matrix {
     }
 
     /**
+     * Returns the mean of each column.
+     * @return the mean of each column.
+     */
+    public Vector colMeans() {
+        Vector means = vector(n);
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                means.add(j, get(i, j));
+            }
+        }
+        for (int j = 0; j < n; j++) {
+            means.div(j, m);
+        }
+
+        return means;
+    }
+
+    /**
+     * Returns the mean of each row.
+     * @return the mean of each row.
+     */
+    public Vector rowMeans() {
+        Vector means = vector(m);
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                means.add(i, get(i, j));
+            }
+        }
+        for (int i = 0; i < m; i++) {
+            means.div(i, n);
+        }
+
+        return means;
+    }
+
+    /**
      * Matrix-vector multiplication.
      * <pre>{@code
      *     y = alpha * op(A) * x + beta * y
