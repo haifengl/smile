@@ -315,8 +315,20 @@ public abstract class Vector extends DenseMatrix {
     }
 
     /**
-     * Sums the absolute values of the elements of a vector.
-     * @return Sum of the absolute values of the elements of the vector x.
+     * Sums the elements of the vector.
+     * @return Sum of the elements of the vector.
+     */
+    public abstract double sum();
+
+    /**
+     * Returns the mean of the elements of the vector.
+     * @return the mean of the elements of the vector.
+     */
+    public abstract double mean();
+
+    /**
+     * Sums the absolute values of the elements of the vector.
+     * @return Sum of the absolute values of the elements of the vector.
      */
     public double asum() {
         return switch(scalarType()) {

@@ -119,6 +119,15 @@ class Vector32 extends Vector implements Serializable {
     }
 
     @Override
+    public String toString() {
+        String suffix = size() > 10 ?  ", ...]" : "]";
+        return IntStream.range(0, length)
+                .limit(10)
+                .mapToObj(i -> AbstractTensor.format(array[offset+i]))
+                .collect(Collectors.joining(", ", "[", suffix));
+    }
+
+    @Override
     public ScalarType scalarType() {
         return ScalarType.Float32;
     }
@@ -262,11 +271,16 @@ class Vector32 extends Vector implements Serializable {
     }
 
     @Override
-    public String toString() {
-        String suffix = size() > 10 ?  ", ...]" : "]";
-        return IntStream.range(0, length)
-                .limit(10)
-                .mapToObj(i -> AbstractTensor.format(array[offset+i]))
-                .collect(Collectors.joining(", ", "[", suffix));
+    public double sum() {
+        double s = 0;
+        for (int i = 0; i < length; i++) {
+            s += array[offset + i];
+        }
+        return s;
+    }
+
+    @Override
+    public double mean() {
+        return length > 0 ? sum() / length : 0;
     }
 }
