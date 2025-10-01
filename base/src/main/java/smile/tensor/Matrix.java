@@ -409,7 +409,7 @@ public interface Matrix extends Tensor {
      * @return the matrix-vector multiplication {@code A' * x}.
      */
     default Vector tv(Vector x) {
-        var y = vector(nrow());
+        var y = vector(ncol());
         mv(TRANSPOSE, 1.0, x, 0.0, y);
         return y;
     }
