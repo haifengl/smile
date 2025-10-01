@@ -392,6 +392,24 @@ public abstract class DenseMatrix implements Matrix {
         if (A.scalarType() != y.scalarType()) {
             throw new IllegalArgumentException("Incompatible ScalarType: " + A.scalarType() + " != " + y.scalarType());
         }
+        switch (trans) {
+            case NO_TRANSPOSE:
+                if (A.ncol() != x.size()) {
+                    throw new IllegalArgumentException("Incompatible x vector size: " + A.ncol() + " != " + x.size());
+                }
+                if (A.nrow() != y.size()) {
+                    throw new IllegalArgumentException("Incompatible y vector size: " + A.nrow() + " != " + y.size());
+                }
+                break;
+            case TRANSPOSE:
+                if (A.nrow() != x.size()) {
+                    throw new IllegalArgumentException("Incompatible x vector size: " + A.nrow() + " != " + x.size());
+                }
+                if (A.ncol() != y.size()) {
+                    throw new IllegalArgumentException("Incompatible y vector size: " + A.ncol() + " != " + y.size());
+                }
+                break;
+        }
 
         var uplo = A.uplo();
         var diag = A.diag();
