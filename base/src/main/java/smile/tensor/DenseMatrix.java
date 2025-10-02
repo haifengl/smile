@@ -253,6 +253,12 @@ public abstract class DenseMatrix implements Matrix {
     }
 
     /**
+     * Assigns the specified value to each element of the specified vector.
+     * @param value the value to be stored in all elements of the vector.
+     */
+    public abstract void fill(double value);
+
+    /**
      * Returns the i-th row. Negative index -i means the i-th row from the end.
      * @param i the row index.
      * @return the row.
