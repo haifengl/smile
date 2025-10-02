@@ -1274,4 +1274,112 @@ public abstract class DenseMatrix implements Matrix {
 
         return matrix;
     }
+
+    /**
+     * Returns a symmetric Toeplitz matrix in which each descending diagonal
+     * from left to right is constant.
+     *
+     * @param a A[i, j] = a[i - j] for {@code i >= j} (or a[j - i] when {@code j > i})
+     * @return the Toeplitz matrix.
+     */
+    public static DenseMatrix toeplitz(double[] a) {
+        int n = a.length;
+        DenseMatrix toeplitz = DenseMatrix.zeros(ScalarType.Float64, n, n);
+        toeplitz.withUplo(LOWER);
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < i; j++) {
+                toeplitz.set(i, j, a[i - j]);
+            }
+
+            for (int j = i; j < n; j++) {
+                toeplitz.set(i, j, a[j - i]);
+            }
+        }
+
+        return toeplitz;
+    }
+
+    /**
+     * Returns a symmetric Toeplitz matrix in which each descending diagonal
+     * from left to right is constant.
+     *
+     * @param a A[i, j] = a[i - j] for {@code i >= j} (or a[j - i] when {@code j > i})
+     * @return the Toeplitz matrix.
+     */
+    public static DenseMatrix toeplitz(float[] a) {
+        int n = a.length;
+        DenseMatrix toeplitz = DenseMatrix.zeros(ScalarType.Float32, n, n);
+        toeplitz.withUplo(LOWER);
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < i; j++) {
+                toeplitz.set(i, j, a[i - j]);
+            }
+
+            for (int j = i; j < n; j++) {
+                toeplitz.set(i, j, a[j - i]);
+            }
+        }
+
+        return toeplitz;
+    }
+
+    /**
+     * Returns a Toeplitz matrix in which each descending diagonal
+     * from left to right is constant.
+     *
+     * @param kl {@code A[i, j] = kl[i - j]} for {@code i >  j}
+     * @param ku {@code A[i, j] = ku[j - i]} for {@code i <= j}
+     * @return the Toeplitz matrix.
+     */
+    public static DenseMatrix toeplitz(double[] kl, double[] ku) {
+        if (kl.length != ku.length - 1) {
+            throw new IllegalArgumentException(String.format("Invalid sub-diagonals and super-diagonals size: %d != %d - 1", kl.length, ku.length));
+        }
+
+        int n = kl.length;
+        DenseMatrix toeplitz = DenseMatrix.zeros(ScalarType.Float64, n, n);
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < i; j++) {
+                toeplitz.set(i, j, kl[i - j]);
+            }
+
+            for (int j = i; j < n; j++) {
+                toeplitz.set(i, j, ku[j - i]);
+            }
+        }
+
+        return toeplitz;
+    }
+
+    /**
+     * Returns a Toeplitz matrix in which each descending diagonal
+     * from left to right is constant.
+     *
+     * @param kl {@code A[i, j] = kl[i - j]} for {@code i >  j}
+     * @param ku {@code A[i, j] = ku[j - i]} for {@code i <= j}
+     * @return the Toeplitz matrix.
+     */
+    public static DenseMatrix toeplitz(float[] kl, float[] ku) {
+        if (kl.length != ku.length - 1) {
+            throw new IllegalArgumentException(String.format("Invalid sub-diagonals and super-diagonals size: %d != %d - 1", kl.length, ku.length));
+        }
+
+        int n = kl.length;
+        DenseMatrix toeplitz = DenseMatrix.zeros(ScalarType.Float32, n, n);
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < i; j++) {
+                toeplitz.set(i, j, kl[i - j]);
+            }
+
+            for (int j = i; j < n; j++) {
+                toeplitz.set(i, j, ku[j - i]);
+            }
+        }
+
+        return toeplitz;
+    }
 }
