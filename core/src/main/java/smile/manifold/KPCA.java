@@ -22,10 +22,12 @@ import java.util.Arrays;
 import java.util.Properties;
 import java.util.function.Function;
 import smile.math.MathEx;
-import smile.linalg.ARPACK;
 import smile.linalg.UPLO;
 import smile.math.kernel.MercerKernel;
-import smile.math.matrix.Matrix;
+import smile.tensor.ARPACK;
+import smile.tensor.DenseMatrix;
+import smile.tensor.ScalarType;
+import smile.tensor.Vector;
 
 /**
  * Kernel principal component analysis. Kernel PCA is an extension of
@@ -138,7 +140,7 @@ public class KPCA<T> implements Function<T, double[]>, Serializable {
     /**
      * The projection matrix.
      */
-    private final Matrix projection;
+    private final DenseMatrix projection;
     /**
      * The coordinates of projected training data.
      */
@@ -154,7 +156,7 @@ public class KPCA<T> implements Function<T, double[]>, Serializable {
      * @param latent the projection matrix.
      * @param projection the projection matrix.
      */
-    public KPCA(T[] data, MercerKernel<T> kernel, double[] mean, double mu, double[][] coordinates, double[] latent, Matrix projection) {
+    public KPCA(T[] data, MercerKernel<T> kernel, double[] mean, double mu, double[][] coordinates, double[] latent, DenseMatrix projection) {
         this.data = data;
         this.kernel = kernel;
         this.mean = mean;
@@ -180,7 +182,7 @@ public class KPCA<T> implements Function<T, double[]>, Serializable {
 
         int n = data.length;
 
-        Matrix K = new Matrix(n, n);
+        DenseMatrix K = DenseMatrix.zeros(ScalarType.Float64, n, n);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j <= i; j++) {
                 double x = kernel.k(data[i], data[j]);
@@ -201,15 +203,15 @@ public class KPCA<T> implements Function<T, double[]>, Serializable {
         }
 
         K.uplo(UPLO.LOWER);
-        Matrix.EVD eigen = ARPACK.syev(K, ARPACK.SymmOption.LA, d);
+        EVD eigen = ARPACK.syev(K, ARPACK.SymmOption.LA, d);
 
-        double[] eigvalues = eigen.wr;
-        Matrix eigvectors = eigen.Vr;
+        Vector eigvalues = eigen.wr();
+        DenseMatrix eigvectors = eigen.Vr();
 
         int p = (int) Arrays.stream(eigvalues).limit(d).filter(e -> e/n > options.threshold).count();
 
         double[] latent = new double[p];
-        Matrix projection = new Matrix(p, n);
+        DenseMatrix projection = DenseMatrix.zeros(ScalarType.Float64, p, n);
         for (int j = 0; j < p; j++) {
             latent[j] = eigvalues[j];
             double s = Math.sqrt(latent[j]);
@@ -218,7 +220,7 @@ public class KPCA<T> implements Function<T, double[]>, Serializable {
             }
         }
 
-        Matrix coord = projection.mm(K);
+        DenseMatrix coord = projection.mm(K);
         double[][] coordinates = new double[n][p];
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < p; j++) {
@@ -260,17 +262,17 @@ public class KPCA<T> implements Function<T, double[]>, Serializable {
     public double[] apply(T x) {
         int n = data.length;
 
-        double[] y = new double[n];
+        Vector y = projection.vector(n);
         for (int i = 0; i < n; i++) {
-            y[i] = kernel.k(x, data[i]);
+            y.set(i, kernel.k(x, data[i]));
         }
 
-        double my = MathEx.mean(y);
+        double my = y.mean();
         for (int i = 0; i < n; i++) {
-            y[i] = y[i] - my - mean[i] + mu;
+            y.sub(i, my + mean[i] - mu);
         }
 
-        return projection.mv(y);
+        return projection.mv(y).toArray(new double[0]);
     }
 
     /**
