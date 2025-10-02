@@ -5,6 +5,7 @@
 ## Goal ##
 <img align="left" width="48" src="/web/src/images/smile.jpg">
 Smile is a fast and comprehensive machine learning framework in Java.
+Smile v4.x requires Java 21. All previous versions require Java 8.
 Smile also provides APIs in Scala, Kotlin, and Clojure with
 corresponding language paradigms. With advanced data structures and
 algorithms, Smile delivers state-of-art performance.
