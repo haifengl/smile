@@ -20,9 +20,9 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import smile.math.MathEx;
-import smile.math.matrix.Matrix;
 import smile.math.special.Beta;
 import smile.stat.Hypothesis;
+import smile.tensor.DenseMatrix;
 
 /**
  * Autoregressive model. The autoregressive model specifies that the output

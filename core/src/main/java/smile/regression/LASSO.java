@@ -23,8 +23,8 @@ import smile.data.formula.Formula;
 import smile.data.type.StructType;
 import smile.math.MathEx;
 import smile.linalg.Transpose;
-import smile.math.matrix.IMatrix;
-import smile.math.matrix.Matrix;
+import smile.tensor.Matrix;
+import smile.tensor.DenseMatrix;
 
 /**
  * Lasso (least absolute shrinkage and selection operator) regression.
