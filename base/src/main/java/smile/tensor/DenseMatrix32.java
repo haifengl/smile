@@ -21,6 +21,8 @@ import java.io.ObjectInputStream;
 import java.io.Serial;
 import java.io.Serializable;
 import java.lang.foreign.MemorySegment;
+import java.util.Arrays;
+
 import smile.linalg.Diag;
 import smile.linalg.UPLO;
 import smile.math.MathEx;
@@ -107,6 +109,11 @@ class DenseMatrix32 extends DenseMatrix implements Serializable {
     @Override
     public void div(int i, int j, double x) {
         array[offset(i, j)] /= (float) x;
+    }
+
+    @Override
+    public void fill(double value) {
+        Arrays.fill(array, (float) value);
     }
 
     @Override

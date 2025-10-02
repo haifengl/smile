@@ -161,12 +161,6 @@ public abstract class Vector extends DenseMatrix {
     public abstract float[] toArray(float[] a);
 
     /**
-     * Assigns the specified value to each element of the specified vector.
-     * @param value the value to be stored in all elements of the vector.
-     */
-    public abstract void fill(double value);
-
-    /**
      * Assigns the specified value to each element of the specified range of
      * the specified vector.
      * @param from the index of the first element (inclusive) to be filled

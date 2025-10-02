@@ -21,7 +21,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.function.ToIntFunction;
 import smile.math.MathEx;
-import smile.math.matrix.Matrix;
+import smile.tensor.DenseMatrix;
 
 /**
  * First-order Hidden Markov Model. A hidden Markov model (HMM) is a
@@ -50,11 +50,11 @@ public class HMM implements Serializable {
     /**
      * State transition probabilities.
      */
-    private final Matrix a;
+    private final DenseMatrix a;
     /**
      * Symbol emission probabilities.
      */
-    private final Matrix b;
+    private final DenseMatrix b;
 
     /**
      * Constructor.
@@ -65,7 +65,7 @@ public class HMM implements Serializable {
      * @param b the symbol emission probabilities, of which b[i][j]
      *          is P(o_j | s_i).
      */
-    public HMM(double[] pi, Matrix a, Matrix b) {
+    public HMM(double[] pi, DenseMatrix a, DenseMatrix b) {
         if (pi.length == 0) {
             throw new IllegalArgumentException("Invalid initial state probabilities.");
         }
@@ -95,7 +95,7 @@ public class HMM implements Serializable {
      * Returns the state transition probabilities.
      * @return the state transition probabilities.
      */
-    public Matrix getStateTransitionProbabilities() {
+    public DenseMatrix getStateTransitionProbabilities() {
         return a;
     }
 
@@ -103,7 +103,7 @@ public class HMM implements Serializable {
      * Returns the symbol emission probabilities.
      * @return the symbol emission probabilities.
      */
-    public Matrix getSymbolEmissionProbabilities() {
+    public DenseMatrix getSymbolEmissionProbabilities() {
         return b;
     }
 
@@ -353,7 +353,7 @@ public class HMM implements Serializable {
             MathEx.unitize1(b[i]);
         }
 
-        return new HMM(pi, Matrix.of(a), Matrix.of(b));
+        return new HMM(pi, DenseMatrix.of(a), DenseMatrix.of(b));
     }
 
     /**
