@@ -23,7 +23,6 @@ import java.util.regex.Matcher;
 import java.util.stream.IntStream;
 import smile.linalg.UPLO;
 import smile.tensor.DenseMatrix;
-import smile.tensor.Matrix;
 import smile.tensor.ScalarType;
 import smile.util.SparseArray;
 
@@ -98,7 +97,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
      * @param x objects.
      * @return the kernel and gradient matrices.
      */
-    default Matrix[] KG(T[] x) {
+    default DenseMatrix[] KG(T[] x) {
         int n = x.length;
         int m = lo().length;
         DenseMatrix[] K = new DenseMatrix[m + 1];
@@ -126,7 +125,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
      * @param x objects.
      * @return the kernel matrix.
      */
-    default Matrix K(T[] x) {
+    default DenseMatrix K(T[] x) {
         int n = x.length;
         DenseMatrix K = DenseMatrix.zeros(ScalarType.Float64, n, n);
         IntStream.range(0, n).parallel().forEach(j -> {
@@ -147,7 +146,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
      * @param y objects.
      * @return the kernel matrix.
      */
-    default Matrix K(T[] x, T[] y) {
+    default DenseMatrix K(T[] x, T[] y) {
         int m = x.length;
         int n = y.length;
         DenseMatrix K = DenseMatrix.zeros(ScalarType.Float64, m, n);
