@@ -33,7 +33,6 @@ import smile.data.type.*;
 import smile.data.vector.*;
 import smile.math.MathEx;
 import smile.tensor.DenseMatrix;
-import smile.tensor.Matrix;
 import smile.tensor.ScalarType;
 import smile.util.Index;
 import smile.util.Strings;
@@ -832,7 +831,7 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
      * encoded as Double.NaN.
      * @return the numeric matrix.
      */
-    public Matrix toMatrix() {
+    public DenseMatrix toMatrix() {
         return toMatrix(false, CategoricalEncoder.LEVEL, null);
     }
 
@@ -848,7 +847,7 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
      * @param rowNames the column to be used as row names.
      * @return the numeric matrix.
      */
-    public Matrix toMatrix(boolean bias, CategoricalEncoder encoder, String rowNames) {
+    public DenseMatrix toMatrix(boolean bias, CategoricalEncoder encoder, String rowNames) {
         int nrow = size();
         int ncol = columns.size();
 
@@ -876,7 +875,7 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
             }
         }
 
-        Matrix matrix = DenseMatrix.zeros(ScalarType.Float64, nrow, colNames.size());
+        DenseMatrix matrix = DenseMatrix.zeros(ScalarType.Float64, nrow, colNames.size());
         if (rowNames != null) {
             int j = schema.indexOf(rowNames);
             String[] rows = new String[nrow];
