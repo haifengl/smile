@@ -287,7 +287,7 @@ public record ICA(double[][] components) implements Serializable {
         }
 
         DenseMatrix XtX = X.ata();
-        EVD eigen = XtX.eigen(false, true);
+        EVD eigen = XtX.eigen();
         DenseMatrix E = eigen.Vr();
         DenseMatrix Y = X.mm(E);
 
