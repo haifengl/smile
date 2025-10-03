@@ -21,7 +21,7 @@ import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.type.StructType;
 import smile.math.MathEx;
-import smile.math.matrix.Matrix;
+import smile.tensor.DenseMatrix;
 
 /**
  * Elastic Net regularization. The elastic net is a regularized regression
@@ -194,7 +194,7 @@ public class ElasticNet {
         formula = formula.expand(data.schema());
         StructType schema = formula.bind(data.schema());
 
-        Matrix X = formula.matrix(data, false);
+        DenseMatrix X = formula.matrix(data, false);
         double[] y = formula.y(data).toDoubleArray();
 
         int n = X.nrow();
@@ -213,7 +213,7 @@ public class ElasticNet {
         }
 
         // Scales the original data array and pads a weighted identity matrix
-        Matrix X2 = new Matrix(X.nrow()+ p, p);
+        DenseMatrix X2 = new Matrix(X.nrow()+ p, p);
         double padding = c * Math.sqrt(options.lambda2);
         for (int j = 0; j < p; j++) {
             for (int i = 0; i < n; i++) {

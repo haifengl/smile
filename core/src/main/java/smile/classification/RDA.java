@@ -18,7 +18,8 @@ package smile.classification;
 
 import java.io.Serial;
 import java.util.Properties;
-import smile.math.matrix.Matrix;
+import smile.tensor.DenseMatrix;
+import smile.tensor.EVD;
 import smile.util.IntSet;
 import smile.util.Strings;
 
@@ -50,7 +51,7 @@ public class RDA extends QDA {
      * @param eigen the eigen values of each variance matrix.
      * @param scaling the eigen vectors of each covariance matrix.
      */
-    public RDA(double[] priori, double[][] mu, double[][] eigen, Matrix[] scaling) {
+    public RDA(double[] priori, double[][] mu, double[][] eigen, DenseMatrix[] scaling) {
         super(priori, mu, eigen, scaling, IntSet.of(priori.length));
     }
 
@@ -62,7 +63,7 @@ public class RDA extends QDA {
      * @param scaling the eigen vectors of each covariance matrix.
      * @param labels the class label encoder.
      */
-    public RDA(double[] priori, double[][] mu, double[][] eigen, Matrix[] scaling, IntSet labels) {
+    public RDA(double[] priori, double[][] mu, double[][] eigen, DenseMatrix[] scaling, IntSet labels) {
         super(priori, mu, eigen, scaling, labels);
     }
 
@@ -114,15 +115,15 @@ public class RDA extends QDA {
         int k = da.k;
         int p = da.mean.length;
 
-        Matrix St = DiscriminantAnalysis.St(x, da.mean, k, tol);
-        Matrix[] cov = DiscriminantAnalysis.cov(x, y, da.mu, da.ni);
+        DenseMatrix St = DiscriminantAnalysis.St(x, da.mean, k, tol);
+        DenseMatrix[] cov = DiscriminantAnalysis.cov(x, y, da.mu, da.ni);
 
         double[][] eigen = new double[k][];
-        Matrix[] scaling = new Matrix[k];
+        DenseMatrix[] scaling = new DenseMatrix[k];
 
         tol = tol * tol;
         for (int i = 0; i < k; i++) {
-            Matrix v = cov[i];
+            DenseMatrix v = cov[i];
             v.add(alpha, 1.0 - alpha, St);
 
             // quick test of singularity
@@ -132,16 +133,16 @@ public class RDA extends QDA {
                 }
             }
 
-            Matrix.EVD evd = v.eigen(false, true, true).sort();
+            EVD evd = v.eigen(false, true).sort();
 
-            for (double s : evd.wr) {
-                if (s < tol) {
+            for (int j = 0; j < evd.wr().size(); j++) {
+                if (evd.wr().get(j) < tol) {
                     throw new IllegalArgumentException(String.format("Class %d covariance matrix is close to singular.", i));
                 }
             }
 
-            eigen[i] = evd.wr;
-            scaling[i] = evd.Vr;
+            eigen[i] = evd.wr().toArray(new double[0]);
+            scaling[i] = evd.Vr();
         }
 
         return new RDA(da.priori, da.mu, eigen, scaling, da.labels);

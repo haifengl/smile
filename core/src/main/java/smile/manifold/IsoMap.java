@@ -20,10 +20,12 @@ import java.util.Properties;
 import smile.graph.AdjacencyList;
 import smile.graph.NearestNeighborGraph;
 import smile.math.MathEx;
-import smile.linalg.ARPACK;
 import smile.linalg.UPLO;
 import smile.math.distance.Distance;
-import smile.math.matrix.Matrix;
+import smile.tensor.ARPACK;
+import smile.tensor.DenseMatrix;
+import smile.tensor.EVD;
+import smile.tensor.ScalarType;
 
 /**
  * Isometric feature mapping. Isomap is a widely used low-dimensional embedding methods,
@@ -188,7 +190,7 @@ public class IsoMap {
         double[] mean = MathEx.rowMeans(D);
         double mu = MathEx.mean(mean);
 
-        Matrix B = new Matrix(n, n);
+        DenseMatrix B = DenseMatrix.zeros(ScalarType.Float64, n, n);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j <= i; j++) {
                 double b = D[i][j] - mean[i] - mean[j] + mu;
@@ -197,22 +199,22 @@ public class IsoMap {
             }
         }
 
-        B.uplo(UPLO.LOWER);
-        Matrix.EVD eigen = ARPACK.syev(B, ARPACK.SymmOption.LA, d);
+        B.withUplo(UPLO.LOWER);
+        EVD eigen = ARPACK.syev(B, ARPACK.SymmOption.LA, d);
 
-        if (eigen.wr.length < d) {
-            logger.warn("eigen({}) returns only {} eigen vectors", d, eigen.wr.length);
-            d = eigen.wr.length;
+        if (eigen.wr().size() < d) {
+            logger.warn("eigen({}) returns only {} eigen vectors", d, eigen.wr().size());
+            d = eigen.wr().size();
         }
 
-        Matrix V = eigen.Vr;
+        DenseMatrix V = eigen.Vr();
         double[][] coordinates = new double[n][d];
         for (int j = 0; j < d; j++) {
-            if (eigen.wr[j] < 0) {
+            if (eigen.wr().get(j) < 0) {
                 throw new IllegalArgumentException(String.format("Some of the first %d eigenvalues are < 0.", d));
             }
 
-            double scale = Math.sqrt(eigen.wr[j]);
+            double scale = Math.sqrt(eigen.wr().get(j));
             for (int i = 0; i < n; i++) {
                 coordinates[i][j] = V.get(i, j) * scale;
             }

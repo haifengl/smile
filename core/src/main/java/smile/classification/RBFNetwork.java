@@ -16,14 +16,15 @@
  */
 package smile.classification;
 
-import smile.base.rbf.RBF;
-import smile.math.MathEx;
-import smile.math.matrix.Matrix;
-import smile.math.rbf.RadialBasisFunction;
-import smile.util.IntSet;
-
 import java.io.Serial;
 import java.util.Properties;
+import smile.base.rbf.RBF;
+import smile.math.rbf.RadialBasisFunction;
+import smile.tensor.DenseMatrix;
+import smile.tensor.QR;
+import smile.tensor.ScalarType;
+import smile.tensor.Vector;
+import smile.util.IntSet;
 
 /**
  * Radial basis function networks. A radial basis function network is an
@@ -102,7 +103,7 @@ public class RBFNetwork<T> extends AbstractClassifier<T> {
     /**
      * The linear weights.
      */
-    private final Matrix w;
+    private final DenseMatrix w;
     /**
      * The radial basis function.
      */
@@ -119,7 +120,7 @@ public class RBFNetwork<T> extends AbstractClassifier<T> {
      * @param w the weights of RBFs.
      * @param normalized True if this is a normalized RBF network.
      */
-    public RBFNetwork(int k, RBF<T>[] rbf, Matrix w, boolean normalized) {
+    public RBFNetwork(int k, RBF<T>[] rbf, DenseMatrix w, boolean normalized) {
         this(k, rbf, w, normalized, IntSet.of(k));
     }
 
@@ -131,7 +132,7 @@ public class RBFNetwork<T> extends AbstractClassifier<T> {
      * @param normalized True if this is a normalized RBF network.
      * @param labels the class label encoder.
      */
-    public RBFNetwork(int k, RBF<T>[] rbf, Matrix w, boolean normalized, IntSet labels) {
+    public RBFNetwork(int k, RBF<T>[] rbf, DenseMatrix w, boolean normalized, IntSet labels) {
         super(labels);
         this.k = k;
         this.rbf = rbf;
@@ -172,8 +173,8 @@ public class RBFNetwork<T> extends AbstractClassifier<T> {
         int n = x.length;
         int m = rbf.length;
 
-        Matrix G = new Matrix(n, m+1);
-        Matrix b = new Matrix(n, k);
+        DenseMatrix G = DenseMatrix.zeros(ScalarType.Float64, n, m+1);
+        DenseMatrix b = DenseMatrix.zeros(ScalarType.Float64, n, k);
         for (int i = 0; i < n; i++) {
             double sum = 0.0;
             for (int j = 0; j < m; j++) {
@@ -191,10 +192,11 @@ public class RBFNetwork<T> extends AbstractClassifier<T> {
             }
         }
 
-        Matrix.QR qr = G.qr(true);
+        QR qr = G.qr();
         qr.solve(b);
+        DenseMatrix w = b.submatrix(0, 0, m, k-1);
 
-        return new RBFNetwork<>(k, rbf, b.submatrix(0, 0, m, k-1), normalize, codec.classes);
+        return new RBFNetwork<>(k, rbf, w, normalize, codec.classes);
     }
 
     /**
@@ -221,15 +223,15 @@ public class RBFNetwork<T> extends AbstractClassifier<T> {
     @Override
     public int predict(T x) {
         int m = rbf.length;
-        double[] f = new double[m+1];
-        f[m] = 1.0;
+        Vector f = w.vector(m+1);
+        f.set(m, 1.0);
         for (int i = 0; i < m; i++) {
-            f[i] = rbf[i].f(x);
+            f.set(i, rbf[i].f(x));
         }
 
-        double[] sumw = new double[k];
+        Vector sumw = w.vector(k);
         w.tv(f, sumw);
 
-        return classes.valueOf(MathEx.whichMax(sumw));
+        return classes.valueOf(sumw.iamax());
     }
 }

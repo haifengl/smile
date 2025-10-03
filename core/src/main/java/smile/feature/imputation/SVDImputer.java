@@ -16,7 +16,10 @@
  */
 package smile.feature.imputation;
 
-import smile.math.matrix.Matrix;
+import smile.tensor.DenseMatrix;
+import smile.tensor.QR;
+import smile.tensor.SVD;
+import smile.tensor.Vector;
 
 /**
  * Missing value imputation with singular value decomposition. Given SVD
@@ -62,7 +65,7 @@ public interface SVDImputer {
         double[][] full = SimpleImputer.impute(data);
 
         for (int iter = 0; iter < maxIter; iter++) {
-            Matrix.SVD svd = Matrix.of(full).svd(true, true);
+            SVD svd = DenseMatrix.of(full).svd(true);
 
             for (int i = 0; i < data.length; i++) {
                 int missing = 0;
@@ -78,26 +81,26 @@ public interface SVDImputer {
                     continue;
                 }
 
-                Matrix A = new Matrix(d - missing, k);
+                DenseMatrix A = svd.Vt().zeros(d - missing, k);
                 double[] b = new double[d - missing];
 
                 for (int j = 0, m = 0; j < d; j++) {
                     if (!Double.isNaN(data[i][j])) {
                         for (int l = 0; l < k; l++) {
-                            A.set(m, l, svd.V.get(j, l));
+                            A.set(m, l, svd.Vt().get(l, j));
                         }
                         b[m++] = data[i][j];
                     }
                 }
 
-                Matrix.QR qr = A.qr(true);
-                double[] s = qr.solve(b);
+                QR qr = A.qr();
+                Vector s = qr.solve(b);
 
                 for (int j = 0; j < d; j++) {
                     if (Double.isNaN(data[i][j])) {
                         full[i][j] = 0;
                         for (int l = 0; l < k; l++) {
-                            full[i][j] += s[l] * svd.V.get(j, l);
+                            full[i][j] += s.get(l) * svd.Vt().get(l, j);
                         }
                     }
                 }

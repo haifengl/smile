@@ -19,8 +19,10 @@ package smile.regression;
 import java.io.Serial;
 import java.util.Properties;
 import smile.base.rbf.RBF;
-import smile.math.matrix.Matrix;
 import smile.math.rbf.RadialBasisFunction;
+import smile.tensor.DenseMatrix;
+import smile.tensor.QR;
+import smile.tensor.ScalarType;
 
 /**
  * Radial basis function network. A radial basis function network is an
@@ -133,7 +135,7 @@ public class RBFNetwork<T> implements Regression<T> {
         int n = x.length;
         int m = rbf.length;
 
-        Matrix G = new Matrix(n, m);
+        DenseMatrix G = DenseMatrix.zeros(ScalarType.Float64, n, m);
         double[] b = new double[n];
         for (int i = 0; i < n; i++) {
             double sum = 0.0;
@@ -150,8 +152,8 @@ public class RBFNetwork<T> implements Regression<T> {
             }
         }
 
-        Matrix.QR qr = G.qr(true);
-        double[] w = qr.solve(b);
+        QR qr = G.qr();
+        double[] w = qr.solve(b).toArray(new double[0]);
 
         return new RBFNetwork<>(rbf, w, normalize);
     }

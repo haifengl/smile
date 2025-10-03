@@ -23,7 +23,8 @@ import smile.data.formula.Formula;
 import smile.data.type.StructType;
 import smile.math.MathEx;
 import smile.linalg.UPLO;
-import smile.math.matrix.Matrix;
+import smile.tensor.Cholesky;
+import smile.tensor.DenseMatrix;
 import smile.util.Strings;
 
 /**
@@ -186,7 +187,7 @@ public class RidgeRegression {
         formula = formula.expand(data.schema());
         StructType schema = formula.bind(data.schema());
 
-        Matrix X = formula.matrix(data, false);
+        DenseMatrix X = formula.matrix(data, false);
         double[] y = formula.y(data).toDoubleArray();
 
         int n = X.nrow();
@@ -235,8 +236,8 @@ public class RidgeRegression {
             }
         }
 
-        Matrix scaledX = X.scale(center, scale);
-        Matrix XtW = new Matrix(p, n);
+        DenseMatrix scaledX = X.scale(center, scale);
+        DenseMatrix XtW = new Matrix(p, n);
         for (int i = 0; i < p; i++) {
             for (int j = 0; j < n; j++) {
                 XtW.set(i, j, weights[j] * scaledX.get(j, i));
@@ -248,10 +249,10 @@ public class RidgeRegression {
             scaledY[i] += lambda[i] * beta0[i];
         }
 
-        Matrix XtX = XtW.mm(scaledX);
-        XtX.uplo(UPLO.LOWER);
+        DenseMatrix XtX = XtW.mm(scaledX);
+        XtX.withUplo(UPLO.LOWER);
         XtX.addDiag(lambda);
-        Matrix.Cholesky cholesky = XtX.cholesky(true);
+        Cholesky cholesky = XtX.cholesky(true);
 
         double[] w = cholesky.solve(scaledY);
         for (int j = 0; j < p; j++) {

@@ -16,12 +16,13 @@
  */
 package smile.feature.extraction;
 
+import java.io.Serial;
 import smile.data.DataFrame;
 import smile.math.MathEx;
 import smile.linalg.UPLO;
-import smile.math.matrix.Matrix;
-
-import java.io.Serial;
+import smile.tensor.DenseMatrix;
+import smile.tensor.EVD;
+import smile.tensor.SVD;
 
 /**
  * Principal component analysis. PCA is an orthogonal
@@ -76,7 +77,7 @@ public class PCA extends Projection {
     /**
      * The matrix of variable loadings, whose columns contain the eigenvectors.
      */
-    private final Matrix eigvectors;
+    private final DenseMatrix eigvectors;
     /**
      * Eigenvalues of principal components.
      */
@@ -98,7 +99,7 @@ public class PCA extends Projection {
      * @param projection the projection matrix.
      * @param columns the columns to transform when applied on Tuple/DataFrame.
      */
-    public PCA(double[] mu, double[] eigvalues, Matrix loadings, Matrix projection, String... columns) {
+    public PCA(double[] mu, double[] eigvalues, DenseMatrix loadings, DenseMatrix projection, String... columns) {
         super(projection, "PCA", columns);
 
         this.mu = mu;
@@ -152,7 +153,7 @@ public class PCA extends Projection {
         int n = data[0].length;
 
         double[] mu = MathEx.colMeans(data);
-        Matrix X = Matrix.of(data);
+        DenseMatrix X = DenseMatrix.of(data);
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
                 X.sub(i, j, mu[j]);
@@ -160,9 +161,9 @@ public class PCA extends Projection {
         }
 
         double[] eigvalues;
-        Matrix eigvectors;
+        DenseMatrix eigvectors;
         if (m > n) {
-            Matrix.SVD svd = X.svd(true, true);
+            SVD svd = X.svd(true, true);
             eigvalues = svd.s;
             for (int i = 0; i < eigvalues.length; i++) {
                 eigvalues[i] *= eigvalues[i];
@@ -171,7 +172,7 @@ public class PCA extends Projection {
             eigvectors = svd.V;
         } else {
 
-            Matrix cov = new Matrix(n, n);
+            DenseMatrix cov = new Matrix(n, n);
             for (int k = 0; k < m; k++) {
                 for (int i = 0; i < n; i++) {
                     for (int j = 0; j <= i; j++) {
@@ -187,14 +188,14 @@ public class PCA extends Projection {
                 }
             }
 
-            cov.uplo(UPLO.LOWER);
-            Matrix.EVD eigen = cov.eigen(false, true, true).sort();
+            cov.withUplo(UPLO.LOWER);
+            EVD eigen = cov.eigen(false, true, true).sort();
 
             eigvalues = eigen.wr;
             eigvectors = eigen.Vr;
         }
 
-        Matrix projection = getProjection(eigvalues, eigvectors, 0.95);
+        DenseMatrix projection = getProjection(eigvalues, eigvectors, 0.95);
         return new PCA(mu, eigvalues, eigvectors, projection, columns);
     }
 
@@ -209,14 +210,14 @@ public class PCA extends Projection {
         int n = data[0].length;
 
         double[] mu = MathEx.colMeans(data);
-        Matrix x = Matrix.of(data);
+        DenseMatrix x = DenseMatrix.of(data);
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
                 x.sub(i, j, mu[j]);
             }
         }
 
-        Matrix cov = new Matrix(n, n);
+        DenseMatrix cov = new Matrix(n, n);
         for (int k = 0; k < m; k++) {
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j <= i; j++) {
@@ -244,18 +245,18 @@ public class PCA extends Projection {
             }
         }
 
-        cov.uplo(UPLO.LOWER);
-        Matrix.EVD eigen = cov.eigen(false, true, true).sort();
+        cov.withUplo(UPLO.LOWER);
+        EVD eigen = cov.eigen(false, true, true).sort();
 
-        Matrix loadings = eigen.Vr;
+        DenseMatrix loadings = eigen.Vr();
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
                 loadings.div(i, j, sd[i]);
             }
         }
 
-        Matrix projection = getProjection(eigen.wr, loadings, 0.95);
-        return new PCA(mu, eigen.wr, loadings, projection, columns);
+        DenseMatrix projection = getProjection(eigen.wr(), loadings, 0.95);
+        return new PCA(mu, eigen.wr(), loadings, projection, columns);
     }
 
     /**
@@ -271,7 +272,7 @@ public class PCA extends Projection {
      * by corresponding eigenvalues. The matrix columns contain the eigenvectors.
      * @return the variable loading matrix.
      */
-    public Matrix loadings() {
+    public DenseMatrix loadings() {
         return eigvectors;
     }
 
@@ -311,7 +312,7 @@ public class PCA extends Projection {
      * @param p the required percentage of variance.
      * @return the projection matrix.
      */
-    private static Matrix getProjection(double[] eigvalues, Matrix loadings, double p) {
+    private static DenseMatrix getProjection(double[] eigvalues, DenseMatrix loadings, double p) {
         if (p <= 0.0 || p > 1.0) {
             throw new IllegalArgumentException("Invalid percentage of variance: " + p);
         }
@@ -338,13 +339,13 @@ public class PCA extends Projection {
      * @param p the required percentage of variance.
      * @return the projection matrix.
      */
-    private static Matrix getProjection(Matrix loadings, int p) {
+    private static DenseMatrix getProjection(DenseMatrix loadings, int p) {
         int n = loadings.nrow();
         if (p < 1 || p > n) {
             throw new IllegalArgumentException("Invalid dimension of feature space: " + p);
         }
 
-        Matrix projection = new Matrix(p, n);
+        DenseMatrix projection = new Matrix(p, n);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < p; j++) {
                 projection.set(j, i, loadings.get(i, j));
@@ -360,7 +361,7 @@ public class PCA extends Projection {
      * @return a new PCA projection.
      */
     public PCA getProjection(int p) {
-        Matrix projection = getProjection(eigvectors, p);
+        DenseMatrix projection = getProjection(eigvectors, p);
         return new PCA(mu, eigvalues, eigvectors, projection, columns);
     }
 

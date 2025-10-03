@@ -22,11 +22,8 @@ import java.util.Properties;
 import smile.graph.AdjacencyList;
 import smile.graph.NearestNeighborGraph;
 import smile.math.MathEx;
-import smile.linalg.ARPACK;
 import smile.linalg.Transpose;
-import smile.math.matrix.IMatrix;
-import smile.math.matrix.Matrix;
-import smile.math.matrix.SparseMatrix;
+import smile.tensor.*;
 
 /**
  * Locally Linear Embedding. It has several advantages over Isomap, including
@@ -157,7 +154,7 @@ public class LLE {
             colIndex[i] = colIndex[i - 1] + k;
         }
 
-        Matrix C = new Matrix(k, k);
+        DenseMatrix C = new Matrix(k, k);
         double[] b = new double[k];
 
         int m = 0;
@@ -184,7 +181,7 @@ public class LLE {
             }
 
             Arrays.fill(b, 1.0);
-            Matrix.LU lu = C.lu(true);
+            LU lu = C.lu(true);
             b = lu.solve(b);
 
             double sum = MathEx.sum(b);
@@ -202,9 +199,9 @@ public class LLE {
 
         // ARPACK may not find all needed eigenvalues for k = d + 1.
         // Hack it with 10 * (d + 1).
-        Matrix.EVD eigen = ARPACK.syev(new M(Wt), ARPACK.SymmOption.SM, Math.min(10*(d+1), n-1));
+        EVD eigen = ARPACK.syev(new M(Wt), ARPACK.SymmOption.SM, Math.min(10*(d+1), n-1));
 
-        Matrix V = eigen.Vr;
+        DenseMatrix V = eigen.Vr();
         // Sometimes, ARPACK doesn't compute the smallest eigenvalue (i.e. 0).
         // Maybe due to numeric stability.
         int offset = eigen.wr[eigen.wr.length - 1] < 1E-12 ? 2 : 1;
@@ -224,7 +221,7 @@ public class LLE {
      * we have M * v = v - W * v - W' * v + W' * W * v. As W is sparse and we can
      * compute only W * v and W' * v efficiently.
      */
-    private static class M extends IMatrix {
+    private static class M implements Matrix {
         final SparseMatrix Wt;
         final double[] x;
         final double[] Wx;
@@ -251,12 +248,12 @@ public class LLE {
         }
 
         @Override
-        public long size() {
-            return Wt.size();
+        public long length() {
+            return Wt.length();
         }
 
         @Override
-        public void mv(double[] work, int inputOffset, int outputOffset) {
+        public void mv(Vector work, int inputOffset, int outputOffset) {
             System.arraycopy(work, inputOffset, x, 0, x.length);
             Wt.tv(x, Wx);
             Wt.mv(x, Wtx);
@@ -269,12 +266,12 @@ public class LLE {
         }
 
         @Override
-        public void tv(double[] work, int inputOffset, int outputOffset) {
+        public void tv(Vector work, int inputOffset, int outputOffset) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public void mv(Transpose trans, double alpha, double[] x, double beta, double[] y) {
+        public void mv(Transpose trans, double alpha, Vector x, double beta, Vector y) {
             throw new UnsupportedOperationException();
         }
     }

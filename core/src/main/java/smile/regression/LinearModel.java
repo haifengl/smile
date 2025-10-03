@@ -24,9 +24,9 @@ import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.data.type.StructType;
 import smile.math.MathEx;
-import smile.math.matrix.Matrix;
 import smile.math.special.Beta;
 import smile.stat.Hypothesis;
+import smile.tensor.DenseMatrix;
 
 /**
  * Linear model. In linear regression,
@@ -146,7 +146,7 @@ public class LinearModel implements DataFrameRegression {
      * First initialized to the matrix (X<sup>T</sup>X)<sup>-1</sup>,
      * it is updated with each new learning instance.
      */
-    Matrix V;
+    DenseMatrix V;
 
     /**
      * Constructor.
@@ -158,7 +158,7 @@ public class LinearModel implements DataFrameRegression {
      * @param w the linear weights.
      * @param b the intercept.
      */
-    public LinearModel(Formula formula, StructType schema, Matrix X, double[] y, double[] w, double b) {
+    public LinearModel(Formula formula, StructType schema, DenseMatrix X, double[] y, double[] w, double b) {
         this.formula = formula;
         this.schema = schema;
         this.predictors = X.colNames();
@@ -356,10 +356,10 @@ public class LinearModel implements DataFrameRegression {
     @Override
     public double[] predict(DataFrame df) {
         if (bias) {
-            Matrix X = formula.matrix(df, true);
+            DenseMatrix X = formula.matrix(df, true);
             return X.mv(w);
         } else {
-            Matrix X = formula.matrix(df, false);
+            DenseMatrix X = formula.matrix(df, false);
             double[] y = new double[X.nrow()];
             Arrays.fill(y, b);
             X.mv(1.0, w, 1.0, y);

@@ -20,8 +20,8 @@ import java.util.Properties;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.type.StructType;
-import smile.math.matrix.Matrix;
 import smile.math.special.Beta;
+import smile.tensor.*;
 
 /**
  * Ordinary least squares. In linear regression,
@@ -153,7 +153,7 @@ public class OLS {
         formula = formula.expand(data.schema());
         StructType schema = formula.bind(data.schema());
 
-        Matrix X = formula.matrix(data);
+        DenseMatrix X = formula.matrix(data);
         double[] y = formula.y(data).toDoubleArray();
 
         int n = X.nrow();
@@ -164,9 +164,9 @@ public class OLS {
         }
 
         // weights and intercept
-        double[] w;
-        Matrix.QR qr = null;
-        Matrix.SVD svd;
+        Vector w;
+        QR qr = null;
+        SVD svd;
 
         if (options.method == Method.SVD) {
             svd = X.svd();
@@ -182,11 +182,11 @@ public class OLS {
             }
         }
 
-        LinearModel model = new LinearModel(formula, schema, X, y, w, 0.0);
+        LinearModel model = new LinearModel(formula, schema, X, y, w.toArray(new double[0]), 0.0);
 
-        Matrix inv = null;
+        DenseMatrix inv = null;
         if (options.stderr || options.recursive) {
-            Matrix.Cholesky cholesky = qr == null ? X.ata().cholesky(true) : qr.CholeskyOfAtA();
+            Cholesky cholesky = qr == null ? X.ata().cholesky() : qr.toCholesky();
             inv = cholesky.inverse();
             model.V = inv;
         }
@@ -196,10 +196,10 @@ public class OLS {
             model.ttest = ttest;
 
             for (int i = 0; i < p; i++) {
-                ttest[i][0] = w[i];
+                ttest[i][0] = w.get(i);
                 double se = model.error * Math.sqrt(inv.get(i, i));
                 ttest[i][1] = se;
-                double t = w[i] / se;
+                double t = w.get(i) / se;
                 ttest[i][2] = t;
                 ttest[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * model.df, 0.5, model.df / (model.df + t * t));
             }

@@ -26,9 +26,11 @@ import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.glm.model.Model;
 import smile.math.MathEx;
-import smile.math.matrix.Matrix;
 import smile.math.special.Erf;
 import smile.stat.Hypothesis;
+import smile.tensor.Cholesky;
+import smile.tensor.DenseMatrix;
+import smile.tensor.QR;
 import smile.validation.ModelSelection;
 
 /**
@@ -251,7 +253,7 @@ public class GLM implements Serializable {
      * @return the mean response.
      */
     public double[] predict(DataFrame data) {
-        Matrix X = formula.matrix(data, true);
+        DenseMatrix X = formula.matrix(data, true);
         double[] y = X.mv(beta);
         int n = y.length;
         for (int i = 0; i < n; i++) {
@@ -362,8 +364,8 @@ public class GLM implements Serializable {
      * @return the model.
      */
     public static GLM fit(Formula formula, DataFrame data, Model model, Options options) {
-        Matrix X = formula.matrix(data, true);
-        Matrix XW = new Matrix(X.nrow(), X.ncol());
+        DenseMatrix X = formula.matrix(data, true);
+        DenseMatrix XW = new Matrix(X.nrow(), X.ncol());
         double[] y = formula.y(data).toDoubleArray();
 
         int n = X.nrow();
@@ -396,7 +398,7 @@ public class GLM implements Serializable {
             }
         }
 
-        Matrix.QR qr = XW.qr(true);
+        QR qr = XW.qr();
         double[] beta = qr.solve(z);
 
         double dev = Double.POSITIVE_INFINITY;
@@ -431,8 +433,8 @@ public class GLM implements Serializable {
             beta = qr.solve(z);
         }
 
-        Matrix.Cholesky cholesky = qr.CholeskyOfAtA();
-        Matrix inv = cholesky.inverse();
+        Cholesky cholesky = qr.toCholesky();
+        DenseMatrix inv = cholesky.inverse();
         double[][] ztest = new double[p][4];
         for (int i = 0; i < p; i++) {
             ztest[i][0] = beta[i];
