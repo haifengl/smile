@@ -30,6 +30,7 @@ import smile.sort.QuickSort;
 import smile.sort.Sort;
 import smile.stat.distribution.GaussianDistribution;
 import smile.tensor.ScalarType;
+import smile.tensor.Vector;
 import smile.util.IntPair;
 import smile.util.SparseArray;
 
@@ -2670,6 +2671,17 @@ public class MathEx {
     }
 
     /**
+     * The Euclidean distance.
+     *
+     * @param a a sparse vector.
+     * @param b a sparse vector.
+     * @return the Euclidean distance.
+     */
+    public static double distance(Vector a, Vector b) {
+        return sqrt(squaredDistance(a, b));
+    }
+
+    /**
      * The squared Euclidean distance on binary sparse arrays,
      * which are the indices of nonzero elements in ascending order.
      *
@@ -2829,6 +2841,28 @@ public class MathEx {
             sum += d * d;
         }
         
+        return sum;
+    }
+
+    /**
+     * The squared Euclidean distance.
+     *
+     * @param a a vector.
+     * @param b a vector.
+     * @return the square of Euclidean distance.
+     */
+    public static double squaredDistance(Vector a, Vector b) {
+        if (a.size() != b.size()) {
+            throw new IllegalArgumentException("Input vector sizes are different.");
+        }
+
+        int length = a.size();
+        double sum = 0.0;
+        for (int i = 0; i < length; i++) {
+            double d = a.get(i) - b.get(i);
+            sum += d * d;
+        }
+
         return sum;
     }
 
