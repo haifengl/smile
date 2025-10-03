@@ -411,7 +411,7 @@ public abstract class Vector extends DenseMatrix {
      * @return L-Infinity norm.
      */
     public double normInf() {
-        return get((int) iamax());
+        return get(iamax());
     }
 
     @Override
@@ -450,8 +450,8 @@ public abstract class Vector extends DenseMatrix {
      *
      * @return The first index of the maximum absolute value of vector x.
      */
-    public long iamax() {
-        return switch(scalarType()) {
+    public int iamax() {
+        return (int) switch(scalarType()) {
             case Float64 -> cblas_idamax(size(), memory, 1);
             case Float32 -> cblas_isamax(size(), memory, 1);
             default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
