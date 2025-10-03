@@ -16,13 +16,14 @@
  */
 package smile.feature.extraction;
 
+import java.io.Serial;
 import smile.data.Tuple;
 import smile.data.DataFrame;
 import smile.math.MathEx;
+import smile.tensor.ScalarType;
 import smile.util.function.TimeFunction;
-import smile.math.matrix.Matrix;
-
-import java.io.Serial;
+import smile.tensor.DenseMatrix;
+import smile.tensor.Vector;
 
 /**
  * Generalized Hebbian Algorithm. GHA is a linear feed-forward neural
@@ -77,11 +78,11 @@ public class GHA extends Projection {
     /**
      * Workspace for W * x.
      */
-    private final double[] y;
+    private final Vector y;
     /**
      * Workspace for W' * y.
      */
-    private final double[] wy;
+    private final Vector wy;
     /**
      * The training iterations.
      */
@@ -94,7 +95,7 @@ public class GHA extends Projection {
      * @param columns the columns to transform when applied on Tuple/DataFrame.
      */
     public GHA(int n, int p, TimeFunction r, String... columns) {
-        super(new Matrix(p, n), "GHA", columns);
+        super(DenseMatrix.zeros(ScalarType.Float64, p, n), "GHA", columns);
 
         if (n < 2) {
             throw new IllegalArgumentException("Invalid dimension of input space: " + n);
@@ -107,9 +108,8 @@ public class GHA extends Projection {
         this.n = n;
         this.p = p;
         this.r = r;
-
-        y = new double[p];
-        wy = new double[n];
+        this.y = projection.vector(p);
+        this.wy = projection.vector(n);
 
         for (int i = 0; i < p; i++) {
             for (int j = 0; j < n; j++) {
@@ -128,14 +128,13 @@ public class GHA extends Projection {
      * @param columns the columns to transform when applied on Tuple/DataFrame.
      */
     public GHA(double[][] w, TimeFunction r, String... columns) {
-        super(Matrix.of(w), "GHA", columns);
+        super(DenseMatrix.of(w), "GHA", columns);
 
         this.p = w.length;
         this.n = w[0].length;
         this.r = r;
-
-        y = new double[p];
-        wy = new double[n];
+        this.y = projection.vector(p);
+        this.wy = projection.vector(n);
     }
 
     /**
@@ -148,15 +147,16 @@ public class GHA extends Projection {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, n));
         }
 
-        projection.mv(x, y);
+        Vector x_ = Vector.column(x);
+        projection.mv(x_, y);
 
         for (int j = 0; j < p; j++) {
             for (int i = 0; i < n; i++) {
                 double delta = x[i];
                 for (int l = 0; l <= j; l++) {
-                    delta -= projection.get(l, i) * y[l];
+                    delta -= projection.get(l, i) * y.get(l);
                 }
-                projection.add(j, i, r.apply(t) * y[j] * delta);
+                projection.add(j, i, r.apply(t) * y.get(j) * delta);
 
                 if (Double.isInfinite(projection.get(j, i))) {
                     throw new IllegalStateException("GHA lost convergence. Lower learning rate?");
@@ -165,7 +165,7 @@ public class GHA extends Projection {
         }
 
         t++;
-        projection.mv(x, y);
+        projection.mv(x_, y);
         projection.tv(y, wy);
         return MathEx.squaredDistance(x, wy);
     }

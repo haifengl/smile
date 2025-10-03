@@ -20,9 +20,9 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import smile.math.MathEx;
-import smile.math.matrix.Matrix;
 import smile.math.special.Beta;
 import smile.stat.Hypothesis;
+import smile.tensor.*;
 
 /**
  * Autoregressive moving-average model. ARMA models provide a parsimonious
@@ -327,7 +327,7 @@ public class ARMA implements Serializable {
         System.arraycopy(arm.residuals(), 0, a, m, a.length - m);
 
         double[] y = Arrays.copyOfRange(x, m+k, x.length);
-        Matrix X = new Matrix(n, p+q+1);
+        DenseMatrix X = DenseMatrix.zeros(ScalarType.Float64, n, p+q+1);
         for (int j = 0; j < p; j++) {
             for (int i = 0; i < n; i++) {
                 X.set(i, j, x[m+k+i-j-1]);
@@ -344,19 +344,19 @@ public class ARMA implements Serializable {
             X.set(i, p+q, 1.0);
         }
 
-        Matrix.SVD svd = X.svd(true, false);
-        double[] arma = svd.solve(y);
-        double[] fittedValues = X.mv(arma);
+        SVD svd = X.copy().svd();
+        Vector arma = svd.solve(y);
+        double[] fittedValues = X.mv(arma).toArray(new double[0]);
         for (int j = 0; j < n; j++) {
             a[m+k+j] = x[m+k+j] - fittedValues[j];
         }
 
-        double[] ar = Arrays.copyOf(arma, p);
-        double[] ma = Arrays.copyOfRange(arma, p, p+q);
-        ARMA model = new ARMA(x, ar, ma, arma[p+q], fittedValues, Arrays.copyOfRange(a, m+k, n));
+        double[] ar = arma.slice(0, p).toArray(new double[p]);
+        double[] ma = arma.slice(p, p+q).toArray(new double[q]);
+        ARMA model = new ARMA(x, ar, ma, arma.get(p+q), fittedValues, Arrays.copyOfRange(a, m+k, n));
 
-        Matrix.Cholesky cholesky = X.ata().cholesky(true);
-        Matrix inv = cholesky.inverse();
+        Cholesky cholesky = X.ata().cholesky();
+        DenseMatrix inv = cholesky.inverse();
 
         int df = model.df;
         double error = Math.sqrt(model.variance);
@@ -364,10 +364,10 @@ public class ARMA implements Serializable {
         model.ttest = ttest;
 
         for (int i = 0; i < p+q; i++) {
-            ttest[i][0] = arma[i];
+            ttest[i][0] = arma.get(i);
             double se = error * Math.sqrt(inv.get(i, i));
             ttest[i][1] = se;
-            double t = arma[i] / se;
+            double t = arma.get(i) / se;
             ttest[i][2] = t;
             ttest[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
         }

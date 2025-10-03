@@ -24,10 +24,7 @@ import java.util.function.Function;
 import smile.math.MathEx;
 import smile.linalg.UPLO;
 import smile.math.kernel.MercerKernel;
-import smile.tensor.ARPACK;
-import smile.tensor.DenseMatrix;
-import smile.tensor.ScalarType;
-import smile.tensor.Vector;
+import smile.tensor.*;
 
 /**
  * Kernel principal component analysis. Kernel PCA is an extension of
@@ -202,7 +199,7 @@ public class KPCA<T> implements Function<T, double[]>, Serializable {
             }
         }
 
-        K.uplo(UPLO.LOWER);
+        K.withUplo(UPLO.LOWER);
         EVD eigen = ARPACK.syev(K, ARPACK.SymmOption.LA, d);
 
         Vector eigvalues = eigen.wr();
@@ -244,7 +241,7 @@ public class KPCA<T> implements Function<T, double[]>, Serializable {
      * by y = W * K(x, &middot;).
      * @return the projection matrix.
      */
-    public Matrix projection() {
+    public DenseMatrix projection() {
         return projection;
     }
 

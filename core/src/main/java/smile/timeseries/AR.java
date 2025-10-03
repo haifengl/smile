@@ -22,7 +22,7 @@ import java.util.Arrays;
 import smile.math.MathEx;
 import smile.math.special.Beta;
 import smile.stat.Hypothesis;
-import smile.tensor.DenseMatrix;
+import smile.tensor.*;
 
 /**
  * Autoregressive model. The autoregressive model specifies that the output
@@ -192,9 +192,9 @@ public class AR implements Serializable {
     }
 
     /** Returns the least squares design matrix. */
-    private static Matrix X(double[] x, int p) {
+    private static DenseMatrix X(double[] x, int p) {
         int n = x.length - p;
-        Matrix X = new Matrix(n, p+1);
+        DenseMatrix X = DenseMatrix.zeros(ScalarType.Float64, n, p+1);
         for (int j = 0; j < p; j++) {
             for (int i = 0; i < n; i++) {
                 X.set(i, j, x[i+p-j-1]);
@@ -357,10 +357,10 @@ public class AR implements Serializable {
         double[] r = new double[p];
         r[0] = 1.0;
         System.arraycopy(y, 0, r, 1, p - 1);
-        Matrix toeplitz = Matrix.toeplitz(r);
+        DenseMatrix toeplitz = DenseMatrix.toeplitz(r);
 
-        Matrix.Cholesky cholesky = toeplitz.cholesky();
-        double[] ar = cholesky.solve(y);
+        Cholesky cholesky = toeplitz.cholesky();
+        double[] ar = cholesky.solve(y).toArray(new double[0]);
         double mu = mean * (1.0 - MathEx.sum(ar));
         AR model = new AR(x, ar, mu, Method.YuleWalker);
 
@@ -397,17 +397,17 @@ public class AR implements Serializable {
             throw new IllegalArgumentException("Invalid order p = " + p);
         }
 
-        Matrix X = X(x, p);
+        DenseMatrix X = X(x, p);
         double[] y = y(x, p);
 
         // weights and intercept
-        Matrix.SVD svd = X.svd(true, !stderr);
-        double[] ar = svd.solve(y);
-        AR model = new AR(x, Arrays.copyOf(ar, p), ar[p], Method.OLS);
+        SVD svd = X.copy().svd(true);
+        Vector ar = svd.solve(y);
+        AR model = new AR(x, ar.slice(0, p).toArray(new double[p]), ar.get(p), Method.OLS);
 
         if (stderr) {
-            Matrix.Cholesky cholesky = X.ata().cholesky(true);
-            Matrix inv = cholesky.inverse();
+            Cholesky cholesky = X.ata().cholesky();
+            DenseMatrix inv = cholesky.inverse();
 
             int df = model.df;
             double error = Math.sqrt(model.variance);
@@ -415,10 +415,10 @@ public class AR implements Serializable {
             model.ttest = ttest;
 
             for (int i = 0; i < p; i++) {
-                ttest[i][0] = ar[i];
+                ttest[i][0] = ar.get(i);
                 double se = error * Math.sqrt(inv.get(i, i));
                 ttest[i][1] = se;
-                double t = ar[i] / se;
+                double t = ar.get(i) / se;
                 ttest[i][2] = t;
                 ttest[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
             }

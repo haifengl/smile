@@ -25,6 +25,7 @@ import smile.math.MathEx;
 import smile.linalg.Transpose;
 import smile.tensor.Matrix;
 import smile.tensor.DenseMatrix;
+import smile.tensor.Preconditioner;
 
 /**
  * Lasso (least absolute shrinkage and selection operator) regression.
@@ -452,7 +453,7 @@ public class LASSO {
     /**
      * Preconditioned conjugate gradients matrix.
      */
-    static class PCG extends IMatrix implements IMatrix.Preconditioner {
+    static class PCG implements Matrix, Preconditioner {
         /** The design matrix. */
         final Matrix A;
         /** A' * A */

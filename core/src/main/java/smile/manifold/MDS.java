@@ -18,9 +18,8 @@ package smile.manifold;
 
 import java.util.Properties;
 import smile.math.MathEx;
-import smile.linalg.ARPACK;
 import smile.linalg.UPLO;
-import smile.math.matrix.Matrix;
+import smile.tensor.*;
 
 /**
  * Classical multidimensional scaling, also known as principal coordinates
@@ -127,10 +126,10 @@ public record MDS(double[] scores, double[] proportion, double[][] coordinates) 
             throw new IllegalArgumentException("Invalid d = " + d);
         }
 
-        Matrix B = getGram(proximity);
+        DenseMatrix B = getGram(proximity);
 
         if (options.positive) {
-            Matrix Z = new Matrix(2 * n, 2 * n);
+            DenseMatrix Z = DenseMatrix.zeros(ScalarType.Float64, 2 * n, 2 * n);
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n; j++) {
                     Z.set(i, n + j, 2 * B.get(i, j));
@@ -149,8 +148,8 @@ public record MDS(double[] scores, double[] proportion, double[][] coordinates) 
                 }
             }
 
-            double[] eigvalues = Z.eigen(false, false, true).wr;
-            double c = MathEx.max(eigvalues);
+            Vector eigvalues = Z.eigen(false, false).wr();
+            double c = eigvalues.normInf();
 
             for (int i = 0; i < n; i++) {
                 B.set(i, i, 0.0);
@@ -162,27 +161,27 @@ public record MDS(double[] scores, double[] proportion, double[][] coordinates) 
             }
         }
 
-        B.uplo(UPLO.LOWER);
-        Matrix.EVD eigen = ARPACK.syev(B, ARPACK.SymmOption.LA, d);
+        B.withUplo(UPLO.LOWER);
+        EVD eigen = ARPACK.syev(B, ARPACK.SymmOption.LA, d);
 
-        if (eigen.wr.length < d) {
-            logger.warn("eigen({}) returns only {} eigen vectors", d, eigen.wr.length);
-            d = eigen.wr.length;
+        if (eigen.wr().size() < d) {
+            logger.warn("eigen({}) returns only {} eigen vectors", d, eigen.wr().size());
+            d = eigen.wr().size();
         }
 
         double[][] coordinates = new double[n][d];
         for (int j = 0; j < d; j++) {
-            if (eigen.wr[j] < 0) {
+            if (eigen.wr().get(j) < 0) {
                 throw new IllegalArgumentException(String.format("Some of the first %d eigenvalues are < 0.", d));
             }
 
-            double scale = Math.sqrt(eigen.wr[j]);
+            double scale = Math.sqrt(eigen.wr().get(j));
             for (int i = 0; i < n; i++) {
-                coordinates[i][j] = eigen.Vr.get(i, j) * scale;
+                coordinates[i][j] = eigen.Vr().get(i, j) * scale;
             }
         }
 
-        double[] eigenvalues = eigen.wr;
+        double[] eigenvalues = eigen.wr().toArray(new double[0]);
         double[] proportion = eigenvalues.clone();
         MathEx.unitize1(proportion);
 
@@ -194,10 +193,10 @@ public record MDS(double[] scores, double[] proportion, double[][] coordinates) 
      * @param proximity the non-negative proximity matrix of dissimilarities.
      * @return the Gram matrix.
      */
-    private static Matrix getGram(double[][] proximity) {
+    private static DenseMatrix getGram(double[][] proximity) {
         int n = proximity[0].length;
-        Matrix A = new Matrix(n, n);
-        Matrix B = new Matrix(n, n);
+        DenseMatrix A = DenseMatrix.zeros(ScalarType.Float64, n, n);
+        DenseMatrix B = DenseMatrix.zeros(ScalarType.Float64, n, n);
 
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < i; j++) {
@@ -207,12 +206,12 @@ public record MDS(double[] scores, double[] proportion, double[][] coordinates) 
             }
         }
 
-        double[] mean = A.rowMeans();
-        double mu = MathEx.mean(mean);
+        Vector mean = A.rowMeans();
+        double mu = mean.mean();
 
         for (int i = 0; i < n; i++) {
             for (int j = 0; j <= i; j++) {
-                double x = A.get(i, j) - mean[i] - mean[j] + mu;
+                double x = A.get(i, j) - mean.get(i) - mean.get(j) + mu;
                 B.set(i, j, x);
                 B.set(j, i, x);
             }

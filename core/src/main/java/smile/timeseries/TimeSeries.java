@@ -17,7 +17,9 @@
 package smile.timeseries;
 
 import smile.math.MathEx;
-import smile.math.matrix.Matrix;
+import smile.tensor.Cholesky;
+import smile.tensor.DenseMatrix;
+import smile.tensor.Vector;
 
 /**
  * Time series utility functions.
@@ -150,11 +152,11 @@ public interface TimeSeries {
         double[] r1 = new double[lag];
         r1[0] = 1.0;
         System.arraycopy(r, 0, r1, 1, lag - 1);
-        Matrix toeplitz = Matrix.toeplitz(r1);
+        DenseMatrix toeplitz = DenseMatrix.toeplitz(r1);
 
-        Matrix.Cholesky cholesky = toeplitz.cholesky();
-        double[] pacf = cholesky.solve(r);
+        Cholesky cholesky = toeplitz.cholesky();
+        Vector pacf = cholesky.solve(r);
 
-        return pacf[lag - 1];
+        return pacf.get(lag - 1);
     }
 }

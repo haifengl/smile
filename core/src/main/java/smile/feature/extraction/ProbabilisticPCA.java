@@ -16,12 +16,14 @@
  */
 package smile.feature.extraction;
 
+import java.io.Serial;
 import smile.data.DataFrame;
 import smile.math.MathEx;
 import smile.linalg.UPLO;
-import smile.math.matrix.Matrix;
-
-import java.io.Serial;
+import smile.tensor.Cholesky;
+import smile.tensor.DenseMatrix;
+import smile.tensor.EVD;
+import smile.tensor.ScalarType;
 
 /**
  * Probabilistic principal component analysis. Probabilistic PCA is
@@ -66,7 +68,7 @@ public class ProbabilisticPCA extends Projection {
     /**
      * The loading matrix.
      */
-    private final Matrix loading;
+    private final DenseMatrix loading;
 
     /**
      * Constructor.
@@ -77,7 +79,7 @@ public class ProbabilisticPCA extends Projection {
      *                   the matrix W in the latent model.
      * @param columns the columns to transform when applied on Tuple/DataFrame.
      */
-    public ProbabilisticPCA(double noise, double[] mu, Matrix loading, Matrix projection, String... columns) {
+    public ProbabilisticPCA(double noise, double[] mu, DenseMatrix loading, DenseMatrix projection, String... columns) {
         super(projection, "PPCA", columns);
 
         this.noise = noise;
@@ -93,7 +95,7 @@ public class ProbabilisticPCA extends Projection {
      * by corresponding eigenvalues.
      * @return the variable loading matrix.
      */
-    public Matrix loadings() {
+    public DenseMatrix loadings() {
         return loading;
     }
 
@@ -144,7 +146,7 @@ public class ProbabilisticPCA extends Projection {
         int n = data[0].length;
 
         double[] mu = MathEx.colMeans(data);
-        Matrix cov = new Matrix(n, n);
+        DenseMatrix cov = DenseMatrix.zeros(ScalarType.Float64, n, n);
         for (double[] datum : data) {
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j <= i; j++) {
@@ -160,10 +162,10 @@ public class ProbabilisticPCA extends Projection {
             }
         }
 
-        cov.uplo(UPLO.LOWER);
-        Matrix.EVD eigen = cov.eigen(false, true, true).sort();
-        double[] eigvalues = eigen.wr;
-        Matrix eigvectors = eigen.Vr;
+        cov.withUplo(UPLO.LOWER);
+        EVD eigen = cov.eigen(false, true).sort();
+        double[] eigvalues = eigen.wr();
+        DenseMatrix eigvectors = eigen.Vr();
 
         double noise = 0.0;
         for (int i = k; i < n; i++) {
@@ -171,19 +173,19 @@ public class ProbabilisticPCA extends Projection {
         }
         noise /= (n - k);
 
-        Matrix loading = new Matrix(n, k);
+        DenseMatrix loading = DenseMatrix.zeros(ScalarType.Float64, n, k);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < k; j++) {
                 loading.set(i, j, eigvectors.get(i, j) * Math.sqrt(eigvalues[j] - noise));
             }
         }
 
-        Matrix M = loading.ata();
+        DenseMatrix M = loading.ata();
         M.addDiag(noise);
 
-        Matrix.Cholesky chol = M.cholesky(true);
-        Matrix Mi = chol.inverse();
-        Matrix projection = Mi.mt(loading);
+        Cholesky chol = M.cholesky();
+        DenseMatrix Mi = chol.inverse();
+        DenseMatrix projection = Mi.mt(loading);
 
         return new ProbabilisticPCA(noise, mu, loading, projection, columns);
     }

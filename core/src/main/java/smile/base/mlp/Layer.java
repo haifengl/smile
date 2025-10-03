@@ -26,7 +26,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import smile.math.MathEx;
-import smile.math.matrix.Matrix;
+import smile.tensor.DenseMatrix;
 import smile.util.Regex;
 
 /**
@@ -53,7 +53,7 @@ public abstract class Layer implements AutoCloseable, Serializable {
     /**
      * The affine transformation matrix.
      */
-    protected Matrix weight;
+    protected DenseMatrix weight;
     /**
      * The bias.
      */
@@ -69,7 +69,7 @@ public abstract class Layer implements AutoCloseable, Serializable {
     /**
      * The weight gradient.
      */
-    protected transient ThreadLocal<Matrix> weightGradient;
+    protected transient ThreadLocal<DenseMatrix> weightGradient;
     /**
      * The bias gradient.
      */
@@ -77,11 +77,11 @@ public abstract class Layer implements AutoCloseable, Serializable {
     /**
      * The first moment of weight gradient.
      */
-    protected transient ThreadLocal<Matrix> weightGradientMoment1;
+    protected transient ThreadLocal<DenseMatrix> weightGradientMoment1;
     /**
      * The second moment of weight gradient.
      */
-    protected transient ThreadLocal<Matrix> weightGradientMoment2;
+    protected transient ThreadLocal<DenseMatrix> weightGradientMoment2;
     /**
      * The first moment of bias gradient.
      */
@@ -93,7 +93,7 @@ public abstract class Layer implements AutoCloseable, Serializable {
     /**
      * The weight update.
      */
-    protected transient ThreadLocal<Matrix> weightUpdate;
+    protected transient ThreadLocal<DenseMatrix> weightUpdate;
     /**
      * The bias update.
      */
@@ -143,7 +143,7 @@ public abstract class Layer implements AutoCloseable, Serializable {
      * @param dropout the dropout rate.
      */
     public Layer(int n, int p, double dropout) {
-        this(Matrix.rand(n, p, -Math.sqrt(6.0 / (n+p)), Math.sqrt(6.0 / (n+p))), new double[n], dropout);
+        this(DenseMatrix.rand(n, p, -Math.sqrt(6.0 / (n+p)), Math.sqrt(6.0 / (n+p))), new double[n], dropout);
     }
 
     /**
@@ -151,7 +151,7 @@ public abstract class Layer implements AutoCloseable, Serializable {
      * @param weight the weight matrix.
      * @param bias the bias vector.
      */
-    public Layer(Matrix weight, double[] bias) {
+    public Layer(DenseMatrix weight, double[] bias) {
         this(weight, bias, 0.0);
     }
 
@@ -161,7 +161,7 @@ public abstract class Layer implements AutoCloseable, Serializable {
      * @param bias the bias vector.
      * @param dropout the dropout rate.
      */
-    public Layer(Matrix weight, double[] bias, double dropout) {
+    public Layer(DenseMatrix weight, double[] bias, double dropout) {
         if (dropout < 0.0 || dropout >= 1.0) {
             throw new IllegalArgumentException("Invalid dropout rate: " + dropout);
         }
@@ -321,7 +321,7 @@ public abstract class Layer implements AutoCloseable, Serializable {
         double[] outputGradient = this.outputGradient.get();
 
         if (momentum > 0.0 && momentum < 1.0) {
-            Matrix weightUpdate = this.weightUpdate.get();
+            DenseMatrix weightUpdate = this.weightUpdate.get();
             double[] biasUpdate = this.biasUpdate.get();
 
             weightUpdate.mul(momentum);
@@ -372,7 +372,7 @@ public abstract class Layer implements AutoCloseable, Serializable {
      * @param epsilon a small constant for numerical stability.
      */
     public void update(int m, double learningRate, double momentum, double decay, double rho, double epsilon) {
-        Matrix weightGradient = this.weightGradient.get();
+        DenseMatrix weightGradient = this.weightGradient.get();
         double[] biasGradient = this.biasGradient.get();
 
         // Instead of computing the average gradient explicitly,
@@ -388,7 +388,7 @@ public abstract class Layer implements AutoCloseable, Serializable {
                 biasGradient[i] /= m;
             }
 
-            Matrix rmsWeightGradient = this.weightGradientMoment2.get();
+            DenseMatrix rmsWeightGradient = this.weightGradientMoment2.get();
             double[] rmsBiasGradient = this.biasGradientMoment2.get();
 
             double rho1 = 1.0 - rho;
@@ -412,7 +412,7 @@ public abstract class Layer implements AutoCloseable, Serializable {
         }
 
         if (momentum > 0.0 && momentum < 1.0) {
-            Matrix weightUpdate = this.weightUpdate.get();
+            DenseMatrix weightUpdate = this.weightUpdate.get();
             double[] biasUpdate = this.biasUpdate.get();
 
             weightUpdate.add(momentum, eta, weightGradient);
