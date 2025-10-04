@@ -515,7 +515,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
 
         DenseMatrix E = kernel.K(x, t);
         DenseMatrix W = kernel.K(t);
-        EVD eigen = W.eigen(false, true, true).sort();
+        EVD eigen = W.eigen().sort();
         DenseMatrix U = eigen.Vr();
         DenseMatrix D = eigen.diag();
         for (int i = 0; i < m; i++) {

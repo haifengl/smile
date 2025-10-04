@@ -21,6 +21,7 @@ import java.util.Properties;
 import smile.math.MathEx;
 import smile.tensor.DenseMatrix;
 import smile.tensor.EVD;
+import smile.tensor.Vector;
 import smile.util.IntSet;
 import smile.util.Strings;
 
@@ -73,7 +74,7 @@ public class QDA extends AbstractClassifier<double[]> {
     /**
      * Eigen values of each covariance matrix.
      */
-    private final double[][] eigen;
+    private final Vector[] eigen;
     /**
      * Eigen vectors of each covariance matrix, which transforms observations
      * to discriminant functions, normalized so that within groups covariance
@@ -88,7 +89,7 @@ public class QDA extends AbstractClassifier<double[]> {
      * @param eigen the eigen values of each variance matrix.
      * @param scaling the eigen vectors of each covariance matrix.
      */
-    public QDA(double[] priori, double[][] mu, double[][] eigen, DenseMatrix[] scaling) {
+    public QDA(double[] priori, double[][] mu, Vector[] eigen, DenseMatrix[] scaling) {
         this(priori, mu, eigen, scaling, IntSet.of(priori.length));
     }
 
@@ -100,7 +101,7 @@ public class QDA extends AbstractClassifier<double[]> {
      * @param scaling the eigen vectors of each covariance matrix.
      * @param labels the class label encoder.
      */
-    public QDA(double[] priori, double[][] mu, double[][] eigen, DenseMatrix[] scaling, IntSet labels) {
+    public QDA(double[] priori, double[][] mu, Vector[] eigen, DenseMatrix[] scaling, IntSet labels) {
         super(labels);
         this.k = priori.length;
         this.p = mu[0].length;
@@ -113,7 +114,7 @@ public class QDA extends AbstractClassifier<double[]> {
         for (int i = 0; i < k; i++) {
             double logev = 0.0;
             for (int j = 0; j < p; j++) {
-                logev += Math.log(eigen[i][j]);
+                logev += Math.log(eigen[i].get(j));
             }
 
             logppriori[i] = Math.log(priori[i]) - 0.5 * logev;
@@ -160,7 +161,7 @@ public class QDA extends AbstractClassifier<double[]> {
 
         int k = cov.length;
         int p = cov[0].nrow();
-        double[][] eigen = new double[k][];
+        Vector[] eigen = new Vector[k];
         DenseMatrix[] scaling = new DenseMatrix[k];
 
         tol = tol * tol;
@@ -172,16 +173,16 @@ public class QDA extends AbstractClassifier<double[]> {
                 }
             }
 
-            EVD evd = cov[i].eigen(false, true).sort();
+            EVD eig = cov[i].eigen().sort();
 
-            for (int j = 0; j < evd.wr().size(); j++) {
-                if (evd.wr().get(j) < tol) {
+            for (int j = 0; j < eig.wr().size(); j++) {
+                if (eig.wr().get(j) < tol) {
                     throw new IllegalArgumentException(String.format("Class %d covariance matrix is close to singular.", i));
                 }
             }
 
-            eigen[i] = evd.wr().toArray(new double[0]);
-            scaling[i] = evd.Vr();
+            eigen[i] = eig.wr();
+            scaling[i] = eig.Vr();
         }
 
         return new QDA(da.priori, da.mu, eigen, scaling, da.labels);
@@ -211,21 +212,22 @@ public class QDA extends AbstractClassifier<double[]> {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
         }
 
-        double[] d = new double[p];
-        double[] ux = new double[p];
+        Vector d = scaling[0].vector(p);
+        Vector ux = scaling[0].vector(p);
 
         for (int i = 0; i < k; i++) {
             double[] mui = mu[i];
             for (int j = 0; j < p; j++) {
-                d[j] = x[j] - mui[j];
+                d.set(j, x[j] - mui[j]);
             }
 
             scaling[i].tv(d, ux);
 
             double f = 0.0;
-            double[] ev = eigen[i];
+            Vector eig = eigen[i];
             for (int j = 0; j < p; j++) {
-                f += ux[j] * ux[j] / ev[j];
+                double uxj = ux.get(j);
+                f += uxj * uxj / eig.get(j);
             }
 
             posteriori[i] = logppriori[i] - 0.5 * f;
