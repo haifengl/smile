@@ -275,4 +275,30 @@ class Vector32 extends Vector implements Serializable {
     public double mean() {
         return length > 0 ? sum() / length : 0;
     }
+
+    @Override
+    public int softmax() {
+        int k = length;
+        int y = -1;
+        float max = Float.NEGATIVE_INFINITY;
+        for (int i = 0; i < k; i++) {
+            if (array[offset+i] > max) {
+                max = array[offset+i];
+                y = i;
+            }
+        }
+
+        float Z = 0.0f;
+        for (int i = 0; i < k; i++) {
+            float out = (float) Math.exp(array[offset+i] - max);
+            array[offset+i] = out;
+            Z += out;
+        }
+
+        for (int i = 0; i < k; i++) {
+            array[offset+i] /= Z;
+        }
+
+        return y;
+    }
 }
