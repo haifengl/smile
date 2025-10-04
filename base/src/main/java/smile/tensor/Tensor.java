@@ -44,7 +44,9 @@ public interface Tensor {
     int size(int dim);
 
     /**
-     * Returns the number of tensor elements.
+     * Returns the number of tensor elements. For tensors with packed storage
+     * (e.g., BandMatrix, SparseMatrix, SymmMatrix), it returns the number of
+     * non-zero elements.
      * @return the number of tensor elements.
      */
     default long length() {

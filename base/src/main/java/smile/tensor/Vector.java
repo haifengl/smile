@@ -344,26 +344,24 @@ public abstract class Vector extends DenseMatrix {
     }
 
     /**
-     * Computes a constant alpha times a vector x plus a vector y.
-     * The result overwrites the initial values of vector y.
+     * Computes a constant alpha times a vector x plus this vector y.
+     * The result overwrites the initial values of this vector y.
      *
      * @param alpha If {@code alpha = 0} this routine returns without any computation.
      *
-     * @param y Input and output vector.
-     *          Before calling the routine, y contains the vector to be summed.
-     *          After the routine ends, y contains the result of the summation.
+     * @param x Input vector.
      */
-    public void axpy(double alpha, Vector y) {
-        if (scalarType() != y.scalarType()) {
-            throw new IllegalArgumentException("Different scalar type: " + y.scalarType());
+    public void axpy(double alpha, Vector x) {
+        if (scalarType() != x.scalarType()) {
+            throw new IllegalArgumentException("Different scalar type: " + x.scalarType());
         }
-        if (size() != y.size()) {
-            throw new IllegalArgumentException("Different vector size: " + y.size());
+        if (size() != x.size()) {
+            throw new IllegalArgumentException("Different vector size: " + x.size());
         }
 
         switch(scalarType()) {
-            case Float64 -> cblas_daxpy(size(), alpha, memory, 1, y.memory, 1);
-            case Float32 -> cblas_saxpy(size(), (float) alpha, memory, 1, y.memory, 1);
+            case Float64 -> cblas_daxpy(size(), alpha, x.memory, 1, memory, 1);
+            case Float32 -> cblas_saxpy(size(), (float) alpha, x.memory, 1, memory, 1);
             default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
         }
     }
@@ -371,21 +369,21 @@ public abstract class Vector extends DenseMatrix {
     /**
      * Computes the dot product of two vectors.
      *
-     * @param y Input vector contains the second vector operand.
+     * @param x Input vector contains the second vector operand.
      *
      * @return dot product.
      */
-    public double dot(Vector y) {
-        if (scalarType() != y.scalarType()) {
-            throw new IllegalArgumentException("Different scalar type: " + y.scalarType());
+    public double dot(Vector x) {
+        if (scalarType() != x.scalarType()) {
+            throw new IllegalArgumentException("Different scalar type: " + x.scalarType());
         }
-        if (size() != y.size()) {
-            throw new IllegalArgumentException("Different vector size: " + y.size());
+        if (size() != x.size()) {
+            throw new IllegalArgumentException("Different vector size: " + x.size());
         }
 
         return switch(scalarType()) {
-            case Float64 -> cblas_ddot(size(), memory, 1, y.memory, 1);
-            case Float32 -> cblas_sdot(size(), memory, 1, y.memory, 1);
+            case Float64 -> cblas_ddot(size(), x.memory, 1, memory, 1);
+            case Float32 -> cblas_sdot(size(), x.memory, 1, memory, 1);
             default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
         };
     }
@@ -438,19 +436,19 @@ public abstract class Vector extends DenseMatrix {
     /**
      * Swaps two vectors.
      *
-     * @param y Vector to be swapped.
+     * @param x Vector to be swapped.
      */
-    public void swap(Vector y) {
-        if (scalarType() != y.scalarType()) {
-            throw new IllegalArgumentException("Different scalar type: " + y.scalarType());
+    public void swap(Vector x) {
+        if (scalarType() != x.scalarType()) {
+            throw new IllegalArgumentException("Different scalar type: " + x.scalarType());
         }
-        if (size() != y.size()) {
-            throw new IllegalArgumentException("Different vector size: " + y.size());
+        if (size() != x.size()) {
+            throw new IllegalArgumentException("Different vector size: " + x.size());
         }
 
         switch(scalarType()) {
-            case Float64 -> cblas_dswap(size(), memory, 1, y.memory, 1);
-            case Float32 -> cblas_sswap(size(), memory, 1, y.memory, 1);
+            case Float64 -> cblas_dswap(size(), x.memory, 1, memory, 1);
+            case Float32 -> cblas_sswap(size(), x.memory, 1, memory, 1);
             default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
         }
     }
