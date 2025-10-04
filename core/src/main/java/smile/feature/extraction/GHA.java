@@ -167,7 +167,7 @@ public class GHA extends Projection {
         t++;
         projection.mv(x_, y);
         projection.tv(y, wy);
-        return MathEx.squaredDistance(x, wy);
+        return MathEx.squaredDistance(x_, wy);
     }
 
     /**

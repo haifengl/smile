@@ -96,7 +96,7 @@ public class Projection implements Transform {
      * @return the projection in the feature space.
      */
     public double[] apply(double[] x) {
-        return postprocess(projection.mv(Vector.column(preprocess(x))).toArray(new double[0]));
+        return postprocess(projection.mv(preprocess(x)).toArray(new double[0]));
     }
 
     /**

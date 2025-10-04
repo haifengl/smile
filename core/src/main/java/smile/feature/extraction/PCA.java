@@ -189,10 +189,11 @@ public class PCA extends Projection {
             }
 
             cov.withUplo(UPLO.LOWER);
-            EVD eigen = cov.eigen(false, true, true).sort();
+            EVD eigen = cov.eigen();
+            eigen.sort();
 
-            eigvalues = eigen.wr;
-            eigvectors = eigen.Vr;
+            eigvalues = eigen.wr();
+            eigvectors = eigen.Vr();
         }
 
         DenseMatrix projection = getProjection(eigvalues, eigvectors, 0.95);

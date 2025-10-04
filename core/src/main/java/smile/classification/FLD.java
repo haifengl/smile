@@ -20,9 +20,7 @@ import java.io.Serial;
 import java.util.Properties;
 import smile.math.MathEx;
 import smile.sort.QuickSort;
-import smile.tensor.DenseMatrix;
-import smile.tensor.EVD;
-import smile.tensor.SVD;
+import smile.tensor.*;
 import smile.util.IntSet;
 
 /**
@@ -81,11 +79,11 @@ public class FLD extends AbstractClassifier<double[]> /*implements Projection<do
     /**
      * Projected mean vector.
      */
-    private final double[] mean;
+    private final Vector mean;
     /**
      * Projected class mean vectors.
      */
-    private final double[][] mu;
+    private final Vector[] mu;
 
     /**
      * Constructor.
@@ -111,12 +109,11 @@ public class FLD extends AbstractClassifier<double[]> /*implements Projection<do
         this.scaling = scaling;
 
         int L = scaling.ncol();
-        this.mean = new double[L];
-        scaling.tv(mean, this.mean);
+        this.mean = scaling.tv(mean);
 
-        this.mu = new double[k][L];
+        this.mu = new Vector[k];
         for (int i = 0; i < k; i++) {
-            scaling.tv(mu[i], this.mu[i]);
+            this.mu[i] = scaling.tv(mu[i]);
         }
     }
 
@@ -199,7 +196,7 @@ public class FLD extends AbstractClassifier<double[]> /*implements Projection<do
         }
 
         // Between class scatter
-        DenseMatrix Sb = new Matrix(p, p);
+        DenseMatrix Sb = DenseMatrix.zeros(ScalarType.Float64, p, p);
         for (double[] mui : mu) {
             for (int j = 0; j < p; j++) {
                 for (int i = 0; i <= j; i++) {
@@ -218,19 +215,21 @@ public class FLD extends AbstractClassifier<double[]> /*implements Projection<do
         // Within class scatter
         DenseMatrix Sw = St.sub(Sb);
         DenseMatrix SwInvSb = Sw.inverse().mm(Sb);
-        EVD evd = SwInvSb.eigen(false, true, true);
+        EVD eig = SwInvSb.eigen();
 
         double[] w = new double[p];
         for (int i = 0; i < p; i++) {
-            w[i] = -(evd.wr[i] * evd.wr[i] + evd.wi[i] * evd.wi[i]);
+            double wri = eig.wr().get(i);
+            double wii = eig.wi().get(i);
+            w[i] = -(wri * wri + wii * wii);
         }
         int[] index = QuickSort.sort(w);
 
-        DenseMatrix scaling = new Matrix(p, L);
+        DenseMatrix scaling = DenseMatrix.zeros(ScalarType.Float64, p, L);
         for (int j = 0; j < L; j++) {
             int l = index[j];
             for (int i = 0; i < p; i++) {
-                scaling.set(i, j, evd.Vr.get(i, l));
+                scaling.set(i, j, eig.Vr().get(i, l));
             }
         }
 
@@ -245,7 +244,7 @@ public class FLD extends AbstractClassifier<double[]> /*implements Projection<do
         int n = x.length;
         double sqrtn = Math.sqrt(n);
 
-        DenseMatrix X = new Matrix(p, n);
+        DenseMatrix X = DenseMatrix.zeros(ScalarType.Float64, p, n);
         for (int i = 0; i < n; i++) {
             double[] xi = x[i];
             for (int j = 0; j < p; j++) {
@@ -259,7 +258,7 @@ public class FLD extends AbstractClassifier<double[]> /*implements Projection<do
             }
         }
 
-        DenseMatrix M = new Matrix(p, k);
+        DenseMatrix M = DenseMatrix.zeros(ScalarType.Float64, p, k);
         for (int i = 0; i < k; i++) {
             double pi = Math.sqrt(priori[i]);
             double[] mui = mu[i];
@@ -268,18 +267,16 @@ public class FLD extends AbstractClassifier<double[]> /*implements Projection<do
             }
         }
 
-        SVD svd = X.svd(true, true);
+        SVD svd = X.svd();
         DenseMatrix U = svd.U();
-        double[] s = svd.s();
+        Vector s = svd.s();
 
         tol = tol * tol;
         DenseMatrix UTM = U.tm(M);
         for (int i = 0; i < n; i++) {
             // Since the rank of St is only n - k, there are some singular values of 0.
-            double si = 0.0;
-            if (s[i] > tol) {
-                si = 1.0 / Math.sqrt(s[i]);
-            }
+            double si = s.get(i);
+            si = si > tol ? 1.0 / Math.sqrt(si) : 0.0;
 
             for (int j = 0; j < k; j++) {
                 UTM.mul(i, j, si);
@@ -291,10 +288,8 @@ public class FLD extends AbstractClassifier<double[]> /*implements Projection<do
 
         for (int i = 0; i < n; i++) {
             // Since the rank of St is only n - k, there are some singular values of 0.
-            double si = 0.0;
-            if (s[i] > tol) {
-                si = 1.0 / Math.sqrt(s[i]);
-            }
+            double si = s.get(i);
+            si = si > tol ? 1.0 / Math.sqrt(si) : 0.0;
 
             for (int j = 0; j < L; j++) {
                 U2.mul(i, j, si);
@@ -310,7 +305,7 @@ public class FLD extends AbstractClassifier<double[]> /*implements Projection<do
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
         }
 
-        double[] wx = project(x);
+        Vector wx = project(x);
 
         int y = 0;
         double nearest = Double.POSITIVE_INFINITY;
@@ -330,13 +325,13 @@ public class FLD extends AbstractClassifier<double[]> /*implements Projection<do
      * @param x a sample
      * @return the feature vector.
      */
-    public double[] project(double[] x) {
+    public Vector project(double[] x) {
         if (x.length != p) {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
         }
 
-        double[] y = scaling.tv(x);
-        MathEx.sub(y, mean);
+        Vector y = scaling.tv(Vector.column(x));
+        y.sub(mean);
         return y;
     }
 
@@ -345,16 +340,17 @@ public class FLD extends AbstractClassifier<double[]> /*implements Projection<do
      * @param x samples
      * @return the feature vectors.
      */
-    public double[][] project(double[][] x) {
-        double[][] y = new double[x.length][scaling.ncol()];
+    public Vector[] project(double[][] x) {
+        Vector[] y = new Vector[x.length];
         
         for (int i = 0; i < x.length; i++) {
             if (x[i].length != p) {
                 throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x[i].length, p));
             }
 
-            scaling.tv(x[i], y[i]);
-            MathEx.sub(y[i], mean);
+            y[i] = scaling.vector(scaling.ncol());
+            scaling.tv(Vector.column(x[i]), y[i]);
+            y[i].sub(mean);
         }
         
         return y;

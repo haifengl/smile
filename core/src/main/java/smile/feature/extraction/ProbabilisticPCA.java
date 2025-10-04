@@ -20,10 +20,7 @@ import java.io.Serial;
 import smile.data.DataFrame;
 import smile.math.MathEx;
 import smile.linalg.UPLO;
-import smile.tensor.Cholesky;
-import smile.tensor.DenseMatrix;
-import smile.tensor.EVD;
-import smile.tensor.ScalarType;
+import smile.tensor.*;
 
 /**
  * Probabilistic principal component analysis. Probabilistic PCA is
@@ -56,11 +53,11 @@ public class ProbabilisticPCA extends Projection {
     /**
      * The sample mean.
      */
-    private final double[] mu;
+    private final Vector mu;
     /**
      * The projected sample mean.
      */
-    private final double[] pmu;
+    private final Vector pmu;
     /**
      * The variance of noise part.
      */
@@ -83,11 +80,9 @@ public class ProbabilisticPCA extends Projection {
         super(projection, "PPCA", columns);
 
         this.noise = noise;
-        this.mu = mu;
+        this.mu = Vector.column(mu);
+        this.pmu = projection.mv(this.mu);
         this.loading = loading;
-
-        pmu = new double[projection.nrow()];
-        projection.mv(mu, pmu);
     }
 
     /**
@@ -103,7 +98,7 @@ public class ProbabilisticPCA extends Projection {
      * Returns the center of data.
      * @return the center of data.
      */
-    public double[] center() {
+    public Vector center() {
         return mu;
     }
 
@@ -117,7 +112,9 @@ public class ProbabilisticPCA extends Projection {
 
     @Override
     protected double[] postprocess(double[] x) {
-        MathEx.sub(x, pmu);
+        for (int i = 0; i < x.length; i++) {
+            x[i] -= pmu.get(i);
+        }
         return x;
     }
 
@@ -163,25 +160,25 @@ public class ProbabilisticPCA extends Projection {
         }
 
         cov.withUplo(UPLO.LOWER);
-        EVD eigen = cov.eigen(false, true).sort();
-        double[] eigvalues = eigen.wr();
+        EVD eigen = cov.eigen().sort();
+        Vector eigvalues = eigen.wr();
         DenseMatrix eigvectors = eigen.Vr();
 
         double noise = 0.0;
         for (int i = k; i < n; i++) {
-            noise += eigvalues[i];
+            noise += eigvalues.get(i);
         }
         noise /= (n - k);
 
         DenseMatrix loading = DenseMatrix.zeros(ScalarType.Float64, n, k);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < k; j++) {
-                loading.set(i, j, eigvectors.get(i, j) * Math.sqrt(eigvalues[j] - noise));
+                loading.set(i, j, eigvectors.get(i, j) * Math.sqrt(eigvalues.get(j) - noise));
             }
         }
 
         DenseMatrix M = loading.ata();
-        M.addDiag(noise);
+        for (int i = 0; i < n; i++) M.add(i, i, noise);
 
         Cholesky chol = M.cholesky();
         DenseMatrix Mi = chol.inverse();
