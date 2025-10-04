@@ -508,31 +508,6 @@ public interface Matrix extends Tensor {
     }
 
     /**
-     * Matrix multiplication {@code A * B}.
-     * @param B the operand.
-     * @return the multiplication.
-     */
-    Matrix mm(Matrix B);
-
-    /**
-     * Matrix multiplication {@code A' * B}.
-     * @param B the operand.
-     * @return the multiplication.
-     */
-    default Matrix tm(Matrix B) {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * Matrix multiplication {@code A * B'}.
-     * @param B the operand.
-     * @return the multiplication.
-     */
-    default Matrix mt(Matrix B) {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
      * Returns the quadratic form {@code x' * A * x}.
      * The left upper submatrix of A is used in the computation based
      * on the size of x.

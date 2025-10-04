@@ -659,49 +659,49 @@ public abstract class DenseMatrix implements Matrix {
         }
     }
 
-    @Override
-    public DenseMatrix mm(Matrix other) {
-        if (ncol() != other.nrow()) {
-            throw new IllegalArgumentException(String.format("Matrix multiplication A * B: %d x %d vs %d x %d", m, n, other.nrow(), other.ncol()));
+    /**
+     * Matrix multiplication {@code A * B}.
+     * @param B the operand.
+     * @return the multiplication.
+     */
+    public DenseMatrix mm(DenseMatrix B) {
+        if (ncol() != B.nrow()) {
+            throw new IllegalArgumentException(String.format("Matrix multiplication A * B: %d x %d vs %d x %d", m, n, B.nrow(), B.ncol()));
         }
 
-        if (other instanceof DenseMatrix B) {
-            DenseMatrix C = zeros(nrow(), B.ncol());
-            mm(1.0, NO_TRANSPOSE, this, NO_TRANSPOSE, B, 0.0, C);
-            return C;
-        }
-
-        throw new UnsupportedOperationException("Unsupported matrix type: " + other.getClass());
+        DenseMatrix C = zeros(nrow(), B.ncol());
+        mm(1.0, NO_TRANSPOSE, this, NO_TRANSPOSE, B, 0.0, C);
+        return C;
     }
 
-    @Override
-    public DenseMatrix tm(Matrix other) {
-        if (nrow() != other.nrow()) {
-            throw new IllegalArgumentException(String.format("Matrix multiplication A' * B: %d x %d vs %d x %d", m, n, other.nrow(), other.ncol()));
+    /**
+     * Matrix multiplication {@code A' * B}.
+     * @param B the operand.
+     * @return the multiplication.
+     */
+    public DenseMatrix tm(DenseMatrix B) {
+        if (nrow() != B.nrow()) {
+            throw new IllegalArgumentException(String.format("Matrix multiplication A' * B: %d x %d vs %d x %d", m, n, B.nrow(), B.ncol()));
         }
 
-        if (other instanceof DenseMatrix B) {
-            DenseMatrix C = zeros(ncol(), B.ncol());
-            mm(1.0, TRANSPOSE, this, NO_TRANSPOSE, B, 0.0, C);
-            return C;
-        }
-
-        throw new UnsupportedOperationException("Unsupported matrix type: " + other.getClass());
+        DenseMatrix C = zeros(ncol(), B.ncol());
+        mm(1.0, TRANSPOSE, this, NO_TRANSPOSE, B, 0.0, C);
+        return C;
     }
 
-    @Override
-    public DenseMatrix mt(Matrix other) {
-        if (ncol() != other.ncol()) {
-            throw new IllegalArgumentException(String.format("Matrix multiplication A * B': %d x %d vs %d x %d", m, n, other.nrow(), other.ncol()));
+    /**
+     * Matrix multiplication {@code A * B'}.
+     * @param B the operand.
+     * @return the multiplication.
+     */
+    public DenseMatrix mt(DenseMatrix B) {
+        if (ncol() != B.ncol()) {
+            throw new IllegalArgumentException(String.format("Matrix multiplication A * B': %d x %d vs %d x %d", m, n, B.nrow(), B.ncol()));
         }
 
-        if (other instanceof DenseMatrix B) {
-            DenseMatrix C = zeros(nrow(), B.nrow());
-            mm(1.0, NO_TRANSPOSE, this, TRANSPOSE, B, 0.0, C);
-            return C;
-        }
-
-        throw new UnsupportedOperationException("Unsupported matrix type: " + other.getClass());
+        DenseMatrix C = zeros(nrow(), B.nrow());
+        mm(1.0, NO_TRANSPOSE, this, TRANSPOSE, B, 0.0, C);
+        return C;
     }
 
     /**

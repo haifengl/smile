@@ -331,9 +331,4 @@ public abstract class BandMatrix implements Matrix {
             }
         }
     }
-
-    @Override
-    public Matrix mm(Matrix B) {
-        throw new UnsupportedOperationException();
-    }
 }
