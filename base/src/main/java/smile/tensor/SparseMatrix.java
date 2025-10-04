@@ -492,65 +492,61 @@ public class SparseMatrix implements Matrix, Iterable<SparseMatrix.Entry>, Seria
     }
 
     /**
-     * Returns the matrix multiplication C = A * B.
-     * @param other the operand.
+     * Matrix multiplication {@code A * B}.
+     * @param B the operand.
      * @return the multiplication.
      */
-    public SparseMatrix mm(Matrix other) {
-        if (other instanceof SparseMatrix B) {
-            if (n != B.m) {
-                throw new IllegalArgumentException(String.format("Matrix dimensions do not match for matrix multiplication: %d x %d vs %d x %d", nrow(), ncol(), B.nrow(), B.ncol()));
-            }
-
-            int n = B.n;
-            int anz = colIndex[n];
-            int[] Bp = B.colIndex;
-            int[] Bi = B.rowIndex;
-            double[] Bx = B.nonzeros;
-            int bnz = Bp[n];
-
-            int[] w = new int[m];
-            double[] abj = new double[m];
-
-            int nzmax = Math.max(anz + bnz, m);
-
-            SparseMatrix C = new SparseMatrix(m, n, nzmax);
-            int[] Cp = C.colIndex;
-            int[] Ci = C.rowIndex;
-            double[] Cx = C.nonzeros;
-
-            int nz = 0;
-            for (int j = 0; j < n; j++) {
-                if (nz + m > nzmax) {
-                    nzmax = 2 * nzmax + m;
-                    double[] Cx2 = new double[nzmax];
-                    int[] Ci2 = new int[nzmax];
-                    System.arraycopy(Ci, 0, Ci2, 0, nz);
-                    System.arraycopy(Cx, 0, Cx2, 0, nz);
-                    Ci = Ci2;
-                    Cx = Cx2;
-                    C = new SparseMatrix(m, n, Cx2, Ci2, Cp);
-                }
-
-                // column j of C starts here
-                Cp[j] = nz;
-
-                for (int p = Bp[j]; p < Bp[j + 1]; p++) {
-                    nz = scatter(this, Bi[p], Bx[p], w, abj, j + 1, C, nz);
-                }
-
-                for (int p = Cp[j]; p < nz; p++) {
-                    Cx[p] = abj[Ci[p]];
-                }
-            }
-
-            // finalize the last column of C
-            Cp[n] = nz;
-
-            return C;
+    public SparseMatrix mm(SparseMatrix B) {
+        if (n != B.m) {
+            throw new IllegalArgumentException(String.format("Matrix dimensions do not match for matrix multiplication: %d x %d vs %d x %d", nrow(), ncol(), B.nrow(), B.ncol()));
         }
 
-        throw new UnsupportedOperationException("Unsupported matrix type: " + other.getClass());
+        int n = B.n;
+        int anz = colIndex[n];
+        int[] Bp = B.colIndex;
+        int[] Bi = B.rowIndex;
+        double[] Bx = B.nonzeros;
+        int bnz = Bp[n];
+
+        int[] w = new int[m];
+        double[] abj = new double[m];
+
+        int nzmax = Math.max(anz + bnz, m);
+
+        SparseMatrix C = new SparseMatrix(m, n, nzmax);
+        int[] Cp = C.colIndex;
+        int[] Ci = C.rowIndex;
+        double[] Cx = C.nonzeros;
+
+        int nz = 0;
+        for (int j = 0; j < n; j++) {
+            if (nz + m > nzmax) {
+                nzmax = 2 * nzmax + m;
+                double[] Cx2 = new double[nzmax];
+                int[] Ci2 = new int[nzmax];
+                System.arraycopy(Ci, 0, Ci2, 0, nz);
+                System.arraycopy(Cx, 0, Cx2, 0, nz);
+                Ci = Ci2;
+                Cx = Cx2;
+                C = new SparseMatrix(m, n, Cx2, Ci2, Cp);
+            }
+
+            // column j of C starts here
+            Cp[j] = nz;
+
+            for (int p = Bp[j]; p < Bp[j + 1]; p++) {
+                nz = scatter(this, Bi[p], Bx[p], w, abj, j + 1, C, nz);
+            }
+
+            for (int p = Cp[j]; p < nz; p++) {
+                Cx[p] = abj[Ci[p]];
+            }
+        }
+
+        // finalize the last column of C
+        Cp[n] = nz;
+
+        return C;
     }
 
     /**

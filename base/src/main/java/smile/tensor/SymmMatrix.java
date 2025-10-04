@@ -251,9 +251,4 @@ public abstract class SymmMatrix implements Matrix {
             default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
         }
     }
-
-    @Override
-    public Matrix mm(Matrix B) {
-        throw new UnsupportedOperationException();
-    }
 }

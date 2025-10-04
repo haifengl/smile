@@ -149,20 +149,4 @@ public class AtA implements Matrix {
         // The square matrix (AA' or A'A) is symmetric.
         mv(work, inputOffset, outputOffset);
     }
-
-    @Override
-    public Matrix mm(Matrix B) {
-        if (A.nrow() >= A.ncol()) {
-            return A.tm(A.mm(B));
-        } else {
-            return A.mm(A.tm(B));
-        }
-
-    }
-
-    @Override
-    public Matrix tm(Matrix B) {
-        // The square matrix (AA' or A'A) is symmetric.
-        return mm(B);
-    }
 }
