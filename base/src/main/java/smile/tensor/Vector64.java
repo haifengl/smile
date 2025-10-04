@@ -275,4 +275,30 @@ class Vector64 extends Vector implements Serializable {
     public double mean() {
         return length > 0 ? sum() / length : 0;
     }
+
+    @Override
+    public int softmax() {
+        int k = length;
+        int y = -1;
+        double max = Double.NEGATIVE_INFINITY;
+        for (int i = 0; i < k; i++) {
+            if (array[offset+i] > max) {
+                max = array[offset+i];
+                y = i;
+            }
+        }
+
+        double Z = 0.0;
+        for (int i = 0; i < k; i++) {
+            double out = Math.exp(array[offset+i] - max);
+            array[offset+i] = out;
+            Z += out;
+        }
+
+        for (int i = 0; i < k; i++) {
+            array[offset+i] /= Z;
+        }
+
+        return y;
+    }
 }
