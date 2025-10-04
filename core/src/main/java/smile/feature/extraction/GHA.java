@@ -20,10 +20,10 @@ import java.io.Serial;
 import smile.data.Tuple;
 import smile.data.DataFrame;
 import smile.math.MathEx;
-import smile.tensor.ScalarType;
 import smile.util.function.TimeFunction;
 import smile.tensor.DenseMatrix;
 import smile.tensor.Vector;
+import static smile.tensor.ScalarType.*;
 
 /**
  * Generalized Hebbian Algorithm. GHA is a linear feed-forward neural
@@ -95,7 +95,7 @@ public class GHA extends Projection {
      * @param columns the columns to transform when applied on Tuple/DataFrame.
      */
     public GHA(int n, int p, TimeFunction r, String... columns) {
-        super(DenseMatrix.zeros(ScalarType.Float64, p, n), "GHA", columns);
+        super(DenseMatrix.zeros(Float64, p, n), "GHA", columns);
 
         if (n < 2) {
             throw new IllegalArgumentException("Invalid dimension of input space: " + n);

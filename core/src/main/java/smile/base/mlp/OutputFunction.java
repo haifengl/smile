@@ -17,6 +17,7 @@
 package smile.base.mlp;
 
 import smile.math.MathEx;
+import smile.tensor.Vector;
 
 /**
  * The output function of neural networks.
@@ -29,12 +30,12 @@ public enum OutputFunction {
      */
     LINEAR {
         @Override
-        public void f(double[] x) {
+        public void f(Vector x) {
             // Identity function keeps the input as is.
         }
 
         @Override
-        public void g(Cost cost, double[] g, double[] y) {
+        public void g(Cost cost, Vector g, Vector y) {
             switch (cost) {
                 case MEAN_SQUARED_ERROR:
                     // no-op as the gradient is just o - t
@@ -55,18 +56,19 @@ public enum OutputFunction {
      */
     SIGMOID {
         @Override
-        public void f(double[] x) {
-            for (int i = 0; i < x.length; i++) {
-                x[i] = MathEx.sigmoid(x[i]);
+        public void f(Vector x) {
+            for (int i = 0; i < x.size(); i++) {
+                x.set(i, MathEx.sigmoid(x.get(i)));
             }
         }
 
         @Override
-        public void g(Cost cost, double[] g, double[] y) {
+        public void g(Cost cost, Vector g, Vector y) {
             switch (cost) {
                 case MEAN_SQUARED_ERROR:
-                    for (int i = 0; i < g.length; i++) {
-                        g[i] *= y[i] * (1.0 - y[i]);
+                    for (int i = 0; i < g.size(); i++) {
+                        double yi = y.get(i);
+                        g.mul(i, yi * (1.0 - yi));
                     }
                     break;
 
@@ -84,12 +86,12 @@ public enum OutputFunction {
      */
     SOFTMAX {
         @Override
-        public void f(double[] x) {
-            MathEx.softmax(x);
+        public void f(Vector x) {
+            x.softmax();
         }
 
         @Override
-        public void g(Cost cost, double[] g, double[] y) {
+        public void g(Cost cost, Vector g, Vector y) {
             switch (cost) {
                 case MEAN_SQUARED_ERROR:
                     throw new IllegalStateException("SOFTMAX must work with LIKELIHOOD cost function");
@@ -105,7 +107,7 @@ public enum OutputFunction {
      * The output function.
      * @param x the input vector.
      */
-    public abstract void f(double[] x);
+    public abstract void f(Vector x);
 
     /**
      * The gradient function.
@@ -114,5 +116,5 @@ public enum OutputFunction {
      *          On output, it is the gradient.
      * @param y the output vector.
      */
-    public abstract void g(Cost cost, double[] g, double[] y);
+    public abstract void g(Cost cost, Vector g, Vector y);
 }

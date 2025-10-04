@@ -22,9 +22,9 @@ import smile.base.rbf.RBF;
 import smile.math.rbf.RadialBasisFunction;
 import smile.tensor.DenseMatrix;
 import smile.tensor.QR;
-import smile.tensor.ScalarType;
 import smile.tensor.Vector;
 import smile.util.IntSet;
+import static smile.tensor.ScalarType.*;
 
 /**
  * Radial basis function networks. A radial basis function network is an
@@ -173,8 +173,8 @@ public class RBFNetwork<T> extends AbstractClassifier<T> {
         int n = x.length;
         int m = rbf.length;
 
-        DenseMatrix G = DenseMatrix.zeros(ScalarType.Float64, n, m+1);
-        DenseMatrix b = DenseMatrix.zeros(ScalarType.Float64, n, k);
+        DenseMatrix G = DenseMatrix.zeros(Float64, n, m+1);
+        DenseMatrix b = DenseMatrix.zeros(Float64, n, k);
         for (int i = 0; i < n; i++) {
             double sum = 0.0;
             for (int j = 0; j < m; j++) {

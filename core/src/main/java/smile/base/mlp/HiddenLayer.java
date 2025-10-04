@@ -16,6 +16,8 @@
  */
 package smile.base.mlp;
 
+import smile.tensor.Vector;
+
 import java.io.Serial;
 
 /**
@@ -52,14 +54,14 @@ public class HiddenLayer extends Layer {
     }
 
     @Override
-    public void transform(double[] x) {
+    public void transform(Vector x) {
         activation.f(x);
     }
 
     @Override
-    public void backpropagate(double[] lowerLayerGradient) {
-        double[] output = this.output.get();
-        double[] outputGradient = this.outputGradient.get();
+    public void backpropagate(Vector lowerLayerGradient) {
+        Vector output = this.output.get();
+        Vector outputGradient = this.outputGradient.get();
 
         activation.g(outputGradient, output);
         if (lowerLayerGradient != null) {

@@ -20,7 +20,7 @@ import java.io.Serial;
 import smile.math.MathEx;
 import smile.stat.distribution.GaussianDistribution;
 import smile.tensor.DenseMatrix;
-import smile.tensor.ScalarType;
+import static smile.tensor.ScalarType.*;
 
 /**
  * Random projection is a promising dimensionality reduction technique for
@@ -125,7 +125,7 @@ public class RandomProjection extends Projection {
             throw new IllegalArgumentException("Invalid dimension of feature space: " + p);
         }
 
-        DenseMatrix projection = DenseMatrix.zeros(ScalarType.Float64, p, n);
+        DenseMatrix projection = DenseMatrix.zeros(Float64, p, n);
         double scale = Math.sqrt(3);
         for (int i = 0; i < p; i++) {
             for (int j = 0; j < n; j++) {

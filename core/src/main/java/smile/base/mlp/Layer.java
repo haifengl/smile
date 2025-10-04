@@ -20,14 +20,15 @@ import java.io.IOException;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import smile.math.MathEx;
 import smile.tensor.DenseMatrix;
+import smile.tensor.Vector;
 import smile.util.Regex;
+import static smile.linalg.Transpose.*;
+import static smile.tensor.ScalarType.*;
 
 /**
  * A layer in the neural network.
@@ -57,15 +58,15 @@ public abstract class Layer implements AutoCloseable, Serializable {
     /**
      * The bias.
      */
-    protected double[] bias;
+    protected Vector bias;
     /**
      * The output vector.
      */
-    protected transient ThreadLocal<double[]> output;
+    protected transient ThreadLocal<Vector> output;
     /**
      * The output gradient.
      */
-    protected transient ThreadLocal<double[]> outputGradient;
+    protected transient ThreadLocal<Vector> outputGradient;
     /**
      * The weight gradient.
      */
@@ -73,7 +74,7 @@ public abstract class Layer implements AutoCloseable, Serializable {
     /**
      * The bias gradient.
      */
-    protected transient ThreadLocal<double[]> biasGradient;
+    protected transient ThreadLocal<Vector> biasGradient;
     /**
      * The first moment of weight gradient.
      */
@@ -85,11 +86,11 @@ public abstract class Layer implements AutoCloseable, Serializable {
     /**
      * The first moment of bias gradient.
      */
-    protected transient ThreadLocal<double[]> biasGradientMoment1;
+    protected transient ThreadLocal<Vector> biasGradientMoment1;
     /**
      * The second moment of bias gradient.
      */
-    protected transient ThreadLocal<double[]> biasGradientMoment2;
+    protected transient ThreadLocal<Vector> biasGradientMoment2;
     /**
      * The weight update.
      */
@@ -97,7 +98,7 @@ public abstract class Layer implements AutoCloseable, Serializable {
     /**
      * The bias update.
      */
-    protected transient ThreadLocal<double[]> biasUpdate;
+    protected transient ThreadLocal<Vector> biasUpdate;
     /**
      * The dropout mask.
      */
@@ -118,7 +119,7 @@ public abstract class Layer implements AutoCloseable, Serializable {
         this.p = n;
         this.dropout = dropout;
 
-        output = ThreadLocal.withInitial(() -> new double[n]);
+        output = ThreadLocal.withInitial(() -> Vector.zeros(Float32, n));
 
         if (dropout > 0.0) {
             mask = ThreadLocal.withInitial(() -> new byte[n]);
@@ -143,7 +144,7 @@ public abstract class Layer implements AutoCloseable, Serializable {
      * @param dropout the dropout rate.
      */
     public Layer(int n, int p, double dropout) {
-        this(DenseMatrix.rand(n, p, -Math.sqrt(6.0 / (n+p)), Math.sqrt(6.0 / (n+p))), new double[n], dropout);
+        this(DenseMatrix.rand(Float32, n, p, -Math.sqrt(6.0 / (n+p)), Math.sqrt(6.0 / (n+p))), Vector.zeros(Float32, n), dropout);
     }
 
     /**
@@ -151,7 +152,7 @@ public abstract class Layer implements AutoCloseable, Serializable {
      * @param weight the weight matrix.
      * @param bias the bias vector.
      */
-    public Layer(DenseMatrix weight, double[] bias) {
+    public Layer(DenseMatrix weight, Vector bias) {
         this(weight, bias, 0.0);
     }
 
@@ -161,7 +162,7 @@ public abstract class Layer implements AutoCloseable, Serializable {
      * @param bias the bias vector.
      * @param dropout the dropout rate.
      */
-    public Layer(DenseMatrix weight, double[] bias, double dropout) {
+    public Layer(DenseMatrix weight, Vector bias, double dropout) {
         if (dropout < 0.0 || dropout >= 1.0) {
             throw new IllegalArgumentException("Invalid dropout rate: " + dropout);
         }
@@ -206,16 +207,16 @@ public abstract class Layer implements AutoCloseable, Serializable {
      * Initializes the workspace.
      */
     private void init() {
-        output = ThreadLocal.withInitial(() -> new double[n]);
-        outputGradient = ThreadLocal.withInitial(() -> new double[n]);
-        weightGradient = ThreadLocal.withInitial(() -> new Matrix(n, p));
-        biasGradient = ThreadLocal.withInitial(() -> new double[n]);
-        weightGradientMoment1 = ThreadLocal.withInitial(() -> new Matrix(n, p));
-        weightGradientMoment2 = ThreadLocal.withInitial(() -> new Matrix(n, p));
-        biasGradientMoment1 = ThreadLocal.withInitial(() -> new double[n]);
-        biasGradientMoment2 = ThreadLocal.withInitial(() -> new double[n]);
-        weightUpdate = ThreadLocal.withInitial(() -> new Matrix(n, p));
-        biasUpdate = ThreadLocal.withInitial(() -> new double[n]);
+        output = ThreadLocal.withInitial(() -> weight.vector(n));
+        outputGradient = ThreadLocal.withInitial(() -> weight.vector(n));
+        weightGradient = ThreadLocal.withInitial(() -> weight.zeros(n, p));
+        biasGradient = ThreadLocal.withInitial(() -> weight.vector(n));
+        weightGradientMoment1 = ThreadLocal.withInitial(() -> weight.zeros(n, p));
+        weightGradientMoment2 = ThreadLocal.withInitial(() -> weight.zeros(n, p));
+        biasGradientMoment1 = ThreadLocal.withInitial(() -> weight.vector(n));
+        biasGradientMoment2 = ThreadLocal.withInitial(() -> weight.vector(n));
+        weightUpdate = ThreadLocal.withInitial(() -> weight.zeros(n, p));
+        biasUpdate = ThreadLocal.withInitial(() -> weight.vector(n));
 
         if (dropout > 0.0) {
             mask = ThreadLocal.withInitial(() -> new byte[n]);
@@ -239,10 +240,26 @@ public abstract class Layer implements AutoCloseable, Serializable {
     }
 
     /**
+     * Returns the weight matrix.
+     * @return the weight matrix.
+     */
+    public DenseMatrix weight() {
+        return weight;
+    }
+
+    /**
+     * Returns the bias vector.
+     * @return the bias vector.
+     */
+    public Vector bias() {
+        return bias;
+    }
+
+    /**
      * Returns the output vector.
      * @return the output vector.
      */
-    public double[] output() {
+    public Vector output() {
         return output.get();
     }
 
@@ -250,7 +267,7 @@ public abstract class Layer implements AutoCloseable, Serializable {
      * Returns the output gradient vector.
      * @return the output gradient vector.
      */
-    public double[] gradient() {
+    public Vector gradient() {
         return outputGradient.get();
     }
 
@@ -258,10 +275,10 @@ public abstract class Layer implements AutoCloseable, Serializable {
      * Propagates the signals from a lower layer to this layer.
      * @param x the lower layer signals.
      */
-    public void propagate(double[] x) {
-        double[] output = this.output.get();
-        System.arraycopy(bias, 0, output, 0, n);
-        weight.mv(1.0, x, 1.0, output);
+    public void propagate(Vector x) {
+        Vector output = this.output.get();
+        Vector.copy(bias,  0, output, 0, n);
+        weight.mv(NO_TRANSPOSE, 1.0, x, 1.0, output);
         transform(output);
     }
 
@@ -272,13 +289,13 @@ public abstract class Layer implements AutoCloseable, Serializable {
      */
     public void propagateDropout() {
         if (dropout > 0.0) {
-            double[] output = this.output.get();
+            Vector output = this.output.get();
             byte[] mask = this.mask.get();
             double scale = 1.0 / (1.0 - dropout);
             for (int i = 0; i < n; i++) {
                 byte retain = (byte) (MathEx.random() < dropout ? 0 : 1);
                 mask[i] = retain;
-                output[i] *= retain * scale;
+                output.mul(i, retain * scale);
             }
         }
     }
@@ -287,24 +304,24 @@ public abstract class Layer implements AutoCloseable, Serializable {
      * The activation or output function.
      * @param x the input and output values.
      */
-    public abstract void transform(double[] x);
+    public abstract void transform(Vector x);
 
     /**
      * Propagates the errors back to a lower layer.
      * @param lowerLayerGradient the gradient vector of lower layer.
      */
-    public abstract void backpropagate(double[] lowerLayerGradient);
+    public abstract void backpropagate(Vector lowerLayerGradient);
 
     /**
      * Propagates the errors back through the (implicit) dropout layer.
      */
     public void backpopagateDropout() {
         if (dropout > 0.0) {
-            double[] gradient = this.outputGradient.get();
+            Vector gradient = this.outputGradient.get();
             byte[] mask = this.mask.get();
             double scale = 1.0 / (1.0 - dropout);
             for (int i = 0; i < n; i++) {
-                gradient[i] *= mask[i] * scale;
+                gradient.mul(i, mask[i] * scale);
             }
         }
     }
@@ -317,31 +334,26 @@ public abstract class Layer implements AutoCloseable, Serializable {
      * @param momentum the momentum factor.
      * @param decay weight decay factor.
      */
-    public void computeGradientUpdate(double[] x, double learningRate, double momentum, double decay) {
-        double[] outputGradient = this.outputGradient.get();
+    public void computeGradientUpdate(Vector x, double learningRate, double momentum, double decay) {
+        Vector outputGradient = this.outputGradient.get();
 
         if (momentum > 0.0 && momentum < 1.0) {
             DenseMatrix weightUpdate = this.weightUpdate.get();
-            double[] biasUpdate = this.biasUpdate.get();
+            Vector biasUpdate = this.biasUpdate.get();
 
-            weightUpdate.mul(momentum);
-            weightUpdate.add(learningRate, outputGradient, x);
+            weightUpdate.scale(momentum);
+            weightUpdate.ger(learningRate, outputGradient, x);
             weight.add(weightUpdate);
 
-            for (int i = 0; i < n; i++) {
-                double b = momentum * biasUpdate[i] + learningRate * outputGradient[i];
-                biasUpdate[i] = b;
-                bias[i] += b;
-            }
+            biasUpdate.add(momentum, biasUpdate, learningRate, outputGradient);
+            bias.add(biasUpdate);
         } else {
-            weight.add(learningRate, outputGradient, x);
-            for (int i = 0; i < n; i++) {
-                bias[i] += learningRate * outputGradient[i];
-            }
+            weight.ger(learningRate, outputGradient, x);
+            bias.axpy(learningRate, outputGradient);
         }
 
         if (decay > 0.9 && decay < 1.0) {
-            weight.mul(decay);
+            weight.scale(decay);
         }
     }
 
@@ -350,15 +362,13 @@ public abstract class Layer implements AutoCloseable, Serializable {
      *
      * @param x the input vector.
      */
-    public void computeGradient(double[] x) {
-        double[] outputGradient = this.outputGradient.get();
-        Matrix weightGradient = this.weightGradient.get();
-        double[] biasGradient = this.biasGradient.get();
+    public void computeGradient(Vector x) {
+        Vector outputGradient = this.outputGradient.get();
+        DenseMatrix weightGradient = this.weightGradient.get();
+        Vector biasGradient = this.biasGradient.get();
 
-        weightGradient.add(1.0, outputGradient, x);
-        for (int i = 0; i < n; i++) {
-            biasGradient[i] += outputGradient[i];
-        }
+        weightGradient.ger(1.0, outputGradient, x);
+        biasGradient.add(outputGradient);
     }
 
     /**
@@ -373,7 +383,7 @@ public abstract class Layer implements AutoCloseable, Serializable {
      */
     public void update(int m, double learningRate, double momentum, double decay, double rho, double epsilon) {
         DenseMatrix weightGradient = this.weightGradient.get();
-        double[] biasGradient = this.biasGradient.get();
+        Vector biasGradient = this.biasGradient.get();
 
         // Instead of computing the average gradient explicitly,
         // we scale down the learning rate by the number of samples.
@@ -383,13 +393,11 @@ public abstract class Layer implements AutoCloseable, Serializable {
             // As gradient will be averaged and smoothed in RMSProp,
             // we need to use the original learning rate.
             eta = learningRate;
-            weightGradient.div(m);
-            for (int i = 0; i < n; i++) {
-                biasGradient[i] /= m;
-            }
+            weightGradient.scale(1.0 / m);
+            biasGradient.scale(1.0 / m);
 
             DenseMatrix rmsWeightGradient = this.weightGradientMoment2.get();
-            double[] rmsBiasGradient = this.biasGradientMoment2.get();
+            Vector rmsBiasGradient = this.biasGradientMoment2.get();
 
             double rho1 = 1.0 - rho;
             for (int j = 0; j < p; j++) {
@@ -398,7 +406,7 @@ public abstract class Layer implements AutoCloseable, Serializable {
                 }
             }
             for (int i = 0; i < n; i++) {
-                rmsBiasGradient[i] = rho * rmsBiasGradient[i] + rho1 * MathEx.pow2(biasGradient[i]);
+                rmsBiasGradient.set(i, rho * rmsBiasGradient.get(i) + rho1 * MathEx.pow2(biasGradient.get(i)));
             }
 
             for (int j = 0; j < p; j++) {
@@ -407,26 +415,21 @@ public abstract class Layer implements AutoCloseable, Serializable {
                 }
             }
             for (int i = 0; i < n; i++) {
-                biasGradient[i] /= Math.sqrt(epsilon + rmsBiasGradient[i]);
+                biasGradient.div(i, Math.sqrt(epsilon + rmsBiasGradient.get(i)));
             }
         }
 
         if (momentum > 0.0 && momentum < 1.0) {
             DenseMatrix weightUpdate = this.weightUpdate.get();
-            double[] biasUpdate = this.biasUpdate.get();
+            Vector biasUpdate = this.biasUpdate.get();
 
-            weightUpdate.add(momentum, eta, weightGradient);
-            for (int i = 0; i < n; i++) {
-                biasUpdate[i] = momentum * biasUpdate[i] + eta * biasGradient[i];
-            }
-
+            weightUpdate.add(momentum, weightUpdate, eta, weightGradient);
+            biasUpdate.add(momentum, biasUpdate, eta, biasGradient);
             weight.add(weightUpdate);
-            MathEx.add(bias, biasUpdate);
+            bias.add(biasUpdate);
         } else {
-            weight.add(eta, weightGradient);
-            for (int i = 0; i < n; i++) {
-                bias[i] += eta * biasGradient[i];
-            }
+            weight.axpy(eta, weightGradient);
+            bias.axpy(eta, biasGradient);
         }
 
         // Weight decay as the weights are multiplied
@@ -434,11 +437,11 @@ public abstract class Layer implements AutoCloseable, Serializable {
         // from growing too large, and can be seen as gradient descent
         // on a quadratic regularization term.
         if (decay > 0.9 && decay < 1.0) {
-            weight.mul(decay);
+            weight.scale(decay);
         }
 
         weightGradient.fill(0.0);
-        Arrays.fill(biasGradient, 0.0);
+        biasGradient.fill(0.0);
     }
 
     /**

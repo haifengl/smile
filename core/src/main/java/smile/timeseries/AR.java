@@ -23,6 +23,7 @@ import smile.math.MathEx;
 import smile.math.special.Beta;
 import smile.stat.Hypothesis;
 import smile.tensor.*;
+import static smile.tensor.ScalarType.*;
 
 /**
  * Autoregressive model. The autoregressive model specifies that the output
@@ -194,7 +195,7 @@ public class AR implements Serializable {
     /** Returns the least squares design matrix. */
     private static DenseMatrix X(double[] x, int p) {
         int n = x.length - p;
-        DenseMatrix X = DenseMatrix.zeros(ScalarType.Float64, n, p+1);
+        DenseMatrix X = DenseMatrix.zeros(Float64, n, p+1);
         for (int j = 0; j < p; j++) {
             for (int i = 0; i < n; i++) {
                 X.set(i, j, x[i+p-j-1]);

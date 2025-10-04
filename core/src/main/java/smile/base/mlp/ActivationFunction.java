@@ -17,6 +17,7 @@
 package smile.base.mlp;
 
 import smile.math.MathEx;
+import smile.tensor.Vector;
 
 import java.io.Serializable;
 
@@ -37,7 +38,7 @@ public interface ActivationFunction extends Serializable {
      * The output function.
      * @param x the input vector.
      */
-    void f(double[] x);
+    void f(Vector x);
 
     /**
      * The gradient function.
@@ -46,7 +47,7 @@ public interface ActivationFunction extends Serializable {
      *          On output, it is the gradient of this layer.
      * @param y the output vector.
      */
-    void g(double[] g, double[] y);
+    void g(Vector g, Vector y);
 
     /**
      * Linear/Identity activation function.
@@ -61,12 +62,12 @@ public interface ActivationFunction extends Serializable {
             }
 
             @Override
-            public void f(double[] x) {
+            public void f(Vector x) {
                 // Identity function keeps the input as is.
             }
 
             @Override
-            public void g(double[] g, double[] y) {
+            public void g(Vector g, Vector y) {
 
             }
         };
@@ -100,16 +101,18 @@ public interface ActivationFunction extends Serializable {
             }
 
             @Override
-            public void f(double[] x) {
-                for (int i = 0; i < x.length; i++) {
-                    x[i] = Math.max(0.0, x[i]);
+            public void f(Vector x) {
+                int n = x.size();
+                for (int i = 0; i < n; i++) {
+                    x.set(i, Math.max(0.0, x.get(i)));
                 }
             }
 
             @Override
-            public void g(double[] g, double[] y) {
-                for (int i = 0; i < g.length; i++) {
-                    g[i] *= y[i] > 0 ? 1 : 0;
+            public void g(Vector g, Vector y) {
+                int n = y.size();
+                for (int i = 0; i < n; i++) {
+                    g.mul(i, y.get(i) > 0 ? 1 : 0);
                 }
             }
         };
@@ -145,16 +148,19 @@ public interface ActivationFunction extends Serializable {
             }
 
             @Override
-            public void f(double[] x) {
-                for (int i = 0; i < x.length; i++) {
-                    x[i] = Math.max(a * x[i], x[i]);
+            public void f(Vector x) {
+                int n = x.size();
+                for (int i = 0; i < n; i++) {
+                    double xi = x.get(i);
+                    x.set(i, Math.max(a * xi, xi));
                 }
             }
 
             @Override
-            public void g(double[] g, double[] y) {
-                for (int i = 0; i < g.length; i++) {
-                    g[i] *= y[i] > 0 ? 1 : a;
+            public void g(Vector g, Vector y) {
+                int n = y.size();
+                for (int i = 0; i < n; i++) {
+                    g.mul(i, y.get(i) > 0 ? 1 : a);
                 }
             }
         };
@@ -177,16 +183,19 @@ public interface ActivationFunction extends Serializable {
             }
 
             @Override
-            public void f(double[] x) {
-                for (int i = 0; i < x.length; i++) {
-                    x[i] = MathEx.sigmoid(x[i]);
+            public void f(Vector x) {
+                int n = x.size();
+                for (int i = 0; i < n; i++) {
+                    x.set(i, MathEx.sigmoid(x.get(i)));
                 }
             }
 
             @Override
-            public void g(double[] g, double[] y) {
-                for (int i = 0; i < g.length; i++) {
-                    g[i] *= y[i] * (1.0 - y[i]);
+            public void g(Vector g, Vector y) {
+                int n = y.size();
+                for (int i = 0; i < n; i++) {
+                    double yi =  y.get(i);
+                    g.mul(i, yi * (1.0 - yi));
                 }
             }
         };
@@ -207,18 +216,19 @@ public interface ActivationFunction extends Serializable {
             }
 
             @Override
-            public void f(double[] x) {
-                for (int i = 0; i < x.length; i++) {
-                    x[i] = Math.tanh(x[i]);
+            public void f(Vector x) {
+                int n = x.size();
+                for (int i = 0; i < n; i++) {
+                    x.set(i, Math.tanh(x.get(i)));
                 }
             }
 
             @Override
-            public void g(double[] g, double[] y) {
-                int n = y.length;
+            public void g(Vector g, Vector y) {
+                int n = y.size();
                 for (int i = 0; i < n; i++) {
-                    double ym1 = 1.0 - y[i];
-                    g[i] *= ym1 * ym1;
+                    double ym1 = 1.0 - y.get(i);
+                    g.mul(i, ym1 * ym1);
                 }
             }
         };

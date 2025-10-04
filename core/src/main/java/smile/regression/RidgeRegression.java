@@ -237,7 +237,7 @@ public class RidgeRegression {
         }
 
         DenseMatrix scaledX = X.scale(center, scale);
-        DenseMatrix XtW = new Matrix(p, n);
+        DenseMatrix XtW = X.zeros(p, n);
         for (int i = 0; i < p; i++) {
             for (int j = 0; j < n; j++) {
                 XtW.set(i, j, weights[j] * scaledX.get(j, i));

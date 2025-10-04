@@ -21,6 +21,7 @@ import smile.data.DataFrame;
 import smile.math.MathEx;
 import smile.linalg.UPLO;
 import smile.tensor.*;
+import static smile.tensor.ScalarType.*;
 
 /**
  * Probabilistic principal component analysis. Probabilistic PCA is
@@ -143,7 +144,7 @@ public class ProbabilisticPCA extends Projection {
         int n = data[0].length;
 
         double[] mu = MathEx.colMeans(data);
-        DenseMatrix cov = DenseMatrix.zeros(ScalarType.Float64, n, n);
+        DenseMatrix cov = DenseMatrix.zeros(Float64, n, n);
         for (double[] datum : data) {
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j <= i; j++) {
@@ -170,7 +171,7 @@ public class ProbabilisticPCA extends Projection {
         }
         noise /= (n - k);
 
-        DenseMatrix loading = DenseMatrix.zeros(ScalarType.Float64, n, k);
+        DenseMatrix loading = DenseMatrix.zeros(Float64, n, k);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < k; j++) {
                 loading.set(i, j, eigvectors.get(i, j) * Math.sqrt(eigvalues.get(j) - noise));

@@ -23,6 +23,7 @@ import smile.math.MathEx;
 import smile.math.special.Beta;
 import smile.stat.Hypothesis;
 import smile.tensor.*;
+import static smile.tensor.ScalarType.*;
 
 /**
  * Autoregressive moving-average model. ARMA models provide a parsimonious
@@ -327,7 +328,7 @@ public class ARMA implements Serializable {
         System.arraycopy(arm.residuals(), 0, a, m, a.length - m);
 
         double[] y = Arrays.copyOfRange(x, m+k, x.length);
-        DenseMatrix X = DenseMatrix.zeros(ScalarType.Float64, n, p+q+1);
+        DenseMatrix X = DenseMatrix.zeros(Float64, n, p+q+1);
         for (int j = 0; j < p; j++) {
             for (int i = 0; i < n; i++) {
                 X.set(i, j, x[m+k+i-j-1]);

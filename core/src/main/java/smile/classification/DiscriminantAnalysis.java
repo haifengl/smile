@@ -19,8 +19,8 @@ package smile.classification;
 import smile.math.MathEx;
 import smile.linalg.UPLO;
 import smile.tensor.DenseMatrix;
-import smile.tensor.ScalarType;
 import smile.util.IntSet;
+import static smile.tensor.ScalarType.*;
 
 /**
  * Common functions for various discriminant analysis.
@@ -139,7 +139,7 @@ class DiscriminantAnalysis {
         int n = x.length;
         int p = x[0].length;
 
-        DenseMatrix St = DenseMatrix.zeros(ScalarType.Float64, p, p);
+        DenseMatrix St = DenseMatrix.zeros(Float64, p, p);
         St.withUplo(UPLO.LOWER);
 
         for (double[] xi : x) {
@@ -178,7 +178,7 @@ class DiscriminantAnalysis {
                 throw new IllegalArgumentException(String.format("The sample size of class %d is too small.", i));
             }
 
-            cov[i] = DenseMatrix.zeros(ScalarType.Float64, p, p);
+            cov[i] = DenseMatrix.zeros(Float64, p, p);
             cov[i].withUplo(UPLO.LOWER);
         }
 

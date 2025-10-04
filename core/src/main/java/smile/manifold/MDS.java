@@ -20,6 +20,7 @@ import java.util.Properties;
 import smile.math.MathEx;
 import smile.linalg.UPLO;
 import smile.tensor.*;
+import static smile.tensor.ScalarType.*;
 
 /**
  * Classical multidimensional scaling, also known as principal coordinates
@@ -129,7 +130,7 @@ public record MDS(double[] scores, double[] proportion, double[][] coordinates) 
         DenseMatrix B = getGram(proximity);
 
         if (options.positive) {
-            DenseMatrix Z = DenseMatrix.zeros(ScalarType.Float64, 2 * n, 2 * n);
+            DenseMatrix Z = DenseMatrix.zeros(Float64, 2 * n, 2 * n);
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n; j++) {
                     Z.set(i, n + j, 2 * B.get(i, j));
@@ -195,8 +196,8 @@ public record MDS(double[] scores, double[] proportion, double[][] coordinates) 
      */
     private static DenseMatrix getGram(double[][] proximity) {
         int n = proximity[0].length;
-        DenseMatrix A = DenseMatrix.zeros(ScalarType.Float64, n, n);
-        DenseMatrix B = DenseMatrix.zeros(ScalarType.Float64, n, n);
+        DenseMatrix A = DenseMatrix.zeros(Float64, n, n);
+        DenseMatrix B = DenseMatrix.zeros(Float64, n, n);
 
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < i; j++) {
