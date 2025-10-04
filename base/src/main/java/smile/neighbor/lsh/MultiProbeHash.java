@@ -66,12 +66,11 @@ public class MultiProbeHash extends Hash {
      * @return the bucket of hash table for given vector x.
      */
     private int mphash(double[] x) {
-        double[] h = new double[k];
-        a.mv(Vector.column(x), Vector.column(h));
+        Vector h = a.mv(x);
 
         long g = 0;
         for (int i = 0; i < k; i++) {
-            double hi = (h[i] + b[i]) / w;
+            double hi = (h.get(i) + b[i]) / w;
 
             umin[i] = Math.min(umin[i], hi);
             umax[i] = Math.max(umax[i], hi);

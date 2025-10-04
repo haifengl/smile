@@ -181,6 +181,40 @@ public interface Matrix extends Tensor {
     }
 
     /**
+     * Creates a column vector of same scalar type.
+     * @param x the initial vector values.
+     * @return the vector.
+     */
+    default Vector vector(double[] x) {
+        return switch (scalarType()) {
+            case Float64 -> Vector.column(x);
+            case Float32 -> {
+                Vector v = Vector.column(new float[x.length]);
+                for (int i = 0; i < x.length; i++) v.set(i, x[i]);
+                yield v;
+            }
+            default -> throw new UnsupportedOperationException("Unsupported ScalarType: " + scalarType());
+        };
+    }
+
+    /**
+     * Creates a column vector of same scalar type.
+     * @param x the initial vector values.
+     * @return the vector.
+     */
+    default Vector vector(float[] x) {
+        return switch (scalarType()) {
+            case Float32 -> Vector.column(x);
+            case Float64 -> {
+                Vector v = Vector.column(new double[x.length]);
+                for (int i = 0; i < x.length; i++) v.set(i, x[i]);
+                yield v;
+            }
+            default -> throw new UnsupportedOperationException("Unsupported ScalarType: " + scalarType());
+        };
+    }
+
+    /**
      * Returns {@code A[i,j]}.
      * @param i the row index.
      * @param j the column index.
@@ -434,6 +468,42 @@ public interface Matrix extends Tensor {
         Vector xb = work.slice(inputOffset, ncol());
         Vector yb = work.slice(outputOffset, nrow());
         mv(TRANSPOSE, 1.0, xb, 0.0, yb);
+    }
+
+    /**
+     * Matrix-vector multiplication {@code A * x}.
+     * @param x the vector.
+     * @return the matrix-vector multiplication {@code A * x}.
+     */
+    default Vector mv(double[] x) {
+        return mv(vector(x));
+    }
+
+    /**
+     * Matrix-vector multiplication {@code A * x}.
+     * @param x the vector.
+     * @return the matrix-vector multiplication {@code A * x}.
+     */
+    default Vector mv(float[] x) {
+        return mv(vector(x));
+    }
+
+    /**
+     * Matrix-vector multiplication {@code A * x}.
+     * @param x the vector.
+     * @return the matrix-vector multiplication {@code A * x}.
+     */
+    default Vector tv(double[] x) {
+        return tv(vector(x));
+    }
+
+    /**
+     * Matrix-vector multiplication {@code A * x}.
+     * @param x the vector.
+     * @return the matrix-vector multiplication {@code A * x}.
+     */
+    default Vector tv(float[] x) {
+        return tv(vector(x));
     }
 
     /**
