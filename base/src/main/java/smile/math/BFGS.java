@@ -862,7 +862,7 @@ public class BFGS {
             freeVar[i] = freeVarIdx.get(i);
         }
 
-        Vector wmc = W.mv(M.mv(Vector.column(c)));
+        Vector wmc = W.mv(M.mv(c));
         double[] r = new double[freeVarCount];
         for (int i = 0; i < freeVarCount; i++) {
             int fi = freeVar[i];

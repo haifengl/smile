@@ -145,12 +145,11 @@ public class Hash implements Serializable {
      * @return the bucket of hash table for given vector x.
      */
     public int hash(double[] x) {
-        double[] h = new double[k];
-        a.mv(Vector.column(x), Vector.column(h));
+        Vector h = a.mv(x);
 
         long g = 0;
         for (int i = 0; i < k; i++) {
-            int hi = (int) Math.floor((h[i] + b[i]) / w);
+            int hi = (int) Math.floor((h.get(i) + b[i]) / w);
             g += (long) c[i] * hi;
         }
 
