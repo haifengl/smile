@@ -415,68 +415,109 @@ public abstract class DenseMatrix implements Matrix {
     }
 
     /**
-     * Matrix-vector multiplication.
+     * Sets this matrix as the sum of two matrices
      * <pre>{@code
-     *     y = alpha * op(A) * x + beta * y
+     *     C = alpha * A + beta * B
      * }</pre>
-     * where op is the transpose operation.
      *
-     * @param trans normal, transpose, or conjugate transpose
-     *              operation on the matrix.
      * @param alpha the scalar alpha.
-     * @param x the input vector.
-     * @param beta the scalar beta. When beta is supplied as zero,
-     *             y need not be set on input.
-     * @param y  the input and output vector.
+     * @param A the input matrix.
+     * @param beta the scalar beta.
+     * @param B the input matrix.
+     * @return this matrix.
      */
-    public static void mv(Transpose trans, DenseMatrix A, double alpha, Vector x, double beta, Vector y) {
-        if (A.scalarType() != x.scalarType()) {
-            throw new IllegalArgumentException("Incompatible ScalarType: " + A.scalarType() + " != " + x.scalarType());
+    public DenseMatrix add(double alpha, DenseMatrix A, double beta, DenseMatrix B) {
+        if (nrow() != A.nrow()) {
+            throw new IllegalArgumentException("Different number of rows: " + nrow() + " != " + A.nrow());
         }
-        if (A.scalarType() != y.scalarType()) {
-            throw new IllegalArgumentException("Incompatible ScalarType: " + A.scalarType() + " != " + y.scalarType());
+        if (nrow() != B.nrow()) {
+            throw new IllegalArgumentException("Different number of rows: " + nrow() + " != " + B.nrow());
+        }
+        if (ncol() != A.ncol()) {
+            throw new IllegalArgumentException("Different number of columns: " + ncol() + " != " + A.ncol());
+        }
+        if (ncol() != B.ncol()) {
+            throw new IllegalArgumentException("Different number of columns: " + ncol() + " != " + B.ncol());
+        }
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                set(i, j, alpha * A.get(i, j) + beta * B.get(i, j));
+            }
+        }
+        return this;
+    }
+
+    /**
+     * Adds two matrices
+     * <pre>{@code
+     *     A += B
+     * }</pre>
+     *
+     * @param B the input matrix.
+     * @return this matrix.
+     */
+    public DenseMatrix add(DenseMatrix B) {
+        return add(1.0, this, 1.0, B);
+    }
+
+    /**
+     * Subtracts two matrices
+     * <pre>{@code
+     *     A -= B
+     * }</pre>
+     *
+     * @param B the input matrix.
+     * @return this matrix.
+     */
+    public DenseMatrix sub(DenseMatrix B) {
+        return add(1.0, this, -1.0, B);
+    }
+
+    @Override
+    public void mv(Transpose trans, double alpha, Vector x, double beta, Vector y) {
+        if (scalarType() != x.scalarType()) {
+            throw new IllegalArgumentException("Incompatible ScalarType: " + scalarType() + " != " + x.scalarType());
+        }
+        if (scalarType() != y.scalarType()) {
+            throw new IllegalArgumentException("Incompatible ScalarType: " + scalarType() + " != " + y.scalarType());
         }
         switch (trans) {
             case NO_TRANSPOSE:
-                if (A.ncol() != x.size()) {
-                    throw new IllegalArgumentException("Incompatible x vector size: " + A.ncol() + " != " + x.size());
+                if (ncol() != x.size()) {
+                    throw new IllegalArgumentException("Incompatible x vector size: " + ncol() + " != " + x.size());
                 }
-                if (A.nrow() != y.size()) {
-                    throw new IllegalArgumentException("Incompatible y vector size: " + A.nrow() + " != " + y.size());
+                if (nrow() != y.size()) {
+                    throw new IllegalArgumentException("Incompatible y vector size: " + nrow() + " != " + y.size());
                 }
                 break;
             case TRANSPOSE:
-                if (A.nrow() != x.size()) {
-                    throw new IllegalArgumentException("Incompatible x vector size: " + A.nrow() + " != " + x.size());
+                if (nrow() != x.size()) {
+                    throw new IllegalArgumentException("Incompatible x vector size: " + nrow() + " != " + x.size());
                 }
-                if (A.ncol() != y.size()) {
-                    throw new IllegalArgumentException("Incompatible y vector size: " + A.ncol() + " != " + y.size());
+                if (ncol() != y.size()) {
+                    throw new IllegalArgumentException("Incompatible y vector size: " + ncol() + " != " + y.size());
                 }
                 break;
         }
 
-        var uplo = A.uplo();
-        var diag = A.diag();
-        int m = A.nrow();
-        int n = A.ncol();
-        int ld = A.ld();
-        switch (A.scalarType()) {
+        switch (scalarType()) {
             case Float64:
                 if (uplo != null) {
                     if (diag != null) {
                         if (alpha == 1.0 && beta == 0.0 && x == y) {
-                            cblas_dtrmv(A.order().blas(), uplo.blas(), trans.blas(), diag.blas(), m,
-                                    A.memory(), ld, y.memory(), 1);
+                            cblas_dtrmv(order().blas(), uplo.blas(), trans.blas(), diag.blas(), m,
+                                    memory, ld, y.memory(), 1);
                         } else {
-                            cblas_dgemv(A.order().blas(), trans.blas(), m, n, alpha, A.memory(),
+                            cblas_dgemv(order().blas(), trans.blas(), m, n, alpha, memory,
                                     ld, x.memory(), 1, beta, y.memory(), 1);
                         }
                     } else {
-                        cblas_dsymv(A.order().blas(), uplo.blas(), m, alpha, A.memory(),
+                        cblas_dsymv(order().blas(), uplo.blas(), m, alpha, memory,
                                 ld, x.memory(), 1, beta, y.memory(), 1);
                     }
                 } else {
-                    cblas_dgemv(A.order().blas(), trans.blas(), m, n, alpha, A.memory(),
+                    cblas_dgemv(order().blas(), trans.blas(), m, n, alpha, memory,
                             ld, x.memory(), 1, beta, y.memory(), 1);
                 }
                 break;
@@ -485,30 +526,25 @@ public abstract class DenseMatrix implements Matrix {
                 if (uplo != null) {
                     if (diag != null) {
                         if (alpha == 1.0 && beta == 0.0 && x == y) {
-                            cblas_strmv(A.order().blas(), uplo.blas(), trans.blas(), diag.blas(), m,
-                                    A.memory(), ld, y.memory(), 1);
+                            cblas_strmv(order().blas(), uplo.blas(), trans.blas(), diag.blas(), m,
+                                    memory, ld, y.memory(), 1);
                         } else {
-                            cblas_sgemv(A.order().blas(), trans.blas(), m, n, (float) alpha, A.memory(),
+                            cblas_sgemv(order().blas(), trans.blas(), m, n, (float) alpha, memory,
                                     ld, x.memory(), 1, (float) beta, y.memory(), 1);
                         }
                     } else {
-                        cblas_ssymv(A.order().blas(), uplo.blas(), m, (float) alpha, A.memory(),
+                        cblas_ssymv(order().blas(), uplo.blas(), m, (float) alpha, memory,
                                 ld, x.memory(), 1, (float) beta, y.memory(), 1);
                     }
                 } else {
-                    cblas_sgemv(A.order().blas(), trans.blas(), m, n, (float) alpha, A.memory(),
+                    cblas_sgemv(order().blas(), trans.blas(), m, n, (float) alpha, memory,
                             ld, x.memory(), 1, (float) beta, y.memory(), 1);
                 }
                 break;
 
             default:
-                throw new UnsupportedOperationException("Unsupported ScalarType: " + A.scalarType());
+                throw new UnsupportedOperationException("Unsupported ScalarType: " + scalarType());
         }
-    }
-
-    @Override
-    public void mv(Transpose trans, double alpha, Vector x, double beta, Vector y) {
-        mv(trans, this, alpha, x, beta, y);
     }
 
     /**
