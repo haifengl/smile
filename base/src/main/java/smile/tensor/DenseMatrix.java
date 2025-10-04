@@ -387,22 +387,46 @@ public abstract class DenseMatrix implements Matrix {
     }
 
     /**
+     * Returns the sum of each column.
+     * @return the sum of each column.
+     */
+    public Vector colSums() {
+        Vector sum = vector(n);
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                sum.add(j, get(i, j));
+            }
+        }
+
+        return sum;
+    }
+
+    /**
+     * Returns the sum of each row.
+     * @return the sum of each row.
+     */
+    public Vector rowSums() {
+        Vector sum = vector(m);
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                sum.add(i, get(i, j));
+            }
+        }
+
+        return sum;
+    }
+
+    /**
      * Returns the mean of each column.
      * @return the mean of each column.
      */
     public Vector colMeans() {
-        Vector means = vector(n);
-
+        Vector mean = colSums();
         for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                means.add(j, get(i, j));
-            }
-        }
-        for (int j = 0; j < n; j++) {
-            means.div(j, m);
+            mean.div(j, m);
         }
 
-        return means;
+        return mean;
     }
 
     /**
@@ -410,18 +434,35 @@ public abstract class DenseMatrix implements Matrix {
      * @return the mean of each row.
      */
     public Vector rowMeans() {
-        Vector means = vector(m);
-
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                means.add(i, get(i, j));
-            }
-        }
+        Vector mean = rowSums();
         for (int i = 0; i < m; i++) {
-            means.div(i, n);
+            mean.div(i, n);
         }
 
-        return means;
+        return mean;
+    }
+
+    /**
+     * Returns the standard deviations of each column.
+     * @return the standard deviations of each column.
+     */
+    public Vector colSds() {
+        Vector sd = vector(n);
+        for (int j = 0; j < n; j++) {
+            double mu = 0.0;
+            double sumsq = 0.0;
+            for (int i = 0; i < m; i++) {
+                double a = get(i, j);
+                mu += a;
+                sumsq += a * a;
+            }
+            mu /= m;
+            // safeguard of negative variance due to floating errors
+            double variance = Math.max(sumsq / m - mu * mu, 0.0);
+            sd.set(j, Math.sqrt(variance));
+        }
+
+        return sd;
     }
 
     /**
