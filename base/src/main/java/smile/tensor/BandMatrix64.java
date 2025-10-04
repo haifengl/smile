@@ -21,6 +21,7 @@ import java.io.ObjectInputStream;
 import java.io.Serial;
 import java.io.Serializable;
 import java.lang.foreign.MemorySegment;
+import static smile.tensor.ScalarType.*;
 
 /**
  * A band matrix of double precision floating numbers.
@@ -54,7 +55,7 @@ class BandMatrix64 extends BandMatrix implements Serializable {
 
     @Override
     public ScalarType scalarType() {
-        return ScalarType.Float64;
+        return Float64;
     }
 
     @Override

@@ -21,6 +21,7 @@ import smile.math.MathEx;
 import smile.linalg.*;
 import static smile.linalg.Order.*;
 import static smile.linalg.blas.cblas_h.*;
+import static smile.tensor.ScalarType.*;
 
 /**
  * The symmetric matrix in packed storage.
@@ -121,7 +122,7 @@ public abstract class SymmMatrix implements Matrix {
      */
     public static SymmMatrix of(UPLO uplo, double[][] AP) {
         int n = AP.length;
-        SymmMatrix matrix = zeros(ScalarType.Float64, uplo, n);
+        SymmMatrix matrix = zeros(Float64, uplo, n);
         switch (uplo) {
             case LOWER -> {
                 for (int i = 0; i < n; i++) {
@@ -149,7 +150,7 @@ public abstract class SymmMatrix implements Matrix {
      */
     public static SymmMatrix of(UPLO uplo, float[][] AP) {
         int n = AP.length;
-        SymmMatrix matrix = zeros(ScalarType.Float32, uplo, n);
+        SymmMatrix matrix = zeros(Float32, uplo, n);
         switch (uplo) {
             case LOWER -> {
                 for (int i = 0; i < n; i++) {

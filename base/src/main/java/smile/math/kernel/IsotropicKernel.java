@@ -16,9 +16,9 @@
  */
 package smile.math.kernel;
 
-import smile.linalg.UPLO;
 import smile.tensor.DenseMatrix;
 import smile.util.function.Function;
+import static smile.linalg.UPLO.*;
 
 /**
  * Isotropic kernel. If the kernel is a function only of the distance
@@ -81,7 +81,7 @@ public interface IsotropicKernel extends Function {
             }
         }
 
-        K.withUplo(UPLO.LOWER);
+        K.withUplo(LOWER);
         return K;
     }
 
@@ -101,7 +101,7 @@ public interface IsotropicKernel extends Function {
         DenseMatrix[] K = new DenseMatrix[m];
         for (int i = 0; i < m; i++) {
             K[i] = pdist.zeros(n, n);
-            K[i].withUplo(UPLO.LOWER);
+            K[i].withUplo(LOWER);
         }
 
         for (int j = 0; j < n; j++) {

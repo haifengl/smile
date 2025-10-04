@@ -22,8 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import smile.math.MathEx;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static smile.linalg.Transpose.NO_TRANSPOSE;
-import static smile.linalg.Transpose.TRANSPOSE;
+import static smile.linalg.Transpose.*;
 
 /**
  *

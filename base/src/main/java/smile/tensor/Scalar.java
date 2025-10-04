@@ -17,6 +17,7 @@
 package smile.tensor;
 
 import java.util.Arrays;
+import static smile.tensor.ScalarType.*;
 
 /**
  * A scalar is a single number.
@@ -30,12 +31,12 @@ public record Scalar(Number value) implements Tensor {
     @Override
     public ScalarType scalarType() {
         return switch (value) {
-            case Byte b -> ScalarType.Int8;
-            case Short b -> ScalarType.Int16;
-            case Integer b -> ScalarType.Int32;
-            case Long b -> ScalarType.Int64;
-            case Float b -> ScalarType.Int32;
-            case Double b -> ScalarType.Int64;
+            case Byte b -> Int8;
+            case Short b -> Int16;
+            case Integer b -> Int32;
+            case Long b -> Int64;
+            case Float b -> Int32;
+            case Double b -> Int64;
             default -> throw new RuntimeException("Unsupported Scalar value type: " + value.getClass());
         };
     }

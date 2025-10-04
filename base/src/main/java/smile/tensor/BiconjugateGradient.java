@@ -17,6 +17,7 @@
 package smile.tensor;
 
 import smile.math.MathEx;
+import static smile.tensor.ScalarType.*;
 
 /**
  * The biconjugate gradient method to solve systems of linear equations.
@@ -74,7 +75,7 @@ public interface BiconjugateGradient {
             throw new IllegalArgumentException("Invalid maximum iterations: " + maxIter);
         }
 
-        double eps = A.scalarType() == ScalarType.Float64 ? MathEx.EPSILON : MathEx.FLOAT_EPSILON;
+        double eps = A.scalarType() == Float64 ? MathEx.EPSILON : MathEx.FLOAT_EPSILON;
         double err = 0.0;
         double ak, akden, bk, bkden = 1.0, bknum, bnrm, dxnrm, xnrm, zm1nrm, znrm = 0.0;
         int j, n = b.size();

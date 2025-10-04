@@ -19,9 +19,9 @@ package smile.math;
 import java.util.Arrays;
 import smile.tensor.DenseMatrix;
 import smile.tensor.SVD;
-import smile.tensor.ScalarType;
 import smile.tensor.Vector;
 import smile.util.function.DifferentiableMultivariateFunction;
+import static smile.tensor.ScalarType.*;
 
 /**
  * The Levenberg–Marquardt algorithm.
@@ -106,7 +106,7 @@ public record LevenbergMarquardt(double[] parameters, double[] fittedValues, dou
         Vector g_ = Vector.column(g);
         Vector gse_ = Vector.column(gse);
         Vector chg_ = Vector.column(chg);
-        DenseMatrix J = DenseMatrix.zeros(ScalarType.Float64, n, d);
+        DenseMatrix J = DenseMatrix.zeros(Float64, n, d);
 
         double epsLlast = 1;
         double[] epstab = {0.1, 1, 1e2, 1e4, 1e6};
@@ -272,7 +272,7 @@ public record LevenbergMarquardt(double[] parameters, double[] fittedValues, dou
         Vector g_ = Vector.column(g);
         Vector gse_ = Vector.column(gse);
         Vector chg_ = Vector.column(chg);
-        DenseMatrix J = DenseMatrix.zeros(ScalarType.Float64, n, d);
+        DenseMatrix J = DenseMatrix.zeros(Float64, n, d);
 
         double epsLlast = 1;
         double[] epstab = {0.1, 1, 1e2, 1e4, 1e6};

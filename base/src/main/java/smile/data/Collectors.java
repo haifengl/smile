@@ -22,7 +22,8 @@ import java.util.stream.Collector;
 import smile.data.type.StructType;
 import smile.tensor.DenseMatrix;
 import smile.tensor.Matrix;
-import smile.tensor.ScalarType;
+import static smile.tensor.ScalarType.*;
+
 
 /** Stream collectors for Dataset, DataFrame, and Matrix. */
 public interface Collectors {
@@ -117,7 +118,7 @@ public interface Collectors {
                     }
                     int nrow = container.size();
                     int ncol = container.getFirst().length();
-                    Matrix m = DenseMatrix.zeros(ScalarType.Float64, nrow, ncol);
+                    Matrix m = DenseMatrix.zeros(Float64, nrow, ncol);
                     for (int i = 0; i < nrow; i++) {
                         for (int j = 0; j < ncol; j++) {
                             m.set(i, j, container.get(i).getDouble(j));

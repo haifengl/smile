@@ -18,8 +18,7 @@ package smile.tensor;
 
 import smile.linalg.Transpose;
 import smile.math.MathEx;
-import static smile.linalg.Transpose.NO_TRANSPOSE;
-import static smile.linalg.Transpose.TRANSPOSE;
+import static smile.linalg.Transpose.*;
 
 /**
  * Singular Value Decomposition.

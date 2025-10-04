@@ -31,6 +31,8 @@ import smile.linalg.Transpose;
 import smile.util.Strings;
 
 import static java.util.Spliterator.*;
+import static smile.linalg.Transpose.*;
+import static smile.tensor.ScalarType.*;
 
 /**
  * A sparse matrix is a matrix populated primarily with zeros. Conceptually,
@@ -215,7 +217,7 @@ public class SparseMatrix implements Matrix, Iterable<SparseMatrix.Entry>, Seria
 
     @Override
     public ScalarType scalarType() {
-        return ScalarType.Float64;
+        return Float64;
     }
 
     @Override
@@ -412,10 +414,10 @@ public class SparseMatrix implements Matrix, Iterable<SparseMatrix.Entry>, Seria
 
     @Override
     public void mv(Transpose trans, double alpha, Vector x, double beta, Vector y) {
-        int k = trans == Transpose.NO_TRANSPOSE ? m : n;
+        int k = trans == NO_TRANSPOSE ? m : n;
         double[] ax = new double[y.size()];
 
-        if (trans == Transpose.NO_TRANSPOSE) {
+        if (trans == NO_TRANSPOSE) {
             for (int j = 0; j < n; j++) {
                 for (int i = colIndex[j]; i < colIndex[j + 1]; i++) {
                     ax[rowIndex[i]] += nonzeros[i] * x.get(j);

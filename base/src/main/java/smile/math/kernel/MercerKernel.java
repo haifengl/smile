@@ -21,10 +21,10 @@ import java.util.Locale;
 import java.util.function.ToDoubleBiFunction;
 import java.util.regex.Matcher;
 import java.util.stream.IntStream;
-import smile.linalg.UPLO;
 import smile.tensor.DenseMatrix;
-import smile.tensor.ScalarType;
 import smile.util.SparseArray;
+import static smile.linalg.UPLO.*;
+import static smile.tensor.ScalarType.*;
 
 /**
  * Mercer kernel, also called covariance function in Gaussian process.
@@ -102,8 +102,8 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
         int m = lo().length;
         DenseMatrix[] K = new DenseMatrix[m + 1];
         for (int i = 0; i <= m; i++) {
-            K[i] = DenseMatrix.zeros(ScalarType.Float64, n, n);
-            K[i].withUplo(UPLO.LOWER);
+            K[i] = DenseMatrix.zeros(Float64, n, n);
+            K[i].withUplo(LOWER);
         }
 
         IntStream.range(0, n).parallel().forEach(j -> {
@@ -127,7 +127,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
      */
     default DenseMatrix K(T[] x) {
         int n = x.length;
-        DenseMatrix K = DenseMatrix.zeros(ScalarType.Float64, n, n);
+        DenseMatrix K = DenseMatrix.zeros(Float64, n, n);
         IntStream.range(0, n).parallel().forEach(j -> {
             T xj = x[j];
             for (int i = 0; i < n; i++) {
@@ -135,7 +135,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
             }
         });
 
-        K.withUplo(UPLO.LOWER);
+        K.withUplo(LOWER);
         return K;
     }
 
@@ -149,7 +149,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
     default DenseMatrix K(T[] x, T[] y) {
         int m = x.length;
         int n = y.length;
-        DenseMatrix K = DenseMatrix.zeros(ScalarType.Float64, m, n);
+        DenseMatrix K = DenseMatrix.zeros(Float64, m, n);
         IntStream.range(0, n).parallel().forEach(j -> {
             T yj = y[j];
             for (int i = 0; i < m; i++) {

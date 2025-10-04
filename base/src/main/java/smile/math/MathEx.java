@@ -22,14 +22,12 @@ import java.util.Iterator;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
-import smile.linalg.UPLO;
 import smile.math.distance.Distance;
 import smile.tensor.DenseMatrix;
 import smile.sort.QuickSelect;
 import smile.sort.QuickSort;
 import smile.sort.Sort;
 import smile.stat.distribution.GaussianDistribution;
-import smile.tensor.ScalarType;
 import smile.tensor.Vector;
 import smile.util.IntPair;
 import smile.util.SparseArray;
@@ -38,6 +36,8 @@ import static java.lang.Math.abs;
 import static java.lang.Math.exp;
 import static java.lang.Math.floor;
 import static java.lang.Math.sqrt;
+import static smile.linalg.UPLO.*;
+import static smile.tensor.ScalarType.*;
 
 /**
  * Extra basic numeric functions. The following functions are
@@ -3424,8 +3424,8 @@ public class MathEx {
      */
     public static DenseMatrix pdot(int[][] x) {
         int n = x.length;
-        DenseMatrix matrix = DenseMatrix.zeros(ScalarType.Float32, n, n);
-        matrix.withUplo(UPLO.LOWER);
+        DenseMatrix matrix = DenseMatrix.zeros(Float32, n, n);
+        matrix.withUplo(LOWER);
         IntStream.range(0, n).parallel().forEach(j -> {
             int[] xj = x[j];
             for (int i = 0; i < n; i++) {
@@ -3443,8 +3443,8 @@ public class MathEx {
      */
     public static DenseMatrix pdot(float[][] x) {
         int n = x.length;
-        DenseMatrix matrix = DenseMatrix.zeros(ScalarType.Float32, n, n);
-        matrix.withUplo(UPLO.LOWER);
+        DenseMatrix matrix = DenseMatrix.zeros(Float32, n, n);
+        matrix.withUplo(LOWER);
         IntStream.range(0, n).parallel().forEach(j -> {
             float[] xj = x[j];
             for (int i = 0; i < n; i++) {
@@ -3462,8 +3462,8 @@ public class MathEx {
      */
     public static DenseMatrix pdot(double[][] x) {
         int n = x.length;
-        DenseMatrix matrix = DenseMatrix.zeros(ScalarType.Float64, n, n);
-        matrix.withUplo(UPLO.LOWER);
+        DenseMatrix matrix = DenseMatrix.zeros(Float64, n, n);
+        matrix.withUplo(LOWER);
         IntStream.range(0, n).parallel().forEach(j -> {
             double[] xj = x[j];
             for (int i = 0; i < n; i++) {
@@ -3481,8 +3481,8 @@ public class MathEx {
      */
     public static DenseMatrix pdot(SparseArray[] x) {
         int n = x.length;
-        DenseMatrix matrix = DenseMatrix.zeros(ScalarType.Float64, n, n);
-        matrix.withUplo(UPLO.LOWER);
+        DenseMatrix matrix = DenseMatrix.zeros(Float64, n, n);
+        matrix.withUplo(LOWER);
         IntStream.range(0, n).parallel().forEach(j -> {
             SparseArray xj = x[j];
             for (int i = 0; i < n; i++) {

@@ -19,7 +19,7 @@ package smile.tensor.fp32;
 import org.junit.jupiter.api.*;
 import smile.tensor.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static smile.linalg.UPLO.LOWER;
+import static smile.linalg.UPLO.*;
 
 /**
  *

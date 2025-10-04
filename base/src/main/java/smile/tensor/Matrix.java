@@ -27,7 +27,8 @@ import java.util.Scanner;
 import smile.linalg.Transpose;
 import smile.util.SparseArray;
 import static smile.linalg.Transpose.*;
-import static smile.linalg.UPLO.LOWER;
+import static smile.linalg.UPLO.*;
+import static smile.tensor.ScalarType.*;
 
 /**
  * Mathematical matrix interface. The most important methods are matrix-matrix
@@ -605,7 +606,7 @@ public interface Matrix extends Tensor {
                 int nrow = s.nextInt();
                 int ncol = s.nextInt();
 
-                DenseMatrix matrix = DenseMatrix.zeros(ScalarType.Float64, nrow, ncol);
+                DenseMatrix matrix = DenseMatrix.zeros(Float64, nrow, ncol);
                 for (int j = 0; j < ncol; j++) {
                     for (int i = 0; i < nrow; i++) {
                         double x = scanner.nextDouble();
@@ -632,7 +633,7 @@ public interface Matrix extends Tensor {
                         throw new IllegalStateException(String.format("Symmetric matrix is not square: %d != %d", nrow, ncol));
                     }
 
-                    SymmMatrix matrix = SymmMatrix.zeros(ScalarType.Float64, LOWER, nrow);
+                    SymmMatrix matrix = SymmMatrix.zeros(Float64, LOWER, nrow);
                     for (int k = 0; k < nz; k++) {
                         String[] tokens = scanner.nextLine().trim().split("\\s+");
                         if (tokens.length != 3) {
@@ -652,7 +653,7 @@ public interface Matrix extends Tensor {
                         throw new IllegalStateException(String.format("Skew-symmetric matrix is not square: %d != %d", nrow, ncol));
                     }
 
-                    DenseMatrix matrix = DenseMatrix.zeros(ScalarType.Float64, nrow, ncol);
+                    DenseMatrix matrix = DenseMatrix.zeros(Float64, nrow, ncol);
                     for (int k = 0; k < nz; k++) {
                         String[] tokens = scanner.nextLine().trim().split("\\s+");
                         if (tokens.length != 3) {

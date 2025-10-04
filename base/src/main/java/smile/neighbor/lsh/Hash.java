@@ -20,8 +20,8 @@ import java.io.Serial;
 import java.io.Serializable;
 import smile.math.MathEx;
 import smile.tensor.DenseMatrix;
-import smile.tensor.ScalarType;
 import smile.tensor.Vector;
+import static smile.tensor.ScalarType.*;
 
 /**
  * The hash function for Euclidean spaces.
@@ -109,7 +109,7 @@ public class Hash implements Serializable {
         this.w = w;
         this.H = H;
 
-        a = DenseMatrix.randn(ScalarType.Float64, k, d);
+        a = DenseMatrix.randn(Float64, k, d);
         b = new double[k];
 
         for (int i = 0; i < k; i++) {

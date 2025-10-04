@@ -33,9 +33,9 @@ import smile.data.type.*;
 import smile.data.vector.*;
 import smile.math.MathEx;
 import smile.tensor.DenseMatrix;
-import smile.tensor.ScalarType;
 import smile.util.Index;
 import smile.util.Strings;
+import static smile.tensor.ScalarType.*;
 
 /**
  * Two-dimensional, potentially heterogeneous tabular data.
@@ -875,7 +875,7 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
             }
         }
 
-        DenseMatrix matrix = DenseMatrix.zeros(ScalarType.Float64, nrow, colNames.size());
+        DenseMatrix matrix = DenseMatrix.zeros(Float64, nrow, colNames.size());
         if (rowNames != null) {
             int j = schema.indexOf(rowNames);
             String[] rows = new String[nrow];

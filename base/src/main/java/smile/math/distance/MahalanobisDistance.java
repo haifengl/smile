@@ -17,9 +17,9 @@
 package smile.math.distance;
 
 import java.io.Serial;
-import smile.linalg.UPLO;
 import smile.tensor.DenseMatrix;
 import smile.tensor.Vector;
+import static smile.linalg.UPLO.*;
 
 /**
  * In statistics, Mahalanobis distance is based on correlations between
@@ -46,7 +46,7 @@ public class MahalanobisDistance implements Metric<double[]> {
      */
     public MahalanobisDistance(double[][] cov) {
         sigma = DenseMatrix.of(cov);
-        sigma.withUplo(UPLO.LOWER);
+        sigma.withUplo(LOWER);
         sigmaInv = sigma.inverse();
     }
 
