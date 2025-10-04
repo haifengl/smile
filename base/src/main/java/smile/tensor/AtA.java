@@ -131,7 +131,7 @@ public class AtA implements Matrix {
 
     @Override
     public void mv(Vector work, int inputOffset, int outputOffset) {
-        work.copy(inputOffset, Ax, 0, n);
+        Vector.copy(work, inputOffset, Ax, 0, n);
 
         if (A.nrow() >= A.ncol()) {
             A.mv(Ax, 0, n);
@@ -141,7 +141,7 @@ public class AtA implements Matrix {
             A.mv(Ax, n, 0);
         }
 
-        Ax.copy(0, work, outputOffset, n);
+        Vector.copy(Ax, 0, work, outputOffset, n);
     }
 
     @Override
