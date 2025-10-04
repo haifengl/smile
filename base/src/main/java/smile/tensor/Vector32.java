@@ -231,15 +231,6 @@ class Vector32 extends Vector implements Serializable {
     }
 
     @Override
-    public void copy(int pos, Vector dest, int destPos, int length) {
-        if (dest instanceof Vector32 other) {
-            System.arraycopy(array, pos, other.array, destPos, length);
-        } else {
-            throw new UnsupportedOperationException("Incompatible scalar type: " + dest.scalarType());
-        }
-    }
-
-    @Override
     public double[] toArray(double[] a) {
         if (a.length < length) {
             a = new double[length];

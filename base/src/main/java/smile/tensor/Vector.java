@@ -137,12 +137,23 @@ public abstract class Vector extends DenseMatrix {
 
     /**
      * Copies the specified range of the vector into another vector.
+     * @param src the destination vector.
      * @param pos starting position in this vector.
      * @param dest the destination vector.
      * @param destPos starting position in the destination vector.
      * @param length the number of vector elements to be copied.
      */
-    public abstract void copy(int pos, Vector dest, int destPos, int length);
+    public static void copy(Vector src, int pos, Vector dest, int destPos, int length) {
+        if (src instanceof Vector32 a && dest instanceof Vector32 b) {
+            System.arraycopy(a.array, pos, b.array, destPos, length);
+        } else if (src instanceof Vector64 a && dest instanceof Vector64 b) {
+            System.arraycopy(a.array, pos, b.array, destPos, length);
+        } else {
+            for (int i = 0; i < length; i++) {
+                dest.set(destPos + i, src.get(pos + i));
+            }
+        }
+    }
 
     /**
      * Returns an array containing all the elements in this vector.
