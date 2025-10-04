@@ -136,6 +136,14 @@ public abstract class DenseMatrix implements Matrix {
         return j * ld + i;
     }
 
+    /**
+     * Returns the size of underlying storage/array.
+     * @return the size of underlying storage/array.
+     */
+    int capacity() {
+        return ld * n;
+    }
+
     @Override
     public abstract DenseMatrix copy();
 
@@ -152,9 +160,10 @@ public abstract class DenseMatrix implements Matrix {
 
     @Override
     public DenseMatrix scale(double alpha) {
+        int length = capacity();
         switch(scalarType()) {
-            case Float64 -> cblas_dscal((int) length(), alpha, memory, 1);
-            case Float32 -> cblas_sscal((int) length(), (float) alpha, memory, 1);
+            case Float64 -> cblas_dscal(length, alpha, memory, 1);
+            case Float32 -> cblas_sscal(length, (float) alpha, memory, 1);
             default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
         }
         return this;
@@ -415,6 +424,35 @@ public abstract class DenseMatrix implements Matrix {
     }
 
     /**
+     * Computes a constant alpha times a matrix x plus this matrix y.
+     * The result overwrites the initial values of this matrix y.
+     *
+     * @param alpha If {@code alpha = 0} this routine returns without any computation.
+     *
+     * @param x Input matrix.
+     */
+    public void axpy(double alpha, DenseMatrix x) {
+        if (nrow() != x.nrow() || ncol() != x.ncol()) {
+            throw new IllegalArgumentException(String.format("Adds matrix: %d x %d vs %d x %d", m, n, x.nrow(), x.ncol()));
+        }
+
+        if (scalarType() == x.scalarType() && ld == x.ld) {
+            int length = capacity();
+            switch (scalarType()) {
+                case Float64 -> cblas_daxpy(length, alpha, x.memory, 1, memory, 1);
+                case Float32 -> cblas_saxpy(length, (float) alpha, x.memory, 1, memory, 1);
+                default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            }
+        } else {
+            for (int j = 0; j < n; j++) {
+                for (int i = 0; i < m; i++) {
+                    set(i, j, alpha * get(i, j) + alpha * x.get(i, j));
+                }
+            }
+        }
+    }
+
+    /**
      * Sets this matrix as the sum of two matrices
      * <pre>{@code
      *     C = alpha * A + beta * B
@@ -424,20 +462,13 @@ public abstract class DenseMatrix implements Matrix {
      * @param A the input matrix.
      * @param beta the scalar beta.
      * @param B the input matrix.
-     * @return this matrix.
      */
-    public DenseMatrix add(double alpha, DenseMatrix A, double beta, DenseMatrix B) {
-        if (nrow() != A.nrow()) {
-            throw new IllegalArgumentException("Different number of rows: " + nrow() + " != " + A.nrow());
+    public void add(double alpha, DenseMatrix A, double beta, DenseMatrix B) {
+        if (nrow() != A.nrow() || ncol() != A.ncol()) {
+            throw new IllegalArgumentException(String.format("Adds matrix: %d x %d vs %d x %d", m, n, A.nrow(), A.ncol()));
         }
-        if (nrow() != B.nrow()) {
-            throw new IllegalArgumentException("Different number of rows: " + nrow() + " != " + B.nrow());
-        }
-        if (ncol() != A.ncol()) {
-            throw new IllegalArgumentException("Different number of columns: " + ncol() + " != " + A.ncol());
-        }
-        if (ncol() != B.ncol()) {
-            throw new IllegalArgumentException("Different number of columns: " + ncol() + " != " + B.ncol());
+        if (nrow() != B.nrow() || ncol() != B.ncol()) {
+            throw new IllegalArgumentException(String.format("Adds matrix: %d x %d vs %d x %d", m, n, B.nrow(), B.ncol()));
         }
 
         for (int j = 0; j < n; j++) {
@@ -445,7 +476,6 @@ public abstract class DenseMatrix implements Matrix {
                 set(i, j, alpha * A.get(i, j) + beta * B.get(i, j));
             }
         }
-        return this;
     }
 
     /**
@@ -455,10 +485,9 @@ public abstract class DenseMatrix implements Matrix {
      * }</pre>
      *
      * @param B the input matrix.
-     * @return this matrix.
      */
-    public DenseMatrix add(DenseMatrix B) {
-        return add(1.0, this, 1.0, B);
+    public void add(DenseMatrix B) {
+        axpy(1.0, B);
     }
 
     /**
@@ -468,10 +497,9 @@ public abstract class DenseMatrix implements Matrix {
      * }</pre>
      *
      * @param B the input matrix.
-     * @return this matrix.
      */
-    public DenseMatrix sub(DenseMatrix B) {
-        return add(1.0, this, -1.0, B);
+    public void sub(DenseMatrix B) {
+        axpy(-1.0, B);
     }
 
     @Override

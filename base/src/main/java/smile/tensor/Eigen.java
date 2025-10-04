@@ -123,7 +123,7 @@ public interface Eigen {
     private static double power(Matrix A, Vector x, Vector y, double p) {
         A.mv(x, y);
         if (p != 0.0) {
-            x.axpy(-p, y);
+            y.axpy(-p, x);
         }
 
         double lambda = y.normInf();
