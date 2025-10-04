@@ -18,11 +18,9 @@ package smile.math;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import smile.linalg.UPLO;
 import smile.tensor.DenseMatrix;
 import smile.sort.QuickSort;
 import smile.tensor.LU;
-import smile.tensor.ScalarType;
 import smile.tensor.Vector;
 import smile.util.function.DifferentiableMultivariateFunction;
 import smile.util.function.MultivariateFunction;
@@ -33,6 +31,8 @@ import static java.lang.Math.sqrt;
 import static smile.math.MathEx.axpy;
 import static smile.math.MathEx.dot;
 import static smile.math.MathEx.norm;
+import static smile.linalg.UPLO.*;
+import static smile.tensor.ScalarType.*;
 
 /**
  * The Broyden–Fletcher–Goldfarb–Shanno (BFGS) algorithm is an iterative
@@ -617,8 +617,8 @@ public class BFGS {
         double theta = 1.0;
 
         DenseMatrix Y = null, S = null;
-        DenseMatrix W = DenseMatrix.zeros(ScalarType.Float64, n, 1);
-        DenseMatrix M = DenseMatrix.zeros(ScalarType.Float64,1, 1);
+        DenseMatrix W = DenseMatrix.zeros(Float64, n, 1);
+        DenseMatrix M = DenseMatrix.zeros(Float64,1, 1);
 
         ArrayList<double[]> yHistory = new ArrayList<>();
         ArrayList<double[]> sHistory = new ArrayList<>();
@@ -703,10 +703,10 @@ public class BFGS {
 
                 int h = yHistory.size();
                 if (Y == null || Y.ncol() < h) {
-                    Y = DenseMatrix.zeros(ScalarType.Float64, n, h);
-                    S = DenseMatrix.zeros(ScalarType.Float64, n, h);
-                    W = DenseMatrix.zeros(ScalarType.Float64, n, 2*h);
-                    M = DenseMatrix.zeros(ScalarType.Float64, 2*h, 2*h);
+                    Y = DenseMatrix.zeros(Float64, n, h);
+                    S = DenseMatrix.zeros(Float64, n, h);
+                    W = DenseMatrix.zeros(Float64, n, 2*h);
+                    M = DenseMatrix.zeros(Float64, 2*h, 2*h);
                 }
 
                 // STEP 7
@@ -742,7 +742,7 @@ public class BFGS {
                     }
                 }
 
-                M.withUplo(UPLO.LOWER);
+                M.withUplo(LOWER);
                 M = M.inverse();
             }
 

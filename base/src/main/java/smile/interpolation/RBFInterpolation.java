@@ -17,13 +17,13 @@
 package smile.interpolation;
 
 import smile.math.MathEx;
-import smile.linalg.UPLO;
 import smile.tensor.Cholesky;
 import smile.tensor.DenseMatrix;
 import smile.math.rbf.GaussianRadialBasis;
 import smile.math.rbf.RadialBasisFunction;
 import smile.tensor.LU;
-import smile.tensor.ScalarType;
+import static smile.linalg.UPLO.*;
+import static smile.tensor.ScalarType.*;
 
 /**
  * Radial basis function interpolation is a popular method for the data points
@@ -116,7 +116,7 @@ public class RBFInterpolation {
         this.normalized = normalized;
 
         int n = x.length;
-        DenseMatrix G = DenseMatrix.zeros(ScalarType.Float64, n, n);
+        DenseMatrix G = DenseMatrix.zeros(Float64, n, n);
         double[] rhs = new double[n];
         for (int i = 0; i < n; i++) {
             double sum = 0.0;
@@ -135,7 +135,7 @@ public class RBFInterpolation {
         }
 
         if (rbf instanceof GaussianRadialBasis) {
-            G.withUplo(UPLO.LOWER);
+            G.withUplo(LOWER);
             Cholesky cholesky = G.cholesky();
             w = cholesky.solve(rhs).toArray(new double[rhs.length]);
         } else {

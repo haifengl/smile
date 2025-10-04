@@ -16,11 +16,11 @@
  */
 package smile.math.kernel;
 
-import smile.linalg.UPLO;
 import smile.tensor.DenseMatrix;
 import smile.tensor.Matrix;
-import smile.tensor.ScalarType;
 import smile.util.function.Function;
+import static smile.linalg.UPLO.*;
+import static smile.tensor.ScalarType.*;
 
 /**
  * Dot product kernel depends only on the dot product of x and y.
@@ -70,7 +70,7 @@ public interface DotProductKernel extends Function {
         }
 
         int n = pdot.nrow();
-        DenseMatrix K = DenseMatrix.zeros(ScalarType.Float64, n, n);
+        DenseMatrix K = DenseMatrix.zeros(Float64, n, n);
 
         for (int j = 0; j < n; j++) {
             K.set(j, j, k(pdot.get(j, j)));
@@ -81,7 +81,7 @@ public interface DotProductKernel extends Function {
             }
         }
 
-        K.withUplo(UPLO.LOWER);
+        K.withUplo(LOWER);
         return K;
     }
 }

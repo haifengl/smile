@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
+import static smile.tensor.ScalarType.*;
 
 /**
  * A vector of single precision floating numbers.
@@ -129,7 +130,7 @@ class Vector32 extends Vector implements Serializable {
 
     @Override
     public ScalarType scalarType() {
-        return ScalarType.Float32;
+        return Float32;
     }
 
     @Override

@@ -17,10 +17,8 @@
 package smile.tensor;
 
 import java.lang.foreign.MemorySegment;
-
-import static smile.linalg.Transpose.TRANSPOSE;
 import static smile.linalg.lapack.clapack_h.*;
-import static smile.linalg.Transpose.NO_TRANSPOSE;
+import static smile.linalg.Transpose.*;
 
 /**
  * The LU decomposition. For an m-by-n matrix A with {@code m >= n}, the LU

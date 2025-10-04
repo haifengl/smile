@@ -22,6 +22,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.lang.foreign.MemorySegment;
 import smile.linalg.UPLO;
+import static smile.tensor.ScalarType.*;
 
 /**
  * A symmetric matrix of double precision floating numbers.
@@ -53,7 +54,7 @@ class SymmMatrix64 extends SymmMatrix implements Serializable {
 
     @Override
     public ScalarType scalarType() {
-        return ScalarType.Float64;
+        return Float64;
     }
 
     @Override

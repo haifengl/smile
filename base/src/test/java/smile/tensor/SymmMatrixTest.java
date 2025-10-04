@@ -18,7 +18,7 @@ package smile.tensor;
 
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static smile.linalg.UPLO.LOWER;
+import static smile.linalg.UPLO.*;
 
 /**
  *

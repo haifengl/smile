@@ -26,6 +26,7 @@ import java.util.Arrays;
 import smile.linalg.Diag;
 import smile.linalg.UPLO;
 import smile.math.MathEx;
+import static smile.tensor.ScalarType.*;
 
 /**
  * A dense matrix of double precision floating numbers.
@@ -78,7 +79,7 @@ class DenseMatrix64 extends DenseMatrix implements Serializable {
 
     @Override
     public ScalarType scalarType() {
-        return ScalarType.Float64;
+        return Float64;
     }
 
     @Override

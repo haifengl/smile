@@ -19,8 +19,9 @@ package smile.stat.distribution;
 import java.io.Serial;
 import java.util.Arrays;
 import smile.math.MathEx;
-import smile.linalg.UPLO;
 import smile.tensor.*;
+import static smile.linalg.UPLO.*;
+import static smile.tensor.ScalarType.*;
 
 /**
  * Multivariate Gaussian distribution.
@@ -167,7 +168,7 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
      */
     private void init() {
         dim = mu.length;
-        sigma.withUplo(UPLO.LOWER);
+        sigma.withUplo(LOWER);
         Cholesky cholesky = sigma.copy().cholesky();
         sigmaInv = cholesky.inverse();
         sigmaDet = cholesky.det();
@@ -360,7 +361,7 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
 
             gaussian = new MultivariateGaussianDistribution(mean, variance);
         } else {
-            DenseMatrix cov = DenseMatrix.zeros(ScalarType.Float64, d, d);
+            DenseMatrix cov = DenseMatrix.zeros(Float64, d, d);
             for (int k = 0; k < n; k++) {
                 double[] x = data[k];
                 for (int i = 0; i < d; i++) {

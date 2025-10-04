@@ -18,6 +18,7 @@ package smile.tensor;
 
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static smile.tensor.ScalarType.*;
 
 /**
  *
@@ -55,7 +56,7 @@ public class BandMatrixTest {
         double[] b = {0.5, 0.5, 0.5};
 
         DenseMatrix a = DenseMatrix.of(A);
-        BandMatrix band = BandMatrix.zeros(ScalarType.Float64, 3, 3, 1, 1);
+        BandMatrix band = BandMatrix.zeros(Float64, 3, 3, 1, 1);
         for (int i = 0; i < A.length; i++) {
             for (int j = 0; j < A[i].length; j++) {
                 if (A[i][j] != 0.0f) {

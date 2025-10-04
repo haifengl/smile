@@ -18,11 +18,11 @@ package smile.tensor.fp32;
 
 import smile.math.MathEx;
 import smile.linalg.Order;
-import smile.linalg.UPLO;
 import smile.tensor.*;
-import static smile.linalg.Transpose.*;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static smile.linalg.UPLO.*;
+import static smile.linalg.Transpose.*;
 
 /**
  * Test DenseMatrix.
@@ -243,7 +243,7 @@ public class DenseMatrixTest {
             }
         }
     }
-/*
+
     @Test
     public void testAdd() {
         System.out.println("add");
@@ -262,10 +262,10 @@ public class DenseMatrixTest {
                 { 0.1051570f, 0f,  0.1051570f},
                 {-0.0151015f, 0f, -0.0151015f}
         };
-        Matrix a = Matrix.of(A);
-        Matrix b = Matrix.of(B);
-        a.add(1.0f, b);
-        assertTrue(MathEx.equals(C, a.toArray(), 1E-6f));
+        DenseMatrix a = DenseMatrix.of(A);
+        DenseMatrix b = DenseMatrix.of(B);
+        a.axpy(1.0f, b);
+        assertTrue(MathEx.equals(C, a.toArray(new float[0][]), 1E-6f));
     }
 
     @Test
@@ -286,12 +286,12 @@ public class DenseMatrixTest {
                 {-0.6349342f, -1.7808990f,  0.6349342f},
                 {-1.2632161f,  0.8989516f,  1.2632161f}
         };
-        Matrix a = Matrix.of(A);
-        Matrix b = Matrix.of(B);
+        DenseMatrix a = DenseMatrix.of(A);
+        DenseMatrix b = DenseMatrix.of(B);
         a.sub(b);
-        assertTrue(MathEx.equals(C, a.toArray(), 1E-6f));
+        assertTrue(MathEx.equals(C, a.toArray(new float[0][]), 1E-6f));
     }
-*/
+
     @Test
     public void testMm() {
         System.out.println("mm");
@@ -446,7 +446,7 @@ public class DenseMatrixTest {
         };
 
         DenseMatrix a = DenseMatrix.of(A);
-        a.withUplo(UPLO.LOWER);
+        a.withUplo(LOWER);
         Cholesky cholesky = a.cholesky();
         for (int i = 0; i < a.nrow(); i++) {
             for (int j = 0; j <= i; j++) {
@@ -501,7 +501,7 @@ public class DenseMatrixTest {
         float[] eigenValues = {1.7498382f, 0.3165784f, 0.1335834f};
 
         DenseMatrix a = DenseMatrix.of(A);
-        a.withUplo(UPLO.LOWER);
+        a.withUplo(LOWER);
         EVD eig = a.copy().eigen().sort();
         assertArrayEquals(eigenValues, eig.wr().toArray(new float[0]), 1E-6f);
 
@@ -586,7 +586,7 @@ public class DenseMatrixTest {
         };
 
         DenseMatrix matrix = DenseMatrix.of(A);
-        matrix.withUplo(UPLO.LOWER);
+        matrix.withUplo(LOWER);
         SVD svd = matrix.svd();
         assertArrayEquals(s, svd.s().toArray(new float[0]), 1E-6f);
 

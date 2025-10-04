@@ -19,10 +19,10 @@ package smile.math.distance;
 import java.io.Serializable;
 import java.util.function.ToDoubleBiFunction;
 import java.util.stream.IntStream;
-import smile.linalg.UPLO;
 import smile.tensor.DenseMatrix;
 import smile.tensor.Matrix;
-import smile.tensor.ScalarType;
+import static smile.linalg.UPLO.*;
+import static smile.tensor.ScalarType.*;
 
 /**
  * An interface to calculate a distance measure between two objects. A distance
@@ -73,7 +73,7 @@ public interface Distance<T> extends ToDoubleBiFunction<T,T>, Serializable {
     default Matrix pdist(T[] x) {
         int n = x.length;
         int N = n * (n - 1) / 2;
-        DenseMatrix D = DenseMatrix.zeros(ScalarType.Float64, n, n);
+        DenseMatrix D = DenseMatrix.zeros(Float64, n, n);
         IntStream.range(0, N).parallel().forEach(k -> {
             int j = n - 2 - (int) Math.floor(Math.sqrt(-8*k + 4*n*(n-1)-7)/2.0 - 0.5);
             int i = k + j + 1 - n*(n-1)/2 + (n-j)*((n-j)-1)/2;
@@ -86,7 +86,7 @@ public interface Distance<T> extends ToDoubleBiFunction<T,T>, Serializable {
             }
         }
 
-        D.withUplo(UPLO.LOWER);
+        D.withUplo(LOWER);
         return D;
     }
 
@@ -100,7 +100,7 @@ public interface Distance<T> extends ToDoubleBiFunction<T,T>, Serializable {
     default Matrix pdist(T[] x, T[] y) {
         int m = x.length;
         int n = y.length;
-        DenseMatrix D = DenseMatrix.zeros(ScalarType.Float64, m, n);
+        DenseMatrix D = DenseMatrix.zeros(Float64, m, n);
         IntStream.range(0, m).parallel().forEach(i -> {
             T xi = x[i];
             for (int j = 0; j < n; j++) {

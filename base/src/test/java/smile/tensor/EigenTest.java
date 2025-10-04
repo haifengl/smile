@@ -18,9 +18,8 @@ package smile.tensor;
 
 import java.util.Arrays;
 import org.junit.jupiter.api.*;
-import smile.linalg.UPLO;
-
 import static org.junit.jupiter.api.Assertions.*;
+import static smile.linalg.UPLO.*;
 
 /**
  *
@@ -95,7 +94,7 @@ public class EigenTest {
     public void testLanczos() {
         System.out.println("Lanczos(3)");
         DenseMatrix a = DenseMatrix.of(A);
-        a.withUplo(UPLO.LOWER);
+        a.withUplo(LOWER);
         EVD result = Eigen.of(a, 3);
         for (int i = 0; i < eigenValues.length; i++) {
             assertEquals(eigenValues[i], result.wr().get(i), 1E-7);
@@ -114,7 +113,7 @@ public class EigenTest {
     public void testLanczos1() {
         System.out.println("Lanczos(1)");
         DenseMatrix a = DenseMatrix.of(A);
-        a.withUplo(UPLO.LOWER);
+        a.withUplo(LOWER);
         EVD result = Eigen.of(a, 1);
         assertEquals(eigenValues[0], result.wr().get(0), 1E-4);
 
@@ -132,7 +131,7 @@ public class EigenTest {
             A[i][i] = (500 - i) / 500.0;
         }
         DenseMatrix a = DenseMatrix.of(A);
-        a.withUplo(UPLO.LOWER);
+        a.withUplo(LOWER);
         EVD result = Eigen.of(a, 6);
         assertEquals(2.0, result.wr().get(0), 1E-4);
         assertEquals(2.0, result.wr().get(1), 1E-4);

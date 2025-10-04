@@ -20,6 +20,7 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.util.Arrays;
 import smile.math.MathEx;
+import static smile.tensor.ScalarType.*;
 
 /**
  * A simple on-heap Tensor implementation.
@@ -72,14 +73,14 @@ public class JTensor extends AbstractTensor {
     @Override
     public ScalarType scalarType() {
         return switch (valueLayout) {
-            case ValueLayout.OfByte layout -> ScalarType.Int8;
-            case ValueLayout.OfShort layout -> ScalarType.Int16;
-            case ValueLayout.OfInt layout -> ScalarType.Int32;
-            case ValueLayout.OfLong layout -> ScalarType.Int64;
-            case ValueLayout.OfFloat layout -> ScalarType.Float32;
-            case ValueLayout.OfDouble layout -> ScalarType.Float64;
-            case ValueLayout.OfBoolean layout -> ScalarType.Int8;
-            case ValueLayout.OfChar layout -> ScalarType.Int16;
+            case ValueLayout.OfByte layout -> Int8;
+            case ValueLayout.OfShort layout -> Int16;
+            case ValueLayout.OfInt layout -> Int32;
+            case ValueLayout.OfLong layout -> Int64;
+            case ValueLayout.OfFloat layout -> Float32;
+            case ValueLayout.OfDouble layout -> Float64;
+            case ValueLayout.OfBoolean layout -> Int8;
+            case ValueLayout.OfChar layout -> Int16;
             default -> throw new IllegalStateException("Unsupported ValueLayout: " + valueLayout);
         };
     }

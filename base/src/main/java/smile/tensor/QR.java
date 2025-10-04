@@ -19,12 +19,10 @@ package smile.tensor;
 import java.io.Serializable;
 import java.lang.foreign.MemorySegment;
 import static smile.linalg.lapack.clapack_h.*;
-import static smile.linalg.Diag.NON_UNIT;
-import static smile.linalg.Side.LEFT;
-import static smile.linalg.Transpose.NO_TRANSPOSE;
-import static smile.linalg.Transpose.TRANSPOSE;
-import static smile.linalg.UPLO.LOWER;
-import static smile.linalg.UPLO.UPPER;
+import static smile.linalg.Diag.*;
+import static smile.linalg.Side.*;
+import static smile.linalg.Transpose.*;
+import static smile.linalg.UPLO.*;
 
 /**
  * The QR decomposition. For an m-by-n matrix A with {@code m >= n},
