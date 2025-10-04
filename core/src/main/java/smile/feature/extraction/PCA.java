@@ -23,6 +23,8 @@ import smile.linalg.UPLO;
 import smile.tensor.DenseMatrix;
 import smile.tensor.EVD;
 import smile.tensor.SVD;
+import smile.tensor.Vector;
+import static smile.linalg.UPLO.*;
 
 /**
  * Principal component analysis. PCA is an orthogonal
@@ -69,11 +71,11 @@ public class PCA extends Projection {
     /**
      * The sample mean.
      */
-    private final double[] mu;
+    private final Vector mu;
     /**
      * The projected sample mean.
      */
-    private final double[] pmu;
+    private final Vector pmu;
     /**
      * The matrix of variable loadings, whose columns contain the eigenvectors.
      */
@@ -81,15 +83,15 @@ public class PCA extends Projection {
     /**
      * Eigenvalues of principal components.
      */
-    private final double[] eigvalues;
+    private final Vector eigvalues;
     /**
      * The proportion of variance contained in each principal component.
      */
-    private final double[] proportion;
+    private final Vector proportion;
     /**
      * The cumulative proportion of variance contained in principal components.
      */
-    private final double[] cumulativeProportion;
+    private final Vector cumulativeProportion;
 
     /**
      * Constructor.
@@ -99,20 +101,20 @@ public class PCA extends Projection {
      * @param projection the projection matrix.
      * @param columns the columns to transform when applied on Tuple/DataFrame.
      */
-    public PCA(double[] mu, double[] eigvalues, DenseMatrix loadings, DenseMatrix projection, String... columns) {
+    public PCA(Vector mu, Vector eigvalues, DenseMatrix loadings, DenseMatrix projection, String... columns) {
         super(projection, "PCA", columns);
 
         this.mu = mu;
         this.eigvalues = eigvalues;
         this.eigvectors = loadings;
 
-        proportion = eigvalues.clone();
-        MathEx.unitize1(proportion);
+        proportion = eigvalues.copy();
+        double norm1 = proportion.norm1();
+        proportion.scale(1 / norm1);
 
-        cumulativeProportion = new double[eigvalues.length];
-        cumulativeProportion[0] = proportion[0];
-        for (int i = 1; i < eigvalues.length; i++) {
-            cumulativeProportion[i] = cumulativeProportion[i - 1] + proportion[i];
+        cumulativeProportion = proportion.copy();
+        for (int i = 1; i < proportion.size(); i++) {
+            cumulativeProportion.set(i, cumulativeProportion.get(i-1) + proportion.get(i));
         }
 
         pmu = projection.mv(mu);
@@ -160,19 +162,20 @@ public class PCA extends Projection {
             }
         }
 
-        double[] eigvalues;
+        Vector eigvalues;
         DenseMatrix eigvectors;
         if (m > n) {
-            SVD svd = X.svd(true, true);
-            eigvalues = svd.s;
-            for (int i = 0; i < eigvalues.length; i++) {
-                eigvalues[i] *= eigvalues[i];
+            SVD svd = X.svd();
+            eigvalues = svd.s();
+            for (int i = 0; i < eigvalues.size(); i++) {
+                double si = eigvalues.get(i);
+                eigvalues.set(i, si * si);
             }
 
-            eigvectors = svd.V;
+            eigvectors = svd.Vt();
         } else {
 
-            DenseMatrix cov = new Matrix(n, n);
+            DenseMatrix cov = X.zeros(n, n);
             for (int k = 0; k < m; k++) {
                 for (int i = 0; i < n; i++) {
                     for (int j = 0; j <= i; j++) {
@@ -197,7 +200,7 @@ public class PCA extends Projection {
         }
 
         DenseMatrix projection = getProjection(eigvalues, eigvectors, 0.95);
-        return new PCA(mu, eigvalues, eigvectors, projection, columns);
+        return new PCA(Vector.column(mu), eigvalues, eigvectors, projection, columns);
     }
 
     /**
@@ -218,7 +221,7 @@ public class PCA extends Projection {
             }
         }
 
-        DenseMatrix cov = new Matrix(n, n);
+        DenseMatrix cov = x.zeros(n, n);
         for (int k = 0; k < m; k++) {
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j <= i; j++) {
@@ -246,8 +249,8 @@ public class PCA extends Projection {
             }
         }
 
-        cov.withUplo(UPLO.LOWER);
-        EVD eigen = cov.eigen(false, true, true).sort();
+        cov.withUplo(LOWER);
+        EVD eigen = cov.eigen().sort();
 
         DenseMatrix loadings = eigen.Vr();
         for (int i = 0; i < n; i++) {
@@ -257,14 +260,14 @@ public class PCA extends Projection {
         }
 
         DenseMatrix projection = getProjection(eigen.wr(), loadings, 0.95);
-        return new PCA(mu, eigen.wr(), loadings, projection, columns);
+        return new PCA(Vector.column(mu), eigen.wr(), loadings, projection, columns);
     }
 
     /**
      * Returns the center of data.
      * @return the center of data.
      */
-    public double[] center() {
+    public Vector center() {
         return mu;
     }
 
@@ -282,7 +285,7 @@ public class PCA extends Projection {
      * which are the eigenvalues of the covariance or correlation matrix of learning data.
      * @return the principal component variances.
      */
-    public double[] variance() {
+    public Vector variance() {
         return eigvalues;
     }
 
@@ -291,7 +294,7 @@ public class PCA extends Projection {
      * ordered from largest to smallest.
      * @return the proportion of variance contained in each principal component.
      */
-    public double[] varianceProportion() {
+    public Vector varianceProportion() {
         return proportion;
     }
 
@@ -300,7 +303,7 @@ public class PCA extends Projection {
      * ordered from largest to smallest.
      * @return the cumulative proportion of variance.
      */
-    public double[] cumulativeVarianceProportion() {
+    public Vector cumulativeVarianceProportion() {
         return cumulativeProportion;
     }
 
@@ -313,12 +316,12 @@ public class PCA extends Projection {
      * @param p the required percentage of variance.
      * @return the projection matrix.
      */
-    private static DenseMatrix getProjection(double[] eigvalues, DenseMatrix loadings, double p) {
+    private static DenseMatrix getProjection(Vector eigvalues, DenseMatrix loadings, double p) {
         if (p <= 0.0 || p > 1.0) {
             throw new IllegalArgumentException("Invalid percentage of variance: " + p);
         }
 
-        double[] proportion = eigvalues.clone();
+        double[] proportion = eigvalues.toArray(new double[0]);
         MathEx.unitize1(proportion);
 
         int k = 0;
@@ -346,7 +349,7 @@ public class PCA extends Projection {
             throw new IllegalArgumentException("Invalid dimension of feature space: " + p);
         }
 
-        DenseMatrix projection = new Matrix(p, n);
+        DenseMatrix projection = loadings.zeros(p, n);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < p; j++) {
                 projection.set(j, i, loadings.get(i, j));
@@ -378,8 +381,8 @@ public class PCA extends Projection {
         }
 
         int k = 0;
-        for (; k < cumulativeProportion.length; k++) {
-            if (cumulativeProportion[k] >= p) {
+        for (; k < cumulativeProportion.size(); k++) {
+            if (cumulativeProportion.get(k) >= p) {
                 break;
             }
         }
@@ -389,7 +392,9 @@ public class PCA extends Projection {
 
     @Override
     protected double[] postprocess(double[] x) {
-        MathEx.sub(x, pmu);
+        for (int i = 0; i < x.length; i++) {
+            x[i] -= pmu.get(i);
+        }
         return x;
     }
 }

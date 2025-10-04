@@ -19,14 +19,15 @@ package smile.clustering;
 import java.util.Properties;
 import java.util.stream.IntStream;
 import smile.data.SparseDataset;
-import smile.math.MathEx;
 import smile.linalg.Transpose;
-import smile.linalg.UPLO;
+import smile.math.MathEx;
 import smile.tensor.*;
 import smile.util.AlgoStatus;
 import smile.util.IterativeAlgorithmController;
 import smile.util.SparseArray;
 import smile.util.SparseIntArray;
+import static smile.linalg.UPLO.*;
+import static smile.tensor.ScalarType.*;
 
 /**
  * Spectral Clustering. Given a set of data points, the similarity matrix may
@@ -197,7 +198,7 @@ public class SpectralClustering {
             x[i] = data[index[i]];
         }
 
-        Matrix C = new Matrix(n, l);
+        DenseMatrix C = DenseMatrix.zeros(Float64, n, l);
         double[] D = new double[n];
 
         IntStream.range(0, n).parallel().forEach(i -> {
@@ -226,10 +227,10 @@ public class SpectralClustering {
             }
         }
 
-        Matrix W = C.submatrix(0, 0, l-1, l-1);
-        W.withUplo(UPLO.LOWER);
+        DenseMatrix W = C.submatrix(0, 0, l-1, l-1);
+        W.withUplo(LOWER);
         EVD eigen = ARPACK.syev(W, ARPACK.SymmOption.LA, k);
-        double[] e = eigen.wr();
+        double[] e = eigen.wr().toArray(new double[0]);
         double scale = Math.sqrt((double)l / n);
         for (int i = 0; i < k; i++) {
             if (e[i] <= 1E-8) {
@@ -246,7 +247,7 @@ public class SpectralClustering {
             }
         }
         
-        double[][] Y = C.mm(U).toArray();
+        double[][] Y = C.mm(U).toArray(new double[0][]);
         for (int i = 0; i < n; i++) {
             MathEx.unitize2(Y[i]);
         }
@@ -264,7 +265,7 @@ public class SpectralClustering {
      * @param d the dimension of feature space.
      * @return the embedding.
      */
-    public static double[][] embed(Matrix W, int d) {
+    public static double[][] embed(DenseMatrix W, int d) {
         int n = W.nrow();
         double[] D = W.colSums();
         for (int i = 0; i < n; i++) {
@@ -283,9 +284,9 @@ public class SpectralClustering {
             }
         }
 
-        W.uplo(UPLO.LOWER);
-        Matrix.EVD eigen = ARPACK.syev(W, ARPACK.SymmOption.LA, d);
-        double[][] Y = eigen.Vr.toArray();
+        W.withUplo(LOWER);
+        EVD eigen = ARPACK.syev(W, ARPACK.SymmOption.LA, d);
+        double[][] Y = eigen.Vr().toArray(new double[0][]);
         for (int i = 0; i < n; i++) {
             MathEx.unitize2(Y[i]);
         }
@@ -304,7 +305,7 @@ public class SpectralClustering {
         int n = data.length;
         double gamma = -0.5 / (sigma * sigma);
 
-        DenseMatrix W = new Matrix(n, n);
+        DenseMatrix W = DenseMatrix.zeros(Float64, n, n);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < i; j++) {
                 double w = Math.exp(gamma * MathEx.squaredDistance(data[i], data[j]));

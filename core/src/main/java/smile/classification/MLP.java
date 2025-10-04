@@ -23,6 +23,7 @@ import java.util.Properties;
 
 import smile.base.mlp.*;
 import smile.math.MathEx;
+import smile.tensor.Vector;
 import smile.util.IntSet;
 import smile.util.Strings;
 
@@ -174,14 +175,14 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
 
     @Override
     public int predict(double[] x, double[] posteriori) {
-        propagate(x, false);
+        propagate(vector(x), false);
 
         int n = output.getOutputSize();
         if (n == 1 && k == 2) {
-            posteriori[1] = output.output()[0];
+            posteriori[1] = output.output().get(0);
             posteriori[0] = 1.0 - posteriori[1];
         } else {
-            System.arraycopy(output.output(), 0, posteriori, 0, n);
+            output.output().toArray(posteriori);
         }
 
         return classes.valueOf(MathEx.whichMax(posteriori));
@@ -189,13 +190,13 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
 
     @Override
     public int predict(double[] x) {
-        propagate(x, false);
+        propagate(vector(x), false);
         int n = output.getOutputSize();
 
         if (n == 1 && k == 2) {
-            return classes.valueOf(output.output()[0] > 0.5 ? 1 : 0);
+            return classes.valueOf(output.output().get(0) > 0.5 ? 1 : 0);
         } else {
-            return classes.valueOf(MathEx.whichMax(output.output()));
+            return classes.valueOf(output.output().iamax());
         }
     }
 
@@ -212,7 +213,7 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
     /** Updates the model with a single sample. RMSProp is not applied. */
     @Override
     public void update(double[] x, int y) {
-        propagate(x, true);
+        propagate(vector(x), true);
         setTarget(classes.indexOf(y));
         backpropagate(true);
         t++;
@@ -222,7 +223,7 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
     @Override
     public void update(double[][] x, int[] y) {
         for (int i = 0; i < x.length; i++) {
-            propagate(x[i], true);
+            propagate(vector(x[i]), true);
             setTarget(classes.indexOf(y[i]));
             backpropagate(false);
         }
@@ -238,12 +239,12 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
         double t = output.cost() == Cost.LIKELIHOOD ? 1.0 : 0.9;
         double f = 1.0 - t;
 
-        double[] target = this.target.get();
+        Vector target = this.target.get();
         if (n == 1) {
-            target[0] = y == 1 ? t : f;
+            target.set(0, y == 1 ? t : f);
         } else {
-            Arrays.fill(target, f);
-            target[y] = t;
+            target.fill(f);
+            target.set(y, t);
         }
     }
 

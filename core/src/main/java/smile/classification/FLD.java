@@ -22,6 +22,7 @@ import smile.math.MathEx;
 import smile.sort.QuickSort;
 import smile.tensor.*;
 import smile.util.IntSet;
+import static smile.tensor.ScalarType.*;
 
 /**
  * Fisher's linear discriminant. Fisher defined the separation between two
@@ -196,7 +197,7 @@ public class FLD extends AbstractClassifier<double[]> /*implements Projection<do
         }
 
         // Between class scatter
-        DenseMatrix Sb = DenseMatrix.zeros(ScalarType.Float64, p, p);
+        DenseMatrix Sb = DenseMatrix.zeros(Float64, p, p);
         for (double[] mui : mu) {
             for (int j = 0; j < p; j++) {
                 for (int i = 0; i <= j; i++) {
@@ -213,7 +214,8 @@ public class FLD extends AbstractClassifier<double[]> /*implements Projection<do
         }
 
         // Within class scatter
-        DenseMatrix Sw = St.sub(Sb);
+        DenseMatrix Sw = St.copy();
+        Sw.sub(Sb);
         DenseMatrix SwInvSb = Sw.inverse().mm(Sb);
         EVD eig = SwInvSb.eigen();
 
@@ -225,7 +227,7 @@ public class FLD extends AbstractClassifier<double[]> /*implements Projection<do
         }
         int[] index = QuickSort.sort(w);
 
-        DenseMatrix scaling = DenseMatrix.zeros(ScalarType.Float64, p, L);
+        DenseMatrix scaling = DenseMatrix.zeros(Float64, p, L);
         for (int j = 0; j < L; j++) {
             int l = index[j];
             for (int i = 0; i < p; i++) {
@@ -244,7 +246,7 @@ public class FLD extends AbstractClassifier<double[]> /*implements Projection<do
         int n = x.length;
         double sqrtn = Math.sqrt(n);
 
-        DenseMatrix X = DenseMatrix.zeros(ScalarType.Float64, p, n);
+        DenseMatrix X = DenseMatrix.zeros(Float64, p, n);
         for (int i = 0; i < n; i++) {
             double[] xi = x[i];
             for (int j = 0; j < p; j++) {
@@ -258,7 +260,7 @@ public class FLD extends AbstractClassifier<double[]> /*implements Projection<do
             }
         }
 
-        DenseMatrix M = DenseMatrix.zeros(ScalarType.Float64, p, k);
+        DenseMatrix M = DenseMatrix.zeros(Float64, p, k);
         for (int i = 0; i < k; i++) {
             double pi = Math.sqrt(priori[i]);
             double[] mui = mu[i];

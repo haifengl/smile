@@ -25,7 +25,7 @@ import smile.math.distance.Distance;
 import smile.tensor.ARPACK;
 import smile.tensor.DenseMatrix;
 import smile.tensor.EVD;
-import smile.tensor.ScalarType;
+import static smile.tensor.ScalarType.*;
 
 /**
  * Isometric feature mapping. Isomap is a widely used low-dimensional embedding methods,
@@ -190,7 +190,7 @@ public class IsoMap {
         double[] mean = MathEx.rowMeans(D);
         double mu = MathEx.mean(mean);
 
-        DenseMatrix B = DenseMatrix.zeros(ScalarType.Float64, n, n);
+        DenseMatrix B = DenseMatrix.zeros(Float64, n, n);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j <= i; j++) {
                 double b = D[i][j] - mean[i] - mean[j] + mu;
