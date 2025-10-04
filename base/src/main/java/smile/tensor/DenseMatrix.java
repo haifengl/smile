@@ -27,6 +27,7 @@ import static smile.linalg.Transpose.*;
 import static smile.linalg.UPLO.*;
 import static smile.linalg.blas.cblas_h.*;
 import static smile.linalg.lapack.clapack_h.*;
+import static smile.tensor.ScalarType.*;
 
 /**
  * A dense matrix is a matrix where a large proportion of its elements
@@ -1159,7 +1160,7 @@ public abstract class DenseMatrix implements Matrix {
     public static DenseMatrix of(double[][] A) {
         int m = A.length;
         int n = A[0].length;
-        DenseMatrix matrix = zeros(ScalarType.Float64, m, n);
+        DenseMatrix matrix = zeros(Float64, m, n);
         for (int i =  0; i < m; i++) {
             for (int j = 0; j < n; j++) {
                 matrix.set(i, j, A[i][j]);
@@ -1176,7 +1177,7 @@ public abstract class DenseMatrix implements Matrix {
     public static DenseMatrix of(float[][] A) {
         int m = A.length;
         int n = A[0].length;
-        DenseMatrix matrix = zeros(ScalarType.Float32, m, n);
+        DenseMatrix matrix = zeros(Float32, m, n);
         for (int i =  0; i < m; i++) {
             for (int j = 0; j < n; j++) {
                 matrix.set(i, j, A[i][j]);
@@ -1270,7 +1271,7 @@ public abstract class DenseMatrix implements Matrix {
      */
     public static DenseMatrix diagflat(double[] diag) {
         int n = diag.length;
-        DenseMatrix matrix = DenseMatrix.zeros(ScalarType.Float64, n, n);
+        DenseMatrix matrix = DenseMatrix.zeros(Float64, n, n);
         for (int i = 0; i < n; i++) {
             matrix.set(i, i, diag[i]);
         }
@@ -1284,7 +1285,7 @@ public abstract class DenseMatrix implements Matrix {
      */
     public static DenseMatrix diagflat(float[] diag) {
         int n = diag.length;
-        DenseMatrix matrix = DenseMatrix.zeros(ScalarType.Float32, n, n);
+        DenseMatrix matrix = DenseMatrix.zeros(Float32, n, n);
         for (int i = 0; i < n; i++) {
             matrix.set(i, i, diag[i]);
         }
@@ -1340,6 +1341,27 @@ public abstract class DenseMatrix implements Matrix {
     }
 
     /**
+     * Returns a uniformly distributed random matrix in [lo, hi).
+     *
+     * @param m the number of rows.
+     * @param n the number of columns.
+     * @param lo the lower bound of uniform distribution.
+     * @param hi the upper bound of uniform distribution.
+     * @return the random matrix.
+     */
+    public static DenseMatrix rand(ScalarType scalarType, int m, int n, double lo, double hi) {
+        DenseMatrix matrix = zeros(scalarType, m, n);
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                matrix.set(i, j, MathEx.random(lo, hi));
+            }
+        }
+
+        return matrix;
+    }
+
+    /**
      * Returns a symmetric Toeplitz matrix in which each descending diagonal
      * from left to right is constant.
      *
@@ -1348,7 +1370,7 @@ public abstract class DenseMatrix implements Matrix {
      */
     public static DenseMatrix toeplitz(double[] a) {
         int n = a.length;
-        DenseMatrix toeplitz = DenseMatrix.zeros(ScalarType.Float64, n, n);
+        DenseMatrix toeplitz = DenseMatrix.zeros(Float64, n, n);
         toeplitz.withUplo(LOWER);
 
         for (int i = 0; i < n; i++) {
@@ -1373,7 +1395,7 @@ public abstract class DenseMatrix implements Matrix {
      */
     public static DenseMatrix toeplitz(float[] a) {
         int n = a.length;
-        DenseMatrix toeplitz = DenseMatrix.zeros(ScalarType.Float32, n, n);
+        DenseMatrix toeplitz = DenseMatrix.zeros(Float32, n, n);
         toeplitz.withUplo(LOWER);
 
         for (int i = 0; i < n; i++) {
@@ -1403,7 +1425,7 @@ public abstract class DenseMatrix implements Matrix {
         }
 
         int n = kl.length;
-        DenseMatrix toeplitz = DenseMatrix.zeros(ScalarType.Float64, n, n);
+        DenseMatrix toeplitz = DenseMatrix.zeros(Float64, n, n);
 
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < i; j++) {
@@ -1432,7 +1454,7 @@ public abstract class DenseMatrix implements Matrix {
         }
 
         int n = kl.length;
-        DenseMatrix toeplitz = DenseMatrix.zeros(ScalarType.Float32, n, n);
+        DenseMatrix toeplitz = DenseMatrix.zeros(Float32, n, n);
 
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < i; j++) {
