@@ -16,6 +16,7 @@
  */
 package smile.tensor;
 
+import java.io.Serializable;
 import java.lang.foreign.MemorySegment;
 import smile.math.MathEx;
 import smile.linalg.*;
@@ -28,7 +29,7 @@ import static smile.tensor.ScalarType.*;
  *
  * @author Haifeng Li
  */
-public abstract class SymmMatrix implements Matrix {
+public abstract class SymmMatrix implements Matrix, Serializable {
     /**
      * The memory segment that stores matrix values.
      */
@@ -41,6 +42,15 @@ public abstract class SymmMatrix implements Matrix {
      * The upper or lower triangle of the symmetric matrix.
      */
     final UPLO uplo;
+
+    /**
+     * Default constructor for readObject.
+     */
+    SymmMatrix() {
+        this.memory = null;
+        this.n = 0;
+        this.uplo = null;
+    }
 
     /**
      * Constructor.

@@ -137,6 +137,17 @@ public class SparseMatrix implements Matrix, Iterable<SparseMatrix.Entry>, Seria
     }
 
     /**
+     * Default constructor for readObject.
+     */
+    SparseMatrix() {
+        this.m = 0;
+        this.n = 0;
+        this.rowIndex = null;
+        this.colIndex = null;
+        this.nonzeros = null;
+    }
+
+    /**
      * Constructor.
      * @param m the number of rows in the matrix.
      * @param n the number of columns in the matrix.

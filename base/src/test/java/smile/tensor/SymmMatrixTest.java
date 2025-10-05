@@ -17,6 +17,9 @@
 package smile.tensor;
 
 import org.junit.jupiter.api.*;
+import smile.io.Read;
+import smile.io.Write;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static smile.linalg.UPLO.*;
 
@@ -46,7 +49,7 @@ public class SymmMatrixTest {
     }
 
     @Test
-    public void test() {
+    public void test() throws Exception{
         System.out.println("SymmMatrix");
         double[][] A = {
                 {0.9000f, 0.4000f, 0.0000f},
@@ -63,5 +66,11 @@ public class SymmMatrixTest {
         Vector y = a.mv(x);
         Vector y2 = symm.mv(x);
         assertEquals(y, y2);
+
+        java.nio.file.Path temp = Write.object(symm);
+        SymmMatrix matrix = (SymmMatrix) Read.object(temp);
+        assertEquals(3, matrix.nrow());
+        assertEquals(3, matrix.ncol());
+        matrix.mv(x);
     }
 }

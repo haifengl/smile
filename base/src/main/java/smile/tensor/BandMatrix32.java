@@ -35,6 +35,13 @@ class BandMatrix32 extends BandMatrix implements Serializable {
     final float[] AB;
 
     /**
+     * Default constructor for readObject.
+     */
+    private BandMatrix32() {
+        this.AB = null;
+    }
+
+    /**
      * Constructor.
      * @param m the number of rows.
      * @param n the number of columns.

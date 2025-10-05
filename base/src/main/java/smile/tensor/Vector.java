@@ -30,6 +30,13 @@ import static smile.linalg.blas.cblas_h.*;
  */
 public abstract class Vector extends DenseMatrix {
     /**
+     * Default constructor for readObject.
+     */
+    Vector() {
+
+    }
+
+    /**
      * Constructor.
      * @param memory the memory segment of data.
      * @param m the number of rows.

@@ -36,6 +36,13 @@ class SymmMatrix32 extends SymmMatrix implements Serializable {
     final float[] AP;
 
     /**
+     * Default constructor for readObject.
+     */
+    private SymmMatrix32() {
+        this.AP = null;
+    }
+
+    /**
      * Constructor.
      * @param uplo the symmetric matrix stores the upper or lower triangle.
      * @param n the number of rows/columns.

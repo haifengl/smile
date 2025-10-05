@@ -32,7 +32,7 @@ import static smile.tensor.ScalarType.*;
  *
  * @author Haifeng Li
  */
-class Vector32 extends Vector implements Serializable {
+class Vector32 extends Vector {
     /**
      * The on-heap data.
      */
@@ -45,6 +45,15 @@ class Vector32 extends Vector implements Serializable {
      * The length of vector.
      */
     final int length;
+
+    /**
+     * Default constructor for readObject.
+     */
+    private Vector32() {
+        this.array = null;
+        this.offset = 0;
+        this.length = 0;
+    }
 
     /**
      * Private constructor with MemorySegment.

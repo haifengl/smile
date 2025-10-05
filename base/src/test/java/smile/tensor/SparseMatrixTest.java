@@ -19,6 +19,9 @@ package smile.tensor;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import smile.io.Read;
+import smile.io.Write;
 import smile.math.MathEx;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -61,6 +64,15 @@ public class SparseMatrixTest {
 
     @AfterEach
     public void tearDown() {
+    }
+
+    @Test
+    public void testSerialize() throws Exception {
+        java.nio.file.Path temp = Write.object(sparse);
+        SparseMatrix matrix = (SparseMatrix) Read.object(temp);
+        assertEquals(3, matrix.nrow());
+        assertEquals(3, matrix.ncol());
+        matrix.mv(b);
     }
 
     @Test

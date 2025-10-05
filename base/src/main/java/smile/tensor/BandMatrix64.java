@@ -35,6 +35,13 @@ class BandMatrix64 extends BandMatrix implements Serializable {
     final double[] AB;
 
     /**
+     * Default constructor for readObject.
+     */
+    private BandMatrix64() {
+        this.AB = null;
+    }
+
+    /**
      * Constructor.
      * @param m the number of rows.
      * @param n the number of columns.

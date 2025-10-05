@@ -17,6 +17,8 @@
 package smile.tensor.fp32;
 
 import org.junit.jupiter.api.*;
+import smile.io.Read;
+import smile.io.Write;
 import smile.tensor.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static smile.tensor.ScalarType.*;
@@ -47,7 +49,7 @@ public class BandMatrixTest {
     }
 
     @Test
-    public void testFloatBandMatrix() {
+    public void test() throws Exception {
         System.out.println("FloatBandMatrix");
         float[][] A = {
             {0.9000f, 0.4000f, 0.0000f},
@@ -70,5 +72,11 @@ public class BandMatrixTest {
         Vector y = a.mv(x);
         Vector y2 = band.mv(x);
         assertEquals(y, y2);
+
+        java.nio.file.Path temp = Write.object(band);
+        BandMatrix matrix = (BandMatrix) Read.object(temp);
+        assertEquals(3, matrix.nrow());
+        assertEquals(3, matrix.ncol());
+        matrix.mv(x);
     }
 }
