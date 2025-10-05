@@ -16,6 +16,7 @@
  */
 package smile.tensor;
 
+import java.io.Serializable;
 import java.lang.foreign.MemorySegment;
 import smile.math.MathEx;
 import smile.linalg.*;
@@ -63,7 +64,7 @@ import static smile.linalg.blas.cblas_h.*;
  *
  * @author Haifeng Li
  */
-public abstract class BandMatrix implements Matrix {
+public abstract class BandMatrix implements Matrix, Serializable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BandMatrix.class);
 
     /**
@@ -94,6 +95,19 @@ public abstract class BandMatrix implements Matrix {
      * The upper or lower triangle of the symmetric band matrix.
      */
     UPLO uplo = null;
+
+    /**
+     * Default constructor for readObject.
+     */
+    BandMatrix() {
+        this.memory = null;
+        this.m = 0;
+        this.n = 0;
+        this.kl = 0;
+        this.ku = 0;
+        this.ld = 0;
+        this.uplo = null;
+    }
 
     /**
      * Constructor.

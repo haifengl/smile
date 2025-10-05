@@ -33,11 +33,18 @@ import static smile.tensor.ScalarType.*;
  *
  * @author Haifeng Li
  */
-class DenseMatrix64 extends DenseMatrix implements Serializable {
+class DenseMatrix64 extends DenseMatrix {
     /**
      * The on-heap data.
      */
     final double[] array;
+
+    /**
+     * Default constructor for readObject.
+     */
+    private DenseMatrix64() {
+        this.array = null;
+    }
 
     /**
      * Constructor.

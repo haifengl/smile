@@ -16,6 +16,8 @@
  */
 package smile.tensor.fp32;
 
+import smile.io.Read;
+import smile.io.Write;
 import smile.math.MathEx;
 import smile.linalg.Order;
 import smile.tensor.*;
@@ -60,6 +62,15 @@ public class DenseMatrixTest {
 
     @AfterEach
     public void tearDown() {
+    }
+
+    @Test
+    public void testSerialize() throws Exception {
+        java.nio.file.Path temp = Write.object(matrix);
+        DenseMatrix b = (DenseMatrix) Read.object(temp);
+        assertEquals(3, b.nrow());
+        assertEquals(3, b.ncol());
+        b.mv(v);
     }
 
     @Test

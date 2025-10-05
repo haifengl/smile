@@ -16,6 +16,7 @@
  */
 package smile.tensor;
 
+import java.io.Serializable;
 import java.lang.foreign.MemorySegment;
 import smile.linalg.*;
 import smile.math.MathEx;
@@ -36,7 +37,7 @@ import static smile.tensor.ScalarType.*;
  *
  * @author Haifeng Li
  */
-public abstract class DenseMatrix implements Matrix {
+public abstract class DenseMatrix implements Matrix, Serializable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DenseMatrix.class);
 
     /**
@@ -64,6 +65,18 @@ public abstract class DenseMatrix implements Matrix {
      * triangular matrix has unit diagonal elements.
      */
     Diag diag;
+
+    /**
+     * Default constructor for readObject.
+     */
+    DenseMatrix() {
+        this.memory = null;
+        this.m = 0;
+        this.n = 0;
+        this.ld = 0;
+        this.uplo = null;
+        this.diag = null;
+    }
 
     /**
      * Constructor.
