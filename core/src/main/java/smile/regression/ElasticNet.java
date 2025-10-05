@@ -22,6 +22,7 @@ import smile.data.formula.Formula;
 import smile.data.type.StructType;
 import smile.math.MathEx;
 import smile.tensor.DenseMatrix;
+import smile.tensor.Vector;
 
 /**
  * Elastic Net regularization. The elastic net is a regularized regression
@@ -199,8 +200,8 @@ public class ElasticNet {
 
         int n = X.nrow();
         int p = X.ncol();
-        double[] center = X.colMeans();
-        double[] scale = X.colSds();
+        Vector center = X.colMeans();
+        Vector scale = X.colSds();
 
         // Pads 0 at the tail
         double[] y2 = new double[n + p];
@@ -213,11 +214,11 @@ public class ElasticNet {
         }
 
         // Scales the original data array and pads a weighted identity matrix
-        DenseMatrix X2 = new Matrix(X.nrow()+ p, p);
+        DenseMatrix X2 = X.zeros(X.nrow()+ p, p);
         double padding = c * Math.sqrt(options.lambda2);
         for (int j = 0; j < p; j++) {
             for (int i = 0; i < n; i++) {
-                X2.set(i, j, c * (X.get(i, j) - center[j]) / scale[j]);
+                X2.set(i, j, c * (X.get(i, j) - center.get(j)) / scale.get(j));
             }
 
             X2.set(j + n, j, padding);
@@ -225,12 +226,12 @@ public class ElasticNet {
 
         var lasso = new LASSO.Options(options.lambda1 * c, options.tol, options.maxIter,
                 options.alpha, options.beta, options.eta, options.lsMaxIter, options.pcgMaxIter);
-        double[] w = LASSO.train(X2, y2, lasso);
+        Vector w = LASSO.train(X2, y2, lasso);
         for (int i = 0; i < p; i++) {
-            w[i] = c * w[i] / scale[i];
+            w.set(i, c * w.get(i) / scale.get(i));
         }
 
-        double b = ym - MathEx.dot(w, center);
+        double b = ym - w.dot(center);
         return new LinearModel(formula, schema, X, y, w, b);
     }
 }

@@ -182,7 +182,7 @@ public class OLS {
             }
         }
 
-        LinearModel model = new LinearModel(formula, schema, X, y, w.toArray(new double[0]), 0.0);
+        LinearModel model = new LinearModel(formula, schema, X, y, w, 0.0);
 
         DenseMatrix inv = null;
         if (options.stderr || options.recursive) {

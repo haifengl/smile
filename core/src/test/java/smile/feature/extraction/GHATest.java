@@ -19,7 +19,7 @@ package smile.feature.extraction;
 import smile.datasets.USArrests;
 import smile.math.MathEx;
 import smile.util.function.TimeFunction;
-import smile.math.matrix.Matrix;
+import smile.tensor.DenseMatrix;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -64,7 +64,7 @@ public class GHATest {
         var x = usa.x();
         int k = 3;
         double[] mu = MathEx.colMeans(x);
-        Matrix cov = Matrix.of(MathEx.cov(x));
+        DenseMatrix cov = DenseMatrix.of(MathEx.cov(x));
         for (double[] xi : x) {
             MathEx.sub(xi, mu);
         }
@@ -83,11 +83,11 @@ public class GHATest {
             }
         }
 
-        Matrix p = gha.projection;
-        Matrix t = p.ata();
+        DenseMatrix p = gha.projection;
+        DenseMatrix t = p.ata();
         System.out.println(t);
 
-        Matrix s = p.mm(cov).mt(p);
+        DenseMatrix s = p.mm(cov).mt(p);
         double[] ev = new double[k];
         System.out.println("Relative error of eigenvalues:");
         for (int i = 0; i < k; i++) {
@@ -102,7 +102,7 @@ public class GHATest {
 
         double[][] lt = MathEx.transpose(loadings);
         double[] evdot = new double[k];
-        double[][] pa = p.toArray();
+        double[][] pa = p.toArray(new double[0][] );
         System.out.println("Dot products of learned eigenvectors to true eigenvectors:");
         for (int i = 0; i < k; i++) {
             evdot[i] = MathEx.dot(lt[i], pa[i]);

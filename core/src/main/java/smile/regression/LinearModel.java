@@ -17,7 +17,6 @@
 package smile.regression;
 
 import java.io.Serial;
-import java.util.Arrays;
 import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.Tuple;
@@ -27,6 +26,8 @@ import smile.math.MathEx;
 import smile.math.special.Beta;
 import smile.stat.Hypothesis;
 import smile.tensor.DenseMatrix;
+import smile.tensor.Vector;
+import static smile.linalg.Transpose.*;
 
 /**
  * Linear model. In linear regression,
@@ -83,7 +84,7 @@ public class LinearModel implements DataFrameRegression {
     /**
      * The linear weights.
      */
-    final double[] w;
+    final Vector w;
     /**
      * True if the linear weights w includes the intercept.
      */
@@ -95,11 +96,11 @@ public class LinearModel implements DataFrameRegression {
     /**
      * The fitted values.
      */
-    final double[] fittedValues;
+    final Vector fittedValues;
     /**
      * The residuals, that is response minus fitted values.
      */
-    final double[] residuals;
+    final Vector residuals;
     /**
      * Residual sum of squares.
      */
@@ -158,28 +159,30 @@ public class LinearModel implements DataFrameRegression {
      * @param w the linear weights.
      * @param b the intercept.
      */
-    public LinearModel(Formula formula, StructType schema, DenseMatrix X, double[] y, double[] w, double b) {
+    public LinearModel(Formula formula, StructType schema, DenseMatrix X, double[] y, Vector w, double b) {
         this.formula = formula;
         this.schema = schema;
-        this.predictors = X.colNames();
+        this.predictors = schema.names();
         this.p = X.ncol();
         this.w = w;
         this.b = b;
         this.bias = predictors[0].equals("Intercept");
 
         int n = X.nrow();
-        fittedValues = new double[n];
-        Arrays.fill(fittedValues, b);
-        X.mv(1.0, w, 1.0, fittedValues);
+        fittedValues = X.vector(n);
+        fittedValues.fill(b);
+        X.mv(NO_TRANSPOSE, 1.0, w, 1.0, fittedValues);
 
-        residuals = new double[n];
+        residuals = X.vector(n);
         RSS = 0.0;
         double TSS = 0.0;
         double ybar = MathEx.mean(y);
         for (int i = 0; i < n; i++) {
-            residuals[i] = y[i] - fittedValues[i];
-            RSS += MathEx.pow2(residuals[i]);
-            TSS += MathEx.pow2(y[i] - ybar);
+            double r = y[i] - fittedValues.get(i);
+            double t = y[i] - ybar;
+            residuals.set(i, r);
+            RSS += r * r;
+            TSS += t * t;
         }
 
         error = Math.sqrt(RSS / (n - p));
@@ -227,8 +230,8 @@ public class LinearModel implements DataFrameRegression {
      * Returns the linear coefficients without intercept.
      * @return the linear coefficients without intercept.
      */
-    public double[] coefficients() {
-        return bias ? Arrays.copyOfRange(w, 1, w.length) : w;
+    public Vector coefficients() {
+        return bias ? w.copy(1, w.size()) : w;
     }
 
     /**
@@ -236,14 +239,14 @@ public class LinearModel implements DataFrameRegression {
      * @return the intercept.
      */
     public double intercept() {
-        return bias ? w[0] : b;
+        return bias ? w.get(0) : b;
     }
 
     /**
      * Returns the residuals, which is response minus fitted values.
      * @return the residuals
      */
-    public double[] residuals() {
+    public Vector residuals() {
         return residuals;
     }
 
@@ -251,7 +254,7 @@ public class LinearModel implements DataFrameRegression {
      * Returns the fitted values.
      * @return the fitted values.
      */
-    public double[] fittedValues() {
+    public Vector fittedValues() {
         return fittedValues;
     }
 
@@ -332,14 +335,14 @@ public class LinearModel implements DataFrameRegression {
      */
     public double predict(double[] x) {
         double y = b;
-        if (x.length == w.length) {
+        if (x.length == w.size()) {
             for (int i = 0; i < x.length; i++) {
-                y += x[i] * w[i];
+                y += x[i] * w.get(i);
             }
-        } else if (bias && x.length == w.length - 1){
-            y = w[0];
+        } else if (bias && x.length == w.size() - 1){
+            y = w.get(0);
             for (int i = 0; i < x.length; i++) {
-                y += x[i] * w[i+1];
+                y += x[i] * w.get(i+1);
             }
         } else {
             throw new IllegalArgumentException("Invalid vector size: " + x.length);
@@ -357,13 +360,13 @@ public class LinearModel implements DataFrameRegression {
     public double[] predict(DataFrame df) {
         if (bias) {
             DenseMatrix X = formula.matrix(df, true);
-            return X.mv(w);
+            return X.mv(w).toArray(new double[0]);
         } else {
             DenseMatrix X = formula.matrix(df, false);
-            double[] y = new double[X.nrow()];
-            Arrays.fill(y, b);
-            X.mv(1.0, w, 1.0, y);
-            return y;
+            Vector y = X.vector(X.nrow());
+            y.fill(b);
+            X.mv(NO_TRANSPOSE, 1.0, w, 1.0, y);
+            return y.toArray(new double[y.size()]);
         }
     }
 
@@ -439,28 +442,27 @@ public class LinearModel implements DataFrameRegression {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
         }
 
-        double v = 1 + V.xAx(x);
+        Vector x_ = Vector.column(x);
+        double v = 1 + V.xAx(x_);
         // If 1/v is NaN, then the update to V will no longer be invertible.
         // See https://en.wikipedia.org/wiki/Sherman%E2%80%93Morrison_formula#Statement
         if (Double.isNaN(1/v)){
             throw new IllegalStateException("The updated V matrix is no longer invertible.");
         }
 
-        double[] Vx = V.mv(x);
+        Vector Vx = V.mv(x);
         for (int j = 0; j < p; j++) {
             for (int i = 0; i < p; i++) {
-                double tmp = V.get(i, j) - ((Vx[i] * Vx[j])/v);
+                double tmp = V.get(i, j) - ((Vx.get(i) * Vx.get(j))/v);
                 V.set(i, j, tmp/lambda);
             }
         }
 
         // V has been updated. Compute Vx again.
-        V.mv(x, Vx);
+        V.mv(x_, Vx);
 
         double err = y - predict(x);
-        for (int i = 0; i < p; i++){
-            w[i] += Vx[i] * err;
-        }
+        w.axpy(err, Vx);
     }
 
     @Override
@@ -468,7 +470,7 @@ public class LinearModel implements DataFrameRegression {
         StringBuilder builder = new StringBuilder();
         builder.append("Linear Model:\n");
 
-        double[] r = residuals.clone();
+        double[] r = residuals.toArray(new double[0]);
         builder.append("\nResiduals:\n");
         builder.append("       Min          1Q      Median          3Q         Max\n");
         builder.append(String.format("%10.4f  %10.4f  %10.4f  %10.4f  %10.4f%n", MathEx.min(r), MathEx.q1(r), MathEx.median(r), MathEx.q3(r), MathEx.max(r)));
@@ -492,7 +494,7 @@ public class LinearModel implements DataFrameRegression {
             }
 
             for (int i = 0; i < p; i++) {
-                builder.append(String.format("%-15s %10.4f%n", predictors[i], w[i]));
+                builder.append(String.format("%-15s %10.4f%n", predictors[i], w.get(i)));
             }
         }
 

@@ -92,7 +92,7 @@ public class OLSTest {
         }
 
         for (int i = 0; i < residuals.length; i++) {
-            assertEquals(residuals[i], model.residuals()[i], 1E-4);
+            assertEquals(residuals[i], model.residuals().get(i), 1E-4);
         }
 
         java.nio.file.Path temp = Write.object(model);

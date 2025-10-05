@@ -267,7 +267,7 @@ public class SpectralClustering {
      */
     public static double[][] embed(DenseMatrix W, int d) {
         int n = W.nrow();
-        double[] D = W.colSums();
+        double[] D = W.colSums().toArray(new double[0]);
         for (int i = 0; i < n; i++) {
             if (D[i] == 0.0) {
                 throw new IllegalArgumentException("Isolated vertex: " + i);
@@ -364,7 +364,7 @@ public class SpectralClustering {
 
         var W = new CountMatrix(SparseDataset.of(X, p).toMatrix(), D);
         EVD eigen = ARPACK.syev(W, ARPACK.SymmOption.LA, d);
-        double[][] Y = eigen.Vr().toArray();
+        double[][] Y = eigen.Vr().toArray(new double[0][]);
         for (int i = 0; i < n; i++) {
             MathEx.unitize2(Y[i]);
         }
@@ -378,7 +378,7 @@ public class SpectralClustering {
     static class CountMatrix implements Matrix {
         /** The design matrix. */
         final Matrix X;
-        final Vector D;
+        final double[] D;
         final Vector x;
         final Vector ax;
         final Vector y;
@@ -386,7 +386,7 @@ public class SpectralClustering {
         /**
          * Constructor.
          */
-        CountMatrix(Matrix X, Vector D) {
+        CountMatrix(Matrix X, double[] D) {
             this.X = X;
             this.D = D;
 
@@ -413,12 +413,17 @@ public class SpectralClustering {
         }
 
         @Override
+        public ScalarType scalarType() {
+            return X.scalarType();
+        }
+
+        @Override
         public void mv(Vector x, Vector y) {
             X.tv(x, ax);
             X.mv(ax, y);
 
             for (int i = 0; i < y.size(); i++) {
-                y.sub(i, x.get(i) / D.get(i));
+                y.sub(i, x.get(i) / D[i]);
             }
         }
 
@@ -434,18 +439,63 @@ public class SpectralClustering {
 
         @Override
         public void mv(Vector work, int inputOffset, int outputOffset) {
-            System.arraycopy(work, inputOffset, x, 0, x.length);
+            Vector.copy(work, inputOffset, x, 0, x.size());
             X.tv(work, ax);
             X.mv(ax, y);
 
-            for (int i = 0; i < y.length; i++) {
-                y[i] -= x[i] / D[i];
+            for (int i = 0; i < y.size(); i++) {
+                y.sub(i, x.get(i) / D[i]);
             }
-            System.arraycopy(y, 0, work, outputOffset, y.length);
+            Vector.copy(y, 0, work, outputOffset, y.size());
         }
 
         @Override
         public void tv(Vector work, int inputOffset, int outputOffset) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public double get(int i, int j) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void set(int i, int j, double x) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void add(int i, int j, double x) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void sub(int i, int j, double x) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void mul(int i, int j, double x) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void div(int i, int j, double x) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Matrix scale(double alpha) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Matrix copy() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Matrix transpose() {
             throw new UnsupportedOperationException();
         }
     }
