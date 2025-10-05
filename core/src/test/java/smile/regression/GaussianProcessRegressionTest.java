@@ -24,8 +24,8 @@ import smile.io.Write;
 import smile.math.MathEx;
 import smile.math.kernel.GaussianKernel;
 import smile.math.kernel.MercerKernel;
-import smile.math.matrix.Matrix;
 import smile.regression.GaussianProcessRegression.Options;
+import smile.tensor.DenseMatrix;
 import smile.validation.*;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -134,8 +134,8 @@ public class GaussianProcessRegressionTest {
         }
 
         double[][] samples = joint.sample(500);
-        System.out.format("samples = %s\n", Matrix.of(samples));
-        System.out.format("sample cov = %s\n", Matrix.of(MathEx.cov(samples)).toString(true));
+        System.out.format("samples = %s\n", DenseMatrix.of(samples));
+        System.out.format("sample cov = %s\n", DenseMatrix.of(MathEx.cov(samples)).toString(true));
 
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);

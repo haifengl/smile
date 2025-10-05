@@ -24,6 +24,7 @@ import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
+import smile.data.type.StructType;
 import smile.glm.model.Model;
 import smile.math.MathEx;
 import smile.math.special.Erf;
@@ -31,6 +32,7 @@ import smile.stat.Hypothesis;
 import smile.tensor.Cholesky;
 import smile.tensor.DenseMatrix;
 import smile.tensor.QR;
+import smile.tensor.Vector;
 import smile.validation.ModelSelection;
 
 /**
@@ -254,7 +256,7 @@ public class GLM implements Serializable {
      */
     public double[] predict(DataFrame data) {
         DenseMatrix X = formula.matrix(data, true);
-        double[] y = X.mv(beta);
+        double[] y = X.mv(beta).toArray(new double[0]);
         int n = y.length;
         for (int i = 0; i < n; i++) {
             y[i] = model.invlink(y[i]);
@@ -364,8 +366,9 @@ public class GLM implements Serializable {
      * @return the model.
      */
     public static GLM fit(Formula formula, DataFrame data, Model model, Options options) {
+        StructType schema = formula.bind(data.schema());
         DenseMatrix X = formula.matrix(data, true);
-        DenseMatrix XW = new Matrix(X.nrow(), X.ncol());
+        DenseMatrix XW = X.zeros(X.nrow(), X.ncol());
         double[] y = formula.y(data).toDoubleArray();
 
         int n = X.nrow();
@@ -399,11 +402,12 @@ public class GLM implements Serializable {
         }
 
         QR qr = XW.qr();
-        double[] beta = qr.solve(z);
+        Vector beta = qr.solve(z);
+        Vector eta_ = Vector.column(eta);
 
         double dev = Double.POSITIVE_INFINITY;
         for (int iter = 0; iter < options.maxIter; iter++) {
-            X.mv(beta, eta);
+            X.mv(beta, eta_);
             IntStream.range(0, n).parallel().forEach(i -> {
                 mu[i] = model.invlink(eta[i]);
                 double g = model.dlink(mu[i]);
@@ -429,7 +433,7 @@ public class GLM implements Serializable {
                 }
             }
 
-            qr = XW.qr(true);
+            qr = XW.qr();
             beta = qr.solve(z);
         }
 
@@ -437,12 +441,13 @@ public class GLM implements Serializable {
         DenseMatrix inv = cholesky.inverse();
         double[][] ztest = new double[p][4];
         for (int i = 0; i < p; i++) {
-            ztest[i][0] = beta[i];
+            ztest[i][0] = beta.get(i);
             ztest[i][1] = Math.sqrt(inv.get(i, i));
             ztest[i][2] = ztest[i][0] / ztest[i][1];
             ztest[i][3] = 2.0 - Erf.erfc(-0.707106781186547524 * Math.abs(ztest[i][2]));
         }
 
-        return new GLM(formula, X.colNames(), model, beta, model.logLikelihood(y, mu), dev, model.nullDeviance(y, MathEx.mean(y)), mu, residuals, ztest);
+        return new GLM(formula, schema.names(), model, beta.toArray(new double[0]), model.logLikelihood(y, mu),
+                dev, model.nullDeviance(y, MathEx.mean(y)), mu, residuals, ztest);
     }
 }

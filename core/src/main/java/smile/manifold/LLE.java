@@ -16,14 +16,12 @@
  */
 package smile.manifold;
 
-import java.util.Arrays;
 import java.util.Properties;
-
 import smile.graph.AdjacencyList;
 import smile.graph.NearestNeighborGraph;
-import smile.math.MathEx;
 import smile.linalg.Transpose;
 import smile.tensor.*;
+import static smile.tensor.ScalarType.*;
 
 /**
  * Locally Linear Embedding. It has several advantages over Isomap, including
@@ -154,8 +152,8 @@ public class LLE {
             colIndex[i] = colIndex[i - 1] + k;
         }
 
-        DenseMatrix C = new Matrix(k, k);
-        double[] b = new double[k];
+        DenseMatrix C = DenseMatrix.zeros(Float64, k, k);
+        Vector b = C.vector(k);
 
         int m = 0;
         for (int i : index) {
@@ -180,14 +178,14 @@ public class LLE {
                 }
             }
 
-            Arrays.fill(b, 1.0);
-            LU lu = C.lu(true);
-            b = lu.solve(b);
+            b.fill(1.0);
+            LU lu = C.lu();
+            lu.solve(b);
 
-            double sum = MathEx.sum(b);
+            double sum = b.sum();
             int[] ni = N[i];
             for (int p = 0; p < k; p++) {
-                w[m * k + p] = b[p] / sum;
+                w[m * k + p] = b.get(p) / sum;
                 rowIndex[m * k + p] = reverseIndex[ni[p]];
             }
 
@@ -204,7 +202,7 @@ public class LLE {
         DenseMatrix V = eigen.Vr();
         // Sometimes, ARPACK doesn't compute the smallest eigenvalue (i.e. 0).
         // Maybe due to numeric stability.
-        int offset = eigen.wr[eigen.wr.length - 1] < 1E-12 ? 2 : 1;
+        int offset = eigen.wr().get(eigen.wr().size() - 1) < 1E-12 ? 2 : 1;
         double[][] coordinates = new double[n][d];
         for (int j = d; --j >= 0; ) {
             int c = V.ncol() - j - offset;
@@ -223,18 +221,17 @@ public class LLE {
      */
     private static class M implements Matrix {
         final SparseMatrix Wt;
-        final double[] x;
-        final double[] Wx;
-        final double[] Wtx;
-        final double[] WtWx;
+        final Vector x;
+        final Vector Wx;
+        final Vector Wtx;
+        final Vector WtWx;
 
         public M(SparseMatrix Wt) {
             this.Wt = Wt;
-
-            x = new double[Wt.nrow()];
-            Wx = new double[Wt.nrow()];
-            Wtx = new double[Wt.ncol()];
-            WtWx = new double[Wt.nrow()];
+            x = Wt.vector(Wt.nrow());
+            Wx = Wt.vector(Wt.nrow());
+            Wtx = Wt.vector(Wt.ncol());
+            WtWx = Wt.vector(Wt.nrow());
         }
 
         @Override
@@ -253,16 +250,26 @@ public class LLE {
         }
 
         @Override
+        public ScalarType scalarType() {
+            return Wt.scalarType();
+        }
+
+        @Override
         public void mv(Vector work, int inputOffset, int outputOffset) {
-            System.arraycopy(work, inputOffset, x, 0, x.length);
+            Vector.copy(work, inputOffset, x, 0, x.size());
             Wt.tv(x, Wx);
             Wt.mv(x, Wtx);
             Wt.mv(Wx, WtWx);
 
-            int n = x.length;
+            int n = x.size();
             for (int i = 0; i < n; i++) {
-                work[outputOffset + i] = WtWx[i] + x[i] - Wx[i] - Wtx[i];
+                work.set(outputOffset + i, WtWx.get(i) + x.get(i) - Wx.get(i) - Wtx.get(i));
             }
+        }
+
+        @Override
+        public void mv(Transpose trans, double alpha, Vector x, double beta, Vector y) {
+            throw new UnsupportedOperationException();
         }
 
         @Override
@@ -271,7 +278,47 @@ public class LLE {
         }
 
         @Override
-        public void mv(Transpose trans, double alpha, Vector x, double beta, Vector y) {
+        public double get(int i, int j) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void set(int i, int j, double x) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void add(int i, int j, double x) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void sub(int i, int j, double x) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void mul(int i, int j, double x) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void div(int i, int j, double x) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Matrix scale(double alpha) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Matrix copy() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Matrix transpose() {
             throw new UnsupportedOperationException();
         }
     }
