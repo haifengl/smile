@@ -442,7 +442,7 @@ public abstract class Vector extends DenseMatrix {
      * @return L-Infinity norm.
      */
     public double normInf() {
-        return get(iamax());
+        return Math.abs(get(iamax()));
     }
 
     @Override
