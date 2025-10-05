@@ -19,10 +19,8 @@ package smile.tensor;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;
-import java.io.Serializable;
 import java.lang.foreign.MemorySegment;
 import java.util.Arrays;
-
 import smile.linalg.Diag;
 import smile.linalg.UPLO;
 import smile.math.MathEx;
@@ -37,18 +35,18 @@ class DenseMatrix32 extends DenseMatrix {
     /**
      * The on-heap data.
      */
-    final float[] array;
+    final float[] data;
 
     /**
      * Default constructor for readObject.
      */
     private DenseMatrix32() {
-        this.array = null;
+        this.data = null;
     }
 
     /**
      * Constructor.
-     * @param array the data array.
+     * @param data the data array.
      * @param m the number of rows.
      * @param n the number of columns.
      * @param ld the leading dimension.
@@ -56,25 +54,27 @@ class DenseMatrix32 extends DenseMatrix {
      * @param diag if not null, this flag specifies if a triangular
      *             matrix has unit diagonal elements.
      */
-    public DenseMatrix32(float[] array, int m, int n, int ld, UPLO uplo, Diag diag) {
-        super(MemorySegment.ofArray(array), m, n, ld, uplo, diag);
-        this.array = array;
+    public DenseMatrix32(float[] data, int m, int n, int ld, UPLO uplo, Diag diag) {
+        super(MemorySegment.ofArray(data), m, n, ld, uplo, diag);
+        this.data = data;
     }
 
     @Serial
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        memory = MemorySegment.ofArray(array);
+        memory = MemorySegment.ofArray(data);
     }
 
     @Override
     public boolean equals(Object other) {
         float tol = 10 * MathEx.FLOAT_EPSILON;
         if (other instanceof DenseMatrix32 b) {
-            if (array.length == b.array.length) {
-                for (int i = 0; i < array.length; i++) {
-                    if (Math.abs(array[i] - b.array[i]) > tol) {
-                        return false;
+            if (nrow() == b.nrow() && ncol() == b.ncol()) {
+                for (int j = 0; j < n; j++) {
+                    for (int i = 0; i < m; i++) {
+                        if (Math.abs(get(i, j) - b.get(i, j)) > tol) {
+                            return false;
+                        }
                     }
                 }
 
@@ -91,48 +91,47 @@ class DenseMatrix32 extends DenseMatrix {
 
     @Override
     public double get(int i, int j) {
-        return array[offset(i, j)];
+        return data[offset(i, j)];
     }
 
     @Override
     public void set(int i, int j, double x) {
-        array[offset(i, j)] = (float) x;
+        data[offset(i, j)] = (float) x;
     }
 
     @Override
     public void add(int i, int j, double x) {
-        array[offset(i, j)] += (float) x;
+        data[offset(i, j)] += (float) x;
     }
 
     @Override
     public void sub(int i, int j, double x) {
-        array[offset(i, j)] -= (float) x;
+        data[offset(i, j)] -= (float) x;
     }
 
     @Override
     public void mul(int i, int j, double x) {
-        array[offset(i, j)] *= (float) x;
+        data[offset(i, j)] *= (float) x;
     }
 
     @Override
     public void div(int i, int j, double x) {
-        array[offset(i, j)] /= (float) x;
+        data[offset(i, j)] /= (float) x;
     }
 
     @Override
     public void fill(double value) {
-        Arrays.fill(array, (float) value);
+        Arrays.fill(data, (float) value);
     }
 
     @Override
     public DenseMatrix copy() {
-        float[] data = array.clone();
-        return new DenseMatrix32(data, m, n, ld, uplo, diag);
+        return new DenseMatrix32(data.clone(), m, n, ld, uplo, diag);
     }
 
     @Override
     public Vector column(int j) {
-        return Vector32.column(array, offset(0, j), m);
+        return Vector32.column(data, offset(0, j), m);
     }
 
     @Override
@@ -142,7 +141,7 @@ class DenseMatrix32 extends DenseMatrix {
         }
 
         if (i == 0 && j == 0) {
-            return new DenseMatrix32(array, k, l, ld, uplo, diag);
+            return new DenseMatrix32(data, k, l, ld, uplo, diag);
         } else {
             int nrow = k - i;
             int ncol = l - j;
