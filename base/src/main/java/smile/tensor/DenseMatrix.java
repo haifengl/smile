@@ -466,6 +466,52 @@ public abstract class DenseMatrix implements Matrix {
     }
 
     /**
+     * Standardizes the columns of matrix.
+     * @return a new matrix with zero mean and unit variance for each column.
+     */
+    public DenseMatrix standardize() {
+        Vector center = colMeans();
+        Vector scale = colSds();
+        return standardize(center, scale);
+    }
+
+    /**
+     * Centers and scales the columns of matrix.
+     * @param center column center. If null, no centering.
+     * @param scale column scale. If null, no scaling.
+     * @return a new normalized matrix.
+     */
+    public DenseMatrix standardize(Vector center, Vector scale) {
+        if (center == null && scale == null) {
+            throw new IllegalArgumentException("Both center and scale are null");
+        }
+
+        DenseMatrix matrix = zeros(m, n);
+
+        if (center == null) {
+            for (int j = 0; j < n; j++) {
+                for (int i = 0; i < m; i++) {
+                    matrix.set(i, j, get(i, j) / scale.get(j));
+                }
+            }
+        } else if (scale == null) {
+            for (int j = 0; j < n; j++) {
+                for (int i = 0; i < m; i++) {
+                    matrix.set(i, j, get(i, j) - center.get(j));
+                }
+            }
+        } else {
+            for (int j = 0; j < n; j++) {
+                for (int i = 0; i < m; i++) {
+                    matrix.set(i, j, (get(i, j) - center.get(j)) / scale.get(j));
+                }
+            }
+        }
+
+        return matrix;
+    }
+
+    /**
      * Computes a constant alpha times a matrix x plus this matrix y.
      * The result overwrites the initial values of this matrix y.
      *
