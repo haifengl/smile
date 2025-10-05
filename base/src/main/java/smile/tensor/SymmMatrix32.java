@@ -33,13 +33,13 @@ class SymmMatrix32 extends SymmMatrix implements Serializable {
     /**
      * The on-heap packed matrix storage.
      */
-    final float[] AP;
+    final float[] ap;
 
     /**
      * Default constructor for readObject.
      */
     private SymmMatrix32() {
-        this.AP = null;
+        this.ap = null;
     }
 
     /**
@@ -50,13 +50,13 @@ class SymmMatrix32 extends SymmMatrix implements Serializable {
      */
     public SymmMatrix32(UPLO uplo, int n, float[] ap) {
         super(MemorySegment.ofArray(ap), uplo, n);
-        this.AP = ap;
+        this.ap = ap;
     }
 
     @Serial
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        memory = MemorySegment.ofArray(AP);
+        memory = MemorySegment.ofArray(ap);
     }
 
     @Override
@@ -66,7 +66,7 @@ class SymmMatrix32 extends SymmMatrix implements Serializable {
 
     @Override
     public long length() {
-        return AP.length;
+        return ap.length;
     }
 
     @Override
@@ -78,7 +78,7 @@ class SymmMatrix32 extends SymmMatrix implements Serializable {
                     i = j;
                     j = tmp;
                 }
-                yield AP[i + ((2 * n - j - 1) * j / 2)];
+                yield ap[i + ((2 * n - j - 1) * j / 2)];
             }
             case UPPER -> {
                 if (i > j) {
@@ -86,7 +86,7 @@ class SymmMatrix32 extends SymmMatrix implements Serializable {
                     i = j;
                     j = tmp;
                 }
-                yield AP[i + (j * (j + 1) / 2)];
+                yield ap[i + (j * (j + 1) / 2)];
             }
         };
     }
@@ -100,7 +100,7 @@ class SymmMatrix32 extends SymmMatrix implements Serializable {
                     i = j;
                     j = tmp;
                 }
-                AP[i + ((2 * n - j - 1) * j / 2)] = (float) x;
+                ap[i + ((2 * n - j - 1) * j / 2)] = (float) x;
             }
             case UPPER -> {
                 if (i > j) {
@@ -108,7 +108,7 @@ class SymmMatrix32 extends SymmMatrix implements Serializable {
                     i = j;
                     j = tmp;
                 }
-                AP[i + (j * (j + 1) / 2)] = (float) x;
+                ap[i + (j * (j + 1) / 2)] = (float) x;
             }
         }
     }
@@ -122,7 +122,7 @@ class SymmMatrix32 extends SymmMatrix implements Serializable {
                     i = j;
                     j = tmp;
                 }
-                AP[i + ((2 * n - j - 1) * j / 2)] += (float) x;
+                ap[i + ((2 * n - j - 1) * j / 2)] += (float) x;
             }
             case UPPER -> {
                 if (i > j) {
@@ -130,7 +130,7 @@ class SymmMatrix32 extends SymmMatrix implements Serializable {
                     i = j;
                     j = tmp;
                 }
-                AP[i + (j * (j + 1) / 2)] += (float) x;
+                ap[i + (j * (j + 1) / 2)] += (float) x;
             }
         }
     }
@@ -144,7 +144,7 @@ class SymmMatrix32 extends SymmMatrix implements Serializable {
                     i = j;
                     j = tmp;
                 }
-                AP[i + ((2 * n - j - 1) * j / 2)] -= (float) x;
+                ap[i + ((2 * n - j - 1) * j / 2)] -= (float) x;
             }
             case UPPER -> {
                 if (i > j) {
@@ -152,7 +152,7 @@ class SymmMatrix32 extends SymmMatrix implements Serializable {
                     i = j;
                     j = tmp;
                 }
-                AP[i + (j * (j + 1) / 2)] -= (float) x;
+                ap[i + (j * (j + 1) / 2)] -= (float) x;
             }
         }
     }
@@ -166,7 +166,7 @@ class SymmMatrix32 extends SymmMatrix implements Serializable {
                     i = j;
                     j = tmp;
                 }
-                AP[i + ((2 * n - j - 1) * j / 2)] *= (float) x;
+                ap[i + ((2 * n - j - 1) * j / 2)] *= (float) x;
             }
             case UPPER -> {
                 if (i > j) {
@@ -174,7 +174,7 @@ class SymmMatrix32 extends SymmMatrix implements Serializable {
                     i = j;
                     j = tmp;
                 }
-                AP[i + (j * (j + 1) / 2)] *= (float) x;
+                ap[i + (j * (j + 1) / 2)] *= (float) x;
             }
         }
     }
@@ -188,7 +188,7 @@ class SymmMatrix32 extends SymmMatrix implements Serializable {
                     i = j;
                     j = tmp;
                 }
-                AP[i + ((2 * n - j - 1) * j / 2)] /= (float) x;
+                ap[i + ((2 * n - j - 1) * j / 2)] /= (float) x;
             }
             case UPPER -> {
                 if (i > j) {
@@ -196,14 +196,13 @@ class SymmMatrix32 extends SymmMatrix implements Serializable {
                     i = j;
                     j = tmp;
                 }
-                AP[i + (j * (j + 1) / 2)] /= (float) x;
+                ap[i + (j * (j + 1) / 2)] /= (float) x;
             }
         }
     }
 
     @Override
     public SymmMatrix copy() {
-        float[] ap = AP.clone();
-        return new SymmMatrix32(uplo, n, ap);
+        return new SymmMatrix32(uplo, n, ap.clone());
     }
 }

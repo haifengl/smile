@@ -411,6 +411,10 @@ public interface Matrix extends Tensor {
      * @return the matrix-vector multiplication {@code A * x}.
      */
     default Vector mv(Vector x) {
+        if (ncol() != x.size()) {
+            throw new IllegalArgumentException(String.format("Dimensions do not match for matrix-vector multiplication A * x: %d x %d vs %d x 1", nrow(), ncol(), x.size()));
+        }
+
         var y = vector(nrow());
         mv(NO_TRANSPOSE, 1.0, x, 0.0, y);
         return y;
@@ -423,6 +427,14 @@ public interface Matrix extends Tensor {
      * @param y  the input and output vector.
      */
     default void mv(Vector x, Vector y) {
+        if (ncol() != x.size()) {
+            throw new IllegalArgumentException(String.format("Dimensions do not match for matrix-vector multiplication A * x: %d x %d vs %d x 1", nrow(), ncol(), x.size()));
+        }
+
+        if (nrow() != y.size()) {
+            throw new IllegalArgumentException(String.format("Dimensions do not match for matrix-vector multiplication y = A * x: %d x %d vs %d x 1", nrow(), ncol(), y.size()));
+        }
+
         mv(NO_TRANSPOSE, 1.0, x, 0.0, y);
     }
 
@@ -444,6 +456,10 @@ public interface Matrix extends Tensor {
      * @return the matrix-vector multiplication {@code A' * x}.
      */
     default Vector tv(Vector x) {
+        if (nrow() != x.size()) {
+            throw new IllegalArgumentException(String.format("Dimensions do not match for matrix-vector multiplication A' * x: %d x %d vs %d x 1", nrow(), ncol(), x.size()));
+        }
+
         var y = vector(ncol());
         mv(TRANSPOSE, 1.0, x, 0.0, y);
         return y;
@@ -456,6 +472,14 @@ public interface Matrix extends Tensor {
      * @param y  the input and output vector.
      */
     default void tv(Vector x, Vector y) {
+        if (nrow() != x.size()) {
+            throw new IllegalArgumentException(String.format("Dimensions do not match for matrix-vector multiplication A' * x: %d x %d vs %d x 1", nrow(), ncol(), x.size()));
+        }
+
+        if (ncol() != y.size()) {
+            throw new IllegalArgumentException(String.format("Dimensions do not match for matrix-vector multiplication y = A' * x: %d x %d vs %d x 1", nrow(), ncol(), y.size()));
+        }
+
         mv(TRANSPOSE, 1.0, x, 0.0, y);
     }
 
@@ -466,8 +490,8 @@ public interface Matrix extends Tensor {
      * @param outputOffset the offset of output vector in workspace.
      */
     default void tv(Vector work, int inputOffset, int outputOffset) {
-        Vector xb = work.slice(inputOffset, ncol());
-        Vector yb = work.slice(outputOffset, nrow());
+        Vector xb = work.slice(inputOffset, inputOffset + nrow());
+        Vector yb = work.slice(outputOffset, outputOffset + ncol());
         mv(TRANSPOSE, 1.0, xb, 0.0, yb);
     }
 

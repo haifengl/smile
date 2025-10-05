@@ -32,13 +32,13 @@ class BandMatrix32 extends BandMatrix implements Serializable {
     /**
      * The on-heap band matrix storage.
      */
-    final float[] AB;
+    final float[] ab;
 
     /**
      * Default constructor for readObject.
      */
     private BandMatrix32() {
-        this.AB = null;
+        this.ab = null;
     }
 
     /**
@@ -51,13 +51,13 @@ class BandMatrix32 extends BandMatrix implements Serializable {
      */
     public BandMatrix32(int m, int n, int kl, int ku, float[] ab) {
         super(MemorySegment.ofArray(ab), m, n, kl, ku);
-        this.AB = ab;
+        this.ab = ab;
     }
 
     @Serial
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        memory = MemorySegment.ofArray(AB);
+        memory = MemorySegment.ofArray(ab);
     }
 
     @Override
@@ -67,13 +67,13 @@ class BandMatrix32 extends BandMatrix implements Serializable {
 
     @Override
     public long length() {
-        return AB.length;
+        return ab.length;
     }
 
     @Override
     public double get(int i, int j) {
         if (Math.max(0, j-ku) <= i && i <= Math.min(m-1, j+kl)) {
-            return AB[j * ld + ku + i - j];
+            return ab[j * ld + ku + i - j];
         } else {
             return 0.0;
         }
@@ -82,7 +82,7 @@ class BandMatrix32 extends BandMatrix implements Serializable {
     @Override
     public void set(int i, int j, double x) {
         if (Math.max(0, j-ku) <= i && i <= Math.min(m-1, j+kl)) {
-            AB[j * ld + ku + i - j] = (float) x;
+            ab[j * ld + ku + i - j] = (float) x;
         } else {
             throw new UnsupportedOperationException(String.format("Set element at (%d, %d)", i, j));
         }
@@ -91,7 +91,7 @@ class BandMatrix32 extends BandMatrix implements Serializable {
     @Override
     public void add(int i, int j, double x) {
         if (Math.max(0, j-ku) <= i && i <= Math.min(m-1, j+kl)) {
-            AB[j * ld + ku + i - j] += (float) x;
+            ab[j * ld + ku + i - j] += (float) x;
         } else {
             throw new UnsupportedOperationException(String.format("Add element at (%d, %d)", i, j));
         }
@@ -100,7 +100,7 @@ class BandMatrix32 extends BandMatrix implements Serializable {
     @Override
     public void sub(int i, int j, double x) {
         if (Math.max(0, j-ku) <= i && i <= Math.min(m-1, j+kl)) {
-            AB[j * ld + ku + i - j] -= (float) x;
+            ab[j * ld + ku + i - j] -= (float) x;
         } else {
             throw new UnsupportedOperationException(String.format("Sub element at (%d, %d)", i, j));
         }
@@ -109,7 +109,7 @@ class BandMatrix32 extends BandMatrix implements Serializable {
     @Override
     public void mul(int i, int j, double x) {
         if (Math.max(0, j-ku) <= i && i <= Math.min(m-1, j+kl)) {
-            AB[j * ld + ku + i - j] *= (float) x;
+            ab[j * ld + ku + i - j] *= (float) x;
         } else {
             throw new UnsupportedOperationException(String.format("Mul element at (%d, %d)", i, j));
         }
@@ -118,7 +118,7 @@ class BandMatrix32 extends BandMatrix implements Serializable {
     @Override
     public void div(int i, int j, double x) {
         if (Math.max(0, j-ku) <= i && i <= Math.min(m-1, j+kl)) {
-            AB[j * ld + ku + i - j] /= (float) x;
+            ab[j * ld + ku + i - j] /= (float) x;
         } else {
             throw new UnsupportedOperationException(String.format("Div element at (%d, %d)", i, j));
         }
@@ -126,12 +126,10 @@ class BandMatrix32 extends BandMatrix implements Serializable {
 
     @Override
     public BandMatrix copy() {
-        float[] ab = AB.clone();
-        BandMatrix matrix = new BandMatrix32(m, n, kl, ku, ab);
+        BandMatrix matrix = new BandMatrix32(m, n, kl, ku, ab.clone());
         if (m == n && kl == ku) {
             matrix.withUplo(uplo);
         }
-
         return matrix;
     }
 }

@@ -835,6 +835,14 @@ public abstract class DenseMatrix implements Matrix, Serializable {
      * @param y the right vector.
      */
     public void ger(double alpha, Vector x, Vector y) {
+        if (m != x.size()) {
+            throw new IllegalArgumentException(String.format("Dimensions do not match for rank-1 update: %d x %d vs %d x 1", nrow(), ncol(), x.size()));
+        }
+
+        if (n != y.size()) {
+            throw new IllegalArgumentException(String.format("Dimensions do not match for rank-1 update: %d x %d vs 1 x %d", nrow(), ncol(), y.size()));
+        }
+
         switch(scalarType()) {
             case Float64 -> cblas_dger(order().blas(), m, n, alpha, x.memory, 1, y.memory, 1, memory, ld);
             case Float32 -> cblas_sger(order().blas(), m, n, (float) alpha, x.memory, 1, y.memory, 1, memory, ld);
