@@ -613,18 +613,18 @@ public abstract class DenseMatrix implements Matrix, Serializable {
         }
         switch (trans) {
             case NO_TRANSPOSE:
-                if (ncol() != x.size()) {
+                if (ncol() > x.size()) {
                     throw new IllegalArgumentException("Incompatible x vector size: " + ncol() + " != " + x.size());
                 }
-                if (nrow() != y.size()) {
+                if (nrow() > y.size()) {
                     throw new IllegalArgumentException("Incompatible y vector size: " + nrow() + " != " + y.size());
                 }
                 break;
             case TRANSPOSE:
-                if (nrow() != x.size()) {
+                if (nrow() > x.size()) {
                     throw new IllegalArgumentException("Incompatible x vector size: " + nrow() + " != " + x.size());
                 }
-                if (ncol() != y.size()) {
+                if (ncol() > y.size()) {
                     throw new IllegalArgumentException("Incompatible y vector size: " + ncol() + " != " + y.size());
                 }
                 break;

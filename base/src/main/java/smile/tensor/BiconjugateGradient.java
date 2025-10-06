@@ -34,7 +34,7 @@ public interface BiconjugateGradient {
      * @param A the linear system.
      * @param b the right hand side of linear equations.
      * @param x on input, x should be set to an initial guess of the solution
-     * (or all zeros). On output, x is reset to the improved solution.
+     * (or all zeros). On output, x is set to the improved solution.
      * @return the estimated error.
      */
     static double solve(Matrix A, Vector b, Vector x) {
@@ -47,7 +47,7 @@ public interface BiconjugateGradient {
      * @param A the linear system.
      * @param b the right hand side of linear equations.
      * @param x on input, x should be set to an initial guess of the solution
-     * (or all zeros). On output, x is reset to the improved solution.
+     * (or all zeros). On output, x is set to the improved solution.
      * @param P The preconditioner matrix.
      * @param tol The desired convergence tolerance.
      * @param itol Which convergence test is applied.

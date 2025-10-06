@@ -126,7 +126,7 @@ public interface Eigen {
             y.axpy(-p, x);
         }
 
-        double lambda = y.normInf();
+        double lambda = y.get(y.iamax());
         y.scale(1.0 / lambda);
         x.swap(y);
         return lambda;
