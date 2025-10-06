@@ -45,8 +45,8 @@ libraryDependencies ++= Seq(
 
 val os = sys.props.get("os.name").get.toLowerCase.split(" ")(0)
 val gpu = Seq(
-  "org.bytedeco" % "pytorch" % "2.7.1-1.5.12" classifier s"$os-x86_64-gpu",
-  "org.bytedeco" % "cuda" % "12.9-9.10-1.5.12" classifier s"$os-x86_64-redist"
+  "org.bytedeco" % "pytorch-platform-gpu" % "2.7.1-1.5.12",
+  "org.bytedeco" % "cuda" % "12.9-9.10-1.5.12" classifier s"$os-x86_64"
 )
 
 libraryDependencies ++= (
@@ -57,8 +57,8 @@ libraryDependencies ++= (
 )
 
 libraryDependencies ++= {
-  val akkaVersion     = "2.10.9"
-  val akkaHttpVersion = "10.7.2"
+  val akkaVersion     = "2.9.5"
+  val akkaHttpVersion = "10.6.3"
   Seq(
     "com.typesafe.akka" %% "akka-actor-typed"         % akkaVersion,
     "com.typesafe.akka" %% "akka-stream"              % akkaVersion,

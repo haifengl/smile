@@ -221,6 +221,5 @@ lazy val shell = project.in(file("shell"))
 
 lazy val serve = project.in(file("serve"))
   .settings(scalaSettings: _*)
-  .settings(scalaVersion := scala3)
   .settings(publish / skip := true)
   .dependsOn(deep)
