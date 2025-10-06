@@ -411,7 +411,7 @@ public interface Matrix extends Tensor {
      * @return the matrix-vector multiplication {@code A * x}.
      */
     default Vector mv(Vector x) {
-        if (ncol() != x.size()) {
+        if (ncol() > x.size()) {
             throw new IllegalArgumentException(String.format("Dimensions do not match for matrix-vector multiplication A * x: %d x %d vs %d x 1", nrow(), ncol(), x.size()));
         }
 
@@ -427,11 +427,11 @@ public interface Matrix extends Tensor {
      * @param y  the input and output vector.
      */
     default void mv(Vector x, Vector y) {
-        if (ncol() != x.size()) {
+        if (ncol() > x.size()) {
             throw new IllegalArgumentException(String.format("Dimensions do not match for matrix-vector multiplication A * x: %d x %d vs %d x 1", nrow(), ncol(), x.size()));
         }
 
-        if (nrow() != y.size()) {
+        if (nrow() > y.size()) {
             throw new IllegalArgumentException(String.format("Dimensions do not match for matrix-vector multiplication y = A * x: %d x %d vs %d x 1", nrow(), ncol(), y.size()));
         }
 
@@ -456,7 +456,7 @@ public interface Matrix extends Tensor {
      * @return the matrix-vector multiplication {@code A' * x}.
      */
     default Vector tv(Vector x) {
-        if (nrow() != x.size()) {
+        if (nrow() > x.size()) {
             throw new IllegalArgumentException(String.format("Dimensions do not match for matrix-vector multiplication A' * x: %d x %d vs %d x 1", nrow(), ncol(), x.size()));
         }
 
@@ -472,11 +472,11 @@ public interface Matrix extends Tensor {
      * @param y  the input and output vector.
      */
     default void tv(Vector x, Vector y) {
-        if (nrow() != x.size()) {
+        if (nrow() > x.size()) {
             throw new IllegalArgumentException(String.format("Dimensions do not match for matrix-vector multiplication A' * x: %d x %d vs %d x 1", nrow(), ncol(), x.size()));
         }
 
-        if (ncol() != y.size()) {
+        if (ncol() > y.size()) {
             throw new IllegalArgumentException(String.format("Dimensions do not match for matrix-vector multiplication y = A' * x: %d x %d vs %d x 1", nrow(), ncol(), y.size()));
         }
 

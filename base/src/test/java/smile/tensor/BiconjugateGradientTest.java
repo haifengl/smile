@@ -58,7 +58,7 @@ public class BiconjugateGradientTest {
 
     @Test
     public void testSolveMatrix() {
-        System.out.println("naive matrix");
+        System.out.println("dense matrix");
 
         DenseMatrix matrix = DenseMatrix.of(A);
         Vector result = matrix.vector(A.length);
