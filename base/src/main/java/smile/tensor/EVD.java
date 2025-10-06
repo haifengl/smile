@@ -16,6 +16,7 @@
  */
 package smile.tensor;
 
+import java.io.Serializable;
 import smile.sort.QuickSort;
 
 /**
@@ -87,7 +88,7 @@ import smile.sort.QuickSort;
  * @param Vr the right eigenvectors.
  * @author Haifeng Li
  */
-public record EVD(Vector wr, Vector wi, DenseMatrix Vl, DenseMatrix Vr) {
+public record EVD(Vector wr, Vector wi, DenseMatrix Vl, DenseMatrix Vr) implements Serializable {
     /**
      * Constructor.
      *

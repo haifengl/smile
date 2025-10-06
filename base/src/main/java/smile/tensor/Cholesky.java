@@ -16,8 +16,8 @@
  */
 package smile.tensor;
 
+import java.io.Serializable;
 import java.lang.foreign.MemorySegment;
-
 import static smile.linalg.lapack.clapack_h.*;
 
 /**
@@ -44,7 +44,7 @@ import static smile.linalg.lapack.clapack_h.*;
  * @param lu the Cholesky factorization.
  * @author Haifeng Li
  */
-public record Cholesky(DenseMatrix lu) {
+public record Cholesky(DenseMatrix lu) implements Serializable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Cholesky.class);
 
     /**

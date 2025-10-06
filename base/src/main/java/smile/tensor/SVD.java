@@ -16,6 +16,7 @@
  */
 package smile.tensor;
 
+import java.io.Serializable;
 import smile.linalg.Transpose;
 import smile.math.MathEx;
 import static smile.linalg.Transpose.*;
@@ -56,7 +57,7 @@ import static smile.linalg.Transpose.*;
  * @param Vt the transpose of right singular vectors.
  * @author Haifeng Li
  */
-public record SVD(int m, int n, Vector s, DenseMatrix U, DenseMatrix Vt) {
+public record SVD(int m, int n, Vector s, DenseMatrix U, DenseMatrix Vt) implements Serializable {
     /**
      * Constructor.
      * @param m the number of rows of matrix.
