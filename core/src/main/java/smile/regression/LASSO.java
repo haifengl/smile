@@ -207,23 +207,29 @@ public class LASSO {
         DenseMatrix X = formula.matrix(data, false);
         double[] y = formula.y(data).toDoubleArray();
 
+        int n = X.nrow();
+        int p = X.ncol();
         Vector center = X.colMeans();
         Vector scale = X.colSds();
-
-        for (int j = 0; j < scale.size(); j++) {
+        for (int j = 0; j < p; j++) {
             if (MathEx.isZero(scale.get(j))) {
                 throw new IllegalArgumentException(String.format("The column '%s' is constant", schema.names()[j]));
             }
         }
 
         DenseMatrix scaledX = X.standardize(center, scale);
-        Vector w = train(scaledX, y, options);
-        int p = w.size();
+        double[] centeredY = new double[n];
+        double ymu = MathEx.mean(y);
+        for (int i = 0; i < n; i++) {
+            centeredY[i] = y[i] - ymu;
+        }
+
+        Vector w = train(scaledX, centeredY, options);
         for (int j = 0; j < p; j++) {
             w.div(j, scale.get(j));
         }
 
-        double b = MathEx.mean(y) - w.dot(center);
+        double b = ymu - w.dot(center);
         return new LinearModel(formula, schema, X, y, w, b);
     }
 
@@ -253,12 +259,6 @@ public class LASSO {
         int n = x.nrow();
         int p = x.ncol();
 
-        double[] Y = new double[n];
-        double ym = MathEx.mean(y);
-        for (int i = 0; i < n; i++) {
-            Y[i] = y[i] - ym;
-        }
-
         double t = Math.min(Math.max(1.0, 1.0 / lambda), 2 * p / 1e-3);
         double dobj = Double.NEGATIVE_INFINITY; // dual objective function value
         double s = Double.POSITIVE_INFINITY;
@@ -269,7 +269,7 @@ public class LASSO {
         double[][] f = new double[2][p];
         Arrays.fill(u, 1.0);
         for (int i = 0; i < p; i++) {
-            f[0][i] = w[i] - u[i];
+            f[0][i] =  w[i] - u[i];
             f[1][i] = -w[i] - u[i];
         }
 
@@ -318,7 +318,7 @@ public class LASSO {
         for (; iter <= maxIter; iter++) {
             x.mv(w_, z_);
             for (int i = 0; i < n; i++) {
-                z[i] -= Y[i];
+                z[i] -= y[i];
                 nu[i] = 2 * z[i];
             }
 
@@ -334,7 +334,7 @@ public class LASSO {
 
             // primal objective function value
             double pobj = MathEx.dot(z, z) + lambda * MathEx.norm1(w);
-            dobj = Math.max(-0.25 * MathEx.dot(nu, nu) - MathEx.dot(nu, Y), dobj);
+            dobj = Math.max(-0.25 * MathEx.dot(nu, nu) - MathEx.dot(nu, y), dobj);
 
             double gap = pobj - dobj;
             if (iter % 10 == 0 || gap / dobj < tol) {
@@ -411,7 +411,7 @@ public class LASSO {
                 if (MathEx.max(newf) < 0.0) {
                     x.mv(neww_, newz_);
                     for (int i = 0; i < n; i++) {
-                        newz[i] -= Y[i];
+                        newz[i] -= y[i];
                     }
 
                     double newphi = MathEx.dot(newz, newz) + lambda * MathEx.sum(newu) - sumlogneg(newf) / t;
@@ -535,8 +535,8 @@ public class LASSO {
             }
 
             for (int i = 0; i < p; i++) {
-                y.set(i,      2 * atax.get(i) + d1[i] * x.get(i) + d2[i] * x.get(i + p));
-                y.set(i + p, d2[i] * x.get(i) + d1[i] * x.get(i + p));
+                y.set(i,     2 * atax.get(i) + d1[i] * x.get(i) + d2[i] * x.get(i + p));
+                y.set(i + p,                   d2[i] * x.get(i) + d1[i] * x.get(i + p));
             }
         }
 
