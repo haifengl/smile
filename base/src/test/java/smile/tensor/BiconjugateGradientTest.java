@@ -59,7 +59,6 @@ public class BiconjugateGradientTest {
     @Test
     public void testSolveMatrix() {
         System.out.println("dense matrix");
-
         DenseMatrix matrix = DenseMatrix.of(A);
         Vector result = matrix.vector(A.length);
         BiconjugateGradient.solve(matrix, Vector.column(b), result);
@@ -73,7 +72,6 @@ public class BiconjugateGradientTest {
     public void testSolveSparseMatrix() {
         System.out.println("sparse matrix");
         SparseMatrix sparse = new SparseMatrix(A, 1E-8);
-
         Vector result = sparse.vector(A.length);
         BiconjugateGradient.solve(sparse, Vector.column(b), result);
 

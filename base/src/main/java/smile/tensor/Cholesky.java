@@ -103,7 +103,9 @@ public record Cholesky(DenseMatrix lu) implements Serializable {
      * @return the solution vector.
      */
     public Vector solve(double[] b) {
-        Vector x = lu.vector(b);
+        // Don't call vector(b) as it will be overwritten.
+        Vector x = lu.vector(lu.n);
+        for (int i = 0; i < lu.n; i++) x.set(i, b[i]);
         solve(x);
         return x;
     }
@@ -115,7 +117,9 @@ public record Cholesky(DenseMatrix lu) implements Serializable {
      * @return the solution vector.
      */
     public Vector solve(float[] b) {
-        Vector x = lu.vector(b);
+        // Don't call vector(b) as it will be overwritten.
+        Vector x = lu.vector(lu.n);
+        for (int i = 0; i < lu.n; i++) x.set(i, b[i]);
         solve(x);
         return x;
     }
