@@ -16,9 +16,10 @@
  */
 package smile.tensor;
 
+import java.io.Serializable;
 import java.lang.foreign.MemorySegment;
-import static smile.linalg.lapack.clapack_h.*;
 import static smile.linalg.Transpose.*;
+import static smile.linalg.lapack.clapack_h.*;
 
 /**
  * The LU decomposition. For an m-by-n matrix A with {@code m >= n}, the LU
@@ -40,7 +41,7 @@ import static smile.linalg.Transpose.*;
  *            a system of equations.{@code info > 0} if the matrix is singular.
  * @author Haifeng Li
  */
-public record LU(DenseMatrix lu, int[] ipiv, int info) {
+public record LU(DenseMatrix lu, int[] ipiv, int info) implements Serializable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LU.class);
 
     /**
