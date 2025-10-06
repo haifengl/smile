@@ -19,7 +19,6 @@ package smile.tensor;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;
-import java.io.Serializable;
 import java.lang.foreign.MemorySegment;
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -269,20 +268,6 @@ class Vector64 extends Vector {
     @Override
     public void fill(int from, int to, double value) {
         Arrays.fill(array, offset+from, offset+to, value);
-    }
-
-    @Override
-    public double sum() {
-        double s = 0;
-        for (int i = 0; i < length; i++) {
-            s += array[offset + i];
-        }
-        return s;
-    }
-
-    @Override
-    public double mean() {
-        return length > 0 ? sum() / length : 0;
     }
 
     @Override
