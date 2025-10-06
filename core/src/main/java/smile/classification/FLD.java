@@ -286,7 +286,7 @@ public class FLD extends AbstractClassifier<double[]> /*implements Projection<do
         }
 
         DenseMatrix StInvM = U.mm(UTM);
-        DenseMatrix U2 = U.tm(StInvM.svd().U().submatrix(0, 0, p-1, L-1));
+        DenseMatrix U2 = U.tm(StInvM.svd().U().submatrix(0, 0, p, L));
 
         for (int i = 0; i < n; i++) {
             // Since the rank of St is only n - k, there are some singular values of 0.
