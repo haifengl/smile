@@ -117,7 +117,7 @@ public interface Eigen {
     }
 
     /**
-     * Computes y = (A - pI) x and then normalize x = y / norm1(y).
+     * Computes y = (A - pI) x and then normalize x = y / normInf(y).
      * Returns the largest element of y in magnitude.
      */
     private static double power(Matrix A, Vector x, Vector y, double p) {
@@ -126,9 +126,10 @@ public interface Eigen {
             y.axpy(-p, x);
         }
 
+        // Don't call normInf as we need to return raw value of largest element.
         double lambda = y.get(y.iamax());
         y.scale(1.0 / lambda);
-        x.swap(y);
+        y.swap(x);
         return lambda;
     }
 

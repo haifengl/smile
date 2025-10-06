@@ -255,23 +255,7 @@ public record SVD(int m, int n, Vector s, DenseMatrix U, DenseMatrix Vt) impleme
         if (U == null || Vt == null) {
             throw new IllegalStateException("The singular vectors are not available.");
         }
-
-        if (b.length != m) {
-            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x 1", m, n, b.length));
-        }
-
-        int r = rank();
-        // The submatrix U[:, 1:r], where r is the rank of matrix.
-        DenseMatrix Ur = r == U.ncol() ? U : U.submatrix(0, 0, m, r);
-        DenseMatrix Vr = r == Vt.nrow() ? Vt : Vt.submatrix(0, 0, r, n);
-        Vector x = Ur.vector(b);
-
-        Vector Utb = Ur.vector(r);
-        Ur.tv(x, Utb);
-        for (int i = 0; i < r; i++) {
-            Utb.set(i, Utb.get(i) / s.get(i));
-        }
-        return Vr.tv(Utb);
+        return solve(U.vector(b));
     }
 
     /**
@@ -281,11 +265,37 @@ public record SVD(int m, int n, Vector s, DenseMatrix U, DenseMatrix Vt) impleme
      * @return the solution vector.
      */
     public Vector solve(float[] b) {
-        double[] x = new double[b.length];
-        for (int i = 0; i <  b.length; i++) {
-            x[i] = b[i];
+        if (U == null || Vt == null) {
+            throw new IllegalStateException("The singular vectors are not available.");
         }
-        return solve(x);
+        return solve(U.vector(b));
+    }
+
+    /**
+     * Solves the least squares min || B - A*X ||.
+     * @param b the right hand side of overdetermined linear system.
+     * @throws RuntimeException when the matrix is rank deficient.
+     * @return the solution vector.
+     */
+    public Vector solve(Vector b) {
+        if (U == null || Vt == null) {
+            throw new IllegalStateException("The singular vectors are not available.");
+        }
+
+        if (b.size() < m) {
+            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x 1", m, n, b.size()));
+        }
+
+        int r = rank();
+        // The submatrix U[:, 1:r], where r is the rank of matrix.
+        DenseMatrix Ur = r == U.ncol() ? U : U.submatrix(0, 0, m, r);
+        DenseMatrix Vr = r == Vt.nrow() ? Vt : Vt.submatrix(0, 0, r, n);
+        Vector Utb = Ur.vector(r);
+        Ur.tv(b, Utb);
+        for (int i = 0; i < r; i++) {
+            Utb.set(i, Utb.get(i) / s.get(i));
+        }
+        return Vr.tv(Utb);
     }
 
     /**
