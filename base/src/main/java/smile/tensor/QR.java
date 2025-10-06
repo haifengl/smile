@@ -113,10 +113,7 @@ public record QR(DenseMatrix qr, Vector tau) implements Serializable {
      * @return the solution vector.
      */
     public Vector solve(double[] b) {
-        Vector x = qr.vector(b.length);
-        for (int i = 0; i < b.length; i++) {
-            x.set(i, b[i]);
-        }
+        Vector x = qr.vector(b);
         solve(x);
         return x.slice(0, qr.n);
     }
@@ -128,10 +125,7 @@ public record QR(DenseMatrix qr, Vector tau) implements Serializable {
      * @return the solution vector.
      */
     public Vector solve(float[] b) {
-        Vector x = qr.vector(b.length);
-        for (int i = 0; i < b.length; i++) {
-            x.set(i, b[i]);
-        }
+        Vector x = qr.vector(b);
         solve(x);
         return x.slice(0, qr.n);
     }
