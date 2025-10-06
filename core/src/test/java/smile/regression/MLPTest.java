@@ -157,7 +157,7 @@ public class MLPTest {
         var calHousing = new CalHousing();
         double[][] x = calHousing.x();
         double[] y = calHousing.y();
-        test("cal_housing", x, y, null, 115704.4419,
+        test("cal_housing", x, y, null, 115720.1382,
                 Layer.input(x[0].length), Layer.rectifier(40), Layer.sigmoid(30));
     }
 

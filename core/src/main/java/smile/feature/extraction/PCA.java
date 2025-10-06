@@ -19,7 +19,6 @@ package smile.feature.extraction;
 import java.io.Serial;
 import smile.data.DataFrame;
 import smile.math.MathEx;
-import smile.linalg.UPLO;
 import smile.tensor.DenseMatrix;
 import smile.tensor.EVD;
 import smile.tensor.SVD;
@@ -154,11 +153,11 @@ public class PCA extends Projection {
         int m = data.length;
         int n = data[0].length;
 
-        double[] mu = MathEx.colMeans(data);
         DenseMatrix X = DenseMatrix.of(data);
+        Vector mu = X.colMeans();
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
-                X.sub(i, j, mu[j]);
+                X.sub(i, j, mu.get(j));
             }
         }
 
@@ -172,7 +171,7 @@ public class PCA extends Projection {
                 eigvalues.set(i, si * si);
             }
 
-            eigvectors = svd.Vt();
+            eigvectors = svd.Vt().transpose();
         } else {
 
             DenseMatrix cov = X.zeros(n, n);
@@ -191,16 +190,15 @@ public class PCA extends Projection {
                 }
             }
 
-            cov.withUplo(UPLO.LOWER);
-            EVD eigen = cov.eigen();
-            eigen.sort();
+            cov.withUplo(LOWER);
+            EVD eigen = cov.eigen().sort();
 
             eigvalues = eigen.wr();
             eigvectors = eigen.Vr();
         }
 
         DenseMatrix projection = getProjection(eigvalues, eigvectors, 0.95);
-        return new PCA(Vector.column(mu), eigvalues, eigvectors, projection, columns);
+        return new PCA(mu, eigvalues, eigvectors, projection, columns);
     }
 
     /**
@@ -213,19 +211,19 @@ public class PCA extends Projection {
         int m = data.length;
         int n = data[0].length;
 
-        double[] mu = MathEx.colMeans(data);
-        DenseMatrix x = DenseMatrix.of(data);
+        DenseMatrix X = DenseMatrix.of(data);
+        Vector mu = X.colMeans();
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
-                x.sub(i, j, mu[j]);
+                X.sub(i, j, mu.get(j));
             }
         }
 
-        DenseMatrix cov = x.zeros(n, n);
+        DenseMatrix cov = X.zeros(n, n);
         for (int k = 0; k < m; k++) {
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j <= i; j++) {
-                    cov.add(i, j, x.get(k, i) * x.get(k, j));
+                    cov.add(i, j, X.get(k, i) * X.get(k, j));
                 }
             }
         }
@@ -260,7 +258,7 @@ public class PCA extends Projection {
         }
 
         DenseMatrix projection = getProjection(eigen.wr(), loadings, 0.95);
-        return new PCA(Vector.column(mu), eigen.wr(), loadings, projection, columns);
+        return new PCA(mu, eigen.wr(), loadings, projection, columns);
     }
 
     /**

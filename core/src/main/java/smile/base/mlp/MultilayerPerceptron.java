@@ -300,7 +300,7 @@ public abstract class MultilayerPerceptron implements AutoCloseable, Serializabl
      * @return the vector.
      */
     protected Vector vector(double[] x) {
-        return net[0].weight().vector(x);
+        return net[0].output().vector(x);
     }
 
     /**

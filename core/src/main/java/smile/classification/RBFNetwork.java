@@ -194,8 +194,7 @@ public class RBFNetwork<T> extends AbstractClassifier<T> {
 
         QR qr = G.qr();
         qr.solve(b);
-        DenseMatrix w = b.submatrix(0, 0, m, k-1);
-
+        DenseMatrix w = b.submatrix(0, 0, m+1, k);
         return new RBFNetwork<>(k, rbf, w, normalize, codec.classes);
     }
 
