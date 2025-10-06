@@ -1247,6 +1247,7 @@ public abstract class DenseMatrix implements Matrix, Serializable {
             iwork = new int[iwork[0]];
             lwork[0] = work.size();
             liwork[0] = iwork.length;
+            iwork_ = MemorySegment.ofArray(iwork);
             switch(scalarType()) {
                 case Float64 -> dsyevd_(vr ? vectors_ : no_vectors_, uplo_, n_, eig.memory, lda_, w.memory, work.memory, lwork_, iwork_, liwork_, info_);
                 case Float32 -> ssyevd_(vr ? vectors_ : no_vectors_, uplo_, n_, eig.memory, lda_, w.memory, work.memory, lwork_, iwork_, liwork_, info_);

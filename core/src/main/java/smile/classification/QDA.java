@@ -156,9 +156,7 @@ public class QDA extends AbstractClassifier<double[]> {
      */
     public static QDA fit(double[][] x, int[] y, double[] priori, double tol) {
         DiscriminantAnalysis da = DiscriminantAnalysis.fit(x, y, priori, tol);
-
         DenseMatrix[] cov = DiscriminantAnalysis.cov(x, y, da.mu, da.ni);
-
         int k = cov.length;
         int p = cov[0].nrow();
         Vector[] eigen = new Vector[k];
