@@ -93,7 +93,10 @@ object ObjectId {
    * * http://hg.openjdk.java.net/jdk8/tl/jdk/rev/b1814b3ea6d3
    */
   private val machineId: Array[Byte] = {
-    val correctVersion = System.getProperty("java.version").substring(0, 3).toFloat >= 1.8
+    val correctVersion = {
+      val ver = System.getProperty("java.version")
+      ver.substring(0, Math.min(3, ver.length())).toFloat >= 1.8
+    }
     val noIpv6 = System.getProperty("java.net.preferIPv4Stack") == "true"
     val isLinux = System.getProperty("os.name") == "Linux"
 
