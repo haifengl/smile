@@ -227,7 +227,7 @@ public class SpectralClustering {
             }
         }
 
-        DenseMatrix W = C.submatrix(0, 0, l-1, l-1);
+        DenseMatrix W = C.submatrix(0, 0, l, l);
         W.withUplo(LOWER);
         EVD eigen = ARPACK.syev(W, ARPACK.SymmOption.LA, k);
         double[] e = eigen.wr().toArray(new double[0]);

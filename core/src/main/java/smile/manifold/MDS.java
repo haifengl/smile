@@ -18,8 +18,8 @@ package smile.manifold;
 
 import java.util.Properties;
 import smile.math.MathEx;
-import smile.linalg.UPLO;
 import smile.tensor.*;
+import static smile.linalg.UPLO.*;
 import static smile.tensor.ScalarType.*;
 
 /**
@@ -130,7 +130,7 @@ public record MDS(double[] scores, double[] proportion, double[][] coordinates) 
         DenseMatrix B = getGram(proximity);
 
         if (options.positive) {
-            DenseMatrix Z = DenseMatrix.zeros(Float64, 2 * n, 2 * n);
+            DenseMatrix Z = B.zeros(2 * n, 2 * n);
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n; j++) {
                     Z.set(i, n + j, 2 * B.get(i, j));
@@ -150,7 +150,7 @@ public record MDS(double[] scores, double[] proportion, double[][] coordinates) 
             }
 
             Vector eigvalues = Z.eigen(false, false).wr();
-            double c = eigvalues.normInf();
+            double c = eigvalues.max();
 
             for (int i = 0; i < n; i++) {
                 B.set(i, i, 0.0);
@@ -162,7 +162,7 @@ public record MDS(double[] scores, double[] proportion, double[][] coordinates) 
             }
         }
 
-        B.withUplo(UPLO.LOWER);
+        B.withUplo(LOWER);
         EVD eigen = ARPACK.syev(B, ARPACK.SymmOption.LA, d);
 
         if (eigen.wr().size() < d) {
