@@ -204,34 +204,34 @@ public class ElasticNet {
         Vector scale = X.colSds();
 
         // Pads 0 at the tail
-        double[] y2 = new double[n + p];
+        double[] centeredY = new double[n + p];
 
         // Center y2 before calling LASSO.
         // Otherwise, padding zeros become negative when LASSO centers y2 again.
-        double ym = MathEx.mean(y);
+        double ymu = MathEx.mean(y);
         for (int i = 0; i < n; i++) {
-            y2[i] = y[i] - ym;
+            centeredY[i] = y[i] - ymu;
         }
 
         // Scales the original data array and pads a weighted identity matrix
-        DenseMatrix X2 = X.zeros(X.nrow()+ p, p);
+        DenseMatrix scaledX = X.zeros(X.nrow() + p, p);
         double padding = c * Math.sqrt(options.lambda2);
         for (int j = 0; j < p; j++) {
             for (int i = 0; i < n; i++) {
-                X2.set(i, j, c * (X.get(i, j) - center.get(j)) / scale.get(j));
+                scaledX.set(i, j, c * (X.get(i, j) - center.get(j)) / scale.get(j));
             }
 
-            X2.set(j + n, j, padding);
+            scaledX.set(j + n, j, padding);
         }
 
         var lasso = new LASSO.Options(options.lambda1 * c, options.tol, options.maxIter,
                 options.alpha, options.beta, options.eta, options.lsMaxIter, options.pcgMaxIter);
-        Vector w = LASSO.train(X2, y2, lasso);
+        Vector w = LASSO.train(scaledX, centeredY, lasso);
         for (int i = 0; i < p; i++) {
             w.set(i, c * w.get(i) / scale.get(i));
         }
 
-        double b = ym - w.dot(center);
+        double b = ymu - w.dot(center);
         return new LinearModel(formula, schema, X, y, w, b);
     }
 }

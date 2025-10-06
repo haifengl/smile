@@ -876,12 +876,14 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
         }
 
         DenseMatrix matrix = DenseMatrix.zeros(Float64, nrow, colNames.size());
+        matrix.withColNames(colNames.toArray(new String[0]));
         if (rowNames != null) {
             int j = schema.indexOf(rowNames);
             String[] rows = new String[nrow];
             for (int i = 0; i < nrow; i++) {
                 rows[i] = getString(i, j);
             }
+            matrix.withRowNames(rows);
         }
 
         int j = 0;
