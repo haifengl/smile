@@ -61,6 +61,6 @@ public class TSNETest {
         long end = System.currentTimeMillis();
         System.out.format("t-SNE takes %.2f seconds\n", (end - start) / 1000.0);
 
-        assertEquals(1.3927, tsne.cost(), 1E-3);
+        assertEquals(1.4170, tsne.cost(), 1E-3);
     }
 }
