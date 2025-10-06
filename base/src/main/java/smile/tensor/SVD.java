@@ -264,10 +264,7 @@ public record SVD(int m, int n, Vector s, DenseMatrix U, DenseMatrix Vt) impleme
         // The submatrix U[:, 1:r], where r is the rank of matrix.
         DenseMatrix Ur = r == U.ncol() ? U : U.submatrix(0, 0, m, r);
         DenseMatrix Vr = r == Vt.nrow() ? Vt : Vt.submatrix(0, 0, r, n);
-        Vector x = Ur.vector(b.length);
-        for (int i = 0; i < b.length; i++) {
-            x.set(i, b[i]);
-        }
+        Vector x = Ur.vector(b);
 
         Vector Utb = Ur.vector(r);
         Ur.tv(x, Utb);
@@ -284,28 +281,11 @@ public record SVD(int m, int n, Vector s, DenseMatrix U, DenseMatrix Vt) impleme
      * @return the solution vector.
      */
     public Vector solve(float[] b) {
-        if (U == null || Vt == null) {
-            throw new IllegalStateException("The singular vectors are not available.");
+        double[] x = new double[b.length];
+        for (int i = 0; i <  b.length; i++) {
+            x[i] = b[i];
         }
-
-        if (b.length != m) {
-            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x 1", m, n, b.length));
-        }
-
-        int r = rank();
-        // The submatrix U[:, 1:r], where r is the rank of matrix.
-        DenseMatrix Ur = r == U.ncol() ? U : U.submatrix(0, 0, m, r);
-        Vector x = Ur.vector(b.length);
-        for (int i = 0; i < b.length; i++) {
-            x.set(i, b[i]);
-        }
-
-        Vector Utb = Ur.vector(s.size());
-        Ur.tv(x, Utb);
-        for (int i = 0; i < r; i++) {
-            Utb.set(i, Utb.get(i) / s.get(i));
-        }
-        return Vt.tv(Utb);
+        return solve(x);
     }
 
     /**

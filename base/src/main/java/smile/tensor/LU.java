@@ -95,10 +95,7 @@ public record LU(DenseMatrix lu, int[] ipiv, int info) implements Serializable {
      * @return the solution vector.
      */
     public Vector solve(double[] b) {
-        Vector x = lu.vector(b.length);
-        for (int i = 0; i < b.length; i++) {
-            x.set(i, b[i]);
-        }
+        Vector x = lu.vector(b);
         solve(x);
         return x;
     }
@@ -110,10 +107,7 @@ public record LU(DenseMatrix lu, int[] ipiv, int info) implements Serializable {
      * @return the solution vector.
      */
     public Vector solve(float[] b) {
-        Vector x = lu.vector(b.length);
-        for (int i = 0; i < b.length; i++) {
-            x.set(i, b[i]);
-        }
+        Vector x = lu.vector(b);
         solve(x);
         return x;
     }
