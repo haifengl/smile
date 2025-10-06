@@ -65,6 +65,14 @@ public abstract class DenseMatrix implements Matrix, Serializable {
      * triangular matrix has unit diagonal elements.
      */
     Diag diag;
+    /**
+     * The row names.
+     */
+    String[] rowNames;
+    /**
+     * The column names.
+     */
+    String[] colNames;
 
     /**
      * Default constructor for readObject.
@@ -273,6 +281,48 @@ public abstract class DenseMatrix implements Matrix, Serializable {
      */
     public Diag diag() {
         return diag;
+    }
+
+    /**
+     * Returns the row names.
+     * @return the row names.
+     */
+    public String[] rowNames() {
+        return rowNames;
+    }
+
+    /**
+     * Sets the row names.
+     * @param names the row names.
+     * @return this matrix.
+     */
+    public DenseMatrix withRowNames(String[] names) {
+        if (names != null && names.length != nrow()) {
+            throw new IllegalArgumentException(String.format("Invalid row names length: %d != %d", names.length, nrow()));
+        }
+        rowNames = names;
+        return this;
+    }
+
+    /**
+     * Returns the column names.
+     * @return the column names.
+     */
+    public String[] colNames() {
+        return colNames;
+    }
+
+    /**
+     * Sets the column names.
+     * @param names the column names.
+     * @return this matrix.
+     */
+    public DenseMatrix withColNames(String[] names) {
+        if (names != null && names.length != ncol()) {
+            throw new IllegalArgumentException(String.format("Invalid column names length: %d != %d", names.length, ncol()));
+        }
+        colNames = names;
+        return this;
     }
 
     /**

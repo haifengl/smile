@@ -162,7 +162,7 @@ public class LinearModel implements DataFrameRegression {
     public LinearModel(Formula formula, StructType schema, DenseMatrix X, double[] y, Vector w, double b) {
         this.formula = formula;
         this.schema = schema;
-        this.predictors = schema.names();
+        this.predictors = X.colNames();
         this.p = X.ncol();
         this.w = w;
         this.b = b;
