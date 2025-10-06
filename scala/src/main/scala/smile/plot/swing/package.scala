@@ -19,8 +19,8 @@ package smile.plot
 import java.awt.Color
 import smile.clustering.HierarchicalClustering
 import smile.data.DataFrame
-import smile.math.matrix.SparseMatrix
 import smile.stat.distribution.{DiscreteDistribution, Distribution}
+import smile.tensor.SparseMatrix
 
 /** Swing based data visualization.
   *
