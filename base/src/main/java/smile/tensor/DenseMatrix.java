@@ -549,24 +549,23 @@ public abstract class DenseMatrix implements Matrix, Serializable {
             throw new IllegalArgumentException("Both center and scale are null");
         }
 
-        DenseMatrix matrix = zeros(m, n);
-
-        if (center == null) {
+        DenseMatrix matrix = copy();
+        if (center != null && scale != null) {
             for (int j = 0; j < n; j++) {
                 for (int i = 0; i < m; i++) {
-                    matrix.set(i, j, get(i, j) / scale.get(j));
+                    matrix.set(i, j, (get(i, j) - center.get(j)) / scale.get(j));
                 }
             }
-        } else if (scale == null) {
+        } else if (center != null) {
             for (int j = 0; j < n; j++) {
                 for (int i = 0; i < m; i++) {
-                    matrix.set(i, j, get(i, j) - center.get(j));
+                    matrix.sub(i, j, center.get(j));
                 }
             }
         } else {
             for (int j = 0; j < n; j++) {
                 for (int i = 0; i < m; i++) {
-                    matrix.set(i, j, (get(i, j) - center.get(j)) / scale.get(j));
+                    matrix.div(i, j, scale.get(j));
                 }
             }
         }
