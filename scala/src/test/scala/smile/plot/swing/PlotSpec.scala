@@ -21,11 +21,11 @@ import java.lang.Math.*
 import org.specs2.mutable.*
 import smile.read
 import smile.interpolation.*
-import smile.math.matrix.*
-import smile.stat.distribution.*
+import smile.io.Paths
 import smile.plot.show
 import smile.plot.Render.*
-import smile.io.Paths
+import smile.stat.distribution.*
+import smile.tensor.*
 
 class PlotSpec extends Specification {
   val iris = read.arff(Paths.getTestData("weka/iris.arff"))
@@ -91,7 +91,7 @@ class PlotSpec extends Specification {
       1 mustEqual 1
     }
     "Histogram 3D" in {
-      val gauss = new MultivariateGaussianDistribution(Array(0.0, 0.0), Matrix.of(Array(Array(1.0, 0.6), Array(0.6, 2.0))))
+      val gauss = new MultivariateGaussianDistribution(Array(0.0, 0.0), DenseMatrix.of(Array(Array(1.0, 0.6), Array(0.6, 2.0))))
       val data = (0 until 10000) map { _ => gauss.rand }
       show(hist3(data.toArray, 50, 50))
       1 mustEqual 1
