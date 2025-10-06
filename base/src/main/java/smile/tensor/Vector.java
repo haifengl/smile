@@ -327,16 +327,52 @@ public abstract class Vector extends DenseMatrix {
     }
 
     /**
+     * Returns the minimal elements of the vector.
+     * @return the minimal elements of the vector.
+     */
+    public double min() {
+        int length = size();
+        double min = Double.MAX_VALUE;
+        for (int i = 0; i < length; i++) {
+            min = Math.min(min, get(i));
+        }
+        return min;
+    }
+
+    /**
+     * Returns the maximal elements of the vector.
+     * @return the maximal elements of the vector.
+     */
+    public double max() {
+        int length = size();
+        double max = Double.MIN_VALUE;
+        for (int i = 0; i < length; i++) {
+            max = Math.max(max, get(i));
+        }
+        return max;
+    }
+
+    /**
      * Sums the elements of the vector.
      * @return Sum of the elements of the vector.
      */
-    public abstract double sum();
+    public double sum() {
+        int length = size();
+        double s = 0;
+        for (int i = 0; i < length; i++) {
+            s += get(i);
+        }
+        return s;
+    }
 
     /**
      * Returns the mean of the elements of the vector.
      * @return the mean of the elements of the vector.
      */
-    public abstract double mean();
+    public double mean() {
+        int length = size();
+        return length > 0 ? sum() / length : 0;
+    }
 
     /**
      * The softmax function without overflow. The function normalizes
