@@ -34,8 +34,8 @@ sealed trait VectorExpression {
   }
 
   def simplify: VectorExpression
-  def toArray: Array[Double] = {
-    val z = new Array[Double](length)
+  def toVector: Vector = {
+    val z = Vector.zeros(Float64, length)
     for (i <- 0 until length) z(i) = apply(i)
     z
   }
@@ -43,7 +43,7 @@ sealed trait VectorExpression {
   /** Dot product. */
   def %*% (b: VectorExpression): Double = {
     if (length != b.length) throw new IllegalArgumentException(s"Vector sizes don't match for dot product: $length %*% ${b.length}")
-    MathEx.dot(toArray, b.toArray)
+    toVector.dot(b.toVector)
   }
 
   def + (b: VectorExpression): VectorAddVector = {
@@ -69,11 +69,11 @@ sealed trait VectorExpression {
   def / (b: Double): VectorDivValue = VectorDivValue(this, b)
 }
 
-case class VectorLift(x: Array[Double]) extends VectorExpression {
-  override def length: Int = x.length
+case class VectorLift(x: Vector) extends VectorExpression {
+  override def length: Int = x.size()
   override def apply(i: Int): Double = x(i)
   override def simplify: VectorExpression = this
-  override def toArray: Array[Double] = x
+  override def toVector: Vector = x
 }
 
 case class VectorAddValue(x: VectorExpression, y: Double) extends VectorExpression {
@@ -258,10 +258,10 @@ case class TanhVector(x: VectorExpression) extends VectorExpression {
 
 case class Ax(A: MatrixExpression, x: VectorExpression) extends VectorExpression {
   override def length: Int = A.nrow
-  override def simplify: VectorExpression = VectorLift(toArray)
+  override def simplify: VectorExpression = VectorLift(toVector)
   override def apply(i: Int): Double = throw new UnsupportedOperationException("Call simplify first")
-  override lazy val toArray: Array[Double] = {
-    A.toMatrix.mv(Vector.column(x)).toArray(new Array[Double](0))
+  override lazy val toVector: Vector = {
+    A.toMatrix.mv(x)
   }
 }
 
@@ -308,12 +308,11 @@ sealed trait MatrixExpression {
     if (ncol != b.nrow) throw new IllegalArgumentException(s"Matrix sizes don't match for matrix multiplication: $nrow x $ncol %*% ${b.nrow} x ${b.ncol}")
     MatrixMultiplication(this, b)
   }
-/*
+
   def + (b: Double): MatrixAddValue = MatrixAddValue(this, b)
   def - (b: Double): MatrixSubValue = MatrixSubValue(this, b)
   def * (b: Double): MatrixMulValue = MatrixMulValue(this, b)
   def / (b: Double): MatrixDivValue = MatrixDivValue(this, b)
-*/
 }
 
 case class MatrixLift(A: DenseMatrix) extends MatrixExpression {
@@ -874,24 +873,27 @@ private[math] class MatrixOps(a: DenseMatrix) {
       a
   }
 
-  def += (b: Double): Matrix = a.add(b)
-  def -= (b: Double): Matrix = a.sub(b)
-  def *= (b: Double): Matrix = a.mul(b)
-  def /= (b: Double): Matrix = a.div(b)
-
-  def += (b: Matrix): Matrix = a.add(b)
-  def -= (b: Matrix): Matrix = a.sub(b)
+  def += (b: Double): DenseMatrix = a.add(b)
+  def -= (b: Double): DenseMatrix = a.sub(b)
 */
+  def *= (b: Double): DenseMatrix = a.scale(b)
+  def /= (b: Double): DenseMatrix = a.scale(1/b)
+
+  def += (b: DenseMatrix): DenseMatrix = a.add(b)
+  def -= (b: DenseMatrix): DenseMatrix = a.sub(b)
+
   /** Element-wise multiplication */
-  //def *= (b: Matrix): Matrix = a.mul(b)
+  //def *= (b: Matrix): DenseMatrix = a.mul(b)
   /** Element-wise division */
-  //def /= (b: Matrix): Matrix = a.div(b)
+  //def /= (b: Matrix): DenseMatrix = a.div(b)
 
   /** Solves A * x = b */
   def \ (b: VectorExpression): Vector = {
+    val x = b.toVector
     if (a.nrow == a.ncol)
-      a.lu().solve(b.toArray)
+      a.lu().solve(x)
     else
-      a.qr().solve(b.toArray)
+      a.qr().solve(x)
+    x
   }
 }
