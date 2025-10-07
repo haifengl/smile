@@ -39,7 +39,7 @@ package object math {
   implicit def matrixOps(matrix: DenseMatrix): MatrixOps = new MatrixOps(matrix)
 
   implicit def array2VectorExpression(x: Array[Double]): VectorLift = VectorLift(x)
-  implicit def vectorExpression2Array(exp: VectorExpression): Array[Double] = exp.toArray
+  implicit def vectorExpression2Vector(exp: VectorExpression): Vector = exp.toVector
 
   implicit def matrix2MatrixExpression(x: DenseMatrix): MatrixLift = MatrixLift(x)
   implicit def matrixExpression2Array(exp: MatrixExpression): DenseMatrix = exp.toMatrix
