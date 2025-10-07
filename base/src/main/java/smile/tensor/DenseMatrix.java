@@ -584,17 +584,17 @@ public abstract class DenseMatrix implements Matrix, Serializable {
      * @param beta the scalar beta.
      * @param B the input matrix.
      */
-    public static void add(double alpha, DenseMatrix A, double beta, DenseMatrix B, DenseMatrix C) {
-        if (C.nrow() != A.nrow() || C.ncol() != A.ncol()) {
-            throw new IllegalArgumentException(String.format("Adds matrix: %d x %d vs %d x %d", A.nrow(), A.ncol(), C.nrow(), C.ncol()));
+    public void add(double alpha, DenseMatrix A, double beta, DenseMatrix B) {
+        if (nrow() != A.nrow() || ncol() != A.ncol()) {
+            throw new IllegalArgumentException(String.format("Adds matrix: %d x %d vs %d x %d", A.nrow(), A.ncol(), m, n));
         }
-        if (C.nrow() != B.nrow() || C.ncol() != B.ncol()) {
-            throw new IllegalArgumentException(String.format("Adds matrix: %d x %d vs %d x %d", B.nrow(), B.ncol(), C.nrow(), C.ncol()));
+        if (nrow() != B.nrow() || ncol() != B.ncol()) {
+            throw new IllegalArgumentException(String.format("Adds matrix: %d x %d vs %d x %d", B.nrow(), B.ncol(), m, n));
         }
 
-        for (int j = 0; j < C.n; j++) {
-            for (int i = 0; i < C.m; i++) {
-                C.set(i, j, alpha * A.get(i, j) + beta * B.get(i, j));
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                set(i, j, alpha * A.get(i, j) + beta * B.get(i, j));
             }
         }
     }
