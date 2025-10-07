@@ -25,7 +25,6 @@ import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.DoubleVector;
 import smile.tensor.DenseMatrix;
-import smile.tensor.Vector;
 
 /**
  * A projection is a kind of feature extraction technique that transforms data
