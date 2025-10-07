@@ -574,14 +574,40 @@ public abstract class DenseMatrix implements Matrix, Serializable {
     }
 
     /**
+     * Adds two matrices
+     * <pre>{@code
+     *     C = alpha * A + beta * B
+     * }</pre>
+     *
+     * @param alpha the scalar alpha.
+     * @param A the input matrix.
+     * @param beta the scalar beta.
+     * @param B the input matrix.
+     */
+    public static void add(double alpha, DenseMatrix A, double beta, DenseMatrix B, DenseMatrix C) {
+        if (C.nrow() != A.nrow() || C.ncol() != A.ncol()) {
+            throw new IllegalArgumentException(String.format("Adds matrix: %d x %d vs %d x %d", A.nrow(), A.ncol(), C.nrow(), C.ncol()));
+        }
+        if (C.nrow() != B.nrow() || C.ncol() != B.ncol()) {
+            throw new IllegalArgumentException(String.format("Adds matrix: %d x %d vs %d x %d", B.nrow(), B.ncol(), C.nrow(), C.ncol()));
+        }
+
+        for (int j = 0; j < C.n; j++) {
+            for (int i = 0; i < C.m; i++) {
+                C.set(i, j, alpha * A.get(i, j) + beta * B.get(i, j));
+            }
+        }
+    }
+
+    /**
      * Computes a constant alpha times a matrix x plus this matrix y.
-     * The result overwrites the initial values of this matrix y.
+     * The result overwrites this matrix y.
      *
      * @param alpha If {@code alpha = 0} this routine returns without any computation.
-     *
      * @param x Input matrix.
+     * @return this matrix.
      */
-    public void axpy(double alpha, DenseMatrix x) {
+    public DenseMatrix axpy(double alpha, DenseMatrix x) {
         if (nrow() != x.nrow() || ncol() != x.ncol()) {
             throw new IllegalArgumentException(String.format("Adds matrix: %d x %d vs %d x %d", m, n, x.nrow(), x.ncol()));
         }
@@ -600,32 +626,7 @@ public abstract class DenseMatrix implements Matrix, Serializable {
                 }
             }
         }
-    }
-
-    /**
-     * Sets this matrix as the sum of two matrices
-     * <pre>{@code
-     *     C = alpha * A + beta * B
-     * }</pre>
-     *
-     * @param alpha the scalar alpha.
-     * @param A the input matrix.
-     * @param beta the scalar beta.
-     * @param B the input matrix.
-     */
-    public void add(double alpha, DenseMatrix A, double beta, DenseMatrix B) {
-        if (nrow() != A.nrow() || ncol() != A.ncol()) {
-            throw new IllegalArgumentException(String.format("Adds matrix: %d x %d vs %d x %d", m, n, A.nrow(), A.ncol()));
-        }
-        if (nrow() != B.nrow() || ncol() != B.ncol()) {
-            throw new IllegalArgumentException(String.format("Adds matrix: %d x %d vs %d x %d", m, n, B.nrow(), B.ncol()));
-        }
-
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                set(i, j, alpha * A.get(i, j) + beta * B.get(i, j));
-            }
-        }
+        return this;
     }
 
     /**
@@ -635,9 +636,10 @@ public abstract class DenseMatrix implements Matrix, Serializable {
      * }</pre>
      *
      * @param B the input matrix.
+     * @return this matrix.
      */
-    public void add(DenseMatrix B) {
-        axpy(1.0, B);
+    public DenseMatrix add(DenseMatrix B) {
+        return axpy(1.0, B);
     }
 
     /**
@@ -647,9 +649,10 @@ public abstract class DenseMatrix implements Matrix, Serializable {
      * }</pre>
      *
      * @param B the input matrix.
+     * @return this matrix.
      */
-    public void sub(DenseMatrix B) {
-        axpy(-1.0, B);
+    public DenseMatrix sub(DenseMatrix B) {
+        return axpy(-1.0, B);
     }
 
     @Override
