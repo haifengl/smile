@@ -29,7 +29,7 @@ import smile.math.MathEx;
  * of double[][] in case of row by row access. For advanced matrix computation,
  * please use <code>Matrix</code>.
  *
- * @see smile.math.matrix.Matrix
+ * @see smile.tensor.Matrix
  */
 public class Array2D {
 
