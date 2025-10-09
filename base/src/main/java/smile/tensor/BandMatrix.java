@@ -21,7 +21,9 @@ import java.lang.foreign.MemorySegment;
 import smile.math.MathEx;
 import smile.linalg.*;
 import static smile.linalg.Order.*;
+import static smile.linalg.Transpose.NO_TRANSPOSE;
 import static smile.linalg.blas.cblas_h.*;
+import static smile.linalg.lapack.clapack_h.*;
 
 /**
  * A band matrix is a sparse matrix, whose non-zero entries are confined to
@@ -261,14 +263,28 @@ public abstract class BandMatrix implements Matrix, Serializable {
         switch(scalarType()) {
             case Float64 -> cblas_dscal((int) length(), alpha, memory, 1);
             case Float32 -> cblas_sscal((int) length(), (float) alpha, memory, 1);
-            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
         }
         return this;
     }
 
     @Override
-    public SymmMatrix transpose() {
-        throw new UnsupportedOperationException();
+    public abstract BandMatrix copy();
+
+    @Override
+    public BandMatrix transpose() {
+        BandMatrix trans = zeros(scalarType(), n, m, ku, kl);
+        for (int j = 0; j < n; j++) {
+            for (int k = 0; k <= kl; k++) {
+                int i = j + k;
+                if (i < m) trans.set(j, i, get(i, j));
+            }
+            for (int k = 1; k <= ku; k++) {
+                int i = j - k;
+                if (i >= 0) trans.set(j, i, get(i, j));
+            }
+        }
+        return trans;
     }
 
     /**
@@ -335,14 +351,104 @@ public abstract class BandMatrix implements Matrix, Serializable {
             switch(scalarType()) {
                 case Float64 -> cblas_dsbmv(layout().blas(), uplo.blas(), n, kl, alpha, memory, ld, x.memory, 1, beta, y.memory, 1);
                 case Float32 -> cblas_ssbmv(layout().blas(), uplo.blas(), n, kl, (float) alpha, memory, ld, x.memory, 1, (float) beta, y.memory, 1);
-                default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+                default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
             }
         } else {
             switch(scalarType()) {
                 case Float64 -> cblas_dgbmv(layout().blas(), trans.blas(), m, n, kl, ku, alpha, memory, ld, x.memory, 1, beta, y.memory, 1);
                 case Float32 -> cblas_sgbmv(layout().blas(), trans.blas(), m, n, kl, ku, (float) alpha, memory, ld, x.memory, 1, (float) beta, y.memory, 1);
-                default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+                default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
             }
+        }
+    }
+
+    /**
+     * Solve A * x = b.
+     * @param b the right hand side of linear systems.
+     * @throws RuntimeException when the matrix is singular.
+     * @return the solution vector.
+     */
+    public Vector solve(double[] b) {
+        // Don't call vector(b) as it will be overwritten.
+        Vector x = vector(n);
+        for (int i = 0; i < n; i++) x.set(i, b[i]);
+        solve(x);
+        return x;
+    }
+
+    /**
+     * Solve A * x = b.
+     * @param b the right hand side of linear systems.
+     * @throws RuntimeException when the matrix is singular.
+     * @return the solution vector.
+     */
+    public Vector solve(float[] b) {
+        // Don't call vector(b) as it will be overwritten.
+        Vector x = vector(n);
+        for (int i = 0; i < n; i++) x.set(i, b[i]);
+        solve(x);
+        return x;
+    }
+
+    /**
+     * Solves the linear system {@code A * X = B}.
+     * @param B the right hand side of linear systems. On output, B will
+     *          be overwritten with the solution matrix.
+     */
+    public void solve(DenseMatrix B) {
+        if (m != n) {
+            throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
+        }
+
+        if (B.m != m) {
+            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", m, n, B.m, B.n));
+        }
+
+        BandMatrix lu = copy();
+        int[] m = { lu.m };
+        int[] n = { lu.n };
+        int[] kl = { lu.kl / 2 };
+        int[] ku = { lu.ku };
+        int[] lda = { lu.ld };
+        int[] ipiv = new int[lu.n];
+        int[] info = { 0 };
+        MemorySegment m_ = MemorySegment.ofArray(m);
+        MemorySegment n_ = MemorySegment.ofArray(n);
+        MemorySegment kl_ = MemorySegment.ofArray(kl);
+        MemorySegment ku_ = MemorySegment.ofArray(ku);
+        MemorySegment lda_ = MemorySegment.ofArray(lda);
+        MemorySegment ipiv_ = MemorySegment.ofArray(ipiv);
+        MemorySegment info_ = MemorySegment.ofArray(info);
+        switch(scalarType()) {
+            case Float64 -> dgbtrf_(m_, n_, kl_, ku_, lu.memory, lda_, ipiv_, info_);
+            case Float32 -> sgbtrf_(m_, n_, kl_, ku_, lu.memory, lda_, ipiv_, info_);
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
+        }
+
+        if (info[0] < 0) {
+            logger.error("LAPACK GBTRF error code: {}", info[0]);
+            throw new ArithmeticException("LAPACK GBTRF error code: " + info[0]);
+        }
+
+        if (info[0] > 0) {
+            throw new RuntimeException("The matrix is singular.");
+        }
+
+        byte[] trans = { NO_TRANSPOSE.lapack() };
+        int[] nrhs = { B.n };
+        int[] ldb = { B.ld };
+        MemorySegment trans_ = MemorySegment.ofArray(trans);
+        MemorySegment nrhs_ = MemorySegment.ofArray(nrhs);
+        MemorySegment ldb_ = MemorySegment.ofArray(ldb);
+        switch(scalarType()) {
+            case Float64 -> dgbtrs_(trans_, n_, kl_, ku_, nrhs_, lu.memory, lda_, ipiv_, B.memory, ldb_, info_);
+            case Float32 -> sgbtrs_(trans_, n_, kl_, ku_, nrhs_, lu.memory, lda_, ipiv_, B.memory, ldb_, info_);
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
+        }
+
+        if (info[0] != 0) {
+            logger.error("LAPACK GBTRS error code: {}", info[0]);
+            throw new ArithmeticException("LAPACK GBTRS error code: " + info[0]);
         }
     }
 }
