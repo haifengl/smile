@@ -156,7 +156,7 @@ public record LU(DenseMatrix lu, int[] ipiv, int info) implements Serializable {
         switch(lu.scalarType()) {
             case Float64 -> dgetrs_(trans_, n_, nrhs_, lu.memory, lda_, ipiv_, B.memory, ldb_, info_);
             case Float32 -> sgetrs_(trans_, n_, nrhs_, lu.memory, lda_, ipiv_, B.memory, ldb_, info_);
-            default -> throw new UnsupportedOperationException("Unsupported scala type: " + lu.scalarType());
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + lu.scalarType());
         }
 
         if (info[0] != 0) {

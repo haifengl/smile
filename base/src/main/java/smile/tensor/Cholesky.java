@@ -152,7 +152,7 @@ public record Cholesky(DenseMatrix lu) implements Serializable {
         switch(lu.scalarType()) {
             case Float64 -> dpotrs_(uplo_, n_, nrhs_, lu.memory, lda_, B.memory, ldb_, info_);
             case Float32 -> spotrs_(uplo_, n_, nrhs_, lu.memory, lda_, B.memory, ldb_, info_);
-            default -> throw new UnsupportedOperationException("Unsupported scala type: " + lu.scalarType());
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + lu.scalarType());
         }
 
         if (info[0] != 0) {

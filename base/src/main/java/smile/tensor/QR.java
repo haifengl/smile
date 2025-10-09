@@ -96,7 +96,7 @@ public record QR(DenseMatrix qr, Vector tau) implements Serializable {
         switch(Q.scalarType()) {
             case Float64 -> dorgqr_(m_, n_, k_, Q.memory, lda_, tau.memory, work.memory, lwork_, info_);
             case Float32 -> sorgqr_(m_, n_, k_, Q.memory, lda_, tau.memory, work.memory, lwork_, info_);
-            default -> throw new UnsupportedOperationException("Unsupported scala type: " + Q.scalarType());
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + Q.scalarType());
         }
 
         if (info[0] != 0) {
@@ -176,7 +176,7 @@ public record QR(DenseMatrix qr, Vector tau) implements Serializable {
         switch(qr.scalarType()) {
             case Float64 -> dormqr_(side_, trans_, m_, n_, k_, qr.memory, lda_, tau.memory, B.memory, ldb_, work.memory, lwork_, info_);
             case Float32 -> sormqr_(side_, trans_, m_, n_, k_, qr.memory, lda_, tau.memory, B.memory, ldb_, work.memory, lwork_, info_);
-            default -> throw new UnsupportedOperationException("Unsupported scala type: " + qr.scalarType());
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + qr.scalarType());
         }
 
         if (info[0] != 0) {
@@ -190,7 +190,7 @@ public record QR(DenseMatrix qr, Vector tau) implements Serializable {
         switch(qr.scalarType()) {
             case Float64 -> dormqr_(side_, trans_, m_, n_, k_, qr.memory, lda_, tau.memory, B.memory, ldb_, work.memory, lwork_, info_);
             case Float32 -> sormqr_(side_, trans_, m_, n_, k_, qr.memory, lda_, tau.memory, B.memory, ldb_, work.memory, lwork_, info_);
-            default -> throw new UnsupportedOperationException("Unsupported scala type: " + qr.scalarType());
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + qr.scalarType());
         }
 
         if (info[0] != 0) {
@@ -205,7 +205,7 @@ public record QR(DenseMatrix qr, Vector tau) implements Serializable {
         switch(qr.scalarType()) {
             case Float64 -> dtrtrs_(side_, trans_, unit_, n_, nrhs_, qr.memory, lda_, B.memory, ldb_, info_);
             case Float32 -> strtrs_(side_, trans_, unit_, n_, nrhs_, qr.memory, lda_, B.memory, ldb_, info_);
-            default -> throw new UnsupportedOperationException("Unsupported scala type: " + qr.scalarType());
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + qr.scalarType());
         }
 
         if (info[0] != 0) {

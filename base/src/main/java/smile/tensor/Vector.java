@@ -397,7 +397,7 @@ public abstract class Vector extends DenseMatrix {
         return switch(scalarType()) {
             case Float64 -> cblas_dasum(size(), memory, 1);
             case Float32 -> cblas_sasum(size(), memory, 1);
-            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
         };
     }
 
@@ -420,7 +420,7 @@ public abstract class Vector extends DenseMatrix {
         switch(scalarType()) {
             case Float64 -> cblas_daxpy(size(), alpha, x.memory, 1, memory, 1);
             case Float32 -> cblas_saxpy(size(), (float) alpha, x.memory, 1, memory, 1);
-            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
         }
     }
 
@@ -442,7 +442,7 @@ public abstract class Vector extends DenseMatrix {
         return switch(scalarType()) {
             case Float64 -> cblas_ddot(size(), x.memory, 1, memory, 1);
             case Float32 -> cblas_sdot(size(), x.memory, 1, memory, 1);
-            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
         };
     }
 
@@ -455,7 +455,7 @@ public abstract class Vector extends DenseMatrix {
         return switch(scalarType()) {
             case Float64 -> cblas_dnrm2(size(), memory, 1);
             case Float32 -> cblas_snrm2(size(), memory, 1);
-            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
         };
     }
 
@@ -468,7 +468,7 @@ public abstract class Vector extends DenseMatrix {
         return switch(scalarType()) {
             case Float64 -> cblas_dasum(size(), memory, 1);
             case Float32 -> cblas_sasum(size(), memory, 1);
-            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
         };
     }
 
@@ -486,7 +486,7 @@ public abstract class Vector extends DenseMatrix {
         switch(scalarType()) {
             case Float64 -> cblas_dscal(size(), alpha, memory, 1);
             case Float32 -> cblas_sscal(size(), (float) alpha, memory, 1);
-            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
         }
         return this;
     }
@@ -507,7 +507,7 @@ public abstract class Vector extends DenseMatrix {
         switch(scalarType()) {
             case Float64 -> cblas_dswap(size(), x.memory, 1, memory, 1);
             case Float32 -> cblas_sswap(size(), x.memory, 1, memory, 1);
-            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
         }
     }
 
@@ -521,7 +521,7 @@ public abstract class Vector extends DenseMatrix {
         return (int) switch(scalarType()) {
             case Float64 -> cblas_idamax(size(), memory, 1);
             case Float32 -> cblas_isamax(size(), memory, 1);
-            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
         };
     }
 }
