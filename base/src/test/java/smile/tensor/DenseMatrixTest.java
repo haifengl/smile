@@ -136,12 +136,12 @@ public class DenseMatrixTest {
         assertEquals(3, t.nrow());
         assertEquals(3, t.ncol());
 
-        assertEquals(0.9, matrix.get(0, 0), 1E-7);
-        assertEquals(0.8, matrix.get(2, 2), 1E-7);
-        assertEquals(0.5, matrix.get(1, 1), 1E-7);
-        assertEquals(0.0, matrix.get(0, 2), 1E-7);
-        assertEquals(0.0, matrix.get(2, 0), 1E-7);
-        assertEquals(0.4, matrix.get(1, 0), 1E-7);
+        assertEquals(0.9, t.get(0, 0), 1E-7);
+        assertEquals(0.8, t.get(2, 2), 1E-7);
+        assertEquals(0.5, t.get(1, 1), 1E-7);
+        assertEquals(0.0, t.get(0, 2), 1E-7);
+        assertEquals(0.0, t.get(2, 0), 1E-7);
+        assertEquals(0.4, t.get(1, 0), 1E-7);
     }
 
     @Test
