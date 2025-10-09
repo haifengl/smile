@@ -132,4 +132,16 @@ class BandMatrix32 extends BandMatrix implements Serializable {
         }
         return matrix;
     }
+
+    @Override
+    MemorySegment lua() {
+        int lda = lda();
+        float[] work = new float[lda * n];
+        for (int k = 0; k < ab.length; k++) {
+            int i = k % ld;
+            int j = k / ld;
+            work[j*lda + i + kl] = ab[k];
+        }
+        return MemorySegment.ofArray(work);
+    }
 }
