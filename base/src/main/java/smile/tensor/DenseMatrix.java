@@ -186,7 +186,7 @@ public abstract class DenseMatrix implements Matrix, Serializable {
         switch(scalarType()) {
             case Float64 -> cblas_dscal(length, alpha, memory, 1);
             case Float32 -> cblas_sscal(length, (float) alpha, memory, 1);
-            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
         }
         return this;
     }
@@ -617,7 +617,7 @@ public abstract class DenseMatrix implements Matrix, Serializable {
             switch (scalarType()) {
                 case Float64 -> cblas_daxpy(length, alpha, x.memory, 1, memory, 1);
                 case Float32 -> cblas_saxpy(length, (float) alpha, x.memory, 1, memory, 1);
-                default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+                default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
             }
         } else {
             for (int j = 0; j < n; j++) {
@@ -898,7 +898,7 @@ public abstract class DenseMatrix implements Matrix, Serializable {
         switch(scalarType()) {
             case Float64 -> cblas_dger(order().blas(), m, n, alpha, x.memory, 1, y.memory, 1, memory, ld);
             case Float32 -> cblas_sger(order().blas(), m, n, (float) alpha, x.memory, 1, y.memory, 1, memory, ld);
-            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
         }
     }
 
@@ -934,7 +934,7 @@ public abstract class DenseMatrix implements Matrix, Serializable {
             switch(scalarType()) {
                 case Float64 -> dsysv_(uplo_, n_, n_, lu.memory, lda_, ipiv_, inv.memory, ldb_, work.memory, lwork_, info_);
                 case Float32 -> ssysv_(uplo_, n_, n_, lu.memory, lda_, ipiv_, inv.memory, ldb_, work.memory, lwork_, info_);
-                default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+                default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
             }
             if (info[0] != 0) {
                 throw new ArithmeticException("SYSV fails: " + info[0]);
@@ -945,7 +945,7 @@ public abstract class DenseMatrix implements Matrix, Serializable {
             switch(scalarType()) {
                 case Float64 -> dsysv_(uplo_, n_, n_, lu.memory, lda_, ipiv_, inv.memory, ldb_, work.memory, lwork_, info_);
                 case Float32 -> ssysv_(uplo_, n_, n_, lu.memory, lda_, ipiv_, inv.memory, ldb_, work.memory, lwork_, info_);
-                default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+                default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
             }
             if (info[0] != 0) {
                 throw new ArithmeticException("SYSV fails: " + info[0]);
@@ -954,7 +954,7 @@ public abstract class DenseMatrix implements Matrix, Serializable {
             switch(scalarType()) {
                 case Float64 -> dgesv_(n_, n_, lu.memory, lda_, ipiv_, inv.memory, ldb_, info_);
                 case Float32 -> sgesv_(n_, n_, lu.memory, lda_, ipiv_, inv.memory, ldb_, info_);
-                default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+                default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
             }
             if (info[0] != 0) {
                 throw new ArithmeticException("GESV fails: " + info[0]);
@@ -984,7 +984,7 @@ public abstract class DenseMatrix implements Matrix, Serializable {
         switch(scalarType()) {
             case Float64 -> dgetrf_(m_, n_, lu.memory, lda_, ipiv_, info_);
             case Float32 -> sgetrf_(m_, n_, lu.memory, lda_, ipiv_, info_);
-            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
         }
 
         if (info[0] < 0) {
@@ -1021,7 +1021,7 @@ public abstract class DenseMatrix implements Matrix, Serializable {
         switch(scalarType()) {
             case Float64 -> dpotrf_(uplo_, n_, lu.memory, lda_, info_);
             case Float32 -> spotrf_(uplo_, n_, lu.memory, lda_, info_);
-            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
         }
 
         if (info[0] != 0) {
@@ -1057,7 +1057,7 @@ public abstract class DenseMatrix implements Matrix, Serializable {
         switch(scalarType()) {
             case Float64 -> dgeqrf_(m_, n_, qr.memory, lda_, tau.memory, work.memory, lwork_, info_);
             case Float32 -> sgeqrf_(m_, n_, qr.memory, lda_, tau.memory, work.memory, lwork_, info_);
-            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
         }
 
         if (info[0] != 0) {
@@ -1071,7 +1071,7 @@ public abstract class DenseMatrix implements Matrix, Serializable {
         switch(scalarType()) {
             case Float64 -> dgeqrf_(m_, n_, qr.memory, lda_, tau.memory, work.memory, lwork_, info_);
             case Float32 -> sgeqrf_(m_, n_, qr.memory, lda_, tau.memory, work.memory, lwork_, info_);
-            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
         }
 
         if (info[0] != 0) {
@@ -1151,7 +1151,7 @@ public abstract class DenseMatrix implements Matrix, Serializable {
         switch(scalarType()) {
             case Float64 -> dgesdd_(jobz_, m_, n_, A.memory, lda_, s.memory, U.memory, ldu_, Vt.memory, ldvt_, work.memory, lwork_, iwork_, info_);
             case Float32 -> sgesdd_(jobz_, m_, n_, A.memory, lda_, s.memory, U.memory, ldu_, Vt.memory, ldvt_, work.memory, lwork_, iwork_, info_);
-            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
         }
 
         if (info[0] != 0) {
@@ -1164,7 +1164,7 @@ public abstract class DenseMatrix implements Matrix, Serializable {
         switch(scalarType()) {
             case Float64 -> dgesdd_(jobz_, m_, n_, A.memory, lda_, s.memory, U.memory, ldu_, Vt.memory, ldvt_, work.memory, lwork_, iwork_, info_);
             case Float32 -> sgesdd_(jobz_, m_, n_, A.memory, lda_, s.memory, U.memory, ldu_, Vt.memory, ldvt_, work.memory, lwork_, iwork_, info_);
-            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
         }
 
         if (info[0] != 0) {
@@ -1237,7 +1237,7 @@ public abstract class DenseMatrix implements Matrix, Serializable {
             switch(scalarType()) {
                 case Float64 -> dsyevd_(vr ? vectors_ : no_vectors_, uplo_, n_, eig.memory, lda_, w.memory, work.memory, lwork_, iwork_, liwork_, info_);
                 case Float32 -> ssyevd_(vr ? vectors_ : no_vectors_, uplo_, n_, eig.memory, lda_, w.memory, work.memory, lwork_, iwork_, liwork_, info_);
-                default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+                default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
             }
 
             if (info[0] != 0) {
@@ -1253,7 +1253,7 @@ public abstract class DenseMatrix implements Matrix, Serializable {
             switch(scalarType()) {
                 case Float64 -> dsyevd_(vr ? vectors_ : no_vectors_, uplo_, n_, eig.memory, lda_, w.memory, work.memory, lwork_, iwork_, liwork_, info_);
                 case Float32 -> ssyevd_(vr ? vectors_ : no_vectors_, uplo_, n_, eig.memory, lda_, w.memory, work.memory, lwork_, iwork_, liwork_, info_);
-                default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+                default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
             }
 
             if (info[0] != 0) {
@@ -1284,7 +1284,7 @@ public abstract class DenseMatrix implements Matrix, Serializable {
                 case Float32 -> sgeev_(vl ? vectors_ : no_vectors_, vr ? vectors_ : no_vectors_,
                         n_, eig.memory, lda_, wr.memory, wi.memory, Vl.memory, ldvl_, Vr.memory, ldvr_,
                         work.memory, lwork_, info_);
-                default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+                default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
             }
 
             if (info[0] != 0) {
@@ -1301,7 +1301,7 @@ public abstract class DenseMatrix implements Matrix, Serializable {
                 case Float32 -> sgeev_(vl ? vectors_ : no_vectors_, vr ? vectors_ : no_vectors_,
                         n_, eig.memory, lda_, wr.memory, wi.memory, Vl.memory, ldvl_, Vr.memory, ldvr_,
                         work.memory, lwork_, info_);
-                default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+                default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
             }
 
             if (info[0] != 0) {

@@ -164,7 +164,7 @@ public interface ARPACK {
                         iparam_, ipntr_, workd.memory, workl.memory, workl.size(), info_);
                 case Float32 -> ssaupd_c(ido_, bmat_, n, bwhich_, nev, (float) tol, resid.memory, ncv, V.memory, ldv,
                         iparam_, ipntr_, workd.memory, workl.memory, workl.size(), info_);
-                default -> throw new UnsupportedOperationException("Unsupported scala type: " + A.scalarType());
+                default -> throw new UnsupportedOperationException("Unsupported scalar type: " + A.scalarType());
             }
 
             if (ido[0] == -1 || ido[0] == 1) {
@@ -192,7 +192,7 @@ public interface ARPACK {
             case Float32 -> sseupd_c(rvec, howmny_, select_, d.memory, V.memory, ldv, (float) sigma,
                     bmat_, n, bwhich_, nev, (float) tol, resid.memory, ncv, V.memory, ldv,
                     iparam_, ipntr_, workd.memory, workl.memory, workl.size(), info_);
-            default -> throw new UnsupportedOperationException("Unsupported scala type: " + A.scalarType());
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + A.scalarType());
         }
 
 
@@ -287,7 +287,7 @@ public interface ARPACK {
                 case Float32 -> snaupd_c(ido_, bmat_, n, bwhich_, nev, (float) tol, resid.memory, ncv, V.memory, ldv, iparam_, ipntr_,
                         workd.memory, workl.memory, workl.size(), info_);
 
-                default -> throw new UnsupportedOperationException("Unsupported scala type: " + A.scalarType());
+                default -> throw new UnsupportedOperationException("Unsupported scalar type: " + A.scalarType());
             }
 
             if (ido[0] == -1 || ido[0] == 1) {
@@ -321,7 +321,7 @@ public interface ARPACK {
                     workd.memory, workl.memory, workl.size(), info_);
 
 
-            default -> throw new UnsupportedOperationException("Unsupported scala type: " + A.scalarType());
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + A.scalarType());
         }
 
         if (info[0] != 0) {

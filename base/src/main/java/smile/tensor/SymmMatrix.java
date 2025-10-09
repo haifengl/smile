@@ -195,7 +195,7 @@ public abstract class SymmMatrix implements Matrix, Serializable {
         switch(scalarType()) {
             case Float64 -> cblas_dscal((int) length(), alpha, memory, 1);
             case Float32 -> cblas_sscal((int) length(), (float) alpha, memory, 1);
-            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
         }
         return this;
     }
@@ -258,7 +258,7 @@ public abstract class SymmMatrix implements Matrix, Serializable {
         switch(scalarType()) {
             case Float64 -> cblas_dspmv(order().blas(), uplo.blas(), n, alpha, memory, x.memory, 1, beta, y.memory, 1);
             case Float32 -> cblas_sspmv(order().blas(), uplo.blas(), n, (float) alpha, memory, x.memory, 1, (float) beta, y.memory, 1);
-            default -> throw new UnsupportedOperationException("Unsupported scala type: " + scalarType());
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
         }
     }
 }
