@@ -407,14 +407,14 @@ public abstract class BandMatrix implements Matrix, Serializable {
             throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", m, n, B.m, B.n));
         }
 
-        BandMatrix lu = copy();
-        int[] m = { lu.m };
-        int[] n = { lu.n };
-        int[] kl = { lu.kl / 2 };
-        int[] ku = { lu.ku };
-        int[] lda = { lu.ld };
-        int[] ipiv = new int[lu.n];
+        int[] m = { this.m };
+        int[] n = { this.n };
+        int[] kl = { this.kl };
+        int[] ku = { this.ku };
+        int[] lda = { lda() };
+        int[] ipiv = new int[this.n];
         int[] info = { 0 };
+        MemorySegment lu = lua();
         MemorySegment m_ = MemorySegment.ofArray(m);
         MemorySegment n_ = MemorySegment.ofArray(n);
         MemorySegment kl_ = MemorySegment.ofArray(kl);
@@ -423,8 +423,8 @@ public abstract class BandMatrix implements Matrix, Serializable {
         MemorySegment ipiv_ = MemorySegment.ofArray(ipiv);
         MemorySegment info_ = MemorySegment.ofArray(info);
         switch(scalarType()) {
-            case Float64 -> dgbtrf_(m_, n_, kl_, ku_, lu.memory, lda_, ipiv_, info_);
-            case Float32 -> sgbtrf_(m_, n_, kl_, ku_, lu.memory, lda_, ipiv_, info_);
+            case Float64 -> dgbtrf_(m_, n_, kl_, ku_, lu, lda_, ipiv_, info_);
+            case Float32 -> sgbtrf_(m_, n_, kl_, ku_, lu, lda_, ipiv_, info_);
             default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
         }
 
@@ -444,8 +444,8 @@ public abstract class BandMatrix implements Matrix, Serializable {
         MemorySegment nrhs_ = MemorySegment.ofArray(nrhs);
         MemorySegment ldb_ = MemorySegment.ofArray(ldb);
         switch(scalarType()) {
-            case Float64 -> dgbtrs_(trans_, n_, kl_, ku_, nrhs_, lu.memory, lda_, ipiv_, B.memory, ldb_, info_);
-            case Float32 -> sgbtrs_(trans_, n_, kl_, ku_, nrhs_, lu.memory, lda_, ipiv_, B.memory, ldb_, info_);
+            case Float64 -> dgbtrs_(trans_, n_, kl_, ku_, nrhs_, lu, lda_, ipiv_, B.memory, ldb_, info_);
+            case Float32 -> sgbtrs_(trans_, n_, kl_, ku_, nrhs_, lu, lda_, ipiv_, B.memory, ldb_, info_);
             default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
         }
 
@@ -454,4 +454,19 @@ public abstract class BandMatrix implements Matrix, Serializable {
             throw new ArithmeticException("LAPACK GBTRS error code: " + info[0]);
         }
     }
+
+    /**
+     * Returns the leading dimension of LU workspace.
+     * @return the leading dimension of LU workspace.
+     */
+    int lda() {
+        return 2 * kl + ku + 1;
+    }
+
+    /**
+     * Returns the workspace for LU decomposition. The matrix is stored in rows
+     * kl+1 to 2*kl+ku+1; rows 1 to kl of the array need not be set.
+     * @return the workspace for LU decomposition.
+     */
+    abstract MemorySegment lua();
 }
