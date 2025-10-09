@@ -66,25 +66,6 @@ class DenseMatrix32 extends DenseMatrix {
     }
 
     @Override
-    public boolean equals(Object other) {
-        float tol = 10 * MathEx.FLOAT_EPSILON;
-        if (other instanceof DenseMatrix32 b) {
-            if (nrow() == b.nrow() && ncol() == b.ncol()) {
-                for (int j = 0; j < n; j++) {
-                    for (int i = 0; i < m; i++) {
-                        if (Math.abs(get(i, j) - b.get(i, j)) > tol) {
-                            return false;
-                        }
-                    }
-                }
-
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Override
     public ScalarType scalarType() {
         return Float32;
     }

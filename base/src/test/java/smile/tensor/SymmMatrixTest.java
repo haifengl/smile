@@ -29,11 +29,11 @@ import static smile.linalg.UPLO.*;
  */
 public class SymmMatrixTest {
     double[][] A = {
-            {0.9000f, 0.4000f, 0.0000f},
-            {0.4000f, 0.5000f, 0.3000f},
-            {0.0000f, 0.3000f, 0.8000f}
+            {0.9000, 0.4000, 0.0000},
+            {0.4000, 0.5000, 0.3000},
+            {0.0000, 0.3000, 0.8000}
     };
-    double[] b = {0.5f, 0.5f, 0.5f};
+    double[] b = {0.5, 0.5, 0.5};
 
     DenseMatrix a = DenseMatrix.of(A).withUplo(LOWER);
     SymmMatrix symm = SymmMatrix.of(a);

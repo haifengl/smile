@@ -229,38 +229,30 @@ public abstract class SymmMatrix implements Matrix, Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof SymmMatrix)) {
-            return false;
-        }
-
-        return equals((SymmMatrix) o, 1E-10);
-    }
-
-    /**
-     * Returns true if two matrices equal in given precision.
-     *
-     * @param o the other matrix.
-     * @param epsilon a number close to zero.
-     * @return true if two matrices equal in given precision.
-     */
-    public boolean equals(SymmMatrix o, double epsilon) {
-        if (n != o.n) {
-            return false;
-        }
-
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < n; i++) {
-                if (!MathEx.isZero(get(i, j) - o.get(i, j), epsilon)) {
-                    return false;
+        double tol = 10 * MathEx.FLOAT_EPSILON;
+        if (o instanceof SymmMatrix b && nrow() == b.nrow()) {
+            for (int j = 0; j < n; j++) {
+                for (int i = 0; i <= j; i++) {
+                    if (Math.abs(get(i, j) - b.get(i, j)) > tol) {
+                        return false;
+                    }
                 }
             }
-        }
 
-        return true;
+            return true;
+        }
+        return false;
     }
 
     @Override
     public void mv(Transpose trans, double alpha, Vector x, double beta, Vector y) {
+        if (scalarType() != x.scalarType()) {
+            throw new IllegalArgumentException("Incompatible ScalarType: " + scalarType() + " != " + x.scalarType());
+        }
+        if (scalarType() != y.scalarType()) {
+            throw new IllegalArgumentException("Incompatible ScalarType: " + scalarType() + " != " + y.scalarType());
+        }
+
         switch(scalarType()) {
             case Float64 -> cblas_dspmv(order().blas(), uplo.blas(), n, alpha, memory, x.memory, 1, beta, y.memory, 1);
             case Float32 -> cblas_sspmv(order().blas(), uplo.blas(), n, (float) alpha, memory, x.memory, 1, (float) beta, y.memory, 1);
@@ -315,6 +307,7 @@ public abstract class SymmMatrix implements Matrix, Serializable {
         MemorySegment uplo_ = MemorySegment.ofArray(uplo);
         MemorySegment ipiv_ = MemorySegment.ofArray(ipiv);
         MemorySegment info_ = MemorySegment.ofArray(info);
+        // Bunch-Kaufman diagonal pivoting method
         switch(scalarType()) {
             case Float64 -> dsptrf_(uplo_, n_, lu.memory, ipiv_, info_);
             case Float32 -> ssptrf_(uplo_, n_, lu.memory, ipiv_, info_);
