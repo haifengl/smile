@@ -64,7 +64,7 @@ public class BandMatrixTest {
     }
 
     @Test
-    public void test() {
+    public void testMv() {
         System.out.println("mv");
         Vector x = Vector.column(b);
         Vector y = a.mv(x);
