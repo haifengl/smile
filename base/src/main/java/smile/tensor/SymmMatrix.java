@@ -23,6 +23,7 @@ import smile.linalg.*;
 import static smile.linalg.Order.*;
 import static smile.linalg.blas.cblas_h.*;
 import static smile.tensor.ScalarType.*;
+import static smile.linalg.lapack.clapack_h.*;
 
 /**
  * The symmetric matrix in packed storage.
@@ -30,6 +31,8 @@ import static smile.tensor.ScalarType.*;
  * @author Haifeng Li
  */
 public abstract class SymmMatrix implements Matrix, Serializable {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SymmMatrix.class);
+
     /**
      * The memory segment that stores matrix values.
      */
@@ -201,6 +204,9 @@ public abstract class SymmMatrix implements Matrix, Serializable {
     }
 
     @Override
+    public abstract SymmMatrix copy();
+
+    @Override
     public SymmMatrix transpose() {
         return this;
     }
@@ -259,6 +265,84 @@ public abstract class SymmMatrix implements Matrix, Serializable {
             case Float64 -> cblas_dspmv(order().blas(), uplo.blas(), n, alpha, memory, x.memory, 1, beta, y.memory, 1);
             case Float32 -> cblas_sspmv(order().blas(), uplo.blas(), n, (float) alpha, memory, x.memory, 1, (float) beta, y.memory, 1);
             default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
+        }
+    }
+
+    /**
+     * Solve A * x = b.
+     * @param b the right hand side of linear systems.
+     * @throws RuntimeException when the matrix is singular.
+     * @return the solution vector.
+     */
+    public Vector solve(double[] b) {
+        // Don't call vector(b) as it will be overwritten.
+        Vector x = vector(n);
+        for (int i = 0; i < n; i++) x.set(i, b[i]);
+        solve(x);
+        return x;
+    }
+
+    /**
+     * Solve A * x = b.
+     * @param b the right hand side of linear systems.
+     * @throws RuntimeException when the matrix is singular.
+     * @return the solution vector.
+     */
+    public Vector solve(float[] b) {
+        // Don't call vector(b) as it will be overwritten.
+        Vector x = vector(n);
+        for (int i = 0; i < n; i++) x.set(i, b[i]);
+        solve(x);
+        return x;
+    }
+
+    /**
+     * Solves the linear system {@code A * X = B}.
+     * @param B the right hand side of linear systems. On output, B will
+     *          be overwritten with the solution matrix.
+     */
+    public void solve(DenseMatrix B) {
+        if (B.m != n) {
+            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", n, n, B.m, B.n));
+        }
+
+        SymmMatrix lu = copy();
+        byte[] uplo = { this.uplo.lapack() };
+        int[] n = { lu.n };
+        int[] ipiv = new int[lu.n];
+        int[] info = { 0 };
+        MemorySegment n_ = MemorySegment.ofArray(n);
+        MemorySegment uplo_ = MemorySegment.ofArray(uplo);
+        MemorySegment ipiv_ = MemorySegment.ofArray(ipiv);
+        MemorySegment info_ = MemorySegment.ofArray(info);
+        switch(scalarType()) {
+            case Float64 -> dsptrf_(uplo_, n_, lu.memory, ipiv_, info_);
+            case Float32 -> ssptrf_(uplo_, n_, lu.memory, ipiv_, info_);
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
+        }
+
+        if (info[0] < 0) {
+            logger.error("LAPACK SPTRF error code: {}", info[0]);
+            throw new ArithmeticException("LAPACK SPTRF error code: " + info[0]);
+        }
+
+        if (info[0] > 0) {
+            throw new RuntimeException("The matrix is singular.");
+        }
+
+        int[] nrhs = { B.n };
+        int[] ldb = { B.ld };
+        MemorySegment nrhs_ = MemorySegment.ofArray(nrhs);
+        MemorySegment ldb_ = MemorySegment.ofArray(ldb);
+        switch(scalarType()) {
+            case Float64 -> dsptrs_(uplo_, n_, nrhs_, lu.memory, ipiv_, B.memory, ldb_, info_);
+            case Float32 -> ssptrs_(uplo_, n_, nrhs_, lu.memory, ipiv_, B.memory, ldb_, info_);
+            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
+        }
+
+        if (info[0] != 0) {
+            logger.error("LAPACK SPTRS error code: {}", info[0]);
+            throw new ArithmeticException("LAPACK SPTRS error code: " + info[0]);
         }
     }
 }

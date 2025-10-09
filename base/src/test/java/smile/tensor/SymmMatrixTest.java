@@ -28,6 +28,15 @@ import static smile.linalg.UPLO.*;
  * @author Haifeng Li
  */
 public class SymmMatrixTest {
+    double[][] A = {
+            {0.9000f, 0.4000f, 0.0000f},
+            {0.4000f, 0.5000f, 0.3000f},
+            {0.0000f, 0.3000f, 0.8000f}
+    };
+    double[] b = {0.5f, 0.5f, 0.5f};
+
+    DenseMatrix a = DenseMatrix.of(A).withUplo(LOWER);
+    SymmMatrix symm = SymmMatrix.of(a);
 
     public SymmMatrixTest() {
     }
@@ -49,28 +58,28 @@ public class SymmMatrixTest {
     }
 
     @Test
-    public void test() throws Exception{
-        System.out.println("SymmMatrix");
-        double[][] A = {
-                {0.9000f, 0.4000f, 0.0000f},
-                {0.4000f, 0.5000f, 0.3000f},
-                {0.0000f, 0.3000f, 0.8000f}
-        };
-        double[] b = {0.5f, 0.5f, 0.5f};
-
-        DenseMatrix a = DenseMatrix.of(A);
-        a.withUplo(LOWER);
-        SymmMatrix symm = SymmMatrix.of(a);
-
+    public void testMv() throws Exception{
+        System.out.println("mv");
         Vector x = Vector.column(b);
         Vector y = a.mv(x);
         Vector y2 = symm.mv(x);
         assertEquals(y, y2);
+    }
 
+    @Test
+    public void testSolve() {
+        System.out.println("solve");
+        Vector y = a.copy().lu().solve(b);
+        Vector y2 = symm.solve(b);
+        assertEquals(y, y2);
+    }
+
+    @Test
+    public void testSerialize() throws Exception {
+        System.out.println("serialize");
         java.nio.file.Path temp = Write.object(symm);
         SymmMatrix matrix = (SymmMatrix) Read.object(temp);
         assertEquals(3, matrix.nrow());
         assertEquals(3, matrix.ncol());
-        matrix.mv(x);
     }
 }
