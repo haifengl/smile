@@ -315,38 +315,41 @@ public abstract class BandMatrix implements Matrix, Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof BandMatrix)) {
-            return false;
-        }
-
-        return equals((BandMatrix) o, 1E-10);
-    }
-
-    /**
-     * Returns true if two matrices equal in given precision.
-     *
-     * @param o the other matrix.
-     * @param epsilon a number close to zero.
-     * @return true if two matrices equal in given precision.
-     */
-    public boolean equals(BandMatrix o, double epsilon) {
-        if (m != o.m || n != o.n) {
-            return false;
-        }
-
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                if (!MathEx.isZero(get(i, j) - o.get(i, j), epsilon)) {
-                    return false;
+        double tol = 10 * MathEx.FLOAT_EPSILON;
+        if (o instanceof BandMatrix b && nrow() == b.nrow() && ncol() == b.ncol() && kl == b.kl && ku == b.ku) {
+            for (int j = 0; j < n; j++) {
+                for (int k = 0; k <= kl; k++) {
+                    int i = j + k;
+                    if (i < m) {
+                        if (Math.abs(get(i, j) - b.get(i, j)) > tol) {
+                            return false;
+                        }
+                    }
+                }
+                for (int k = 1; k <= ku; k++) {
+                    int i = j - k;
+                    if (i >= 0) {
+                        if (Math.abs(get(i, j) - b.get(i, j)) > tol) {
+                            return false;
+                        }
+                    }
                 }
             }
-        }
 
-        return true;
+            return true;
+        }
+        return false;
     }
 
     @Override
     public void mv(Transpose trans, double alpha, Vector x, double beta, Vector y) {
+        if (scalarType() != x.scalarType()) {
+            throw new IllegalArgumentException("Incompatible ScalarType: " + scalarType() + " != " + x.scalarType());
+        }
+        if (scalarType() != y.scalarType()) {
+            throw new IllegalArgumentException("Incompatible ScalarType: " + scalarType() + " != " + y.scalarType());
+        }
+
         if (uplo != null) {
             switch(scalarType()) {
                 case Float64 -> cblas_dsbmv(layout().blas(), uplo.blas(), n, kl, alpha, memory, ld, x.memory, 1, beta, y.memory, 1);

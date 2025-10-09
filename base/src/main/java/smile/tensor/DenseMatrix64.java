@@ -66,25 +66,6 @@ class DenseMatrix64 extends DenseMatrix {
     }
 
     @Override
-    public boolean equals(Object other) {
-        double tol = MathEx.FLOAT_EPSILON;
-        if (other instanceof DenseMatrix64 b) {
-            if (nrow() == b.nrow() && ncol() == b.ncol()) {
-                for (int j = 0; j < n; j++) {
-                    for (int i = 0; i < m; i++) {
-                        if (Math.abs(get(i, j) - b.get(i, j)) > tol) {
-                            return false;
-                        }
-                    }
-                }
-
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Override
     public ScalarType scalarType() {
         return Float64;
     }

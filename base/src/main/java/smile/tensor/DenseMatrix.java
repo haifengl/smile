@@ -117,6 +117,28 @@ public abstract class DenseMatrix implements Matrix, Serializable {
         this.diag = diag;
     }
 
+    @Override
+    public String toString() {
+        return toString(false);
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        double tol = 10 * MathEx.FLOAT_EPSILON;
+        if (other instanceof DenseMatrix b && nrow() == b.nrow() && ncol() == b.ncol()) {
+            for (int j = 0; j < n; j++) {
+                for (int i = 0; i < m; i++) {
+                    if (Math.abs(get(i, j) - b.get(i, j)) > tol) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+        return false;
+    }
+
     /**
      * Returns the optimal leading dimension. The present process have
      * cascade caches. And read/write cache are 64 byte (multiple of 16
@@ -189,11 +211,6 @@ public abstract class DenseMatrix implements Matrix, Serializable {
             default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
         }
         return this;
-    }
-
-    @Override
-    public String toString() {
-        return toString(false);
     }
 
     @Override
@@ -663,6 +680,7 @@ public abstract class DenseMatrix implements Matrix, Serializable {
         if (scalarType() != y.scalarType()) {
             throw new IllegalArgumentException("Incompatible ScalarType: " + scalarType() + " != " + y.scalarType());
         }
+
         switch (trans) {
             case NO_TRANSPOSE:
                 if (ncol() > x.size()) {
