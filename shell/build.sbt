@@ -61,11 +61,12 @@ batScriptExtraDefines ++= Seq(
 
 libraryDependencies ++= Seq(
   "com.github.scopt" %% "scopt"           % "4.1.0",
-  "org.scala-lang"   %  "scala-compiler"  % "2.13.16",
-  "ch.qos.logback"   %  "logback-classic" % "1.5.18",
-  "com.formdev"      %  "flatlaf"         % "3.6.1",
-  "com.fifesoft"     %  "rsyntaxtextarea" % "3.6.0",
-  "com.fifesoft"     %  "autocomplete"    % "3.3.2"
+  "org.scala-lang"   %  "scala-compiler"  % "2.13.17",
+  "org.slf4j"        % "slf4j-simple"     % "2.0.17",
+//  "ch.qos.logback"   %  "logback-classic" % "1.5.19",
+//  "com.formdev"      %  "flatlaf"         % "3.6.1",
+//  "com.fifesoft"     %  "rsyntaxtextarea" % "3.6.0",
+//  "com.fifesoft"     %  "autocomplete"    % "3.3.2"
 )
 
 libraryDependencies ++= {
