@@ -25,11 +25,12 @@ import smile.graph.NearestNeighborGraph;
 import smile.math.LevenbergMarquardt;
 import smile.math.MathEx;
 import smile.math.distance.Metric;
-import smile.math.matrix.ARPACK;
-import smile.math.matrix.Matrix;
-import smile.math.matrix.SparseMatrix;
 import smile.stat.distribution.GaussianDistribution;
+import smile.tensor.EVD;
 import smile.util.function.DifferentiableMultivariateFunction;
+import smile.tensor.ARPACK;
+import smile.tensor.DenseMatrix;
+import smile.tensor.SparseMatrix;
 
 /**
  * Uniform Manifold Approximation and Projection.
@@ -319,7 +320,7 @@ public class UMAP {
         }
         double[] p = {0.5, 0.0};
         LevenbergMarquardt curveFit = LevenbergMarquardt.fit(new Curve(), x, y, p);
-        var result = curveFit.parameters;
+        var result = curveFit.parameters();
         result[1] /= 2; // We fit 2*b in Curve function definition.
         return result;
     }
@@ -548,12 +549,15 @@ public class UMAP {
         // ARPACK may not find all needed eigenvalues for k = d + 1.
         // Hack it with heuristic min(2*k+1, sqrt(n)).
         int k = d + 1;
-        int numEigen = Math.max(2*k+1, (int) Math.sqrt(n));
+        int numEigen = Math.min(2*k+1, (int) Math.sqrt(n));
+        // safeguard on edge cases
+        numEigen = Math.max(numEigen, k);
+        numEigen = Math.min(numEigen, n);
         SparseMatrix L = laplacian.toMatrix();
         logger.info("Spectral layout computes {} eigen vectors", numEigen);
-        Matrix.EVD eigen = ARPACK.syev(L, ARPACK.SymmOption.SM, numEigen);
+        EVD eigen = ARPACK.syev(L, ARPACK.SymmOption.SM, numEigen);
 
-        Matrix V = eigen.Vr;
+        DenseMatrix V = eigen.Vr();
         double[][] coordinates = new double[n][d];
         for (int j = d; --j >= 0; ) {
             int c = V.ncol() - j - 2;

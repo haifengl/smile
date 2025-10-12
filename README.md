@@ -5,6 +5,7 @@
 ## Goal ##
 <img align="left" width="48" src="/web/src/images/smile.jpg">
 Smile is a fast and comprehensive machine learning framework in Java.
+Smile v4.x requires Java 21. All previous versions require Java 8.
 Smile also provides APIs in Scala, Kotlin, and Clojure with
 corresponding language paradigms. With advanced data structures and
 algorithms, Smile delivers state-of-art performance.
@@ -99,7 +100,7 @@ following to your project pom.xml file.
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-core</artifactId>
-      <version>4.3.0</version>
+      <version>4.4.2</version>
     </dependency>
 ```
 
@@ -107,13 +108,13 @@ For deep learning and NLP, use the artifactId smile-deep and smile-nlp, respecti
 
 For Scala API, please add the below into your sbt script.
 ```
-    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "4.3.0"
+    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "4.4.2"
 ```
 
 For Kotlin API, add the below into the `dependencies` section
 of Gradle build script.
 ```
-    implementation("com.github.haifengl:smile-kotlin:4.3.0")
+    implementation("com.github.haifengl:smile-kotlin:4.4.2")
 ```
 
 For Clojure API, add the following dependency to your project file:
@@ -207,7 +208,7 @@ To use smile-plot, add the following to dependencies
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-plot</artifactId>
-      <version>4.3.0</version>
+      <version>4.4.2</version>
     </dependency>
 ```
 

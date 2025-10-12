@@ -11,19 +11,19 @@
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-markdown": "^10.0.0",
+    "react-markdown": "^10.1.0",
     "react-syntax-highlighter": "^15.6.1",
     "rehype-katex": "^7.0.1",
     "remark-gemoji": "^8.0.0",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
-    "ollama": "^0.5.14",
+    "ollama": "^0.5.16",
     "sse.js": "^2.6.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.4",
-    "vite": "^6.2.0"
+    "@vitejs/plugin-react": "^4.5.1",
+    "vite": "^6.3.5"
   }
 }

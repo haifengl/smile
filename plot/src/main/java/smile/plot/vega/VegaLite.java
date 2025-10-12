@@ -92,6 +92,7 @@ public class VegaLite {
 
     /**
      * Returns the Vega-Lite specification.
+     * @return the Vega-Lite specification.
      */
     public ObjectNode spec() {
         return spec;
@@ -102,6 +103,7 @@ public class VegaLite {
      * Returns the configuration object that lists properties of
      * a visualization for creating a consistent theme. This property
      * can only be defined at the top-level of a specification.
+     * @return the configuration object.
      */
     public Config config() {
         return new Config(config);
@@ -110,6 +112,7 @@ public class VegaLite {
     /**
      * Returns the configuration object defining the style of
      * a single view visualization.
+     * @return the view configuration object.
      */
     public ViewConfig viewConfig() {
         return new ViewConfig(view);
@@ -118,6 +121,8 @@ public class VegaLite {
     /**
      * Optional metadata that will be passed to Vega. This object is completely
      * ignored by Vega and Vega-Lite and can be used for custom metadata.
+     * @param metadata the metadata.
+     * @return this object.
      */
     public VegaLite usermeta(JsonNode metadata) {
         spec.set("usermeta", metadata);
@@ -127,6 +132,8 @@ public class VegaLite {
     /**
      * Optional metadata that will be passed to Vega. This object is completely
      * ignored by Vega and Vega-Lite and can be used for custom metadata.
+     * @param metadata the metadata.
+     * @return this object.
      */
     public VegaLite usermeta(Object metadata) {
         spec.putPOJO("usermeta", metadata);
@@ -135,6 +142,8 @@ public class VegaLite {
 
     /**
      * Sets the background of the entire view with CSS color property.
+     * @param color the background color.
+     * @return this object.
      */
     public VegaLite background(String color) {
         spec.put("background", color);
@@ -145,6 +154,8 @@ public class VegaLite {
      * Specifies padding for all sides.
      * The visualization padding, in pixels, is from the edge of the
      * visualization canvas to the data rectangle.
+     * @param size the padding size.
+     * @return this object.
      */
     public VegaLite padding(int size) {
         spec.put("padding", size);
@@ -155,6 +166,11 @@ public class VegaLite {
      * Specifies padding for each side.
      * The visualization padding, in pixels, is from the edge of the
      * visualization canvas to the data rectangle.
+     * @param left the left padding.
+     * @param top the top padding.
+     * @param right the right padding.
+     * @param bottom the bottom padding.
+     * @return this object.
      */
     public VegaLite padding(int left, int top, int right, int bottom) {
         ObjectNode padding = spec.putObject("padding");
@@ -170,6 +186,7 @@ public class VegaLite {
      * a Vega-Lite visualization may be determined by multiple factors:
      * specified width, height, and padding values, as well as content
      * such as axes, legends, and titles.
+     * @return this object.
      */
     public VegaLite autosize() {
         return autosize("pad", false, "content");
@@ -195,6 +212,7 @@ public class VegaLite {
      *                 calculations, such that the width and height settings
      *                 indicate the total intended size of the view.
      * @see <a href="https://vega.github.io/vega-lite/docs/size.html#autosize">autosize</a>
+     * @return this object.
      */
     public VegaLite autosize(String type, boolean resize, String contains) {
         ObjectNode autosize = spec.putObject("autosize");
@@ -208,6 +226,8 @@ public class VegaLite {
 
     /**
      * Sets the name of the visualization for later reference.
+     * @param name the name of the visualization.
+     * @return this object.
      */
     public VegaLite name(String name) {
         spec.put("name", name);
@@ -216,6 +236,8 @@ public class VegaLite {
 
     /**
      * Sets the description of this mark for commenting purpose.
+     * @param description description of this mark.
+     * @return this object.
      */
     public VegaLite description(String description) {
         spec.put("description", description);
@@ -263,6 +285,8 @@ public class VegaLite {
 
     /**
      * Displays the plot with the default browser.
+     * @throws IOException if fails to create html file of plot.
+     * @throws HeadlessException if the VM runs in headless mode.
      */
     public void show() throws IOException, HeadlessException {
         show(false);
@@ -271,6 +295,8 @@ public class VegaLite {
     /**
      * Displays the plot with the default browser.
      * @param silent If true, silently swallow any exception.
+     * @throws IOException if fails to create html file of plot.
+     * @throws HeadlessException if the VM runs in headless mode.
      */
     public void show(boolean silent) throws IOException, HeadlessException {
         try {
@@ -289,6 +315,7 @@ public class VegaLite {
 
     /**
      * Returns the HTML of plot specification with Vega Embed.
+     * @return the HTML of plot specification with Vega Embed.
      */
     public String html() {
         return html("en");
@@ -331,6 +358,7 @@ public class VegaLite {
 
     /**
      * Returns the HTML wrapped in an iframe to render in notebooks.
+     * @return the HTML wrapped in an iframe to render in notebooks.
      */
     public String iframe() {
         return iframe(UUID.randomUUID().toString());
@@ -340,6 +368,7 @@ public class VegaLite {
      * Returns the HTML wrapped in an iframe to render in notebooks.
      *
      * @param id the iframe HTML id.
+     * @return the HTML wrapped in an iframe to render in notebooks.
      */
     public String iframe(String id) {
         String src = Strings.htmlEscape(html());
@@ -358,7 +387,9 @@ public class VegaLite {
         return String.format(html, id, src, id);
     }
 
-    /** Returns the encoding object. */
+    /**
+     * Returns the encoding object.
+     * @return the encoding object. */
     ObjectNode encoding() {
         return spec.has("encoding") ? (ObjectNode) spec.get("encoding") : spec.putObject("encoding");
     }

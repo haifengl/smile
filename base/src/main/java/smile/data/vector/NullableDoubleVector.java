@@ -50,13 +50,13 @@ public class NullableDoubleVector extends NullablePrimitiveVector {
      * @param nullMask The null bitmap. The bit is 1 if the value is null.
      */
     public NullableDoubleVector(StructField field, double[] vector, BitSet nullMask) {
-        super(field, nullMask);
         if (field.dtype() != DataTypes.NullableDoubleType) {
             throw new IllegalArgumentException("Invalid data type: " + field);
         }
         if (field.measure() instanceof CategoricalMeasure) {
             throw new IllegalArgumentException("Invalid measure: " + field.measure());
         }
+        super(field, nullMask);
         this.vector = vector;
     }
 

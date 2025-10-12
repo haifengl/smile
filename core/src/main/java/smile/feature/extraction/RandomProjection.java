@@ -16,11 +16,11 @@
  */
 package smile.feature.extraction;
 
-import smile.math.MathEx;
-import smile.math.matrix.Matrix;
-import smile.stat.distribution.GaussianDistribution;
-
 import java.io.Serial;
+import smile.math.MathEx;
+import smile.stat.distribution.GaussianDistribution;
+import smile.tensor.DenseMatrix;
+import static smile.tensor.ScalarType.*;
 
 /**
  * Random projection is a promising dimensionality reduction technique for
@@ -67,7 +67,7 @@ public class RandomProjection extends Projection {
      * @param projection the projection matrix.
      * @param columns the columns to transform when applied on Tuple/DataFrame.
      */
-    public RandomProjection(Matrix projection, String... columns) {
+    public RandomProjection(DenseMatrix projection, String... columns) {
         super(projection, "RP", columns);
     }
 
@@ -106,7 +106,7 @@ public class RandomProjection extends Projection {
             MathEx.unitize(projection[i]);
         }
 
-        return new RandomProjection(Matrix.of(projection), columns);
+        return new RandomProjection(DenseMatrix.of(projection), columns);
     }
 
     /**
@@ -125,7 +125,7 @@ public class RandomProjection extends Projection {
             throw new IllegalArgumentException("Invalid dimension of feature space: " + p);
         }
 
-        Matrix projection = new Matrix(p, n);
+        DenseMatrix projection = DenseMatrix.zeros(Float64, p, n);
         double scale = Math.sqrt(3);
         for (int i = 0; i < p; i++) {
             for (int j = 0; j < n; j++) {

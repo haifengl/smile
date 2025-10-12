@@ -19,7 +19,9 @@ package smile.neighbor.lsh;
 import java.io.Serial;
 import java.io.Serializable;
 import smile.math.MathEx;
-import smile.math.matrix.Matrix;
+import smile.tensor.DenseMatrix;
+import smile.tensor.Vector;
+import static smile.tensor.ScalarType.*;
 
 /**
  * The hash function for Euclidean spaces.
@@ -64,7 +66,7 @@ public class Hash implements Serializable {
      * The random vectors with entries chosen independently from a Gaussian
      * distribution.
      */
-    Matrix a;
+    DenseMatrix a;
     /**
      * Real numbers chosen uniformly from the range [0, w].
      */
@@ -107,7 +109,7 @@ public class Hash implements Serializable {
         this.w = w;
         this.H = H;
 
-        a = Matrix.randn(k, d);
+        a = DenseMatrix.randn(Float64, k, d);
         b = new double[k];
 
         for (int i = 0; i < k; i++) {
@@ -143,12 +145,11 @@ public class Hash implements Serializable {
      * @return the bucket of hash table for given vector x.
      */
     public int hash(double[] x) {
-        double[] h = new double[k];
-        a.mv(x, h);
+        Vector h = a.mv(x);
 
         long g = 0;
         for (int i = 0; i < k; i++) {
-            int hi = (int) Math.floor((h[i] + b[i]) / w);
+            int hi = (int) Math.floor((h.get(i) + b[i]) / w);
             g += (long) c[i] * hi;
         }
 

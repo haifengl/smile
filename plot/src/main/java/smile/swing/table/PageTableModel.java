@@ -37,9 +37,7 @@ import smile.swing.Button;
  * 
  * @author Haifeng Li
  */
-@SuppressWarnings("serial")
 public abstract class PageTableModel extends AbstractTableModel {
-
     /**
      * Number of rows per page.
      */
@@ -52,27 +50,33 @@ public abstract class PageTableModel extends AbstractTableModel {
      * Associate toolbar for page control.
      */
     private JToolBar toolbar;
-    /**
-     * Controls on toolbar.
-     */
+    /** Page size field on toolbar. */
     private final JTextField pageSizeField = new JTextField(5);
+    /** Page field on toolbar. */
     private final JTextField pageField = new JTextField(5);
+    /** Page size label on toolbar. */
     private final JLabel pageSizeLabel = new JLabel("Page Size: ");
+    /** Row count label on toolbar. */
     private final JLabel totalRowCountLabel = new JLabel();
+    /** Page count label on toolbar. */
     private final JLabel pageCountLabel = new JLabel();
+    /** Row count label format. */
     private final String totalRowCountLabelFormat =  "Total Rows: %-8d    Page:";
+    /** Page count label format. */
     private final String pageCountLabelFormat = " of %d";
 
-    /**
-     * Paging event action.
-     */
+    /** Page down event action. */
     private final Action pageDownAction = new PageDownAction();
+    /** Page up event action. */
     private final Action pageUpAction = new PageUpAction();
+    /** First page event action. */
     private final Action firstPageAction = new FirstPageAction();
+    /** Last page event action. */
     private final Action lastPageAction = new LastPageAction();
+    /** Goto page event action. */
     private final Action gotoPageAction = new GoToPageAction();
+    /** Page size event action. */
     private final Action pageSizeAction = new PageSizeAction();
-
 
     /**
      * Default constructor.
@@ -140,6 +144,7 @@ public abstract class PageTableModel extends AbstractTableModel {
 
     /**
      * Moves to specific page and fire a data changed (all rows).
+     * @param p the page number.
      * @return true if we can move to the page.
      */
     public boolean setPage(int p) {

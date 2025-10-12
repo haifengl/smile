@@ -24,7 +24,6 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  * @author Haifeng Li
  */
-@SuppressWarnings("serial")
 public class FontCellRenderer extends DefaultTableCellRenderer {
     
     /**
@@ -36,6 +35,7 @@ public class FontCellRenderer extends DefaultTableCellRenderer {
     
     /**
      * Constructor.
+     * @param text the example text.
      */
     public FontCellRenderer(String text) {
         setText(text);

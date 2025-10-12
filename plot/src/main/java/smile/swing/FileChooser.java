@@ -68,6 +68,7 @@ public class FileChooser extends JFileChooser {
      * Returns the shared file chooser instance. In general, an application
      * should have only one file chooser so that it always points to the recent
      * directory.
+     * @return the shared file chooser instance.
      */
     public static FileChooser getInstance() {
         return chooser;
@@ -264,7 +265,7 @@ public class FileChooser extends JFileChooser {
     /**
      * A simple extension-based file filter. Accept all directories and known
      * file extensions. Extensions are typically found on Windows and Unix,
-     * but not on Macinthosh. Case is ignored.
+     * but not on Mac. Case is ignored.
      */
     public static class SimpleFileFilter extends FileFilter {
         /**
@@ -295,6 +296,8 @@ public class FileChooser extends JFileChooser {
          * <p>
          * Note that the "." before the extension is not needed. If
          * provided, it will be ignored.
+         * @param description the filter description.
+         * @param extension the file extension.
          */
         public SimpleFileFilter(String description, String extension) {
             if (description != null) {
@@ -310,6 +313,8 @@ public class FileChooser extends JFileChooser {
          * Creates a file filter from the given string array and description.
          * <p>
          * Note that the "." before the extension is not needed and will be ignored.
+         * @param description the filter description.
+         * @param filters the filters.
          */
         public SimpleFileFilter(String description, String... filters) {
             if (description != null) {
@@ -326,6 +331,8 @@ public class FileChooser extends JFileChooser {
          * Creates a file filter from the given string array and description.
          * <p>
          * Note that the "." before the extension is not needed and will be ignored.
+         * @param description the filter description.
+         * @param filters the filters.
          */
         public SimpleFileFilter(String description, Collection<String> filters) {
             if (description != null) {
@@ -340,6 +347,7 @@ public class FileChooser extends JFileChooser {
 
         /**
          * Returns the filter for readable images.
+         * @return the filter for readable images.
          */
         public static SimpleFileFilter getReadableImageFilter() {
             return readableImageFilter;
@@ -347,6 +355,7 @@ public class FileChooser extends JFileChooser {
         
         /**
          * Returns the filter for writable images.
+         * @return the filter for writable images.
          */
         public static SimpleFileFilter getWritableImageFIlter() {
             return writableImageFilter;            
@@ -371,6 +380,7 @@ public class FileChooser extends JFileChooser {
         /**
          * Adds a file type "dot" extension to filter against.
          * Note that the "." before the extension is not needed and will be ignored.
+         * @param extension the file extension.
          */
         public void addExtension(String extension) {
             filters.add(extension.toLowerCase());
@@ -397,6 +407,7 @@ public class FileChooser extends JFileChooser {
 
         /**
          * Sets the human-readable description of this filter.
+         * @param description the human-readable description of this filter.
          */
         public void setDescription(String description) {
             this.description = description;

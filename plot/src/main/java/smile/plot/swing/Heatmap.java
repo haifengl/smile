@@ -184,7 +184,7 @@ public class Heatmap extends Plot {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         double[] start = new double[2];
         double[] end = new double[2];
 
@@ -275,8 +275,8 @@ public class Heatmap extends Plot {
     }
     
     @Override
-    public Canvas canvas() {
-        Canvas canvas = new Canvas(getLowerBound(), getUpperBound(), false);
+    public Figure figure() {
+        Figure canvas = new Figure(getLowerBound(), getUpperBound(), false);
         canvas.add(this);
 
         canvas.getAxis(0).setGridVisible(false);
@@ -311,7 +311,9 @@ public class Heatmap extends Plot {
     }
 
     /**
-     * Constructor. Use 16-color jet color palette.
+     * Creates a heatmap with 16-color jet color palette.
+     * @param z a data matrix to be shown in pseudo heat map.
+     * @return the heatmap.
      */
     public static Heatmap of(double[][] z) {
         return of(z, 16);
@@ -321,52 +323,63 @@ public class Heatmap extends Plot {
      * Creates a heatmap with jet color palette.
      * @param z a data matrix to be shown in pseudo heat map.
      * @param k the number of colors in the palette.
+     * @return the heatmap.
      */
     public static Heatmap of(double[][] z, int k) {
         return of(z, Palette.jet(k, 1.0f));
     }
 
     /**
-     * Constructor.
+     * Creates a heatmap with given color palette.
      * @param z a data matrix to be shown in pseudo heat map.
      * @param palette the color palette.
+     * @return the heatmap.
      */
     public static Heatmap of(double[][] z, Color[] palette) {
         return new Heatmap((double[]) null, null, z, palette);
     }
 
     /**
-     * Constructor. Use 16-color jet color palette.
+     * Creates a heatmap with 16-color jet color palette.
+     * @param rowLabels the row labels.
+     * @param columnLabels the column labels.
+     * @param z a data matrix to be shown in pseudo heat map.
+     * @return the heatmap.
      */
     public static Heatmap of(String[] rowLabels, String[] columnLabels, double[][] z) {
         return of(rowLabels, columnLabels, z, 16);
     }
 
     /**
-     * Constructor. Use jet color palette.
+     * Creates a heatmap with jet color palette.
+     * @param rowLabels the row labels.
+     * @param columnLabels the column labels.
      * @param z a data matrix to be shown in pseudo heat map.
      * @param k the number of colors in the palette.
+     * @return the heatmap.
      */
     public static Heatmap of(String[] rowLabels, String[] columnLabels, double[][] z, int k) {
         return new Heatmap(rowLabels, columnLabels, z, Palette.jet(k, 1.0f));
     }
 
     /**
-     * Constructor. Use 16-color jet color palette.
+     * Creates a heatmap with 16-color jet color palette.
      * @param x x coordinate of data matrix cells. Must be in ascending order.
      * @param y y coordinate of data matrix cells. Must be in ascending order.
      * @param z a data matrix to be shown in pseudo heat map.
+     * @return the heatmap.
      */
     public static Heatmap of(double[] x, double[] y, double[][] z) {
         return of(x, y, z, 16);
     }
 
     /**
-     * Constructor. Use jet color palette.
+     * Creates a heatmap with jet color palette.
      * @param x x coordinate of data matrix cells. Must be in ascending order.
      * @param y y coordinate of data matrix cells. Must be in ascending order.
      * @param z a data matrix to be shown in pseudo heat map.
      * @param k the number of colors in the palette.
+     * @return the heatmap.
      */
     public static Heatmap of(double[] x, double[] y, double[][] z, int k) {
         return new Heatmap(x, y, z, Palette.jet(k, 1.0f));

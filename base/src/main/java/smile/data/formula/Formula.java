@@ -27,7 +27,7 @@ import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.type.*;
 import smile.data.vector.*;
-import smile.math.matrix.Matrix;
+import smile.tensor.DenseMatrix;
 
 /**
  * The model fitting formula in a compact symbolic form.
@@ -529,7 +529,7 @@ public class Formula implements AutoCloseable, Serializable {
      * @param data The input data frame.
      * @return the design matrix.
      */
-    public Matrix matrix(DataFrame data) {
+    public DenseMatrix matrix(DataFrame data) {
         return matrix(data, hasBias());
     }
 
@@ -540,7 +540,7 @@ public class Formula implements AutoCloseable, Serializable {
      * @param bias If true, include the bias column.
      * @return the design matrix.
      */
-    public Matrix matrix(DataFrame data, boolean bias) {
+    public DenseMatrix matrix(DataFrame data, boolean bias) {
         return x(data).toMatrix(bias, CategoricalEncoder.DUMMY, null);
     }
 

@@ -17,10 +17,11 @@
 package smile
 
 import scala.language.implicitConversions
-import smile.math.matrix.*
 import smile.math.special.{Beta, Erf, Gamma}
 import smile.stat.distribution.{Distribution, GaussianDistribution}
 import smile.stat.hypothesis.{ChiSqTest, CorTest, FTest, KSTest, TTest}
+import smile.tensor.*
+import smile.tensor.ScalarType.Float64
 
 /** Mathematical and statistical functions.
   *
@@ -33,15 +34,15 @@ package object math {
   implicit def pimpDoubleArray(data: Array[Double]): PimpedDoubleArray = new PimpedDoubleArray(data)
   implicit def pimpArray2D(data: Array[Array[Double]]): PimpedArray2D = new PimpedArray2D(data)
 
-  implicit def array2Matrix(data: Array[Double]): Matrix = Matrix.column(data)
-  implicit def array2Matrix(data: Array[Array[Double]]): Matrix = Matrix.of(data)
-  implicit def matrixOps(matrix: Matrix): MatrixOps = new MatrixOps(matrix)
+  implicit def array2Vector(data: Array[Double]): Vector = Vector.column(data)
+  implicit def array2Matrix(data: Array[Array[Double]]): DenseMatrix = DenseMatrix.of(data)
+  implicit def matrixOps(matrix: DenseMatrix): MatrixOps = new MatrixOps(matrix)
 
   implicit def array2VectorExpression(x: Array[Double]): VectorLift = VectorLift(x)
-  implicit def vectorExpression2Array(exp: VectorExpression): Array[Double] = exp.toArray
+  implicit def vectorExpression2Vector(exp: VectorExpression): Vector = exp.toVector
 
-  implicit def matrix2MatrixExpression(x: Matrix): MatrixLift = MatrixLift(x)
-  implicit def matrixExpression2Array(exp: MatrixExpression): Matrix = exp.toMatrix
+  implicit def matrix2MatrixExpression(x: DenseMatrix): MatrixLift = MatrixLift(x)
+  implicit def matrixExpression2Array(exp: MatrixExpression): DenseMatrix = exp.toMatrix
 
   def abs(x: VectorExpression): AbsVector = AbsVector(x)
   def acos(x: VectorExpression): AcosVector = AcosVector(x)
@@ -216,63 +217,71 @@ package object math {
   def chisqtest(table: Array[Array[Int]]): ChiSqTest = ChiSqTest.test(table)
 
   /** Returns an n-by-n zero matrix. */
-  def zeros(n: Int) = new Matrix(n, n)
+  def zeros(n: Int) = DenseMatrix.zeros(Float64, n, n)
   /** Returns an m-by-n zero matrix. */
-  def zeros(m: Int, n: Int) = new Matrix(m, n)
+  def zeros(m: Int, n: Int) = DenseMatrix.zeros(Float64, m, n)
   /** Returns an n-by-n matrix of all ones. */
-  def ones(n: Int) = new Matrix(n, n, 1.0)
+  def ones(n: Int): DenseMatrix = {
+    val matrix = DenseMatrix.zeros(Float64, n, n)
+    matrix.fill(1.0)
+    matrix
+  }
   /** Returns an m-by-n matrix of all ones. */
-  def ones(m: Int, n: Int) = new Matrix(m, n, 1.0)
+  def ones(m: Int, n: Int) = {
+    val matrix = DenseMatrix.zeros(Float64, m, n)
+    matrix.fill(1.0)
+    matrix
+  }
   /** Returns an n-by-n identity matrix. */
-  def eye(n: Int): Matrix = Matrix.eye(n)
+  def eye(n: Int): Matrix = DenseMatrix.eye(Float64, n)
   /** Returns an m-by-n identity matrix. */
-  def eye(m: Int, n: Int): Matrix = Matrix.eye(m, n)
+  def eye(m: Int, n: Int): Matrix = DenseMatrix.eye(Float64, m, n)
   /** Returns an m-by-n matrix of uniform distributed random numbers. */
-  def rand(m: Int, n: Int, lo: Double = 0.0, hi: Double = 1.0): Matrix = Matrix.rand(m, n, lo, hi)
+  def rand(m: Int, n: Int, lo: Double = 0.0, hi: Double = 1.0): DenseMatrix = DenseMatrix.rand(Float64, m, n, lo, hi)
   /** Returns an m-by-n matrix of normally distributed random numbers. */
-  def randn(m: Int, n: Int, mu: Double = 0.0, sigma: Double = 1.0): Matrix = Matrix.rand(m, n, new GaussianDistribution(mu, sigma))
+  def randn(m: Int, n: Int, mu: Double = 0.0, sigma: Double = 1.0): DenseMatrix = DenseMatrix.rand(Float64, m, n, new GaussianDistribution(mu, sigma))
   /** Returns the trace of matrix. */
   def trace(A: Matrix): Double = A.trace()
   /** Returns the diagonal elements of matrix. */
-  def diag(A: Matrix): Array[Double] = A.diag()
+  def diag(A: DenseMatrix): Vector = A.diagonal()
 
   /** LU decomposition. */
-  def lu(A: Array[Array[Double]]): Matrix.LU = Matrix.of(A).lu(true)
+  def lu(A: Array[Array[Double]]): LU = DenseMatrix.of(A).lu()
   /** LU decomposition. */
-  def lu(A: Matrix): Matrix.LU = A.lu(false)
+  def lu(A: DenseMatrix): LU = A.lu()
   /** LU decomposition. */
-  def lu(A: MatrixExpression): Matrix.LU = A.toMatrix.lu(true)
+  def lu(A: MatrixExpression): LU = A.toMatrix.lu()
 
   /** QR decomposition. */
-  def qr(A: Array[Array[Double]]): Matrix.QR = Matrix.of(A).qr(true)
+  def qr(A: Array[Array[Double]]): QR = DenseMatrix.of(A).qr()
   /** QR decomposition. */
-  def qr(A: Matrix): Matrix.QR = A.qr(false)
+  def qr(A: DenseMatrix): QR = A.copy().qr()
   /** QR decomposition. */
-  def qr(A: MatrixExpression): Matrix.QR = A.toMatrix.qr(true)
+  def qr(A: MatrixExpression): QR = A.toMatrix.qr()
 
   /** Cholesky decomposition. */
-  def cholesky(A: Array[Array[Double]]): Matrix.Cholesky = Matrix.of(A).cholesky(true)
+  def cholesky(A: Array[Array[Double]]): Cholesky = DenseMatrix.of(A).cholesky()
   /** Cholesky decomposition. */
-  def cholesky(A: Matrix): Matrix.Cholesky = A.cholesky(false)
+  def cholesky(A: DenseMatrix): Cholesky = A.copy().cholesky()
   /** Cholesky decomposition. */
-  def cholesky(A: MatrixExpression): Matrix.Cholesky = A.toMatrix.cholesky(true)
+  def cholesky(A: MatrixExpression): Cholesky = A.toMatrix.cholesky()
 
   /** Returns eigen values. */
-  def eig(A: Array[Array[Double]]): Matrix.EVD = Matrix.of(A).eigen(false, false, true)
+  def eig(A: Array[Array[Double]]): EVD = DenseMatrix.of(A).eigen(false, false)
   /** Returns eigen values. */
-  def eig(A: Matrix): Matrix.EVD = A.eigen(false, false, false)
+  def eig(A: DenseMatrix): EVD = A.copy().eigen(false, false)
   /** Returns eigen values. */
-  def eig(A: MatrixExpression): Matrix.EVD = A.toMatrix.eigen(false, false, true)
+  def eig(A: MatrixExpression): EVD = A.toMatrix.eigen(false, false)
 
   /** Eigen decomposition. */
-  def eigen(A: Array[Array[Double]]): Matrix.EVD = Matrix.of(A).eigen(false, true, true)
+  def eigen(A: Array[Array[Double]]): EVD = DenseMatrix.of(A).eigen()
   /** Eigen decomposition. */
-  def eigen(A: Matrix): Matrix.EVD = A.eigen(false, true, false)
+  def eigen(A: DenseMatrix): EVD = A.eigen()
   /** Eigen decomposition. */
-  def eigen(A: MatrixExpression): Matrix.EVD = A.toMatrix.eigen(false, true, true)
+  def eigen(A: MatrixExpression): EVD = A.toMatrix.eigen()
   /** Returns k largest eigenvectors. */
-  def eigen(A: IMatrix, k: Int): Matrix.EVD = A match {
-    case a: Matrix =>
+  def eigen(A: Matrix, k: Int): EVD = A match {
+    case a: DenseMatrix =>
       if (a.isSymmetric) ARPACK.syev(a, ARPACK.SymmOption.LA, k)
       else ARPACK.eigen(A, ARPACK.AsymmOption.LM, k)
     case a: BandMatrix =>
@@ -283,24 +292,24 @@ package object math {
   }
 
   /** SVD decomposition. */
-  def svd(A: Array[Array[Double]]): Matrix.SVD = Matrix.of(A).svd(true, true)
+  def svd(A: Array[Array[Double]]): SVD = DenseMatrix.of(A).svd()
   /** SVD decomposition. */
-  def svd(A: Matrix): Matrix.SVD = A.svd(true, false)
+  def svd(A: DenseMatrix): SVD = A.copy().svd()
   /** SVD decomposition. */
-  def svd(A: MatrixExpression): Matrix.SVD = A.toMatrix.svd(true, true)
+  def svd(A: MatrixExpression): SVD = A.toMatrix.svd()
   /** Returns k largest singular vectors. */
-  def svd(A: IMatrix, k: Int): Matrix.SVD = ARPACK.svd(A, k)
+  def svd(A: Matrix, k: Int): SVD = ARPACK.svd(A, k)
 
   /** Returns the determinant of matrix. */
-  def det(A: Matrix): Double = lu(A).det()
+  def det(A: DenseMatrix): Double = lu(A).det()
   /** Returns the determinant of matrix. */
   def det(A: MatrixExpression): Double = lu(A).det()
   /** Returns the rank of matrix. */
-  def rank(A: Matrix): Int = svd(A).rank()
+  def rank(A: DenseMatrix): Int = svd(A).rank()
   /** Returns the rank of matrix. */
   def rank(A: MatrixExpression): Int = svd(A).rank()
   /** Returns the inverse of matrix. */
-  def inv(A: Matrix): Matrix = A.inverse()
+  def inv(A: DenseMatrix): DenseMatrix = A.inverse()
   /** Returns the inverse of matrix. */
-  def inv(A: MatrixExpression): Matrix = A.toMatrix.inverse()
+  def inv(A: MatrixExpression): DenseMatrix = A.toMatrix.inverse()
 }

@@ -417,6 +417,7 @@ public class Transform {
 
     /**
      * Creates a data specification object.
+     * @param fields the transform fields.
      * @return a data specification object.
      */
     public WindowTransform window(WindowTransformField... fields) {

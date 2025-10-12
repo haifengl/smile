@@ -23,13 +23,13 @@ import java.util.stream.DoubleStream;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.*;
 import smile.data.DataFrame;
-import smile.io.Read;
 import smile.interpolation.BicubicInterpolation;
-import smile.math.matrix.Matrix;
-import smile.math.matrix.SparseMatrix;
+import smile.io.Paths;
+import smile.io.Read;
 import smile.stat.distribution.GaussianDistribution;
 import smile.stat.distribution.MultivariateGaussianDistribution;
-import smile.io.Paths;
+import smile.tensor.DenseMatrix;
+import smile.tensor.SparseMatrix;
 import static java.lang.Math.*;
 import static java.awt.Color.*;
 
@@ -85,33 +85,36 @@ public class PlotTest {
             heart[i][1] = 13 * cos(t) - 5 * cos(2*t) - 2 * cos(3*t) - cos(4*t);
         }
 
-        var canvas = LinePlot.of(heart, RED).canvas();
-        canvas.window();
+        var figure = LinePlot.of(heart, RED).figure();
+        var pane = new FigurePane(figure);
+        pane.window();
     }
 
     @Test
     public void testScatter() throws Exception {
         System.out.println("Scatter");
 
-        var canvas = ScatterPlot.of(iris, "sepallength", "sepalwidth", "class", '*').canvas();
-        canvas.setAxisLabels("sepallength", "sepalwidth");
-        canvas.window();
+        var figure = ScatterPlot.of(iris, "sepallength", "sepalwidth", "class", '*').figure();
+        figure.setAxisLabels("sepallength", "sepalwidth");
+        var pane = new FigurePane(figure);
+        pane.window();
     }
 
     @Test
     public void testIris() throws Exception {
         System.out.println("Iris");
 
-        var canvas = ScatterPlot.of(iris, "sepallength", "sepalwidth", "petallength", "class", '*').canvas();
-        canvas.setAxisLabels("sepallength", "sepalwidth", "petallength");
-        canvas.window();
+        var figure = ScatterPlot.of(iris, "sepallength", "sepalwidth", "petallength", "class", '*').figure();
+        figure.setAxisLabels("sepallength", "sepalwidth", "petallength");
+        var pane = new FigurePane(figure);
+        pane.window();
     }
 
     @Test
     public void testSPLOM() throws Exception {
         System.out.println("SPLOM");
 
-        var canvas = PlotGrid.splom(iris, '*', "class");
+        var canvas = MultiFigurePane.splom(iris, '*', "class");
         canvas.window();
     }
 
@@ -128,9 +131,10 @@ public class PlotTest {
                     mapToDouble(row -> row.getFloat("sepallength")).
                     toArray();
         }
-        var canvas = new BoxPlot(data, labels).canvas();
-        canvas.setAxisLabels("", "sepallength");
-        canvas.window();
+        var figure = new BoxPlot(data, labels).figure();
+        figure.setAxisLabels("", "sepallength");
+        var pane = new FigurePane(figure);
+        pane.window();
     }
 
     @Test
@@ -139,9 +143,10 @@ public class PlotTest {
 
         var cow = Read.csv(Paths.getTestData("stat/cow.txt")).column("V1").toDoubleArray();
         var data = Arrays.stream(cow).filter(w -> w <= 3500).toArray();
-        var canvas = Histogram.of(data, 50, true).canvas();
-        canvas.setAxisLabels("Weight", "Probability");
-        canvas.window();
+        var figure = Histogram.of(data, 50, true).figure();
+        figure.setAxisLabels("Weight", "Probability");
+        var pane = new FigurePane(figure);
+        pane.window();
     }
 
     @Test
@@ -150,9 +155,12 @@ public class PlotTest {
 
         double[] mu = {0.0, 0.0};
         double[][] v = { {1.0, 0.6}, {0.6, 2.0} };
-        var gauss = new MultivariateGaussianDistribution(mu, Matrix.of(v));
+        var gauss = new MultivariateGaussianDistribution(mu, DenseMatrix.of(v));
         var data = Stream.generate(gauss::rand).limit(10000).toArray(double[][]::new);
-        Histogram3D.of(data, 50, false).canvas().window();
+        var figure = Histogram3D.of(data, 50, false).figure();
+        var pane = new FigurePane(figure);
+        pane.window();
+
     }
 
     @Test
@@ -161,15 +169,19 @@ public class PlotTest {
 
         var gauss = new GaussianDistribution(0.0, 1.0);
         var data = DoubleStream.generate(gauss::rand).limit(1000).toArray();
-        QQPlot.of(data).canvas().window();
+        var figure = QQPlot.of(data).figure();
+        var pane = new FigurePane(figure);
+        pane.window();
+
     }
 
     @Test
     public void testHeatmap() throws Exception {
         System.out.println("Heatmap");
 
-        var canvas = Heatmap.of(Z, Palette.jet(256)).canvas();
-        canvas.window();
+        var figure = Heatmap.of(Z, Palette.jet(256)).figure();
+        var pane = new FigurePane(figure);
+        pane.window();
     }
 
     @Test
@@ -177,25 +189,28 @@ public class PlotTest {
         System.out.println("Sparse Matrix");
 
         var sparse = SparseMatrix.text(Paths.getTestData("matrix/mesh2em5.txt"));
-        var canvas = SparseMatrixPlot.of(sparse).canvas();
-        canvas.setTitle("mesh2em5");
-        canvas.window();
+        var figure = SparseMatrixPlot.of(sparse).figure();
+        figure.setTitle("mesh2em5");
+        var pane = new FigurePane(figure);
+        pane.window();
     }
 
     @Test
     public void testContour() throws Exception {
         System.out.println("Contour");
 
-        var canvas = Heatmap.of(Z, 256).canvas();
-        canvas.add(Contour.of(Z));
-        canvas.window();
+        var figure = Heatmap.of(Z, 256).figure();
+        figure.add(Contour.of(Z));
+        var pane = new FigurePane(figure);
+        pane.window();
     }
 
     @Test
     public void testSurface() throws Exception {
         System.out.println("Surface");
 
-        var canvas = Surface.of(Z, Palette.jet(256, 1.0f)).canvas();
-        canvas.window();
+        var figure = Surface.of(Z, Palette.jet(256, 1.0f)).figure();
+        var pane = new FigurePane(figure);
+        pane.window();
     }
 }

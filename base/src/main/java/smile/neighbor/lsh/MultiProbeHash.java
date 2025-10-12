@@ -16,6 +16,8 @@
  */
 package smile.neighbor.lsh;
 
+import smile.tensor.Vector;
+
 import java.io.Serial;
 import java.util.Arrays;
 
@@ -64,11 +66,11 @@ public class MultiProbeHash extends Hash {
      * @return the bucket of hash table for given vector x.
      */
     private int mphash(double[] x) {
-        double[] h = a.mv(x);
+        Vector h = a.mv(x);
 
         long g = 0;
         for (int i = 0; i < k; i++) {
-            double hi = (h[i] + b[i]) / w;
+            double hi = (h.get(i) + b[i]) / w;
 
             umin[i] = Math.min(umin[i], hi);
             umax[i] = Math.max(umax[i], hi);

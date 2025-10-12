@@ -46,13 +46,13 @@ public class CharVector extends PrimitiveVector {
      * @param vector the elements of vector.
      */
     public CharVector(StructField field, char[] vector) {
-        super(field);
         if (field.dtype() != DataTypes.CharType) {
             throw new IllegalArgumentException("Invalid data type: " + field);
         }
         if (field.measure() instanceof NumericalMeasure) {
             throw new IllegalArgumentException("Invalid measure: " + field.measure());
         }
+        super(field);
         this.vector = vector;
     }
 

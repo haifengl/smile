@@ -86,8 +86,8 @@ import smile.util.Strings;
 
     @Override
     public double predict(double[] x) {
-        propagate(x, false);
-        double y = output.output()[0];
+        propagate(vector(x), false);
+        double y = output.output().get(0);
         return scaler == null ? y : scaler.inv(y);
     }
 
@@ -99,7 +99,7 @@ import smile.util.Strings;
     /** Updates the model with a single sample. RMSProp is not applied. */
     @Override
     public void update(double[] x, double y) {
-        propagate(x, true);
+        propagate(vector(x), true);
         setTarget(y);
         backpropagate(true);
         t++;
@@ -109,7 +109,7 @@ import smile.util.Strings;
     @Override
     public void update(double[][] x, double[] y) {
         for (int i = 0; i < x.length; i++) {
-            propagate(x[i], true);
+            propagate(vector(x[i]), true);
             setTarget(y[i]);
             backpropagate(false);
         }
@@ -124,7 +124,7 @@ import smile.util.Strings;
      * @param y the raw responsible variable.
      */
     private void setTarget(double y) {
-        target.get()[0] = scaler == null ? y : scaler.f(y);
+        target.get().set(0, scaler == null ? y : scaler.f(y));
     }
 
     /**

@@ -50,7 +50,7 @@ public class QQPlot extends Plot {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         g.setColor(color);
 
         double[] lowerEnd = g.getLowerBound();
@@ -79,6 +79,8 @@ public class QQPlot extends Plot {
 
     /**
      * One sample Q-Q plot to standard normal distribution.
+     * @param x the data.
+     * @return the Q-Q plot.
      */
     public static QQPlot of(double[] x) {
         return of(x, GaussianDistribution.getInstance());
@@ -86,6 +88,9 @@ public class QQPlot extends Plot {
 
     /**
      * One sample Q-Q plot to given distribution.
+     * @param x the data.
+     * @param d the distribution.
+     * @return the Q-Q plot.
      */
     public static QQPlot of(double[] x, Distribution d) {
         Arrays.sort(x);
@@ -103,6 +108,9 @@ public class QQPlot extends Plot {
 
     /**
      * One sample Q-Q plot to given discrete distribution.
+     * @param x the data.
+     * @param d the distribution.
+     * @return the Q-Q plot.
      */
     public static QQPlot of(int[] x, DiscreteDistribution d) {
         Arrays.sort(x);
@@ -120,6 +128,9 @@ public class QQPlot extends Plot {
 
     /**
      * Two sample Q-Q plot.
+     * @param x the data.
+     * @param y another data.
+     * @return the Q-Q plot.
      */
     public static QQPlot of(double[] x, double[] y) {
         Arrays.sort(x);
@@ -139,6 +150,9 @@ public class QQPlot extends Plot {
 
     /**
      * Two sample Q-Q plot.
+     * @param x the data.
+     * @param y another data.
+     * @return the Q-Q plot.
      */
     public static QQPlot of(int[] x, int[] y) {
         Arrays.sort(x);

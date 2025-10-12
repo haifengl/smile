@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import smile.math.MathEx;
-import smile.math.matrix.SparseMatrix;
+import smile.tensor.SparseMatrix;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 

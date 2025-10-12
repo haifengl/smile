@@ -21,10 +21,9 @@ import java.util.Properties;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.type.StructType;
+import smile.linalg.Transpose;
 import smile.math.MathEx;
-import smile.math.blas.Transpose;
-import smile.math.matrix.IMatrix;
-import smile.math.matrix.Matrix;
+import smile.tensor.*;
 
 /**
  * Lasso (least absolute shrinkage and selection operator) regression.
@@ -205,28 +204,32 @@ public class LASSO {
         formula = formula.expand(data.schema());
         StructType schema = formula.bind(data.schema());
 
-        Matrix X = formula.matrix(data, false);
+        DenseMatrix X = formula.matrix(data, false);
         double[] y = formula.y(data).toDoubleArray();
 
-        double[] center = X.colMeans();
-        double[] scale = X.colSds();
-
-        for (int j = 0; j < scale.length; j++) {
-            if (MathEx.isZero(scale[j])) {
-                throw new IllegalArgumentException(String.format("The column '%s' is constant", X.colName(j)));
+        int n = X.nrow();
+        int p = X.ncol();
+        Vector center = X.colMeans();
+        Vector scale = X.colSds();
+        for (int j = 0; j < p; j++) {
+            if (MathEx.isZero(scale.get(j))) {
+                throw new IllegalArgumentException(String.format("The column '%s' is constant", schema.names()[j]));
             }
         }
 
-        Matrix scaledX = X.scale(center, scale);
-
-        double[] w = train(scaledX, y, options);
-
-        int p = w.length;
-        for (int j = 0; j < p; j++) {
-            w[j] /= scale[j];
+        DenseMatrix scaledX = X.standardize(center, scale);
+        double[] centeredY = new double[n];
+        double ymu = MathEx.mean(y);
+        for (int i = 0; i < n; i++) {
+            centeredY[i] = y[i] - ymu;
         }
 
-        double b = MathEx.mean(y) - MathEx.dot(w, center);
+        Vector w = train(scaledX, centeredY, options);
+        for (int j = 0; j < p; j++) {
+            w.div(j, scale.get(j));
+        }
+
+        double b = ymu - w.dot(center);
         return new LinearModel(formula, schema, X, y, w, b);
     }
 
@@ -237,7 +240,7 @@ public class LASSO {
      * @param options the hyperparameters.
      * @return the model.
      */
-    static double[] train(Matrix x, double[] y, Options options) {
+    static Vector train(DenseMatrix x, double[] y, Options options) {
         // IPM parameters
         final double tol = options.tol;
         final double lambda = options.lambda;
@@ -256,12 +259,6 @@ public class LASSO {
         int n = x.nrow();
         int p = x.ncol();
 
-        double[] Y = new double[n];
-        double ym = MathEx.mean(y);
-        for (int i = 0; i < n; i++) {
-            Y[i] = y[i] - ym;
-        }
-
         double t = Math.min(Math.max(1.0, 1.0 / lambda), 2 * p / 1e-3);
         double dobj = Double.NEGATIVE_INFINITY; // dual objective function value
         double s = Double.POSITIVE_INFINITY;
@@ -272,7 +269,7 @@ public class LASSO {
         double[][] f = new double[2][p];
         Arrays.fill(u, 1.0);
         for (int i = 0; i < p; i++) {
-            f[0][i] = w[i] - u[i];
+            f[0][i] =  w[i] - u[i];
             f[1][i] = -w[i] - u[i];
         }
 
@@ -306,18 +303,28 @@ public class LASSO {
         double[] prs = new double[p];
         PCG pcg = new PCG(x, d1, d2, prb, prs);
 
+        Vector w_ = Vector.column(w);
+        Vector z_ = Vector.column(z);
+        Vector nu_ = Vector.column(nu);
+        Vector xnu_ = Vector.column(xnu);
+        Vector neww_ = Vector.column(neww);
+        Vector newz_ = Vector.column(newz);
+        Vector grad_ = Vector.column(grad);
+        Vector dxu_ = Vector.column(dxu);
+        Vector gradphi0 = Vector.column(gradphi[0]);
+
         // MAIN LOOP
         int iter = 1;
         for (; iter <= maxIter; iter++) {
-            x.mv(w, z);
+            x.mv(w_, z_);
             for (int i = 0; i < n; i++) {
-                z[i] -= Y[i];
+                z[i] -= y[i];
                 nu[i] = 2 * z[i];
             }
 
             // CALCULATE DUALITY GAP
-            x.tv(nu, xnu);
-            double maxXnu = MathEx.normInf(xnu);
+            x.tv(nu_, xnu_);
+            double maxXnu = xnu_.normInf();
             if (maxXnu > lambda) {
                 double lnu = lambda / maxXnu;
                 for (int i = 0; i < n; i++) {
@@ -327,7 +334,7 @@ public class LASSO {
 
             // primal objective function value
             double pobj = MathEx.dot(z, z) + lambda * MathEx.norm1(w);
-            dobj = Math.max(-0.25 * MathEx.dot(nu, nu) - MathEx.dot(nu, Y), dobj);
+            dobj = Math.max(-0.25 * MathEx.dot(nu, nu) - MathEx.dot(nu, y), dobj);
 
             double gap = pobj - dobj;
             if (iter % 10 == 0 || gap / dobj < tol) {
@@ -355,7 +362,7 @@ public class LASSO {
             }
 
             // calculate gradient
-            x.tv(z, gradphi[0]);
+            x.tv(z_, gradphi0);
             for (int i = 0; i < p; i++) {
                 gradphi[0][i] = 2 * gradphi[0][i] - (q1[i] - q2[i]) / t;
                 gradphi[1][i] = lambda - (q1[i] + q2[i]) / t;
@@ -377,7 +384,7 @@ public class LASSO {
             }
 
             // preconditioned conjugate gradient
-            double error = pcg.solve(grad, dxu, pcg, pcgtol, 1, pcgMaxIter);
+            double error = BiconjugateGradient.solve(pcg, grad_, dxu_, pcg, pcgtol, 1, pcgMaxIter);
             if (error > pcgtol) {
                 pitr = pcgMaxIter;
             }
@@ -402,9 +409,9 @@ public class LASSO {
                 }
 
                 if (MathEx.max(newf) < 0.0) {
-                    x.mv(neww, newz);
+                    x.mv(neww_, newz_);
                     for (int i = 0; i < n; i++) {
-                        newz[i] -= Y[i];
+                        newz[i] -= y[i];
                     }
 
                     double newphi = MathEx.dot(newz, newz) + lambda * MathEx.sum(newu) - sumlogneg(newf) / t;
@@ -430,7 +437,7 @@ public class LASSO {
             logger.warn("IPM reaches maximum number of iterations: {}", maxIter);
         }
 
-        return w;
+        return w_;
     }
 
     /**
@@ -452,9 +459,9 @@ public class LASSO {
     /**
      * Preconditioned conjugate gradients matrix.
      */
-    static class PCG extends IMatrix implements IMatrix.Preconditioner {
+    static class PCG implements Matrix, Preconditioner {
         /** The design matrix. */
-        final Matrix A;
+        final DenseMatrix A;
         /** A' * A */
         Matrix AtA;
         /** The number of columns of A. */
@@ -468,14 +475,14 @@ public class LASSO {
         /** The vector used in preconditioner. */
         final double[] prs;
         /** A * x */
-        final double[] ax;
+        final Vector ax;
         /** A' * A * x. */
-        final double[] atax;
+        final Vector atax;
 
         /**
          * Constructor.
          */
-        PCG(Matrix A, double[] d1, double[] d2, double[] prb, double[] prs) {
+        PCG(DenseMatrix A, double[] d1, double[] d2, double[] prb, double[] prs) {
             this.A = A;
             this.d1 = d1;
             this.d2 = d2;
@@ -484,8 +491,8 @@ public class LASSO {
 
             int n = A.nrow();
             p = A.ncol();
-            ax = new double[n];
-            atax = new double[p];
+            ax = A.vector(n);
+            atax = A.vector(p);
 
             if (A.ncol() < 10000) {
                 AtA = A.ata();
@@ -503,12 +510,17 @@ public class LASSO {
         }
 
         @Override
-        public long size() {
-            return A.size();
+        public long length() {
+            return A.length();
         }
 
         @Override
-        public void mv(double[] x, double[] y) {
+        public ScalarType scalarType() {
+            return A.scalarType();
+        }
+
+        @Override
+        public void mv(Vector x, Vector y) {
             // COMPUTE AX (PCG)
             // 
             // y = hessphi * x,
@@ -523,39 +535,78 @@ public class LASSO {
             }
 
             for (int i = 0; i < p; i++) {
-                y[i]     = 2 * atax[i] + d1[i] * x[i] + d2[i] * x[i + p];
-                y[i + p] =               d2[i] * x[i] + d1[i] * x[i + p];
+                y.set(i,     2 * atax.get(i) + d1[i] * x.get(i) + d2[i] * x.get(i + p));
+                y.set(i + p,                   d2[i] * x.get(i) + d1[i] * x.get(i + p));
             }
         }
 
         @Override
-        public void tv(double[] x, double[] y) {
+        public void tv(Vector x, Vector y) {
             mv(x, y);
         }
 
         @Override
-        public void asolve(double[] b, double[] x) {
+        public void solve(Vector b, Vector x) {
             // COMPUTE P^{-1}X (PCG)
             // y = P^{-1} * x
             for (int i = 0; i < p; i++) {
-                x[i]   = ( d1[i] * b[i] -  d2[i] * b[i+p]) / prs[i];
-                x[i+p] = (-d2[i] * b[i] + prb[i] * b[i+p]) / prs[i];
+                x.set(i,   ( d1[i] * b.get(i) -  d2[i] * b.get(i+p)) / prs[i]);
+                x.set(i+p, (-d2[i] * b.get(i) + prb[i] * b.get(i+p)) / prs[i]);
             }
         }
 
         @Override
-        public void mv(Transpose trans, double alpha, double[] x, double beta, double[] y) {
+        public void mv(Transpose trans, double alpha, Vector x, double beta, Vector y) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public void mv(double[] work, int inputOffset, int outputOffset) {
+        public void tv(Vector work, int inputOffset, int outputOffset) {
             throw new UnsupportedOperationException();
         }
 
+        @Override
+        public double get(int i, int j) {
+            throw new UnsupportedOperationException();
+        }
 
         @Override
-        public void tv(double[] work, int inputOffset, int outputOffset) {
+        public void set(int i, int j, double x) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void add(int i, int j, double x) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void sub(int i, int j, double x) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void mul(int i, int j, double x) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void div(int i, int j, double x) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Matrix scale(double alpha) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Matrix copy() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Matrix transpose() {
             throw new UnsupportedOperationException();
         }
     }

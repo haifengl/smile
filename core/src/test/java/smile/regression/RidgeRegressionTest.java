@@ -57,12 +57,12 @@ public class RidgeRegressionTest {
         System.out.println(model);
 
         assertEquals(-1.354007e+03, model.intercept(), 1E-3);
-        assertEquals(5.457700e-02, model.coefficients()[0], 1E-7);
-        assertEquals(1.198440e-02, model.coefficients()[1], 1E-7);
-        assertEquals(1.261978e-02, model.coefficients()[2], 1E-7);
-        assertEquals(-1.856041e-01, model.coefficients()[3], 1E-7);
-        assertEquals(7.218054e-01, model.coefficients()[4], 1E-7);
-        assertEquals(5.884884e-01, model.coefficients()[5], 1E-7);
+        assertEquals(5.457700e-02, model.coefficients().get(0), 1E-7);
+        assertEquals(1.198440e-02, model.coefficients().get(1), 1E-7);
+        assertEquals(1.261978e-02, model.coefficients().get(2), 1E-7);
+        assertEquals(-1.856041e-01, model.coefficients().get(3), 1E-7);
+        assertEquals(7.218054e-01, model.coefficients().get(4), 1E-7);
+        assertEquals(5.884884e-01, model.coefficients().get(5), 1E-7);
 
         RegressionMetrics metrics = LOOCV.regression(longley.formula(), longley.data(),
                 (f, x) -> RidgeRegression.fit(f, x, 0.1));

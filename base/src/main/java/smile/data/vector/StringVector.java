@@ -51,10 +51,10 @@ public class StringVector extends ObjectVector<String> {
      * @param vector the elements of vector.
      */
     public StringVector(StructField field, String[] vector) {
-        super(field, vector);
         if (field.dtype() != DataTypes.StringType) {
             throw new IllegalArgumentException("Invalid data type: " + field);
         }
+        super(field, vector);
     }
 
     /**

@@ -21,7 +21,6 @@ import smile.clustering.linkage.*
 import smile.math.distance.Distance
 import smile.math.distance.EuclideanDistance
 import smile.math.distance.Metric
-import smile.math.matrix.Matrix
 import smile.neighbor.RNNSearch
 import smile.util.SparseArray
 

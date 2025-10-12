@@ -17,6 +17,7 @@
 package smile.base.mlp;
 
 import java.io.Serial;
+import smile.tensor.Vector;
 
 /**
  * The output layer in the neural network.
@@ -74,12 +75,12 @@ public class OutputLayer extends Layer {
     }
 
     @Override
-    public void transform(double[] x) {
+    public void transform(Vector x) {
         activation.f(x);
     }
 
     @Override
-    public void backpropagate(double[] lowerLayerGradient) {
+    public void backpropagate(Vector lowerLayerGradient) {
         weight.tv(outputGradient.get(), lowerLayerGradient);
     }
 
@@ -88,25 +89,23 @@ public class OutputLayer extends Layer {
      * @param target the desired output.
      * @param weight a positive weight value associated with the training instance.
      */
-    public void computeOutputGradient(double[] target, double weight) {
-        double[] output = this.output.get();
-        double[] outputGradient = this.outputGradient.get();
+    public void computeOutputGradient(Vector target, double weight) {
+        Vector output = this.output.get();
+        Vector outputGradient = this.outputGradient.get();
 
-        int n = output.length;
-        if (target.length != n) {
-            throw new IllegalArgumentException(String.format("Invalid target vector size: %d, expected: %d", target.length, n));
+        int n = output.size();
+        if (target.size() != n) {
+            throw new IllegalArgumentException(String.format("Invalid target vector size: %d, expected: %d", target.size(), n));
         }
 
         for (int i = 0; i < n; i++) {
-            outputGradient[i] = target[i] - output[i];
+            outputGradient.set(i, target.get(i) - output.get(i));
         }
 
         activation.g(cost, outputGradient, output);
 
         if (weight > 0.0 && weight != 1.0) {
-            for (int i = 0; i < n; i++) {
-                outputGradient[i] *= weight;
-            }
+            outputGradient.scale(weight);
         }
     }
 }

@@ -29,8 +29,8 @@ import javax.swing.SwingUtilities
   */
 object Html {
   /** Returns the HTML img tag of the canvas encoded by BASE64. */
-  def canvas(canvas: Canvas, width: Int = 600, height: Int = 600): String = {
-    val bi = canvas.toBufferedImage(width, height)
+  def figure(figure: Figure, width: Int = 600, height: Int = 600): String = {
+    val bi = figure.toBufferedImage(width, height)
 
     val os = new ByteArrayOutputStream
     ImageIO.write(bi, "png", os)

@@ -33,13 +33,18 @@ class BaseLabel extends Label {
 
     /**
      * Constructor.
+     * @param text the label text.
+     * @param coordinates the label location.
+     * @param horizontalReference the horizontal reference position of coordinates respected to dimension of text.
+     * @param verticalReference the vertical reference position of coordinates respected to dimension of text.
+     * @param rotation the rotation angel of text.
      */
     public BaseLabel(String text, double[] coordinates, double horizontalReference, double verticalReference, double rotation) {
         super(text, coordinates, horizontalReference, verticalReference, rotation, Arial, Color.BLACK);
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         Font f = g.getFont();
         g.setFont(font);
 

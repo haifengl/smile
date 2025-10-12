@@ -73,7 +73,7 @@ public class ElasticNetTest {
         assertEquals(5.0262, result.model().intercept(), 1E-4);
         double[] w = {0.9659, -2.9425E-5, 0.9550, 7.4383E-5};
         for (int i = 0; i < w.length; i++) {
-            assertEquals(w[i], result.model().coefficients()[i], 1E-4);
+            assertEquals(w[i], result.model().coefficients().get(i), 1E-4);
         }
     }
 

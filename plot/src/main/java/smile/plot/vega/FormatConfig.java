@@ -50,6 +50,8 @@ public class FormatConfig {
 
     /**
      * Sets custom number format.
+     * @param format custom number format.
+     * @return this object.
      */
     public FormatConfig numberFormat(String format) {
         spec.put("numberFormat", format);
@@ -58,6 +60,8 @@ public class FormatConfig {
 
     /**
      * Sets custom number format type.
+     * @param formatType custom number format type.
+     * @return this object.
      */
     public FormatConfig numberFormatType(String formatType) {
         spec.put("numberFormatType", formatType);
@@ -66,6 +70,8 @@ public class FormatConfig {
 
     /**
      * Sets custom normalized number format.
+     * @param format custom normalized number format.
+     * @return this object.
      */
     public FormatConfig normalizedNumberFormat(String format) {
         spec.put("normalizedNumberFormat", format);
@@ -74,6 +80,8 @@ public class FormatConfig {
 
     /**
      * Sets custom normalized number format type.
+     * @param formatType custom normalized number format type.
+     * @return this object.
      */
     public FormatConfig normalizedNumberFormatType(String formatType) {
         spec.put("normalizedNumberFormatType", formatType);
@@ -82,6 +90,8 @@ public class FormatConfig {
 
     /**
      * Sets custom time format.
+     * @param format the custom time format.
+     * @return this object.
      */
     public FormatConfig timeFormat(String format) {
         spec.put("timeFormat", format);
@@ -90,6 +100,8 @@ public class FormatConfig {
 
     /**
      * Sets custom time format type.
+     * @param formatType the custom time format type.
+     * @return this object.
      */
     public FormatConfig timeFormatType(String formatType) {
         spec.put("timeFormatType", formatType);
@@ -99,6 +111,8 @@ public class FormatConfig {
     /**
      * Allow the formatType property for text marks and guides to accept
      * a custom formatter function registered as a Vega expression.
+     * @param flag true if accepting custom format types.
+     * @return this object.
      */
     public FormatConfig customFormatTypes(boolean flag) {
         spec.put("customFormatTypes", flag);

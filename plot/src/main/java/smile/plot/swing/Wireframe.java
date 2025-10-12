@@ -42,6 +42,7 @@ public class Wireframe extends Plot {
      * @param vertices an n-by-2 or n-by-3 array which are coordinates of n vertices.
      * @param edges an m-by-2 array of which each row is the vertex indices of two
      * end points of each edge.
+     * @param color the color of plot.
      */
     public Wireframe(double[][] vertices, int[][] edges, Color color) {
         super(color);
@@ -60,7 +61,7 @@ public class Wireframe extends Plot {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         g.setColor(color);
 
         for (int[] edge : edges) {
@@ -69,10 +70,11 @@ public class Wireframe extends Plot {
     }
 
     /**
-     * Constructor.
+     * Creates a wireframe plot.
      * @param vertices an n-by-2 or n-by-3 array which are coordinates of n vertices.
      * @param edges an m-by-2 array of which each row is the vertex indices of two
      * end points of each edge.
+     * @return the plot.
      */
     public static Wireframe of(double[][] vertices, int[][] edges) {
         return new Wireframe(vertices, edges, Color.BLACK);

@@ -16,7 +16,7 @@
  */
 package smile.feature.extraction;
 
-import smile.math.matrix.Matrix;
+import smile.tensor.DenseMatrix;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -50,8 +50,8 @@ public class RandomProjectionTest {
         System.out.println("regular random projection");
         RandomProjection instance = RandomProjection.of(128, 40);
 
-        Matrix p = instance.projection;
-        Matrix t = p.aat();
+        DenseMatrix p = instance.projection;
+        DenseMatrix t = p.aat();
 
         System.out.println(p.toString(true));
         for (int i = 0; i < 40; i++) {
@@ -69,7 +69,7 @@ public class RandomProjectionTest {
         System.out.println("sparse random projection");
         RandomProjection instance = RandomProjection.sparse(128, 40);
 
-        Matrix p = instance.projection;
+        DenseMatrix p = instance.projection;
         System.out.println(p.toString(true));
     }
 }

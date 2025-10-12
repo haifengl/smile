@@ -46,10 +46,10 @@ public class IntVector extends PrimitiveVector {
      * @param vector the elements of vector.
      */
     public IntVector(StructField field, int[] vector) {
-        super(field);
         if (field.dtype() != DataTypes.IntType) {
             throw new IllegalArgumentException("Invalid data type: " + field);
         }
+        super(field);
         this.vector = vector;
     }
 

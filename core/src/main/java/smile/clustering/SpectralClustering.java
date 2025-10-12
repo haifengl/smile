@@ -16,20 +16,18 @@
  */
 package smile.clustering;
 
-import java.util.Arrays;
 import java.util.Properties;
 import java.util.stream.IntStream;
 import smile.data.SparseDataset;
+import smile.linalg.Transpose;
 import smile.math.MathEx;
-import smile.math.blas.Transpose;
-import smile.math.blas.UPLO;
-import smile.math.matrix.ARPACK;
-import smile.math.matrix.IMatrix;
-import smile.math.matrix.Matrix;
+import smile.tensor.*;
 import smile.util.AlgoStatus;
 import smile.util.IterativeAlgorithmController;
 import smile.util.SparseArray;
 import smile.util.SparseIntArray;
+import static smile.linalg.UPLO.*;
+import static smile.tensor.ScalarType.*;
 
 /**
  * Spectral Clustering. Given a set of data points, the similarity matrix may
@@ -200,7 +198,7 @@ public class SpectralClustering {
             x[i] = data[index[i]];
         }
 
-        Matrix C = new Matrix(n, l);
+        DenseMatrix C = DenseMatrix.zeros(Float64, n, l);
         double[] D = new double[n];
 
         IntStream.range(0, n).parallel().forEach(i -> {
@@ -229,10 +227,10 @@ public class SpectralClustering {
             }
         }
 
-        Matrix W = C.submatrix(0, 0, l-1, l-1);
-        W.uplo(UPLO.LOWER);
-        Matrix.EVD eigen = ARPACK.syev(W, ARPACK.SymmOption.LA, k);
-        double[] e = eigen.wr;
+        DenseMatrix W = C.submatrix(0, 0, l, l);
+        W.withUplo(LOWER);
+        EVD eigen = ARPACK.syev(W, ARPACK.SymmOption.LA, k);
+        double[] e = eigen.wr().toArray(new double[0]);
         double scale = Math.sqrt((double)l / n);
         for (int i = 0; i < k; i++) {
             if (e[i] <= 1E-8) {
@@ -241,15 +239,15 @@ public class SpectralClustering {
             
             e[i] = scale / e[i];
         }
-        
-        Matrix U = eigen.Vr;
+
+        DenseMatrix U = eigen.Vr();
         for (int i = 0; i < l; i++) {
             for (int j = 0; j < k; j++) {
                 U.mul(i, j, e[j]);
             }
         }
         
-        double[][] Y = C.mm(U).toArray();
+        double[][] Y = C.mm(U).toArray(new double[0][]);
         for (int i = 0; i < n; i++) {
             MathEx.unitize2(Y[i]);
         }
@@ -267,9 +265,9 @@ public class SpectralClustering {
      * @param d the dimension of feature space.
      * @return the embedding.
      */
-    public static double[][] embed(Matrix W, int d) {
+    public static double[][] embed(DenseMatrix W, int d) {
         int n = W.nrow();
-        double[] D = W.colSums();
+        double[] D = W.colSums().toArray(new double[0]);
         for (int i = 0; i < n; i++) {
             if (D[i] == 0.0) {
                 throw new IllegalArgumentException("Isolated vertex: " + i);
@@ -286,9 +284,9 @@ public class SpectralClustering {
             }
         }
 
-        W.uplo(UPLO.LOWER);
-        Matrix.EVD eigen = ARPACK.syev(W, ARPACK.SymmOption.LA, d);
-        double[][] Y = eigen.Vr.toArray();
+        W.withUplo(LOWER);
+        EVD eigen = ARPACK.syev(W, ARPACK.SymmOption.LA, d);
+        double[][] Y = eigen.Vr().toArray(new double[0][]);
         for (int i = 0; i < n; i++) {
             MathEx.unitize2(Y[i]);
         }
@@ -307,7 +305,7 @@ public class SpectralClustering {
         int n = data.length;
         double gamma = -0.5 / (sigma * sigma);
 
-        Matrix W = new Matrix(n, n);
+        DenseMatrix W = DenseMatrix.zeros(Float64, n, n);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < i; j++) {
                 double w = Math.exp(gamma * MathEx.squaredDistance(data[i], data[j]));
@@ -365,8 +363,8 @@ public class SpectralClustering {
         });
 
         var W = new CountMatrix(SparseDataset.of(X, p).toMatrix(), D);
-        Matrix.EVD eigen = ARPACK.syev(W, ARPACK.SymmOption.LA, d);
-        double[][] Y = eigen.Vr.toArray();
+        EVD eigen = ARPACK.syev(W, ARPACK.SymmOption.LA, d);
+        double[][] Y = eigen.Vr().toArray(new double[0][]);
         for (int i = 0; i < n; i++) {
             MathEx.unitize2(Y[i]);
         }
@@ -377,26 +375,26 @@ public class SpectralClustering {
     /**
      * Normalized feature count matrix.
      */
-    static class CountMatrix extends IMatrix {
+    static class CountMatrix implements Matrix {
         /** The design matrix. */
-        final IMatrix X;
+        final Matrix X;
         final double[] D;
-        final double[] x;
-        final double[] ax;
-        final double[] y;
+        final Vector x;
+        final Vector ax;
+        final Vector y;
 
         /**
          * Constructor.
          */
-        CountMatrix(IMatrix X, double[] D) {
+        CountMatrix(Matrix X, double[] D) {
             this.X = X;
             this.D = D;
 
             int n = X.nrow();
             int p = X.ncol();
-            x = new double[n];
-            y = new double[n];
-            ax = new double[p];
+            x = X.vector(n);
+            y = X.vector(n);
+            ax = X.vector(p);
         }
 
         @Override
@@ -410,44 +408,94 @@ public class SpectralClustering {
         }
 
         @Override
-        public long size() {
-            return X.size();
+        public long length() {
+            return X.length();
         }
 
         @Override
-        public void mv(double[] x, double[] y) {
+        public ScalarType scalarType() {
+            return X.scalarType();
+        }
+
+        @Override
+        public void mv(Vector x, Vector y) {
             X.tv(x, ax);
             X.mv(ax, y);
 
-            for (int i = 0; i < y.length; i++) {
-                y[i] -= x[i] / D[i];
+            for (int i = 0; i < y.size(); i++) {
+                y.sub(i, x.get(i) / D[i]);
             }
         }
 
         @Override
-        public void tv(double[] x, double[] y) {
+        public void tv(Vector x, Vector y) {
             mv(x, y);
         }
 
         @Override
-        public void mv(Transpose trans, double alpha, double[] x, double beta, double[] y) {
+        public void mv(Transpose trans, double alpha, Vector x, double beta, Vector y) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public void mv(double[] work, int inputOffset, int outputOffset) {
-            System.arraycopy(work, inputOffset, x, 0, x.length);
+        public void mv(Vector work, int inputOffset, int outputOffset) {
+            Vector.copy(work, inputOffset, x, 0, x.size());
             X.tv(work, ax);
             X.mv(ax, y);
 
-            for (int i = 0; i < y.length; i++) {
-                y[i] -= x[i] / D[i];
+            for (int i = 0; i < y.size(); i++) {
+                y.sub(i, x.get(i) / D[i]);
             }
-            System.arraycopy(y, 0, work, outputOffset, y.length);
+            Vector.copy(y, 0, work, outputOffset, y.size());
         }
 
         @Override
-        public void tv(double[] work, int inputOffset, int outputOffset) {
+        public void tv(Vector work, int inputOffset, int outputOffset) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public double get(int i, int j) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void set(int i, int j, double x) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void add(int i, int j, double x) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void sub(int i, int j, double x) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void mul(int i, int j, double x) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void div(int i, int j, double x) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Matrix scale(double alpha) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Matrix copy() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Matrix transpose() {
             throw new UnsupportedOperationException();
         }
     }

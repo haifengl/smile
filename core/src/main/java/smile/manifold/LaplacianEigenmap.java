@@ -24,9 +24,10 @@ import smile.graph.Graph.Edge;
 import smile.graph.NearestNeighborGraph;
 import smile.math.MathEx;
 import smile.math.distance.Distance;
-import smile.math.matrix.ARPACK;
-import smile.math.matrix.Matrix;
-import smile.math.matrix.SparseMatrix;
+import smile.tensor.ARPACK;
+import smile.tensor.DenseMatrix;
+import smile.tensor.EVD;
+import smile.tensor.SparseMatrix;
 import smile.util.SparseArray;
 
 /**
@@ -174,9 +175,9 @@ public class LaplacianEigenmap {
 
         // ARPACK may not find all needed eigenvalues for k = d + 1.
         // Hack it with 10 * (d + 1).
-        Matrix.EVD eigen = ARPACK.syev(L, ARPACK.SymmOption.SM, Math.min(10*(d+1), n-1));
+        EVD eigen = ARPACK.syev(L, ARPACK.SymmOption.SM, Math.min(10*(d+1), n-1));
 
-        Matrix V = eigen.Vr;
+        DenseMatrix V = eigen.Vr();
         double[][] coordinates = new double[n][d];
         for (int j = d; --j >= 0; ) {
             double norm = 0.0;

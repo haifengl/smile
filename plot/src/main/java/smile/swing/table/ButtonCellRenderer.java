@@ -51,17 +51,25 @@ import javax.swing.table.TableColumnModel;
  *
  * @author Haifeng Li
  */
-@SuppressWarnings("serial")
-public class ButtonCellRenderer extends AbstractCellEditor implements TableCellRenderer, TableCellEditor, ActionListener, MouseListener
-{
+public class ButtonCellRenderer extends AbstractCellEditor
+        implements TableCellRenderer, TableCellEditor, ActionListener, MouseListener {
+    /** The table. */
     private final JTable table;
+    /** The button action. */
     private final transient Action action;
+    /** The mnemonic. */
     private int mnemonic;
+    /** The button border. */
     private final Border originalBorder;
+    /** The focus border. */
     private Border focusBorder;
+    /** The render button. */
     private final JButton renderButton;
+    /** The edit button. */
     private final JButton editButton;
+    /** The editor. */
     private Object editorValue;
+    /** True if button is column editor. */
     private boolean isButtonColumnEditor;
 
     /**
@@ -109,14 +117,18 @@ public class ButtonCellRenderer extends AbstractCellEditor implements TableCellR
         editButton.setBorder(focusBorder);
     }
 
+    /**
+     * Returns the mnemonic.
+     * @return the mnemonic.
+     */
     public int getMnemonic() {
         return mnemonic;
     }
 
     /**
-     * The mnemonic to activate the button when the cell has focus
+     * Sets the mnemonic to activate the button when the cell has focus.
      *
-     * @param mnemonic the mnemonic
+     * @param mnemonic the mnemonic.
      */
     public void setMnemonic(int mnemonic) {
         this.mnemonic = mnemonic;

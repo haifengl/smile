@@ -21,11 +21,11 @@ sbt unidoc
 check_error "!!"
 mv target/javaunidoc doc/api/java
 
-sbt ++3.3.5 json/doc
+sbt ++3.3.6 json/doc
 check_error "!!"
 find doc/api/json -name '*.html' -exec bin/gtag.sh {} \;
 
-sbt ++3.3.5 scala/doc
+sbt ++3.3.6 scala/doc
 check_error "!!"
 find doc/api/scala -name '*.html' -exec bin/gtag.sh {} \;
 
@@ -61,13 +61,26 @@ while true; do
             sbt publishSigned
             check_error "sbt publish"
 
-            sbt ++3.3.5 scala/publishSigned
+            sbt ++3.3.6 scala/publishSigned
             check_error "sbt scala/publish"
-            sbt ++3.3.5 json/publishSigned
+            sbt ++3.3.6 json/publishSigned
             check_error "sbt json/publish"
-            # sbt ++3.3.5 spark/publishSigned
+            # sbt ++3.3.6 spark/publishSigned
             # check_error "sbt spark/publish"
-            ./gradlew :kotlin:publishMavenJavaPublicationToMavenRepository
+            #./gradlew :kotlin:publishMavenJavaPublicationToMavenRepository
+            # check_error "gradlew :kotlin:publish"
+            break;;
+        [Nn]* ) break;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
+
+while true; do
+    read -p "Do you want to release to the Central Repository? (yes/no): " ans
+    case $ans in
+        [Yy]* )
+            sbt sonaRelease
+            check_error "sbt sonaRelease"
             break;;
         [Nn]* ) break;;
         * ) echo "Please answer yes or no.";;

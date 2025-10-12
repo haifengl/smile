@@ -21,7 +21,8 @@ import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.type.StructType;
 import smile.math.MathEx;
-import smile.math.matrix.Matrix;
+import smile.tensor.DenseMatrix;
+import smile.tensor.Vector;
 
 /**
  * Elastic Net regularization. The elastic net is a regularized regression
@@ -194,43 +195,43 @@ public class ElasticNet {
         formula = formula.expand(data.schema());
         StructType schema = formula.bind(data.schema());
 
-        Matrix X = formula.matrix(data, false);
+        DenseMatrix X = formula.matrix(data, false);
         double[] y = formula.y(data).toDoubleArray();
 
         int n = X.nrow();
         int p = X.ncol();
-        double[] center = X.colMeans();
-        double[] scale = X.colSds();
+        Vector center = X.colMeans();
+        Vector scale = X.colSds();
 
         // Pads 0 at the tail
-        double[] y2 = new double[n + p];
+        double[] centeredY = new double[n + p];
 
         // Center y2 before calling LASSO.
         // Otherwise, padding zeros become negative when LASSO centers y2 again.
-        double ym = MathEx.mean(y);
+        double ymu = MathEx.mean(y);
         for (int i = 0; i < n; i++) {
-            y2[i] = y[i] - ym;
+            centeredY[i] = y[i] - ymu;
         }
 
         // Scales the original data array and pads a weighted identity matrix
-        Matrix X2 = new Matrix(X.nrow()+ p, p);
+        DenseMatrix scaledX = X.zeros(X.nrow() + p, p);
         double padding = c * Math.sqrt(options.lambda2);
         for (int j = 0; j < p; j++) {
             for (int i = 0; i < n; i++) {
-                X2.set(i, j, c * (X.get(i, j) - center[j]) / scale[j]);
+                scaledX.set(i, j, c * (X.get(i, j) - center.get(j)) / scale.get(j));
             }
 
-            X2.set(j + n, j, padding);
+            scaledX.set(j + n, j, padding);
         }
 
         var lasso = new LASSO.Options(options.lambda1 * c, options.tol, options.maxIter,
                 options.alpha, options.beta, options.eta, options.lsMaxIter, options.pcgMaxIter);
-        double[] w = LASSO.train(X2, y2, lasso);
+        Vector w = LASSO.train(scaledX, centeredY, lasso);
         for (int i = 0; i < p; i++) {
-            w[i] = c * w[i] / scale[i];
+            w.set(i, c * w.get(i) / scale.get(i));
         }
 
-        double b = ym - MathEx.dot(w, center);
+        double b = ymu - w.dot(center);
         return new LinearModel(formula, schema, X, y, w, b);
     }
 }

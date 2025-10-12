@@ -131,6 +131,7 @@ public class Data {
      * the parent's data source. If no data is set, it is derived from
      * the parent.
      * @param data an array of data.
+     * @param <T> the data type.
      * @return this object.
      */
     public <T> Data values(T[] data) {
@@ -143,6 +144,7 @@ public class Data {
      * the parent's data source. If no data is set, it is derived from
      * the parent.
      * @param data a list of data.
+     * @param <T> the data type.
      * @return this object.
      */
     public <T> Data values(List<T> data) {

@@ -17,8 +17,8 @@
 package smile.sequence;
 
 import smile.math.MathEx;
-import smile.math.matrix.Matrix;
 import smile.stat.distribution.EmpiricalDistribution;
+import smile.tensor.DenseMatrix;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -57,7 +57,7 @@ public class HMMTest {
     @Test
     public void testGetInitialStateProbabilities() {
         System.out.println("getInitialStateProbabilities");
-        HMM hmm = new HMM(pi, Matrix.of(a), Matrix.of(b));
+        HMM hmm = new HMM(pi, DenseMatrix.of(a), DenseMatrix.of(b));
         double[] result = hmm.getInitialStateProbabilities();
         for (int i = 0; i < pi.length; i++) {
             assertEquals(pi[i], result[i], 1E-7);
@@ -70,8 +70,8 @@ public class HMMTest {
     @Test
     public void testGetStateTransitionProbabilities() {
         System.out.println("getStateTransitionProbabilities");
-        HMM hmm = new HMM(pi, Matrix.of(a), Matrix.of(b));
-        Matrix result = hmm.getStateTransitionProbabilities();
+        HMM hmm = new HMM(pi, DenseMatrix.of(a), DenseMatrix.of(b));
+        DenseMatrix result = hmm.getStateTransitionProbabilities();
         for (int i = 0; i < a.length; i++) {
             for (int j = 0; j < a[i].length; j++) {
                 assertEquals(a[i][j], result.get(i, j), 1E-7);
@@ -85,8 +85,8 @@ public class HMMTest {
     @Test
     public void testGetSymbolEmissionProbabilities() {
         System.out.println("getSymbolEmissionProbabilities");
-        HMM hmm = new HMM(pi, Matrix.of(a), Matrix.of(b));
-        Matrix result = hmm.getSymbolEmissionProbabilities();
+        HMM hmm = new HMM(pi, DenseMatrix.of(a), DenseMatrix.of(b));
+        DenseMatrix result = hmm.getSymbolEmissionProbabilities();
         for (int i = 0; i < b.length; i++) {
             for (int j = 0; j < b[i].length; j++) {
                 assertEquals(b[i][j], result.get(i, j), 1E-7);
@@ -102,7 +102,7 @@ public class HMMTest {
         System.out.println("joint p");
         int[] o = {0, 0, 1, 1, 0, 1, 1, 0};
         int[] s = {0, 0, 1, 1, 1, 1, 1, 0};
-        HMM hmm = new HMM(pi, Matrix.of(a), Matrix.of(b));
+        HMM hmm = new HMM(pi, DenseMatrix.of(a), DenseMatrix.of(b));
         double expResult = 7.33836e-05;
         double result = hmm.p(o, s);
         assertEquals(expResult, result, 1E-10);
@@ -114,7 +114,7 @@ public class HMMTest {
     @Test
     public void testJointLogp() {
         System.out.println("joint logp");
-        HMM hmm = new HMM(pi, Matrix.of(a), Matrix.of(b));
+        HMM hmm = new HMM(pi, DenseMatrix.of(a), DenseMatrix.of(b));
         int[] o = {0, 0, 1, 1, 0, 1, 1, 0};
         int[] s = {0, 0, 1, 1, 1, 1, 1, 0};
         double expResult = -9.51981;
@@ -128,7 +128,7 @@ public class HMMTest {
     @Test
     public void testP() {
         System.out.println("p");
-        HMM hmm = new HMM(pi, Matrix.of(a), Matrix.of(b));
+        HMM hmm = new HMM(pi, DenseMatrix.of(a), DenseMatrix.of(b));
         int[] o = {0, 0, 1, 1, 0, 1, 1, 0};
         double expResult = 0.003663364;
         double result = hmm.p(o);
@@ -141,7 +141,7 @@ public class HMMTest {
     @Test
     public void testLogp() {
         System.out.println("logp");
-        HMM hmm = new HMM(pi, Matrix.of(a), Matrix.of(b));
+        HMM hmm = new HMM(pi, DenseMatrix.of(a), DenseMatrix.of(b));
         int[] o = {0, 0, 1, 1, 0, 1, 1, 0};
         double expResult = -5.609373;
         double result = hmm.logp(o);
@@ -154,7 +154,7 @@ public class HMMTest {
     @Test
     public void testPredict() {
         System.out.println("predict");
-        HMM hmm = new HMM(pi, Matrix.of(a), Matrix.of(b));
+        HMM hmm = new HMM(pi, DenseMatrix.of(a), DenseMatrix.of(b));
         int[] o = {0, 0, 1, 1, 0, 1, 1, 0};
         int[] s = {0, 0, 0, 0, 0, 0, 0, 0};
         int[] result = hmm.predict(o);
@@ -211,14 +211,14 @@ public class HMMTest {
             assertEquals(expPi2[i], pi2[i], 1E-4);
         }
 
-        Matrix a2 = model.getStateTransitionProbabilities();
+        DenseMatrix a2 = model.getStateTransitionProbabilities();
         for (int i = 0; i < a.length; i++) {
             for (int j = 0; j < a[i].length; j++) {
                 assertEquals(expA2[i][j], a2.get(i, j), 1E-4);
             }
         }
 
-        Matrix b2 = model.getSymbolEmissionProbabilities();
+        DenseMatrix b2 = model.getSymbolEmissionProbabilities();
         for (int i = 0; i < b.length; i++) {
             for (int j = 0; j < b[i].length; j++) {
                 assertEquals(expB2[i][j], b2.get(i, j), 1E-4);
@@ -264,7 +264,7 @@ public class HMMTest {
         double[] expPi2 = {0.47245901561967496, 0.527540984380325};
         double[][] expA2 = {{0.8006, 0.1994}, {0.1986, 0.8014}};
         double[][] expB2 = {{0.6008, 0.3992}, {0.3997, 0.6003}};
-        HMM model = new HMM(pi, Matrix.of(a), Matrix.of(b));
+        HMM model = new HMM(pi, DenseMatrix.of(a), DenseMatrix.of(b));
         model.update(sequences, 100);
         System.out.println(model);
 
@@ -273,14 +273,14 @@ public class HMMTest {
             assertEquals(expPi2[i], pi2[i], 1E-4);
         }
 
-        Matrix a2 = model.getStateTransitionProbabilities();
+        DenseMatrix a2 = model.getStateTransitionProbabilities();
         for (int i = 0; i < a.length; i++) {
             for (int j = 0; j < a[i].length; j++) {
                 assertEquals(expA2[i][j], a2.get(i, j), 1E-4);
             }
         }
 
-        Matrix b2 = model.getSymbolEmissionProbabilities();
+        DenseMatrix b2 = model.getSymbolEmissionProbabilities();
         for (int i = 0; i < b.length; i++) {
             for (int j = 0; j < b[i].length; j++) {
                 assertEquals(expB2[i][j], b2.get(i, j), 1E-4);

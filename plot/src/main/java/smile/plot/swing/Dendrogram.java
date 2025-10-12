@@ -107,6 +107,7 @@ public class Dendrogram extends Plot {
 
     /**
      * Returns the height of tree.
+     * @return the height of tree.
      */
     public double getHeight() {
         return height;
@@ -135,7 +136,7 @@ public class Dendrogram extends Plot {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         Color c = g.getColor();
         g.setColor(color);
 
@@ -158,8 +159,8 @@ public class Dendrogram extends Plot {
     }
 
     @Override
-    public Canvas canvas() {
-        Canvas canvas = new Canvas(getLowerBound(), getUpperBound(), false);
+    public Figure figure() {
+        Figure canvas = new Figure(getLowerBound(), getUpperBound(), false);
         canvas.getAxis(0).setGridVisible(false);
         canvas.getAxis(0).setTickVisible(false);
 

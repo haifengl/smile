@@ -48,13 +48,13 @@ public class DoubleVector extends PrimitiveVector {
      * @param vector the elements of vector.
      */
     public DoubleVector(StructField field, double[] vector) {
-        super(field);
         if (field.dtype() != DataTypes.DoubleType) {
             throw new IllegalArgumentException("Invalid data type: " + field);
         }
         if (field.measure() instanceof CategoricalMeasure) {
             throw new IllegalArgumentException("Invalid measure: " + field.measure());
         }
+        super(field);
         this.vector = vector;
     }
 

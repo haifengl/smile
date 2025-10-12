@@ -28,25 +28,27 @@ public abstract class Projection {
      * provides logical coordinate space and the Java2D coordinate space of
      * canvas is the projection target.
      */
-    protected final Canvas canvas;
+    final Figure figure;
     /**
      * The base coordinates on Java2D screen.
      */
-    private int[][] baseScreenCoords;
+    final int[][] baseScreenCoords;
     /**
      * The width of canvas in Java2D coordinate space.
      */
-    protected int width = 1;
+    int width = 800;
     /**
      * The height of canvas in Java2D coordinate space.
      */
-    protected int height = 1;
+    int height = 800;
 
     /**
      * Constructor.
+     * @param figure the figure to project.
      */
-    public Projection(Canvas canvas) {
-        this.canvas = canvas;
+    public Projection(Figure figure) {
+        this.figure = figure;
+        this.baseScreenCoords = new int[figure.base.baseCoords.length][2];
         init();
     }
 
@@ -58,7 +60,9 @@ public abstract class Projection {
     }
 
     /**
-     * Sets the size of physical plot area.
+     * Sets the canvas size.
+     * @param width  the canvas width.
+     * @param height the canvas height.
      */
     public void setSize(int width, int height) {
         this.width = width;
@@ -67,13 +71,28 @@ public abstract class Projection {
     }
 
     /**
+     * Returns the width of canvas.
+     * @return the width of canvas.
+     */
+    public int width() {
+        return width;
+    }
+
+    /**
+     * Returns the height of canvas.
+     * @return the height of canvas.
+     */
+    public int height() {
+        return height;
+    }
+
+    /**
      * Initialize base coordinates on Java2D screen.
      */
     private void init() {
-        Base base = canvas.base;
-        double margin = canvas.margin;
+        Base base = figure.base;
+        double margin = figure.margin;
 
-        baseScreenCoords = new int[base.baseCoords.length][2];
         for (int i = 0; i < base.dimension + 1; i++) {
             double[] ratio = baseCoordsScreenProjectionRatio(base.baseCoords[i]);
             baseScreenCoords[i][0] = (int) (width * (margin + (1 - 2 * margin) * ratio[0]));
@@ -83,9 +102,11 @@ public abstract class Projection {
 
     /**
      * Project logical coordinates to Java2D coordinates.
+     * @param coord the logic coordinates.
+     * @return Java2D coordinates.
      */
     public int[] screenProjection(double... coord) {
-        Base base = canvas.base;
+        Base base = figure.base;
 
         double[] sc = new double[2];
         sc[0] = baseScreenCoords[0][0];
@@ -101,9 +122,11 @@ public abstract class Projection {
 
     /**
      * Project logical coordinates in base ratio to Java2D coordinates.
+     * @param coord the logic coordinates in base ratio.
+     * @return Java2D coordinates.
      */
     public int[] screenProjectionBaseRatio(double... coord) {
-        Base base = canvas.base;
+        Base base = figure.base;
 
         double[] sc = new double[2];
         sc[0] = baseScreenCoords[0][0];

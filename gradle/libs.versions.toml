@@ -1,15 +1,15 @@
 [versions]
-arrow = "18.2.0"
+arrow = "18.3.0"
 akka = "2.9.3"
 akka-http = "10.6.3"
 
 [libraries]
-logback = { module = "ch.qos.logback:logback-classic", version = "1.5.17" }
-sqlite = { module = "org.xerial:sqlite-jdbc", version = "3.49.1.0" }
-jackson = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-xml", version = "2.18.3" }
+logback = { module = "ch.qos.logback:logback-classic", version = "1.5.18" }
+sqlite = { module = "org.xerial:sqlite-jdbc", version = "3.50.3.0" }
+jackson = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-xml", version = "2.20.0" }
 javacpp = { module = "org.bytedeco:javacpp", version = "1.5.11" }
-openblas = { module = "org.bytedeco:openblas-platform", version = "0.3.28-1.5.11" }
-arpack = { module = "org.bytedeco:arpack-ng-platform", version = "3.9.1-1.5.11" }
+openblas = { module = "org.bytedeco:openblas-platform", version = "0.3.30-1.5.12" }
+arpack = { module = "org.bytedeco:arpack-ng-platform", version = "3.9.1-1.5.12" }
 arrow-vector = { module = "org.apache.arrow:arrow-vector", version.ref = "arrow" }
 arrow-memory = { module = "org.apache.arrow:arrow-memory", version.ref = "arrow" }
 arrow-memory-netty = { module = "org.apache.arrow:arrow-memory-netty", version.ref = "arrow" }
