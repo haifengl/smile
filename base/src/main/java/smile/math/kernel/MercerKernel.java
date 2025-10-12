@@ -21,9 +21,10 @@ import java.util.Locale;
 import java.util.function.ToDoubleBiFunction;
 import java.util.regex.Matcher;
 import java.util.stream.IntStream;
-import smile.math.blas.UPLO;
-import smile.math.matrix.Matrix;
+import smile.tensor.DenseMatrix;
 import smile.util.SparseArray;
+import static smile.linalg.UPLO.*;
+import static smile.tensor.ScalarType.*;
 
 /**
  * Mercer kernel, also called covariance function in Gaussian process.
@@ -96,13 +97,13 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
      * @param x objects.
      * @return the kernel and gradient matrices.
      */
-    default Matrix[] KG(T[] x) {
+    default DenseMatrix[] KG(T[] x) {
         int n = x.length;
         int m = lo().length;
-        Matrix[] K = new Matrix[m + 1];
+        DenseMatrix[] K = new DenseMatrix[m + 1];
         for (int i = 0; i <= m; i++) {
-            K[i] = new Matrix(n, n);
-            K[i].uplo(UPLO.LOWER);
+            K[i] = DenseMatrix.zeros(Float64, n, n);
+            K[i].withUplo(LOWER);
         }
 
         IntStream.range(0, n).parallel().forEach(j -> {
@@ -124,9 +125,9 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
      * @param x objects.
      * @return the kernel matrix.
      */
-    default Matrix K(T[] x) {
+    default DenseMatrix K(T[] x) {
         int n = x.length;
-        Matrix K = new Matrix(n, n);
+        DenseMatrix K = DenseMatrix.zeros(Float64, n, n);
         IntStream.range(0, n).parallel().forEach(j -> {
             T xj = x[j];
             for (int i = 0; i < n; i++) {
@@ -134,7 +135,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
             }
         });
 
-        K.uplo(UPLO.LOWER);
+        K.withUplo(LOWER);
         return K;
     }
 
@@ -145,10 +146,10 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
      * @param y objects.
      * @return the kernel matrix.
      */
-    default Matrix K(T[] x, T[] y) {
+    default DenseMatrix K(T[] x, T[] y) {
         int m = x.length;
         int n = y.length;
-        Matrix K = new Matrix(m, n);
+        DenseMatrix K = DenseMatrix.zeros(Float64, m, n);
         IntStream.range(0, n).parallel().forEach(j -> {
             T yj = y[j];
             for (int i = 0; i < m; i++) {

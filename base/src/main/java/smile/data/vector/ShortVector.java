@@ -45,10 +45,10 @@ public class ShortVector extends PrimitiveVector {
      * @param vector the elements of vector.
      */
     public ShortVector(StructField field, short[] vector) {
-        super(field);
         if (field.dtype() != DataTypes.ShortType) {
             throw new IllegalArgumentException("Invalid data type: " + field);
         }
+        super(field);
         this.vector = vector;
     }
 

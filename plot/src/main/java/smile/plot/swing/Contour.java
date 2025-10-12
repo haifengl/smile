@@ -688,15 +688,15 @@ public class Contour extends Plot {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         for (Isoline contour : contours) {
             contour.paint(g);
         }
     }
 
     @Override
-    public Canvas canvas() {
-        Canvas canvas = new Canvas(getLowerBound(), getUpperBound(), false);
+    public Figure figure() {
+        Figure canvas = new Figure(getLowerBound(), getUpperBound(), false);
         canvas.add(this);
 
         if (!isTickVisible) {
@@ -710,6 +710,7 @@ public class Contour extends Plot {
     /**
      * Creates a contour plot with 10 isolines.
      * @param z the data matrix to create contour plot.
+     * @return a contour plot.
      */
     public static Contour of(double[][] z) {
         return of(z, 10);
@@ -719,6 +720,7 @@ public class Contour extends Plot {
      * Creates a contour plot.
      * @param z the data matrix to create contour plot.
      * @param numLevels the number of contour levels.
+     * @return a contour plot.
      */
     public static Contour of(double[][] z, int numLevels) {
         return new Contour(z, numLevels, false);
@@ -729,6 +731,7 @@ public class Contour extends Plot {
      * @param x the x coordinates of the data grid of z. Must be in ascending order.
      * @param y the y coordinates of the data grid of z. Must be in ascending order.
      * @param z the data matrix to create contour plot.
+     * @return a contour plot.
      */
     public static Contour of(double[] x, double[] y, double[][] z) {
         return of(x, y, z, 10);
@@ -740,6 +743,7 @@ public class Contour extends Plot {
      * @param y the y coordinates of the data grid of z. Must be in ascending order.
      * @param z the data matrix to create contour plot.
      * @param numLevels the number of contour levels.
+     * @return a contour plot.
      */
     public static Contour of(double[] x, double[] y, double[][] z, int numLevels) {
         return new Contour(x, y, z, numLevels, false);

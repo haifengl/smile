@@ -16,10 +16,11 @@
  */
 package smile.interpolation;
 
-import smile.math.blas.UPLO;
-import smile.math.matrix.Matrix;
+import smile.tensor.*;
 import smile.math.rbf.GaussianRadialBasis;
 import smile.math.rbf.RadialBasisFunction;
+import static smile.linalg.UPLO.*;
+import static smile.tensor.ScalarType.*;
 
 /**
  * Radial basis function interpolation is a popular method for the data points
@@ -121,8 +122,7 @@ public class RBFInterpolation2D implements Interpolation2D {
         this.normalized = normalized;
 
         int n = y.length;
-
-        Matrix G = new Matrix(n, n);
+        DenseMatrix G = DenseMatrix.zeros(Float64, n, n);
         double[] rhs = new double[n];
         for (int i = 0; i < n; i++) {
             double sum = 0.0;
@@ -144,12 +144,12 @@ public class RBFInterpolation2D implements Interpolation2D {
         }
 
         if (rbf instanceof GaussianRadialBasis) {
-            G.uplo(UPLO.LOWER);
-            Matrix.Cholesky cholesky = G.cholesky(true);
-            w = cholesky.solve(rhs);
+            G.withUplo(LOWER);
+            Cholesky cholesky = G.cholesky();
+            w = cholesky.solve(rhs).toArray(new double[rhs.length]);
         } else {
-            Matrix.LU lu = G.lu(true);
-            w = lu.solve(rhs);
+            LU lu = G.lu();
+            w = lu.solve(rhs).toArray(new double[rhs.length]);
         }
     }
 

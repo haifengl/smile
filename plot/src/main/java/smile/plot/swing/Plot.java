@@ -34,35 +34,52 @@ public abstract class Plot extends Shape {
         this(null, Color.BLACK);
     }
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param color the color of plot.
+     */
     public Plot(Color color) {
         this(null, color);
     }
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param name the name of plot.
+     * @param color the color of plot.
+     */
     public Plot(String name, Color color) {
         super(color);
         this.name = name;
     }
 
-    /** Returns the lower bound of data. */
+    /**
+     * Returns the lower bound of data.
+     * @return the lower bound of data.
+     */
     public abstract double[] getLowerBound();
-    /** Returns the upper bound of data. */
+
+    /**
+     * Returns the upper bound of data.
+     * @return the upper bound of data.
+     */
     public abstract double[] getUpperBound();
 
-    /** Returns a canvas of the plot. */
-    public Canvas canvas() {
-        Canvas canvas = new Canvas(getLowerBound(), getUpperBound());
-        canvas.add(this);
+    /**
+     * Returns a figure containing the plot.
+     * @return a figure containing the plot.
+     */
+    public Figure figure() {
+        Figure figure = new Figure(getLowerBound(), getUpperBound());
+        figure.add(this);
         if (name != null) {
-            canvas.setTitle(name);
+            figure.setTitle(name);
         }
-        return canvas;
+        return figure;
     }
 
     /**
-     * Returns the optional name of shape, which will be used to
-     * draw a legend outside the box.
+     * Returns the optional legend of shape.
+     * @return the optional legend of shape
      */
     public Optional<Legend[]> legends() {
         return Optional.empty();

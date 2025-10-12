@@ -78,6 +78,7 @@ public class BoxPlot extends Plot {
      * Constructor.
      * @param data the input dataset of which each row is a set of samples
      *            and will have a corresponding box plot.
+     * @param labels the labels of boxes.
      */
     public BoxPlot(double[][] data, String[] labels) {
         if (labels != null && labels.length != data.length) {
@@ -127,7 +128,7 @@ public class BoxPlot extends Plot {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         g.setColor(color);
 
         double[] start = new double[2];
@@ -180,11 +181,11 @@ public class BoxPlot extends Plot {
     }
 
     @Override
-    public Canvas canvas() {
+    public Figure figure() {
         double[] lowerBound = getLowerBound();
         double[] upperBound = getUpperBound();
 
-        Canvas canvas = new Canvas(lowerBound, upperBound);
+        Figure canvas = new Figure(lowerBound, upperBound);
         canvas.add(this);
         canvas.getAxis(0).setGridVisible(false);
 
@@ -207,8 +208,9 @@ public class BoxPlot extends Plot {
     }
 
     /**
-     * Create a plot canvas with multiple box plots of given data.
+     * Creates a plot with multiple box plots of given data.
      * @param data a data matrix of which each row will create a box plot.
+     * @return the bax plot.
      */
     public static BoxPlot of(double[]... data) {
         return new BoxPlot(data, null);

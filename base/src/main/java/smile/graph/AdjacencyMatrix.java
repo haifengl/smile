@@ -24,7 +24,8 @@ import java.util.List;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
-import smile.math.matrix.Matrix;
+import smile.tensor.DenseMatrix;
+import smile.tensor.Matrix;
 import smile.util.function.ArrayElementConsumer;
 import smile.util.function.ArrayElementFunction;
 
@@ -177,7 +178,7 @@ public class AdjacencyMatrix extends Graph implements Serializable {
 
     @Override
     public Matrix toMatrix() {
-        return Matrix.of(graph);
+        return DenseMatrix.of(graph);
     }
 
     /**

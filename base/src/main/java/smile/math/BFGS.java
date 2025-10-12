@@ -18,9 +18,10 @@ package smile.math;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import smile.math.blas.UPLO;
-import smile.math.matrix.Matrix;
+import smile.tensor.DenseMatrix;
 import smile.sort.QuickSort;
+import smile.tensor.LU;
+import smile.tensor.Vector;
 import smile.util.function.DifferentiableMultivariateFunction;
 import smile.util.function.MultivariateFunction;
 import static java.lang.Math.abs;
@@ -30,6 +31,8 @@ import static java.lang.Math.sqrt;
 import static smile.math.MathEx.axpy;
 import static smile.math.MathEx.dot;
 import static smile.math.MathEx.norm;
+import static smile.linalg.UPLO.*;
+import static smile.tensor.ScalarType.*;
 
 /**
  * The Broyden–Fletcher–Goldfarb–Shanno (BFGS) algorithm is an iterative
@@ -613,9 +616,9 @@ public class BFGS {
         int n = x.length;
         double theta = 1.0;
 
-        Matrix Y = null, S = null;
-        Matrix W = new Matrix(n, 1);
-        Matrix M = new Matrix(1, 1);
+        DenseMatrix Y = null, S = null;
+        DenseMatrix W = DenseMatrix.zeros(Float64, n, 1);
+        DenseMatrix M = DenseMatrix.zeros(Float64,1, 1);
 
         ArrayList<double[]> yHistory = new ArrayList<>();
         ArrayList<double[]> sHistory = new ArrayList<>();
@@ -700,10 +703,10 @@ public class BFGS {
 
                 int h = yHistory.size();
                 if (Y == null || Y.ncol() < h) {
-                    Y = new Matrix(n, h);
-                    S = new Matrix(n, h);
-                    W = new Matrix(n, 2*h);
-                    M = new Matrix(2*h, 2*h);
+                    Y = DenseMatrix.zeros(Float64, n, h);
+                    S = DenseMatrix.zeros(Float64, n, h);
+                    W = DenseMatrix.zeros(Float64, n, 2*h);
+                    M = DenseMatrix.zeros(Float64, 2*h, 2*h);
                 }
 
                 // STEP 7
@@ -720,8 +723,8 @@ public class BFGS {
                     }
                 }
 
-                Matrix SY = S.tm(Y);
-                Matrix SS = S.ata();
+                DenseMatrix SY = S.tm(Y);
+                DenseMatrix SS = S.ata();
                 for (int j = 0; j < h; j++) {
                     M.set(j, j, -SY.get(j, j));
                     for (int i = 0; i <= j; i++) {
@@ -739,7 +742,7 @@ public class BFGS {
                     }
                 }
 
-                M.uplo(UPLO.LOWER);
+                M.withUplo(LOWER);
                 M = M.inverse();
             }
 
@@ -760,10 +763,11 @@ public class BFGS {
      * @param x  the parameter vector
      * @param g  the gradient vector
      */
-    private static double[] cauchy(double[] x, double[] g, double[] cauchy, double[] l, double[] u, double theta, Matrix W, Matrix M) {
+    private static double[] cauchy(double[] x, double[] g, double[] cauchy, double[] l, double[] u, double theta, DenseMatrix W, DenseMatrix M) {
         int n = x.length;
         double[] t = new double[n];
         double[] d = new double[n];
+        Vector d_ = Vector.column(d);
         for (int i = 0; i < n; i++) {
             t[i] = g[i] == 0 ? Double.MAX_VALUE
                 : (g[i] <  0 ? (x[i] - u[i]) / g[i]
@@ -772,10 +776,13 @@ public class BFGS {
         }
 
         int[] index = QuickSort.sort(t);
-        double[] p = W.tv(d);
+        double[] p = new double[W.ncol()];
+        Vector p_ = Vector.column(p);
+        W.tv(d_, p_);
         double[] c = new double[p.length];
-        double fPrime = -dot(d, d);
-        double fDoublePrime  = max(-theta * fPrime - M.xAx(p), EPSILON);
+        Vector c_ = Vector.column(c);
+        double fPrime = -d_.dot(d_);
+        double fDoublePrime  = max(-theta * fPrime - M.xAx(p_), EPSILON);
         double f_dp_orig     = fDoublePrime;
         double dt_min        = -fPrime / fDoublePrime;
         double t_old         = 0.0;
@@ -799,12 +806,12 @@ public class BFGS {
             }
 
             double gb = g[b];
-            double[] wbt  = W.row(b);
-            fPrime       += dt * fDoublePrime + gb * gb + theta * gb * zb - gb * dot(wbt, M.mv(c));
-            fDoublePrime -= theta * gb * gb + 2.0 * gb * dot(wbt, M.mv(p)) + gb * gb * M.xAx(wbt);
+            Vector wbt = W.row(b);
+            fPrime       += dt * fDoublePrime + gb * gb + theta * gb * zb - gb * wbt.dot(M.mv(c_));
+            fDoublePrime -= theta * gb * gb + 2.0 * gb * wbt.dot(M.mv(p_)) + gb * gb * M.xAx(wbt);
             fDoublePrime  = max(fDoublePrime, EPSILON * f_dp_orig);
             for (int j = 0; j < p.length; j++) {
-                p[j] += wbt[j] * gb;
+                p[j] += wbt.get(j) * gb;
             }
 
             d[b]          = 0;
@@ -835,7 +842,7 @@ public class BFGS {
      * @param c        vector obtained from gcp() used to initialize the subspace
      *                 minimization process
      */
-    private static double[] subspaceMinimization(double[] x, double[] g, double[] cauchy, double[] c, double[] l, double[] u, double theta, Matrix W, Matrix M) {
+    private static double[] subspaceMinimization(double[] x, double[] g, double[] cauchy, double[] c, double[] l, double[] u, double theta, DenseMatrix W, DenseMatrix M) {
         int n = x.length;
         double thetaInverse = 1.0 / theta;
         ArrayList<Integer> freeVarIdx = new ArrayList<>();
@@ -855,27 +862,30 @@ public class BFGS {
             freeVar[i] = freeVarIdx.get(i);
         }
 
-        double[] wmc = W.mv(M.mv(c));
+        Vector wmc = W.mv(M.mv(c));
         double[] r = new double[freeVarCount];
         for (int i = 0; i < freeVarCount; i++) {
             int fi = freeVar[i];
-            r[i] = g[fi] + (cauchy[fi] - x[fi]) * theta - wmc[fi];
+            r[i] = g[fi] + (cauchy[fi] - x[fi]) * theta - wmc.get(fi);
         }
 
-        Matrix WZ = W.rows(freeVar);
-        double[] v  = M.mv(WZ.tv(r));
-        Matrix N = WZ.ata().mul(-thetaInverse);
+        DenseMatrix WZ = W.rows(freeVar);
+        Vector v  = M.mv(WZ.tv(Vector.column(r)));
+        DenseMatrix N = WZ.ata().scale(-thetaInverse);
         N = M.mm(N);
-        N.addDiag(1.0);
+        int nl = Math.min(N.nrow(), N.ncol());
+        for (int i = 0; i < nl; i++) {
+            N.add(i, i, 1.0);
+        }
 
-        Matrix.LU lu = N.lu();
-        v = lu.solve(v);
+        LU lu = N.lu();
+        lu.solve(v);
 
-        double[] wzv = WZ.mv(v);
+        Vector wzv = WZ.mv(v);
 
         double[] du = new double[freeVarCount];
         for (int i = 0; i < freeVarCount; i++) {
-            du[i] = -thetaInverse * (r[i] + wzv[i] * thetaInverse);
+            du[i] = -thetaInverse * (r[i] + wzv.get(i) * thetaInverse);
         }
         double alphaStar = findAlpha(cauchy, du, l, u, freeVar);
         double[] dStar   = new double[freeVarCount];

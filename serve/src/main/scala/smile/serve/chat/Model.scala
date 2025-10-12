@@ -103,7 +103,7 @@ object JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   }
 
   implicit object MessageJsonFormat extends RootJsonFormat[Message] {
-    def write(message: Message) = JsObject(
+    def write(message: Message): JsObject = JsObject(
       "role" -> JsString(message.role.toString),
       "content" -> JsString(message.content)
     )
@@ -122,7 +122,7 @@ object JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   }
 
   implicit object UsageJsonFormat extends RootJsonFormat[Usage] {
-    def write(usage: Usage) = JsObject(
+    def write(usage: Usage): JsObject = JsObject(
       "prompt_tokens" -> JsNumber(usage.promptTokens),
       "completion_tokens" -> JsNumber(usage.completionTokens),
       "total_tokens" -> JsNumber(usage.totalTokens)

@@ -1,11 +1,11 @@
 name := "smile"
 
-lazy val scala213 = "2.13.16"
-lazy val scala3 = "3.3.5"
+lazy val scala213 = "2.13.17"
+lazy val scala3 = "3.3.6"
 lazy val supportedScalaVersions = List(scala213, scala3)
 
 lazy val commonSettings = Seq(
-  resolvers += "Akka library repository".at("https://repo.akka.io/maven"),
+  resolvers += "Akka library repository" at "https://repo.akka.io/maven",
   resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
 
   // skip packageDoc task on stage
@@ -13,10 +13,11 @@ lazy val commonSettings = Seq(
   // always set scala version including Java only modules
   scalaVersion := scala213,
 
+  description := "Statistical Machine Intelligence and Learning Engine",
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("https://haifengl.github.io/")),
-  version := "4.3.0",
+  version := "5.0.0",
 
   // Run in a separate JVM, to make sure sbt waits until all threads have
   // finished before returning.
@@ -38,39 +39,41 @@ lazy val commonSettings = Seq(
     "--add-opens=java.base/java.nio=ALL-UNNAMED",
     "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
     "--add-opens=java.base/sun.nio.cs=ALL-UNNAMED",
-    "--add-opens=java.base/sun.security.action=ALL-UNNAMED"
+    "--add-opens=java.base/sun.security.action=ALL-UNNAMED",
+    "--enable-native-access=ALL-UNNAMED"
   ),
 
   versionScheme := Some("early-semver"),
   publishTo := {
-    val nexus = "https://oss.sonatype.org/"
-    if (isSnapshot.value)
-      Some("snapshots" at nexus + "content/repositories/snapshots")
-    else
-      Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+    val centralSnapshots = "https://central.sonatype.com/repository/maven-snapshots/"
+    if (isSnapshot.value) Some("central-snapshots" at centralSnapshots)
+    else localStaging.value
   },
   publishMavenStyle := true,
   pomIncludeRepository := { _ => false },
-  pomExtra := (
-    <url>https://github.com/haifengl/smile</url>
-      <licenses>
-        <license>
-          <name>GNU General Public License, Version 3</name>
-          <url>https://opensource.org/licenses/GPL-3.0</url>
-          <distribution>repo</distribution>
-        </license>
-      </licenses>
-      <scm>
-        <url>git@github.com:haifengl/smile.git</url>
-        <connection>scm:git:git@github.com:haifengl/smile.git</connection>
-      </scm>
-      <developers>
-        <developer>
-          <id>haifengl</id>
-          <name>Haifeng Li</name>
-          <url>https://haifengl.github.io/</url>
-        </developer>
-      </developers>
+  homepage := Some(url("https://haifengl.github.io/")),
+  scmInfo := Some(
+    ScmInfo(
+      url("https://github.com/haifengl/smile"),
+      "scm:git:git@github.com:haifengl/smile.git"
+    )
+  ),
+  developers := List(
+    Developer(
+      id = "haifengl",
+      name = "Haifeng Li",
+      email = "",
+      url = url("https://github.com/haifengl")
+    ),
+    Developer(
+      id = "kklioss",
+      name = "Karl Li",
+      email = "",
+      url = url("https://github.com/kklioss")
+    )
+  ),
+  licenses := List(
+    "GNU 3" -> url("https://opensource.org/licenses/GPL-3.0")
   )
 )
 
@@ -82,11 +85,11 @@ lazy val javaSettings = commonSettings ++ Seq(
     "-g:lines,vars,source",
     "-Xlint:deprecation",
     "-Xlint:unchecked",
-    "-source", "21",
-    "-target", "21"
+    "-source", "25",
+    "-target", "25"
   ),
   Compile / doc / javacOptions ++= Seq(
-    "-Xdoclint:none",
+    //"-Xdoclint:none",
     "--allow-script-in-comments",
     "-doctitle", """Smile &mdash; Statistical Machine Intelligence &amp; Learning Engine""",
     "--add-script", "project/gtag.js",
@@ -97,7 +100,7 @@ lazy val javaSettings = commonSettings ++ Seq(
   libraryDependencies ++= Seq(
     "org.slf4j" % "slf4j-api" % "2.0.17",
     "org.slf4j" % "slf4j-simple" % "2.0.17" % Test,
-    "org.junit.jupiter" % "junit-jupiter-engine" % "5.11.4" % Test,
+    "org.junit.jupiter" % "junit-jupiter-engine" % "6.0.0" % Test,
     "com.github.sbt.junit" % "jupiter-interface" % JupiterKeys.jupiterVersion.value % Test
   )
 )
@@ -111,8 +114,11 @@ lazy val scalaSettings = commonSettings ++ Seq(
     "-deprecation",
     "-feature",
     "-encoding", "utf8",
-    "-Xsource:3",
-    "-release:21"
+    "-release:25"
+  ),
+  scalacOptions ++= Seq(
+    if (scalaVersion.value.startsWith("2.13")) "-Xsource:3"
+    else "-source:3.0"
   ),
   Compile / doc / scalacOptions ++= Seq(
     "-groups",
@@ -123,17 +129,17 @@ lazy val scalaSettings = commonSettings ++ Seq(
                          |Use is subject to license terms.""".stripMargin
   ),
   libraryDependencies ++= Seq(
-    "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.9.6",
     "org.slf4j" % "slf4j-simple" % "2.0.17" % Test,
-    "org.specs2" %% "specs2-core" % "4.20.9" % Test
+    "org.specs2" %% "specs2-core" % "4.22.0" % Test
   ),
 )
 
 lazy val javaCppSettings = Seq(
   libraryDependencies ++= Seq(
-    "org.bytedeco" % "javacpp"   % "1.5.11"        classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
-    "org.bytedeco" % "openblas"  % "0.3.28-1.5.11" classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
-    "org.bytedeco" % "arpack-ng" % "3.9.1-1.5.11"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
+    "org.bytedeco" % "javacpp"   % "1.5.12"        classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+    "org.bytedeco" % "openblas"  % "0.3.30-1.5.12" classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+    "org.bytedeco" % "arpack-ng" % "3.9.1-1.5.12"  classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
   )
 )
 
@@ -170,11 +176,10 @@ lazy val root = project.in(file("."))
   .settings(
     JavaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(json, scala, spark, shell)
   )
-  .aggregate(core, base, nlp, deep, plot, json, scala, spark, shell, serve)
+  .aggregate(core, base, nlp, deep, plot, json, scala, spark, kotlin, shell, serve)
 
 lazy val base = project.in(file("base"))
   .settings(javaSettings: _*)
-  .settings(javaCppSettings: _*)
 
 lazy val core = project.in(file("core"))
   .settings(javaSettings: _*)
@@ -203,15 +208,18 @@ lazy val spark = project.in(file("spark"))
   .settings(scalaSettings: _*)
   .dependsOn(core)
 
+lazy val kotlin = project.in(file("kotlin"))
+  .settings(commonSettings: _*)
+  .enablePlugins(KotlinPlugin)
+  .dependsOn(core, nlp)
+
 lazy val shell = project.in(file("shell"))
   .settings(javaSettings: _*)
   .settings(scalaSettings: _*)
-  .settings(akkaSettings: _*)
   .settings(publish / skip := true)
   .dependsOn(scala)
 
 lazy val serve = project.in(file("serve"))
   .settings(scalaSettings: _*)
-  .settings(akkaSettings: _*)
   .settings(publish / skip := true)
   .dependsOn(deep)

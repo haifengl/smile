@@ -44,6 +44,7 @@ public class ScatterPlot extends Plot {
 
     /**
      * Constructor.
+     * @param points an n-by-2 or n-by-3 matrix that describes coordinates of n points.
      */
     public ScatterPlot(Point... points) {
         this(points, null);
@@ -51,6 +52,8 @@ public class ScatterPlot extends Plot {
 
     /**
      * Constructor.
+     * @param points an n-by-2 or n-by-3 matrix that describes coordinates of n points.
+     * @param legends the legends.
      */
     public ScatterPlot(Point[] points, Legend[] legends) {
         this.points = points;
@@ -58,7 +61,7 @@ public class ScatterPlot extends Plot {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         for (Point point : points) {
             point.paint(g);
         }
@@ -104,6 +107,7 @@ public class ScatterPlot extends Plot {
     /**
      * Create a scatter plot.
      * @param points an n-by-2 or n-by-3 matrix that describes coordinates of n points.
+     * @return the scatter plot.
      */
     public static ScatterPlot of(double[][] points) {
         return new ScatterPlot(Point.of(points));
@@ -112,6 +116,8 @@ public class ScatterPlot extends Plot {
     /**
      * Create a scatter plot.
      * @param points an n-by-2 or n-by-3 matrix that describes coordinates of n points.
+     * @param color the point color.
+     * @return the scatter plot.
      */
     public static ScatterPlot of(double[][] points, Color color) {
         return new ScatterPlot(Point.of(points, color));
@@ -120,6 +126,8 @@ public class ScatterPlot extends Plot {
     /**
      * Create a scatter plot.
      * @param points an n-by-2 or n-by-3 matrix that describes coordinates of n points.
+     * @param mark the point mark.
+     * @return the scatter plot.
      */
     public static ScatterPlot of(double[][] points, char mark) {
         return new ScatterPlot(Point.of(points, mark));
@@ -128,6 +136,9 @@ public class ScatterPlot extends Plot {
     /**
      * Create a scatter plot.
      * @param points an n-by-2 or n-by-3 matrix that describes coordinates of n points.
+     * @param mark the point mark.
+     * @param color the point color.
+     * @return the scatter plot.
      */
     public static ScatterPlot of(double[][] points, char mark, Color color) {
         return new ScatterPlot(new Point(points, mark, color));
@@ -137,6 +148,8 @@ public class ScatterPlot extends Plot {
      * Creates a scatter plot of multiple groups of data.
      * @param x the data points. The elements should be of dimension 2 or 3.
      * @param y the group label of data points.
+     * @param mark the point mark.
+     * @return the scatter plot.
      */
     public static ScatterPlot of(double[][] x, String[] y, char mark) {
         if (x.length != y.length) {
@@ -165,6 +178,8 @@ public class ScatterPlot extends Plot {
      * Creates a scatter plot of multiple groups of data.
      * @param x the data points. The elements should be of dimension 2 or 3.
      * @param y the group label of data points.
+     * @param mark the point mark.
+     * @return the scatter plot.
      */
     public static ScatterPlot of(double[][] x, int[] y, char mark) {
         return of(x, Arrays.stream(y).mapToObj(i -> String.format("class %d", i)).toArray(String[]::new), mark);
@@ -175,6 +190,9 @@ public class ScatterPlot extends Plot {
      * @param data the data frame.
      * @param x the column as x-axis.
      * @param y the column as y-axis.
+     * @param mark the point mark.
+     * @param color the point color.
+     * @return the scatter plot.
      */
     public static ScatterPlot of(DataFrame data, String x, String y, char mark, Color color) {
         int ix = data.schema().indexOf(x);
@@ -189,6 +207,8 @@ public class ScatterPlot extends Plot {
      * @param x the column as x-axis.
      * @param y the column as y-axis.
      * @param category the category column for coloring.
+     * @param mark the point mark.
+     * @return the scatter plot.
      */
     public static ScatterPlot of(DataFrame data, String x, String y, String category, char mark) {
         int ix = data.schema().indexOf(x);
@@ -204,6 +224,9 @@ public class ScatterPlot extends Plot {
      * @param x the column as x-axis.
      * @param y the column as y-axis.
      * @param z the column as z-axis.
+     * @param mark the point mark.
+     * @param color the point color.
+     * @return the scatter plot.
      */
     public static ScatterPlot of(DataFrame data, String x, String y, String z, char mark, Color color) {
         int ix = data.schema().indexOf(x);
@@ -219,6 +242,9 @@ public class ScatterPlot extends Plot {
      * @param x the column as x-axis.
      * @param y the column as y-axis.
      * @param z the column as z-axis.
+     * @param category the category column for coloring.
+     * @param mark the point mark.
+     * @return the scatter plot.
      */
     public static ScatterPlot of(DataFrame data, String x, String y, String z, String category, char mark) {
         int ix = data.schema().indexOf(x);

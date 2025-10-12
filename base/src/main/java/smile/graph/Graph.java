@@ -19,8 +19,8 @@ package smile.graph;
 import java.util.*;
 import java.util.stream.DoubleStream;
 import smile.math.MathEx;
-import smile.math.matrix.IMatrix;
 import smile.sort.Sort;
+import smile.tensor.Matrix;
 import smile.util.function.ArrayElementConsumer;
 import smile.util.function.ArrayElementFunction;
 import smile.util.PriorityQueue;
@@ -136,7 +136,7 @@ public abstract class Graph {
      * Returns the (dense or sparse) matrix representation of the graph.
      * @return the matrix representation of the graph.
      */
-    public abstract IMatrix toMatrix();
+    public abstract Matrix toMatrix();
 
     /**
      * Returns a subgraph containing all given vertices.

@@ -27,9 +27,13 @@ import javax.swing.table.DefaultTableCellRenderer;
  */
 @SuppressWarnings("serial")
 public class NumberCellRenderer extends DefaultTableCellRenderer {
+    /** Integer cell renderer. */
     public static final NumberCellRenderer INTEGER  = new NumberCellRenderer(NumberFormat.getIntegerInstance());
+    /** Number cell renderer. */
     public static final NumberCellRenderer NUMBER   = new NumberCellRenderer(NumberFormat.getNumberInstance());
+    /** Percentage cell renderer. */
     public static final NumberCellRenderer PERCENT  = new NumberCellRenderer(NumberFormat.getPercentInstance());
+    /** Current cell renderer. */
     public static final NumberCellRenderer CURRENCY = new NumberCellRenderer(NumberFormat.getCurrencyInstance());
 
     /**

@@ -19,7 +19,9 @@ package smile.classification;
 import java.io.Serial;
 import java.util.Properties;
 import smile.math.MathEx;
-import smile.math.matrix.Matrix;
+import smile.tensor.DenseMatrix;
+import smile.tensor.EVD;
+import smile.tensor.Vector;
 import smile.util.IntSet;
 import smile.util.Strings;
 
@@ -83,13 +85,13 @@ public class LDA extends AbstractClassifier<double[]> {
     /**
      * The eigen values of common variance matrix.
      */
-    private final double[] eigen;
+    private final Vector eigen;
     /**
      * The eigen vectors of common covariance matrix, which transforms observations
      * to discriminant functions, normalized so that common covariance
      * matrix is spherical.
      */
-    private final Matrix scaling;
+    private final DenseMatrix scaling;
 
     /**
      * Constructor.
@@ -98,7 +100,7 @@ public class LDA extends AbstractClassifier<double[]> {
      * @param eigen the eigen values of common variance matrix.
      * @param scaling the eigen vectors of common covariance matrix.
      */
-    public LDA(double[] priori, double[][] mu, double[] eigen, Matrix scaling) {
+    public LDA(double[] priori, double[][] mu, Vector eigen, DenseMatrix scaling) {
         this(priori, mu, eigen, scaling, IntSet.of(priori.length));
     }
 
@@ -110,7 +112,7 @@ public class LDA extends AbstractClassifier<double[]> {
      * @param scaling the eigen vectors of common covariance matrix.
      * @param labels the class label encoder.
      */
-    public LDA(double[] priori, double[][] mu, double[] eigen, Matrix scaling, IntSet labels) {
+    public LDA(double[] priori, double[][] mu, Vector eigen, DenseMatrix scaling, IntSet labels) {
         super(labels);
         this.k = priori.length;
         this.p = mu[0].length;
@@ -160,17 +162,17 @@ public class LDA extends AbstractClassifier<double[]> {
      */
     public static LDA fit(double[][] x, int[] y, double[] priori, double tol) {
         DiscriminantAnalysis da = DiscriminantAnalysis.fit(x, y, priori, tol);
-        Matrix St = DiscriminantAnalysis.St(x, da.mean, da.k, tol);
-        Matrix.EVD eigen = St.eigen(false, true, true).sort();
+        DenseMatrix St = DiscriminantAnalysis.St(x, da.mean, da.k, tol);
+        EVD eigen = St.eigen().sort();
 
         tol = tol * tol;
-        for (double s : eigen.wr) {
-            if (s < tol) {
+        for (int j = 0; j < eigen.wr().size(); j++) {
+            if (eigen.wr().get(j) < tol) {
                 throw new IllegalArgumentException("The covariance matrix is close to singular.");
             }
         }
 
-        return new LDA(da.priori, da.mu, eigen.wr, eigen.Vr, da.labels);
+        return new LDA(da.priori, da.mu, eigen.wr(), eigen.Vr(), da.labels);
     }
 
     /**
@@ -197,20 +199,21 @@ public class LDA extends AbstractClassifier<double[]> {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
         }
 
-        double[] d = new double[p];
-        double[] ux = new double[p];
+        Vector d = scaling.vector(p);
+        Vector ux = scaling.vector(p);
 
         for (int i = 0; i < k; i++) {
             double[] mean = mu[i];
             for (int j = 0; j < p; j++) {
-                d[j] = x[j] - mean[j];
+                d.set(j, x[j] - mean[j]);
             }
 
             scaling.tv(d, ux);
 
             double f = 0.0;
             for (int j = 0; j < p; j++) {
-                f += ux[j] * ux[j] / eigen[j];
+                double uxj = ux.get(j);
+                f += uxj * uxj / eigen.get(j);
             }
 
             posteriori[i] = logppriori[i] - 0.5 * f;

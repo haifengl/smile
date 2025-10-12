@@ -53,6 +53,7 @@ public class Config {
      * a Vega-Lite visualization may be determined by multiple factors:
      * specified width, height, and padding values, as well as content
      * such as axes, legends, and titles.
+     * @return this object.
      */
     public Config autosize() {
         return autosize("pad", false, "content");
@@ -78,6 +79,7 @@ public class Config {
      *                 calculations, such that the width and height settings
      *                 indicate the total intended size of the view.
      * @see <a href="https://vega.github.io/vega-lite/docs/size.html#autosize">autosize</a>
+     * @return this object.
      */
     public Config autosize(String type, boolean resize, String contains) {
         ObjectNode autosize = spec.putObject("autosize");
@@ -89,6 +91,8 @@ public class Config {
 
     /**
      * Sets the background with CSS color property.
+     * @param color the background color.
+     * @return this object.
      */
     public Config background(String color) {
         spec.put("background", color);
@@ -99,6 +103,8 @@ public class Config {
      * Specifies padding for all sides.
      * The visualization padding, in pixels, is from the edge of the
      * visualization canvas to the data rectangle.
+     * @param size the padding size.
+     * @return this object.
      */
     public Config padding(int size) {
         spec.put("padding", size);
@@ -109,6 +115,11 @@ public class Config {
      * Specifies padding for each side.
      * The visualization padding, in pixels, is from the edge of the
      * visualization canvas to the data rectangle.
+     * @param left the left padding.
+     * @param top the top padding.
+     * @param right the right padding.
+     * @param bottom the bottom padding.
+     * @return this object.
      */
     public Config padding(int left, int top, int right, int bottom) {
         ObjectNode padding = spec.putObject("padding");
@@ -121,6 +132,8 @@ public class Config {
 
     /**
      * Sets the default axis and legend title for count fields.
+     * @param title the count title.
+     * @return this object.
      */
     public Config countTitle(String title) {
         spec.put("countTitle", title);
@@ -135,6 +148,8 @@ public class Config {
      * "function" - displays function using parentheses and capitalized texts (e.g., “SUM(field)”, “YEARMONTH(date)”, “BIN(field)”).
      * <p>
      * "plain" - displays only the field name without functions (e.g., “field”, “date”, “field”).
+     * @param title the field title.
+     * @return this object.
      */
     public Config fieldTitle(String title) {
         spec.put("fieldTitle", title);
@@ -143,6 +158,8 @@ public class Config {
 
     /**
      * Sets the default font for all text marks, titles, and labels.
+     * @param font the text font.
+     * @return this object.
      */
     public Config font(String font) {
         spec.put("font", font);
@@ -155,6 +172,8 @@ public class Config {
      * default for text marks, which is overridden by mark or style config
      * settings, and by the lineBreak mark encoding channel. If signal-valued,
      * either string or regular expression (regexp) values are valid.
+     * @param lineBreak the line delimiter.
+     * @return this object.
      */
     public Config lineBreak(String lineBreak) {
         spec.put("lineBreak", lineBreak);

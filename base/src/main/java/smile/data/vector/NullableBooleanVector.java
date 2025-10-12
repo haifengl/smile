@@ -73,13 +73,13 @@ public class NullableBooleanVector extends NullablePrimitiveVector {
      * @param nullMask The null bitmap. The bit is 1 if the value is null.
      */
     public NullableBooleanVector(StructField field, int size, BitSet bits, BitSet nullMask) {
-        super(field, nullMask);
         if (field.dtype() != DataTypes.NullableBooleanType) {
             throw new IllegalArgumentException("Invalid data type: " + field);
         }
         if (field.measure() instanceof NumericalMeasure) {
             throw new IllegalArgumentException("Invalid measure: " + field.measure());
         }
+        super(field, nullMask);
         this.size = size;
         this.vector = bits;
     }

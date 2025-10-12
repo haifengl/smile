@@ -43,6 +43,8 @@ public class Isoline extends Shape {
 
     /**
      * Constructor.
+     * @param level the level value of contour line.
+     * @param isLevelVisible true if showing the value of isoline.
      */
     public Isoline(double level, boolean isLevelVisible) {
         this.level = level;
@@ -51,24 +53,26 @@ public class Isoline extends Shape {
 
     /**
      * Returns true if the isoline doesn't have any points.
+     * @return true if the isoline doesn't have any points.
      */
     public boolean isEmpty() {
         return points.isEmpty();
     }
 
     /**
-     * Add a point to the contour line.
+     * Adds a point to the contour line.
+     * @param point the point coordinates.
      */
     public void add(double... point) {
         points.add(point);
     }
 
     /**
-     * Paint the contour line. If the color attribute is null, the level
+     * Paints the contour line. If the color attribute is null, the level
      * value of contour line will be shown along the line.
      */
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         double angle = 0.0;
         double horizontalReference = 0.0;
         double verticalReference = 0.0;

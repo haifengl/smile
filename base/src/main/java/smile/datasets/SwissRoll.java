@@ -65,6 +65,6 @@ public record SwissRoll(double[][] data) {
      * @return the pairwise distance matrix.
      */
     public double[][] distance(int size) {
-        return MathEx.pdist(Arrays.copyOf(data, size)).toArray();
+        return MathEx.pdist(Arrays.copyOf(data, size)).toArray(new double[size][size]);
     }
 }

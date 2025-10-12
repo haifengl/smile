@@ -30,10 +30,15 @@ public class Line extends Shape {
      * The supported styles of lines.
      */
     public enum Style {
+        /** Solid line. */
         SOLID,
+        /** Dot line. */
         DOT,
+        /** Dash line. */
         DASH,
+        /** Dot dash line. */
         DOT_DASH,
+        /** Long dash line. */
         LONG_DASH
     }
 
@@ -127,7 +132,7 @@ public class Line extends Shape {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         g.setColor(color);
 
         Stroke s = g.getStroke();
@@ -148,6 +153,7 @@ public class Line extends Shape {
      * Returns a 2-dimensional array with the index as the x coordinate.
      * @param y the data vector of y coordinates.
      *          The x coordinates will be [0, n), where n is the length of y.
+     * @return 2-dimensional array with the index as the x coordinate.
      */
     public static double[][] zipWithIndex(double[] y) {
         int n = y.length;
@@ -162,6 +168,8 @@ public class Line extends Shape {
 
     /**
      * Creates a Line with solid stroke and black color.
+     * @param points the points.
+     * @return the line.
      */
     public static Line of(double[][] points) {
         return new Line(points, Style.SOLID, ' ', Color.BLACK);
@@ -169,6 +177,9 @@ public class Line extends Shape {
 
     /**
      * Creates a Line.
+     * @param points the points.
+     * @param style the line style.
+     * @return the line.
      */
     public static Line of(double[][] points, Style style) {
         return new Line(points, style, ' ', Color.BLACK);
@@ -176,6 +187,9 @@ public class Line extends Shape {
 
     /**
      * Creates a Line.
+     * @param points the points.
+     * @param mark the point mark.
+     * @return the line.
      */
     public static Line of(double[][] points, char mark) {
         return new Line(points, Style.SOLID, mark, Color.BLACK);
@@ -183,6 +197,9 @@ public class Line extends Shape {
 
     /**
      * Creates a Line.
+     * @param points the points.
+     * @param color the color of line.
+     * @return the line.
      */
     public static Line of(double[][] points, Color color) {
         return new Line(points, Style.SOLID, ' ', color);
@@ -190,6 +207,10 @@ public class Line extends Shape {
 
     /**
      * Creates a Line.
+     * @param points the points.
+     * @param style the line style.
+     * @param color the color of line.
+     * @return the line.
      */
     public static Line of(double[][] points, Style style, Color color) {
         return new Line(points, style, ' ', color);

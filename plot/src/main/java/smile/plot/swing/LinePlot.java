@@ -37,6 +37,7 @@ public class LinePlot extends Plot {
 
     /**
      * Constructor.
+     * @param lines the lines.
      */
     public LinePlot(Line... lines) {
         this(lines, null);
@@ -44,6 +45,8 @@ public class LinePlot extends Plot {
 
     /**
      * Constructor.
+     * @param lines the lines.
+     * @param legends the legends of lines.
      */
     public LinePlot(Line[] lines, Legend[] legends) {
         this.lines = lines;
@@ -56,8 +59,8 @@ public class LinePlot extends Plot {
     }
 
     @Override
-    public Canvas canvas() {
-        Canvas canvas = new Canvas(getLowerBound(), getUpperBound());
+    public Figure figure() {
+        Figure canvas = new Figure(getLowerBound(), getUpperBound());
         canvas.add(this);
         return canvas;
     }
@@ -95,7 +98,7 @@ public class LinePlot extends Plot {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         for (Line line : lines) {
             line.paint(g);
         }
@@ -103,6 +106,8 @@ public class LinePlot extends Plot {
 
     /**
      * Creates a line plot.
+     * @param data the lines.
+     * @return the line plot.
      */
     public static LinePlot of(double[][] data) {
         return new LinePlot(Line.of(data));
@@ -110,6 +115,9 @@ public class LinePlot extends Plot {
 
     /**
      * Creates a line plot.
+     * @param data the lines.
+     * @param style the line style.
+     * @return the line plot.
      */
     public static LinePlot of(double[][] data, Line.Style style) {
         return new LinePlot(Line.of(data, style));
@@ -117,6 +125,9 @@ public class LinePlot extends Plot {
 
     /**
      * Creates a line plot.
+     * @param data the lines.
+     * @param color the line color.
+     * @return the line plot.
      */
     public static LinePlot of(double[][] data, Color color) {
         return new LinePlot(Line.of(data, color));
@@ -124,6 +135,10 @@ public class LinePlot extends Plot {
 
     /**
      * Creates a line plot.
+     * @param data the lines.
+     * @param style the line style.
+     * @param color the line color.
+     * @return the line plot.
      */
     public static LinePlot of(double[][] data, Line.Style style, Color color) {
         return new LinePlot(Line.of(data, style, color));
@@ -131,6 +146,11 @@ public class LinePlot extends Plot {
 
     /**
      * Creates a line plot.
+     * @param data the lines.
+     * @param style the line style.
+     * @param color the line color.
+     * @param label the line legend.
+     * @return the line plot.
      */
     public static LinePlot of(double[][] data, Line.Style style, Color color, String label) {
         Line[] line = {Line.of(data, style, color)};
@@ -142,6 +162,7 @@ public class LinePlot extends Plot {
      * Creates a line plot with the index as the x coordinate.
      * @param y the data vector of y coordinates.
      *          The x coordinates will be [0, n), where n is the length of y.
+     * @return the line plot.
      */
     public static LinePlot of(double[] y) {
         return of(Line.zipWithIndex(y));
@@ -151,6 +172,8 @@ public class LinePlot extends Plot {
      * Creates a line plot with the index as the x coordinate.
      * @param y the data vector of y coordinates.
      *          The x coordinates will be [0, n), where n is the length of y.
+     * @param style the line style.
+     * @return the line plot.
      */
     public static LinePlot of(double[] y, Line.Style style) {
         return new LinePlot(Line.of(Line.zipWithIndex(y), style));
@@ -160,6 +183,8 @@ public class LinePlot extends Plot {
      * Creates a line plot with the index as the x coordinate.
      * @param y the data vector of y coordinates.
      *          The x coordinates will be [0, n), where n is the length of y.
+     * @param color the line color.
+     * @return the line plot.
      */
     public static LinePlot of(double[] y, Color color) {
         return new LinePlot(Line.of(Line.zipWithIndex(y), color));
@@ -169,6 +194,9 @@ public class LinePlot extends Plot {
      * Creates a line plot with the index as the x coordinate.
      * @param y the data vector of y coordinates.
      *          The x coordinates will be [0, n), where n is the length of y.
+     * @param style the line style.
+     * @param color the line color.
+     * @return the line plot.
      */
     public static LinePlot of(double[] y, Line.Style style, Color color) {
         return new LinePlot(Line.of(Line.zipWithIndex(y), style, color));
@@ -178,6 +206,10 @@ public class LinePlot extends Plot {
      * Creates a line plot with the index as the x coordinate.
      * @param y the data vector of y coordinates.
      *          The x coordinates will be [0, n), where n is the length of y.
+     * @param style the line style.
+     * @param color the line color.
+     * @param label the line legend.
+     * @return the line plot.
      */
     public static LinePlot of(double[] y, Line.Style style, Color color, String label) {
         Line[] line = {Line.of(Line.zipWithIndex(y), style, color)};

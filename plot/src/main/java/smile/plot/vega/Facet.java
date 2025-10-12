@@ -36,6 +36,7 @@ public class Facet extends VegaLite implements ViewLayoutComposition {
 
     /**
      * Constructor.
+     * @param view the view spec.
      */
     public Facet(VegaLite view) {
         spec.set("spec", view.spec);

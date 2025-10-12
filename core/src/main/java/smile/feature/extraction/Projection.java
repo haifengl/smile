@@ -24,7 +24,7 @@ import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.DoubleVector;
-import smile.math.matrix.Matrix;
+import smile.tensor.DenseMatrix;
 
 /**
  * A projection is a kind of feature extraction technique that transforms data
@@ -40,7 +40,7 @@ public class Projection implements Transform {
      * The projection matrix. The dimension reduced data
      * can be obtained by y = W * x.
      */
-    public final Matrix projection;
+    public final DenseMatrix projection;
     /**
      * The schema of output space.
      */
@@ -56,7 +56,7 @@ public class Projection implements Transform {
      * @param prefix the output field name prefix.
      * @param columns the input fields.
      */
-    public Projection(Matrix projection, String prefix, String... columns) {
+    public Projection(DenseMatrix projection, String prefix, String... columns) {
         this.projection = projection;
         int p = projection.nrow();
         StructField[] fields = IntStream.range(1, p+1)
@@ -95,7 +95,7 @@ public class Projection implements Transform {
      * @return the projection in the feature space.
      */
     public double[] apply(double[] x) {
-        return postprocess(projection.mv(preprocess(x)));
+        return postprocess(projection.mv(preprocess(x)).toArray(new double[0]));
     }
 
     /**

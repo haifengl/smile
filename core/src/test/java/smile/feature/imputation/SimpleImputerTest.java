@@ -113,7 +113,7 @@ public class SimpleImputerTest {
     }
 
     @Test
-    public void testSimpleImputer() throws Exception {
+    public void test() throws Exception {
         System.out.println("SimpleImputer");
         var control = new SyntheticControl();
         double[][] data = control.x();
@@ -129,14 +129,20 @@ public class SimpleImputerTest {
     @Test
     public void testJson() throws Exception {
         System.out.println("SimpleImputer on JSON");
-        DataFrame df = Read.json(Paths.getTestData("json/access.json"));
+        DataFrame df = Read.json(Paths.getTestData("imputation/access.json"));
         System.out.println(df);
-        SimpleImputer simpleImputer = SimpleImputer.fit(df);
-        System.out.println(simpleImputer);
-        System.out.println(simpleImputer.apply(df));
-/*
-        impute(imputer, data, 0.01, 38.88);
-        impute(imputer, data, 0.05, 48.80);
-        impute(imputer, data, 0.10, 45.04);*/
+        SimpleImputer imputer = SimpleImputer.fit(df);
+        System.out.println(imputer);
+        System.out.println(imputer.apply(df));
+    }
+
+    @Test
+    public void testCsv() throws Exception {
+        System.out.println("SimpleImputer on CSV");
+        DataFrame df = Read.csv(Paths.getTestData("imputation/ratio.csv").toString(), "header=true");
+        System.out.println(df);
+        SimpleImputer imputer = SimpleImputer.fit(df);
+        System.out.println(imputer);
+        System.out.println(imputer.apply(df));
     }
 }

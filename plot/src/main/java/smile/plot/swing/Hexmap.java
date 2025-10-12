@@ -29,7 +29,12 @@ import smile.math.MathEx;
 public class Hexmap extends Plot {
     /** The lambda interface to retrieve the tooltip of cell. */
     public interface Tooltip {
-        /** Gets the tooltip of cell at (i, j). */
+        /**
+         * Gets the tooltip of cell at (i, j).
+         * @param i the row index of cell.
+         * @param j the column index of cell.
+         * @return the tooltip.
+         */
         String get(int i, int j);
     }
 
@@ -143,7 +148,7 @@ public class Hexmap extends Plot {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         for (int i = 0; i < z.length; i++) {
             for (int j = 0; j < z[i].length; j++) {
                 if (Double.isNaN(z[i][j])) {
@@ -201,8 +206,8 @@ public class Hexmap extends Plot {
     }
 
     @Override
-    public Canvas canvas() {
-        Canvas canvas = new Canvas(getLowerBound(), getUpperBound(), false);
+    public Figure figure() {
+        Figure canvas = new Figure(getLowerBound(), getUpperBound(), false);
         canvas.add(this);
 
         canvas.getAxis(0).setFrameVisible(false);
@@ -218,6 +223,7 @@ public class Hexmap extends Plot {
     /**
      * Creates a hexmap with 16-color jet color palette.
      * @param z a data matrix to be shown in hexmap.
+     * @return the hexmap.
      */
     public static Hexmap of(double[][] z) {
         return of(z, 16);
@@ -227,15 +233,17 @@ public class Hexmap extends Plot {
      * Creates a hexmap with the jet color palette.
      * @param z a data matrix to be shown in hexmap.
      * @param k the number of colors in the palette.
+     * @return the hexmap.
      */
-    public static Hexmap  of(double[][] z, int k) {
+    public static Hexmap of(double[][] z, int k) {
         return of(z, Palette.jet(k, 1.0f));
     }
 
     /**
-     * Constructor.
+     * Creates a hexmap with given color palette.
      * @param z a data matrix to be shown in hexmap.
      * @param palette the color palette.
+     * @return the hexmap.
      */
     public static Hexmap of(double[][] z, Color[] palette) {
         return new Hexmap(z, palette, null);

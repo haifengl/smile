@@ -26,6 +26,11 @@ import java.util.Arrays;
  * @author Haifeng Li
  */
 public class IntegerArrayFormatter extends DefaultFormatter {
+    /** Constructor. */
+    public IntegerArrayFormatter() {
+
+    }
+
     @Override
     public Object stringToValue(String string) throws ParseException {
         string = string.trim();

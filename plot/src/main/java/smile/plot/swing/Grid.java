@@ -33,6 +33,7 @@ public class Grid extends Plot {
     /**
      * Constructor.
      * @param data an m x n x 2 array which are coordinates of m x n grid.
+     * @param color the color of grid.
      */
     public Grid(double[][][] data, Color color) {
         super(color);
@@ -40,7 +41,7 @@ public class Grid extends Plot {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         g.setColor(color);
 
         for (var row : data) {
@@ -93,6 +94,7 @@ public class Grid extends Plot {
     /**
      * Creates a grid with black lines.
      * @param data an m x n x 2 array which are coordinates of m x n grid.
+     * @return a grid with black lines.
      */
     public static Grid of(double[][][] data) {
         return new Grid(data, Color.BLACK);

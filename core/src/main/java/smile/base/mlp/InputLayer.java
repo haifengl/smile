@@ -16,6 +16,8 @@
  */
 package smile.base.mlp;
 
+import smile.tensor.Vector;
+
 import java.io.IOException;
 import java.io.Serial;
 
@@ -54,7 +56,7 @@ public class InputLayer extends Layer {
     @Serial
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        output = ThreadLocal.withInitial(() -> new double[n]);
+        output = ThreadLocal.withInitial(() -> weight.vector(n));
 
         if (dropout > 0.0) {
             mask = ThreadLocal.withInitial(() -> new byte[n]);
@@ -71,27 +73,27 @@ public class InputLayer extends Layer {
     }
 
     @Override
-    public void propagate(double[] x) {
-        System.arraycopy(x, 0, output.get(), 0, p);
+    public void propagate(Vector x) {
+        Vector.copy(x, 0, output.get(), 0, p);
     }
 
     @Override
-    public void backpropagate(double[] lowerLayerGradient) {
+    public void backpropagate(Vector lowerLayerGradient) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void transform(double[] x) {
+    public void transform(Vector x) {
         // identity activation function
     }
 
     @Override
-    public void computeGradient(double[] x) {
+    public void computeGradient(Vector x) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void computeGradientUpdate(double[] x, double learningRate, double momentum, double decay) {
+    public void computeGradientUpdate(Vector x, double learningRate, double momentum, double decay) {
         throw new UnsupportedOperationException();
     }
 

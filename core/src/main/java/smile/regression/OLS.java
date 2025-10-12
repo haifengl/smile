@@ -20,8 +20,8 @@ import java.util.Properties;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.type.StructType;
-import smile.math.matrix.Matrix;
 import smile.math.special.Beta;
+import smile.tensor.*;
 
 /**
  * Ordinary least squares. In linear regression,
@@ -153,55 +153,47 @@ public class OLS {
         formula = formula.expand(data.schema());
         StructType schema = formula.bind(data.schema());
 
-        Matrix X = formula.matrix(data);
+        DenseMatrix X = formula.matrix(data);
         double[] y = formula.y(data).toDoubleArray();
 
         int n = X.nrow();
         int p = X.ncol();
-        
+
         if (n <= p) {
             throw new IllegalArgumentException(String.format("The input matrix is not over determined: %d rows, %d columns", n, p));
         }
 
-        // weights and intercept
-        double[] w;
-        Matrix.QR qr = null;
-        Matrix.SVD svd;
-
-        if (options.method == Method.SVD) {
-            svd = X.svd();
-            w = svd.solve(y);
-        } else {
-            try {
-                qr = X.qr();
-                w = qr.solve(y);
-            } catch (RuntimeException e) {
-                logger.warn("Matrix is not of full rank, try SVD instead");
-                svd = X.svd();
-                w = svd.solve(y);
+        QR qr = null;
+        Vector w = switch (options.method) {
+            case SVD -> X.copy().svd().solve(y);
+            case QR -> {
+                try {
+                    qr = X.copy().qr();
+                    yield qr.solve(y);
+                } catch (RuntimeException e) {
+                    logger.warn("Matrix is not of full rank, try SVD instead");
+                    yield X.copy().svd().solve(y);
+                }
             }
-        }
+        };
 
         LinearModel model = new LinearModel(formula, schema, X, y, w, 0.0);
-
-        Matrix inv = null;
         if (options.stderr || options.recursive) {
-            Matrix.Cholesky cholesky = qr == null ? X.ata().cholesky(true) : qr.CholeskyOfAtA();
-            inv = cholesky.inverse();
+            Cholesky cholesky = qr == null ? X.ata().cholesky() : qr.toCholesky();
+            DenseMatrix inv = cholesky.inverse();
             model.V = inv;
-        }
 
-        if (options.stderr) {
-            double[][] ttest = new double[p][4];
-            model.ttest = ttest;
-
-            for (int i = 0; i < p; i++) {
-                ttest[i][0] = w[i];
-                double se = model.error * Math.sqrt(inv.get(i, i));
-                ttest[i][1] = se;
-                double t = w[i] / se;
-                ttest[i][2] = t;
-                ttest[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * model.df, 0.5, model.df / (model.df + t * t));
+            if (options.stderr) {
+                double[][] ttest = new double[p][4];
+                model.ttest = ttest;
+                for (int i = 0; i < p; i++) {
+                    ttest[i][0] = w.get(i);
+                    double se = model.error * Math.sqrt(inv.get(i, i));
+                    ttest[i][1] = se;
+                    double t = w.get(i) / se;
+                    ttest[i][2] = t;
+                    ttest[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * model.df, 0.5, model.df / (model.df + t * t));
+                }
             }
         }
 

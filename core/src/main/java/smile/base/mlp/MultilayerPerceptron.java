@@ -22,8 +22,9 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.stream.Collectors;
-import smile.math.MathEx;
+import smile.tensor.Vector;
 import smile.util.function.TimeFunction;
+import static smile.tensor.ScalarType.*;
 
 /**
  * Fully connected multilayer perceptron neural network.
@@ -57,7 +58,7 @@ public abstract class MultilayerPerceptron implements AutoCloseable, Serializabl
     /**
      * The buffer to store desired target value of training instance.
      */
-    protected transient ThreadLocal<double[]> target;
+    protected transient ThreadLocal<Vector> target;
     /**
      * The learning rate.
      */
@@ -154,7 +155,7 @@ public abstract class MultilayerPerceptron implements AutoCloseable, Serializabl
      * Initializes the workspace.
      */
     private void init() {
-        target = ThreadLocal.withInitial(() -> new double[output.getOutputSize()]);
+        target = ThreadLocal.withInitial(() -> Vector.zeros(Float32, output.getOutputSize()));
     }
 
     @Override
@@ -294,12 +295,21 @@ public abstract class MultilayerPerceptron implements AutoCloseable, Serializabl
     }
 
     /**
+     * Wraps an array into vector.
+     * @param x the input array.
+     * @return the vector.
+     */
+    protected Vector vector(double[] x) {
+        return net[0].output().vector(x);
+    }
+
+    /**
      * Propagates the signals through the neural network.
      * @param x the input signal.
      * @param training true if this is in training pass.
      */
-    protected void propagate(double[] x, boolean training) {
-        double[] input = x;
+    protected void propagate(Vector x, boolean training) {
+        Vector input = x;
         for (Layer layer : net) {
             layer.propagate(input);
             if (training) {
@@ -315,21 +325,19 @@ public abstract class MultilayerPerceptron implements AutoCloseable, Serializabl
      * usually in recurrent neural networks.
      * @param gradient the gradient vector.
      */
-    private void clipGradient(double[] gradient) {
+    private void clipGradient(Vector gradient) {
         if (clipNorm > 0.0) {
-            double norm = MathEx.norm(gradient);
+            double norm = gradient.norm2();
             if (norm > clipNorm) {
                 double scale = clipNorm / norm;
-                for (int j = 0; j < gradient.length; j++) {
-                    gradient[j] *= scale;
-                }
+                gradient.scale(scale);
             }
         } else if (clipValue > 0.0) {
-            for (int j = 0; j < gradient.length; j++) {
-                if (gradient[j] > clipValue) {
-                    gradient[j] = clipValue;
-                } else if (gradient[j] < -clipValue) {
-                    gradient[j] = -clipValue;
+            for (int j = 0; j < gradient.size(); j++) {
+                if (gradient.get(j) > clipValue) {
+                    gradient.set(j, clipValue);
+                } else if (gradient.get(j) < -clipValue) {
+                    gradient.set(j, -clipValue);
                 }
             }
         }
@@ -370,7 +378,7 @@ public abstract class MultilayerPerceptron implements AutoCloseable, Serializabl
                 throw new IllegalStateException(String.format("Invalid learning rate (eta = %.2f) and/or L2 regularization (lambda = %.2f) such that weight decay = %.2f", eta, lambda, decay));
             }
 
-            double[] x = net[0].output();
+            Vector x = net[0].output();
             for (int i = 1; i < net.length; i++) {
                 Layer layer = net[i];
                 layer.computeGradientUpdate(x, eta, alpha, decay);
@@ -379,7 +387,7 @@ public abstract class MultilayerPerceptron implements AutoCloseable, Serializabl
 
             output.computeGradientUpdate(x, eta, alpha, decay);
         } else {
-            double[] x = net[0].output();
+            Vector x = net[0].output();
             for (int i = 1; i < net.length; i++) {
                 Layer layer = net[i];
                 layer.computeGradient(x);

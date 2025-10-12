@@ -77,8 +77,8 @@ public interface Sort {
      * We move up the heap, exchanging the node at position k with its parent
      * (at position k/2) if necessary, continuing as long as {@code a[k/2] < a[k]} or
      * until we reach the top of the heap.
-     * @param a the array.
-     * @param k the index of array element.
+     * @param a the heap array.
+     * @param k the index of the node to sift up.
      */
     static void siftUp(int[] a, int k) {
         while (k > 1 && a[k/2] < a[k]) {
@@ -92,8 +92,8 @@ public interface Sort {
      * We move up the heap, exchanging the node at position k with its parent
      * (at position k/2) if necessary, continuing as long as {@code a[k/2] < a[k]} or
      * until we reach the top of the heap.
-     * @param a the array.
-     * @param k the index of array element.
+     * @param a the heap array.
+     * @param k the index of the node to sift up.
      */
     static void siftUp(float[] a, int k) {
         while (k > 1 && a[k/2] < a[k]) {
@@ -107,8 +107,8 @@ public interface Sort {
      * We move up the heap, exchanging the node at position k with its parent
      * (at position k/2) if necessary, continuing as long as {@code a[k/2] < a[k]} or
      * until we reach the top of the heap.
-     * @param a the array.
-     * @param k the index of array element.
+     * @param a the heap array.
+     * @param k the index of the node to sift up.
      */
     static void siftUp(double[] a, int k) {
         while (k > 1 && a[k/2] < a[k]) {
@@ -122,8 +122,8 @@ public interface Sort {
      * We move up the heap, exchanging the node at position k with its parent
      * (at position k/2) if necessary, continuing as long as {@code a[k/2] < a[k]} or
      * until we reach the top of the heap.
-     * @param a the array.
-     * @param k the index of array element.
+     * @param a the heap array.
+     * @param k the index of the node to sift up.
      * @param <T> the data type of array elements.
      */
     static <T extends Comparable<? super T>> void siftUp(T[] a, int k) {
@@ -140,9 +140,9 @@ public interface Sort {
      * k is not smaller than either child or the bottom is reached. Note that
      * if n is even and k is n/2, then the node at k has only one child -- this
      * case must be treated properly.
-     * @param a the array.
-     * @param k the index of array element.
-     * @param n the index {@code n > k}.
+     * @param a the heap array.
+     * @param k the index of the node to sift down.
+     * @param n the current size of the heap {@code n > k}.
      */
     static void siftDown(int[] a, int k, int n) {
         while (2*k <= n) {
@@ -165,9 +165,9 @@ public interface Sort {
      * k is not smaller than either child or the bottom is reached. Note that
      * if n is even and k is n/2, then the node at k has only one child -- this
      * case must be treated properly.
-     * @param a the array.
-     * @param k the index of array element.
-     * @param n the index {@code n > k}.
+     * @param a the heap array.
+     * @param k the index of the node to sift down.
+     * @param n the current size of the heap {@code n > k}.
      */
     static void siftDown(float[] a, int k, int n) {
         while (2*k <= n) {
@@ -190,9 +190,9 @@ public interface Sort {
      * k is not smaller than either child or the bottom is reached. Note that
      * if n is even and k is n/2, then the node at k has only one child -- this
      * case must be treated properly.
-     * @param a the array.
-     * @param k the index of array element.
-     * @param n the index {@code n > k}.
+     * @param a the heap array.
+     * @param k the index of the node to sift down.
+     * @param n the current size of the heap {@code n > k}.
      */
     static void siftDown(double[] a, int k, int n) {
         while (2*k <= n) {
@@ -215,9 +215,9 @@ public interface Sort {
      * k is not smaller than either child or the bottom is reached. Note that
      * if n is even and k is n/2, then the node at k has only one child -- this
      * case must be treated properly.
-     * @param a the array.
-     * @param k the index of array element.
-     * @param n the index {@code n > k}.
+     * @param a the heap array.
+     * @param k the index of the node to sift down.
+     * @param n the current size of the heap {@code n > k}.
      * @param <T> the data type of array elements.
      */
     static <T extends Comparable<? super T>> void siftDown(T[] a, int k, int n) {

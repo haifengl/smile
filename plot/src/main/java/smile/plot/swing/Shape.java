@@ -19,14 +19,14 @@ package smile.plot.swing;
 import java.awt.Color;
 
 /**
- * Abstract rendering object in a PlotCanvas.
+ * Abstract object that knows how to use a renderer to paint onto the canvas.
  *
  * @author Haifeng Li
  */
 public abstract class Shape {
 
     /**
-     * The color of the shape. By default, it is black.
+     * The color of shape. By default, it is black.
      */
     final Color color;
 
@@ -39,6 +39,7 @@ public abstract class Shape {
 
     /**
      * Constructor.
+     * @param color the color of shape.
      */
     public Shape(Color color) {
         this.color = color;
@@ -46,6 +47,7 @@ public abstract class Shape {
 
     /**
      * Draws the shape.
+     * @param g the renderer.
      */
-    public abstract void paint(Graphics g);
+    public abstract void paint(Renderer g);
 }

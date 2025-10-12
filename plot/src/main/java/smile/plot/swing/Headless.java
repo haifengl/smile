@@ -30,15 +30,20 @@ import javax.swing.JInternalFrame;
  * @author Tony Johnson
  * @author Mark Donszelmann
  */
-@SuppressWarnings("serial")
 public class Headless extends JInternalFrame {
-
+    /**
+     * Constructor.
+     * @param component the swing component.
+     * @param width the width of component.
+     * @param height the height of component.
+     */
     public Headless(JComponent component, int width, int height) {
         component.setPreferredSize(new Dimension(width, height));
         setContentPane(component);
     }
 
     // Note, this must override the (deprecated) method show, not setVisible
+    @Override
     public void show() {
         super.show();
         // Although the above calculates the size of the components, it does not lay them out.

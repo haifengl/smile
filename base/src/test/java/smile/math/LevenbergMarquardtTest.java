@@ -76,9 +76,9 @@ public class LevenbergMarquardtTest {
 
         double[] p = {0.5, 0.0};
         LevenbergMarquardt lma = LevenbergMarquardt.fit(func, x, y, p);
-        assertEquals(0.0863, lma.sse, 1E-4);
-        assertEquals(1.2260, lma.parameters[0], 1E-4);
-        assertEquals(1.8024, lma.parameters[1], 1E-4);
+        assertEquals(0.0863, lma.sse(), 1E-4);
+        assertEquals(1.2260, lma.parameters()[0], 1E-4);
+        assertEquals(1.8024, lma.parameters()[1], 1E-4);
     }
 }
 

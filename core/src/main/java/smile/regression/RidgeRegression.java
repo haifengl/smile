@@ -22,9 +22,11 @@ import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.type.StructType;
 import smile.math.MathEx;
-import smile.math.blas.UPLO;
-import smile.math.matrix.Matrix;
+import smile.tensor.Cholesky;
+import smile.tensor.DenseMatrix;
+import smile.tensor.Vector;
 import smile.util.Strings;
+import static smile.linalg.UPLO.*;
 
 /**
  * Ridge Regression. Coefficient estimates for multiple linear regression
@@ -186,7 +188,7 @@ public class RidgeRegression {
         formula = formula.expand(data.schema());
         StructType schema = formula.bind(data.schema());
 
-        Matrix X = formula.matrix(data, false);
+        DenseMatrix X = formula.matrix(data, false);
         double[] y = formula.y(data).toDoubleArray();
 
         int n = X.nrow();
@@ -226,39 +228,40 @@ public class RidgeRegression {
             throw new IllegalArgumentException(String.format("Invalid beta0 vector size: %d != %d", beta0.length, p));
         }
 
-        double[] center = X.colMeans();
-        double[] scale = X.colSds();
-
-        for (int j = 0; j < scale.length; j++) {
-            if (MathEx.isZero(scale[j])) {
-                throw new IllegalArgumentException(String.format("The column '%s' is constant", X.colName(j)));
+        Vector center = X.colMeans();
+        Vector scale = X.colSds();
+        for (int j = 0; j < scale.size(); j++) {
+            if (MathEx.isZero(scale.get(j))) {
+                throw new IllegalArgumentException(String.format("The column '%s' is constant", schema.names()[j]));
             }
         }
 
-        Matrix scaledX = X.scale(center, scale);
-        Matrix XtW = new Matrix(p, n);
+        DenseMatrix scaledX = X.standardize(center, scale);
+        DenseMatrix XtW = X.zeros(p, n);
         for (int i = 0; i < p; i++) {
             for (int j = 0; j < n; j++) {
                 XtW.set(i, j, weights[j] * scaledX.get(j, i));
             }
         }
 
-        double[] scaledY = XtW.mv(y);
+        Vector w = XtW.mv(y);
         for (int i = 0; i < p; i++) {
-            scaledY[i] += lambda[i] * beta0[i];
+            w.add(i, lambda[i] * beta0[i]);
         }
 
-        Matrix XtX = XtW.mm(scaledX);
-        XtX.uplo(UPLO.LOWER);
-        XtX.addDiag(lambda);
-        Matrix.Cholesky cholesky = XtX.cholesky(true);
+        DenseMatrix XtX = XtW.mm(scaledX);
+        XtX.withUplo(LOWER);
+        for (int i = 0; i < XtX.nrow(); i++) {
+            XtX.add(i, i, lambda[i]);
+        }
 
-        double[] w = cholesky.solve(scaledY);
+        Cholesky cholesky = XtX.cholesky();
+        cholesky.solve(w);
         for (int j = 0; j < p; j++) {
-            w[j] /= scale[j];
+            w.div(j, scale.get(j));
         }
 
-        double b = MathEx.mean(y) - MathEx.dot(w, center);
+        double b = MathEx.mean(y) - w.dot(center);
         return new LinearModel(formula, schema, X, y, w, b);
     }
 }

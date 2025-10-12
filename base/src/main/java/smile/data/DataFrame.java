@@ -32,9 +32,10 @@ import smile.data.measure.NominalScale;
 import smile.data.type.*;
 import smile.data.vector.*;
 import smile.math.MathEx;
-import smile.math.matrix.Matrix;
+import smile.tensor.DenseMatrix;
 import smile.util.Index;
 import smile.util.Strings;
+import static smile.tensor.ScalarType.*;
 
 /**
  * Two-dimensional, potentially heterogeneous tabular data.
@@ -488,7 +489,7 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
      */
     public DataFrame select(int... indices) {
         return new DataFrame(index, Arrays.stream(indices)
-                .mapToObj(j -> columns.get(j))
+                .mapToObj(columns::get)
                 .toArray(ValueVector[]::new));
     }
 
@@ -830,7 +831,7 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
      * encoded as Double.NaN.
      * @return the numeric matrix.
      */
-    public Matrix toMatrix() {
+    public DenseMatrix toMatrix() {
         return toMatrix(false, CategoricalEncoder.LEVEL, null);
     }
 
@@ -846,7 +847,7 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
      * @param rowNames the column to be used as row names.
      * @return the numeric matrix.
      */
-    public Matrix toMatrix(boolean bias, CategoricalEncoder encoder, String rowNames) {
+    public DenseMatrix toMatrix(boolean bias, CategoricalEncoder encoder, String rowNames) {
         int nrow = size();
         int ncol = columns.size();
 
@@ -874,15 +875,15 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
             }
         }
 
-        Matrix matrix = new Matrix(nrow, colNames.size());
-        matrix.colNames(colNames.toArray(new String[0]));
+        DenseMatrix matrix = DenseMatrix.zeros(Float64, nrow, colNames.size());
+        matrix.withColNames(colNames.toArray(new String[0]));
         if (rowNames != null) {
             int j = schema.indexOf(rowNames);
             String[] rows = new String[nrow];
             for (int i = 0; i < nrow; i++) {
                 rows[i] = getString(i, j);
             }
-            matrix.rowNames(rows);
+            matrix.withRowNames(rows);
         }
 
         int j = 0;

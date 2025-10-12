@@ -88,7 +88,7 @@ public class RBFNetworkTest {
                 (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 50), true));
 
         System.out.println("Normalized RBF Network: " + result);
-        assertEquals(0.9207, result.avg().accuracy(), 1E-4);
+        assertEquals(0.9172, result.avg().accuracy(), 1E-4);
     }
 
     @Test

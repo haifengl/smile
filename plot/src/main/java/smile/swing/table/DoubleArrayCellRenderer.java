@@ -24,7 +24,6 @@ import javax.swing.table.DefaultTableCellRenderer;
  * 
  * @author Haifeng Li
  */
-@SuppressWarnings("serial")
 public class DoubleArrayCellRenderer extends DefaultTableCellRenderer {
 
     /**

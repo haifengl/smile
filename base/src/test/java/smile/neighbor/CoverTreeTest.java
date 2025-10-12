@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.List;
 import smile.math.MathEx;
 import smile.math.distance.EditDistance;
-import smile.math.matrix.Matrix;
 import smile.datasets.WordNet;
 import smile.datasets.SwissRoll;
 import smile.datasets.USPS;
@@ -60,7 +59,7 @@ public class CoverTreeTest {
     public void testNearest() {
         System.out.println("nearest");
 
-        double[][] data = Matrix.randn(1000, 10).toArray();
+        double[][] data = MathEx.randn(1000, 10);
         CoverTree<double[], double[]> coverTree = CoverTree.of(data, MathEx::distance);
         LinearSearch<double[], double[]> naive = LinearSearch.of(data, MathEx::distance);
 
@@ -77,7 +76,7 @@ public class CoverTreeTest {
     public void testKnn() {
         System.out.println("knn");
 
-        double[][] data = Matrix.randn(1000, 10).toArray();
+        double[][] data = MathEx.randn(1000, 10);
         CoverTree<double[], double[]> coverTree = CoverTree.of(data, MathEx::distance);
         LinearSearch<double[], double[]> naive = LinearSearch.of(data, MathEx::distance);
 
@@ -100,7 +99,7 @@ public class CoverTreeTest {
     public void testKnn1() {
         System.out.println("knn1");
 
-        double[][] data = Matrix.randn(2, 10).toArray();
+        double[][] data = MathEx.randn(2, 10);
         double[][] data1 = {data[0]};
         CoverTree<double[], double[]> coverTree = CoverTree.of(data1, MathEx::distance);
 
@@ -115,7 +114,7 @@ public class CoverTreeTest {
     public void testRange() {
         System.out.println("range");
 
-        double[][] data = Matrix.randn(1000, 10).toArray();
+        double[][] data = MathEx.randn(1000, 10);
         CoverTree<double[], double[]> coverTree = CoverTree.of(data, MathEx::distance);
         LinearSearch<double[], double[]> naive = LinearSearch.of(data, MathEx::distance);
 

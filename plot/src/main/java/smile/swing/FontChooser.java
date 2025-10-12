@@ -76,7 +76,6 @@ import javax.swing.text.Position;
  *
  * @author Haifeng Li
  */
-@SuppressWarnings("serial")
 public class FontChooser extends JComponent {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FontChooser.class);
     /**
@@ -104,10 +103,16 @@ public class FontChooser extends JComponent {
         "8", "9", "10", "11", "12", "14", "16", "18", "20",
         "22", "24", "26", "28", "36", "48", "72",};
     
-    // instance variables
+    /** The dialog result value. */
     protected int dialogResultValue = ERROR_OPTION;
+    /** The message resource bundle. */
     private final ResourceBundle messageCatalog = ResourceBundle.getBundle(FontChooser.class.getName(), getLocale());
 
+    /**
+     * Returns a message.
+     * @param key the message key.
+     * @return the message.
+     */
     protected String getMessage(String key) {
         String value = key;
         try {
@@ -117,19 +122,34 @@ public class FontChooser extends JComponent {
         }
         return value;
     }
+
+    /** The font style names. */
     private String[] fontStyleNames = null;
+    /** The font family names. */
     private String[] fontFamilyNames = null;
+    /** The font size texts. */
     private final String[] fontSizeStrings;
+    /** The font family text field. */
     private JTextField fontFamilyTextField = null;
+    /** The font style text field. */
     private JTextField fontStyleTextField = null;
+    /** The font size text field. */
     private JTextField fontSizeTextField = null;
+    /** The font name list. */
     private JList<String> fontNameList = null;
+    /** The font sytle list. */
     private JList<String> fontStyleList = null;
+    /** The font size list. */
     private JList<String> fontSizeList = null;
+    /** The font name panel. */
     private JPanel fontNamePanel = null;
+    /** The font style panel. */
     private JPanel fontStylePanel = null;
+    /** The font size panel. */
     private JPanel fontSizePanel = null;
+    /** The sample panel. */
     private JPanel samplePanel = null;
+    /** The sample text. */
     private JTextField sampleText = null;
 
     /**
@@ -176,6 +196,7 @@ public class FontChooser extends JComponent {
      * Returns the shared font chooser instance. In general, an application
      * should have only one font chooser so that it always knows the latest
      * chosen font.
+     * @return the shared font chooser instance.
      */
     public static FontChooser getInstance() {
         return chooser;
@@ -312,7 +333,7 @@ public class FontChooser extends JComponent {
     }
 
     /**
-     * Get the selected font.
+     * Gets the selected font.
      * @return  the selected font
      *
      * @see #setSelectedFont
@@ -323,9 +344,9 @@ public class FontChooser extends JComponent {
     }
 
     /**
-     * Set the family name of the selected font.
+     * Sets the family name of the selected font.
      * @param name  the family name of the selected font. 
-     *
+     * @return this object.
      * @see #getSelectedFontFamily
      **/
     public FontChooser setSelectedFontFamily(String name) {
@@ -341,12 +362,12 @@ public class FontChooser extends JComponent {
     }
 
     /**
-     * Set the style of the selected font.
+     * Sets the style of the selected font.
      * @param style  the size of the selected font.
      *               <code>Font.PLAIN</code>, <code>Font.BOLD</code>,
      *               <code>Font.ITALIC</code>, or
      *               <code>Font.BOLD|Font.ITALIC</code>.
-     *
+     * @return this object.
      * @see java.awt.Font#PLAIN
      * @see java.awt.Font#BOLD
      * @see java.awt.Font#ITALIC
@@ -364,9 +385,9 @@ public class FontChooser extends JComponent {
     }
 
     /**
-     * Set the size of the selected font.
+     * Sets the size of the selected font.
      * @param size the size of the selected font
-     *
+     * @return this object.
      * @see #getSelectedFontSize
      **/
     public FontChooser setSelectedFontSize(int size) {
@@ -383,9 +404,9 @@ public class FontChooser extends JComponent {
     }
 
     /**
-     * Set the selected font.
+     * Sets the selected font.
      * @param font the selected font
-     *
+     * @return this object.
      * @see #getSelectedFont
      * @see java.awt.Font
      **/
@@ -397,14 +418,13 @@ public class FontChooser extends JComponent {
     }
 
     /**
-     *  Show font selection dialog.
-     *  @param parent Dialog's Parent component.
-     *  @return OK_OPTION, CANCEL_OPTION or ERROR_OPTION
-     *
-     *  @see #OK_OPTION 
-     *  @see #CANCEL_OPTION
-     *  @see #ERROR_OPTION
-     **/
+     * Shows font selection dialog.
+     * @param parent Dialog's Parent component.
+     * @return OK_OPTION, CANCEL_OPTION or ERROR_OPTION
+     * @see #OK_OPTION
+     * @see #CANCEL_OPTION
+     * @see #ERROR_OPTION
+     */
     public int showDialog(Component parent) {
         dialogResultValue = ERROR_OPTION;
         JDialog dialog = createDialog(parent);

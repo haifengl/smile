@@ -74,6 +74,7 @@ public class Surface extends Plot {
     /**
      * Constructor for irregular mesh surface.
      * @param data an m x n x 3 array which are coordinates of m x n surface.
+     * @param palette the color palette.
      */
     public Surface(double[][][] data, Color[] palette) {
         super(Color.GRAY);
@@ -166,7 +167,7 @@ public class Surface extends Plot {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         g.setColor(color);
 
         for (var datum : data) {
@@ -184,7 +185,7 @@ public class Surface extends Plot {
         if (palette != null) {
             int m = data.length;
             int n = data[0].length;
-            Projection3D p3d = (Projection3D) g.projection;
+            Projection3D p3d = (Projection3D) g.projection();
 
             // Calculates z-axis values in camera coordinates.
             for (int i = 0; i < m; i++) {
@@ -233,6 +234,7 @@ public class Surface extends Plot {
      * @param z the z-axis values of surface. The x-axis and y-axis location of
      * surface will be set to 0.5, 1.5, 2.5, ...
      * @param k the number of colors in the palette.
+     * @return the plot.
      */
     public static Surface of(double[][] z, int k) {
         return of(z, Palette.jet(k, 1.0f));
@@ -243,6 +245,7 @@ public class Surface extends Plot {
      * @param z the z-axis values of surface. The x-axis and y-axis location of
      * surface will be set to 0.5, 1.5, 2.5, ...
      * @param palette the color palette.
+     * @return the plot.
      */
     public static Surface of(double[][] z, Color[] palette) {
         int m = z.length;
@@ -264,6 +267,7 @@ public class Surface extends Plot {
      * @param x the x-axis values of surface.
      * @param y the y-axis values of surface.
      * @param z the z-axis values of surface.
+     * @return the plot.
      */
     public static Surface of(double[] x, double[] y, double[][] z) {
         return of(x, y, z, null);
@@ -274,6 +278,8 @@ public class Surface extends Plot {
      * @param x the x-axis values of surface.
      * @param y the y-axis values of surface.
      * @param z the z-axis values of surface.
+     * @param k the number of colors in the palette.
+     * @return the plot.
      */
     public static Surface of(double[] x, double[] y, double[][] z, int k) {
         return of(x, y, z, Palette.jet(k, 1.0f));
@@ -285,6 +291,7 @@ public class Surface extends Plot {
      * @param y the y-axis values of surface.
      * @param z the z-axis values of surface.
      * @param palette the color palette.
+     * @return the plot.
      */
     public static Surface of(double[] x, double[] y, double[][] z, Color[] palette) {
         int m = z.length;

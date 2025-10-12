@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import smile.math.MathEx;
-import smile.math.matrix.Matrix;
 import smile.datasets.GaussianMixture;
 import smile.datasets.USPS;
 import org.junit.jupiter.api.*;
@@ -56,7 +55,7 @@ public class KDTreeTest {
     public void testNearest() {
         System.out.println("nearest");
 
-        double[][] data = Matrix.randn(1000, 10).toArray();
+        double[][] data = MathEx.randn(1000, 10);
         KDTree<double[]> kdtree = new KDTree<>(data, data);
         LinearSearch<double[], double[]> naive = LinearSearch.of(data, MathEx::distance);
 
@@ -73,7 +72,7 @@ public class KDTreeTest {
     public void testKnn() {
         System.out.println("knn");
 
-        double[][] data = Matrix.randn(1000, 10).toArray();
+        double[][] data = MathEx.randn(1000, 10);
         KDTree<double[]> kdtree = new KDTree<>(data, data);
         LinearSearch<double[], double[]> naive = LinearSearch.of(data, MathEx::distance);
 
@@ -92,7 +91,7 @@ public class KDTreeTest {
     public void testRange() {
         System.out.println("range 0.5");
 
-        double[][] data = Matrix.randn(1000, 10).toArray();
+        double[][] data = MathEx.randn(1000, 10);
         KDTree<double[]> kdtree = new KDTree<>(data, data);
         LinearSearch<double[], double[]> naive = LinearSearch.of(data, MathEx::distance);
 

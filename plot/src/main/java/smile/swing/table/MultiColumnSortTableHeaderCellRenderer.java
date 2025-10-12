@@ -30,9 +30,8 @@ import smile.swing.AlphaIcon;
  *
  * @author Haifeng Li
  */
-@SuppressWarnings("serial")
 public class MultiColumnSortTableHeaderCellRenderer extends DefaultTableHeaderCellRenderer {
-
+    /** The opacity. */
     private final float alpha;
 
     /**

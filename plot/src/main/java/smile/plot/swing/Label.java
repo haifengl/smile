@@ -38,12 +38,12 @@ public class Label extends Shape {
      */
     final double[] coordinates;
     /**
-     *  The reference position of coordinates respected to dimension of text.
+     * The reference position of coordinates respected to dimension of text.
      * (0.5, 0.5) is center, (0, 0) is lower left, (0, 1) is upper left, etc.
      */
     final double horizontalReference;
     /**
-     *  The reference position of coordinates respected to dimension of text.
+     * The reference position of coordinates respected to dimension of text.
      * (0.5, 0.5) is center, (0, 0) is lower left, (0, 1) is upper left, etc.
      */
     final double verticalReference;
@@ -59,6 +59,13 @@ public class Label extends Shape {
 
     /**
      * Constructor.
+     * @param text the label text.
+     * @param coordinates the label location.
+     * @param horizontalReference the horizontal reference position of coordinates respected to dimension of text.
+     * @param verticalReference the vertical reference position of coordinates respected to dimension of text.
+     * @param rotation the rotation angel of text.
+     * @param font the label font.
+     * @param color the label color.
      */
     public Label(String text, double[] coordinates, double horizontalReference, double verticalReference, double rotation, Font font, Color color) {
         super(color);
@@ -71,7 +78,7 @@ public class Label extends Shape {
     }
 
     @Override
-    public void paint(Graphics g) {
+    public void paint(Renderer g) {
         Font f = g.getFont();
         if (font != null) g.setFont(font);
 
@@ -104,6 +111,9 @@ public class Label extends Shape {
 
     /**
      * Creates a black label centered at the coordinates.
+     * @param text the label text.
+     * @param coordinates the label coordinates.
+     * @return the label.
      */
     public static Label of(String text, double[] coordinates) {
         return Label.of(text, coordinates, 0.5, 0.5, 0.0);
@@ -111,6 +121,8 @@ public class Label extends Shape {
 
     /**
      * Creates a black label with coordinates as text.
+     * @param coordinates the label coordinates.
+     * @return the label.
      */
     public static Label of(double... coordinates) {
         return Label.of(coordinatesToString(coordinates), coordinates, 0.5, 0.5, 0.0);
@@ -118,6 +130,12 @@ public class Label extends Shape {
 
     /**
      * Creates a black label with system default font.
+     * @param text the label text.
+     * @param coordinates the label coordinates.
+     * @param horizontalReference the horizontal reference position of coordinates respected to dimension of text.
+     * @param verticalReference the vertical reference position of coordinates respected to dimension of text.
+     * @param rotation the rotation angel of text.
+     * @return the label.
      */
     public static Label of(String text, double[] coordinates, double horizontalReference, double verticalReference, double rotation) {
         return new Label(text, coordinates, horizontalReference, verticalReference, rotation, DefaultFont, Color.BLACK);

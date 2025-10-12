@@ -37,11 +37,10 @@ import smile.swing.text.IntegerArrayFormatter;
  *
  * @author Haifeng Li
  */
-@SuppressWarnings("serial")
 public class IntegerArrayCellEditor extends DefaultCellEditor {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IntegerArrayCellEditor.class);
-
-    final JFormattedTextField textField;
+    /** The text field. */
+    private final JFormattedTextField textField;
 
     /**
      * Constructor.

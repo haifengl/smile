@@ -16,7 +16,7 @@
  */
 package smile.math;
 
-import smile.math.matrix.Matrix;
+import smile.tensor.Matrix;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 

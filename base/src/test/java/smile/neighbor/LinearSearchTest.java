@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import smile.math.MathEx;
 import smile.math.distance.EditDistance;
-import smile.math.matrix.Matrix;
 import smile.datasets.GaussianMixture;
 import smile.datasets.WordNet;
 import smile.datasets.SwissRoll;
@@ -62,7 +61,7 @@ public class LinearSearchTest {
     public void testKnn1() {
         System.out.println("----- knn1 -----");
 
-        double[][] data = Matrix.randn(2, 10).toArray();
+        double[][] data = MathEx.randn(2, 10);
         double[][] data1 = {data[0]};
         LinearSearch<double[], double[]> naive = LinearSearch.of(data1, MathEx::distance);
 

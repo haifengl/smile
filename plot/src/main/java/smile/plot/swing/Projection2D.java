@@ -26,15 +26,16 @@ class Projection2D extends Projection {
     /**
      * Constructor.
      */
-    public Projection2D(Canvas canvas) {
-        super(canvas);
+    public Projection2D(Figure figure) {
+        super(figure);
     }
 
     @Override
     double[] baseCoordsScreenProjectionRatio(double[] xy) {
+        Base base = figure.base;
         double[] ratio = new double[2];
-        ratio[0] = (xy[0] - canvas.base.lowerBound[0]) / (canvas.base.upperBound[0] - canvas.base.lowerBound[0]);
-        ratio[1] = (xy[1] - canvas.base.lowerBound[1]) / (canvas.base.upperBound[1] - canvas.base.lowerBound[1]);
+        ratio[0] = (xy[0] - base.lowerBound[0]) / (base.upperBound[0] - base.lowerBound[0]);
+        ratio[1] = (xy[1] - base.lowerBound[1]) / (base.upperBound[1] - base.lowerBound[1]);
         return ratio;
     }
 
@@ -44,13 +45,15 @@ class Projection2D extends Projection {
      * @param y the y of Java2D coordinate in the canvas
      */
     public double[] inverseProjection(int x, int y) {
+        Base base = figure.base;
+        double margin = figure.margin;
         double[] sc = new double[2];
 
-        double ratio = (canvas.base.upperBound[0] - canvas.base.lowerBound[0]) / (width * (1 - 2 * canvas.margin));
-        sc[0] = canvas.base.lowerBound[0] + ratio * (x - width * canvas.margin);
+        double ratio = (base.upperBound[0] - base.lowerBound[0]) / (width * (1 - 2 * margin));
+        sc[0] = base.lowerBound[0] + ratio * (x - width * margin);
 
-        ratio = (canvas.base.upperBound[1] - canvas.base.lowerBound[1]) / (height * (1 - 2 * canvas.margin));
-        sc[1] = canvas.base.lowerBound[1] + ratio * (height * (1 - canvas.margin) - y);
+        ratio = (base.upperBound[1] - base.lowerBound[1]) / (height * (1 - 2 * margin));
+        sc[1] = base.lowerBound[1] + ratio * (height * (1 - margin) - y);
 
         return sc;
     }

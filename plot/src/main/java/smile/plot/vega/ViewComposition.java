@@ -34,6 +34,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public interface ViewComposition {
     /**
      * Returns the top level Vega-Lite specification.
+     * @return the top level Vega-Lite specification.
      */
     ObjectNode spec();
 

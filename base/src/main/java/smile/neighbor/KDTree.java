@@ -302,7 +302,7 @@ public class KDTree <E> implements KNNSearch<double[], E>, RNNSearch<double[], E
                     if (distance < datum.distance) {
                         datum.distance = distance;
                         datum.index = i;
-                        heap.heapify();
+                        heap.siftDown();
                     }
                 }
             }
