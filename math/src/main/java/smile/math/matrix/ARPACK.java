@@ -182,7 +182,7 @@ public class ARPACK {
         double[] d = new double[ncv * 2];
         int[] select = new int[ncv];
         double sigma = 0.0;
-        boolean rvec = true;
+        int rvec = 1;
 
         dseupd_c(rvec, howmny, select, d, V, ldv, sigma,
                  bmat, n, bwhich, nev, tol, resid, ncv, V, ldv, iparam, ipntr,
@@ -282,7 +282,7 @@ public class ARPACK {
         float[] d = new float[ncv * 2];
         int[] select = new int[ncv];
         float sigma = 0.0f;
-        boolean rvec = true;
+        int rvec = 1;
 
         sseupd_c(rvec, howmny, select, d, V, ldv, sigma,
                 bmat, n, bwhich, nev, tol, resid, ncv, V, ldv, iparam, ipntr,
@@ -385,7 +385,7 @@ public class ARPACK {
         int[] select = new int[ncv];
         double sigmar = 0.0;
         double sigmai = 0.0;
-        boolean rvec = true;
+        int rvec = 1;
 
         dneupd_c(rvec, howmny, select, wr, wi, V, ldv, sigmar, sigmai, workev,
                 bmat, n, bwhich, nev, tol, resid, ncv, V, ldv, iparam, ipntr,
@@ -489,7 +489,7 @@ public class ARPACK {
         int[] select = new int[ncv];
         float sigmar = 0.0f;
         float sigmai = 0.0f;
-        boolean rvec = true;
+        int rvec = 1;
 
         sneupd_c(rvec, howmny, select, wr, wi, V, ldv, sigmar, sigmai, workev,
                 bmat, n, bwhich, nev, tol, resid, ncv, V, ldv, iparam, ipntr,
