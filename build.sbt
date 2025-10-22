@@ -131,7 +131,7 @@ lazy val scalaSettings = commonSettings ++ Seq(
   libraryDependencies ++= Seq(
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.6",
     "org.slf4j" % "slf4j-simple" % "2.0.17" % Test,
-    "org.specs2" %% "specs2-core" % "4.22.0" % Test
+    "org.specs2" %% "specs2-core" % "4.23.0" % Test
   ),
 )
 
