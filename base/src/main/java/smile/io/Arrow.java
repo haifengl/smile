@@ -26,6 +26,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.*;
 import java.util.*;
+
+import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.*;
 import org.apache.arrow.vector.dictionary.DictionaryProvider;
@@ -56,19 +58,6 @@ public class Arrow {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Arrow.class);
 
     /**
-     * The root allocator. Typically only one created for a JVM.
-     * Arrow provides a tree-based model for memory allocation.
-     * The RootAllocator is created first, then all allocators are
-     * created as children of that allocator. The RootAllocator is
-     * responsible for being the master bookkeeper for memory
-     * allocations. All other allocators are created as children
-     * of this tree. Each allocator can first determine whether
-     * it has enough local memory to satisfy a particular request.
-     * If not, the allocator can ask its parent for an additional
-     * memory allocation.
-     */
-    private static RootAllocator allocator;
-    /**
      * The number of records in a record batch.
      * An Apache Arrow record batch is conceptually similar
      * to the Parquet row group. Parquet recommends a
@@ -93,21 +82,6 @@ public class Arrow {
         }
 
         this.batch = batch;
-    }
-
-    /**
-     * Creates the root allocator.
-     * The RootAllocator is responsible for being the master
-     * bookeeper for memory allocations.
-     *
-     * @param limit the memory allocation limit in bytes.
-     */
-    public static void allocate(long limit) {
-        if (limit <= 0) {
-            throw new IllegalArgumentException("Invalid RootAllocator limit: " + limit);
-        }
-
-        allocator = new RootAllocator(limit);
     }
 
     /**
@@ -167,89 +141,16 @@ public class Arrow {
      * @return the data frame.
      */
     public DataFrame read(InputStream input, int limit) throws IOException {
-        if (allocator == null) {
-            allocate(Long.MAX_VALUE);
-        }
-
-        try (ArrowStreamReader reader = new ArrowStreamReader(input, allocator)) {
-            // The holder for a set of vectors to be loaded/unloaded.
-            VectorSchemaRoot root = reader.getVectorSchemaRoot();
+        try (BufferAllocator allocator = new RootAllocator(Long.MAX_VALUE);
+             ArrowStreamReader reader = new ArrowStreamReader(input, allocator)) {
             List<DataFrame> frames = new ArrayList<>();
-            int size = 0;
-            while (reader.loadNextBatch() && size < limit) {
-                List<FieldVector> fieldVectors = root.getFieldVectors();
-                logger.info("read {} rows and {} columns", root.getRowCount(), fieldVectors.size());
-
-                smile.data.vector.ValueVector[] vectors = new smile.data.vector.ValueVector[fieldVectors.size()];
-                for (int j = 0; j < fieldVectors.size(); j++) {
-                    FieldVector fieldVector = fieldVectors.get(j);
-                    ArrowType type = fieldVector.getField().getType();
-                    switch (type.getTypeID()) {
-                        case Int:
-                            ArrowType.Int itype = (ArrowType.Int) type;
-                            int bitWidth = itype.getBitWidth();
-                            switch (bitWidth) {
-                                case 8:
-                                    vectors[j] = readByteField(fieldVector);
-                                    break;
-                                case 16:
-                                    if (itype.getIsSigned())
-                                        vectors[j] = readShortField(fieldVector);
-                                    else
-                                        vectors[j] = readCharField(fieldVector);
-                                    break;
-                                case 32:
-                                    vectors[j] = readIntField(fieldVector);
-                                    break;
-                                case 64:
-                                    vectors[j] = readLongField(fieldVector);
-                                    break;
-                                default:
-                                    throw new UnsupportedOperationException("Unsupported integer bit width: " + bitWidth);
-                            }
-                            break;
-                        case FloatingPoint:
-                            FloatingPointPrecision precision = ((ArrowType.FloatingPoint) type).getPrecision();
-                            switch (precision) {
-                                case DOUBLE:
-                                    vectors[j] = readDoubleField(fieldVector);
-                                    break;
-                                case SINGLE:
-                                    vectors[j] = readFloatField(fieldVector);
-                                    break;
-                                case HALF:
-                                    throw new UnsupportedOperationException("Unsupported float precision: " + precision);
-                            }
-                            break;
-                        case Decimal:
-                            vectors[j] = readDecimalField(fieldVector);
-                            break;
-                        case Bool:
-                            vectors[j] = readBitField(fieldVector);
-                            break;
-                        case Date:
-                            vectors[j] = readDateField(fieldVector);
-                            break;
-                        case Time:
-                            vectors[j] = readTimeField(fieldVector);
-                            break;
-                        case Timestamp:
-                            vectors[j] = readDateTimeField(fieldVector);
-                            break;
-                        case Binary:
-                        case FixedSizeBinary:
-                            vectors[j] = readByteArrayField(fieldVector);
-                            break;
-                        case Utf8:
-                            vectors[j] = readStringField(fieldVector);
-                            break;
-                        default: throw new UnsupportedOperationException("Unsupported column type: " + fieldVector.getMinorType());
-                    }
+            int rowCount = 0;
+            while (reader.loadNextBatch() && rowCount < limit) {
+                try (VectorSchemaRoot root = reader.getVectorSchemaRoot()) {
+                    DataFrame frame = read(root);
+                    frames.add(frame);
+                    rowCount += frames.size();
                 }
-
-                DataFrame frame = new DataFrame(vectors);
-                frames.add(frame);
-                size += frames.size();
             }
 
             if (frames.isEmpty()) {
@@ -263,6 +164,80 @@ public class Arrow {
         }
     }
 
+    static DataFrame read(VectorSchemaRoot root) {
+        List<FieldVector> fieldVectors = root.getFieldVectors();
+        logger.info("read {} rows and {} columns", root.getRowCount(), fieldVectors.size());
+
+        smile.data.vector.ValueVector[] vectors = new smile.data.vector.ValueVector[fieldVectors.size()];
+        for (int j = 0; j < fieldVectors.size(); j++) {
+            FieldVector fieldVector = fieldVectors.get(j);
+            ArrowType type = fieldVector.getField().getType();
+            switch (type.getTypeID()) {
+                case Int:
+                    ArrowType.Int itype = (ArrowType.Int) type;
+                    int bitWidth = itype.getBitWidth();
+                    switch (bitWidth) {
+                        case 8:
+                            vectors[j] = readByteField(fieldVector);
+                            break;
+                        case 16:
+                            if (itype.getIsSigned())
+                                vectors[j] = readShortField(fieldVector);
+                            else
+                                vectors[j] = readCharField(fieldVector);
+                            break;
+                        case 32:
+                            vectors[j] = readIntField(fieldVector);
+                            break;
+                        case 64:
+                            vectors[j] = readLongField(fieldVector);
+                            break;
+                        default:
+                            throw new UnsupportedOperationException("Unsupported integer bit width: " + bitWidth);
+                    }
+                    break;
+                case FloatingPoint:
+                    FloatingPointPrecision precision = ((ArrowType.FloatingPoint) type).getPrecision();
+                    switch (precision) {
+                        case DOUBLE:
+                            vectors[j] = readDoubleField(fieldVector);
+                            break;
+                        case SINGLE:
+                            vectors[j] = readFloatField(fieldVector);
+                            break;
+                        case HALF:
+                            throw new UnsupportedOperationException("Unsupported float precision: " + precision);
+                    }
+                    break;
+                case Decimal:
+                    vectors[j] = readDecimalField(fieldVector);
+                    break;
+                case Bool:
+                    vectors[j] = readBitField(fieldVector);
+                    break;
+                case Date:
+                    vectors[j] = readDateField(fieldVector);
+                    break;
+                case Time:
+                    vectors[j] = readTimeField(fieldVector);
+                    break;
+                case Timestamp:
+                    vectors[j] = readDateTimeField(fieldVector);
+                    break;
+                case Binary:
+                case FixedSizeBinary:
+                    vectors[j] = readByteArrayField(fieldVector);
+                    break;
+                case Utf8:
+                    vectors[j] = readStringField(fieldVector);
+                    break;
+                default: throw new UnsupportedOperationException("Unsupported column type: " + fieldVector.getMinorType());
+            }
+        }
+
+        return new DataFrame(vectors);
+    }
+
     /**
      * Writes the data frame to an arrow file.
      *
@@ -271,10 +246,6 @@ public class Arrow {
      * @throws IOException when fails to write the file.
      */
     public void write(DataFrame data, Path path) throws IOException {
-        if (allocator == null) {
-            allocate(Long.MAX_VALUE);
-        }
-
         Schema schema = toArrow(data.schema());
         /*
          * When a field is dictionary encoded, the values are represented
@@ -288,7 +259,8 @@ public class Arrow {
          * it must send at least one DictionaryBatch for this id.
          */
         DictionaryProvider provider = new DictionaryProvider.MapDictionaryProvider();
-        try (VectorSchemaRoot root = VectorSchemaRoot.create(schema, allocator);
+        try (BufferAllocator allocator = new RootAllocator(Long.MAX_VALUE);
+             VectorSchemaRoot root = VectorSchemaRoot.create(schema, allocator);
              OutputStream output = Files.newOutputStream(path);
              ArrowStreamWriter writer = new ArrowStreamWriter(root, provider, output)) {
 
@@ -394,7 +366,7 @@ public class Arrow {
     }
 
     /** Reads a boolean column. */
-    private smile.data.vector.ValueVector readBitField(FieldVector fieldVector) {
+    static smile.data.vector.ValueVector readBitField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         var name = fieldVector.getField().getName();
         BitVector vector = (BitVector) fieldVector;
@@ -418,7 +390,7 @@ public class Arrow {
     }
 
     /** Reads a byte column. */
-    private smile.data.vector.ValueVector readByteField(FieldVector fieldVector) {
+    static smile.data.vector.ValueVector readByteField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         var name = fieldVector.getField().getName();
         TinyIntVector vector = (TinyIntVector) fieldVector;
@@ -442,7 +414,7 @@ public class Arrow {
     }
 
     /** Reads a char column. */
-    private smile.data.vector.ValueVector readCharField(FieldVector fieldVector) {
+    static smile.data.vector.ValueVector readCharField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         var name = fieldVector.getField().getName();
         SmallIntVector vector = (SmallIntVector) fieldVector;
@@ -466,7 +438,7 @@ public class Arrow {
     }
 
     /** Reads a short column. */
-    private smile.data.vector.ValueVector readShortField(FieldVector fieldVector) {
+    static smile.data.vector.ValueVector readShortField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         var name = fieldVector.getField().getName();
         SmallIntVector vector = (SmallIntVector) fieldVector;
@@ -490,7 +462,7 @@ public class Arrow {
     }
 
     /** Reads an int column. */
-    private smile.data.vector.ValueVector readIntField(FieldVector fieldVector) {
+    static smile.data.vector.ValueVector readIntField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         var name = fieldVector.getField().getName();
         IntVector vector = (IntVector) fieldVector;
@@ -514,7 +486,7 @@ public class Arrow {
     }
 
     /** Reads a long column. */
-    private smile.data.vector.ValueVector readLongField(FieldVector fieldVector) {
+    static smile.data.vector.ValueVector readLongField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         var name = fieldVector.getField().getName();
         BigIntVector vector = (BigIntVector) fieldVector;
@@ -538,7 +510,7 @@ public class Arrow {
     }
 
     /** Reads a float column. */
-    private smile.data.vector.ValueVector readFloatField(FieldVector fieldVector) {
+    static smile.data.vector.ValueVector readFloatField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         var name = fieldVector.getField().getName();
         Float4Vector vector = (Float4Vector) fieldVector;
@@ -562,7 +534,7 @@ public class Arrow {
     }
 
     /** Reads a double column. */
-    private smile.data.vector.ValueVector readDoubleField(FieldVector fieldVector) {
+    static smile.data.vector.ValueVector readDoubleField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         var name = fieldVector.getField().getName();
         Float8Vector vector = (Float8Vector) fieldVector;
@@ -586,7 +558,7 @@ public class Arrow {
     }
 
     /** Reads a decimal column. */
-    private smile.data.vector.ValueVector readDecimalField(FieldVector fieldVector) {
+    static smile.data.vector.ValueVector readDecimalField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         var name = fieldVector.getField().getName();
         BigDecimal[] data = new BigDecimal[count];
@@ -600,7 +572,7 @@ public class Arrow {
     }
 
     /** Reads a date column. */
-    private smile.data.vector.ValueVector readDateField(FieldVector fieldVector) {
+    static smile.data.vector.ValueVector readDateField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         var name = fieldVector.getField().getName();
         LocalDate[] data = new LocalDate[count];
@@ -620,7 +592,7 @@ public class Arrow {
     }
 
     /** Reads a time column. */
-    private smile.data.vector.ValueVector readTimeField(FieldVector fieldVector) {
+    static smile.data.vector.ValueVector readTimeField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         var name = fieldVector.getField().getName();
         LocalTime[] data = new LocalTime[count];
@@ -653,7 +625,7 @@ public class Arrow {
     }
 
     /** Reads a DateTime column. */
-    private smile.data.vector.ValueVector readDateTimeField(FieldVector fieldVector) {
+    static smile.data.vector.ValueVector readDateTimeField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         var name = fieldVector.getField().getName();
         LocalDateTime[] data = new LocalDateTime[count];
@@ -688,7 +660,7 @@ public class Arrow {
     }
 
     /** Reads a byte[] column. */
-    private smile.data.vector.ValueVector readByteArrayField(FieldVector fieldVector) {
+    static smile.data.vector.ValueVector readByteArrayField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         var name = fieldVector.getField().getName();
         byte[][] data = new byte[count][];
@@ -715,7 +687,7 @@ public class Arrow {
     }
 
     /** Reads a String column. */
-    private smile.data.vector.ValueVector readStringField(FieldVector fieldVector) {
+    static smile.data.vector.ValueVector readStringField(FieldVector fieldVector) {
         int count = fieldVector.getValueCount();
         var name = fieldVector.getField().getName();
         VarCharVector vector = (VarCharVector) fieldVector;
