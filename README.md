@@ -5,8 +5,8 @@
 ## Goal ##
 <img align="left" width="48" src="/web/src/images/smile.jpg">
 Smile is a fast and comprehensive machine learning framework in Java.
-Smile v4.x requires Java 21. All previous versions require Java 8.
-Smile also provides APIs in Scala, Kotlin, and Clojure with
+Smile v5.x requires Java 25, v4.x requires Java 21, all previous versions require Java 8.
+Smile also provides APIs in Scala and Kotlin with
 corresponding language paradigms. With advanced data structures and
 algorithms, Smile delivers state-of-art performance.
 Smile covers every aspect of machine learning, including deep learning,
@@ -100,7 +100,7 @@ following to your project pom.xml file.
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-core</artifactId>
-      <version>4.4.2</version>
+      <version>5.0.0</version>
     </dependency>
 ```
 
@@ -108,24 +108,37 @@ For deep learning and NLP, use the artifactId smile-deep and smile-nlp, respecti
 
 For Scala API, please add the below into your sbt script.
 ```
-    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "4.4.2"
+    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "5.0.0"
 ```
 
 For Kotlin API, add the below into the `dependencies` section
 of Gradle build script.
 ```
-    implementation("com.github.haifengl:smile-kotlin:4.4.2")
-```
-
-For Clojure API, add the following dependency to your project file:
-```
-    [org.clojars.haifengl/smile "4.2.0"]
+    implementation("com.github.haifengl:smile-kotlin:5.0.0")
 ```
 
 Some algorithms rely on BLAS and LAPACK (e.g. manifold learning,
 some clustering algorithms, Gaussian Process regression, MLP, etc.).
-To use these algorithms, you should include OpenBLAS for optimized matrix
-computation:
+To use these algorithms in Smile v5.x, you should install OpenBLAS and ARPACK
+for optimized matrix computation. For Windows, you can find the pre-built
+DLL from `bin` directory of release packages. Make sure adding the directory
+to PATH environment variable.
+
+To install on Linux (e.g., Ubuntu), run
+```
+sudo apt update
+sudo apt install libopenblas-dev libarpack2
+```
+
+On Mac, we use the BLAS library from the Accelerate framework provided by macOS.
+But you should install ARPACK by running
+```
+brew install arpack
+export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:/opt/homebrew/Cellar/arpack/3.9.1_1/lib
+```
+
+For Smile v4.x, OpenBLAS and ARPACK libraries can be added to your project with
+the following dependencies.
 ```
     libraryDependencies ++= Seq(
       "org.bytedeco" % "javacpp"   % "1.5.11"        classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
@@ -136,25 +149,6 @@ computation:
 In this example, we include all supported 64-bit platforms and filter out
 32-bit platforms. The user should include only the needed platforms to save
 spaces.
-
-If you prefer other BLAS implementations, you can use any library found on
-the "java.library.path" or on the class path, by specifying it with the
-"org.bytedeco.openblas.load" system property. For example, to use the BLAS
-library from the Accelerate framework on Mac OS X, we can pass options such
-as `-Dorg.bytedeco.openblas.load=blas`.
-
-If you have a default installation of MKL or simply include the following
-modules that include the full version of MKL binaries, Smile will automatically
-switch to MKL.
-```
-libraryDependencies ++= {
-  val version = "2025.0-1.5.11"
-  Seq(
-    "org.bytedeco" % "mkl-platform"        % version,
-    "org.bytedeco" % "mkl-platform-redist" % version
-  )
-}
-```
 
 ## Shell ##
 Smile comes with interactive shells for Java, Scala and Kotlin.
@@ -208,7 +202,7 @@ To use smile-plot, add the following to dependencies
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-plot</artifactId>
-      <version>4.4.2</version>
+      <version>5.0.0</version>
     </dependency>
 ```
 
