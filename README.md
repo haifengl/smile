@@ -121,8 +121,8 @@ Some algorithms rely on BLAS and LAPACK (e.g. manifold learning,
 some clustering algorithms, Gaussian Process regression, MLP, etc.).
 To use these algorithms in Smile v5.x, you should install OpenBLAS and ARPACK
 for optimized matrix computation. For Windows, you can find the pre-built
-DLL from `bin` directory of release packages. Make sure adding the directory
-to PATH environment variable.
+DLL files from the `bin` directory of release packages. Make sure to add this
+directory to PATH environment variable.
 
 To install on Linux (e.g., Ubuntu), run
 ```
@@ -134,8 +134,12 @@ On Mac, we use the BLAS library from the Accelerate framework provided by macOS.
 But you should install ARPACK by running
 ```
 brew install arpack
-export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:/opt/homebrew/Cellar/arpack/3.9.1_1/lib
 ```
+However, macOS System Integrity Protection (SIP) significantly impacts how
+JVM handles dynamic library loading by purging dynamic linker (DYLD)
+environment variables like DYLD_LIBRARY_PATH when launching protected processes. 
+A simple workaround is to copy /opt/homebrew/lib/libarpack.dylib to your working
+directory so that JVM can successfully load it.
 
 For Smile v4.x, OpenBLAS and ARPACK libraries can be added to your project with
 the following dependencies.
