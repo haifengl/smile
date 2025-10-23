@@ -24,8 +24,7 @@ Smile implements the following major machine learning algorithms:
 - **GenAI:**
 Native Java implementation of Llama 3.1, tiktoken tokenizer, high performance
 LLM inference server with OpenAI-compatible APIs and SSE-based chat streaming,
-fully functional frontend. [A free service](https://smile-ai.org) is available
-for personal or test usage. No registration is required.
+fully functional frontend.
 
 - **Deep Learning:**
 Deep learning with CPU and GPU. EfficientNet model for image classification.
