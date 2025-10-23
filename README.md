@@ -1,23 +1,23 @@
-# Smile &mdash; Statistical Machine Intelligence and Learning Engine
+# SMILE - Statistical Machine Intelligence & Learning Engine
 
 ## Goal ##
 <img align="left" width="48" src="/web/src/images/smile.jpg">
-Smile is a fast and comprehensive machine learning framework in Java.
-Smile v5.x requires Java 25, v4.x requires Java 21, and all previous versions
-require Java 8. Smile also provides APIs in Scala and Kotlin with
+SMILE is a fast and comprehensive machine learning framework in Java.
+SMILE v5.x requires Java 25, v4.x requires Java 21, and all previous versions
+require Java 8. SMILE also provides APIs in Scala and Kotlin with
 corresponding language paradigms. With advanced data structures and
-algorithms, Smile delivers state-of-art performance.
-Smile covers every aspect of machine learning, including deep learning,
+algorithms, SMILE delivers state-of-art performance.
+SMILE covers every aspect of machine learning, including deep learning,
 large language models, classification, regression, clustering, association
 rule mining, feature selection and extraction, manifold learning,
 multidimensional scaling, genetic algorithms, missing value imputation,
-efficient nearest neighbor search, etc. Furthermore, Smile also provides
+efficient nearest neighbor search, etc. Furthermore, SMILE also provides
 advanced algorithms for graph, linear algebra, numerical analysis,
 interpolation, computer algebra system for symbolic manipulations,
 and data visualization.
 
 ## Features ##
-Smile implements the following major machine learning algorithms:
+SMILE implements the following major machine learning algorithms:
 
 - **LLM:**
 Native Java implementation of Llama 3.1, tiktoken tokenizer, high performance
@@ -78,10 +78,12 @@ To acquire a commercial license, please contact smile.sales@outlook.com.
 ## Issues/Discussions ##
 
 * **Discussion/Questions**:
-  If you wish to ask questions about Smile, we're active on [GitHub Discussions](https://github.com/haifengl/smile/discussions) and [Stack Overflow](http://stackoverflow.com/questions/tagged/smile).
+If you wish to ask questions about SMILE, we're active on
+[GitHub Discussions](https://github.com/haifengl/smile/discussions) and
+[Stack Overflow](http://stackoverflow.com/questions/tagged/smile).
 
 * **Docs**:
-Smile is well documented and [our docs are available online](https://haifengl.github.io/), where you can find tutorial,
+SMILE is well documented and [our docs are available online](https://haifengl.github.io/), where you can find tutorial,
 programming guides, and more information. If you'd like to help improve the docs, they're part of this repository
 in the `web/src` directory. [Java Docs](https://haifengl.github.io/api/java/index.html),
 [Scala Docs](https://haifengl.github.io/api/scala/index.html), [Kotlin Docs](https://haifengl.github.io/api/kotlin/index.html),
@@ -101,7 +103,7 @@ following to your project pom.xml file.
     </dependency>
 ```
 
-For deep learning and NLP, use the artifactId smile-deep and smile-nlp, respectively.
+For deep learning and NLP, use the artifactId `smile-deep` and `smile-nlp`, respectively.
 
 For Scala API, please add the below into your sbt script.
 ```
@@ -116,7 +118,7 @@ of Gradle build script.
 
 Some algorithms rely on BLAS and LAPACK (e.g. manifold learning,
 some clustering algorithms, Gaussian Process regression, MLP, etc.).
-To use these algorithms in Smile v5.x, you should install OpenBLAS and ARPACK
+To use these algorithms in SMILE v5.x, you should install OpenBLAS and ARPACK
 for optimized matrix computation. For Windows, you can find the pre-built
 DLL files from the `bin` directory of release packages. Make sure to add this
 directory to PATH environment variable.
@@ -138,7 +140,7 @@ environment variables like DYLD_LIBRARY_PATH when launching protected processes.
 A simple workaround is to copy /opt/homebrew/lib/libarpack.dylib to your working
 directory so that JVM can successfully load it.
 
-For Smile v4.x, OpenBLAS and ARPACK libraries can be added to your project with
+For SMILE v4.x, OpenBLAS and ARPACK libraries can be added to your project with
 the following dependencies.
 ```
     libraryDependencies ++= Seq(
@@ -152,15 +154,15 @@ In this example, we include all supported 64-bit platforms and filter out
 spaces.
 
 ## Shell ##
-Smile comes with interactive shells for Java, Scala and Kotlin.
-Download pre-packaged Smile from the
+SMILE comes with interactive shells for Java, Scala and Kotlin.
+Download pre-packaged SMILE from the
 [releases page](https://github.com/haifengl/smile/releases).
-After unziping the package and cd into the home directory of Smile
+After unziping the package and cd into the home directory of SMILE
 in a terminal, type
 ```
     ./bin/jshell.sh
 ```
-to enter Smile shell in Java, which pre-imports all major Smile packages.
+to enter SMILE shell in Java, which pre-imports all major SMILE packages.
 You can run any valid Java expressions in the shell. In the simplest case,
 you can use it as a calculator.
 
@@ -168,8 +170,8 @@ To enter the shell in Scala, type
 ```
     ./bin/smile
 ```
-Similar to the shell in Java, all major Smile packages are pre-imported.
-Besides, all high-level Smile operators are predefined in the shell.
+Similar to the shell in Java, all major SMILE packages are pre-imported.
+Besides, all high-level SMILE operators are predefined in the shell.
 
 By default, the shell uses up to 75% memory. If you need more memory
 to handle large data, use the option `-J-Xmx` or `-XX:MaxRAMPercentage`.
@@ -180,7 +182,7 @@ For example,
 You can also modify the configuration file `./conf/smile.ini` for the
 memory and other JVM settings.
 
-To use Smile shell in Kotlin, type
+To use SMILE shell in Kotlin, type
 ```
     ./bin/kotlin.sh
 ```
@@ -196,9 +198,9 @@ use serialized models in other systems such as Spark.
 A picture is worth a thousand words. In machine learning, we usually handle
 high-dimensional data, which is impossible to draw on display directly.
 But a variety of statistical plots are tremendously valuable for us to grasp
-the characteristics of many data points. Smile provides data visualization tools
+the characteristics of many data points. SMILE provides data visualization tools
 such as plots and maps for researchers to understand information more easily and quickly.
-To use smile-plot, add the following to dependencies
+To use `smile-plot`, add the following to dependencies
 ```
     <dependency>
       <groupId>com.github.haifengl</groupId>
@@ -222,7 +224,7 @@ including axes, legends, and scales. It then determines properties
 of these components based on a set of carefully designed rules.
 
 ## Contributing ##
-Please read the [contributing.md](CONTRIBUTING.md) on how to build and test Smile.
+Please read the [contributing.md](CONTRIBUTING.md) on how to build and test SMILE.
 
 ## Maintainers ##
 - Haifeng Li (@haifengl)
