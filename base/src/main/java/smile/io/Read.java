@@ -478,8 +478,20 @@ public interface Read {
      * @throws URISyntaxException when the file path syntax is wrong.
      * @return the data frame.
      */
-    static DataFrame parquet(String path) throws Exception {
+    static DataFrame parquet(Path path) throws Exception {
         return Parquet.read(path);
+    }
+
+    /**
+     * Reads an Apache Parquet file.
+     *
+     * @param uri the input file URI.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
+     */
+    static DataFrame parquet(String uri) throws Exception {
+        return Parquet.read(uri);
     }
 
     /**

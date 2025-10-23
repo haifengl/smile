@@ -18,6 +18,7 @@ package smile.io;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,7 +60,7 @@ public class Parquet {
      * @throws URISyntaxException when the file path syntax is wrong.
      * @return the data frame.
      */
-    public static DataFrame read(String path) throws Exception {
+    public static DataFrame read(Path path) throws Exception {
         return read(path, Integer.MAX_VALUE);
     }
 
@@ -70,9 +71,34 @@ public class Parquet {
      * @throws IOException when fails to write the file.
      * @return the data frame.
      */
-    public static DataFrame read(String path, int limit) throws Exception {
+    public static DataFrame read(Path path, int limit) throws Exception {
+        String file = path.toAbsolutePath().toString();
+        // prefix slash on Windows
+        if (!file.startsWith("/")) file = "/" + file;
+        String uri = "file://" + file;
+        return read(uri, limit);
+    }
+
+    /**
+     * Reads a parquet file.
+     * @param uri the input file URI.
+     * @throws IOException when fails to write the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
+     */
+    public static DataFrame read(String uri) throws Exception {
+        return read(uri, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Reads a limited number of records from a parquet file.
+     * @param uri the input file URI.
+     * @param limit the number of records to read.
+     * @throws IOException when fails to write the file.
+     * @return the data frame.
+     */
+    public static DataFrame read(String uri, int limit) throws Exception {
         ScanOptions options = new ScanOptions(32768); // batch size
-        String uri = "file://" + path;
         try (BufferAllocator allocator = new RootAllocator(Long.MAX_VALUE);
              DatasetFactory factory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
              Dataset dataset = factory.finish();
