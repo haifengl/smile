@@ -118,7 +118,7 @@ public class NullableDoubleVector extends NullablePrimitiveVector {
 
     @Override
     public double getDouble(int i) {
-        return vector[i];
+        return nullMask.get(i) ? Double.NaN : vector[i];
     }
 
     @Override
@@ -153,6 +153,6 @@ public class NullableDoubleVector extends NullablePrimitiveVector {
 
     @Override
     public float getFloat(int i) {
-        return (float) vector[i];
+        return nullMask.get(i) ? Float.NaN : (float) vector[i];
     }
 }
