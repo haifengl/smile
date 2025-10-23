@@ -131,7 +131,7 @@ lazy val scalaSettings = commonSettings ++ Seq(
   libraryDependencies ++= Seq(
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.6",
     "org.slf4j" % "slf4j-simple" % "2.0.17" % Test,
-    "org.specs2" %% "specs2-core" % "4.22.0" % Test
+    "org.specs2" %% "specs2-core" % "4.23.0" % Test
   ),
 )
 
@@ -176,7 +176,7 @@ lazy val root = project.in(file("."))
   .settings(
     JavaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(json, scala, spark, shell)
   )
-  .aggregate(core, base, nlp, deep, plot, json, scala, spark, kotlin, shell, serve)
+  .aggregate(core, base, nlp, deep, plot, json, scala, kotlin, shell, serve)
 
 lazy val base = project.in(file("base"))
   .settings(javaSettings: _*)
@@ -206,6 +206,7 @@ lazy val scala = project.in(file("scala"))
 
 lazy val spark = project.in(file("spark"))
   .settings(scalaSettings: _*)
+  .settings(publish / skip := true)
   .dependsOn(core)
 
 lazy val kotlin = project.in(file("kotlin"))

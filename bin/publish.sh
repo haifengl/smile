@@ -12,7 +12,7 @@ check_error() {
 }
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    export JAVA_HOME=`/usr/libexec/java_home -v 21`
+    export JAVA_HOME=`/usr/libexec/java_home -v 25`
 fi
 
 sbt clean
