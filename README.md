@@ -1,12 +1,10 @@
 # Smile &mdash; Statistical Machine Intelligence and Learning Engine
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.haifengl/smile-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.haifengl/smile-core)
-
 ## Goal ##
 <img align="left" width="48" src="/web/src/images/smile.jpg">
 Smile is a fast and comprehensive machine learning framework in Java.
-Smile v5.x requires Java 25, v4.x requires Java 21, all previous versions require Java 8.
-Smile also provides APIs in Scala and Kotlin with
+Smile v5.x requires Java 25, v4.x requires Java 21, and all previous versions
+require Java 8. Smile also provides APIs in Scala and Kotlin with
 corresponding language paradigms. With advanced data structures and
 algorithms, Smile delivers state-of-art performance.
 Smile covers every aspect of machine learning, including deep learning,
@@ -21,7 +19,7 @@ and data visualization.
 ## Features ##
 Smile implements the following major machine learning algorithms:
 
-- **GenAI:**
+- **LLM:**
 Native Java implementation of Llama 3.1, tiktoken tokenizer, high performance
 LLM inference server with OpenAI-compatible APIs and SSE-based chat streaming,
 fully functional frontend.
