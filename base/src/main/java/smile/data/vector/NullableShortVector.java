@@ -131,11 +131,11 @@ public class NullableShortVector extends NullablePrimitiveVector {
 
     @Override
     public float getFloat(int i) {
-        return vector[i];
+        return nullMask.get(i) ? Float.NaN : vector[i];
     }
 
     @Override
     public double getDouble(int i) {
-        return vector[i];
+        return nullMask.get(i) ? Double.NaN : vector[i];
     }
 }
