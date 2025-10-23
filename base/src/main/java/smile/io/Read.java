@@ -61,12 +61,10 @@ public interface Read {
     /**
      * Reads a data file. Infers the data format by the file name extension.
      * @param path the input file path.
-     * @throws IOException when fails to read the file.
-     * @throws ParseException when fails to parse the file.
-     * @throws URISyntaxException when the file path syntax is wrong.
+     * @throws Exception when fails to read the file.
      * @return the data frame.
      */
-    static DataFrame data(String path) throws IOException, URISyntaxException, ParseException {
+    static DataFrame data(String path) throws Exception {
         return data(path, null);
     }
 
@@ -78,12 +76,10 @@ public interface Read {
      *               For json files, it is the file mode (single-line or
      *               multi-line). For avro files, it is the path to the schema
      *               file.
-     * @throws IOException when fails to read the file.
-     * @throws ParseException when fails to parse the file.
-     * @throws URISyntaxException when the file path syntax is wrong.
+     * @throws Exception when fails to read the file.
      * @return the data frame.
      */
-    static DataFrame data(String path, String format) throws IOException, URISyntaxException, ParseException {
+    static DataFrame data(String path, String format) throws Exception {
         int dotIndex = path.lastIndexOf(".");
         String ext = dotIndex < 0 ? "csv" : path.substring(dotIndex + 1);
         switch (ext) {
@@ -444,7 +440,7 @@ public interface Read {
      * @return the data frame.
      */
     static DataFrame avro(String path, String schema) throws IOException, URISyntaxException {
-        Avro avro = new Avro(HadoopInput.stream(schema));
+        Avro avro = new Avro(Files.newInputStream(Path.of(schema)));
         return avro.read(path);
     }
 
@@ -482,18 +478,7 @@ public interface Read {
      * @throws URISyntaxException when the file path syntax is wrong.
      * @return the data frame.
      */
-    static DataFrame parquet(String path) throws IOException, URISyntaxException {
-        return Parquet.read(path);
-    }
-
-    /**
-     * Reads an Apache Parquet file.
-     *
-     * @param path the input file path.
-     * @throws IOException when fails to read the file.
-     * @return the data frame.
-     */
-    static DataFrame parquet(Path path) throws IOException {
+    static DataFrame parquet(String path) throws Exception {
         return Parquet.read(path);
     }
 

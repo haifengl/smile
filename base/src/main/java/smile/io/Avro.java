@@ -109,7 +109,7 @@ public class Avro {
      * @return the data frame.
      */
     public DataFrame read(String path) throws IOException, URISyntaxException {
-        return read(HadoopInput.stream(path), Integer.MAX_VALUE);
+        return read(Files.newInputStream(Path.of(path)), Integer.MAX_VALUE);
     }
 
     /**
