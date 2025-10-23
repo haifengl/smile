@@ -630,7 +630,7 @@ public class Arrow {
         var name = fieldVector.getField().getName();
         LocalDateTime[] data = new LocalDateTime[count];
         String timezone = ((ArrowType.Timestamp) fieldVector.getField().getType()).getTimezone();
-        ZoneOffset zone = timezone == null ? OffsetDateTime.now().getOffset() : ZoneOffset.of(timezone);
+        ZoneOffset zone = timezone == null ? ZoneOffset.UTC : ZoneOffset.of(timezone);
         switch (fieldVector) {
             case TimeStampMilliVector vector -> {
                 for (int i = 0; i < count; i++) {
