@@ -16,19 +16,20 @@
  */
 package smile.shell
 
-/** An object that runs Smile script or interactive shell.
+/** Java REPL.
   *
   * @author Haifeng Li
   */
-object Main {
-  def main(args: Array[String]): Unit = {
-    val command = args.headOption.getOrElse("")
-    command match {
-      case "train" => Train(args.drop(1))
-      case "predict" => Predict(args.drop(1))
-      case "serve" => Serve(args.drop(1))
-      case "scala" => ScalaREPL.main0(args.drop(1))
-      case _ => JavaREPL.main0(args)
-    }
+object JavaREPL {
+  def main0(args: Array[String]): Unit = {
+    val home = System.getProperty("smile.home", ".")
+    val startup = Array(
+      "--startup", "DEFAULT",
+      "--startup", "PRINTING",
+      "--startup", s"$home/bin/predef.jsh",
+      "--feedback", "smile")
+    jdk.jshell.tool.JavaShellToolBuilder
+      .builder()
+      .start(Array.concat(startup, args)*)
   }
 }

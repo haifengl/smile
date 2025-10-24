@@ -16,7 +16,7 @@
  */
 package smile.shell
 
-/** Scala REPL based shell.
+/** Scala REPL.
   *
   * @author Haifeng Li
   */
