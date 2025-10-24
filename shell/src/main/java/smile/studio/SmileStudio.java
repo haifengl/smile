@@ -18,6 +18,8 @@ package smile.studio;
 
 import java.awt.*;
 import java.io.Serial;
+import java.util.Locale;
+import java.util.ResourceBundle;
 import javax.swing.*;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
@@ -35,46 +37,43 @@ import smile.studio.view.Notebook;
 public class SmileStudio extends JFrame {
     @Serial
     private static final long serialVersionUID = 1L;
-
-    private final Explorer explorer;
-    private final Notebook notebook;
-    private final LogArea logArea;
-    private final JSplitPane workspace;
+    /** The message resource bundle. */
+    static final ResourceBundle bundle = ResourceBundle.getBundle(SmileStudio.class.getName(), Locale.getDefault());
 
     public SmileStudio() {
-        super("Smile Studio");
+        super(bundle.getString("AppName"));
         JPanel contentPane = new JPanel(new BorderLayout());
         setContentPane(contentPane);
 
-        explorer = new Explorer();
-        notebook = new Notebook();
-        logArea = new LogArea();
+        Explorer explorer = new Explorer();
+        Notebook notebook = new Notebook();
+        LogArea logArea = new LogArea();
 
-        workspace = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        Dimension minimumSize = new Dimension(100, 50);
+        explorer.setMinimumSize(minimumSize);
+        notebook.setMinimumSize(minimumSize);
+        logArea.setMinimumSize(minimumSize);
+
+        JSplitPane workspace = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         workspace.setTopComponent(notebook);
         workspace.setBottomComponent(logArea);
         workspace.setDividerLocation(700);
+        workspace.setPreferredSize(new Dimension(900, 800));
 
-        // Add the scroll panes to a split pane.
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        splitPane.setLeftComponent(explorer);
-        splitPane.setRightComponent(workspace);
+        JSplitPane explorerWorkspacePane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        explorerWorkspacePane.setLeftComponent(explorer);
+        explorerWorkspacePane.setRightComponent(workspace);
+        explorerWorkspacePane.setDividerLocation(300);
+        explorerWorkspacePane.setPreferredSize(new Dimension(1200, 800));
 
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        Dimension minimumSize = new Dimension(100, 50);
-        notebook.setMinimumSize(minimumSize);
-        workspace.setMinimumSize(minimumSize);
-        explorer.setMinimumSize(minimumSize);
-        splitPane.setDividerLocation(300);
-        splitPane.setPreferredSize(new Dimension(1200, 800));
-
-        contentPane.add(splitPane, BorderLayout.CENTER);
+        contentPane.add(explorerWorkspacePane, BorderLayout.CENTER);
         LogStreamAppender.setStaticOutputStream(logArea.getOutputStream());
     }
 
     /**
      * Creates and shows the GUI. For thread safety, this method should be
      * invoked from the event dispatch thread.
+     * @param exitOnClose the behavior when the user attempts to close the window.
      */
     public static void createAndShowGUI(boolean exitOnClose) {
         // Set application monospaced font before setting up FlatLaf
@@ -96,7 +95,7 @@ public class SmileStudio extends JFrame {
             frame.getRootPane().putClientProperty("apple.awt.windowTitleVisible", false);
             // macOS red/orange/green buttons overlap Swing components (e.g. toolbar).
             // Add some space to avoid the overlapping.
-            // toolBar.add(Box.createHorizontalStrut( 70 ), 0);
+            // toolBar.add(Box.createHorizontalStrut(70), 0);
         }
 
         if (exitOnClose) {
@@ -114,7 +113,11 @@ public class SmileStudio extends JFrame {
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
 
-    public static void main(String[] args) {
+    /**
+     * Starts Studio UI.
+     * @param args command-line arguments.
+     */
+    public static void start(String[] args) {
         // macOS global settings
         // Must be set on main thread and before AWT/Swing is initialized
         if (SystemInfo.isMacOS) {
@@ -123,7 +126,7 @@ public class SmileStudio extends JFrame {
             // Appearance of window title bars: use current macOS appearance
             System.setProperty("apple.awt.application.appearance", "system");
             // Application name used in screen menu bar (in first menu after the "Apple" menu)
-            System.setProperty("apple.awt.application.name", "Smile Studio");
+            System.setProperty("apple.awt.application.name", bundle.getString("AppName"));
         }
 
         if (GraphicsEnvironment.isHeadless()) {
