@@ -21,7 +21,7 @@ package smile.shell
   * @author Haifeng Li
   */
 object ScalaREPL extends scala.tools.nsc.MainGenericRunner {
-  def main0(args: Array[String]): Unit = {
+  def apply(args: Array[String]): Unit = {
     System.setProperty("scala.repl.prompt", "%nsmile> ")
     System.setProperty("scala.repl.welcome", welcome(":quit"))
     

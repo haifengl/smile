@@ -16,6 +16,8 @@
  */
 package smile.shell
 
+import smile.studio.SmileStudio
+
 /** An object that runs Smile script or interactive shell.
   *
   * @author Haifeng Li
@@ -27,8 +29,9 @@ object Main {
       case "train" => Train(args.drop(1))
       case "predict" => Predict(args.drop(1))
       case "serve" => Serve(args.drop(1))
-      case "scala" => ScalaREPL.main0(args.drop(1))
-      case _ => JavaREPL.main0(args)
+      case "scala" => ScalaREPL(args.drop(1))
+      case "shell" => JavaREPL(args.drop(1))
+      case _ => SmileStudio.main(args)
     }
   }
 }
