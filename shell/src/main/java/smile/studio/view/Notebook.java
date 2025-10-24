@@ -20,7 +20,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import smile.studio.font.JetBrainsMonoFont;
+import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
 
 /**
  * Interactive environment to write and execute Java code combining code,
@@ -33,7 +33,7 @@ public class Notebook extends JPanel implements KeyListener {
     private static final int MIN_FONT_SIZE = 8;
     private static final int MAX_FONT_SIZE = 72;
     private int fontSize = 12;
-    private Font font = new Font(JetBrainsMonoFont.FAMILY, Font.PLAIN, fontSize);
+    private Font font = new Font(FlatJetBrainsMonoFont.FAMILY, Font.PLAIN, fontSize);
 
     @Override
     public void keyTyped(KeyEvent e) {
@@ -52,7 +52,7 @@ public class Notebook extends JPanel implements KeyListener {
                     fontSize--;
                 }
             }
-            font = new Font(JetBrainsMonoFont.FAMILY, Font.PLAIN, fontSize);
+            font = new Font(FlatJetBrainsMonoFont.FAMILY, Font.PLAIN, fontSize);
         }
     }
 

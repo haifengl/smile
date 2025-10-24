@@ -22,7 +22,7 @@ import javax.swing.*;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.util.SystemInfo;
-import smile.studio.font.JetBrainsMonoFont;
+import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
 import smile.studio.view.Explorer;
 import smile.studio.view.LogArea;
 import smile.studio.view.Notebook;
@@ -78,7 +78,7 @@ public class SmileStudio extends JFrame {
      */
     public static void createAndShowGUI(boolean exitOnClose) {
         // Set application monospaced font before setting up FlatLaf
-        FlatLaf.setPreferredMonospacedFontFamily(JetBrainsMonoFont.FAMILY);
+        FlatLaf.setPreferredMonospacedFontFamily(FlatJetBrainsMonoFont.FAMILY);
         FlatLightLaf.setup();
 
         // Create and set up the window.
@@ -132,7 +132,7 @@ public class SmileStudio extends JFrame {
         }
 
         // Install font in main
-        JetBrainsMonoFont.install();
+        FlatJetBrainsMonoFont.install();
         // Schedule a job for the event dispatch thread:
         // creating and showing this application's GUI.
         javax.swing.SwingUtilities.invokeLater(() -> createAndShowGUI(true));
