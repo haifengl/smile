@@ -31,7 +31,7 @@ object Main {
       case "serve" => Serve(args.drop(1))
       case "scala" => ScalaREPL(args.drop(1))
       case "shell" => JavaREPL(args.drop(1))
-      case _ => SmileStudio.main(args)
+      case _ => SmileStudio.start(args)
     }
   }
 }
