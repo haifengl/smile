@@ -21,7 +21,7 @@ package smile.shell
   * @author Haifeng Li
   */
 object JavaREPL {
-  def main0(args: Array[String]): Unit = {
+  def apply(args: Array[String]): Unit = {
     val home = System.getProperty("smile.home", ".")
     val startup = Array(
       "--startup", "DEFAULT",
