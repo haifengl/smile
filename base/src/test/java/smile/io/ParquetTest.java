@@ -35,10 +35,7 @@ public class ParquetTest {
 
     public ParquetTest() {
         try {
-            String path = Paths.getTestData("kylo/userdata1.parquet").toAbsolutePath().toString();
-            // prefix slash on Windows
-            if (!path.startsWith("/")) path = "/" + path;
-            df = Parquet.read(path);
+            df = Parquet.read(Paths.getTestData("kylo/userdata1.parquet"));
             System.out.println(df);
         } catch (Exception ex) {
             ex.printStackTrace();
