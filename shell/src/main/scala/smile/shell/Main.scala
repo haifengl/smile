@@ -27,12 +27,8 @@ object Main {
       case "train" => Train(args.drop(1))
       case "predict" => Predict(args.drop(1))
       case "serve" => Serve(args.drop(1))
-      case _ => try {
-        val clazz = Class.forName("ammonite.Main$")
-        AmmoniteREPL.main0(clazz, args)
-      } catch {
-        case _: ClassNotFoundException => ScalaREPL.main0(args)
-      }
+      case "scala" => ScalaREPL.main0(args.drop(1))
+      case _ => JavaREPL.main0(args)
     }
   }
 }
