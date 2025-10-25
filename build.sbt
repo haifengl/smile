@@ -3,6 +3,7 @@ name := "smile"
 lazy val scala213 = "2.13.17"
 lazy val scala3 = "3.3.6"
 lazy val supportedScalaVersions = List(scala213, scala3)
+lazy val os = sys.props.get("os.name").get.toLowerCase.split(" ")(0)
 
 lazy val commonSettings = Seq(
   resolvers += "Akka library repository" at "https://repo.akka.io/maven",
@@ -41,6 +42,14 @@ lazy val commonSettings = Seq(
     "--add-opens=java.base/sun.nio.cs=ALL-UNNAMED",
     "--add-opens=java.base/sun.security.action=ALL-UNNAMED",
     "--enable-native-access=ALL-UNNAMED"
+  ),
+  Test / envVars := Map(
+    os match {
+      case "windows" =>
+        "PATH" -> s"${(Test / baseDirectory).value}/shell/src/universal/bin;${System.getenv("PATH")}"
+      case _ =>
+        "PATH" -> s"${(Test / baseDirectory).value}/shell/src/universal/bin:${System.getenv("PATH")}"
+    }
   ),
 
   versionScheme := Some("early-semver"),
