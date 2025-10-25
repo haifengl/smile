@@ -22,19 +22,4 @@ package smile
   */
 package object shell {
   val version: String = getClass.getPackage.getImplementationVersion
-  def welcome(exit: String): String =
-    s"""
-       |                                                       ..::''''::..
-       |                                                     .;''        ``;.
-       |     ....                                           ::    ::  ::    ::
-       |   ,;' .;:                ()  ..:                  ::     ::  ::     ::
-       |   ::.      ..:,:;.,:;.    .   ::   .::::.         :: .:' ::  :: `:. ::
-       |    '''::,   ::  ::  ::  `::   ::  ;:   .::        ::  :          :  ::
-       |  ,:';  ::;  ::  ::  ::   ::   ::  ::,::''.         :: `:.      .:' ::
-       |  `:,,,,;;' ,;; ,;;, ;;, ,;;, ,;;, `:,,,,:'          `;..``::::''..;'
-       |                                                       ``::,,,,::''
-       |
-       |  Welcome to Smile $version! Type "$exit<RETURN>" to leave the Smile Shell.
-       |===============================================================================
-     """.stripMargin
 }

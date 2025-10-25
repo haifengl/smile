@@ -22,8 +22,23 @@ package smile.shell
   */
 object ScalaREPL extends scala.tools.nsc.MainGenericRunner {
   def apply(args: Array[String]): Unit = {
+    val welcome =
+      s"""
+         |                                                       ..::''''::..
+         |                                                     .;''        ``;.
+         |     ....                                           ::    ::  ::    ::
+         |   ,;' .;:                ()  ..:                  ::     ::  ::     ::
+         |   ::.      ..:,:;.,:;.    .   ::   .::::.         :: .:' ::  :: `:. ::
+         |    '''::,   ::  ::  ::  `::   ::  ;:   .::        ::  :          :  ::
+         |  ,:';  ::;  ::  ::  ::   ::   ::  ::,::''.         :: `:.      .:' ::
+         |  `:,,,,;;' ,;; ,;;, ;;, ,;;, ,;;, `:,,,,:'          `;..``::::''..;'
+         |                                                       ``::,,,,::''
+         |
+         |  Welcome to Smile $version! Type ":quit<RETURN>" to leave the Smile Shell.
+         |===============================================================================
+     """.stripMargin
     System.setProperty("scala.repl.prompt", "%nsmile> ")
-    System.setProperty("scala.repl.welcome", welcome(":quit"))
+    System.setProperty("scala.repl.welcome", welcome)
     
     if (!process(args)) System.exit(1)
   }
