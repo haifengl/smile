@@ -17,7 +17,7 @@
 package smile.studio.view;
 
 import javax.swing.*;
-import javax.swing.border.EtchedBorder;
+import javax.swing.border.*;
 import java.awt.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
@@ -41,9 +41,11 @@ public class StatusBar extends JPanel {
      */
     public StatusBar() {
         super(new FlowLayout(FlowLayout.LEFT));
-        setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 
-        //status.putClientProperty("FlatLaf.styleClass", "monospaced");
+        // Create a MatteBorder with a 2-pixel black border only on the top
+        //Border topBorder = new MatteBorder(2, 0, 0, 0, Color.BLACK);
+        //setBorder(topBorder);
+
         Font font = FontUtils.getCompositeFont(FlatJetBrainsMonoFont.FAMILY, Font.PLAIN, 12);
         status.setFont(font);
         add(status);
