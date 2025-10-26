@@ -16,38 +16,22 @@
  */
 package smile.studio.view;
 
-import smile.studio.LogStreamAppender;
-
 import javax.swing.*;
 import java.awt.*;
 import java.io.Serial;
 
-public class Workspace extends JSplitPane{
+public class Workspace extends JSplitPane {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private final Explorer explorer;
-    private final Notebook notebook;
-    private final LogArea logArea;
-    private final JSplitPane workspace;
+    private final Explorer explorer = new Explorer();
+    private final Notebook notebook = new Notebook();
 
     public Workspace() {
         super(JSplitPane.HORIZONTAL_SPLIT);
-        explorer = new Explorer();
-        notebook = new Notebook();
-        logArea = new LogArea();
-
-        workspace = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-        workspace.setTopComponent(notebook);
-        workspace.setBottomComponent(logArea);
-        workspace.setDividerLocation(700);
-
-        // Add the scroll panes to a split pane.
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        splitPane.setLeftComponent(explorer);
-        splitPane.setRightComponent(workspace);
-
-        splitPane.setDividerLocation(300);
-        splitPane.setPreferredSize(new Dimension(1200, 800));
+        setLeftComponent(explorer);
+        setRightComponent(notebook);
+        setDividerLocation(300);
+        setPreferredSize(new Dimension(1200, 800));
     }
 }

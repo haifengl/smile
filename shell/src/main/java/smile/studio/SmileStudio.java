@@ -25,9 +25,7 @@ import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.util.SystemInfo;
 import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
-import smile.studio.view.Explorer;
-import smile.studio.view.LogArea;
-import smile.studio.view.Notebook;
+import smile.studio.view.*;
 
 /**
  * Smile Studio is an integrated development environment (IDE) for Smile.
@@ -39,35 +37,26 @@ public class SmileStudio extends JFrame {
     private static final long serialVersionUID = 1L;
     /** The message resource bundle. */
     static final ResourceBundle bundle = ResourceBundle.getBundle(SmileStudio.class.getName(), Locale.getDefault());
+    static final JToolBar toolBar = new JToolBar();
+    static final StatusBar statusBar = new StatusBar();
+    final Workspace workspace = new Workspace();
 
     public SmileStudio() {
         super(bundle.getString("AppName"));
         JPanel contentPane = new JPanel(new BorderLayout());
         setContentPane(contentPane);
 
-        Explorer explorer = new Explorer();
-        Notebook notebook = new Notebook();
-        LogArea logArea = new LogArea();
+        JPanel browser = new JPanel();
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        splitPane.setLeftComponent(workspace);
+        splitPane.setRightComponent(browser);
+        splitPane.setDividerLocation(900);
+        splitPane.setPreferredSize(new Dimension(1200, 800));
 
-        Dimension minimumSize = new Dimension(100, 50);
-        explorer.setMinimumSize(minimumSize);
-        notebook.setMinimumSize(minimumSize);
-        logArea.setMinimumSize(minimumSize);
-
-        JSplitPane workspace = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-        workspace.setTopComponent(notebook);
-        workspace.setBottomComponent(logArea);
-        workspace.setDividerLocation(700);
-        workspace.setPreferredSize(new Dimension(900, 800));
-
-        JSplitPane explorerWorkspacePane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        explorerWorkspacePane.setLeftComponent(explorer);
-        explorerWorkspacePane.setRightComponent(workspace);
-        explorerWorkspacePane.setDividerLocation(300);
-        explorerWorkspacePane.setPreferredSize(new Dimension(1200, 800));
-
-        contentPane.add(explorerWorkspacePane, BorderLayout.CENTER);
-        LogStreamAppender.setStaticOutputStream(logArea.getOutputStream());
+        contentPane.add(toolBar, BorderLayout.NORTH);
+        contentPane.add(workspace, BorderLayout.CENTER);
+        contentPane.add(statusBar, BorderLayout.SOUTH);
+        //LogStreamAppender.setStaticOutputStream(logArea.getOutputStream());
     }
 
     /**
@@ -84,6 +73,11 @@ public class SmileStudio extends JFrame {
         JFrame frame = new SmileStudio();
         frame.setSize(new Dimension(1200, 800));
 
+        // Don't allow the toolbar to be dragged and undocked
+        toolBar.setFloatable(false);
+        // Show a border only when the mouse hovers over a button
+        toolBar.setRollover(true);
+
         // macOS window settings
         if (SystemInfo.isMacFullWindowContentSupported) {
             // Full window content
@@ -95,7 +89,7 @@ public class SmileStudio extends JFrame {
             frame.getRootPane().putClientProperty("apple.awt.windowTitleVisible", false);
             // macOS red/orange/green buttons overlap Swing components (e.g. toolbar).
             // Add some space to avoid the overlapping.
-            // toolBar.add(Box.createHorizontalStrut(70), 0);
+            toolBar.add(Box.createHorizontalStrut(70), 0);
         }
 
         if (exitOnClose) {
