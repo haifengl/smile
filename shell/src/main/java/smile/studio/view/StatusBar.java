@@ -16,24 +16,60 @@
  */
 package smile.studio.view;
 
-import javax.swing.JPanel;
+import javax.swing.*;
+import javax.swing.border.EtchedBorder;
+import java.awt.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
-import java.lang.management.OperatingSystemMXBean;
+
+import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
+import com.formdev.flatlaf.util.FontUtils;
+import com.sun.management.OperatingSystemMXBean;
 
 public class StatusBar extends JPanel {
+    /** Status message. */
+    final JLabel status = new JLabel("Ready");
+    /* OS's MXBean */
+    final OperatingSystemMXBean os = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+    /* Memory's MXBean */
+    final MemoryMXBean memory = ManagementFactory.getMemoryMXBean();
+    /* Timer to refresh CPU/Memory usage. */
+    final Timer timer;
+
+    /**
+     * Constructor.
+     */
     public StatusBar() {
-        // Get the operating system's MXBean
-        OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
+        super(new FlowLayout(FlowLayout.LEFT));
+        setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 
-        // CPU Usage
-        double cpuLoad = os.getSystemLoadAverage();
-        System.out.println("CPU Usage: " + (cpuLoad * 100) + "%");
+        //status.putClientProperty("FlatLaf.styleClass", "monospaced");
+        Font font = FontUtils.getCompositeFont(FlatJetBrainsMonoFont.FAMILY, Font.PLAIN, 12);
+        status.setFont(font);
+        add(status);
 
-        // Memory Usage
-        MemoryMXBean memory = ManagementFactory.getMemoryMXBean();
-        long usedMemory = memory.getHeapMemoryUsage().getUsed();
-        long maxMemory = memory.getHeapMemoryUsage().getMax();
-        System.out.println("Memory Usage: " + (usedMemory * 100.0 / maxMemory) + "%");
+        timer = new Timer(1000, e -> {
+            double cpuLoad = os.getCpuLoad();
+            double usedHeap = memory.getHeapMemoryUsage().getUsed() / (1024 * 1024.0);
+            String unit = "MB";
+            if (usedHeap >= 1024) {
+                usedHeap /= 1024;
+                unit = "GB";
+            }
+            String message = String.format("Heap Memory: %4.1f %s    CPU Usage: %d%%", usedHeap, unit, (int) (cpuLoad * 100));
+            status.setText(message);
+        });
+        timer.setInitialDelay(5000);
+        timer.start();
+    }
+
+    /**
+     * Update the status message.
+     * @param message the status message.
+     */
+    public void setStatus(String message) {
+        status.setText(message);
+        timer.stop();
+        timer.restart();
     }
 }
