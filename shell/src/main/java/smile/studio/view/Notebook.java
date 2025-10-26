@@ -17,6 +17,7 @@
 package smile.studio.view;
 
 import javax.swing.*;
+import javax.swing.border.EtchedBorder;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -34,6 +35,11 @@ public class Notebook extends JPanel implements KeyListener {
     private static final int MAX_FONT_SIZE = 72;
     private int fontSize = 12;
     private Font font = new Font(FlatJetBrainsMonoFont.FAMILY, Font.PLAIN, fontSize);
+
+    public Notebook() {
+        putClientProperty("FlatLaf.styleClass", "monospaced");
+        setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+    }
 
     @Override
     public void keyTyped(KeyEvent e) {

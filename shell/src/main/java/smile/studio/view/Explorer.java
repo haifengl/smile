@@ -21,23 +21,24 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeSelectionModel;
+import java.awt.*;
 
-public class Explorer extends JScrollPane implements TreeSelectionListener {
-    private final JTree tree;
+public class Explorer extends JPanel implements TreeSelectionListener {
+    final DefaultMutableTreeNode top = new DefaultMutableTreeNode("Smile");
+    final JTree tree = new JTree(top);
 
     public Explorer() {
-        DefaultMutableTreeNode top = new DefaultMutableTreeNode("Smile");
+        super(new BorderLayout());
         createNodes(top);
 
-        // Create a tree that allows one selection at a time.
-        tree = new JTree(top);
+        // Allow one selection at a time.
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-
         // Listen for when the selection changes.
         tree.addTreeSelectionListener(this);
 
         // Add the tree to the scroll pane.
-        add(tree);
+        JScrollPane scrollPane = new JScrollPane(tree);
+        add(scrollPane, BorderLayout.CENTER);
     }
 
     private void createNodes(DefaultMutableTreeNode top) {

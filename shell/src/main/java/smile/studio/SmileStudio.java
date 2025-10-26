@@ -40,21 +40,22 @@ public class SmileStudio extends JFrame {
     static final JToolBar toolBar = new JToolBar();
     static final StatusBar statusBar = new StatusBar();
     final Workspace workspace = new Workspace();
+    final Chat chat = new Chat();
 
     public SmileStudio() {
         super(bundle.getString("AppName"));
         JPanel contentPane = new JPanel(new BorderLayout());
         setContentPane(contentPane);
 
-        JPanel browser = new JPanel();
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setLeftComponent(workspace);
-        splitPane.setRightComponent(browser);
-        splitPane.setDividerLocation(900);
-        splitPane.setPreferredSize(new Dimension(1200, 800));
+        splitPane.setRightComponent(chat);
+        splitPane.setDividerLocation(screenSize.width * 3 / 4);
+        workspace.setPreferredSize(new Dimension(1200, 800));
 
         contentPane.add(toolBar, BorderLayout.NORTH);
-        contentPane.add(workspace, BorderLayout.CENTER);
+        contentPane.add(splitPane, BorderLayout.CENTER);
         contentPane.add(statusBar, BorderLayout.SOUTH);
         //LogStreamAppender.setStaticOutputStream(logArea.getOutputStream());
     }
