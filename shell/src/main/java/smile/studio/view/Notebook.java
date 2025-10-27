@@ -36,6 +36,9 @@ public class Notebook extends JPanel implements KeyListener {
     private int fontSize = 12;
     private Font font = new Font(FlatJetBrainsMonoFont.FAMILY, Font.PLAIN, fontSize);
 
+    /**
+     * Constructor.
+     */
     public Notebook() {
         putClientProperty("FlatLaf.styleClass", "monospaced");
         setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
