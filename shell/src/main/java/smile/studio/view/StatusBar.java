@@ -17,23 +17,31 @@
 package smile.studio.view;
 
 import javax.swing.*;
-import javax.swing.border.*;
 import java.awt.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
 import com.formdev.flatlaf.util.FontUtils;
 import com.sun.management.OperatingSystemMXBean;
 
+/**
+ * A status bar poses an information area typically found at the window's bottom.
+ *
+ * @author Haifeng Li
+ */
 public class StatusBar extends JPanel {
+    /** The message resource bundle. */
+    static final ResourceBundle bundle = ResourceBundle.getBundle(StatusBar.class.getName(), Locale.getDefault());
     /** Status message. */
-    final JLabel status = new JLabel("Ready");
-    /* OS's MXBean */
+    final JLabel status = new JLabel(bundle.getString("Ready"));
+    /** OS's MXBean */
     final OperatingSystemMXBean os = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-    /* Memory's MXBean */
+    /** Memory's MXBean */
     final MemoryMXBean memory = ManagementFactory.getMemoryMXBean();
-    /* Timer to refresh CPU/Memory usage. */
+    /** Timer to refresh CPU/Memory usage. */
     final Timer timer;
 
     /**
@@ -41,12 +49,6 @@ public class StatusBar extends JPanel {
      */
     public StatusBar() {
         super(new FlowLayout(FlowLayout.LEFT));
-
-        // Retrieves the color that the current Look and Feel uses for general control elements
-        Color color = UIManager.getColor("control");
-        // Create a MatteBorder with a 2-pixel border only on the top
-        Border topBorder = new MatteBorder(2, 0, 0, 0, color);
-        setBorder(topBorder);
 
         Font font = FontUtils.getCompositeFont(FlatJetBrainsMonoFont.FAMILY, Font.PLAIN, 12);
         status.setFont(font);
@@ -60,7 +62,7 @@ public class StatusBar extends JPanel {
                 usedHeap /= 1024;
                 unit = "GB";
             }
-            String message = String.format("Heap Memory:%5.1f %s    CPU Usage:%3d%%", usedHeap, unit, (int) (cpuLoad * 100));
+            String message = String.format(bundle.getString("SystemInfo"), usedHeap, unit, (int) (cpuLoad * 100));
             status.setText(message);
         });
         timer.setInitialDelay(5000);

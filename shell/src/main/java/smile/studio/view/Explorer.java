@@ -23,43 +23,60 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
+/**
+ * A workspace explorer.
+ *
+ * @author Haifeng Li
+ */
 public class Explorer extends JPanel implements TreeSelectionListener {
-    final DefaultMutableTreeNode top = new DefaultMutableTreeNode("Project");
-    final JTree tree = new JTree(top);
+    /** The message resource bundle. */
+    static final ResourceBundle bundle = ResourceBundle.getBundle(Explorer.class.getName(), Locale.getDefault());
+    /** Root node. */
+    final DefaultMutableTreeNode root = new DefaultMutableTreeNode(bundle.getString("Root"));
+    /** Tree of workspace runtime information. */
+    final JTree tree = new JTree(root);
 
+    /**
+     * Constructor.
+     */
     public Explorer() {
         super(new BorderLayout());
-        createNodes(top);
+        createNodes();
 
         // Allow one selection at a time.
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         // Listen for when the selection changes.
         tree.addTreeSelectionListener(this);
         // Expand the tree
-        tree.expandPath(new TreePath(top));
+        tree.expandPath(new TreePath(root));
 
         // Add the tree to the scroll pane.
         JScrollPane scrollPane = new JScrollPane(tree);
         add(scrollPane, BorderLayout.CENTER);
     }
 
-    private void createNodes(DefaultMutableTreeNode top) {
+    /**
+     * Creates tree nodes.
+     */
+    private void createNodes() {
         DefaultMutableTreeNode category;
         DefaultMutableTreeNode category2;
         DefaultMutableTreeNode algorithm = null;
 
-        category = new DefaultMutableTreeNode("DataFrame");
-        top.add(category);
+        category = new DefaultMutableTreeNode(bundle.getString("DataFrames"));
+        root.add(category);
 
-        category = new DefaultMutableTreeNode("SQL");
-        top.add(category);
+        category = new DefaultMutableTreeNode(bundle.getString("Tables"));
+        root.add(category);
 
-        category = new DefaultMutableTreeNode("Model");
-        top.add(category);
+        category = new DefaultMutableTreeNode(bundle.getString("Models"));
+        root.add(category);
 
-        category = new DefaultMutableTreeNode("Service");
-        top.add(category);
+        category = new DefaultMutableTreeNode(bundle.getString("Services"));
+        root.add(category);
     }
 
     /** Required by TreeSelectionListener interface. */

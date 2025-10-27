@@ -19,11 +19,19 @@ package smile.studio.view;
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * A chat interface for LLMs.
+ *
+ * @author Haifeng Li
+ */
 public class Chat extends JPanel {
     final JTextArea messages = new JTextArea();
     final JTextField input = new JTextField();
     final JButton send = new JButton("Send");
 
+    /**
+     * Constructor.
+     */
     public Chat() {
         super(new BorderLayout());
         messages.setEditable(false);
@@ -40,6 +48,9 @@ public class Chat extends JPanel {
         input.addActionListener(e -> sendMessage());
     }
 
+    /**
+     * Sends user message.
+     */
     private void sendMessage() {
         String message = input.getText().trim();
         if (!message.isEmpty()) {

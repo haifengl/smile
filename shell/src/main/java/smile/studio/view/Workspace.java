@@ -19,13 +19,22 @@ package smile.studio.view;
 import javax.swing.*;
 import java.io.Serial;
 
+/**
+ * A notebook workspace.
+ *
+ * @author Haifeng Li
+ */
 public class Workspace extends JSplitPane {
     @Serial
     private static final long serialVersionUID = 1L;
-
+    /** The explorer of runtime information. */
     private final Explorer explorer = new Explorer();
+    /** The editor of notebook. */
     private final Notebook notebook = new Notebook();
 
+    /**
+     * Constructor.
+     */
     public Workspace() {
         super(JSplitPane.HORIZONTAL_SPLIT);
         setLeftComponent(explorer);
