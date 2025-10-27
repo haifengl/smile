@@ -17,7 +17,6 @@
 package smile.studio.view;
 
 import javax.swing.*;
-import java.awt.*;
 import java.io.Serial;
 
 public class Workspace extends JSplitPane {
@@ -31,7 +30,6 @@ public class Workspace extends JSplitPane {
         super(JSplitPane.HORIZONTAL_SPLIT);
         setLeftComponent(explorer);
         setRightComponent(notebook);
-        setDividerLocation(300);
-        setPreferredSize(new Dimension(1200, 800));
+        setResizeWeight(0.15);
     }
 }
