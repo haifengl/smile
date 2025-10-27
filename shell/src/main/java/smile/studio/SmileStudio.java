@@ -37,8 +37,8 @@ public class SmileStudio extends JFrame {
     private static final long serialVersionUID = 1L;
     /** The message resource bundle. */
     static final ResourceBundle bundle = ResourceBundle.getBundle(SmileStudio.class.getName(), Locale.getDefault());
-    static final JToolBar toolBar = new JToolBar();
-    static final StatusBar statusBar = new StatusBar();
+    final JToolBar toolBar = new JToolBar();
+    final StatusBar statusBar = new StatusBar();
     final Workspace workspace = new Workspace();
     final Chat chat = new Chat();
 
@@ -47,17 +47,23 @@ public class SmileStudio extends JFrame {
         JPanel contentPane = new JPanel(new BorderLayout());
         setContentPane(contentPane);
 
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        initToolBar();
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setLeftComponent(workspace);
         splitPane.setRightComponent(chat);
-        splitPane.setDividerLocation(screenSize.width * 3 / 4);
-        workspace.setPreferredSize(new Dimension(1200, 800));
+        splitPane.setResizeWeight(0.85);
 
         contentPane.add(toolBar, BorderLayout.NORTH);
         contentPane.add(splitPane, BorderLayout.CENTER);
         contentPane.add(statusBar, BorderLayout.SOUTH);
         //LogStreamAppender.setStaticOutputStream(logArea.getOutputStream());
+    }
+
+    private void initToolBar() {
+        // Don't allow the toolbar to be dragged and undocked
+        toolBar.setFloatable(false);
+        // Show a border only when the mouse hovers over a button
+        toolBar.setRollover(true);
     }
 
     /**
@@ -71,41 +77,36 @@ public class SmileStudio extends JFrame {
         FlatLightLaf.setup();
 
         // Create and set up the window.
-        JFrame frame = new SmileStudio();
-        frame.setSize(new Dimension(1200, 800));
-
-        // Don't allow the toolbar to be dragged and undocked
-        toolBar.setFloatable(false);
-        // Show a border only when the mouse hovers over a button
-        toolBar.setRollover(true);
+        SmileStudio studio = new SmileStudio();
+        studio.setSize(new Dimension(1200, 800));
 
         // macOS window settings
         if (SystemInfo.isMacFullWindowContentSupported) {
             // Full window content
-            frame.getRootPane().putClientProperty("apple.awt.fullWindowContent", true);
+            studio.getRootPane().putClientProperty("apple.awt.fullWindowContent", true);
             // Transparent title bar
-            frame.getRootPane().putClientProperty("apple.awt.transparentTitleBar", true);
+            studio.getRootPane().putClientProperty("apple.awt.transparentTitleBar", true);
             // The window title is painted using the system appearance, and it overlaps
             // Swing components. Hide the window title.
-            frame.getRootPane().putClientProperty("apple.awt.windowTitleVisible", false);
+            studio.getRootPane().putClientProperty("apple.awt.windowTitleVisible", false);
             // macOS red/orange/green buttons overlap Swing components (e.g. toolbar).
             // Add some space to avoid the overlapping.
-            toolBar.add(Box.createHorizontalStrut(70), 0);
+            studio.toolBar.add(Box.createHorizontalStrut(70), 0);
         }
 
         if (exitOnClose) {
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            studio.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         } else {
-            frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            studio.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         }
 
         // Set the frame at the center of screen
-        frame.setLocationRelativeTo(null);
+        studio.setLocationRelativeTo(null);
         // Display the window.
-        frame.pack();
-        frame.setVisible(true);
+        studio.pack();
+        studio.setVisible(true);
         // Maximize the frame. Must be after setVisible(true).
-        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        studio.setExtendedState(JFrame.MAXIMIZED_BOTH);
     }
 
     /**

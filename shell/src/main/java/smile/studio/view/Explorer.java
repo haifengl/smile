@@ -20,11 +20,12 @@ import javax.swing.*;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
 
 public class Explorer extends JPanel implements TreeSelectionListener {
-    final DefaultMutableTreeNode top = new DefaultMutableTreeNode("Smile");
+    final DefaultMutableTreeNode top = new DefaultMutableTreeNode("Project");
     final JTree tree = new JTree(top);
 
     public Explorer() {
@@ -35,6 +36,8 @@ public class Explorer extends JPanel implements TreeSelectionListener {
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         // Listen for when the selection changes.
         tree.addTreeSelectionListener(this);
+        // Expand the tree
+        tree.expandPath(new TreePath(top));
 
         // Add the tree to the scroll pane.
         JScrollPane scrollPane = new JScrollPane(tree);

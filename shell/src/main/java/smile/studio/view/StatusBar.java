@@ -42,9 +42,11 @@ public class StatusBar extends JPanel {
     public StatusBar() {
         super(new FlowLayout(FlowLayout.LEFT));
 
-        // Create a MatteBorder with a 2-pixel black border only on the top
-        //Border topBorder = new MatteBorder(2, 0, 0, 0, Color.BLACK);
-        //setBorder(topBorder);
+        // Retrieves the color that the current Look and Feel uses for general control elements
+        Color color = UIManager.getColor("control");
+        // Create a MatteBorder with a 2-pixel border only on the top
+        Border topBorder = new MatteBorder(2, 0, 0, 0, color);
+        setBorder(topBorder);
 
         Font font = FontUtils.getCompositeFont(FlatJetBrainsMonoFont.FAMILY, Font.PLAIN, 12);
         status.setFont(font);
@@ -58,7 +60,7 @@ public class StatusBar extends JPanel {
                 usedHeap /= 1024;
                 unit = "GB";
             }
-            String message = String.format("Heap Memory: %4.1f %s    CPU Usage: %d%%", usedHeap, unit, (int) (cpuLoad * 100));
+            String message = String.format("Heap Memory:%5.1f %s    CPU Usage:%3d%%", usedHeap, unit, (int) (cpuLoad * 100));
             status.setText(message);
         });
         timer.setInitialDelay(5000);
