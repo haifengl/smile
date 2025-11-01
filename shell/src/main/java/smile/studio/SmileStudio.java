@@ -16,17 +16,15 @@
  */
 package smile.studio;
 
-//import java.awt.*;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.GraphicsEnvironment;
+import java.awt.*;
+import java.awt.image.*;
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.ResourceBundle;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.util.SystemInfo;
@@ -50,6 +48,7 @@ public class SmileStudio extends JFrame {
 
     public SmileStudio() {
         super(bundle.getString("AppName"));
+        setIcon();
         JPanel contentPane = new JPanel(new BorderLayout());
         setContentPane(contentPane);
 
@@ -62,15 +61,41 @@ public class SmileStudio extends JFrame {
         contentPane.add(toolBar, BorderLayout.NORTH);
         contentPane.add(splitPane, BorderLayout.CENTER);
         contentPane.add(statusBar, BorderLayout.SOUTH);
-        //LogStreamAppender.setStaticOutputStream(logArea.getOutputStream());
     }
 
-    /** Initializes the tool bar. */
+    /**
+     * Sets the icon images for the frame.
+     */
+    private void setIcon() {
+        try (InputStream input = SmileStudio.class.getResourceAsStream("images/robot.png")) {
+            if (input == null) {
+                System.err.println("Resource not found: images/robot.png");
+                return;
+            }
+
+            BufferedImage icon = ImageIO.read(input);
+            ArrayList<Image> icons = new ArrayList<>();
+            int[] sizes = {16, 24, 32, 48, 64, 128, 256, 512};
+            for (int size : sizes) {
+                BufferedImage image = new BufferedImage(size, size, Transparency.TRANSLUCENT);
+                Graphics2D g2 = image.createGraphics();
+                g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                g2.drawImage(icon, 0, 0, size, size, null);
+                g2.dispose();
+                icons.add(image);
+            }
+            setIconImages(icons);
+        } catch (IOException e) {
+            System.err.println("Error loading image from resource: images/robot.png");
+        }
+    }
+
+    /** Initializes the toolbar. */
     private void initToolBar() {
         // Don't allow the toolbar to be dragged and undocked
         toolBar.setFloatable(false);
         // Show a border only when the mouse hovers over a button
-        //toolBar.setRollover(true);
+        toolBar.setRollover(true);
         //toolBar.add(button("New", e -> newNotebook()));
         toolBar.add(button("Open…", e -> openNotebook()));
         toolBar.add(button("Save", e -> saveNotebook(false)));
@@ -235,6 +260,8 @@ public class SmileStudio extends JFrame {
         studio.setVisible(true);
         // Maximize the frame. Must be after setVisible(true).
         studio.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        // Set a preferred size to maintain a consistent height of status bar.
+        studio.statusBar.setPreferredSize(new Dimension(studio.getWidth(), 24));
     }
 
     /**
