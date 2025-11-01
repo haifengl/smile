@@ -25,6 +25,7 @@ import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import smile.studio.model.Runner;
 
 /**
  * A workspace explorer.
@@ -42,7 +43,7 @@ public class Explorer extends JPanel implements TreeSelectionListener {
     /**
      * Constructor.
      */
-    public Explorer() {
+    public Explorer(Runner runner) {
         super(new BorderLayout());
         createNodes();
 
@@ -79,7 +80,6 @@ public class Explorer extends JPanel implements TreeSelectionListener {
         root.add(category);
     }
 
-    /** Required by TreeSelectionListener interface. */
     @Override
     public void valueChanged(TreeSelectionEvent e) {
         DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();

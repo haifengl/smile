@@ -28,24 +28,18 @@ import org.fife.ui.rsyntaxtextarea.*;
  *
  * @author Haifeng Li
  */
-public class CodeEditor extends JPanel {
+public class CodeEditor extends RSyntaxTextArea {
     @Serial
     private static final long serialVersionUID = 2L;
-
-    /** Code editor. */
-    private final RSyntaxTextArea editor;
 
     /**
      * Constructor.
      */
     public CodeEditor() {
-        super(new BorderLayout());
-        editor = new RSyntaxTextArea(20, 60);
-        editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);
-        editor.setCodeFoldingEnabled(true);
-        editor.setRoundedSelectionEdges(true);
-        RTextScrollPane scrollPane  = new RTextScrollPane(editor);
-        add(scrollPane);
+        super(20, 60);
+        setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);
+        setCodeFoldingEnabled(true);
+        setRoundedSelectionEdges(true);
 
         // A CompletionProvider is what knows of all possible completions, and
         // analyzes the contents of the text area at the caret position to
@@ -61,15 +55,15 @@ public class CodeEditor extends JPanel {
         // CompletionProviders, instances of AutoCompletion cannot be shared
         // among multiple text components.
         AutoCompletion ac = new AutoCompletion(provider);
-        ac.install(editor);
+        ac.install(this);
     }
-
+/*
     @Override
     public void setFont(Font font) {
         super.setFont(font);
         editor.setFont(font);
     }
-
+*/
     /**
      * Create a simple provider that adds some Java-related completions.
      */

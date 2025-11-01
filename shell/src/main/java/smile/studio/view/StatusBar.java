@@ -22,7 +22,6 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.util.Locale;
 import java.util.ResourceBundle;
-
 import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
 import com.formdev.flatlaf.util.FontUtils;
 import com.sun.management.OperatingSystemMXBean;
@@ -50,8 +49,9 @@ public class StatusBar extends JPanel {
     public StatusBar() {
         super(new FlowLayout(FlowLayout.LEFT));
 
-        Font font = FontUtils.getCompositeFont(FlatJetBrainsMonoFont.FAMILY, Font.PLAIN, 12);
-        status.setFont(font);
+        //Font font = FontUtils.getCompositeFont(FlatJetBrainsMonoFont.FAMILY, Font.PLAIN, 12);
+        //status.setFont(font);
+        status.putClientProperty("FlatLaf.styleClass", "monospaced");
         add(status);
 
         timer = new Timer(1000, e -> {
