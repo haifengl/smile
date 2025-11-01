@@ -17,7 +17,16 @@
 package smile.studio.view;
 
 import javax.swing.*;
-import java.io.Serial;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import jdk.jshell.*;
+import smile.studio.model.RunBehavior;
+import smile.studio.model.Runner;
+import smile.studio.view.Explorer;
 
 /**
  * A notebook workspace.
@@ -27,18 +36,29 @@ import java.io.Serial;
 public class Workspace extends JSplitPane {
     @Serial
     private static final long serialVersionUID = 1L;
+    /** Java execution engine. */
+    final Runner runner = new Runner();
     /** The explorer of runtime information. */
-    private final Explorer explorer = new Explorer();
+    final Explorer explorer = new Explorer(runner);
     /** The editor of notebook. */
-    private final Notebook notebook = new Notebook();
+    final Notebook notebook = new Notebook(runner);
 
     /**
      * Constructor.
      */
     public Workspace() {
         super(JSplitPane.HORIZONTAL_SPLIT);
+
         setLeftComponent(explorer);
         setRightComponent(notebook);
         setResizeWeight(0.15);
+    }
+
+    public Notebook notebook() {
+        return notebook;
+    }
+
+    public Explorer explorer() {
+        return explorer;
     }
 }

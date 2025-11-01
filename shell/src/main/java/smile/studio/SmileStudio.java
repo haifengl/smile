@@ -16,11 +16,17 @@
  */
 package smile.studio;
 
-import java.awt.*;
-import java.io.Serial;
-import java.util.Locale;
-import java.util.ResourceBundle;
+//import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.GraphicsEnvironment;
 import javax.swing.*;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.util.SystemInfo;
@@ -59,11 +65,133 @@ public class SmileStudio extends JFrame {
         //LogStreamAppender.setStaticOutputStream(logArea.getOutputStream());
     }
 
+    /** Initializes the tool bar. */
     private void initToolBar() {
         // Don't allow the toolbar to be dragged and undocked
         toolBar.setFloatable(false);
         // Show a border only when the mouse hovers over a button
-        toolBar.setRollover(true);
+        //toolBar.setRollover(true);
+        //toolBar.add(button("New", e -> newNotebook()));
+        toolBar.add(button("Open…", e -> openNotebook()));
+        toolBar.add(button("Save", e -> saveNotebook(false)));
+        toolBar.add(button("Save As…", e -> saveNotebook(true)));
+        toolBar.addSeparator();
+        toolBar.add(button("Add Cell", e -> workspace.notebook().addCell(null)));
+        toolBar.add(button("Run All ▶▶", e -> workspace.notebook().runAllCells()));
+        toolBar.add(button("Clear Outputs", e -> workspace.notebook().clearAllOutputs()));
+    }
+
+    private JButton button(String text, AbstractAction action) {
+        JButton b = new JButton(action);
+        b.setText(text);
+        return b;
+    }
+
+    private JButton button(String text, java.awt.event.ActionListener l) {
+        JButton b = new JButton(text);
+        b.addActionListener(l);
+        return b;
+    }
+
+    private boolean confirmDiscardIfUnsaved() {
+        // This minimal sample doesn’t track dirty state.
+        // Prompt anyway when opening/new.
+        int res = JOptionPane.showConfirmDialog(this,
+                "This will clear the current notebook. Continue?",
+                "Confirm", JOptionPane.OK_CANCEL_OPTION);
+        return res == JOptionPane.OK_OPTION;
+    }
+
+    private void openNotebook() {
+        /*
+        if (!confirmDiscardIfUnsaved()) return;
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Open Notebook");
+        chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Simple Notebook (*.snb)", "snb"));
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File f = chooser.getSelectedFile();
+            try {
+                List<String> lines = Files.readAllLines(f.toPath(), StandardCharsets.UTF_8);
+                List<String> cells = parseCells(lines);
+                cellsPanel.removeAll();
+                for (String src : cells) {
+                    CodeCellPanel cell = new CodeCellPanel();
+                    cell.codeArea.setText(src);
+                    cellsPanel.add(cell);
+                }
+                if (cells.isEmpty()) addCell(null);
+                cellsPanel.revalidate();
+                cellsPanel.repaint();
+                currentFile = f;
+                setTitle("Simple Java Notebook - " + f.getName());
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this, "Failed to open: " + ex.getMessage(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }*/
+    }
+
+    private void saveNotebook(boolean saveAs) {
+        /*
+        if (currentFile == null || saveAs) {
+            JFileChooser chooser = new JFileChooser();
+            chooser.setDialogTitle("Save Notebook");
+            chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Simple Notebook (*.snb)", "snb"));
+            if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+                File f = chooser.getSelectedFile();
+                if (!f.getName().toLowerCase().endsWith(".snb")) {
+                    f = new File(f.getParentFile(), f.getName() + ".snb");
+                }
+                currentFile = f;
+            } else {
+                return;
+            }
+        }
+        try {
+            List<String> lines = new ArrayList<>();
+            lines.add("# SimpleNotebook v1");
+            lines.add("created: " + ZonedDateTime.now());
+            for (int i = 0; i < cellsPanel.getComponentCount(); i++) {
+                CodeCellPanel c = getCell(i);
+                lines.add("CELL");
+                lines.addAll(codeToLines(c.codeArea.getText()));
+                lines.add("ENDCELL");
+            }
+            Files.write(currentFile.toPath(), lines, StandardCharsets.UTF_8);
+            setTitle("Simple Java Notebook - " + currentFile.getName());
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(this, "Failed to save: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        */
+    }
+
+    private static List<String> parseCells(List<String> lines) {
+        List<String> cells = new ArrayList<>();
+        StringBuilder current = null;
+        boolean inCell = false;
+        for (String line : lines) {
+            if (line.equals("CELL")) {
+                inCell = true;
+                current = new StringBuilder();
+            } else if (line.equals("ENDCELL")) {
+                if (current != null) cells.add(current.toString());
+                current = null;
+                inCell = false;
+            } else if (inCell) {
+                current.append(line).append("\n");
+            }
+        }
+        return cells;
+    }
+
+    private static List<String> codeToLines(String code) throws IOException {
+        List<String> l = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new StringReader(code))) {
+            String s;
+            while ((s = br.readLine()) != null) l.add(s);
+        }
+        return l;
     }
 
     /**
