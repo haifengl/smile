@@ -22,8 +22,6 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.util.Locale;
 import java.util.ResourceBundle;
-import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
-import com.formdev.flatlaf.util.FontUtils;
 import com.sun.management.OperatingSystemMXBean;
 
 /**
@@ -36,6 +34,8 @@ public class StatusBar extends JPanel {
     static final ResourceBundle bundle = ResourceBundle.getBundle(StatusBar.class.getName(), Locale.getDefault());
     /** Status message. */
     final JLabel status = new JLabel(bundle.getString("Ready"));
+    /** Status message. */
+    final JLabel system = new JLabel();
     /** OS's MXBean */
     final OperatingSystemMXBean os = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
     /** Memory's MXBean */
@@ -47,12 +47,21 @@ public class StatusBar extends JPanel {
      * Constructor.
      */
     public StatusBar() {
-        super(new FlowLayout(FlowLayout.LEFT));
+        super(new BorderLayout());
+        //status.putClientProperty("FlatLaf.styleClass", "monospaced");
 
-        //Font font = FontUtils.getCompositeFont(FlatJetBrainsMonoFont.FAMILY, Font.PLAIN, 12);
-        //status.setFont(font);
-        status.putClientProperty("FlatLaf.styleClass", "monospaced");
-        add(status);
+        // Left-aligned status message
+        status.setHorizontalAlignment(SwingConstants.LEFT);
+        // Add some padding to the left side
+        status.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 0));
+        add(status, BorderLayout.WEST);
+
+        // Right-aligned system info
+        system.setHorizontalAlignment(SwingConstants.RIGHT);
+        // Add some padding to the right side
+        system.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 8));
+        add(system, BorderLayout.EAST);
+
 
         timer = new Timer(1000, e -> {
             double cpuLoad = os.getCpuLoad();
@@ -62,20 +71,18 @@ public class StatusBar extends JPanel {
                 usedHeap /= 1024;
                 unit = "GB";
             }
-            String message = String.format(bundle.getString("SystemInfo"), usedHeap, unit, (int) (cpuLoad * 100));
-            status.setText(message);
+            String info = String.format(bundle.getString("SystemInfo"), usedHeap, unit, (int) (cpuLoad * 100));
+            system.setText(info);
         });
         timer.setInitialDelay(5000);
         timer.start();
     }
 
     /**
-     * Update the status message.
+     * Updates the status message.
      * @param message the status message.
      */
     public void setStatus(String message) {
         status.setText(message);
-        timer.stop();
-        timer.restart();
     }
 }
