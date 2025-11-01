@@ -47,8 +47,10 @@ lazy val commonSettings = Seq(
     os match {
       case "windows" =>
         "PATH" -> s"${(Test / baseDirectory).value}/shell/src/universal/bin;${System.getenv("PATH")}"
+      case "mac" =>
+        "DYLD_LIBRARY_PATH" -> s"${(Test / baseDirectory).value}/shell/src/universal/bin:${System.getenv("DYLD_LIBRARY_PATH")}"
       case _ =>
-        "PATH" -> s"${(Test / baseDirectory).value}/shell/src/universal/bin:${System.getenv("PATH")}"
+        "LD_LIBRARY_PATH" -> s"${(Test / baseDirectory).value}/shell/src/universal/bin:${System.getenv("LD_LIBRARY_PATH")}"
     }
   ),
 
