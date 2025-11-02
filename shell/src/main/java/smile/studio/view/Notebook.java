@@ -17,21 +17,23 @@
 package smile.studio.view;
 
 import javax.swing.*;
-import javax.swing.border.EtchedBorder;
-import javax.swing.border.EmptyBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Font;
 import java.awt.Rectangle;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import jdk.jshell.*;
-import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
 import smile.studio.model.RunBehavior;
 import smile.studio.model.Runner;
 
@@ -42,12 +44,15 @@ import smile.studio.model.Runner;
  *
  * @author Haifeng Li
  */
-public class Notebook extends JPanel {
+public class Notebook extends JPanel implements DocumentListener {
+    private final static String CELL_SEPARATOR = "//--- CELL ---";
     private final JPanel cells = new JPanel();
     private final JScrollPane scrollPane = new JScrollPane(cells);
-    private final DateTimeFormatter datetime = DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss.SSS");
+    private final DateTimeFormatter datetime = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
     private final Runner runner;
     private int runCount = 0;
+    private File file;
+    private boolean saved = false;
 
     /**
      * Constructor.
@@ -64,12 +69,119 @@ public class Notebook extends JPanel {
     }
 
     /**
+     * Returns the notebook file.
+     * @return the notebook file.
+     */
+    public File getFile() {
+        return file;
+    }
+
+    /**
+     * Sets the notebook file.
+     * @param file the notebook file.
+     */
+    public void setFile(File file) {
+        this.file = file;
+    }
+
+    /**
+     * Opens a notebook.
+     * @param file the notebook file.
+     * @throws IOException If an I/O error occurs.
+     */
+    public void open(File file) throws IOException {
+        List<String> lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+        List<String> snippets = parseCells(lines);
+        cells.removeAll();
+        for (String src : snippets) {
+            Cell cell = new Cell(this);
+            cell.editor.setText(src);
+            cell.editor.getDocument().addDocumentListener(this);
+            cells.add(cell);
+        }
+        if (snippets.isEmpty()) addCell(null);
+        cells.revalidate();
+        cells.repaint();
+        this.file = file;
+    }
+
+    /**
+     * Saves the notebook to file.
+     * @throws IOException If an I/O error occurs.
+     */
+    public void save() throws IOException {
+        if (file == null) throw new IOException("Notebook file is null");
+        List<String> lines = new ArrayList<>();
+        for (int i = 0; i < cells.getComponentCount(); i++) {
+            Cell cell = getCell(i);
+            lines.addAll(codeToLines(cell.editor.getText()));
+        }
+        Files.write(file.toPath(), lines, StandardCharsets.UTF_8);
+        saved = true;
+    }
+
+    /**
+     * Returns true if the notebook is saved.
+     * @return true if the notebook is saved.
+     */
+    public boolean isSaved() {
+        return saved;
+    }
+
+    private static List<String> parseCells(List<String> lines) {
+        List<String> cells = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        for (String line : lines) {
+            if (line.trim().equals(CELL_SEPARATOR)) {
+                if (!current.isEmpty()) cells.add(current.toString());
+                current = new StringBuilder();
+            } else {
+                current.append(line).append(System.lineSeparator());
+            }
+        }
+        return cells;
+    }
+
+    /**
+     * Splits code snippet into lines.
+     * @param code the code snippet.
+     * @return the code lines.
+     * @throws IOException if
+     */
+    private static List<String> codeToLines(String code) throws IOException {
+        String line = CELL_SEPARATOR;
+        List<String> lines = new ArrayList<>();
+        lines.add(line);
+        try (BufferedReader br = new BufferedReader(new StringReader(code))) {
+            while ((line = br.readLine()) != null) lines.add(line);
+        }
+        return lines;
+    }
+
+    @Override
+    public void insertUpdate(DocumentEvent e) {
+        saved = false;
+    }
+
+    @Override
+    public void removeUpdate(DocumentEvent e) {
+        saved = false;
+    }
+
+    @Override
+    public void changedUpdate(DocumentEvent e) {
+        // This method is typically not used for plain text changes
+        // but for changes to attributes of styled text.
+    }
+
+    /**
      * Adds a new cell.
      * @param insertAfter adds the new cell after this one.
      * If null, add the cell at the end of notebook.
      */
-    public void addCell(Cell insertAfter) {
+    public Cell addCell(Cell insertAfter) {
         Cell cell = new Cell(this);
+        cell.editor.getDocument().addDocumentListener(this);
         int idx = (insertAfter == null) ? cells.getComponentCount()
                                         : indexOf(insertAfter) + 1;
         cells.add(cell, idx);
@@ -80,6 +192,7 @@ public class Notebook extends JPanel {
             cell.editor.requestFocusInWindow();
             scrollTo(cell);
         });
+        return cell;
     }
 
     /**
@@ -189,7 +302,7 @@ public class Notebook extends JPanel {
         cell.setOutput("");
         StringBuilder outBuff = new StringBuilder();
         String stamp = datetime.format(ZonedDateTime.now());
-        appendLine(outBuff, "⏵ Started: " + stamp);
+        appendLine(outBuff, "⏵ " + stamp + " started");
 
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override protected Void doInBackground() {
@@ -241,7 +354,7 @@ public class Notebook extends JPanel {
 
             @Override protected void done() {
                 String stamp = datetime.format(ZonedDateTime.now());
-                appendLine(outBuff, "⏹ Finished: " + stamp);
+                appendLine(outBuff, "⏹ " + stamp + " finished");
                 cell.setOutput(outBuff.toString());
                 cell.output.setCaretPosition(0);
                 cell.setRunning(false);
@@ -257,12 +370,12 @@ public class Notebook extends JPanel {
 
     private void handlePostRunNav(Cell cell, RunBehavior behavior) {
         switch (behavior) {
-            case STAY -> SwingUtilities.invokeLater(() -> cell.editor.requestFocusInWindow());
+            case STAY -> SwingUtilities.invokeLater(cell.editor::requestFocusInWindow);
             case NEXT_OR_NEW -> {
                 int idx = indexOf(cell);
                 if (idx < cells.getComponentCount() - 1) {
                     Cell next = getCell(idx + 1);
-                    SwingUtilities.invokeLater(() -> next.editor.requestFocusInWindow());
+                    SwingUtilities.invokeLater(next.editor::requestFocusInWindow);
                     scrollTo(next);
                 } else {
                     addCell(cell);
@@ -297,7 +410,7 @@ public class Notebook extends JPanel {
                     StringBuilder outBuff = new StringBuilder();
                     runner.setOutBuffer(outBuff);
                     try {
-                        appendLine(outBuff, "⏵ Started: " + datetime.format(ZonedDateTime.now()));
+                        appendLine(outBuff, "⏵ " + datetime.format(ZonedDateTime.now()) + " started");
                         List<SnippetEvent> events = runner.eval(cell.editor.getText());
                         for (SnippetEvent ev : events) {
                             if (ev.status() == Snippet.Status.VALID && ev.value() != null) {
@@ -314,7 +427,7 @@ public class Notebook extends JPanel {
                                 if (ex.getMessage() != null) appendLine(outBuff, ex.getMessage());
                             }
                         }
-                        appendLine(outBuff, "⏹ Finished: " + datetime.format(ZonedDateTime.now()));
+                        appendLine(outBuff, "⏹ " + datetime.format(ZonedDateTime.now()) + " finished");
                     } catch (Throwable t) {
                         appendLine(outBuff, "✖ Error during execution: " + t);
                     } finally {
@@ -337,10 +450,18 @@ public class Notebook extends JPanel {
         worker.execute();
     }
 
+    /**
+     * Appends a line to buffer.
+     * @param sb string buffer.
+     * @param s a new line.
+     */
     private static void appendLine(StringBuilder sb, String s) {
         sb.append(s).append(System.lineSeparator());
     }
 
+    /**
+     * Clear the outputs of all cells.
+     */
     public void clearAllOutputs() {
         for (int i = 0; i < cells.getComponentCount(); i++) {
             getCell(i).setOutput("");
