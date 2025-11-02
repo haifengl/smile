@@ -21,7 +21,9 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Stream;
+import javax.swing.*;
 import jdk.jshell.*;
+import smile.studio.view.Cell;
 
 /**
  * Java code execution engine.
@@ -29,8 +31,10 @@ import jdk.jshell.*;
 public class Runner {
     /** JShell instance. */
     private JShell jshell;
-    /** JShell out buffer. */
-    private final ThreadLocal<StringBuilder> outBuffer = new ThreadLocal<>();
+    /** JShell running cell. */
+    private Cell cell;
+    /** Timestamp of last time updating cell output. */
+    private long stamp;
     /** JShell out stream. */
     private final PrintStream shellOut;
     /** JShell err stream. */
@@ -44,13 +48,28 @@ public class Runner {
     public Runner() {
         // Build JShell with custom output capture
         OutputStream delegatingOut = new OutputStream() {
-            @Override public void write(int b) {
-                StringBuilder sb = outBuffer.get();
-                if (sb != null) sb.append((char) b);
+            @Override
+            public void write(int b) {
+                if (cell != null) {
+                    StringBuffer buffer = cell.buffer();
+                    buffer.append((char) b);
+                }
             }
-            @Override public void write(byte[] b, int off, int len) {
-                StringBuilder sb = outBuffer.get();
-                if (sb != null) sb.append(new String(b, off, len, StandardCharsets.UTF_8));
+            @Override
+            public void write(byte[] b, int off, int len) {
+                if (cell != null) {
+                    StringBuffer buffer = cell.buffer();
+                    buffer.append(new String(b, off, len, StandardCharsets.UTF_8));
+                    long time = System.currentTimeMillis();
+                    if (time - stamp > 100) {
+                        stamp = time;
+                        SwingUtilities.invokeLater(() -> {
+                            if (cell != null) {
+                                cell.setOutput(cell.buffer().toString());
+                            }
+                        });
+                    }
+                }
             }
         };
         
@@ -76,18 +95,19 @@ public class Runner {
     }
 
     /**
-     * Sets the output buffer.
-     * @param sb the output buffer.
+     * Sets the running cell.
+     * @param cell the running cell.
      */
-    public void setOutBuffer(StringBuilder sb) {
-        outBuffer.set(sb);
+    public void setCell(Cell cell) {
+        this.cell = cell;
+        stamp = System.currentTimeMillis();
     }
 
     /**
-     * Removes the cell output buffer.
+     * Removes the running cell.
      */
-    public void removeOutBuffer() {
-        outBuffer.remove();
+    public void removeCell() {
+        cell = null;
     }
 
     /**
@@ -100,7 +120,7 @@ public class Runner {
     }
 
     /**
-     * Diagonstics a code snippet.
+     * Diagnoses a code snippet.
      * @param snippet a code snippet.
      * @return the diagnostics result stream.
      */
