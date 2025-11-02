@@ -17,19 +17,20 @@
 package smile.studio;
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.image.*;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.io.*;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Locale;
-import java.util.ResourceBundle;
+
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.util.SystemInfo;
 import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
 import smile.studio.view.*;
+import smile.swing.Button;
 
 /**
  * Smile Studio is an integrated development environment (IDE) for Smile.
@@ -41,6 +42,7 @@ public class SmileStudio extends JFrame {
     private static final long serialVersionUID = 1L;
     /** The message resource bundle. */
     static final ResourceBundle bundle = ResourceBundle.getBundle(SmileStudio.class.getName(), Locale.getDefault());
+    final JMenuBar menuBar = new JMenuBar();
     final JToolBar toolBar = new JToolBar();
     final StatusBar statusBar = new StatusBar();
     final Workspace workspace = new Workspace();
@@ -48,25 +50,26 @@ public class SmileStudio extends JFrame {
 
     public SmileStudio() {
         super(bundle.getString("AppName"));
-        setIcon();
-        JPanel contentPane = new JPanel(new BorderLayout());
-        setContentPane(contentPane);
+        setFrameIcon();
+        setJMenuBar(menuBar);
+        initMenuToolBar();
 
-        initToolBar();
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setLeftComponent(workspace);
         splitPane.setRightComponent(chat);
         splitPane.setResizeWeight(0.85);
 
+        JPanel contentPane = new JPanel(new BorderLayout());
         contentPane.add(toolBar, BorderLayout.NORTH);
         contentPane.add(splitPane, BorderLayout.CENTER);
         contentPane.add(statusBar, BorderLayout.SOUTH);
+        setContentPane(contentPane);
     }
 
     /**
      * Sets the icon images for the frame.
      */
-    private void setIcon() {
+    private void setFrameIcon() {
         try (InputStream input = SmileStudio.class.getResourceAsStream("images/robot.png")) {
             if (input == null) {
                 System.err.println("Resource not found: images/robot.png");
@@ -75,7 +78,7 @@ public class SmileStudio extends JFrame {
 
             BufferedImage icon = ImageIO.read(input);
             ArrayList<Image> icons = new ArrayList<>();
-            int[] sizes = {16, 24, 32, 48, 64, 128, 256, 512};
+            int[] sizes = {16, 24, 32, 48, 64, 128, 256};
             for (int size : sizes) {
                 BufferedImage image = new BufferedImage(size, size, Transparency.TRANSLUCENT);
                 Graphics2D g2 = image.createGraphics();
@@ -90,70 +93,157 @@ public class SmileStudio extends JFrame {
         }
     }
 
-    /** Initializes the toolbar. */
-    private void initToolBar() {
+    /** Initializes the menubar and the toolbar. */
+    private void initMenuToolBar() {
+        var newNotebook = new NewNotebookAction();
+        var openNotebook = new OpenNotebookAction();
+        var saveNotebook = new SaveNotebookAction();
+        var saveAsNotebook = new SaveAsNotebookAction();
+        var addCell = new AddCellAction();
+        var runAll = new RunAllAction();
+        var clearAll = new ClearAllAction();
+
+        JMenu fileMenu = new JMenu(bundle.getString("File"));
+        fileMenu.add(new JMenuItem(newNotebook));
+        fileMenu.add(new JMenuItem(openNotebook));
+        fileMenu.add(new JMenuItem(saveNotebook));
+        fileMenu.add(new JMenuItem(saveAsNotebook));
+        menuBar.add(fileMenu);
+
+        JMenu cellMenu = new JMenu(bundle.getString("Cell"));
+        cellMenu.add(new JMenuItem(addCell));
+        cellMenu.add(new JMenuItem(runAll));
+        cellMenu.add(new JMenuItem(clearAll));
+        menuBar.add(cellMenu);
+
         // Don't allow the toolbar to be dragged and undocked
         toolBar.setFloatable(false);
         // Show a border only when the mouse hovers over a button
         toolBar.setRollover(true);
-        //toolBar.add(button("New", e -> newNotebook()));
-        toolBar.add(button("Open…", e -> openNotebook()));
-        toolBar.add(button("Save", e -> saveNotebook(false)));
-        toolBar.add(button("Save As…", e -> saveNotebook(true)));
+        toolBar.add(new Button(newNotebook));
+        toolBar.add(new Button(openNotebook));
+        toolBar.add(new Button(saveNotebook));
+        toolBar.add(new Button(saveAsNotebook));
         toolBar.addSeparator();
-        toolBar.add(button("Add Cell", e -> workspace.notebook().addCell(null)));
-        toolBar.add(button("Run All ▶▶", e -> workspace.notebook().runAllCells()));
-        toolBar.add(button("Clear Outputs", e -> workspace.notebook().clearAllOutputs()));
+        toolBar.add(new Button(addCell));
+        toolBar.add(new Button(runAll));
+        toolBar.add(new Button(clearAll));
     }
 
-    private JButton button(String text, AbstractAction action) {
-        JButton b = new JButton(action);
-        b.setText(text);
-        return b;
+    /**
+     * Scales an image icon to 16x16.
+     * @param icon the input image icon.
+     * @return the scaled image icon.
+     */
+    private ImageIcon scale(ImageIcon icon) {
+        Image image = icon.getImage();
+        Image scaledImage = image.getScaledInstance(16, 16, Image.SCALE_SMOOTH);
+        return new ImageIcon(scaledImage);
     }
 
-    private JButton button(String text, java.awt.event.ActionListener l) {
-        JButton b = new JButton(text);
-        b.addActionListener(l);
-        return b;
+    private class NewNotebookAction extends AbstractAction {
+        public NewNotebookAction() {
+            super(bundle.getString("New"),
+                  scale(new ImageIcon(Objects.requireNonNull(SmileStudio.class.getResource("images/notebook.png")))));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            newNotebook();
+        }
     }
 
+    private class OpenNotebookAction extends AbstractAction {
+        public OpenNotebookAction() {
+            super(bundle.getString("Open"),
+                  scale(new ImageIcon(Objects.requireNonNull(SmileStudio.class.getResource("images/open.png")))));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            openNotebook();
+        }
+    }
+
+    private class SaveNotebookAction extends AbstractAction {
+        public SaveNotebookAction() {
+            super(bundle.getString("Save"),
+                  scale(new ImageIcon(Objects.requireNonNull(SmileStudio.class.getResource("images/save.png")))));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            saveNotebook(false);
+        }
+    }
+
+    private class SaveAsNotebookAction extends AbstractAction {
+        public SaveAsNotebookAction() {
+            super(bundle.getString("SaveAs"),
+                  scale(new ImageIcon(Objects.requireNonNull(SmileStudio.class.getResource("images/save-as.png")))));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            saveNotebook(true);
+        }
+    }
+
+    private class AddCellAction extends AbstractAction {
+        public AddCellAction() {
+            super(bundle.getString("AddCell"),
+                  scale(new ImageIcon(Objects.requireNonNull(SmileStudio.class.getResource("images/add-cell.png")))));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            workspace.notebook().addCell(null);
+        }
+    }
+
+    private class RunAllAction extends AbstractAction {
+        public RunAllAction() {
+            super(bundle.getString("RunAll"),
+                  scale(new ImageIcon(Objects.requireNonNull(SmileStudio.class.getResource("images/run.png")))));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            workspace.notebook().runAllCells();
+        }
+    }
+
+    private class ClearAllAction extends AbstractAction {
+        public ClearAllAction() {
+            super(bundle.getString("ClearAll"),
+                  scale(new ImageIcon(Objects.requireNonNull(SmileStudio.class.getResource("images/clear.png")))));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            workspace.notebook().clearAllOutputs();
+        }
+    }
+
+
+    /**
+     * Prompt anyway when opening/new as we don't track dirty state.
+     * @return true if ok is clicked.
+     */
     private boolean confirmDiscardIfUnsaved() {
-        // This minimal sample doesn’t track dirty state.
-        // Prompt anyway when opening/new.
         int res = JOptionPane.showConfirmDialog(this,
-                "This will clear the current notebook. Continue?",
-                "Confirm", JOptionPane.OK_CANCEL_OPTION);
+                bundle.getString("Discard"),
+                bundle.getString("Confirm"),
+                JOptionPane.OK_CANCEL_OPTION);
         return res == JOptionPane.OK_OPTION;
     }
 
+    private void newNotebook() {
+
+    }
+
     private void openNotebook() {
-        /*
-        if (!confirmDiscardIfUnsaved()) return;
-        JFileChooser chooser = new JFileChooser();
-        chooser.setDialogTitle("Open Notebook");
-        chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Simple Notebook (*.snb)", "snb"));
-        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            File f = chooser.getSelectedFile();
-            try {
-                List<String> lines = Files.readAllLines(f.toPath(), StandardCharsets.UTF_8);
-                List<String> cells = parseCells(lines);
-                cellsPanel.removeAll();
-                for (String src : cells) {
-                    CodeCellPanel cell = new CodeCellPanel();
-                    cell.codeArea.setText(src);
-                    cellsPanel.add(cell);
-                }
-                if (cells.isEmpty()) addCell(null);
-                cellsPanel.revalidate();
-                cellsPanel.repaint();
-                currentFile = f;
-                setTitle("Simple Java Notebook - " + f.getName());
-            } catch (IOException ex) {
-                JOptionPane.showMessageDialog(this, "Failed to open: " + ex.getMessage(),
-                        "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        }*/
+
     }
 
     private void saveNotebook(boolean saveAs) {
