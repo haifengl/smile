@@ -34,11 +34,11 @@ import smile.studio.model.Runner;
  */
 public class Explorer extends JPanel implements TreeSelectionListener {
     /** The message resource bundle. */
-    static final ResourceBundle bundle = ResourceBundle.getBundle(Explorer.class.getName(), Locale.getDefault());
+    private static final ResourceBundle bundle = ResourceBundle.getBundle(Explorer.class.getName(), Locale.getDefault());
     /** Root node. */
-    final DefaultMutableTreeNode root = new DefaultMutableTreeNode(bundle.getString("Root"));
+    private final DefaultMutableTreeNode root = new DefaultMutableTreeNode(bundle.getString("Root"));
     /** Tree of workspace runtime information. */
-    final JTree tree = new JTree(root);
+    private final JTree tree = new JTree(root);
 
     /**
      * Constructor.

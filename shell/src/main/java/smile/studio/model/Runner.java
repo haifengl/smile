@@ -57,9 +57,6 @@ public class Runner {
         shellOut = new PrintStream(delegatingOut, true, StandardCharsets.UTF_8);
         shellErr = new PrintStream(delegatingOut, true, StandardCharsets.UTF_8);
         jshell = JShell.builder().out(shellOut).err(shellErr).build();
-        jshell.eval("import java.util.*;");
-        jshell.eval("import java.math.*;");
-        jshell.eval("import java.util.stream.*;");
     }
 
     /**
