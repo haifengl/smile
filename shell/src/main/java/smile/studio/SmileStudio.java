@@ -21,10 +21,9 @@ import java.awt.event.ActionEvent;
 import java.awt.image.*;
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.*;
 import java.util.*;
-import java.util.List;
-
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.util.SystemInfo;
@@ -42,19 +41,19 @@ public class SmileStudio extends JFrame {
     private static final long serialVersionUID = 1L;
     /** The message resource bundle. */
     static final ResourceBundle bundle = ResourceBundle.getBundle(SmileStudio.class.getName(), Locale.getDefault());
-    final JMenuBar menuBar = new JMenuBar();
-    final JToolBar toolBar = new JToolBar();
-    final StatusBar statusBar = new StatusBar();
-    final Workspace workspace = new Workspace();
-    final Chat chat = new Chat();
+    private final JMenuBar menuBar = new JMenuBar();
+    private final JToolBar toolBar = new JToolBar();
+    private final StatusBar statusBar = new StatusBar();
+    private final JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+    private Workspace workspace = new Workspace();
+    private Chat chat = new Chat();
 
     public SmileStudio() {
         super(bundle.getString("AppName"));
         setFrameIcon();
         setJMenuBar(menuBar);
-        initMenuToolBar();
+        initMenuAndToolBar();
 
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setLeftComponent(workspace);
         splitPane.setRightComponent(chat);
         splitPane.setResizeWeight(0.85);
@@ -94,7 +93,7 @@ public class SmileStudio extends JFrame {
     }
 
     /** Initializes the menubar and the toolbar. */
-    private void initMenuToolBar() {
+    private void initMenuAndToolBar() {
         var newNotebook = new NewNotebookAction();
         var openNotebook = new OpenNotebookAction();
         var saveNotebook = new SaveNotebookAction();
@@ -149,7 +148,7 @@ public class SmileStudio extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            newNotebook();
+            newNotebook(true);
         }
     }
 
@@ -227,10 +226,11 @@ public class SmileStudio extends JFrame {
 
 
     /**
-     * Prompt anyway when opening/new as we don't track dirty state.
+     * Prompts when opening/new and the notebook is not saved.
      * @return true if ok is clicked.
      */
     private boolean confirmDiscardIfUnsaved() {
+        if (workspace.notebook().isSaved()) return true;
         int res = JOptionPane.showConfirmDialog(this,
                 bundle.getString("Discard"),
                 bundle.getString("Confirm"),
@@ -238,75 +238,75 @@ public class SmileStudio extends JFrame {
         return res == JOptionPane.OK_OPTION;
     }
 
-    private void newNotebook() {
-
+    /**
+     * Creates a new notebook.
+     * @param checking checking if the current notebook is saved.
+     */
+    private void newNotebook(boolean checking) {
+        if (checking && !confirmDiscardIfUnsaved()) return;
+        workspace = new Workspace();
+        chat = new Chat();
+        splitPane.setLeftComponent(workspace);
+        splitPane.setRightComponent(chat);
     }
 
+    /**
+     * Sets the frame title with notebook file name.
+     * @param file the notebook file.
+     */
+    private void setTitle(File file) {
+        setTitle(bundle.getString("AppName") + " - " + file.getName());
+    }
+
+    /**
+     * Opens a notebook.
+     */
     private void openNotebook() {
-
+        if (!confirmDiscardIfUnsaved()) return;
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle(bundle.getString("OpenNotebook"));
+        chooser.setFileFilter(new FileNameExtensionFilter(bundle.getString("SmileFile"), "java"));
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File file = chooser.getSelectedFile();
+            try {
+                newNotebook(false);
+                workspace.notebook().open(file);
+                setTitle(file);
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this, "Failed to open: " + ex.getMessage(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
 
+    /**
+     * Saves the notebook.
+     * @param saveAs save the notebook to a new file if true.
+     */
     private void saveNotebook(boolean saveAs) {
-        /*
-        if (currentFile == null || saveAs) {
+        if (workspace.notebook().getFile() == null || saveAs) {
             JFileChooser chooser = new JFileChooser();
-            chooser.setDialogTitle("Save Notebook");
-            chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Simple Notebook (*.snb)", "snb"));
+            chooser.setDialogTitle(bundle.getString("SaveNotebook"));
+            chooser.setFileFilter(new FileNameExtensionFilter(bundle.getString("SmileFile"), "java"));
             if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-                File f = chooser.getSelectedFile();
-                if (!f.getName().toLowerCase().endsWith(".snb")) {
-                    f = new File(f.getParentFile(), f.getName() + ".snb");
+                File file = chooser.getSelectedFile();
+                if (!file.getName().toLowerCase().endsWith(".java")) {
+                    file = new File(file.getParentFile(), file.getName() + ".java");
                 }
-                currentFile = f;
+                workspace.notebook().setFile(file);
+                setTitle(file);
             } else {
                 return;
             }
         }
+
         try {
-            List<String> lines = new ArrayList<>();
-            lines.add("# SimpleNotebook v1");
-            lines.add("created: " + ZonedDateTime.now());
-            for (int i = 0; i < cellsPanel.getComponentCount(); i++) {
-                CodeCellPanel c = getCell(i);
-                lines.add("CELL");
-                lines.addAll(codeToLines(c.codeArea.getText()));
-                lines.add("ENDCELL");
-            }
-            Files.write(currentFile.toPath(), lines, StandardCharsets.UTF_8);
-            setTitle("Simple Java Notebook - " + currentFile.getName());
+            workspace.notebook().save();
         } catch (IOException ex) {
-            JOptionPane.showMessageDialog(this, "Failed to save: " + ex.getMessage(),
+            JOptionPane.showMessageDialog(this,
+                    "Failed to save: " + ex.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
-        */
-    }
-
-    private static List<String> parseCells(List<String> lines) {
-        List<String> cells = new ArrayList<>();
-        StringBuilder current = null;
-        boolean inCell = false;
-        for (String line : lines) {
-            if (line.equals("CELL")) {
-                inCell = true;
-                current = new StringBuilder();
-            } else if (line.equals("ENDCELL")) {
-                if (current != null) cells.add(current.toString());
-                current = null;
-                inCell = false;
-            } else if (inCell) {
-                current.append(line).append("\n");
-            }
-        }
-        return cells;
-    }
-
-    private static List<String> codeToLines(String code) throws IOException {
-        List<String> l = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new StringReader(code))) {
-            String s;
-            while ((s = br.readLine()) != null) l.add(s);
-        }
-        return l;
     }
 
     /**

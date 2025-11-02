@@ -18,15 +18,7 @@ package smile.studio.view;
 
 import javax.swing.*;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import jdk.jshell.*;
-import smile.studio.model.RunBehavior;
 import smile.studio.model.Runner;
-import smile.studio.view.Explorer;
 
 /**
  * A notebook workspace.
@@ -54,10 +46,30 @@ public class Workspace extends JSplitPane {
         setResizeWeight(0.15);
     }
 
+    /**
+     * Constructor.
+     * @param file the notebook file.
+     */
+    public Workspace(File file) {
+        super(JSplitPane.HORIZONTAL_SPLIT);
+
+        setLeftComponent(explorer);
+        setRightComponent(notebook);
+        setResizeWeight(0.15);
+    }
+
+    /**
+     * Returns the notebook component.
+     * @return the notebook component.
+     */
     public Notebook notebook() {
         return notebook;
     }
 
+    /**
+     * Returns the explorer component.
+     * @return the explorer component.
+     */
     public Explorer explorer() {
         return explorer;
     }

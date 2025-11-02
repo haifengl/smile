@@ -27,7 +27,6 @@ import java.awt.event.KeyEvent;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import jdk.jshell.*;
 import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
 import com.formdev.flatlaf.util.FontUtils;
 import smile.studio.model.RunBehavior;
@@ -42,9 +41,9 @@ import smile.studio.model.RunBehavior;
 public class Cell extends JPanel {
     /** The message resource bundle. */
     static final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), Locale.getDefault());
-    final TitledBorder border = BorderFactory.createTitledBorder("[ ]");
     final JTextArea editor = new JTextArea();
     final JTextArea output = new JTextArea();
+    final TitledBorder border = BorderFactory.createTitledBorder("[ ]");
     final JButton runBtn = new JButton("▶");
     final JButton upBtn = new JButton("↑");
     final JButton downBtn = new JButton("↓");
@@ -55,14 +54,6 @@ public class Cell extends JPanel {
     public Cell(Notebook notebook) {
         super(new BorderLayout(5, 5));
         setBorder(new EmptyBorder(8,8,8,8));
-        /*
-        setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(210, 210, 210)),
-                new EmptyBorder(8,8,8,8)));
-
-        editor.putClientProperty("FlatLaf.styleClass", "monospaced");
-        output.putClientProperty("FlatLaf.styleClass", "monospaced");
-        */
 
         // Header (cell controls)
         JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
@@ -91,6 +82,8 @@ public class Cell extends JPanel {
         editor.setTabSize(4);
         editor.setLineWrap(false);
         editor.setWrapStyleWord(false);
+        JScrollPane editorScroll = new JScrollPane(editor);
+        editorScroll.setBorder(border);
 
         // Key bindings (inspired by Jupyter)
         InputMap inputMap = editor.getInputMap(JComponent.WHEN_FOCUSED);
@@ -147,21 +140,15 @@ public class Cell extends JPanel {
             }
         });
 
-        JScrollPane editorScroll = new JScrollPane(editor);
-        editorScroll.setBorder(border);
-
         // Output area
         //output.putClientProperty("FlatLaf.styleClass", "monospaced");
         output.setEditable(false);
-        //output.setFont(font);
         output.setBackground(getBackground());
         //JScrollPane outputScroll = new JScrollPane(output);
         //outputScroll.setBorder(new EmptyBorder(8,8,8,8));
-        //outputScroll.setBorder(BorderFactory.createTitledBorder("[ ]"));
 
         add(header, BorderLayout.NORTH);
         add(editorScroll, BorderLayout.CENTER);
-        //add(outputScroll, BorderLayout.SOUTH);
     }
 
     /**
@@ -185,6 +172,10 @@ public class Cell extends JPanel {
         border.setTitle(title);
     }
 
+    /**
+     * Sets the output.
+     * @param text the output.
+     */
     public void setOutput(String text) {
         output.setText(text);
         if (text.isEmpty()) {
