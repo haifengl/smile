@@ -41,6 +41,8 @@ import smile.studio.model.RunBehavior;
 public class Cell extends JPanel {
     /** The message resource bundle. */
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), Locale.getDefault());
+    /** The output buffer. StringBuffer is multi-thread safe while StringBuilder isn't. */
+    final StringBuffer buffer = new StringBuffer();
     final JTextArea editor = new JTextArea();
     final JTextArea output = new JTextArea();
     final TitledBorder border = BorderFactory.createTitledBorder("[ ]");
@@ -133,14 +135,12 @@ public class Cell extends JPanel {
         });
 
         // Output area
-        //output.putClientProperty("FlatLaf.styleClass", "monospaced");
         output.setEditable(false);
         output.setBackground(getBackground());
-        //JScrollPane outputScroll = new JScrollPane(output);
-        //outputScroll.setBorder(new EmptyBorder(8,8,8,8));
 
         add(header, BorderLayout.NORTH);
         add(editorScroll, BorderLayout.CENTER);
+        //add(output, BorderLayout.SOUTH);
     }
 
     /**
@@ -153,7 +153,10 @@ public class Cell extends JPanel {
         downBtn.setEnabled(!running);
         deleteBtn.setEnabled(!running);
         editor.setEnabled(!running);
-        if (running) border.setTitle("[*]");
+        if (running) {
+            border.setTitle("[*]");
+            output.setText("");
+        }
     }
 
     /**
@@ -175,5 +178,29 @@ public class Cell extends JPanel {
         } else {
             add(output, BorderLayout.SOUTH);
         }
+    }
+
+    /**
+     * Returns the code editor.
+     * @return the code editor.
+     */
+    public JTextArea editor() {
+        return editor;
+    }
+
+    /**
+     * Returns the output area.
+     * @return the output area.
+     */
+    public JTextArea output() {
+        return output;
+    }
+
+    /**
+     * Returns the output buffer.
+     * @return the output buffer.
+     */
+    public StringBuffer buffer() {
+        return buffer;
     }
 }

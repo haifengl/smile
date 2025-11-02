@@ -34,7 +34,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
-
 import jdk.jshell.*;
 import smile.studio.model.RunBehavior;
 import smile.studio.model.Runner;
@@ -47,8 +46,10 @@ import smile.studio.model.Runner;
  * @author Haifeng Li
  */
 public class Notebook extends JPanel implements DocumentListener {
-    /** The message resource bundle. */
-    private static final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), Locale.getDefault());
+    /**
+     * The message resource bundle.
+     */
+    private static final ResourceBundle bundle = ResourceBundle.getBundle(Notebook.class.getName(), Locale.getDefault());
     private final static String CELL_SEPARATOR = "//--- CELL ---";
     private final JPanel cells = new JPanel();
     private final JScrollPane scrollPane = new JScrollPane(cells);
@@ -71,53 +72,50 @@ public class Notebook extends JPanel implements DocumentListener {
         // Start with one cell
         Cell cell = addCell(null);
         cell.editor.setText("""
-import java.util.*;
-import org.apache.commons.csv.CSVFormat;
-import smile.io.*;
-import smile.data.*;
-import smile.data.formula.*;
-import smile.data.measure.*;
-import smile.data.type.*;
-import smile.data.vector.*;
-import static smile.data.formula.Terms.*;
-import smile.graph.*;
-import smile.math.*;
-import smile.math.distance.*;
-import smile.math.kernel.*;
-import smile.math.rbf.*;
-import smile.stat.*;
-import smile.stat.distribution.*;
-import smile.stat.hypothesis.*;
-import smile.tensor.*;
-import smile.plot.swing.*;
-import smile.validation.*;
-import smile.validation.metric.*;
-import smile.association.*;
-import smile.base.mlp.*;
-import smile.classification.*;
-import smile.regression.OLS;
-import smile.regression.LASSO;
-import smile.regression.ElasticNet;
-import smile.regression.RidgeRegression;
-import smile.regression.GaussianProcessRegression;
-import smile.regression.RegressionTree;
-import smile.feature.extraction.*;
-import smile.feature.importance.*;
-import smile.feature.imputation.*;
-import smile.feature.selection.*;
-import smile.feature.transform.*;
-import smile.clustering.*;
-import smile.hpo.*;
-import smile.vq.*;
-import smile.manifold.*;
-
-void main() {
-    
-}""");
+                import java.util.*;
+                import org.apache.commons.csv.CSVFormat;
+                import smile.io.*;
+                import smile.data.*;
+                import smile.data.formula.*;
+                import smile.data.measure.*;
+                import smile.data.type.*;
+                import smile.data.vector.*;
+                import static smile.data.formula.Terms.*;
+                import smile.graph.*;
+                import smile.math.*;
+                import smile.math.distance.*;
+                import smile.math.kernel.*;
+                import smile.math.rbf.*;
+                import smile.stat.*;
+                import smile.stat.distribution.*;
+                import smile.stat.hypothesis.*;
+                import smile.tensor.*;
+                import smile.plot.swing.*;
+                import smile.validation.*;
+                import smile.validation.metric.*;
+                import smile.association.*;
+                import smile.base.mlp.*;
+                import smile.classification.*;
+                import smile.regression.OLS;
+                import smile.regression.LASSO;
+                import smile.regression.ElasticNet;
+                import smile.regression.RidgeRegression;
+                import smile.regression.GaussianProcessRegression;
+                import smile.regression.RegressionTree;
+                import smile.feature.extraction.*;
+                import smile.feature.importance.*;
+                import smile.feature.imputation.*;
+                import smile.feature.selection.*;
+                import smile.feature.transform.*;
+                import smile.clustering.*;
+                import smile.hpo.*;
+                import smile.vq.*;
+                import smile.manifold.*;""");
     }
 
     /**
      * Returns the notebook file.
+     *
      * @return the notebook file.
      */
     public File getFile() {
@@ -126,6 +124,7 @@ void main() {
 
     /**
      * Sets the notebook file.
+     *
      * @param file the notebook file.
      */
     public void setFile(File file) {
@@ -134,6 +133,7 @@ void main() {
 
     /**
      * Opens a notebook.
+     *
      * @param file the notebook file.
      * @throws IOException If an I/O error occurs.
      */
@@ -155,6 +155,7 @@ void main() {
 
     /**
      * Saves the notebook to file.
+     *
      * @throws IOException If an I/O error occurs.
      */
     public void save() throws IOException {
@@ -170,12 +171,18 @@ void main() {
 
     /**
      * Returns true if the notebook is saved.
+     *
      * @return true if the notebook is saved.
      */
     public boolean isSaved() {
         return saved;
     }
 
+    /**
+     * Parses code lines into cells.
+     * @param lines code lines.
+     * @return the list of cells.
+     */
     private static List<String> parseCells(List<String> lines) {
         List<String> cells = new ArrayList<>();
         StringBuilder current = new StringBuilder();
@@ -192,6 +199,7 @@ void main() {
 
     /**
      * Splits code snippet into lines.
+     *
      * @param code the code snippet.
      * @return the code lines.
      * @throws IOException if
@@ -224,8 +232,9 @@ void main() {
 
     /**
      * Adds a new cell.
+     *
      * @param insertAfter adds the new cell after this one.
-     * If null, add the cell at the end of notebook.
+     *                    If null, add the cell at the end of notebook.
      */
     public Cell addCell(Cell insertAfter) {
         Cell cell = new Cell(this);
@@ -245,6 +254,7 @@ void main() {
 
     /**
      * Deletes a cell.
+     *
      * @param cell the cell to delete.
      */
     public void deleteCell(Cell cell) {
@@ -263,6 +273,7 @@ void main() {
 
     /**
      * Moves up a cell.
+     *
      * @param cell the cell to move.
      */
     public void moveCellUp(Cell cell) {
@@ -278,6 +289,7 @@ void main() {
 
     /**
      * Moves down a cell.
+     *
      * @param cell the cell to move.
      */
     public void moveCellDown(Cell cell) {
@@ -293,6 +305,7 @@ void main() {
 
     /**
      * Scroll the notebook to the given component.
+     *
      * @param c the component.
      */
     public void scrollTo(Component c) {
@@ -302,6 +315,7 @@ void main() {
 
     /**
      * Returns the index of cell.
+     *
      * @param cell a cell in this notebook.
      * @return the index of cell or -1 if not found.
      */
@@ -314,6 +328,7 @@ void main() {
 
     /**
      * Returns the cell at specific index.
+     *
      * @param index the cell index.
      * @return the cell.
      */
@@ -323,68 +338,73 @@ void main() {
 
     /**
      * Focus on the cell at given cell.
+     *
      * @param index the cell index.
      */
     public void focusCell(int index) {
-        Cell c = getCell(index);
-        c.editor.requestFocusInWindow();
+        Cell cell = getCell(index);
+        cell.editor.requestFocusInWindow();
     }
 
+    /**
+     * Evaluates the code of cell.
+     * @param cell the cell to evaluate.
+     */
     private void runCell(Cell cell) {
         runCount++;
+        runner.setCell(cell); // Direct JShell prints
         SwingUtilities.invokeLater(() -> {
             cell.setRunning(true);
-            cell.setOutput("");
         });
 
-        // Direct JShell prints for THIS thread into this buffer
-        StringBuilder outBuff = new StringBuilder();
-        runner.setOutBuffer(outBuff);
-
         try {
-            appendLine(outBuff, "⏵ " + datetime.format(ZonedDateTime.now()) + " started");
+            cell.buffer.setLength(0); // Clears the StringBuilder
+            appendLine(cell.buffer, "⏵ " + datetime.format(ZonedDateTime.now()) + " started");
             List<SnippetEvent> events = runner.eval(cell.editor.getText());
             // Capture diagnostics, values, and exceptions in order
             for (SnippetEvent ev : events) {
                 if (ev.status() == Snippet.Status.VALID && ev.value() != null) {
-                    appendLine(outBuff, "⇒ " + ev.value());
+                    appendLine(cell.buffer, "⇒ " + ev.value());
                 } else if (ev.status() == Snippet.Status.REJECTED) {
-                    appendLine(outBuff, "✖ Rejected snippet: " + ev.snippet().source());
+                    appendLine(cell.buffer, "✖ Rejected snippet: " + ev.snippet().source());
                 } else if (ev.status() == Snippet.Status.RECOVERABLE_DEFINED ||
-                           ev.status() == Snippet.Status.RECOVERABLE_NOT_DEFINED) {
-                    appendLine(outBuff, "⚠ Recoverable issue.");
+                        ev.status() == Snippet.Status.RECOVERABLE_NOT_DEFINED) {
+                    appendLine(cell.buffer, "⚠ Recoverable issue.");
                 }
 
                 runner.diagnostics(ev.snippet()).forEach(diag -> {
                     String kind = diag.isError() ? "ERROR" : "WARN";
-                    appendLine(outBuff, String.format("%s: %s",
+                    appendLine(cell.buffer, String.format("%s: %s",
                             kind, diag.getMessage(Locale.getDefault())));
                 });
 
                 if (ev.exception() instanceof EvalException ex) {
-                    appendLine(outBuff, "Exception: " + ex.getExceptionClassName());
-                    if (ex.getMessage() != null) appendLine(outBuff, ex.getMessage());
+                    appendLine(cell.buffer, "Exception: " + ex.getExceptionClassName());
+                    if (ex.getMessage() != null) appendLine(cell.buffer, ex.getMessage());
                     // JShell exception stack trace is often concise
                     for (StackTraceElement ste : ex.getStackTrace()) {
-                        appendLine(outBuff, "  at " + ste.toString());
+                        appendLine(cell.buffer, "  at " + ste.toString());
                     }
                 }
             }
-            appendLine(outBuff, "⏹ " + datetime.format(ZonedDateTime.now()) + " finished");
+            appendLine(cell.buffer, "⏹ " + datetime.format(ZonedDateTime.now()) + " finished");
         } catch (Throwable t) {
-            appendLine(outBuff, "✖ Error during execution: " + t);
+            appendLine(cell.buffer, "✖ Error during execution: " + t);
         } finally {
-            runner.removeOutBuffer();
-            final String text = outBuff.toString();
+            runner.removeCell();
             SwingUtilities.invokeLater(() -> {
                 cell.setRunning(false);
                 cell.setTitle("[" + runCount + "]");
-                cell.setOutput(text);
-                //cell.output.setCaretPosition(0);
+                cell.setOutput(cell.buffer.toString());
             });
         }
     }
 
+    /**
+     * Evaluates a cell and handles post-run navigation.
+     * @param cell the cell to evaluate.
+     * @param behavior post-run navigation behavior.
+     */
     public synchronized void runCell(Cell cell, RunBehavior behavior) {
         if (runner.isRunning()) {
             JOptionPane.showMessageDialog(this,
@@ -402,13 +422,15 @@ void main() {
         }
 
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
-            @Override protected Void doInBackground() {
+            @Override
+            protected Void doInBackground() {
                 runner.setRunning(true);
                 runCell(cell);
                 return null;
             }
 
-            @Override protected void done() {
+            @Override
+            protected void done() {
                 runner.setRunning(false);
                 // Post-run navigation
                 handlePostRunNav(cell, behavior);
@@ -417,6 +439,11 @@ void main() {
         worker.execute();
     }
 
+    /**
+     * Handles post-run navigation.
+     * @param cell the cell evaluated.
+     * @param behavior post-run navigation behavior.
+     */
     private void handlePostRunNav(Cell cell, RunBehavior behavior) {
         switch (behavior) {
             case STAY -> SwingUtilities.invokeLater(cell.editor::requestFocusInWindow);
@@ -436,6 +463,9 @@ void main() {
         }
     }
 
+    /**
+     * Runs all cells.
+     */
     public void runAllCells() {
         if (runner.isRunning()) {
             JOptionPane.showMessageDialog(this,
@@ -452,7 +482,8 @@ void main() {
         }
 
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
-            @Override protected Void doInBackground() {
+            @Override
+            protected Void doInBackground() {
                 runner.setRunning(true);
                 for (Cell cell : cells) {
                     if (cell.editor.getText().trim().isEmpty()) continue;
@@ -461,7 +492,8 @@ void main() {
                 return null;
             }
 
-            @Override protected void done() {
+            @Override
+            protected void done() {
                 runner.setRunning(false);
             }
         };
@@ -469,12 +501,14 @@ void main() {
     }
 
     /**
-     * Appends a line to buffer.
-     * @param sb string buffer.
-     * @param s a new line.
+     * Appends a line to output buffer.
+     *
+     * @param buffer the output buffer.
+     * @param line a new line.
      */
-    private static void appendLine(StringBuilder sb, String s) {
-        sb.append(s).append(System.lineSeparator());
+    private static void appendLine(StringBuffer buffer, String line) {
+        buffer.append(line);
+        buffer.append(System.lineSeparator());
     }
 
     /**
