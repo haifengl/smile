@@ -40,7 +40,7 @@ public class SmileStudio extends JFrame {
     @Serial
     private static final long serialVersionUID = 1L;
     /** The message resource bundle. */
-    static final ResourceBundle bundle = ResourceBundle.getBundle(SmileStudio.class.getName(), Locale.getDefault());
+    private static final ResourceBundle bundle = ResourceBundle.getBundle(SmileStudio.class.getName(), Locale.getDefault());
     private final JMenuBar menuBar = new JMenuBar();
     private final JToolBar toolBar = new JToolBar();
     private final StatusBar statusBar = new StatusBar();

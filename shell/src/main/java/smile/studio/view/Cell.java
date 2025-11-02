@@ -40,7 +40,7 @@ import smile.studio.model.RunBehavior;
  */
 public class Cell extends JPanel {
     /** The message resource bundle. */
-    static final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), Locale.getDefault());
+    private static final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), Locale.getDefault());
     final JTextArea editor = new JTextArea();
     final JTextArea output = new JTextArea();
     final TitledBorder border = BorderFactory.createTitledBorder("[ ]");
@@ -89,14 +89,6 @@ public class Cell extends JPanel {
         InputMap inputMap = editor.getInputMap(JComponent.WHEN_FOCUSED);
         ActionMap actionMap = editor.getActionMap();
 
-        inputMap.put(KeyStroke.getKeyStroke("ENTER"), "new-line");
-        actionMap.put("new-line", new AbstractAction() {
-            @Override public void actionPerformed(ActionEvent e) {
-                editor.append(System.lineSeparator());
-                long rows = editor.getText().lines().count();
-                editor.setRows(Math.min(20, (int) rows));
-            }
-        });
         inputMap.put(KeyStroke.getKeyStroke("shift ENTER"), "run-next");
         actionMap.put("run-next", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {

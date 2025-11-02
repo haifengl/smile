@@ -33,6 +33,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.ResourceBundle;
+
 import jdk.jshell.*;
 import smile.studio.model.RunBehavior;
 import smile.studio.model.Runner;
@@ -45,6 +47,8 @@ import smile.studio.model.Runner;
  * @author Haifeng Li
  */
 public class Notebook extends JPanel implements DocumentListener {
+    /** The message resource bundle. */
+    private static final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), Locale.getDefault());
     private final static String CELL_SEPARATOR = "//--- CELL ---";
     private final JPanel cells = new JPanel();
     private final JScrollPane scrollPane = new JScrollPane(cells);
@@ -65,7 +69,51 @@ public class Notebook extends JPanel implements DocumentListener {
         add(scrollPane, BorderLayout.CENTER);
 
         // Start with one cell
-        addCell(null);
+        Cell cell = addCell(null);
+        cell.editor.setText("""
+import java.util.*;
+import org.apache.commons.csv.CSVFormat;
+import smile.io.*;
+import smile.data.*;
+import smile.data.formula.*;
+import smile.data.measure.*;
+import smile.data.type.*;
+import smile.data.vector.*;
+import static smile.data.formula.Terms.*;
+import smile.graph.*;
+import smile.math.*;
+import smile.math.distance.*;
+import smile.math.kernel.*;
+import smile.math.rbf.*;
+import smile.stat.*;
+import smile.stat.distribution.*;
+import smile.stat.hypothesis.*;
+import smile.tensor.*;
+import smile.plot.swing.*;
+import smile.validation.*;
+import smile.validation.metric.*;
+import smile.association.*;
+import smile.base.mlp.*;
+import smile.classification.*;
+import smile.regression.OLS;
+import smile.regression.LASSO;
+import smile.regression.ElasticNet;
+import smile.regression.RidgeRegression;
+import smile.regression.GaussianProcessRegression;
+import smile.regression.RegressionTree;
+import smile.feature.extraction.*;
+import smile.feature.importance.*;
+import smile.feature.imputation.*;
+import smile.feature.selection.*;
+import smile.feature.transform.*;
+import smile.clustering.*;
+import smile.hpo.*;
+import smile.vq.*;
+import smile.manifold.*;
+
+void main() {
+    
+}""");
     }
 
     /**
@@ -282,14 +330,70 @@ public class Notebook extends JPanel implements DocumentListener {
         c.editor.requestFocusInWindow();
     }
 
+    private void runCell(Cell cell) {
+        runCount++;
+        SwingUtilities.invokeLater(() -> {
+            cell.setRunning(true);
+            cell.setOutput("");
+        });
+
+        // Direct JShell prints for THIS thread into this buffer
+        StringBuilder outBuff = new StringBuilder();
+        runner.setOutBuffer(outBuff);
+
+        try {
+            appendLine(outBuff, "⏵ " + datetime.format(ZonedDateTime.now()) + " started");
+            List<SnippetEvent> events = runner.eval(cell.editor.getText());
+            // Capture diagnostics, values, and exceptions in order
+            for (SnippetEvent ev : events) {
+                if (ev.status() == Snippet.Status.VALID && ev.value() != null) {
+                    appendLine(outBuff, "⇒ " + ev.value());
+                } else if (ev.status() == Snippet.Status.REJECTED) {
+                    appendLine(outBuff, "✖ Rejected snippet: " + ev.snippet().source());
+                } else if (ev.status() == Snippet.Status.RECOVERABLE_DEFINED ||
+                           ev.status() == Snippet.Status.RECOVERABLE_NOT_DEFINED) {
+                    appendLine(outBuff, "⚠ Recoverable issue.");
+                }
+
+                runner.diagnostics(ev.snippet()).forEach(diag -> {
+                    String kind = diag.isError() ? "ERROR" : "WARN";
+                    appendLine(outBuff, String.format("%s: %s",
+                            kind, diag.getMessage(Locale.getDefault())));
+                });
+
+                if (ev.exception() instanceof EvalException ex) {
+                    appendLine(outBuff, "Exception: " + ex.getExceptionClassName());
+                    if (ex.getMessage() != null) appendLine(outBuff, ex.getMessage());
+                    // JShell exception stack trace is often concise
+                    for (StackTraceElement ste : ex.getStackTrace()) {
+                        appendLine(outBuff, "  at " + ste.toString());
+                    }
+                }
+            }
+            appendLine(outBuff, "⏹ " + datetime.format(ZonedDateTime.now()) + " finished");
+        } catch (Throwable t) {
+            appendLine(outBuff, "✖ Error during execution: " + t);
+        } finally {
+            runner.removeOutBuffer();
+            final String text = outBuff.toString();
+            SwingUtilities.invokeLater(() -> {
+                cell.setRunning(false);
+                cell.setTitle("[" + runCount + "]");
+                cell.setOutput(text);
+                //cell.output.setCaretPosition(0);
+            });
+        }
+    }
+
     public synchronized void runCell(Cell cell, RunBehavior behavior) {
         if (runner.isRunning()) {
             JOptionPane.showMessageDialog(this,
-                    "A cell is currently running. Please wait.",
-                    "Execution in progress",
+                    bundle.getString("RaceConditionMessage"),
+                    bundle.getString("RaceConditionTitle"),
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
+
         final String code = cell.editor.getText();
         if (code.trim().isEmpty()) {
             // Honor the navigation behavior even on empty run
@@ -297,70 +401,15 @@ public class Notebook extends JPanel implements DocumentListener {
             return;
         }
 
-        runner.setRunning(true);
-        cell.setRunning(true);
-        cell.setOutput("");
-        StringBuilder outBuff = new StringBuilder();
-        String stamp = datetime.format(ZonedDateTime.now());
-        appendLine(outBuff, "⏵ " + stamp + " started");
-
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override protected Void doInBackground() {
-                try {
-                    runCount++;
-                    // Direct JShell prints for THIS thread into this buffer
-                    runner.setOutBuffer(outBuff);
-
-                    // Evaluate
-                    List<SnippetEvent> events = runner.eval(code);
-
-                    // Capture diagnostics, values, and exceptions in order
-                    for (SnippetEvent ev : events) {
-                        if (ev.status() == Snippet.Status.VALID) {
-                            if (ev.value() != null) {
-                                appendLine(outBuff, "⇒ " + ev.value());
-                            }
-                        } else if (ev.status() == Snippet.Status.REJECTED) {
-                            appendLine(outBuff, "✖ Rejected snippet: " + ev.snippet().source());
-                        } else if (ev.status() == Snippet.Status.RECOVERABLE_DEFINED ||
-                                   ev.status() == Snippet.Status.RECOVERABLE_NOT_DEFINED) {
-                            appendLine(outBuff, "⚠ Recoverable issue.");
-                        }
-
-                        runner.diagnostics(ev.snippet()).forEach(d -> {
-                            String kind = d.isError() ? "ERROR" : "WARN";
-                            appendLine(outBuff, String.format("%s: %s",
-                                    kind, d.getMessage(Locale.getDefault())));
-                        });
-
-                        if (ev.exception() instanceof EvalException ex) {
-                            appendLine(outBuff, "Exception: " + ex.getExceptionClassName());
-                            if (ex.getMessage() != null) {
-                                appendLine(outBuff, ex.getMessage());
-                            }
-                            // JShell exception stack trace is often concise
-                            for (StackTraceElement ste : ex.getStackTrace()) {
-                                appendLine(outBuff, "  at " + ste.toString());
-                            }
-                        }
-                    }
-                } catch (Throwable t) {
-                    appendLine(outBuff, "✖ Error during execution: " + t);
-                } finally {
-                    runner.removeOutBuffer();
-                }
+                runner.setRunning(true);
+                runCell(cell);
                 return null;
             }
 
             @Override protected void done() {
-                String stamp = datetime.format(ZonedDateTime.now());
-                appendLine(outBuff, "⏹ " + stamp + " finished");
-                cell.setOutput(outBuff.toString());
-                cell.output.setCaretPosition(0);
-                cell.setRunning(false);
-                cell.setTitle("[" + runCount + "]");
                 runner.setRunning(false);
-
                 // Post-run navigation
                 handlePostRunNav(cell, behavior);
             }
@@ -390,55 +439,24 @@ public class Notebook extends JPanel implements DocumentListener {
     public void runAllCells() {
         if (runner.isRunning()) {
             JOptionPane.showMessageDialog(this,
-                    "A cell is currently running. Please wait.",
-                    "Execution in progress",
+                    bundle.getString("RaceConditionMessage"),
+                    bundle.getString("RaceConditionTitle"),
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
+
         // Sequentially run all non-empty cells
         List<Cell> cells = new ArrayList<>();
         for (int i = 0; i < this.cells.getComponentCount(); i++) {
             cells.add(getCell(i));
         }
+
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override protected Void doInBackground() {
                 runner.setRunning(true);
                 for (Cell cell : cells) {
                     if (cell.editor.getText().trim().isEmpty()) continue;
-                    runCount++;
-                    SwingUtilities.invokeLater(() -> cell.setRunning(true));
-                    StringBuilder outBuff = new StringBuilder();
-                    runner.setOutBuffer(outBuff);
-                    try {
-                        appendLine(outBuff, "⏵ " + datetime.format(ZonedDateTime.now()) + " started");
-                        List<SnippetEvent> events = runner.eval(cell.editor.getText());
-                        for (SnippetEvent ev : events) {
-                            if (ev.status() == Snippet.Status.VALID && ev.value() != null) {
-                                appendLine(outBuff, "⇒ " + ev.value());
-                            }
-                            runner.diagnostics(ev.snippet()).forEach(d -> {
-                                String kind = d.isError() ? "ERROR" : "WARN";
-                                appendLine(outBuff, String.format("%s: %s (%s)",
-                                        kind, d.getMessage(Locale.getDefault()),
-                                        ev.snippet().source()));
-                            });
-                            if (ev.exception() instanceof EvalException ex) {
-                                appendLine(outBuff, "Exception: " + ex.getExceptionClassName());
-                                if (ex.getMessage() != null) appendLine(outBuff, ex.getMessage());
-                            }
-                        }
-                        appendLine(outBuff, "⏹ " + datetime.format(ZonedDateTime.now()) + " finished");
-                    } catch (Throwable t) {
-                        appendLine(outBuff, "✖ Error during execution: " + t);
-                    } finally {
-                        runner.removeOutBuffer();
-                        final String text = outBuff.toString();
-                        SwingUtilities.invokeLater(() -> {
-                            cell.setOutput(text);
-                            cell.output.setCaretPosition(0);
-                            cell.setRunning(false);
-                        });
-                    }
+                    runCell(cell);
                 }
                 return null;
             }
