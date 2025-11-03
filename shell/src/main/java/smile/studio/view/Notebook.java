@@ -194,6 +194,8 @@ public class Notebook extends JPanel implements DocumentListener {
                 current.append(line).append(System.lineSeparator());
             }
         }
+        // The last cell may not end with separator.
+        if (!current.isEmpty()) cells.add(current.toString());
         return cells;
     }
 
