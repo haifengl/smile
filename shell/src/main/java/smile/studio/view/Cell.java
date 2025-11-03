@@ -80,7 +80,6 @@ public class Cell extends JPanel {
         // Code area
         Font font = FontUtils.getCompositeFont(FlatJetBrainsMonoFont.FAMILY, Font.PLAIN, 14);
         editor.setFont(font);
-        editor.setRows(1);
         editor.setTabSize(4);
         editor.setLineWrap(false);
         editor.setWrapStyleWord(false);
