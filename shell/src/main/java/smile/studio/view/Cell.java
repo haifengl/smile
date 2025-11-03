@@ -39,6 +39,10 @@ import smile.studio.model.RunBehavior;
  * @author Haifeng Li
  */
 public class Cell extends JPanel {
+    /** Editor font shared across all cells. */
+    private static Font editorFont = FontUtils.getCompositeFont(FlatJetBrainsMonoFont.FAMILY, Font.PLAIN, 14);
+    /** Output font shared across all cells. */
+    private static Font outputFont = FontUtils.getCompositeFont(FlatJetBrainsMonoFont.FAMILY, Font.PLAIN, 12);
     /** The message resource bundle. */
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), Locale.getDefault());
     /** The output buffer. StringBuffer is multi-thread safe while StringBuilder isn't. */
@@ -78,8 +82,7 @@ public class Cell extends JPanel {
         deleteBtn.addActionListener(e -> notebook.deleteCell(this));
 
         // Code area
-        Font font = FontUtils.getCompositeFont(FlatJetBrainsMonoFont.FAMILY, Font.PLAIN, 14);
-        editor.setFont(font);
+        editor.setFont(editorFont);
         editor.setTabSize(4);
         editor.setLineWrap(false);
         editor.setWrapStyleWord(false);
@@ -111,31 +114,28 @@ public class Cell extends JPanel {
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, InputEvent.CTRL_DOWN_MASK), "increase-font-size");
         actionMap.put("increase-font-size", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
-                Font font = editor.getFont();
-                font = font.deriveFont(Math.min(32f, font.getSize() + 1));
-                editor.setFont(font);
+                editorFont = editorFont.deriveFont(Math.min(32f, editorFont.getSize() + 1));
+                editor.setFont(editorFont);
 
-                font = output.getFont();
-                font = font.deriveFont(Math.min(32f, font.getSize() + 1));
-                output.setFont(font);
+                outputFont = outputFont.deriveFont(Math.min(32f, outputFont.getSize() + 1));
+                output.setFont(outputFont);
             }
         });
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, InputEvent.CTRL_DOWN_MASK), "decrease-font-size");
         actionMap.put("decrease-font-size", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
-                Font font = editor.getFont();
-                font = font.deriveFont(Math.max(8f, font.getSize() - 1));
-                editor.setFont(font);
+                editorFont = editorFont.deriveFont(Math.max(8f, editorFont.getSize() - 1));
+                editor.setFont(editorFont);
 
-                font = output.getFont();
-                font = font.deriveFont(Math.max(8f, font.getSize() - 1));
-                output.setFont(font);
+                outputFont = outputFont.deriveFont(Math.max(8f, outputFont.getSize() - 1));
+                output.setFont(outputFont);
             }
         });
 
         // Output area
         output.setEditable(false);
         output.setBackground(getBackground());
+        output.setFont(outputFont);
 
         add(header, BorderLayout.NORTH);
         add(editorScroll, BorderLayout.CENTER);
