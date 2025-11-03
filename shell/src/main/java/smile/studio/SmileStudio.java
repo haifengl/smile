@@ -45,8 +45,8 @@ public class SmileStudio extends JFrame {
     private final JToolBar toolBar = new JToolBar();
     private final StatusBar statusBar = new StatusBar();
     private final JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-    private Workspace workspace = new Workspace();
-    private Chat chat = new Chat();
+    private final Workspace workspace = new Workspace();
+    private final Chat chat = new Chat();
 
     public SmileStudio() {
         super(bundle.getString("AppName"));
@@ -243,11 +243,7 @@ public class SmileStudio extends JFrame {
      * @param checking checking if the current notebook is saved.
      */
     private void newNotebook(boolean checking) {
-        if (checking && !confirmDiscardIfUnsaved()) return;
-        workspace = new Workspace();
-        chat = new Chat();
-        splitPane.setLeftComponent(workspace);
-        splitPane.setRightComponent(chat);
+        javax.swing.SwingUtilities.invokeLater(() -> createAndShowGUI(false));
     }
 
     /**
@@ -372,6 +368,8 @@ public class SmileStudio extends JFrame {
 
         if (GraphicsEnvironment.isHeadless()) {
             System.err.println("Cannot start Smile Studio as JVM is running in headless mode.");
+            System.err.println("Run 'smile shell' for smile shell with Java.");
+            System.err.println("Run 'smile scala' for smile shell with Scala.");
             System.exit(1);
         }
 
