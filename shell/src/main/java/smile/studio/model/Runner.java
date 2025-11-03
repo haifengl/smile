@@ -75,10 +75,12 @@ public class Runner {
                 }
             }
         };
-        
+
         shellOut = new PrintStream(delegatingOut, true, StandardCharsets.UTF_8);
         shellErr = new PrintStream(delegatingOut, true, StandardCharsets.UTF_8);
-        jshell = JShell.builder().out(shellOut).err(shellErr).build();
+        jshell = JShell.builder().out(shellOut).err(shellErr)
+                .remoteVMOptions("--class-path", System.getProperty("java.class.path"))
+                .build();
         sourceAnalyzer = jshell.sourceCodeAnalysis();
     }
 
