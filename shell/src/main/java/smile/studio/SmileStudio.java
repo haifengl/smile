@@ -30,6 +30,7 @@ import com.formdev.flatlaf.util.SystemInfo;
 import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
 import smile.studio.view.*;
 import smile.swing.Button;
+import smile.swing.FileChooser;
 
 /**
  * Smile Studio is an integrated development environment (IDE) for Smile.
@@ -148,7 +149,7 @@ public class SmileStudio extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            newNotebook(true);
+            newNotebook();
         }
     }
 
@@ -240,9 +241,8 @@ public class SmileStudio extends JFrame {
 
     /**
      * Creates a new notebook.
-     * @param checking checking if the current notebook is saved.
      */
-    private void newNotebook(boolean checking) {
+    private void newNotebook() {
         javax.swing.SwingUtilities.invokeLater(() -> createAndShowGUI(false));
     }
 
@@ -259,13 +259,12 @@ public class SmileStudio extends JFrame {
      */
     private void openNotebook() {
         if (!confirmDiscardIfUnsaved()) return;
-        JFileChooser chooser = new JFileChooser();
+        JFileChooser chooser = FileChooser.getInstance();
         chooser.setDialogTitle(bundle.getString("OpenNotebook"));
         chooser.setFileFilter(new FileNameExtensionFilter(bundle.getString("SmileFile"), "java"));
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             File file = chooser.getSelectedFile();
             try {
-                newNotebook(false);
                 workspace.notebook().open(file);
                 setTitle(file);
             } catch (IOException ex) {
@@ -281,7 +280,7 @@ public class SmileStudio extends JFrame {
      */
     private void saveNotebook(boolean saveAs) {
         if (workspace.notebook().getFile() == null || saveAs) {
-            JFileChooser chooser = new JFileChooser();
+            JFileChooser chooser = FileChooser.getInstance();
             chooser.setDialogTitle(bundle.getString("SaveNotebook"));
             chooser.setFileFilter(new FileNameExtensionFilter(bundle.getString("SmileFile"), "java"));
             if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
