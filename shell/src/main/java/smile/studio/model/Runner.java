@@ -19,6 +19,7 @@ package smile.studio.model;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.swing.*;
@@ -30,17 +31,19 @@ import smile.studio.view.Cell;
  */
 public class Runner {
     /** JShell instance. */
-    private JShell jshell;
-    /** JShell running cell. */
-    private Cell cell;
-    /** Timestamp of last time updating cell output. */
-    private long stamp;
+    private final JShell jshell;
+    /** Analysis utilities for source code input. */
+    private final SourceCodeAnalysis sourceAnalyzer;
     /** JShell out stream. */
     private final PrintStream shellOut;
     /** JShell err stream. */
     private final PrintStream shellErr;
     /** JShell running state. */
     private volatile boolean isRunning = false;
+    /** JShell running cell. */
+    private Cell cell;
+    /** Timestamp of last time updating cell output. */
+    private long stamp;
 
     /**
      * Constructor.
@@ -76,6 +79,7 @@ public class Runner {
         shellOut = new PrintStream(delegatingOut, true, StandardCharsets.UTF_8);
         shellErr = new PrintStream(delegatingOut, true, StandardCharsets.UTF_8);
         jshell = JShell.builder().out(shellOut).err(shellErr).build();
+        sourceAnalyzer = jshell.sourceCodeAnalysis();
     }
 
     /**
@@ -116,7 +120,17 @@ public class Runner {
      * @return the evaluation results.
      */
     public List<SnippetEvent> eval(String code) {
-        return jshell.eval(code);
+        List<SnippetEvent> results = new ArrayList<>();
+        SourceCodeAnalysis.CompletionInfo info;
+        for (info = sourceAnalyzer.analyzeCompletion(code); info.completeness().isComplete(); info = sourceAnalyzer.analyzeCompletion(info.remaining())) {
+            results.addAll(jshell.eval(info.source()));
+        }
+
+        if (info.completeness() != SourceCodeAnalysis.Completeness.EMPTY) {
+            throw new RuntimeException(info.completeness() + ": " + info.remaining().trim());
+        }
+
+        return results;
     }
 
     /**

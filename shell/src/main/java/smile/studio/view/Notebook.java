@@ -355,13 +355,15 @@ public class Notebook extends JPanel implements DocumentListener {
         runner.setCell(cell); // Direct JShell prints
         SwingUtilities.invokeLater(() -> {
             cell.setRunning(true);
+            long rows = cell.editor.getText().lines().count();
+            cell.editor.setRows((int) rows);
         });
 
         try {
             cell.buffer.setLength(0); // Clears the StringBuilder
             appendLine(cell.buffer, "⏵ " + datetime.format(ZonedDateTime.now()) + " started");
             List<SnippetEvent> events = runner.eval(cell.editor.getText());
-            // Capture diagnostics, values, and exceptions in order
+            // Capture values, diagnostics, and exceptions in order
             for (SnippetEvent ev : events) {
                 if (ev.status() == Snippet.Status.VALID && ev.value() != null) {
                     appendLine(cell.buffer, "⇒ " + ev.value());
