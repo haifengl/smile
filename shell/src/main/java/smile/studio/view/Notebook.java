@@ -368,7 +368,16 @@ public class Notebook extends JPanel implements DocumentListener {
             // Capture values, diagnostics, and exceptions in order
             for (SnippetEvent ev : events) {
                 if (ev.status() == Snippet.Status.VALID && ev.value() != null) {
-                    appendLine(cell.buffer, "⇒ " + ev.value());
+                    var snippet = ev.snippet();
+                    if (snippet instanceof VarSnippet variable) {
+                        cell.buffer.append("⇒ ").append(variable.name()).append(" = ");
+                        if (variable.typeName().equals("DataFrame")) {
+                            cell.buffer.append(System.lineSeparator());
+                        }
+                        appendLine(cell.buffer, ev.value());
+                    } else {
+                        appendLine(cell.buffer, "⇒ " + ev.value());
+                    }
                 } else if (ev.status() == Snippet.Status.REJECTED) {
                     appendLine(cell.buffer, "✖ Rejected snippet: " + ev.snippet().source());
                 } else if (ev.status() == Snippet.Status.RECOVERABLE_DEFINED ||
