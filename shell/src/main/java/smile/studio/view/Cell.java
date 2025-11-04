@@ -29,6 +29,7 @@ import java.util.ResourceBundle;
 
 import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
 import com.formdev.flatlaf.util.FontUtils;
+import org.fife.ui.rtextarea.RTextScrollPane;
 import smile.studio.model.RunBehavior;
 
 /**
@@ -47,7 +48,7 @@ public class Cell extends JPanel {
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), Locale.getDefault());
     /** The output buffer. StringBuffer is multi-thread safe while StringBuilder isn't. */
     final StringBuffer buffer = new StringBuffer();
-    final JTextArea editor = new JTextArea();
+    final JTextArea editor = new CodeEditor();
     final JTextArea output = new JTextArea();
     final TitledBorder border = BorderFactory.createTitledBorder("[ ]");
     final JButton runBtn = new JButton("▶");
@@ -86,7 +87,7 @@ public class Cell extends JPanel {
         editor.setTabSize(4);
         editor.setLineWrap(false);
         editor.setWrapStyleWord(false);
-        JScrollPane editorScroll = new JScrollPane(editor);
+        RTextScrollPane editorScroll = new RTextScrollPane(editor);
         editorScroll.setBorder(border);
 
         // Key bindings (inspired by Jupyter)
