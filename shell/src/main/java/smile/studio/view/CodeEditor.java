@@ -16,11 +16,8 @@
  */
 package smile.studio.view;
 
-import java.awt.*;
 import java.io.Serial;
-import javax.swing.*;
 import org.fife.ui.autocomplete.*;
-import org.fife.ui.rtextarea.*;
 import org.fife.ui.rsyntaxtextarea.*;
 
 /**
@@ -36,7 +33,7 @@ public class CodeEditor extends RSyntaxTextArea {
      * Constructor.
      */
     public CodeEditor() {
-        super(20, 60);
+        super(20, 120);
         setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);
         setCodeFoldingEnabled(true);
         setRoundedSelectionEdges(true);
@@ -54,16 +51,10 @@ public class CodeEditor extends RSyntaxTextArea {
         // documentation window along with completion choices, etc.). Unlike
         // CompletionProviders, instances of AutoCompletion cannot be shared
         // among multiple text components.
-        AutoCompletion ac = new AutoCompletion(provider);
-        ac.install(this);
+        //AutoCompletion ac = new AutoCompletion(provider);
+        //ac.install(this);
     }
-/*
-    @Override
-    public void setFont(Font font) {
-        super.setFont(font);
-        editor.setFont(font);
-    }
-*/
+
     /**
      * Create a simple provider that adds some Java-related completions.
      */

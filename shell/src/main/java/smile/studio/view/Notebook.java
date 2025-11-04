@@ -72,6 +72,8 @@ public class Notebook extends JPanel implements DocumentListener {
         // Start with one cell
         Cell cell = addCell(null);
         cell.editor.setText("""
+                import java.awt.Color;
+                import java.time.*;
                 import java.util.*;
                 import org.apache.commons.csv.CSVFormat;
                 import smile.io.*;
@@ -358,7 +360,7 @@ public class Notebook extends JPanel implements DocumentListener {
         SwingUtilities.invokeLater(() -> {
             cell.setRunning(true);
             long rows = cell.editor.getText().lines().count();
-            cell.editor.setRows((int) rows);
+            cell.editor.setRows(Math.min(20, (int) rows));
         });
 
         try {
@@ -405,9 +407,12 @@ public class Notebook extends JPanel implements DocumentListener {
             appendLine(cell.buffer, "✖ Error during execution: " + t);
         } finally {
             runner.removeCell();
+            // Generates title before calling invokeLater
+            // as runCount may have changed in runAllCells.
+            String title = "[" + runCount + "]";
             SwingUtilities.invokeLater(() -> {
                 cell.setRunning(false);
-                cell.setTitle("[" + runCount + "]");
+                cell.setTitle(title);
                 cell.setOutput(cell.buffer.toString());
             });
         }
