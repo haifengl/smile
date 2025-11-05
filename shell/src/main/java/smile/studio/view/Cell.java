@@ -137,6 +137,8 @@ public class Cell extends JPanel {
         output.setEditable(false);
         output.setBackground(getBackground());
         output.setFont(outputFont);
+        output.setLineWrap(true);
+        output.setWrapStyleWord(true);
 
         add(header, BorderLayout.NORTH);
         add(editorScroll, BorderLayout.CENTER);

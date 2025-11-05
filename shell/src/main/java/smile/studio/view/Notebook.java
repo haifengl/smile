@@ -408,7 +408,7 @@ public class Notebook extends JPanel implements DocumentListener {
         } finally {
             runner.removeCell();
             // Generates title before calling invokeLater
-            // as runCount may have changed in runAllCells.
+            // as runCount may have changed in case of runAllCells.
             String title = "[" + runCount + "]";
             SwingUtilities.invokeLater(() -> {
                 cell.setRunning(false);
