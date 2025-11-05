@@ -671,6 +671,11 @@ public class Canvas extends JComponent implements ComponentListener,
                 };
 
         propertyTable = new Table(data, columnNames);
+        propertyTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        propertyTable.setFillsViewportHeight(true);
+        var model = propertyTable.getColumnModel();
+        model.getColumn(0).setPreferredWidth(200);
+        model.getColumn(1).setPreferredWidth(200);
 
         // There is a known issue with JTables whereby the changes made in a
         // cell editor are not committed when focus is lost.
@@ -686,7 +691,6 @@ public class Canvas extends JComponent implements ComponentListener,
         // instance to turn this feature on.
         propertyTable.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
 
-        propertyTable.setFillsViewportHeight(true);
         JScrollPane tablePanel = new JScrollPane(propertyTable);
 
         dialog.getContentPane().add(tablePanel, BorderLayout.CENTER);
