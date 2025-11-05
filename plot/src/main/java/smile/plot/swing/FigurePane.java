@@ -37,7 +37,7 @@ public class FigurePane extends JPanel {
      */
     public FigurePane(Figure figure) {
         super(new BorderLayout());
-        this.canvas = new Canvas(figure);
+        canvas = new Canvas(figure);
         add(canvas, BorderLayout.CENTER);
         add(canvas.toolbar(), BorderLayout.NORTH);
         addComponentListener(new ComponentAdapter() {

@@ -205,14 +205,20 @@ public interface Scene extends Printable {
      * @throws InvocationTargetException if an exception is thrown while showing the frame.
      */
     default JFrame window() throws InterruptedException, InvocationTargetException {
-        JFrame frame = new JFrame();
-        String title = String.format("Smile Plot %d", WindowCount.addAndGet(1));
-        frame.setTitle(title);
+        String title = null;
+        if (content() instanceof Canvas canvas) {
+            title = canvas.figure().getTitle();
+        }
+        if (title == null) {
+            title = String.format("Smile Plot %d", WindowCount.addAndGet(1));
+        }
 
         JPanel pane = new JPanel(new BorderLayout());
         pane.add(content(), BorderLayout.CENTER);
         pane.add(toolbar(), BorderLayout.NORTH);
 
+        JFrame frame = new JFrame();
+        frame.setTitle(title);
         frame.getContentPane().add(pane);
         frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         frame.setSize(new java.awt.Dimension(1280, 1000));
