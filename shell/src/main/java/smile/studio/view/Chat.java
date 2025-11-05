@@ -43,9 +43,11 @@ public class Chat extends JPanel {
         inputPane.add(send, BorderLayout.EAST);
         add(inputPane, BorderLayout.SOUTH);
 
-        send.addActionListener(e -> sendMessage());
+        input.putClientProperty("JComponent.roundRect", true);
+        send.putClientProperty("JButton.buttonType", "roundRect");
         // Enter key action
         input.addActionListener(e -> sendMessage());
+        send.addActionListener(e -> sendMessage());
     }
 
     /**

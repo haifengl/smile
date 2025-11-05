@@ -89,6 +89,7 @@ public class Cell extends JPanel {
         editor.setWrapStyleWord(false);
         RTextScrollPane editorScroll = new RTextScrollPane(editor);
         editorScroll.setBorder(border);
+        editorScroll.putClientProperty("JScrollBar.showButtons", true);
 
         // Key bindings (inspired by Jupyter)
         InputMap inputMap = editor.getInputMap(JComponent.WHEN_FOCUSED);
