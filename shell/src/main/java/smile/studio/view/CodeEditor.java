@@ -33,7 +33,7 @@ public class CodeEditor extends RSyntaxTextArea {
      * Constructor.
      */
     public CodeEditor() {
-        super(20, 120);
+        super(20, 80);
         setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);
         setCodeFoldingEnabled(true);
         setRoundedSelectionEdges(true);

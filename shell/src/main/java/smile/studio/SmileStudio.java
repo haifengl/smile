@@ -45,7 +45,6 @@ public class SmileStudio extends JFrame {
     private final JMenuBar menuBar = new JMenuBar();
     private final JToolBar toolBar = new JToolBar();
     private final StatusBar statusBar = new StatusBar();
-    private final JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
     private final Workspace workspace = new Workspace();
     private final Chat chat = new Chat();
 
@@ -55,6 +54,7 @@ public class SmileStudio extends JFrame {
         setJMenuBar(menuBar);
         initMenuAndToolBar();
 
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setLeftComponent(workspace);
         splitPane.setRightComponent(chat);
         splitPane.setResizeWeight(0.85);
