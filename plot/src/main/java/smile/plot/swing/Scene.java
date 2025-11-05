@@ -81,6 +81,7 @@ public interface Scene extends Printable {
          */
         public SaveAction(Scene scene) {
             super("Save", new ImageIcon(Objects.requireNonNull(Scene.class.getResource("images/save16.png"))));
+            putValue(LARGE_ICON_KEY, new ImageIcon(Objects.requireNonNull(Scene.class.getResource("images/save24.png"))));
             this.scene = scene;
         }
 
@@ -107,6 +108,7 @@ public interface Scene extends Printable {
          */
         public PrintAction(Scene scene) {
             super("Print", new ImageIcon(Objects.requireNonNull(Scene.class.getResource("images/print16.png"))));
+            putValue(LARGE_ICON_KEY, new ImageIcon(Objects.requireNonNull(Scene.class.getResource("images/print24.png"))));
             this.scene = scene;
         }
 

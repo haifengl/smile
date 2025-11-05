@@ -428,6 +428,7 @@ public class Canvas extends JComponent implements ComponentListener,
 
         public ZoomInAction() {
             super("Zoom In", new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/zoom-in16.png"))));
+            putValue(LARGE_ICON_KEY, new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/zoom-in24.png"))));
         }
 
         @Override
@@ -440,6 +441,7 @@ public class Canvas extends JComponent implements ComponentListener,
 
         public ZoomOutAction() {
             super("Zoom Out", new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/zoom-out16.png"))));
+            putValue(LARGE_ICON_KEY, new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/zoom-out24.png"))));
         }
 
         @Override
@@ -452,6 +454,7 @@ public class Canvas extends JComponent implements ComponentListener,
 
         public ResetAction() {
             super("Reset", new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/refresh16.png"))));
+            putValue(LARGE_ICON_KEY, new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/refresh24.png"))));
         }
 
         @Override
@@ -463,7 +466,8 @@ public class Canvas extends JComponent implements ComponentListener,
     private class EnlargePlotAreaAction extends AbstractAction {
 
         public EnlargePlotAreaAction() {
-            super("Enlarge", new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/resize-larger16.png"))));
+            super("Enlarge", new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/arrow-out16.png"))));
+            putValue(LARGE_ICON_KEY, new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/arrow-out24.png"))));
         }
 
         @Override
@@ -487,7 +491,8 @@ public class Canvas extends JComponent implements ComponentListener,
     private class ShrinkPlotAreaAction extends AbstractAction {
 
         public ShrinkPlotAreaAction() {
-            super("Shrink", new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/resize-smaller16.png"))));
+            super("Shrink", new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/arrow-in16.png"))));
+            putValue(LARGE_ICON_KEY, new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/arrow-in24.png"))));
         }
 
         @Override
@@ -512,6 +517,7 @@ public class Canvas extends JComponent implements ComponentListener,
 
         public IncreaseWidthAction() {
             super("Increase Width", new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/increase-width16.png"))));
+            putValue(LARGE_ICON_KEY, new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/increase-width24.png"))));
         }
 
         @Override
@@ -532,6 +538,7 @@ public class Canvas extends JComponent implements ComponentListener,
 
         public IncreaseHeightAction() {
             super("Increase Height", new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/increase-height16.png"))));
+            putValue(LARGE_ICON_KEY, new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/increase-height24.png"))));
         }
 
         @Override
@@ -552,6 +559,7 @@ public class Canvas extends JComponent implements ComponentListener,
 
         public DecreaseWidthAction() {
             super("Decrease Width", new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/decrease-width16.png"))));
+            putValue(LARGE_ICON_KEY, new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/decrease-width24.png"))));
         }
 
         @Override
@@ -575,6 +583,7 @@ public class Canvas extends JComponent implements ComponentListener,
 
         public DecreaseHeightAction() {
             super("Decrease Height", new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/decrease-height16.png"))));
+            putValue(LARGE_ICON_KEY, new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/decrease-height24.png"))));
         }
 
         @Override
@@ -597,7 +606,8 @@ public class Canvas extends JComponent implements ComponentListener,
     private class PropertyAction extends AbstractAction {
 
         public PropertyAction() {
-            super("Properties", new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/property16.png"))));
+            super("Properties", new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/settings16.png"))));
+            putValue(LARGE_ICON_KEY, new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/settings24.png"))));
         }
 
         @Override
