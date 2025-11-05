@@ -332,13 +332,10 @@ public class SmileStudio extends JFrame {
      * @param exitOnClose the behavior when the user attempts to close the window.
      */
     public static void createAndShowGUI(boolean exitOnClose) {
-        // Set application monospaced font before setting up FlatLaf
-        FlatLaf.setPreferredMonospacedFontFamily(FlatJetBrainsMonoFont.FAMILY);
-        FlatLightLaf.setup();
-
         // Create and set up the window.
         SmileStudio studio = new SmileStudio();
         studio.setSize(new Dimension(1200, 800));
+        studio.setDefaultCloseOperation(exitOnClose ? JFrame.EXIT_ON_CLOSE : JFrame.DISPOSE_ON_CLOSE);
 
         // macOS window settings
         if (SystemInfo.isMacFullWindowContentSupported) {
@@ -352,12 +349,6 @@ public class SmileStudio extends JFrame {
             // macOS red/orange/green buttons overlap Swing components (e.g. toolbar).
             // Add some space to avoid the overlapping.
             studio.toolBar.add(Box.createHorizontalStrut(70), 0);
-        }
-
-        if (exitOnClose) {
-            studio.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        } else {
-            studio.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         }
 
         // Set the frame at the center of screen
@@ -387,6 +378,13 @@ public class SmileStudio extends JFrame {
             System.setProperty("apple.awt.application.name", bundle.getString("AppName"));
         }
 
+        // Linux
+        if( SystemInfo.isLinux ) {
+            // enable custom window decorations
+            JFrame.setDefaultLookAndFeelDecorated( true );
+            JDialog.setDefaultLookAndFeelDecorated( true );
+        }
+
         if (GraphicsEnvironment.isHeadless()) {
             System.err.println("Cannot start Smile Studio as JVM is running in headless mode.");
             System.err.println("Run 'smile shell' for smile shell with Java.");
@@ -394,10 +392,15 @@ public class SmileStudio extends JFrame {
             System.exit(1);
         }
 
-        // Install font in main
-        FlatJetBrainsMonoFont.install();
         // Schedule a job for the event dispatch thread:
         // creating and showing this application's GUI.
-        javax.swing.SwingUtilities.invokeLater(() -> createAndShowGUI(true));
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            // Install font
+            FlatJetBrainsMonoFont.install();
+            // Set application monospaced font before setting up FlatLaf
+            FlatLaf.setPreferredMonospacedFontFamily(FlatJetBrainsMonoFont.FAMILY);
+            FlatLightLaf.setup();
+            createAndShowGUI(true);
+        });
     }
 }
