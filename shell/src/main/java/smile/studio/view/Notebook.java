@@ -69,6 +69,13 @@ public class Notebook extends JPanel implements DocumentListener {
         scrollPane.getVerticalScrollBar().setUnitIncrement(18);
         add(scrollPane, BorderLayout.CENTER);
 
+        // Note that JShell runs in another JVM so that
+        // we need to setup FlatLaf again.
+        runner.eval("""
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                com.formdev.flatlaf.FlatLightLaf.setup();
+            });""");
+
         // Start with one cell
         Cell cell = addCell(null);
         cell.editor.setText("""
@@ -359,8 +366,7 @@ public class Notebook extends JPanel implements DocumentListener {
         runner.setCell(cell); // Direct JShell prints
         SwingUtilities.invokeLater(() -> {
             cell.setRunning(true);
-            long rows = cell.editor.getText().lines().count();
-            cell.editor.setRows(Math.min(20, (int) rows));
+            cell.editor.setRows(Math.min(20, cell.editor.getLineCount()));
         });
 
         try {

@@ -36,7 +36,7 @@ public class CodeEditor extends RSyntaxTextArea {
         super(20, 80);
         setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);
         setCodeFoldingEnabled(true);
-        setRoundedSelectionEdges(true);
+        //setRoundedSelectionEdges(true);
 
         // A CompletionProvider is what knows of all possible completions, and
         // analyzes the contents of the text area at the caret position to
