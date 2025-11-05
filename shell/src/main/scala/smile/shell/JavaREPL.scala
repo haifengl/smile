@@ -25,6 +25,7 @@ object JavaREPL {
     val home = System.getProperty("smile.home", ".")
     val startup = Array(
       "--class-path", System.getProperty("java.class.path"),
+      "-R-Dsmile.home=" + home,
       "--startup", "DEFAULT",
       "--startup", "PRINTING",
       "--startup", s"$home/bin/predef.jsh",
