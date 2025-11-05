@@ -90,6 +90,12 @@ public class Notebook extends JPanel implements DocumentListener {
                 import smile.data.type.*;
                 import smile.data.vector.*;
                 import static smile.data.formula.Terms.*;
+                import smile.feature.extraction.*;
+                import smile.feature.importance.*;
+                import smile.feature.imputation.*;
+                import smile.feature.selection.*;
+                import smile.feature.transform.*;
+                import smile.tensor.*;
                 import smile.graph.*;
                 import smile.math.*;
                 import smile.math.distance.*;
@@ -98,28 +104,67 @@ public class Notebook extends JPanel implements DocumentListener {
                 import smile.stat.*;
                 import smile.stat.distribution.*;
                 import smile.stat.hypothesis.*;
-                import smile.tensor.*;
                 import smile.plot.swing.*;
-                import smile.validation.*;
-                import smile.validation.metric.*;
+                import static smile.swing.SmileSwing.*;
                 import smile.association.*;
                 import smile.base.mlp.*;
                 import smile.classification.*;
+                import smile.clustering.*;
+                import smile.manifold.*;
                 import smile.regression.OLS;
                 import smile.regression.LASSO;
                 import smile.regression.ElasticNet;
                 import smile.regression.RidgeRegression;
                 import smile.regression.GaussianProcessRegression;
                 import smile.regression.RegressionTree;
-                import smile.feature.extraction.*;
-                import smile.feature.importance.*;
-                import smile.feature.imputation.*;
-                import smile.feature.selection.*;
-                import smile.feature.transform.*;
-                import smile.clustering.*;
+                import smile.validation.*;
+                import smile.validation.metric.*;
                 import smile.hpo.*;
-                import smile.vq.*;
-                import smile.manifold.*;""");
+                import smile.vq.*;""");
+
+        cell = addCell(null);
+        cell.editor.setText("""
+                var home = System.getProperty("smile.home");
+                var iris = Read.arff(home + "/data/weka/iris.arff");
+                var figure = ScatterPlot.of(iris, "sepallength", "sepalwidth", "class", '*').figure();
+                figure.setAxisLabels("sepallength", "sepalwidth");
+                figure.setTitle("Iris");
+                show(figure)""");
+        cell.editor.setRows(cell.editor.getLineCount());
+
+        cell = addCell(null);
+        cell.editor.setText("""
+                var rf = RandomForest.fit(Formula.lhs("class"), iris);
+                IO.println("OOB metrics = " + rf.metrics());""");
+        cell.editor.setRows(cell.editor.getLineCount());
+
+        cell = addCell(null);
+        cell.editor.setText("""
+                var cv = CrossValidation.classification(10, Formula.lhs("class"), iris, (formula, data) -> DecisionTree.fit(formula, data));""");
+        cell.editor.setRows(cell.editor.getLineCount());
+
+        cell = addCell(null);
+        cell.editor.setText("""
+                var format = CSVFormat.DEFAULT.withDelimiter(' ');
+                var mnist = Read.csv(home + "/data/mnist/mnist2500_X.txt", format).toArray();
+                var label = Read.csv(home + "/data/mnist/mnist2500_labels.txt", format).column(0).toIntArray();
+                
+                var pca = PCA.fit(mnist).getProjection(50);
+                var X = pca.apply(mnist);
+                var tsne = TSNE.fit(X, new TSNE.Options(2, 20, 200, 12, 550));
+                
+                var figure = ScatterPlot.of(tsne.coordinates(), label, '@').figure();
+                figure.setTitle("MNIST - t-SNE");
+                show(figure);""");
+        cell.editor.setRows(cell.editor.getLineCount());
+
+        cell = addCell(null);
+        cell.editor.setText("""
+                var umap = UMAP.fit(mnist, new UMAP.Options(15));
+                figure = ScatterPlot.of(umap, label, '@').figure();
+                figure.setTitle("MNIST - UMAP");
+                show(figure);""");
+        cell.editor.setRows(cell.editor.getLineCount());
     }
 
     /**
