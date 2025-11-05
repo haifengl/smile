@@ -80,6 +80,7 @@ public class Runner {
         shellErr = new PrintStream(delegatingOut, true, StandardCharsets.UTF_8);
         jshell = JShell.builder().out(shellOut).err(shellErr)
                 .remoteVMOptions("--class-path", System.getProperty("java.class.path"))
+                .remoteVMOptions("-Dsmile.home=" + System.getProperty("smile.home", "."))
                 .build();
         sourceAnalyzer = jshell.sourceCodeAnalysis();
     }
