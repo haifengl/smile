@@ -227,7 +227,7 @@ public interface Scene extends Printable {
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
 
-        javax.swing.SwingUtilities.invokeAndWait(() -> {
+        javax.swing.SwingUtilities.invokeLater(() -> {
             frame.toFront();
             frame.repaint();
         });
