@@ -17,13 +17,10 @@
 package smile.studio.view;
 
 import javax.swing.*;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeCellRenderer;
-import javax.swing.tree.TreePath;
-import javax.swing.tree.TreeSelectionModel;
+import javax.swing.tree.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Objects;
 import java.util.ResourceBundle;
 import jdk.jshell.VarSnippet;
@@ -35,7 +32,7 @@ import static smile.swing.SmileUtilities.scaleImageIcon;
  *
  * @author Haifeng Li
  */
-public class Explorer extends JPanel implements TreeSelectionListener {
+public class Explorer extends JPanel {
     /** The message resource bundle. */
     private final ResourceBundle bundle = ResourceBundle.getBundle(Explorer.class.getName(), getLocale());
     /** Tree nodes. */
@@ -50,6 +47,11 @@ public class Explorer extends JPanel implements TreeSelectionListener {
     private static final ImageIcon tableIcon = scaleImageIcon(new ImageIcon(Objects.requireNonNull(Explorer.class.getResource("images/table.png"))), 24);
     /** Tree of workspace runtime information. */
     private final JTree tree = new JTree(root);
+    /**
+     * To correctly update the JTree and display new children, we must use the
+     * DefaultTreeModel's methods to manage the nodes.
+     */
+    private final DefaultTreeModel treeModel = (DefaultTreeModel) tree.getModel();
     /** JShell instance. */
     private final Runner runner;
 
@@ -71,15 +73,13 @@ public class Explorer extends JPanel implements TreeSelectionListener {
      * Initializes tree nodes.
      */
     private void initTree() {
-        root.add(frames);
-        root.add(matrix);
-        root.add(models);
-        root.add(services);
+        treeModel.insertNodeInto(frames, root, root.getChildCount());
+        treeModel.insertNodeInto(matrix, root, root.getChildCount());
+        treeModel.insertNodeInto(models, root, root.getChildCount());
+        treeModel.insertNodeInto(services, root, root.getChildCount());
 
         // Allow one selection at a time.
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-        // Listen for when the selection changes.
-        tree.addTreeSelectionListener(this);
         // Expand the tree
         tree.expandPath(new TreePath(root));
         // Hide the root node
@@ -110,24 +110,33 @@ public class Explorer extends JPanel implements TreeSelectionListener {
             }
         };
         tree.setCellRenderer(renderer);
-    }
 
-    @Override
-    public void valueChanged(TreeSelectionEvent e) {
-        DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
-        if (node != null) {
-            var parent = node.getParent();
-            if (parent == frames || parent == matrix) {
-                var snippet = (VarSnippet) node.getUserObject();
-                var name = snippet.name();
-                runner.eval(String.format("""
-                        var %sWindow = smile.swing.SmileUtilities.show(%s);
-                        %sWindow.setTitle("%s");
-                        """, name, name, name, name));
-            } else if (parent == models) {
-                // Starts an inference service
+        tree.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) { // double-click
+                    // Get the path and node associated with the double-click
+                    TreePath path = tree.getPathForLocation(e.getX(), e.getY());
+                    if (path != null) {
+                        DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+                        if (node.isLeaf()) {
+                            var parent = node.getParent();
+                            if (parent == frames || parent == matrix) {
+                                var snippet = (VarSnippet) node.getUserObject();
+                                var name = snippet.name();
+                                runner.eval(String.format("""
+                                        var %sWindow = smile.swing.SmileUtilities.show(%s);
+                                        %sWindow.setTitle("%s");
+                                        """, name, name, name, name));
+                            } else if (parent == models) {
+                                // Starts an inference service
+                            }
+
+                        }
+                    }
+                }
             }
-        }
+        });
     }
 
     /**
@@ -137,15 +146,16 @@ public class Explorer extends JPanel implements TreeSelectionListener {
         frames.removeAllChildren();
         matrix.removeAllChildren();
         models.removeAllChildren();
+        treeModel.reload(root);
 
         runner.variables().forEach(snippet -> {
             var node = new DefaultMutableTreeNode(snippet);
             switch (snippet.typeName()) {
                 case "DataFrame" -> {
-                    frames.add(node);
+                    treeModel.insertNodeInto(node, frames, frames.getChildCount());
                 }
                 case "DenseMatrix", "BandMatrix", "SymmMatrix", "SparseMatrix" -> {
-                    matrix.add(node);
+                    treeModel.insertNodeInto(node, matrix, matrix.getChildCount());
                 }
                 case "Classifier", "Regression", "KNN", "FLD", "LDA", "QDA", "RDA",
                      "NaiveBayes", "OneVersusOne", "OneVersusRest", "MLP", "RBFNetwork",
@@ -153,7 +163,7 @@ public class Explorer extends JPanel implements TreeSelectionListener {
                      "DecisionTree", "RegressionTree", "AdaBoost", "RandomForest", "GradientTreeBoost",
                      "KernelMachine", "LinearSVM", "SparseLinearSVM",
                      "LinearModel", "GaussianProcessRegression" -> {
-                    models.add(node);
+                    treeModel.insertNodeInto(node, models, models.getChildCount());
                 }
             }
         });
