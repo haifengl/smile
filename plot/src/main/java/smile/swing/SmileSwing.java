@@ -24,6 +24,7 @@ import smile.plot.swing.*;
 import smile.swing.table.DataFrameTableModel;
 import smile.swing.table.MatrixTableModel;
 import smile.tensor.Matrix;
+import smile.tensor.SparseMatrix;
 
 
 /**
@@ -128,5 +129,15 @@ public interface SmileSwing {
         });
 
         return frame;
+    }
+
+    /**
+     * Shows the sparse matrix structure in a figure window.
+     * @param matrix the matrix to display.
+     * @return a new JFrame that displays the sparse matrix structure.
+     */
+    static JFrame show(SparseMatrix matrix) {
+        Figure figure = SparseMatrixPlot.of(matrix).figure();
+        return show(figure);
     }
 }
