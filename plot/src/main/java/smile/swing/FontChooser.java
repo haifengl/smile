@@ -106,7 +106,7 @@ public class FontChooser extends JComponent {
     /** The dialog result value. */
     protected int dialogResultValue = ERROR_OPTION;
     /** The message resource bundle. */
-    private final ResourceBundle messageCatalog = ResourceBundle.getBundle(FontChooser.class.getName(), getLocale());
+    private final ResourceBundle bundle = ResourceBundle.getBundle(FontChooser.class.getName(), getLocale());
 
     /**
      * Returns a message.
@@ -116,7 +116,7 @@ public class FontChooser extends JComponent {
     protected String getMessage(String key) {
         String value = key;
         try {
-            value = messageCatalog.getString(key);
+            value = bundle.getString(key);
         } catch (MissingResourceException ex) {
             logger.debug("Failed to get message resource: ", ex);
         }
