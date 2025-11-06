@@ -127,7 +127,7 @@ public class Notebook extends JPanel implements DocumentListener {
                 var figure = ScatterPlot.of(iris, "sepallength", "sepalwidth", "class", '*').figure();
                 figure.setAxisLabels("sepallength", "sepalwidth");
                 figure.setTitle("Iris");
-                show(figure)""");
+                show(figure);""");
         cell.editor.setRows(cell.editor.getLineCount());
 
         cell = addCell(null);

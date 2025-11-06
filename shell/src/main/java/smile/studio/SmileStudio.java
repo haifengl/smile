@@ -367,8 +367,13 @@ public class SmileStudio extends JFrame {
             System.setProperty("apple.awt.application.name", bundle.getString("AppName"));
         }
 
-        // Linux
-        if( SystemInfo.isLinux ) {
+        if (SystemInfo.isWindows) {
+            // Icons may become blurry due to desktop scaling.
+            // Set to 1.0 for no scaling.
+            System.setProperty("sun.java2d.uiScale", "1.0");
+        }
+
+        if (SystemInfo.isLinux) {
             // enable custom window decorations
             JFrame.setDefaultLookAndFeelDecorated( true );
             JDialog.setDefaultLookAndFeelDecorated( true );
