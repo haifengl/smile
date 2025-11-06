@@ -124,6 +124,8 @@ public class Notebook extends JPanel implements DocumentListener {
         cell.editor.setText("""
                 var home = System.getProperty("smile.home");
                 var iris = Read.arff(home + "/data/weka/iris.arff");
+                show(iris);
+                
                 var figure = ScatterPlot.of(iris, "sepallength", "sepalwidth", "class", '*').figure();
                 figure.setAxisLabels("sepallength", "sepalwidth");
                 figure.setTitle("Iris");
