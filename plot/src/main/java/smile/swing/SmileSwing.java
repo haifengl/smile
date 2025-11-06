@@ -19,10 +19,11 @@ package smile.swing;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.lang.reflect.InvocationTargetException;
 import smile.data.DataFrame;
 import smile.plot.swing.*;
 import smile.swing.table.DataFrameTableModel;
+import smile.swing.table.MatrixTableModel;
+import smile.tensor.Matrix;
 
 
 /**
@@ -74,10 +75,39 @@ public interface SmileSwing {
     /**
      * Shows the data frame in a window.
      * @param df the data frame to display.
-     * @return a new JFrame that contains the figure.
+     * @return a new JFrame that displays the matrix in a table.
      */
     static JFrame show(DataFrame df) {
         DataFrameTableModel model = new DataFrameTableModel(df);
+        Table table = new Table(model);
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setRowHeaderView(table.getRowHeader());
+        JPanel contentPane = new JPanel(new BorderLayout());
+        contentPane.add(model.getToolbar(), BorderLayout.NORTH);
+        contentPane.add(scrollPane, BorderLayout.CENTER);
+
+        JFrame frame = new JFrame();
+        frame.setContentPane(contentPane);
+        frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        frame.setSize(new java.awt.Dimension(1280, 1000));
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            frame.toFront();
+            frame.repaint();
+        });
+
+        return frame;
+    }
+
+    /**
+     * Shows the matrix in a window.
+     * @param matrix the matrix to display.
+     * @return a new JFrame that displays the matrix in a table.
+     */
+    static JFrame show(Matrix matrix) {
+        MatrixTableModel model = new MatrixTableModel(matrix);
         Table table = new Table(model);
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setRowHeaderView(table.getRowHeader());
