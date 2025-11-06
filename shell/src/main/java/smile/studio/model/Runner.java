@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.stream.Stream;
 import javax.swing.*;
 import jdk.jshell.*;
+import com.formdev.flatlaf.util.SystemInfo;
 import smile.studio.view.Cell;
 
 /**
@@ -78,10 +79,15 @@ public class Runner {
 
         shellOut = new PrintStream(delegatingOut, true, StandardCharsets.UTF_8);
         shellErr = new PrintStream(delegatingOut, true, StandardCharsets.UTF_8);
-        jshell = JShell.builder().out(shellOut).err(shellErr)
+        var builder = JShell.builder().out(shellOut).err(shellErr)
                 .remoteVMOptions("--class-path", System.getProperty("java.class.path"))
-                .remoteVMOptions("-Dsmile.home=" + System.getProperty("smile.home", "."))
-                .build();
+                .remoteVMOptions("-Dsmile.home=" + System.getProperty("smile.home", "."));
+
+        if (SystemInfo.isWindows) {
+            // Set to 1.0 for no scaling
+            builder = builder.remoteVMOptions("-Dsun.java2d.uiScale=1.0");
+        }
+        jshell = builder.build();
         sourceAnalyzer = jshell.sourceCodeAnalysis();
     }
 
