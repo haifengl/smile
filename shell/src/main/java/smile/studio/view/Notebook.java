@@ -105,7 +105,7 @@ public class Notebook extends JPanel implements DocumentListener {
                 import smile.stat.distribution.*;
                 import smile.stat.hypothesis.*;
                 import smile.plot.swing.*;
-                import static smile.swing.SmileSwing.*;
+                import static smile.swing.SmileUtilities.*;
                 import smile.association.*;
                 import smile.base.mlp.*;
                 import smile.classification.*;

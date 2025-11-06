@@ -32,14 +32,14 @@ import smile.tensor.SparseMatrix;
  *
  * @author Haifeng Li
  */
-public interface SmileSwing {
+public interface SmileUtilities {
     /**
      * Scales an image icon to desired size.
      * @param icon the input image icon.
      * @param size the desired icon size.
      * @return the scaled image icon.
      */
-    static ImageIcon scale(ImageIcon icon, int size) {
+    static ImageIcon scaleImageIcon(ImageIcon icon, int size) {
         Image image = icon.getImage();
         BufferedImage scaledImage = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = scaledImage.createGraphics();

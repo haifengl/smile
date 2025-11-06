@@ -23,14 +23,13 @@ import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import smile.swing.FileChooser;
 import smile.swing.Printer;
-import smile.swing.SmileSwing;
+import static smile.swing.SmileUtilities.scaleImageIcon;
 
 /**
  * Printable scene of mathematical plots.
@@ -74,8 +73,8 @@ public interface Scene extends Printable {
      */
     class SaveAction extends AbstractAction {
         static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/save.png")));
-        static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
-        static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
         /** The scene to save. */
         private final Scene scene;
 
@@ -104,8 +103,8 @@ public interface Scene extends Printable {
      */
     class PrintAction extends AbstractAction {
         static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/print.png")));
-        static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
-        static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
         /** The scene to print. */
         private final Scene scene;
 

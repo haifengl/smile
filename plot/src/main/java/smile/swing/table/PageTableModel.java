@@ -25,7 +25,7 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
 import smile.swing.Button;
-import smile.swing.SmileSwing;
+import static smile.swing.SmileUtilities.scaleImageIcon;
 
 /**
  * A table model that performs "paging" of its data. This model
@@ -316,8 +316,8 @@ public abstract class PageTableModel extends AbstractTableModel {
     
     class PageDownAction extends AbstractAction {
         static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("images/forward.png")));
-        static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
-        static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
 
         public PageDownAction() {
             super("Next Page", icon16);
@@ -333,8 +333,8 @@ public abstract class PageTableModel extends AbstractTableModel {
     
     class PageUpAction extends AbstractAction {
         static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("images/back.png")));
-        static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
-        static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
 
         public PageUpAction() {
             super("Previous Page", icon16);
@@ -350,8 +350,8 @@ public abstract class PageTableModel extends AbstractTableModel {
     
     class FirstPageAction extends AbstractAction {
         static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("images/double-left.png")));
-        static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
-        static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
 
         public FirstPageAction() {
             super("First Page", icon16);
@@ -367,8 +367,8 @@ public abstract class PageTableModel extends AbstractTableModel {
     
     class LastPageAction extends AbstractAction {
         static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("images/double-right.png")));
-        static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
-        static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
 
         public LastPageAction() {
             super("Last Page", icon16);
