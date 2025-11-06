@@ -20,9 +20,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.lang.reflect.InvocationTargetException;
-import smile.plot.swing.Figure;
-import smile.plot.swing.FigurePane;
-import smile.plot.swing.MultiFigurePane;
+import smile.data.DataFrame;
+import smile.plot.swing.*;
+import smile.swing.table.DataFrameTableModel;
 
 
 /**
@@ -43,6 +43,7 @@ public interface SmileSwing {
         Graphics2D g2d = scaledImage.createGraphics();
 
         try {
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
             g2d.drawImage(image, 0, 0, size, size, null);
         } finally {
@@ -55,10 +56,8 @@ public interface SmileSwing {
      * Shows the figure in a window.
      * @param figure the figure to display.
      * @return a new JFrame that contains the figure.
-     * @throws InterruptedException if we're interrupted while waiting for the event dispatching thread to finish executing.
-     * @throws InvocationTargetException if an exception is thrown while showing the frame.
      */
-    static JFrame show(Figure figure) throws InterruptedException, InvocationTargetException {
+    static JFrame show(Figure figure) {
         var pane = new FigurePane(figure);
         return pane.window();
     }
@@ -67,10 +66,37 @@ public interface SmileSwing {
      * Shows the figure in a window.
      * @param figure the figure to display.
      * @return a new JFrame that contains the figure.
-     * @throws InterruptedException if we're interrupted while waiting for the event dispatching thread to finish executing.
-     * @throws InvocationTargetException if an exception is thrown while showing the frame.
      */
-    static JFrame show(MultiFigurePane figure) throws InterruptedException, InvocationTargetException {
+    static JFrame show(MultiFigurePane figure) {
         return figure.window();
+    }
+
+    /**
+     * Shows the data frame in a window.
+     * @param df the data frame to display.
+     * @return a new JFrame that contains the figure.
+     */
+    static JFrame show(DataFrame df) {
+        DataFrameTableModel model = new DataFrameTableModel(df);
+        Table table = new Table(model);
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setRowHeaderView(table.getRowHeader());
+        JPanel contentPane = new JPanel(new BorderLayout());
+        contentPane.add(model.getToolbar(), BorderLayout.NORTH);
+        contentPane.add(scrollPane, BorderLayout.CENTER);
+
+        JFrame frame = new JFrame();
+        frame.setContentPane(contentPane);
+        frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        frame.setSize(new java.awt.Dimension(1280, 1000));
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            frame.toFront();
+            frame.repaint();
+        });
+
+        return frame;
     }
 }
