@@ -31,7 +31,7 @@ import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
 import smile.studio.view.*;
 import smile.swing.Button;
 import smile.swing.FileChooser;
-import smile.swing.SmileSwing;
+import static smile.swing.SmileUtilities.scaleImageIcon;
 
 /**
  * Smile Studio is an integrated development environment (IDE) for Smile.
@@ -133,8 +133,8 @@ public class SmileStudio extends JFrame {
 
     private class NewNotebookAction extends AbstractAction {
         static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(SmileStudio.class.getResource("images/notebook.png")));
-        static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
-        static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
         public NewNotebookAction() {
             super(bundle.getString("New"), icon16);
             putValue(LARGE_ICON_KEY, icon24);
@@ -148,8 +148,8 @@ public class SmileStudio extends JFrame {
 
     private class OpenNotebookAction extends AbstractAction {
         static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(SmileStudio.class.getResource("images/open.png")));
-        static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
-        static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
         public OpenNotebookAction() {
             super(bundle.getString("Open"), icon16);
             putValue(LARGE_ICON_KEY, icon24);
@@ -163,8 +163,8 @@ public class SmileStudio extends JFrame {
 
     private class SaveNotebookAction extends AbstractAction {
         static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(SmileStudio.class.getResource("images/save.png")));
-        static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
-        static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
         public SaveNotebookAction() {
             super(bundle.getString("Save"), icon16);
             putValue(LARGE_ICON_KEY, icon24);
@@ -178,8 +178,8 @@ public class SmileStudio extends JFrame {
 
     private class SaveAsNotebookAction extends AbstractAction {
         static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(SmileStudio.class.getResource("images/save-as.png")));
-        static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
-        static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
         public SaveAsNotebookAction() {
             super(bundle.getString("SaveAs"), icon16);
             putValue(LARGE_ICON_KEY, icon24);
@@ -193,8 +193,8 @@ public class SmileStudio extends JFrame {
 
     private class AddCellAction extends AbstractAction {
         static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(SmileStudio.class.getResource("images/add-cell.png")));
-        static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
-        static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
         public AddCellAction() {
             super(bundle.getString("AddCell"), icon16);
             putValue(LARGE_ICON_KEY, icon24);
@@ -208,8 +208,8 @@ public class SmileStudio extends JFrame {
 
     private class RunAllAction extends AbstractAction {
         static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(SmileStudio.class.getResource("images/run.png")));
-        static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
-        static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
         public RunAllAction() {
             super(bundle.getString("RunAll"), icon16);
             putValue(LARGE_ICON_KEY, icon24);
@@ -223,8 +223,8 @@ public class SmileStudio extends JFrame {
 
     private class ClearAllAction extends AbstractAction {
         static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(SmileStudio.class.getResource("images/clear.png")));
-        static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
-        static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
         public ClearAllAction() {
             super(bundle.getString("ClearAll"), icon16);
             putValue(LARGE_ICON_KEY, icon24);

@@ -24,8 +24,8 @@ import javax.swing.*;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 import smile.swing.Button;
-import smile.swing.SmileSwing;
 import smile.swing.Table;
+import static smile.swing.SmileUtilities.scaleImageIcon;
 
 /**
  * Interactive view of a mathematical plot. For both 2D and 3D plot,
@@ -427,8 +427,8 @@ public class Canvas extends JComponent implements ComponentListener,
 
     private class ZoomInAction extends AbstractAction {
         static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/zoom-in.png")));
-        static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
-        static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
 
         public ZoomInAction() {
             super("Zoom In", icon16);
@@ -443,8 +443,8 @@ public class Canvas extends JComponent implements ComponentListener,
 
     private class ZoomOutAction extends AbstractAction {
         static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/zoom-out.png")));
-        static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
-        static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
 
         public ZoomOutAction() {
             super("Zoom Out", icon16);
@@ -459,8 +459,8 @@ public class Canvas extends JComponent implements ComponentListener,
 
     private class ResetAction extends AbstractAction {
         static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/reset.png")));
-        static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
-        static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
 
         public ResetAction() {
             super("Reset", icon16);
@@ -475,8 +475,8 @@ public class Canvas extends JComponent implements ComponentListener,
 
     private class EnlargePlotAreaAction extends AbstractAction {
         static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/enlarge.png")));
-        static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
-        static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
 
         public EnlargePlotAreaAction() {
             super("Enlarge", icon16);
@@ -503,8 +503,8 @@ public class Canvas extends JComponent implements ComponentListener,
 
     private class ShrinkPlotAreaAction extends AbstractAction {
         static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/shrink.png")));
-        static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
-        static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
 
         public ShrinkPlotAreaAction() {
             super("Shrink", icon16);
@@ -621,8 +621,8 @@ public class Canvas extends JComponent implements ComponentListener,
 
     private class PropertyAction extends AbstractAction {
         static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/property.png")));
-        static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
-        static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
         public PropertyAction() {
             super("Properties", icon16);
             putValue(LARGE_ICON_KEY, icon24);
