@@ -19,12 +19,11 @@ package smile.swing.table;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.util.Objects;
-
+import java.util.ResourceBundle;
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
-
 import smile.swing.Button;
 import smile.swing.SmileSwing;
 
@@ -55,16 +54,16 @@ public abstract class PageTableModel extends AbstractTableModel {
     private final JTextField pageSizeField = new JTextField(5);
     /** Page field on toolbar. */
     private final JTextField pageField = new JTextField(5);
-    /** Page size label on toolbar. */
-    private final JLabel pageSizeLabel = new JLabel("Page Size: ");
+    /** The message resource bundle. */
+    private final ResourceBundle bundle = ResourceBundle.getBundle(PageTableModel.class.getName(), pageSizeField.getLocale());
     /** Row count label on toolbar. */
     private final JLabel totalRowCountLabel = new JLabel();
     /** Page count label on toolbar. */
     private final JLabel pageCountLabel = new JLabel();
     /** Row count label format. */
-    private final String totalRowCountLabelFormat =  "Total Rows: %-8d    Page: ";
+    private final String totalRowCountLabelFormat =  bundle.getString("RowCountFormat");
     /** Page count label format. */
-    private final String pageCountLabelFormat = " of %d";
+    private final String pageCountLabelFormat = bundle.getString("PageCountFormat");;
 
     /** Page down event action. */
     private final Action pageDownAction = new PageDownAction();
@@ -249,7 +248,9 @@ public abstract class PageTableModel extends AbstractTableModel {
         toolbar.add(new Button(lastPageAction));
         
         toolbar.addSeparator();
+        JLabel pageSizeLabel = new JLabel(bundle.getString("PageSize"));
         toolbar.add(pageSizeLabel);
+        toolbar.add(Box.createHorizontalStrut(4));
         toolbar.add(pageSizeField);
         pageSizeField.setText(Integer.toString(getPageSize()));
         pageSizeField.setHorizontalAlignment(JTextField.RIGHT);
@@ -259,14 +260,19 @@ public abstract class PageTableModel extends AbstractTableModel {
         toolbar.addSeparator();
         totalRowCountLabel.setText(String.format(totalRowCountLabelFormat, getRealRowCount()));
         toolbar.add(totalRowCountLabel);
-        
+        toolbar.add(Box.createHorizontalStrut(40));
+
+        JLabel pageLabel = new JLabel(bundle.getString("Page"));
+        toolbar.add(pageLabel);
+        toolbar.add(Box.createHorizontalStrut(4));
         toolbar.add(pageField);
         pageField.setText(Integer.toString(getPage() + 1));
         pageField.setHorizontalAlignment(JTextField.RIGHT);
         pageField.setAction(gotoPageAction);
         pageField.setMaximumSize(pageField.getPreferredSize());
-        
+
         pageCountLabel.setText(String.format(pageCountLabelFormat, getPageCount()));
+        toolbar.add(Box.createHorizontalStrut(4));
         toolbar.add(pageCountLabel);
         
         setActionEnabled();
@@ -309,7 +315,7 @@ public abstract class PageTableModel extends AbstractTableModel {
     }
     
     class PageDownAction extends AbstractAction {
-        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("/smile/swing/images/forward.png")));
+        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("images/forward.png")));
         static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
         static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
 
@@ -326,7 +332,7 @@ public abstract class PageTableModel extends AbstractTableModel {
     }
     
     class PageUpAction extends AbstractAction {
-        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("/smile/swing/images/back.png")));
+        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("images/back.png")));
         static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
         static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
 
@@ -343,7 +349,7 @@ public abstract class PageTableModel extends AbstractTableModel {
     }
     
     class FirstPageAction extends AbstractAction {
-        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("/smile/swing/images/double-left.png")));
+        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("images/double-left.png")));
         static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
         static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
 
@@ -360,7 +366,7 @@ public abstract class PageTableModel extends AbstractTableModel {
     }
     
     class LastPageAction extends AbstractAction {
-        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("/smile/swing/images/double-right.png")));
+        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("images/double-right.png")));
         static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
         static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
 
