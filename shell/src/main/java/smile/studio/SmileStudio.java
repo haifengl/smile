@@ -202,7 +202,9 @@ public class SmileStudio extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            workspace.notebook().addCell(null);
+            var focus = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+            Cell insertAfter = (Cell) SwingUtilities.getAncestorOfClass(Cell.class, focus);
+            workspace.notebook().addCell(insertAfter);
         }
     }
 
