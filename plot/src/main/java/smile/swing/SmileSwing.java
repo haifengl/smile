@@ -18,6 +18,7 @@ package smile.swing;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.lang.reflect.InvocationTargetException;
 import smile.plot.swing.Figure;
 import smile.plot.swing.FigurePane;
@@ -38,7 +39,15 @@ public interface SmileSwing {
      */
     static ImageIcon scale(ImageIcon icon, int size) {
         Image image = icon.getImage();
-        Image scaledImage = image.getScaledInstance(size, size, Image.SCALE_SMOOTH);
+        BufferedImage scaledImage = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = scaledImage.createGraphics();
+
+        try {
+            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+            g2d.drawImage(image, 0, 0, size, size, null);
+        } finally {
+            g2d.dispose();
+        }
         return new ImageIcon(scaledImage);
     }
 

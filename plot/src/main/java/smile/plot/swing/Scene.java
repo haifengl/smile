@@ -30,6 +30,7 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import smile.swing.FileChooser;
 import smile.swing.Printer;
+import smile.swing.SmileSwing;
 
 /**
  * Printable scene of mathematical plots.
@@ -72,6 +73,9 @@ public interface Scene extends Printable {
      * Action to save the scene to an image file.
      */
     class SaveAction extends AbstractAction {
+        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/save.png")));
+        static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
+        static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
         /** The scene to save. */
         private final Scene scene;
 
@@ -80,8 +84,8 @@ public interface Scene extends Printable {
          * @param scene the scene to save.
          */
         public SaveAction(Scene scene) {
-            super("Save", new ImageIcon(Objects.requireNonNull(Scene.class.getResource("images/save16.png"))));
-            putValue(LARGE_ICON_KEY, new ImageIcon(Objects.requireNonNull(Scene.class.getResource("images/save24.png"))));
+            super("Save", icon16);
+            putValue(LARGE_ICON_KEY, icon24);
             this.scene = scene;
         }
 
@@ -99,6 +103,9 @@ public interface Scene extends Printable {
      * Action to print the scene.
      */
     class PrintAction extends AbstractAction {
+        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/print.png")));
+        static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
+        static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
         /** The scene to print. */
         private final Scene scene;
 
@@ -107,8 +114,8 @@ public interface Scene extends Printable {
          * @param scene the scene to print.
          */
         public PrintAction(Scene scene) {
-            super("Print", new ImageIcon(Objects.requireNonNull(Scene.class.getResource("images/print16.png"))));
-            putValue(LARGE_ICON_KEY, new ImageIcon(Objects.requireNonNull(Scene.class.getResource("images/print24.png"))));
+            super("Print", icon16);
+            putValue(LARGE_ICON_KEY, icon24);
             this.scene = scene;
         }
 
