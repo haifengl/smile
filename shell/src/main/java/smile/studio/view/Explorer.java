@@ -158,9 +158,8 @@ public class Explorer extends JPanel implements TreeSelectionListener {
             }
         });
 
-        tree.expandPath(new TreePath(new Object[] {root, frames}));
-        tree.expandPath(new TreePath(new Object[] {root, matrix}));
-        tree.expandPath(new TreePath(new Object[] {root, models}));
-        tree.expandPath(new TreePath(new Object[] {root, services}));
+        for (int i = 0; i < tree.getRowCount(); i++) {
+            tree.expandRow(i);
+        }
     }
 }
