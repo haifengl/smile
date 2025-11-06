@@ -210,10 +210,8 @@ public interface Scene extends Printable {
     /**
      * Shows the scene in a window.
      * @return a new JFrame that contains the scene.
-     * @throws InterruptedException if we're interrupted while waiting for the event dispatching thread to finish executing.
-     * @throws InvocationTargetException if an exception is thrown while showing the frame.
      */
-    default JFrame window() throws InterruptedException, InvocationTargetException {
+    default JFrame window() {
         String title = null;
         if (content() instanceof Canvas canvas) {
             title = canvas.figure().getTitle();
