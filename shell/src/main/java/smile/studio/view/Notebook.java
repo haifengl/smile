@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import jdk.jshell.*;
-import smile.studio.model.RunBehavior;
+import smile.studio.model.PostRunNavigation;
 import smile.studio.model.Runner;
 
 /**
@@ -46,25 +46,27 @@ import smile.studio.model.Runner;
  * @author Haifeng Li
  */
 public class Notebook extends JPanel implements DocumentListener {
-    /**
-     * The message resource bundle.
-     */
-    private static final ResourceBundle bundle = ResourceBundle.getBundle(Notebook.class.getName(), Locale.getDefault());
-    private final static String CELL_SEPARATOR = "//--- CELL ---";
+    private static final String CELL_SEPARATOR = "//--- CELL ---";
+    /** The message resource bundle. */
+    private final ResourceBundle bundle = ResourceBundle.getBundle(Notebook.class.getName(), getLocale());
     private final JPanel cells = new JPanel();
     private final JScrollPane scrollPane = new JScrollPane(cells);
     private final DateTimeFormatter datetime = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
     private final Runner runner;
+    private final Runnable postRunAction;
     private int runCount = 0;
     private File file;
     private boolean saved = false;
 
     /**
      * Constructor.
+     * @param runner Java code execution engine.
+     * @param postRunAction the action to perform after running cells.
      */
-    public Notebook(Runner runner) {
+    public Notebook(Runner runner, Runnable postRunAction) {
         super(new BorderLayout());
         this.runner = runner;
+        this.postRunAction = postRunAction;
         cells.setLayout(new BoxLayout(cells, BoxLayout.Y_AXIS));
         scrollPane.getVerticalScrollBar().setUnitIncrement(18);
         add(scrollPane, BorderLayout.CENTER);
@@ -474,7 +476,7 @@ public class Notebook extends JPanel implements DocumentListener {
      * @param cell the cell to evaluate.
      * @param behavior post-run navigation behavior.
      */
-    public synchronized void runCell(Cell cell, RunBehavior behavior) {
+    public synchronized void runCell(Cell cell, PostRunNavigation behavior) {
         if (runner.isRunning()) {
             JOptionPane.showMessageDialog(this,
                     bundle.getString("RaceConditionMessage"),
@@ -501,8 +503,9 @@ public class Notebook extends JPanel implements DocumentListener {
             @Override
             protected void done() {
                 runner.setRunning(false);
-                // Post-run navigation
+                // Post-run actions
                 handlePostRunNav(cell, behavior);
+                SwingUtilities.invokeLater(postRunAction);
             }
         };
         worker.execute();
@@ -513,7 +516,7 @@ public class Notebook extends JPanel implements DocumentListener {
      * @param cell the cell evaluated.
      * @param behavior post-run navigation behavior.
      */
-    private void handlePostRunNav(Cell cell, RunBehavior behavior) {
+    private void handlePostRunNav(Cell cell, PostRunNavigation behavior) {
         switch (behavior) {
             case STAY -> SwingUtilities.invokeLater(cell.editor::requestFocusInWindow);
             case NEXT_OR_NEW -> {
@@ -564,6 +567,7 @@ public class Notebook extends JPanel implements DocumentListener {
             @Override
             protected void done() {
                 runner.setRunning(false);
+                SwingUtilities.invokeLater(postRunAction);
             }
         };
         worker.execute();

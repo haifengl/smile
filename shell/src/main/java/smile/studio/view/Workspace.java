@@ -33,7 +33,7 @@ public class Workspace extends JSplitPane {
     /** The explorer of runtime information. */
     final Explorer explorer = new Explorer(runner);
     /** The editor of notebook. */
-    final Notebook notebook = new Notebook(runner);
+    final Notebook notebook = new Notebook(runner, explorer::refresh);
 
     /**
      * Constructor.

@@ -23,8 +23,8 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
-import java.util.Locale;
 import java.util.ResourceBundle;
+import jdk.jshell.VarSnippet;
 import smile.studio.model.Runner;
 
 /**
@@ -34,25 +34,26 @@ import smile.studio.model.Runner;
  */
 public class Explorer extends JPanel implements TreeSelectionListener {
     /** The message resource bundle. */
-    private static final ResourceBundle bundle = ResourceBundle.getBundle(Explorer.class.getName(), Locale.getDefault());
-    /** Root node. */
+    private final ResourceBundle bundle = ResourceBundle.getBundle(Explorer.class.getName(), getLocale());
+    /** Tree nodes. */
     private final DefaultMutableTreeNode root = new DefaultMutableTreeNode(bundle.getString("Root"));
+    private final DefaultMutableTreeNode frames = new DefaultMutableTreeNode(bundle.getString("DataFrames"));;
+    private final DefaultMutableTreeNode matrix = new DefaultMutableTreeNode(bundle.getString("Matrix"));
+    private final DefaultMutableTreeNode models = new DefaultMutableTreeNode(bundle.getString("Models"));
+    private final DefaultMutableTreeNode services = new DefaultMutableTreeNode(bundle.getString("Services"));
     /** Tree of workspace runtime information. */
     private final JTree tree = new JTree(root);
+    /** JShell instance. */
+    private final Runner runner;
 
     /**
      * Constructor.
+     * @param runner Java code execution engine.
      */
     public Explorer(Runner runner) {
         super(new BorderLayout());
-        createNodes();
-
-        // Allow one selection at a time.
-        tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-        // Listen for when the selection changes.
-        tree.addTreeSelectionListener(this);
-        // Expand the tree
-        tree.expandPath(new TreePath(root));
+        this.runner = runner;
+        initTree();
 
         // Add the tree to the scroll pane.
         JScrollPane scrollPane = new JScrollPane(tree);
@@ -60,35 +61,70 @@ public class Explorer extends JPanel implements TreeSelectionListener {
     }
 
     /**
-     * Creates tree nodes.
+     * Initializes tree nodes.
      */
-    private void createNodes() {
-        DefaultMutableTreeNode category;
-        DefaultMutableTreeNode category2;
-        DefaultMutableTreeNode algorithm = null;
+    private void initTree() {
+        root.add(frames);
+        root.add(matrix);
+        root.add(models);
+        root.add(services);
 
-        category = new DefaultMutableTreeNode(bundle.getString("DataFrames"));
-        root.add(category);
-
-        category = new DefaultMutableTreeNode(bundle.getString("Tables"));
-        root.add(category);
-
-        category = new DefaultMutableTreeNode(bundle.getString("Models"));
-        root.add(category);
-
-        category = new DefaultMutableTreeNode(bundle.getString("Services"));
-        root.add(category);
+        // Allow one selection at a time.
+        tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+        // Listen for when the selection changes.
+        tree.addTreeSelectionListener(this);
+        // Expand the tree
+        tree.expandPath(new TreePath(root));
+        // Hide the root node
+        tree.setRootVisible(false);
     }
 
     @Override
     public void valueChanged(TreeSelectionEvent e) {
         DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
-        if (node != null && node.isLeaf()) {
-            /*
-            int pos = workspace.getDividerLocation();
-            workspace.setTopComponent((JPanel) node.getUserObject());
-            workspace.setDividerLocation(pos);
-             */
+        if (node != null) {
+            var parent = node.getParent();
+            if (parent == frames || parent == matrix) {
+                var snippet = (VarSnippet) node.getUserObject();
+                var name = snippet.name();
+                runner.eval(String.format("""
+                        var %sWindow = smile.swing.SmileSwing.show(%s);
+                        %sWindow.setTitle(%s);
+                        """, name, name, name, name));
+            } else if (parent == models) {
+                // Starts an inference service
+            }
         }
+    }
+
+    /**
+     * Refreshes the tree with JShell active variables.
+     */
+    public void refresh() {
+        frames.removeAllChildren();
+        matrix.removeAllChildren();
+        models.removeAllChildren();
+
+        runner.variables().forEach(snippet -> {
+            switch (snippet.typeName()) {
+                case "DataFrame" -> {
+                    var node = new DefaultMutableTreeNode(snippet);
+                    frames.add(node);
+                }
+                case "DenseMatrix", "BandMatrix", "SymmMatrix", "SparseMatrix" -> {
+                    var node = new DefaultMutableTreeNode(snippet);
+                    matrix.add(node);
+                }
+                case "Classifier", "Regression", "KNN", "FLD", "LDA", "QDA", "RDA",
+                     "NaiveBayes", "OneVersusOne", "OneVersusRest", "MLP", "RBFNetwork",
+                     "LogisticRegression", "SparseLogisticRegression", "Maxent",
+                     "DecisionTree", "RegressionTree", "AdaBoost", "RandomForest", "GradientTreeBoost",
+                     "KernelMachine", "LinearSVM", "SparseLinearSVM",
+                     "LinearModel", "GaussianProcessRegression" -> {
+                    var node = new DefaultMutableTreeNode(snippet);
+                    models.add(node);
+                }
+            }
+        });
     }
 }

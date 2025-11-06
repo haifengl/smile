@@ -150,4 +150,12 @@ public class Runner {
     public Stream<Diag> diagnostics(Snippet snippet) {
         return jshell.diagnostics(snippet);
     }
+
+    /**
+     * Returns the active variable snippets.
+     * @return the active variable snippets.
+     */
+    public Stream<VarSnippet> variables() {
+        return jshell.variables();
+    }
 }

@@ -20,7 +20,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
-import java.util.Locale;
 import java.util.ResourceBundle;
 import com.sun.management.OperatingSystemMXBean;
 
@@ -31,7 +30,7 @@ import com.sun.management.OperatingSystemMXBean;
  */
 public class StatusBar extends JPanel {
     /** The message resource bundle. */
-    static final ResourceBundle bundle = ResourceBundle.getBundle(StatusBar.class.getName(), Locale.getDefault());
+    final ResourceBundle bundle = ResourceBundle.getBundle(StatusBar.class.getName(), getLocale());
     /** Status message. */
     final JLabel status = new JLabel(bundle.getString("Ready"));
     /** Status message. */

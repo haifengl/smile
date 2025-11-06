@@ -24,13 +24,12 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
-import java.util.Locale;
 import java.util.ResourceBundle;
 
 import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
 import com.formdev.flatlaf.util.FontUtils;
 import org.fife.ui.rtextarea.RTextScrollPane;
-import smile.studio.model.RunBehavior;
+import smile.studio.model.PostRunNavigation;
 
 /**
  * A cell is a multiline text input field, and its contents can be executed.
@@ -45,7 +44,7 @@ public class Cell extends JPanel {
     /** Output font shared across all cells. */
     private static Font outputFont = FontUtils.getCompositeFont(FlatJetBrainsMonoFont.FAMILY, Font.PLAIN, 12);
     /** The message resource bundle. */
-    private static final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), Locale.getDefault());
+    private final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), getLocale());
     /** The output buffer. StringBuffer is multi-thread safe while StringBuilder isn't. */
     final StringBuffer buffer = new StringBuffer();
     final JTextArea editor = new CodeEditor();
@@ -76,7 +75,7 @@ public class Cell extends JPanel {
         clearBtn.setToolTipText(bundle.getString("Clear"));
         deleteBtn.setToolTipText(bundle.getString("Delete"));
 
-        runBtn.addActionListener(e -> notebook.runCell(this, RunBehavior.STAY));
+        runBtn.addActionListener(e -> notebook.runCell(this, PostRunNavigation.STAY));
         upBtn.addActionListener(e -> notebook.moveCellUp(this));
         downBtn.addActionListener(e -> notebook.moveCellDown(this));
         clearBtn.addActionListener(e -> output.setText(""));
@@ -98,19 +97,19 @@ public class Cell extends JPanel {
         inputMap.put(KeyStroke.getKeyStroke("shift ENTER"), "run-next");
         actionMap.put("run-next", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
-                notebook.runCell(Cell.this, RunBehavior.NEXT_OR_NEW);
+                notebook.runCell(Cell.this, PostRunNavigation.NEXT_OR_NEW);
             }
         });
         inputMap.put(KeyStroke.getKeyStroke("ctrl ENTER"), "run-stay");
         actionMap.put("run-stay", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
-                notebook.runCell(Cell.this, RunBehavior.STAY);
+                notebook.runCell(Cell.this, PostRunNavigation.STAY);
             }
         });
         inputMap.put(KeyStroke.getKeyStroke("alt ENTER"), "run-insert");
         actionMap.put("run-insert", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
-                notebook.runCell(Cell.this, RunBehavior.INSERT_BELOW);
+                notebook.runCell(Cell.this, PostRunNavigation.INSERT_BELOW);
             }
         });
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, InputEvent.CTRL_DOWN_MASK), "increase-font-size");

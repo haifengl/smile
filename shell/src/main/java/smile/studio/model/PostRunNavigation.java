@@ -17,9 +17,9 @@
 package smile.studio.model;
 
 /**
- * Behavior post running a cell.
+ * Navigation behavior post running a cell.
  */
-public enum RunBehavior {
+public enum PostRunNavigation {
     /** Stays the focus on the cell. */
     STAY,
     /** Moves the focus to the next cell. Creates a new cell below if it doesn't exist. */
