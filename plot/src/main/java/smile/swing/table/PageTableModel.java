@@ -26,6 +26,7 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
 
 import smile.swing.Button;
+import smile.swing.SmileSwing;
 
 /**
  * A table model that performs "paging" of its data. This model
@@ -91,7 +92,6 @@ public abstract class PageTableModel extends AbstractTableModel {
      */
     public PageTableModel(int pageSize) {
         this.pageSize = pageSize;
-        initToolBar();
     }
 
     @Override
@@ -231,6 +231,9 @@ public abstract class PageTableModel extends AbstractTableModel {
      * @return a toolbar to control the plot.
      */
     public JToolBar getToolbar() {
+        if (toolbar == null) {
+            initToolBar();
+        }
         return toolbar;
     }
 
@@ -306,9 +309,13 @@ public abstract class PageTableModel extends AbstractTableModel {
     }
     
     class PageDownAction extends AbstractAction {
+        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("/smile/swing/images/forward.png")));
+        static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
+        static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
 
         public PageDownAction() {
-            super("Next Page", new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("/smile/swing/images/navigate_right.png"))));
+            super("Next Page", icon16);
+            //putValue(LARGE_ICON_KEY, icon24);
         }
 
         @Override
@@ -319,9 +326,13 @@ public abstract class PageTableModel extends AbstractTableModel {
     }
     
     class PageUpAction extends AbstractAction {
+        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("/smile/swing/images/back.png")));
+        static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
+        static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
 
         public PageUpAction() {
-            super("Previous Page", new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("/smile/swing/images/navigate_left.png"))));
+            super("Previous Page", icon16);
+            //putValue(LARGE_ICON_KEY, icon24);
         }
 
         @Override
@@ -332,9 +343,13 @@ public abstract class PageTableModel extends AbstractTableModel {
     }
     
     class FirstPageAction extends AbstractAction {
+        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("/smile/swing/images/double-left.png")));
+        static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
+        static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
 
         public FirstPageAction() {
-            super("First Page", new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("/smile/swing/images/navigate_beginning.png"))));
+            super("First Page", icon16);
+            //putValue(LARGE_ICON_KEY, icon24);
         }
 
         @Override
@@ -345,9 +360,13 @@ public abstract class PageTableModel extends AbstractTableModel {
     }
     
     class LastPageAction extends AbstractAction {
+        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("/smile/swing/images/double-right.png")));
+        static final ImageIcon icon16 = SmileSwing.scale(icon, 16);
+        static final ImageIcon icon24 = SmileSwing.scale(icon, 24);
 
         public LastPageAction() {
-            super("Last Page", new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("/smile/swing/images/navigate_end.png"))));
+            super("Last Page", icon16);
+            //putValue(LARGE_ICON_KEY, icon24);
         }
 
         @Override
