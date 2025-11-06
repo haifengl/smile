@@ -367,12 +367,10 @@ public class Canvas extends JComponent implements ComponentListener,
         toolbar.addSeparator();
         toolbar.add(new Button(enlargePlotAreaAction));
         toolbar.add(new Button(shrinkPlotAreaAction));
-        /*
         toolbar.add(new Button(increaseHeightAction));
         toolbar.add(new Button(decreaseHeightAction));
         toolbar.add(new Button(increaseWidthAction));
         toolbar.add(new Button(decreaseWidthAction));
-         */
         toolbar.addSeparator();
         toolbar.add(new Button(propertyAction));
 
@@ -389,12 +387,10 @@ public class Canvas extends JComponent implements ComponentListener,
         popup.addSeparator();
         popup.add(new JMenuItem(enlargePlotAreaAction));
         popup.add(new JMenuItem(shrinkPlotAreaAction));
-        /*
         popup.add(new JMenuItem(increaseHeightAction));
         popup.add(new JMenuItem(decreaseHeightAction));
         popup.add(new JMenuItem(increaseWidthAction));
         popup.add(new JMenuItem(decreaseWidthAction));
-         */
         popup.addSeparator();
         popup.add(new JMenuItem(propertyAction));
 
