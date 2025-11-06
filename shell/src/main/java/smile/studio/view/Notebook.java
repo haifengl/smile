@@ -142,7 +142,8 @@ public class Notebook extends JPanel implements DocumentListener {
 
         cell = addCell(null);
         cell.editor.setText("""
-                var cv = CrossValidation.classification(10, Formula.lhs("class"), iris, (formula, data) -> DecisionTree.fit(formula, data));""");
+                var cv = CrossValidation.classification(10, Formula.lhs("class"), iris,
+                            (formula, data) -> DecisionTree.fit(formula, data));""");
         cell.editor.setRows(cell.editor.getLineCount());
 
         cell = addCell(null);
