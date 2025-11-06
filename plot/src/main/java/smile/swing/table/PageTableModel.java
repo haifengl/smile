@@ -62,7 +62,7 @@ public abstract class PageTableModel extends AbstractTableModel {
     /** Page count label on toolbar. */
     private final JLabel pageCountLabel = new JLabel();
     /** Row count label format. */
-    private final String totalRowCountLabelFormat =  "Total Rows: %-8d    Page:";
+    private final String totalRowCountLabelFormat =  "Total Rows: %-8d    Page: ";
     /** Page count label format. */
     private final String pageCountLabelFormat = " of %d";
 
@@ -315,7 +315,7 @@ public abstract class PageTableModel extends AbstractTableModel {
 
         public PageDownAction() {
             super("Next Page", icon16);
-            //putValue(LARGE_ICON_KEY, icon24);
+            putValue(LARGE_ICON_KEY, icon24);
         }
 
         @Override
@@ -332,7 +332,7 @@ public abstract class PageTableModel extends AbstractTableModel {
 
         public PageUpAction() {
             super("Previous Page", icon16);
-            //putValue(LARGE_ICON_KEY, icon24);
+            putValue(LARGE_ICON_KEY, icon24);
         }
 
         @Override
@@ -349,7 +349,7 @@ public abstract class PageTableModel extends AbstractTableModel {
 
         public FirstPageAction() {
             super("First Page", icon16);
-            //putValue(LARGE_ICON_KEY, icon24);
+            putValue(LARGE_ICON_KEY, icon24);
         }
 
         @Override
@@ -366,7 +366,7 @@ public abstract class PageTableModel extends AbstractTableModel {
 
         public LastPageAction() {
             super("Last Page", icon16);
-            //putValue(LARGE_ICON_KEY, icon24);
+            putValue(LARGE_ICON_KEY, icon24);
         }
 
         @Override

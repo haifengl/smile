@@ -220,13 +220,14 @@ public interface Scene extends Printable {
             title = String.format("Smile Plot %d", WindowCount.addAndGet(1));
         }
 
-        JPanel pane = new JPanel(new BorderLayout());
-        pane.add(content(), BorderLayout.CENTER);
-        pane.add(toolbar(), BorderLayout.NORTH);
+        JScrollPane scrollPane = new JScrollPane(content());
+        JPanel contentPane = new JPanel(new BorderLayout());
+        contentPane.add(scrollPane, BorderLayout.CENTER);
+        contentPane.add(toolbar(), BorderLayout.NORTH);
 
         JFrame frame = new JFrame();
         frame.setTitle(title);
-        frame.getContentPane().add(pane);
+        frame.setContentPane(contentPane);
         frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         frame.setSize(new java.awt.Dimension(1280, 1000));
         frame.setLocationRelativeTo(null);
