@@ -231,11 +231,11 @@ public interface Scene extends Printable {
         frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         frame.setSize(new java.awt.Dimension(1280, 1000));
         frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
 
         javax.swing.SwingUtilities.invokeLater(() -> {
+            frame.setVisible(true);
             frame.toFront();
-            frame.repaint();
+            frame.requestFocus();
         });
 
         return frame;
