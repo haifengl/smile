@@ -20,12 +20,15 @@ import javax.swing.*;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
+import java.util.Objects;
 import java.util.ResourceBundle;
 import jdk.jshell.VarSnippet;
 import smile.studio.model.Runner;
+import static smile.swing.SmileUtilities.scaleImageIcon;
 
 /**
  * A workspace explorer.
@@ -41,6 +44,10 @@ public class Explorer extends JPanel implements TreeSelectionListener {
     private final DefaultMutableTreeNode matrix = new DefaultMutableTreeNode(bundle.getString("Matrix"));
     private final DefaultMutableTreeNode models = new DefaultMutableTreeNode(bundle.getString("Models"));
     private final DefaultMutableTreeNode services = new DefaultMutableTreeNode(bundle.getString("Services"));
+    private static final ImageIcon matrixIcon = scaleImageIcon(new ImageIcon(Objects.requireNonNull(Explorer.class.getResource("images/matrix.png"))), 24);
+    private static final ImageIcon modelIcon = scaleImageIcon(new ImageIcon(Objects.requireNonNull(Explorer.class.getResource("images/model.png"))), 24);
+    private static final ImageIcon serverIcon = scaleImageIcon(new ImageIcon(Objects.requireNonNull(Explorer.class.getResource("images/server.png"))), 24);
+    private static final ImageIcon tableIcon = scaleImageIcon(new ImageIcon(Objects.requireNonNull(Explorer.class.getResource("images/table.png"))), 24);
     /** Tree of workspace runtime information. */
     private final JTree tree = new JTree(root);
     /** JShell instance. */
@@ -77,6 +84,32 @@ public class Explorer extends JPanel implements TreeSelectionListener {
         tree.expandPath(new TreePath(root));
         // Hide the root node
         tree.setRootVisible(false);
+        // JTree needs to be registered with the ToolTipManager to enable tooltips.
+        ToolTipManager.sharedInstance().registerComponent(tree);
+
+        DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer() {
+            @Override
+            public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected,
+                                                          boolean expanded, boolean leaf, int row, boolean hasFocus) {
+                super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
+                DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
+                Object object = node.getUserObject();
+                if (node == frames) {
+                    setIcon(tableIcon);
+                } else if (node == matrix) {
+                    setIcon(matrixIcon);
+                } else if (node == models) {
+                    setIcon(modelIcon);
+                } else if (node == services) {
+                    setIcon(serverIcon);
+                } else if (object instanceof VarSnippet snippet) {
+                    setText(snippet.name());
+                    setToolTipText(snippet.source().trim());
+                }
+                return this;
+            }
+        };
+        tree.setCellRenderer(renderer);
     }
 
     @Override
@@ -88,8 +121,8 @@ public class Explorer extends JPanel implements TreeSelectionListener {
                 var snippet = (VarSnippet) node.getUserObject();
                 var name = snippet.name();
                 runner.eval(String.format("""
-                        var %sWindow = smile.swing.SmileSwing.show(%s);
-                        %sWindow.setTitle(%s);
+                        var %sWindow = smile.swing.SmileUtilities.show(%s);
+                        %sWindow.setTitle("%s");
                         """, name, name, name, name));
             } else if (parent == models) {
                 // Starts an inference service
@@ -106,13 +139,12 @@ public class Explorer extends JPanel implements TreeSelectionListener {
         models.removeAllChildren();
 
         runner.variables().forEach(snippet -> {
+            var node = new DefaultMutableTreeNode(snippet);
             switch (snippet.typeName()) {
                 case "DataFrame" -> {
-                    var node = new DefaultMutableTreeNode(snippet);
                     frames.add(node);
                 }
                 case "DenseMatrix", "BandMatrix", "SymmMatrix", "SparseMatrix" -> {
-                    var node = new DefaultMutableTreeNode(snippet);
                     matrix.add(node);
                 }
                 case "Classifier", "Regression", "KNN", "FLD", "LDA", "QDA", "RDA",
@@ -121,10 +153,14 @@ public class Explorer extends JPanel implements TreeSelectionListener {
                      "DecisionTree", "RegressionTree", "AdaBoost", "RandomForest", "GradientTreeBoost",
                      "KernelMachine", "LinearSVM", "SparseLinearSVM",
                      "LinearModel", "GaussianProcessRegression" -> {
-                    var node = new DefaultMutableTreeNode(snippet);
                     models.add(node);
                 }
             }
         });
+
+        tree.expandPath(new TreePath(new Object[] {root, frames}));
+        tree.expandPath(new TreePath(new Object[] {root, matrix}));
+        tree.expandPath(new TreePath(new Object[] {root, models}));
+        tree.expandPath(new TreePath(new Object[] {root, services}));
     }
 }
