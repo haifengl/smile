@@ -18,6 +18,8 @@ package smile.studio;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.image.*;
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -341,6 +343,13 @@ public class SmileStudio extends JFrame {
             // Add some space to avoid the overlapping.
             studio.toolBar.add(Box.createHorizontalStrut(70), 0);
         }
+
+        studio.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                studio.workspace.close();
+            }
+        });
 
         // Set the frame at the center of screen
         studio.setLocationRelativeTo(null);

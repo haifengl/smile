@@ -92,6 +92,13 @@ public class Runner {
     }
 
     /**
+     * Closes this engine and frees resources.
+     */
+    public void close() {
+        jshell.close();
+    }
+
+    /**
      * Returns the running state of the execution engine.
      * @return the running state of the execution engine.
      */
