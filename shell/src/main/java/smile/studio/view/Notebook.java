@@ -439,13 +439,20 @@ public class Notebook extends JPanel implements DocumentListener {
                 if (ev.status() == Snippet.Status.VALID && ev.value() != null) {
                     var snippet = ev.snippet();
                     if (snippet instanceof VarSnippet variable) {
-                        cell.buffer.append("⇒ ").append(variable.name()).append(" = ");
-                        if (variable.typeName().equals("DataFrame")) {
+                        String typeName = variable.typeName();
+                        cell.buffer.append("⇒ ")
+                                .append(typeName)
+                                .append(" ")
+                                .append(variable.name())
+                                .append(" = ");
+
+                        String value = ev.value();
+                        if (typeName.equals("DataFrame")) {
                             cell.buffer.append(System.lineSeparator());
+                        } else if (typeName.contains("[]")) {
+                            value = value.substring(0, value.indexOf('{'));
                         }
-                        appendLine(cell.buffer, ev.value());
-                    } else {
-                        appendLine(cell.buffer, "⇒ " + ev.value());
+                        appendLine(cell.buffer, value);
                     }
                 } else if (ev.status() == Snippet.Status.REJECTED) {
                     appendLine(cell.buffer, "✖ Rejected snippet: " + ev.snippet().source());
