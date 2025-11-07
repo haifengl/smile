@@ -16,9 +16,11 @@
  */
 package smile.studio.view;
 
-import java.awt.*;
+import java.util.regex.Pattern;
 import javax.swing.*;
 import javax.swing.text.*;
+import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
+import smile.plot.swing.Palette;
 
 /**
  * Text area for cell output.
@@ -26,6 +28,9 @@ import javax.swing.text.*;
  * @author Haifeng Li
  */
 public class OutputArea extends JTextArea {
+    private final DefaultHighlightPainter painter = new DefaultHighlightPainter(Palette.LIGHT_PINK);
+    private final Pattern pattern = Pattern.compile("ERROR|WARN|Recoverable issue|Rejected snippet|Exception:");
+
     /**
      * Constructor.
      */
@@ -34,31 +39,24 @@ public class OutputArea extends JTextArea {
         setEditable(false);
         setLineWrap(true);
         setWrapStyleWord(true);
-
-        var doc = ((AbstractDocument) getDocument());
-        doc.setDocumentFilter(new HighlightDocumentFilter());
     }
 
-    private class HighlightDocumentFilter extends DocumentFilter {
-        private final DefaultHighlighter.DefaultHighlightPainter highlightPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.YELLOW);
-
-        public HighlightDocumentFilter() {
-            //SimpleAttributeSet background = new SimpleAttributeSet();
-            //StyleConstants.setBackground(background, Color.RED);
-        }
-
-        @Override
-        public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
-            super.replace(fb, offset, length, text, attrs);
-
-            String match = " ERROR ";
-            int startIndex = offset - match.length();
-            if (startIndex >= 0) {
-                String last = fb.getDocument().getText(startIndex, match.length()).trim();
-                if (last.equals(match)) {
-                    getHighlighter().addHighlight(startIndex + 1, startIndex + match.length() - 1, highlightPainter);
+    @Override
+    public void setText(String text) {
+        super.setText(text);
+        try {
+            var highlighter = getHighlighter();
+            String[] lines = text.split("\\r?\\n");
+            for (int i = 0; i < lines.length; i++) {
+                var matcher = pattern.matcher(lines[i]);
+                if (matcher.find()) {
+                    int startOffset = getLineStartOffset(i);
+                    int endOffset = getLineEndOffset(i);
+                    highlighter.addHighlight(startOffset, endOffset, painter);
                 }
             }
+        } catch (BadLocationException e) {
+            System.err.println(e.getMessage());
         }
     }
 }
