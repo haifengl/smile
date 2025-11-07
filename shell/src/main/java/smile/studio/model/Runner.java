@@ -131,15 +131,26 @@ public class Runner {
     }
 
     /**
-     * Evaluates a code snippet.
-     * @param code a code snippet.
+     * Evaluates a code block.
+     * @param code a code block.
      * @return the evaluation results.
      */
     public List<SnippetEvent> eval(String code) {
+        boolean failed = false;
         List<SnippetEvent> results = new ArrayList<>();
         SourceCodeAnalysis.CompletionInfo info;
         for (info = sourceAnalyzer.analyzeCompletion(code); info.completeness().isComplete(); info = sourceAnalyzer.analyzeCompletion(info.remaining())) {
-            results.addAll(jshell.eval(info.source()));
+            List<SnippetEvent> events = jshell.eval(info.source());
+            results.addAll(events);
+            for (SnippetEvent event : events) {
+                switch (event.status()) {
+                    case REJECTED, RECOVERABLE_DEFINED, RECOVERABLE_NOT_DEFINED:
+                        return results;
+                }
+                if (event.exception() instanceof EvalException ex) {
+                    return results;
+                }
+            }
         }
 
         if (info.completeness() != SourceCodeAnalysis.Completeness.EMPTY) {
