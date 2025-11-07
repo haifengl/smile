@@ -41,8 +41,6 @@ import static smile.swing.SmileUtilities.scaleImageIcon;
  * @author Haifeng Li
  */
 public class SmileStudio extends JFrame {
-    @Serial
-    private static final long serialVersionUID = 1L;
     /** The message resource bundle. */
     private static final ResourceBundle bundle = ResourceBundle.getBundle(SmileStudio.class.getName(), Locale.getDefault());
     private final JMenuBar menuBar = new JMenuBar();
@@ -409,6 +407,8 @@ public class SmileStudio extends JFrame {
             FlatJetBrainsMonoFont.install();
             // Set application monospaced font before setting up FlatLaf
             FlatLaf.setPreferredMonospacedFontFamily(FlatJetBrainsMonoFont.FAMILY);
+            // Application specific UI defaults
+            FlatLaf.registerCustomDefaultsSource("smile.studio");
             FlatLightLaf.setup();
             createAndShowGUI(true);
         });
