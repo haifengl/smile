@@ -73,4 +73,11 @@ public class Workspace extends JSplitPane {
     public Explorer explorer() {
         return explorer;
     }
+
+    /**
+     * Closes the execution engine and frees resources.
+     */
+    public void close() {
+        runner.close();
+    }
 }
