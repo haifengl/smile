@@ -56,7 +56,7 @@ public class Notebook extends JPanel implements DocumentListener {
     private final Runnable postRunAction;
     private int runCount = 0;
     private File file;
-    private boolean saved = false;
+    private boolean saved = true;
 
     /**
      * Constructor.
@@ -84,6 +84,10 @@ public class Notebook extends JPanel implements DocumentListener {
                 import java.awt.Color;
                 import java.time.*;
                 import java.util.*;
+                import static java.lang.Math.*;
+                import smile.plot.swing.*;
+                import static smile.swing.SmileUtilities.*;
+
                 import org.apache.commons.csv.CSVFormat;
                 import smile.io.*;
                 import smile.data.*;
@@ -106,8 +110,6 @@ public class Notebook extends JPanel implements DocumentListener {
                 import smile.stat.*;
                 import smile.stat.distribution.*;
                 import smile.stat.hypothesis.*;
-                import smile.plot.swing.*;
-                import static smile.swing.SmileUtilities.*;
                 import smile.association.*;
                 import smile.base.mlp.*;
                 import smile.classification.*;
@@ -122,7 +124,17 @@ public class Notebook extends JPanel implements DocumentListener {
                 import smile.validation.*;
                 import smile.validation.metric.*;
                 import smile.hpo.*;
-                import smile.vq.*;""");
+                import smile.vq.*;
+
+                double[][] heart = new double[200][2];
+                for (int i = 0; i < heart.length; i++) {
+                    double t = PI * (i - 100) / 100;
+                    heart[i][0] = 16 * pow(sin(t), 3);
+                    heart[i][1] = 13 * cos(t) - 5 * cos(2*t) - 2 * cos(3*t) - cos(4*t);
+                }
+                var figure = LinePlot.of(heart, Color.RED).figure();
+                figure.setTitle("Mathematical Beauty");
+                show(figure);""");
 
         cell = addCell(null);
         cell.editor.setText("""
@@ -130,20 +142,14 @@ public class Notebook extends JPanel implements DocumentListener {
                 var iris = Read.arff(home + "/data/weka/iris.arff");
                 show(iris);
                 
-                var figure = ScatterPlot.of(iris, "sepallength", "sepalwidth", "class", '*').figure();
+                figure = ScatterPlot.of(iris, "sepallength", "sepalwidth", "class", '*').figure();
                 figure.setAxisLabels("sepallength", "sepalwidth");
                 figure.setTitle("Iris");
-                show(figure);""");
-        cell.editor.setRows(cell.editor.getLineCount());
+                show(figure);
 
-        cell = addCell(null);
-        cell.editor.setText("""
                 var rf = RandomForest.fit(Formula.lhs("class"), iris);
-                IO.println("OOB metrics = " + rf.metrics());""");
-        cell.editor.setRows(cell.editor.getLineCount());
+                IO.println("OOB metrics = " + rf.metrics());
 
-        cell = addCell(null);
-        cell.editor.setText("""
                 var cv = CrossValidation.classification(10, Formula.lhs("class"), iris,
                             (formula, data) -> DecisionTree.fit(formula, data));""");
         cell.editor.setRows(cell.editor.getLineCount());
@@ -158,13 +164,10 @@ public class Notebook extends JPanel implements DocumentListener {
                 var X = pca.apply(mnist);
                 var tsne = TSNE.fit(X, new TSNE.Options(2, 20, 200, 12, 550));
                 
-                var figure = ScatterPlot.of(tsne.coordinates(), label, '@').figure();
+                figure = ScatterPlot.of(tsne.coordinates(), label, '@').figure();
                 figure.setTitle("MNIST - t-SNE");
-                show(figure);""");
-        cell.editor.setRows(cell.editor.getLineCount());
+                show(figure);
 
-        cell = addCell(null);
-        cell.editor.setText("""
                 var umap = UMAP.fit(mnist, new UMAP.Options(15));
                 figure = ScatterPlot.of(umap, label, '@').figure();
                 figure.setTitle("MNIST - UMAP");
@@ -235,6 +238,14 @@ public class Notebook extends JPanel implements DocumentListener {
      */
     public boolean isSaved() {
         return saved;
+    }
+
+    /**
+     * Sets the flag if the notebook is saved.
+     * @param saved the flag if the notebook is saved.
+     */
+    public void setSaved(boolean saved) {
+        this.saved = saved;
     }
 
     /**
