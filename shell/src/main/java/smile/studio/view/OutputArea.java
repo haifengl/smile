@@ -17,67 +17,26 @@
 package smile.studio.view;
 
 import java.awt.*;
-import java.io.OutputStream;
-import java.io.Serial;
 import javax.swing.*;
 import javax.swing.text.*;
 
 /**
- * Text area for log messages.
+ * Text area for cell output.
  *
  * @author Haifeng Li
  */
-public class LogArea extends JPanel {
-    @Serial
-    private static final long serialVersionUID = 2L;
-
-    /** Text area of log messages. */
-    private final JTextArea logArea;
-    /** Output stream for redirection. */
-    private final OutputStream out = new OutputStream() {
-        @Override
-        public void write(int b) {
-            append(String.valueOf((char) b));
-        }
-
-        @Override
-        public void write(byte[] b, int off, int len) {
-            append(new String(b, off, len));
-        }
-
-        @Override
-        public void write(byte[] b) {
-            write(b, 0, b.length);
-        }
-    };
-
+public class OutputArea extends JTextArea {
     /**
      * Constructor.
      */
-    public LogArea() {
-        super(new BorderLayout());
-        logArea = new JTextArea();
-        logArea.setEditable(false);
-        var doc = ((AbstractDocument) logArea.getDocument());
+    public OutputArea() {
+        putClientProperty("FlatLaf.styleClass", "monospaced");
+        setEditable(false);
+        setLineWrap(true);
+        setWrapStyleWord(true);
+
+        var doc = ((AbstractDocument) getDocument());
         doc.setDocumentFilter(new HighlightDocumentFilter());
-        JScrollPane scrollPane = new JScrollPane(logArea);
-        add(scrollPane, BorderLayout.CENTER);
-    }
-
-    /**
-     * Returns the output stream directing to the log area.
-     * @return the output stream.
-     */
-    public OutputStream getOutputStream() {
-        return out;
-    }
-
-    /**
-     * Appends text to log area.
-     * @param text log message.
-     */
-    private void append(String text) {
-        SwingUtilities.invokeLater(() -> logArea.append(text));
     }
 
     private class HighlightDocumentFilter extends DocumentFilter {
@@ -97,7 +56,7 @@ public class LogArea extends JPanel {
             if (startIndex >= 0) {
                 String last = fb.getDocument().getText(startIndex, match.length()).trim();
                 if (last.equals(match)) {
-                    logArea.getHighlighter().addHighlight(startIndex + 1, startIndex + match.length() - 1, highlightPainter);
+                    getHighlighter().addHighlight(startIndex + 1, startIndex + match.length() - 1, highlightPainter);
                 }
             }
         }

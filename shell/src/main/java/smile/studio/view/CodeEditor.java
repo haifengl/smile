@@ -19,7 +19,7 @@ package smile.studio.view;
 import org.fife.ui.rsyntaxtextarea.*;
 
 /**
- * Code editor with syntax highlighting and auto-complete.
+ * Code editor with syntax highlighting.
  *
  * @author Haifeng Li
  */
@@ -29,7 +29,11 @@ public class CodeEditor extends RSyntaxTextArea {
      */
     public CodeEditor() {
         super(20, 80);
+        putClientProperty("FlatLaf.styleClass", "monospaced");
         setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);
         setCodeFoldingEnabled(true);
+        setTabSize(4);
+        setLineWrap(false);
+        setWrapStyleWord(false);
     }
 }
