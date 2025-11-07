@@ -79,21 +79,21 @@ public interface SmileUtilities {
      * @return a new JFrame that displays the matrix in a table.
      */
     static JFrame show(DataFrame df) {
-        DataFrameTableModel model = new DataFrameTableModel(df);
-        Table table = new Table(model);
-        JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setRowHeaderView(table.getRowHeader());
-        JPanel contentPane = new JPanel(new BorderLayout());
-        contentPane.add(model.getToolbar(), BorderLayout.NORTH);
-        contentPane.add(scrollPane, BorderLayout.CENTER);
-
         JFrame frame = new JFrame();
-        frame.setContentPane(contentPane);
-        frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        frame.setSize(new java.awt.Dimension(1280, 1000));
-        frame.setLocationRelativeTo(null);
-
         javax.swing.SwingUtilities.invokeLater(() -> {
+            DataFrameTableModel model = new DataFrameTableModel(df);
+            Table table = new Table(model);
+            JScrollPane scrollPane = new JScrollPane(table);
+            scrollPane.setRowHeaderView(table.getRowHeader());
+            JPanel contentPane = new JPanel(new BorderLayout());
+            contentPane.add(model.getToolbar(), BorderLayout.NORTH);
+            contentPane.add(scrollPane, BorderLayout.CENTER);
+
+            frame.setContentPane(contentPane);
+            frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+            frame.setSize(new java.awt.Dimension(1280, 1000));
+            frame.setLocationRelativeTo(null);
+
             frame.setVisible(true);
             frame.toFront();
             frame.requestFocus();
@@ -108,21 +108,21 @@ public interface SmileUtilities {
      * @return a new JFrame that displays the matrix in a table.
      */
     static JFrame show(Matrix matrix) {
-        MatrixTableModel model = new MatrixTableModel(matrix);
-        Table table = new Table(model);
-        JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setRowHeaderView(table.getRowHeader());
-        JPanel contentPane = new JPanel(new BorderLayout());
-        contentPane.add(model.getToolbar(), BorderLayout.NORTH);
-        contentPane.add(scrollPane, BorderLayout.CENTER);
-
         JFrame frame = new JFrame();
-        frame.setContentPane(contentPane);
-        frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        frame.setSize(new java.awt.Dimension(1280, 1000));
-        frame.setLocationRelativeTo(null);
-
         javax.swing.SwingUtilities.invokeLater(() -> {
+            MatrixTableModel model = new MatrixTableModel(matrix);
+            Table table = new Table(model);
+            JScrollPane scrollPane = new JScrollPane(table);
+            scrollPane.setRowHeaderView(table.getRowHeader());
+            JPanel contentPane = new JPanel(new BorderLayout());
+            contentPane.add(model.getToolbar(), BorderLayout.NORTH);
+            contentPane.add(scrollPane, BorderLayout.CENTER);
+
+            frame.setContentPane(contentPane);
+            frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+            frame.setSize(new java.awt.Dimension(1280, 1000));
+            frame.setLocationRelativeTo(null);
+
             frame.setVisible(true);
             frame.toFront();
             frame.requestFocus();
