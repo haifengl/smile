@@ -16,10 +16,8 @@
  */
 package smile.studio.view;
 
-import java.awt.Color;
-import java.awt.Dimension;
+import java.awt.*;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.io.Serial;
 import javax.swing.*;
 import javax.swing.text.*;
@@ -34,7 +32,7 @@ public class LogArea extends JPanel {
     private static final long serialVersionUID = 2L;
 
     /** Text area of log messages. */
-    private final JTextArea logText;
+    private final JTextArea logArea;
     /** Output stream for redirection. */
     private final OutputStream out = new OutputStream() {
         @Override
@@ -57,15 +55,13 @@ public class LogArea extends JPanel {
      * Constructor.
      */
     public LogArea() {
-        logText = new JTextArea();
-        logText.setEditable(false);
-        var doc = ((AbstractDocument) logText.getDocument());
+        super(new BorderLayout());
+        logArea = new JTextArea();
+        logArea.setEditable(false);
+        var doc = ((AbstractDocument) logArea.getDocument());
         doc.setDocumentFilter(new HighlightDocumentFilter());
-
-        JScrollPane logView = new JScrollPane(logText);
-        Dimension minimumSize = new Dimension(100, 50);
-        logView.setMinimumSize(minimumSize);
-        add(logView);
+        JScrollPane scrollPane = new JScrollPane(logArea);
+        add(scrollPane, BorderLayout.CENTER);
     }
 
     /**
@@ -81,7 +77,7 @@ public class LogArea extends JPanel {
      * @param text log message.
      */
     private void append(String text) {
-        SwingUtilities.invokeLater(() -> logText.append(text));
+        SwingUtilities.invokeLater(() -> logArea.append(text));
     }
 
     private class HighlightDocumentFilter extends DocumentFilter {
@@ -101,7 +97,7 @@ public class LogArea extends JPanel {
             if (startIndex >= 0) {
                 String last = fb.getDocument().getText(startIndex, match.length()).trim();
                 if (last.equals(match)) {
-                    logText.getHighlighter().addHighlight(startIndex + 1, startIndex + match.length() - 1, highlightPainter);
+                    logArea.getHighlighter().addHighlight(startIndex + 1, startIndex + match.length() - 1, highlightPainter);
                 }
             }
         }

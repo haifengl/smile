@@ -16,8 +16,6 @@
  */
 package smile.studio.view;
 
-import java.io.Serial;
-import org.fife.ui.autocomplete.*;
 import org.fife.ui.rsyntaxtextarea.*;
 
 /**
@@ -26,9 +24,6 @@ import org.fife.ui.rsyntaxtextarea.*;
  * @author Haifeng Li
  */
 public class CodeEditor extends RSyntaxTextArea {
-    @Serial
-    private static final long serialVersionUID = 2L;
-
     /**
      * Constructor.
      */
@@ -36,56 +31,5 @@ public class CodeEditor extends RSyntaxTextArea {
         super(20, 80);
         setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);
         setCodeFoldingEnabled(true);
-        //setRoundedSelectionEdges(true);
-
-        // A CompletionProvider is what knows of all possible completions, and
-        // analyzes the contents of the text area at the caret position to
-        // determine what completion choices should be presented. Most instances
-        // of CompletionProvider (such as DefaultCompletionProvider) are designed
-        // so that they can be shared among multiple text components.
-        CompletionProvider provider = createCompletionProvider();
-
-        // An AutoCompletion acts as a "middle-man" between a text component
-        // and a CompletionProvider. It manages any options associated with
-        // the auto-completion (the popup trigger key, whether to display a
-        // documentation window along with completion choices, etc.). Unlike
-        // CompletionProviders, instances of AutoCompletion cannot be shared
-        // among multiple text components.
-        //AutoCompletion ac = new AutoCompletion(provider);
-        //ac.install(this);
-    }
-
-    /**
-     * Create a simple provider that adds some Java-related completions.
-     */
-    private CompletionProvider createCompletionProvider() {
-        // A DefaultCompletionProvider is the simplest concrete implementation
-        // of CompletionProvider. This provider has no understanding of
-        // language semantics. It simply checks the text entered up to the
-        // caret position for a match against known completions. This is all
-        // that is needed in the majority of cases.
-        DefaultCompletionProvider provider = new DefaultCompletionProvider();
-
-        // Add completions for all Java keywords. A BasicCompletion is just
-        // a straightforward word completion.
-        provider.addCompletion(new BasicCompletion(provider, "abstract"));
-        provider.addCompletion(new BasicCompletion(provider, "assert"));
-        provider.addCompletion(new BasicCompletion(provider, "break"));
-        provider.addCompletion(new BasicCompletion(provider, "case"));
-        // ... etc ...
-        provider.addCompletion(new BasicCompletion(provider, "transient"));
-        provider.addCompletion(new BasicCompletion(provider, "try"));
-        provider.addCompletion(new BasicCompletion(provider, "void"));
-        provider.addCompletion(new BasicCompletion(provider, "volatile"));
-        provider.addCompletion(new BasicCompletion(provider, "while"));
-
-        // Add a couple of "shorthand" completions. These completions don't
-        // require the input text to be the same thing as the replacement text.
-        provider.addCompletion(new ShorthandCompletion(provider, "sysout",
-                "System.out.println(", "System.out.println("));
-        provider.addCompletion(new ShorthandCompletion(provider, "syserr",
-                "System.err.println(", "System.err.println("));
-
-        return provider;
     }
 }
