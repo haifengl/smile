@@ -28,8 +28,8 @@ import java.io.*;
 import java.util.*;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
-import com.formdev.flatlaf.util.SystemInfo;
 import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
+import com.formdev.flatlaf.util.SystemInfo;
 import smile.studio.view.*;
 import smile.swing.Button;
 import smile.swing.FileChooser;
@@ -386,8 +386,8 @@ public class SmileStudio extends JFrame {
 
         if (SystemInfo.isLinux) {
             // enable custom window decorations
-            JFrame.setDefaultLookAndFeelDecorated( true );
-            JDialog.setDefaultLookAndFeelDecorated( true );
+            JFrame.setDefaultLookAndFeelDecorated(true);
+            JDialog.setDefaultLookAndFeelDecorated(true);
         }
 
         if (GraphicsEnvironment.isHeadless()) {
