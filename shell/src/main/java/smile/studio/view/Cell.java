@@ -39,16 +39,13 @@ import smile.studio.model.PostRunNavigation;
  * @author Haifeng Li
  */
 public class Cell extends JPanel {
-    /** Editor font shared across all cells. */
-    private static Font editorFont = FontUtils.getCompositeFont(FlatJetBrainsMonoFont.FAMILY, Font.PLAIN, 14);
-    /** Output font shared across all cells. */
-    private static Font outputFont = FontUtils.getCompositeFont(FlatJetBrainsMonoFont.FAMILY, Font.PLAIN, 12);
+    private static Font font = FontUtils.getCompositeFont(FlatJetBrainsMonoFont.FAMILY, Font.PLAIN, 14);
     /** The message resource bundle. */
     private final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), getLocale());
     /** The output buffer. StringBuffer is multi-thread safe while StringBuilder isn't. */
     final StringBuffer buffer = new StringBuffer();
     final JTextArea editor = new CodeEditor();
-    final JTextArea output = new JTextArea();
+    final JTextArea output = new OutputArea();
     final TitledBorder border = BorderFactory.createTitledBorder("[ ]");
     final JButton runBtn = new JButton("▶");
     final JButton upBtn = new JButton("↑");
@@ -81,11 +78,12 @@ public class Cell extends JPanel {
         clearBtn.addActionListener(e -> output.setText(""));
         deleteBtn.addActionListener(e -> notebook.deleteCell(this));
 
+        // Output area
+        output.setBackground(getBackground());
+        output.setFont(font);
+
         // Code area
-        editor.setFont(editorFont);
-        editor.setTabSize(4);
-        editor.setLineWrap(false);
-        editor.setWrapStyleWord(false);
+        editor.setFont(font);
         RTextScrollPane editorScroll = new RTextScrollPane(editor);
         editorScroll.setBorder(border);
         editorScroll.putClientProperty("JScrollBar.showButtons", true);
@@ -115,34 +113,32 @@ public class Cell extends JPanel {
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, InputEvent.CTRL_DOWN_MASK), "increase-font-size");
         actionMap.put("increase-font-size", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
-                editorFont = editorFont.deriveFont(Math.min(32f, editorFont.getSize() + 1));
-                editor.setFont(editorFont);
-
-                outputFont = outputFont.deriveFont(Math.min(32f, outputFont.getSize() + 1));
-                output.setFont(outputFont);
+                font = font.deriveFont(Math.min(32f, font.getSize() + 1));
+                setNotebookFont();
             }
         });
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, InputEvent.CTRL_DOWN_MASK), "decrease-font-size");
         actionMap.put("decrease-font-size", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
-                editorFont = editorFont.deriveFont(Math.max(8f, editorFont.getSize() - 1));
-                editor.setFont(editorFont);
-
-                outputFont = outputFont.deriveFont(Math.max(8f, outputFont.getSize() - 1));
-                output.setFont(outputFont);
+                font = font.deriveFont(Math.max(8f, font.getSize() - 1));
+                setNotebookFont();
             }
         });
 
-        // Output area
-        output.setEditable(false);
-        output.setBackground(getBackground());
-        output.setFont(outputFont);
-        output.setLineWrap(true);
-        output.setWrapStyleWord(true);
-
         add(header, BorderLayout.NORTH);
         add(editorScroll, BorderLayout.CENTER);
-        //add(output, BorderLayout.SOUTH);
+    }
+
+    /**
+     * Sets the font for all the cells in the parent Notebook.
+     */
+    private void setNotebookFont() {
+        for (Component sibling : getParent().getComponents()) {
+            if (sibling instanceof Cell cell) {
+                cell.editor.setFont(font);
+                cell.output.setFont(font);
+            }
+        }
     }
 
     /**
