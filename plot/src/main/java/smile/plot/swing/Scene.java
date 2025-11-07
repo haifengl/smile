@@ -211,27 +211,26 @@ public interface Scene extends Printable {
      * @return a new JFrame that contains the scene.
      */
     default JFrame window() {
-        String title = null;
+        String figureTitle = null;
         if (content() instanceof Canvas canvas) {
-            title = canvas.figure().getTitle();
+            figureTitle = canvas.figure().getTitle();
         }
-        if (title == null) {
-            title = String.format("Smile Plot %d", WindowCount.addAndGet(1));
-        }
-
-        JScrollPane scrollPane = new JScrollPane(content());
-        JPanel contentPane = new JPanel(new BorderLayout());
-        contentPane.add(scrollPane, BorderLayout.CENTER);
-        contentPane.add(toolbar(), BorderLayout.NORTH);
 
         JFrame frame = new JFrame();
-        frame.setTitle(title);
-        frame.setContentPane(contentPane);
-        frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        frame.setSize(new java.awt.Dimension(1280, 1000));
-        frame.setLocationRelativeTo(null);
-
+        String title = figureTitle != null ? figureTitle :
+                String.format("Smile Plot %d", WindowCount.addAndGet(1));
         javax.swing.SwingUtilities.invokeLater(() -> {
+            JScrollPane scrollPane = new JScrollPane(content());
+            JPanel contentPane = new JPanel(new BorderLayout());
+            contentPane.add(scrollPane, BorderLayout.CENTER);
+            contentPane.add(toolbar(), BorderLayout.NORTH);
+
+            frame.setTitle(title);
+            frame.setContentPane(contentPane);
+            frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+            frame.setSize(new java.awt.Dimension(1280, 1000));
+            frame.setLocationRelativeTo(null);
+
             frame.setVisible(true);
             frame.toFront();
             frame.requestFocus();
