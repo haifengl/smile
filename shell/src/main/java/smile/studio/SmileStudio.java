@@ -67,6 +67,18 @@ public class SmileStudio extends JFrame {
         contentPane.add(splitPane, BorderLayout.CENTER);
         contentPane.add(statusBar, BorderLayout.SOUTH);
         setContentPane(contentPane);
+
+        // Initialized as true so that we won't try to save sample code.
+        workspace.notebook().setSaved(true);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                if (!workspace.notebook().isSaved()) {
+                    saveNotebook(false);
+                }
+                workspace.close();
+            }
+        });
     }
 
     /**
@@ -343,13 +355,6 @@ public class SmileStudio extends JFrame {
             // Add some space to avoid the overlapping.
             studio.toolBar.add(Box.createHorizontalStrut(70), 0);
         }
-
-        studio.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                studio.workspace.close();
-            }
-        });
 
         // Set the frame at the center of screen
         studio.setLocationRelativeTo(null);
