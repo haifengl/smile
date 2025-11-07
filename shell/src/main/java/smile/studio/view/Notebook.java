@@ -74,7 +74,9 @@ public class Notebook extends JPanel implements DocumentListener {
         // Note that JShell runs in another JVM so that
         // we need to setup FlatLaf again.
         runner.eval("""
-            com.formdev.flatlaf.FlatLightLaf.setup();""");
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                com.formdev.flatlaf.FlatLightLaf.setup();
+            });""");
 
         // Start with one cell
         Cell cell = addCell(null);
