@@ -17,14 +17,17 @@
 package smile.studio.view;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.tree.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.util.Objects;
 import java.util.ResourceBundle;
 import jdk.jshell.VarSnippet;
 import smile.studio.model.Runner;
+import smile.swing.FileChooser;
 import static smile.swing.SmileUtilities.scaleImageIcon;
 
 /**
@@ -76,7 +79,7 @@ public class Explorer extends JPanel {
         treeModel.insertNodeInto(frames, root, root.getChildCount());
         treeModel.insertNodeInto(matrix, root, root.getChildCount());
         treeModel.insertNodeInto(models, root, root.getChildCount());
-        treeModel.insertNodeInto(services, root, root.getChildCount());
+        //treeModel.insertNodeInto(services, root, root.getChildCount());
 
         // Allow one selection at a time.
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
@@ -129,9 +132,22 @@ public class Explorer extends JPanel {
                                         %sWindow.setTitle("%s");
                                         """, name, name, name, name));
                             } else if (parent == models) {
-                                // Starts an inference service
+                                JFileChooser chooser = FileChooser.getInstance();
+                                chooser.setDialogTitle(bundle.getString("SaveModel"));
+                                chooser.setFileFilter(new FileNameExtensionFilter(bundle.getString("ModelFile"), "sml"));
+                                if (chooser.showSaveDialog(SwingUtilities.getWindowAncestor(Explorer.this)) == JFileChooser.APPROVE_OPTION) {
+                                    File file = chooser.getSelectedFile();
+                                    if (!file.getName().toLowerCase().endsWith(".sml")) {
+                                        file = new File(file.getParentFile(), file.getName() + ".sml");
+                                    }
+                                    var snippet = (VarSnippet) node.getUserObject();
+                                    var name = snippet.name();
+                                    // replace backslash with slash in case of Windows
+                                    runner.eval(String.format("""
+                                            smile.io.Write.object(%s, java.nio.file.Paths.get("%s"));
+                                            """, name, file.getAbsolutePath().replace('\\', '/')));
+                                }
                             }
-
                         }
                     }
                 }
