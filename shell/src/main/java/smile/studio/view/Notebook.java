@@ -436,23 +436,23 @@ public class Notebook extends JPanel implements DocumentListener {
             List<SnippetEvent> events = runner.eval(cell.editor.getText());
             // Capture values, diagnostics, and exceptions in order
             for (SnippetEvent ev : events) {
-                if (ev.status() == Snippet.Status.VALID && ev.value() != null) {
-                    var snippet = ev.snippet();
-                    if (snippet instanceof VarSnippet variable) {
+                if (ev.status() == Snippet.Status.VALID && ev.snippet() instanceof VarSnippet variable) {
+                    if (!variable.name().matches("\\$\\d+")) {
                         String typeName = variable.typeName();
                         cell.buffer.append("⇒ ")
-                                .append(typeName)
-                                .append(" ")
-                                .append(variable.name())
-                                .append(" = ");
+                                .append(typeName).append(" ")
+                                .append(variable.name());
 
                         String value = ev.value();
-                        if (typeName.equals("DataFrame")) {
-                            cell.buffer.append(System.lineSeparator());
-                        } else if (typeName.contains("[]")) {
-                            value = value.substring(0, value.indexOf('{'));
+                        if (value != null) {
+                            cell.buffer.append(" = ");
+                            if (typeName.equals("DataFrame")) {
+                                cell.buffer.append(System.lineSeparator());
+                            } else if (typeName.contains("[]")) {
+                                value = value.substring(0, value.indexOf('{'));
+                            }
+                            appendLine(cell.buffer, value);
                         }
-                        appendLine(cell.buffer, value);
                     }
                 } else if (ev.status() == Snippet.Status.REJECTED) {
                     appendLine(cell.buffer, "✖ Rejected snippet: " + ev.snippet().source());
