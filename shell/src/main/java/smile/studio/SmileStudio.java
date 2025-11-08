@@ -43,6 +43,8 @@ import static smile.swing.SmileUtilities.scaleImageIcon;
 public class SmileStudio extends JFrame {
     /** The message resource bundle. */
     private static final ResourceBundle bundle = ResourceBundle.getBundle(SmileStudio.class.getName(), Locale.getDefault());
+    /** Source code file name extensions. */
+    private static final String[] fileNameExtensions = {"java", "jsh"};
     private final JMenuBar menuBar = new JMenuBar();
     private final JToolBar toolBar = new JToolBar();
     private final StatusBar statusBar = new StatusBar();
@@ -286,7 +288,7 @@ public class SmileStudio extends JFrame {
         if (!confirmDiscardIfUnsaved()) return;
         JFileChooser chooser = FileChooser.getInstance();
         chooser.setDialogTitle(bundle.getString("OpenNotebook"));
-        chooser.setFileFilter(new FileNameExtensionFilter(bundle.getString("SmileFile"), "java"));
+        chooser.setFileFilter(new FileNameExtensionFilter(bundle.getString("SmileFile"), fileNameExtensions));
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             File file = chooser.getSelectedFile();
             try {
@@ -307,10 +309,11 @@ public class SmileStudio extends JFrame {
         if (workspace.notebook().getFile() == null || saveAs) {
             JFileChooser chooser = FileChooser.getInstance();
             chooser.setDialogTitle(bundle.getString("SaveNotebook"));
-            chooser.setFileFilter(new FileNameExtensionFilter(bundle.getString("SmileFile"), "java"));
+            chooser.setFileFilter(new FileNameExtensionFilter(bundle.getString("SmileFile"), fileNameExtensions));
             if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
                 File file = chooser.getSelectedFile();
-                if (!file.getName().toLowerCase().endsWith(".java")) {
+                String name = file.getName().toLowerCase();
+                if (!(name.endsWith(".java") || name.endsWith(".jsh"))) {
                     file = new File(file.getParentFile(), file.getName() + ".java");
                 }
                 workspace.notebook().setFile(file);
