@@ -21,14 +21,13 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 import java.util.ResourceBundle;
 
 import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
 import com.formdev.flatlaf.util.FontUtils;
 import org.fife.ui.rtextarea.RTextScrollPane;
+import org.jdesktop.swingx.JXTextField;
 import smile.studio.model.PostRunNavigation;
 
 /**
@@ -42,10 +41,12 @@ public class Cell extends JPanel {
     private static Font font = FontUtils.getCompositeFont(FlatJetBrainsMonoFont.FAMILY, Font.PLAIN, 14);
     /** The message resource bundle. */
     private final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), getLocale());
+    private final String placeholder = bundle.getString("Prompt");
     /** The output buffer. StringBuffer is multi-thread safe while StringBuilder isn't. */
     final StringBuffer buffer = new StringBuffer();
     final JTextArea editor = new CodeEditor();
     final JTextArea output = new OutputArea();
+    final JTextField prompt = new JXTextField(placeholder);
     final TitledBorder border = BorderFactory.createTitledBorder("[ ]");
     final JButton runBtn = new JButton("▶");
     final JButton upBtn = new JButton("↑");
@@ -53,18 +54,31 @@ public class Cell extends JPanel {
     final JButton clearBtn = new JButton("⌦");
     final JButton deleteBtn = new JButton("🗑");
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param notebook the parent notebook.
+     */
     public Cell(Notebook notebook) {
         super(new BorderLayout(5, 5));
         setBorder(new EmptyBorder(8,8,8,8));
 
-        // Header (cell controls)
-        JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        JPanel header = new JPanel();
+        header.setLayout(new BoxLayout(header, BoxLayout.X_AXIS));
+        header.add(Box.createHorizontalStrut(2));
         header.add(runBtn);
+        header.add(Box.createHorizontalStrut(6));
         header.add(upBtn);
+        header.add(Box.createHorizontalStrut(6));
         header.add(downBtn);
+        header.add(Box.createHorizontalStrut(6));
         header.add(clearBtn);
+        header.add(Box.createHorizontalStrut(6));
         header.add(deleteBtn);
+        header.add(Box.createHorizontalStrut(20));
+        header.add(prompt);
+
+        // Enter key action
+        prompt.addActionListener(e -> generateCode());
 
         runBtn.setToolTipText(bundle.getString("Run"));
         upBtn.setToolTipText(bundle.getString("MoveUp"));
@@ -127,6 +141,13 @@ public class Cell extends JPanel {
 
         add(header, BorderLayout.NORTH);
         add(editorScroll, BorderLayout.CENTER);
+    }
+
+    private void generateCode() {
+        String text = prompt.getText();
+        if (!text.isBlank()) {
+
+        }
     }
 
     /**
