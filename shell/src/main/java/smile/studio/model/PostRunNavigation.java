@@ -18,6 +18,8 @@ package smile.studio.model;
 
 /**
  * Navigation behavior post running a cell.
+ *
+ * @author Haifeng Li
  */
 public enum PostRunNavigation {
     /** Stays the focus on the cell. */

@@ -22,12 +22,15 @@ import javax.swing.border.TitledBorder;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
 import com.formdev.flatlaf.util.FontUtils;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jdesktop.swingx.JXTextField;
+import smile.studio.model.Coder;
 import smile.studio.model.PostRunNavigation;
 
 /**
@@ -143,11 +146,92 @@ public class Cell extends JPanel {
         add(editorScroll, BorderLayout.CENTER);
     }
 
-    private void generateCode() {
-        String text = prompt.getText();
-        if (!text.isBlank()) {
-
+    /**
+     * Completes the current line of code.
+     */
+    private void completeCode() {
+        String task = prompt.getText();
+        if (!task.isBlank()) {
+            String context = editor.getText();
+            var future = Coder.complete(context, task);
+            future.thenAccept(response -> SwingUtilities.invokeLater(() -> {
+                if (response.isValid()) {
+                    String line = response.choices().getFirst().message().content().orElse("// Oops, empty response");
+                    editor.append(line);
+                }
+            }));
         }
+    }
+
+    /**
+     * Generates code based on prompt.
+     */
+    private void generateCode() {
+        String task = prompt.getText();
+        if (!task.isBlank()) {
+            String context = editor.getText();
+            editor.append(System.lineSeparator());
+            for (String line : wrap(task, 80)) {
+                editor.append("/// " + line);
+                editor.append(System.lineSeparator());
+            }
+
+            var stream = Coder.generate(context, task);
+            stream.subscribe(chunk -> SwingUtilities.invokeLater(() -> {
+                if (chunk.isValid()) {
+                    String delta = chunk.choices().getFirst().delta().content().orElse("");
+                    editor.append(delta);
+                }
+            }));
+        }
+    }
+
+    /**
+     * Breaks a string into lines with word wrapping up to a specified line width.
+     * @param text the input text.
+     * @param maxWidth the line width.
+     * @return the lines.
+     */
+    private static List<String> wrap(String text, int maxWidth) {
+        List<String> lines = new ArrayList<>();
+        if (text == null || text.isEmpty()) {
+            lines.add("");
+            return lines;
+        }
+
+        String[] words = text.split("\\s+"); // Split by one or more spaces
+        StringBuilder currentLine = new StringBuilder();
+
+        for (String word : words) {
+            // If the current word itself is longer than maxWidth, handle it by breaking it
+            if (word.length() > maxWidth) {
+                if (currentLine.length() > 0) { // Add current line if not empty
+                    lines.add(currentLine.toString().trim());
+                    currentLine = new StringBuilder();
+                }
+                // Break the long word into multiple lines
+                for (int i = 0; i < word.length(); i += maxWidth) {
+                    lines.add(word.substring(i, Math.min(i + maxWidth, word.length())));
+                }
+                continue; // Move to the next word
+            }
+
+            if (currentLine.length() == 0) {
+                currentLine.append(word);
+            } else if (currentLine.length() + 1 + word.length() <= maxWidth) {
+                currentLine.append(" ").append(word);
+            } else {
+                lines.add(currentLine.toString().trim());
+                currentLine = new StringBuilder(word);
+            }
+        }
+
+        // Add the last line if it's not empty
+        if (currentLine.length() > 0) {
+            lines.add(currentLine.toString().trim());
+        }
+
+        return lines;
     }
 
     /**

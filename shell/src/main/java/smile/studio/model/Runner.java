@@ -29,6 +29,8 @@ import smile.studio.view.Cell;
 
 /**
  * Java code execution engine.
+ *
+ * @author Haifeng Li
  */
 public class Runner {
     /** JShell instance. */
