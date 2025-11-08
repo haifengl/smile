@@ -60,11 +60,13 @@ public class Notebook extends JPanel implements DocumentListener {
 
     /**
      * Constructor.
+     * @param file the notebook file. If null, a new notebook will be created.
      * @param runner Java code execution engine.
      * @param postRunAction the action to perform after running cells.
      */
-    public Notebook(JavaRunner runner, Runnable postRunAction) {
+    public Notebook(File file, JavaRunner runner, Runnable postRunAction) {
         super(new BorderLayout());
+        this.file = file;
         this.runner = runner;
         this.postRunAction = postRunAction;
         cells.setLayout(new BoxLayout(cells, BoxLayout.Y_AXIS));
@@ -78,108 +80,123 @@ public class Notebook extends JPanel implements DocumentListener {
                 com.formdev.flatlaf.FlatLightLaf.setup();
             });""");
 
-        // Start with one cell
-        Cell first = addCell(null);
-        first.editor.setText("""
-                import java.awt.Color;
-                import java.time.*;
-                import java.util.*;
-                import static java.lang.Math.*;
-                import smile.plot.swing.*;
-                import static smile.swing.SmileUtilities.*;
+        if (file != null) {
+            try {
+                open(file);
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(
+                        null,
+                        ex.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
+            }
+        } else {
+            // Start with one cell
+            Cell cell = addCell(null);
+            cell.editor.setText("""
+                    import java.awt.Color;
+                    import java.time.*;
+                    import java.util.*;
+                    import static java.lang.Math.*;
+                    import smile.plot.swing.*;
+                    import static smile.swing.SmileUtilities.*;
+                    
+                    import org.apache.commons.csv.CSVFormat;
+                    import smile.io.*;
+                    import smile.data.*;
+                    import smile.data.formula.*;
+                    import smile.data.measure.*;
+                    import smile.data.type.*;
+                    import smile.data.vector.*;
+                    import static smile.data.formula.Terms.*;
+                    import smile.feature.extraction.*;
+                    import smile.feature.importance.*;
+                    import smile.feature.imputation.*;
+                    import smile.feature.selection.*;
+                    import smile.feature.transform.*;
+                    import smile.tensor.*;
+                    import smile.graph.*;
+                    import smile.math.*;
+                    import smile.math.distance.*;
+                    import smile.math.kernel.*;
+                    import smile.math.rbf.*;
+                    import smile.stat.*;
+                    import smile.stat.distribution.*;
+                    import smile.stat.hypothesis.*;
+                    import smile.association.*;
+                    import smile.base.mlp.*;
+                    import smile.classification.*;
+                    import smile.clustering.*;
+                    import smile.manifold.*;
+                    import smile.regression.OLS;
+                    import smile.regression.LASSO;
+                    import smile.regression.ElasticNet;
+                    import smile.regression.RidgeRegression;
+                    import smile.regression.GaussianProcessRegression;
+                    import smile.regression.RegressionTree;
+                    import smile.validation.*;
+                    import smile.validation.metric.*;
+                    import smile.hpo.*;
+                    import smile.vq.*;
+                    
+                    double[][] heart = new double[200][2];
+                    for (int i = 0; i < heart.length; i++) {
+                        double t = PI * (i - 100) / 100;
+                        heart[i][0] = 16 * pow(sin(t), 3);
+                        heart[i][1] = 13 * cos(t) - 5 * cos(2*t) - 2 * cos(3*t) - cos(4*t);
+                    }
+                    var figure = LinePlot.of(heart, Color.RED).figure();
+                    figure.setTitle("Mathematical Beauty");
+                    show(figure);""");
 
-                import org.apache.commons.csv.CSVFormat;
-                import smile.io.*;
-                import smile.data.*;
-                import smile.data.formula.*;
-                import smile.data.measure.*;
-                import smile.data.type.*;
-                import smile.data.vector.*;
-                import static smile.data.formula.Terms.*;
-                import smile.feature.extraction.*;
-                import smile.feature.importance.*;
-                import smile.feature.imputation.*;
-                import smile.feature.selection.*;
-                import smile.feature.transform.*;
-                import smile.tensor.*;
-                import smile.graph.*;
-                import smile.math.*;
-                import smile.math.distance.*;
-                import smile.math.kernel.*;
-                import smile.math.rbf.*;
-                import smile.stat.*;
-                import smile.stat.distribution.*;
-                import smile.stat.hypothesis.*;
-                import smile.association.*;
-                import smile.base.mlp.*;
-                import smile.classification.*;
-                import smile.clustering.*;
-                import smile.manifold.*;
-                import smile.regression.OLS;
-                import smile.regression.LASSO;
-                import smile.regression.ElasticNet;
-                import smile.regression.RidgeRegression;
-                import smile.regression.GaussianProcessRegression;
-                import smile.regression.RegressionTree;
-                import smile.validation.*;
-                import smile.validation.metric.*;
-                import smile.hpo.*;
-                import smile.vq.*;
+            cell = addCell(null);
+            cell.editor.setText("""
+                    var home = System.getProperty("smile.home");
+                    var iris = Read.arff(home + "/data/weka/iris.arff");
+                    show(iris);
+                    
+                    figure = ScatterPlot.of(iris, "sepallength", "sepalwidth", "class", '*').figure();
+                    figure.setAxisLabels("sepallength", "sepalwidth");
+                    figure.setTitle("Iris");
+                    show(figure);
+                    
+                    var rf = RandomForest.fit(Formula.lhs("class"), iris);
+                    IO.println("OOB metrics = " + rf.metrics());
+                    
+                    var cv = CrossValidation.classification(10, Formula.lhs("class"), iris,
+                                (formula, data) -> DecisionTree.fit(formula, data));""");
+            cell.editor.setRows(cell.editor.getLineCount());
 
-                double[][] heart = new double[200][2];
-                for (int i = 0; i < heart.length; i++) {
-                    double t = PI * (i - 100) / 100;
-                    heart[i][0] = 16 * pow(sin(t), 3);
-                    heart[i][1] = 13 * cos(t) - 5 * cos(2*t) - 2 * cos(3*t) - cos(4*t);
-                }
-                var figure = LinePlot.of(heart, Color.RED).figure();
-                figure.setTitle("Mathematical Beauty");
-                show(figure);""");
+            cell = addCell(null);
+            cell.editor.setText("""
+                    var format = CSVFormat.DEFAULT.withDelimiter(' ');
+                    var mnist = Read.csv(home + "/data/mnist/mnist2500_X.txt", format).toArray();
+                    var label = Read.csv(home + "/data/mnist/mnist2500_labels.txt", format).column(0).toIntArray();
+                    
+                    var pca = PCA.fit(mnist).getProjection(50);
+                    var X = pca.apply(mnist);
+                    var tsne = TSNE.fit(X, new TSNE.Options(2, 20, 200, 12, 550));
+                    
+                    figure = ScatterPlot.of(tsne.coordinates(), label, '@').figure();
+                    figure.setTitle("MNIST - t-SNE");
+                    show(figure);
+                    
+                    var umap = UMAP.fit(mnist, new UMAP.Options(15));
+                    figure = ScatterPlot.of(umap, label, '@').figure();
+                    figure.setTitle("MNIST - UMAP");
+                    show(figure);""");
+            cell.editor.setRows(cell.editor.getLineCount());
+        }
 
-        Cell cell = addCell(null);
-        cell.editor.setText("""
-                var home = System.getProperty("smile.home");
-                var iris = Read.arff(home + "/data/weka/iris.arff");
-                show(iris);
-                
-                figure = ScatterPlot.of(iris, "sepallength", "sepalwidth", "class", '*').figure();
-                figure.setAxisLabels("sepallength", "sepalwidth");
-                figure.setTitle("Iris");
-                show(figure);
-
-                var rf = RandomForest.fit(Formula.lhs("class"), iris);
-                IO.println("OOB metrics = " + rf.metrics());
-
-                var cv = CrossValidation.classification(10, Formula.lhs("class"), iris,
-                            (formula, data) -> DecisionTree.fit(formula, data));""");
-        cell.editor.setRows(cell.editor.getLineCount());
-
-        cell = addCell(null);
-        cell.editor.setText("""
-                var format = CSVFormat.DEFAULT.withDelimiter(' ');
-                var mnist = Read.csv(home + "/data/mnist/mnist2500_X.txt", format).toArray();
-                var label = Read.csv(home + "/data/mnist/mnist2500_labels.txt", format).column(0).toIntArray();
-                
-                var pca = PCA.fit(mnist).getProjection(50);
-                var X = pca.apply(mnist);
-                var tsne = TSNE.fit(X, new TSNE.Options(2, 20, 200, 12, 550));
-                
-                figure = ScatterPlot.of(tsne.coordinates(), label, '@').figure();
-                figure.setTitle("MNIST - t-SNE");
-                show(figure);
-
-                var umap = UMAP.fit(mnist, new UMAP.Options(15));
-                figure = ScatterPlot.of(umap, label, '@').figure();
-                figure.setTitle("MNIST - UMAP");
-                show(figure);""");
-        cell.editor.setRows(cell.editor.getLineCount());
-
-        // Scroll to the first cell
-        SwingUtilities.invokeLater(() -> {
-            first.editor.requestFocusInWindow();
-            first.editor.setCaretPosition(0);
-            scrollTo(first);
-        });
+        if (cells.getComponentCount() > 0 && cells.getComponent(0) instanceof Cell first) {
+            // Scroll to the first cell
+            SwingUtilities.invokeLater(() -> {
+                first.editor.requestFocusInWindow();
+                first.editor.setCaretPosition(0);
+                scrollTo(first);
+            });
+        }
     }
 
     /**
