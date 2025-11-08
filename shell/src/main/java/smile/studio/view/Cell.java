@@ -19,6 +19,9 @@ package smile.studio.view;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.BadLocationException;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -40,7 +43,7 @@ import smile.studio.model.PostRunNavigation;
  *
  * @author Haifeng Li
  */
-public class Cell extends JPanel {
+public class Cell extends JPanel implements DocumentListener {
     private static Font font = FontUtils.getCompositeFont(FlatJetBrainsMonoFont.FAMILY, Font.PLAIN, 14);
     /** The message resource bundle. */
     private final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), getLocale());
@@ -49,13 +52,15 @@ public class Cell extends JPanel {
     final StringBuffer buffer = new StringBuffer();
     final JTextArea editor = new CodeEditor();
     final JTextArea output = new OutputArea();
-    final JTextField prompt = new JXTextField(placeholder);
-    final TitledBorder border = BorderFactory.createTitledBorder("[ ]");
-    final JButton runBtn = new JButton("▶");
-    final JButton upBtn = new JButton("↑");
-    final JButton downBtn = new JButton("↓");
-    final JButton clearBtn = new JButton("⌦");
-    final JButton deleteBtn = new JButton("🗑");
+    private final JTextField prompt = new JXTextField(placeholder);
+    private final TitledBorder border = BorderFactory.createTitledBorder("[ ]");
+    private final JButton runBtn = new JButton("▶");
+    private final JButton upBtn = new JButton("↑");
+    private final JButton downBtn = new JButton("↓");
+    private final JButton clearBtn = new JButton("⌦");
+    private final JButton deleteBtn = new JButton("🗑");
+    /** Running code completing. */
+    private volatile boolean isCompleting = false;
 
     /**
      * Constructor.
@@ -101,6 +106,7 @@ public class Cell extends JPanel {
 
         // Code area
         editor.setFont(font);
+        editor.getDocument().addDocumentListener(this);
         RTextScrollPane editorScroll = new RTextScrollPane(editor);
         editorScroll.setBorder(border);
         editorScroll.putClientProperty("JScrollBar.showButtons", true);
@@ -150,16 +156,44 @@ public class Cell extends JPanel {
      * Completes the current line of code.
      */
     private void completeCode() {
-        String task = prompt.getText();
-        if (!task.isBlank()) {
-            String context = editor.getText();
-            var future = Coder.complete(context, task);
-            future.thenAccept(response -> SwingUtilities.invokeLater(() -> {
-                if (response.isValid()) {
-                    String line = response.choices().getFirst().message().content().orElse("// Oops, empty response");
-                    editor.append(line);
-                }
-            }));
+        try {
+            int caretPosition = editor.getCaretPosition();
+            int lineNum = editor.getLineOfOffset(caretPosition);
+            // Skip code completion for first line.
+            if (lineNum == 0) {
+                isCompleting = false;
+                return;
+            }
+
+            int startOffset = editor.getLineStartOffset(lineNum);
+            int endOffset = editor.getLineEndOffset(lineNum);
+            String context = editor.getText(0, startOffset);
+            String currentLine = editor.getText(startOffset, endOffset - startOffset);
+
+            if (currentLine.length() >= 8) {
+                SwingWorker<Void, Void> worker = new SwingWorker<>() {
+                    @Override
+                    protected Void doInBackground() {
+                        var future = Coder.complete(context, currentLine);
+                        future.thenAccept(response -> SwingUtilities.invokeLater(() -> {
+                            if (response.isValid()) {
+                                String line = response.choices().getFirst().message().content().orElse("// Oops, empty response");
+                                editor.append(line);
+                            }
+                            isCompleting = false;
+                        }));
+                        return null;
+                    }
+
+                    @Override
+                    protected void done() {
+                        isCompleting = false;
+                    }
+                };
+                worker.execute();
+            }
+        } catch (BadLocationException ex) {
+            System.err.println(ex.getMessage());
         }
     }
 
@@ -176,13 +210,26 @@ public class Cell extends JPanel {
                 editor.append(System.lineSeparator());
             }
 
-            var stream = Coder.generate(context, task);
-            stream.subscribe(chunk -> SwingUtilities.invokeLater(() -> {
-                if (chunk.isValid()) {
-                    String delta = chunk.choices().getFirst().delta().content().orElse("");
-                    editor.append(delta);
+            SwingWorker<Void, Void> worker = new SwingWorker<>() {
+                @Override
+                protected Void doInBackground() {
+                    var stream = Coder.generate(context, task);
+                    stream.subscribe(chunk -> SwingUtilities.invokeLater(() -> {
+                        System.out.println(chunk);
+                        if (chunk.isValid()) {
+                            String delta = chunk.choices().getFirst().delta().content().orElse("");
+                            editor.append(delta);
+                        }
+                    }));
+                    return null;
                 }
-            }));
+
+                @Override
+                protected void done() {
+
+                }
+            };
+            worker.execute();
         }
     }
 
@@ -200,35 +247,22 @@ public class Cell extends JPanel {
         }
 
         String[] words = text.split("\\s+"); // Split by one or more spaces
-        StringBuilder currentLine = new StringBuilder();
+        StringBuilder line = new StringBuilder();
 
         for (String word : words) {
-            // If the current word itself is longer than maxWidth, handle it by breaking it
-            if (word.length() > maxWidth) {
-                if (currentLine.length() > 0) { // Add current line if not empty
-                    lines.add(currentLine.toString().trim());
-                    currentLine = new StringBuilder();
-                }
-                // Break the long word into multiple lines
-                for (int i = 0; i < word.length(); i += maxWidth) {
-                    lines.add(word.substring(i, Math.min(i + maxWidth, word.length())));
-                }
-                continue; // Move to the next word
-            }
-
-            if (currentLine.length() == 0) {
-                currentLine.append(word);
-            } else if (currentLine.length() + 1 + word.length() <= maxWidth) {
-                currentLine.append(" ").append(word);
+            if (line.isEmpty()) {
+                line.append(word);
+            } else if (line.length() + 1 + word.length() <= maxWidth) {
+                line.append(" ").append(word);
             } else {
-                lines.add(currentLine.toString().trim());
-                currentLine = new StringBuilder(word);
+                lines.add(line.toString().trim());
+                line = new StringBuilder(word);
             }
         }
 
         // Add the last line if it's not empty
-        if (currentLine.length() > 0) {
-            lines.add(currentLine.toString().trim());
+        if (!line.isEmpty()) {
+            lines.add(line.toString().trim());
         }
 
         return lines;
@@ -244,6 +278,28 @@ public class Cell extends JPanel {
                 cell.output.setFont(font);
             }
         }
+    }
+
+    @Override
+    public void insertUpdate(DocumentEvent e) {
+        if (isCompleting) {
+            isCompleting = true;
+            completeCode();
+        }
+    }
+
+    @Override
+    public void removeUpdate(DocumentEvent e) {
+        if (isCompleting) {
+            isCompleting = true;
+            completeCode();
+        }
+    }
+
+    @Override
+    public void changedUpdate(DocumentEvent e) {
+        // This method is typically not used for plain text changes
+        // but for changes to attributes of styled text.
     }
 
     /**
