@@ -26,7 +26,7 @@ import java.io.File;
 import java.util.Objects;
 import java.util.ResourceBundle;
 import jdk.jshell.VarSnippet;
-import smile.studio.model.Runner;
+import smile.studio.model.JavaRunner;
 import smile.swing.FileChooser;
 import static smile.swing.SmileUtilities.scaleImageIcon;
 
@@ -56,13 +56,13 @@ public class Explorer extends JPanel {
      */
     private final DefaultTreeModel treeModel = (DefaultTreeModel) tree.getModel();
     /** JShell instance. */
-    private final Runner runner;
+    private final JavaRunner runner;
 
     /**
      * Constructor.
      * @param runner Java code execution engine.
      */
-    public Explorer(Runner runner) {
+    public Explorer(JavaRunner runner) {
         super(new BorderLayout());
         this.runner = runner;
         initTree();

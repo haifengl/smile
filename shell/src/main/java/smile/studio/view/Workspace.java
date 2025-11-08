@@ -18,7 +18,7 @@ package smile.studio.view;
 
 import javax.swing.*;
 import java.io.*;
-import smile.studio.model.Runner;
+import smile.studio.model.JavaRunner;
 
 /**
  * A notebook workspace.
@@ -29,7 +29,7 @@ public class Workspace extends JSplitPane {
     @Serial
     private static final long serialVersionUID = 1L;
     /** Java execution engine. */
-    final Runner runner = new Runner();
+    final JavaRunner runner = new JavaRunner();
     /** The explorer of runtime information. */
     final Explorer explorer = new Explorer(runner);
     /** The editor of notebook. */

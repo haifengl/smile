@@ -32,7 +32,7 @@ import smile.studio.view.Cell;
  *
  * @author Haifeng Li
  */
-public class Runner {
+public class JavaRunner {
     /** JShell instance. */
     private final JShell jshell;
     /** Analysis utilities for source code input. */
@@ -51,7 +51,7 @@ public class Runner {
     /**
      * Constructor.
      */
-    public Runner() {
+    public JavaRunner() {
         // Build JShell with custom output capture
         OutputStream delegatingOut = new OutputStream() {
             @Override
