@@ -47,7 +47,7 @@ public class SmileStudio extends JFrame {
     private final JToolBar toolBar = new JToolBar();
     private final StatusBar statusBar = new StatusBar();
     private final Workspace workspace = new Workspace();
-    private final Chat chat = new Chat();
+    private final Architect architect = new Architect();
 
     public SmileStudio() {
         super(bundle.getString("AppName"));
@@ -57,7 +57,7 @@ public class SmileStudio extends JFrame {
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setLeftComponent(workspace);
-        splitPane.setRightComponent(chat);
+        splitPane.setRightComponent(architect);
         splitPane.setResizeWeight(0.85);
 
         JPanel contentPane = new JPanel(new BorderLayout());

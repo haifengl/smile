@@ -23,11 +23,11 @@ import com.formdev.flatlaf.ui.FlatBorder;
 import smile.plot.swing.Palette;
 
 /**
- * A chat interface for LLMs.
+ * An architect creates model building pipeline.
  *
  * @author Haifeng Li
  */
-public class Chat extends JPanel {
+public class Architect extends JPanel {
     static final Color userMessageColor = new Color(220, 248, 198);
     static final Color botMessageColor = Palette.web("#8dd4e8");
     final JPanel messages = new JPanel();
@@ -36,7 +36,7 @@ public class Chat extends JPanel {
     /**
      * Constructor.
      */
-    public Chat() {
+    public Architect() {
         super(new BorderLayout(0, 10));
         messages.setLayout(new BoxLayout(messages, BoxLayout.Y_AXIS));
         JScrollPane scrollPane = new JScrollPane(messages);
