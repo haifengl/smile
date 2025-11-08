@@ -45,6 +45,8 @@ public class Architect extends JPanel {
 
         input.setRows(3);
         input.setBorder(new FlatBorder());
+        input.setLineWrap(true);
+        input.setWrapStyleWord(true);
 
         InputMap inputMap = input.getInputMap(JComponent.WHEN_FOCUSED);
         ActionMap actionMap = input.getActionMap();
