@@ -163,7 +163,7 @@ public interface Scene extends Printable {
      */
     default void save() throws IOException {
         JFileChooser fc = FileChooser.getInstance();
-        fc.setFileFilter(FileChooser.SimpleFileFilter.getWritableImageFIlter());
+        fc.setFileFilter(FileChooser.SimpleFileFilter.getWritableImageFilter());
         fc.setAcceptAllFileFilterUsed(false);
         fc.setSelectedFiles(new File[0]);
 

@@ -357,7 +357,7 @@ public class FileChooser extends JFileChooser {
          * Returns the filter for writable images.
          * @return the filter for writable images.
          */
-        public static SimpleFileFilter getWritableImageFIlter() {
+        public static SimpleFileFilter getWritableImageFilter() {
             return writableImageFilter;            
         }
         
