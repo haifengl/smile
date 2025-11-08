@@ -65,7 +65,8 @@ libraryDependencies ++= Seq(
   "org.slf4j"        %  "slf4j-simple"    % "2.0.17",
   "com.formdev"      %  "flatlaf"         % "3.6.2",
   "com.formdev"      %  "flatlaf-fonts-jetbrains-mono" % "2.304",
-  "com.fifesoft"     %  "rsyntaxtextarea" % "3.6.0"
+  "com.fifesoft"     %  "rsyntaxtextarea" % "3.6.0",
+  "com.openai"       %  "openai-java"     % "4.7.1"
 )
 
 libraryDependencies ++= {
