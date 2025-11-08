@@ -36,7 +36,7 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 import jdk.jshell.*;
 import smile.studio.model.PostRunNavigation;
-import smile.studio.model.Runner;
+import smile.studio.model.JavaRunner;
 
 /**
  * Interactive environment to write and execute Java code combining code,
@@ -52,7 +52,7 @@ public class Notebook extends JPanel implements DocumentListener {
     private final JPanel cells = new JPanel();
     private final JScrollPane scrollPane = new JScrollPane(cells);
     private final DateTimeFormatter datetime = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
-    private final Runner runner;
+    private final JavaRunner runner;
     private final Runnable postRunAction;
     private int runCount = 0;
     private File file;
@@ -63,7 +63,7 @@ public class Notebook extends JPanel implements DocumentListener {
      * @param runner Java code execution engine.
      * @param postRunAction the action to perform after running cells.
      */
-    public Notebook(Runner runner, Runnable postRunAction) {
+    public Notebook(JavaRunner runner, Runnable postRunAction) {
         super(new BorderLayout());
         this.runner = runner;
         this.postRunAction = postRunAction;
