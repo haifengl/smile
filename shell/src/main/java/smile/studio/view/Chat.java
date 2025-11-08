@@ -18,6 +18,9 @@ package smile.studio.view;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import com.formdev.flatlaf.ui.FlatBorder;
+import smile.plot.swing.Palette;
 
 /**
  * A chat interface for LLMs.
@@ -25,29 +28,32 @@ import java.awt.*;
  * @author Haifeng Li
  */
 public class Chat extends JPanel {
-    final JTextArea messages = new JTextArea();
-    final JTextField input = new JTextField();
-    final JButton send = new JButton("Send");
+    static final Color userMessageColor = new Color(220, 248, 198);
+    static final Color botMessageColor = Palette.web("#8dd4e8");
+    final JPanel messages = new JPanel();
+    final JTextArea input = new JTextArea();
 
     /**
      * Constructor.
      */
     public Chat() {
-        super(new BorderLayout());
-        messages.setEditable(false);
+        super(new BorderLayout(0, 10));
+        messages.setLayout(new BoxLayout(messages, BoxLayout.Y_AXIS));
         JScrollPane scrollPane = new JScrollPane(messages);
         add(scrollPane, BorderLayout.CENTER);
+        add(input, BorderLayout.SOUTH);
 
-        JPanel inputPane = new JPanel(new BorderLayout());
-        inputPane.add(input, BorderLayout.CENTER);
-        inputPane.add(send, BorderLayout.EAST);
-        add(inputPane, BorderLayout.SOUTH);
+        input.setRows(3);
+        input.setBorder(new FlatBorder());
 
-        input.putClientProperty("JComponent.roundRect", true);
-        send.putClientProperty("JButton.buttonType", "roundRect");
-        // Enter key action
-        input.addActionListener(e -> sendMessage());
-        send.addActionListener(e -> sendMessage());
+        InputMap inputMap = input.getInputMap(JComponent.WHEN_FOCUSED);
+        ActionMap actionMap = input.getActionMap();
+        inputMap.put(KeyStroke.getKeyStroke("ENTER"), "send-message");
+        actionMap.put("send-message", new AbstractAction() {
+            @Override public void actionPerformed(ActionEvent e) {
+                sendMessage();
+            }
+        });
     }
 
     /**
@@ -56,8 +62,22 @@ public class Chat extends JPanel {
     private void sendMessage() {
         String message = input.getText().trim();
         if (!message.isEmpty()) {
-            messages.append(message);
+            addMessage(message, userMessageColor, 0.1f);
             input.setText("");
+        }
+    }
+
+    /**
+     * Adds a message widget.
+     */
+    private void addMessage(String message, Color background, float alignment) {
+        if (!message.isEmpty()) {
+            JTextPane pane = new JTextPane();
+            pane.setText(message);
+            pane.setBackground(background);
+            pane.setBorder(new FlatBorder());
+            pane.setAlignmentX(alignment);
+            messages.add(pane);
         }
     }
 }
