@@ -79,8 +79,8 @@ public class Notebook extends JPanel implements DocumentListener {
             });""");
 
         // Start with one cell
-        Cell cell = addCell(null);
-        cell.editor.setText("""
+        Cell first = addCell(null);
+        first.editor.setText("""
                 import java.awt.Color;
                 import java.time.*;
                 import java.util.*;
@@ -136,7 +136,7 @@ public class Notebook extends JPanel implements DocumentListener {
                 figure.setTitle("Mathematical Beauty");
                 show(figure);""");
 
-        cell = addCell(null);
+        Cell cell = addCell(null);
         cell.editor.setText("""
                 var home = System.getProperty("smile.home");
                 var iris = Read.arff(home + "/data/weka/iris.arff");
@@ -173,6 +173,13 @@ public class Notebook extends JPanel implements DocumentListener {
                 figure.setTitle("MNIST - UMAP");
                 show(figure);""");
         cell.editor.setRows(cell.editor.getLineCount());
+
+        // Scroll to the first cell
+        SwingUtilities.invokeLater(() -> {
+            first.editor.requestFocusInWindow();
+            first.editor.setCaretPosition(0);
+            scrollTo(first);
+        });
     }
 
     /**
