@@ -27,10 +27,13 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
 import com.formdev.flatlaf.util.FontUtils;
+import com.openai.core.http.AsyncStreamResponse;
+import com.openai.models.chat.completions.ChatCompletionChunk;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jdesktop.swingx.JXTextField;
 import smile.studio.model.Coder;
@@ -44,6 +47,7 @@ import smile.studio.model.PostRunNavigation;
  * @author Haifeng Li
  */
 public class Cell extends JPanel implements DocumentListener {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Cell.class);
     private static Font font = FontUtils.getCompositeFont(FlatJetBrainsMonoFont.FAMILY, Font.PLAIN, 14);
     /** The message resource bundle. */
     private final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), getLocale());
@@ -59,8 +63,8 @@ public class Cell extends JPanel implements DocumentListener {
     private final JButton downBtn = new JButton("↓");
     private final JButton clearBtn = new JButton("⌦");
     private final JButton deleteBtn = new JButton("🗑");
-    /** Running code completing. */
-    private volatile boolean isCompleting = false;
+    /** Running code generation. */
+    private volatile boolean isCoding = false;
 
     /**
      * Constructor.
@@ -87,6 +91,7 @@ public class Cell extends JPanel implements DocumentListener {
 
         // Enter key action
         prompt.addActionListener(e -> generateCode());
+        prompt.putClientProperty("JComponent.roundRect", true);
 
         runBtn.setToolTipText(bundle.getString("Run"));
         upBtn.setToolTipText(bundle.getString("MoveUp"));
@@ -156,12 +161,15 @@ public class Cell extends JPanel implements DocumentListener {
      * Completes the current line of code.
      */
     private void completeCode() {
+        if (isCoding) return;
+
         try {
+            isCoding = true;
             int caretPosition = editor.getCaretPosition();
             int lineNum = editor.getLineOfOffset(caretPosition);
             // Skip code completion for first line.
             if (lineNum == 0) {
-                isCompleting = false;
+                isCoding = false;
                 return;
             }
 
@@ -170,30 +178,36 @@ public class Cell extends JPanel implements DocumentListener {
             String context = editor.getText(0, startOffset);
             String currentLine = editor.getText(startOffset, endOffset - startOffset);
 
-            if (currentLine.length() >= 8) {
+            if (currentLine.length() >= 8 && !currentLine.trim().endsWith(";")) {
                 SwingWorker<Void, Void> worker = new SwingWorker<>() {
                     @Override
                     protected Void doInBackground() {
                         var future = Coder.complete(context, currentLine);
-                        future.thenAccept(response -> SwingUtilities.invokeLater(() -> {
-                            if (response.isValid()) {
-                                String line = response.choices().getFirst().message().content().orElse("// Oops, empty response");
-                                editor.append(line);
+                        future.handle((completion, error) -> {
+                            if (error != null) {
+                                logger.error("Code completion failed: ", error);
+                            } else {
+                                if (completion.isValid()) {
+                                    String line = completion.choices().getFirst().message().content().orElse("// Oops, empty response");
+                                    SwingUtilities.invokeLater(() -> editor.insert(line, caretPosition));
+                                    return true;
+                                }
                             }
-                            isCompleting = false;
-                        }));
+                            return false;
+                        }).join();
                         return null;
                     }
 
                     @Override
                     protected void done() {
-                        isCompleting = false;
+                        isCoding = false;
                     }
                 };
                 worker.execute();
             }
         } catch (BadLocationException ex) {
-            System.err.println(ex.getMessage());
+            isCoding = false;
+            logger.debug("completeCode failed: {}", ex.getMessage());
         }
     }
 
@@ -201,8 +215,11 @@ public class Cell extends JPanel implements DocumentListener {
      * Generates code based on prompt.
      */
     private void generateCode() {
+        if (isCoding) return;
+
         String task = prompt.getText();
         if (!task.isBlank()) {
+            isCoding = true;
             String context = editor.getText();
             editor.append(System.lineSeparator());
             for (String line : wrap(task, 80)) {
@@ -214,19 +231,36 @@ public class Cell extends JPanel implements DocumentListener {
                 @Override
                 protected Void doInBackground() {
                     var stream = Coder.generate(context, task);
-                    stream.subscribe(chunk -> SwingUtilities.invokeLater(() -> {
-                        System.out.println(chunk);
-                        if (chunk.isValid()) {
-                            String delta = chunk.choices().getFirst().delta().content().orElse("");
-                            editor.append(delta);
+                    stream.subscribe(new AsyncStreamResponse.Handler<>() {
+                        @Override
+                        public void onNext(ChatCompletionChunk chunk) {
+                            if (chunk.isValid()) {
+                                String delta = chunk.choices().getFirst().delta().content().orElse("");
+                                SwingUtilities.invokeLater(() -> editor.append(delta));
+                            }
                         }
-                    }));
+
+                        @Override
+                        public void onComplete(Optional<Throwable> error) {
+                            if (error.isPresent()) {
+                                logger.error("Code generation streaming failed: ", error.get());
+                                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
+                                        null,
+                                        error.get().getMessage(),
+                                        "Error",
+                                        JOptionPane.ERROR_MESSAGE
+                                ));
+                            } else {
+                                logger.debug("Code generation streaming succeed!");
+                            }
+                        }
+                    });
                     return null;
                 }
 
                 @Override
                 protected void done() {
-
+                    isCoding = false;
                 }
             };
             worker.execute();
@@ -282,18 +316,12 @@ public class Cell extends JPanel implements DocumentListener {
 
     @Override
     public void insertUpdate(DocumentEvent e) {
-        if (isCompleting) {
-            isCompleting = true;
-            completeCode();
-        }
+        completeCode();
     }
 
     @Override
     public void removeUpdate(DocumentEvent e) {
-        if (isCompleting) {
-            isCompleting = true;
-            completeCode();
-        }
+        completeCode();
     }
 
     @Override
