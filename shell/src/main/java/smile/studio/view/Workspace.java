@@ -33,26 +33,15 @@ public class Workspace extends JSplitPane {
     /** The explorer of runtime information. */
     final Explorer explorer = new Explorer(runner);
     /** The editor of notebook. */
-    final Notebook notebook = new Notebook(runner, explorer::refresh);
+    final Notebook notebook;
 
     /**
      * Constructor.
-     */
-    public Workspace() {
-        super(JSplitPane.HORIZONTAL_SPLIT);
-
-        setLeftComponent(explorer);
-        setRightComponent(notebook);
-        setResizeWeight(0.15);
-    }
-
-    /**
-     * Constructor.
-     * @param file the notebook file.
+     * @param file the notebook file. If null, a new notebook will be created.
      */
     public Workspace(File file) {
         super(JSplitPane.HORIZONTAL_SPLIT);
-
+        notebook = new Notebook(file, runner, explorer::refresh);
         setLeftComponent(explorer);
         setRightComponent(notebook);
         setResizeWeight(0.15);

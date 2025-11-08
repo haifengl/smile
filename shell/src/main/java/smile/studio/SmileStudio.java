@@ -48,14 +48,20 @@ public class SmileStudio extends JFrame {
     private final JMenuBar menuBar = new JMenuBar();
     private final JToolBar toolBar = new JToolBar();
     private final StatusBar statusBar = new StatusBar();
-    private final Workspace workspace = new Workspace();
     private final Architect architect = new Architect();
+    private final Workspace workspace;
 
-    public SmileStudio() {
+    /**
+     * Constructor.
+     * @param file the notebook file. If null, a new notebook will be created.
+     */
+    public SmileStudio(File file) {
         super(bundle.getString("AppName"));
         setFrameIcon();
         setJMenuBar(menuBar);
         initMenuAndToolBar();
+        workspace = new Workspace(file);
+        if (file != null) setTitle(file);
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setLeftComponent(workspace);
@@ -73,10 +79,21 @@ public class SmileStudio extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                if (!workspace.notebook().isSaved()) {
+                if (confirmSaveNotebook()) {
                     saveNotebook(false);
                 }
                 workspace.close();
+
+                // Exit the app if this is the last window.
+                int count = 0;
+                for (Window window : Window.getWindows()) {
+                    if (window instanceof SmileStudio && window.isVisible()) {
+                        count++;
+                    }
+                }
+                if (count <= 1) {
+                    System.exit(0);
+                }
             }
         });
     }
@@ -254,23 +271,23 @@ public class SmileStudio extends JFrame {
 
 
     /**
-     * Prompts when opening/new and the notebook is not saved.
+     * Prompts if the notebook is not saved.
      * @return true if ok is clicked.
      */
-    private boolean confirmDiscardIfUnsaved() {
-        if (workspace.notebook().isSaved()) return true;
-        int res = JOptionPane.showConfirmDialog(this,
-                bundle.getString("Discard"),
-                bundle.getString("Confirm"),
+    private boolean confirmSaveNotebook() {
+        if (workspace.notebook().isSaved()) return false;
+        int choice = JOptionPane.showConfirmDialog(this,
+                bundle.getString("SaveMessage"),
+                bundle.getString("SaveTitle"),
                 JOptionPane.OK_CANCEL_OPTION);
-        return res == JOptionPane.OK_OPTION;
+        return choice == JOptionPane.OK_OPTION;
     }
 
     /**
      * Creates a new notebook.
      */
     private void newNotebook() {
-        javax.swing.SwingUtilities.invokeLater(() -> createAndShowGUI(false));
+        javax.swing.SwingUtilities.invokeLater(() -> createAndShowGUI(null));
     }
 
     /**
@@ -285,19 +302,12 @@ public class SmileStudio extends JFrame {
      * Opens a notebook.
      */
     private void openNotebook() {
-        if (!confirmDiscardIfUnsaved()) return;
         JFileChooser chooser = FileChooser.getInstance();
         chooser.setDialogTitle(bundle.getString("OpenNotebook"));
         chooser.setFileFilter(new FileNameExtensionFilter(bundle.getString("SmileFile"), fileNameExtensions));
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             File file = chooser.getSelectedFile();
-            try {
-                workspace.notebook().open(file);
-                setTitle(file);
-            } catch (IOException ex) {
-                JOptionPane.showMessageDialog(this, "Failed to open: " + ex.getMessage(),
-                        "Error", JOptionPane.ERROR_MESSAGE);
-            }
+            createAndShowGUI(file);
         }
     }
 
@@ -335,13 +345,13 @@ public class SmileStudio extends JFrame {
     /**
      * Creates and shows the GUI. For thread safety, this method should be
      * invoked from the event dispatch thread.
-     * @param exitOnClose the behavior when the user attempts to close the window.
+     * @param file the notebook file.
      */
-    public static void createAndShowGUI(boolean exitOnClose) {
+    public static void createAndShowGUI(File file) {
         // Create and set up the window.
-        SmileStudio studio = new SmileStudio();
+        SmileStudio studio = new SmileStudio(file);
         studio.setSize(new Dimension(1200, 800));
-        studio.setDefaultCloseOperation(exitOnClose ? JFrame.EXIT_ON_CLOSE : JFrame.DISPOSE_ON_CLOSE);
+        studio.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         // macOS window settings
         if (SystemInfo.isMacFullWindowContentSupported) {
@@ -413,7 +423,38 @@ public class SmileStudio extends JFrame {
             // Application specific UI defaults
             FlatLaf.registerCustomDefaultsSource("smile.studio");
             FlatLightLaf.setup();
-            createAndShowGUI(true);
+            if (args == null || args.length == 0) {
+                createAndShowGUI(null);
+            } else {
+                for (int i = 0; i < args.length; i++) {
+                    File file = new File(args[i]);
+                    if (file.isDirectory()) {
+                        JOptionPane.showMessageDialog(
+                                null,
+                                args[i] + bundle.getString("DirectoryError"),
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE
+                        );
+                        return;
+                    }
+
+                    if (!file.exists()) {
+                        try {
+                            file.createNewFile();
+                        } catch (IOException ex) {
+                            JOptionPane.showMessageDialog(
+                                    null,
+                                    ex.getMessage(),
+                                    "Error",
+                                    JOptionPane.ERROR_MESSAGE
+                            );
+                            return;
+                        }
+                    }
+
+                    createAndShowGUI(file);
+                }
+            }
         });
     }
 }
