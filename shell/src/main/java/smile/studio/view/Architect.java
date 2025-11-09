@@ -19,13 +19,18 @@ package smile.studio.view;
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.io.StringReader;
+
 import com.formdev.flatlaf.ui.FlatBorder;
 import com.formdev.flatlaf.ui.FlatLineBorder;
 import org.commonmark.node.*;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
+import org.xhtmlrenderer.simple.XHTMLPanel;
+import org.xml.sax.InputSource;
 import smile.plot.swing.Palette;
 
 /**
@@ -34,11 +39,12 @@ import smile.plot.swing.Palette;
  * @author Haifeng Li
  */
 public class Architect extends JPanel {
-    static final Color userMessageColor = new Color(220, 248, 198);
-    static final Color botMessageColor = Palette.web("#8dd4e8");
-    static final FlatBorder flat = new FlatBorder(); // proxy to get theme color and width
-    final JPanel messages = new JPanel();
-    final JTextArea input = new JTextArea();
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Architect.class);
+    private static final Color userMessageColor = new Color(220, 248, 198);
+    private static final Color botMessageColor = Palette.web("#8dd4e8");
+    private static final FlatBorder flat = new FlatBorder(); // proxy to get theme color and width
+    private final JPanel messages = new JPanel();
+    private final JTextArea input = new JTextArea();
 
     /**
      * Constructor.
@@ -84,45 +90,65 @@ public class Architect extends JPanel {
     private void sendMessage() {
         String message = input.getText().trim();
         if (!message.isEmpty()) {
-            addUserMessage(message, userMessageColor);
             input.setText("");
+            addUserMessage(message);
+            addAgentMessage(message);
         }
     }
 
     /**
-     * Adds a message widget.
+     * Adds an agent message widget.
      */
-    private void addAgentMessage(String message, Color background) {
+    private void addAgentMessage(String message) {
         if (!message.isEmpty()) {
             // Parse Markdown to HTML
             Parser parser = Parser.builder().build();
             Node document = parser.parse(message);
             HtmlRenderer renderer = HtmlRenderer.builder().build();
-            String html = renderer.render(document);
-
+            String content = renderer.render(document);
+/*
             JTextPane text = new JTextPane();
             text.setContentType("text/html");
             text.setText(html);
             text.setEditable(false);
+            text.setBorder(new EmptyBorder(8, 16, 8, 16));
             Dimension size = getSize();
-            text.setPreferredSize(new Dimension(size.width * 9 / 10, 100));
-            //text.setBackground(background);
+            //text.setPreferredSize(new Dimension(size.width, Integer.MAX_VALUE));
 
             JPanel pane = new JPanel(new BorderLayout());
             pane.setBorder(new CompoundBorder(
-                    new EmptyBorder(8, 8, 8, 8),
+                    new EmptyBorder(8, 8, 8, 16),
                     createRoundBorder()));
-            //pane.setBackground(background);
             pane.add(text, BorderLayout.CENTER);
-            messages.add(pane);
+*/
+            try {
+                String html = """
+                        <html>
+                        <body style="width: 95%; height: auto; margin: 0 auto;">
+                        """ + content + "</body></html>";
+                var factory = DocumentBuilderFactory.newInstance();
+                var builder = factory.newDocumentBuilder();
+                var doc = builder.parse(new InputSource(new StringReader(html)));
+
+                XHTMLPanel browser = new XHTMLPanel();
+                browser.setInteractive(false);
+                browser.setBackground(getBackground());
+                //browser.setCenteredPagedView(true);
+                browser.setDocument(doc, null); // The second argument is for base URI, can be null
+                messages.add(browser);
+            } catch (Exception ex) {
+                logger.error("Failed to add agent message: ", ex);
+            }
         }
     }
 
     /**
      * Adds a user message widget.
      */
-    private void addUserMessage(String message, Color background) {
+    private void addUserMessage(String message) {
         if (!message.isEmpty()) {
+            Color color = messages.getBackground().brighter();
+
             JTextArea text = new JTextArea();
             text.setText(message);
             text.setEditable(false);
@@ -134,7 +160,6 @@ public class Architect extends JPanel {
             pane.setBorder(new CompoundBorder(
                     new EmptyBorder(8, 8, 8, 16),
                     createRoundBorder()));
-            //pane.setBackground(background);
             pane.add(text, BorderLayout.CENTER);
             messages.add(pane);
         }
