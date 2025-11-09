@@ -194,7 +194,7 @@ public class Notebook extends JPanel implements DocumentListener {
             SwingUtilities.invokeLater(() -> {
                 first.editor.requestFocusInWindow();
                 first.editor.setCaretPosition(0);
-                scrollTo(first);
+                scrollTo(first.editor);
             });
         }
     }
@@ -343,7 +343,7 @@ public class Notebook extends JPanel implements DocumentListener {
 
         SwingUtilities.invokeLater(() -> {
             cell.editor.requestFocusInWindow();
-            scrollTo(cell);
+            scrollTo(cell.editor);
         });
         return cell;
     }
@@ -379,7 +379,7 @@ public class Notebook extends JPanel implements DocumentListener {
             cells.add(cell, idx - 1);
             cells.revalidate();
             cells.repaint();
-            scrollTo(cell);
+            scrollTo(cell.editor);
         }
     }
 
@@ -395,7 +395,7 @@ public class Notebook extends JPanel implements DocumentListener {
             cells.add(cell, idx + 1);
             cells.revalidate();
             cells.repaint();
-            scrollTo(cell);
+            scrollTo(cell.editor);
         }
     }
 
@@ -568,14 +568,24 @@ public class Notebook extends JPanel implements DocumentListener {
                 int idx = indexOf(cell);
                 if (idx < cells.getComponentCount() - 1) {
                     Cell next = getCell(idx + 1);
-                    SwingUtilities.invokeLater(next.editor::requestFocusInWindow);
-                    scrollTo(next);
+                    SwingUtilities.invokeLater(() -> {
+                        next.editor.requestFocusInWindow();
+                        scrollTo(next.editor);
+                    });
                 } else {
-                    addCell(cell);
+                    Cell next = addCell(cell);
+                    SwingUtilities.invokeLater(() -> {
+                        next.editor.requestFocusInWindow();
+                        scrollTo(next.editor);
+                    });
                 }
             }
             case INSERT_BELOW -> {
-                addCell(cell);
+                Cell next = addCell(cell);
+                SwingUtilities.invokeLater(() -> {
+                    next.editor.requestFocusInWindow();
+                    scrollTo(next.editor);
+                });
             }
         }
     }
