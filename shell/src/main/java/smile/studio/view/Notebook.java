@@ -445,8 +445,9 @@ public class Notebook extends JPanel implements DocumentListener {
     /**
      * Evaluates the code of cell.
      * @param cell the cell to evaluate.
+     * @return true if code evaluation succeeded without exceptions.
      */
-    private void runCell(Cell cell) {
+    private boolean runCell(Cell cell) {
         runCount++;
         runner.setCell(cell); // Direct JShell prints
         SwingUtilities.invokeLater(() -> {
@@ -454,6 +455,7 @@ public class Notebook extends JPanel implements DocumentListener {
             cell.editor.setRows(Math.min(20, cell.editor.getLineCount()));
         });
 
+        boolean okay = true;
         try {
             cell.buffer.setLength(0); // Clears the StringBuilder
             appendLine(cell.buffer, "⏵ " + datetime.format(ZonedDateTime.now()) + " started");
@@ -473,15 +475,20 @@ public class Notebook extends JPanel implements DocumentListener {
                             if (typeName.equals("DataFrame")) {
                                 cell.buffer.append(System.lineSeparator());
                             } else if (typeName.contains("[]")) {
-                                value = value.substring(0, value.indexOf('{'));
+                                int index = value.indexOf('{');
+                                if (index > 0) {
+                                    value = value.substring(0, index);
+                                }
                             }
                             appendLine(cell.buffer, value);
                         }
                     }
                 } else if (ev.status() == Snippet.Status.REJECTED) {
+                    okay = false;
                     appendLine(cell.buffer, "✖ Rejected snippet: " + ev.snippet().source());
                 } else if (ev.status() == Snippet.Status.RECOVERABLE_DEFINED ||
                            ev.status() == Snippet.Status.RECOVERABLE_NOT_DEFINED) {
+                    okay = false;
                     appendLine(cell.buffer, "⚠ Recoverable issue: " + ev.snippet().source());
                 }
 
@@ -492,6 +499,7 @@ public class Notebook extends JPanel implements DocumentListener {
                 });
 
                 if (ev.exception() instanceof EvalException ex) {
+                    okay = false;
                     appendLine(cell.buffer, "Exception: " + ex.getExceptionClassName());
                     if (ex.getMessage() != null) appendLine(cell.buffer, ex.getMessage());
                     // JShell exception stack trace is often concise
@@ -502,7 +510,9 @@ public class Notebook extends JPanel implements DocumentListener {
             }
             appendLine(cell.buffer, "⏹ " + datetime.format(ZonedDateTime.now()) + " finished");
         } catch (Throwable t) {
+            okay = false;
             appendLine(cell.buffer, "✖ Error during execution: " + t);
+            t.printStackTrace();
         } finally {
             runner.removeCell();
             // Generates title before calling invokeLater
@@ -514,6 +524,8 @@ public class Notebook extends JPanel implements DocumentListener {
                 cell.setOutput(cell.buffer.toString());
             });
         }
+
+        return okay;
     }
 
     /**
@@ -614,7 +626,7 @@ public class Notebook extends JPanel implements DocumentListener {
                 runner.setRunning(true);
                 for (Cell cell : cells) {
                     if (cell.editor.getText().trim().isEmpty()) continue;
-                    runCell(cell);
+                    if (!runCell(cell)) break;
                 }
                 return null;
             }

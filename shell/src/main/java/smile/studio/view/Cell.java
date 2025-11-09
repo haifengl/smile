@@ -207,7 +207,7 @@ public class Cell extends JPanel implements DocumentListener {
             }
         } catch (BadLocationException ex) {
             isCoding = false;
-            logger.debug("completeCode failed: {}", ex.getMessage());
+            logger.trace("completeCode failed: {}", ex.getMessage());
         }
     }
 
@@ -251,7 +251,7 @@ public class Cell extends JPanel implements DocumentListener {
                                         JOptionPane.ERROR_MESSAGE
                                 ));
                             } else {
-                                logger.debug("Code generation streaming succeed!");
+                                logger.trace("Code generation streaming succeed!");
                             }
                         }
                     });
