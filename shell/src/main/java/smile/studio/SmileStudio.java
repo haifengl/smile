@@ -23,6 +23,7 @@ import java.awt.event.WindowEvent;
 import java.awt.image.*;
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.Timer;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.*;
 import java.util.*;
@@ -87,7 +88,7 @@ public class SmileStudio extends JFrame {
                 // Exit the app if this is the last window.
                 int count = 0;
                 for (Window window : Window.getWindows()) {
-                    if (window instanceof SmileStudio && window.isVisible()) {
+                    if (window.isVisible() && window instanceof SmileStudio) {
                         count++;
                     }
                 }
@@ -131,15 +132,21 @@ public class SmileStudio extends JFrame {
         var openNotebook = new OpenNotebookAction();
         var saveNotebook = new SaveNotebookAction();
         var saveAsNotebook = new SaveAsNotebookAction();
+        var autoSave = new AutoSaveAction();
         var addCell = new AddCellAction();
         var runAll = new RunAllAction();
         var clearAll = new ClearAllAction();
+        var settings = new SettingsAction();
+        var exit = new ExitAction();
 
         JMenu fileMenu = new JMenu(bundle.getString("File"));
         fileMenu.add(new JMenuItem(newNotebook));
         fileMenu.add(new JMenuItem(openNotebook));
         fileMenu.add(new JMenuItem(saveNotebook));
         fileMenu.add(new JMenuItem(saveAsNotebook));
+        fileMenu.add(new JCheckBoxMenuItem(autoSave));
+        fileMenu.add(new JMenuItem(settings));
+        fileMenu.add(new JMenuItem(exit));
         menuBar.add(fileMenu);
 
         JMenu cellMenu = new JMenu(bundle.getString("Cell"));
@@ -222,6 +229,30 @@ public class SmileStudio extends JFrame {
         }
     }
 
+    private class AutoSaveAction extends AbstractAction {
+        final Timer timer = new Timer(60000, e -> {
+            if (workspace.notebook().getFile() != null && !workspace.notebook().isSaved()) {
+                saveNotebook(false);
+            }
+        });
+
+        public AutoSaveAction() {
+            super(bundle.getString("AutoSave"));
+            timer.setInitialDelay(1000);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (e.getSource() instanceof JCheckBoxMenuItem autoSave) {
+                if (autoSave.isSelected()) {
+                    timer.start();
+                } else {
+                    timer.stop();
+                }
+            }
+        }
+    }
+
     private class AddCellAction extends AbstractAction {
         static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(SmileStudio.class.getResource("images/add-cell.png")));
         static final ImageIcon icon16 = scaleImageIcon(icon, 16);
@@ -269,6 +300,41 @@ public class SmileStudio extends JFrame {
         }
     }
 
+    private class SettingsAction extends AbstractAction {
+        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(SmileStudio.class.getResource("images/settings.png")));
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
+        public SettingsAction() {
+            super(bundle.getString("Settings"), icon16);
+            putValue(LARGE_ICON_KEY, icon24);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+
+        }
+    }
+
+    private class ExitAction extends AbstractAction {
+        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(SmileStudio.class.getResource("images/exit.png")));
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
+        public ExitAction() {
+            super(bundle.getString("Exit"), icon16);
+            putValue(LARGE_ICON_KEY, icon24);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            int count = 0;
+            for (Window window : Window.getWindows()) {
+                if (window.isVisible() && window instanceof SmileStudio studio) {
+                    // Simulates a user clicking the close button to trigger WindowListener.
+                    studio.dispatchEvent(new WindowEvent(studio, WindowEvent.WINDOW_CLOSING));
+                }
+            }
+        }
+    }
 
     /**
      * Prompts if the notebook is not saved.
