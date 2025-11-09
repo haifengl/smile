@@ -29,8 +29,8 @@ import java.util.prefs.Preferences;
  * @author Haifeng Li
  */
 public class SettingsDialog extends JDialog {
+    public static final String OPENAI_API_KEY = "openaiApiKey";
     private static final ResourceBundle bundle = ResourceBundle.getBundle(SettingsDialog.class.getName(), Locale.getDefault());
-    private static final String OPENAI_API_KEY = "OpenAI_API_KEY";
     private final JLabel apiKeyLabel = new JLabel(bundle.getString("APIKey"));
     private final JTextField apiKeyField = new JTextField(25);
     private final JButton okButton = new JButton(bundle.getString("OK"));
