@@ -17,11 +17,15 @@
 package smile.studio.view;
 
 import javax.swing.*;
+import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import com.formdev.flatlaf.ui.FlatBorder;
 import com.formdev.flatlaf.ui.FlatLineBorder;
+import org.commonmark.node.*;
+import org.commonmark.parser.Parser;
+import org.commonmark.renderer.html.HtmlRenderer;
 import smile.plot.swing.Palette;
 
 /**
@@ -32,6 +36,7 @@ import smile.plot.swing.Palette;
 public class Architect extends JPanel {
     static final Color userMessageColor = new Color(220, 248, 198);
     static final Color botMessageColor = Palette.web("#8dd4e8");
+    static final FlatBorder flat = new FlatBorder(); // proxy to get theme color and width
     final JPanel messages = new JPanel();
     final JTextArea input = new JTextArea();
 
@@ -43,15 +48,11 @@ public class Architect extends JPanel {
         setBorder(new EmptyBorder(0, 0, 0, 8));
         messages.setLayout(new BoxLayout(messages, BoxLayout.Y_AXIS));
         JScrollPane scrollPane = new JScrollPane(messages);
+        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
         JPanel inputPane = new JPanel(new BorderLayout());
-        var flat = new FlatBorder(); // proxy to get theme color and width
-        var border = new FlatLineBorder(new Insets(5, 5, 5, 5),
-                (Color) flat.getStyleableValue("borderColor"),
-                (Float) flat.getStyleableValue("borderWidth"),
-                20);
-        inputPane.setBorder(border);
         inputPane.setBackground(input.getBackground());
+        inputPane.setBorder(createRoundBorder());
         inputPane.add(input, BorderLayout.CENTER);
 
         input.setRows(3);
@@ -66,6 +67,12 @@ public class Architect extends JPanel {
                 sendMessage();
             }
         });
+        inputMap.put(KeyStroke.getKeyStroke("shift ENTER"), "new-line");
+        actionMap.put("new-line", new AbstractAction() {
+            @Override public void actionPerformed(ActionEvent e) {
+                input.insert("\n", input.getCaretPosition());
+            }
+        });
 
         add(scrollPane, BorderLayout.CENTER);
         add(inputPane, BorderLayout.SOUTH);
@@ -77,7 +84,7 @@ public class Architect extends JPanel {
     private void sendMessage() {
         String message = input.getText().trim();
         if (!message.isEmpty()) {
-            addMessage(message, userMessageColor, 0.1f);
+            addUserMessage(message, userMessageColor);
             input.setText("");
         }
     }
@@ -85,14 +92,62 @@ public class Architect extends JPanel {
     /**
      * Adds a message widget.
      */
-    private void addMessage(String message, Color background, float alignment) {
+    private void addAgentMessage(String message, Color background) {
         if (!message.isEmpty()) {
-            JTextPane pane = new JTextPane();
-            pane.setText(message);
-            pane.setBackground(background);
-            pane.setBorder(new FlatBorder());
-            pane.setAlignmentX(alignment);
+            // Parse Markdown to HTML
+            Parser parser = Parser.builder().build();
+            Node document = parser.parse(message);
+            HtmlRenderer renderer = HtmlRenderer.builder().build();
+            String html = renderer.render(document);
+
+            JTextPane text = new JTextPane();
+            text.setContentType("text/html");
+            text.setText(html);
+            text.setEditable(false);
+            Dimension size = getSize();
+            text.setPreferredSize(new Dimension(size.width * 9 / 10, 100));
+            //text.setBackground(background);
+
+            JPanel pane = new JPanel(new BorderLayout());
+            pane.setBorder(new CompoundBorder(
+                    new EmptyBorder(8, 8, 8, 8),
+                    createRoundBorder()));
+            //pane.setBackground(background);
+            pane.add(text, BorderLayout.CENTER);
             messages.add(pane);
         }
+    }
+
+    /**
+     * Adds a user message widget.
+     */
+    private void addUserMessage(String message, Color background) {
+        if (!message.isEmpty()) {
+            JTextArea text = new JTextArea();
+            text.setText(message);
+            text.setEditable(false);
+            text.setLineWrap(true);
+            text.setWrapStyleWord(true);
+            text.setRows(text.getLineCount());
+
+            JPanel pane = new JPanel(new BorderLayout());
+            pane.setBorder(new CompoundBorder(
+                    new EmptyBorder(8, 8, 8, 16),
+                    createRoundBorder()));
+            //pane.setBackground(background);
+            pane.add(text, BorderLayout.CENTER);
+            messages.add(pane);
+        }
+    }
+
+    /**
+     * Returns a border with round corners.
+     * @return a border with round corner.
+     */
+    private FlatLineBorder createRoundBorder() {
+        return new FlatLineBorder(new Insets(5, 5, 5, 5),
+                (Color) flat.getStyleableValue("borderColor"),
+                (Float) flat.getStyleableValue("borderWidth"),
+                20);
     }
 }
