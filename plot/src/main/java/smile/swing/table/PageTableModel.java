@@ -18,6 +18,7 @@ package smile.swing.table;
 
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.ResourceBundle;
 import javax.swing.*;
@@ -55,7 +56,7 @@ public abstract class PageTableModel extends AbstractTableModel {
     /** Page field on toolbar. */
     private final JTextField pageField = new JTextField(5);
     /** The message resource bundle. */
-    private final ResourceBundle bundle = ResourceBundle.getBundle(PageTableModel.class.getName(), pageSizeField.getLocale());
+    private static final ResourceBundle bundle = ResourceBundle.getBundle(PageTableModel.class.getName(), Locale.getDefault());
     /** Row count label on toolbar. */
     private final JLabel totalRowCountLabel = new JLabel();
     /** Page count label on toolbar. */

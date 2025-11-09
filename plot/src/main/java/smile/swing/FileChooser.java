@@ -41,7 +41,7 @@ import javax.swing.UIManager;
 import javax.swing.filechooser.FileFilter;
 
 /**
- * File chooser for with file/images preview. A simple file filter based on
+ * File chooser with file/images preview. A simple file filter based on
  * file extensions is also provided.
  * 
  * @author Haifeng Li
