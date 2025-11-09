@@ -166,21 +166,34 @@ public class Explorer extends JPanel {
 
         runner.variables().forEach(snippet -> {
             var node = new DefaultMutableTreeNode(snippet);
-            switch (snippet.typeName()) {
-                case "DataFrame" -> {
+            String typeName = snippet.typeName();
+            switch (typeName) {
+                case "DataFrame":
                     treeModel.insertNodeInto(node, frames, frames.getChildCount());
-                }
-                case "DenseMatrix", "BandMatrix", "SymmMatrix", "SparseMatrix" -> {
+                    break;
+
+                case "DenseMatrix", "BandMatrix", "SymmMatrix", "SparseMatrix":
                     treeModel.insertNodeInto(node, matrix, matrix.getChildCount());
-                }
-                case "Classifier", "Regression", "KNN", "FLD", "LDA", "QDA", "RDA",
-                     "NaiveBayes", "OneVersusOne", "OneVersusRest", "MLP", "RBFNetwork",
-                     "LogisticRegression", "SparseLogisticRegression", "Maxent",
-                     "DecisionTree", "RegressionTree", "AdaBoost", "RandomForest", "GradientTreeBoost",
-                     "KernelMachine", "LinearSVM", "SparseLinearSVM",
-                     "LinearModel", "GaussianProcessRegression" -> {
+                    break;
+
+                case "FLD", "LDA", "QDA", "RDA", "NaiveBayes", "MLP", "Maxent",
+                      "LogisticRegression", "SparseLogisticRegression",
+                      "DecisionTree", "RegressionTree", "AdaBoost", "RandomForest",
+                      "GradientTreeBoost", "LinearSVM", "SparseLinearSVM",
+                      "LinearModel", "GaussianProcessRegression":
                     treeModel.insertNodeInto(node, models, models.getChildCount());
-                }
+                    break;
+
+                default:
+                    if (typeName.startsWith("Classifier<") ||
+                        typeName.startsWith("Regression<") ||
+                        typeName.startsWith("KNN<") ||
+                        typeName.startsWith("RBFNetwork<") ||
+                        typeName.startsWith("KernelMachine<") ||
+                        typeName.startsWith("OneVersusOne<") ||
+                        typeName.startsWith("OneVersusRest<")) {
+                        treeModel.insertNodeInto(node, models, models.getChildCount());
+                    }
             }
         });
 
