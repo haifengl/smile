@@ -74,6 +74,7 @@ public class Cell extends JPanel implements DocumentListener {
         super(new BorderLayout(5, 5));
         setBorder(new EmptyBorder(8,8,8,8));
 
+        // Header of action buttons and prompt field
         JPanel header = new JPanel();
         header.setLayout(new BoxLayout(header, BoxLayout.X_AXIS));
         header.add(Box.createHorizontalStrut(2));
@@ -89,7 +90,6 @@ public class Cell extends JPanel implements DocumentListener {
         header.add(Box.createHorizontalStrut(20));
         header.add(prompt);
 
-        // Enter key action
         prompt.addActionListener(e -> generateCode());
         prompt.putClientProperty("JComponent.roundRect", true);
 
@@ -105,11 +105,8 @@ public class Cell extends JPanel implements DocumentListener {
         clearBtn.addActionListener(e -> output.setText(""));
         deleteBtn.addActionListener(e -> notebook.deleteCell(this));
 
-        // Output area
-        output.setBackground(getBackground());
+        // Cell editor and output configuration
         output.setFont(font);
-
-        // Code area
         editor.setFont(font);
         editor.getDocument().addDocumentListener(this);
         RTextScrollPane editorScroll = new RTextScrollPane(editor);
