@@ -475,6 +475,7 @@ public class Notebook extends JPanel implements DocumentListener {
                             if (typeName.equals("DataFrame")) {
                                 cell.buffer.append(System.lineSeparator());
                             } else if (typeName.contains("[]")) {
+                                // The type may be generic with array, e.g., SVM<double[]>
                                 int index = value.indexOf('{');
                                 if (index > 0) {
                                     value = value.substring(0, index);
