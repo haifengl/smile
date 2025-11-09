@@ -1,12 +1,11 @@
 // t-SNE on MNIST
 
 import smile.io.Read;
-import smile.util.Paths;
+import smile.io.Paths;
 import smile.manifold.TSNE;
 import smile.feature.extraction.PCA;
-import smile.plot.swing.Palette;
-import smile.plot.swing.PlotPanel;
 import smile.plot.swing.ScatterPlot;
+import static smile.swing.SmileUtilities.*;
 import org.apache.commons.csv.CSVFormat;
 
 var format = CSVFormat.DEFAULT.withDelimiter(' ');
@@ -17,11 +16,8 @@ var pca = PCA.fit(mnist).getProjection(50);
 var X = pca.apply(mnist);
 
 var perplexity = 20;
-var tsne = new TSNE(X, 2, perplexity, 200, 1000);
+var tsne = TSNE.fit(X, new TSNE.Options(2, 20, 200, 12, 550));
 
-var plot = ScatterPlot.of(tsne.coordinates, labels, '@');
-var canvas = plot.canvas();
-canvas.setTitle("t-SNE of MNIST");
-canvas.window();
-
-/exit
+var figure = ScatterPlot.of(tsne.coordinates(), labels, '@').figure();
+figure.setTitle("MNIST - t-SNE");
+show(figure);
