@@ -482,6 +482,15 @@ public class SmileStudio extends JFrame {
             System.exit(1);
         }
 
+        // If user doesn't set system property for api key,
+        // we will try to set it from preferences if it exists.
+        if (System.getProperty("openai.apiKey", "").isBlank()) {
+            String apiKey = SmileStudio.prefs.get(SettingsDialog.OPENAI_API_KEY, "").trim();
+            if (!apiKey.isEmpty()) {
+                System.setProperty("openai.apiKey", apiKey);
+            }
+        }
+
         // Schedule a job for the event dispatch thread:
         // creating and showing this application's GUI.
         javax.swing.SwingUtilities.invokeLater(() -> {
