@@ -25,10 +25,8 @@ import javax.swing.text.BadLocationException;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Optional;
-import java.util.ResourceBundle;
 
 import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
 import com.formdev.flatlaf.util.FontUtils;
@@ -48,9 +46,8 @@ import smile.studio.model.PostRunNavigation;
  */
 public class Cell extends JPanel implements DocumentListener {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Cell.class);
+    private static final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), Locale.getDefault());
     private static Font font = FontUtils.getCompositeFont(FlatJetBrainsMonoFont.FAMILY, Font.PLAIN, 14);
-    /** The message resource bundle. */
-    private final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), getLocale());
     private final String placeholder = bundle.getString("Prompt");
     /** The output buffer. StringBuffer is multi-thread safe while StringBuilder isn't. */
     final StringBuffer buffer = new StringBuffer();

@@ -21,6 +21,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
+import java.util.Locale;
 import java.util.ResourceBundle;
 import com.sun.management.OperatingSystemMXBean;
 
@@ -30,18 +31,15 @@ import com.sun.management.OperatingSystemMXBean;
  * @author Haifeng Li
  */
 public class StatusBar extends JPanel {
-    /** The message resource bundle. */
-    final ResourceBundle bundle = ResourceBundle.getBundle(StatusBar.class.getName(), getLocale());
+    private static final ResourceBundle bundle = ResourceBundle.getBundle(StatusBar.class.getName(), Locale.getDefault());
     /** Status message. */
-    final JLabel status = new JLabel(bundle.getString("Ready"));
+    private final JLabel status = new JLabel(bundle.getString("Ready"));
     /** Status message. */
-    final JLabel system = new JLabel();
+    private final JLabel system = new JLabel();
     /** OS's MXBean */
-    final OperatingSystemMXBean os = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+    private final OperatingSystemMXBean os = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
     /** Memory's MXBean */
-    final MemoryMXBean memory = ManagementFactory.getMemoryMXBean();
-    /** Timer to refresh CPU/Memory usage. */
-    final Timer timer;
+    private final MemoryMXBean memory = ManagementFactory.getMemoryMXBean();
 
     /**
      * Constructor.
@@ -61,7 +59,8 @@ public class StatusBar extends JPanel {
         system.setBorder(new EmptyBorder(0, 0, 0, 8));
         add(system, BorderLayout.EAST);
 
-        timer = new Timer(1000, e -> {
+        // Timer to refresh CPU/Memory usage
+        Timer timer = new Timer(1000, e -> {
             double cpuLoad = os.getCpuLoad();
             double usedHeap = memory.getHeapMemoryUsage().getUsed() / (1024 * 1024.0);
             String unit = "MB";
