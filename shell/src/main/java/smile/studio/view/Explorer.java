@@ -24,6 +24,7 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.ResourceBundle;
 import jdk.jshell.VarSnippet;
@@ -37,8 +38,7 @@ import static smile.swing.SmileUtilities.scaleImageIcon;
  * @author Haifeng Li
  */
 public class Explorer extends JPanel {
-    /** The message resource bundle. */
-    private final ResourceBundle bundle = ResourceBundle.getBundle(Explorer.class.getName(), getLocale());
+    private static final ResourceBundle bundle = ResourceBundle.getBundle(Explorer.class.getName(), Locale.getDefault());
     /** Tree nodes. */
     private final DefaultMutableTreeNode root = new DefaultMutableTreeNode(bundle.getString("Root"));
     private final DefaultMutableTreeNode frames = new DefaultMutableTreeNode(bundle.getString("DataFrames"));;

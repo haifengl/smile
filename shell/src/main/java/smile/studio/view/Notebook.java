@@ -47,8 +47,7 @@ import smile.studio.model.JavaRunner;
  */
 public class Notebook extends JPanel implements DocumentListener {
     private static final String CELL_SEPARATOR = "//--- CELL ---";
-    /** The message resource bundle. */
-    private final ResourceBundle bundle = ResourceBundle.getBundle(Notebook.class.getName(), getLocale());
+    private static final ResourceBundle bundle = ResourceBundle.getBundle(Notebook.class.getName(), Locale.getDefault());
     private final JPanel cells = new JPanel();
     private final JScrollPane scrollPane = new JScrollPane(cells);
     private final DateTimeFormatter datetime = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
