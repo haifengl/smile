@@ -106,21 +106,7 @@ public class Architect extends JPanel {
             Node document = parser.parse(message);
             HtmlRenderer renderer = HtmlRenderer.builder().build();
             String content = renderer.render(document);
-/*
-            JTextPane text = new JTextPane();
-            text.setContentType("text/html");
-            text.setText(html);
-            text.setEditable(false);
-            text.setBorder(new EmptyBorder(8, 16, 8, 16));
-            Dimension size = getSize();
-            //text.setPreferredSize(new Dimension(size.width, Integer.MAX_VALUE));
 
-            JPanel pane = new JPanel(new BorderLayout());
-            pane.setBorder(new CompoundBorder(
-                    new EmptyBorder(8, 8, 8, 16),
-                    createRoundBorder()));
-            pane.add(text, BorderLayout.CENTER);
-*/
             try {
                 String html = """
                         <html>
@@ -133,7 +119,6 @@ public class Architect extends JPanel {
                 XHTMLPanel browser = new XHTMLPanel();
                 browser.setInteractive(false);
                 browser.setBackground(getBackground());
-                //browser.setCenteredPagedView(true);
                 browser.setDocument(doc, null); // The second argument is for base URI, can be null
                 messages.add(browser);
             } catch (Exception ex) {

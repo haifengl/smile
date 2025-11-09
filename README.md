@@ -1,4 +1,6 @@
 # Statistical Machine Intelligence & Learning Engine
+[![Maven Central](https://img.shields.io/maven-central/v/org.github.haifengl/smile-core)](https://central.sonatype.com/artifact/org.github.haifengl/smile-core)
+[![Dual License](https://img.shields.io/badge/license-GPL--3-blue.svg)](https://github.com/haifengl/smile/blob/master/LICENSE)
 
 ## Goal ##
 <img align="left" width="48" src="/web/src/images/smile.jpg">
