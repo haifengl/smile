@@ -17,6 +17,7 @@
 package smile.studio.view;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.tree.*;
 import java.awt.*;
@@ -64,6 +65,7 @@ public class Explorer extends JPanel {
      */
     public Explorer(JavaRunner runner) {
         super(new BorderLayout());
+        setBorder(new EmptyBorder(0, 8, 0, 0));
         this.runner = runner;
         initTree();
 

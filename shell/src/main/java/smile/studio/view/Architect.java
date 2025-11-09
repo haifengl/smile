@@ -17,9 +17,11 @@
 package smile.studio.view;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import com.formdev.flatlaf.ui.FlatBorder;
+import com.formdev.flatlaf.ui.FlatLineBorder;
 import smile.plot.swing.Palette;
 
 /**
@@ -37,14 +39,22 @@ public class Architect extends JPanel {
      * Constructor.
      */
     public Architect() {
-        super(new BorderLayout(0, 10));
+        super(new BorderLayout(0, 8));
+        setBorder(new EmptyBorder(0, 0, 0, 8));
         messages.setLayout(new BoxLayout(messages, BoxLayout.Y_AXIS));
         JScrollPane scrollPane = new JScrollPane(messages);
-        add(scrollPane, BorderLayout.CENTER);
-        add(input, BorderLayout.SOUTH);
+
+        JPanel inputPane = new JPanel(new BorderLayout());
+        var flat = new FlatBorder(); // proxy to get theme color and width
+        var border = new FlatLineBorder(new Insets(5, 5, 5, 5),
+                (Color) flat.getStyleableValue("borderColor"),
+                (Float) flat.getStyleableValue("borderWidth"),
+                20);
+        inputPane.setBorder(border);
+        inputPane.setBackground(input.getBackground());
+        inputPane.add(input, BorderLayout.CENTER);
 
         input.setRows(3);
-        input.setBorder(new FlatBorder());
         input.setLineWrap(true);
         input.setWrapStyleWord(true);
 
@@ -56,6 +66,9 @@ public class Architect extends JPanel {
                 sendMessage();
             }
         });
+
+        add(scrollPane, BorderLayout.CENTER);
+        add(inputPane, BorderLayout.SOUTH);
     }
 
     /**

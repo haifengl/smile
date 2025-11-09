@@ -17,6 +17,7 @@
 package smile.studio.view;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
@@ -47,20 +48,18 @@ public class StatusBar extends JPanel {
      */
     public StatusBar() {
         super(new BorderLayout());
-        //status.putClientProperty("FlatLaf.styleClass", "monospaced");
 
         // Left-aligned status message
         status.setHorizontalAlignment(SwingConstants.LEFT);
         // Add some padding to the left side
-        status.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 0));
+        status.setBorder(new EmptyBorder(0, 8, 0, 0));
         add(status, BorderLayout.WEST);
 
         // Right-aligned system info
         system.setHorizontalAlignment(SwingConstants.RIGHT);
         // Add some padding to the right side
-        system.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 8));
+        system.setBorder(new EmptyBorder(0, 0, 0, 8));
         add(system, BorderLayout.EAST);
-
 
         timer = new Timer(1000, e -> {
             double cpuLoad = os.getCpuLoad();
