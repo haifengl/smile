@@ -518,6 +518,8 @@ public class SmileStudio extends JFrame {
             // Application specific UI defaults
             FlatLaf.registerCustomDefaultsSource("smile.studio");
             FlatLightLaf.setup();
+
+            // Start the GUI
             if (args == null || args.length == 0) {
                 createAndShowGUI(null);
             } else {

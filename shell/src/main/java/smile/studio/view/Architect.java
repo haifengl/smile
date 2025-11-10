@@ -92,14 +92,13 @@ public class Architect extends JPanel {
         if (!message.isEmpty()) {
             input.setText("");
             addUserMessage(message);
-            addAgentMessage(message);
         }
     }
 
     /**
      * Adds an agent message widget.
      */
-    private void addAgentMessage(String message) {
+    private JComponent addAgentMessage(String message) {
         if (!message.isEmpty()) {
             // Parse Markdown to HTML
             Parser parser = Parser.builder().build();
@@ -120,11 +119,13 @@ public class Architect extends JPanel {
                 browser.setInteractive(false);
                 browser.setBackground(getBackground());
                 browser.setDocument(doc, null); // The second argument is for base URI, can be null
-                messages.add(browser);
+                return browser;
             } catch (Exception ex) {
                 logger.error("Failed to add agent message: ", ex);
+                return new JLabel(ex.getMessage());
             }
         }
+        return null;
     }
 
     /**
@@ -132,8 +133,6 @@ public class Architect extends JPanel {
      */
     private void addUserMessage(String message) {
         if (!message.isEmpty()) {
-            Color color = messages.getBackground().brighter();
-
             JTextArea text = new JTextArea();
             text.setText(message);
             text.setEditable(false);
@@ -147,6 +146,11 @@ public class Architect extends JPanel {
                     createRoundBorder()));
             pane.add(text, BorderLayout.CENTER);
             messages.add(pane);
+
+            var response = addAgentMessage(message);
+            if (response != null) {
+                pane.add(response, BorderLayout.CENTER);
+            }
         }
     }
 
