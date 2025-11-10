@@ -170,11 +170,13 @@ public class Explorer extends JPanel {
             var node = new DefaultMutableTreeNode(snippet);
             String typeName = snippet.typeName();
             switch (typeName) {
-                case "DataFrame":
+                case "DataFrame", "smile.data.DataFrame":
                     treeModel.insertNodeInto(node, frames, frames.getChildCount());
                     break;
 
-                case "DenseMatrix", "BandMatrix", "SymmMatrix", "SparseMatrix":
+                case "DenseMatrix", "BandMatrix", "SymmMatrix", "SparseMatrix",
+                     "smile.tensor.DenseMatrix", "smile.tensor.BandMatrix",
+                     "smile.tensor.SymmMatrix", "smile.tensor.SparseMatrix":
                     treeModel.insertNodeInto(node, matrix, matrix.getChildCount());
                     break;
 
