@@ -48,6 +48,7 @@ public class SmileStudio extends JFrame {
     /** Source code file name extensions. */
     private static final String[] fileNameExtensions = {"java", "jsh"};
     private static final Preferences prefs = Preferences.userNodeForPackage(SmileStudio.class);
+    private static final String AUTO_SAVE_KEY = "autoSave";
     /** Each window has its own FileChooser so that it points to its own recent directory. */
     private final JFileChooser fileChooser = new FileChooser();
     private final JMenuBar menuBar = new JMenuBar();
@@ -143,12 +144,17 @@ public class SmileStudio extends JFrame {
         var settings = new SettingsAction();
         var exit = new ExitAction();
 
+        var autoSaveMenuItem = new JCheckBoxMenuItem(autoSave);
+        if (prefs.getBoolean(AUTO_SAVE_KEY, false)) {
+            SwingUtilities.invokeLater(() -> autoSaveMenuItem.doClick());
+        }
+
         JMenu fileMenu = new JMenu(bundle.getString("File"));
         fileMenu.add(new JMenuItem(newNotebook));
         fileMenu.add(new JMenuItem(openNotebook));
         fileMenu.add(new JMenuItem(saveNotebook));
         fileMenu.add(new JMenuItem(saveAsNotebook));
-        fileMenu.add(new JCheckBoxMenuItem(autoSave));
+        fileMenu.add(autoSaveMenuItem);
         fileMenu.add(new JMenuItem(settings));
         fileMenu.add(new JMenuItem(exit));
         menuBar.add(fileMenu);
@@ -234,6 +240,9 @@ public class SmileStudio extends JFrame {
     }
 
     private class AutoSaveAction extends AbstractAction {
+        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(SmileStudio.class.getResource("images/refresh.png")));
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
         final Timer timer = new Timer(60000, e -> {
             if (workspace.notebook().getFile() != null && !workspace.notebook().isSaved()) {
                 saveNotebook(false);
@@ -241,13 +250,15 @@ public class SmileStudio extends JFrame {
         });
 
         public AutoSaveAction() {
-            super(bundle.getString("AutoSave"));
+            super(bundle.getString("AutoSave"), icon16);
+            putValue(LARGE_ICON_KEY, icon24);
             timer.setInitialDelay(1000);
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
             if (e.getSource() instanceof JCheckBoxMenuItem autoSave) {
+                prefs.putBoolean(AUTO_SAVE_KEY, autoSave.isSelected());
                 if (autoSave.isSelected()) {
                     timer.start();
                 } else {
@@ -358,7 +369,7 @@ public class SmileStudio extends JFrame {
      * Creates a new notebook.
      */
     private void newNotebook() {
-        javax.swing.SwingUtilities.invokeLater(() -> createAndShowGUI(null));
+        SwingUtilities.invokeLater(() -> createAndShowGUI(null));
     }
 
     /**
@@ -493,7 +504,7 @@ public class SmileStudio extends JFrame {
 
         // Schedule a job for the event dispatch thread:
         // creating and showing this application's GUI.
-        javax.swing.SwingUtilities.invokeLater(() -> {
+        SwingUtilities.invokeLater(() -> {
             // Install font
             FlatJetBrainsMonoFont.install();
             // Set application monospaced font before setting up FlatLaf
