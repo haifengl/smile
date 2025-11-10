@@ -250,7 +250,7 @@ public class SmileStudio extends JFrame {
         });
 
         public AutoSaveAction() {
-            super(bundle.getString("AutoSave"), icon);
+            super(bundle.getString("AutoSave"));
             // Without icon, menu items wont' align well on Mac.
             // However, FlatLaf won't show check mark on Windows
             // if we set the icon.
