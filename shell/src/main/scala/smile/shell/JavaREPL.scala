@@ -25,6 +25,10 @@ object JavaREPL {
     val home = System.getProperty("smile.home", ".")
     val startup = Array(
       "--class-path", System.getProperty("java.class.path"),
+      "-R-XX:MaxMetaspaceSize=1024M",
+      "-R-Xss4M",
+      "-R--add-opens=java.base/java.nio=ALL-UNNAMED",
+      "-R--enable-native-access=ALL-UNNAMED",
       "-R-Dsmile.home=" + home,
       "--startup", "DEFAULT",
       "--startup", "PRINTING",

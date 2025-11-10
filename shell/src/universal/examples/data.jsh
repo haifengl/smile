@@ -1,3 +1,4 @@
+//--- CELL ---
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -59,6 +60,16 @@ var cat = employees.factorize("state");
 var home = System.getProperty("smile.home");
 var iris = Read.arff(home + "/data/weka/iris.arff");
 var summary = iris.describe();
+
+// Parquet
+var users = Read.parquet(Paths.getTestData("kylo/userdata1.parquet"));
+
+// Avro
+Avro avro = new Avro(Paths.getTestData("kylo/userdata.avsc"));
+var users1 = avro.read(Paths.getTestData("kylo/userdata1.avro"));
+
+// SAS
+var airline = Read.sas(home + "/data/sas/airline.sas7bdat");
 
 // Advanced operations such as exists, forall, find, filter are also supported.
 IO.println(iris.stream().anyMatch(row -> row.getDouble(0) > 4.5));

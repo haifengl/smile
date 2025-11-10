@@ -83,12 +83,9 @@ public class JavaRunner {
         shellErr = new PrintStream(delegatingOut, true, StandardCharsets.UTF_8);
         var builder = JShell.builder().out(shellOut).err(shellErr)
                 .remoteVMOptions("--class-path", System.getProperty("java.class.path"))
-                .remoteVMOptions("--add-opens=java.base/java.lang=ALL-UNNAMED")
-                .remoteVMOptions("--add-opens=java.base/java.lang.reflect=ALL-UNNAMED")
+                .remoteVMOptions("-XX:MaxMetaspaceSize=1024M")
+                .remoteVMOptions("-Xss4M")
                 .remoteVMOptions("--add-opens=java.base/java.nio=ALL-UNNAMED")
-                .remoteVMOptions("--add-opens=java.base/sun.nio.ch=ALL-UNNAMED")
-                .remoteVMOptions("--add-opens=java.base/sun.nio.cs=ALL-UNNAMED")
-                .remoteVMOptions("--add-opens=java.base/sun.security.action=ALL-UNNAMED")
                 .remoteVMOptions("--enable-native-access=ALL-UNNAMED")
                 .remoteVMOptions("-Dsmile.home=" + System.getProperty("smile.home", "."));
 
