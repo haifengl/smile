@@ -47,6 +47,7 @@ import smile.studio.model.JavaRunner;
  */
 public class Notebook extends JPanel implements DocumentListener {
     private static final String CELL_SEPARATOR = "//--- CELL ---";
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Notebook.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Notebook.class.getName(), Locale.getDefault());
     private final JPanel cells = new JPanel();
     private final JScrollPane scrollPane = new JScrollPane(cells);
@@ -454,65 +455,71 @@ public class Notebook extends JPanel implements DocumentListener {
             cell.editor.setRows(Math.min(20, cell.editor.getLineCount()));
         });
 
-        boolean okay = true;
         try {
             cell.buffer.setLength(0); // Clears the StringBuilder
             appendLine(cell.buffer, "⏵ " + datetime.format(ZonedDateTime.now()) + " started");
-            List<SnippetEvent> events = runner.eval(cell.editor.getText());
-            // Capture values, diagnostics, and exceptions in order
-            for (SnippetEvent ev : events) {
-                if (ev.status() == Snippet.Status.VALID && ev.snippet() instanceof VarSnippet variable) {
-                    if (!variable.name().matches("\\$\\d+")) {
-                        String typeName = variable.typeName();
-                        cell.buffer.append("⇒ ")
-                                .append(typeName).append(" ")
-                                .append(variable.name());
+            boolean okay = runner.eval(cell.editor.getText(), (events) -> {
+                // The number of errors;
+                int errors = 0;
+                // Capture values, diagnostics, and exceptions in order
+                for (SnippetEvent ev : events) {
+                    if (ev.status() == Snippet.Status.VALID && ev.snippet() instanceof VarSnippet variable) {
+                        if (!variable.name().matches("\\$\\d+")) {
+                            String typeName = variable.typeName();
+                            cell.buffer.append("⇒ ")
+                                    .append(typeName).append(" ")
+                                    .append(variable.name());
 
-                        String value = ev.value();
-                        if (value != null) {
-                            cell.buffer.append(" = ");
-                            if (typeName.endsWith("DataFrame")) {
-                                cell.buffer.append(System.lineSeparator());
-                            } else if (typeName.contains("[]")) {
-                                // The type may be generic with array, e.g., SVM<double[]>
-                                int index = value.indexOf('{');
-                                if (index > 0) {
-                                    value = value.substring(0, index);
+                            String value = ev.value();
+                            if (value != null) {
+                                cell.buffer.append(" = ");
+                                if (typeName.endsWith("DataFrame")) {
+                                    cell.buffer.append(System.lineSeparator());
+                                } else if (typeName.contains("[]")) {
+                                    // The type may be generic with array, e.g., SVM<double[]>
+                                    int index = value.indexOf('{');
+                                    if (index > 0) {
+                                        value = value.substring(0, index);
+                                    }
                                 }
+                                appendLine(cell.buffer, value);
                             }
-                            appendLine(cell.buffer, value);
+                        }
+                    } else if (ev.status() == Snippet.Status.REJECTED) {
+                        errors++;
+                        appendLine(cell.buffer, "✖ Rejected snippet: " + ev.snippet().source());
+                    } else if (ev.status() == Snippet.Status.RECOVERABLE_DEFINED ||
+                            ev.status() == Snippet.Status.RECOVERABLE_NOT_DEFINED) {
+                        errors++;
+                        appendLine(cell.buffer, "⚠ Recoverable issue: " + ev.snippet().source());
+                    }
+
+                    errors += runner.diagnostics(ev.snippet()).mapToInt(diag -> {
+                        String kind = diag.isError() ? "ERROR" : "WARN";
+                        appendLine(cell.buffer, String.format("%s: %s",
+                                kind, diag.getMessage(Locale.getDefault())));
+                        return diag.isError() ? 1 : 0;
+                    }).sum();
+
+                    if (ev.exception() instanceof EvalException ex) {
+                        errors++;
+                        appendLine(cell.buffer, "Exception: " + ex.getExceptionClassName());
+                        if (ex.getMessage() != null) appendLine(cell.buffer, ex.getMessage());
+                        // JShell exception stack trace is often concise
+                        for (StackTraceElement ste : ex.getStackTrace()) {
+                            appendLine(cell.buffer, "  at " + ste.toString());
                         }
                     }
-                } else if (ev.status() == Snippet.Status.REJECTED) {
-                    okay = false;
-                    appendLine(cell.buffer, "✖ Rejected snippet: " + ev.snippet().source());
-                } else if (ev.status() == Snippet.Status.RECOVERABLE_DEFINED ||
-                           ev.status() == Snippet.Status.RECOVERABLE_NOT_DEFINED) {
-                    okay = false;
-                    appendLine(cell.buffer, "⚠ Recoverable issue: " + ev.snippet().source());
                 }
+                return errors;
+            });
 
-                runner.diagnostics(ev.snippet()).forEach(diag -> {
-                    String kind = diag.isError() ? "ERROR" : "WARN";
-                    appendLine(cell.buffer, String.format("%s: %s",
-                            kind, diag.getMessage(Locale.getDefault())));
-                });
-
-                if (ev.exception() instanceof EvalException ex) {
-                    okay = false;
-                    appendLine(cell.buffer, "Exception: " + ex.getExceptionClassName());
-                    if (ex.getMessage() != null) appendLine(cell.buffer, ex.getMessage());
-                    // JShell exception stack trace is often concise
-                    for (StackTraceElement ste : ex.getStackTrace()) {
-                        appendLine(cell.buffer, "  at " + ste.toString());
-                    }
-                }
-            }
             appendLine(cell.buffer, "⏹ " + datetime.format(ZonedDateTime.now()) + " finished");
+            return okay;
         } catch (Throwable t) {
-            okay = false;
             appendLine(cell.buffer, "✖ Error during execution: " + t);
-            t.printStackTrace();
+            logger.error("Error during execution: ", t);
+            return false;
         } finally {
             runner.removeCell();
             // Generates title before calling invokeLater
@@ -524,8 +531,6 @@ public class Notebook extends JPanel implements DocumentListener {
                 cell.setOutput(cell.buffer.toString());
             });
         }
-
-        return okay;
     }
 
     /**
