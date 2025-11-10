@@ -250,8 +250,14 @@ public class SmileStudio extends JFrame {
         });
 
         public AutoSaveAction() {
-            super(bundle.getString("AutoSave"), icon16);
-            putValue(LARGE_ICON_KEY, icon24);
+            super(bundle.getString("AutoSave"), icon);
+            // Without icon, menu items wont' align well on Mac.
+            // However, FlatLaf won't show check mark on Windows
+            // if we set the icon.
+            if (SystemInfo.isMacFullWindowContentSupported) {
+                putValue(SMALL_ICON, icon16);
+                putValue(LARGE_ICON_KEY, icon24);
+            }
             timer.setInitialDelay(1000);
         }
 
