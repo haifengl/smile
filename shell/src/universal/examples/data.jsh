@@ -1,11 +1,13 @@
-//--- CELL ---
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import org.apache.commons.csv.CSVFormat;
 import smile.data.*;
 import smile.data.vector.*;
 import smile.io.*;
 import smile.math.MathEx;
+import smile.tensor.*;
+import smile.util.Dates;
 import smile.util.Index;
 
 // A ValueVector that is a one-dimensional labeled abstraction
@@ -59,7 +61,6 @@ var cat = employees.factorize("state");
 // binary sparse data. 
 var home = System.getProperty("smile.home");
 var iris = Read.arff(home + "/data/weka/iris.arff");
-var summary = iris.describe();
 
 // Parquet
 var users = Read.parquet(Paths.getTestData("kylo/userdata1.parquet"));
@@ -71,12 +72,40 @@ var users1 = avro.read(Paths.getTestData("kylo/userdata1.avro"));
 // SAS
 var airline = Read.sas(home + "/data/sas/airline.sas7bdat");
 
+// CSV
+var format = CSVFormat.DEFAULT.withDelimiter(' ');
+var zip = Read.csv(home + "/data/usps/zip.train", format);
+
+// LibSVM
+var glass = Read.libsvm(home + "/data/libsvm/glass.txt");
+
+// Sparse data in Coordinate Triple Tuple List
+var kos = SparseDataset.from(Paths.getTestData("sparse/kos.txt"), 1);
+
+// Sparse matrix in Harwell-Boeing Column-Compressed format
+var blocks = SparseMatrix.text(Paths.getTestData("matrix/08blocks.txt"));
+//--- CELL ---
+// head() and tail() to view the top and bottom rows of the frame respectively.
+IO.println(iris.head(3));
+IO.println(iris.tail(3));
+
+// Refer a column by its name
+IO.println(iris.column("sepallength"));
+// Select a few columns to create a new data frame
+IO.println(iris.select("sepallength", "sepalwidth"));
+
+// Slice a subset of rows
+IO.println(iris.get(Index.range(1, 10)));
+// Select rows with boolean indexing
+IO.println(iris.get(iris.column("class").isin("Iris-setosa", "Iris-virginica")));
+var summary = iris.describe();
+
 // Advanced operations such as exists, forall, find, filter are also supported.
 IO.println(iris.stream().anyMatch(row -> row.getDouble(0) > 4.5));
 IO.println(iris.stream().allMatch(row -> row.getDouble(0) < 10));
 IO.println(iris.stream().filter(row -> row.getByte("class") == 1).findAny());
 IO.println(iris.stream().filter(row -> row.getString("class").equals("Iris-versicolor")).findAny());
-//--- CELL ---
+
 // For data wrangling, the most important functions of DataFrame are map and groupBy.
 var x6 = iris.stream().map(row -> {
                var x = new double[6];
@@ -86,6 +115,26 @@ var x6 = iris.stream().map(row -> {
                return x;
            });
 
-x6.forEach(xi -> System.out.println(Arrays.toString(xi)));
+x6.limit(3).forEach(xi -> System.out.println(Arrays.toString(xi)));
 
-var classes = iris.stream().collect(java.util.stream.Collectors.groupingBy(row -> row.getString("class")));
+var versicolor = iris.stream()
+        .collect(java.util.stream.Collectors.groupingBy(row -> row.getString("class")))
+        .get("Iris-versicolor")
+        .getFirst();
+//--- CELL ---
+// Indexing
+var rand = DataFrame.of(MathEx.randn(6, 4));
+var dates = Dates.range(LocalDate.of(2025,2,1), 6);
+rand = rand.setIndex(dates);
+
+// Access rows efficiently with the loc() method.
+IO.println(rand.loc(dates[1], dates[2]));
+
+// The row index may be an existing column,
+// which will be removed in the resulting data frame.
+df = df.setIndex("B");
+
+// Join two data frames on their index
+var df1 = DataFrame.of(MathEx.randn(6, 4)).setIndex(dates);
+var df2 = DataFrame.of(MathEx.randn(6, 4)).setIndex(dates);
+var df3 = df1.join(df2);
