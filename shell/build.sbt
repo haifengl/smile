@@ -1,4 +1,4 @@
-name := "smile-shell"
+name := "smile-studio"
 
 Compile / mainClass := Some("smile.shell.Main")
 
@@ -70,6 +70,18 @@ libraryDependencies ++= Seq(
   "org.commonmark"    %  "commonmark"         % "0.27.0",
   "org.xhtmlrenderer" %  "flying-saucer-core" % "10.0.3"
 )
+
+libraryDependencies ++= {
+  val arrowV = "18.3.0"
+  Seq(
+    "org.apache.arrow" % "arrow-dataset" % arrowV,
+    "org.apache.arrow" % "arrow-memory-netty" % arrowV,
+    "org.apache.avro" % "avro" % "1.12.1" exclude("org.slf4j", "slf4j-log4j12"),
+    "org.xerial.snappy" % "snappy-java" % "1.1.10.8", // for avro
+    "com.epam" % "parso" % "2.0.14", // SAS7BDAT
+    "org.xerial" % "sqlite-jdbc" % "3.51.0.0"
+  )
+}
 
 libraryDependencies ++= {
   val akkaVersion     = "2.9.5"
