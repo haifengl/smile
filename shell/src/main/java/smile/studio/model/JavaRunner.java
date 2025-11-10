@@ -19,8 +19,8 @@ package smile.studio.model;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.function.ToIntFunction;
 import java.util.stream.Stream;
 import javax.swing.*;
 import jdk.jshell.*;
@@ -137,33 +137,43 @@ public class JavaRunner {
     }
 
     /**
+     * Attempt to stop currently running evaluation.
+     */
+    public void stop() {
+        jshell.stop();
+    }
+
+    /**
      * Evaluates a code block.
      * @param code a code block.
-     * @return the evaluation results.
      */
-    public List<SnippetEvent> eval(String code) {
-        boolean failed = false;
-        List<SnippetEvent> results = new ArrayList<>();
-        SourceCodeAnalysis.CompletionInfo info;
-        for (info = sourceAnalyzer.analyzeCompletion(code); info.completeness().isComplete(); info = sourceAnalyzer.analyzeCompletion(info.remaining())) {
+    public void eval(String code) {
+        eval(code, null);
+    }
+
+    /**
+     * Evaluates a code block.
+     * @param code a code block.
+     * @param callback the callback function for each snippet evaluation results,
+     *                 which returns the number of execution errors.
+     * @return true if no errors reported by callback.
+     */
+    public boolean eval(String code, ToIntFunction<List<SnippetEvent>> callback) {
+        SourceCodeAnalysis.CompletionInfo info = sourceAnalyzer.analyzeCompletion(code);
+        while (info.completeness().isComplete()) {
             List<SnippetEvent> events = jshell.eval(info.source());
-            results.addAll(events);
-            for (SnippetEvent event : events) {
-                switch (event.status()) {
-                    case REJECTED, RECOVERABLE_DEFINED, RECOVERABLE_NOT_DEFINED:
-                        return results;
-                }
-                if (event.exception() instanceof EvalException ex) {
-                    return results;
-                }
+            if (callback != null) {
+                int errors = callback.applyAsInt(events);
+                if (errors > 0) return false;
             }
+            info = sourceAnalyzer.analyzeCompletion(info.remaining());
         }
 
         if (info.completeness() != SourceCodeAnalysis.Completeness.EMPTY) {
             throw new RuntimeException(info.completeness() + ": " + info.remaining().trim());
         }
 
-        return results;
+        return true;
     }
 
     /**
