@@ -43,12 +43,9 @@ bashScriptConfigLocation := Some("${app_home}/../conf/smile.ini")
 batScriptConfigLocation := Some("%APP_HOME%\\conf\\smile.ini")
 
 bashScriptExtraDefines ++= Seq(
-  """addJava "--add-opens=java.base/java.lang=ALL-UNNAMED"""",
-  """addJava "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED"""",
+  """addJava "-XX:MaxMetaspaceSize=1024M"""",
+  """addJava "-Xss4M"""",
   """addJava "--add-opens=java.base/java.nio=ALL-UNNAMED"""",
-  """addJava "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED"""",
-  """addJava "--add-opens=java.base/sun.nio.cs=ALL-UNNAMED"""",
-  """addJava "--add-opens=java.base/sun.security.action=ALL-UNNAMED"""",
   """addJava "--enable-native-access=ALL-UNNAMED"""",
   """addJava "-Dsmile.home=${app_home}/.."""",
   """addJava "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug"""",
@@ -57,12 +54,9 @@ bashScriptExtraDefines ++= Seq(
 )
 
 batScriptExtraDefines ++= Seq(
-  """call :add_java --add-opens=java.base/java.lang=ALL-UNNAMED""",
-  """call :add_java --add-opens=java.base/java.lang.reflect=ALL-UNNAMED""",
+  """call :add_java -XX:MaxMetaspaceSize=1024M""",
+  """call :add_java -Xss4M""",
   """call :add_java --add-opens=java.base/java.nio=ALL-UNNAMED""",
-  """call :add_java --add-opens=java.base/sun.nio.ch=ALL-UNNAMED""",
-  """call :add_java --add-opens=java.base/sun.nio.cs=ALL-UNNAMED""",
-  """call :add_java --add-opens=java.base/sun.security.action=ALL-UNNAMED""",
   """call :add_java --enable-native-access=ALL-UNNAMED""",
   """call :add_java -Dsmile.home=%APP_HOME%""",
   """call :add_java -Dorg.slf4j.simpleLogger.defaultLogLevel=debug""",
