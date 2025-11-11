@@ -16,71 +16,31 @@
  */
 package smile.studio.model;
 
-import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.function.ToIntFunction;
 import java.util.stream.Stream;
-import javax.swing.*;
 import jdk.jshell.*;
 import com.formdev.flatlaf.util.SystemInfo;
-import smile.studio.view.Cell;
 
 /**
  * Java code execution engine.
  *
  * @author Haifeng Li
  */
-public class JavaRunner {
+public class JavaRunner extends Runner {
     /** JShell instance. */
     private final JShell jshell;
     /** Analysis utilities for source code input. */
     private final SourceCodeAnalysis sourceAnalyzer;
-    /** JShell out stream. */
-    private final PrintStream shellOut;
-    /** JShell err stream. */
-    private final PrintStream shellErr;
-    /** JShell running state. */
-    private volatile boolean isRunning = false;
-    /** JShell running cell. */
-    private Cell cell;
-    /** Timestamp of last time updating cell output. */
-    private long stamp;
 
     /**
      * Constructor.
      */
     public JavaRunner() {
-        // Build JShell with custom output capture
-        OutputStream delegatingOut = new OutputStream() {
-            @Override
-            public void write(int b) {
-                if (cell != null) {
-                    StringBuffer buffer = cell.buffer();
-                    buffer.append((char) b);
-                }
-            }
-            @Override
-            public void write(byte[] b, int off, int len) {
-                if (cell != null) {
-                    StringBuffer buffer = cell.buffer();
-                    buffer.append(new String(b, off, len, StandardCharsets.UTF_8));
-                    long time = System.currentTimeMillis();
-                    if (time - stamp > 100) {
-                        stamp = time;
-                        SwingUtilities.invokeLater(() -> {
-                            if (cell != null) {
-                                cell.setOutput(cell.buffer().toString());
-                            }
-                        });
-                    }
-                }
-            }
-        };
-
-        shellOut = new PrintStream(delegatingOut, true, StandardCharsets.UTF_8);
-        shellErr = new PrintStream(delegatingOut, true, StandardCharsets.UTF_8);
+        PrintStream shellOut = new PrintStream(delegatingOut, true, StandardCharsets.UTF_8);
+        PrintStream shellErr = new PrintStream(delegatingOut, true, StandardCharsets.UTF_8);
         var builder = JShell.builder().out(shellOut).err(shellErr)
                 .remoteVMOptions("--class-path", System.getProperty("java.class.path"))
                 .remoteVMOptions("-XX:MaxMetaspaceSize=1024M")
@@ -104,41 +64,7 @@ public class JavaRunner {
         jshell.close();
     }
 
-    /**
-     * Returns the running state of the execution engine.
-     * @return the running state of the execution engine.
-     */
-    public boolean isRunning() {
-        return isRunning;
-    }
-
-    /**
-     * Sets the running state.
-     * @param flag the running state.
-     */
-    public void setRunning(boolean flag) {
-        isRunning = flag;
-    }
-
-    /**
-     * Sets the running cell.
-     * @param cell the running cell.
-     */
-    public void setCell(Cell cell) {
-        this.cell = cell;
-        stamp = System.currentTimeMillis();
-    }
-
-    /**
-     * Removes the running cell.
-     */
-    public void removeCell() {
-        cell = null;
-    }
-
-    /**
-     * Attempt to stop currently running evaluation.
-     */
+    @Override
     public void stop() {
         jshell.stop();
     }
