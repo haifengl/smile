@@ -74,9 +74,11 @@ libraryDependencies ++= Seq(
   "com.fifesoft"      %  "rsyntaxtextarea"    % "3.6.0",
   "com.formdev"       %  "flatlaf"            % "3.6.2",
   "com.formdev"       %  "flatlaf-fonts-jetbrains-mono" % "2.304",
-  "com.openai"        %  "openai-java"        % "4.7.1",
   "org.commonmark"    %  "commonmark"         % "0.27.0",
-  "org.xhtmlrenderer" %  "flying-saucer-core" % "10.0.3"
+  "org.xhtmlrenderer" %  "flying-saucer-core" % "10.0.3",
+  "com.openai"        %  "openai-java"        % "4.7.1",
+  "com.anthropic"     %  "anthropic-java"     % "2.10.0",
+  "com.google.genai"  %  "google-genai"       % "1.26.0"
 )
 
 libraryDependencies ++= {

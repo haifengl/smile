@@ -507,6 +507,12 @@ public class SmileStudio extends JFrame {
                 System.setProperty("openai.apiKey", apiKey);
             }
         }
+        if (System.getProperty("anthropic.apiKey", "").isBlank()) {
+            String apiKey = SmileStudio.prefs.get(SettingsDialog.ANTHROPIC_API_KEY, "").trim();
+            if (!apiKey.isEmpty()) {
+                System.setProperty("anthropic.apiKey", apiKey);
+            }
+        }
 
         // Schedule a job for the event dispatch thread:
         // creating and showing this application's GUI.
