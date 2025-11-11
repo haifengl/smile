@@ -35,8 +35,8 @@ import com.openai.core.http.AsyncStreamResponse;
 import com.openai.models.chat.completions.ChatCompletionChunk;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jdesktop.swingx.JXTextField;
-import smile.studio.model.Coder;
-import smile.studio.model.PostRunNavigation;
+import smile.studio.kernel.Coder;
+import smile.studio.kernel.PostRunNavigation;
 
 /**
  * A cell is a multiline text input field, and its contents can be executed.

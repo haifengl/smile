@@ -36,8 +36,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import jdk.jshell.*;
-import smile.studio.model.PostRunNavigation;
-import smile.studio.model.JavaRunner;
+import smile.studio.kernel.PostRunNavigation;
+import smile.studio.kernel.JavaRunner;
 
 /**
  * Interactive environment to write and execute Java code combining code,

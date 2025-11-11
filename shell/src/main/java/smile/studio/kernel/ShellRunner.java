@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.studio.model;
+package smile.studio.kernel;
 
 import java.io.BufferedReader;
 import java.io.IOException;
