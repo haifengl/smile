@@ -64,6 +64,14 @@ public class Workspace extends JSplitPane {
     }
 
     /**
+     * Returns the Java execution engine.
+     * @return the Java execution engine.
+     */
+    public JavaRunner runner() {
+        return runner;
+    }
+
+    /**
      * Closes the execution engine and frees resources.
      */
     public void close() {

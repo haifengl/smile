@@ -141,6 +141,7 @@ public class SmileStudio extends JFrame {
         var addCell = new AddCellAction();
         var runAll = new RunAllAction();
         var clearAll = new ClearAllAction();
+        var stop = new StopAction();
         var settings = new SettingsAction();
         var exit = new ExitAction();
 
@@ -163,6 +164,7 @@ public class SmileStudio extends JFrame {
         cellMenu.add(new JMenuItem(addCell));
         cellMenu.add(new JMenuItem(runAll));
         cellMenu.add(new JMenuItem(clearAll));
+        cellMenu.add(new JMenuItem(stop));
         menuBar.add(cellMenu);
 
         // Don't allow the toolbar to be dragged and undocked
@@ -177,6 +179,7 @@ public class SmileStudio extends JFrame {
         toolBar.add(new Button(addCell));
         toolBar.add(new Button(runAll));
         toolBar.add(new Button(clearAll));
+        toolBar.add(new Button(stop));
     }
 
     private class NewNotebookAction extends AbstractAction {
@@ -318,6 +321,21 @@ public class SmileStudio extends JFrame {
         @Override
         public void actionPerformed(ActionEvent e) {
             workspace.notebook().clearAllOutputs();
+        }
+    }
+
+    private class StopAction extends AbstractAction {
+        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(SmileStudio.class.getResource("images/cancel.png")));
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
+        public StopAction() {
+            super(bundle.getString("Stop"), icon16);
+            putValue(LARGE_ICON_KEY, icon24);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            workspace.runner().stop();
         }
     }
 
