@@ -56,10 +56,11 @@ public class Cell extends JPanel implements DocumentListener {
     private final JTextField prompt = new JXTextField(placeholder);
     private final TitledBorder border = BorderFactory.createTitledBorder("[ ]");
     private final JButton runBtn = new JButton("▶");
+    private final JButton runBelowBtn = new JButton("⋙");
     private final JButton upBtn = new JButton("↑");
     private final JButton downBtn = new JButton("↓");
-    private final JButton clearBtn = new JButton("⌦");
-    private final JButton deleteBtn = new JButton("🗑");
+    private final JButton clearBtn = new JButton("🗑");
+    private final JButton deleteBtn = new JButton("⌦");
     /** Running code generation. */
     private volatile boolean isCoding = false;
 
@@ -77,6 +78,8 @@ public class Cell extends JPanel implements DocumentListener {
         header.add(Box.createHorizontalStrut(2));
         header.add(runBtn);
         header.add(Box.createHorizontalStrut(6));
+        header.add(runBelowBtn);
+        header.add(Box.createHorizontalStrut(6));
         header.add(upBtn);
         header.add(Box.createHorizontalStrut(6));
         header.add(downBtn);
@@ -91,12 +94,14 @@ public class Cell extends JPanel implements DocumentListener {
         prompt.putClientProperty("JComponent.roundRect", true);
 
         runBtn.setToolTipText(bundle.getString("Run"));
+        runBelowBtn.setToolTipText(bundle.getString("RunBelow"));
         upBtn.setToolTipText(bundle.getString("MoveUp"));
         downBtn.setToolTipText(bundle.getString("MoveDown"));
         clearBtn.setToolTipText(bundle.getString("Clear"));
         deleteBtn.setToolTipText(bundle.getString("Delete"));
 
         runBtn.addActionListener(e -> notebook.runCell(this, PostRunNavigation.STAY));
+        runBelowBtn.addActionListener(e -> notebook.runCellAndBelow(this));
         upBtn.addActionListener(e -> notebook.moveCellUp(this));
         downBtn.addActionListener(e -> notebook.moveCellDown(this));
         clearBtn.addActionListener(e -> output.setText(""));
