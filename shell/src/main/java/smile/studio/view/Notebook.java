@@ -534,16 +534,23 @@ public class Notebook extends JPanel implements DocumentListener {
     }
 
     /**
+     * Shows the dialog that code evaluation is running.
+     */
+    private void showRaceConditionDialog() {
+        JOptionPane.showMessageDialog(this,
+                bundle.getString("RaceConditionMessage"),
+                bundle.getString("RaceConditionTitle"),
+                JOptionPane.WARNING_MESSAGE);
+    }
+
+    /**
      * Evaluates a cell and handles post-run navigation.
      * @param cell the cell to evaluate.
      * @param behavior post-run navigation behavior.
      */
     public synchronized void runCell(Cell cell, PostRunNavigation behavior) {
         if (runner.isRunning()) {
-            JOptionPane.showMessageDialog(this,
-                    bundle.getString("RaceConditionMessage"),
-                    bundle.getString("RaceConditionTitle"),
-                    JOptionPane.WARNING_MESSAGE);
+            showRaceConditionDialog();
             return;
         }
 
@@ -608,23 +615,10 @@ public class Notebook extends JPanel implements DocumentListener {
     }
 
     /**
-     * Runs all cells.
+     * Runs a set of cells.
+     * @param cells the cells to evaluate.
      */
-    public void runAllCells() {
-        if (runner.isRunning()) {
-            JOptionPane.showMessageDialog(this,
-                    bundle.getString("RaceConditionMessage"),
-                    bundle.getString("RaceConditionTitle"),
-                    JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        // Sequentially run all non-empty cells
-        List<Cell> cells = new ArrayList<>();
-        for (int i = 0; i < this.cells.getComponentCount(); i++) {
-            cells.add(getCell(i));
-        }
-
+    private void runCells(List<Cell> cells) {
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() {
@@ -643,6 +637,44 @@ public class Notebook extends JPanel implements DocumentListener {
             }
         };
         worker.execute();
+    }
+
+    /**
+     * Runs the cell and all below.
+     * @param cell the selected cell.
+     */
+    public synchronized void runCellAndBelow(Cell cell) {
+        if (runner.isRunning()) {
+            showRaceConditionDialog();
+            return;
+        }
+
+        // Sequentially run all non-empty cells
+        List<Cell> cells = new ArrayList<>();
+        int index = Math.max(0, indexOf(cell)); // start from beginning if cell is not found
+        for (int i = index; i < this.cells.getComponentCount(); i++) {
+            cells.add(getCell(i));
+        }
+
+        runCells(cells);
+    }
+
+    /**
+     * Runs all cells.
+     */
+    public synchronized void runAllCells() {
+        if (runner.isRunning()) {
+            showRaceConditionDialog();
+            return;
+        }
+
+        // Sequentially run all non-empty cells
+        List<Cell> cells = new ArrayList<>();
+        for (int i = 0; i < this.cells.getComponentCount(); i++) {
+            cells.add(getCell(i));
+        }
+
+        runCells(cells);
     }
 
     /**
