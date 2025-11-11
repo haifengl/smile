@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -457,7 +458,8 @@ public class Notebook extends JPanel implements DocumentListener {
 
         try {
             cell.buffer.setLength(0); // Clears the StringBuilder
-            appendLine(cell.buffer, "⏵ " + datetime.format(ZonedDateTime.now()) + " started");
+            ZonedDateTime start = ZonedDateTime.now();
+            appendLine(cell.buffer, "⏵ " + datetime.format(start) + " started");
             boolean okay = runner.eval(cell.editor.getText(), (events) -> {
                 // The number of errors;
                 int errors = 0;
@@ -514,7 +516,9 @@ public class Notebook extends JPanel implements DocumentListener {
                 return errors;
             });
 
-            appendLine(cell.buffer, "⏹ " + datetime.format(ZonedDateTime.now()) + " finished");
+            ZonedDateTime end = ZonedDateTime.now();
+            Duration duration = Duration.between(start, end);
+            appendLine(cell.buffer, "⏹ " + datetime.format(end) + " finished (" + duration + ")");
             return okay;
         } catch (Throwable t) {
             appendLine(cell.buffer, "✖ Error during execution: " + t);
