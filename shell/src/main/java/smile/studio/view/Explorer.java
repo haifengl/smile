@@ -28,7 +28,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.ResourceBundle;
 import jdk.jshell.VarSnippet;
-import smile.studio.model.JavaRunner;
+import smile.studio.kernel.JavaRunner;
 import smile.swing.FileChooser;
 import static smile.swing.SmileUtilities.scaleImageIcon;
 
