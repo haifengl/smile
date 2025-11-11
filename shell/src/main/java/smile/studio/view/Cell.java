@@ -30,6 +30,7 @@ import java.util.List;
 
 import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
 import com.formdev.flatlaf.util.FontUtils;
+import com.formdev.flatlaf.util.SystemInfo;
 import com.openai.core.http.AsyncStreamResponse;
 import com.openai.models.chat.completions.ChatCompletionChunk;
 import org.fife.ui.rtextarea.RTextScrollPane;
@@ -59,7 +60,8 @@ public class Cell extends JPanel implements DocumentListener {
     private final JButton runBelowBtn = new JButton("⋙");
     private final JButton upBtn = new JButton("↑");
     private final JButton downBtn = new JButton("↓");
-    private final JButton clearBtn = new JButton("🗑");
+    // Windows doesn't show broom emoji properly
+    private final JButton clearBtn = new JButton(SystemInfo.isMacOS ? "🧹" : "🗑");
     private final JButton deleteBtn = new JButton("⌦");
     /** Running code generation. */
     private volatile boolean isCoding = false;
