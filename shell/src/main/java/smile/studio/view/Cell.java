@@ -57,7 +57,7 @@ public class Cell extends JPanel implements DocumentListener {
     private final JTextField prompt = new JXTextField(placeholder);
     private final TitledBorder border = BorderFactory.createTitledBorder("[ ]");
     private final JButton runBtn = new JButton("▶");
-    private final JButton runBelowBtn = new JButton("⋙");
+    private final JButton runBelowBtn = new JButton("⏭");
     private final JButton upBtn = new JButton("↑");
     private final JButton downBtn = new JButton("↓");
     // Windows doesn't show broom emoji properly
