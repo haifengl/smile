@@ -162,9 +162,8 @@ public class JavaRunner {
         SourceCodeAnalysis.CompletionInfo info = sourceAnalyzer.analyzeCompletion(code);
         while (info.completeness().isComplete()) {
             List<SnippetEvent> events = jshell.eval(info.source());
-            if (callback != null) {
-                int errors = callback.applyAsInt(events);
-                if (errors > 0) return false;
+            if (callback != null && callback.applyAsInt(events) > 0) {
+                return false;
             }
             info = sourceAnalyzer.analyzeCompletion(info.remaining());
         }

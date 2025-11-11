@@ -30,9 +30,15 @@ import java.util.prefs.Preferences;
  */
 public class SettingsDialog extends JDialog {
     public static final String OPENAI_API_KEY = "openaiApiKey";
+    public static final String ANTHROPIC_API_KEY = "anthropicApiKey";
+    public static final String GOOGLE_API_KEY = "googleApiKey";
     private static final ResourceBundle bundle = ResourceBundle.getBundle(SettingsDialog.class.getName(), Locale.getDefault());
-    private final JLabel apiKeyLabel = new JLabel(bundle.getString("APIKey"));
-    private final JTextField apiKeyField = new JTextField(25);
+    private final JLabel openaiApiKeyLabel = new JLabel(bundle.getString("OpenAIAPIKey"));
+    private final JTextField openaiApiKeyField = new JTextField(25);
+    private final JLabel anthropicApiKeyLabel = new JLabel(bundle.getString("AnthropicAPIKey"));
+    private final JTextField anthropicApiKeyField = new JTextField(25);
+    private final JLabel googleApiKeyLabel = new JLabel(bundle.getString("GoogleAPIKey"));
+    private final JTextField googleApiKeyField = new JTextField(25);
     private final JButton okButton = new JButton(bundle.getString("OK"));
     private final JButton cancelButton = new JButton(bundle.getString("Cancel"));
 
@@ -47,12 +53,53 @@ public class SettingsDialog extends JDialog {
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        apiKeyField.setText(prefs.get(OPENAI_API_KEY, ""));
+        openaiApiKeyField.setText(prefs.get(OPENAI_API_KEY, ""));
+        anthropicApiKeyField.setText(prefs.get(ANTHROPIC_API_KEY, ""));
+        googleApiKeyField.setText(prefs.get(GOOGLE_API_KEY, ""));
+
         // Panel for the input field and label
-        JPanel inputPane = new JPanel(new FlowGridBagLayout());
+        JPanel inputPane = new JPanel(new GridBagLayout());
         inputPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        inputPane.add(apiKeyLabel);
-        inputPane.add(apiKeyField);
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        // Row 1
+        gbc.gridx = 0; // Column 0
+        gbc.gridy = 0; // Row 0
+        gbc.anchor = GridBagConstraints.WEST;
+        inputPane.add(openaiApiKeyLabel, gbc);
+
+        gbc.gridx = 1; // Column 1
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0; // Allow text field to take extra horizontal space
+        inputPane.add(openaiApiKeyField, gbc);
+
+        // Row 2
+        gbc.gridx = 0; // Column 0
+        gbc.gridy = 1; // Row 1
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.NONE; // Reset fill for label
+        gbc.weightx = 0.0; // Reset weightx for label
+        inputPane.add(anthropicApiKeyLabel, gbc);
+
+        gbc.gridx = 1; // Column 1
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        inputPane.add(anthropicApiKeyField, gbc);
+
+        // Row 3
+        gbc.gridx = 0; // Column 0
+        gbc.gridy = 2; // Row 2
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0.0;
+        inputPane.add(googleApiKeyLabel, gbc);
+
+        gbc.gridx = 1; // Column 1
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        inputPane.add(googleApiKeyField, gbc);
 
         // Panel for the buttons
         JPanel buttonPane = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -61,7 +108,9 @@ public class SettingsDialog extends JDialog {
         buttonPane.add(cancelButton);
 
         okButton.addActionListener((e) -> {
-            prefs.put(OPENAI_API_KEY, apiKeyField.getText());
+            prefs.put(OPENAI_API_KEY, openaiApiKeyField.getText());
+            prefs.put(ANTHROPIC_API_KEY, anthropicApiKeyField.getText());
+            prefs.put(GOOGLE_API_KEY, googleApiKeyField.getText());
             dispose();
         });
 
@@ -78,13 +127,6 @@ public class SettingsDialog extends JDialog {
     // Custom Layout Manager helper for simple label-field alignment
     class FlowGridBagLayout extends GridBagLayout {
         public FlowGridBagLayout() {
-            GridBagConstraints gbc = new GridBagConstraints();
-            gbc.insets = new Insets(5, 5, 5, 5);
-            gbc.anchor = GridBagConstraints.WEST;
-            setConstraints(apiKeyLabel, gbc);
-            gbc.gridwidth = GridBagConstraints.REMAINDER; // End of row
-            gbc.fill = GridBagConstraints.HORIZONTAL;
-            setConstraints(apiKeyField, gbc);
         }
     }
 }
