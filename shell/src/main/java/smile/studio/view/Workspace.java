@@ -42,7 +42,6 @@ public class Workspace extends JSplitPane {
         notebook = new Notebook(file, runner, explorer::refresh);
         setLeftComponent(explorer);
         setRightComponent(notebook);
-        setResizeWeight(0.15);
     }
 
     /**

@@ -66,13 +66,13 @@ public class SmileStudio extends JFrame {
         setFrameIcon();
         setJMenuBar(menuBar);
         initMenuAndToolBar();
+
         workspace = new Workspace(file);
         if (file != null) setTitle(file);
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setLeftComponent(workspace);
         splitPane.setRightComponent(architect);
-        splitPane.setResizeWeight(0.85);
 
         JPanel contentPane = new JPanel(new BorderLayout());
         contentPane.add(toolBar, BorderLayout.NORTH);
@@ -100,6 +100,14 @@ public class SmileStudio extends JFrame {
                 if (count <= 1) {
                     System.exit(0);
                 }
+            }
+
+            @Override
+            public void windowOpened(WindowEvent e) {
+                // JSplitPane.setDividerLocation() set the location based on
+                // current pane size. We should set it after window is opened.
+                splitPane.setDividerLocation(0.7);
+                workspace.setDividerLocation(0.15);
             }
         });
     }
