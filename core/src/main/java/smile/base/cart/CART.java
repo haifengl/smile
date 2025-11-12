@@ -434,8 +434,8 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
      * @return the graphic representation in Graphviz dot format.
      */
     public String dot() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("digraph CART {\n node [shape=box, style=\"filled, rounded\", color=\"black\", fontname=helvetica];\n edge [fontname=helvetica];\n");
+        StringBuilder sb = new StringBuilder();
+        sb.append("digraph CART {\n node [shape=box, style=\"filled, rounded\", color=\"black\", fontname=helvetica];\n edge [fontname=helvetica];\n");
 
         String trueLabel  = " [labeldistance=2.5, labelangle=45, headlabel=\"True\"];\n";
         String falseLabel = " [labeldistance=2.5, labelangle=-45, headlabel=\"False\"];\n";
@@ -450,7 +450,7 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
             Node node = entry.getValue();
 
             // leaf node
-            builder.append(node.dot(schema, response, id));
+            sb.append(node.dot(schema, response, id));
 
             if (node instanceof InternalNode inode) {
                 int tid = 2 * id;
@@ -459,8 +459,8 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
                 queue.add(new SimpleEntry<>(fid, inode.falseChild));
 
                 // add edge
-                builder.append(' ').append(id).append(" -> ").append(tid).append(trueLabel);
-                builder.append(' ').append(id).append(" -> ").append(fid).append(falseLabel);
+                sb.append(' ').append(id).append(" -> ").append(tid).append(trueLabel);
+                sb.append(' ').append(id).append(" -> ").append(fid).append(falseLabel);
 
                 // only draw edge label at top
                 if (id == 1) {
@@ -470,8 +470,8 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
             }
         }
 
-        builder.append("}");
-        return builder.toString();
+        sb.append("}");
+        return sb.toString();
     }
 
     /**

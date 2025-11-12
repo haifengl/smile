@@ -96,27 +96,14 @@ public class RegressionNode extends LeafNode {
 
     @Override
     public int[] toString(StructType schema, StructField response, InternalNode parent, int depth, BigInteger id, List<String> lines) {
-        StringBuilder line = new StringBuilder();
-
-        // indent
-        line.append(" ".repeat(depth));
-        line.append(id).append(") ");
-
-        // split
-        line.append(parent == null ? "root" : parent.toString(schema, this == parent.trueChild)).append(" ");
-
-        // size
-        line.append(size).append(" ");
-
-        // deviance
-        line.append(String.format("%.5g", rss)).append(" ");
-
-        // fitted value
-        line.append(String.format("%g", output));
-
-        // terminal node
-        line.append(" *");
-        lines.add(line.toString());
+        String line = " ".repeat(depth) + // indent
+                id + ") " +
+                (parent == null ? "root" : parent.toString(schema, this == parent.trueChild)) + " " + // split
+                size + " " + // size
+                String.format("%.5g", rss) + " " + // deviance
+                String.format("%g", output) + // fitted value
+                " *"; // terminal node
+        lines.add(line);
 
         return new int[]{size};
     }
