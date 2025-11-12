@@ -134,6 +134,15 @@ public class JavaRunner extends Runner {
     }
 
     /**
+     * Returns the names of current unresolved dependencies for the snippet.
+     * @param snippet the declaration snippet to look up.
+     * @return a stream of symbol names that are currently unresolvedDependencies.
+     */
+    public Stream<String> unresolvedDependencies(DeclarationSnippet snippet) {
+        return jshell.unresolvedDependencies(snippet);
+    }
+
+    /**
      * Evaluate a magic command.
      * @param magic the magic command line.
      */
@@ -147,7 +156,7 @@ public class JavaRunner extends Runner {
             } catch (DependencyResolutionException | DependencyCollectionException ex) {
                 throw new RuntimeException(ex.getMessage(), ex);
             }
-        } else {
+        } else if (!command[0].isBlank()) {
             logger.warn("Unknown magic: {}", magic);
         }
     }
