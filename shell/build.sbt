@@ -48,7 +48,6 @@ bashScriptExtraDefines ++= Seq(
   """addJava "--add-opens=java.base/java.nio=ALL-UNNAMED"""",
   """addJava "--enable-native-access=ALL-UNNAMED"""",
   """addJava "-Dsmile.home=${app_home}/.."""",
-  """addJava "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug"""",
   """addJava "-Dscala.usejavacp=true"""", // for Scala REPL
   """addJava "-Dscala.repl.autoruncode=${app_home}/predef.sc""""
 )
@@ -59,7 +58,6 @@ batScriptExtraDefines ++= Seq(
   """call :add_java --add-opens=java.base/java.nio=ALL-UNNAMED""",
   """call :add_java --enable-native-access=ALL-UNNAMED""",
   """call :add_java -Dsmile.home=%APP_HOME%""",
-  """call :add_java -Dorg.slf4j.simpleLogger.defaultLogLevel=debug""",
   """call :add_java -Dscala.usejavacp=true""",
   """call :add_java -Dscala.repl.autoruncode=%APP_HOME%\bin\predef.sc""",
   """set OPENBLAS_NO_AVX512=1""",
@@ -68,17 +66,19 @@ batScriptExtraDefines ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "com.github.scopt" %%  "scopt"              % "4.1.0",
-  "org.scala-lang"    %  "scala-compiler"     % "2.13.17",
-  "org.slf4j"         %  "slf4j-simple"       % "2.0.17",
-  "com.fifesoft"      %  "rsyntaxtextarea"    % "3.6.0",
-  "com.formdev"       %  "flatlaf"            % "3.6.2",
-  "com.formdev"       %  "flatlaf-fonts-jetbrains-mono" % "2.304",
-  "org.commonmark"    %  "commonmark"         % "0.27.0",
-  "org.xhtmlrenderer" %  "flying-saucer-core" % "10.0.3",
-  "com.openai"        %  "openai-java"        % "4.7.1",
-  "com.anthropic"     %  "anthropic-java"     % "2.10.0",
-  "com.google.genai"  %  "google-genai"       % "1.26.0"
+  "com.github.scopt" %% "scopt"              % "4.1.0",
+  "org.scala-lang"    % "scala-compiler"     % "2.13.17",
+  "org.slf4j"         % "slf4j-simple"       % "2.0.17",
+  "com.openai"        % "openai-java"        % "4.7.1",
+  "com.anthropic"     % "anthropic-java"     % "2.10.0",
+  "com.google.genai"  % "google-genai"       % "1.26.0",
+  "org.commonmark"    % "commonmark"         % "0.27.0",
+  "org.xhtmlrenderer" % "flying-saucer-core" % "10.0.3",
+  "com.fifesoft"      % "rsyntaxtextarea"    % "3.6.0",
+  "com.formdev"       % "flatlaf"            % "3.6.2",
+  "com.formdev"       % "flatlaf-fonts-jetbrains-mono" % "2.304",
+  "org.apache.maven"  % "maven-resolver-provider" % "3.9.11",
+  "org.apache.maven.resolver" % "maven-resolver-supplier-mvn4" % "2.0.13"
 )
 
 libraryDependencies ++= {
