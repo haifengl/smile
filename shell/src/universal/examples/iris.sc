@@ -1,6 +1,6 @@
 // Toy example
 import smile._
-import smile.util._
+import smile.io._
 import smile.data.formula._
 import smile.classification._
 

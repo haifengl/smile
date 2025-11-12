@@ -1,5 +1,5 @@
 // t-SNE on MNIST
-import smile.util._
+import smile.io._
 import smile.feature.extraction._
 import smile.manifold._
 import smile.plot.swing._

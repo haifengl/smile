@@ -3,7 +3,7 @@
 import smile.*
 import smile.classification.*
 import smile.data.formula.Formula
-import smile.util.Paths
+import smile.io.Paths
 
 val data = read.arff(Paths.getTestData("weka/iris.arff"))
 println(data)
