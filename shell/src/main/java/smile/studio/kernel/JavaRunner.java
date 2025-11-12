@@ -18,6 +18,7 @@ package smile.studio.kernel;
 
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.function.ToIntFunction;
 import java.util.stream.Stream;
@@ -45,6 +46,8 @@ public class JavaRunner extends Runner {
                 .remoteVMOptions("--class-path", System.getProperty("java.class.path"))
                 .remoteVMOptions("-XX:MaxMetaspaceSize=1024M")
                 .remoteVMOptions("-Xss4M")
+                .remoteVMOptions("-XX:MaxRAMPercentage=75")
+                .remoteVMOptions("-XX:+UseZGC")
                 .remoteVMOptions("--add-opens=java.base/java.nio=ALL-UNNAMED")
                 .remoteVMOptions("--enable-native-access=ALL-UNNAMED")
                 .remoteVMOptions("-Dsmile.home=" + System.getProperty("smile.home", "."));
@@ -116,5 +119,18 @@ public class JavaRunner extends Runner {
      */
     public Stream<VarSnippet> variables() {
         return jshell.variables();
+    }
+
+    /**
+     * Adds the specified jar paths to the end of the classpath used in eval().
+     * @param jars the jar paths to add to the classpath.
+     */
+    public void addToClasspath(List<Path> jars) {
+        for (Path jar : jars) {
+            if (jar != null) {
+                System.out.println(jar.toAbsolutePath().toString());
+                jshell.addToClasspath(jar.toAbsolutePath().toString());
+            }
+        }
     }
 }
