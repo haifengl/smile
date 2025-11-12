@@ -33,6 +33,7 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
  * @author Haifeng Li
  */
 public class JavaRunner extends Runner {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JavaRunner.class);
     /** JShell instance. */
     private final JShell jshell;
     /** Analysis utilities for source code input. */
@@ -96,12 +97,8 @@ public class JavaRunner extends Runner {
             String[] lines = source.split("\\r?\\n");
             for (String line : lines) {
                 line = line.trim();
-                if (line.startsWith("//!mvn ")) {
-                    try {
-                        addToClasspath(line.substring(7).trim());
-                    } catch (Exception ex) {
-                        throw new RuntimeException(ex.getMessage(), ex);
-                    }
+                if (line.startsWith("//!")) {
+                    evalMagic(line.substring(3));
                 }
             }
 
@@ -134,6 +131,25 @@ public class JavaRunner extends Runner {
      */
     public Stream<VarSnippet> variables() {
         return jshell.variables();
+    }
+
+    /**
+     * Evaluate a magic command.
+     * @param magic the magic command line.
+     */
+    public void evalMagic(String magic) {
+        String[] command = magic.trim().split("\\s+");
+        if (command[0].equals("mvn")) {
+            try {
+                for (int i = 1; i < command.length; i++) {
+                    addToClasspath(command[i]);
+                }
+            } catch (DependencyResolutionException | DependencyCollectionException ex) {
+                throw new RuntimeException(ex.getMessage(), ex);
+            }
+        } else {
+            logger.warn("Unknown magic: {}", magic);
+        }
     }
 
     /**
