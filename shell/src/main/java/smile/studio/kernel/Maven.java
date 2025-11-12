@@ -39,7 +39,7 @@ import org.eclipse.aether.resolution.DependencyResult;
  * @author Haifeng Li
  */
 public interface Maven {
-    static List<Path> getDependencyJarPaths(String groupId, String artifactId, String version)
+    static List<Artifact> getDependencyJarPaths(String groupId, String artifactId, String version)
             throws DependencyResolutionException, DependencyCollectionException {
         Artifact artifact = new DefaultArtifact(groupId, artifactId, "", "pom", version);
 
@@ -65,10 +65,10 @@ public interface Maven {
         dependencyRequest.setRoot(collectResult.getRoot());
         DependencyResult dependencyResult = system.resolveDependencies(session, dependencyRequest);
 
-        List<Path> dependencyJarPaths = new ArrayList<>();
-        dependencyJarPaths.add(artifact.getPath());
-        for (ArtifactResult artifactResult : dependencyResult.getArtifactResults()) {
-            dependencyJarPaths.add(artifactResult.getArtifact().getPath());
+        List<Artifact> dependencyJarPaths = new ArrayList<>();
+        dependencyJarPaths.add(artifact);
+        for (ArtifactResult result : dependencyResult.getArtifactResults()) {
+            dependencyJarPaths.add(result.getArtifact());
         }
         return dependencyJarPaths;
     }
