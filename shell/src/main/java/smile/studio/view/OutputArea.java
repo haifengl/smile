@@ -29,7 +29,7 @@ import smile.plot.swing.Palette;
  */
 public class OutputArea extends JTextArea {
     private final DefaultHighlightPainter painter = new DefaultHighlightPainter(Palette.LIGHT_PINK);
-    private final Pattern pattern = Pattern.compile("ERROR|WARN|Recoverable issue|Rejected snippet|Exception:");
+    private final Pattern pattern = Pattern.compile("ERROR|WARN|Recoverable issue|Rejected snippet|Unresolved dependencies|Exception:");
 
     /**
      * Constructor.

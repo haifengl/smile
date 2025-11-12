@@ -491,9 +491,13 @@ public class Notebook extends JPanel implements DocumentListener {
                         errors++;
                         appendLine(cell.buffer, "✖ Rejected snippet: " + ev.snippet().source());
                     } else if (ev.status() == Snippet.Status.RECOVERABLE_DEFINED ||
-                            ev.status() == Snippet.Status.RECOVERABLE_NOT_DEFINED) {
+                               ev.status() == Snippet.Status.RECOVERABLE_NOT_DEFINED) {
                         errors++;
                         appendLine(cell.buffer, "⚠ Recoverable issue: " + ev.snippet().source());
+                        if (ev.snippet() instanceof DeclarationSnippet snippet) {
+                            appendLine(cell.buffer, "⚠ Unresolved dependencies:");
+                            runner.unresolvedDependencies(snippet).forEach(name -> appendLine(cell.buffer, "    " + name));
+                        }
                     }
 
                     errors += runner.diagnostics(ev.snippet()).mapToInt(diag -> {
