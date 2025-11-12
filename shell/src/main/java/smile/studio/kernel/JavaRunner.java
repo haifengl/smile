@@ -155,14 +155,17 @@ public class JavaRunner extends Runner {
     public void addToClasspath(String groupId, String artifactId, String version)
             throws DependencyCollectionException, DependencyResolutionException {
         for (var artifact : Maven.getDependencyJarPaths(groupId, artifactId, version)) {
-            var path = artifact.getPath();
-            if (path != null) {
-                jshell.addToClasspath(path.toAbsolutePath().toString());
-            } else {
-                throw new RuntimeException(artifact + " is not available locally");
+            if (artifact.getExtension().equals("jar")) {
+                var path = artifact.getPath();
+                if (path != null) {
+                    jshell.addToClasspath(path.toAbsolutePath().toString());
+                } else {
+                    throw new RuntimeException(artifact + " is not available locally");
+                }
             }
         }
     }
+
     /**
      * Adds a maven artifact and its transitive dependencies to the end of the classpath used in eval().
      * @param coordinates the Maven coordinates in GAV (groupId:artifactId:version) format.
