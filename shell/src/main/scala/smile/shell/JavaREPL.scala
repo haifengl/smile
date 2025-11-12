@@ -27,6 +27,8 @@ object JavaREPL {
       "--class-path", System.getProperty("java.class.path"),
       "-R-XX:MaxMetaspaceSize=1024M",
       "-R-Xss4M",
+      "-R-XX:MaxRAMPercentage=75",
+      "-R-XX:+UseZGC",
       "-R--add-opens=java.base/java.nio=ALL-UNNAMED",
       "-R--enable-native-access=ALL-UNNAMED",
       "-R-Dsmile.home=" + home,
