@@ -48,7 +48,6 @@ import smile.studio.kernel.PostRunNavigation;
 public class Cell extends JPanel implements DocumentListener {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Cell.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), Locale.getDefault());
-    private static Font font = FontUtils.getCompositeFont(FlatJetBrainsMonoFont.FAMILY, Font.PLAIN, 14);
     private final String placeholder = bundle.getString("Prompt");
     /** The output buffer. StringBuffer is multi-thread safe while StringBuilder isn't. */
     final StringBuffer buffer = new StringBuffer();
@@ -110,8 +109,8 @@ public class Cell extends JPanel implements DocumentListener {
         deleteBtn.addActionListener(e -> notebook.deleteCell(this));
 
         // Cell editor and output configuration
-        output.setFont(font);
-        editor.setFont(font);
+        output.setFont(Monospace.font);
+        editor.setFont(Monospace.font);
         editor.getDocument().addDocumentListener(this);
         RTextScrollPane editorScroll = new RTextScrollPane(editor);
         editorScroll.setBorder(border);
@@ -142,14 +141,14 @@ public class Cell extends JPanel implements DocumentListener {
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, InputEvent.CTRL_DOWN_MASK), "increase-font-size");
         actionMap.put("increase-font-size", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
-                font = font.deriveFont(Math.min(32f, font.getSize() + 1));
+                Monospace.font = Monospace.font.deriveFont(Math.min(32f, Monospace.font.getSize() + 1));
                 setNotebookFont();
             }
         });
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, InputEvent.CTRL_DOWN_MASK), "decrease-font-size");
         actionMap.put("decrease-font-size", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
-                font = font.deriveFont(Math.max(8f, font.getSize() - 1));
+                Monospace.font = Monospace.font.deriveFont(Math.max(8f, Monospace.font.getSize() - 1));
                 setNotebookFont();
             }
         });
@@ -309,8 +308,8 @@ public class Cell extends JPanel implements DocumentListener {
     private void setNotebookFont() {
         for (Component sibling : getParent().getComponents()) {
             if (sibling instanceof Cell cell) {
-                cell.editor.setFont(font);
-                cell.output.setFont(font);
+                cell.editor.setFont(Monospace.font);
+                cell.output.setFont(Monospace.font);
             }
         }
     }
