@@ -30,6 +30,8 @@ import smile.plot.swing.Palette;
 public class OutputArea extends JTextArea {
     private final DefaultHighlightPainter painter = new DefaultHighlightPainter(Palette.LIGHT_PINK);
     private final Pattern pattern = Pattern.compile("ERROR|WARN|Recoverable issue|Rejected snippet|Unresolved dependencies|Exception:");
+    /** The output buffer. StringBuffer is multi-thread safe while StringBuilder isn't. */
+    final StringBuffer buffer = new StringBuffer();
 
     /**
      * Constructor.
@@ -39,6 +41,53 @@ public class OutputArea extends JTextArea {
         setEditable(false);
         setLineWrap(true);
         setWrapStyleWord(true);
+    }
+
+    /**
+     * Returns the output buffer.
+     * @return the output buffer.
+     */
+    public StringBuffer buffer() {
+        return buffer;
+    }
+
+    /**
+     * Flushes the buffer to the text area.
+     */
+    public void flush() {
+        setText(buffer.toString());
+    }
+
+    /**
+     * Clears the text content and buffer.
+     */
+    public void clear() {
+        setText("");
+        buffer.setLength(0);
+    }
+
+    /**
+     * Appends a string to the buffer.
+     *
+     * @param str a string.
+     * @return this object.
+     */
+    public OutputArea appendBuffer(String str) {
+        buffer.append(str);
+        return this;
+    }
+
+    /**
+     * Appends a line to buffer and flush context to the output area.
+     *
+     * @param str a string.
+     * @return this object.
+     */
+    public OutputArea appendLine(String str) {
+        buffer.append(str);
+        buffer.append(System.lineSeparator());
+        flush();
+        return this;
     }
 
     @Override

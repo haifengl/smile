@@ -64,6 +64,7 @@ public class Architect extends JPanel {
         input.setRows(3);
         input.setLineWrap(true);
         input.setWrapStyleWord(true);
+        messages.add(inputPane);
 
         InputMap inputMap = input.getInputMap(JComponent.WHEN_FOCUSED);
         ActionMap actionMap = input.getActionMap();
@@ -81,7 +82,7 @@ public class Architect extends JPanel {
         });
 
         add(scrollPane, BorderLayout.CENTER);
-        add(inputPane, BorderLayout.SOUTH);
+        //add(inputPane, BorderLayout.SOUTH);
     }
 
     /**

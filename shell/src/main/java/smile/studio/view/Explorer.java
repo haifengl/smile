@@ -83,6 +83,7 @@ public class Explorer extends JPanel {
         treeModel.insertNodeInto(models, root, root.getChildCount());
         //treeModel.insertNodeInto(services, root, root.getChildCount());
 
+        tree.setFont(Monospace.font);
         // Allow one selection at a time.
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         // Expand the tree

@@ -28,8 +28,6 @@ import java.awt.event.*;
 import java.util.*;
 import java.util.List;
 
-import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
-import com.formdev.flatlaf.util.FontUtils;
 import com.formdev.flatlaf.util.SystemInfo;
 import com.openai.core.http.AsyncStreamResponse;
 import com.openai.models.chat.completions.ChatCompletionChunk;
@@ -49,19 +47,17 @@ public class Cell extends JPanel implements DocumentListener {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Cell.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), Locale.getDefault());
     private final String placeholder = bundle.getString("Prompt");
-    /** The output buffer. StringBuffer is multi-thread safe while StringBuilder isn't. */
-    final StringBuffer buffer = new StringBuffer();
-    final JTextArea editor = new CodeEditor();
-    final JTextArea output = new OutputArea();
+    private final CodeEditor editor = new CodeEditor();
+    private final OutputArea output = new OutputArea();
     private final JTextField prompt = new JXTextField(placeholder);
     private final TitledBorder border = BorderFactory.createTitledBorder("[ ]");
-    private final JButton runBtn = new JButton("▶");
-    private final JButton runBelowBtn = new JButton("⏭");
-    private final JButton upBtn = new JButton("↑");
-    private final JButton downBtn = new JButton("↓");
+    private final JButton runButton = new JButton("▶");
+    private final JButton runBelowButton = new JButton("⏭");
+    private final JButton upButton = new JButton("↑");
+    private final JButton downButton = new JButton("↓");
     // Windows doesn't show broom emoji properly
-    private final JButton clearBtn = new JButton(SystemInfo.isMacOS ? "🧹" : "🗑");
-    private final JButton deleteBtn = new JButton("⌦");
+    private final JButton clearButton = new JButton(SystemInfo.isMacOS ? "🧹" : "🗑");
+    private final JButton deleteButton = new JButton("⌦");
     /** Running code generation. */
     private volatile boolean isCoding = false;
 
@@ -77,36 +73,36 @@ public class Cell extends JPanel implements DocumentListener {
         JPanel header = new JPanel();
         header.setLayout(new BoxLayout(header, BoxLayout.X_AXIS));
         header.add(Box.createHorizontalStrut(2));
-        header.add(runBtn);
+        header.add(runButton);
         header.add(Box.createHorizontalStrut(6));
-        header.add(runBelowBtn);
+        header.add(runBelowButton);
         header.add(Box.createHorizontalStrut(6));
-        header.add(upBtn);
+        header.add(upButton);
         header.add(Box.createHorizontalStrut(6));
-        header.add(downBtn);
+        header.add(downButton);
         header.add(Box.createHorizontalStrut(6));
-        header.add(clearBtn);
+        header.add(clearButton);
         header.add(Box.createHorizontalStrut(6));
-        header.add(deleteBtn);
+        header.add(deleteButton);
         header.add(Box.createHorizontalStrut(20));
         header.add(prompt);
 
         prompt.addActionListener(e -> generateCode());
         prompt.putClientProperty("JComponent.roundRect", true);
 
-        runBtn.setToolTipText(bundle.getString("Run"));
-        runBelowBtn.setToolTipText(bundle.getString("RunBelow"));
-        upBtn.setToolTipText(bundle.getString("MoveUp"));
-        downBtn.setToolTipText(bundle.getString("MoveDown"));
-        clearBtn.setToolTipText(bundle.getString("Clear"));
-        deleteBtn.setToolTipText(bundle.getString("Delete"));
+        runButton.setToolTipText(bundle.getString("Run"));
+        runBelowButton.setToolTipText(bundle.getString("RunBelow"));
+        upButton.setToolTipText(bundle.getString("MoveUp"));
+        downButton.setToolTipText(bundle.getString("MoveDown"));
+        clearButton.setToolTipText(bundle.getString("Clear"));
+        deleteButton.setToolTipText(bundle.getString("Delete"));
 
-        runBtn.addActionListener(e -> notebook.runCell(this, PostRunNavigation.STAY));
-        runBelowBtn.addActionListener(e -> notebook.runCellAndBelow(this));
-        upBtn.addActionListener(e -> notebook.moveCellUp(this));
-        downBtn.addActionListener(e -> notebook.moveCellDown(this));
-        clearBtn.addActionListener(e -> output.setText(""));
-        deleteBtn.addActionListener(e -> notebook.deleteCell(this));
+        runButton.addActionListener(e -> notebook.runCell(this, PostRunNavigation.STAY));
+        runBelowButton.addActionListener(e -> notebook.runCellAndBelow(this));
+        upButton.addActionListener(e -> notebook.moveCellUp(this));
+        downButton.addActionListener(e -> notebook.moveCellDown(this));
+        clearButton.addActionListener(e -> output.setText(""));
+        deleteButton.addActionListener(e -> notebook.deleteCell(this));
 
         // Cell editor and output configuration
         output.setFont(Monospace.font);
@@ -155,6 +151,7 @@ public class Cell extends JPanel implements DocumentListener {
 
         add(header, BorderLayout.NORTH);
         add(editorScroll, BorderLayout.CENTER);
+        add(output, BorderLayout.SOUTH);
     }
 
     /**
@@ -335,10 +332,10 @@ public class Cell extends JPanel implements DocumentListener {
      * @param running the running state.
      */
     public void setRunning(boolean running) {
-        runBtn.setEnabled(!running);
-        upBtn.setEnabled(!running);
-        downBtn.setEnabled(!running);
-        deleteBtn.setEnabled(!running);
+        runButton.setEnabled(!running);
+        upButton.setEnabled(!running);
+        downButton.setEnabled(!running);
+        deleteButton.setEnabled(!running);
         editor.setEnabled(!running);
         if (running) {
             border.setTitle("[*]");
@@ -355,23 +352,10 @@ public class Cell extends JPanel implements DocumentListener {
     }
 
     /**
-     * Sets the output.
-     * @param text the output.
-     */
-    public void setOutput(String text) {
-        output.setText(text);
-        if (text.isEmpty()) {
-            remove(output);
-        } else {
-            add(output, BorderLayout.SOUTH);
-        }
-    }
-
-    /**
      * Returns the code editor.
      * @return the code editor.
      */
-    public JTextArea editor() {
+    public CodeEditor editor() {
         return editor;
     }
 
@@ -379,15 +363,7 @@ public class Cell extends JPanel implements DocumentListener {
      * Returns the output area.
      * @return the output area.
      */
-    public JTextArea output() {
+    public OutputArea output() {
         return output;
-    }
-
-    /**
-     * Returns the output buffer.
-     * @return the output buffer.
-     */
-    public StringBuffer buffer() {
-        return buffer;
     }
 }

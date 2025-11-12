@@ -43,8 +43,8 @@ public class JavaRunner extends Runner {
      * Constructor.
      */
     public JavaRunner() {
-        PrintStream shellOut = new PrintStream(delegatingOut, true, StandardCharsets.UTF_8);
-        PrintStream shellErr = new PrintStream(delegatingOut, true, StandardCharsets.UTF_8);
+        PrintStream shellOut = new PrintStream(console, true, StandardCharsets.UTF_8);
+        PrintStream shellErr = new PrintStream(console, true, StandardCharsets.UTF_8);
         var builder = JShell.builder().out(shellOut).err(shellErr)
                 .remoteVMOptions("--class-path", System.getProperty("java.class.path"))
                 .remoteVMOptions("-XX:MaxMetaspaceSize=1024M")
