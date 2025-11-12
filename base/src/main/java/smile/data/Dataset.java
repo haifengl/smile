@@ -111,7 +111,8 @@ public interface Dataset<D, T> extends Iterable<SampleInstance<D, T>> {
      */
     default String toString(int numRows) {
         StringBuilder sb = new StringBuilder();
-        String top = stream().limit(numRows).map(Object::toString).collect(java.util.stream.Collectors.joining(System.lineSeparator()));
+        String top = stream().limit(numRows).map(Object::toString)
+                .collect(java.util.stream.Collectors.joining(System.lineSeparator()));
         sb.append(top);
 
         int rest = size() - numRows;

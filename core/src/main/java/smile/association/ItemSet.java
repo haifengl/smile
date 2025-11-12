@@ -49,14 +49,10 @@ public record ItemSet(int[] items, int support) {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("ItemSet(");
-        sb.append(Arrays.toString(items));
-        sb.append(", support=");
-        sb.append(support);
-        sb.append(')');
-        
-        return sb.toString();
+        return "ItemSet(" +
+                Arrays.toString(items) +
+                ", support=" +
+                support +
+                ')';
     }
 }
