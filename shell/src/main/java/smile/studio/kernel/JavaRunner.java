@@ -24,6 +24,8 @@ import java.util.function.ToIntFunction;
 import java.util.stream.Stream;
 import jdk.jshell.*;
 import com.formdev.flatlaf.util.SystemInfo;
+import org.eclipse.aether.collection.DependencyCollectionException;
+import org.eclipse.aether.resolution.DependencyResolutionException;
 
 /**
  * Java code execution engine.
@@ -90,7 +92,20 @@ public class JavaRunner extends Runner {
     public boolean eval(String code, ToIntFunction<List<SnippetEvent>> callback) {
         SourceCodeAnalysis.CompletionInfo info = sourceAnalyzer.analyzeCompletion(code);
         while (info.completeness().isComplete()) {
-            List<SnippetEvent> events = jshell.eval(info.source());
+            String source = info.source();
+            String[] lines = source.split("\\r?\\n");
+            for (String line : lines) {
+                line = line.trim();
+                if (line.startsWith("//!mvn ")) {
+                    try {
+                        addToClasspath(line.substring(7).trim());
+                    } catch (Exception ex) {
+                        throw new RuntimeException(ex.getMessage(), ex);
+                    }
+                }
+            }
+
+            List<SnippetEvent> events = jshell.eval(source);
             if (callback != null && callback.applyAsInt(events) > 0) {
                 return false;
             }
@@ -127,10 +142,37 @@ public class JavaRunner extends Runner {
      */
     public void addToClasspath(List<Path> jars) {
         for (Path jar : jars) {
-            if (jar != null) {
-                System.out.println(jar.toAbsolutePath().toString());
-                jshell.addToClasspath(jar.toAbsolutePath().toString());
+            jshell.addToClasspath(jar.toAbsolutePath().toString());
+        }
+    }
+
+    /**
+     * Adds a maven artifact and its transitive dependencies to the end of the classpath used in eval().
+     * @param groupId the group or organization that created the artifact.
+     * @param artifactId the specific project within the group.
+     * @param version the specific version of the artifact.
+     */
+    public void addToClasspath(String groupId, String artifactId, String version)
+            throws DependencyCollectionException, DependencyResolutionException {
+        for (var artifact : Maven.getDependencyJarPaths(groupId, artifactId, version)) {
+            var path = artifact.getPath();
+            if (path != null) {
+                jshell.addToClasspath(path.toAbsolutePath().toString());
+            } else {
+                throw new RuntimeException(artifact + " is not available locally");
             }
         }
+    }
+    /**
+     * Adds a maven artifact and its transitive dependencies to the end of the classpath used in eval().
+     * @param coordinates the Maven coordinates in GAV (groupId:artifactId:version) format.
+     */
+    public void addToClasspath(String coordinates)
+            throws DependencyCollectionException, DependencyResolutionException {
+        String[] gav = coordinates.split(":");
+        if (gav.length != 3) {
+            throw new IllegalArgumentException("Invalid Maven coordinates: " + coordinates);
+        }
+        addToClasspath(gav[0], gav[1], gav[2]);
     }
 }
