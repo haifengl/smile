@@ -16,43 +16,47 @@
  */
 package smile.studio.kernel;
 
-import smile.studio.view.Cell;
-
 import javax.swing.*;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import smile.studio.view.OutputArea;
 
-public class CellOutputStream extends OutputStream {
+/**
+ * Redirect console output stream.
+ *
+ * @author Haifeng Li
+ */
+public class ConsoleOutputStream extends OutputStream {
     /** JShell running cell. */
-    private Cell cell;
+    private OutputArea area;
     /** Timestamp of last time updating cell output. */
     private long stamp;
 
     /**
      * Constructor.
      */
-    public CellOutputStream() {
+    public ConsoleOutputStream() {
 
     }
 
     @Override
     public void write(int b) {
-        if (cell != null) {
-            StringBuffer buffer = cell.buffer();
+        if (area != null) {
+            StringBuffer buffer = area.buffer();
             buffer.append((char) b);
         }
     }
     @Override
     public void write(byte[] b, int off, int len) {
-        if (cell != null) {
-            StringBuffer buffer = cell.buffer();
+        if (area != null) {
+            StringBuffer buffer = area.buffer();
             buffer.append(new String(b, off, len, StandardCharsets.UTF_8));
             long time = System.currentTimeMillis();
             if (time - stamp > 100) {
                 stamp = time;
                 SwingUtilities.invokeLater(() -> {
-                    if (cell != null) {
-                        cell.setOutput(cell.buffer().toString());
+                    if (area != null) {
+                        area.setText(area.buffer().toString());
                     }
                 });
             }
@@ -60,18 +64,18 @@ public class CellOutputStream extends OutputStream {
     }
 
     /**
-     * Sets the running cell.
-     * @param cell the running cell.
+     * Sets the output area.
+     * @param area the output area for redirected stream.
      */
-    public void setCell(Cell cell) {
-        this.cell = cell;
+    public void setOutputArea(OutputArea area) {
+        this.area = area;
         stamp = System.currentTimeMillis();
     }
 
     /**
-     * Removes the running cell.
+     * Removes the output area.
      */
-    public void removeCell() {
-        cell = null;
+    public void removeOutputArea() {
+        area = null;
     }
 }

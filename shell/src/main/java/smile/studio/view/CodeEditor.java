@@ -36,4 +36,11 @@ public class CodeEditor extends RSyntaxTextArea {
         setLineWrap(false);
         setWrapStyleWord(false);
     }
+
+    /**
+     * Sets the number of rows to fit the content.
+     */
+    public void setPreferredRows() {
+        setRows(Math.min(20, getLineCount()));
+    }
 }

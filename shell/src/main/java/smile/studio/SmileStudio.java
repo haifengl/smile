@@ -107,7 +107,8 @@ public class SmileStudio extends JFrame {
                 // JSplitPane.setDividerLocation() set the location based on
                 // current pane size. We should set it after window is opened.
                 splitPane.setDividerLocation(0.7);
-                workspace.setDividerLocation(0.15);
+                // Invoker later so that splitPane.invalidate() be done
+                SwingUtilities.invokeLater(() -> workspace.setDividerLocation(0.15));
             }
         });
     }

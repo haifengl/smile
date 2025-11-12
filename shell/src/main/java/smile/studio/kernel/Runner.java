@@ -16,7 +16,7 @@
  */
 package smile.studio.kernel;
 
-import smile.studio.view.Cell;
+import smile.studio.view.OutputArea;
 
 /**
  * Base class of code execution engines.
@@ -25,7 +25,7 @@ import smile.studio.view.Cell;
  */
 public abstract class Runner {
     /** Output capture. */
-    final CellOutputStream delegatingOut = new CellOutputStream();
+    final ConsoleOutputStream console = new ConsoleOutputStream();
     /** Running state. */
     volatile boolean isRunning = false;
 
@@ -52,19 +52,20 @@ public abstract class Runner {
         isRunning = flag;
     }
 
+
     /**
-     * Sets the running cell.
-     * @param cell the running cell.
+     * Sets the output area.
+     * @param area the output area for redirected stream.
      */
-    public void setCell(Cell cell) {
-        delegatingOut.setCell(cell);
+    public void setOutputArea(OutputArea area) {
+        console.setOutputArea(area);
     }
 
     /**
-     * Removes the running cell.
+     * Removes the output area.
      */
-    public void removeCell() {
-        delegatingOut.removeCell();
+    public void removeOutputArea() {
+        console.removeOutputArea();
     }
 
     /**

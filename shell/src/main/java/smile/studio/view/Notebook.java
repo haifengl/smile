@@ -95,7 +95,7 @@ public class Notebook extends JPanel implements DocumentListener {
         } else {
             // Start with one cell
             Cell cell = addCell(null);
-            cell.editor.setText("""
+            cell.editor().setText("""
                     import java.awt.Color;
                     import java.time.*;
                     import java.util.*;
@@ -150,9 +150,10 @@ public class Notebook extends JPanel implements DocumentListener {
                     var figure = LinePlot.of(heart, Color.RED).figure();
                     figure.setTitle("Mathematical Beauty");
                     show(figure);""");
+            cell.editor().setPreferredRows();
 
             cell = addCell(null);
-            cell.editor.setText("""
+            cell.editor().setText("""
                     var home = System.getProperty("smile.home");
                     var iris = Read.arff(home + "/data/weka/iris.arff");
                     show(iris);
@@ -167,10 +168,10 @@ public class Notebook extends JPanel implements DocumentListener {
                     
                     var cv = CrossValidation.classification(10, Formula.lhs("class"), iris,
                                 (formula, data) -> DecisionTree.fit(formula, data));""");
-            cell.editor.setRows(cell.editor.getLineCount());
+            cell.editor().setPreferredRows();
 
             cell = addCell(null);
-            cell.editor.setText("""
+            cell.editor().setText("""
                     var format = CSVFormat.DEFAULT.withDelimiter(' ');
                     var mnist = Read.csv(home + "/data/mnist/mnist2500_X.txt", format).toArray();
                     var label = Read.csv(home + "/data/mnist/mnist2500_labels.txt", format).column(0).toIntArray();
@@ -187,15 +188,15 @@ public class Notebook extends JPanel implements DocumentListener {
                     figure = ScatterPlot.of(umap, label, '@').figure();
                     figure.setTitle("MNIST - UMAP");
                     show(figure);""");
-            cell.editor.setRows(cell.editor.getLineCount());
+            cell.editor().setPreferredRows();
         }
 
         if (cells.getComponentCount() > 0 && cells.getComponent(0) instanceof Cell first) {
             // Scroll to the first cell
             SwingUtilities.invokeLater(() -> {
-                first.editor.requestFocusInWindow();
-                first.editor.setCaretPosition(0);
-                scrollTo(first.editor);
+                first.editor().requestFocusInWindow();
+                first.editor().setCaretPosition(0);
+                scrollTo(first.editor());
             });
         }
     }
@@ -230,8 +231,8 @@ public class Notebook extends JPanel implements DocumentListener {
         cells.removeAll();
         for (String src : snippets) {
             Cell cell = new Cell(this);
-            cell.editor.setText(src);
-            cell.editor.getDocument().addDocumentListener(this);
+            cell.editor().setText(src);
+            cell.editor().getDocument().addDocumentListener(this);
             cells.add(cell);
         }
         if (snippets.isEmpty()) addCell(null);
@@ -250,7 +251,7 @@ public class Notebook extends JPanel implements DocumentListener {
         List<String> lines = new ArrayList<>();
         for (int i = 0; i < cells.getComponentCount(); i++) {
             Cell cell = getCell(i);
-            lines.addAll(codeToLines(cell.editor.getText()));
+            lines.addAll(codeToLines(cell.editor().getText()));
         }
         Files.write(file.toPath(), lines, StandardCharsets.UTF_8);
         saved = true;
@@ -335,7 +336,7 @@ public class Notebook extends JPanel implements DocumentListener {
      */
     public Cell addCell(Cell insertAfter) {
         Cell cell = new Cell(this);
-        cell.editor.getDocument().addDocumentListener(this);
+        cell.editor().getDocument().addDocumentListener(this);
         int idx = (insertAfter == null) ? cells.getComponentCount()
                                         : indexOf(insertAfter) + 1;
         cells.add(cell, idx);
@@ -343,8 +344,8 @@ public class Notebook extends JPanel implements DocumentListener {
         cells.repaint();
 
         SwingUtilities.invokeLater(() -> {
-            cell.editor.requestFocusInWindow();
-            scrollTo(cell.editor);
+            cell.editor().requestFocusInWindow();
+            scrollTo(cell.editor());
         });
         return cell;
     }
@@ -356,8 +357,8 @@ public class Notebook extends JPanel implements DocumentListener {
      */
     public void deleteCell(Cell cell) {
         if (cells.getComponentCount() == 1) {
-            cell.editor.setText("");
-            cell.output.setText("");
+            cell.editor().setText("");
+            cell.output().setText("");
             return;
         }
 
@@ -380,7 +381,7 @@ public class Notebook extends JPanel implements DocumentListener {
             cells.add(cell, idx - 1);
             cells.revalidate();
             cells.repaint();
-            scrollTo(cell.editor);
+            scrollTo(cell.editor());
         }
     }
 
@@ -396,7 +397,7 @@ public class Notebook extends JPanel implements DocumentListener {
             cells.add(cell, idx + 1);
             cells.revalidate();
             cells.repaint();
-            scrollTo(cell.editor);
+            scrollTo(cell.editor());
         }
     }
 
@@ -440,7 +441,7 @@ public class Notebook extends JPanel implements DocumentListener {
      */
     public void focusCell(int index) {
         Cell cell = getCell(index);
-        cell.editor.requestFocusInWindow();
+        cell.editor().requestFocusInWindow();
     }
 
     /**
@@ -450,17 +451,17 @@ public class Notebook extends JPanel implements DocumentListener {
      */
     private boolean runCell(Cell cell) {
         runCount++;
-        runner.setCell(cell); // Direct JShell prints
+        runner.setOutputArea(cell.output()); // Direct JShell prints
         SwingUtilities.invokeLater(() -> {
             cell.setRunning(true);
-            cell.editor.setRows(Math.min(20, cell.editor.getLineCount()));
+            cell.editor().setPreferredRows();
         });
 
         try {
-            cell.buffer.setLength(0); // Clears the StringBuilder
+            cell.output().clear();
             ZonedDateTime start = ZonedDateTime.now();
-            appendLine(cell.buffer, "⏵ " + datetime.format(start) + " started");
-            boolean okay = runner.eval(cell.editor.getText(), (events) -> {
+            cell.output().appendLine("⏵ " + datetime.format(start) + " started");
+            boolean okay = runner.eval(cell.editor().getText(), (events) -> {
                 // The number of errors;
                 int errors = 0;
                 // Capture values, diagnostics, and exceptions in order
@@ -468,15 +469,13 @@ public class Notebook extends JPanel implements DocumentListener {
                     if (ev.status() == Snippet.Status.VALID && ev.snippet() instanceof VarSnippet variable) {
                         if (!variable.name().matches("\\$\\d+")) {
                             String typeName = variable.typeName();
-                            cell.buffer.append("⇒ ")
-                                    .append(typeName).append(" ")
-                                    .append(variable.name());
+                            cell.output().appendBuffer("⇒ " + typeName + " " + variable.name());
 
                             String value = ev.value();
                             if (value != null) {
-                                cell.buffer.append(" = ");
+                                cell.output().appendBuffer(" = ");
                                 if (typeName.endsWith("DataFrame")) {
-                                    cell.buffer.append(System.lineSeparator());
+                                    cell.output().appendBuffer(System.lineSeparator());
                                 } else if (typeName.contains("[]")) {
                                     // The type may be generic with array, e.g., SVM<double[]>
                                     int index = value.indexOf('{');
@@ -484,36 +483,36 @@ public class Notebook extends JPanel implements DocumentListener {
                                         value = value.substring(0, index);
                                     }
                                 }
-                                appendLine(cell.buffer, value);
+                                cell.output().appendLine(value);
                             }
                         }
                     } else if (ev.status() == Snippet.Status.REJECTED) {
                         errors++;
-                        appendLine(cell.buffer, "✖ Rejected snippet: " + ev.snippet().source());
+                        cell.output().appendLine("✖ Rejected snippet: " + ev.snippet().source());
                     } else if (ev.status() == Snippet.Status.RECOVERABLE_DEFINED ||
                                ev.status() == Snippet.Status.RECOVERABLE_NOT_DEFINED) {
                         errors++;
-                        appendLine(cell.buffer, "⚠ Recoverable issue: " + ev.snippet().source());
+                        cell.output().appendLine("⚠ Recoverable issue: " + ev.snippet().source());
                         if (ev.snippet() instanceof DeclarationSnippet snippet) {
-                            appendLine(cell.buffer, "⚠ Unresolved dependencies:");
-                            runner.unresolvedDependencies(snippet).forEach(name -> appendLine(cell.buffer, "    " + name));
+                            cell.output().appendLine("⚠ Unresolved dependencies:");
+                            runner.unresolvedDependencies(snippet).forEach(name -> cell.output().appendLine("    " + name));
                         }
                     }
 
                     errors += runner.diagnostics(ev.snippet()).mapToInt(diag -> {
                         String kind = diag.isError() ? "ERROR" : "WARN";
-                        appendLine(cell.buffer, String.format("%s: %s",
+                        cell.output().appendLine(String.format("%s: %s",
                                 kind, diag.getMessage(Locale.getDefault())));
                         return diag.isError() ? 1 : 0;
                     }).sum();
 
                     if (ev.exception() instanceof EvalException ex) {
                         errors++;
-                        appendLine(cell.buffer, "Exception: " + ex.getExceptionClassName());
-                        if (ex.getMessage() != null) appendLine(cell.buffer, ex.getMessage());
+                        cell.output().appendLine("Exception: " + ex.getExceptionClassName());
+                        if (ex.getMessage() != null) cell.output().appendLine(ex.getMessage());
                         // JShell exception stack trace is often concise
                         for (StackTraceElement ste : ex.getStackTrace()) {
-                            appendLine(cell.buffer, "  at " + ste.toString());
+                            cell.output().appendLine("  at " + ste.toString());
                         }
                     }
                 }
@@ -522,21 +521,21 @@ public class Notebook extends JPanel implements DocumentListener {
 
             ZonedDateTime end = ZonedDateTime.now();
             Duration duration = Duration.between(start, end);
-            appendLine(cell.buffer, "⏹ " + datetime.format(end) + " finished (" + duration + ")");
+            cell.output().appendLine("⏹ " + datetime.format(end) + " finished (" + duration + ")");
             return okay;
         } catch (Throwable t) {
-            appendLine(cell.buffer, "✖ Error during execution: " + t);
+            cell.output().appendLine("✖ Error during execution: " + t);
             logger.error("Error during execution: ", t);
             return false;
         } finally {
-            runner.removeCell();
+            runner.removeOutputArea();;
             // Generates title before calling invokeLater
             // as runCount may have changed in case of runAllCells.
             String title = "[" + runCount + "]";
             SwingUtilities.invokeLater(() -> {
                 cell.setRunning(false);
                 cell.setTitle(title);
-                cell.setOutput(cell.buffer.toString());
+                cell.output().flush();
             });
         }
     }
@@ -562,7 +561,7 @@ public class Notebook extends JPanel implements DocumentListener {
             return;
         }
 
-        final String code = cell.editor.getText();
+        final String code = cell.editor().getText();
         if (code.trim().isEmpty()) {
             // Honor the navigation behavior even on empty run
             handlePostRunNav(cell, behavior);
@@ -595,28 +594,28 @@ public class Notebook extends JPanel implements DocumentListener {
      */
     private void handlePostRunNav(Cell cell, PostRunNavigation behavior) {
         switch (behavior) {
-            case STAY -> SwingUtilities.invokeLater(cell.editor::requestFocusInWindow);
+            case STAY -> SwingUtilities.invokeLater(cell.editor()::requestFocusInWindow);
             case NEXT_OR_NEW -> {
                 int idx = indexOf(cell);
                 if (idx < cells.getComponentCount() - 1) {
                     Cell next = getCell(idx + 1);
                     SwingUtilities.invokeLater(() -> {
-                        next.editor.requestFocusInWindow();
-                        scrollTo(next.editor);
+                        next.editor().requestFocusInWindow();
+                        scrollTo(next.editor());
                     });
                 } else {
                     Cell next = addCell(cell);
                     SwingUtilities.invokeLater(() -> {
-                        next.editor.requestFocusInWindow();
-                        scrollTo(next.editor);
+                        next.editor().requestFocusInWindow();
+                        scrollTo(next.editor());
                     });
                 }
             }
             case INSERT_BELOW -> {
                 Cell next = addCell(cell);
                 SwingUtilities.invokeLater(() -> {
-                    next.editor.requestFocusInWindow();
-                    scrollTo(next.editor);
+                    next.editor().requestFocusInWindow();
+                    scrollTo(next.editor());
                 });
             }
         }
@@ -632,7 +631,7 @@ public class Notebook extends JPanel implements DocumentListener {
             protected Void doInBackground() {
                 runner.setRunning(true);
                 for (Cell cell : cells) {
-                    if (cell.editor.getText().trim().isEmpty()) continue;
+                    if (cell.editor().getText().trim().isEmpty()) continue;
                     if (!runCell(cell)) break;
                 }
                 return null;
@@ -686,22 +685,11 @@ public class Notebook extends JPanel implements DocumentListener {
     }
 
     /**
-     * Appends a line to output buffer.
-     *
-     * @param buffer the output buffer.
-     * @param line a new line.
-     */
-    private static void appendLine(StringBuffer buffer, String line) {
-        buffer.append(line);
-        buffer.append(System.lineSeparator());
-    }
-
-    /**
      * Clear the outputs of all cells.
      */
     public void clearAllOutputs() {
         for (int i = 0; i < cells.getComponentCount(); i++) {
-            getCell(i).setOutput("");
+            getCell(i).output().setText("");
         }
     }
 }
