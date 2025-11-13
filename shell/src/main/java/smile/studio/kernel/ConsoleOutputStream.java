@@ -52,11 +52,11 @@ public class ConsoleOutputStream extends OutputStream {
             StringBuffer buffer = area.buffer();
             buffer.append(new String(b, off, len, StandardCharsets.UTF_8));
             long time = System.currentTimeMillis();
-            if (time - stamp > 100) {
+            if (time - stamp >= 100) {
                 stamp = time;
                 SwingUtilities.invokeLater(() -> {
                     if (area != null) {
-                        area.setText(area.buffer().toString());
+                        area.flush();
                     }
                 });
             }
