@@ -33,7 +33,7 @@ import com.openai.core.http.AsyncStreamResponse;
 import com.openai.models.chat.completions.ChatCompletionChunk;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jdesktop.swingx.JXTextField;
-import smile.studio.kernel.Coder;
+import smile.studio.agent.Coder;
 import smile.studio.kernel.PostRunNavigation;
 
 /**
