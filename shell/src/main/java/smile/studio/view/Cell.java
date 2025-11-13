@@ -145,17 +145,13 @@ public class Cell extends JPanel implements DocumentListener {
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, InputEvent.CTRL_DOWN_MASK), "increase-font-size");
         actionMap.put("increase-font-size", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
-                Font font = Monospace.getFont();
-                font = font.deriveFont(Math.min(32f, font.getSize() + 1));
-                Monospace.setFont(font);
+                Monospace.adjustFontSize(1);
             }
         });
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, InputEvent.CTRL_DOWN_MASK), "decrease-font-size");
         actionMap.put("decrease-font-size", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
-                Font font = Monospace.getFont();
-                font = font.deriveFont(Math.max(8f, font.getSize() - 1));
-                Monospace.setFont(font);
+                Monospace.adjustFontSize(-1);
             }
         });
 
