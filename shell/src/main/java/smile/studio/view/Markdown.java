@@ -31,18 +31,18 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 /**
- * Text area for markdown context.
+ * A component to render markdown text.
  *
  * @author Haifeng Li
  */
-public class MarkdownArea extends JPanel {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MarkdownArea.class);
+public class Markdown extends JPanel {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Markdown.class);
 
     /**
      * Constructor.
      * @param text the markdown text.
      */
-    public MarkdownArea(String text) {
+    public Markdown(String text) {
         super(new BorderLayout());
         Parser parser = Parser.builder().build();
         Node document = parser.parse(text);

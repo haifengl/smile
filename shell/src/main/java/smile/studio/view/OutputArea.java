@@ -23,7 +23,7 @@ import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
 import smile.plot.swing.Palette;
 
 /**
- * Text area for cell output.
+ * Text area for output stream.
  *
  * @author Haifeng Li
  */

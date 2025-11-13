@@ -39,6 +39,16 @@ import org.eclipse.aether.resolution.DependencyResult;
  * @author Haifeng Li
  */
 public interface Maven {
+    /**
+     * Returns the list of transitive dependencies of an artifact including itself.
+     * @param groupId the group or organization that created the artifact.
+     * @param artifactId the specific project within the group.
+     * @param version the specific version of the artifact.
+     * @return the list of transitive dependencies of an artifact including itself.
+     * @throws DependencyResolutionException if Maven could not resolve dependencies.
+     * @throws DependencyCollectionException if bad artifact descriptors, version ranges
+     * or other issues encountered during calculation of the dependency graph.
+     */
     static List<Artifact> getDependencyJarPaths(String groupId, String artifactId, String version)
             throws DependencyResolutionException, DependencyCollectionException {
         Artifact artifact = new DefaultArtifact(groupId, artifactId, "", "pom", version);
