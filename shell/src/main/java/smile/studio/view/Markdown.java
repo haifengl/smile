@@ -67,7 +67,9 @@ public class Markdown extends JPanel {
         } catch (ParserConfigurationException | SAXException | IOException ex) {
             logger.error("Failed to process Markdown: ", ex);
             JTextArea area = new JTextArea(text);
-            setFont(Monospace.font);
+            Monospace.addListener((e) ->
+                    SwingUtilities.invokeLater(() -> setFont((Font) e.getNewValue())));
+            setFont(Monospace.getFont());
             add(area, BorderLayout.CENTER);
         }
     }

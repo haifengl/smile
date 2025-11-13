@@ -72,6 +72,7 @@ public class Notebook extends JPanel implements DocumentListener {
         this.postRunAction = postRunAction;
         cells.setLayout(new BoxLayout(cells, BoxLayout.Y_AXIS));
         scrollPane.getVerticalScrollBar().setUnitIncrement(18);
+        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         add(scrollPane, BorderLayout.CENTER);
 
         // Note that JShell runs in another JVM so that
