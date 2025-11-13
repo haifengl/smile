@@ -105,8 +105,16 @@ public class Cell extends JPanel implements DocumentListener {
         deleteButton.addActionListener(e -> notebook.deleteCell(this));
 
         // Cell editor and output configuration
-        output.setFont(Monospace.font);
-        editor.setFont(Monospace.font);
+        Monospace.addListener((e) ->
+            SwingUtilities.invokeLater(() -> {
+                Font font = (Font) e.getNewValue();
+                output.setFont(font);
+                editor.setFont(font);
+            })
+        );
+
+        output.setFont(Monospace.getFont());
+        editor.setFont(Monospace.getFont());
         editor.getDocument().addDocumentListener(this);
         RTextScrollPane editorScroll = new RTextScrollPane(editor);
         editorScroll.setBorder(border);
@@ -137,15 +145,17 @@ public class Cell extends JPanel implements DocumentListener {
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, InputEvent.CTRL_DOWN_MASK), "increase-font-size");
         actionMap.put("increase-font-size", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
-                Monospace.font = Monospace.font.deriveFont(Math.min(32f, Monospace.font.getSize() + 1));
-                setNotebookFont();
+                Font font = Monospace.getFont();
+                font = font.deriveFont(Math.min(32f, font.getSize() + 1));
+                Monospace.setFont(font);
             }
         });
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, InputEvent.CTRL_DOWN_MASK), "decrease-font-size");
         actionMap.put("decrease-font-size", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
-                Monospace.font = Monospace.font.deriveFont(Math.max(8f, Monospace.font.getSize() - 1));
-                setNotebookFont();
+                Font font = Monospace.getFont();
+                font = font.deriveFont(Math.max(8f, font.getSize() - 1));
+                Monospace.setFont(font);
             }
         });
 
@@ -297,18 +307,6 @@ public class Cell extends JPanel implements DocumentListener {
         }
 
         return lines;
-    }
-
-    /**
-     * Sets the font for all the cells in the parent Notebook.
-     */
-    private void setNotebookFont() {
-        for (Component sibling : getParent().getComponents()) {
-            if (sibling instanceof Cell cell) {
-                cell.editor.setFont(Monospace.font);
-                cell.output.setFont(Monospace.font);
-            }
-        }
     }
 
     @Override
