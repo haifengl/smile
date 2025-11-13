@@ -38,21 +38,21 @@ import smile.plot.swing.Palette;
  *
  * @author Haifeng Li
  */
-public class Architect extends JPanel {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Architect.class);
+public class Analyst extends JPanel {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Analyst.class);
     private static final Color userMessageColor = new Color(220, 248, 198);
     private static final Color botMessageColor = Palette.web("#8dd4e8");
     private static final FlatBorder flat = new FlatBorder(); // proxy to get theme color and width
     private final JPanel messages = new JPanel();
-    private final JTextArea input = new JTextArea();
+    private final JTextArea input = new JTextArea(3, 80);
 
     /**
      * Constructor.
      */
-    public Architect() {
+    public Analyst() {
         super(new BorderLayout(0, 8));
         setBorder(new EmptyBorder(0, 0, 0, 8));
-        messages.setLayout(new BoxLayout(messages, BoxLayout.Y_AXIS));
+        messages.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));//new BoxLayout(messages, BoxLayout.Y_AXIS));
         JScrollPane scrollPane = new JScrollPane(messages);
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
@@ -61,7 +61,7 @@ public class Architect extends JPanel {
         inputPane.setBorder(createRoundBorder());
         inputPane.add(input, BorderLayout.CENTER);
 
-        input.setRows(3);
+        //input.setRows(3);
         input.setLineWrap(true);
         input.setWrapStyleWord(true);
         messages.add(inputPane);
