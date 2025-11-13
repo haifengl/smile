@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.studio.kernel;
+package smile.studio.agent;
 
 import java.util.concurrent.CompletableFuture;
 import com.openai.client.OpenAIClient;
