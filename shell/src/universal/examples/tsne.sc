@@ -10,8 +10,6 @@ val labels = smile.read.csv(Paths.getTestData("mnist/mnist2500_labels.txt").toSt
 val pca = PCA.fit(mnist).getProjection(50)
 val X = pca(mnist)
 
-val perplexity = 20
-val tsne = new TSNE(X, 2, perplexity, 200, 1000)
-
-val canvas = plot(tsne.coordinates, labels, '@')
+val model = tsne(X, 2, 20, 200, 12, 550)
+val canvas = plot(model.coordinates, labels, '@')
 canvas.window()

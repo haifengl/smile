@@ -77,11 +77,10 @@ System.out.format("Confusion Matrix: %s%n", ConfusionMatrix.of(testy, logitpred)
 System.out.println("Training Neural Network, 10 epoch...");
 
 var net = new MLP(Layer.input(256),
-                  Layer.leaky(768, 0.2, 0.02),
-                  Layer.rectifier(192),
-                  Layer.rectifier(30),
-                  Layer.mle(k, OutputFunction.SOFTMAX)
-);
+    Layer.leaky(768, 0.2, 0.02),
+    Layer.rectifier(192),
+    Layer.rectifier(30),
+    Layer.mle(k, OutputFunction.SOFTMAX));
 
 net.setLearningRate(TimeFunction.linear(0.01, 20000, 0.001));
 
