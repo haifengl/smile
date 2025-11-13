@@ -22,7 +22,7 @@ import java.nio.charset.StandardCharsets;
 import smile.studio.view.OutputArea;
 
 /**
- * Redirect console output stream.
+ * Redirect console output stream to an OutputArea.
  *
  * @author Haifeng Li
  */
