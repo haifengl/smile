@@ -470,11 +470,12 @@ public class Notebook extends JPanel implements DocumentListener {
                     if (ev.status() == Snippet.Status.VALID && ev.snippet() instanceof VarSnippet variable) {
                         if (!variable.name().matches("\\$\\d+")) {
                             String typeName = variable.typeName();
-                            cell.output().appendBuffer("⇒ " + typeName + " " + variable.name());
+                            cell.output().appendBuffer("⇒ " + typeName + " " + variable.name() + " = ");
 
                             String value = ev.value();
-                            if (value != null) {
-                                cell.output().appendBuffer(" = ");
+                            if (value == null) {
+                                cell.output().appendLine("null");
+                            } else {
                                 if (typeName.endsWith("DataFrame")) {
                                     cell.output().appendBuffer(System.lineSeparator());
                                 } else if (typeName.contains("[]")) {
@@ -496,7 +497,7 @@ public class Notebook extends JPanel implements DocumentListener {
                         cell.output().appendLine("⚠ Recoverable issue: " + ev.snippet().source());
                         if (ev.snippet() instanceof DeclarationSnippet snippet) {
                             cell.output().appendLine("⚠ Unresolved dependencies:");
-                            runner.unresolvedDependencies(snippet).forEach(name -> cell.output().appendLine("    " + name));
+                            runner.unresolvedDependencies(snippet).forEach(name -> cell.output().appendLine("  └ " + name));
                         }
                     }
 
@@ -509,8 +510,7 @@ public class Notebook extends JPanel implements DocumentListener {
 
                     if (ev.exception() instanceof EvalException ex) {
                         errors++;
-                        cell.output().appendLine("Exception: " + ex.getExceptionClassName());
-                        if (ex.getMessage() != null) cell.output().appendLine(ex.getMessage());
+                        cell.output().appendLine(ex.getExceptionClassName() + ": " + (ex.getMessage() != null ? ex.getMessage() : ""));
                         // JShell exception stack trace is often concise
                         for (StackTraceElement ste : ex.getStackTrace()) {
                             cell.output().appendLine("  at " + ste.toString());

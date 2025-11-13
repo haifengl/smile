@@ -41,6 +41,6 @@ public class CodeEditor extends RSyntaxTextArea {
      * Sets the number of rows to fit the content.
      */
     public void setPreferredRows() {
-        setRows(Math.min(20, getLineCount()));
+        setRows(Math.min(30, getLineCount()));
     }
 }
