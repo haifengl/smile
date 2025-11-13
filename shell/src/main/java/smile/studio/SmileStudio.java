@@ -115,6 +115,17 @@ public class SmileStudio extends JFrame {
     }
 
     /**
+     * Sets the status in the StatusBar of the Studio containing the component.
+     * @param comp the component that sets the status message.
+     * @param status the status message.
+     */
+    public static void setStatus(Component comp, String status) {
+        if (SwingUtilities.getWindowAncestor(comp) instanceof SmileStudio studio) {
+            studio.statusBar.setStatus(status);
+        }
+    }
+
+    /**
      * Sets the icon images for the frame.
      */
     private void setFrameIcon() {

@@ -56,7 +56,7 @@ public class Cell extends JPanel implements DocumentListener {
     private final JButton upButton = new JButton("↑");
     private final JButton downButton = new JButton("↓");
     // Windows doesn't show broom emoji properly
-    private final JButton clearButton = new JButton(SystemInfo.isMacOS ? "🧹" : "🗑");
+    private final JButton clearButton = new JButton(SystemInfo.isMacOS ? "🧹" : "⌫");
     private final JButton deleteButton = new JButton("⌦");
     /** Running code generation. */
     private volatile boolean isCoding = false;
