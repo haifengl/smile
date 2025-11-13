@@ -73,6 +73,7 @@ public class SmileStudio extends JFrame {
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setLeftComponent(workspace);
         splitPane.setRightComponent(analyst);
+        splitPane.setResizeWeight(0.7);
 
         JPanel contentPane = new JPanel(new BorderLayout());
         contentPane.add(toolBar, BorderLayout.NORTH);

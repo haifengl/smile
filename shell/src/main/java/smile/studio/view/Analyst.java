@@ -44,7 +44,7 @@ public class Analyst extends JPanel {
     private static final Color botMessageColor = Palette.web("#8dd4e8");
     private static final FlatBorder flat = new FlatBorder(); // proxy to get theme color and width
     private final JPanel messages = new JPanel();
-    private final JTextArea input = new JTextArea(3, 40);
+    private final JTextArea input = new JTextArea(3, 60);
 
     /**
      * Constructor.
