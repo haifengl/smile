@@ -55,4 +55,12 @@ public class Monospace {
         font = newFont;
         pcs.firePropertyChange("font", oldFont, newFont);
     }
+
+    /**
+     * Adjusts the font size.
+     * @param delta the value by which the font size is adjusted.
+     */
+    public static void adjustFontSize(float delta) {
+        setFont(font.deriveFont(Math.min(32f, Math.max(8f, font.getSize() + delta))));
+    }
 }

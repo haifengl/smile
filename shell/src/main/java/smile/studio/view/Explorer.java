@@ -123,7 +123,7 @@ public class Explorer extends JPanel {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2) { // double-click
-                    // Get the path and node associated with the double-click
+                    // Get the path and node associated with the double click
                     TreePath path = tree.getPathForLocation(e.getX(), e.getY());
                     if (path != null) {
                         DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
