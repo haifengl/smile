@@ -55,15 +55,15 @@ public class OutputArea extends JTextArea {
      * Flushes the buffer to the text area.
      */
     public void flush() {
-        setText(buffer.toString());
+        SwingUtilities.invokeLater(() -> setText(buffer.toString()));
     }
 
     /**
      * Clears the text content and buffer.
      */
     public void clear() {
-        setText("");
         buffer.setLength(0);
+        SwingUtilities.invokeLater(() -> setText(""));
     }
 
     /**
