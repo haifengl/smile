@@ -11,13 +11,14 @@ import smile.math._
 import smile.math.distance._
 import smile.math.kernel._
 import smile.math.rbf._
+import smile.util.function.TimeFunction
 import smile.validation._
 import smile.validation.metric._
 
 val fields = new java.util.ArrayList[StructField]
 fields.add(new StructField("class", DataTypes.ByteType))
 (1 to 256).foreach(i => fields.add(new StructField("V" + i, DataTypes.DoubleType)))
-val schema = DataTypes.struct(fields)
+val schema = new StructType(fields)
 
 val formula: Formula = "class" ~ "."
 val zipTrain = read.csv(Paths.getTestData("usps/zip.train").toString, delimiter = " ", header = false, schema = schema)
@@ -48,15 +49,15 @@ println("Training SVM, one epoch...")
 val kernel = new GaussianKernel(8.0)
 validate.classification(x, y, testx, testy) { (x, y) =>
   ovo(x, y) { (x, y) =>
-    SVM.fit(x, y, kernel, 5, 1E-3)
+    SVM.fit(x, y, kernel, new SVM.Options(5))
   }
 }
 
 // RBF Network
 println("Training RBF Network...")
-val kmeans = KMeans.fit(x, 200)
+val kmeans = KMeans.fit(x, 200, 10)
 val distance = new EuclideanDistance
-val neurons = RBF.of(kmeans.centroids, new GaussianRadialBasis(8.0), distance)
+val neurons = RBF.of(kmeans.centers, new GaussianRadialBasis(8.0), distance)
 validate.classification(x, y, testx, testy) { (x, y) =>
   rbfnet(x, y, neurons, false)
 }
@@ -70,10 +71,10 @@ validate.classification(x, y, testx, testy) { (x, y) =>
 // Neural Network
 println("Training Neural Network, 10 epoch...")
 val net = new MLP(Layer.input(256),
-  Layer.sigmoid(768),
-  Layer.sigmoid(192),
-  Layer.sigmoid(30),
-  Layer.mle(10, OutputFunction.SIGMOID)
+  Layer.leaky(768, 0.2, 0.02),
+  Layer.rectifier(192),
+  Layer.rectifier(30),
+  Layer.mle(k, OutputFunction.SOFTMAX)
 )
 
 net.setLearningRate(TimeFunction.linear(0.01, 20000, 0.001));

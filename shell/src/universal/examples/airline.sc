@@ -1,9 +1,8 @@
 // Benchmark on Airline data
 // https://github.com/szilard/benchm-ml
 import smile._
-import smile.util._
+import smile.io._
 import smile.classification._
-import smile.data._
 import smile.data.formula._
 import smile.data.measure._
 import smile.data.`type`._
@@ -39,7 +38,7 @@ val airport = new NominalScale("ABE", "ABI", "ABQ", "ABY", "ACK", "ACT",
   "TEX", "TLH", "TOL", "TPA", "TRI", "TTN", "TUL", "TUP", "TUS", "TVC", "TWF",
   "TXK", "TYR", "TYS", "VCT", "VIS", "VLD", "VPS", "WRG", "WYS", "XNA", "YAK",
   "YKM", "YUM")
-val schema = DataTypes.struct(
+val schema = new StructType(
   new StructField("Month", DataTypes.ByteType, new NominalScale("c-1", "c-2", "c-3", "c-4",
     "c-5", "c-6", "c-7", "c-8", "c-9", "c-10", "c-11", "c-12")),
   new StructField("DayofMonth", DataTypes.ByteType, new NominalScale("c-1", "c-2", "c-3", "c-4",
@@ -47,12 +46,12 @@ val schema = DataTypes.struct(
     "c-19", "c-20", "c-21", "c-22", "c-23", "c-24", "c-25", "c-26", "c-27", "c-28", "c-29", "c-30", "c-31")),
   new StructField("DayOfWeek", DataTypes.ByteType, new NominalScale("c-1", "c-2", "c-3", "c-4",
     "c-5", "c-6", "c-7")),
-  new StructField("DepTime", DataTypes.IntegerType),
+  new StructField("DepTime", DataTypes.IntType),
   new StructField("UniqueCarrier", DataTypes.ByteType, new NominalScale("9E", "AA", "AQ", "AS",
     "B6", "CO", "DH", "DL", "EV", "F9", "FL", "HA", "HP", "MQ", "NW", "OH", "OO", "TZ", "UA", "US", "WN", "XE", "YV")),
   new StructField("Origin", DataTypes.ShortType, airport),
   new StructField("Dest", DataTypes.ShortType, airport),
-  new StructField("Distance", DataTypes.IntegerType),
+  new StructField("Distance", DataTypes.IntType),
   new StructField("dep_delayed_15min", DataTypes.ByteType, new NominalScale("N", "Y"))
 )
 
