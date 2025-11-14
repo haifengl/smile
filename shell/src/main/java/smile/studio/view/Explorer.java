@@ -83,7 +83,8 @@ public class Explorer extends JPanel {
         treeModel.insertNodeInto(frames, root, root.getChildCount());
         treeModel.insertNodeInto(matrix, root, root.getChildCount());
         treeModel.insertNodeInto(models, root, root.getChildCount());
-        treeModel.insertNodeInto(services, root, root.getChildCount());
+        //'smile serve' expects a model file produced by 'smile train'
+        //treeModel.insertNodeInto(services, root, root.getChildCount());
 
         Monospace.addListener((e) ->
                 SwingUtilities.invokeLater(() -> tree.setFont((Font) e.getNewValue())));
