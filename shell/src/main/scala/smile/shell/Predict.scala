@@ -107,7 +107,7 @@ object Predict {
         model.regression.predict(data).foreach(y => println(Strings.format(y)))
 
       case _ =>
-        Console.err.println(s"{config.model} doesn't contain a valid model.")
+        Console.err.println(s"${config.model} doesn't contain a valid model.")
     }
   }
 }
