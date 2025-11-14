@@ -117,7 +117,7 @@ object Serve extends LazyLogging {
       case model: SmileModel => model
 
       case _ =>
-        Console.err.println(s"{config.model} doesn't contain a valid model.")
+        Console.err.println(s"${config.model} doesn't contain a valid model.")
         return
     }
 
