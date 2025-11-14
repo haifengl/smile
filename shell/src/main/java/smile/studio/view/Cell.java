@@ -188,6 +188,7 @@ public class Cell extends JPanel implements DocumentListener {
                         var future = Coder.complete(context, currentLine);
                         future.handle((completion, error) -> {
                             if (error != null) {
+                                error.printStackTrace();
                                 logger.error("Code completion failed: ", error);
                             } else {
                                 if (completion.isValid()) {

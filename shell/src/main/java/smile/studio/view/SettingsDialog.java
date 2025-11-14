@@ -33,14 +33,9 @@ public class SettingsDialog extends JDialog {
     public static final String ANTHROPIC_API_KEY = "anthropicApiKey";
     public static final String GOOGLE_API_KEY = "googleApiKey";
     private static final ResourceBundle bundle = ResourceBundle.getBundle(SettingsDialog.class.getName(), Locale.getDefault());
-    private final JLabel openaiApiKeyLabel = new JLabel(bundle.getString("OpenAIAPIKey"));
     private final JTextField openaiApiKeyField = new JTextField(25);
-    private final JLabel anthropicApiKeyLabel = new JLabel(bundle.getString("AnthropicAPIKey"));
     private final JTextField anthropicApiKeyField = new JTextField(25);
-    private final JLabel googleApiKeyLabel = new JLabel(bundle.getString("GoogleAPIKey"));
     private final JTextField googleApiKeyField = new JTextField(25);
-    private final JButton okButton = new JButton(bundle.getString("OK"));
-    private final JButton cancelButton = new JButton(bundle.getString("Cancel"));
 
     /**
      * Constructor.
@@ -53,6 +48,9 @@ public class SettingsDialog extends JDialog {
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
 
+        JLabel openaiApiKeyLabel = new JLabel(bundle.getString("OpenAIAPIKey"));
+        JLabel anthropicApiKeyLabel = new JLabel(bundle.getString("AnthropicAPIKey"));
+        JLabel googleApiKeyLabel = new JLabel(bundle.getString("GoogleAPIKey"));
         openaiApiKeyField.setText(prefs.get(OPENAI_API_KEY, ""));
         anthropicApiKeyField.setText(prefs.get(ANTHROPIC_API_KEY, ""));
         googleApiKeyField.setText(prefs.get(GOOGLE_API_KEY, ""));
@@ -104,8 +102,11 @@ public class SettingsDialog extends JDialog {
         // Panel for the buttons
         JPanel buttonPane = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         buttonPane.setBorder(new EmptyBorder(0, 0, 0, 10));
+        JButton okButton = new JButton(bundle.getString("OK"));
+        JButton cancelButton = new JButton(bundle.getString("Cancel"));
         buttonPane.add(okButton);
         buttonPane.add(cancelButton);
+        getRootPane().setDefaultButton(okButton);
 
         okButton.addActionListener((e) -> {
             prefs.put(OPENAI_API_KEY, openaiApiKeyField.getText());
@@ -114,19 +115,11 @@ public class SettingsDialog extends JDialog {
             dispose();
         });
 
-        cancelButton.addActionListener((e) -> {
-            dispose();
-        });
+        cancelButton.addActionListener((e) -> dispose());
 
         add(inputPane, BorderLayout.CENTER);
         add(buttonPane, BorderLayout.SOUTH);
         pack();
         setLocationRelativeTo(owner);
-    }
-
-    // Custom Layout Manager helper for simple label-field alignment
-    class FlowGridBagLayout extends GridBagLayout {
-        public FlowGridBagLayout() {
-        }
     }
 }
