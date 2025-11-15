@@ -20,7 +20,7 @@
                                  MLP RBFNetwork SVM DecisionTree
                                  RandomForest GradientTreeBoost
                                  AdaBoost FLD LDA QDA RDA]
-           [smile.base.cart SplitRule]))
+           [smile.model.cart SplitRule]))
 
 (defn knn
   "K-nearest neighbor classifier.
