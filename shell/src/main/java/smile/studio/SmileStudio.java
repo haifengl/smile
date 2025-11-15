@@ -29,9 +29,10 @@ import java.io.*;
 import java.util.*;
 import java.util.prefs.Preferences;
 
-import com.formdev.flatlaf.FlatLaf;
-import com.formdev.flatlaf.FlatLightLaf;
+import com.formdev.flatlaf.*;
 import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
+import com.formdev.flatlaf.themes.FlatMacDarkLaf;
+import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import com.formdev.flatlaf.util.SystemInfo;
 import smile.studio.view.*;
 import smile.swing.Button;
@@ -562,7 +563,20 @@ public class SmileStudio extends JFrame {
             FlatLaf.setPreferredMonospacedFontFamily(FlatJetBrainsMonoFont.FAMILY);
             // Application specific UI defaults
             FlatLaf.registerCustomDefaultsSource("smile.studio");
-            FlatLightLaf.setup();
+
+            String theme = SmileStudio.prefs.get("Theme", SystemInfo.isMacOS ? "macLight" : "Light");
+            switch (theme) {
+                case "Light" -> FlatLightLaf.setup();
+                case "Dark" -> FlatDarkLaf.setup();
+                case "IntelliJ" -> FlatIntelliJLaf.setup();
+                case "Darcula" -> FlatDarculaLaf.setup();
+                case "macLight" -> FlatMacLightLaf.setup();
+                case "macDark" -> FlatMacDarkLaf.setup();
+                default -> {
+                    System.err.println("Unknown theme: " + theme);
+                    FlatLightLaf.setup();
+                }
+            }
 
             // Start the GUI
             if (args == null || args.length == 0) {
