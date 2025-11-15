@@ -61,15 +61,15 @@ public interface Model {
      * @param algorithm the learning algorithm.
      * @param formula the model formula.
      * @param data the training data.
+     * @param test the optional test data.
      * @param params the hyperparameters.
      * @param kfold k-fold cross validation.
      * @param round the number of repeated cross validation.
      * @param ensemble create the ensemble of cross validation models if true.
-     * @param test the optional test data.
      * @return the classification model.
      */
-    static ClassificationModel classification(String algorithm, Formula formula, DataFrame data, Properties params,
-                                              int kfold, int round, boolean ensemble, DataFrame test) {
+    static ClassificationModel classification(String algorithm, Formula formula, DataFrame data, DataFrame test,
+                                              Properties params, int kfold, int round, boolean ensemble) {
         long start = System.nanoTime();
         DataFrameClassifier model;
         ClassificationMetrics validationMetrics = null;
@@ -92,6 +92,19 @@ public interface Model {
         var predictors = data.schema().fields().stream().filter(field -> !y.contains(field.name())).toList();
         var schema = new StructType(predictors);
         return new ClassificationModel(algorithm, schema, formula, model, trainMetrics, validationMetrics, testMetrics);
+    }
+
+    /**
+     * Trains a classification model.
+     * @param algorithm the learning algorithm.
+     * @param formula the model formula.
+     * @param data the training data.
+     * @param test the optional test data.
+     * @param params the hyperparameters.
+     * @return the classification model.
+     */
+    static ClassificationModel classification(String algorithm, Formula formula, DataFrame data, DataFrame test, Properties params) {
+        return classification(algorithm, formula, data, test, params, 1, 1, false);
     }
 
     /**
@@ -178,15 +191,15 @@ public interface Model {
      * @param algorithm the learning algorithm.
      * @param formula the model formula.
      * @param data the training data.
+     * @param test the optional test data.
      * @param params the hyperparameters.
      * @param kfold k-fold cross validation if kfold > 1.
      * @param round the number of repeated cross validation.
      * @param ensemble create the ensemble of cross validation models if true.
-     * @param test the test data.
      * @return the regression model.
      */
-    static RegressionModel regression(String algorithm, Formula formula, DataFrame data, Properties params,
-                                             int kfold, int round, boolean ensemble, DataFrame test) {
+    static RegressionModel regression(String algorithm, Formula formula, DataFrame data, DataFrame test,
+                                      Properties params, int kfold, int round, boolean ensemble) {
         long start = System.nanoTime();
         DataFrameRegression model;
         RegressionMetrics validationMetrics = null;
@@ -209,6 +222,19 @@ public interface Model {
         var predictors = data.schema().fields().stream().filter(field -> !y.contains(field.name())).toList();
         var schema = new StructType(predictors);
         return new RegressionModel(algorithm, schema, formula, model, trainMetrics, validationMetrics, testMetrics);
+    }
+
+    /**
+     * Trains a regression model.
+     * @param algorithm the learning algorithm.
+     * @param formula the model formula.
+     * @param data the training data.
+     * @param test the optional test data.
+     * @param params the hyperparameters.
+     * @return the regression model.
+     */
+    static RegressionModel regression(String algorithm, Formula formula, DataFrame data, DataFrame test, Properties params) {
+        return regression(algorithm, formula, data, test, params, 1, 1, false);
     }
 
     /**
