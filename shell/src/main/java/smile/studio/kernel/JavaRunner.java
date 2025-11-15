@@ -78,9 +78,19 @@ public class JavaRunner extends Runner {
     /**
      * Evaluates a code block.
      * @param code a code block.
+     * @return the value of last variable snippet. Or null if no variables.
      */
-    public void eval(String code) {
-        eval(code, null);
+    public String eval(String code) {
+        var wrapper = new Object() { String value = null; };
+        eval(code, (events) -> {
+            for (var event : events) {
+                if (event.status() == Snippet.Status.VALID && event.snippet() instanceof VarSnippet variable) {
+                    wrapper.value = event.value();
+                }
+            }
+            return 0;
+        });
+        return wrapper.value;
     }
 
     /**
