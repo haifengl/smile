@@ -17,8 +17,10 @@
 package smile.studio.agent;
 
 import java.util.concurrent.CompletableFuture;
-import com.openai.client.OpenAIClient;
-import com.openai.client.okhttp.OpenAIOkHttpClient;
+
+import com.azure.ai.openai.OpenAIAsyncClient;
+import com.azure.ai.openai.OpenAIClientBuilder;
+import com.azure.core.credential.AzureKeyCredential;
 import com.openai.core.http.AsyncStreamResponse;
 import com.openai.models.ChatModel;
 import com.openai.models.chat.completions.ChatCompletion;
@@ -26,14 +28,15 @@ import com.openai.models.chat.completions.ChatCompletionChunk;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
 
 /**
- * Code generating agent.
+ * AZure AI client.
  *
  * @author Haifeng Li
  */
-public interface Coder {
-    // Configures using the `openai.apiKey`, `openai.orgId`, `openai.projectId`, `openai.webhookSecret` and `openai.baseUrl` system properties
-    // Or configures using the `OPENAI_API_KEY`, `OPENAI_ORG_ID`, `OPENAI_PROJECT_ID`, `OPENAI_WEBHOOK_SECRET` and `OPENAI_BASE_URL` environment variables
-    OpenAIClient client = OpenAIOkHttpClient.builder().fromEnv().build();
+public interface AZure {
+    OpenAIAsyncClient client = new OpenAIClientBuilder()
+            .credential(new AzureKeyCredential("05c3bd98e376410da4bc63b5aff2c6ed"))
+            .endpoint("https://apimgenaidev.azure-api.net/shared-openai/deployments/gpt-4.1-shared/chat/completions?api-version=2025-01-01-preview")
+            .buildAsyncClient();
     String codingSystemPrompt = """
             You are a highly skilled Java programming assistant.
             You are a machine learning expert and can build highly
