@@ -32,10 +32,11 @@ import akka.stream.alpakka.csv.scaladsl.{CsvParsing, CsvToMap}
 import akka.util.ByteString
 import com.typesafe.scalalogging.LazyLogging
 import scopt.OParser
-import smile.data.StructTypeOps
+import smile.data.{StructTypeOps, Tuple}
 import smile.data.`type`.StructType
+import smile.model.*
 import spray.json.*
-import smile.model.SmileModel
+import spray.json.DefaultJsonProtocol.*
 
 /**
   * Serve command options.
@@ -114,7 +115,7 @@ object Serve extends LazyLogging {
     val options = new Properties()
     if (config.probability) options.setProperty("probability", "true")
     val model = smile.read(config.model) match {
-      case model: SmileModel => model
+      case model: Model => model
 
       case _ =>
         Console.err.println(s"${config.model} doesn't contain a valid model.")
@@ -161,8 +162,8 @@ object Serve extends LazyLogging {
     }
   }
 
-  def processJSON(stream: Source[JsValue, Any], model: SmileModel, options: Properties): Source[JsValue, Any]  = {
-    stream.map(model.schema.json(_)).map(model(_, options))
+  def processJSON(stream: Source[JsValue, Any], model: Model, options: Properties): Source[JsValue, Any]  = {
+    process(stream.map(model.schema.json(_)), model, options)
   }
 
   def getCsvFormatByte(format: String, param: Array[String]): Byte = {
@@ -172,7 +173,7 @@ object Serve extends LazyLogging {
     param(1).charAt(0).toByte
   }
 
-  def processCSV(bytes: Source[ByteString, Any], format: String, model: SmileModel, options: Properties): Source[JsValue, Any] = {
+  def processCSV(bytes: Source[ByteString, Any], format: String, model: Model, options: Properties): Source[JsValue, Any] = {
     var delimiter = CsvParsing.Comma
     var quote = CsvParsing.DoubleQuote
     var escape = CsvParsing.Backslash
@@ -192,13 +193,37 @@ object Serve extends LazyLogging {
 
     val lines = bytes.via(CsvParsing.lineScanner(delimiter, quote, escape))
     if (header) {
-      lines.via(CsvToMap.toMapAsStrings())
-        .map(model.schema.csv(_))
-        .map(model(_, options))
+      process(lines.via(CsvToMap.toMapAsStrings()).map(model.schema.csv(_)), model, options)
     } else {
-      lines.map(_.map(_.utf8String))
-        .map(model.schema.csv(_))
-        .map(model(_, options))
+      process(lines.map(_.map(_.utf8String)).map(model.schema.csv(_)), model, options)
+    }
+  }
+
+  def process(stream: Source[Option[Tuple], Any], model: Model, options: Properties): Source[JsValue, Any]  = {
+    stream.map {
+      case None => JsString("Invalid instance")
+      case Some(x) =>
+        model match {
+          case classifier: ClassificationModel =>
+            if (options.getProperty("probability", "false").toBoolean) {
+              try {
+                val prob = Array.ofDim[Double](classifier.numClasses())
+                val y = classifier.predict(x, prob)
+                JsObject(
+                  "class" -> y.toJson,
+                  "probability" -> JsArray(prob.toSeq.map(p => JsNumber(BigDecimal(p).setScale(4, BigDecimal.RoundingMode.HALF_UP))) *)
+                )
+              } catch {
+                // in case that the model cannot calculate probabilities
+                case _: Exception =>
+                  JsNumber.apply(classifier.predict(x))
+              }
+            } else {
+              JsNumber.apply(classifier.predict(x))
+            }
+          case regression: RegressionModel =>
+            JsNumber.apply(regression.predict(x))
+        }
     }
   }
 }

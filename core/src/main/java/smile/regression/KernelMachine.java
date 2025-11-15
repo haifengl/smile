@@ -16,9 +16,8 @@
  */
 package smile.regression;
 
-import smile.math.kernel.MercerKernel;
-
 import java.io.Serial;
+import smile.math.kernel.MercerKernel;
 
 /**
  * The learning methods building on kernels. Kernel methods owe their name to
@@ -37,7 +36,7 @@ import java.io.Serial;
  *
  * @author Haifeng Li
  */
-public class KernelMachine<T> extends smile.base.svm.KernelMachine<T> implements Regression<T> {
+public class KernelMachine<T> extends smile.model.svm.KernelMachine<T> implements Regression<T> {
     @Serial
     private static final long serialVersionUID = 2L;
 

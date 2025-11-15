@@ -78,16 +78,16 @@ object Train {
 
         config.seed.foreach(MathEx.setSeed)
         if (config.classification) {
-          val model = ClassificationModel(config.algorithm, formula, data, config.params, config.kfold, config.round, config.ensemble, test)
+          val model = Model.classification(config.algorithm, formula, data, config.params, config.kfold, config.round, config.ensemble, test.orNull)
           println(s"Training metrics: ${model.train}")
-          model.validation.foreach(metrics => println(s"Validation metrics: $metrics"))
-          model.test.foreach(metrics => println(s"Test metrics: $metrics"))
+          if (model.validation != null) println(s"Validation metrics: ${model.validation}")
+          if (model.test != null) println(s"Test metrics: ${model.test}")
           smile.write(model, config.model)
         } else {
-          val model = RegressionModel(config.algorithm, formula, data, config.params, config.kfold, config.round, config.ensemble, test)
+          val model = Model.regression(config.algorithm, formula, data, config.params, config.kfold, config.round, config.ensemble, test.orNull)
           println(s"Training metrics: ${model.train}")
-          model.validation.foreach(metrics => println(s"Validation metrics: $metrics"))
-          model.test.foreach(metrics => println(s"Test metrics: $metrics"))
+          if (model.validation != null) println(s"Validation metrics: ${model.validation}")
+          if (model.test != null) println(s"Test metrics: ${model.test}")
           smile.write(model, config.model)
           if (test.isDefined) {
             val metrics = RegressionMetrics.of(model.regression, formula, test.get)

@@ -17,9 +17,9 @@
 package smile.anomaly;
 
 import java.util.Properties;
-import smile.base.svm.KernelMachine;
-import smile.base.svm.OCSVM;
 import smile.math.kernel.MercerKernel;
+import smile.model.svm.KernelMachine;
+import smile.model.svm.OCSVM;
 
 /**
  * One-class support vector machines for novelty detection.

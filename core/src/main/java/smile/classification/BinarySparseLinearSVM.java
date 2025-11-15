@@ -16,8 +16,8 @@
  */
 package smile.classification;
 
-import smile.base.svm.KernelMachine;
-import smile.base.svm.LinearKernelMachine;
+import smile.model.svm.KernelMachine;
+import smile.model.svm.LinearKernelMachine;
 import smile.util.IntSet;
 
 /**

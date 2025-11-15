@@ -18,8 +18,8 @@ package smile.regression;
 
 import java.io.Serial;
 import java.util.Properties;
-import smile.base.rbf.RBF;
 import smile.math.rbf.RadialBasisFunction;
+import smile.model.rbf.RBF;
 import smile.tensor.DenseMatrix;
 import smile.tensor.QR;
 import static smile.tensor.ScalarType.*;

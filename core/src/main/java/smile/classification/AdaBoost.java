@@ -18,8 +18,6 @@ package smile.classification;
 
 import java.io.Serial;
 import java.util.*;
-import smile.base.cart.CART;
-import smile.base.cart.SplitRule;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
@@ -27,6 +25,8 @@ import smile.data.type.StructType;
 import smile.data.vector.ValueVector;
 import smile.feature.importance.TreeSHAP;
 import smile.math.MathEx;
+import smile.model.cart.CART;
+import smile.model.cart.SplitRule;
 import smile.util.IntSet;
 import smile.util.IterativeAlgorithmController;
 import smile.validation.ClassificationMetrics;

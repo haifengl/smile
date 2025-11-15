@@ -16,10 +16,10 @@
  */
 package smile.feature.importance;
 
-import smile.base.cart.CART;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
+import smile.model.cart.CART;
 
 /**
  * SHAP of ensemble tree methods. TreeSHAP is a fast and exact method to

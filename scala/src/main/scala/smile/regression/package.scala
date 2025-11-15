@@ -16,11 +16,11 @@
  */
 package smile
 
-import smile.base.cart.Loss
-import smile.base.rbf.RBF
 import smile.data.DataFrame
 import smile.data.formula.Formula
 import smile.math.kernel.MercerKernel
+import smile.model.cart.Loss
+import smile.model.rbf.RBF
 import smile.util.time
 
 /** Regression analysis. Regression analysis includes any

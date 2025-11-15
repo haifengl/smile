@@ -117,7 +117,7 @@ public class SVM {
      * @return the model.
      */
     public static Regression<double[]> fit(double[][] x, double[] y, Options options) {
-        smile.base.svm.SVR<double[]> svr = new smile.base.svm.SVR<>(new LinearKernel(), options.eps, options.C, options.tol);
+        smile.model.svm.SVR<double[]> svr = new smile.model.svm.SVR<>(new LinearKernel(), options.eps, options.C, options.tol);
         return new LinearSVM(svr.fit(x, y));
     }
 
@@ -130,7 +130,7 @@ public class SVM {
      * @return the model.
      */
     public static BinarySparseLinearSVM fit(int[][] x, double[] y, int p, Options options) {
-        smile.base.svm.SVR<int[]> svr = new smile.base.svm.SVR<>(new BinarySparseLinearKernel(), options.eps, options.C, options.tol);
+        smile.model.svm.SVR<int[]> svr = new smile.model.svm.SVR<>(new BinarySparseLinearKernel(), options.eps, options.C, options.tol);
         return new BinarySparseLinearSVM(p, svr.fit(x, y));
     }
 
@@ -143,7 +143,7 @@ public class SVM {
      * @return the model.
      */
     public static SparseLinearSVM fit(SparseArray[] x, double[] y, int p, Options options) {
-        smile.base.svm.SVR<SparseArray> svr = new smile.base.svm.SVR<>(new SparseLinearKernel(), options.eps, options.C, options.tol);
+        smile.model.svm.SVR<SparseArray> svr = new smile.model.svm.SVR<>(new SparseLinearKernel(), options.eps, options.C, options.tol);
         return new SparseLinearSVM(p, svr.fit(x, y));
     }
 
@@ -157,7 +157,7 @@ public class SVM {
      * @return the model.
      */
     public static <T> KernelMachine<T> fit(T[] x, double[] y, MercerKernel<T> kernel, Options options) {
-        smile.base.svm.SVR<T> svr = new smile.base.svm.SVR<>(kernel, options.eps, options.C, options.tol);
+        smile.model.svm.SVR<T> svr = new smile.model.svm.SVR<>(kernel, options.eps, options.C, options.tol);
         return svr.fit(x, y);
     }
 

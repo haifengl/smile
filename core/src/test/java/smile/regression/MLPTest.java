@@ -16,8 +16,6 @@
  */
 package smile.regression;
 
-import smile.base.mlp.Layer;
-import smile.base.mlp.LayerBuilder;
 import smile.data.DataFrame;
 import smile.data.transform.InvertibleColumnTransform;
 import smile.datasets.*;
@@ -26,6 +24,8 @@ import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
 import smile.math.Scaler;
+import smile.model.mlp.Layer;
+import smile.model.mlp.LayerBuilder;
 import smile.util.function.TimeFunction;
 import smile.validation.*;
 import org.junit.jupiter.api.*;
