@@ -36,12 +36,14 @@ public class ProcessFrame extends JFrame {
      */
     public ProcessFrame(int scrollback) {
         this.scrollback = scrollback;
-        setSize(800, 600);
+        setSize(1200, 800);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null); // Center the window
 
         output.setEditable(false);
         output.setFont(Monospace.getFont());
+        output.setBackground(Color.BLACK);
+        output.setForeground(Color.WHITE);
         Monospace.addListener((e) -> {
             SwingUtilities.invokeLater(() -> output.setFont((Font) e.getNewValue()));
         });
