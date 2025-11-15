@@ -16,9 +16,13 @@
  */
 package smile.studio.view;
 
+import smile.studio.SmileStudio;
+
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.*;
 
 /**
@@ -29,6 +33,7 @@ public class ProcessFrame extends JFrame {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProcessFrame.class);
     private final JTextArea output = new JTextArea();
     private final int scrollback;
+    private Process process;
 
     /**
      * Constructor.
@@ -41,11 +46,22 @@ public class ProcessFrame extends JFrame {
         setLocationRelativeTo(null); // Center the window
 
         output.setEditable(false);
-        output.setFont(Monospace.getFont());
+        output.setLineWrap(true);
+        output.setWrapStyleWord(true);
         output.setBackground(Color.BLACK);
         output.setForeground(Color.WHITE);
+        output.setFont(Monospace.getFont());
         Monospace.addListener((e) -> {
             SwingUtilities.invokeLater(() -> output.setFont((Font) e.getNewValue()));
+        });
+
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                if (process != null && process.isAlive()) {
+                    process.destroy();
+                }
+            }
         });
 
         JScrollPane scrollPane = new JScrollPane(output);
@@ -61,9 +77,12 @@ public class ProcessFrame extends JFrame {
         output.setText("");
 
         try {
-            Process process = new ProcessBuilder(command)
+            process = new ProcessBuilder(command)
                     .redirectErrorStream(true)
                     .start();
+
+            // Gracefully shutdown
+            Runtime.getRuntime().addShutdownHook(new Thread(process::destroy));
 
             // Create a thread to read the process's output
             Thread thread = new Thread(() -> {
