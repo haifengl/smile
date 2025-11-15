@@ -126,8 +126,9 @@ public class Notebook extends JPanel implements DocumentListener {
                     import smile.stat.*;
                     import smile.stat.distribution.*;
                     import smile.stat.hypothesis.*;
+                    import smile.model.*;
+                    import smile.model.mlp.*;
                     import smile.association.*;
-                    import smile.base.mlp.*;
                     import smile.classification.*;
                     import smile.clustering.*;
                     import smile.manifold.*;
@@ -164,11 +165,14 @@ public class Notebook extends JPanel implements DocumentListener {
                     figure.setTitle("Iris");
                     show(figure);
                     
-                    var rf = RandomForest.fit(Formula.lhs("class"), iris);
+                    var formula = Formula.lhs("class");
+                    var rf = RandomForest.fit(formula, iris);
                     IO.println("OOB metrics = " + rf.metrics());
                     
-                    var cv = CrossValidation.classification(10, Formula.lhs("class"), iris,
-                                (formula, data) -> DecisionTree.fit(formula, data));""");
+                    var params = new Properties();
+                    params.setProperty("smile.random_forest.trees", "100");
+                    params.setProperty("smile.random_forest.max_nodes", "100");
+                    var model = Model.classification("random_forest", formula, iris, null, params);""");
             cell.editor().setPreferredRows();
 
             cell = addCell(null);
@@ -466,13 +470,13 @@ public class Notebook extends JPanel implements DocumentListener {
                 // The number of errors;
                 int errors = 0;
                 // Capture values, diagnostics, and exceptions in order
-                for (SnippetEvent ev : events) {
-                    if (ev.status() == Snippet.Status.VALID && ev.snippet() instanceof VarSnippet variable) {
+                for (SnippetEvent event : events) {
+                    if (event.status() == Snippet.Status.VALID && event.snippet() instanceof VarSnippet variable) {
                         if (!variable.name().matches("\\$\\d+")) {
                             String typeName = variable.typeName();
                             cell.output().appendBuffer("⇒ " + typeName + " " + variable.name() + " = ");
 
-                            String value = ev.value();
+                            String value = event.value();
                             if (value == null) {
                                 cell.output().appendLine("null");
                             } else {
@@ -488,27 +492,27 @@ public class Notebook extends JPanel implements DocumentListener {
                                 cell.output().appendLine(value);
                             }
                         }
-                    } else if (ev.status() == Snippet.Status.REJECTED) {
+                    } else if (event.status() == Snippet.Status.REJECTED) {
                         errors++;
-                        cell.output().appendLine("✖ Rejected snippet: " + ev.snippet().source());
-                    } else if (ev.status() == Snippet.Status.RECOVERABLE_DEFINED ||
-                               ev.status() == Snippet.Status.RECOVERABLE_NOT_DEFINED) {
+                        cell.output().appendLine("✖ Rejected snippet: " + event.snippet().source());
+                    } else if (event.status() == Snippet.Status.RECOVERABLE_DEFINED ||
+                               event.status() == Snippet.Status.RECOVERABLE_NOT_DEFINED) {
                         errors++;
-                        cell.output().appendLine("⚠ Recoverable issue: " + ev.snippet().source());
-                        if (ev.snippet() instanceof DeclarationSnippet snippet) {
+                        cell.output().appendLine("⚠ Recoverable issue: " + event.snippet().source());
+                        if (event.snippet() instanceof DeclarationSnippet snippet) {
                             cell.output().appendLine("⚠ Unresolved dependencies:");
                             runner.unresolvedDependencies(snippet).forEach(name -> cell.output().appendLine("  └ " + name));
                         }
                     }
 
-                    errors += runner.diagnostics(ev.snippet()).mapToInt(diag -> {
+                    errors += runner.diagnostics(event.snippet()).mapToInt(diag -> {
                         String kind = diag.isError() ? "ERROR" : "WARN";
                         cell.output().appendLine(String.format("%s: %s",
                                 kind, diag.getMessage(Locale.getDefault())));
                         return diag.isError() ? 1 : 0;
                     }).sum();
 
-                    if (ev.exception() instanceof EvalException ex) {
+                    if (event.exception() instanceof EvalException ex) {
                         errors++;
                         cell.output().appendLine(ex.getExceptionClassName() + ": " + (ex.getMessage() != null ? ex.getMessage() : ""));
                         // JShell exception stack trace is often concise

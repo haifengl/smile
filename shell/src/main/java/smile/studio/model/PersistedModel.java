@@ -17,15 +17,13 @@
 package smile.studio.model;
 
 /**
- * A model file path.
+ * A persisted model.
  * @param name the model name.
+ * @param schema the schema of input data.
  * @param path the model file path.
  *
  * @author Haifeng Li
  */
-public record ModelPath(String name, String path) {
-    @Override
-    public String toString() {
-        return name;
-    }
+public record PersistedModel(String name, String schema, String path) {
+
 }
