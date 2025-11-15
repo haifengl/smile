@@ -230,10 +230,15 @@ public interface Scene extends Printable {
             frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
             frame.setSize(new java.awt.Dimension(1280, 1000));
             frame.setLocationRelativeTo(null);
-
             frame.setVisible(true);
+
+            // manipulating the extended state
+            frame.setExtendedState(Frame.NORMAL);
+            // temporarily setting setAlwaysOnTop(true) may help.
+            frame.setAlwaysOnTop(true);
             frame.toFront();
             frame.requestFocus();
+            frame.setAlwaysOnTop(false);
         });
 
         return frame;
