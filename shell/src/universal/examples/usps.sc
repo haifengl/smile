@@ -1,8 +1,6 @@
 // Benchmark on USPS zip code handwriting data
 import smile._
 import smile.io._
-import smile.base.rbf.RBF;
-import smile.base.mlp.{Layer, OutputFunction}
 import smile.clustering._
 import smile.data.formula._
 import smile.data.`type`._
@@ -11,6 +9,8 @@ import smile.math._
 import smile.math.distance._
 import smile.math.kernel._
 import smile.math.rbf._
+import smile.model.rbf.RBF
+import smile.model.mlp.{Layer, OutputFunction}
 import smile.util.function.TimeFunction
 import smile.validation._
 import smile.validation.metric._

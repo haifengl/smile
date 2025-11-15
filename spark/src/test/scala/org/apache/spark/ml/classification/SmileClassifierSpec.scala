@@ -22,7 +22,7 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.col
 import org.specs2.mutable.*
 import org.specs2.specification.{AfterAll, BeforeAll}
-import smile.base.rbf.RBF
+import smile.model.rbf.RBF
 import smile.classification.RBFNetwork
 import smile.io.Paths
 

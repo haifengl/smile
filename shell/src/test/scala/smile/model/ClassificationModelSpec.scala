@@ -36,12 +36,11 @@ class ClassificationModelSpec extends Specification {
       val params = new Properties()
       params.setProperty("smile.random_forest.trees", "100")
       params.setProperty("smile.random_forest.max_nodes", "100")
-      val model = ClassificationModel("random_forest", formula, train, params, test = Some(test))
+      val model = Model.classification("random_forest", formula, train, params, 1, 1, false, test)
       println(s"Training metrics: ${model.train}")
       println(s"Validation metrics: ${model.validation}")
       println(s"Test metrics: ${model.test}")
-      model.validation.isDefined must beFalse
-      model.test.get.error must beCloseTo(34 +/- 3)
+      model.test.error must beCloseTo(34 +/- 3)
     }
     "svm" in {
       MathEx.setSeed(19650218)
@@ -52,11 +51,11 @@ class ClassificationModelSpec extends Specification {
       params.setProperty("smile.svm.kernel", "Gaussian(6.4)")
       params.setProperty("smile.svm.C", "100")
       params.setProperty("smile.svm.type", "ovo")
-      val model = ClassificationModel("svm", formula, scaler(train), params, test = Some(scaler(test)))
+      val model = Model.classification("svm", formula, scaler(train), params, 1, 1, false, scaler(test))
       println(s"Training metrics: ${model.train}")
       println(s"Validation metrics: ${model.validation}")
       println(s"Test metrics: ${model.test}")
-      model.test.get.error must beCloseTo(33 +/- 3)
+      model.test.error must beCloseTo(33 +/- 3)
     }
     "svm with ensemble" in {
       MathEx.setSeed(19650218)
@@ -67,11 +66,11 @@ class ClassificationModelSpec extends Specification {
       params.setProperty("smile.svm.kernel", "Gaussian(6.4)")
       params.setProperty("smile.svm.C", "100")
       params.setProperty("smile.svm.type", "ovo")
-      val model = ClassificationModel("svm", formula, scaler(train), params, kfold = 5, round = 3, ensemble = true, test = Some(scaler(test)))
+      val model = Model.classification("svm", formula, scaler(train), params, 5, 3, true, scaler(test))
       println(s"Training metrics: ${model.train}")
       println(s"Validation metrics: ${model.validation}")
       println(s"Test metrics: ${model.test}")
-      model.test.get.error must beCloseTo(30 +/- 3)
+      model.test.error must beCloseTo(30 +/- 3)
     }
     "mlp" in {
       MathEx.setSeed(19650218)
@@ -84,11 +83,11 @@ class ClassificationModelSpec extends Specification {
       params.setProperty("smile.mlp.layers", "Sigmoid(50)")
       params.setProperty("smile.mlp.learning_rate", "linear(0.1, 10000, 0.01)")
       params.setProperty("smile.mlp.RMSProp.rho", "0.9")
-      val model = ClassificationModel("mlp", formula, scaler(train), params, test = Some(scaler(test)))
+      val model = Model.classification("mlp", formula, scaler(train), params, 1, 1, false, scaler(test))
       println(s"Training metrics: ${model.train}")
       println(s"Validation metrics: ${model.validation}")
       println(s"Test metrics: ${model.test}")
-      model.test.get.error mustEqual 32
+      model.test.error mustEqual 32
     }
   }
 }
