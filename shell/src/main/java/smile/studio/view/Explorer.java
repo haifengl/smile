@@ -30,7 +30,7 @@ import java.util.ResourceBundle;
 import jdk.jshell.VarSnippet;
 import com.formdev.flatlaf.util.SystemInfo;
 import smile.studio.kernel.JavaRunner;
-import smile.studio.model.ModelPath;
+import smile.studio.model.PersistedModel;
 import smile.swing.FileChooser;
 import static smile.swing.SmileUtilities.scaleImageIcon;
 
@@ -115,6 +115,9 @@ public class Explorer extends JPanel {
                 } else if (object instanceof VarSnippet snippet) {
                     setText(snippet.name());
                     setToolTipText(snippet.source().trim());
+                } else if (object instanceof PersistedModel model) {
+                    setText(model.name());
+                    setToolTipText(model.schema());
                 }
                 return this;
             }
@@ -156,13 +159,14 @@ public class Explorer extends JPanel {
                                             """, name, path));
 
                                     if (snippet.typeName().equals("ClassificationModel") || snippet.typeName().equals("RegressionModel")) {
-                                        var serviceNode = new DefaultMutableTreeNode(new ModelPath(name, path));
+                                        var schema = runner.eval(name + ".schema();");
+                                        var serviceNode = new DefaultMutableTreeNode(new PersistedModel(name, schema, path));
                                         treeModel.insertNodeInto(serviceNode, services, services.getChildCount());
                                         tree.expandPath(new TreePath(new Object[]{root, services}));
                                     }
                                 }
                             } else if (parent == services) {
-                                ModelPath service = (ModelPath) node.getUserObject();
+                                PersistedModel service = (PersistedModel) node.getUserObject();
                                 StartServiceDialog dialog = new StartServiceDialog(SwingUtilities.getWindowAncestor(Explorer.this), service);
                                 dialog.setVisible(true);
                             }
@@ -225,14 +229,14 @@ public class Explorer extends JPanel {
 
     /** The dialog to start model inference service. */
     static class StartServiceDialog extends JDialog {
-        private final ModelPath model;
+        private final PersistedModel model;
         private final JTextField hostField = new JTextField(25);
         private final JTextField portField = new JTextField(25);
 
         /**
          * Constructor.
          */
-        public StartServiceDialog(Window owner, ModelPath model) {
+        public StartServiceDialog(Window owner, PersistedModel model) {
             super(owner, bundle.getString("StartServiceDialogTitle"));
             this.model = model;
             setDefaultCloseOperation(DISPOSE_ON_CLOSE);
