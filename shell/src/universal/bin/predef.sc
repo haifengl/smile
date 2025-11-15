@@ -49,9 +49,9 @@ import smile.validation._
 import smile.validation.metric._
 import smile.anomaly.IsolationForest
 import smile.association._
-import smile.base.cart.SplitRule
-import smile.base.mlp._
-import smile.base.rbf.RBF
+import smile.model.cart.SplitRule
+import smile.model.mlp._
+import smile.model.rbf.RBF
 import smile.classification._
 import smile.regression.{lm, ridge, lasso, gpr}
 import smile.feature._
