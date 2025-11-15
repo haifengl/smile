@@ -19,9 +19,9 @@ package smile.regression;
 import java.io.Serial;
 import java.util.Arrays;
 import java.util.Properties;
-import smile.base.mlp.*;
 import smile.math.Scaler;
 import smile.math.MathEx;
+import smile.model.mlp.*;
 import smile.util.Strings;
 
 /**

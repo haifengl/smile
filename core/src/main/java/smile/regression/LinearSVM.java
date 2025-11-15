@@ -16,8 +16,8 @@
  */
 package smile.regression;
 
-import smile.base.svm.KernelMachine;
-import smile.base.svm.LinearKernelMachine;
+import smile.model.svm.KernelMachine;
+import smile.model.svm.LinearKernelMachine;
 
 /**
  * Linear support vector machines for regression.

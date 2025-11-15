@@ -20,9 +20,8 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Properties;
-
-import smile.base.mlp.*;
 import smile.math.MathEx;
+import smile.model.mlp.*;
 import smile.tensor.Vector;
 import smile.util.IntSet;
 import smile.util.Strings;

@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.stream.IntStream;
-import smile.base.cart.CART;
-import smile.base.cart.Loss;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.measure.NominalScale;
@@ -32,6 +30,8 @@ import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.IntVector;
 import smile.math.MathEx;
+import smile.model.cart.CART;
+import smile.model.cart.Loss;
 import smile.regression.RegressionTree;
 import smile.util.Strings;
 

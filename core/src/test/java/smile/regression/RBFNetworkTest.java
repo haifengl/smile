@@ -16,11 +16,11 @@
  */
 package smile.regression;
 
-import smile.base.rbf.RBF;
 import smile.datasets.*;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
+import smile.model.rbf.RBF;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
 import smile.validation.RegressionMetrics;

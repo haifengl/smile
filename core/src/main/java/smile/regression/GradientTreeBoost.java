@@ -20,7 +20,6 @@ import java.io.Serial;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.stream.IntStream;
-import smile.base.cart.*;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
@@ -29,6 +28,7 @@ import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.feature.importance.TreeSHAP;
 import smile.math.MathEx;
+import smile.model.cart.*;
 import smile.util.IterativeAlgorithmController;
 import smile.validation.RegressionMetrics;
 

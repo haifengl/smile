@@ -16,13 +16,13 @@
  */
 package smile.classification;
 
-import smile.base.cart.SplitRule;
 import smile.classification.DecisionTree.Options;
 import smile.datasets.BreastCancer;
 import smile.datasets.*;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
+import smile.model.cart.SplitRule;
 import smile.validation.*;
 import smile.validation.metric.Error;
 import org.junit.jupiter.api.*;

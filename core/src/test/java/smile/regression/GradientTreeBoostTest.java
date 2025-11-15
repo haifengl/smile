@@ -18,7 +18,6 @@ package smile.regression;
 
 import java.lang.ref.WeakReference;
 import java.util.concurrent.Flow;
-import smile.base.cart.Loss;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.type.StructField;
@@ -32,6 +31,7 @@ import smile.validation.RegressionMetrics;
 import smile.validation.RegressionValidations;
 import smile.validation.metric.RMSE;
 import smile.math.MathEx;
+import smile.model.cart.Loss;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
