@@ -39,11 +39,9 @@ public class ShellRunner extends Runner {
      */
     public int exec(String command) {
         try {
-            ProcessBuilder builder = new ProcessBuilder();
-            builder.command(command);
-            // Redirect error stream to output stream
-            builder.redirectErrorStream(true);
-            process = builder.start();
+            process = new ProcessBuilder(command)
+                    .redirectErrorStream(true)
+                    .start();
 
             // Read output from the command
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
