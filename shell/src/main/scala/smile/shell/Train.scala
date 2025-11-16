@@ -78,13 +78,13 @@ object Train {
 
         config.seed.foreach(MathEx.setSeed)
         if (config.classification) {
-          val model = Model.classification(config.algorithm, formula, data, config.params, config.kfold, config.round, config.ensemble, test.orNull)
+          val model = Model.classification(config.algorithm, formula, data, test.orNull, config.params, config.kfold, config.round, config.ensemble)
           println(s"Training metrics: ${model.train}")
           if (model.validation != null) println(s"Validation metrics: ${model.validation}")
           if (model.test != null) println(s"Test metrics: ${model.test}")
           smile.write(model, config.model)
         } else {
-          val model = Model.regression(config.algorithm, formula, data, config.params, config.kfold, config.round, config.ensemble, test.orNull)
+          val model = Model.regression(config.algorithm, formula, data, test.orNull, config.params, config.kfold, config.round, config.ensemble)
           println(s"Training metrics: ${model.train}")
           if (model.validation != null) println(s"Validation metrics: ${model.validation}")
           if (model.test != null) println(s"Test metrics: ${model.test}")

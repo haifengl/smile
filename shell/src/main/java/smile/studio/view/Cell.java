@@ -27,13 +27,13 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.formdev.flatlaf.util.SystemInfo;
-import com.openai.core.http.AsyncStreamResponse;
-import com.openai.models.chat.completions.ChatCompletionChunk;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jdesktop.swingx.JXTextField;
-import smile.studio.agent.Coder;
+import smile.studio.agent.LLM;
+import smile.studio.agent.Prompt;
 import smile.studio.kernel.PostRunNavigation;
 
 /**
@@ -46,6 +46,7 @@ import smile.studio.kernel.PostRunNavigation;
 public class Cell extends JPanel implements DocumentListener {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Cell.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), Locale.getDefault());
+    private static final LLM llm = LLM.getInstance();
     private final String placeholder = bundle.getString("Prompt");
     private final CodeEditor editor = new CodeEditor();
     private final OutputArea output = new OutputArea();
@@ -185,6 +186,10 @@ public class Cell extends JPanel implements DocumentListener {
                 SwingWorker<Void, Void> worker = new SwingWorker<>() {
                     @Override
                     protected Void doInBackground() {
+                        var input = Prompt.completeCode(context, currentLine);
+                        var code = llm.request(input).output().collect(Collectors.joining());
+                        SwingUtilities.invokeLater(() -> editor.insert(code, caretPosition));
+                        /*
                         var future = Coder.complete(context, currentLine);
                         future.handle((completion, error) -> {
                             if (error != null) {
@@ -199,6 +204,7 @@ public class Cell extends JPanel implements DocumentListener {
                             }
                             return false;
                         }).join();
+                         */
                         return null;
                     }
 
@@ -234,7 +240,10 @@ public class Cell extends JPanel implements DocumentListener {
             SwingWorker<Void, Void> worker = new SwingWorker<>() {
                 @Override
                 protected Void doInBackground() {
-                    var stream = Coder.generate(context, task);
+                    var input = Prompt.generateCode(context, task);
+                    var code = llm.request(input).output().collect(Collectors.joining());
+                    SwingUtilities.invokeLater(() -> editor.append(code));
+/*
                     stream.subscribe(new AsyncStreamResponse.Handler<>() {
                         @Override
                         public void onNext(ChatCompletionChunk chunk) {
@@ -258,7 +267,7 @@ public class Cell extends JPanel implements DocumentListener {
                                 logger.trace("Code generation streaming succeed!");
                             }
                         }
-                    });
+                    });*/
                     return null;
                 }
 
