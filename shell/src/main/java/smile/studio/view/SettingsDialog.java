@@ -19,8 +19,9 @@ package smile.studio.view;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.util.Locale;
-import java.util.ResourceBundle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.*;
 import java.util.prefs.Preferences;
 
 /**
@@ -28,14 +29,19 @@ import java.util.prefs.Preferences;
  *
  * @author Haifeng Li
  */
-public class SettingsDialog extends JDialog {
-    public static final String OPENAI_API_KEY = "openaiApiKey";
-    public static final String ANTHROPIC_API_KEY = "anthropicApiKey";
-    public static final String GOOGLE_API_KEY = "googleApiKey";
+public class SettingsDialog extends JDialog implements ActionListener {
     private static final ResourceBundle bundle = ResourceBundle.getBundle(SettingsDialog.class.getName(), Locale.getDefault());
-    private final JTextField openaiApiKeyField = new JTextField(25);
-    private final JTextField anthropicApiKeyField = new JTextField(25);
-    private final JTextField googleApiKeyField = new JTextField(25);
+    private static final String AI_SERVICE = "aiService";
+    private static final String API_KEY = "ApiKey";
+    private static final String BASE_URL = "BaseUrl";
+    private static final String[] options = {"OpenAI", "Azure OpenAI", "Anthropic", "Google Gemini", "Google Vertex AI"};
+    private static final String[] keys = {"openai", "azureOpenAI", "anthropic", "googleGemini", "googleVertexAI"};
+    private final JComboBox<String> comboBox = new JComboBox<>(options);;
+    private final CardLayout cardLayout = new CardLayout();
+    private final JPanel cardPane = new JPanel(cardLayout);
+    private final Map<String, JTextField> apiKeyFields = new TreeMap<>();
+    private final Map<String, JTextField> baseUrlFields = new TreeMap<>();
+    private final Preferences prefs;
 
     /**
      * Constructor.
@@ -47,18 +53,29 @@ public class SettingsDialog extends JDialog {
         super(owner, bundle.getString("Title"), true);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
+        this.prefs = prefs;
 
-        JLabel openaiApiKeyLabel = new JLabel(bundle.getString("OpenAIAPIKey"));
-        JLabel anthropicApiKeyLabel = new JLabel(bundle.getString("AnthropicAPIKey"));
-        JLabel googleApiKeyLabel = new JLabel(bundle.getString("GoogleAPIKey"));
-        openaiApiKeyField.setText(prefs.get(OPENAI_API_KEY, ""));
-        anthropicApiKeyField.setText(prefs.get(ANTHROPIC_API_KEY, ""));
-        googleApiKeyField.setText(prefs.get(GOOGLE_API_KEY, ""));
+        comboBox.addActionListener(this);
+        add(createServiceChoice(), BorderLayout.NORTH);
 
-        // Panel for the input field and label
-        JPanel inputPane = new JPanel(new GridBagLayout());
-        inputPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        // Add the panels to the dynamic panel with unique names
+        for (int i = 0; i < options.length; i++) {
+            cardPane.add(createServiceCard(keys[i]), options[i]);
+        }
 
+        // Add the dynamic panel to the center of the dialog
+        add(cardPane, BorderLayout.CENTER);
+        comboBox.setSelectedItem(prefs.get(AI_SERVICE, options[0]));
+
+        // Panel for the buttons
+        add(createButtonPane(), BorderLayout.SOUTH);
+        pack();
+        setLocationRelativeTo(owner);
+    }
+
+    private JPanel createServiceChoice() {
+        JPanel pane = new JPanel(new GridBagLayout());
+        pane.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
@@ -66,12 +83,37 @@ public class SettingsDialog extends JDialog {
         gbc.gridx = 0; // Column 0
         gbc.gridy = 0; // Row 0
         gbc.anchor = GridBagConstraints.WEST;
-        inputPane.add(openaiApiKeyLabel, gbc);
+        JLabel apiKeyLabel = new JLabel(bundle.getString("Service"));
+        pane.add(apiKeyLabel, gbc);
 
         gbc.gridx = 1; // Column 1
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0; // Allow text field to take extra horizontal space
-        inputPane.add(openaiApiKeyField, gbc);
+        pane.add(comboBox, gbc);
+
+        return pane;
+    }
+
+    private JPanel createServiceCard(String key) {
+        JPanel card = new JPanel(new GridBagLayout());
+        card.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        // Row 1
+        gbc.gridx = 0; // Column 0
+        gbc.gridy = 0; // Row 0
+        gbc.anchor = GridBagConstraints.WEST;
+        JLabel apiKeyLabel = new JLabel(bundle.getString("APIKey"));
+        card.add(apiKeyLabel, gbc);
+
+        gbc.gridx = 1; // Column 1
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0; // Allow text field to take extra horizontal space
+        JTextField apiKeyField = new JTextField(25);
+        apiKeyField.setText(prefs.get(key + "ApiKey", ""));
+        apiKeyFields.put(key, apiKeyField);
+        card.add(apiKeyField, gbc);
 
         // Row 2
         gbc.gridx = 0; // Column 0
@@ -79,47 +121,53 @@ public class SettingsDialog extends JDialog {
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.NONE; // Reset fill for label
         gbc.weightx = 0.0; // Reset weightx for label
-        inputPane.add(anthropicApiKeyLabel, gbc);
+        JLabel baseUrlLabel = new JLabel(bundle.getString("BaseUrl"));
+        card.add(baseUrlLabel, gbc);
 
         gbc.gridx = 1; // Column 1
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
-        inputPane.add(anthropicApiKeyField, gbc);
+        JTextField baseUrlField = new JTextField(25);
+        baseUrlField.setText(prefs.get(key + "BaseUrl", ""));
+        baseUrlFields.put(key, baseUrlField);
+        card.add(baseUrlField, gbc);
+        return card;
+    }
 
-        // Row 3
-        gbc.gridx = 0; // Column 0
-        gbc.gridy = 2; // Row 2
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.weightx = 0.0;
-        inputPane.add(googleApiKeyLabel, gbc);
-
-        gbc.gridx = 1; // Column 1
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
-        inputPane.add(googleApiKeyField, gbc);
-
-        // Panel for the buttons
-        JPanel buttonPane = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        buttonPane.setBorder(new EmptyBorder(0, 0, 0, 10));
+    private JPanel createButtonPane() {
+        JPanel pane = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        pane.setBorder(new EmptyBorder(0, 0, 0, 10));
         JButton okButton = new JButton(bundle.getString("OK"));
         JButton cancelButton = new JButton(bundle.getString("Cancel"));
-        buttonPane.add(okButton);
-        buttonPane.add(cancelButton);
+        pane.add(okButton);
+        pane.add(cancelButton);
         getRootPane().setDefaultButton(okButton);
 
         okButton.addActionListener((e) -> {
-            prefs.put(OPENAI_API_KEY, openaiApiKeyField.getText());
-            prefs.put(ANTHROPIC_API_KEY, anthropicApiKeyField.getText());
-            prefs.put(GOOGLE_API_KEY, googleApiKeyField.getText());
+            prefs.put(AI_SERVICE, options[comboBox.getSelectedIndex()]);
+            for (String service : keys) {
+                prefs.put(service + API_KEY, apiKeyFields.get(service).getText());
+                prefs.put(service + BASE_URL, baseUrlFields.get(service).getText());
+            }
             dispose();
         });
 
         cancelButton.addActionListener((e) -> dispose());
+        return pane;
+    }
 
-        add(inputPane, BorderLayout.CENTER);
-        add(buttonPane, BorderLayout.SOUTH);
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        // This method is called when the JComboBox selection changes
+        String selectedOption = (String) comboBox.getSelectedItem();
+
+        // Tell the CardLayout to show the panel corresponding to the selected option
+        cardLayout.show(cardPane, selectedOption);
+
+        // Repaint and revalidate the container to ensure correct display
+        cardPane.revalidate();
+        cardPane.repaint();
+        // Call pack() if the new panel has a different preferred size
         pack();
-        setLocationRelativeTo(owner);
     }
 }
