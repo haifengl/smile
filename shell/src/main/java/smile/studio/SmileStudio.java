@@ -46,9 +46,10 @@ import static smile.swing.SmileUtilities.scaleImageIcon;
  */
 public class SmileStudio extends JFrame {
     private static final ResourceBundle bundle = ResourceBundle.getBundle(SmileStudio.class.getName(), Locale.getDefault());
+    /** Application preference and configuration. */
+    private static final Preferences prefs = Preferences.userNodeForPackage(SmileStudio.class);
     /** Source code file name extensions. */
     private static final String[] fileNameExtensions = {"java", "jsh"};
-    private static final Preferences prefs = Preferences.userNodeForPackage(SmileStudio.class);
     private static final String AUTO_SAVE_KEY = "autoSave";
     /** Each window has its own FileChooser so that it points to its own recent directory. */
     private final JFileChooser fileChooser = new FileChooser();
@@ -113,6 +114,14 @@ public class SmileStudio extends JFrame {
                 SwingUtilities.invokeLater(() -> workspace.setDividerLocation(0.15));
             }
         });
+    }
+
+    /**
+     * Returns the application preference and configuration.
+     * @return the application preference and configuration.
+     */
+    public static Preferences preferences() {
+        return prefs;
     }
 
     /**
@@ -542,13 +551,19 @@ public class SmileStudio extends JFrame {
         // If user doesn't set system property for api key,
         // we will try to set it from preferences if it exists.
         if (System.getProperty("openai.apiKey", "").isBlank()) {
-            String apiKey = SmileStudio.prefs.get(SettingsDialog.OPENAI_API_KEY, "").trim();
+            String apiKey = SmileStudio.prefs.get("openaiApiKey", "").trim();
             if (!apiKey.isEmpty()) {
                 System.setProperty("openai.apiKey", apiKey);
             }
         }
+        if (System.getProperty("openai.baseUrl", "").isBlank()) {
+            String baseUrl = SmileStudio.prefs.get("openaiBaseUrl", "").trim();
+            if (!baseUrl.isEmpty()) {
+                System.setProperty("openai.baseUrl", baseUrl);
+            }
+        }
         if (System.getProperty("anthropic.apiKey", "").isBlank()) {
-            String apiKey = SmileStudio.prefs.get(SettingsDialog.ANTHROPIC_API_KEY, "").trim();
+            String apiKey = SmileStudio.prefs.get("anthropicApiKey", "").trim();
             if (!apiKey.isEmpty()) {
                 System.setProperty("anthropic.apiKey", apiKey);
             }
