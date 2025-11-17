@@ -46,7 +46,7 @@ import smile.studio.kernel.PostRunNavigation;
 public class Cell extends JPanel implements DocumentListener {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Cell.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), Locale.getDefault());
-    private static final LLM llm = LLM.getInstance();
+    private static final LLM coder = LLM.getCoder();
     private final String placeholder = bundle.getString("Prompt");
     private final CodeEditor editor = new CodeEditor();
     private final OutputArea output = new OutputArea();
@@ -187,7 +187,7 @@ public class Cell extends JPanel implements DocumentListener {
                     @Override
                     protected Void doInBackground() {
                         var input = Prompt.completeCode(context, currentLine);
-                        var code = llm.request(input).output().collect(Collectors.joining());
+                        var code = coder.request(input).output().collect(Collectors.joining());
                         SwingUtilities.invokeLater(() -> editor.insert(code, caretPosition));
                         /*
                         var future = Coder.complete(context, currentLine);
@@ -235,14 +235,17 @@ public class Cell extends JPanel implements DocumentListener {
             for (String line : wrap(task, 80)) {
                 editor.append("/// " + line);
                 editor.append(System.lineSeparator());
+                editor.setCaretPosition(editor.getDocument().getLength());
+                editor.requestFocus();
             }
 
             SwingWorker<Void, Void> worker = new SwingWorker<>() {
                 @Override
                 protected Void doInBackground() {
                     var input = Prompt.generateCode(context, task);
-                    var code = llm.request(input).output().collect(Collectors.joining());
-                    SwingUtilities.invokeLater(() -> editor.append(code));
+                    var response = coder.request(input);
+                    response.output().forEach(chunk ->
+                            SwingUtilities.invokeLater(() -> editor.append(chunk)));
 /*
                     stream.subscribe(new AsyncStreamResponse.Handler<>() {
                         @Override

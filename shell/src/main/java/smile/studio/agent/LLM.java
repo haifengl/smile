@@ -17,7 +17,7 @@
 package smile.studio.agent;
 
 import java.util.Properties;
-import java.util.prefs.Preferences;
+import com.openai.azure.AzureOpenAIServiceVersion;
 import smile.studio.SmileStudio;
 
 /**
@@ -43,11 +43,25 @@ public interface LLM {
      * Returns an LLM instance specified by app settings.
      * @return an LLM instance specified by app settings.
      */
-    static LLM getInstance() {
-        Preferences prefs = SmileStudio.preferences();
-        LLM llm = new AzureOpenAI();
+    static LLM getCoder() {
+        var prefs = SmileStudio.preferences();
+        var service = prefs.get("aiService", "OpenAI");
+
+        LLM llm = switch (service) {
+            case "OpenAI" -> new OpenAI();
+            case "Azure OpenAI" -> new AzureOpenAI(
+                        prefs.get("azureOpenAIBaseUrl", ""),
+                        prefs.get("azureOpenAIApiKey", ""),
+                        AzureOpenAIServiceVersion.latestPreviewVersion());
+
+            default -> {
+                System.out.println("Unknown AI service: " + service);
+                yield new OpenAI();
+            }
+        };
+
         llm.context().setProperty("systemMessage", Prompt.smileSystem());
-        llm.context().setProperty("model", "gpt-4.1-shared");
+        llm.context().setProperty("model", "gpt-5.1-codex");
         return llm;
     }
 }
