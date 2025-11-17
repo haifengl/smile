@@ -20,6 +20,7 @@ import java.util.Properties;
 import java.util.stream.Stream;
 import com.openai.client.OpenAIClient;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
+import com.openai.models.ChatModel;
 import com.openai.models.responses.ResponseCreateParams;
 import com.openai.models.responses.ResponseOutputText;
 
@@ -33,8 +34,8 @@ public class OpenAI implements LLM {
     // `openai.webhookSecret` and `openai.baseUrl` system properties.
     // Or configures using the `OPENAI_API_KEY`, `OPENAI_ORG_ID`, `OPENAI_PROJECT_ID`,
     // `OPENAI_WEBHOOK_SECRET` and `OPENAI_BASE_URL` environment variables.
-    static final OpenAIClient client = OpenAIOkHttpClient.builder().fromEnv().build();
-    final Properties context = new Properties();
+    private static final OpenAIClient client = OpenAIOkHttpClient.fromEnv();
+    private final Properties context = new Properties();
 
     /**
      * Constructor.
@@ -52,7 +53,7 @@ public class OpenAI implements LLM {
     public Response request(String input) {
         ResponseCreateParams params = ResponseCreateParams.builder()
                 .input(input)
-                .model(context.getProperty("model", "GPT_5"))
+                .model(context.getProperty("model", ChatModel.GPT_5_1_MINI.toString()))
                 .build();
 
         return new ResponseAdaptor(client.responses().create(params));
