@@ -16,19 +16,16 @@
  */
 package smile.studio.view;
 
+import java.awt.*;
+import java.awt.event.*;
+import java.util.*;
+import java.util.List;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
-
-import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import com.formdev.flatlaf.util.SystemInfo;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jdesktop.swingx.JXTextField;
@@ -181,7 +178,7 @@ public class Cell extends JPanel implements DocumentListener {
             int endOffset = editor.getLineEndOffset(lineNum);
             String context = editor.getText(0, startOffset);
             String currentLine = editor.getText(startOffset, endOffset - startOffset);
-
+/*
             if (currentLine.length() >= 8 && !currentLine.trim().endsWith(";")) {
                 SwingWorker<Void, Void> worker = new SwingWorker<>() {
                     @Override
@@ -189,22 +186,6 @@ public class Cell extends JPanel implements DocumentListener {
                         var input = Prompt.completeCode(context, currentLine);
                         var code = coder.request(input).output().collect(Collectors.joining());
                         SwingUtilities.invokeLater(() -> editor.insert(code, caretPosition));
-                        /*
-                        var future = Coder.complete(context, currentLine);
-                        future.handle((completion, error) -> {
-                            if (error != null) {
-                                error.printStackTrace();
-                                logger.error("Code completion failed: ", error);
-                            } else {
-                                if (completion.isValid()) {
-                                    String line = completion.choices().getFirst().message().content().orElse("// Oops, empty response");
-                                    SwingUtilities.invokeLater(() -> editor.insert(line, caretPosition));
-                                    return true;
-                                }
-                            }
-                            return false;
-                        }).join();
-                         */
                         return null;
                     }
 
@@ -214,7 +195,7 @@ public class Cell extends JPanel implements DocumentListener {
                     }
                 };
                 worker.execute();
-            }
+            }*/
         } catch (BadLocationException ex) {
             isCoding = false;
             logger.trace("completeCode failed: {}", ex.getMessage());
@@ -233,8 +214,7 @@ public class Cell extends JPanel implements DocumentListener {
             String context = editor.getText();
             editor.append(System.lineSeparator());
             for (String line : wrap(task, 80)) {
-                editor.append("/// " + line);
-                editor.append(System.lineSeparator());
+                editor.append("/// " + line + "\n");
                 editor.setCaretPosition(editor.getDocument().getLength());
                 editor.requestFocus();
             }
@@ -243,34 +223,24 @@ public class Cell extends JPanel implements DocumentListener {
                 @Override
                 protected Void doInBackground() {
                     var input = Prompt.generateCode(context, task);
-                    var response = coder.request(input);
-                    response.output().forEach(chunk ->
-                            SwingUtilities.invokeLater(() -> editor.append(chunk)));
-/*
-                    stream.subscribe(new AsyncStreamResponse.Handler<>() {
-                        @Override
-                        public void onNext(ChatCompletionChunk chunk) {
-                            if (chunk.isValid()) {
-                                String delta = chunk.choices().getFirst().delta().content().orElse("");
-                                SwingUtilities.invokeLater(() -> editor.append(delta));
-                            }
+                    coder.request(input).whenComplete((response, ex) -> {
+                        if (ex != null) {
+                            SwingUtilities.invokeLater(() -> editor.append("/// Code generation failed: " + ex.getMessage()));
                         }
 
-                        @Override
-                        public void onComplete(Optional<Throwable> error) {
-                            if (error.isPresent()) {
-                                logger.error("Code generation streaming failed: ", error.get());
-                                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
-                                        null,
-                                        error.get().getMessage(),
-                                        "Error",
-                                        JOptionPane.ERROR_MESSAGE
-                                ));
-                            } else {
-                                logger.trace("Code generation streaming succeed!");
-                            }
+                        if (response != null) {
+                            System.out.println(response.status());
+                            System.out.println(response.model());
+                            System.out.println(response.metadata());
+                            System.out.println(response.isValid());
+                            System.out.println(response.incompleteDetails());
+                            response.output().stream()
+                                    .flatMap(item -> item.message().stream())
+                                    .flatMap(message -> message.content().stream())
+                                    .flatMap(content -> content.outputText().stream())
+                                    .forEach(chunk -> SwingUtilities.invokeLater(() -> editor.append(chunk.text())));
                         }
-                    });*/
+                    }).join();
                     return null;
                 }
 

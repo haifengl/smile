@@ -17,7 +17,9 @@
 package smile.studio.agent;
 
 import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
 import com.openai.azure.AzureOpenAIServiceVersion;
+import com.openai.models.responses.Response;
 import smile.studio.SmileStudio;
 
 /**
@@ -31,7 +33,7 @@ public interface LLM {
      * @param input the input message.
      * @return a response object.
      */
-    Response request(String input);
+    CompletableFuture<Response> request(String input);
 
     /**
      * Returns the associated context object.
@@ -50,9 +52,10 @@ public interface LLM {
         LLM llm = switch (service) {
             case "OpenAI" -> new OpenAI();
             case "Azure OpenAI" -> new AzureOpenAI(
-                        prefs.get("azureOpenAIBaseUrl", ""),
                         prefs.get("azureOpenAIApiKey", ""),
-                        AzureOpenAIServiceVersion.latestPreviewVersion());
+                        prefs.get("azureOpenAIBaseUrl", ""),
+                    "gpt-4.1-shared",
+                        AzureOpenAIServiceVersion.getV2025_01_01_PREVIEW());
 
             default -> {
                 System.out.println("Unknown AI service: " + service);
@@ -60,7 +63,7 @@ public interface LLM {
             }
         };
 
-        llm.context().setProperty("systemMessage", Prompt.smileSystem());
+        llm.context().setProperty("instructions", Prompt.smileInstructions());
         llm.context().setProperty("model", "gpt-5.1-codex");
         return llm;
     }

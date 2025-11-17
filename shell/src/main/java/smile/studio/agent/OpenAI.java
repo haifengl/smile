@@ -17,12 +17,12 @@
 package smile.studio.agent;
 
 import java.util.Properties;
-import java.util.stream.Stream;
-import com.openai.client.OpenAIClient;
-import com.openai.client.okhttp.OpenAIOkHttpClient;
+import java.util.concurrent.CompletableFuture;
+import com.openai.client.OpenAIClientAsync;
+import com.openai.client.okhttp.OpenAIOkHttpClientAsync;
 import com.openai.models.ChatModel;
+import com.openai.models.responses.Response;
 import com.openai.models.responses.ResponseCreateParams;
-import com.openai.models.responses.ResponseOutputText;
 
 /**
  * OpenAI service.
@@ -34,14 +34,34 @@ public class OpenAI implements LLM {
     // `openai.webhookSecret` and `openai.baseUrl` system properties.
     // Or configures using the `OPENAI_API_KEY`, `OPENAI_ORG_ID`, `OPENAI_PROJECT_ID`,
     // `OPENAI_WEBHOOK_SECRET` and `OPENAI_BASE_URL` environment variables.
-    private static final OpenAIClient client = OpenAIOkHttpClient.fromEnv();
-    private final Properties context = new Properties();
+    // Don't create more than one client in the same application. Each client has
+    // a connection pool and thread pools, which are more efficient to share between requests.
+    static final OpenAIClientAsync singleton = OpenAIOkHttpClientAsync.fromEnv();
+    /** Instance client will reuse connection and thread pool of singleton. */
+    final OpenAIClientAsync client;
+    final Properties context = new Properties();
 
     /**
      * Constructor.
      */
     public OpenAI() {
+        client = singleton;
+    }
 
+    /**
+     * Constructor.
+     * @param apiKey API key for authentication and authorization.
+     */
+    public OpenAI(String apiKey) {
+        client = singleton.withOptions(builder -> builder.apiKey(apiKey));
+    }
+
+    /**
+     * For subclass which needs to customize the client.
+     * @param client a client instance.
+     */
+    OpenAI(OpenAIClientAsync client) {
+        this.client = client;
     }
 
     @Override
@@ -50,23 +70,13 @@ public class OpenAI implements LLM {
     }
 
     @Override
-    public Response request(String input) {
-        ResponseCreateParams params = ResponseCreateParams.builder()
-                .input(input)
+    public CompletableFuture<Response> request(String input) {
+        var params = ResponseCreateParams.builder()
                 .model(context.getProperty("model", ChatModel.GPT_5_1_MINI.toString()))
+                .instructions(context.getProperty("instructions"))
+                .input(input)
                 .build();
 
-        return new ResponseAdaptor(client.responses().create(params));
-    }
-
-    private record ResponseAdaptor(com.openai.models.responses.Response response) implements Response {
-        @Override
-        public Stream<String> output() {
-            return response.output().stream()
-                    .flatMap(item -> item.message().stream())
-                    .flatMap(message -> message.content().stream())
-                    .flatMap(content -> content.outputText().stream())
-                    .map(ResponseOutputText::text);
-        }
+        return client.responses().create(params);
     }
 }
