@@ -23,7 +23,7 @@ import java.util.stream.Stream;
  *
  * @author Haifeng Li
  */
-public interface Response {
+public interface ResponseStream {
     /**
      * Returns the stream of output message.
      * @return the stream of output message.

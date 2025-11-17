@@ -23,10 +23,10 @@ package smile.studio.agent;
  */
 public interface Prompt {
     /**
-     * Returns the system prompt for coding with SMILE.
-     * @return the system prompt for coding with SMILE.
+     * Returns the instructions (system prompt) for coding with SMILE.
+     * @return the instructions (system prompt) for coding with SMILE.
      */
-    static String smileSystem() {
+    static String smileInstructions() {
         return """
             You are a highly skilled Java programming assistant.
             You are a machine learning expert and can build highly
