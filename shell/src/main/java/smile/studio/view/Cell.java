@@ -215,7 +215,15 @@ public class Cell extends JPanel {
      * Generates code based on prompt.
      */
     private void generateCode() {
-        if (coder.isEmpty() || isCoding) return;
+        if (coder.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    bundle.getString("NoAIServiceError"),
+                    bundle.getString("AIService"),
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (isCoding) return;
 
         String task = prompt.getText();
         if (!task.isBlank()) {
