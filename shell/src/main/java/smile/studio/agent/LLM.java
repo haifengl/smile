@@ -90,7 +90,7 @@ public interface LLM {
             return Optional.of(llm);
         } catch (Throwable t) {
             // It is often a rethrow exception
-            System.err.println("Failed to initialize LLM service: " + t.getCause());
+            System.err.println("Failed to initialize AI service: " + t.getCause());
         }
 
         return Optional.empty();
