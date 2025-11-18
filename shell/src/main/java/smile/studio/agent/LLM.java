@@ -62,10 +62,10 @@ public interface LLM {
      * @return an LLM instance specified by app settings.
      */
     static Optional<LLM> getCoder() {
-        var prefs = SmileStudio.preferences();
-        var service = prefs.get("aiService", "OpenAI");
-
         try {
+            var prefs = SmileStudio.preferences();
+            var service = prefs.get("aiService", "OpenAI");
+
             LLM llm = switch (service) {
                 case "OpenAI" -> {
                     var openai = new OpenAI();
@@ -88,8 +88,9 @@ public interface LLM {
 
             llm.context().setProperty("instructions", Prompt.smileDeveloper());
             return Optional.of(llm);
-        } catch (Exception ex) {
-            System.err.println("Failed to create LLM service: " + ex.getMessage());
+        } catch (Throwable t) {
+            // It is often a rethrow exception
+            System.err.println("Failed to create LLM service: " + t.getCause());
         }
 
         return Optional.empty();
