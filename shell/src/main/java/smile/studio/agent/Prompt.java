@@ -45,7 +45,8 @@ public interface Prompt {
      */
     static String completeCode(String context, String start) {
         String template = """
-            Complete the next line of Java code based on the provided context.%n%n
+            Complete the next line of Java code based on the provided context.
+            Returns the whole line of generated code, without explanations or markdown annotations.%n%n
             Context:%n%s%n%n
             Current line start: %s""";
 
@@ -60,7 +61,8 @@ public interface Prompt {
      */
     static String generateCode(String context, String task) {
         String template = """
-            Generate Java code based on the provided context and task.%n%n
+            Generate Java code based on the provided context and task.
+            Returns the generated code only, without explanations or markdown annotations.%n%n
             Context:%n%s%n%n
             Task:%n%s%n%n""";
 

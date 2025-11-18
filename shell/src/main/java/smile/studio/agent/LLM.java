@@ -18,7 +18,7 @@ package smile.studio.agent;
 
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
-import com.openai.azure.AzureOpenAIServiceVersion;
+import java.util.stream.Stream;
 import com.openai.models.responses.Response;
 import smile.studio.SmileStudio;
 
@@ -29,17 +29,30 @@ import smile.studio.SmileStudio;
  */
 public interface LLM {
     /**
-     * Sends a request to LLM service.
-     * @param input the input message.
-     * @return a response object.
-     */
-    CompletableFuture<Response> request(String input);
-
-    /**
      * Returns the associated context object.
      * @return the associated context object.
      */
     Properties context();
+
+    /**
+     * Sends a request to LLM service.
+     * @param input the input message.
+     * @return a future of response object.
+     */
+    CompletableFuture<Response> request(String input);
+    /**
+     * Code completion with chat completions API.
+     * @param message the user message.
+     * @return a future of completion object.
+     */
+    CompletableFuture<String> complete(String message);
+
+    /**
+     * Code generation with chat completions API.
+     * @param message the user message.
+     * @return a future of completion object.
+     */
+    CompletableFuture<Stream<String>> generate(String message);
 
     /**
      * Returns an LLM instance specified by app settings.
@@ -54,8 +67,7 @@ public interface LLM {
             case "Azure OpenAI" -> new AzureOpenAI(
                         prefs.get("azureOpenAIApiKey", ""),
                         prefs.get("azureOpenAIBaseUrl", ""),
-                    "gpt-4.1-shared",
-                        AzureOpenAIServiceVersion.getV2025_01_01_PREVIEW());
+                    "gpt-4.1-shared");
 
             default -> {
                 System.out.println("Unknown AI service: " + service);
