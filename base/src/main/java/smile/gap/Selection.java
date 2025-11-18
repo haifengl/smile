@@ -54,7 +54,7 @@ public interface Selection {
                 if (worst > 0.0) worst = 0.0;
 
                 // In Roulete wheel selection, we don't do such scaling in
-                // general. However, in case of negative fitness socres,
+                // general. However, in case of negative fitness scores,
                 // we need scale them to positive.
                 double[] fitness = new double[size];
                 for (int i = 0; i < size; i++) {
