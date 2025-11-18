@@ -16,12 +16,9 @@
  */
 package smile.studio.agent;
 
-import java.util.concurrent.CompletableFuture;
 import com.openai.azure.AzureOpenAIServiceVersion;
 import com.openai.azure.AzureUrlPathMode;
 import com.openai.azure.credential.AzureApiKeyCredential;
-import com.openai.models.responses.Response;
-import com.openai.models.responses.ResponseCreateParams;
 
 /**
  * OpenAI service by Azure.
@@ -30,6 +27,7 @@ import com.openai.models.responses.ResponseCreateParams;
  */
 public class AzureOpenAI extends OpenAI {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AzureOpenAI.class);
+    /** The deployment name serves as the model name in requests. */
     private final String model;
 
     /**
@@ -37,24 +35,15 @@ public class AzureOpenAI extends OpenAI {
      */
     public AzureOpenAI(String apiKey, String baseUrl, String model) {
         // The new client will reuse connection and thread pool
-        super(OpenAI.singleton.withOptions(builder -> {
-            builder.baseUrl(baseUrl)
-                   .credential(AzureApiKeyCredential.create(apiKey))
-                   .azureServiceVersion(AzureOpenAIServiceVersion.fromString("2025-04-01-preview"))
-                   .azureUrlPathMode(AzureUrlPathMode.AUTO);
-        }));
+        super(OpenAI.singleton.withOptions(builder -> builder.baseUrl(baseUrl + "/openai")
+                    .credential(AzureApiKeyCredential.create(apiKey))
+                    .azureServiceVersion(AzureOpenAIServiceVersion.fromString("2025-04-01-preview"))
+                    .azureUrlPathMode(AzureUrlPathMode.UNIFIED)),
+              OpenAI.singleton.withOptions(builder -> builder.baseUrl(baseUrl)
+                    .credential(AzureApiKeyCredential.create(apiKey))
+                    .azureServiceVersion(AzureOpenAIServiceVersion.fromString("2025-04-01-preview"))
+                    .azureUrlPathMode(AzureUrlPathMode.LEGACY)));
         this.model = model;
-    }
-
-    @Override
-    public CompletableFuture<Response> request(String input) {
-        var params = ResponseCreateParams.builder()
-                .model(model)
-                .instructions(context.getProperty("instructions"))
-                .input(input)
-                .build();
-
-        return client.responses().create(params);
     }
 
     @Override

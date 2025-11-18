@@ -43,6 +43,8 @@ public class OpenAI implements LLM {
     static final OpenAIClientAsync singleton = OpenAIOkHttpClientAsync.fromEnv();
     /** Instance client will reuse connection and thread pool of singleton. */
     final OpenAIClientAsync client;
+    /** The client for legacy APIs. */
+    final OpenAIClientAsync legacy;
     final Properties context = new Properties();
 
     /**
@@ -50,6 +52,7 @@ public class OpenAI implements LLM {
      */
     public OpenAI() {
         client = singleton;
+        legacy = singleton;
     }
 
     /**
@@ -58,14 +61,17 @@ public class OpenAI implements LLM {
      */
     public OpenAI(String apiKey) {
         client = singleton.withOptions(builder -> builder.apiKey(apiKey));
+        legacy = singleton.withOptions(builder -> builder.apiKey(apiKey));
     }
 
     /**
      * For subclass which needs to customize the client.
-     * @param client a client instance.
+     * @param client a client instance for responses API calss.
+     * @param legacy a client instance for legacy API calls.
      */
-    OpenAI(OpenAIClientAsync client) {
+    OpenAI(OpenAIClientAsync client, OpenAIClientAsync legacy) {
         this.client = client;
+        this.legacy = legacy;
     }
 
     @Override
@@ -92,7 +98,7 @@ public class OpenAI implements LLM {
                 .addSystemMessage(context.getProperty("instructions"))
                 .addUserMessage(message)
                 .build();
-        return client.chat().completions().create(params)
+        return legacy.chat().completions().create(params)
                 .thenApply(completion -> completion.choices().stream()
                             .flatMap(choice -> choice.message().content().stream())
                             .collect(Collectors.joining()));
@@ -106,7 +112,7 @@ public class OpenAI implements LLM {
                 .addSystemMessage(context.getProperty("instructions"))
                 .addUserMessage(message)
                 .build();
-        return client.chat().completions().create(params)
+        return legacy.chat().completions().create(params)
                 .thenApply(completion -> completion.choices().stream()
                         .flatMap(choice -> choice.message().content().stream()));
     }
