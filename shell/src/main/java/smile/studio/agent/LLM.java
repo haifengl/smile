@@ -18,6 +18,8 @@ package smile.studio.agent;
 
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import com.openai.models.responses.Response;
 import smile.studio.SmileStudio;
@@ -43,16 +45,17 @@ public interface LLM {
     /**
      * Code completion with chat completions API.
      * @param message the user message.
-     * @return a future of completion object.
+     * @return a future of response message.
      */
     CompletableFuture<String> complete(String message);
 
     /**
      * Code generation with chat completions API.
      * @param message the user message.
-     * @return a future of completion object.
+     * @param consumer the consumer of completion chunks.
+     * @param handler the exception handler.
      */
-    CompletableFuture<Stream<String>> generate(String message);
+    void generate(String message, Consumer<String> consumer, Function<Throwable, ? extends Void> handler);
 
     /**
      * Returns an LLM instance specified by app settings.

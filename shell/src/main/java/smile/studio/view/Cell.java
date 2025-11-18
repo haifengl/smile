@@ -196,8 +196,6 @@ public class Cell extends JPanel {
                             SwingUtilities.invokeLater(() -> editor.replaceRange(line, startOffset, caretPosition));
                         }
                     }).join();
-                    //var code = coder.request(input).output().collect(Collectors.joining());
-                    //SwingUtilities.invokeLater(() -> editor.insert(code, caretPosition));
                     return null;
                 }
 
@@ -235,34 +233,12 @@ public class Cell extends JPanel {
                 @Override
                 protected Void doInBackground() {
                     var input = Prompt.generateCode(context, task);
-                    coder.generate(input).whenComplete((chunks, ex) -> {
-                        if (ex != null) {
+                    coder.generate(input,
+                        chunk -> SwingUtilities.invokeLater(() -> editor.append(chunk)),
+                        ex -> {
                             SwingUtilities.invokeLater(() -> editor.append("/// Code generation failed: " + ex.getMessage()));
-                        }
-
-                        if (chunks != null) {
-                            chunks.forEach(chunk -> SwingUtilities.invokeLater(() -> editor.append(chunk)));
-                        }
-                    }).join();
-                    /*
-                    coder.request(input).whenComplete((response, ex) -> {
-                        if (ex != null) {
-                            SwingUtilities.invokeLater(() -> editor.append("/// Code generation failed: " + ex.getMessage()));
-                        }
-
-                        if (response != null) {
-                            System.out.println(response.status());
-                            System.out.println(response.model());
-                            System.out.println(response.metadata());
-                            System.out.println(response.isValid());
-                            System.out.println(response.incompleteDetails());
-                            response.output().stream()
-                                    .flatMap(item -> item.message().stream())
-                                    .flatMap(message -> message.content().stream())
-                                    .flatMap(content -> content.outputText().stream())
-                                    .forEach(chunk -> SwingUtilities.invokeLater(() -> editor.append(chunk.text())));
-                        }
-                    }).join();*/
+                            return null;
+                    });
                     return null;
                 }
 
