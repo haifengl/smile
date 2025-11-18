@@ -18,9 +18,13 @@ package smile.studio.agent;
 
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import com.openai.client.OpenAIClientAsync;
 import com.openai.client.okhttp.OpenAIOkHttpClientAsync;
 import com.openai.models.ChatModel;
+import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import com.openai.models.responses.Response;
 import com.openai.models.responses.ResponseCreateParams;
 
@@ -72,11 +76,54 @@ public class OpenAI implements LLM {
     @Override
     public CompletableFuture<Response> request(String input) {
         var params = ResponseCreateParams.builder()
-                .model(context.getProperty("model", ChatModel.GPT_5_1_MINI.toString()))
+                .model(agent())
                 .instructions(context.getProperty("instructions"))
                 .input(input)
                 .build();
 
         return client.responses().create(params);
+    }
+
+    @Override
+    public CompletableFuture<String> complete(String message) {
+        var params = ChatCompletionCreateParams.builder()
+                .model(coder())
+                .stop("\n")
+                .addSystemMessage(context.getProperty("instructions"))
+                .addUserMessage(message)
+                .build();
+        return client.chat().completions().create(params)
+                .thenApply(completion -> completion.choices().stream()
+                            .flatMap(choice -> choice.message().content().stream())
+                            .collect(Collectors.joining()));
+    }
+
+    @Override
+    public CompletableFuture<Stream<String>> generate(String message) {
+        var params = ChatCompletionCreateParams.builder()
+                .model(coder())
+                .maxCompletionTokens(2048)
+                .addSystemMessage(context.getProperty("instructions"))
+                .addUserMessage(message)
+                .build();
+        return client.chat().completions().create(params)
+                .thenApply(completion -> completion.choices().stream()
+                        .flatMap(choice -> choice.message().content().stream()));
+    }
+
+    /**
+     * Returns the model for agentic workflows.
+     * @return the model for agentic workflows.
+     */
+    public String agent() {
+        return context.getProperty("model", ChatModel.GPT_5_1.toString());
+    }
+
+    /**
+     * Returns the model for coding.
+     * @return the model for coding.
+     */
+    public String coder() {
+        return context.getProperty("model", ChatModel.GPT_5_1_CODEX.toString());
     }
 }

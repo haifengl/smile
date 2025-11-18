@@ -35,12 +35,12 @@ public class AzureOpenAI extends OpenAI {
     /**
      * Constructor.
      */
-    public AzureOpenAI(String apiKey, String baseUrl, String model, AzureOpenAIServiceVersion version) {
+    public AzureOpenAI(String apiKey, String baseUrl, String model) {
         // The new client will reuse connection and thread pool
         super(OpenAI.singleton.withOptions(builder -> {
             builder.baseUrl(baseUrl)
                    .credential(AzureApiKeyCredential.create(apiKey))
-                   .azureServiceVersion(version)
+                   .azureServiceVersion(AzureOpenAIServiceVersion.fromString("2025-04-01-preview"))
                    .azureUrlPathMode(AzureUrlPathMode.AUTO);
         }));
         this.model = model;
@@ -55,5 +55,15 @@ public class AzureOpenAI extends OpenAI {
                 .build();
 
         return client.responses().create(params);
+    }
+
+    @Override
+    public String agent() {
+        return model;
+    }
+
+    @Override
+    public String coder() {
+        return model;
     }
 }
