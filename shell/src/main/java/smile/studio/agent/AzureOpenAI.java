@@ -32,6 +32,8 @@ public class AzureOpenAI extends OpenAI {
 
     /**
      * Constructor.
+     * @param apiKey API key for authentication and authorization.
+     * @param model the model name, aka the deployment name in Azure.
      */
     public AzureOpenAI(String apiKey, String baseUrl, String model) {
         // The new client will reuse connection and thread pool

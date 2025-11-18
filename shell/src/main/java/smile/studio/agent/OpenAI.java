@@ -45,14 +45,14 @@ public class OpenAI implements LLM {
     final OpenAIClientAsync client;
     /** The client for legacy APIs. */
     final OpenAIClientAsync legacy;
+    /** The context object. */
     final Properties context = new Properties();
 
     /**
      * Constructor.
      */
     public OpenAI() {
-        client = singleton;
-        legacy = singleton;
+        this(singleton, singleton);
     }
 
     /**
@@ -60,13 +60,20 @@ public class OpenAI implements LLM {
      * @param apiKey API key for authentication and authorization.
      */
     public OpenAI(String apiKey) {
-        client = singleton.withOptions(builder -> builder.apiKey(apiKey));
-        legacy = singleton.withOptions(builder -> builder.apiKey(apiKey));
+        this(singleton.withOptions(builder -> builder.apiKey(apiKey)));
     }
 
     /**
-     * For subclass which needs to customize the client.
-     * @param client a client instance for responses API calss.
+     * Constructor with customized client.
+     * @param client a client instance for responses API class.
+     */
+    OpenAI(OpenAIClientAsync client) {
+        this(client, client);
+    }
+
+    /**
+     * Constructor with customized client.
+     * @param client a client instance for responses API class.
      * @param legacy a client instance for legacy API calls.
      */
     OpenAI(OpenAIClientAsync client, OpenAIClientAsync legacy) {

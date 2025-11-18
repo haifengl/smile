@@ -34,6 +34,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
     private static final String AI_SERVICE = "aiService";
     private static final String API_KEY = "ApiKey";
     private static final String BASE_URL = "BaseUrl";
+    private static final String MODEL = "Model";
     private static final String[] options = {"OpenAI", "Azure OpenAI", "Anthropic", "Google Gemini", "Google Vertex AI"};
     private static final String[] keys = {"openai", "azureOpenAI", "anthropic", "googleGemini", "googleVertexAI"};
     private final JComboBox<String> comboBox = new JComboBox<>(options);;
@@ -41,6 +42,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
     private final JPanel cardPane = new JPanel(cardLayout);
     private final Map<String, JTextField> apiKeyFields = new TreeMap<>();
     private final Map<String, JTextField> baseUrlFields = new TreeMap<>();
+    private final Map<String, JTextField> modelFields = new TreeMap<>();
     private final Preferences prefs;
 
     /**
@@ -131,6 +133,24 @@ public class SettingsDialog extends JDialog implements ActionListener {
         baseUrlField.setText(prefs.get(key + "BaseUrl", ""));
         baseUrlFields.put(key, baseUrlField);
         card.add(baseUrlField, gbc);
+
+        // Row 3
+        gbc.gridx = 0; // Column 0
+        gbc.gridy = 2; // Row 2
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.NONE; // Reset fill for label
+        gbc.weightx = 0.0; // Reset weightx for label
+        JLabel modelLabel = new JLabel(bundle.getString("Model"));
+        card.add(modelLabel, gbc);
+
+        gbc.gridx = 1; // Column 1
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        JTextField modelField = new JTextField(25);
+        modelField.setText(prefs.get(key + "Model", ""));
+        modelFields.put(key, modelField);
+        card.add(modelField, gbc);
+
         return card;
     }
 
@@ -148,6 +168,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
             for (String service : keys) {
                 prefs.put(service + API_KEY, apiKeyFields.get(service).getText());
                 prefs.put(service + BASE_URL, baseUrlFields.get(service).getText());
+                prefs.put(service + MODEL, modelFields.get(service).getText());
             }
             dispose();
         });

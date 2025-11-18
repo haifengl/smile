@@ -63,20 +63,26 @@ public interface LLM {
         var service = prefs.get("aiService", "OpenAI");
 
         LLM llm = switch (service) {
-            case "OpenAI" -> new OpenAI();
+            case "OpenAI" -> {
+                var openai = new OpenAI();
+                openai.context().setProperty("model", prefs.get("azureOpenAIModel", "gpt-5.1-codex"));
+                yield openai;
+            }
+
             case "Azure OpenAI" -> new AzureOpenAI(
                         prefs.get("azureOpenAIApiKey", ""),
                         prefs.get("azureOpenAIBaseUrl", ""),
-                    "gpt-4.1-shared");
+                        prefs.get("azureOpenAIModel", "gpt-5.1-codex"));
 
             default -> {
                 System.out.println("Unknown AI service: " + service);
-                yield new OpenAI();
+                var openai = new OpenAI();
+                openai.context().setProperty("model", "gpt-5.1-codex");
+                yield openai;
             }
         };
 
         llm.context().setProperty("instructions", Prompt.smileInstructions());
-        llm.context().setProperty("model", "gpt-5.1-codex");
         return llm;
     }
 }
