@@ -18,9 +18,9 @@ package smile.studio.agent;
 
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import com.openai.client.OpenAIClientAsync;
 import com.openai.client.okhttp.OpenAIOkHttpClientAsync;
 import com.openai.models.ChatModel;
@@ -112,16 +112,20 @@ public class OpenAI implements LLM {
     }
 
     @Override
-    public CompletableFuture<Stream<String>> generate(String message) {
+    public void generate(String message, Consumer<String> consumer, Function<Throwable, ? extends Void> handler) {
         var params = ChatCompletionCreateParams.builder()
                 .model(coder())
                 .maxCompletionTokens(2048)
                 .addSystemMessage(context.getProperty("instructions"))
                 .addUserMessage(message)
                 .build();
-        return legacy.chat().completions().create(params)
-                .thenApply(completion -> completion.choices().stream()
-                        .flatMap(choice -> choice.message().content().stream()));
+        legacy.chat().completions().createStreaming(params)
+                .subscribe(completion -> completion.choices().stream()
+                        .flatMap(choice -> choice.delta().content().stream())
+                        .forEach(consumer))
+                .onCompleteFuture()
+                .exceptionally(handler)
+                .join();
     }
 
     /**
