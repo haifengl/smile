@@ -23,8 +23,6 @@ import java.util.List;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import com.formdev.flatlaf.util.SystemInfo;
 import org.fife.ui.rtextarea.RTextScrollPane;
@@ -40,7 +38,7 @@ import smile.studio.kernel.PostRunNavigation;
  *
  * @author Haifeng Li
  */
-public class Cell extends JPanel implements DocumentListener {
+public class Cell extends JPanel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Cell.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), Locale.getDefault());
     private static final LLM coder = LLM.getCoder();
@@ -113,7 +111,6 @@ public class Cell extends JPanel implements DocumentListener {
 
         output.setFont(Monospace.getFont());
         editor.setFont(Monospace.getFont());
-        editor.getDocument().addDocumentListener(this);
         RTextScrollPane editorScroll = new RTextScrollPane(editor);
         editorScroll.setBorder(border);
         editorScroll.putClientProperty("JScrollBar.showButtons", true);
@@ -122,6 +119,12 @@ public class Cell extends JPanel implements DocumentListener {
         InputMap inputMap = editor.getInputMap(JComponent.WHEN_FOCUSED);
         ActionMap actionMap = editor.getActionMap();
 
+        inputMap.put(KeyStroke.getKeyStroke("TAB"), "complete-code");
+        actionMap.put("complete-code", new AbstractAction() {
+            @Override public void actionPerformed(ActionEvent e) {
+                completeCode();
+            }
+        });
         inputMap.put(KeyStroke.getKeyStroke("shift ENTER"), "run-next");
         actionMap.put("run-next", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
@@ -178,27 +181,35 @@ public class Cell extends JPanel implements DocumentListener {
             int endOffset = editor.getLineEndOffset(lineNum);
             String context = editor.getText(0, startOffset);
             String currentLine = editor.getText(startOffset, endOffset - startOffset);
-/*
-            if (currentLine.length() >= 8 && !currentLine.trim().endsWith(";")) {
-                SwingWorker<Void, Void> worker = new SwingWorker<>() {
-                    @Override
-                    protected Void doInBackground() {
-                        var input = Prompt.completeCode(context, currentLine);
-                        var code = coder.request(input).output().collect(Collectors.joining());
-                        SwingUtilities.invokeLater(() -> editor.insert(code, caretPosition));
-                        return null;
-                    }
 
-                    @Override
-                    protected void done() {
-                        isCoding = false;
-                    }
-                };
-                worker.execute();
-            }*/
+            // Run code completion in a worker thread as join() blocks.
+            SwingWorker<Void, Void> worker = new SwingWorker<>() {
+                @Override
+                protected Void doInBackground() {
+                    var input = Prompt.completeCode(context, currentLine);
+                    coder.complete(input).whenComplete((line, ex) -> {
+                        if (ex != null) {
+                            logger.warn("Code completion failed: {}", ex.getMessage());
+                        }
+
+                        if (line != null) {
+                            SwingUtilities.invokeLater(() -> editor.replaceRange(line, startOffset, caretPosition));
+                        }
+                    }).join();
+                    //var code = coder.request(input).output().collect(Collectors.joining());
+                    //SwingUtilities.invokeLater(() -> editor.insert(code, caretPosition));
+                    return null;
+                }
+
+                @Override
+                protected void done() {
+                    isCoding = false;
+                }
+            };
+            worker.execute();
         } catch (BadLocationException ex) {
             isCoding = false;
-            logger.trace("completeCode failed: {}", ex.getMessage());
+            logger.trace("Code completion failed: {}", ex.getMessage());
         }
     }
 
@@ -219,10 +230,21 @@ public class Cell extends JPanel implements DocumentListener {
                 editor.requestFocus();
             }
 
+            // Run code completion in a worker thread as join() blocks.
             SwingWorker<Void, Void> worker = new SwingWorker<>() {
                 @Override
                 protected Void doInBackground() {
                     var input = Prompt.generateCode(context, task);
+                    coder.generate(input).whenComplete((chunks, ex) -> {
+                        if (ex != null) {
+                            SwingUtilities.invokeLater(() -> editor.append("/// Code generation failed: " + ex.getMessage()));
+                        }
+
+                        if (chunks != null) {
+                            chunks.forEach(chunk -> SwingUtilities.invokeLater(() -> editor.append(chunk)));
+                        }
+                    }).join();
+                    /*
                     coder.request(input).whenComplete((response, ex) -> {
                         if (ex != null) {
                             SwingUtilities.invokeLater(() -> editor.append("/// Code generation failed: " + ex.getMessage()));
@@ -240,7 +262,7 @@ public class Cell extends JPanel implements DocumentListener {
                                     .flatMap(content -> content.outputText().stream())
                                     .forEach(chunk -> SwingUtilities.invokeLater(() -> editor.append(chunk.text())));
                         }
-                    }).join();
+                    }).join();*/
                     return null;
                 }
 
@@ -286,22 +308,6 @@ public class Cell extends JPanel implements DocumentListener {
         }
 
         return lines;
-    }
-
-    @Override
-    public void insertUpdate(DocumentEvent e) {
-        completeCode();
-    }
-
-    @Override
-    public void removeUpdate(DocumentEvent e) {
-        completeCode();
-    }
-
-    @Override
-    public void changedUpdate(DocumentEvent e) {
-        // This method is typically not used for plain text changes
-        // but for changes to attributes of styled text.
     }
 
     /**
