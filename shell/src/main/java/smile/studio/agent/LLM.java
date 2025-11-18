@@ -16,11 +16,11 @@
  */
 package smile.studio.agent;
 
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Stream;
 import com.openai.models.responses.Response;
 import smile.studio.SmileStudio;
 
@@ -43,14 +43,14 @@ public interface LLM {
      */
     CompletableFuture<Response> request(String input);
     /**
-     * Code completion with chat completions API.
+     * Single line code completion.
      * @param message the user message.
      * @return a future of response message.
      */
     CompletableFuture<String> complete(String message);
 
     /**
-     * Code generation with chat completions API.
+     * Code block generation in an async streaming approach.
      * @param message the user message.
      * @param consumer the consumer of completion chunks.
      * @param handler the exception handler.
@@ -61,31 +61,37 @@ public interface LLM {
      * Returns an LLM instance specified by app settings.
      * @return an LLM instance specified by app settings.
      */
-    static LLM getCoder() {
+    static Optional<LLM> getCoder() {
         var prefs = SmileStudio.preferences();
         var service = prefs.get("aiService", "OpenAI");
 
-        LLM llm = switch (service) {
-            case "OpenAI" -> {
-                var openai = new OpenAI();
-                openai.context().setProperty("model", prefs.get("azureOpenAIModel", "gpt-5.1-codex"));
-                yield openai;
-            }
+        try {
+            LLM llm = switch (service) {
+                case "OpenAI" -> {
+                    var openai = new OpenAI();
+                    openai.context().setProperty("model", prefs.get("azureOpenAIModel", "gpt-5.1-codex"));
+                    yield openai;
+                }
 
-            case "Azure OpenAI" -> new AzureOpenAI(
+                case "Azure OpenAI" -> new AzureOpenAI(
                         prefs.get("azureOpenAIApiKey", ""),
                         prefs.get("azureOpenAIBaseUrl", ""),
                         prefs.get("azureOpenAIModel", "gpt-5.1-codex"));
 
-            default -> {
-                System.out.println("Unknown AI service: " + service);
-                var openai = new OpenAI();
-                openai.context().setProperty("model", "gpt-5.1-codex");
-                yield openai;
-            }
-        };
+                default -> {
+                    System.out.println("Unknown AI service: " + service);
+                    var openai = new OpenAI();
+                    openai.context().setProperty("model", "gpt-5.1-codex");
+                    yield openai;
+                }
+            };
 
-        llm.context().setProperty("instructions", Prompt.smileInstructions());
-        return llm;
+            llm.context().setProperty("instructions", Prompt.smileDeveloper());
+            return Optional.of(llm);
+        } catch (Exception ex) {
+            System.err.println("Failed to create LLM service: " + ex.getMessage());
+        }
+
+        return Optional.empty();
     }
 }

@@ -26,7 +26,6 @@ import com.openai.azure.credential.AzureApiKeyCredential;
  * @author Haifeng Li
  */
 public class AzureOpenAI extends OpenAI {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AzureOpenAI.class);
     /** The deployment name serves as the model name in requests. */
     private final String model;
 

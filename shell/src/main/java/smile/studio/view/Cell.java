@@ -41,7 +41,7 @@ import smile.studio.kernel.PostRunNavigation;
 public class Cell extends JPanel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Cell.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), Locale.getDefault());
-    private static final LLM coder = LLM.getCoder();
+    private static final Optional<LLM> coder = LLM.getCoder();
     private final String placeholder = bundle.getString("Prompt");
     private final CodeEditor editor = new CodeEditor();
     private final OutputArea output = new OutputArea();
@@ -165,7 +165,7 @@ public class Cell extends JPanel {
      * Completes the current line of code.
      */
     private void completeCode() {
-        if (isCoding) return;
+        if (coder.isEmpty() || isCoding) return;
 
         try {
             isCoding = true;
@@ -187,7 +187,7 @@ public class Cell extends JPanel {
                 @Override
                 protected Void doInBackground() {
                     var input = Prompt.completeCode(context, currentLine);
-                    coder.complete(input).whenComplete((line, ex) -> {
+                    coder.ifPresent(llm -> llm.complete(input).whenComplete((line, ex) -> {
                         if (ex != null) {
                             logger.warn("Code completion failed: {}", ex.getMessage());
                         }
@@ -195,7 +195,7 @@ public class Cell extends JPanel {
                         if (line != null) {
                             SwingUtilities.invokeLater(() -> editor.replaceRange(line, startOffset, caretPosition));
                         }
-                    }).join();
+                    }).join());
                     return null;
                 }
 
@@ -215,7 +215,7 @@ public class Cell extends JPanel {
      * Generates code based on prompt.
      */
     private void generateCode() {
-        if (isCoding) return;
+        if (coder.isEmpty() || isCoding) return;
 
         String task = prompt.getText();
         if (!task.isBlank()) {
@@ -233,12 +233,12 @@ public class Cell extends JPanel {
                 @Override
                 protected Void doInBackground() {
                     var input = Prompt.generateCode(context, task);
-                    coder.generate(input,
+                    coder.ifPresent(llm -> llm.generate(input,
                         chunk -> SwingUtilities.invokeLater(() -> editor.append(chunk)),
                         ex -> {
                             SwingUtilities.invokeLater(() -> editor.append("/// Code generation failed: " + ex.getMessage()));
                             return null;
-                    });
+                    }));
                     return null;
                 }
 
