@@ -551,6 +551,14 @@ public class SmileStudio extends JFrame {
         // If user doesn't set system property for api key,
         // we will try to set it from preferences if it exists.
         if (System.getProperty("openai.apiKey", "").isBlank()) {
+            // Without openai.apiKey, OpenAI.client will fail to initialize.
+            String apiKey = SmileStudio.prefs.get("azureOpenAIApiKey", "").trim();
+            if (!apiKey.isEmpty()) {
+                System.setProperty("openai.apiKey", apiKey);
+            }
+        }
+        if (System.getProperty("openai.apiKey", "").isBlank()) {
+            // We will overwrite the above api key by Azure.
             String apiKey = SmileStudio.prefs.get("openaiApiKey", "").trim();
             if (!apiKey.isEmpty()) {
                 System.setProperty("openai.apiKey", apiKey);
