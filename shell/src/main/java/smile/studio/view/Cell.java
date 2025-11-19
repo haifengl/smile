@@ -32,9 +32,8 @@ import smile.studio.agent.Prompt;
 import smile.studio.kernel.PostRunNavigation;
 
 /**
- * A cell is a multiline text input field, and its contents can be executed.
- * The execution behavior of a cell is determined by the cell's type.
- * There are three types of cells: code cells, markdown cells, and raw cells.
+ * A cell is a multiline coding field, and its contents can be executed
+ * by Java engine.
  *
  * @author Haifeng Li
  */
