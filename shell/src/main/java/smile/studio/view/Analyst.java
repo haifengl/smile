@@ -21,17 +21,12 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.io.StringReader;
-
-import com.formdev.flatlaf.ui.FlatBorder;
-import com.formdev.flatlaf.ui.FlatLineBorder;
 import org.commonmark.node.*;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.xhtmlrenderer.simple.XHTMLPanel;
 import org.xml.sax.InputSource;
-import smile.plot.swing.Palette;
 
 /**
  * An architect creates model building pipeline.
@@ -40,11 +35,7 @@ import smile.plot.swing.Palette;
  */
 public class Analyst extends JPanel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Analyst.class);
-    private static final Color userMessageColor = new Color(220, 248, 198);
-    private static final Color botMessageColor = Palette.web("#8dd4e8");
-    private static final FlatBorder flat = new FlatBorder(); // proxy to get theme color and width
-    private final JPanel messages = new JPanel();
-    private final JTextArea input = new JTextArea(3, 60);
+    private final JPanel commands = new JPanel();
 
     /**
      * Constructor.
@@ -52,48 +43,33 @@ public class Analyst extends JPanel {
     public Analyst() {
         super(new BorderLayout(0, 8));
         setBorder(new EmptyBorder(0, 0, 0, 8));
-        messages.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));//new BoxLayout(messages, BoxLayout.Y_AXIS));
-        JScrollPane scrollPane = new JScrollPane(messages);
+        commands.setLayout(new BoxLayout(commands, BoxLayout.Y_AXIS));
+        commands.setBorder(new EmptyBorder(8, 8, 8, 8));
+        JScrollPane scrollPane = new JScrollPane(commands);
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
-        JPanel inputPane = new JPanel(new BorderLayout());
-        inputPane.setBackground(input.getBackground());
-        inputPane.setBorder(createRoundBorder());
-        inputPane.add(input, BorderLayout.CENTER);
-
-        //input.setRows(3);
-        input.setLineWrap(true);
-        input.setWrapStyleWord(true);
-        messages.add(inputPane);
-
-        InputMap inputMap = input.getInputMap(JComponent.WHEN_FOCUSED);
-        ActionMap actionMap = input.getActionMap();
-        inputMap.put(KeyStroke.getKeyStroke("ENTER"), "send-message");
-        actionMap.put("send-message", new AbstractAction() {
-            @Override public void actionPerformed(ActionEvent e) {
-                sendMessage();
-            }
-        });
-        inputMap.put(KeyStroke.getKeyStroke("shift ENTER"), "new-line");
-        actionMap.put("new-line", new AbstractAction() {
-            @Override public void actionPerformed(ActionEvent e) {
-                input.insert("\n", input.getCaretPosition());
-            }
-        });
+        Command command = new Command(this);
+        command.setEditable(false);
+        command.input().setText("""
+                Welcome to Smile Analyst!
+                /help for help, /status for your current setup
+                cwd: """ + System.getProperty("user.dir"));
+        command.output().setText("""
+                Tips for getting started:
+                1. Be as specific as you would with another data scientist for the best result
+                2. Use SMILE to help with data analysis""");
+        commands.add(command);
+        commands.add(new Command(this));
 
         add(scrollPane, BorderLayout.CENTER);
-        //add(inputPane, BorderLayout.SOUTH);
     }
 
     /**
-     * Sends user message.
+     * Executes command in natural language.
+     * @param command the commands to execute.
      */
-    private void sendMessage() {
-        String message = input.getText().trim();
-        if (!message.isEmpty()) {
-            input.setText("");
-            addUserMessage(message);
-        }
+    public void run(Command command) {
+
     }
 
     /**
@@ -144,25 +120,14 @@ public class Analyst extends JPanel {
             JPanel pane = new JPanel(new BorderLayout());
             pane.setBorder(new CompoundBorder(
                     new EmptyBorder(8, 8, 8, 16),
-                    createRoundBorder()));
+                    Command.createRoundBorder()));
             pane.add(text, BorderLayout.CENTER);
-            messages.add(pane);
+            commands.add(pane);
 
             var response = addAgentMessage(message);
             if (response != null) {
                 pane.add(response, BorderLayout.CENTER);
             }
         }
-    }
-
-    /**
-     * Returns a border with round corners.
-     * @return a border with round corner.
-     */
-    private FlatLineBorder createRoundBorder() {
-        return new FlatLineBorder(new Insets(5, 5, 5, 5),
-                (Color) flat.getStyleableValue("borderColor"),
-                (Float) flat.getStyleableValue("borderWidth"),
-                20);
     }
 }
