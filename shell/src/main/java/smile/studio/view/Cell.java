@@ -100,14 +100,6 @@ public class Cell extends JPanel {
         deleteButton.addActionListener(e -> notebook.deleteCell(this));
 
         // Cell editor and output configuration
-        Monospace.addListener((e) ->
-            SwingUtilities.invokeLater(() -> {
-                Font font = (Font) e.getNewValue();
-                output.setFont(font);
-                editor.setFont(font);
-            })
-        );
-
         output.setFont(Monospace.getFont());
         editor.setFont(Monospace.getFont());
         RTextScrollPane editorScroll = new RTextScrollPane(editor);
