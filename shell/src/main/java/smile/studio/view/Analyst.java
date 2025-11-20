@@ -60,6 +60,21 @@ public class Analyst extends JPanel {
                 2. Use SMILE to help with data analysis""");
         commands.add(command);
         commands.add(new Command(this));
+        // Add vertical glue to push components to the top
+        commands.add(Box.createVerticalGlue());
+
+        Monospace.addListener((e) ->
+                SwingUtilities.invokeLater(() -> {
+                    Font font = (Font) e.getNewValue();
+                    for (int i = 0; i < commands.getComponentCount(); i++) {
+                        if (commands.getComponent(i) instanceof Command cmd) {
+                            cmd.prompt().setFont(font);
+                            cmd.input().setFont(font);
+                            cmd.output().setFont(font);
+                        }
+                    }
+                })
+        );
 
         add(scrollPane, BorderLayout.CENTER);
     }

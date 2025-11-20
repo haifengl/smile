@@ -19,9 +19,7 @@ package smile.studio.view;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -204,6 +202,18 @@ public class Notebook extends JPanel implements DocumentListener {
                 scrollTo(first.editor());
             });
         }
+
+        Monospace.addListener((e) ->
+                SwingUtilities.invokeLater(() -> {
+                    Font font = (Font) e.getNewValue();
+                    for (int i = 0; i < cells.getComponentCount(); i++) {
+                        if (cells.getComponent(i) instanceof Cell cell) {
+                            cell.editor().setFont(font);
+                            cell.output().setFont(font);
+                        }
+                    }
+                })
+        );
     }
 
     /**

@@ -19,6 +19,7 @@ package smile.studio.view;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import com.formdev.flatlaf.ui.FlatBorder;
 import com.formdev.flatlaf.ui.FlatLineBorder;
 import smile.plot.swing.Palette;
@@ -38,9 +39,11 @@ public class Command extends JPanel {
     private final JTextArea output = new JTextArea();
 
     public Command(Analyst analyst) {
-        super(new BorderLayout());
+        super(new BorderLayout(5, 5));
+        setBorder(new EmptyBorder(0, 0, 10, 0));
         prompt.setVerticalAlignment(JLabel.TOP);
         prompt.setForeground(promptColor);
+        input.setBackground(inputColor);
         input.setLineWrap(true);
         input.setWrapStyleWord(true);
         output.setEditable(false);
@@ -48,6 +51,7 @@ public class Command extends JPanel {
         output.setWrapStyleWord(true);
 
         JPanel inputPane = new JPanel(new BorderLayout());
+        inputPane.setBackground(inputColor);
         inputPane.setBorder(createRoundBorder());
         inputPane.add(prompt, BorderLayout.WEST);
         inputPane.add(input, BorderLayout.CENTER);
@@ -69,14 +73,6 @@ public class Command extends JPanel {
         prompt.setFont(Monospace.getFont());
         input.setFont(Monospace.getFont());
         output.setFont(Monospace.getFont());
-        Monospace.addListener((e) ->
-                SwingUtilities.invokeLater(() -> {
-                    Font font = (Font) e.getNewValue();
-                    prompt.setFont(font);
-                    input.setFont(font);
-                    output.setFont(font);
-                })
-        );
     }
 
     /**
