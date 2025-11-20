@@ -27,6 +27,7 @@ import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.xhtmlrenderer.simple.XHTMLPanel;
 import org.xml.sax.InputSource;
+import smile.plot.swing.Palette;
 
 /**
  * An architect creates model building pipeline.
@@ -35,33 +36,38 @@ import org.xml.sax.InputSource;
  */
 public class Analyst extends JPanel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Analyst.class);
-    private final JPanel commands = new JPanel();
+    private final JPanel commands = new ScrollablePanel();
 
     /**
      * Constructor.
      */
     public Analyst() {
-        super(new BorderLayout(0, 8));
-        setBorder(new EmptyBorder(0, 0, 0, 8));
+        super(new BorderLayout());
         commands.setLayout(new BoxLayout(commands, BoxLayout.Y_AXIS));
-        commands.setBorder(new EmptyBorder(8, 8, 8, 8));
-        JScrollPane scrollPane = new JScrollPane(commands);
-        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
-        Command command = new Command(this);
-        command.setEditable(false);
-        command.input().setText("""
+        JScrollPane scrollPane = new JScrollPane(commands);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(18);
+        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        add(scrollPane, BorderLayout.CENTER);
+
+        Command welcome = new Command(this);
+        welcome.setEditable(false);
+        welcome.input().setText("""
                 Welcome to Smile Analyst!
                 /help for help, /status for your current setup
                 cwd: """ + System.getProperty("user.dir"));
-        command.output().setText("""
+        welcome.setInputFont(welcome.input().getFont().deriveFont(Font.BOLD));
+        welcome.setInputForeground(Palette.MAROON);
+        welcome.output().setText("""
                 Tips for getting started:
                 1. Be as specific as you would with another data scientist for the best result
                 2. Use SMILE to help with data analysis""");
+        commands.add(welcome);
+
+        Command command = new Command(this);
         commands.add(command);
-        commands.add(new Command(this));
-        // Add vertical glue to push components to the top
         commands.add(Box.createVerticalGlue());
+        SwingUtilities.invokeLater(() -> command.input().requestFocusInWindow());
 
         Monospace.addListener((e) ->
                 SwingUtilities.invokeLater(() -> {
@@ -75,8 +81,6 @@ public class Analyst extends JPanel {
                     }
                 })
         );
-
-        add(scrollPane, BorderLayout.CENTER);
     }
 
     /**
@@ -143,6 +147,41 @@ public class Analyst extends JPanel {
             if (response != null) {
                 pane.add(response, BorderLayout.CENTER);
             }
+        }
+    }
+
+    /**
+     * Customized JPanel whose width match the width of its containing
+     * JScrollPane's viewport.
+     */
+    static class ScrollablePanel extends JPanel implements Scrollable {
+        public ScrollablePanel() {
+
+        }
+
+        @Override
+        public Dimension getPreferredScrollableViewportSize() {
+            return getPreferredSize();
+        }
+
+        @Override
+        public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
+            return 18;
+        }
+
+        @Override
+        public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
+            return ((orientation == SwingConstants.VERTICAL) ? visibleRect.height : visibleRect.width) - 18;
+        }
+
+        @Override
+        public boolean getScrollableTracksViewportWidth() {
+            return true; // This is the key method to make the width match
+        }
+
+        @Override
+        public boolean getScrollableTracksViewportHeight() {
+            return false; // Set to true if you also want the height to match
         }
     }
 }

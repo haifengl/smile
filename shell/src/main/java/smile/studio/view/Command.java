@@ -40,7 +40,7 @@ public class Command extends JPanel {
 
     public Command(Analyst analyst) {
         super(new BorderLayout(5, 5));
-        setBorder(new EmptyBorder(0, 0, 10, 0));
+        setBorder(new EmptyBorder(8,8,8,8));
         prompt.setVerticalAlignment(JLabel.TOP);
         prompt.setForeground(promptColor);
         input.setBackground(inputColor);
@@ -82,6 +82,24 @@ public class Command extends JPanel {
     public void setEditable(boolean flag) {
         prompt.setText(flag ? ">" : "*");
         input.setEditable(flag);
+    }
+
+    /**
+     * Sets the text color for input and prompt.
+     * @param color the foreground color.
+     */
+    public void setInputForeground(Color color) {
+        prompt.setForeground(color);
+        input.setForeground(color);
+    }
+
+    /**
+     * Sets the font for input and prompt.
+     * @param font the font.
+     */
+    public void setInputFont(Font font) {
+        prompt.setFont(font);
+        input.setFont(font);
     }
 
     /**
