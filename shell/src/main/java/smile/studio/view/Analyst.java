@@ -43,6 +43,7 @@ public class Analyst extends JPanel {
      */
     public Analyst() {
         super(new BorderLayout());
+        setBorder(new EmptyBorder(0, 0, 0, 8));
         commands.setLayout(new BoxLayout(commands, BoxLayout.Y_AXIS));
 
         JScrollPane scrollPane = new JScrollPane(commands);

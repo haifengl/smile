@@ -20,7 +20,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import com.formdev.flatlaf.ui.FlatBorder;
 import com.formdev.flatlaf.ui.FlatLineBorder;
 import smile.plot.swing.Palette;
 
@@ -31,9 +30,9 @@ import smile.plot.swing.Palette;
  * @author Haifeng Li
  */
 public class Command extends JPanel {
-    private static final FlatBorder flat = new FlatBorder(); // proxy to get theme color and width
     private static final Color inputColor = new Color(220, 248, 198);
-    private static final Color promptColor = Palette.web("#8dd4e8");
+    private static final Color borderColor = Palette.web("#8dd4e8");
+    private final JPanel inputPane = new JPanel(new BorderLayout());
     private final JLabel prompt = new JLabel(">", SwingConstants.CENTER);
     private final JTextArea input = new JTextArea(1, 60);
     private final JTextArea output = new JTextArea();
@@ -42,20 +41,17 @@ public class Command extends JPanel {
         super(new BorderLayout(5, 5));
         setBorder(new EmptyBorder(8,8,8,8));
         prompt.setVerticalAlignment(JLabel.TOP);
-        prompt.setForeground(promptColor);
-        input.setBackground(inputColor);
         input.setLineWrap(true);
         input.setWrapStyleWord(true);
-        output.setEditable(false);
-        output.setLineWrap(true);
-        output.setWrapStyleWord(true);
-
-        JPanel inputPane = new JPanel(new BorderLayout());
+        input.setBackground(inputColor);
         inputPane.setBackground(inputColor);
         inputPane.setBorder(createRoundBorder());
         inputPane.add(prompt, BorderLayout.WEST);
         inputPane.add(input, BorderLayout.CENTER);
 
+        output.setEditable(false);
+        output.setLineWrap(true);
+        output.setWrapStyleWord(true);
         add(inputPane, BorderLayout.NORTH);
         add(output, BorderLayout.CENTER);
 
@@ -77,11 +73,20 @@ public class Command extends JPanel {
 
     /**
      * Sets whether the input area should be editable.
-     * @param flag the editable flag.
+     * @param editable the editable flag.
      */
-    public void setEditable(boolean flag) {
-        prompt.setText(flag ? ">" : "*");
-        input.setEditable(flag);
+    public void setEditable(boolean editable) {
+        input.setEditable(editable);
+        if (editable) {
+            prompt.setText(">");
+            input.setBackground(inputColor);
+            inputPane.setBackground(inputColor);
+
+        } else {
+            prompt.setText("*");
+            input.setBackground(getBackground());
+            inputPane.setBackground(getBackground());
+        }
     }
 
     /**
@@ -132,8 +137,6 @@ public class Command extends JPanel {
      */
     static FlatLineBorder createRoundBorder() {
         return new FlatLineBorder(new Insets(5, 5, 5, 5),
-                (Color) flat.getStyleableValue("borderColor"),
-                (Float) flat.getStyleableValue("borderWidth"),
-                20);
+                borderColor, 1, 20);
     }
 }
