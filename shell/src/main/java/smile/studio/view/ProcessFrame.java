@@ -92,7 +92,7 @@ public class ProcessFrame extends JFrame {
                         if (line == null) break;
                         // Append the line to the JTextArea on the Event Dispatch Thread (EDT)
                         SwingUtilities.invokeLater(() -> {
-                            output.append(line + System.lineSeparator());
+                            output.append(line + "\n");
                             int numLinesToTrunk = output.getLineCount() - scrollback;
                             // trunk every 100 overflow lines to minimize the overhead
                             if (numLinesToTrunk > 100) {
@@ -106,12 +106,12 @@ public class ProcessFrame extends JFrame {
                         });
                     } while (true);
                 } catch (IOException ex) {
-                    SwingUtilities.invokeLater(() -> output.append("Error reading process output: " + ex.getMessage() +  System.lineSeparator()));
+                    SwingUtilities.invokeLater(() -> output.append("Error reading process output: " + ex.getMessage() + "\n"));
                 }
             });
             thread.start();
         } catch (IOException ex) {
-            output.append("Failed to start process: " + ex.getMessage() + System.lineSeparator());
+            output.append("Failed to start process: " + ex.getMessage() + "\n");
         }
     }
 }
