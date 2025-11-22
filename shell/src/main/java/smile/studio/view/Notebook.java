@@ -302,7 +302,7 @@ public class Notebook extends JPanel implements DocumentListener {
                 if (!current.isEmpty()) cells.add(current.toString());
                 current = new StringBuilder();
             } else {
-                current.append(line).append(System.lineSeparator());
+                current.append(line).append('\n');
             }
         }
         // The last cell may not end with separator.
@@ -491,7 +491,7 @@ public class Notebook extends JPanel implements DocumentListener {
                                 cell.output().appendLine("null");
                             } else {
                                 if (typeName.endsWith("DataFrame")) {
-                                    cell.output().appendBuffer(System.lineSeparator());
+                                    cell.output().appendBuffer("\n");
                                 } else if (typeName.contains("[]")) {
                                     // The type may be generic with array, e.g., SVM<double[]>
                                     int index = value.indexOf('{');

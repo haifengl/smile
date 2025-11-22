@@ -84,8 +84,7 @@ public class OutputArea extends JTextArea {
      * @return this object.
      */
     public OutputArea appendLine(String str) {
-        buffer.append(str);
-        buffer.append(System.lineSeparator());
+        buffer.append(str).append('\n');
         flush();
         return this;
     }
