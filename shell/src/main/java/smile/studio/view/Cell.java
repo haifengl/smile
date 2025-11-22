@@ -219,23 +219,43 @@ public class Cell extends JPanel {
         String task = prompt.getText();
         if (!task.isBlank()) {
             isCoding = true;
-            String context = editor.getText();
-            editor.append(System.lineSeparator());
-            for (String line : wrap(task, 80)) {
-                editor.append("/// " + line + "\n");
+            editor.requestFocus();
+            int position = editor.getSelectionEnd();
+            // No selected text. Append at the end.
+            if (position == 0) {
                 editor.setCaretPosition(editor.getDocument().getLength());
-                editor.requestFocus();
+            } else {
+                try {
+                    int lineNumber = editor.getLineOfOffset(position);
+                    int lineEndOffset = editor.getLineEndOffset(lineNumber);
+                    editor.setCaretPosition(lineEndOffset);
+                } catch (BadLocationException e) {
+                    editor.setCaretPosition(position);
+                }
+            }
+
+            editor.insert("\n", editor.getCaretPosition());
+            for (String line : wrap(task, 80)) {
+                editor.insert("/// " + line + "\n", editor.getCaretPosition());
             }
 
             // Run code completion in a worker thread as join() blocks.
             SwingWorker<Void, Void> worker = new SwingWorker<>() {
                 @Override
                 protected Void doInBackground() {
+                    String context = editor.getSelectedText();
+                    if (context == null) {
+                        context = editor.getText();
+                    }
+
                     var input = Prompt.generateCode(context, task);
                     coder.ifPresent(llm -> llm.generate(input,
-                        chunk -> SwingUtilities.invokeLater(() -> editor.append(chunk)),
+                        chunk -> SwingUtilities.invokeLater(() -> editor.insert(chunk, editor.getCaretPosition())),
                         ex -> {
-                            SwingUtilities.invokeLater(() -> editor.append("/// Code generation failed: " + ex.getMessage()));
+                            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(Cell.this,
+                                    "Code generation failed: " + ex.getMessage(),
+                                    bundle.getString("AIService"),
+                                    JOptionPane.ERROR_MESSAGE));
                             return null;
                     }));
                     return null;
@@ -244,6 +264,8 @@ public class Cell extends JPanel {
                 @Override
                 protected void done() {
                     isCoding = false;
+                    // Appending a new line at the end of generated code.
+                    SwingUtilities.invokeLater(() -> editor.insert("\n", editor.getCaretPosition()));
                 }
             };
             worker.execute();
