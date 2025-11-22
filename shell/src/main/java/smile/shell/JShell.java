@@ -55,6 +55,8 @@ public interface JShell {
     Collections.addAll(list, startup);
     Collections.addAll(list, args);
 
-    return JavaShellToolBuilder.builder().start(list.toArray(String[]::new));
+    return JavaShellToolBuilder.builder()
+            .interactiveTerminal(true)
+            .start(list.toArray(String[]::new));
   }
 }
