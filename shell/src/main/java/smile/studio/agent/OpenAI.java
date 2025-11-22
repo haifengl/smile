@@ -103,7 +103,9 @@ public class OpenAI implements LLM {
     public CompletableFuture<String> complete(String message) {
         var params = ChatCompletionCreateParams.builder()
                 .model(coder())
-                .stop("\n")
+                .n(1) // only 1 chat completion choice to generate
+                .temperature(0.2) // low temperature for more predictable, focused, and deterministic code
+                .stop("\n") // stop at the end of line
                 .addDeveloperMessage(context.getProperty("instructions"))
                 .addUserMessage(message)
                 .build();
@@ -117,6 +119,8 @@ public class OpenAI implements LLM {
     public void generate(String message, Consumer<String> consumer, Function<Throwable, ? extends Void> handler) {
         var params = ChatCompletionCreateParams.builder()
                 .model(coder())
+                .n(1) // only 1 chat completion choice to generate
+                .temperature(0.2) // low temperature for more predictable, focused, and deterministic code
                 .maxCompletionTokens(maxOutputTokens(2048))
                 .addDeveloperMessage(context.getProperty("instructions"))
                 .addUserMessage(message)
