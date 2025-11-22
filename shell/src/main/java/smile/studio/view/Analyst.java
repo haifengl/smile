@@ -53,12 +53,22 @@ public class Analyst extends JPanel {
 
         Command welcome = new Command(this);
         welcome.setEditable(false);
+        welcome.prompt().setText("");
         welcome.input().setText("""
-                Welcome to Smile Analyst!
-                /help for help, /status for your current setup
-                cwd: """ + System.getProperty("user.dir"));
-        welcome.setInputFont(welcome.input().getFont().deriveFont(Font.BOLD));
-        welcome.setInputForeground(Palette.MAROON);
+                                                         ..::''''::..
+                                                       .;''        ``;.
+       ....                                           ::    ::  ::    ::
+     ,;' .;:                ()  ..:                  ::     ::  ::     ::
+     ::.      ..:,:;.,:;.    .   ::   .::::.         :: .:' ::  :: `:. ::
+      '''::,   ::  ::  ::  `::   ::  ;:   .::        ::  :          :  ::
+    ,:';  ::;  ::  ::  ::   ::   ::  ::,::''.         :: `:.      .:' ::
+    `:,,,,;;' ,;; ,;;, ;;, ,;;, ,;;, `:,,,,:'          `;..``::::''..;'
+                                                         ``::,,,,::''
+    =====================================================================
+    Welcome to Smile Analyst!
+    /help for help, /status for your current setup
+    cwd: """ + System.getProperty("user.dir"));
+        welcome.setInputForeground(Palette.DARK_GRAY);
         welcome.output().setText("""
                 Tips for getting started:
                 1. Be as specific as you would with another data scientist for the best result

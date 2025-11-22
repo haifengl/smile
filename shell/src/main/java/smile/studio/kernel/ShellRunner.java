@@ -53,7 +53,7 @@ public class ShellRunner extends Runner {
             // Wait for the process to complete and return the exit code
             return process.waitFor();
         } catch (IOException | InterruptedException ex) {
-            logger.error("Failed to execute " + command, ex);
+            logger.error("Failed to execute {}", command, ex);
         }
         return -1;
     }

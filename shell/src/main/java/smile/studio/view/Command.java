@@ -34,7 +34,7 @@ public class Command extends JPanel {
     private static final Color borderColor = Palette.web("#8dd4e8");
     private final JPanel inputPane = new JPanel(new BorderLayout());
     private final JLabel prompt = new JLabel(">", SwingConstants.CENTER);
-    private final JTextArea input = new JTextArea(1, 60);
+    private final JTextArea input = new JTextArea(1, 80);
     private final JTextArea output = new JTextArea();
 
     public Command(Analyst analyst) {
