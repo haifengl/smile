@@ -55,7 +55,6 @@ bashScriptExtraDefines ++= Seq(
 batScriptExtraDefines ++= Seq(
   """call :add_java -XX:MaxMetaspaceSize=1024M""",
   """call :add_java -Xss4M""",
-  """call :add_java -Dorg.slf4j.simpleLogger.defaultLogLevel=trace""",
   """call :add_java --add-opens=java.base/java.nio=ALL-UNNAMED""",
   """call :add_java --enable-native-access=ALL-UNNAMED""",
   """call :add_java -Dsmile.home=%APP_HOME%""",
