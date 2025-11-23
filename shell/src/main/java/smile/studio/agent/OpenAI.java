@@ -35,12 +35,14 @@ import com.openai.models.responses.ResponseCreateParams;
  */
 public class OpenAI implements LLM {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OpenAI.class);
-    // Configures using the `openai.apiKey`, `openai.orgId`, `openai.projectId`,
-    // `openai.webhookSecret` and `openai.baseUrl` system properties.
-    // Or configures using the `OPENAI_API_KEY`, `OPENAI_ORG_ID`, `OPENAI_PROJECT_ID`,
-    // `OPENAI_WEBHOOK_SECRET` and `OPENAI_BASE_URL` environment variables.
-    // Don't create more than one client in the same application. Each client has
-    // a connection pool and thread pools, which are more efficient to share between requests.
+    /**
+     * Don't create more than one client in the same application. Each client has
+     * a connection pool and thread pools, which are more efficient to share between requests.
+     * Configures using the `openai.apiKey`, `openai.orgId`, `openai.projectId`,
+     * `openai.webhookSecret` and `openai.baseUrl` system properties.
+     * Or configures using the `OPENAI_API_KEY`, `OPENAI_ORG_ID`, `OPENAI_PROJECT_ID`,
+     * `OPENAI_WEBHOOK_SECRET` and `OPENAI_BASE_URL` environment variables.
+     */
     static final OpenAIClientAsync singleton = OpenAIOkHttpClientAsync.fromEnv();
     /** Instance client will reuse connection and thread pool of singleton. */
     final OpenAIClientAsync client;
@@ -87,8 +89,12 @@ public class OpenAI implements LLM {
         return context;
     }
 
-    @Override
-    public CompletableFuture<Response> request(String input) {
+    /**
+     * Returns a future of response from OpenAI service.
+     * @param input the input message.
+     * @return a future of response.
+     */
+    public CompletableFuture<Response> response(String input) {
         var params = ResponseCreateParams.builder()
                 .model(agent())
                 .maxOutputTokens(maxOutputTokens(8192))
@@ -148,21 +154,5 @@ public class OpenAI implements LLM {
      */
     public String coder() {
         return context.getProperty("model", ChatModel.GPT_5_1_CODEX.toString());
-    }
-
-    /**
-     * Returns the upper bound for the number of tokens that can be generated
-     * for a response, including visible output tokens and reasoning tokens.
-     * @param defaultValue the default value if the user doesn't set the context property.
-     * @return the upper bound for the number of output tokens.
-     */
-    private int maxOutputTokens(int defaultValue) {
-        String maxOutputTokens = context.getProperty("maxOutputTokens", String.valueOf(defaultValue));
-        try {
-            return Integer.parseInt(maxOutputTokens);
-        } catch (NumberFormatException ex) {
-            logger.error("Invalid maxOutputTokens: {}", maxOutputTokens);
-            return defaultValue;
-        }
     }
 }
