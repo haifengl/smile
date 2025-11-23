@@ -49,12 +49,7 @@ public class AzureOpenAI extends OpenAI {
     }
 
     @Override
-    public String agent() {
-        return model;
-    }
-
-    @Override
-    public String coder() {
+    public String model() {
         return model;
     }
 }
