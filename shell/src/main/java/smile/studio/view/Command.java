@@ -33,10 +33,11 @@ import org.xhtmlrenderer.simple.XHTMLPanel;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import smile.plot.swing.Palette;
+import smile.studio.model.CommandType;
 
 /**
  * A command is a multiline text input field, and its contents can be executed
- * by an LLM model.
+ * by a variety of engines including LLM agents.
  *
  * @author Haifeng Li
  */
@@ -44,27 +45,40 @@ public class Command extends JPanel {
     private static final Color inputColor = new Color(220, 248, 198);
     private static final Color borderColor = Palette.web("#8dd4e8");
     private final JPanel inputPane = new JPanel(new BorderLayout());
-    private final JLabel prompt = new JLabel(">", SwingConstants.CENTER);
+    private final CommandTypeComboBox commandType = new CommandTypeComboBox();
     private final JTextArea input = new JTextArea(1, 80);
     private final JTextArea output = new JTextArea();
 
     public Command(Analyst analyst) {
         super(new BorderLayout(5, 5));
         setBorder(new EmptyBorder(8,8,8,8));
-        prompt.setVerticalAlignment(JLabel.TOP);
+
+        int width = 20;
+        JPanel header = new JPanel();
+        header.setLayout(new BoxLayout(header, BoxLayout.X_AXIS));
+        commandType.setOpaque(false);
+        //commandType.setBackground(Color.RED);
+        //commandType.setMaximumSize(new Dimension(width, commandType.getPreferredSize().height));
+        //header.setOpaque(false);
+        //header.setPreferredSize(new Dimension(width, 0));
+        header.add(commandType);
+        //header.add(Box.createVerticalGlue()); // Push commandType towards the top
+
         input.setLineWrap(true);
         input.setWrapStyleWord(true);
         input.setBackground(inputColor);
+        input.setBorder(createRoundBorder());
         inputPane.setBackground(inputColor);
         inputPane.setBorder(createRoundBorder());
-        inputPane.add(prompt, BorderLayout.WEST);
-        inputPane.add(input, BorderLayout.CENTER);
+        //inputPane.add(commandType, BorderLayout.NORTH);
+        //inputPane.add(input, BorderLayout.CENTER);
 
         output.setEditable(false);
         output.setLineWrap(true);
         output.setWrapStyleWord(true);
-        add(inputPane, BorderLayout.NORTH);
-        add(output, BorderLayout.CENTER);
+        add(header, BorderLayout.NORTH);
+        add(input, BorderLayout.CENTER);
+        add(output, BorderLayout.SOUTH);
 
         InputMap inputMap = input.getInputMap(JComponent.WHEN_FOCUSED);
         ActionMap actionMap = input.getActionMap();
@@ -77,7 +91,7 @@ public class Command extends JPanel {
             }
         });
 
-        prompt.setFont(Monospace.getFont());
+        commandType.setFont(Monospace.getFont());
         input.setFont(Monospace.getFont());
         output.setFont(Monospace.getFont());
     }
@@ -87,16 +101,18 @@ public class Command extends JPanel {
      * @param editable the editable flag.
      */
     public void setEditable(boolean editable) {
+        commandType.setEnabled(editable);
         input.setEditable(editable);
         if (editable) {
-            prompt.setText(">");
+            commandType.setBackground(inputColor);
             input.setBackground(inputColor);
             inputPane.setBackground(inputColor);
 
         } else {
-            prompt.setText("*");
-            input.setBackground(getBackground());
-            inputPane.setBackground(getBackground());
+            Color background = getBackground();
+            commandType.setBackground(background);
+            input.setBackground(background);
+            inputPane.setBackground(background);
         }
     }
 
@@ -105,7 +121,7 @@ public class Command extends JPanel {
      * @param color the foreground color.
      */
     public void setInputForeground(Color color) {
-        prompt.setForeground(color);
+        commandType.setForeground(color);
         input.setForeground(color);
     }
 
@@ -114,16 +130,32 @@ public class Command extends JPanel {
      * @param font the font.
      */
     public void setInputFont(Font font) {
-        prompt.setFont(font);
+        commandType.setFont(font);
         input.setFont(font);
     }
 
     /**
-     * Returns the command prompt.
-     * @return the command prompt.
+     * Returns the command type.
+     * @return the command type.
      */
-    public JLabel prompt() {
-        return prompt;
+    public CommandType getCommandType() {
+        return (CommandType) commandType.getSelectedItem();
+    }
+
+    /**
+     * Sets the command type.
+     * @param type the command type.
+     */
+    public void setCommandType(CommandType type) {
+        commandType.setSelectedItem(type);
+    }
+
+    /**
+     * Returns the command type widget.
+     * @return the command type widget.
+     */
+    public CommandTypeComboBox commandType() {
+        return commandType;
     }
 
     /**

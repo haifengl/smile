@@ -20,6 +20,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import smile.plot.swing.Palette;
+import smile.studio.model.CommandType;
 
 /**
  * An architect creates model building pipeline.
@@ -44,8 +45,7 @@ public class Analyst extends JPanel {
         add(scrollPane, BorderLayout.CENTER);
 
         Command welcome = new Command(this);
-        welcome.setEditable(false);
-        welcome.prompt().setText("");
+        welcome.setCommandType(CommandType.Raw);
         welcome.input().setText("""
                                                          ..::''''::..
                                                        .;''        ``;.
@@ -60,6 +60,7 @@ public class Analyst extends JPanel {
     Welcome to Smile Analyst!
     /help for help, /status for your current setup
     cwd: """ + System.getProperty("user.dir"));
+        welcome.setEditable(false);
         welcome.setInputForeground(Palette.DARK_GRAY);
         welcome.output().setText("""
                 Tips for getting started:
@@ -77,7 +78,7 @@ public class Analyst extends JPanel {
                     Font font = (Font) e.getNewValue();
                     for (int i = 0; i < commands.getComponentCount(); i++) {
                         if (commands.getComponent(i) instanceof Command cmd) {
-                            cmd.prompt().setFont(font);
+                            cmd.commandType().setFont(font);
                             cmd.input().setFont(font);
                             cmd.output().setFont(font);
                         }
