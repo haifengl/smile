@@ -54,7 +54,7 @@ public interface LLM {
      * Returns an LLM instance specified by app settings.
      * @return an LLM instance specified by app settings.
      */
-    static Optional<LLM> getCoder() {
+    static Optional<LLM> getInstance() {
         try {
             var prefs = SmileStudio.preferences();
             var service = prefs.get("aiService", "OpenAI");
@@ -99,7 +99,6 @@ public interface LLM {
                 }
             };
 
-            llm.context().setProperty("instructions", Prompt.smileDeveloper());
             return Optional.of(llm);
         } catch (Throwable t) {
             // It is often a rethrow exception
@@ -107,6 +106,16 @@ public interface LLM {
         }
 
         return Optional.empty();
+    }
+
+    /**
+     * Returns an LLM instance specified by app settings.
+     * @return an LLM instance specified by app settings.
+     */
+    static Optional<LLM> getCoder() {
+        var llm = getInstance();
+        llm.ifPresent(model -> model.context().setProperty("instructions", Prompt.smileDeveloper()));
+        return llm;
     }
 
     /**

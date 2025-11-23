@@ -542,9 +542,10 @@ public class SmileStudio extends JFrame {
         }
 
         if (GraphicsEnvironment.isHeadless()) {
-            System.err.println("Cannot start Smile Studio as JVM is running in headless mode.");
-            System.err.println("Run 'smile shell' for smile shell with Java.");
-            System.err.println("Run 'smile scala' for smile shell with Scala.");
+            System.err.println("""
+                    Cannot start Smile Studio as JVM is running in headless mode.
+                    Run 'smile shell' for smile shell with Java.
+                    Run 'smile scala' for smile shell with Scala.""");
             System.exit(1);
         }
 
