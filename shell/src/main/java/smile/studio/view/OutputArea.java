@@ -103,8 +103,8 @@ public class OutputArea extends JTextArea {
                     highlighter.addHighlight(startOffset, endOffset, painter);
                 }
             }
-        } catch (BadLocationException e) {
-            System.err.println(e.getMessage());
+        } catch (BadLocationException ex) {
+            System.err.println(ex.getMessage());
         }
     }
 }
