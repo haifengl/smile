@@ -570,10 +570,18 @@ public class SmileStudio extends JFrame {
                 System.setProperty("openai.baseUrl", baseUrl);
             }
         }
+
+        // Anthropic system properties
         if (System.getProperty("anthropic.apiKey", "").isBlank()) {
             String apiKey = SmileStudio.prefs.get("anthropicApiKey", "").trim();
             if (!apiKey.isEmpty()) {
                 System.setProperty("anthropic.apiKey", apiKey);
+            }
+        }
+        if (System.getProperty("anthropic.baseUrl", "").isBlank()) {
+            String baseUrl = SmileStudio.prefs.get("anthropicBaseUrl", "").trim();
+            if (!baseUrl.isEmpty()) {
+                System.setProperty("anthropic.baseUrl", baseUrl);
             }
         }
 
