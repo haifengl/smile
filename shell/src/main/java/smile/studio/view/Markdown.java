@@ -57,7 +57,7 @@ public class Markdown extends JPanel {
         try {
             XHTMLPanel browser = new XHTMLPanel();
             browser.setInteractive(false);
-            browser.setBackground(getBackground());
+            browser.setOpaque(false); // transparent background
 
             var factory = DocumentBuilderFactory.newInstance();
             var builder = factory.newDocumentBuilder();

@@ -35,49 +35,43 @@ public class CommandTypeComboBox extends JComboBox<CommandType> {
     public CommandTypeComboBox() {
         super(new CommandType[] {Raw, Magic, Shell, Python, Markdown, Instructions});
         // Select Instructions by default.
-        setSelectedItem(CommandType.Instructions);
-        setEditable(false); // Don't allow typing in the text field.
+        setSelectedItem(Instructions);
+        // Don't allow typing in the text field.
+        setEditable(false);
         setBorder(BorderFactory.createEmptyBorder());
+        setPrototypeDisplayValue(Instructions);
         setRenderer(new ItemRenderer());
-        //setPreferredSize(renderer.getPreferredSize());
 
-
-        // Extend BasicComboBoxUI and override the createArrowButton() method
-        // to return a button with zero width and height, effectively making
-        // it invisible.
-        BasicComboBoxUI ui = new BasicComboBoxUI() {
-            @Override
-            protected JButton createArrowButton() {
-                // Create an invisible button
-                JButton button = new JButton();
-                var dim = new Dimension(0, 0);
-                button.setPreferredSize(dim);
-                button.setMinimumSize(dim);
-                button.setMaximumSize(dim);
-                button.setVisible(false); // Ensure it's not visible
-                return button;
-            }
-
+        setUI(new BasicComboBoxUI() {
             @Override
             protected BasicComboPopup createPopup() {
                 return new BasicComboPopup(comboBox) {
                     @Override
                     protected Rectangle computePopupBounds(int px, int py, int pw, int ph) {
-                        int desiredWidth = 120;
-                        return super.computePopupBounds(px, py, desiredWidth, ph);
+                        // Sets desired width for popup list
+                        return super.computePopupBounds(px, py, 120, ph);
                     }
                 };
             }
-        };
-        setUI(ui);
+        });
+
+        // Find and remove the arrow button component
+        for (Component component : getComponents()) {
+            if (component instanceof AbstractButton) {
+                remove(component);
+                revalidate(); // layout manager needs to recalculate the sizes
+                break; // Assuming only one button
+            }
+        }
+
+        // To prevent the box from expanding
+        setMaximumSize(getPreferredSize());
     }
 
     /** Custom renderer controls how each item is displayed in the dropdown list. */
-    private class ItemRenderer extends JLabel implements ListCellRenderer<CommandType> {
+    private static class ItemRenderer extends JLabel implements ListCellRenderer<CommandType> {
         public ItemRenderer() {
             setOpaque(true);
-            //setHorizontalAlignment(SwingConstants.CENTER);
-            setVerticalAlignment(SwingConstants.TOP);
         }
 
         @Override
@@ -86,6 +80,7 @@ public class CommandTypeComboBox extends JComboBox<CommandType> {
                                                       int index,
                                                       boolean isSelected,
                                                       boolean cellHasFocus) {
+            setOpaque(index != -1);
             if (value == null) {
                 setText(""); // Handle null value if necessary
             }

@@ -82,6 +82,6 @@ public enum CommandType {
 
     @Override
     public String toString() {
-        return description;
+        return legend;
     }
 }
