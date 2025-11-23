@@ -73,7 +73,7 @@ public class GoogleGemini implements LLM {
     }
 
     @Override
-    public void generate(String message, Consumer<String> consumer, Function<Throwable, ? extends Void> handler) {
+    public void complete(String message, Consumer<String> consumer, Function<Throwable, ? extends Void> handler) {
         var instructions = Content.fromParts(Part.fromText(context.getProperty("instructions")));
         var config = GenerateContentConfig.builder()
                 .candidateCount(1)

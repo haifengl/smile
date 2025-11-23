@@ -36,19 +36,19 @@ public interface LLM {
     Properties context();
 
     /**
-     * Single line code completion.
+     * Asynchronously completes a message.
      * @param message the user message.
-     * @return a future of response message.
+     * @return a future of completion.
      */
     CompletableFuture<String> complete(String message);
 
     /**
-     * Code block generation in an async streaming approach.
+     * Asynchronously completes a message in a streaming way.
      * @param message the user message.
      * @param consumer the consumer of completion chunks.
      * @param handler the exception handler.
      */
-    void generate(String message, Consumer<String> consumer, Function<Throwable, ? extends Void> handler);
+    void complete(String message, Consumer<String> consumer, Function<Throwable, ? extends Void> handler);
 
     /**
      * Returns an LLM instance specified by app settings.
@@ -108,15 +108,6 @@ public interface LLM {
         return Optional.empty();
     }
 
-    /**
-     * Returns an LLM instance specified by app settings.
-     * @return an LLM instance specified by app settings.
-     */
-    static Optional<LLM> getCoder() {
-        var llm = getInstance();
-        llm.ifPresent(model -> model.context().setProperty("instructions", Prompt.smileDeveloper()));
-        return llm;
-    }
 
     /**
      * Returns the upper bound for the number of tokens that can be generated

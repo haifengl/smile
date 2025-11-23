@@ -122,7 +122,7 @@ public class OpenAI implements LLM {
     }
 
     @Override
-    public void generate(String message, Consumer<String> consumer, Function<Throwable, ? extends Void> handler) {
+    public void complete(String message, Consumer<String> consumer, Function<Throwable, ? extends Void> handler) {
         var params = ChatCompletionCreateParams.builder()
                 .model(model())
                 .n(1) // only 1 chat completion choice to generate

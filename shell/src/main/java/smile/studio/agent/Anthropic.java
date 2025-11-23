@@ -98,7 +98,7 @@ public class Anthropic implements LLM {
     }
 
     @Override
-    public void generate(String message, Consumer<String> consumer, Function<Throwable, ? extends Void> handler) {
+    public void complete(String message, Consumer<String> consumer, Function<Throwable, ? extends Void> handler) {
         var params = MessageCreateParams.builder()
                 .model(model())
                 .temperature(0.2) // low temperature for more predictable, focused, and deterministic code

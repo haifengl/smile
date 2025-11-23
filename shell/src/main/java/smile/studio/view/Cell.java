@@ -27,8 +27,7 @@ import javax.swing.text.BadLocationException;
 import com.formdev.flatlaf.util.SystemInfo;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jdesktop.swingx.JXTextField;
-import smile.studio.agent.LLM;
-import smile.studio.agent.Prompt;
+import smile.studio.agent.Coder;
 import smile.studio.kernel.PostRunNavigation;
 
 /**
@@ -40,7 +39,7 @@ import smile.studio.kernel.PostRunNavigation;
 public class Cell extends JPanel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Cell.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), Locale.getDefault());
-    private static final Optional<LLM> coder = LLM.getCoder();
+    private static final Optional<Coder> coder = Coder.getInstance();
     private final String placeholder = bundle.getString("Prompt");
     private final CodeEditor editor = new CodeEditor();
     private final OutputArea output = new OutputArea();
@@ -159,15 +158,12 @@ public class Cell extends JPanel {
         if (coder.isEmpty() || isCoding) return;
 
         try {
-            isCoding = true;
             int caretPosition = editor.getCaretPosition();
             int lineNum = editor.getLineOfOffset(caretPosition);
             // Skip code completion for first line.
-            if (lineNum == 0) {
-                isCoding = false;
-                return;
-            }
+            if (lineNum == 0) return;
 
+            isCoding = true;
             int startOffset = editor.getLineStartOffset(lineNum);
             int endOffset = editor.getLineEndOffset(lineNum);
             String context = editor.getText(0, startOffset);
@@ -177,8 +173,7 @@ public class Cell extends JPanel {
             SwingWorker<Void, Void> worker = new SwingWorker<>() {
                 @Override
                 protected Void doInBackground() {
-                    var input = Prompt.completeCode(context, currentLine);
-                    coder.ifPresent(llm -> llm.complete(input).whenComplete((line, ex) -> {
+                    coder.ifPresent(llm -> llm.complete(currentLine, context).whenComplete((line, ex) -> {
                         if (ex != null) {
                             logger.warn("Code completion failed: {}", ex.getMessage());
                         }
@@ -234,6 +229,7 @@ public class Cell extends JPanel {
                 }
             }
 
+            String context = getCodeGenerationContext();
             editor.insert("\n", editor.getCaretPosition());
             for (String line : wrap(task, 80)) {
                 editor.insert("/// " + line + "\n", editor.getCaretPosition());
@@ -243,13 +239,7 @@ public class Cell extends JPanel {
             SwingWorker<Void, Void> worker = new SwingWorker<>() {
                 @Override
                 protected Void doInBackground() {
-                    String context = editor.getSelectedText();
-                    if (context == null) {
-                        context = editor.getText();
-                    }
-
-                    var input = Prompt.generateCode(context, task);
-                    coder.ifPresent(llm -> llm.generate(input,
+                    coder.ifPresent(llm -> llm.generate(task, context,
                         chunk -> SwingUtilities.invokeLater(() -> editor.insert(chunk, editor.getCaretPosition())),
                         ex -> {
                             SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(Cell.this,
@@ -270,6 +260,18 @@ public class Cell extends JPanel {
             };
             worker.execute();
         }
+    }
+
+    /**
+     * Returns the context for code generation.
+     * @return the context for code generation.
+     */
+    private String getCodeGenerationContext() {
+        String context = editor.getSelectedText();
+        if (context == null || context.isBlank()) {
+            context = editor.getText();
+        }
+        return context;
     }
 
     /**
@@ -313,6 +315,7 @@ public class Cell extends JPanel {
      */
     public void setRunning(boolean running) {
         runButton.setEnabled(!running);
+        runBelowButton.setEnabled(!running);
         upButton.setEnabled(!running);
         downButton.setEnabled(!running);
         deleteButton.setEnabled(!running);
