@@ -17,16 +17,8 @@
 package smile.studio.view;
 
 import javax.swing.*;
-import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.awt.*;
-import java.io.StringReader;
-import org.commonmark.node.*;
-import org.commonmark.parser.Parser;
-import org.commonmark.renderer.html.HtmlRenderer;
-import org.xhtmlrenderer.simple.XHTMLPanel;
-import org.xml.sax.InputSource;
 import smile.plot.swing.Palette;
 
 /**
@@ -100,65 +92,6 @@ public class Analyst extends JPanel {
      */
     public void run(Command command) {
 
-    }
-
-    /**
-     * Adds an agent message widget.
-     */
-    private JComponent addAgentMessage(String message) {
-        if (!message.isEmpty()) {
-            // Parse Markdown to HTML
-            Parser parser = Parser.builder().build();
-            Node document = parser.parse(message);
-            HtmlRenderer renderer = HtmlRenderer.builder().build();
-            String content = renderer.render(document);
-
-            try {
-                String html = """
-                        <html>
-                        <body style="width: 95%; height: auto; margin: 0 auto;">
-                        """ + content + "</body></html>";
-                var factory = DocumentBuilderFactory.newInstance();
-                var builder = factory.newDocumentBuilder();
-                var doc = builder.parse(new InputSource(new StringReader(html)));
-
-                XHTMLPanel browser = new XHTMLPanel();
-                browser.setInteractive(false);
-                browser.setBackground(getBackground());
-                browser.setDocument(doc, null); // The second argument is for base URI, can be null
-                return browser;
-            } catch (Exception ex) {
-                logger.error("Failed to add agent message: ", ex);
-                return new JLabel(ex.getMessage());
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Adds a user message widget.
-     */
-    private void addUserMessage(String message) {
-        if (!message.isEmpty()) {
-            JTextArea text = new JTextArea();
-            text.setText(message);
-            text.setEditable(false);
-            text.setLineWrap(true);
-            text.setWrapStyleWord(true);
-            text.setRows(text.getLineCount());
-
-            JPanel pane = new JPanel(new BorderLayout());
-            pane.setBorder(new CompoundBorder(
-                    new EmptyBorder(8, 8, 8, 16),
-                    Command.createRoundBorder()));
-            pane.add(text, BorderLayout.CENTER);
-            commands.add(pane);
-
-            var response = addAgentMessage(message);
-            if (response != null) {
-                pane.add(response, BorderLayout.CENTER);
-            }
-        }
     }
 
     /**
