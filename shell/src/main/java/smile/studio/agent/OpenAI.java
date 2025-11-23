@@ -75,7 +75,7 @@ public class OpenAI implements LLM {
     }
 
     /**
-     * Constructor with customized client.
+     * Constructor with customized clients.
      * @param client a client instance for responses API class.
      * @param legacy a client instance for legacy API calls.
      */
@@ -96,7 +96,7 @@ public class OpenAI implements LLM {
      */
     public CompletableFuture<Response> response(String input) {
         var params = ResponseCreateParams.builder()
-                .model(agent())
+                .model(model())
                 .maxOutputTokens(maxOutputTokens(8192))
                 .instructions(context.getProperty("instructions"))
                 .input(input)
@@ -108,7 +108,7 @@ public class OpenAI implements LLM {
     @Override
     public CompletableFuture<String> complete(String message) {
         var params = ChatCompletionCreateParams.builder()
-                .model(coder())
+                .model(model())
                 .n(1) // only 1 chat completion choice to generate
                 .temperature(0.2) // low temperature for more predictable, focused, and deterministic code
                 .stop("\n") // stop at the end of line
@@ -124,7 +124,7 @@ public class OpenAI implements LLM {
     @Override
     public void generate(String message, Consumer<String> consumer, Function<Throwable, ? extends Void> handler) {
         var params = ChatCompletionCreateParams.builder()
-                .model(coder())
+                .model(model())
                 .n(1) // only 1 chat completion choice to generate
                 .temperature(0.2) // low temperature for more predictable, focused, and deterministic code
                 .maxCompletionTokens(maxOutputTokens(2048))
@@ -141,18 +141,10 @@ public class OpenAI implements LLM {
     }
 
     /**
-     * Returns the model for agentic workflows.
-     * @return the model for agentic workflows.
+     * Returns the configured model.
+     * @return the configured model.
      */
-    public String agent() {
-        return context.getProperty("model", ChatModel.GPT_5_1.toString());
-    }
-
-    /**
-     * Returns the model for coding.
-     * @return the model for coding.
-     */
-    public String coder() {
+    String model() {
         return context.getProperty("model", ChatModel.GPT_5_1_CODEX.toString());
     }
 }

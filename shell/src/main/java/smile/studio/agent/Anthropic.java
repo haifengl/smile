@@ -68,7 +68,7 @@ public class Anthropic implements LLM {
 
     /**
      * Constructor with customized client.
-     * @param client a client instance for responses API class.
+     * @param client a client instance.
      */
     Anthropic(AnthropicClientAsync client) {
         this.client = client;
@@ -82,7 +82,7 @@ public class Anthropic implements LLM {
     @Override
     public CompletableFuture<String> complete(String message) {
         var params = MessageCreateParams.builder()
-                .model(coder())
+                .model(model())
                 .temperature(0.2) // low temperature for more predictable, focused, and deterministic code
                 .addStopSequence("\n") // stop at the end of line
                 .system(context.getProperty("instructions"))
@@ -100,7 +100,7 @@ public class Anthropic implements LLM {
     @Override
     public void generate(String message, Consumer<String> consumer, Function<Throwable, ? extends Void> handler) {
         var params = MessageCreateParams.builder()
-                .model(coder())
+                .model(model())
                 .temperature(0.2) // low temperature for more predictable, focused, and deterministic code
                 .maxTokens(maxOutputTokens(2048))
                 .system(context.getProperty("instructions"))
@@ -119,18 +119,10 @@ public class Anthropic implements LLM {
     }
 
     /**
-     * Returns the model for agentic workflows.
-     * @return the model for agentic workflows.
+     * Returns the configured model.
+     * @return the configured model.
      */
-    public String agent() {
-        return context.getProperty("model", Model.CLAUDE_SONNET_4_5.toString());
-    }
-
-    /**
-     * Returns the model for coding.
-     * @return the model for coding.
-     */
-    public String coder() {
+    String model() {
         return context.getProperty("model", Model.CLAUDE_SONNET_4_5.toString());
     }
 }

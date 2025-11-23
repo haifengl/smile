@@ -77,6 +77,20 @@ public interface LLM {
                     yield anthropic;
                 }
 
+                case "GoogleGemini" -> {
+                    var gemini = new GoogleGemini(prefs.get("googleGeminiApiKey", ""));
+                    gemini.context().setProperty("model", prefs.get("googleGeminiModel", "gemini-3-pro-preview"));
+                    yield gemini;
+                }
+
+                case "GoogleVertexAI" -> {
+                    var vertex = new GoogleVertexAI(
+                            prefs.get("googleVertexAIApiKey", ""),
+                            prefs.get("googleVertexAIBaseUrl", ""));
+                    vertex.context().setProperty("model", prefs.get("googleVertexAIModel", "gemini-3-pro-preview"));
+                    yield vertex;
+                }
+
                 default -> {
                     System.out.println("Unknown AI service: " + service);
                     var openai = new OpenAI();
