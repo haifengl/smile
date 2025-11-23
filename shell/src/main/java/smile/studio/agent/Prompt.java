@@ -39,11 +39,11 @@ public interface Prompt {
 
     /**
      * Returns the prompt for code completion.
-     * @param context the previous lines of code.
      * @param start the current line start.
+     * @param context the previous lines of code.
      * @return the prompt.
      */
-    static String completeCode(String context, String start) {
+    static String completeCode(String start, String context) {
         String template = """
             Complete the next line of Java code based on the provided context.
             Returns the whole line of generated code, without explanations or markdown annotations.%n%n
@@ -55,11 +55,11 @@ public interface Prompt {
 
     /**
      * Returns the prompt for code generation.
-     * @param context the previous lines of code.
      * @param task the user prompt of task.
+     * @param context the previous lines of code.
      * @return the prompt.
      */
-    static String generateCode(String context, String task) {
+    static String generateCode(String task, String context) {
         String template = """
             Generate Java code based on the provided context and task.
             Returns the generated code only, without explanations or markdown annotations.%n%n
