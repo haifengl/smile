@@ -18,9 +18,20 @@ package smile.studio.view;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.io.IOException;
+import java.io.StringReader;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
 import com.formdev.flatlaf.ui.FlatLineBorder;
+import org.commonmark.node.Node;
+import org.commonmark.parser.Parser;
+import org.commonmark.renderer.html.HtmlRenderer;
+import org.xhtmlrenderer.simple.XHTMLPanel;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 import smile.plot.swing.Palette;
 
 /**
@@ -138,5 +149,34 @@ public class Command extends JPanel {
     static FlatLineBorder createRoundBorder() {
         return new FlatLineBorder(new Insets(5, 5, 5, 5),
                 borderColor, 1, 20);
+    }
+
+    /**
+     * Returns an XHTML panel to display markdown content.
+     * @param md the markdown content.
+     * @return an XHTML panel to display markdown content.
+     * @throws ParserConfigurationException if a DocumentBuilder cannot be created with default configuration.
+     * @throws IOException if any IO errors occur.
+     * @throws SAXException if any parse errors occur.
+     */
+    static XHTMLPanel markdown(String md) throws IOException, ParserConfigurationException, SAXException {
+        // Parse Markdown to HTML
+        Parser parser = Parser.builder().build();
+        Node document = parser.parse(md);
+        HtmlRenderer renderer = HtmlRenderer.builder().build();
+        String content = renderer.render(document);
+
+        String html = """
+                        <html>
+                        <body style="width: 95%; height: auto; margin: 0 auto;">
+                        """ + content + "</body></html>";
+        var factory = DocumentBuilderFactory.newInstance();
+        var builder = factory.newDocumentBuilder();
+        var doc = builder.parse(new InputSource(new StringReader(html)));
+
+        XHTMLPanel browser = new XHTMLPanel();
+        browser.setInteractive(false);
+        browser.setDocument(doc, null); // The second argument is for base URI, can be null
+        return browser;
     }
 }
