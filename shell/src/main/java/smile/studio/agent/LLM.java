@@ -21,7 +21,6 @@ import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import com.openai.models.responses.Response;
 import smile.studio.SmileStudio;
 
 /**
@@ -36,12 +35,6 @@ public interface LLM {
      */
     Properties context();
 
-    /**
-     * Sends a request to LLM service.
-     * @param input the input message.
-     * @return a future of response object.
-     */
-    CompletableFuture<Response> request(String input);
     /**
      * Single line code completion.
      * @param message the user message.
@@ -69,7 +62,7 @@ public interface LLM {
             LLM llm = switch (service) {
                 case "OpenAI" -> {
                     var openai = new OpenAI();
-                    openai.context().setProperty("model", prefs.get("azureOpenAIModel", "gpt-5.1-codex"));
+                    openai.context().setProperty("model", prefs.get("openaiModel", "gpt-5.1-codex"));
                     yield openai;
                 }
 
@@ -77,6 +70,12 @@ public interface LLM {
                         prefs.get("azureOpenAIApiKey", ""),
                         prefs.get("azureOpenAIBaseUrl", ""),
                         prefs.get("azureOpenAIModel", "gpt-5.1-codex"));
+
+                case "Anthropic" -> {
+                    var anthropic = new Anthropic();
+                    anthropic.context().setProperty("model", prefs.get("anthropicModel", "claude-sonnet-4-5"));
+                    yield anthropic;
+                }
 
                 default -> {
                     System.out.println("Unknown AI service: " + service);
@@ -94,5 +93,21 @@ public interface LLM {
         }
 
         return Optional.empty();
+    }
+
+    /**
+     * Returns the upper bound for the number of tokens that can be generated
+     * for a response, including visible output tokens and reasoning tokens.
+     * @param defaultValue the default value if the user doesn't set the context property.
+     * @return the upper bound for the number of output tokens.
+     */
+    default int maxOutputTokens(int defaultValue) {
+        String maxOutputTokens = context().getProperty("maxOutputTokens", String.valueOf(defaultValue));
+        try {
+            return Integer.parseInt(maxOutputTokens);
+        } catch (NumberFormatException ex) {
+            System.err.println("Invalid maxOutputTokens: " + maxOutputTokens);
+            return defaultValue;
+        }
     }
 }
