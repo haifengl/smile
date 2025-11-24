@@ -5,13 +5,17 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
 import com.formdev.flatlaf.util.FontUtils;
+import smile.studio.SmileStudio;
 
 /**
  * The monospace font for view components.
  */
 public class Monospace {
     /** The shared font for consistency. */
-    private static Font font = FontUtils.getCompositeFont(FlatJetBrainsMonoFont.FAMILY, Font.PLAIN, 14);
+    private static Font font = FontUtils.getCompositeFont(
+            FlatJetBrainsMonoFont.FAMILY,
+            Font.PLAIN,
+            SmileStudio.preferences().getInt("monospaced", 14));
     /** A singleton instance used as the source object for font changes. */
     private static final Monospace bean = new Monospace();
     /** The utility to support bound properties. */
@@ -54,6 +58,7 @@ public class Monospace {
         Font oldFont = font;
         font = newFont;
         pcs.firePropertyChange("font", oldFont, newFont);
+        SmileStudio.preferences().putInt("monospaced", font.getSize());
     }
 
     /**
