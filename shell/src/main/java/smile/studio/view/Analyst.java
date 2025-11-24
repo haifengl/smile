@@ -78,7 +78,7 @@ public class Analyst extends JPanel {
                     Font font = (Font) e.getNewValue();
                     for (int i = 0; i < commands.getComponentCount(); i++) {
                         if (commands.getComponent(i) instanceof Command cmd) {
-                            cmd.commandType().setFont(font);
+                            cmd.indicator().setFont(font);
                             cmd.input().setFont(font);
                             cmd.output().setFont(font);
                         }
