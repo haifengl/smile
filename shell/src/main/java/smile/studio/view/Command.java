@@ -25,6 +25,7 @@ import javax.swing.border.EmptyBorder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import com.formdev.flatlaf.ui.FlatComboBoxUI;
 import com.formdev.flatlaf.ui.FlatLineBorder;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
@@ -45,6 +46,7 @@ import static smile.studio.model.CommandType.*;
 public class Command extends JPanel {
     private static final Color inputColor = new Color(220, 248, 198);
     private static final Color borderColor = Palette.web("#8dd4e8");
+    private final JPanel header = new JPanel();
     private final JPanel inputPane = new JPanel(new BorderLayout());
     private final JLabel indicator = new JLabel(">", SwingConstants.CENTER);
     private final JComboBox<CommandType> commandType = new JComboBox<>(new CommandType[] {Raw, Magic, Shell, Python, Markdown, Instructions});
@@ -58,41 +60,36 @@ public class Command extends JPanel {
         input.setFont(Monospace.getFont());
         output.setFont(Monospace.getFont());
         indicator.setFont(Monospace.getFont());
+        indicator.setVerticalAlignment(JLabel.TOP);
 
-        commandType.setOpaque(false);
-        // Make the combobox invisible effectively.
-        commandType.setMaximumSize(new Dimension(200, commandType.getPreferredSize().height));
-        // Select Instructions by default.
         commandType.setSelectedItem(Instructions);
-        // Don't allow typing in the text field.
-        commandType.setEditable(false);
         commandType.setBorder(BorderFactory.createEmptyBorder());
-        // Find and remove the arrow button component
-        for (Component component : commandType.getComponents()) {
-            if (component instanceof AbstractButton) {
-                commandType.remove(component);
-                break; // Assuming only one button
-            }
+        commandType.setBackground(inputColor);
+        commandType.setForeground(Color.DARK_GRAY);
+        if (commandType.getComponentCount() > 0 && commandType.getComponent(0) instanceof AbstractButton button) {
+            button.setVisible(false);
         }
+        commandType.addItemListener(e -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                indicator.setText(((CommandType) e.getItem()).legend());
+            }
+        });
 
-        JPanel header = new JPanel();
-        //header.setPreferredSize(new Dimension(24, 0));
-        header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
+        header.setLayout(new BoxLayout(header, BoxLayout.X_AXIS));
         header.setOpaque(false);
-        header.add(indicator);
-        //header.add(commandType);
-        //header.add(commandType);
-        header.add(Box.createVerticalGlue()); // Push commandType towards the top
+        header.add(Box.createHorizontalStrut(indicator.getPreferredSize().width));
+        header.add(commandType);
 
         input.setLineWrap(true);
         input.setWrapStyleWord(true);
+        input.setOpaque(false);
         input.setBackground(inputColor);
 
         inputPane.setBackground(inputColor);
         inputPane.setBorder(createRoundBorder());
-        inputPane.add(header, BorderLayout.WEST);
+        inputPane.add(indicator, BorderLayout.WEST);
         inputPane.add(input, BorderLayout.CENTER);
-        inputPane.add(commandType, BorderLayout.SOUTH);
+        inputPane.add(header, BorderLayout.SOUTH);
 
         output.setEditable(false);
         output.setLineWrap(true);
@@ -106,12 +103,6 @@ public class Command extends JPanel {
                 if (input.isEditable()) {
                     analyst.run(Command.this);
                 }
-            }
-        });
-
-        commandType.addItemListener(e -> {
-            if (e.getStateChange() == ItemEvent.SELECTED) {
-                indicator.setText(((CommandType) e.getItem()).legend());
             }
         });
 
@@ -134,7 +125,7 @@ public class Command extends JPanel {
         } else {
             input.setBackground(getBackground());
             inputPane.setBackground(getBackground());
-            inputPane.remove(commandType);
+            header.remove(commandType);
         }
     }
 
