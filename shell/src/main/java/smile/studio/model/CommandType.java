@@ -65,14 +65,6 @@ public enum CommandType {
     }
 
     /**
-     * Returns the description.
-     * @return the description.
-     */
-    public String description() {
-        return description;
-    }
-
-    /**
      * Returns the legend.
      * @return the legend.
      */
@@ -82,6 +74,6 @@ public enum CommandType {
 
     @Override
     public String toString() {
-        return legend;
+        return description;
     }
 }
