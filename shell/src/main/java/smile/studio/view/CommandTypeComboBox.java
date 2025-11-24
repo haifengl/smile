@@ -90,7 +90,7 @@ public class CommandTypeComboBox extends JComboBox<CommandType> {
                 if (index == -1) { // This is the selected item in the "box mode"
                     setText(value.legend());
                 } else { // This is an item in the dropdown list
-                    setText(value.description());
+                    setText(value.toString());
                 }
             } else {
                 setText(""); // Handle null value if necessary

@@ -34,6 +34,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import smile.plot.swing.Palette;
 import smile.studio.model.CommandType;
+import static smile.studio.model.CommandType.*;
 
 /**
  * A command is a multiline text input field, and its contents can be executed
@@ -45,8 +46,8 @@ public class Command extends JPanel {
     private static final Color inputColor = new Color(220, 248, 198);
     private static final Color borderColor = Palette.web("#8dd4e8");
     private final JPanel inputPane = new JPanel(new BorderLayout());
-    private final JLabel indicator = new JLabel(">");
-    private final CommandTypeComboBox commandType = new CommandTypeComboBox();
+    private final JLabel indicator = new JLabel(">", SwingConstants.CENTER);
+    private final JComboBox<CommandType> commandType = new JComboBox<>(new CommandType[] {Raw, Magic, Shell, Python, Markdown, Instructions});
     private final JTextArea input = new JTextArea(1, 80);
     private final JTextArea output = new JTextArea();
 
@@ -54,21 +55,33 @@ public class Command extends JPanel {
         super(new BorderLayout(5, 5));
         setBorder(new EmptyBorder(8,8,8,8));
 
-        indicator.setHorizontalAlignment(SwingConstants.CENTER);
-        indicator.setFont(Monospace.getFont());
-        //commandType.setOpaque(false);
-        // Make the combobox invisible effectively.
-        commandType.setPreferredSize(new Dimension(0, 0));
         input.setFont(Monospace.getFont());
         output.setFont(Monospace.getFont());
+        indicator.setFont(Monospace.getFont());
 
-        int width = 20;
+        commandType.setOpaque(false);
+        // Make the combobox invisible effectively.
+        commandType.setMaximumSize(new Dimension(200, commandType.getPreferredSize().height));
+        // Select Instructions by default.
+        commandType.setSelectedItem(Instructions);
+        // Don't allow typing in the text field.
+        commandType.setEditable(false);
+        commandType.setBorder(BorderFactory.createEmptyBorder());
+        // Find and remove the arrow button component
+        for (Component component : commandType.getComponents()) {
+            if (component instanceof AbstractButton) {
+                commandType.remove(component);
+                break; // Assuming only one button
+            }
+        }
+
         JPanel header = new JPanel();
-        header.setPreferredSize(new Dimension(20, 0));
+        //header.setPreferredSize(new Dimension(24, 0));
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
         header.setOpaque(false);
         header.add(indicator);
-        header.add(commandType);
+        //header.add(commandType);
+        //header.add(commandType);
         header.add(Box.createVerticalGlue()); // Push commandType towards the top
 
         input.setLineWrap(true);
@@ -79,6 +92,7 @@ public class Command extends JPanel {
         inputPane.setBorder(createRoundBorder());
         inputPane.add(header, BorderLayout.WEST);
         inputPane.add(input, BorderLayout.CENTER);
+        inputPane.add(commandType, BorderLayout.SOUTH);
 
         output.setEditable(false);
         output.setLineWrap(true);
@@ -101,15 +115,8 @@ public class Command extends JPanel {
             }
         });
 
-        indicator.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                commandType.showPopup();
-            }
-        });
-
-        add(inputPane, BorderLayout.NORTH);
-        add(output, BorderLayout.CENTER);
+        add(inputPane, BorderLayout.CENTER);
+        add(output, BorderLayout.SOUTH);
     }
 
     /**
@@ -120,15 +127,14 @@ public class Command extends JPanel {
         commandType.setEnabled(editable);
         input.setEditable(editable);
         if (editable) {
-            commandType.setBackground(inputColor);
             input.setBackground(inputColor);
             inputPane.setBackground(inputColor);
+            commandType.setBackground(inputColor);
 
         } else {
-            Color background = getBackground();
-            commandType.setBackground(background);
-            input.setBackground(background);
-            inputPane.setBackground(background);
+            input.setBackground(getBackground());
+            inputPane.setBackground(getBackground());
+            inputPane.remove(commandType);
         }
     }
 
@@ -137,7 +143,7 @@ public class Command extends JPanel {
      * @param color the foreground color.
      */
     public void setInputForeground(Color color) {
-        commandType.setForeground(color);
+        indicator.setForeground(color);
         input.setForeground(color);
     }
 
@@ -146,7 +152,7 @@ public class Command extends JPanel {
      * @param font the font.
      */
     public void setInputFont(Font font) {
-        commandType.setFont(font);
+        indicator.setFont(font);
         input.setFont(font);
     }
 
