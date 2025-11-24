@@ -46,7 +46,7 @@ public class Analyst extends JPanel {
 
         Command welcome = new Command(this);
         welcome.setCommandType(CommandType.Raw);
-        welcome.input().setText("""
+        welcome.editor().setText("""
                                                          ..::''''::..
                                                        .;''        ``;.
        ....                                           ::    ::  ::    ::
@@ -71,7 +71,7 @@ public class Analyst extends JPanel {
         Command command = new Command(this);
         commands.add(command);
         commands.add(Box.createVerticalGlue());
-        SwingUtilities.invokeLater(() -> command.input().requestFocusInWindow());
+        SwingUtilities.invokeLater(() -> command.editor().requestFocusInWindow());
 
         Monospace.addListener((e) ->
                 SwingUtilities.invokeLater(() -> {
@@ -79,7 +79,7 @@ public class Analyst extends JPanel {
                     for (int i = 0; i < commands.getComponentCount(); i++) {
                         if (commands.getComponent(i) instanceof Command cmd) {
                             cmd.indicator().setFont(font);
-                            cmd.input().setFont(font);
+                            cmd.editor().setFont(font);
                             cmd.output().setFont(font);
                         }
                     }
@@ -105,7 +105,7 @@ public class Analyst extends JPanel {
     public void addCommand() {
         Command command = new Command(this);
         commands.add(command, commands.getComponentCount() - 1);
-        SwingUtilities.invokeLater(() -> command.input().requestFocusInWindow());
+        SwingUtilities.invokeLater(() -> command.editor().requestFocusInWindow());
     }
 
     /**

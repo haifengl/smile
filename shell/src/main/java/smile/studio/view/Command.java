@@ -27,9 +27,12 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import com.formdev.flatlaf.ui.FlatLineBorder;
+import com.formdev.flatlaf.util.SystemInfo;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.xhtmlrenderer.simple.XHTMLPanel;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -50,7 +53,7 @@ public class Command extends JPanel {
     private final JPanel inputPane = new JPanel(new BorderLayout());
     private final JLabel indicator = new JLabel(">", SwingConstants.CENTER);
     private final JComboBox<CommandType> commandType = new JComboBox<>(new CommandType[] {Raw, Magic, Shell, Python, Markdown, Instructions});
-    private final JTextArea editor = new JTextArea(1, 80);
+    private final RSyntaxTextArea editor = new RSyntaxTextArea(1, 80);
     private final OutputArea output = new OutputArea();
 
     public Command(Analyst analyst) {
@@ -85,6 +88,23 @@ public class Command extends JPanel {
                 var command = (CommandType) e.getItem();
                 indicator.setText(command.legend());
                 indicator.setToolTipText(command.toString());
+                editor.requestFocusInWindow();
+
+                switch (command) {
+                    case Shell -> {
+                        if (SystemInfo.isWindows) {
+                            editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_WINDOWS_BATCH);
+                        } else {
+                            editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_UNIX_SHELL);
+                        }
+                    }
+                    case Python ->
+                        editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_PYTHON);
+                    case Markdown ->
+                        editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_MARKDOWN);
+                    default ->
+                        editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);
+                }
             }
         });
 
@@ -97,6 +117,7 @@ public class Command extends JPanel {
         editor.setLineWrap(true);
         editor.setWrapStyleWord(true);
         editor.setOpaque(false);
+        editor.setHighlightCurrentLine(false);
         editor.setBackground(inputColor);
 
         inputPane.setBackground(inputColor);
@@ -228,10 +249,10 @@ public class Command extends JPanel {
     }
 
     /**
-     * Returns the command input.
-     * @return the command input.
+     * Returns the command editor.
+     * @return the command editor.
      */
-    public JTextArea input() {
+    public RSyntaxTextArea editor() {
         return editor;
     }
 
