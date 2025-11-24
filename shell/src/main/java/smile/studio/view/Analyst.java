@@ -92,7 +92,19 @@ public class Analyst extends JPanel {
      * @param command the commands to execute.
      */
     public void run(Command command) {
+        switch (command.getCommandType()) {
+            case Raw -> command.output().setText("Help");
+            case Magic -> command.output().setText("Help");
+            case Python -> command.output().setText("Help");
+            case Markdown -> command.output().setText("Help");
+            case Instructions -> command.output().setText("Help");
+        }
+        command.setEditable(false);
 
+        // Append a new command box.
+        Command next = new Command(this);
+        commands.add(next, commands.getComponentCount() - 1);
+        SwingUtilities.invokeLater(() -> next.input().requestFocusInWindow());
     }
 
     /**

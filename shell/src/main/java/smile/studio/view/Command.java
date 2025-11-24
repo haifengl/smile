@@ -22,10 +22,10 @@ import java.io.IOException;
 import java.io.StringReader;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.text.BadLocationException;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import com.formdev.flatlaf.ui.FlatComboBoxUI;
 import com.formdev.flatlaf.ui.FlatLineBorder;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
@@ -51,14 +51,24 @@ public class Command extends JPanel {
     private final JLabel indicator = new JLabel(">", SwingConstants.CENTER);
     private final JComboBox<CommandType> commandType = new JComboBox<>(new CommandType[] {Raw, Magic, Shell, Python, Markdown, Instructions});
     private final JTextArea input = new JTextArea(1, 80);
-    private final JTextArea output = new JTextArea();
+    private final OutputArea output = new OutputArea();
 
     public Command(Analyst analyst) {
         super(new BorderLayout(5, 5));
         setBorder(new EmptyBorder(8,8,8,8));
 
-        input.setFont(Monospace.getFont());
+        initInputPane();
+        initInputActionMap(analyst);
         output.setFont(Monospace.getFont());
+        output.setEditable(false);
+        output.setLineWrap(true);
+        output.setWrapStyleWord(true);
+
+        add(inputPane, BorderLayout.CENTER);
+        add(output, BorderLayout.SOUTH);
+    }
+
+    private void initInputPane() {
         indicator.setFont(Monospace.getFont());
         indicator.setVerticalAlignment(JLabel.TOP);
 
@@ -80,6 +90,7 @@ public class Command extends JPanel {
         header.add(Box.createHorizontalStrut(indicator.getPreferredSize().width));
         header.add(commandType);
 
+        input.setFont(Monospace.getFont());
         input.setLineWrap(true);
         input.setWrapStyleWord(true);
         input.setOpaque(false);
@@ -90,24 +101,30 @@ public class Command extends JPanel {
         inputPane.add(indicator, BorderLayout.WEST);
         inputPane.add(input, BorderLayout.CENTER);
         inputPane.add(header, BorderLayout.SOUTH);
+    }
 
-        output.setEditable(false);
-        output.setLineWrap(true);
-        output.setWrapStyleWord(true);
-
+    private void initInputActionMap(Analyst analyst) {
         InputMap inputMap = input.getInputMap(JComponent.WHEN_FOCUSED);
         ActionMap actionMap = input.getActionMap();
         inputMap.put(KeyStroke.getKeyStroke("ctrl ENTER"), "run");
         actionMap.put("run", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
                 if (input.isEditable()) {
+                    try {
+                        char ch = input.getText(0, 1).charAt(0);
+                        switch (input.getText(0, 1).charAt(0)) {
+                            case '/' -> commandType.setSelectedItem(Magic);
+                            case '%' -> commandType.setSelectedItem(Shell);
+                            case '!' -> commandType.setSelectedItem(Markdown);
+                        }
+                    } catch (BadLocationException ex) {
+                        // ignore the exception
+                    }
+
                     analyst.run(Command.this);
                 }
             }
         });
-
-        add(inputPane, BorderLayout.CENTER);
-        add(output, BorderLayout.SOUTH);
     }
 
     /**
@@ -183,7 +200,7 @@ public class Command extends JPanel {
      * Returns the command output.
      * @return the command output.
      */
-    public JTextArea output() {
+    public OutputArea output() {
         return output;
     }
 
