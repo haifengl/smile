@@ -16,6 +16,10 @@
  */
 package smile.studio.view;
 
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 import org.fife.ui.rsyntaxtextarea.*;
 
 /**
@@ -26,15 +30,36 @@ import org.fife.ui.rsyntaxtextarea.*;
 public class CodeEditor extends RSyntaxTextArea {
     /**
      * Constructor.
+     * @param rows the number of rows.
+     * @param cols the number of columns.
+     * @param style language highlighting style.
      */
-    public CodeEditor() {
-        super(20, 80);
+    public CodeEditor(int rows, int cols, String style) {
+        super(rows, cols);
         putClientProperty("FlatLaf.styleClass", "monospaced");
-        setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);
-        setCodeFoldingEnabled(true);
-        setTabSize(4);
-        setLineWrap(false);
-        setWrapStyleWord(false);
+        setSyntaxEditingStyle(style);
+        if (!style.equals(SyntaxConstants.SYNTAX_STYLE_NONE)) {
+            setCodeFoldingEnabled(true);
+            setTabSize(4);
+            setLineWrap(false);
+            setWrapStyleWord(false);
+        }
+
+        InputMap inputMap = getInputMap(JComponent.WHEN_FOCUSED);
+        ActionMap actionMap = getActionMap();
+
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, InputEvent.CTRL_DOWN_MASK), "increase-font-size");
+        actionMap.put("increase-font-size", new AbstractAction() {
+            @Override public void actionPerformed(ActionEvent e) {
+                Monospace.adjustFontSize(1);
+            }
+        });
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, InputEvent.CTRL_DOWN_MASK), "decrease-font-size");
+        actionMap.put("decrease-font-size", new AbstractAction() {
+            @Override public void actionPerformed(ActionEvent e) {
+                Monospace.adjustFontSize(-1);
+            }
+        });
     }
 
     /**
