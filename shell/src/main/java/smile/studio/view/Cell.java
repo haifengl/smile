@@ -25,6 +25,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.text.BadLocationException;
 import com.formdev.flatlaf.util.SystemInfo;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jdesktop.swingx.JXTextField;
 import smile.studio.agent.Coder;
@@ -41,7 +42,7 @@ public class Cell extends JPanel {
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), Locale.getDefault());
     private static final Optional<Coder> coder = Coder.getInstance();
     private final String placeholder = bundle.getString("Prompt");
-    private final CodeEditor editor = new CodeEditor();
+    private final CodeEditor editor = new CodeEditor(20, 80, SyntaxConstants.SYNTAX_STYLE_JAVA);
     private final OutputArea output = new OutputArea();
     private final JTextField prompt = new JXTextField(placeholder);
     private final TitledBorder border = BorderFactory.createTitledBorder("[ ]");
@@ -131,18 +132,6 @@ public class Cell extends JPanel {
         actionMap.put("run-insert", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
                 notebook.runCell(Cell.this, PostRunNavigation.INSERT_BELOW);
-            }
-        });
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, InputEvent.CTRL_DOWN_MASK), "increase-font-size");
-        actionMap.put("increase-font-size", new AbstractAction() {
-            @Override public void actionPerformed(ActionEvent e) {
-                Monospace.adjustFontSize(1);
-            }
-        });
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, InputEvent.CTRL_DOWN_MASK), "decrease-font-size");
-        actionMap.put("decrease-font-size", new AbstractAction() {
-            @Override public void actionPerformed(ActionEvent e) {
-                Monospace.adjustFontSize(-1);
             }
         });
 

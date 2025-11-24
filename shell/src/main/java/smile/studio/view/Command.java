@@ -34,7 +34,6 @@ import com.formdev.flatlaf.util.SystemInfo;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.xhtmlrenderer.simple.XHTMLPanel;
 import org.xml.sax.InputSource;
@@ -57,7 +56,7 @@ public class Command extends JPanel {
     private final JPanel inputPane = new JPanel(new BorderLayout());
     private final JLabel indicator = new JLabel(">", SwingConstants.CENTER);
     private final JComboBox<CommandType> commandType = new JComboBox<>(new CommandType[] {Raw, Magic, Shell, Python, Markdown, Instructions});
-    private final RSyntaxTextArea editor = new RSyntaxTextArea(1, 80);
+    private final CodeEditor editor = new CodeEditor(1, 80, SyntaxConstants.SYNTAX_STYLE_NONE);
     private final OutputArea output = new OutputArea();
 
     public Command(Analyst analyst) {
@@ -249,12 +248,22 @@ public class Command extends JPanel {
         switch (command[0]) {
             case "help" -> magicHelp(command);
             case "train", "predict" -> runShell();
+            case "load" -> magicLoad(command);
+            case "analyze" -> magicAnalyze(command);
             default -> output.setText("Error: unknown magic - " + command[0]);
         }
     }
 
     private void magicHelp(String[] command) {
         output.setText("Help!!!");
+    }
+
+    private void magicLoad(String[] command) {
+
+    }
+
+    private void magicAnalyze(String[] command) {
+
     }
 
     /**
@@ -322,7 +331,7 @@ public class Command extends JPanel {
      * Returns the command editor.
      * @return the command editor.
      */
-    public RSyntaxTextArea editor() {
+    public CodeEditor editor() {
         return editor;
     }
 
