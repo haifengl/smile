@@ -30,8 +30,11 @@ public class Workspace extends JSplitPane {
     final JavaRunner runner = new JavaRunner();
     /** The explorer of runtime information. */
     final Explorer explorer = new Explorer(runner);
+    /** The pane of analyst agent. */
+    final Analyst analyst = new Analyst(runner);
     /** The editor of notebook. */
     final Notebook notebook;
+    final JSplitPane project = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 
     /**
      * Constructor.
@@ -40,8 +43,13 @@ public class Workspace extends JSplitPane {
     public Workspace(File file) {
         super(JSplitPane.HORIZONTAL_SPLIT);
         notebook = new Notebook(file, runner, explorer::refresh);
-        setLeftComponent(explorer);
-        setRightComponent(notebook);
+
+        project.setLeftComponent(explorer);
+        project.setRightComponent(notebook);
+        project.setResizeWeight(0.15);
+
+        setLeftComponent(project);
+        setRightComponent(analyst);
         setResizeWeight(0.15);
     }
 
@@ -59,6 +67,22 @@ public class Workspace extends JSplitPane {
      */
     public Explorer explorer() {
         return explorer;
+    }
+
+    /**
+     * Returns the analyst agent component.
+     * @return the analyst agent component.
+     */
+    public Analyst analyst() {
+        return analyst;
+    }
+
+    /**
+     * Returns the project split pane of explorer and notebook.
+     * @return the project split pane of explorer and notebook.
+     */
+    public JSplitPane project() {
+        return project;
     }
 
     /**
