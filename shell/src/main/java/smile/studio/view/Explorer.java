@@ -67,8 +67,9 @@ public class Explorer extends JPanel {
      */
     public Explorer(JavaRunner runner) {
         super(new BorderLayout());
-        setBorder(new EmptyBorder(0, 8, 0, 0));
         this.runner = runner;
+
+        setBorder(new EmptyBorder(0, 8, 0, 0));
         initTree();
 
         // Add the tree to the scroll pane.

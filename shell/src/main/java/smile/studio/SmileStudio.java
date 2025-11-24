@@ -56,7 +56,6 @@ public class SmileStudio extends JFrame {
     private final JMenuBar menuBar = new JMenuBar();
     private final JToolBar toolBar = new JToolBar();
     private final StatusBar statusBar = new StatusBar();
-    private final Analyst analyst = new Analyst();
     private final Workspace workspace;
 
     /**
@@ -72,14 +71,9 @@ public class SmileStudio extends JFrame {
         workspace = new Workspace(file);
         if (file != null) setTitle(file);
 
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        splitPane.setLeftComponent(workspace);
-        splitPane.setRightComponent(analyst);
-        splitPane.setResizeWeight(0.7);
-
         JPanel contentPane = new JPanel(new BorderLayout());
         contentPane.add(toolBar, BorderLayout.NORTH);
-        contentPane.add(splitPane, BorderLayout.CENTER);
+        contentPane.add(workspace, BorderLayout.CENTER);
         contentPane.add(statusBar, BorderLayout.SOUTH);
         setContentPane(contentPane);
 
@@ -109,9 +103,9 @@ public class SmileStudio extends JFrame {
             public void windowOpened(WindowEvent e) {
                 // JSplitPane.setDividerLocation() set the location based on
                 // current pane size. We should set it after window is opened.
-                splitPane.setDividerLocation(0.7);
+                workspace.setDividerLocation(0.7);
                 // Invoker later so that splitPane.invalidate() be done
-                SwingUtilities.invokeLater(() -> workspace.setDividerLocation(0.15));
+                SwingUtilities.invokeLater(() -> workspace.project().setDividerLocation(0.15));
             }
         });
     }

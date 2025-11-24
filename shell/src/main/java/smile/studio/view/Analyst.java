@@ -20,6 +20,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import smile.plot.swing.Palette;
+import smile.studio.kernel.JavaRunner;
 import smile.studio.model.CommandType;
 
 /**
@@ -30,12 +31,17 @@ import smile.studio.model.CommandType;
 public class Analyst extends JPanel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Analyst.class);
     private final JPanel commands = new ScrollablePanel();
+    /** JShell instance. */
+    private final JavaRunner runner;
 
     /**
      * Constructor.
+     * @param runner Java code execution engine.
      */
-    public Analyst() {
+    public Analyst(JavaRunner runner) {
         super(new BorderLayout());
+        this.runner = runner;
+
         setBorder(new EmptyBorder(0, 0, 0, 8));
         commands.setLayout(new BoxLayout(commands, BoxLayout.Y_AXIS));
 
@@ -71,7 +77,6 @@ public class Analyst extends JPanel {
         Command command = new Command(this);
         commands.add(command);
         commands.add(Box.createVerticalGlue());
-        SwingUtilities.invokeLater(() -> command.editor().requestFocusInWindow());
 
         Monospace.addListener((e) ->
                 SwingUtilities.invokeLater(() -> {
