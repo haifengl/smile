@@ -21,6 +21,7 @@ import java.awt.event.*;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -170,8 +171,7 @@ public class Command extends JPanel {
                 switch ((CommandType) commandType.getSelectedItem()) {
                     case Raw -> runRaw();
                     case Magic -> runMagic();
-                    case Shell -> runShell(false);
-                    case Python -> runShell(true);
+                    case Shell, Python -> runShell();
                     case Markdown -> {
                         try {
                             var html = markdown(editor.getText());
@@ -191,28 +191,38 @@ public class Command extends JPanel {
 
     /**
      * Executes shell commands.
-     * @param python flag if the command is Python script.
      */
-    private void runShell(boolean python) {
-        SwingWorker<Void, Void> worker = new SwingWorker<>() {
-            @Override
-            protected Void doInBackground() {
-                var shell = new ShellRunner();
-                shell.setOutputArea(output);
-                List<String> command = new ArrayList<>();
-                if (python) {
-                    command.add("python");
-                    command.add("-c");
-                }
-                else if (SystemInfo.isWindows) {
+    private void runShell() {
+        List<String> command = new ArrayList<>();
+        switch (getCommandType()) {
+            case Python -> {
+                command.add("python");
+                command.add("-c");
+                command.add(editor.getText());
+            }
+            case Shell -> {
+                if (SystemInfo.isWindows) {
                     command.add("cmd.exe");
                     command.add("/c");
                 } else {
                     command.add("bash");
                     command.add("-c");
                 }
-
                 command.add(editor.getText());
+            }
+            case Magic -> {
+                var smile = System.getProperty("smile.home", ".") + "/bin/smile";
+                if (SystemInfo.isWindows) smile += ".bat";
+                command.add(smile);
+                command.addAll(Arrays.asList(editor.getText().split("\\s+")));
+            }
+        }
+
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Void doInBackground() {
+                var shell = new ShellRunner();
+                shell.setOutputArea(output);
                 int ret = shell.exec(command);
                 if (ret != 0) output.appendLine("\nCommand failed with error code " + ret);
                 return null;
@@ -228,14 +238,23 @@ public class Command extends JPanel {
         worker.execute();
     }
 
-    /** Executes magic commands. */
-    private void runMagic() {
-        output().setText("Magic");
-    }
-
     /** Executes raw content. */
     private void runRaw() {
         // do nothing
+    }
+
+    /** Executes magic commands. */
+    private void runMagic() {
+        String[] command = editor.getText().split("\\s+");
+        switch (command[0]) {
+            case "help" -> magicHelp(command);
+            case "train", "predict" -> runShell();
+            default -> output.setText("Error: unknown magic - " + command[0]);
+        }
+    }
+
+    private void magicHelp(String[] command) {
+        output.setText("Help!!!");
     }
 
     /**
