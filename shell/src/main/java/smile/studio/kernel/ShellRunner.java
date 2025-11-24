@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 /**
  * Command execution engine.
@@ -34,10 +35,10 @@ public class ShellRunner extends Runner {
 
     /**
      * Executes the specified system command in a separate process.
-     * @param command a specified system command.
+     * @param command the program and its arguments.
      * @return the exit value of the command. By convention, the value 0 indicates normal termination.
      */
-    public int exec(String command) {
+    public int exec(List<String> command) {
         try {
             process = new ProcessBuilder(command)
                     .redirectErrorStream(true)
@@ -53,25 +54,9 @@ public class ShellRunner extends Runner {
             // Wait for the process to complete and return the exit code
             return process.waitFor();
         } catch (IOException | InterruptedException ex) {
-            logger.error("Failed to execute {}", command, ex);
+            shellOut.println("Failed to execute '" + String.join(" " , command) + "': " + ex.getMessage());
         }
         return -1;
-    }
-
-    /**
-     * Executes the specified system commands sequentially.
-     * Stops the execution whenever a command return a nonzero code.
-     * @param commands a list of system commands.
-     * @return the exit value of the last executed command.
-     */
-    public int exec(String... commands) {
-        for (String command : commands) {
-            int retcode = exec(command);
-            if (retcode != 0) {
-                return retcode;
-            }
-        }
-        return 0;
     }
 
     @Override
