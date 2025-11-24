@@ -20,6 +20,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.BadLocationException;
@@ -37,6 +39,7 @@ import org.xhtmlrenderer.simple.XHTMLPanel;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import smile.plot.swing.Palette;
+import smile.studio.kernel.ShellRunner;
 import smile.studio.model.CommandType;
 import static smile.studio.model.CommandType.*;
 
@@ -133,58 +136,100 @@ public class Command extends JPanel {
         inputMap.put(KeyStroke.getKeyStroke("ctrl ENTER"), "run");
         actionMap.put("run", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
-                if (editor.isEditable()) {
-                    try {
-                        char ch = editor.getText(0, 1).charAt(0);
-                        switch (editor.getText(0, 1).charAt(0)) {
-                            case '/' -> {
-                                commandType.setSelectedItem(Magic);
-                                editor.replaceRange("", 0, 1);
-                            }
-                            case '%' -> {
-                                commandType.setSelectedItem(Shell);
-                                editor.replaceRange("", 0, 1);
+                if (!editor.isEditable()) return;
+                if (editor.getText().isBlank()) return;
 
-                            }
-                            case '!' -> {
-                                commandType.setSelectedItem(Markdown);
-                                editor.replaceRange("", 0, 1);
-                            }
+                try {
+                    char ch = editor.getText(0, 1).charAt(0);
+                    switch (editor.getText(0, 1).charAt(0)) {
+                        case '/' -> {
+                            commandType.setSelectedItem(Magic);
+                            editor.replaceRange("", 0, 1);
                         }
-                    } catch (BadLocationException ex) {
-                        // ignore the exception
+                        case '%' -> {
+                            commandType.setSelectedItem(Shell);
+                            editor.replaceRange("", 0, 1);
+
+                        }
+                        case '!' -> {
+                            commandType.setSelectedItem(Markdown);
+                            editor.replaceRange("", 0, 1);
+                        }
                     }
-
-                    setEditable(false);
-                    switch ((CommandType) commandType.getSelectedItem()) {
-                        case Raw -> {
-                            // Do nothing
-                        }
-                        case Magic -> {
-                            output().setText("Magic");
-                        }
-                        case Shell -> {
-                            output().setText("Shell");
-                        }
-                        case Python -> {
-                            output().setText("Python");
-                        }
-                        case Markdown -> {
-                            try {
-                                var html = markdown(editor.getText());
-                                remove(output);
-                                add(html, BorderLayout.SOUTH);
-                            } catch (Exception ex) {
-                                output.setText("Error to render Markdown: " + ex.getMessage());
-                            }
-                        }
-                        case Instructions -> analyst.run(Command.this);
-                    }
-
-                    analyst.addCommand();
+                } catch (BadLocationException ex) {
+                    // ignore the exception
                 }
+
+                setEditable(false);
+                switch ((CommandType) commandType.getSelectedItem()) {
+                    case Raw -> runRaw();
+                    case Magic -> runMagic();
+                    case Shell -> runShell(false);
+                    case Python -> runShell(true);
+                    case Markdown -> {
+                        try {
+                            var html = markdown(editor.getText());
+                            remove(output);
+                            add(html, BorderLayout.SOUTH);
+                        } catch (Exception ex) {
+                            output.setText("Error to render Markdown: " + ex.getMessage());
+                        }
+                    }
+                    case Instructions -> analyst.run(Command.this);
+                }
+
+                analyst.addCommand();
             }
         });
+    }
+
+    /**
+     * Executes shell commands.
+     * @param python flag if the command is Python script.
+     */
+    private void runShell(boolean python) {
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Void doInBackground() {
+                var shell = new ShellRunner();
+                shell.setOutputArea(output);
+                List<String> command = new ArrayList<>();
+                if (python) {
+                    command.add("python");
+                    command.add("-c");
+                }
+                else if (SystemInfo.isWindows) {
+                    command.add("cmd.exe");
+                    command.add("/c");
+                } else {
+                    command.add("bash");
+                    command.add("-c");
+                }
+
+                command.add(editor.getText());
+                int ret = shell.exec(command);
+                if (ret != 0) output.appendLine("\nCommand failed with error code " + ret);
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                SwingUtilities.invokeLater(() -> {
+                    output.flush();
+                });
+            }
+        };
+        worker.execute();
+    }
+
+    /** Executes magic commands. */
+    private void runMagic() {
+        output().setText("Magic");
+    }
+
+    /** Executes raw content. */
+    private void runRaw() {
+        // do nothing
     }
 
     /**
