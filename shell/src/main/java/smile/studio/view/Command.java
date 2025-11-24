@@ -77,7 +77,13 @@ public class Command extends JPanel {
     private void initInputPane() {
         indicator.setFont(Monospace.getFont());
         indicator.setToolTipText(Instructions.toString());
-        indicator.setVerticalAlignment(JLabel.TOP);
+        JPanel west = new JPanel();
+        west.setLayout(new BoxLayout(west, BoxLayout.Y_AXIS));
+        west.setOpaque(false);
+        west.add(Box.createVerticalStrut(3));
+        west.add(indicator);
+        west.add(Box.createVerticalGlue());
+
 
         commandType.setSelectedItem(Instructions);
         commandType.setBorder(BorderFactory.createEmptyBorder());
@@ -125,7 +131,7 @@ public class Command extends JPanel {
 
         inputPane.setBackground(inputColor);
         inputPane.setBorder(createRoundBorder());
-        inputPane.add(indicator, BorderLayout.WEST);
+        inputPane.add(west, BorderLayout.WEST);
         inputPane.add(editor, BorderLayout.CENTER);
         inputPane.add(header, BorderLayout.SOUTH);
     }
