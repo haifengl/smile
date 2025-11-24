@@ -17,7 +17,7 @@
 package smile.studio.view;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
+import java.awt.event.*;
 import java.io.IOException;
 import java.io.StringReader;
 import javax.swing.*;
@@ -45,6 +45,7 @@ public class Command extends JPanel {
     private static final Color inputColor = new Color(220, 248, 198);
     private static final Color borderColor = Palette.web("#8dd4e8");
     private final JPanel inputPane = new JPanel(new BorderLayout());
+    private final JLabel indicator = new JLabel(">");
     private final CommandTypeComboBox commandType = new CommandTypeComboBox();
     private final JTextArea input = new JTextArea(1, 80);
     private final JTextArea output = new JTextArea();
@@ -53,32 +54,35 @@ public class Command extends JPanel {
         super(new BorderLayout(5, 5));
         setBorder(new EmptyBorder(8,8,8,8));
 
+        indicator.setHorizontalAlignment(SwingConstants.CENTER);
+        indicator.setFont(Monospace.getFont());
+        //commandType.setOpaque(false);
+        // Make the combobox invisible effectively.
+        commandType.setPreferredSize(new Dimension(0, 0));
+        input.setFont(Monospace.getFont());
+        output.setFont(Monospace.getFont());
+
         int width = 20;
         JPanel header = new JPanel();
-        header.setLayout(new BoxLayout(header, BoxLayout.X_AXIS));
-        commandType.setOpaque(false);
-        //commandType.setBackground(Color.RED);
-        //commandType.setMaximumSize(new Dimension(width, commandType.getPreferredSize().height));
-        //header.setOpaque(false);
-        //header.setPreferredSize(new Dimension(width, 0));
+        header.setPreferredSize(new Dimension(20, 0));
+        header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
+        header.setOpaque(false);
+        header.add(indicator);
         header.add(commandType);
-        //header.add(Box.createVerticalGlue()); // Push commandType towards the top
+        header.add(Box.createVerticalGlue()); // Push commandType towards the top
 
         input.setLineWrap(true);
         input.setWrapStyleWord(true);
         input.setBackground(inputColor);
-        input.setBorder(createRoundBorder());
+
         inputPane.setBackground(inputColor);
         inputPane.setBorder(createRoundBorder());
-        //inputPane.add(commandType, BorderLayout.NORTH);
-        //inputPane.add(input, BorderLayout.CENTER);
+        inputPane.add(header, BorderLayout.WEST);
+        inputPane.add(input, BorderLayout.CENTER);
 
         output.setEditable(false);
         output.setLineWrap(true);
         output.setWrapStyleWord(true);
-        add(header, BorderLayout.NORTH);
-        add(input, BorderLayout.CENTER);
-        add(output, BorderLayout.SOUTH);
 
         InputMap inputMap = input.getInputMap(JComponent.WHEN_FOCUSED);
         ActionMap actionMap = input.getActionMap();
@@ -91,9 +95,21 @@ public class Command extends JPanel {
             }
         });
 
-        commandType.setFont(Monospace.getFont());
-        input.setFont(Monospace.getFont());
-        output.setFont(Monospace.getFont());
+        commandType.addItemListener(e -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                indicator.setText(((CommandType) e.getItem()).legend());
+            }
+        });
+
+        indicator.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                commandType.showPopup();
+            }
+        });
+
+        add(inputPane, BorderLayout.NORTH);
+        add(output, BorderLayout.CENTER);
     }
 
     /**
@@ -151,11 +167,11 @@ public class Command extends JPanel {
     }
 
     /**
-     * Returns the command type widget.
-     * @return the command type widget.
+     * Returns the indicator component.
+     * @return the indicator component.
      */
-    public CommandTypeComboBox commandType() {
-        return commandType;
+    public JLabel indicator() {
+        return indicator;
     }
 
     /**

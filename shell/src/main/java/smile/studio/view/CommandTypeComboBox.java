@@ -36,10 +36,11 @@ public class CommandTypeComboBox extends JComboBox<CommandType> {
         super(new CommandType[] {Raw, Magic, Shell, Python, Markdown, Instructions});
         // Select Instructions by default.
         setSelectedItem(Instructions);
+        // Calculate the preferred width.
+        setPrototypeDisplayValue(Instructions);
         // Don't allow typing in the text field.
         setEditable(false);
         setBorder(BorderFactory.createEmptyBorder());
-        setPrototypeDisplayValue(Instructions);
         setRenderer(new ItemRenderer());
 
         setUI(new BasicComboBoxUI() {
