@@ -99,12 +99,13 @@ public class Analyst extends JPanel {
             case Markdown -> command.output().setText("Help");
             case Instructions -> command.output().setText("Help");
         }
-        command.setEditable(false);
+    }
 
-        // Append a new command box.
-        Command next = new Command(this);
-        commands.add(next, commands.getComponentCount() - 1);
-        SwingUtilities.invokeLater(() -> next.input().requestFocusInWindow());
+    /** Append a new command box. */
+    public void addCommand() {
+        Command command = new Command(this);
+        commands.add(command, commands.getComponentCount() - 1);
+        SwingUtilities.invokeLater(() -> command.input().requestFocusInWindow());
     }
 
     /**

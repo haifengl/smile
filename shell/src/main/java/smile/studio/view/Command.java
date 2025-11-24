@@ -50,7 +50,7 @@ public class Command extends JPanel {
     private final JPanel inputPane = new JPanel(new BorderLayout());
     private final JLabel indicator = new JLabel(">", SwingConstants.CENTER);
     private final JComboBox<CommandType> commandType = new JComboBox<>(new CommandType[] {Raw, Magic, Shell, Python, Markdown, Instructions});
-    private final JTextArea input = new JTextArea(1, 80);
+    private final JTextArea editor = new JTextArea(1, 80);
     private final OutputArea output = new OutputArea();
 
     public Command(Analyst analyst) {
@@ -70,6 +70,7 @@ public class Command extends JPanel {
 
     private void initInputPane() {
         indicator.setFont(Monospace.getFont());
+        indicator.setToolTipText(Instructions.toString());
         indicator.setVerticalAlignment(JLabel.TOP);
 
         commandType.setSelectedItem(Instructions);
@@ -81,7 +82,9 @@ public class Command extends JPanel {
         }
         commandType.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
-                indicator.setText(((CommandType) e.getItem()).legend());
+                var command = (CommandType) e.getItem();
+                indicator.setText(command.legend());
+                indicator.setToolTipText(command.toString());
             }
         });
 
@@ -90,38 +93,74 @@ public class Command extends JPanel {
         header.add(Box.createHorizontalStrut(indicator.getPreferredSize().width));
         header.add(commandType);
 
-        input.setFont(Monospace.getFont());
-        input.setLineWrap(true);
-        input.setWrapStyleWord(true);
-        input.setOpaque(false);
-        input.setBackground(inputColor);
+        editor.setFont(Monospace.getFont());
+        editor.setLineWrap(true);
+        editor.setWrapStyleWord(true);
+        editor.setOpaque(false);
+        editor.setBackground(inputColor);
 
         inputPane.setBackground(inputColor);
         inputPane.setBorder(createRoundBorder());
         inputPane.add(indicator, BorderLayout.WEST);
-        inputPane.add(input, BorderLayout.CENTER);
+        inputPane.add(editor, BorderLayout.CENTER);
         inputPane.add(header, BorderLayout.SOUTH);
     }
 
     private void initInputActionMap(Analyst analyst) {
-        InputMap inputMap = input.getInputMap(JComponent.WHEN_FOCUSED);
-        ActionMap actionMap = input.getActionMap();
+        InputMap inputMap = editor.getInputMap(JComponent.WHEN_FOCUSED);
+        ActionMap actionMap = editor.getActionMap();
         inputMap.put(KeyStroke.getKeyStroke("ctrl ENTER"), "run");
         actionMap.put("run", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
-                if (input.isEditable()) {
+                if (editor.isEditable()) {
                     try {
-                        char ch = input.getText(0, 1).charAt(0);
-                        switch (input.getText(0, 1).charAt(0)) {
-                            case '/' -> commandType.setSelectedItem(Magic);
-                            case '%' -> commandType.setSelectedItem(Shell);
-                            case '!' -> commandType.setSelectedItem(Markdown);
+                        char ch = editor.getText(0, 1).charAt(0);
+                        switch (editor.getText(0, 1).charAt(0)) {
+                            case '/' -> {
+                                commandType.setSelectedItem(Magic);
+                                editor.replaceRange("", 0, 1);
+                            }
+                            case '%' -> {
+                                commandType.setSelectedItem(Shell);
+                                editor.replaceRange("", 0, 1);
+
+                            }
+                            case '!' -> {
+                                commandType.setSelectedItem(Markdown);
+                                editor.replaceRange("", 0, 1);
+                            }
                         }
                     } catch (BadLocationException ex) {
                         // ignore the exception
                     }
 
-                    analyst.run(Command.this);
+                    setEditable(false);
+                    switch ((CommandType) commandType.getSelectedItem()) {
+                        case Raw -> {
+                            // Do nothing
+                        }
+                        case Magic -> {
+                            output().setText("Magic");
+                        }
+                        case Shell -> {
+                            output().setText("Shell");
+                        }
+                        case Python -> {
+                            output().setText("Python");
+                        }
+                        case Markdown -> {
+                            try {
+                                var html = markdown(editor.getText());
+                                remove(output);
+                                add(html, BorderLayout.SOUTH);
+                            } catch (Exception ex) {
+                                output.setText("Error to render Markdown: " + ex.getMessage());
+                            }
+                        }
+                        case Instructions -> analyst.run(Command.this);
+                    }
+
+                    analyst.addCommand();
                 }
             }
         });
@@ -133,14 +172,14 @@ public class Command extends JPanel {
      */
     public void setEditable(boolean editable) {
         commandType.setEnabled(editable);
-        input.setEditable(editable);
+        editor.setEditable(editable);
         if (editable) {
-            input.setBackground(inputColor);
+            editor.setBackground(inputColor);
             inputPane.setBackground(inputColor);
             commandType.setBackground(inputColor);
 
         } else {
-            input.setBackground(getBackground());
+            editor.setBackground(getBackground());
             inputPane.setBackground(getBackground());
             header.remove(commandType);
         }
@@ -152,7 +191,7 @@ public class Command extends JPanel {
      */
     public void setInputForeground(Color color) {
         indicator.setForeground(color);
-        input.setForeground(color);
+        editor.setForeground(color);
     }
 
     /**
@@ -161,7 +200,7 @@ public class Command extends JPanel {
      */
     public void setInputFont(Font font) {
         indicator.setFont(font);
-        input.setFont(font);
+        editor.setFont(font);
     }
 
     /**
@@ -193,7 +232,7 @@ public class Command extends JPanel {
      * @return the command input.
      */
     public JTextArea input() {
-        return input;
+        return editor;
     }
 
     /**
@@ -238,6 +277,7 @@ public class Command extends JPanel {
 
         XHTMLPanel browser = new XHTMLPanel();
         browser.setInteractive(false);
+        browser.setOpaque(false);
         browser.setDocument(doc, null); // The second argument is for base URI, can be null
         return browser;
     }
