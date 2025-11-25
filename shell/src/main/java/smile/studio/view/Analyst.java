@@ -97,7 +97,7 @@ public class Analyst extends JPanel {
     🔍 Best practices and state-of-the-art methods with web search.
     🏅 Targeted code block refinement by ablation study.
     🤝 Improved solution using iterative ensemble strategy.
-    ☕ High-quality code completion and generation.
+    💡 High-quality code completion and generation.
     📊 Advanced interactive data visualization.
     📂 Process data from CSV, ARFF, JSON, Avro, Parquet, Iceberg, to SQL.
     🌐 Built-in inference server.
