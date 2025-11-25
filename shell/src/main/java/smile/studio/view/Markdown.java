@@ -31,7 +31,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 /**
- * A component to render markdown text.
+ * A component to render Markdown text.
  *
  * @author Haifeng Li
  */
