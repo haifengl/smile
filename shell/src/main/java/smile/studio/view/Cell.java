@@ -85,7 +85,6 @@ public class Cell extends JPanel {
      * @return the header of action buttons and prompt field.
      */
     private JPanel createHeader(Notebook notebook) {
-        // Header of action buttons and prompt field
         JPanel header = new JPanel();
         header.setLayout(new BoxLayout(header, BoxLayout.X_AXIS));
         header.add(Box.createHorizontalStrut(2));
@@ -102,6 +101,7 @@ public class Cell extends JPanel {
         header.add(deleteButton);
         header.add(Box.createHorizontalStrut(20));
         header.add(prompt);
+        header.add(Box.createHorizontalStrut(2));
 
         prompt.addActionListener(e -> generateCode());
         prompt.putClientProperty("JComponent.roundRect", true);

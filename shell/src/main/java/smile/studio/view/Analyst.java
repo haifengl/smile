@@ -115,39 +115,4 @@ public class Analyst extends JPanel {
         commands.add(command, commands.getComponentCount() - 1);
         SwingUtilities.invokeLater(() -> command.editor().requestFocusInWindow());
     }
-
-    /**
-     * Customized JPanel whose width match the width of its containing
-     * JScrollPane's viewport.
-     */
-    static class ScrollablePanel extends JPanel implements Scrollable {
-        public ScrollablePanel() {
-
-        }
-
-        @Override
-        public Dimension getPreferredScrollableViewportSize() {
-            return getPreferredSize();
-        }
-
-        @Override
-        public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
-            return 18;
-        }
-
-        @Override
-        public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
-            return ((orientation == SwingConstants.VERTICAL) ? visibleRect.height : visibleRect.width) - 18;
-        }
-
-        @Override
-        public boolean getScrollableTracksViewportWidth() {
-            return true; // This is the key method to make the width match
-        }
-
-        @Override
-        public boolean getScrollableTracksViewportHeight() {
-            return false; // Set to true if you also want the height to match
-        }
-    }
 }

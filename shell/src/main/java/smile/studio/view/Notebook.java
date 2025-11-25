@@ -48,7 +48,7 @@ public class Notebook extends JPanel implements DocumentListener {
     private static final String CELL_SEPARATOR = "//--- CELL ---";
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Notebook.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Notebook.class.getName(), Locale.getDefault());
-    private final JPanel cells = new JPanel();
+    private final JPanel cells = new ScrollablePanel();
     private final JScrollPane scrollPane = new JScrollPane(cells);
     private final DateTimeFormatter datetime = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
     private final JavaRunner runner;
