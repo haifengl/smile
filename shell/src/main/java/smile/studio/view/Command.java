@@ -262,24 +262,14 @@ public class Command extends JPanel {
 
     private void magicHelp(String[] command) {
         output.setText("""
-                Smile Analyst is a state-of-the-art machine learning engineering agent.
-                🤖 Automatic end-to-end ML/AI solutions based on your requirements.
-                🔍 Best practices and state-of-the-art methods with web search.
-                🏅 Targeted code block refinement by ablation study.
-                🤝 Improved solution using iterative ensemble strategy.
-                ☕ High-quality code completion and generation.
-                📊 Advanced interactive data visualization.
-                📂 Process data from CSV, ARFF, JSON, Avro, Parquet, Iceberg, to SQL.
-                🌐 Built-in inference server.
+                The following magic commands are available:
                 
-                The following magic commands are also available.
                 /init the project with your requirements
                 /load data
                 /analyze for exploratory data analysis
                 /train to build a model
                 /predict to run batch inference
-                /serve to start an inference service
-                /""");
+                /serve to start an inference service""");
     }
 
     private void magicInit(String instructions) {
