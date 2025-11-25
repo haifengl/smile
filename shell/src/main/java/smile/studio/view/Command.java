@@ -52,19 +52,23 @@ import static smile.studio.model.CommandType.*;
 public class Command extends JPanel {
     private static final Color inputColor = new Color(220, 248, 198);
     private static final Color borderColor = Palette.web("#8dd4e8");
-    private final JPanel header = new JPanel();
+    private final JPanel footer = new JPanel();
     private final JPanel inputPane = new JPanel(new BorderLayout());
     private final JLabel indicator = new JLabel(">", SwingConstants.CENTER);
     private final JComboBox<CommandType> commandType = new JComboBox<>(new CommandType[] {Raw, Magic, Shell, Python, Markdown, Instructions});
     private final CodeEditor editor = new CodeEditor(1, 80, SyntaxConstants.SYNTAX_STYLE_NONE);
     private final OutputArea output = new OutputArea();
 
+    /**
+     * Constructor.
+     * @param analyst the parent analyst component.
+     */
     public Command(Analyst analyst) {
         super(new BorderLayout(5, 5));
         setBorder(new EmptyBorder(8,8,8,8));
 
         initInputPane();
-        initInputActionMap(analyst);
+        initActionMap(analyst);
         output.setFont(Monospace.getFont());
         output.setEditable(false);
         output.setLineWrap(true);
@@ -77,14 +81,35 @@ public class Command extends JPanel {
     private void initInputPane() {
         indicator.setFont(Monospace.getFont());
         indicator.setToolTipText(Instructions.toString());
-        JPanel west = new JPanel();
-        west.setLayout(new BoxLayout(west, BoxLayout.Y_AXIS));
-        west.setOpaque(false);
-        west.add(Box.createVerticalStrut(3));
-        west.add(indicator);
-        west.add(Box.createVerticalGlue());
 
+        JPanel sidebar = new JPanel();
+        sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
+        sidebar.setOpaque(false);
+        sidebar.add(Box.createVerticalStrut(3));
+        sidebar.add(indicator);
+        sidebar.add(Box.createVerticalGlue());
 
+        editor.setFont(Monospace.getFont());
+        editor.setLineWrap(true);
+        editor.setWrapStyleWord(true);
+        editor.setOpaque(false);
+        editor.setHighlightCurrentLine(false);
+        editor.setBackground(inputColor);
+
+        initCommandType();
+        footer.setLayout(new BoxLayout(footer, BoxLayout.X_AXIS));
+        footer.setOpaque(false);
+        footer.add(Box.createHorizontalStrut(indicator.getPreferredSize().width));
+        footer.add(commandType);
+
+        inputPane.setBackground(inputColor);
+        inputPane.setBorder(createRoundBorder());
+        inputPane.add(sidebar, BorderLayout.WEST);
+        inputPane.add(editor, BorderLayout.CENTER);
+        inputPane.add(footer, BorderLayout.SOUTH);
+    }
+
+    private void initCommandType() {
         commandType.setSelectedItem(Instructions);
         commandType.setBorder(BorderFactory.createEmptyBorder());
         commandType.setBackground(inputColor);
@@ -108,35 +133,17 @@ public class Command extends JPanel {
                         }
                     }
                     case Python ->
-                        editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_PYTHON);
+                            editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_PYTHON);
                     case Markdown ->
-                        editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_MARKDOWN);
+                            editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_MARKDOWN);
                     default ->
-                        editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);
+                            editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);
                 }
             }
         });
-
-        header.setLayout(new BoxLayout(header, BoxLayout.X_AXIS));
-        header.setOpaque(false);
-        header.add(Box.createHorizontalStrut(indicator.getPreferredSize().width));
-        header.add(commandType);
-
-        editor.setFont(Monospace.getFont());
-        editor.setLineWrap(true);
-        editor.setWrapStyleWord(true);
-        editor.setOpaque(false);
-        editor.setHighlightCurrentLine(false);
-        editor.setBackground(inputColor);
-
-        inputPane.setBackground(inputColor);
-        inputPane.setBorder(createRoundBorder());
-        inputPane.add(west, BorderLayout.WEST);
-        inputPane.add(editor, BorderLayout.CENTER);
-        inputPane.add(header, BorderLayout.SOUTH);
     }
 
-    private void initInputActionMap(Analyst analyst) {
+    private void initActionMap(Analyst analyst) {
         InputMap inputMap = editor.getInputMap(JComponent.WHEN_FOCUSED);
         ActionMap actionMap = editor.getActionMap();
         inputMap.put(KeyStroke.getKeyStroke("ctrl ENTER"), "run");
@@ -281,7 +288,7 @@ public class Command extends JPanel {
         } else {
             editor.setBackground(getBackground());
             inputPane.setBackground(getBackground());
-            header.remove(commandType);
+            footer.remove(commandType);
         }
     }
 

@@ -64,6 +64,27 @@ public class Cell extends JPanel {
         super(new BorderLayout(5, 5));
         setBorder(new EmptyBorder(8,8,8,8));
 
+        JPanel header = createHeader(notebook);
+        initActionMap(notebook);
+
+        // Cell editor and output configuration
+        output.setFont(Monospace.getFont());
+        editor.setFont(Monospace.getFont());
+        RTextScrollPane editorScroll = new RTextScrollPane(editor);
+        editorScroll.setBorder(border);
+        editorScroll.putClientProperty("JScrollBar.showButtons", true);
+
+        add(header, BorderLayout.NORTH);
+        add(editorScroll, BorderLayout.CENTER);
+        add(output, BorderLayout.SOUTH);
+    }
+
+    /**
+     * Returns the header of action buttons and prompt field.
+     * @param notebook the parent notebook.
+     * @return the header of action buttons and prompt field.
+     */
+    private JPanel createHeader(Notebook notebook) {
         // Header of action buttons and prompt field
         JPanel header = new JPanel();
         header.setLayout(new BoxLayout(header, BoxLayout.X_AXIS));
@@ -99,13 +120,14 @@ public class Cell extends JPanel {
         clearButton.addActionListener(e -> output.setText(""));
         deleteButton.addActionListener(e -> notebook.deleteCell(this));
 
-        // Cell editor and output configuration
-        output.setFont(Monospace.getFont());
-        editor.setFont(Monospace.getFont());
-        RTextScrollPane editorScroll = new RTextScrollPane(editor);
-        editorScroll.setBorder(border);
-        editorScroll.putClientProperty("JScrollBar.showButtons", true);
+        return header;
+    }
 
+    /**
+     * Sets up the action map of editor.
+     * @param notebook the parent notebook.
+     */
+    private void initActionMap(Notebook notebook) {
         // Key bindings (inspired by Jupyter)
         InputMap inputMap = editor.getInputMap(JComponent.WHEN_FOCUSED);
         ActionMap actionMap = editor.getActionMap();
@@ -135,9 +157,6 @@ public class Cell extends JPanel {
             }
         });
 
-        add(header, BorderLayout.NORTH);
-        add(editorScroll, BorderLayout.CENTER);
-        add(output, BorderLayout.SOUTH);
     }
 
     /**
