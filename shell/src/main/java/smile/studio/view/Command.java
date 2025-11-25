@@ -164,10 +164,7 @@ public class Command extends JPanel {
                             editor.replaceRange("", 0, 1);
 
                         }
-                        case '!' -> {
-                            commandType.setSelectedItem(Markdown);
-                            editor.replaceRange("", 0, 1);
-                        }
+                        case '#' -> commandType.setSelectedItem(Markdown);
                     }
                 } catch (BadLocationException ex) {
                     // ignore the exception
@@ -184,7 +181,7 @@ public class Command extends JPanel {
                             remove(output);
                             add(html, BorderLayout.SOUTH);
                         } catch (Exception ex) {
-                            output.setText("Error to render Markdown: " + ex.getMessage());
+                            output.setText("ERROR rendering Markdown: " + ex.getMessage());
                         }
                     }
                     case Instructions -> analyst.run(Command.this);
@@ -251,18 +248,42 @@ public class Command extends JPanel {
 
     /** Executes magic commands. */
     private void runMagic() {
-        String[] command = editor.getText().split("\\s+");
+        String instructions = editor.getText();
+        String[] command = instructions.split("\\s+");
         switch (command[0]) {
             case "help" -> magicHelp(command);
-            case "train", "predict" -> runShell();
+            case "train", "predict", "serve" -> runShell();
+            case "init" -> magicInit(instructions);
             case "load" -> magicLoad(command);
             case "analyze" -> magicAnalyze(command);
-            default -> output.setText("Error: unknown magic - " + command[0]);
+            default -> output.setText("ERROR: unknown magic - " + command[0]);
         }
     }
 
     private void magicHelp(String[] command) {
-        output.setText("Help!!!");
+        output.setText("""
+                Smile Analyst is a state-of-the-art machine learning engineering agent.
+                🤖 Automatic end-to-end ML/AI solutions based on your requirements.
+                🔍 Best practices and state-of-the-art methods with web search.
+                🏅 Targeted code block refinement by ablation study.
+                🤝 Improved solution using iterative ensemble strategy.
+                ☕ High-quality code completion and generation.
+                📊 Advanced interactive data visualization.
+                📂 Process data from CSV, ARFF, JSON, Avro, Parquet, Iceberg, to SQL.
+                🌐 Built-in inference server.
+                
+                The following magic commands are also available.
+                /init the project with your requirements
+                /load data
+                /analyze for exploratory data analysis
+                /train to build a model
+                /predict to run batch inference
+                /serve to start an inference service
+                /""");
+    }
+
+    private void magicInit(String instructions) {
+
     }
 
     private void magicLoad(String[] command) {
