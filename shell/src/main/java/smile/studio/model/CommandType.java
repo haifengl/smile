@@ -38,7 +38,7 @@ public enum CommandType {
     /**
      * Python code.
      */
-    Python("Python", "⚕"),
+    Python("Python", "!"),
     /**
      * Text in Markdown format, providing explanations,
      * documentation, or narrative content.
