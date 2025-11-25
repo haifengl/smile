@@ -106,7 +106,7 @@ public class ProcessFrame extends JFrame {
                         });
                     } while (true);
                 } catch (IOException ex) {
-                    SwingUtilities.invokeLater(() -> output.append("Error reading process output: " + ex.getMessage() + "\n"));
+                    SwingUtilities.invokeLater(() -> output.append("ERROR reading process output: " + ex.getMessage() + "\n"));
                 }
             });
             thread.start();

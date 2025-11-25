@@ -540,7 +540,7 @@ public class Notebook extends JPanel implements DocumentListener {
             cell.output().appendLine("⏹ " + datetime.format(end) + " finished (" + duration + ")");
             return okay;
         } catch (Throwable t) {
-            cell.output().appendLine("✖ Error during execution: " + t);
+            cell.output().appendLine("✖ ERROR during execution: " + t);
             logger.error("Error during execution: ", t);
             return false;
         } finally {
