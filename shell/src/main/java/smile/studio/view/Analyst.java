@@ -50,32 +50,8 @@ public class Analyst extends JPanel {
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         add(scrollPane, BorderLayout.CENTER);
 
-        Command welcome = new Command(this);
-        welcome.setCommandType(CommandType.Raw);
-        welcome.editor().setText("""
-                                                         ..::''''::..
-                                                       .;''        ``;.
-       ....                                           ::    ::  ::    ::
-     ,;' .;:                ()  ..:                  ::     ::  ::     ::
-     ::.      ..:,:;.,:;.    .   ::   .::::.         :: .:' ::  :: `:. ::
-      '''::,   ::  ::  ::  `::   ::  ;:   .::        ::  :          :  ::
-    ,:';  ::;  ::  ::  ::   ::   ::  ::,::''.         :: `:.      .:' ::
-    `:,,,,;;' ,;; ,;;, ;;, ,;;, ,;;, `:,,,,:'          `;..``::::''..;'
-                                                         ``::,,,,::''
-    =====================================================================
-    Welcome to Smile Analyst!
-    /help for help, /status for your current setup
-    cwd: """ + System.getProperty("user.dir"));
-        welcome.setEditable(false);
-        welcome.setInputForeground(Palette.DARK_GRAY);
-        welcome.output().setText("""
-                Tips for getting started:
-                1. Be as specific as you would with another data scientist for the best result
-                2. Use SMILE to help with data analysis""");
-        commands.add(welcome);
-
-        Command command = new Command(this);
-        commands.add(command);
+        commands.add(welcome());
+        commands.add(new Command(this));
         commands.add(Box.createVerticalGlue());
 
         Monospace.addListener((e) ->
@@ -90,6 +66,33 @@ public class Analyst extends JPanel {
                     }
                 })
         );
+    }
+
+    /** Returns the welcome banner. */
+    private Command welcome() {
+        Command welcome = new Command(this);
+        welcome.setCommandType(CommandType.Raw);
+        welcome.setEditable(false);
+        welcome.setInputForeground(Palette.DARK_GRAY);
+        welcome.editor().setText("""
+                                                         ..::''''::..
+                                                       .;''        ``;.
+       ....                                           ::    ::  ::    ::
+     ,;' .;:                ()  ..:                  ::     ::  ::     ::
+     ::.      ..:,:;.,:;.    .   ::   .::::.         :: .:' ::  :: `:. ::
+      '''::,   ::  ::  ::  `::   ::  ;:   .::        ::  :          :  ::
+    ,:';  ::;  ::  ::  ::   ::   ::  ::,::''.         :: `:.      .:' ::
+    `:,,,,;;' ,;; ,;;, ;;, ,;;, ,;;, `:,,,,:'          `;..``::::''..;'
+                                                         ``::,,,,::''
+    =====================================================================
+    Welcome to Smile Analyst!
+    /help for help, /status for your current setup
+    cwd: """ + System.getProperty("user.dir"));
+        welcome.output().setText("""
+                Tips for getting started:
+                1. Be as specific as you would with another data scientist for the best result
+                2. Use SMILE to help with data analysis""");
+        return welcome;
     }
 
     /**
