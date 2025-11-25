@@ -36,6 +36,7 @@ import java.util.ResourceBundle;
 import jdk.jshell.*;
 import smile.studio.kernel.PostRunNavigation;
 import smile.studio.kernel.JavaRunner;
+import smile.swing.ScrollablePanel;
 
 /**
  * Interactive environment to write and execute Java code combining code,

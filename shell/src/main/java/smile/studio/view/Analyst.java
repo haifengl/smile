@@ -22,6 +22,7 @@ import java.awt.*;
 import smile.plot.swing.Palette;
 import smile.studio.kernel.JavaRunner;
 import smile.studio.model.CommandType;
+import smile.swing.ScrollablePanel;
 
 /**
  * An architect creates model building pipeline.
