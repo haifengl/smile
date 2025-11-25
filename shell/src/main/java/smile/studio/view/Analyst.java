@@ -88,11 +88,27 @@ public class Analyst extends JPanel {
     =====================================================================
     Welcome to Smile Analyst!
     /help for help, /init for initializing your project
-    cwd: """ + System.getProperty("user.dir"));
+    cwd:\s""" + System.getProperty("user.dir"));
         welcome.output().setText("""
-                Tips for getting started:
-                1. Be as specific as you would with another data scientist for the best result
-                2. Use SMILE to help with data analysis""");
+    As a state-of-the-art machine learning engineering agent,
+    Smile Analyst can help you with:
+    
+    🤖 Automatic end-to-end ML/AI solutions based on your requirements.
+    🔍 Best practices and state-of-the-art methods with web search.
+    🏅 Targeted code block refinement by ablation study.
+    🤝 Improved solution using iterative ensemble strategy.
+    ☕ High-quality code completion and generation.
+    📊 Advanced interactive data visualization.
+    📂 Process data from CSV, ARFF, JSON, Avro, Parquet, Iceberg, to SQL.
+    🌐 Built-in inference server.
+    
+    Tips for getting started:
+    1. Run /init to create a SMILE.md file with instructions for agent.
+    2. Be as specific as you would with another data scientist for the best result.
+    3. Use magic and shell commands to help with data analysis, git, etc.
+    4. Data visualization can be feed to AI agents for interpretation and advices.
+    5. Python and Markdown are supported too.
+    6. AI can make mistakes. Always review agent's responses.""");
         return welcome;
     }
 
@@ -101,12 +117,8 @@ public class Analyst extends JPanel {
      * @param command the commands to execute.
      */
     public void run(Command command) {
-        switch (command.getCommandType()) {
-            case Raw -> command.output().setText("Help");
-            case Magic -> command.output().setText("Help");
-            case Python -> command.output().setText("Help");
-            case Markdown -> command.output().setText("Help");
-            case Instructions -> command.output().setText("Help");
+        if (command.getCommandType() == CommandType.Instructions) {
+            command.output().setText(command.editor().getText());
         }
     }
 
