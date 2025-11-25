@@ -5,6 +5,7 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
 import com.formdev.flatlaf.util.FontUtils;
+import com.formdev.flatlaf.util.SystemInfo;
 import smile.studio.SmileStudio;
 
 /**
@@ -13,7 +14,10 @@ import smile.studio.SmileStudio;
 public class Monospace {
     /** The shared font for consistency. */
     private static Font font = FontUtils.getCompositeFont(
-            FlatJetBrainsMonoFont.FAMILY,
+            // FlatLaF doesn't support NL (no ligatures) flavor.
+            // On Mac, ligatures will cause uneven spaces sometimes.
+            // For example, SMILE ascii art doesn't show properly.
+            SystemInfo.isMacOS ? "Monospaced" : FlatJetBrainsMonoFont.FAMILY,
             Font.PLAIN,
             SmileStudio.preferences().getInt("monospaced", 14));
     /** A singleton instance used as the source object for font changes. */
