@@ -43,7 +43,7 @@ public enum CommandType {
      * Text in Markdown format, providing explanations,
      * documentation, or narrative content.
      */
-    Markdown("Markdown", "!"),
+    Markdown("Markdown", "#"),
     /**
      * Instructions in natural language for LLM agents to execute.
      */
