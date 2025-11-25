@@ -16,8 +16,6 @@
  */
 package smile.studio.view;
 
-import smile.studio.SmileStudio;
-
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import java.awt.*;
@@ -50,8 +48,8 @@ public class ProcessFrame extends JFrame {
         output.setWrapStyleWord(true);
         output.setBackground(Color.BLACK);
         output.setForeground(Color.WHITE);
-        output.setFont(Monospace.getFont());
-        Monospace.addListener((e) -> {
+        output.setFont(Monospaced.getFont());
+        Monospaced.addListener((e) -> {
             SwingUtilities.invokeLater(() -> output.setFont((Font) e.getNewValue()));
         });
 

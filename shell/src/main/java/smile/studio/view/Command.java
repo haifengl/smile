@@ -69,7 +69,7 @@ public class Command extends JPanel {
 
         initInputPane();
         initActionMap(analyst);
-        output.setFont(Monospace.getFont());
+        output.setFont(Monospaced.getFont());
         output.setEditable(false);
         output.setLineWrap(true);
         output.setWrapStyleWord(true);
@@ -79,7 +79,7 @@ public class Command extends JPanel {
     }
 
     private void initInputPane() {
-        indicator.setFont(Monospace.getFont());
+        indicator.setFont(Monospaced.getFont());
         indicator.setToolTipText(Instructions.toString());
 
         JPanel sidebar = new JPanel();
@@ -89,7 +89,7 @@ public class Command extends JPanel {
         sidebar.add(indicator);
         sidebar.add(Box.createVerticalGlue());
 
-        editor.setFont(Monospace.getFont());
+        editor.setFont(Monospaced.getFont());
         editor.setLineWrap(true);
         editor.setWrapStyleWord(true);
         editor.setOpaque(false);

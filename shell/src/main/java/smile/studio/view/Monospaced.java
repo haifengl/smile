@@ -9,9 +9,9 @@ import com.formdev.flatlaf.util.SystemInfo;
 import smile.studio.SmileStudio;
 
 /**
- * The monospace font for view components.
+ * The monospaced font for view components.
  */
-public class Monospace {
+public class Monospaced {
     /** The shared font for consistency. */
     private static Font font = FontUtils.getCompositeFont(
             // FlatLaF doesn't support NL (no ligatures) flavor.
@@ -21,12 +21,12 @@ public class Monospace {
             Font.PLAIN,
             SmileStudio.preferences().getInt("monospaced", 14));
     /** A singleton instance used as the source object for font changes. */
-    private static final Monospace bean = new Monospace();
+    private static final Monospaced bean = new Monospaced();
     /** The utility to support bound properties. */
     private static final PropertyChangeSupport pcs = new PropertyChangeSupport(bean);
 
     /** Private constructor to prevent creating instances. */
-    private Monospace() {
+    private Monospaced() {
 
     }
 
