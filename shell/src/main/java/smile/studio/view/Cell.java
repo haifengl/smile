@@ -68,8 +68,8 @@ public class Cell extends JPanel {
         initActionMap(notebook);
 
         // Cell editor and output configuration
-        output.setFont(Monospace.getFont());
-        editor.setFont(Monospace.getFont());
+        output.setFont(Monospaced.getFont());
+        editor.setFont(Monospaced.getFont());
         RTextScrollPane editorScroll = new RTextScrollPane(editor);
         editorScroll.setBorder(border);
         editorScroll.putClientProperty("JScrollBar.showButtons", true);

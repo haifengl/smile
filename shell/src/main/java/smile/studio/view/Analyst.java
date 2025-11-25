@@ -55,7 +55,7 @@ public class Analyst extends JPanel {
         commands.add(new Command(this));
         commands.add(Box.createVerticalGlue());
 
-        Monospace.addListener((e) ->
+        Monospaced.addListener((e) ->
                 SwingUtilities.invokeLater(() -> {
                     Font font = (Font) e.getNewValue();
                     for (int i = 0; i < commands.getComponentCount(); i++) {

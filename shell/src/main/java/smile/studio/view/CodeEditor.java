@@ -51,13 +51,13 @@ public class CodeEditor extends RSyntaxTextArea {
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, InputEvent.CTRL_DOWN_MASK), "increase-font-size");
         actionMap.put("increase-font-size", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
-                Monospace.adjustFontSize(1);
+                Monospaced.adjustFontSize(1);
             }
         });
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, InputEvent.CTRL_DOWN_MASK), "decrease-font-size");
         actionMap.put("decrease-font-size", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
-                Monospace.adjustFontSize(-1);
+                Monospaced.adjustFontSize(-1);
             }
         });
     }

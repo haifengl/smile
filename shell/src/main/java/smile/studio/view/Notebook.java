@@ -204,7 +204,7 @@ public class Notebook extends JPanel implements DocumentListener {
             });
         }
 
-        Monospace.addListener((e) ->
+        Monospaced.addListener((e) ->
                 SwingUtilities.invokeLater(() -> {
                     Font font = (Font) e.getNewValue();
                     for (int i = 0; i < cells.getComponentCount(); i++) {
