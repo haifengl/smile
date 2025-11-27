@@ -87,6 +87,7 @@ public class Analyst extends JPanel {
                                                          ``::,,,,::''
     =====================================================================
     Welcome to Smile Analyst!
+    
     /help for help, /init for initializing your project
     cwd:\s""" + System.getProperty("user.dir"));
         welcome.output().setText("""
