@@ -16,6 +16,7 @@
  */
 package smile.shell
 
+import java.nio.file.Path
 import smile.studio.SmileStudio
 
 /** An object that runs Smile script or interactive shell.
@@ -24,6 +25,10 @@ import smile.studio.SmileStudio
   */
 object Main {
   def main(args: Array[String]): Unit = {
+    // Normalize home path
+    val home = Path.of(System.getProperty("smile.home", ". ")).normalize()
+    System.setProperty("smile.home", home.toString)
+
     val command = args.headOption.getOrElse("")
     command match {
       case "train" => Train(args.drop(1))

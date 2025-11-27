@@ -17,7 +17,7 @@ public class Monospaced {
             // FlatLaF doesn't support NL (no ligatures) flavor.
             // On Mac, ligatures will cause uneven spaces sometimes.
             // For example, SMILE ascii art doesn't show properly.
-            SystemInfo.isMacOS ? "Monospaced" : FlatJetBrainsMonoFont.FAMILY,
+            SystemInfo.isMacOS ? Font.MONOSPACED : FlatJetBrainsMonoFont.FAMILY,
             Font.PLAIN,
             SmileStudio.preferences().getInt("monospaced", 14));
     /** A singleton instance used as the source object for font changes. */
