@@ -1,6 +1,6 @@
 name := "smile"
 
-lazy val scala213 = "2.13.17"
+lazy val scala213 = "2.13.18"
 lazy val scala3 = "3.3.6"
 lazy val supportedScalaVersions = List(scala213, scala3)
 lazy val os = sys.props.get("os.name").get.toLowerCase.split(" ")(0)
@@ -47,8 +47,10 @@ lazy val commonSettings = Seq(
     os match {
       case "windows" =>
         "PATH" -> s"${(Test / baseDirectory).value}/shell/src/universal/bin;${System.getenv("PATH")}"
+      case "mac" =>
+        "DYLD_LIBRARY_PATH" -> s"${(Test / baseDirectory).value}/shell/src/universal/bin:${System.getenv("DYLD_LIBRARY_PATH")}"
       case _ =>
-        "PATH" -> s"${(Test / baseDirectory).value}/shell/src/universal/bin:${System.getenv("PATH")}"
+        "LD_LIBRARY_PATH" -> s"${(Test / baseDirectory).value}/shell/src/universal/bin:${System.getenv("LD_LIBRARY_PATH")}"
     }
   ),
 
@@ -109,7 +111,7 @@ lazy val javaSettings = commonSettings ++ Seq(
   libraryDependencies ++= Seq(
     "org.slf4j" % "slf4j-api" % "2.0.17",
     "org.slf4j" % "slf4j-simple" % "2.0.17" % Test,
-    "org.junit.jupiter" % "junit-jupiter-engine" % "6.0.0" % Test,
+    "org.junit.jupiter" % "junit-jupiter-engine" % "6.0.1" % Test,
     "com.github.sbt.junit" % "jupiter-interface" % JupiterKeys.jupiterVersion.value % Test
   )
 )

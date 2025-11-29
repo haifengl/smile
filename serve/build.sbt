@@ -39,8 +39,8 @@ batScriptExtraDefines ++= Seq(
 libraryDependencies ++= Seq(
   "com.github.scopt"   %% "scopt" % "4.1.0",
   "com.typesafe.slick" %% "slick" % "3.6.1",
-  "org.xerial"         %  "sqlite-jdbc" % "3.50.3.0",
-  "ch.qos.logback"     %  "logback-classic" % "1.5.20"
+  "org.xerial"         %  "sqlite-jdbc" % "3.51.0.0",
+  "ch.qos.logback"     %  "logback-classic" % "1.5.21"
 )
 
 val os = sys.props.get("os.name").get.toLowerCase.split(" ")(0)

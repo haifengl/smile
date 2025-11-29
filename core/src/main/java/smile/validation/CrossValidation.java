@@ -90,7 +90,7 @@ public interface CrossValidation {
      * Cross validation with stratified folds. The folds are made by
      * preserving the percentage of samples for each group.
      *
-     * @param category the strata labels.
+     * @param category the strata label.
      * @param k the number of folds.
      * @return k-fold data splits.
      */
