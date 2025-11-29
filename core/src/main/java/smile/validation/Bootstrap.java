@@ -86,7 +86,7 @@ public interface Bootstrap {
     /**
      * Stratified bootstrap sampling.
      *
-     * @param category the strata labels.
+     * @param category the strata label.
      * @param k the number of rounds of bootstrap.
      * @return the samplings.
      */

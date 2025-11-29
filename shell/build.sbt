@@ -67,13 +67,13 @@ batScriptExtraDefines ++= Seq(
 
 libraryDependencies ++= Seq(
   "com.github.scopt" %% "scopt"              % "4.1.0",
-  "org.scala-lang"    % "scala-compiler"     % "2.13.17",
+  "org.scala-lang"    % "scala-compiler"     % "2.13.18",
   "org.slf4j"         % "slf4j-simple"       % "2.0.17",
   "com.openai"        % "openai-java"        % "4.8.0",
   "com.anthropic"     % "anthropic-java"     % "2.11.1",
   "com.google.genai"  % "google-genai"       % "1.28.0",
   "org.commonmark"    % "commonmark"         % "0.27.0",
-  "org.xhtmlrenderer" % "flying-saucer-core" % "10.0.4",
+  "org.xhtmlrenderer" % "flying-saucer-core" % "10.0.5",
   "com.fifesoft"      % "rsyntaxtextarea"    % "3.6.0",
   "com.formdev"       % "flatlaf"            % "3.6.2",
   "com.formdev"       % "flatlaf-fonts-jetbrains-mono" % "2.304",
