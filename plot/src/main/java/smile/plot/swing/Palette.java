@@ -17,8 +17,8 @@
 package smile.plot.swing;
 
 import java.awt.Color;
+import java.util.AbstractMap;
 import java.util.Locale;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -80,7 +80,7 @@ public class Palette {
                 return parseHSLColor(color, 5, true, opacity);
             }
         } else {
-            Color namedColor = cssNamedColors.get(color);
+            Color namedColor = NAMED_COLORS.get(color);
             if (namedColor != null) {
                 return namedColor;
             }
@@ -1465,11 +1465,11 @@ public class Palette {
      * @return the color.
      */
     public static Color get(int index) {
-        return NAMED_COLORS[index % NAMED_COLORS.length];
+        return COLORS[index % COLORS.length];
     }
 
     /** Named colors except white colors. */
-    public static final Color[] NAMED_COLORS = {
+    public static final Color[] COLORS = {
             RED,
             BLUE,
             GREEN,
@@ -1601,156 +1601,155 @@ public class Palette {
             BLACK
     };
 
-    private static final Map<String, Color> cssNamedColors = new HashMap<>();
-    static {
-        cssNamedColors.put("aliceblue", ALICE_BLUE);
-        cssNamedColors.put("antiquewhite", ANTIQUE_WHITE);
-        cssNamedColors.put("aqua", AQUA);
-        cssNamedColors.put("aquamarine", AQUAMARINE);
-        cssNamedColors.put("azure", AZURE);
-        cssNamedColors.put("beige", BEIGE);
-        cssNamedColors.put("bisque", BISQUE);
-        cssNamedColors.put("black", BLACK);
-        cssNamedColors.put("blanchedalmond", BLANCHED_ALMOND);
-        cssNamedColors.put("blue", BLUE);
-        cssNamedColors.put("blueviolet", BLUE_VIOLET);
-        cssNamedColors.put("brown", BROWN);
-        cssNamedColors.put("burlywood", BURLYWOOD);
-        cssNamedColors.put("cadetblue", CADET_BLUE);
-        cssNamedColors.put("chartreuse", CHARTREUSE);
-        cssNamedColors.put("chocolate", CHOCOLATE);
-        cssNamedColors.put("coral", CORAL);
-        cssNamedColors.put("cornflowerblue", CORNFLOWER_BLUE);
-        cssNamedColors.put("cornsilk", CORNSILK);
-        cssNamedColors.put("crimson", CRIMSON);
-        cssNamedColors.put("cyan", CYAN);
-        cssNamedColors.put("darkblue", DARK_BLUE);
-        cssNamedColors.put("darkcyan", DARK_CYAN);
-        cssNamedColors.put("darkgoldenrod", DARK_GOLDENROD);
-        cssNamedColors.put("darkgray", DARK_GRAY);
-        cssNamedColors.put("darkgreen", DARK_GREEN);
-        cssNamedColors.put("darkgrey", DARK_GREY);
-        cssNamedColors.put("darkkhaki", DARK_KHAKI);
-        cssNamedColors.put("darkmagenta", DARK_MAGENTA);
-        cssNamedColors.put("darkolivegreen", DARK_OLIVE_GREEN);
-        cssNamedColors.put("darkorange", DARK_ORANGE);
-        cssNamedColors.put("darkorchid", DARK_ORCHID);
-        cssNamedColors.put("darkred", DARK_RED);
-        cssNamedColors.put("darksalmon", DARK_SALMON);
-        cssNamedColors.put("darkseagreen", DARK_SEAGREEN);
-        cssNamedColors.put("darkslateblue", DARK_SLATE_BLUE);
-        cssNamedColors.put("darkslategray", DARK_SLATE_GRAY);
-        cssNamedColors.put("darkslategrey", DARK_SLATE_GREY);
-        cssNamedColors.put("darkturquoise", DARK_TURQUOISE);
-        cssNamedColors.put("darkviolet", DARK_VIOLET);
-        cssNamedColors.put("deeppink", DEEP_PINK);
-        cssNamedColors.put("deepskyblue", DEEP_SKYBLUE);
-        cssNamedColors.put("dimgray", DIM_GRAY);
-        cssNamedColors.put("dimgrey", DIM_GREY);
-        cssNamedColors.put("dodgerblue", DODGER_BLUE);
-        cssNamedColors.put("firebrick", FIREBRICK);
-        cssNamedColors.put("floralwhite", FLORAL_WHITE);
-        cssNamedColors.put("forestgreen", FOREST_GREEN);
-        cssNamedColors.put("fuchsia", FUCHSIA);
-        cssNamedColors.put("gainsboro", GAINSBORO);
-        cssNamedColors.put("ghostwhite", GHOST_WHITE);
-        cssNamedColors.put("gold", GOLD);
-        cssNamedColors.put("goldenrod", GOLDENROD);
-        cssNamedColors.put("gray", GRAY);
-        cssNamedColors.put("green", GREEN);
-        cssNamedColors.put("greenyellow", GREEN_YELLOW);
-        cssNamedColors.put("grey", GREY);
-        cssNamedColors.put("honeydew", HONEYDEW);
-        cssNamedColors.put("hotpink", HOT_PINK);
-        cssNamedColors.put("indianred", INDIAN_RED);
-        cssNamedColors.put("indigo", INDIGO);
-        cssNamedColors.put("ivory", IVORY);
-        cssNamedColors.put("khaki", KHAKI);
-        cssNamedColors.put("lavender", LAVENDER);
-        cssNamedColors.put("lavenderblush", LAVENDER_BLUSH);
-        cssNamedColors.put("lawngreen", LAWN_GREEN);
-        cssNamedColors.put("lemonchiffon", LEMON_CHIFFON);
-        cssNamedColors.put("lightblue", LIGHT_BLUE);
-        cssNamedColors.put("lightcoral", LIGHT_CORAL);
-        cssNamedColors.put("lightcyan", LIGHT_CYAN);
-        cssNamedColors.put("lightgoldenrodyellow", LIGHT_GOLDENROD_YELLOW);
-        cssNamedColors.put("lightgray", LIGHT_GRAY);
-        cssNamedColors.put("lightgreen", LIGHT_GREEN);
-        cssNamedColors.put("lightgrey", LIGHT_GREY);
-        cssNamedColors.put("lightpink", LIGHT_PINK);
-        cssNamedColors.put("lightsalmon", LIGHT_SALMON);
-        cssNamedColors.put("lightseagreen", LIGHT_SEAGREEN);
-        cssNamedColors.put("lightskyblue", LIGHT_SKYBLUE);
-        cssNamedColors.put("lightslategray", LIGHT_SLATE_GRAY);
-        cssNamedColors.put("lightslategrey", LIGHT_SLATE_GREY);
-        cssNamedColors.put("lightsteelblue", LIGHT_STEEL_BLUE);
-        cssNamedColors.put("lightyellow", LIGHT_YELLOW);
-        cssNamedColors.put("lime", LIME);
-        cssNamedColors.put("limegreen", LIME_GREEN);
-        cssNamedColors.put("linen", LINEN);
-        cssNamedColors.put("magenta", MAGENTA);
-        cssNamedColors.put("maroon", MAROON);
-        cssNamedColors.put("mediumaquamarine", MEDIUM_AQUAMARINE);
-        cssNamedColors.put("mediumblue", MEDIUM_BLUE);
-        cssNamedColors.put("mediumorchid", MEDIUM_ORCHID);
-        cssNamedColors.put("mediumpurple", MEDIUM_PURPLE);
-        cssNamedColors.put("mediumseagreen", MEDIUM_SEAGREEN);
-        cssNamedColors.put("mediumslateblue", MEDIUM_SLATE_BLUE);
-        cssNamedColors.put("mediumspringgreen", MEDIUM_SPRING_GREEN);
-        cssNamedColors.put("mediumturquoise", MEDIUM_TURQUOISE);
-        cssNamedColors.put("mediumvioletred", MEDIUM_VIOLET_RED);
-        cssNamedColors.put("midnightblue", MIDNIGHT_BLUE);
-        cssNamedColors.put("mintcream", MINT_CREAM);
-        cssNamedColors.put("mistyrose", MISTY_ROSE);
-        cssNamedColors.put("moccasin", MOCCASIN);
-        cssNamedColors.put("navajowhite", NAVAJO_WHITE);
-        cssNamedColors.put("navy", NAVY);
-        cssNamedColors.put("oldlace", OLD_LACE);
-        cssNamedColors.put("olive", OLIVE);
-        cssNamedColors.put("olivedrab", OLIVE_DRAB);
-        cssNamedColors.put("orange", ORANGE);
-        cssNamedColors.put("orangered", ORANGE_RED);
-        cssNamedColors.put("orchid", ORCHID);
-        cssNamedColors.put("palegoldenrod", PALE_GOLDENROD);
-        cssNamedColors.put("palegreen", PALE_GREEN);
-        cssNamedColors.put("paleturquoise", PALE_TURQUOISE);
-        cssNamedColors.put("palevioletred", PALE_VIOLET_RED);
-        cssNamedColors.put("papayawhip", PAPAYA_WHIP);
-        cssNamedColors.put("peachpuff", PEACH_PUFF);
-        cssNamedColors.put("peru", PERU);
-        cssNamedColors.put("pink", PINK);
-        cssNamedColors.put("plum", PLUM);
-        cssNamedColors.put("powderblue", POWDER_BLUE);
-        cssNamedColors.put("purple", PURPLE);
-        cssNamedColors.put("red", RED);
-        cssNamedColors.put("rosybrown", ROSY_BROWN);
-        cssNamedColors.put("royalblue", ROYAL_BLUE);
-        cssNamedColors.put("saddlebrown", SADDLE_BROWN);
-        cssNamedColors.put("salmon", SALMON);
-        cssNamedColors.put("sandybrown", SANDY_BROWN);
-        cssNamedColors.put("seagreen", SEAGREEN);
-        cssNamedColors.put("seashell", SEASHELL);
-        cssNamedColors.put("sienna", SIENNA);
-        cssNamedColors.put("silver", SILVER);
-        cssNamedColors.put("skyblue", SKY_BLUE);
-        cssNamedColors.put("slateblue", SLATE_BLUE);
-        cssNamedColors.put("slategray", SLATE_GRAY);
-        cssNamedColors.put("slategrey", SLATE_GREY);
-        cssNamedColors.put("snow", SNOW);
-        cssNamedColors.put("springgreen", SPRING_GREEN);
-        cssNamedColors.put("steelblue", STEEL_BLUE);
-        cssNamedColors.put("tan", TAN);
-        cssNamedColors.put("teal", TEAL);
-        cssNamedColors.put("thistle", THISTLE);
-        cssNamedColors.put("tomato", TOMATO);
-        cssNamedColors.put("transparent", TRANSPARENT);
-        cssNamedColors.put("turquoise", TURQUOISE);
-        cssNamedColors.put("violet", VIOLET);
-        cssNamedColors.put("wheat", WHEAT);
-        cssNamedColors.put("white", WHITE);
-        cssNamedColors.put("whitesmoke", WHITE_SMOKE);
-        cssNamedColors.put("yellow", YELLOW);
-        cssNamedColors.put("yellowgreen", YELLOW_GREEN);
-    }
+    public static final Map<String, Color> NAMED_COLORS = Map.ofEntries(
+            new AbstractMap.SimpleEntry<>("aliceblue", ALICE_BLUE),
+            new AbstractMap.SimpleEntry<>("antiquewhite", ANTIQUE_WHITE),
+            new AbstractMap.SimpleEntry<>("aqua", AQUA),
+            new AbstractMap.SimpleEntry<>("aquamarine", AQUAMARINE),
+            new AbstractMap.SimpleEntry<>("azure", AZURE),
+            new AbstractMap.SimpleEntry<>("beige", BEIGE),
+            new AbstractMap.SimpleEntry<>("bisque", BISQUE),
+            new AbstractMap.SimpleEntry<>("black", BLACK),
+            new AbstractMap.SimpleEntry<>("blanchedalmond", BLANCHED_ALMOND),
+            new AbstractMap.SimpleEntry<>("blue", BLUE),
+            new AbstractMap.SimpleEntry<>("blueviolet", BLUE_VIOLET),
+            new AbstractMap.SimpleEntry<>("brown", BROWN),
+            new AbstractMap.SimpleEntry<>("burlywood", BURLYWOOD),
+            new AbstractMap.SimpleEntry<>("cadetblue", CADET_BLUE),
+            new AbstractMap.SimpleEntry<>("chartreuse", CHARTREUSE),
+            new AbstractMap.SimpleEntry<>("chocolate", CHOCOLATE),
+            new AbstractMap.SimpleEntry<>("coral", CORAL),
+            new AbstractMap.SimpleEntry<>("cornflowerblue", CORNFLOWER_BLUE),
+            new AbstractMap.SimpleEntry<>("cornsilk", CORNSILK),
+            new AbstractMap.SimpleEntry<>("crimson", CRIMSON),
+            new AbstractMap.SimpleEntry<>("cyan", CYAN),
+            new AbstractMap.SimpleEntry<>("darkblue", DARK_BLUE),
+            new AbstractMap.SimpleEntry<>("darkcyan", DARK_CYAN),
+            new AbstractMap.SimpleEntry<>("darkgoldenrod", DARK_GOLDENROD),
+            new AbstractMap.SimpleEntry<>("darkgray", DARK_GRAY),
+            new AbstractMap.SimpleEntry<>("darkgreen", DARK_GREEN),
+            new AbstractMap.SimpleEntry<>("darkgrey", DARK_GREY),
+            new AbstractMap.SimpleEntry<>("darkkhaki", DARK_KHAKI),
+            new AbstractMap.SimpleEntry<>("darkmagenta", DARK_MAGENTA),
+            new AbstractMap.SimpleEntry<>("darkolivegreen", DARK_OLIVE_GREEN),
+            new AbstractMap.SimpleEntry<>("darkorange", DARK_ORANGE),
+            new AbstractMap.SimpleEntry<>("darkorchid", DARK_ORCHID),
+            new AbstractMap.SimpleEntry<>("darkred", DARK_RED),
+            new AbstractMap.SimpleEntry<>("darksalmon", DARK_SALMON),
+            new AbstractMap.SimpleEntry<>("darkseagreen", DARK_SEAGREEN),
+            new AbstractMap.SimpleEntry<>("darkslateblue", DARK_SLATE_BLUE),
+            new AbstractMap.SimpleEntry<>("darkslategray", DARK_SLATE_GRAY),
+            new AbstractMap.SimpleEntry<>("darkslategrey", DARK_SLATE_GREY),
+            new AbstractMap.SimpleEntry<>("darkturquoise", DARK_TURQUOISE),
+            new AbstractMap.SimpleEntry<>("darkviolet", DARK_VIOLET),
+            new AbstractMap.SimpleEntry<>("deeppink", DEEP_PINK),
+            new AbstractMap.SimpleEntry<>("deepskyblue", DEEP_SKYBLUE),
+            new AbstractMap.SimpleEntry<>("dimgray", DIM_GRAY),
+            new AbstractMap.SimpleEntry<>("dimgrey", DIM_GREY),
+            new AbstractMap.SimpleEntry<>("dodgerblue", DODGER_BLUE),
+            new AbstractMap.SimpleEntry<>("firebrick", FIREBRICK),
+            new AbstractMap.SimpleEntry<>("floralwhite", FLORAL_WHITE),
+            new AbstractMap.SimpleEntry<>("forestgreen", FOREST_GREEN),
+            new AbstractMap.SimpleEntry<>("fuchsia", FUCHSIA),
+            new AbstractMap.SimpleEntry<>("gainsboro", GAINSBORO),
+            new AbstractMap.SimpleEntry<>("ghostwhite", GHOST_WHITE),
+            new AbstractMap.SimpleEntry<>("gold", GOLD),
+            new AbstractMap.SimpleEntry<>("goldenrod", GOLDENROD),
+            new AbstractMap.SimpleEntry<>("gray", GRAY),
+            new AbstractMap.SimpleEntry<>("green", GREEN),
+            new AbstractMap.SimpleEntry<>("greenyellow", GREEN_YELLOW),
+            new AbstractMap.SimpleEntry<>("grey", GREY),
+            new AbstractMap.SimpleEntry<>("honeydew", HONEYDEW),
+            new AbstractMap.SimpleEntry<>("hotpink", HOT_PINK),
+            new AbstractMap.SimpleEntry<>("indianred", INDIAN_RED),
+            new AbstractMap.SimpleEntry<>("indigo", INDIGO),
+            new AbstractMap.SimpleEntry<>("ivory", IVORY),
+            new AbstractMap.SimpleEntry<>("khaki", KHAKI),
+            new AbstractMap.SimpleEntry<>("lavender", LAVENDER),
+            new AbstractMap.SimpleEntry<>("lavenderblush", LAVENDER_BLUSH),
+            new AbstractMap.SimpleEntry<>("lawngreen", LAWN_GREEN),
+            new AbstractMap.SimpleEntry<>("lemonchiffon", LEMON_CHIFFON),
+            new AbstractMap.SimpleEntry<>("lightblue", LIGHT_BLUE),
+            new AbstractMap.SimpleEntry<>("lightcoral", LIGHT_CORAL),
+            new AbstractMap.SimpleEntry<>("lightcyan", LIGHT_CYAN),
+            new AbstractMap.SimpleEntry<>("lightgoldenrodyellow", LIGHT_GOLDENROD_YELLOW),
+            new AbstractMap.SimpleEntry<>("lightgray", LIGHT_GRAY),
+            new AbstractMap.SimpleEntry<>("lightgreen", LIGHT_GREEN),
+            new AbstractMap.SimpleEntry<>("lightgrey", LIGHT_GREY),
+            new AbstractMap.SimpleEntry<>("lightpink", LIGHT_PINK),
+            new AbstractMap.SimpleEntry<>("lightsalmon", LIGHT_SALMON),
+            new AbstractMap.SimpleEntry<>("lightseagreen", LIGHT_SEAGREEN),
+            new AbstractMap.SimpleEntry<>("lightskyblue", LIGHT_SKYBLUE),
+            new AbstractMap.SimpleEntry<>("lightslategray", LIGHT_SLATE_GRAY),
+            new AbstractMap.SimpleEntry<>("lightslategrey", LIGHT_SLATE_GREY),
+            new AbstractMap.SimpleEntry<>("lightsteelblue", LIGHT_STEEL_BLUE),
+            new AbstractMap.SimpleEntry<>("lightyellow", LIGHT_YELLOW),
+            new AbstractMap.SimpleEntry<>("lime", LIME),
+            new AbstractMap.SimpleEntry<>("limegreen", LIME_GREEN),
+            new AbstractMap.SimpleEntry<>("linen", LINEN),
+            new AbstractMap.SimpleEntry<>("magenta", MAGENTA),
+            new AbstractMap.SimpleEntry<>("maroon", MAROON),
+            new AbstractMap.SimpleEntry<>("mediumaquamarine", MEDIUM_AQUAMARINE),
+            new AbstractMap.SimpleEntry<>("mediumblue", MEDIUM_BLUE),
+            new AbstractMap.SimpleEntry<>("mediumorchid", MEDIUM_ORCHID),
+            new AbstractMap.SimpleEntry<>("mediumpurple", MEDIUM_PURPLE),
+            new AbstractMap.SimpleEntry<>("mediumseagreen", MEDIUM_SEAGREEN),
+            new AbstractMap.SimpleEntry<>("mediumslateblue", MEDIUM_SLATE_BLUE),
+            new AbstractMap.SimpleEntry<>("mediumspringgreen", MEDIUM_SPRING_GREEN),
+            new AbstractMap.SimpleEntry<>("mediumturquoise", MEDIUM_TURQUOISE),
+            new AbstractMap.SimpleEntry<>("mediumvioletred", MEDIUM_VIOLET_RED),
+            new AbstractMap.SimpleEntry<>("midnightblue", MIDNIGHT_BLUE),
+            new AbstractMap.SimpleEntry<>("mintcream", MINT_CREAM),
+            new AbstractMap.SimpleEntry<>("mistyrose", MISTY_ROSE),
+            new AbstractMap.SimpleEntry<>("moccasin", MOCCASIN),
+            new AbstractMap.SimpleEntry<>("navajowhite", NAVAJO_WHITE),
+            new AbstractMap.SimpleEntry<>("navy", NAVY),
+            new AbstractMap.SimpleEntry<>("oldlace", OLD_LACE),
+            new AbstractMap.SimpleEntry<>("olive", OLIVE),
+            new AbstractMap.SimpleEntry<>("olivedrab", OLIVE_DRAB),
+            new AbstractMap.SimpleEntry<>("orange", ORANGE),
+            new AbstractMap.SimpleEntry<>("orangered", ORANGE_RED),
+            new AbstractMap.SimpleEntry<>("orchid", ORCHID),
+            new AbstractMap.SimpleEntry<>("palegoldenrod", PALE_GOLDENROD),
+            new AbstractMap.SimpleEntry<>("palegreen", PALE_GREEN),
+            new AbstractMap.SimpleEntry<>("paleturquoise", PALE_TURQUOISE),
+            new AbstractMap.SimpleEntry<>("palevioletred", PALE_VIOLET_RED),
+            new AbstractMap.SimpleEntry<>("papayawhip", PAPAYA_WHIP),
+            new AbstractMap.SimpleEntry<>("peachpuff", PEACH_PUFF),
+            new AbstractMap.SimpleEntry<>("peru", PERU),
+            new AbstractMap.SimpleEntry<>("pink", PINK),
+            new AbstractMap.SimpleEntry<>("plum", PLUM),
+            new AbstractMap.SimpleEntry<>("powderblue", POWDER_BLUE),
+            new AbstractMap.SimpleEntry<>("purple", PURPLE),
+            new AbstractMap.SimpleEntry<>("red", RED),
+            new AbstractMap.SimpleEntry<>("rosybrown", ROSY_BROWN),
+            new AbstractMap.SimpleEntry<>("royalblue", ROYAL_BLUE),
+            new AbstractMap.SimpleEntry<>("saddlebrown", SADDLE_BROWN),
+            new AbstractMap.SimpleEntry<>("salmon", SALMON),
+            new AbstractMap.SimpleEntry<>("sandybrown", SANDY_BROWN),
+            new AbstractMap.SimpleEntry<>("seagreen", SEAGREEN),
+            new AbstractMap.SimpleEntry<>("seashell", SEASHELL),
+            new AbstractMap.SimpleEntry<>("sienna", SIENNA),
+            new AbstractMap.SimpleEntry<>("silver", SILVER),
+            new AbstractMap.SimpleEntry<>("skyblue", SKY_BLUE),
+            new AbstractMap.SimpleEntry<>("slateblue", SLATE_BLUE),
+            new AbstractMap.SimpleEntry<>("slategray", SLATE_GRAY),
+            new AbstractMap.SimpleEntry<>("slategrey", SLATE_GREY),
+            new AbstractMap.SimpleEntry<>("snow", SNOW),
+            new AbstractMap.SimpleEntry<>("springgreen", SPRING_GREEN),
+            new AbstractMap.SimpleEntry<>("steelblue", STEEL_BLUE),
+            new AbstractMap.SimpleEntry<>("tan", TAN),
+            new AbstractMap.SimpleEntry<>("teal", TEAL),
+            new AbstractMap.SimpleEntry<>("thistle", THISTLE),
+            new AbstractMap.SimpleEntry<>("tomato", TOMATO),
+            new AbstractMap.SimpleEntry<>("transparent", TRANSPARENT),
+            new AbstractMap.SimpleEntry<>("turquoise", TURQUOISE),
+            new AbstractMap.SimpleEntry<>("violet", VIOLET),
+            new AbstractMap.SimpleEntry<>("wheat", WHEAT),
+            new AbstractMap.SimpleEntry<>("white", WHITE),
+            new AbstractMap.SimpleEntry<>("whitesmoke", WHITE_SMOKE),
+            new AbstractMap.SimpleEntry<>("yellow", YELLOW),
+            new AbstractMap.SimpleEntry<>("yellowgreen", YELLOW_GREEN)
+    );
 }
 
