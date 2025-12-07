@@ -21,22 +21,22 @@ sbt unidoc
 check_error "!!"
 mv target/javaunidoc doc/api/java
 
-sbt ++3.3.6 json/doc
+sbt ++3.3.7 json/doc
 check_error "!!"
 find doc/api/json -name '*.html' -exec bin/gtag.sh {} \;
 
-sbt ++3.3.6 scala/doc
+sbt ++3.3.7 scala/doc
 check_error "!!"
 find doc/api/scala -name '*.html' -exec bin/gtag.sh {} \;
 
 # build smile-kotlin.jar and copy it to shell
-rm shell/src/universal/bin/smile-kotlin-*.jar
-./gradlew :kotlin:build
-check_error "!!"
+#rm shell/src/universal/bin/smile-kotlin-*.jar
+#./gradlew :kotlin:build
+#check_error "!!"
 
-./gradlew :kotlin:dokkaGenerate
-check_error "!!"
-find doc/api/kotlin -name '*.html' -exec bin/gtag.sh {} \;
+#./gradlew :kotlin:dokkaGenerate
+#check_error "!!"
+#find doc/api/kotlin -name '*.html' -exec bin/gtag.sh {} \;
 
 #cd clojure
 #./lein codox
@@ -61,11 +61,11 @@ while true; do
             sbt publishSigned
             check_error "sbt publish"
 
-            sbt ++3.3.6 scala/publishSigned
+            sbt ++3.3.7 scala/publishSigned
             check_error "sbt scala/publish"
-            sbt ++3.3.6 json/publishSigned
+            sbt ++3.3.7 json/publishSigned
             check_error "sbt json/publish"
-            # sbt ++3.3.6 spark/publishSigned
+            # sbt ++3.3.7 spark/publishSigned
             # check_error "sbt spark/publish"
             #./gradlew :kotlin:publishMavenJavaPublicationToMavenRepository
             # check_error "gradlew :kotlin:publish"

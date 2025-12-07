@@ -1,7 +1,7 @@
 name := "smile"
 
 lazy val scala213 = "2.13.18"
-lazy val scala3 = "3.3.6"
+lazy val scala3 = "3.3.7"
 lazy val supportedScalaVersions = List(scala213, scala3)
 lazy val os = sys.props.get("os.name").get.toLowerCase.split(" ")(0)
 
@@ -18,7 +18,7 @@ lazy val commonSettings = Seq(
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("https://haifengl.github.io/")),
-  version := "5.0.0",
+  version := "5.0.1",
 
   // Run in a separate JVM, to make sure sbt waits until all threads have
   // finished before returning.
