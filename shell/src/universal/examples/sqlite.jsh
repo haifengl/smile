@@ -1,4 +1,4 @@
-//!mvn org.xerial:sqlite-jdbc:3.51.0.0
+//!mvn org.xerial:sqlite-jdbc:3.51.1.0
 
 import java.sql.DriverManager;
 import java.sql.Connection;

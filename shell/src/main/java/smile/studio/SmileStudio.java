@@ -82,9 +82,21 @@ public class SmileStudio extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                if (confirmSaveNotebook()) {
-                    saveNotebook(false);
+                switch (confirmSaveNotebook()) {
+                    case JOptionPane.YES_OPTION:
+                        saveNotebook(false);
+                        dispose();
+                        break;
+
+                    case JOptionPane.NO_OPTION:
+                        dispose();
+                        break;
+
+                    case JOptionPane.CANCEL_OPTION:
+                        return;
                 }
+
+                // Shutdown the execution engine.
                 workspace.close();
 
                 // Exit the app if this is the last window.
@@ -279,7 +291,7 @@ public class SmileStudio extends JFrame {
 
         public AutoSaveAction() {
             super(bundle.getString("AutoSave"));
-            // Without icon, menu items wont' align well on Mac.
+            // Without icon, menu items won't align well on Mac.
             // However, FlatLaf won't show check mark on Windows
             // if we set the icon.
             if (SystemInfo.isMacFullWindowContentSupported) {
@@ -403,15 +415,14 @@ public class SmileStudio extends JFrame {
 
     /**
      * Prompts if the notebook is not saved.
-     * @return true if ok is clicked.
+     * @return an integer indicating the option selected by the user.
      */
-    private boolean confirmSaveNotebook() {
-        if (workspace.notebook().isSaved()) return false;
-        int choice = JOptionPane.showConfirmDialog(this,
+    private int confirmSaveNotebook() {
+        if (workspace.notebook().isSaved()) return JOptionPane.NO_OPTION;
+        return JOptionPane.showConfirmDialog(this,
                 bundle.getString("SaveMessage"),
                 bundle.getString("SaveTitle"),
-                JOptionPane.OK_CANCEL_OPTION);
-        return choice == JOptionPane.OK_OPTION;
+                JOptionPane.YES_NO_CANCEL_OPTION);
     }
 
     /**
@@ -480,7 +491,7 @@ public class SmileStudio extends JFrame {
         // Create and set up the window.
         SmileStudio studio = new SmileStudio(file);
         studio.setSize(new Dimension(1200, 800));
-        studio.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        studio.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
         // macOS window settings
         if (SystemInfo.isMacFullWindowContentSupported) {
