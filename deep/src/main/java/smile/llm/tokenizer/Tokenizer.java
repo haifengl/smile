@@ -73,16 +73,6 @@ public interface Tokenizer {
     String[] tokenize(String text);
 
     /**
-     * Loads a SentencePiece model.
-     * @param path The SentencePiece model file path.
-     * @return a SentencePiece tokenizer.
-     * @throws IOException if fail to load the model.
-     */
-    static SentencePiece sentencePiece(String path) throws IOException {
-        return new SentencePiece(path);
-    }
-
-    /**
      * Loads a tiktoken model with default BOS token (<s>) and EOS token (</s>).
      * @param path The tiktoken model file path.
      * @param pattern The regex pattern to split the input text into tokens.
