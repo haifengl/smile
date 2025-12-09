@@ -62,8 +62,8 @@ public class SVMTest {
         System.out.println("svmguide1");
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        SparseDataset<Integer> train = Read.libsvm(smile.io.Paths.getTestData("libsvm/svmguide1"));
-        SparseDataset<Integer> test  = Read.libsvm(smile.io.Paths.getTestData("libsvm/svmguide1.t"));
+        SparseDataset<Integer> train = Read.libsvm(smile.io.Paths.getTestData("libsvm/svmguide1.dat"));
+        SparseDataset<Integer> test  = Read.libsvm(smile.io.Paths.getTestData("libsvm/svmguide1.t.dat"));
 
         int n = train.size();
         double[][] x = new double[n][4];
