@@ -2,7 +2,7 @@
 [![Maven Central](https://img.shields.io/maven-central/v/com.github.haifengl/smile-core)](https://central.sonatype.com/artifact/com.github.haifengl/smile-core)
 
 ## Goal ##
-<img align="left" width="48" src="/web/src/images/smile.jpg">
+<img style="float:left; width:48px;" src="/web/src/images/smile.jpg" alt="SMILE">
 SMILE (Statistical Machine Intelligence & Learning Engine) is
 a fast and comprehensive machine learning framework in Java.
 SMILE v5.x requires Java 25, v4.x requires Java 21, and all previous versions
@@ -156,13 +156,13 @@ In this example, we include all supported 64-bit platforms and filter out
 spaces.
 
 ## Shell ##
-SMILE comes with interactive shells for Java, Scala and Kotlin.
+SMILE comes with interactive shells for Java and Scala.
 Download pre-packaged SMILE from the
 [releases page](https://github.com/haifengl/smile/releases).
 After unziping the package and cd into the home directory of SMILE
 in a terminal, type
 ```
-    ./bin/jshell.sh
+    ./bin/smile
 ```
 to enter SMILE shell in Java, which pre-imports all major SMILE packages.
 You can run any valid Java expressions in the shell. In the simplest case,
@@ -170,7 +170,7 @@ you can use it as a calculator.
 
 To enter the shell in Scala, type
 ```
-    ./bin/smile
+    ./bin/smile scala
 ```
 Similar to the shell in Java, all major SMILE packages are pre-imported.
 Besides, all high-level SMILE operators are predefined in the shell.
@@ -183,12 +183,6 @@ For example,
 ```
 You can also modify the configuration file `./conf/smile.ini` for the
 memory and other JVM settings.
-
-To use SMILE shell in Kotlin, type
-```
-    ./bin/kotlin.sh
-```
-Unfortunately, Kotlin shell doesn't support pre-import packages.
 
 ## Model Serialization ##
 Most models support the Java `Serializable` interface (all classifiers

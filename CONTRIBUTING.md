@@ -1,6 +1,6 @@
-# How to contribute to Smile #
-Welcome! If you are interested in contributing to Smile, reporting issues,
-or just getting in touch with the folks who work on Smile, this guide is
+# How to contribute to SMILE #
+Welcome! If you are interested in contributing to SMILE, reporting issues,
+or just getting in touch with the folks who work on SMILE, this guide is
 for you.
 
 One of the easiest ways to contribute is to participate in discussions
@@ -8,7 +8,7 @@ and discuss issues. You can also contribute by opening an issue and
 submitting a pull request with code changes.
 
 ## Build ##
-To build Smile from source, please first install Java 21, Scala 2.13
+To build SMILE from source, please first install Java 25, Scala 2.13
 and SBT 1.0+. Then clone the repo and build the package:
 
 ```bash
@@ -22,13 +22,7 @@ sbt test
 
 To build with Scala 3, run
 ```bash
-sbt ++3.3.3 scala/package
-```
-
-To build Kotlin package, run
-```bash
-cd kotlin
-./gradlew build
+sbt ++3.3.7 scala/package
 ```
 
 To use Clojure package, run
@@ -37,8 +31,8 @@ cd clojure
 ./lein repl
 ```
 
-For Kotlin and Clojure to pick up your changes in Java, you should
-first publish Smile packages locally.
+For Clojure to pick up your changes in Java, you should
+first publish SMILE packages locally.
 ```bash
 sbt publishM2
 ```
@@ -48,7 +42,7 @@ To test the latest code, run the following
 git pull
 bin/smile.sh
 ```
-which will build the system and enter the Smile shell in Scala.
+which will build the system and enter the SMILE shell in Scala.
 If you prefer Java, you may run
 ```bash
 sbt shell/stage
@@ -63,7 +57,7 @@ GitHub supports [markdown](https://help.github.com/categories/writing-on-github/
 so when filing bugs make sure you check the formatting before clicking submit.
 
 ## Other discussions ##
-For general "how-to" and guidance questions about using Smile to build
+For general "how-to" and guidance questions about using SMILE to build
 and run applications, please use [Stack Overflow](http://stackoverflow.com/questions/tagged/smile-ai)
 tagged with `smile-ai`.
 
@@ -78,7 +72,7 @@ following guidelines to maximize the chances of your PR being merged.
    it fits the current project direction and make sure no one else
    is already working on it.
 
- - For any work related to setting up build, test, and CI for Smile
+ - For any work related to setting up build, test, and CI for SMILE
    on GitHub, or for small patches or bug fixes, please open an issue
    for tracking purposes, but we generally don't need a discussion
    prior to opening a PR.
@@ -94,7 +88,7 @@ Please be sure to follow the usual process for submitting PRs:
 We reserve the right to close PRs that are not making progress. Closed PRs can be reopened again later and work can resume.
 
 ### Contributor License Agreement ##
-By contributing your code to Smile you grant us a non-exclusive,
+By contributing your code to SMILE you grant us a non-exclusive,
 irrevocable, worldwide, royalty-free, sublicenseable, transferable
 license under all of Your relevant intellectual property rights
 (including copyright, patent, and any other rights), to use, copy,
@@ -125,5 +119,5 @@ ANY WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT,
 MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 
 ## Code of Conduct ##
-To ensure an inclusive community, contributors and users in the Smile
+To ensure an inclusive community, contributors and users in the SMILE
 community should follow the [code of conduct](./CODE_OF_CONDUCT.md).
