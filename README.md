@@ -1,7 +1,6 @@
-# Statistical Machine Intelligence & Learning Engine
+# Statistical Machine Intelligence & Learning Engine <img align="left" width="48" src="/web/src/images/smile.jpg" alt="SMILE">
 
 ## Goal ##
-<img style="float:left; width:48px;" src="/web/src/images/smile.jpg" alt="SMILE">
 SMILE (Statistical Machine Intelligence & Learning Engine) is
 a fast and comprehensive machine learning framework in Java.
 SMILE v5.x requires Java 25, v4.x requires Java 21, and all previous versions
