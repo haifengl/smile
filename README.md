@@ -1,4 +1,4 @@
-# Statistical Machine Intelligence & Learning Engine <img align="left" width="48" src="/web/src/images/smile.jpg" alt="SMILE">
+# Statistical Machine Intelligence & Learning Engine <img align="left" width="40" src="/web/src/images/smile.jpg" alt="SMILE">
 
 ## Goal ##
 SMILE (Statistical Machine Intelligence & Learning Engine) is
