@@ -16,6 +16,7 @@ tasks.withType<Test>().all {
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED")
     jvmArgs("--add-opens=java.base/java.nio=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED")
     jvmArgs("--add-opens=java.base/sun.nio.cs=ALL-UNNAMED", "--add-opens=java.base/sun.security.action=ALL-UNNAMED")
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
 }
 
 tasks.withType<Jar>().all {
