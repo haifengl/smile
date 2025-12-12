@@ -23,6 +23,7 @@
   * 
   * @author Karl Li
   */
+ @FunctionalInterface
  public interface ArrayElementConsumer {
      /**
       * Performs this operation on the given element.
