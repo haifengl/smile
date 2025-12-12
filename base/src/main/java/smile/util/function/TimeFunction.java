@@ -32,6 +32,7 @@ import static smile.util.Regex.DOUBLE_REGEX;
  *
  * @author Haifeng Li
  */
+@FunctionalInterface
 public interface TimeFunction extends Serializable {
     /**
      * Returns the function value at time step t.
