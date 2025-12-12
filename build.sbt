@@ -18,7 +18,7 @@ lazy val commonSettings = Seq(
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("https://haifengl.github.io/")),
-  version := "5.0.1",
+  version := "5.0.2",
 
   // Run in a separate JVM, to make sure sbt waits until all threads have
   // finished before returning.
