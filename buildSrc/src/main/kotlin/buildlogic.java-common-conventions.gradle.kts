@@ -7,10 +7,9 @@ plugins {
 
 dependencies {
     implementation("org.slf4j:slf4j-api:2.0.17")
-    implementation("org.bytedeco.gradle-javacpp-build:org.bytedeco.gradle-javacpp-build.gradle.plugin:1.5.10")
 
     // Use JUnit Jupiter for testing.
-    testImplementation("org.junit.jupiter:junit-jupiter:5.13.4")
+    testImplementation("org.junit.jupiter:junit-jupiter:6.0.1")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testRuntimeOnly("org.slf4j:slf4j-simple:2.0.17")
 }
@@ -31,9 +30,9 @@ tasks.javadoc {
 }
 
 tasks.withType<JavaCompile> {
-    // Set the source and target compatibility to Java 21
-    sourceCompatibility = JavaVersion.VERSION_21.toString()
-    targetCompatibility = JavaVersion.VERSION_21.toString()
+    // Set the source and target compatibility to Java 25
+    sourceCompatibility = JavaVersion.VERSION_25.toString()
+    targetCompatibility = JavaVersion.VERSION_25.toString()
 
     options.encoding = "UTF-8"
     options.compilerArgs.add("-g:lines,vars,source")

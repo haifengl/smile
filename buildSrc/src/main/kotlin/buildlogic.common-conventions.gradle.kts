@@ -1,5 +1,5 @@
 group = "com.github.haifengl"
-version = "5.0.0"
+version = "5.0.2"
 extra["isReleaseVersion"] = !version.toString().endsWith("SNAPSHOT")
 
 repositories {
@@ -16,8 +16,10 @@ tasks.withType<Test>().all {
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED")
     jvmArgs("--add-opens=java.base/java.nio=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED")
     jvmArgs("--add-opens=java.base/sun.nio.cs=ALL-UNNAMED", "--add-opens=java.base/sun.security.action=ALL-UNNAMED")
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
 }
 
 tasks.withType<Jar>().all {
     archiveBaseName.set("${rootProject.name}-${project.name}")
 }
+
