@@ -24,6 +24,7 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
+@FunctionalInterface
 public interface Function extends Serializable {
     /** Logging facility. */
     org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Function.class);
