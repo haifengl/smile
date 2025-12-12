@@ -24,7 +24,6 @@ import java.awt.image.*;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.Timer;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.*;
 import java.util.*;
 import java.util.prefs.Preferences;
@@ -33,10 +32,10 @@ import com.formdev.flatlaf.*;
 import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
+import com.formdev.flatlaf.util.SystemFileChooser;
 import com.formdev.flatlaf.util.SystemInfo;
 import smile.studio.view.*;
 import smile.swing.Button;
-import smile.swing.FileChooser;
 import static smile.swing.SmileUtilities.scaleImageIcon;
 
 /**
@@ -52,7 +51,7 @@ public class SmileStudio extends JFrame {
     private static final String[] fileNameExtensions = {"java", "jsh"};
     private static final String AUTO_SAVE_KEY = "autoSave";
     /** Each window has its own FileChooser so that it points to its own recent directory. */
-    private final JFileChooser fileChooser = new FileChooser();
+    private final SystemFileChooser fileChooser = new SystemFileChooser();
     private final JMenuBar menuBar = new JMenuBar();
     private final JToolBar toolBar = new JToolBar();
     private final StatusBar statusBar = new StatusBar();
@@ -445,8 +444,8 @@ public class SmileStudio extends JFrame {
      */
     private void openNotebook() {
         fileChooser.setDialogTitle(bundle.getString("OpenNotebook"));
-        fileChooser.setFileFilter(new FileNameExtensionFilter(bundle.getString("SmileFile"), fileNameExtensions));
-        if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+        fileChooser.setFileFilter(new SystemFileChooser.FileNameExtensionFilter(bundle.getString("SmileFile"), fileNameExtensions));
+        if (fileChooser.showOpenDialog(this) == SystemFileChooser.APPROVE_OPTION) {
             File file = fileChooser.getSelectedFile();
             createAndShowGUI(file);
         }
@@ -459,8 +458,8 @@ public class SmileStudio extends JFrame {
     private void saveNotebook(boolean saveAs) {
         if (workspace.notebook().getFile() == null || saveAs) {
             fileChooser.setDialogTitle(bundle.getString("SaveNotebook"));
-            fileChooser.setFileFilter(new FileNameExtensionFilter(bundle.getString("SmileFile"), fileNameExtensions));
-            if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            fileChooser.setFileFilter(new SystemFileChooser.FileNameExtensionFilter(bundle.getString("SmileFile"), fileNameExtensions));
+            if (fileChooser.showSaveDialog(this) == SystemFileChooser.APPROVE_OPTION) {
                 File file = fileChooser.getSelectedFile();
                 String name = file.getName().toLowerCase();
                 if (!(name.endsWith(".java") || name.endsWith(".jsh"))) {
