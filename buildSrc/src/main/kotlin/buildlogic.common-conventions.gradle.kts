@@ -1,5 +1,5 @@
 group = "com.github.haifengl"
-version = "5.0.0"
+version = "5.0.2"
 extra["isReleaseVersion"] = !version.toString().endsWith("SNAPSHOT")
 
 repositories {
@@ -22,3 +22,4 @@ tasks.withType<Test>().all {
 tasks.withType<Jar>().all {
     archiveBaseName.set("${rootProject.name}-${project.name}")
 }
+
