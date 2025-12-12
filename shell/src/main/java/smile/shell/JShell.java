@@ -19,6 +19,7 @@ package smile.shell;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.prefs.Preferences;
 import jdk.jshell.tool.JavaShellToolBuilder;
 
 /**
@@ -57,6 +58,7 @@ public interface JShell {
 
     return JavaShellToolBuilder.builder()
             .interactiveTerminal(true)
+            .persistence(Preferences.userNodeForPackage(JShell.class))
             .start(list.toArray(String[]::new));
   }
 }
