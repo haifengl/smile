@@ -68,6 +68,7 @@ batScriptExtraDefines ++= Seq(
 libraryDependencies ++= Seq(
   "com.github.scopt" %% "scopt"              % "4.1.0",
   "org.scala-lang"    % "scala-compiler"     % "2.13.18",
+  "info.picocli"      % "picocli"            % "4.7.7",
   "org.slf4j"         % "slf4j-simple"       % "2.0.17",
   "com.openai"        % "openai-java"        % "4.11.0",
   "com.anthropic"     % "anthropic-java"     % "2.11.1",

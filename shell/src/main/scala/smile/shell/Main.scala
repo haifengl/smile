@@ -17,6 +17,7 @@
 package smile.shell
 
 import java.nio.file.Path
+import picocli.CommandLine
 import smile.studio.SmileStudio
 
 /** An object that runs Smile script or interactive shell.
@@ -32,7 +33,7 @@ object Main {
     val command = args.headOption.getOrElse("")
     command match {
       case "train" => Train(args.drop(1))
-      case "predict" => Predict(args.drop(1))
+      case "predict" => new CommandLine(new Predict()).execute(args.drop(1)*)
       case "serve" => Serve(args.drop(1))
       case "scala" => ScalaREPL(args.drop(1))
       case "shell" => JShell.start(args.drop(1))
