@@ -11,7 +11,7 @@ libraryDependencies ++= {
     "org.xerial.snappy" % "snappy-java" % "1.1.10.8", // for avro
     "com.epam" % "parso" % "2.0.14" % Provided, // SAS7BDAT
     "org.apache.commons" % "commons-csv" % "1.14.1",
-    "org.duckdb" % "duckdb_jdbc" % "1.4.2.0",
+    "org.duckdb" % "duckdb_jdbc" % "1.4.3.0",
     "org.xerial" % "sqlite-jdbc" % "3.51.1.0" % Test
   )
 }
