@@ -15,7 +15,7 @@ dependencies {
 // Compile bytecode to Java 25
 tasks.withType<KotlinJvmCompile>().configureEach {
     compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_24)
+        jvmTarget.set(JvmTarget.JVM_25)
         freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
     }
 }
