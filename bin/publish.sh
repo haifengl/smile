@@ -34,9 +34,9 @@ find doc/api/scala -name '*.html' -exec bin/gtag.sh {} \;
 #./gradlew :kotlin:build
 #check_error "!!"
 
-#./gradlew :kotlin:dokkaGenerate
-#check_error "!!"
-#find doc/api/kotlin -name '*.html' -exec bin/gtag.sh {} \;
+./gradlew :kotlin:dokkaGenerate
+check_error "!!"
+find doc/api/kotlin -name '*.html' -exec bin/gtag.sh {} \;
 
 #cd clojure
 #./lein codox
