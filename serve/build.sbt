@@ -40,7 +40,7 @@ libraryDependencies ++= Seq(
   "com.github.scopt"   %% "scopt" % "4.1.0",
   "com.typesafe.slick" %% "slick" % "3.6.1",
   "org.xerial"         %  "sqlite-jdbc" % "3.51.1.0",
-  "ch.qos.logback"     %  "logback-classic" % "1.5.21"
+  "ch.qos.logback"     %  "logback-classic" % "1.5.23"
 )
 
 val os = sys.props.get("os.name").get.toLowerCase.split(" ")(0)
@@ -57,7 +57,7 @@ libraryDependencies ++= (
 )
 
 libraryDependencies ++= {
-  val akkaVersion     = "2.9.5"
+  val akkaVersion     = "2.9.3"
   val akkaHttpVersion = "10.6.3"
   Seq(
     "com.typesafe.akka" %% "akka-actor-typed"         % akkaVersion,
