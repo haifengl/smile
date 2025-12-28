@@ -79,6 +79,7 @@
 /set format smile value "%3$s"
 
 // Welcome message
+var smileVersion = smile.shell.JShell.class.getPackage().getImplementationVersion();
 println("""
 
                                                        ..::''''::..
@@ -90,8 +91,8 @@ println("""
   ,:';  ::;  ::  ::  ::   ::   ::  ::,::''.         :: `:.      .:' ::
   `:,,,,;;' ,;; ,;;, ;;, ,;;, ,;;, `:,,,,:'          `;..``::::''..;'
                                                        ``::,,,,::''
-|  Welcome to Smile  -- Version  5.0.2
-===============================================================================""")
+|  Welcome to Smile  -- Version""" + ' ' + smileVersion);
+println("===============================================================================");
 
 
 // Imports Smile packages.
