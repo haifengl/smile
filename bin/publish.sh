@@ -29,14 +29,9 @@ sbt ++3.3.7 scala/doc
 check_error "!!"
 find doc/api/scala -name '*.html' -exec bin/gtag.sh {} \;
 
-# build smile-kotlin.jar and copy it to shell
-#rm shell/src/universal/bin/smile-kotlin-*.jar
-#./gradlew :kotlin:build
-#check_error "!!"
-
-#./gradlew :kotlin:dokkaGenerate
-#check_error "!!"
-#find doc/api/kotlin -name '*.html' -exec bin/gtag.sh {} \;
+./gradlew :kotlin:dokkaGenerate
+check_error "!!"
+find doc/api/kotlin -name '*.html' -exec bin/gtag.sh {} \;
 
 #cd clojure
 #./lein codox
@@ -100,3 +95,4 @@ while true; do
         * ) echo "Please answer yes or no.";;
     esac
 done
+
