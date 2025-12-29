@@ -28,50 +28,54 @@ import jdk.jshell.tool.JavaShellToolBuilder;
  * @author Haifeng Li
  */
 public interface JShell {
-  String version = JShell.class.getPackage().getImplementationVersion();
-  String logo = """
-                                                                ..::''''::..
-                                                              .;''        ``;.
-              ....                                           ::    ::  ::    ::
-            ,;' .;:                ()  ..:                  ::     ::  ::     ::
-            ::.      ..:,:;.,:;.    .   ::   .::::.         :: .:' ::  :: `:. ::
-             '''::,   ::  ::  ::  `::   ::  ;:   .::        ::  :          :  ::
-           ,:';  ::;  ::  ::  ::   ::   ::  ::,::''.         :: `:.      .:' ::
-           `:,,,,;;' ,;; ,;;, ;;, ,;;, ,;;, `:,,,,:'          `;..``::::''..;'
-                                                                ``::,,,,::''
-        """;
+    String version = JShell.class.getPackage().getImplementationVersion();
+    String logo = """
+                                                                  ..::''''::..
+                                                                .;''        ``;.
+                ....                                           ::    ::  ::    ::
+              ,;' .;:                ()  ..:                  ::     ::  ::     ::
+              ::.      ..:,:;.,:;.    .   ::   .::::.         :: .:' ::  :: `:. ::
+               '''::,   ::  ::  ::  `::   ::  ;:   .::        ::  :          :  ::
+             ,:';  ::;  ::  ::  ::   ::   ::  ::,::''.         :: `:.      .:' ::
+             `:,,,,;;' ,;; ,;;, ;;, ,;;, ,;;, `:,,,,:'          `;..``::::''..;'
+                                                                  ``::,,,,::''
+          """;
 
-  /**
-   * Launch an instance of a Java shell tool.
-   * @param args the command-line arguments.
-   * @return the exit status with which the tool explicitly exited (if any),
-   *         otherwise 0 for success or 1 for failure.
-   * @throws Exception an unexpected fatal exception
-   */
-  static int start(String[] args) throws Exception {
-    String home = System.getProperty("smile.home", ".");
-    String[] startup = {
-            "--class-path", System.getProperty("java.class.path"),
-            "-R-XX:MaxMetaspaceSize=1024M",
-            "-R-Xss4M",
-            "-R-XX:MaxRAMPercentage=75",
-            "-R-XX:+UseZGC",
-            "-R--add-opens=java.base/java.nio=ALL-UNNAMED",
-            "-R--enable-native-access=ALL-UNNAMED",
-            "-R-Dsmile.home=" + home,
-            "--startup", "DEFAULT",
-            "--startup", "PRINTING",
-            "--startup", home + "/bin/predef.jsh",
-            "--feedback", "smile"
-    };
+    /**
+     * Launch an instance of a Java shell tool.
+     * @param args the command-line arguments.
+     * @return the exit status with which the tool explicitly exited (if any),
+     *         otherwise 0 for success or 1 for failure.
+     */
+    static int start(String[] args) {
+        String home = System.getProperty("smile.home", ".");
+        String[] startup = {
+                "--class-path", System.getProperty("java.class.path"),
+                "-R-XX:MaxMetaspaceSize=1024M",
+                "-R-Xss4M",
+                "-R-XX:MaxRAMPercentage=75",
+                "-R-XX:+UseZGC",
+                "-R--add-opens=java.base/java.nio=ALL-UNNAMED",
+                "-R--enable-native-access=ALL-UNNAMED",
+                "-R-Dsmile.home=" + home,
+                "--startup", "DEFAULT",
+                "--startup", "PRINTING",
+                "--startup", home + "/bin/predef.jsh",
+                "--feedback", "smile"
+        };
 
-    List<String> list = new ArrayList<>(startup.length + args.length);
-    Collections.addAll(list, startup);
-    Collections.addAll(list, args);
+        List<String> list = new ArrayList<>(startup.length + args.length);
+        Collections.addAll(list, startup);
+        Collections.addAll(list, args);
 
-    return JavaShellToolBuilder.builder()
-            .interactiveTerminal(true)
-            .persistence(Preferences.userNodeForPackage(JShell.class))
-            .start(list.toArray(String[]::new));
-  }
+        try {
+            return JavaShellToolBuilder.builder()
+                    .interactiveTerminal(true)
+                    .persistence(Preferences.userNodeForPackage(JShell.class))
+                    .start(list.toArray(String[]::new));
+        } catch (Exception ex) {
+            System.err.println(ex.getMessage());
+        }
+        return 1;
+    }
 }
