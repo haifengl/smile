@@ -23,7 +23,6 @@ package smile.shell
 object ScalaREPL extends scala.tools.nsc.MainGenericRunner {
   def apply(args: Array[String]): Unit = {
     val welcome = s"""
-         |
          |${JShell.logo}
          ||  Welcome to SMILE ${JShell.version}! Type :help for command help.
          |===============================================================================""".stripMargin

@@ -1,6 +1,6 @@
 name := "smile-studio"
 
-Compile / mainClass := Some("smile.shell.Main")
+Compile / mainClass := Some("smile.Main")
 
 // native packager
 enablePlugins(JavaAppPackaging)

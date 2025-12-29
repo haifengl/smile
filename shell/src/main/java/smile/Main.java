@@ -14,25 +14,32 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.shell;
+package smile;
 
 import java.nio.file.Path;
 import java.util.Arrays;
 import picocli.CommandLine;
+import smile.shell.*;
 import smile.studio.SmileStudio;
 
-/** An object that runs Smile script or interactive shell.
-  *
-  * @author Haifeng Li
-  */
+/**
+ * The entry point of SMILE Shell or Studio.
+ *
+ * @author Haifeng Li
+ */
 public class Main {
     static void main(String[] args) {
         // Normalize home path
         var home = Path.of(System.getProperty("smile.home", ". ")).normalize();
         System.setProperty("smile.home", home.toString());
 
-        var command = args.length > 0 ? args[0] : "";
-        var options = args.length > 0 ? Arrays.copyOfRange(args, 1, args.length) : args;
+        var command = "";
+        var options = args;
+        if (args.length > 0) {
+            command = args[0];
+            options = Arrays.copyOfRange(args, 1, args.length);
+        }
+
         switch (command) {
             case "train" -> new CommandLine(new Train()).execute(options);
             case "predict" -> new CommandLine(new Predict()).execute(options);
