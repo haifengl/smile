@@ -20,6 +20,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import smile.plot.swing.Palette;
+import smile.shell.JShell;
 import smile.studio.kernel.JavaRunner;
 import smile.studio.model.CommandType;
 import smile.swing.ScrollablePanel;
@@ -75,16 +76,7 @@ public class Analyst extends JPanel {
         welcome.setCommandType(CommandType.Raw);
         welcome.setEditable(false);
         welcome.setInputForeground(Palette.DARK_GRAY);
-        welcome.editor().setText("""
-                                                         ..::''''::..
-                                                       .;''        ``;.
-       ....                                           ::    ::  ::    ::
-     ,;' .;:                ()  ..:                  ::     ::  ::     ::
-     ::.      ..:,:;.,:;.    .   ::   .::::.         :: .:' ::  :: `:. ::
-      '''::,   ::  ::  ::  `::   ::  ;:   .::        ::  :          :  ::
-    ,:';  ::;  ::  ::  ::   ::   ::  ::,::''.         :: `:.      .:' ::
-    `:,,,,;;' ,;; ,;;, ;;, ,;;, ,;;, `:,,,,:'          `;..``::::''..;'
-                                                         ``::,,,,::''
+        welcome.editor().setText(JShell.logo.replaceAll("(?m)^\\s{3}", "") + """
     =====================================================================
     Welcome to Smile Analyst!
     

@@ -28,6 +28,19 @@ import jdk.jshell.tool.JavaShellToolBuilder;
  * @author Haifeng Li
  */
 public interface JShell {
+  String version = JShell.class.getPackage().getImplementationVersion();
+  String logo = """
+                                                                ..::''''::..
+                                                              .;''        ``;.
+              ....                                           ::    ::  ::    ::
+            ,;' .;:                ()  ..:                  ::     ::  ::     ::
+            ::.      ..:,:;.,:;.    .   ::   .::::.         :: .:' ::  :: `:. ::
+             '''::,   ::  ::  ::  `::   ::  ;:   .::        ::  :          :  ::
+           ,:';  ::;  ::  ::  ::   ::   ::  ::,::''.         :: `:.      .:' ::
+           `:,,,,;;' ,;; ,;;, ;;, ,;;, ,;;, `:,,,,:'          `;..``::::''..;'
+                                                                ``::,,,,::''
+        """;
+
   /**
    * Launch an instance of a Java shell tool.
    * @param args the command-line arguments.

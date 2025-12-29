@@ -79,21 +79,9 @@
 /set format smile value "%3$s"
 
 // Welcome message
-var smileVersion = smile.shell.JShell.class.getPackage().getImplementationVersion();
-println("""
-
-                                                       ..::''''::..
-                                                     .;''        ``;.
-     ....                                           ::    ::  ::    ::
-   ,;' .;:                ()  ..:                  ::     ::  ::     ::
-   ::.      ..:,:;.,:;.    .   ::   .::::.         :: .:' ::  :: `:. ::
-    '''::,   ::  ::  ::  `::   ::  ;:   .::        ::  :          :  ::
-  ,:';  ::;  ::  ::  ::   ::   ::  ::,::''.         :: `:.      .:' ::
-  `:,,,,;;' ,;; ,;;, ;;, ,;;, ,;;, `:,,,,:'          `;..``::::''..;'
-                                                       ``::,,,,::''
-|  Welcome to Smile  -- Version""" + ' ' + smileVersion);
+println("\n" + smile.shell.JShell.logo);
+println("|  Welcome to SMILE  -- Version " + smile.shell.JShell.version);
 println("===============================================================================");
-
 
 // Imports Smile packages.
 import java.awt.Color;
