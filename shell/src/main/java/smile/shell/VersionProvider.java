@@ -14,12 +14,13 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile
+package smile.shell;
 
-/** Common shell commands.
-  *
-  * @author Haifeng Li
-  */
-package object shell {
-  val version: String = getClass.getPackage.getImplementationVersion
+import picocli.CommandLine.IVersionProvider;
+
+public class VersionProvider implements IVersionProvider {
+    @Override
+    public String[] getVersion() {
+        return new String[]{"SMILE " + JShell.version};
+    }
 }
