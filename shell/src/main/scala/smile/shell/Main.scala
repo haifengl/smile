@@ -32,7 +32,7 @@ object Main {
 
     val command = args.headOption.getOrElse("")
     command match {
-      case "train" => Train(args.drop(1))
+      case "train" => new CommandLine(new Train()).execute(args.drop(1)*)
       case "predict" => new CommandLine(new Predict()).execute(args.drop(1)*)
       case "serve" => Serve(args.drop(1))
       case "scala" => ScalaREPL(args.drop(1))
