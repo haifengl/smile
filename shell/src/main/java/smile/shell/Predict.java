@@ -31,20 +31,16 @@ import smile.util.Strings;
  *
  * @author Haifeng Li
  */
-@Command(name = "smile predict", version = "smile predict 5.0.2",
+@Command(name = "smile predict", versionProvider = VersionProvider.class,
          description = "Run batch prediction on a file.",
          mixinStandardHelpOptions = true)
 public class Predict implements Callable<Integer> {
-    /** The data file. */
     @Parameters(index = "0", description = "The data file.")
     private File file;
-    /** The model file. */
     @Option(names = {"-m", "--model"}, required = true, description = "The model file.")
     private File model;
-    /** The data file content type. */
-    @Option(names = {"-t", "--type"}, defaultValue = "", description = "The data file content type.")
+    @Option(names = {"-t", "--type"}, description = "The data file content type.")
     private String type;
-    /** Computes posteriori probabilities for soft classifiers. */
     @Option(names = {"-p", "--probability"}, description = "Compute posteriori probabilities for soft classifiers.")
     private boolean probability;
 
