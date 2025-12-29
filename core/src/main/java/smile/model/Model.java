@@ -117,11 +117,11 @@ public interface Model {
      */
     static DataFrameClassifier classification(String algorithm, Formula formula, DataFrame data, Properties params) {
         return switch (algorithm) {
-            case "random_forest" ->
+            case "random-forest" ->
                     RandomForest.fit(formula, data, RandomForest.Options.of(params));
-            case "gradient_boost" ->
+            case "gradient-boost" ->
                     GradientTreeBoost.fit(formula, data, GradientTreeBoost.Options.of(params));
-            case "adaboost" ->
+            case "ada-boost" ->
                     AdaBoost.fit(formula, data, AdaBoost.Options.of(params));
             case "cart" ->
                     DecisionTree.fit(formula, data, DecisionTree.Options.of(params));
@@ -247,9 +247,9 @@ public interface Model {
      */
     static DataFrameRegression regression(String algorithm, Formula formula, DataFrame data, Properties params) {
         return switch (algorithm) {
-            case "random_forest" ->
+            case "random-forest" ->
                     smile.regression.RandomForest.fit(formula, data, smile.regression.RandomForest.Options.of(params));
-            case "gradient_boost" ->
+            case "gradient-boost" ->
                     smile.regression.GradientTreeBoost.fit(formula, data, smile.regression.GradientTreeBoost.Options.of(params));
             case "cart" ->
                     RegressionTree.fit(formula, data, RegressionTree.Options.of(params));
@@ -257,14 +257,14 @@ public interface Model {
                     OLS.fit(formula, data, OLS.Options.of(params));
             case "lasso" ->
                     LASSO.fit(formula, data, LASSO.Options.of(params));
-            case "elastic_net" ->
+            case "elastic-net" ->
                     ElasticNet.fit(formula, data, ElasticNet.Options.of(params));
             case "ridge" -> {
                 double[] weights = new double[data.size()];
                 Arrays.fill(weights, 1);
                 yield RidgeRegression.fit(formula, data, weights, RidgeRegression.Options.of(params));
             }
-            case "gaussian_process" ->
+            case "gaussian-process" ->
                     DataFrameRegression.of(formula, data, params, new Regression.Trainer<double[], GaussianProcessRegression<double[]>>() {
                         @Override
                         public GaussianProcessRegression<double[]> fit(double[][] x, double[] y, Properties params) {
