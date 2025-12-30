@@ -75,8 +75,8 @@ public class InferenceService {
         try {
             var obj = Read.object(path);
             if (obj instanceof Model model) {
-                String key = model.getProperty(Model.ID, getFileName(path)) + "-"
-                        + model.getProperty(Model.VERSION, "1");
+                String key = model.getTag(Model.ID, getFileName(path)) + "-"
+                           + model.getTag(Model.VERSION, "1");
                 models.put(key, model);
             } else {
                 logger.errorf("'%s' is not a valid model", path);

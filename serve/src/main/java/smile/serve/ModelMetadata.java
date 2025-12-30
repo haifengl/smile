@@ -42,7 +42,7 @@ public class ModelMetadata {
         this.id = id;
         this.algorithm = model.algorithm();
         this.schema = new TreeMap<>();
-        this.tags = model.properties();
+        this.tags = model.tags();
         for (var field : model.schema().fields()) {
             schema.put(field.name(), new Type(field.dtype().name(), field.dtype().isNullable()));
         }
