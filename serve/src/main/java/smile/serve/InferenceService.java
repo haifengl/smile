@@ -30,14 +30,21 @@ import org.jboss.logging.Logger;
 import smile.io.Read;
 import smile.model.Model;
 
+/**
+ * The inference service provider.
+ *
+ * @author Haifeng Li
+ */
 @ApplicationScoped
 public class InferenceService {
     private static final Logger logger = Logger.getLogger(InferenceService.class);
     private static final String MODEL_PATH = "SMILE_SERVE_MODEL";
     private final Map<String, Model> models = new TreeMap<>();
 
-    // Load your ML model here upon application start
-    // The @ApplicationScoped scope ensures the model is loaded once and reused
+    /**
+     * Load ML models upon application start.
+     * The @ApplicationScoped scope ensures the models are loaded once and reused
+     */
     public InferenceService() {
         var env = System.getenv(MODEL_PATH);
         var path = Paths.get(env == null ? ".." : env).toAbsolutePath();
@@ -60,6 +67,10 @@ public class InferenceService {
         }
     }
 
+    /**
+     * Loads a model.
+     * @param path the model file path.
+     */
     private void loadModel(Path path) {
         try {
             var obj = Read.object(path);
@@ -75,6 +86,11 @@ public class InferenceService {
         }
     }
 
+    /**
+     * Returns the file name without extension.
+     * @param path the file path.
+     * @return the file name without extension.
+     */
     private static String getFileName(Path path) {
         Path file = path.getFileName();
         if (file == null) {
@@ -90,8 +106,21 @@ public class InferenceService {
         }
     }
 
+    /**
+     * Returns the list of models in id-version format.
+     * @return the list of models.
+     */
     public List<String> models() {
         return new ArrayList<>(models.keySet());
+    }
+
+    /**
+     * Returns the model instance.
+     * @param id the model id.
+     * @return the model instance.
+     */
+    public Model getModel(String id) {
+        return models.get(id);
     }
 
     /**

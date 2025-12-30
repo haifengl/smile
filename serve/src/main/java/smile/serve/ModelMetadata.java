@@ -17,22 +17,34 @@
 package smile.serve;
 
 import java.util.Map;
+import java.util.Properties;
+import java.util.TreeMap;
+import smile.data.measure.Measure;
+import smile.data.type.DataType;
+import smile.model.Model;
 
 /**
- * The generic inference request.
+ * The metadata of model.
  *
  * @author Haifeng Li
  */
-public class InferenceRequest {
-    /** This map will hold the generic JSON data (e.g., {"feature1": 10.5, "feature2": "value"}) */
-    public Map<String, Object> data;
+public class ModelMetadata {
+    public record Type(String type, boolean nullable) {}
+    public String id;
+    public String algorithm;
+    public Map<String, Type> schema;
+    public Properties tags;
 
-    /** Constructor. */
-    public InferenceRequest() {
+    public ModelMetadata() {
     }
 
-    /** Constructor. */
-    public InferenceRequest(Map<String, Object> data) {
-        this.data = data;
+    public ModelMetadata(String id, Model model) {
+        this.id = id;
+        this.algorithm = model.algorithm();
+        this.schema = new TreeMap<>();
+        this.tags = model.properties();
+        for (var field : model.schema().fields()) {
+            schema.put(field.name(), new Type(field.dtype().name(), field.dtype().isNullable()));
+        }
     }
 }
