@@ -38,9 +38,9 @@ import smile.validation.RegressionMetrics;
  * @author Haifeng Li
  */
 public interface Model {
-    /** The property key for model id. */
+    /** The tag key for model id. */
     String ID = "id";
-    /** The property key for model version. */
+    /** The tag key for model version. */
     String VERSION = "version";
 
     /**
@@ -62,37 +62,37 @@ public interface Model {
     Formula formula();
 
     /**
-     * Returns the model properties.
-     * @return the model properties.
+     * Returns the model metadata tags.
+     * @return the model metadata tags.
      */
-    Properties properties();
+    Properties tags();
 
     /**
-     * Returns the model property for the given key.
-     * @param key the property key.
-     * @return the property value.
+     * Returns the model metadata tag.
+     * @param key the tag key.
+     * @return the tag value.
      */
-    default String getProperty(String key) {
-        return properties().getProperty(key);
+    default String getTag(String key) {
+        return tags().getProperty(key);
     }
 
     /**
-     * Returns the model property for the given key.
-     * @param key the property key.
+     * Returns the model metadata tag.
+     * @param key the tag key.
      * @param defaultValue a default value.
-     * @return the property value.
+     * @return the tag value.
      */
-    default String getProperty(String key, String defaultValue) {
-        return properties().getProperty(key, defaultValue);
+    default String getTag(String key, String defaultValue) {
+        return tags().getProperty(key, defaultValue);
     }
 
     /**
-     * Sets a model property.
-     * @param key the property key.
-     * @param value the property value.
+     * Sets a model metadata tag.
+     * @param key the tag key.
+     * @param value the tag value.
      */
     default void setProperty(String key, String value) {
-        properties().setProperty(key, value);
+        tags().setProperty(key, value);
     }
 
     /**
@@ -130,7 +130,7 @@ public interface Model {
         var y = formula.response().variables();
         var predictors = data.schema().fields().stream().filter(field -> !y.contains(field.name())).toList();
         var schema = new StructType(predictors);
-        return new ClassificationModel(algorithm, schema, formula, model, trainMetrics, validationMetrics, testMetrics, new Properties());
+        return new ClassificationModel(algorithm, schema, formula, model, trainMetrics, validationMetrics, testMetrics, new Properties(params));
     }
 
     /**
@@ -260,7 +260,7 @@ public interface Model {
         var y = formula.response().variables();
         var predictors = data.schema().fields().stream().filter(field -> !y.contains(field.name())).toList();
         var schema = new StructType(predictors);
-        return new RegressionModel(algorithm, schema, formula, model, trainMetrics, validationMetrics, testMetrics, new Properties());
+        return new RegressionModel(algorithm, schema, formula, model, trainMetrics, validationMetrics, testMetrics, new Properties(params));
     }
 
     /**

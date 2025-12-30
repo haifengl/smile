@@ -33,7 +33,7 @@ import smile.validation.RegressionMetrics;
  * @param train the training metrics.
  * @param validation the cross-validation metrics.
  * @param test the test metrics.
- * @param properties the model properties.
+ * @param tag the model metadata tags.
  *
  * @author Haifeng Li
  */
@@ -44,7 +44,7 @@ public record RegressionModel(String algorithm,
                               RegressionMetrics train,
                               RegressionMetrics validation,
                               RegressionMetrics test,
-                              Properties properties) implements Model, Serializable {
+                              Properties tags) implements Model, Serializable {
     /**
      * Model inference.
      * @param x the input tuple.
