@@ -27,6 +27,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -34,6 +35,10 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+/**
+ * Model REST API.
+ * @author Haifeng Li
+ */
 @Path("/models")
 public class InferenceResource {
 
@@ -47,6 +52,15 @@ public class InferenceResource {
     @Produces(MediaType.APPLICATION_JSON)
     public List<String> list() {
         return service.models();
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/{modelId}")
+    public ModelMetadata get(@PathParam("modelId") String id) {
+        var model = service.getModel(id);
+        if (model == null) throw new NotFoundException();
+        return new ModelMetadata(id, model);
     }
 
     @POST

@@ -18,13 +18,20 @@ package smile.serve;
 
 import java.util.Map;
 
+/**
+ * The generic inference request.
+ *
+ * @author Haifeng Li
+ */
 public class InferenceRequest {
-    // This map will hold the generic JSON data (e.g., {"feature1": 10.5, "feature2": "value"})
+    /** This map will hold the generic JSON data (e.g., {"feature1": 10.5, "feature2": "value"}) */
     public Map<String, Object> data;
 
+    /** Constructor. */
     public InferenceRequest() {
     }
 
+    /** Constructor. */
     public InferenceRequest(Map<String, Object> data) {
         this.data = data;
     }
