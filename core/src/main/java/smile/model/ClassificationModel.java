@@ -17,6 +17,7 @@
 package smile.model;
 
 import java.io.Serializable;
+import java.util.Properties;
 import smile.classification.*;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
@@ -33,6 +34,7 @@ import smile.validation.ClassificationMetrics;
  * @param train the training metrics.
  * @param validation the cross-validation metrics.
  * @param test the test metrics.
+ * @param properties the model properties.
  *
  * @author Haifeng Li
  */
@@ -42,7 +44,8 @@ public record ClassificationModel(String algorithm,
                                   DataFrameClassifier classifier,
                                   ClassificationMetrics train,
                                   ClassificationMetrics validation,
-                                  ClassificationMetrics test) implements Model, Serializable {
+                                  ClassificationMetrics test,
+                                  Properties properties) implements Model, Serializable {
 
     /**
      * Model inference.

@@ -38,6 +38,11 @@ import smile.validation.RegressionMetrics;
  * @author Haifeng Li
  */
 public interface Model {
+    /** The property key for model id. */
+    String ID = "id";
+    /** The property key for model version. */
+    String VERSION = "version";
+
     /**
      * Returns the algorithm name.
      * @return the algorithm name.
@@ -55,6 +60,40 @@ public interface Model {
      * @return the model formula.
      */
     Formula formula();
+
+    /**
+     * Returns the model properties.
+     * @return the model properties.
+     */
+    Properties properties();
+
+    /**
+     * Returns the model property for the given key.
+     * @param key the property key.
+     * @return the property value.
+     */
+    default String getProperty(String key) {
+        return properties().getProperty(key);
+    }
+
+    /**
+     * Returns the model property for the given key.
+     * @param key the property key.
+     * @param defaultValue a default value.
+     * @return the property value.
+     */
+    default String getProperty(String key, String defaultValue) {
+        return properties().getProperty(key, defaultValue);
+    }
+
+    /**
+     * Sets a model property.
+     * @param key the property key.
+     * @param value the property value.
+     */
+    default void setProperty(String key, String value) {
+        properties().setProperty(key, value);
+    }
 
     /**
      * Trains a classification model by cross validation.
@@ -91,7 +130,7 @@ public interface Model {
         var y = formula.response().variables();
         var predictors = data.schema().fields().stream().filter(field -> !y.contains(field.name())).toList();
         var schema = new StructType(predictors);
-        return new ClassificationModel(algorithm, schema, formula, model, trainMetrics, validationMetrics, testMetrics);
+        return new ClassificationModel(algorithm, schema, formula, model, trainMetrics, validationMetrics, testMetrics, new Properties());
     }
 
     /**
@@ -221,7 +260,7 @@ public interface Model {
         var y = formula.response().variables();
         var predictors = data.schema().fields().stream().filter(field -> !y.contains(field.name())).toList();
         var schema = new StructType(predictors);
-        return new RegressionModel(algorithm, schema, formula, model, trainMetrics, validationMetrics, testMetrics);
+        return new RegressionModel(algorithm, schema, formula, model, trainMetrics, validationMetrics, testMetrics, new Properties());
     }
 
     /**

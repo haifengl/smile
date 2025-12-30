@@ -17,6 +17,7 @@
 package smile.model;
 
 import java.io.Serializable;
+import java.util.Properties;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.data.type.StructType;
@@ -32,6 +33,7 @@ import smile.validation.RegressionMetrics;
  * @param train the training metrics.
  * @param validation the cross-validation metrics.
  * @param test the test metrics.
+ * @param properties the model properties.
  *
  * @author Haifeng Li
  */
@@ -41,7 +43,8 @@ public record RegressionModel(String algorithm,
                               DataFrameRegression regression,
                               RegressionMetrics train,
                               RegressionMetrics validation,
-                              RegressionMetrics test) implements Model, Serializable {
+                              RegressionMetrics test,
+                              Properties properties) implements Model, Serializable {
     /**
      * Model inference.
      * @param x the input tuple.
