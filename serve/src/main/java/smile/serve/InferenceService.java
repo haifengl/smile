@@ -16,18 +16,82 @@
  */
 package smile.serve;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Stream;
+import jakarta.enterprise.context.ApplicationScoped;
+import org.jboss.logging.Logger;
+import smile.io.Read;
+import smile.model.Model;
 
 @ApplicationScoped
 public class InferenceService {
+    private static final Logger logger = Logger.getLogger(InferenceService.class);
+    private static final String MODEL_PATH = "SMILE_SERVE_MODEL";
+    private final Map<String, Model> models = new TreeMap<>();
 
     // Load your ML model here upon application start
     // The @ApplicationScoped scope ensures the model is loaded once and reused
     public InferenceService() {
-        // Model loading logic (e.g., loading an ONNX or TF model from resources)
-        System.out.println("Loading ML model...");
-        // Placeholder for model loading
+        var env = System.getenv(MODEL_PATH);
+        var path = Paths.get(env == null ? ".." : env).toAbsolutePath();
+        logger.infof("Loading model from '%s'", path);
+        if (Files.isRegularFile(path)) {
+            loadModel(path);
+        } else if (Files.isDirectory(path)) {
+            try (Stream<Path> files = Files.list(path)) {
+                files.forEach(file -> {
+                    if (Files.isRegularFile(file) && file.toString().endsWith(".sml")) {
+                        System.out.println("loading");
+                        loadModel(file);
+                    }
+                });
+            } catch (IOException ex) {
+                logger.error(ex);
+            }
+        } else {
+            logger.errorf("'%s' is not a regular file", path);
+        }
+    }
+
+    private void loadModel(Path path) {
+        try {
+            var obj = Read.object(path);
+            if (obj instanceof Model model) {
+                String key = model.getProperty(Model.ID, getFileName(path)) + "-"
+                        + model.getProperty(Model.VERSION, "1");
+                models.put(key, model);
+            } else {
+                logger.errorf("'%s' is not a valid model", path);
+            }
+        } catch (Exception ex) {
+            logger.errorf(ex, "Failed to load model '%s'", path);
+        }
+    }
+
+    private static String getFileName(Path path) {
+        Path file = path.getFileName();
+        if (file == null) {
+            return ""; // Handle cases where the path doesn't have a filename component
+        }
+
+        String name = file.toString();
+        int lastDotIndex = name.lastIndexOf('.');
+        if (lastDotIndex > 0) { // Ensures the file is not a hidden file like ".gitignore" (where pos=0)
+            return name.substring(0, lastDotIndex);
+        } else {
+            return name; // Returns the original name if no extension is found
+        }
+    }
+
+    public List<String> models() {
+        return new ArrayList<>(models.keySet());
     }
 
     /**
@@ -37,9 +101,6 @@ public class InferenceService {
      */
     public Map<String, Object> predict(InferenceRequest request) {
         Map<String, Object> inputData = request.data;
-        // Pre-process the inputData map into the format your model expects (e.g., tensors, arrays)
-        System.out.println("Processing input: " + inputData);
-
         // Placeholder for actual ML inference
         // Use a library like ONNX Runtime Java API to feed the data to your model
         String prediction = "Sample_Prediction";
