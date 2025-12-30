@@ -34,7 +34,7 @@ import smile.validation.ClassificationMetrics;
  * @param train the training metrics.
  * @param validation the cross-validation metrics.
  * @param test the test metrics.
- * @param properties the model properties.
+ * @param tags the model metadata tags.
  *
  * @author Haifeng Li
  */
@@ -45,7 +45,7 @@ public record ClassificationModel(String algorithm,
                                   ClassificationMetrics train,
                                   ClassificationMetrics validation,
                                   ClassificationMetrics test,
-                                  Properties properties) implements Model, Serializable {
+                                  Properties tags) implements Model, Serializable {
 
     /**
      * Model inference.
