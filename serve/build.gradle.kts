@@ -1,17 +1,31 @@
 plugins {
-    id("buildlogic.scala-application-conventions")
+    id("buildlogic.java-common-conventions")
+    id("io.quarkus")
 }
+
+val quarkusPlatformGroupId: String by project
+val quarkusPlatformArtifactId: String by project
+val quarkusPlatformVersion: String by project
 
 dependencies {
-    implementation(project(":deep"))
-    implementation(libs.bundles.akka)
-    implementation(libs.logback)
-    implementation(libs.sqlite)
-    implementation("com.github.scopt:scopt_3:4.1.0")
-    implementation("com.typesafe.slick:slick_3:3.6.1")
+    implementation(project(":core"))
+    implementation("io.quarkiverse.quinoa:quarkus-quinoa:2.7.1")
+    implementation(enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}"))
+    implementation("io.quarkus:quarkus-rest")
+    implementation("io.quarkus:quarkus-rest-jackson")
+    implementation("io.quarkus:quarkus-arc")
+    implementation("org.jboss.slf4j:slf4j-jboss-logmanager")
+    testImplementation("io.quarkus:quarkus-junit5")
 }
 
-application {
-    // Define the main class for the application.
-    mainClass = "smile.serve.Main"
+tasks.withType<Test> {
+    systemProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager")
+    jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
+}
+tasks.withType<JavaCompile> {
+    options.encoding = "UTF-8"
+    options.compilerArgs.add("-parameters")
+}
+tasks.withType<Javadoc> {
+    enabled = false
 }
