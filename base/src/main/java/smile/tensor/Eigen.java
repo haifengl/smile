@@ -16,6 +16,8 @@
  */
 package smile.tensor;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.math.MathEx;
 
 /**
@@ -38,14 +40,20 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public interface Eigen {
-    org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Eigen.class);
+    private static Logger logger() {
+        final class LogHolder {
+            private static final Logger logger = LoggerFactory.getLogger(Eigen.class);
+        }
+        return LogHolder.logger;
+    }
 
     /**
      * Returns the largest eigen pair of matrix with the power iteration
      * under the assumptions A has an eigenvalue that is strictly greater
      * in magnitude than its other eigenvalues and the starting
      * vector has a nonzero component in the direction of an eigenvector
-     * associated with the dominant eigenvalue.
+     * associated with the dominant eigen value.
+     * @param A the matrix.
      * @param v on input, it is the non-zero initial guess of the eigen vector.
      * On output, it is the eigen vector corresponding largest eigen value.
      * @return the largest eigen value.
@@ -59,7 +67,8 @@ public interface Eigen {
      * under the assumptions A has an eigenvalue that is strictly greater
      * in magnitude than its other eigenvalues and the starting
      * vector has a nonzero component in the direction of an eigenvector
-     * associated with the dominant eigenvalue.
+     * associated with the dominant eigen value.
+     * @param A the matrix.
      * @param v on input, it is the non-zero initial guess of the eigen vector.
      * On output, it is the eigen vector corresponding largest eigen value.
      * @param p the origin in the shifting power method. A - pI will be
@@ -103,16 +112,16 @@ public interface Eigen {
 
             double eps = Math.abs(lambda - l);
             if (iter % 10 == 0) {
-                logger.trace("Largest eigenvalue after {} power iterations: {}", iter, lambda + p);
+                logger().trace("Largest eigenvalue after {} power iterations: {}", iter, lambda + p);
             }
 
             if (eps < tol) break;
         }
 
         if (iter == maxIter) {
-            logger.error("Power iteration exceeded the maximum number of iterations.");
+            logger().error("Power iteration exceeded the maximum number of iterations.");
         }
-        logger.info("Largest eigenvalue after {} power iterations: {}", iter, lambda + p);
+        logger().info("Largest eigenvalue after {} power iterations: {}", iter, lambda + p);
         return lambda + p;
     }
 
@@ -387,7 +396,7 @@ public interface Eigen {
             enough = enough || first >= n;
         }
 
-        logger.info("Lanczos: {} iterations for Matrix of size {}", iter, n);
+        logger().info("Lanczos: {} iterations for Matrix of size {}", iter, n);
 
         store(q, j, wptr[1]);
 
@@ -439,7 +448,7 @@ public interface Eigen {
 
         // fatal error
         if (rnm <= 0.0) {
-            logger.error("Lanczos method was unable to find a starting vector within range.");
+            logger().error("Lanczos method was unable to find a starting vector within range.");
             return -1;
         }
 
@@ -644,11 +653,11 @@ public interface Eigen {
             }
         }
 
-        logger.info("Lancozs method found {} converged eigenvalues of the {}-by-{} matrix", neig, step + 1, step + 1);
+        logger().info("Lancozs method found {} converged eigenvalues of the {}-by-{} matrix", neig, step + 1, step + 1);
         if (neig != 0) {
             for (int i = 0; i <= step; i++) {
                 if (bnd[i] <= 16.0 * MathEx.EPSILON * Math.abs(ritz[i])) {
-                    logger.info("ritz[{}] = {}", i, ritz[i]);
+                    logger().info("ritz[{}] = {}", i, ritz[i]);
                 }
             }
         }
