@@ -130,7 +130,8 @@ public interface Model {
         var y = formula.response().variables();
         var predictors = data.schema().fields().stream().filter(field -> !y.contains(field.name())).toList();
         var schema = new StructType(predictors);
-        return new ClassificationModel(algorithm, schema, formula, model, trainMetrics, validationMetrics, testMetrics, new Properties(params));
+        return new ClassificationModel(algorithm, schema, formula, model,
+            trainMetrics, validationMetrics, testMetrics, (Properties) params.clone());
     }
 
     /**
@@ -260,7 +261,8 @@ public interface Model {
         var y = formula.response().variables();
         var predictors = data.schema().fields().stream().filter(field -> !y.contains(field.name())).toList();
         var schema = new StructType(predictors);
-        return new RegressionModel(algorithm, schema, formula, model, trainMetrics, validationMetrics, testMetrics, new Properties(params));
+        return new RegressionModel(algorithm, schema, formula, model,
+            trainMetrics, validationMetrics, testMetrics, (Properties) params.clone());
     }
 
     /**
