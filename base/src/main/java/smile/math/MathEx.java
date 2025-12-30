@@ -2249,6 +2249,7 @@ public class MathEx {
 
     /**
      * Returns the product of all elements in an integer array.
+     * @param x the array.
      * @return the product of all elements in an integer array.
      */
     public static long product(int... x) {

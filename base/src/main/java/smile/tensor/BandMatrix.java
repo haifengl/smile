@@ -145,11 +145,13 @@ public abstract class BandMatrix implements Matrix, Serializable {
     }
 
     /**
-     * Returns a zero matrix.
+     * Returns a zero band matrix.
+     * @param scalarType the data type of matrix elements.
      * @param m the number of rows.
      * @param n the number of columns.
      * @param kl the number of subdiagonals.
      * @param ku the number of superdiagonals.
+     * @return a zero band matrix.
      */
     public static BandMatrix zeros(ScalarType scalarType, int m, int n, int kl, int ku) {
         int ld = kl + ku + 1;
@@ -167,13 +169,14 @@ public abstract class BandMatrix implements Matrix, Serializable {
     }
 
     /**
-     * Returns a symmetric matrix from a two-dimensional array.
+     * Returns a band matrix from a two-dimensional array.
      * @param m the number of rows.
      * @param n the number of columns.
      * @param kl the number of subdiagonals.
      * @param ku the number of superdiagonals.
      * @param ab the band matrix. A[i,j] is stored in {@code AB[ku+i-j, j]}
      *           for {@code max(0, j-ku) <= i <= min(m-1, j+kl)}.
+     * @return a band matrix.
      */
     public static BandMatrix of(int m, int n, int kl, int ku, double[][] ab) {
         int ld = kl + ku + 1;
@@ -188,13 +191,14 @@ public abstract class BandMatrix implements Matrix, Serializable {
     }
 
     /**
-     * Returns a symmetric matrix from a two-dimensional array.
+     * Returns a band matrix from a two-dimensional array.
      * @param m the number of rows.
      * @param n the number of columns.
      * @param kl the number of subdiagonals.
      * @param ku the number of superdiagonals.
      * @param ab the band matrix. A[i,j] is stored in {@code AB[ku+i-j, j]}
      *           for {@code max(0, j-ku) <= i <= min(m-1, j+kl)}.
+     * @return a band matrix.
      */
     public static BandMatrix of(int m, int n, int kl, int ku, float[][] ab) {
         int ld = kl + ku + 1;

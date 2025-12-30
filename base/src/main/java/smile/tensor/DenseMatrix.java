@@ -1473,6 +1473,7 @@ public abstract class DenseMatrix implements Matrix, Serializable {
 
     /**
      * Returns a random matrix of standard normal distribution.
+     * @param scalarType the data type of matrix elements.
      * @param m the number of rows.
      * @param n the number of columns.
      * @return the random matrix.
@@ -1483,6 +1484,7 @@ public abstract class DenseMatrix implements Matrix, Serializable {
 
     /**
      * Returns a random matrix with given distribution.
+     * @param scalarType the data type of matrix elements.
      * @param m the number of rows.
      * @param n the number of columns.
      * @param distribution the distribution of random numbers.
@@ -1502,7 +1504,7 @@ public abstract class DenseMatrix implements Matrix, Serializable {
 
     /**
      * Returns a uniformly distributed random matrix in [0, 1).
-     *
+     * @param scalarType the data type of matrix elements.
      * @param m the number of rows.
      * @param n the number of columns.
      * @return the random matrix.
@@ -1521,7 +1523,7 @@ public abstract class DenseMatrix implements Matrix, Serializable {
 
     /**
      * Returns a uniformly distributed random matrix in [lo, hi).
-     *
+     * @param scalarType the data type of matrix elements.
      * @param m the number of rows.
      * @param n the number of columns.
      * @param lo the lower bound of uniform distribution.

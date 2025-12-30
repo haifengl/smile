@@ -16,7 +16,7 @@
  */
 package smile.linalg;
 
-/** Matrix transpose. */
+/** Matrix transpose operation. */
 public enum Transpose {
     /** Normal operation on the matrix. */
     NO_TRANSPOSE(111, (byte) 'N'),
@@ -48,7 +48,11 @@ public enum Transpose {
      */
     public byte lapack() { return lapack; }
 
-    /** Flips the value, null safe. */
+    /**
+     * Flips the value, null safe.
+     * @param value a Transpose operation value.
+     * @return the flipped value.
+     */
     public static Transpose flip(Transpose value) {
         return switch (value) {
             case null -> null;

@@ -108,6 +108,7 @@ public class SQL implements AutoCloseable {
      * Loads an extension.
      *
      * @param name the extension name.
+     * @return this object.
      * @throws SQLException if fail to load the extension.
      */
     public SQL loadExtension(String name) throws SQLException {

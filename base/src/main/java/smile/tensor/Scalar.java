@@ -21,6 +21,7 @@ import static smile.tensor.ScalarType.*;
 
 /**
  * A scalar is a single number.
+ * @param value the scalar value.
  *
  * @author Haifeng Li
  */
