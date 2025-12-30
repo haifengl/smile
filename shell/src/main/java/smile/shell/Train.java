@@ -35,19 +35,23 @@ import smile.model.cart.SplitRule;
  * @author Haifeng Li
  */
 @Command(name = "smile train", versionProvider = VersionProvider.class,
-        description = "Trains a supervised learning model.",
+        description = "Train a supervised learning model.",
         mixinStandardHelpOptions = true)
 public class Train {
-    @Option(names = {"-m", "--model"}, required = true, description = "The model file.")
+    @Option(names = {"-m", "--model"}, required = true, paramLabel = "<file>", description = "The model file.")
     private File model;
-    @Option(names = {"-f", "--formula"}, description = "The model formula <class ~ .>.")
+    @Option(names = {"--model-id"}, description = "The model id.")
+    private String id;
+    @Option(names = {"--model-version"}, paramLabel = "<ver>", description = "The model version.")
+    private String version;
+    @Option(names = {"--formula"}, description = "The model formula <class ~ .>.")
     private String formula;
-    @Option(names = {"-d", "--data"}, required = true, description = "The training data file.")
+    @Option(names = {"-d", "--data"}, required = true, paramLabel = "<file>", description = "The training data file.")
     private File train;
-    @Option(names = {"--test"}, description = "The test data file.")
+    @Option(names = {"--test"}, paramLabel = "<file>", description = "The test data file.")
     private File test;
-    @Option(names = {"-t", "--type"}, description = "The data file content type.")
-    private String type;
+    @Option(names = {"--format"}, description = "The data file format.")
+    private String format;
     @Option(names = {"-k", "--kfold"}, paramLabel = "<fold>", description = "k-fold cross validation.")
     private int kfold = 1;
     @Option(names = {"-r", "--round"}, description = "The number of rounds of repeated cross validation.")
@@ -66,7 +70,7 @@ public class Train {
     /** Runs the training algorithm. */
     private void run() throws Exception {
         var path = model.toPath();
-        var data = Read.data(train.getCanonicalPath(), type);
+        var data = Read.data(train.getCanonicalPath(), format);
         var columns = Arrays.asList(data.names());
 
         Formula modelFormula;
@@ -88,7 +92,7 @@ public class Train {
 
         DataFrame testData = null;
         if (test != null) {
-            testData = Read.data(test.getCanonicalPath(), type);
+            testData = Read.data(test.getCanonicalPath(), format);
         }
 
         if (classification) {
@@ -100,6 +104,12 @@ public class Train {
             if (model.test() != null) {
               System.out.println("Test metrics: " + model.test());
             }
+            if (id != null) {
+                model.setProperty(Model.ID, id);
+            }
+            if (version != null) {
+                model.setProperty(Model.VERSION, version);
+            }
             Write.object(model, path);
         } else {
             var model = Model.regression(algorithm, modelFormula, data, testData, params, kfold, round, ensemble);
@@ -109,6 +119,12 @@ public class Train {
             }
             if (model.test() != null) {
               System.out.println("Test metrics: " + model.test());
+            }
+            if (id != null) {
+                model.setProperty(Model.ID, id);
+            }
+            if (version != null) {
+                model.setProperty(Model.VERSION, version);
             }
             Write.object(model, path);
         }

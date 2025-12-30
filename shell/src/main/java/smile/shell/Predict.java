@@ -37,16 +37,16 @@ import smile.util.Strings;
 public class Predict implements Callable<Integer> {
     @Parameters(index = "0", description = "The data file.")
     private File file;
-    @Option(names = {"-m", "--model"}, required = true, description = "The model file.")
+    @Option(names = {"-m", "--model"}, required = true, paramLabel = "<file>", description = "The model file.")
     private File model;
-    @Option(names = {"-t", "--type"}, description = "The data file content type.")
-    private String type;
+    @Option(names = {"--format"}, description = "The data file format.")
+    private String format;
     @Option(names = {"-p", "--probability"}, description = "Compute posteriori probabilities for soft classifiers.")
     private boolean probability;
 
     @Override
     public Integer call() throws Exception {
-        var data = Read.data(file.getCanonicalPath(), type);
+        var data = Read.data(file.getCanonicalPath(), format);
         var obj = Read.object(model.toPath());
         if (obj instanceof ClassificationModel box) {
             var classifier = box.classifier();
