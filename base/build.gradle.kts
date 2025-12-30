@@ -11,3 +11,8 @@ dependencies {
 
     testRuntimeOnly(libs.sqlite)
 }
+
+tasks.withType<Javadoc> {
+    // Exclude specific packages from Javadoc generation
+    exclude("smile/linalg/arpack/**", "smile/linalg/blas/**", "smile/linalg/lapack/**")
+}
