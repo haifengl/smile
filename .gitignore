@@ -4,35 +4,8 @@
 *.war
 *.ear
 
-# SBT
-.bsp
-
-# Intellij
-.idea
-**/target
-
-# Eclipse
-.project
-.settings
-.cache-main
-.cache-tests
-.classpath
-
-# NetBeans
-nbproject
-
-# Android Studio
-*.iml
-
-# Jupyter
-.ipynb_checkpoints
-
-# PyTorch checkpoints
-*.pt
-
-# JavaDoc
-doc/api
-web/_site/
+# JVM crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
 
 # Data
 shell/src/universal/data/image
@@ -43,18 +16,65 @@ shell/src/universal/data/nlp
 .lein-repl-*
 clojure/pom.xml*
 
-# Gradle
-.gradle
-build
-
 # Node.js
 node_modules
 
-# JVM crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
+# PyTorch checkpoints
+*.pt
+
+# Jupyter
+.ipynb_checkpoints
 
 # macOS
 .DS_Store
 
 # Generated
+doc/api
+web/_site/
 serve/src/universal/chat
+
+# SBT
+.bsp
+**/target
+
+# Gradle
+.gradle/
+build/
+
+# Eclipse
+.project
+.classpath
+.settings/
+.cache-main
+.cache-tests
+bin/
+
+# IntelliJ
+.idea
+*.ipr
+*.iml
+*.iws
+
+# NetBeans
+nbproject
+nb-configuration.xml
+
+# Visual Studio Code
+.vscode
+.factorypath
+
+# Vim
+*.swp
+*.swo
+
+# patch
+*.orig
+*.rej
+
+# Local environment
+.env
+
+# Plugin directory
+/.quarkus/cli/plugins/
+# TLS Certificates
+.certs/
