@@ -5,9 +5,6 @@ extra["isReleaseVersion"] = !version.toString().endsWith("SNAPSHOT")
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
-    maven {
-        url = uri("https://repo.akka.io/maven")
-    }
 }
 
 tasks.withType<Test>().all {
