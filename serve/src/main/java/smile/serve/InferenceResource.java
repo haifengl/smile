@@ -19,13 +19,14 @@ package smile.serve;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.stream.Collectors;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -33,14 +34,20 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-@Path("/v1/infer")
+@Path("/models")
 public class InferenceResource {
 
     @Inject
-    InferenceService inferenceService;
+    InferenceService service;
 
     @Inject
     ObjectMapper objectMapper; // Inject the Quarkus-provided Jackson ObjectMapper
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<String> list() {
+        return service.models();
+    }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -52,7 +59,7 @@ public class InferenceResource {
         }
 
         // Run the inference using the service
-        Map<String, Object> result = inferenceService.predict(request);
+        Map<String, Object> result = service.predict(request);
 
         // Return the result as JSON
         return Response.ok(result).build();
