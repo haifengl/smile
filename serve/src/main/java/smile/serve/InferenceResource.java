@@ -16,13 +16,12 @@
  */
 package smile.serve;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
-
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
@@ -33,7 +32,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
+import smile.model.Model;
 
 /**
  * Model REST API.
@@ -47,6 +46,7 @@ public class InferenceResource {
 
     @Inject
     ObjectMapper objectMapper; // Inject the Quarkus-provided Jackson ObjectMapper
+    TypeReference<Map<String, Object>> typeReference = new TypeReference<>() {};
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -55,50 +55,37 @@ public class InferenceResource {
     }
 
     @GET
-    @Produces(MediaType.APPLICATION_JSON)
     @Path("/{modelId}")
+    @Produces(MediaType.APPLICATION_JSON)
     public ModelMetadata get(@PathParam("modelId") String id) {
-        var model = service.getModel(id);
-        if (model == null) throw new NotFoundException();
-        return new ModelMetadata(id, model);
+        return new ModelMetadata(id, service.getModel(id));
     }
 
     @POST
+    @Path("/{modelId}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{modelId}")
-    public Response predict(@PathParam("modelId") String modelId, InferenceRequest request) {
-        if (request == null || request.data == null) {
-            throw new BadRequestException();
-        }
-
-        // Run the inference using the service
-        Map<String, Object> result = service.predict(request);
-
-        // Return the result as JSON
-        return Response.ok(result).build();
+    public InferenceResponse predict(@PathParam("modelId") String id, Map<String, Object> request) {
+        return service.predict(id, request);
     }
 
     @POST
-    @Path("/jsonl")
+    @Path("/{modelId}/stream")
     @Consumes("application/jsonl") // custom media type for JSON Lines
-    public Response stream(InputStream requestBody) {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(requestBody))) {
-            reader.lines().forEach(line -> {
-                try {
-                    // Deserialize each line into your Java object
-                    InferenceRequest data = objectMapper.readValue(line, InferenceRequest.class);
-                    // Process the data object (e.g., save to DB, queue for processing)
-                    System.out.println("Processed JSONL item: " + data);
-                } catch (Exception e) {
-                    // Handle errors for individual lines
-                    e.printStackTrace();
-                }
-            });
-        } catch (Exception e) {
-            return Response.serverError().entity("Error processing JSONL stream").build();
-        }
-
-        return Response.accepted().entity("JSONL stream processed").build();
+    @Produces("application/jsonl")
+    public Multi<String> jsonl(@PathParam("modelId") String id, Multi<String> lines) {
+        System.out.println("streaming process");
+        var model = service.getModel(id);
+        return lines.onItem().transformToUni(line -> {
+            System.out.println(line);
+            // Process each line (which should be a single JSON object)
+            try {
+                Map<String, Object> data = objectMapper.readValue(line, typeReference);
+                return Uni.createFrom().item(service.predict(model, data).toString());
+            } catch (Exception e) {
+                // Handle parsing errors for specific lines
+                return Uni.createFrom().item("Error processing line: " + line + "\n");
+            }
+        }).merge();
     }
 }
