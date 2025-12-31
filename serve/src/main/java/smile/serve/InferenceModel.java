@@ -19,6 +19,7 @@ package smile.serve;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import io.vertx.core.json.JsonObject;
 import jakarta.ws.rs.BadRequestException;
 import smile.data.Tuple;
 import smile.data.type.StructType;
@@ -79,7 +80,7 @@ public class InferenceModel {
      * @return the inference result.
      * @throws BadRequestException if invalid request.
      */
-    public InferenceResponse predict(Map<String, Object> request) throws BadRequestException {
+    public InferenceResponse predict(JsonObject request) throws BadRequestException {
         return predict(json(request));
     }
 
@@ -121,13 +122,13 @@ public class InferenceModel {
      * @return the tuple.
      * @throws BadRequestException if invalid request body.
      */
-    public Tuple json(Map<String, Object> values) throws BadRequestException {
+    public Tuple json(JsonObject values) throws BadRequestException {
         StructType schema = model.schema();
         if (values.size() < schema.length()) throw new BadRequestException();
 
         var row = new Object[schema.length()];
         for (int i = 0; i < row.length; i++) {
-            row[i] = values.get(schema.field(i).name());
+            row[i] = values.getValue(schema.field(i).name());
         }
         return Tuple.of(schema, row);
     }

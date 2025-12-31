@@ -21,6 +21,7 @@ import java.util.Map;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.smallrye.mutiny.Multi;
+import io.vertx.core.json.JsonObject;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -52,34 +53,34 @@ public class InferenceResource {
     }
 
     @GET
-    @Path("/{modelId}")
+    @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ModelMetadata get(@PathParam("modelId") String id) {
+    public ModelMetadata get(@PathParam("id") String id) {
         return service.getModel(id).metadata();
     }
 
     @POST
-    @Path("/{modelId}")
+    @Path("/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public InferenceResponse predict(@PathParam("modelId") String id, Map<String, Object> request) {
+    public InferenceResponse predict(@PathParam("id") String id, JsonObject request) {
         return service.predict(id, request);
     }
 
     @POST
-    @Path("/{modelId}/jsonl")
+    @Path("/{id}/jsonl")
     @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Multi<InferenceResponse> jsonl(@PathParam("modelId") String id, Multi<Map<String, Object>> lines) {
+    @RestStreamElementType(MediaType.APPLICATION_JSON)
+    public Multi<InferenceResponse> jsonl(@PathParam("id") String id, Multi<JsonObject> lines) {
         var model = service.getModel(id);
         return lines.onItem().transform(line -> model.predict(line));
     }
 
     @POST
-    @Path("/{modelId}/csv")
+    @Path("/{id}/csv")
     @Consumes(MediaType.TEXT_PLAIN)
-    @Produces(MediaType.TEXT_PLAIN)
-    public Multi<String> csv(@PathParam("modelId") String id, Multi<String> lines) {
+    @RestStreamElementType(MediaType.TEXT_PLAIN) // Important for streaming item by item without buffering
+    public Multi<String> csv(@PathParam("id") String id, Multi<String> lines) {
         var model = service.getModel(id);
         return lines.onItem().transform(line -> model.predict(line).toString());
     }

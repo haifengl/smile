@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Stream;
+import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
@@ -115,7 +116,7 @@ public class InferenceService {
      * @return The inference result.
      * @throws BadRequestException if invalid request body.
      */
-    public InferenceResponse predict(String model, Map<String, Object> request) throws BadRequestException, NotFoundException {
+    public InferenceResponse predict(String model, JsonObject request) throws BadRequestException, NotFoundException {
         return getModel(model).predict(request);
     }
 }
