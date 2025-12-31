@@ -651,12 +651,12 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
     }
 
     @Override
-    public boolean soft() {
+    public boolean isSoft() {
         return true;
     }
 
     @Override
-    public boolean online() {
+    public boolean isOnline() {
         return true;
     }
 

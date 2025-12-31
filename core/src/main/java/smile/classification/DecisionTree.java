@@ -397,7 +397,7 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
     }
 
     @Override
-    public boolean soft() {
+    public boolean isSoft() {
         return true;
     }
 

@@ -97,7 +97,7 @@ public interface LOOCV {
             fitTime += System.nanoTime() - start;
 
             start = System.nanoTime();
-            if (model.soft()) {
+            if (model.isSoft()) {
                 soft = true;
                 prediction[i] = model.predict(x[i], posteriori[i]);
             } else {
@@ -181,7 +181,7 @@ public interface LOOCV {
             fitTime += System.nanoTime() - start;
 
             start = System.nanoTime();
-            if (model.soft()) {
+            if (model.isSoft()) {
                 soft = true;
                 prediction[i] = model.predict(data.get(i), posteriori[i]);
             } else {

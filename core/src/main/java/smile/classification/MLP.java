@@ -200,12 +200,12 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
     }
 
     @Override
-    public boolean soft() {
+    public boolean isSoft() {
         return true;
     }
 
     @Override
-    public boolean online() {
+    public boolean isOnline() {
         return true;
     }
 

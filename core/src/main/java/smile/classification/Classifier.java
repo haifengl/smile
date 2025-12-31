@@ -149,7 +149,7 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
      *
      * @return true if soft classifier.
      */
-    default boolean soft() {
+    default boolean isSoft() {
         try {
             predict(null, new double[numClasses()]);
         } catch (UnsupportedOperationException e) {
@@ -227,7 +227,7 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
      *
      * @return true if online learner.
      */
-    default boolean online() {
+    default boolean isOnline() {
         try {
             update(null, 0);
         } catch (UnsupportedOperationException e) {
@@ -286,20 +286,20 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
             /**
              * The ensemble is a soft classifier only if all the base models are.
              */
-            private final boolean soft = Arrays.stream(models).allMatch(Classifier::soft);
+            private final boolean soft = Arrays.stream(models).allMatch(Classifier::isSoft);
 
             /**
              * The ensemble is an online learner only if all the base models are.
              */
-            private final boolean online = Arrays.stream(models).allMatch(Classifier::online);
+            private final boolean online = Arrays.stream(models).allMatch(Classifier::isOnline);
 
             @Override
-            public boolean soft() {
+            public boolean isSoft() {
                 return soft;
             }
 
             @Override
-            public boolean online() {
+            public boolean isOnline() {
                 return online;
             }
 

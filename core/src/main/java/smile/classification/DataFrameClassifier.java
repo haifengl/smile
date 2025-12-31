@@ -167,18 +167,18 @@ public interface DataFrameClassifier extends Classifier<Tuple> {
     static DataFrameClassifier ensemble(DataFrameClassifier... models) {
         return new DataFrameClassifier() {
             /** The ensemble is a soft classifier only if all the base models are. */
-            private final boolean soft = Arrays.stream(models).allMatch(DataFrameClassifier::soft);
+            private final boolean soft = Arrays.stream(models).allMatch(DataFrameClassifier::isSoft);
 
             /** The ensemble is an online learner only if all the base models are. */
-            private final boolean online = Arrays.stream(models).allMatch(DataFrameClassifier::online);
+            private final boolean online = Arrays.stream(models).allMatch(DataFrameClassifier::isOnline);
 
             @Override
-            public boolean soft() {
+            public boolean isSoft() {
                 return soft;
             }
 
             @Override
-            public boolean online() {
+            public boolean isOnline() {
                 return online;
             }
 

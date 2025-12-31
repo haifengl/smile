@@ -654,7 +654,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
     }
 
     @Override
-    public boolean soft() {
+    public boolean isSoft() {
         return true;
     }
 

@@ -209,7 +209,7 @@ public class OneVersusRest<T> extends AbstractClassifier<T> {
     }
 
     @Override
-    public boolean soft() {
+    public boolean isSoft() {
         return true;
     }
 

@@ -250,7 +250,7 @@ public record ClassificationMetrics(double fitTime, double scoreTime, int size, 
     public static <T, M extends Classifier<T>> ClassificationMetrics of(double fitTime, M model, T[] testx, int[] testy) {
         int k = MathEx.unique(testy).length;
         long start = System.nanoTime();
-        if (model.soft()) {
+        if (model.isSoft()) {
             double[][] posteriori = new double[testx.length][k];
             int[] prediction = model.predict(testx, posteriori);
             double scoreTime = (System.nanoTime() - start) / 1E6;
@@ -292,7 +292,7 @@ public record ClassificationMetrics(double fitTime, double scoreTime, int size, 
         long start = System.nanoTime();
         int n = test.size();
         int[] prediction = new int[n];
-        if (model.soft()) {
+        if (model.isSoft()) {
             double[][] posteriori = new double[n][k];
             for (int i = 0; i < n; i++) {
                 prediction[i] = model.predict(test.get(i), posteriori[i]);

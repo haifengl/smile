@@ -189,7 +189,7 @@ public class LDA extends AbstractClassifier<double[]> {
     }
 
     @Override
-    public boolean soft() {
+    public boolean isSoft() {
         return true;
     }
 
