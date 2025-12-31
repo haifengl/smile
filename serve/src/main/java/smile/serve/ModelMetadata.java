@@ -29,15 +29,22 @@ import smile.model.Model;
  * @author Haifeng Li
  */
 public class ModelMetadata {
+    /** Data type. */
     public record Type(String type, boolean nullable) {}
+    /** The model id. */
     public String id;
+    /** The learning algorithm. */
     public String algorithm;
+    /** The data schema. */
     public Map<String, Type> schema;
+    /** The model tags. */
     public Properties tags;
 
+    /** Constructor. */
     public ModelMetadata() {
     }
 
+    /** Constructor. */
     public ModelMetadata(String id, Model model) {
         this.id = id;
         this.algorithm = model.algorithm();
