@@ -48,7 +48,7 @@ public class InferenceModel {
         this.model = model;
         this.path = path;
         if (model instanceof ClassificationModel m) {
-            isSoft = m.classifier().soft();
+            isSoft = m.classifier().isSoft();
         } else {
             isSoft = false;
         }
