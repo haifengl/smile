@@ -16,15 +16,20 @@
  */
 package smile.serve;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.core.json.JsonObject;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -68,20 +73,27 @@ public class InferenceResource {
     }
 
     @POST
-    @Path("/{id}/jsonl")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @RestStreamElementType(MediaType.APPLICATION_JSON)
-    public Multi<InferenceResponse> jsonl(@PathParam("id") String id, Multi<JsonObject> lines) {
-        var model = service.getModel(id);
-        return lines.onItem().transform(line -> model.predict(line));
-    }
-
-    @POST
-    @Path("/{id}/csv")
-    @Consumes(MediaType.TEXT_PLAIN)
+    @Path("/{id}/stream")
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     @RestStreamElementType(MediaType.TEXT_PLAIN) // Important for streaming item by item without buffering
-    public Multi<String> csv(@PathParam("id") String id, Multi<String> lines) {
+    public Multi<String> csv(@HeaderParam("Content-Type") String contentType, @PathParam("id") String id, InputStream input) {
         var model = service.getModel(id);
-        return lines.onItem().transform(line -> model.predict(line).toString());
+        boolean json = MediaType.APPLICATION_JSON.equals(contentType);
+        return Multi.createFrom().emitter(emitter -> {
+            Infrastructure.getDefaultWorkerPool().submit(() -> {
+                try (var reader = new BufferedReader(new InputStreamReader(input))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        if (!line.isBlank()) {
+                            var response = json ? model.predict(new JsonObject(line)) : model.predict(line);
+                            emitter.emit(response.toString());
+                        }
+                    }
+                    emitter.complete();
+                } catch (Exception ex) {
+                    emitter.fail(ex);
+                }
+            });
+        });
     }
 }
