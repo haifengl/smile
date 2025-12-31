@@ -96,7 +96,7 @@ public record ClassificationValidation<M>(M model, int[] truth, int[] prediction
         double fitTime = (System.nanoTime() - start) / 1E6;
 
         start = System.nanoTime();
-        if (model.soft()) {
+        if (model.isSoft()) {
             int k = model.numClasses();
             double[][] posteriori = new double[testx.length][k];
             int[] prediction = model.predict(testx, posteriori);
@@ -155,7 +155,7 @@ public record ClassificationValidation<M>(M model, int[] truth, int[] prediction
 
         int n = test.size();
         int[] prediction = new int[n];
-        if (model.soft()) {
+        if (model.isSoft()) {
             int k = model.numClasses();
             double[][] posteriori = new double[n][k];
             start = System.nanoTime();
