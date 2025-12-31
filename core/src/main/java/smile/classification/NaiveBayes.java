@@ -138,7 +138,7 @@ public class NaiveBayes extends AbstractClassifier<double[]> {
     }
 
     @Override
-    public boolean soft() {
+    public boolean isSoft() {
         return true;
     }
 
