@@ -412,7 +412,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
     }
 
     @Override
-    public boolean soft() {
+    public boolean isSoft() {
         return true;
     }
 

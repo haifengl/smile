@@ -50,7 +50,7 @@ public class Predict implements Callable<Integer> {
         var obj = Read.object(model.toPath());
         if (obj instanceof ClassificationModel box) {
             var classifier = box.classifier();
-            if (probability && classifier.soft()) {
+            if (probability && classifier.isSoft()) {
                 var prob = new ArrayList<double[]>();
                 var pred = classifier.predict(data, prob);
                 for (int i = 0; i < pred.length; i++) {

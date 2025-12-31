@@ -589,7 +589,7 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
     }
 
     @Override
-    public boolean soft() {
+    public boolean isSoft() {
         return true;
     }
 
