@@ -19,13 +19,8 @@ package smile.serve;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
-import java.util.TreeMap;
 import jakarta.ws.rs.BadRequestException;
-import jakarta.ws.rs.NotFoundException;
 import smile.data.Tuple;
-import smile.data.measure.Measure;
-import smile.data.type.DataType;
 import smile.data.type.StructType;
 import smile.io.Paths;
 import smile.model.*;
@@ -79,14 +74,31 @@ public class InferenceModel {
     }
 
     /**
-     * Performs inference using the generic JSON input.
-     * @param model the model.
-     * @param request The generic input data as a Map.
-     * @return The inference result.
-     * @throws BadRequestException if invalid request body.
+     * Performs inference using generic JSON input.
+     * @param request the input data as a Map.
+     * @return the inference result.
+     * @throws BadRequestException if invalid request.
      */
     public InferenceResponse predict(Map<String, Object> request) throws BadRequestException {
-        var x = json(request);
+        return predict(json(request));
+    }
+
+    /**
+     * Performs inference using CSV input.
+     * @param request the input data in CSV format.
+     * @return the inference result.
+     * @throws BadRequestException if invalid request.
+     */
+    public InferenceResponse predict(String request) throws BadRequestException {
+        return predict(csv(request));
+    }
+
+    /**
+     * Performs inference.
+     * @param x the input tuple.
+     * @return the inference result.
+     */
+    public InferenceResponse predict(Tuple x) {
         double[] probabilities = null;
         Number y = switch (model) {
             case ClassificationModel m -> {
@@ -105,7 +117,6 @@ public class InferenceModel {
 
     /**
      * Converts a JSON object to a SMILE tuple.
-     * @param schema the tuple schema.
      * @param values the JSON object.
      * @return the tuple.
      * @throws BadRequestException if invalid request body.
@@ -123,19 +134,19 @@ public class InferenceModel {
 
     /**
      * Converts a CSV line to a SMILE tuple.
-     * @param schema the tuple schema.
-     * @param values the CSV fields.
+     * @param line the CSV line.
      * @return the tuple.
      * @throws BadRequestException if invalid request body.
      */
-    public Tuple csv(List<String> values) throws BadRequestException {
+    public Tuple csv(String line) throws BadRequestException {
+        var values = line.split(",");
         StructType schema = model.schema();
-        if (values.size() < schema.length()) throw new BadRequestException();
+        if (values.length < schema.length()) throw new BadRequestException();
 
         try {
             var row = new Object[schema.length()];
             for (int i = 0; i < row.length; i++) {
-                row[i] = schema.field(i).valueOf(values.get(i));
+                row[i] = schema.field(i).valueOf(values[i]);
             }
             return Tuple.of(schema, row);
         } catch (Exception ex) {
