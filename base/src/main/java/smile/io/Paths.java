@@ -32,6 +32,26 @@ public interface Paths {
     String home = System.getProperty("smile.home", "shell/src/universal/");
 
     /**
+     * Returns the file name without extension.
+     * @param path the file path.
+     * @return the file name without extension.
+     */
+    static String getFileName(Path path) {
+        Path file = path.getFileName();
+        if (file == null) {
+            return ""; // Handle cases where the path doesn't have a filename component
+        }
+
+        String name = file.toString();
+        int lastDotIndex = name.lastIndexOf('.');
+        if (lastDotIndex > 0) { // Ensures the file is not a hidden file like ".gitignore" (where pos=0)
+            return name.substring(0, lastDotIndex);
+        } else {
+            return name; // Returns the original name if no extension is found
+        }
+    }
+
+    /**
      * Get the file path of a test sample dataset.
      * @param path the path strings to be joined to form the path.
      * @return the file path to the test data.

@@ -58,7 +58,7 @@ public class InferenceResource {
     @Path("/{modelId}")
     @Produces(MediaType.APPLICATION_JSON)
     public ModelMetadata get(@PathParam("modelId") String id) {
-        return new ModelMetadata(id, service.getModel(id));
+        return service.getModel(id).metadata();
     }
 
     @POST
@@ -81,7 +81,7 @@ public class InferenceResource {
             // Process each line (which should be a single JSON object)
             try {
                 Map<String, Object> data = objectMapper.readValue(line, typeReference);
-                return Uni.createFrom().item(service.predict(model, data).toString());
+                return Uni.createFrom().item(model.predict(data).toString());
             } catch (Exception e) {
                 // Handle parsing errors for specific lines
                 return Uni.createFrom().item("Error processing line: " + line + "\n");
