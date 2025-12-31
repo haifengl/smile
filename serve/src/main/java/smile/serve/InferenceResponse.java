@@ -19,6 +19,7 @@ package smile.serve;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /**
  * The generic inference request.
@@ -30,6 +31,7 @@ public class InferenceResponse {
     public Number prediction;
     /** Posteriori probabilities in case of soft classification. */
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonSerialize(using = ProbabilitySerializer.class)
     public double[] probabilities;
 
     /** Constructor. */
