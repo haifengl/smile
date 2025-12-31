@@ -19,8 +19,6 @@ package smile.serve;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
-import smile.data.measure.Measure;
-import smile.data.type.DataType;
 import smile.model.Model;
 
 /**

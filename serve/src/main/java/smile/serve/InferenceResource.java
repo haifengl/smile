@@ -21,18 +21,15 @@ import java.util.Map;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.smallrye.mutiny.Multi;
-import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
-import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import smile.model.Model;
+import org.jboss.resteasy.reactive.RestStreamElementType;
 
 /**
  * Model REST API.
@@ -70,22 +67,20 @@ public class InferenceResource {
     }
 
     @POST
-    @Path("/{modelId}/stream")
-    @Consumes("application/jsonl") // custom media type for JSON Lines
-    @Produces("application/jsonl")
-    public Multi<String> jsonl(@PathParam("modelId") String id, Multi<String> lines) {
-        System.out.println("streaming process");
+    @Path("/{modelId}/jsonl")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Multi<InferenceResponse> jsonl(@PathParam("modelId") String id, Multi<Map<String, Object>> lines) {
         var model = service.getModel(id);
-        return lines.onItem().transformToUni(line -> {
-            System.out.println(line);
-            // Process each line (which should be a single JSON object)
-            try {
-                Map<String, Object> data = objectMapper.readValue(line, typeReference);
-                return Uni.createFrom().item(model.predict(data).toString());
-            } catch (Exception e) {
-                // Handle parsing errors for specific lines
-                return Uni.createFrom().item("Error processing line: " + line + "\n");
-            }
-        }).merge();
+        return lines.onItem().transform(line -> model.predict(line));
+    }
+
+    @POST
+    @Path("/{modelId}/csv")
+    @Consumes(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.TEXT_PLAIN)
+    public Multi<String> csv(@PathParam("modelId") String id, Multi<String> lines) {
+        var model = service.getModel(id);
+        return lines.onItem().transform(line -> model.predict(line).toString());
     }
 }
