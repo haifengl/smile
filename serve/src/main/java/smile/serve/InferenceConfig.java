@@ -16,23 +16,16 @@
  */
 package smile.serve;
 
-import java.io.IOException;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
+import io.smallrye.config.ConfigMapping;
+import io.smallrye.config.WithDefault;
 
 /**
- * Custom serializer for probability values.
+ * The inference configuration.
+ *
+ * @author Haifeng Li
  */
-public class ProbabilitySerializer extends JsonSerializer<double[]> {
-
-    @Override
-    public void serialize(double[] probabilities, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-        gen.writeStartArray();
-        for (double prob : probabilities) {
-            String value = String.format("%.3f", prob);
-            gen.writeRawValue(value);
-        }
-        gen.writeEndArray();
-    }
+@ConfigMapping(prefix = "smile.serve")
+public interface InferenceConfig {
+    /** The location of pre-trained model(s) for inference. */
+    String model();
 }

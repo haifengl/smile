@@ -27,8 +27,10 @@ import java.util.TreeMap;
 import java.util.stream.Stream;
 import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import smile.io.Read;
 import smile.model.Model;
@@ -41,8 +43,6 @@ import smile.model.Model;
 @ApplicationScoped
 public class InferenceService {
     private static final Logger logger = Logger.getLogger(InferenceService.class);
-    /** The environment variable to locate models. */
-    private static final String MODEL_PATH = "SMILE_SERVE_MODEL";
     /** The ML models. */
     private final Map<String, InferenceModel> models = new TreeMap<>();
 
@@ -50,9 +50,9 @@ public class InferenceService {
      * Load ML models upon application start.
      * The @ApplicationScoped scope ensures the models are loaded once and reused
      */
-    public InferenceService() {
-        var env = System.getenv(MODEL_PATH);
-        var path = Paths.get(env == null ? ".." : env).toAbsolutePath().normalize();
+    @Inject
+    public InferenceService(InferenceConfig config) {
+        var path = Paths.get(config.model()).toAbsolutePath().normalize();
         if (Files.isRegularFile(path)) {
             loadModel(path);
         } else if (Files.isDirectory(path)) {
