@@ -192,7 +192,7 @@ public class Llama {
      * The batch size must be 1.
      * @return The generated text completion.
      */
-    public CompletionPrediction[] generate(int[][] prompts, int maxGenLen, double temperature, double topp, boolean logprobs, Long seed, SubmissionPublisher<String> publisher) {
+    public CompletionPrediction[] generate(int[][] prompts, int maxGenLen, double temperature, double topp, boolean logprobs, long seed, SubmissionPublisher<String> publisher) {
         int batchSize = prompts.length;
         if (batchSize > model.params.maxBatchSize()) {
             throw new IllegalArgumentException("The number of prompts is greater than max_batch_size");
@@ -213,7 +213,7 @@ public class Llama {
         }
 
         // seed must be the same in all processes
-        if (seed != null) {
+        if (seed != 0) {
             torch.manual_seed(seed);
         }
 
@@ -364,7 +364,7 @@ public class Llama {
      * The batch size must be 1.
      * @return The generated text completion.
      */
-    public CompletionPrediction[] complete(String[] prompts, int maxGenLen, double temperature, double topp, boolean logprobs, Long seed, SubmissionPublisher<String> publisher) {
+    public CompletionPrediction[] complete(String[] prompts, int maxGenLen, double temperature, double topp, boolean logprobs, long seed, SubmissionPublisher<String> publisher) {
         int batchSize = prompts.length;
         int[][] tokens = new int[batchSize][];
         for (int i = 0; i < batchSize; i++) {
@@ -386,7 +386,7 @@ public class Llama {
      * The batch size must be 1.
      * @return The generated chat responses.
      */
-    public CompletionPrediction[] chat(Message[][] dialogs, int maxGenLen, double temperature, double topp, boolean logprobs, Long seed, SubmissionPublisher<String> publisher) {
+    public CompletionPrediction[] chat(Message[][] dialogs, int maxGenLen, double temperature, double topp, boolean logprobs, long seed, SubmissionPublisher<String> publisher) {
         int batchSize = dialogs.length;
         int[][] tokens = new int[batchSize][];
         for (int i = 0; i < batchSize; i++) {
