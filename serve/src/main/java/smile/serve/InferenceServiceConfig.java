@@ -17,15 +17,14 @@
 package smile.serve;
 
 import io.smallrye.config.ConfigMapping;
-import io.smallrye.config.WithDefault;
 
 /**
- * The inference configuration.
+ * The inference service configuration.
  *
  * @author Haifeng Li
  */
 @ConfigMapping(prefix = "smile.serve")
-public interface InferenceConfig {
+public interface InferenceServiceConfig {
     /** The location of pre-trained model(s) for inference. */
     String model();
 }

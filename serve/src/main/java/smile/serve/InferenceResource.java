@@ -21,7 +21,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
@@ -38,7 +37,7 @@ import jakarta.ws.rs.core.MediaType;
 import org.jboss.resteasy.reactive.RestStreamElementType;
 
 /**
- * Model REST API.
+ * Model inference API.
  * @author Haifeng Li
  */
 @Path("/models")
@@ -49,7 +48,6 @@ public class InferenceResource {
 
     @Inject
     ObjectMapper objectMapper; // Inject the Quarkus-provided Jackson ObjectMapper
-    TypeReference<Map<String, Object>> typeReference = new TypeReference<>() {};
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
