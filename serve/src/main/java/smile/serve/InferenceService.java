@@ -30,7 +30,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import smile.io.Read;
 import smile.model.Model;
@@ -51,7 +50,7 @@ public class InferenceService {
      * The @ApplicationScoped scope ensures the models are loaded once and reused
      */
     @Inject
-    public InferenceService(InferenceConfig config) {
+    public InferenceService(InferenceServiceConfig config) {
         var path = Paths.get(config.model()).toAbsolutePath().normalize();
         if (Files.isRegularFile(path)) {
             loadModel(path);
