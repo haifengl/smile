@@ -9,6 +9,7 @@ val quarkusPlatformVersion: String by project
 
 dependencies {
     implementation(project(":core"))
+    implementation(project(":deep"))
     implementation(enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}"))
     implementation("io.quarkus:quarkus-rest")
     implementation("io.quarkus:quarkus-rest-jackson")

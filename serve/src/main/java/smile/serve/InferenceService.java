@@ -111,8 +111,8 @@ public class InferenceService {
     /**
      * Performs inference using the generic JSON input.
      * @param model the model id.
-     * @param request The generic input data as a Map.
-     * @return The inference result.
+     * @param request the generic input data as a Map.
+     * @return the inference result.
      * @throws BadRequestException if invalid request body.
      */
     public InferenceResponse predict(String model, JsonObject request) throws BadRequestException, NotFoundException {
