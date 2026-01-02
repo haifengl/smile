@@ -21,7 +21,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   base: '/chat',
   build: {
-    outDir: '../serve/src/universal/chat'
+    outDir: '../serve/src/main/resources/META-INF/resources/chat'
   },
   plugins: [react()],
   preview: {

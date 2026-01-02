@@ -15,7 +15,6 @@ dependencies {
     implementation("io.quarkus:quarkus-rest-jackson")
     implementation("io.quarkus:quarkus-arc")
     implementation("org.jboss.slf4j:slf4j-jboss-logmanager")
-    implementation("io.quarkiverse.quinoa:quarkus-quinoa:2.7.1")
     testImplementation("io.quarkus:quarkus-junit5")
 }
 
