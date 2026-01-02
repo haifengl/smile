@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.concurrent.SubmissionPublisher;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import io.quarkus.runtime.Startup;
 import org.jboss.logging.Logger;
 import smile.llm.*;
 import smile.llm.llama.*;
@@ -29,6 +30,7 @@ import smile.llm.llama.*;
  *
  * @author Haifeng Li
  */
+@Startup
 @ApplicationScoped
 public class ChatService {
     private static final Logger logger = Logger.getLogger(ChatService.class);
@@ -44,8 +46,8 @@ public class ChatService {
         try {
             model = Llama.build(config.model(), config.tokenizer(),
                     config.maxBatchSize(), config.maxSeqLen(), config.device());
-        } catch (IOException ex) {
-            logger.errorf(ex, "Failed to load model '%s'", config.model());
+        } catch (Throwable t) {
+            logger.errorf(t, "Failed to load model '%s'", config.model());
         }
     }
 
@@ -63,7 +65,8 @@ public class ChatService {
      * @param publisher the flow publisher.
      */
     public CompletionPrediction[] complete(CompletionRequest request, SubmissionPublisher<String> publisher) {
-        return model.chat(request.messages, request.maxTokens, request.temperature,
+        Message[][] dialogs = { request.messages };
+        return model.chat(dialogs, request.maxTokens, request.temperature,
                 request.topP, request.logprobs, request.seed, publisher);
     }
 }
