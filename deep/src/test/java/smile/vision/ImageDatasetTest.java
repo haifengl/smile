@@ -49,8 +49,8 @@ public class ImageDatasetTest {
     @Test
     public void test() throws IOException {
         var transform = Transform.classification(384, 384);
-        var data = new ImageDataset(4, "../imagenet/train", transform, ImageNet.folder2Target);
-        assertEquals(1281167, data.size());
+        var data = new ImageDataset(4, "deep/src/test/resources/data/imagenet-mini/train", transform, ImageNet.folder2Target);
+        assertEquals(34745, data.size());
         var iter = data.iterator();
         assertEquals(true, iter.hasNext());
         var sample = iter.next();
