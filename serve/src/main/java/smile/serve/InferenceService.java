@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Stream;
+import io.quarkus.runtime.Startup;
 import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -39,6 +40,7 @@ import smile.model.Model;
  *
  * @author Haifeng Li
  */
+@Startup
 @ApplicationScoped
 public class InferenceService {
     private static final Logger logger = Logger.getLogger(InferenceService.class);

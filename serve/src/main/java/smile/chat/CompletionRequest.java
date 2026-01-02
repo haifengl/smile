@@ -16,8 +16,6 @@
  */
 package smile.chat;
 
-import java.util.List;
-import java.util.Optional;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import smile.llm.Message;
@@ -29,7 +27,7 @@ import smile.llm.Message;
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class CompletionRequest {
-    public Message[][] messages;
+    public Message[] messages;
     public int maxTokens = 2048;
     public double temperature = 0.6;
     public double topP = 0.9;
