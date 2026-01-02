@@ -17,11 +17,11 @@
 package smile.nlp.pos;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
-
 import smile.math.MathEx;
-import smile.io.Paths;
 
 /**
  * Part-of-speech tagging with hidden Markov model.
@@ -314,86 +314,85 @@ public class HMMPOSTagger implements POSTagger, Serializable {
         
         return new HMMPOSTagger(symbol, suffix, pi, a, b, c);
     }
-    
+
     /**
      * Load training data from a corpora.
-     * @param dir the top directory of training data.
-     * @param sentences the output list of training sentences.
-     * @param labels the output list of training labels.
+     * @param dir a file object defining the top directory
      */
-    public static void read(Path dir, List<String[]> sentences, List<PennTreebankPOS[]> labels) {
-        List<File> files = new ArrayList<>();
-        walkin(dir.toFile(), files);
+    static void read(String dir, List<String[]> sentences, List<PennTreebankPOS[]> tags) {
+        try {
+            List<File> files = new ArrayList<>();
+            walkin(Paths.get(dir), files);
 
-        for (File file : files) {
-            try {
+            for (File file : files) {
                 FileInputStream stream = new FileInputStream(file);
                 BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
                 String line;
-                List<String> sent = new ArrayList<>();
-                List<PennTreebankPOS> label = new ArrayList<>();
+                List<String> sentence = new ArrayList<>();
+                List<PennTreebankPOS> tag = new ArrayList<>();
                 while ((line = reader.readLine()) != null) {
                     line = line.trim();
                     if (line.isEmpty()) {
-                        if (!sent.isEmpty()) {
-                            sentences.add(sent.toArray(new String[0]));
-                            labels.add(label.toArray(new PennTreebankPOS[0]));
-                            sent.clear();
-                            label.clear();
+                        if (!sentence.isEmpty()) {
+                            sentences.add(sentence.toArray(new String[0]));
+                            tags.add(tag.toArray(new PennTreebankPOS[0]));
+                            sentence.clear();
+                            tag.clear();
                         }
                     } else if (!line.startsWith("===") && !line.startsWith("*x*")) {
                         String[] words = line.split("\\s");
                         for (String word : words) {
                             String[] w = word.split("/");
                             if (w.length == 2) {
-                                sent.add(w[0]);
-                                
-                                int pos = w[1].indexOf('|');
-                                String tag = pos == -1 ? w[1] : w[1].substring(0, pos);
-                                if (tag.equals("PRP$R")) tag = "PRP$";
-                                if (tag.equals("JJSS")) tag = "JJS";
-                                label.add(PennTreebankPOS.getValue(tag));
+                                sentence.add(w[0]);
+
+                                int index = w[1].indexOf('|');
+                                String pos = index == -1 ? w[1] : w[1].substring(0, index);
+                                if (pos.equals("PRP$R")) pos = "PRP$";
+                                if (pos.equals("JJSS")) pos = "JJS";
+                                tag.add(PennTreebankPOS.getValue(pos));
                             }
                         }
                     }
                 }
-                
-                if (!sent.isEmpty()) {
-                    sentences.add(sent.toArray(new String[0]));
-                    labels.add(label.toArray(new PennTreebankPOS[0]));
-                    sent.clear();
-                    label.clear();
+
+                if (!sentence.isEmpty()) {
+                    sentences.add(sentence.toArray(new String[0]));
+                    tags.add(tag.toArray(new PennTreebankPOS[0]));
+                    sentence.clear();
+                    tag.clear();
                 }
-                
+
                 reader.close();
-            } catch (Exception e) {
-                logger.error("Failed to load training data {}", file, e);
             }
+        } catch (IOException ex) {
+            System.err.println(ex.getMessage());
         }
     }
 
-    /**  
+    /**
      * Recursive function to descend into the directory tree and find all the files
      * that end with ".POS"
-     * @param dir the top directory of training data.
-     * @param files the output list of training files.
-     */
-    public static void walkin(File dir, List<File> files) {
+     * @param dir a file object defining the top directory
+     **/
+    static void walkin(Path dir, List<File> files) throws IOException {
         String pattern = ".POS";
-        File[] listFile = dir.listFiles();
-        if (listFile != null) {
-            for (File file : listFile) {                
-                if (file.isDirectory()) {
-                    walkin(file, files);
-                } else {
-                    if (file.getName().endsWith(pattern)) {
-                        files.add(file);
-                    }
+        Files.newDirectoryStream(dir).forEach(path -> {
+            File file = path.toFile();
+            if (file.isDirectory()) {
+                try {
+                    walkin(path, files);
+                } catch (IOException ex) {
+                    System.err.println(ex.getMessage());
+                }
+            } else {
+                if (file.getName().endsWith(pattern)) {
+                    files.add(file);
                 }
             }
-        }
+        });
     }
-    
+
     /**
      * Train the default model on WSJ and BROWN datasets.
      * @param args the command line arguments.
@@ -402,8 +401,8 @@ public class HMMPOSTagger implements POSTagger, Serializable {
         List<String[]> sentences = new ArrayList<>();
         List<PennTreebankPOS[]> labels = new ArrayList<>();
         
-        read(Paths.getTestData("nlp/PennTreebank/PennTreebank2/TAGGED/POS/WSJ"), sentences, labels);
-        read(Paths.getTestData("nlp/PennTreebank/PennTreebank2/TAGGED/POS/BROWN"), sentences, labels);
+        read("nlp/src/test/resources/data/PennTreebank/PennTreebank2/TAGGED/POS/WSJ", sentences, labels);
+        read("nlp/src/test/resources/data/PennTreebank/PennTreebank2/TAGGED/POS/BROWN", sentences, labels);
         
         String[][] x = sentences.toArray(new String[sentences.size()][]);
         PennTreebankPOS[][] y = labels.toArray(new PennTreebankPOS[labels.size()][]);

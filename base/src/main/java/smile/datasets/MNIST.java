@@ -21,7 +21,6 @@ import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.stream.IntStream;
 
 import org.apache.commons.csv.CSVFormat;
