@@ -31,7 +31,7 @@ node_modules
 # Generated
 doc/api
 web/_site/
-serve/src/universal/chat
+serve/src/main/resources/META-INF/resources/chat
 
 # SBT
 .bsp
