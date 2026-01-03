@@ -9,10 +9,10 @@ packageName := "smile"
 packageSummary := "Statistical Machine Intelligence and Learning Engine"
 packageDescription :=
   """
-    |Smile is a fast and comprehensive machine learning, NLP, linear algebra,
+    |SMILE is a fast and comprehensive machine learning, NLP, linear algebra,
     |graph, interpolation, and visualization system in Java and Scala.
-    |With advanced data structures and algorithms, Smile delivers
-    |state-of-art performance. Smile is well documented and please check out
+    |With advanced data structures and algorithms, SMILE delivers
+    |state-of-art performance. SMILE is well documented and please check out
     |the project website for programming guides and more information.
     |""".stripMargin
 

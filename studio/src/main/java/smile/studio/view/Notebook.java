@@ -171,7 +171,7 @@ public class Notebook extends JPanel implements DocumentListener {
                     var params = new Properties();
                     params.setProperty("smile.random_forest.trees", "100");
                     params.setProperty("smile.random_forest.max_nodes", "100");
-                    var model = Model.classification("random_forest", formula, iris, null, params);""");
+                    var model = Model.classification("random-forest", formula, iris, null, params);""");
             cell.editor().setPreferredRows();
 
             cell = addCell(null);

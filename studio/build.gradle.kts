@@ -19,5 +19,5 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClass = "smile.shell.Main"
+    mainClass = "smile.Main"
 }

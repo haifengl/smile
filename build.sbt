@@ -35,7 +35,7 @@ lazy val commonSettings = Seq(
     "-XX:MaxMetaspaceSize=1024M",
     "-Xss4M",
     "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug",
-    "--add-opens=java.base/java.nio=org.apache.arrow.dataset,org.apache.arrow.memory.core,ALL-UNNAMED",
+    "--add-opens=java.base/java.nio=ALL-UNNAMED",
     "--enable-native-access=ALL-UNNAMED"
   ),
   Test / envVars := Map(
@@ -180,9 +180,9 @@ lazy val root = project.in(file("."))
   .settings(publish / skip := true)
   .settings(crossScalaVersions := Nil)
   .settings(
-    JavaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(json, scala, spark, shell)
+    JavaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(json, scala, spark, studio)
   )
-  .aggregate(core, base, nlp, deep, plot, json, scala, kotlin, shell, serve)
+  .aggregate(core, base, nlp, deep, plot, json, scala, kotlin, studio, serve)
 
 lazy val base = project.in(file("base"))
   .settings(javaSettings: _*)
@@ -220,7 +220,7 @@ lazy val kotlin = project.in(file("kotlin"))
   .enablePlugins(KotlinPlugin)
   .dependsOn(core, nlp)
 
-lazy val shell = project.in(file("shell"))
+lazy val studio = project.in(file("studio"))
   .settings(javaSettings: _*)
   .settings(scalaSettings: _*)
   .settings(publish / skip := true)
