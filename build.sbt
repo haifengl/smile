@@ -18,7 +18,7 @@ lazy val commonSettings = Seq(
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("https://haifengl.github.io/")),
-  version := "5.0.2",
+  version := "5.1.0",
 
   // Run in a separate JVM, to make sure sbt waits until all threads have
   // finished before returning.
@@ -35,12 +35,7 @@ lazy val commonSettings = Seq(
     "-XX:MaxMetaspaceSize=1024M",
     "-Xss4M",
     "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug",
-    //"--add-opens=java.base/java.lang=ALL-UNNAMED",
-    //"--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
-    "--add-opens=java.base/java.nio=ALL-UNNAMED",
-    //"--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
-    //"--add-opens=java.base/sun.nio.cs=ALL-UNNAMED",
-    //"--add-opens=java.base/sun.security.action=ALL-UNNAMED",
+    "--add-opens=java.base/java.nio=org.apache.arrow.dataset,org.apache.arrow.memory.core,ALL-UNNAMED",
     "--enable-native-access=ALL-UNNAMED"
   ),
   Test / envVars := Map(
