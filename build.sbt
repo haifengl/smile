@@ -24,7 +24,7 @@ lazy val commonSettings = Seq(
   // finished before returning.
   // If you want to keep the application running while executing other
   // sbt tasks, consider https://github.com/spray/sbt-revolver/
-  fork := true,
+  Test / fork := true,
 
   autoAPIMappings := true,
   Test / baseDirectory := (ThisBuild/Test/run/baseDirectory).value,
