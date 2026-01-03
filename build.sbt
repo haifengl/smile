@@ -38,7 +38,7 @@ lazy val commonSettings = Seq(
     "--add-opens=java.base/java.nio=ALL-UNNAMED",
     "--enable-native-access=ALL-UNNAMED"
   ),
-  Test / envVars := Map(
+  Test / envVars ++= Map(
     os match {
       case "windows" =>
         "PATH" -> s"${(Test / baseDirectory).value}/studio/src/universal/bin;${System.getenv("PATH")}"
