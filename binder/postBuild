@@ -10,7 +10,7 @@ curl -Lo coursier https://git.io/coursier-cli
 chmod +x coursier
 
 # Install almond for Scala 2.13
-SCALA_VERSION=2.13.14 ALMOND_VERSION=0.14.0-RC15
+SCALA_VERSION=2.13.16 ALMOND_VERSION=0.14.4
 ./coursier launch "almond:$ALMOND_VERSION" --scala $SCALA_VERSION -- \
   --install \
   --id scala213 \

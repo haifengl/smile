@@ -1,4 +1,5 @@
-openjdk-21-jdk
+openjdk-25-jdk
 maven
 graphviz
 libopenblas-dev
+libarpack2
