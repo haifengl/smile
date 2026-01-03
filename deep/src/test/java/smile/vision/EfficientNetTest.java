@@ -120,11 +120,10 @@ public class EfficientNetTest {
 
     @Test
     public void train() throws IOException {
-        Device device = Device.CUDA((byte) 1);
-        device.setDefaultDevice();
-
         // half precision to lower memory usage.
         var dtype = ScalarType.BFloat16;
+        Device device = Device.CUDA((byte) 1);
+        device.setDefaultDevice();
 
         var model = EfficientNet.V2S();
         model.to(device, dtype);
