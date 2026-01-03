@@ -16,8 +16,12 @@ packageDescription :=
     |the project website for programming guides and more information.
     |""".stripMargin
 
-
 import com.typesafe.sbt.packager.MappingsHelper._
+Universal / mappings ++= Seq(
+  (baseDirectory.value / "../README.md") -> "README.md",
+  (baseDirectory.value / "../COPYING") -> "COPYING",
+  (baseDirectory.value / "../LICENSE") -> "LICENSE"
+)
 Universal / mappings ++= contentOf("base/src/test/resources/data/")
   .filter {
     case (file, path) => path.startsWith("mnist") ||
