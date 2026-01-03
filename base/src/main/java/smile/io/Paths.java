@@ -29,7 +29,7 @@ import java.util.stream.Stream;
  */
 public interface Paths {
     /** Smile home directory. */
-    String home = System.getProperty("smile.home", "shell/src/universal/");
+    String home = System.getProperty("smile.home", "base/src/test/resources/");
 
     /**
      * Get the file path of a test sample dataset.
