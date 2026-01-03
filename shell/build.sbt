@@ -16,24 +16,25 @@ packageDescription :=
     |the project website for programming guides and more information.
     |""".stripMargin
 
-// Filter data files in universal
-Universal / mappings := {
-  // universalMappings: Seq[(File,String)]
-  val universalMappings = (Universal / mappings).value
 
-  // removing means filtering
-  universalMappings filter {
-    case (file, name) => !name.startsWith("data/kylo") &&
-                         !name.startsWith("data/matrix") &&
-                         !name.startsWith("data/nlp") &&
-                         !name.startsWith("data/sas") &&
-                         !name.startsWith("data/sparse") &&
-                         !name.startsWith("data/sqlite") &&
-                         !name.startsWith("data/transaction") &&
-                         !name.startsWith("data/wavefront") &&
-                         !name.endsWith("-ubyte")
+import com.typesafe.sbt.packager.MappingsHelper._
+Universal / mappings ++= contentOf("base/src/test/resources/data/")
+  .filter {
+    case (file, path) => path.startsWith("mnist") ||
+      path.startsWith("usps") ||
+      path.startsWith("sqlite") ||
+      path.startsWith("kylo") ||
+      path.startsWith("weka") ||
+      path.startsWith("libsvm") ||
+      path.startsWith("regression") ||
+      path.startsWith("sas") ||
+      path.startsWith("stat") ||
+      path.startsWith("sparse") ||
+      path.startsWith("matrix")
   }
-}
+  .map {
+    case (file, path) => (file, s"data/$path")
+  }
 
 // dealing with long classpaths
 scriptClasspath := Seq("*")
@@ -70,16 +71,16 @@ libraryDependencies ++= Seq(
   "org.scala-lang"    % "scala-compiler"     % "2.13.18",
   "info.picocli"      % "picocli"            % "4.7.7",
   "org.slf4j"         % "slf4j-simple"       % "2.0.17",
-  "com.openai"        % "openai-java"        % "4.11.0",
+  "com.openai"        % "openai-java"        % "4.13.0",
   "com.anthropic"     % "anthropic-java"     % "2.11.1",
-  "com.google.genai"  % "google-genai"       % "1.31.0",
+  "com.google.genai"  % "google-genai"       % "1.32.0",
   "org.commonmark"    % "commonmark"         % "0.27.0",
   "org.xhtmlrenderer" % "flying-saucer-core" % "10.0.6",
-  "com.fifesoft"      % "rsyntaxtextarea"    % "3.6.0",
+  "com.fifesoft"      % "rsyntaxtextarea"    % "3.6.1",
   "com.formdev"       % "flatlaf"            % "3.7",
   "com.formdev"       % "flatlaf-fonts-jetbrains-mono" % "2.304",
-  "org.apache.maven"  % "maven-resolver-provider" % "3.9.11",
-  "org.apache.maven.resolver" % "maven-resolver-supplier-mvn4" % "2.0.13"
+  "org.apache.maven"  % "maven-resolver-provider" % "3.9.12",
+  "org.apache.maven.resolver" % "maven-resolver-supplier-mvn4" % "2.0.14"
 )
 
 libraryDependencies ++= {
@@ -90,7 +91,6 @@ libraryDependencies ++= {
     "org.apache.avro" % "avro" % "1.12.1" exclude("org.slf4j", "slf4j-log4j12"),
     "org.xerial.snappy" % "snappy-java" % "1.1.10.8", // for avro
     "com.epam" % "parso" % "2.0.14", // SAS7BDAT
-    "org.xerial" % "sqlite-jdbc" % "3.51.0.0"
   )
 }
 
