@@ -8,8 +8,12 @@
 hs_err_pid*
 
 # Test data
+base/src/test/resources/data/iceberg
 deep/src/test/resources
 nlp/src/test/resources
+
+# Native library
+deep/lib
 
 # Clojure
 .lein-repl-*
