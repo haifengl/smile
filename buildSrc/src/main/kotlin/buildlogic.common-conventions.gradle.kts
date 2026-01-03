@@ -10,7 +10,7 @@ repositories {
 tasks.withType<Test>().all {
     systemProperty("org.slf4j.simpleLogger.defaultLogLevel", "debug")
     jvmArgs("-Xmx6G", "-XX:+UseG1GC", "-XX:MaxMetaspaceSize=1024M", "-Xss4M")
-    jvmArgs("--add-opens=java.base/java.nio=org.apache.arrow.dataset,org.apache.arrow.memory.core,ALL-UNNAMED",)
+    jvmArgs("--add-opens=java.base/java.nio=ALL-UNNAMED",)
     jvmArgs("--enable-native-access=ALL-UNNAMED")
 }
 
