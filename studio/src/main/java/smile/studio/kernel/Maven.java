@@ -51,7 +51,7 @@ public interface Maven {
      */
     static List<Artifact> getDependencyJarPaths(String groupId, String artifactId, String version)
             throws DependencyResolutionException, DependencyCollectionException {
-        Artifact artifact = new DefaultArtifact(groupId, artifactId, "", "pom", version);
+        Artifact artifact = new DefaultArtifact(groupId, artifactId, "", "jar", version);
 
         var systemSupplier = new RepositorySystemSupplier();
         var system = systemSupplier.get();
