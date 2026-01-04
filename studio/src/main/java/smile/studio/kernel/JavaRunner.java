@@ -190,12 +190,12 @@ public class JavaRunner extends Runner {
     public void addToClasspath(String groupId, String artifactId, String version)
             throws DependencyCollectionException, DependencyResolutionException {
         for (var artifact : Maven.getDependencyJarPaths(groupId, artifactId, version)) {
-            if (artifact.getExtension().equals("jar")) {
+            if (artifact.getArtifactId().equals(artifactId) && artifact.getExtension().equals("jar")) {
                 var path = artifact.getPath();
                 if (path != null) {
                     jshell.addToClasspath(path.toAbsolutePath().toString());
                 } else {
-                    throw new RuntimeException(artifact + " is not available locally");
+                    logger.info("{}: null path", artifact);
                 }
             }
         }
