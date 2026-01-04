@@ -67,7 +67,7 @@ batScriptExtraDefines ++= Seq(
   """call :add_java -Dscala.repl.autoruncode=%APP_HOME%\bin\predef.sc""",
   """set OPENBLAS_NO_AVX512=1""",
   """set OPENBLAS_NUM_THREAD=1""",
-  """set PATH=%~dp0;!PATH!"""
+  """set "PATH=%~dp0;!PATH!""""
 )
 
 libraryDependencies ++= Seq(
