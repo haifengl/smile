@@ -8,6 +8,7 @@
 
 import smile.wavelet.*;
 import smile.plot.swing.*;
+import static java.awt.Color.*;
 import static smile.swing.SmileUtilities.*;
 
 double[] sp500 = {
