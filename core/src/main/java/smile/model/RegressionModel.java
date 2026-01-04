@@ -33,7 +33,7 @@ import smile.validation.RegressionMetrics;
  * @param train the training metrics.
  * @param validation the cross-validation metrics.
  * @param test the test metrics.
- * @param tag the model metadata tags.
+ * @param tags the model metadata tags.
  *
  * @author Haifeng Li
  */
