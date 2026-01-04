@@ -550,7 +550,7 @@ title: Smile - Regression
           <pre class="prettyprint lang-java"><code>
     var diabetes = Read.csv("data/regression/diabetes.csv", CSVFormat.DEFAULT.withFirstRecordAsHeader());
     var formula = Formula.lhs("y");
-    LASSO.fit(formula, diabetes, new LASSO.Options(10)));
+    LASSO.fit(formula, diabetes, new LASSO.Options(10));
     LASSO.fit(formula, diabetes, new LASSO.Options(100));
     LASSO.fit(formula, diabetes, new LASSO.Options(500));
           </code></pre>
@@ -1391,7 +1391,7 @@ title: Smile - Regression
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     cv.regression(10, x, y) { (x, y) =>
-        val t = kmeans(x, 20).centroids
+        val t = kmeans(x, 20).centers
         gpr.approx(x, y, t, new GaussianKernel(0.06), 0.01)
     }
     </code></pre>
@@ -1402,7 +1402,7 @@ title: Smile - Regression
           <pre class="prettyprint lang-java"><code>
     var options = new GaussianProcessRegression.Options(0.01);
     CrossValidation.regression(10, x, y, (x, y) -> {
-        var t = KMeans.fit(x, 20).centroids;
+        var t = KMeans.fit(x, 20, 5).centers();
         return GaussianProcessRegression.fit(x, y, t, new GaussianKernel(0.06), options);
     });
           </code></pre>
@@ -1412,7 +1412,7 @@ title: Smile - Regression
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-kotlin"><code>
     CrossValidation.regression(10, x, y, { x, y ->
-        val t = kmeans(x, 20).centroids
+        val t = kmeans(x, 20).centers
         gpr.approx(x, y, t, GaussianKernel(0.06), 0.01)
     })
           </code></pre>
