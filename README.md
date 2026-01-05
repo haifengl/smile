@@ -125,14 +125,14 @@ DLL files from the `bin` directory of release packages. Make sure to add this
 directory to PATH environment variable.
 
 To install on Linux (e.g., Ubuntu), run
-```
+```shell script
 sudo apt update
 sudo apt install libopenblas-dev libarpack2
 ```
 
 On Mac, we use the BLAS library from the Accelerate framework provided by macOS.
 But you should install ARPACK by running
-```
+```shell script
 brew install arpack
 ```
 However, macOS System Integrity Protection (SIP) significantly impacts how
@@ -154,33 +154,31 @@ In this example, we include all supported 64-bit platforms and filter out
 32-bit platforms. The user should include only the needed platforms to save
 spaces.
 
-## Shell ##
-SMILE comes with interactive shells for Java and Scala.
+## Studio ##
+SMILE Studio is an interactive desktop application to help you be more
+productive in building and serving models with SMILE. Similar to Jupyter
+Notebooks, SMILE Studio is a REPL (Read-Evaluate-Print-Loop) containing
+an ordered list of input/output cells.
+
 Download pre-packaged SMILE from the
 [releases page](https://github.com/haifengl/smile/releases).
-After unziping the package and cd into the home directory of SMILE
+After unziping the package and cd into the `bin` directory of SMILE
 in a terminal, type
+```shell script
+    ./smile
 ```
-    ./bin/smile
-```
-to enter SMILE shell in Java, which pre-imports all major SMILE packages.
-You can run any valid Java expressions in the shell. In the simplest case,
-you can use it as a calculator.
+to enter SMILE Studio. If you work in a headless environment without
+graphical interface, you may run `./smile shell` to enter SMILE Shell
+for Java, which pre-imports all major SMILE packages. If you prefer
+Scala, type `./smile scala` to enter SMILE Shell for Scala.
 
-To enter the shell in Scala, type
-```
-    ./bin/smile scala
-```
-Similar to the shell in Java, all major SMILE packages are pre-imported.
-Besides, all high-level SMILE operators are predefined in the shell.
-
-By default, the shell uses up to 75% memory. If you need more memory
+By default, the Studio/Shell uses up to 4GB memory. If you need more memory
 to handle large data, use the option `-J-Xmx` or `-XX:MaxRAMPercentage`.
 For example,
+```shell script
+    ./smile -J-Xmx30G
 ```
-    ./bin/smile -J-Xmx30G
-```
-You can also modify the configuration file `./conf/smile.ini` for the
+You can also modify the configuration file `conf/smile.ini` for the
 memory and other JVM settings.
 
 ## Model Serialization ##
