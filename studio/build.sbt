@@ -71,8 +71,7 @@ batScriptExtraDefines ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "com.github.scopt" %% "scopt"              % "4.1.0",
-  "org.scala-lang"    % "scala-compiler"     % "2.13.18",
+  "org.scala-lang"   %% "scala3-compiler"    % scalaVersion.value,
   "info.picocli"      % "picocli"            % "4.7.7",
   "org.slf4j"         % "slf4j-simple"       % "2.0.17",
   "com.openai"        % "openai-java"        % "4.13.0",
@@ -95,20 +94,5 @@ libraryDependencies ++= {
     "org.apache.avro" % "avro" % "1.12.1" exclude("org.slf4j", "slf4j-log4j12"),
     "org.xerial.snappy" % "snappy-java" % "1.1.10.8", // for avro
     "com.epam" % "parso" % "2.0.14", // SAS7BDAT
-  )
-}
-
-libraryDependencies ++= {
-  val akkaVersion     = "2.9.3"
-  val akkaHttpVersion = "10.6.3"
-  Seq(
-    "com.typesafe.akka"  %% "akka-actor-typed"         % akkaVersion,
-    "com.typesafe.akka"  %% "akka-stream"              % akkaVersion,
-    "com.typesafe.akka"  %% "akka-pki"                 % akkaVersion,
-    "com.typesafe.akka"  %% "akka-http"                % akkaHttpVersion,
-    "com.typesafe.akka"  %% "akka-http-spray-json"     % akkaHttpVersion,
-    "com.lightbend.akka" %% "akka-stream-alpakka-csv"  % "8.0.0" exclude("com.typesafe.akka", "akka-stream_3"),
-    "com.typesafe.akka"  %% "akka-actor-testkit-typed" % akkaVersion     % Test,
-    "com.typesafe.akka"  %% "akka-http-testkit"        % akkaHttpVersion % Test
   )
 }
