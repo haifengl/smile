@@ -12,7 +12,7 @@ lazy val commonSettings = Seq(
   // skip packageDoc task on stage
   Compile / packageDoc / mappings := Seq(),
   // always set scala version including Java only modules
-  scalaVersion := scala213,
+  scalaVersion := scala3,
 
   description := "Statistical Machine Intelligence and Learning Engine",
   organization := "com.github.haifengl",
