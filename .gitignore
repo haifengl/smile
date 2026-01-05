@@ -11,6 +11,7 @@ hs_err_pid*
 base/src/test/resources/data/iceberg
 deep/src/test/resources
 nlp/src/test/resources
+model
 
 # Native library
 deep/lib
