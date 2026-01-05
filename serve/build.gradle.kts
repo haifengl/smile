@@ -15,14 +15,17 @@ dependencies {
     implementation("io.quarkus:quarkus-rest-jackson")
     implementation("io.quarkus:quarkus-arc")
     implementation("org.jboss.slf4j:slf4j-jboss-logmanager")
+    implementation("org.bytedeco:pytorch-platform-gpu:2.7.1-1.5.12")
+    implementation("org.bytedeco:cuda-platform-redist:12.9-9.10-1.5.12")
+    implementation("org.bytedeco:cuda-platform-redist-cublas:12.9-9.10-1.5.12")
+    implementation("org.bytedeco:cuda-platform-redist-cudnn:12.9-9.10-1.5.12")
+    implementation("org.bytedeco:cuda-platform-redist-cusolver:12.9-9.10-1.5.12")
+    implementation("org.bytedeco:cuda-platform-redist-cusparse:12.9-9.10-1.5.12")
     testImplementation("io.quarkus:quarkus-junit5")
 }
 
 tasks.withType<Test> {
     systemProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager")
-    jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED",
-            "--add-opens", "java.base/java.nio=ALL-UNNAMED",
-            "--enable-native-access", "ALL-UNNAMED")
 }
 tasks.quarkusDev {
     jvmArgs = listOf(
