@@ -17,6 +17,7 @@ model
 deep/lib
 
 # Clojure
+.nrepl-port
 .lein-repl-*
 clojure/pom.xml*
 
