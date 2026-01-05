@@ -21,11 +21,11 @@ sbt unidoc
 check_error "!!"
 mv target/javaunidoc doc/api/java
 
-sbt ++3.3.7 json/doc
+sbt json/doc
 check_error "!!"
 find doc/api/json -name '*.html' -exec bin/gtag.sh {} \;
 
-sbt ++3.3.7 scala/doc
+sbt scala/doc
 check_error "!!"
 find doc/api/scala -name '*.html' -exec bin/gtag.sh {} \;
 
@@ -56,14 +56,12 @@ while true; do
             sbt publishSigned
             check_error "sbt publish"
 
-            sbt ++3.3.7 scala/publishSigned
+            sbt ++2.13.18 scala/publishSigned
             check_error "sbt scala/publish"
-            sbt ++3.3.7 json/publishSigned
+            sbt ++2.13.18 json/publishSigned
             check_error "sbt json/publish"
-            # sbt ++3.3.7 spark/publishSigned
+            # sbt ++2.13.18 spark/publishSigned
             # check_error "sbt spark/publish"
-            #./gradlew :kotlin:publishMavenJavaPublicationToMavenRepository
-            # check_error "gradlew :kotlin:publish"
             break;;
         [Nn]* ) break;;
         * ) echo "Please answer yes or no.";;
@@ -95,4 +93,3 @@ while true; do
         * ) echo "Please answer yes or no.";;
     esac
 done
-
