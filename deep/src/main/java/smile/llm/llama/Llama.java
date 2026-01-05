@@ -346,6 +346,8 @@ public class Llama {
                 var reason = stop ? FinishReason.stop : FinishReason.length;
                 predictions[i] = new CompletionPrediction(name, tokenizer.decode(completion), prompts[i], completion, reason, probs);
             }
+
+            if (publisher != null) publisher.close();
             Tensor.pop();
             System.gc();
             return predictions;
