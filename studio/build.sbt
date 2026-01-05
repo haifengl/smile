@@ -18,7 +18,7 @@ packageDescription :=
 
 import com.typesafe.sbt.packager.MappingsHelper._
 Universal / mappings ++= Seq(
-  (baseDirectory.value / "../README.md") -> "README.md",
+  (baseDirectory.value / "README.md") -> "README.md",
   (baseDirectory.value / "../COPYING") -> "COPYING",
   (baseDirectory.value / "../LICENSE") -> "LICENSE"
 )
