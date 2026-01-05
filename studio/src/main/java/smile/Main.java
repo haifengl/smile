@@ -43,8 +43,7 @@ public class Main {
         switch (command) {
             case "train" -> new CommandLine(new Train()).execute(options);
             case "predict" -> new CommandLine(new Predict()).execute(options);
-            case "serve" -> Serve.apply(options);
-            case "scala" -> ScalaREPL.apply(options);
+            case "scala" -> ScalaREPL.start(options);
             case "shell" -> JShell.start(options);
             default -> SmileStudio.start(args);
         }
