@@ -34,5 +34,5 @@ public interface ChatServiceConfig {
     @WithDefault("1")
     int maxBatchSize();
     @WithDefault("0")
-    int device();
+    byte device();
 }

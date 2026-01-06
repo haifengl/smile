@@ -88,24 +88,11 @@ public class Llama {
      * @param tokenizerPath the path of tokenizer model file.
      * @param maxSeqLen the maximum sequence length for input text.
      * @param maxBatchSize the maximum batch size for inference.
+     * @param deviceId the optional CUDA device ID. If negative, don't use CUDA.
      * @throws IOException if fail to open model checkpoint.
      * @return an instance of Llama model.
      */
-    public static Llama build(String checkpointDir, String tokenizerPath, int maxBatchSize, int maxSeqLen) throws IOException {
-        return build(checkpointDir, tokenizerPath, maxBatchSize, maxSeqLen, null);
-    }
-
-    /**
-     * Builds a Llama instance by initializing and loading a model checkpoint.
-     * @param checkpointDir the directory path of checkpoint files.
-     * @param tokenizerPath the path of tokenizer model file.
-     * @param maxSeqLen the maximum sequence length for input text.
-     * @param maxBatchSize the maximum batch size for inference.
-     * @param deviceId the optional CUDA device ID.
-     * @throws IOException if fail to open model checkpoint.
-     * @return an instance of Llama model.
-     */
-    public static Llama build(String checkpointDir, String tokenizerPath, int maxBatchSize, int maxSeqLen, Integer deviceId) throws IOException {
+    public static Llama build(String checkpointDir, String tokenizerPath, int maxBatchSize, int maxSeqLen, byte deviceId) throws IOException {
         File dir = new File(checkpointDir);
         if (!dir.exists() || !dir.isDirectory()) {
             throw new IllegalArgumentException("Checkpoint directory doesn't exist: " + checkpointDir);
@@ -115,26 +102,26 @@ public class Llama {
         int modelParallelSize = Integer.parseInt(worldSize);
         String localRank = Objects.requireNonNullElse(System.getenv("LOCAL_RANK"), "0");
         int rank = Integer.parseInt(localRank);
-        if (deviceId == null) {
-            deviceId = rank;
+
+        Device device = Device.CPU();
+        if (deviceId >= 0) {
+            var startTime = System.currentTimeMillis();
+            cudart.cuInit(0);
+            torch_cuda.set_device(deviceId);
+            device = Device.CUDA(deviceId);
+
+            // half precision to lower memory usage.
+            var meta = new TypeMeta();
+            meta.put(Tensor.isBF16Supported() ? torch.ScalarType.BFloat16 : torch.ScalarType.Half);
+            torch.set_default_dtype(meta);
+            var time = System.currentTimeMillis() - startTime;
+            logger.info("Initialized CUDA[{}]: {}.{} seconds", deviceId, time / 1000, time % 1000);
         }
 
-        var startTime = System.currentTimeMillis();
-        cudart.cuInit(0);
-        torch_cuda.set_device(deviceId.byteValue());
-
-        // half precision to lower memory usage.
-        var meta = new TypeMeta();
-        meta.put(Tensor.isBF16Supported() ? torch.ScalarType.BFloat16 : torch.ScalarType.Half);
-        torch.set_default_dtype(meta);
-
-        Device device = Device.CUDA(deviceId.byteValue());
         var options = new Tensor.Options().device(device).requireGradients(false);
         Tensor.setDefaultOptions(options);
-        var time = System.currentTimeMillis() - startTime;
-        logger.info("Initialized CUDA[{}]: {}.{} seconds", rank, time/1000, time%1000);
 
-        startTime = System.currentTimeMillis();
+        var startTime = System.currentTimeMillis();
         List<String> checkpoints = getCheckpoints(dir);
         if (checkpoints.isEmpty()) {
             throw new IllegalArgumentException("No checkpoint files found in " + checkpointDir);
@@ -157,7 +144,7 @@ public class Llama {
         var checkpoint = checkpoints.get(rank);
         model.load(checkpoint);
 
-        time = System.currentTimeMillis() - startTime;
+        var time = System.currentTimeMillis() - startTime;
         logger.info("Model {}[{}]: loaded in {}.{} seconds", checkpointDir, rank, time/1000, time%1000);
         return new Llama(dir.getName(), model, tokenizer);
     }
