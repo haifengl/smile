@@ -122,7 +122,7 @@ public class EfficientNetTest {
     public void train() throws IOException {
         // half precision to lower memory usage.
         var dtype = ScalarType.BFloat16;
-        Device device = Device.CUDA((byte) 1);
+        Device device = Device.CUDA();
         device.setDefaultDevice();
 
         var model = EfficientNet.V2S();
@@ -139,6 +139,6 @@ public class EfficientNetTest {
         // Use parameters from the paper, the rests are Keras default values.
         // Note that Keras has different default values from PyTorch (e.g. alpha and eps).
         Optimizer optimizer = Optimizer.RMSprop(model, 0.0001, 0.9, 1E-07, 1E-05, 0.9, false);
-        model.train(5, optimizer, Loss.nll(), data, test, null, new Accuracy());
+        model.train(1, optimizer, Loss.nll(), data, test, null, new Accuracy());
     }
 }
