@@ -6,7 +6,6 @@ lazy val supportedScalaVersions = List(scala213, scala3)
 lazy val os = sys.props.get("os.name").get.toLowerCase.split(" ")(0)
 
 lazy val commonSettings = Seq(
-  resolvers += "Akka library repository" at "https://repo.akka.io/maven",
   resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
 
   // skip packageDoc task on stage
@@ -147,21 +146,6 @@ lazy val javaCppSettings = Seq(
     "org.bytedeco" % "openblas"  % "0.3.30-1.5.12" classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
     "org.bytedeco" % "arpack-ng" % "3.9.1-1.5.12"  classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
   )
-)
-
-lazy val akkaSettings = Seq(
-  libraryDependencies ++= {
-    val akkaVersion     = "2.9.3"
-    val akkaHttpVersion = "10.6.3"
-    Seq(
-      "com.typesafe.akka" %% "akka-actor-typed"         % akkaVersion,
-      "com.typesafe.akka" %% "akka-stream"              % akkaVersion,
-      "com.typesafe.akka" %% "akka-http"                % akkaHttpVersion,
-      "com.typesafe.akka" %% "akka-http-spray-json"     % akkaHttpVersion,
-      "com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaVersion     % Test,
-      "com.typesafe.akka" %% "akka-http-testkit"        % akkaHttpVersion % Test
-    )
-  }
 )
 
 JavaUnidoc / unidoc / javacOptions ++= Seq(
