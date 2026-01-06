@@ -4,7 +4,7 @@ arrow = "18.3.0"
 [libraries]
 logback = { module = "ch.qos.logback:logback-classic", version = "1.5.23" }
 sqlite = { module = "org.xerial:sqlite-jdbc", version = "3.51.1.0" }
-jackson = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-xml", version = "2.20.0" }
+jackson = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-xml", version = "2.20.1" }
 arrow-dataset = { module = "org.apache.arrow:arrow-dataset", version.ref = "arrow" }
 arrow-memory-netty = { module = "org.apache.arrow:arrow-memory-netty", version.ref = "arrow" }
 

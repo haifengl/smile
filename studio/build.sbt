@@ -22,6 +22,10 @@ Universal / mappings ++= Seq(
   (baseDirectory.value / "../COPYING") -> "COPYING",
   (baseDirectory.value / "../LICENSE") -> "LICENSE"
 )
+Universal / mappings ++= contentOf("serve/build/quarkus-app/")
+  .map {
+    case (file, path) => (file, s"serve/$path")
+  }
 Universal / mappings ++= contentOf("base/src/test/resources/data/")
   .filter {
     case (file, path) => path.startsWith("mnist") ||
