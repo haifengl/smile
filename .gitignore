@@ -80,5 +80,8 @@ nb-configuration.xml
 
 # Plugin directory
 /.quarkus/cli/plugins/
+
 # TLS Certificates
+*.cer
+*.key
 .certs/
