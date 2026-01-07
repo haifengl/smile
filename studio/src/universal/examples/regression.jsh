@@ -3,7 +3,15 @@
 import smile.data.*;
 import smile.data.formula.*;
 import smile.io.*;
-import smile.regression.*;
+import smile.regression.OLS;
+import smile.regression.RidgeRegression;
+import smile.regression.LASSO;
+import smile.regression.SVM;
+import smile.regression.RBFNetwork;
+import smile.regression.RegressionTree;
+import smile.regression.RandomForest;
+import smile.regression.GradientTreeBoost;
+import smile.regression.GaussianProcessRegression;
 import smile.clustering.KMeans;
 import smile.math.distance.*;
 import smile.math.kernel.*;
