@@ -20,12 +20,12 @@ in a terminal, type
 ```shell script
     ./smile
 ```
-to enter SMILE Studio. If you work in a headless environment without
-graphical interface, you may run `./smile shell` to enter SMILE Shell
+to enter Smile Studio. If you work in a headless environment without
+graphical interface, you may run `./smile shell` to enter Smile Shell
 for Java, which pre-imports all major SMILE packages. If you prefer
-Scala, type `./smile scala` to enter SMILE Shell for Scala.
+Scala, type `./smile scala` to enter Smile Shell for Scala.
 
-By default, the Studio/Shell uses up to 4GB memory. If you need more memory
+By default, Smile Studio/Shell uses up to 4GB memory. If you need more memory
 to handle large data, use the option `-J-Xmx` or `-XX:MaxRAMPercentage`.
 For example,
 ```shell script
