@@ -105,7 +105,7 @@ lazy val javaSettings = commonSettings ++ Seq(
   libraryDependencies ++= Seq(
     "org.slf4j" % "slf4j-api" % "2.0.17",
     "org.slf4j" % "slf4j-simple" % "2.0.17" % Test,
-    "org.junit.jupiter" % "junit-jupiter-engine" % "6.0.1" % Test,
+    "org.junit.jupiter" % "junit-jupiter-engine" % "6.0.2" % Test,
     "com.github.sbt.junit" % "jupiter-interface" % JupiterKeys.jupiterVersion.value % Test
   )
 )
@@ -213,4 +213,4 @@ lazy val studio = project.in(file("studio"))
 lazy val serve = project.in(file("serve"))
   .settings(scalaSettings: _*)
   .settings(publish / skip := true)
-  .dependsOn(deep)
+  .dependsOn(core, deep)
