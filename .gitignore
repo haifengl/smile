@@ -11,11 +11,13 @@ hs_err_pid*
 base/src/test/resources/data/iceberg
 deep/src/test/resources
 nlp/src/test/resources
+model
 
 # Native library
 deep/lib
 
 # Clojure
+.nrepl-port
 .lein-repl-*
 clojure/pom.xml*
 
@@ -34,7 +36,7 @@ node_modules
 # Generated
 doc/api
 web/_site/
-serve/src/universal/chat
+serve/src/main/resources/META-INF/resources/chat
 
 # SBT
 .bsp
@@ -79,5 +81,8 @@ nb-configuration.xml
 
 # Plugin directory
 /.quarkus/cli/plugins/
+
 # TLS Certificates
+*.cer
+*.key
 .certs/

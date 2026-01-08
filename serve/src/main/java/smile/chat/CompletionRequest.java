@@ -14,21 +14,24 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.shell
+package smile.chat;
 
-/** Scala REPL.
-  *
-  * @author Haifeng Li
-  */
-object ScalaREPL extends scala.tools.nsc.MainGenericRunner {
-  def apply(args: Array[String]): Unit = {
-    val welcome = s"""
-         |${JShell.logo}
-         ||  Welcome to SMILE ${JShell.version}! Type :help for command help.
-         |===============================================================================""".stripMargin
-    System.setProperty("scala.repl.prompt", "%nsmile> ")
-    System.setProperty("scala.repl.welcome", welcome)
-    
-    if (!process(args)) System.exit(1)
-  }
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import smile.llm.Message;
+
+/**
+ * The chat completion request.
+ *
+ * @author Haifeng Li
+ */
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+public class CompletionRequest {
+    public Message[] messages;
+    public int maxTokens = 2048;
+    public double temperature = 0.6;
+    public double topP = 0.9;
+    public boolean logprobs = false;
+    public long seed = 0;
+    public boolean stream = true;
 }
