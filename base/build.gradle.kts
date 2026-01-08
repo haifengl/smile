@@ -8,7 +8,7 @@ dependencies {
     implementation(libs.bundles.arrow)
     implementation("com.epam:parso:2.0.14") // SAS7BDAT
     implementation("org.apache.avro:avro:1.12.1") { exclude("org.slf4j", "slf4j-log4j12") }
-
+    implementation("org.xerial.snappy:snappy-java:1.1.10.8")
     testRuntimeOnly(libs.sqlite)
 }
 

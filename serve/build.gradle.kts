@@ -1,17 +1,45 @@
 plugins {
-    id("buildlogic.scala-application-conventions")
+    id("buildlogic.java-common-conventions")
+    id("io.quarkus")
 }
+
+val quarkusPlatformGroupId: String by project
+val quarkusPlatformArtifactId: String by project
+val quarkusPlatformVersion: String by project
 
 dependencies {
+    implementation(project(":core"))
     implementation(project(":deep"))
-    implementation(libs.bundles.akka)
-    implementation(libs.logback)
-    implementation(libs.sqlite)
-    implementation("com.github.scopt:scopt_3:4.1.0")
-    implementation("com.typesafe.slick:slick_3:3.6.1")
+    implementation(enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}"))
+    implementation("io.quarkus:quarkus-rest")
+    implementation("io.quarkus:quarkus-rest-jackson")
+    implementation("io.quarkus:quarkus-arc")
+    implementation("org.jboss.slf4j:slf4j-jboss-logmanager")
+    /*
+    implementation("org.bytedeco:pytorch-platform-gpu:2.7.1-1.5.12")
+    implementation("org.bytedeco:cuda-platform-redist:12.9-9.10-1.5.12")
+    implementation("org.bytedeco:cuda-platform-redist-cublas:12.9-9.10-1.5.12")
+    implementation("org.bytedeco:cuda-platform-redist-cudnn:12.9-9.10-1.5.12")
+    implementation("org.bytedeco:cuda-platform-redist-cusolver:12.9-9.10-1.5.12")
+    implementation("org.bytedeco:cuda-platform-redist-cusparse:12.9-9.10-1.5.12")
+     */
+    testImplementation("io.quarkus:quarkus-junit5")
 }
 
-application {
-    // Define the main class for the application.
-    mainClass = "smile.serve.Main"
+tasks.withType<Test> {
+    systemProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager")
 }
+tasks.quarkusDev {
+    jvmArgs = listOf(
+        "--add-opens", "java.base/java.lang=ALL-UNNAMED",
+        "--add-opens", "java.base/java.nio=ALL-UNNAMED",
+        "--enable-native-access", "ALL-UNNAMED")
+}
+tasks.withType<JavaCompile> {
+    options.encoding = "UTF-8"
+    options.compilerArgs.add("-parameters")
+}
+tasks.withType<Javadoc> {
+    enabled = false
+}
+
