@@ -24,6 +24,7 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.ResourceBundle;
@@ -292,12 +293,15 @@ public class Explorer extends JPanel {
                 frame.setTitle(model.name());
 
                 String home = System.getProperty("smile.home", ".");
-                String command = home + (SystemInfo.isWindows ? "\\bin\\smile.bat" : "/bin/smile");
-                frame.start( command, "serve",
-                        "--line",
-                        "--model", model.path(),
-                        "--host", hostField.getText(),
-                        "--port", portField.getText());
+                // jvm options should be before -jar argument
+                frame.start( "java",
+                        "--add-opens", "java.base/java.lang=ALL-UNNAMED",
+                        "--add-opens", "java.base/java.nio=ALL-UNNAMED",
+                        "--enable-native-access", "ALL-UNNAMED",
+                        "-Dsmile.serve.model=" + model.path(),
+                        "-Dquarkus.http.host=" + hostField.getText(),
+                        "-Dquarkus.http.port=" + portField.getText(),
+                        "-jar", Path.of(home, "serve", "quarkus-run.jar").normalize().toString());
                 frame.setVisible(true);
             });
 
