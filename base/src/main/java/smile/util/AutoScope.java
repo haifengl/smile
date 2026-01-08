@@ -22,8 +22,8 @@ import java.util.LinkedList;
 /**
  * AutoScope allows for predictable, deterministic resource deallocation.
  * AutoScope can be closed explicitly or be best used with try-with-resources
- * Statement. Closing an AutoScope will cause all the cleanup actions
- * associated with that scope to be called.
+ * statement. Closing an AutoScope will cause all the resources
+ * associated with that scope to be closed.
  */
 public class AutoScope implements AutoCloseable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AutoScope.class);
