@@ -209,8 +209,3 @@ lazy val studio = project.in(file("studio"))
   .settings(scalaSettings: _*)
   .settings(publish / skip := true)
   .dependsOn(scala)
-
-lazy val serve = project.in(file("serve"))
-  .settings(scalaSettings: _*)
-  .settings(publish / skip := true)
-  .dependsOn(core, deep)
