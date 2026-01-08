@@ -16,7 +16,8 @@
  */
 package smile.chat;
 
-import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.concurrent.SubmissionPublisher;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -44,8 +45,12 @@ public class ChatService {
     @Inject
     public ChatService(ChatServiceConfig config) {
         try {
-            model = Llama.build(config.model(), config.tokenizer(),
-                    config.maxBatchSize(), config.maxSeqLen(), config.device());
+            if (Files.exists(Paths.get(config.model()))) {
+                model = Llama.build(config.model(), config.tokenizer(),
+                        config.maxBatchSize(), config.maxSeqLen(), config.device());
+            } else {
+                logger.infof("LLM model '%s' doesn't exist. Chat service won't be available.", config.model());
+            }
         } catch (Throwable t) {
             logger.errorf(t, "Failed to load model '%s'", config.model());
         }
