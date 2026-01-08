@@ -33,7 +33,49 @@ The application can be packaged using:
 It produces the `quarkus-run.jar` file in the `build/quarkus-app/` directory.
 Be aware that it’s not an _über-jar_ as the dependencies are copied into the `build/quarkus-app/lib/` directory.
 
-The application is now runnable using `java -jar build/quarkus-app/quarkus-run.jar`.
+The application is now runnable using
+```shell script
+java --add-opens java.base/java.lang=ALL-UNNAMED \
+     --add-opens java.base/java.nio=ALL-UNNAMED \
+     --enable-native-access ALL-UNNAMED \
+     -jar build/quarkus-app/quarkus-run.jar
+```
+
+By default, the service runs on the port 8080. To customize the port,
+use the `-D` flag on command line. For example,
+```shell script
+java --add-opens java.base/java.lang=ALL-UNNAMED \
+     --add-opens java.base/java.nio=ALL-UNNAMED \
+     --enable-native-access ALL-UNNAMED \
+     -Dquarkus.http.port=3801 \
+     -jar build/quarkus-app/quarkus-run.jar
+```
+
+By default, the service loads all model files (`*.sml`) from the folder
+`../model`. You may specify system property `smile.serve.model` to a
+`.sml` file or a folder to override the model location. You may list
+the available models with the endpoint `/v1/models`.
+```shell script
+curl http://localhost:8080/v1/models
+```
+The model metadata can be queried by `/v1/models/{modelId}`.
+```shell script
+curl http://localhost:8080/v1/models/iris_random_forest-1
+```
+To send an inference request, use `POST`
+```shell script
+curl -X POST -H "Content-Type: application/json" http://localhost:8080/v1/models/iris_random_forest-1 \
+        -d '{
+          "sepallength": 5.1,
+          "sepalwidth": 3.5,
+          "petallength": 1.4,
+          "petalwidth": 0.2
+        }'
+```
+Or use the endpoint `/v1/models/{modelId}/stream` for stream processing.
+```shell script
+cat iris.txt | curl -H "Content-Type: text/plain" -X POST --data-binary @- http://localhost:8080/v1/models/iris_random_forest-1/stream
+```
 
 If you want to build an _über-jar_, execute the following command:
 
