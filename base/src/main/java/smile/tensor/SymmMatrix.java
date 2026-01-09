@@ -73,9 +73,10 @@ public abstract class SymmMatrix implements Matrix, Serializable {
 
     /**
      * Returns a zero matrix.
+     * @param scalarType the data type of matrix elements.
      * @param uplo the symmetric matrix stores the upper or lower triangle.
      * @param n the dimension of matrix.
-     * @return the packed symmetric matrix.
+     * @return a packed symmetric zero matrix.
      */
     public static SymmMatrix zeros(ScalarType scalarType, UPLO uplo, int n) {
         if (uplo == null) {

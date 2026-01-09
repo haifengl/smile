@@ -16,13 +16,13 @@
  */
 package smile.classification;
 
-import smile.base.rbf.RBF;
 import smile.clustering.KMeans;
 import smile.datasets.*;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
 import smile.math.rbf.GaussianRadialBasis;
+import smile.model.rbf.RBF;
 import smile.validation.*;
 import smile.validation.metric.Error;
 import org.junit.jupiter.api.*;

@@ -6,25 +6,24 @@ lazy val supportedScalaVersions = List(scala213, scala3)
 lazy val os = sys.props.get("os.name").get.toLowerCase.split(" ")(0)
 
 lazy val commonSettings = Seq(
-  resolvers += "Akka library repository" at "https://repo.akka.io/maven",
   resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
 
   // skip packageDoc task on stage
   Compile / packageDoc / mappings := Seq(),
   // always set scala version including Java only modules
-  scalaVersion := scala213,
+  scalaVersion := scala3,
 
   description := "Statistical Machine Intelligence and Learning Engine",
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("https://haifengl.github.io/")),
-  version := "5.0.1",
+  version := "5.1.0",
 
   // Run in a separate JVM, to make sure sbt waits until all threads have
   // finished before returning.
   // If you want to keep the application running while executing other
   // sbt tasks, consider https://github.com/spray/sbt-revolver/
-  fork := true,
+  Test / fork := true,
 
   autoAPIMappings := true,
   Test / baseDirectory := (ThisBuild/Test/run/baseDirectory).value,
@@ -35,22 +34,17 @@ lazy val commonSettings = Seq(
     "-XX:MaxMetaspaceSize=1024M",
     "-Xss4M",
     "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug",
-    "--add-opens=java.base/java.lang=ALL-UNNAMED",
-    "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
     "--add-opens=java.base/java.nio=ALL-UNNAMED",
-    "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
-    "--add-opens=java.base/sun.nio.cs=ALL-UNNAMED",
-    "--add-opens=java.base/sun.security.action=ALL-UNNAMED",
     "--enable-native-access=ALL-UNNAMED"
   ),
-  Test / envVars := Map(
+  Test / envVars ++= Map(
     os match {
       case "windows" =>
-        "PATH" -> s"${(Test / baseDirectory).value}/shell/src/universal/bin;${System.getenv("PATH")}"
+        "PATH" -> s"${(Test / baseDirectory).value}/studio/src/universal/bin;${System.getenv("PATH")}"
       case "mac" =>
-        "DYLD_LIBRARY_PATH" -> s"${(Test / baseDirectory).value}/shell/src/universal/bin:${System.getenv("DYLD_LIBRARY_PATH")}"
+        "DYLD_LIBRARY_PATH" -> s"${(Test / baseDirectory).value}/studio/src/universal/bin:${System.getenv("DYLD_LIBRARY_PATH")}"
       case _ =>
-        "LD_LIBRARY_PATH" -> s"${(Test / baseDirectory).value}/shell/src/universal/bin:${System.getenv("LD_LIBRARY_PATH")}"
+        "LD_LIBRARY_PATH" -> s"${(Test / baseDirectory).value}/studio/src/universal/bin:${System.getenv("LD_LIBRARY_PATH")}"
     }
   ),
 
@@ -111,7 +105,7 @@ lazy val javaSettings = commonSettings ++ Seq(
   libraryDependencies ++= Seq(
     "org.slf4j" % "slf4j-api" % "2.0.17",
     "org.slf4j" % "slf4j-simple" % "2.0.17" % Test,
-    "org.junit.jupiter" % "junit-jupiter-engine" % "6.0.1" % Test,
+    "org.junit.jupiter" % "junit-jupiter-engine" % "6.0.2" % Test,
     "com.github.sbt.junit" % "jupiter-interface" % JupiterKeys.jupiterVersion.value % Test
   )
 )
@@ -154,21 +148,6 @@ lazy val javaCppSettings = Seq(
   )
 )
 
-lazy val akkaSettings = Seq(
-  libraryDependencies ++= {
-    val akkaVersion     = "2.9.3"
-    val akkaHttpVersion = "10.6.3"
-    Seq(
-      "com.typesafe.akka" %% "akka-actor-typed"         % akkaVersion,
-      "com.typesafe.akka" %% "akka-stream"              % akkaVersion,
-      "com.typesafe.akka" %% "akka-http"                % akkaHttpVersion,
-      "com.typesafe.akka" %% "akka-http-spray-json"     % akkaHttpVersion,
-      "com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaVersion     % Test,
-      "com.typesafe.akka" %% "akka-http-testkit"        % akkaHttpVersion % Test
-    )
-  }
-)
-
 JavaUnidoc / unidoc / javacOptions ++= Seq(
   "-Xdoclint:none",
   "--allow-script-in-comments",
@@ -185,9 +164,9 @@ lazy val root = project.in(file("."))
   .settings(publish / skip := true)
   .settings(crossScalaVersions := Nil)
   .settings(
-    JavaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(json, scala, spark, shell)
+    JavaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(json, scala, spark, kotlin, studio)
   )
-  .aggregate(core, base, nlp, deep, plot, json, scala, kotlin, shell, serve)
+  .aggregate(core, base, nlp, deep, plot, json, scala, kotlin, studio)
 
 lazy val base = project.in(file("base"))
   .settings(javaSettings: _*)
@@ -225,13 +204,8 @@ lazy val kotlin = project.in(file("kotlin"))
   .enablePlugins(KotlinPlugin)
   .dependsOn(core, nlp)
 
-lazy val shell = project.in(file("shell"))
+lazy val studio = project.in(file("studio"))
   .settings(javaSettings: _*)
   .settings(scalaSettings: _*)
   .settings(publish / skip := true)
   .dependsOn(scala)
-
-lazy val serve = project.in(file("serve"))
-  .settings(scalaSettings: _*)
-  .settings(publish / skip := true)
-  .dependsOn(deep)

@@ -23,6 +23,7 @@ import java.io.Serializable;
  *
  * @author Haifeng Li
  */
+@FunctionalInterface
 public interface IntFunction extends Serializable {
     /**
      * Computes the value of the function at x.

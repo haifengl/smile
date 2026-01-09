@@ -25,7 +25,6 @@ import smile.deep.metric.Recall;
 import smile.deep.layer.Layer;
 import smile.deep.tensor.*;
 import org.junit.jupiter.api.*;
-import smile.io.Paths;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -66,10 +65,10 @@ public class ModelTest {
                 input -> input.reshape(input.size(0), 784)
         ).to(device);
 
-        Dataset data = Dataset.mnist(Paths.getTestData("mnist").toString(), true, 64);
-        Dataset test = Dataset.mnist(Paths.getTestData("mnist").toString(), false, 64);
+        Dataset data = Dataset.mnist("deep/src/test/resources/data/mnist", true, 64);
+        Dataset test = Dataset.mnist("deep/src/test/resources/data/mnist", false, 64);
 
-        // Instantiate an SGD optimization algorithm to update our Net's parameters.
+        // Instantiate an SGD optimization algorithm to update our model's parameters.
         Optimizer optimizer = Optimizer.SGD(net, 0.01);
         Loss loss = Loss.nll();
         net.train(10, optimizer, loss, data, test, null, new Accuracy(),

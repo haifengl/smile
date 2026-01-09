@@ -30,6 +30,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
@@ -106,7 +107,7 @@ public class FontChooser extends JComponent {
     /** The dialog result value. */
     protected int dialogResultValue = ERROR_OPTION;
     /** The message resource bundle. */
-    private final ResourceBundle messageCatalog = ResourceBundle.getBundle(FontChooser.class.getName(), getLocale());
+    private static final ResourceBundle bundle = ResourceBundle.getBundle(FontChooser.class.getName(), Locale.getDefault());
 
     /**
      * Returns a message.
@@ -116,7 +117,7 @@ public class FontChooser extends JComponent {
     protected String getMessage(String key) {
         String value = key;
         try {
-            value = messageCatalog.getString(key);
+            value = bundle.getString(key);
         } catch (MissingResourceException ex) {
             logger.debug("Failed to get message resource: ", ex);
         }

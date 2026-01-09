@@ -41,7 +41,7 @@ import javax.swing.UIManager;
 import javax.swing.filechooser.FileFilter;
 
 /**
- * File chooser for with file/images preview. A simple file filter based on
+ * File chooser with file/images preview. A simple file filter based on
  * file extensions is also provided.
  * 
  * @author Haifeng Li
@@ -357,7 +357,7 @@ public class FileChooser extends JFileChooser {
          * Returns the filter for writable images.
          * @return the filter for writable images.
          */
-        public static SimpleFileFilter getWritableImageFIlter() {
+        public static SimpleFileFilter getWritableImageFilter() {
             return writableImageFilter;            
         }
         

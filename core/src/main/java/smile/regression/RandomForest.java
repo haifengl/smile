@@ -21,8 +21,6 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.stream.IntStream;
-import smile.base.cart.CART;
-import smile.base.cart.Loss;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
@@ -31,6 +29,8 @@ import smile.data.type.StructType;
 import smile.data.vector.ValueVector;
 import smile.feature.importance.TreeSHAP;
 import smile.math.MathEx;
+import smile.model.cart.CART;
+import smile.model.cart.Loss;
 import smile.util.IterativeAlgorithmController;
 import smile.validation.RegressionMetrics;
 

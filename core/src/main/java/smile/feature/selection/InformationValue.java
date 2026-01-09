@@ -120,14 +120,14 @@ public record InformationValue(String feature, double iv, double[] woe, double[]
      * @return a string representation of information values
      */
     public static String toString(InformationValue[] ivs) {
-        StringBuilder builder = new StringBuilder();
+        StringBuilder sb = new StringBuilder();
 
-        builder.append("Feature                   Information Value    Predictive Power\n");
+        sb.append("Feature                   Information Value    Predictive Power\n");
         for (var iv : ivs) {
-            builder.append(String.format("%-25s %17.4f    %16s%n", iv.feature, iv.iv, predictivePower(iv.iv)));
+            sb.append(String.format("%-25s %17.4f    %16s%n", iv.feature, iv.iv, predictivePower(iv.iv)));
         }
 
-        return builder.toString();
+        return sb.toString();
     }
 
     /**

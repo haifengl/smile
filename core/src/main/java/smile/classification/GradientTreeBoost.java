@@ -20,7 +20,6 @@ import java.io.Serial;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.stream.IntStream;
-import smile.base.cart.*;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
@@ -30,6 +29,7 @@ import smile.data.type.StructType;
 import smile.data.vector.ValueVector;
 import smile.feature.importance.SHAP;
 import smile.math.MathEx;
+import smile.model.cart.*;
 import smile.regression.RegressionTree;
 import smile.util.IntSet;
 import smile.util.IterativeAlgorithmController;
@@ -654,7 +654,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
     }
 
     @Override
-    public boolean soft() {
+    public boolean isSoft() {
         return true;
     }
 

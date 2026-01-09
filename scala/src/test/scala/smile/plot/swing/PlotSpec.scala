@@ -23,7 +23,6 @@ import smile.read
 import smile.interpolation.*
 import smile.io.Paths
 import smile.plot.show
-import smile.plot.Render.*
 import smile.stat.distribution.*
 import smile.tensor.*
 

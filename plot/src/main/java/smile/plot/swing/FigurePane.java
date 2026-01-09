@@ -37,7 +37,7 @@ public class FigurePane extends JPanel {
      */
     public FigurePane(Figure figure) {
         super(new BorderLayout());
-        this.canvas = new Canvas(figure);
+        canvas = new Canvas(figure);
         add(canvas, BorderLayout.CENTER);
         add(canvas.toolbar(), BorderLayout.NORTH);
         addComponentListener(new ComponentAdapter() {
@@ -58,10 +58,8 @@ public class FigurePane extends JPanel {
     /**
      * Shows the figure in a window.
      * @return a new JFrame that contains the figure.
-     * @throws InterruptedException if we're interrupted while waiting for the event dispatching thread to finish executing.
-     * @throws InvocationTargetException if an exception is thrown while showing the frame.
      */
-    public JFrame window() throws InterruptedException, InvocationTargetException {
+    public JFrame window() {
         return canvas.window();
     }
 }

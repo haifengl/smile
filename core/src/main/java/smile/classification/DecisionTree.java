@@ -18,7 +18,6 @@ package smile.classification;
 
 import java.io.Serial;
 import java.util.*;
-import smile.base.cart.*;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
@@ -28,6 +27,7 @@ import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.ValueVector;
 import smile.math.MathEx;
+import smile.model.cart.*;
 import smile.util.IntSet;
 
 /**
@@ -397,7 +397,7 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
     }
 
     @Override
-    public boolean soft() {
+    public boolean isSoft() {
         return true;
     }
 

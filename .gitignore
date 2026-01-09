@@ -4,57 +4,85 @@
 *.war
 *.ear
 
-# SBT
-.bsp
+# JVM crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
 
-# Intellij
-.idea
-**/target
+# Test data
+base/src/test/resources/data/iceberg
+deep/src/test/resources
+nlp/src/test/resources
+model
 
-# Eclipse
-.project
-.settings
-.cache-main
-.cache-tests
-.classpath
-
-# NetBeans
-nbproject
-
-# Android Studio
-*.iml
-
-# Jupyter
-.ipynb_checkpoints
-
-# PyTorch checkpoints
-*.pt
-
-# JavaDoc
-doc/api
-web/_site/
-
-# Data
-shell/src/universal/data/image
-shell/src/universal/data/mnist
-shell/src/universal/data/nlp
+# Native library
+deep/lib
 
 # Clojure
+.nrepl-port
 .lein-repl-*
 clojure/pom.xml*
-
-# Gradle
-.gradle
-build
 
 # Node.js
 node_modules
 
-# JVM crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
+# PyTorch checkpoints
+*.pt
+
+# Jupyter
+.ipynb_checkpoints
 
 # macOS
 .DS_Store
 
 # Generated
-serve/src/universal/chat
+doc/api
+web/_site/
+serve/src/main/resources/META-INF/resources/chat
+
+# SBT
+.bsp
+**/target
+
+# Gradle
+.gradle/
+build/
+
+# Eclipse
+.project
+.classpath
+.settings/
+.cache-main
+.cache-tests
+bin/
+
+# IntelliJ
+.idea
+*.ipr
+*.iml
+*.iws
+
+# NetBeans
+nbproject
+nb-configuration.xml
+
+# Visual Studio Code
+.vscode
+.factorypath
+
+# Vim
+*.swp
+*.swo
+
+# patch
+*.orig
+*.rej
+
+# Local environment
+.env
+
+# Plugin directory
+/.quarkus/cli/plugins/
+
+# TLS Certificates
+*.cer
+*.key
+.certs/

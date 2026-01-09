@@ -64,7 +64,11 @@ public enum UPLO {
      */
     public byte lapack() { return lapack; }
 
-    /** Flips the value, null safe. */
+    /**
+     * Flips the value, null safe.
+     * @param value an UPLO value.
+     * @return the flipped value.
+     */
     public static UPLO flip(UPLO value) {
         return switch (value) {
             case null -> null;

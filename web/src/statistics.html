@@ -32,7 +32,7 @@ title: Smile - Statistics
     smile> mean(x)
     res1: Double = 2.5
 
-    smile> sd(x)
+    smile> stdev(x)
     res2: Double = 1.2909944487358054
     </code></pre>
             </div>
@@ -50,7 +50,7 @@ title: Smile - Statistics
     smile> mean(x)
     $4 ==> 2.5
 
-    smile> sd(x)
+    smile> stdev(x)
     $5 ==> 1.2909944487358054
           </code></pre>
             </div>
@@ -389,10 +389,10 @@ title: Smile - Statistics
         <div class="tab-pane" id="scala_7">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-scala"><code>
-    smile> val x = Array(Array(12, 7), Array(5, 7))
-    x: Array[Array[Int]] = Array(Array(12, 7), Array(5, 7))
+    smile> val count = Array(Array(12, 7), Array(5, 7))
+    count: Array[Array[Int]] = Array(Array(12, 7), Array(5, 7))
 
-    smile> chisqtest(x)
+    smile> chisqtest(count)
     res13: stat.hypothesis.ChiSqTest = Pearson's Chi-squared Test(t = 0.6411, df = 1.000, p-value = 0.423305)
           </code></pre>
             </div>
@@ -400,10 +400,10 @@ title: Smile - Statistics
         <div class="tab-pane active" id="java_7">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    smile> int[][] x = { {12, 7}, {5, 7} }
-    x ==> int[2][] { int[2] { 12, 7 }, int[2] { 5, 7 } }
+    smile> int[][] count = { {12, 7}, {5, 7} }
+    count ==> int[2][] { int[2] { 12, 7 }, int[2] { 5, 7 } }
 
-    smile> ChiSqTest.test(x)
+    smile> ChiSqTest.test(count)
     $42 ==> Pearson's Chi-squared Test(t = 0.6411, df = 1.000, p-value = 0.423305)
           </code></pre>
             </div>
@@ -724,7 +724,7 @@ title: Smile - Statistics
     </div>
 
     <h4 class="title">Two-Sample Test</h4>
-    <p>The two-sample K–S for the null hypothesis that the data sets
+    <p>The two-sample K–S test for the null hypothesis that the data sets
         are drawn from the same distribution. Small values of p-value show that
         the cumulative distribution function of x is significantly different from
         that of y. The arrays x and y are modified by being sorted into
@@ -779,9 +779,6 @@ title: Smile - Statistics
         <div class="tab-pane active" id="java_13">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    smile> KSTest.test(x, new GaussianDistribution(0, 1))
-    $59 ==> Gaussian Distribution(0.0000, 1.0000) Kolmogorov-Smirnov Test(d = 0.0930, p-value = 0.759824)
-
     smile> double[] y = {0.95791391, 0.16203847, 0.56622013, 0.39252941, 0.99126354, 0.65639108,
                       0.07903248, 0.84124582, 0.76718719, 0.80756577, 0.12263981, 0.84733360,
                       0.85190907, 0.77896244, 0.84915723, 0.78225903, 0.95788055, 0.01849366,
