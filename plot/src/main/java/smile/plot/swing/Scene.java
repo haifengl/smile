@@ -23,13 +23,13 @@ import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import smile.swing.FileChooser;
 import smile.swing.Printer;
+import static smile.swing.SmileUtilities.scaleImageIcon;
 
 /**
  * Printable scene of mathematical plots.
@@ -72,6 +72,9 @@ public interface Scene extends Printable {
      * Action to save the scene to an image file.
      */
     class SaveAction extends AbstractAction {
+        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/save.png")));
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
         /** The scene to save. */
         private final Scene scene;
 
@@ -80,7 +83,8 @@ public interface Scene extends Printable {
          * @param scene the scene to save.
          */
         public SaveAction(Scene scene) {
-            super("Save", new ImageIcon(Objects.requireNonNull(Scene.class.getResource("images/save16.png"))));
+            super("Save", icon16);
+            putValue(LARGE_ICON_KEY, icon24);
             this.scene = scene;
         }
 
@@ -98,6 +102,9 @@ public interface Scene extends Printable {
      * Action to print the scene.
      */
     class PrintAction extends AbstractAction {
+        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/print.png")));
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
         /** The scene to print. */
         private final Scene scene;
 
@@ -106,7 +113,8 @@ public interface Scene extends Printable {
          * @param scene the scene to print.
          */
         public PrintAction(Scene scene) {
-            super("Print", new ImageIcon(Objects.requireNonNull(Scene.class.getResource("images/print16.png"))));
+            super("Print", icon16);
+            putValue(LARGE_ICON_KEY, icon24);
             this.scene = scene;
         }
 
@@ -155,7 +163,7 @@ public interface Scene extends Printable {
      */
     default void save() throws IOException {
         JFileChooser fc = FileChooser.getInstance();
-        fc.setFileFilter(FileChooser.SimpleFileFilter.getWritableImageFIlter());
+        fc.setFileFilter(FileChooser.SimpleFileFilter.getWritableImageFilter());
         fc.setAcceptAllFileFilterUsed(false);
         fc.setSelectedFiles(new File[0]);
 
@@ -201,27 +209,36 @@ public interface Scene extends Printable {
     /**
      * Shows the scene in a window.
      * @return a new JFrame that contains the scene.
-     * @throws InterruptedException if we're interrupted while waiting for the event dispatching thread to finish executing.
-     * @throws InvocationTargetException if an exception is thrown while showing the frame.
      */
-    default JFrame window() throws InterruptedException, InvocationTargetException {
+    default JFrame window() {
+        String figureTitle = null;
+        if (content() instanceof Canvas canvas) {
+            figureTitle = canvas.figure().getTitle();
+        }
+
         JFrame frame = new JFrame();
-        String title = String.format("Smile Plot %d", WindowCount.addAndGet(1));
-        frame.setTitle(title);
+        String title = figureTitle != null ? figureTitle :
+                String.format("Smile Plot %d", WindowCount.addAndGet(1));
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            JScrollPane scrollPane = new JScrollPane(content());
+            JPanel contentPane = new JPanel(new BorderLayout());
+            contentPane.add(scrollPane, BorderLayout.CENTER);
+            contentPane.add(toolbar(), BorderLayout.NORTH);
 
-        JPanel pane = new JPanel(new BorderLayout());
-        pane.add(content(), BorderLayout.CENTER);
-        pane.add(toolbar(), BorderLayout.NORTH);
+            frame.setTitle(title);
+            frame.setContentPane(contentPane);
+            frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+            frame.setSize(new java.awt.Dimension(1280, 1000));
+            frame.setLocationRelativeTo(null);
+            frame.setVisible(true);
 
-        frame.getContentPane().add(pane);
-        frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        frame.setSize(new java.awt.Dimension(1280, 1000));
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
-
-        javax.swing.SwingUtilities.invokeAndWait(() -> {
+            // manipulating the extended state
+            frame.setExtendedState(Frame.NORMAL);
+            // temporarily setting setAlwaysOnTop(true) may help.
+            frame.setAlwaysOnTop(true);
             frame.toFront();
-            frame.repaint();
+            frame.requestFocus();
+            frame.setAlwaysOnTop(false);
         });
 
         return frame;

@@ -24,6 +24,7 @@ import java.util.function.ToDoubleFunction;
  *
  * @author Haifeng Li
  */
+@FunctionalInterface
 public interface MultivariateFunction extends ToDoubleFunction<double[]>, Serializable {
     /**
      * Computes the value of the function at x.

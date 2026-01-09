@@ -16,7 +16,6 @@
  */
 package smile.classification;
 
-import smile.base.mlp.*;
 import smile.data.DataFrame;
 import smile.data.transform.InvertibleColumnTransform;
 import smile.datasets.BreastCancer;
@@ -27,6 +26,7 @@ import smile.feature.transform.WinsorScaler;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
+import smile.model.mlp.*;
 import smile.util.function.TimeFunction;
 import smile.validation.ClassificationValidations;
 import smile.validation.CrossValidation;

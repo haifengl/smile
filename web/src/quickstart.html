@@ -416,167 +416,94 @@ smile>
         <div class="tab-pane active" id="training_1">
             <div class="code" style="text-align: left;">
                 <pre class="prettyprint lang-shell"><code style="white-space: preserve nowrap;">
-$ bin/smile train
-Smile 4.0.0
-Usage: smile train [random_forest|gradient_boost|adaboost|cart|logistic|fisher|lda|qda|rda|mlp|svm|rbf|ols|lasso|ridge|elastic_net|gaussian_process] [options]
-
-  --formula &lt;class ~ .&gt;    The model formula
-  --data &lt;file&gt;            The training data file
-  --test &lt;file&gt;            The optional test data file
-  --model &lt;file&gt;           The model file to save
-  --format &lt;csv,header=true,delimiter=\t,comment=#,escape=\,quote=&quot;&gt;
-                           The data file format
-  --kfold &lt;value&gt;          The k-fold cross validation
-  --round &lt;value&gt;          The number of rounds of repeated cross validation
-  --ensemble               Ensemble cross validation models
-  --seed &lt;value&gt;           The random number generator seed
-Command: random_forest [options]
+$ bin/smile train -h
+Usage: smile train [-ehV] -d=&lt;file&gt; [--format=&lt;format&gt;] [--formula=&lt;formula&gt;]
+                   [-k=&lt;fold&gt;] -m=&lt;file&gt; [--model-id=&lt;id&gt;]
+                   [--model-version=&lt;ver&gt;] [-r=&lt;round&gt;] [-s=&lt;seed&gt;]
+                   [--test=&lt;file&gt;] [COMMAND]
+Train a supervised learning model.
+  -d, --data=&lt;file&gt;         The training data file.
+  -e, --ensemble            Create the ensemble of cross validation models.
+      --format=&lt;format&gt;     The data file format.
+      --formula=&lt;formula&gt;   The model formula &lt;class ~ .&gt;.
+  -h, --help                Show this help message and exit.
+  -k, --kfold=&lt;fold&gt;        k-fold cross validation.
+  -m, --model=&lt;file&gt;        The model file.
+      --model-id=&lt;id&gt;       The model id.
+      --model-version=&lt;ver&gt; The model version.
+  -r, --round=&lt;round&gt;       The number of rounds of repeated cross validation.
+  -s, --seed=&lt;seed&gt;         The random number generator seed.
+      --test=&lt;file&gt;         The test data file.
+  -V, --version             Print version information and exit.
+Commands:
+  ada-boost         Adaptive Boosting
+  cart              Classification and Regression Tree
+  elastic-net       Least Absolute Shrinkage and Selection Operator
+  fisher            Fisher's Linear Discriminant
+  gaussian-process  Gaussian Process Regression
+  gradient-boost    Gradient Boosting
+  lasso             Least Absolute Shrinkage and Selection Operator
+  lda               Linear Discriminant Analysis
+  logistic          Logistic Regression
+  mlp               Multilayer Perceptron
+  ols               Ordinary Least Squares
+  qda               Quadratic Discriminant Analysis
+  random-forest     Random Forest
+  rbf               Radial Basis Function Network
+  rda               Regularized Discriminant Analysis
+  ridge             Ridge Regression
+  svm               Support Vector Machine
+                </code></pre>
+            </div>
+        </div>
+        <p>The <code>train</code> command has many subcommands for different learning algorithms.
+            Each subcommand supports <code>-h</code> to show the help message on the algorithm-specific
+            arguments.</p>
+        <div class="tab-pane" id="train_2">
+            <div class="code" style="text-align: left;">
+                <pre class="prettyprint lang-shell"><code>
+$ bin/smile train --data data/weka/iris.arff --formula "class ~ ." --model iris_random_forest.sml random-forest -h
+Usage: smile train random-forest [-hV] [--regression]
+                                 [--class-weight=&lt;weights&gt;]
+                                 [--max-depth=&lt;depth&gt;] [--max-nodes=&lt;nodes&gt;]
+                                 [--mtry=&lt;features&gt;] [--node-size=&lt;size&gt;]
+                                 [--sampling=&lt;rate&gt;] [--split=&lt;rule&gt;]
+                                 [--trees=&lt;trees&gt;]
 Random Forest
-  --regression             To train a regression model
-  --trees &lt;value&gt;          The number of trees
-  --mtry &lt;value&gt;           The number of features to train node split
-  --split &lt;GINI, ENTROPY, CLASSIFICATION_ERROR&gt;
-                           The split rule
-  --max_depth &lt;value&gt;      The maximum tree depth
-  --max_nodes &lt;value&gt;      The maximum number of leaf nodes
-  --node_size &lt;value&gt;      The minimum leaf node size
-  --sampling &lt;value&gt;       The sampling rate
-  --class_weight &lt;value&gt;   The class weights
-Command: gradient_boost [options]
-Gradient Boosting
-  --regression             To train a regression model
-  --trees &lt;value&gt;          The number of trees
-  --shrinkage &lt;value&gt;      The shrinkage parameter in (0, 1] controls the learning rate
-  --max_depth &lt;value&gt;      The maximum tree depth
-  --max_nodes &lt;value&gt;      The maximum number of leaf nodes
-  --node_size &lt;value&gt;      The minimum leaf node size
-  --sampling &lt;value&gt;       The sampling rate
-Command: adaboost [options]
-AdaBoost
-  --trees &lt;value&gt;          The number of trees
-  --max_depth &lt;value&gt;      The maximum tree depth
-  --max_nodes &lt;value&gt;      The maximum number of leaf nodes
-  --node_size &lt;value&gt;      The minimum leaf node size
-Command: cart [options]
-Classification and Regression Tree
-  --regression             To train a regression model
-  --split &lt;GINI, ENTROPY, CLASSIFICATION_ERROR>
-                           The split rule
-  --max_depth &lt;value&gt;      The maximum tree depth
-  --max_nodes &lt;value&gt;      The maximum number of leaf nodes
-  --node_size &lt;value&gt;      The minimum leaf node size
-Command: logistic [options]
-Logistic Regression
-  --transform &lt;standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf&gt;
-                           The feature transformation
-  --lambda &lt;value&gt;         The regularization on linear weights
-  --iterations &lt;value&gt;     The maximum number of iterations
-  --tolerance &lt;value&gt;      The tolerance to stop iterations
-Command: fisher [options]
-Fisher Linear Discriminant
-  --transform &lt;standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf&gt;
-                           The feature transformation
-  --dimension &lt;value&gt;      The dimensionality of mapped space
-  --tolerance &lt;value&gt;      The tolerance if a covariance matrix is singular
-Command: lda [options]
-Linear Discriminant Analysis
-  --transform &lt;standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf&gt;
-                           The feature transformation
-  --priori &lt;value&gt;         The priori probability of each class
-  --tolerance &lt;value&gt;      The tolerance if a covariance matrix is singular
-Command: qda [options]
-Quadratic Discriminant Analysis
-  --transform &lt;standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf&gt;
-                           The feature transformation
-  --priori &lt;value&gt;         The priori probability of each class
-  --tolerance &lt;value&gt;      The tolerance if a covariance matrix is singular
-Command: rda [options]
-Regularized Discriminant Analysis
-  --transform &lt;standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf&gt;
-                           The feature transformation
-  --alpha &lt;value&gt;          The regularization factor in [0, 1] allows a continuum of models between LDA and QDA
-  --priori &lt;value&gt;         The priori probability of each class
-  --tolerance &lt;value&gt;      The tolerance if a covariance matrix is singular
-Command: mlp [options]
-Multilayer Perceptron
-  --regression             To train a regression model
-  --transform &lt;standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf&gt;
-                           The feature transformation
-  --layers &lt;ReLU(100)|Sigmoid(30)&gt;
-                           The neural network layers
-  --epochs &lt;value&gt;         The number of training epochs
-  --mini_batch &lt;value&gt;     The split rule
-  --learning_rate &lt;0.01, linear(0.01, 10000, 0.001), piecewise(...), polynomial(...), inverse(...), exp(...)&gt;
-                           The learning rate schedule
-  --momentum &lt;value&gt;       The momentum schedule
-  --weight_decay &lt;value&gt;   The weight decay
-  --clip_norm &lt;value&gt;      The gradient clipping norm
-  --clip_value &lt;value&gt;     The gradient clipping value
-  --rho &lt;value&gt;            RMSProp rho
-  --epsilon &lt;value&gt;        RMSProp epsilon
-Command: svm [options]
-Support Vector Machine
-  --transform &lt;standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf&gt;
-                           The feature transformation
-  --kernel &lt;value&gt;         The kernel function
-  --C &lt;value&gt;              The soft margin penalty parameter
-  --epsilon &lt;value&gt;        The parameter of epsilon-insensitive hinge loss
-  --ovr                    One vs Rest strategy for multiclass classification
-  --ovo                    One vs One strategy for multiclass classification
-  --tolerance &lt;value&gt;      The tolerance of convergence test
-Command: rbf [options]
-Radial Basis Function Network
-  --regression             To train a regression model
-  --transform &lt;standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf>
-                           The feature transformation
-  --neurons &lt;value&gt;        The number of neurons (radial basis functions)
-  --normalize              Normalized RBF network
-Command: ols [options]
-Ordinary Least Squares
-  --method &lt;qr, svd&gt;       The fitting method
-  --stderr                 Compute the standard errors of the estimate of parameters.
-  --recursive              Recursive least squares
-Command: lasso [options]
-LASSO - Least Absolute Shrinkage and Selection Operator
-  --lambda &lt;value&gt;         The regularization on linear weights
-  --iterations &lt;value&gt;     The maximum number of iterations
-  --tolerance &lt;value&gt;      The tolerance to stop iterations (relative target duality gap)
-Command: ridge [options]
-Ridge Regression
-  --lambda &lt;value&gt;         The regularization on linear weights
-Command: elastic_net [options]
-Elastic Net
-  --lambda1 &lt;value&gt;        The L1 regularization on linear weights
-  --lambda2 &lt;value&gt;        The L2 regularization on linear weights
-  --iterations &lt;value&gt;     The maximum number of iterations
-  --tolerance &lt;value&gt;      The tolerance to stop iterations (relative target duality gap)
-Command: gaussian_process [options]
-Gaussian Process Regression
-  --transform &lt;standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf&gt;
-                           The feature transformation
-  --kernel &lt;value&gt;         The kernel function
-  --noise &lt;value&gt;          The noise variance
-  --normalize              Normalize the response variable
-  --iterations &lt;value&gt;     The maximum number of HPO iterations
-  --tolerance &lt;value&gt;      The stopping tolerance for HPO
-          </code></pre>
+      --class-weight=&lt;weights&gt;
+                            The class weights.
+  -h, --help                Show this help message and exit.
+      --max-depth=&lt;depth&gt;   The maximum tree depth.
+      --max-nodes=&lt;nodes&gt;   The maximum number of leaf nodes.
+      --mtry=&lt;features&gt;     The number of features to train node split.
+      --node-size=&lt;size&gt;    The minimum leaf node size.
+      --regression          Train a regression model.
+      --sampling=&lt;rate&gt;     The sampling rate.
+      --split=&lt;rule&gt;        The split rule &lt;GINI, ENTROPY,
+                              CLASSIFICATION_ERROR&gt;.
+      --trees=&lt;trees&gt;       The number of trees.
+  -V, --version             Print version information and exit.
+    </code></pre>
             </div>
         </div>
         <div class="tab-pane" id="predict_1">
             <div class="code" style="text-align: left;">
                 <pre class="prettyprint lang-shell"><code>
-$ bin/smile predict
-Smile 4.0.0
-Usage: smile predict [options]
-
-  --model &lt;value&gt;   The model file
-  --data &lt;value&gt;    The data file
-  --format &lt;value&gt;  The data file format/schema
-  --probability     Output the posteriori probabilities for soft classifier
-
+$ bin/smile predict -h
+Usage: smile predict [-hpV] [--format=&lt;format&gt;] -m=&lt;file&gt; &lt;file&gt;
+Run batch prediction on a file.
+&lt;file&gt;              The data file.
+      --format=&lt;format&gt;   The data file format.
+  -h, --help              Show this help message and exit.
+  -m, --model=&lt;file&gt;      The model file.
+  -p, --probability       Compute posteriori probabilities for soft classifiers.
+  -V, --version           Print version information and exit.
     </code></pre>
             </div>
         </div>
+        <p>Besides batch inference with <code>predict</code> command, we may also start
+            a web service with <code>serve</code> command to serve inference requests
+            in real time.</p>
         <div class="tab-pane" id="serve_1">
             <div class="code" style="text-align: left;">
                 <pre class="prettyprint lang-shell"><code>
@@ -602,10 +529,10 @@ Usage: smile serve [options]
         <li class="active"><a href="#train_2" data-toggle="tab">Training</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="train_2">
+        <div class="tab-pane active" id="train_3">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-shell"><code style="white-space: preserve nowrap;">
-$ bin/smile train random_forest --data data/weka/iris.arff --formula "class ~ ." --model iris_random_forest.model
+$ bin/smile train --data data/weka/iris.arff --formula "class ~ ." --model iris_random_forest.sml random-forest
 [main] INFO smile.io.Arff - Read ARFF relation iris
 [ForkJoinPool.commonPool-worker-3] INFO smile.classification.RandomForest - Decision tree OOB accuracy: 88.89%
 [ForkJoinPool.commonPool-worker-2] INFO smile.classification.RandomForest - Decision tree OOB accuracy: 95.35%
@@ -650,7 +577,7 @@ Training metrics: {
         <div class="tab-pane active" id="predict_2">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-shell"><code>
-$ bin/smile predict --model iris_random_forest.model --data data/weka/iris.arff --probability
+$ bin/smile predict --model iris_random_forest.sml --data data/weka/iris.arff --probability
 0 0.9601 0.0205 0.0194
 0 0.9599 0.0206 0.0195
 0 0.9600 0.0206 0.0194
@@ -672,7 +599,7 @@ $ bin/smile predict --model iris_random_forest.model --data data/weka/iris.arff 
         </div>
     </div>
 
-    <p>It is also easy to create an endpoint to serve online requests.</p>
+    <p>Alternatively, it is also easy to create an endpoint to serve online requests.</p>
     <ul class="nav nav-tabs">
         <li class="active"><a href="#serve_2" data-toggle="tab">Online Serving</a></li>
     </ul>
@@ -680,7 +607,7 @@ $ bin/smile predict --model iris_random_forest.model --data data/weka/iris.arff 
         <div class="tab-pane active" id="serve_2">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-shell"><code>
-$ bin/smile serve --model iris_random_forest.model --probability --line
+$ bin/smile serve --model iris_random_forest.sml --probability --line
 [smile-akka.actor.default-dispatcher-4] INFO akka.event.slf4j.Slf4jLogger - Slf4jLogger started
 Smile online at http://localhost:8728/v1/infer
 Press RETURN to stop...
@@ -779,7 +706,7 @@ $ cat iris.txt | curl -H "Content-Type: text/csv" -X POST --data-binary @- http:
         <div class="tab-pane active" id="notebook_1">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code style="white-space: preserve nowrap;">
-    import $ivy.`com.github.haifengl::smile-scala:5.0.1`
+    import $ivy.`com.github.haifengl::smile-scala:5.1.0`
 
     import scala.language.postfixOps
     import org.apache.commons.csv.CSVFormat

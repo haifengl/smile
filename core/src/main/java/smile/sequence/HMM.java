@@ -551,18 +551,12 @@ public class HMM implements Serializable {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(String.format("HMM (%d states, %d emission symbols)%n", a.nrow(), b.ncol()));
-
-        sb.append("Initial state probability: ");
-        sb.append(Arrays.toString(pi));
-
-        sb.append("\nState transition probability:\n");
-        sb.append(a);
-
-        sb.append("Symbol emission probability:\n");
-        sb.append(b);
-
-        return sb.toString();
+        return String.format("HMM (%d states, %d emission symbols)%n", a.nrow(), b.ncol()) +
+                "Initial state probability: " +
+                Arrays.toString(pi) +
+                "\nState transition probability:\n" +
+                a +
+                "Symbol emission probability:\n" +
+                b;
     }
 }

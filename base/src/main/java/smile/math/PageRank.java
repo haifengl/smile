@@ -16,6 +16,8 @@
  */
 package smile.math;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.tensor.Matrix;
 import smile.tensor.Vector;
 
@@ -32,7 +34,12 @@ import smile.tensor.Vector;
  * @author Haifeng Li
  */
 public interface PageRank {
-    org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PageRank.class);
+    private static Logger logger() {
+        final class LogHolder {
+            private static final Logger logger = LoggerFactory.getLogger(PageRank.class);
+        }
+        return LogHolder.logger;
+    }
 
     /**
      * Calculates the page rank vector.
@@ -97,13 +104,13 @@ public interface PageRank {
             }
 
             if (iter % 10 == 0 || delta < tol) {
-                logger.info("PageRank residual after {} power iterations: {}", iter, delta);
+                logger().info("PageRank residual after {} power iterations: {}", iter, delta);
             }
 
             if (delta < tol) return p;
         }
 
-        logger.error("PageRank iteration exceeded the maximum number of iterations.");
+        logger().error("PageRank iteration exceeded the maximum number of iterations.");
         return p;
     }
 }

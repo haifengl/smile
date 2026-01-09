@@ -53,8 +53,8 @@ public interface Selection {
                 double worst = population[0].fitness();
                 if (worst > 0.0) worst = 0.0;
 
-                // In Roulete wheel selection, we don't do such scaling in
-                // general. However, in case of negative fitness socres,
+                // In Roulette wheel selection, we don't do such scaling in
+                // general. However, in case of negative fitness scores,
                 // we need scale them to positive.
                 double[] fitness = new double[size];
                 for (int i = 0; i < size; i++) {
@@ -76,7 +76,7 @@ public interface Selection {
      * corresponding reduced. This problem can partially be addressed by
      * using some form of fitness scaling. In the simplest case, on can
      * subtract the fitness of the worst chromosome in the population
-     * from the fitnesses of all chromosomes in the population.
+     * from the fitness of all chromosomes in the population.
      * Alternatively, one may use rank based selection.
      *
      * @return the scaled roulette wheel selection algorithm.
@@ -101,7 +101,7 @@ public interface Selection {
 
     /**
      * Rank Selection. The Roulette Wheel Selection will have problems when
-     * the fitnesses differ very much. For example, if the best chromosome
+     * the fitness differ very much. For example, if the best chromosome
      * fitness is 90% of all the roulette wheel then the other chromosomes
      * will have very few chances to be selected. Rank selection first ranks
      * the population and then every chromosome receives fitness from this

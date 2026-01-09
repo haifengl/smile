@@ -93,14 +93,10 @@ public record AssociationRule(int[] antecedent, int[] consequent, double support
     
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("AssociationRule(");
-        sb.append(Arrays.toString(antecedent));
-        sb.append(" => ");
-        sb.append(Arrays.toString(consequent));
-        sb.append(String.format(", support=%.1f%%, confidence=%.1f%%, lift=%.2f, leverage=%.3f)", 100*support, 100*confidence, lift, leverage));
-
-        return sb.toString();
+        return "AssociationRule(" +
+                Arrays.toString(antecedent) +
+                " => " +
+                Arrays.toString(consequent) +
+                String.format(", support=%.1f%%, confidence=%.1f%%, lift=%.2f, leverage=%.3f)", 100 * support, 100 * confidence, lift, leverage);
     }
 }

@@ -19,7 +19,7 @@
   (:import [smile.regression OLS RidgeRegression LASSO MLP RBFNetwork SVM
                              RegressionTree RandomForest GradientTreeBoost
                              GaussianProcessRegression]
-           [smile.base.cart Loss]))
+           [smile.model.cart Loss]))
 
 (defn lm
   "Fitting linear models (ordinary least squares).

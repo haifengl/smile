@@ -91,15 +91,13 @@ public record RegressionValidations<M>(List<RegressionValidation<M>> rounds,
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("{\n");
-        sb.append(String.format("  fit time: %.3f ms ± %.3f,\n", avg.fitTime(), std.fitTime()));
-        sb.append(String.format("  score time: %.3f ms ± %.3f,\n", avg.scoreTime(), std.scoreTime()));
-        sb.append(String.format("  validation data size: %d ± %d,\n", avg.size(), std.size()));
-        sb.append(String.format("  RSS: %.4f ± %.4f,\n", avg.rss(), std.rss()));
-        sb.append(String.format("  MSE: %.4f ± %.4f,\n", avg.mse(), std.mse()));
-        sb.append(String.format("  RMSE: %.4f ± %.4f,\n", avg.rmse(), std.rmse()));
-        sb.append(String.format("  MAD: %.4f ± %.4f,\n", avg.mad(), std.mad()));
-        sb.append(String.format("  R2: %.2f%% ± %.2f\n}", 100 * avg.r2(), 100 * std.r2()));
-        return sb.toString();
+        return "{\n" + String.format("  fit time: %.3f ms ± %.3f,\n", avg.fitTime(), std.fitTime()) +
+                String.format("  score time: %.3f ms ± %.3f,\n", avg.scoreTime(), std.scoreTime()) +
+                String.format("  validation data size: %d ± %d,\n", avg.size(), std.size()) +
+                String.format("  RSS: %.4f ± %.4f,\n", avg.rss(), std.rss()) +
+                String.format("  MSE: %.4f ± %.4f,\n", avg.mse(), std.mse()) +
+                String.format("  RMSE: %.4f ± %.4f,\n", avg.rmse(), std.rmse()) +
+                String.format("  MAD: %.4f ± %.4f,\n", avg.mad(), std.mad()) +
+                String.format("  R2: %.2f%% ± %.2f\n}", 100 * avg.r2(), 100 * std.r2());
     }
 }

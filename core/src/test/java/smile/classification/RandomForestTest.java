@@ -18,13 +18,13 @@ package smile.classification;
 
 import java.util.Arrays;
 import java.util.concurrent.Flow;
-import smile.base.cart.SplitRule;
 import smile.classification.RandomForest.Options;
 import smile.data.DataFrame;
 import smile.datasets.*;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.MathEx;
+import smile.model.cart.SplitRule;
 import smile.util.IterativeAlgorithmController;
 import smile.validation.*;
 import smile.validation.metric.Accuracy;

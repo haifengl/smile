@@ -25,6 +25,7 @@ import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 import smile.swing.Button;
 import smile.swing.Table;
+import static smile.swing.SmileUtilities.scaleImageIcon;
 
 /**
  * Interactive view of a mathematical plot. For both 2D and 3D plot,
@@ -425,9 +426,13 @@ public class Canvas extends JComponent implements ComponentListener,
     }
 
     private class ZoomInAction extends AbstractAction {
+        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/zoom-in.png")));
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
 
         public ZoomInAction() {
-            super("Zoom In", new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/zoom-in16.png"))));
+            super("Zoom In", icon16);
+            putValue(LARGE_ICON_KEY, icon24);
         }
 
         @Override
@@ -437,9 +442,13 @@ public class Canvas extends JComponent implements ComponentListener,
     }
 
     private class ZoomOutAction extends AbstractAction {
+        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/zoom-out.png")));
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
 
         public ZoomOutAction() {
-            super("Zoom Out", new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/zoom-out16.png"))));
+            super("Zoom Out", icon16);
+            putValue(LARGE_ICON_KEY, icon24);
         }
 
         @Override
@@ -449,9 +458,13 @@ public class Canvas extends JComponent implements ComponentListener,
     }
 
     private class ResetAction extends AbstractAction {
+        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/reset.png")));
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
 
         public ResetAction() {
-            super("Reset", new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/refresh16.png"))));
+            super("Reset", icon16);
+            putValue(LARGE_ICON_KEY, icon24);
         }
 
         @Override
@@ -461,9 +474,13 @@ public class Canvas extends JComponent implements ComponentListener,
     }
 
     private class EnlargePlotAreaAction extends AbstractAction {
+        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/enlarge.png")));
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
 
         public EnlargePlotAreaAction() {
-            super("Enlarge", new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/resize-larger16.png"))));
+            super("Enlarge", icon16);
+            putValue(LARGE_ICON_KEY, icon24);
         }
 
         @Override
@@ -485,9 +502,13 @@ public class Canvas extends JComponent implements ComponentListener,
     }
 
     private class ShrinkPlotAreaAction extends AbstractAction {
+        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/shrink.png")));
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
 
         public ShrinkPlotAreaAction() {
-            super("Shrink", new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/resize-smaller16.png"))));
+            super("Shrink", icon16);
+            putValue(LARGE_ICON_KEY, icon24);
         }
 
         @Override
@@ -512,6 +533,7 @@ public class Canvas extends JComponent implements ComponentListener,
 
         public IncreaseWidthAction() {
             super("Increase Width", new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/increase-width16.png"))));
+            putValue(LARGE_ICON_KEY, new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/increase-width24.png"))));
         }
 
         @Override
@@ -532,6 +554,7 @@ public class Canvas extends JComponent implements ComponentListener,
 
         public IncreaseHeightAction() {
             super("Increase Height", new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/increase-height16.png"))));
+            putValue(LARGE_ICON_KEY, new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/increase-height24.png"))));
         }
 
         @Override
@@ -552,6 +575,7 @@ public class Canvas extends JComponent implements ComponentListener,
 
         public DecreaseWidthAction() {
             super("Decrease Width", new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/decrease-width16.png"))));
+            putValue(LARGE_ICON_KEY, new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/decrease-width24.png"))));
         }
 
         @Override
@@ -575,6 +599,7 @@ public class Canvas extends JComponent implements ComponentListener,
 
         public DecreaseHeightAction() {
             super("Decrease Height", new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/decrease-height16.png"))));
+            putValue(LARGE_ICON_KEY, new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/decrease-height24.png"))));
         }
 
         @Override
@@ -595,9 +620,12 @@ public class Canvas extends JComponent implements ComponentListener,
     }
 
     private class PropertyAction extends AbstractAction {
-
+        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/property.png")));
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
         public PropertyAction() {
-            super("Properties", new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/property16.png"))));
+            super("Properties", icon16);
+            putValue(LARGE_ICON_KEY, icon24);
         }
 
         @Override
@@ -661,6 +689,11 @@ public class Canvas extends JComponent implements ComponentListener,
                 };
 
         propertyTable = new Table(data, columnNames);
+        propertyTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        propertyTable.setFillsViewportHeight(true);
+        var model = propertyTable.getColumnModel();
+        model.getColumn(0).setPreferredWidth(200);
+        model.getColumn(1).setPreferredWidth(200);
 
         // There is a known issue with JTables whereby the changes made in a
         // cell editor are not committed when focus is lost.
@@ -676,7 +709,6 @@ public class Canvas extends JComponent implements ComponentListener,
         // instance to turn this feature on.
         propertyTable.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
 
-        propertyTable.setFillsViewportHeight(true);
         JScrollPane tablePanel = new JScrollPane(propertyTable);
 
         dialog.getContentPane().add(tablePanel, BorderLayout.CENTER);

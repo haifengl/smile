@@ -26,6 +26,7 @@ package smile.util.function;
  *
  * @author Haifeng Li
  */
+@FunctionalInterface
 public interface ToFloatFunction<T> {
     /**
      * Applies this function to the given argument.

@@ -23,12 +23,12 @@ import java.io.FileInputStream;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.ArrayList;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 import smile.math.MathEx;
-import smile.io.Paths;
 import smile.validation.CrossValidation;
 import smile.validation.Bag;
 
@@ -40,84 +40,6 @@ public class HMMPOSTaggerTest {
 
     public HMMPOSTaggerTest() {
 
-    }
-    
-    /**
-     * Load training data from a corpora.
-     * @param dir a file object defining the top directory
-     */
-    public void read(Path dir, List<String[]> sentences, List<PennTreebankPOS[]> tags) throws IOException {
-        List<File> files = new ArrayList<>();
-        walkin(dir, files);
-
-        for (File file : files) {
-            try {
-                FileInputStream stream = new FileInputStream(file);
-                BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-                String line;
-                List<String> sentence = new ArrayList<>();
-                List<PennTreebankPOS> tag = new ArrayList<>();
-                while ((line = reader.readLine()) != null) {
-                    line = line.trim();
-                    if (line.isEmpty()) {
-                        if (!sentence.isEmpty()) {
-                            sentences.add(sentence.toArray(new String[0]));
-                            tags.add(tag.toArray(new PennTreebankPOS[0]));
-                            sentence.clear();
-                            tag.clear();
-                        }
-                    } else if (!line.startsWith("===") && !line.startsWith("*x*")) {
-                        String[] words = line.split("\\s");
-                        for (String word : words) {
-                            String[] w = word.split("/");
-                            if (w.length == 2) {
-                                sentence.add(w[0]);
-                                
-                                int index = w[1].indexOf('|');
-                                String pos = index == -1 ? w[1] : w[1].substring(0, index);
-                                if (pos.equals("PRP$R")) pos = "PRP$";
-                                if (pos.equals("JJSS")) pos = "JJS";
-                                tag.add(PennTreebankPOS.getValue(pos));
-                            }
-                        }
-                    }
-                }
-                
-                if (!sentence.isEmpty()) {
-                    sentences.add(sentence.toArray(new String[0]));
-                    tags.add(tag.toArray(new PennTreebankPOS[0]));
-                    sentence.clear();
-                    tag.clear();
-                }
-                
-                reader.close();
-            } catch (Exception ex) {
-                System.err.println(ex.getMessage());
-            }
-        }
-    }
-
-    /**  
-     * Recursive function to descend into the directory tree and find all the files
-     * that end with ".POS"
-     * @param dir a file object defining the top directory
-     **/
-    public static void walkin(Path dir, List<File> files) throws IOException {
-        String pattern = ".POS";
-        Files.newDirectoryStream(dir).forEach(path -> {
-            File file = path.toFile();
-            if (file.isDirectory()) {
-                try {
-                    walkin(path, files);
-                } catch (IOException ex) {
-                    System.err.println(ex.getMessage());
-                }
-            } else {
-                if (file.getName().endsWith(pattern)) {
-                    files.add(file);
-                }
-            }
-        });
     }
     
     @BeforeAll
@@ -143,7 +65,7 @@ public class HMMPOSTaggerTest {
         MathEx.setSeed(19650218); // to get repeatable results.
         List<String[]> sentences = new ArrayList<>();
         List<PennTreebankPOS[]> tags = new ArrayList<>();
-        read(Paths.getTestData("nlp/PennTreebank/PennTreebank2/TAGGED/POS/WSJ"), sentences, tags);
+        HMMPOSTagger.read("nlp/src/test/resources/data/PennTreebank/PennTreebank2/TAGGED/POS/WSJ", sentences, tags);
 
         // Data is not available
         if (sentences.isEmpty()) return;
@@ -187,7 +109,7 @@ public class HMMPOSTaggerTest {
         MathEx.setSeed(19650218); // to get repeatable results.
         List<String[]> sentences = new ArrayList<>();
         List<PennTreebankPOS[]> tags = new ArrayList<>();
-        read(Paths.getTestData("nlp/PennTreebank/PennTreebank2/TAGGED/POS/BROWN"), sentences, tags);
+        HMMPOSTagger.read("nlp/src/test/resources/data/PennTreebank/PennTreebank2/TAGGED/POS/BROWN", sentences, tags);
 
         // Data is not available
         if (sentences.isEmpty()) return;

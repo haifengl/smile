@@ -16,6 +16,8 @@
  */
 package smile.tensor;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.math.MathEx;
 import static smile.tensor.ScalarType.*;
 
@@ -25,7 +27,12 @@ import static smile.tensor.ScalarType.*;
  * @author Haifeng Li
  */
 public interface BiconjugateGradient {
-    org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BiconjugateGradient.class);
+    private static Logger logger() {
+        final class LogHolder {
+            private static final Logger logger = LoggerFactory.getLogger(BiconjugateGradient.class);
+        }
+        return LogHolder.logger;
+    }
 
     /**
      * Solves A * x = b by iterative biconjugate gradient method with Jacobi
@@ -162,7 +169,7 @@ public interface BiconjugateGradient {
             }
 
             if (iter % 10 == 0 || err <= tol) {
-                logger.info("BCG: the error after {} iterations: {}", iter, err);
+                logger().info("BCG: the error after {} iterations: {}", iter, err);
             }
 
             if (err <= tol) break;

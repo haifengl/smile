@@ -23,6 +23,7 @@ package smile.util.function;
  *
  * @author Karl Li
  */
+@FunctionalInterface
 public interface IntArrayElementConsumer {
     /**
      * Performs this operation on the given element.

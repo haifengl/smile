@@ -19,7 +19,6 @@ package smile.regression;
 import java.io.Serial;
 import java.util.*;
 import java.util.stream.IntStream;
-import smile.base.cart.*;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
@@ -29,6 +28,7 @@ import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.ValueVector;
 import smile.math.MathEx;
+import smile.model.cart.*;
 
 /**
  * Regression tree. A classification/regression tree can be learned by

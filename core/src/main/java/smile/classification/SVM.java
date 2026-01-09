@@ -18,9 +18,9 @@ package smile.classification;
 
 import java.util.Arrays;
 import java.util.Properties;
-import smile.base.svm.KernelMachine;
-import smile.base.svm.LASVM;
 import smile.math.MathEx;
+import smile.model.svm.KernelMachine;
+import smile.model.svm.LASVM;
 import smile.util.SparseArray;
 import smile.math.kernel.*;
 

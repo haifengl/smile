@@ -21,22 +21,17 @@ sbt unidoc
 check_error "!!"
 mv target/javaunidoc doc/api/java
 
-sbt ++3.3.7 json/doc
+sbt json/doc
 check_error "!!"
 find doc/api/json -name '*.html' -exec bin/gtag.sh {} \;
 
-sbt ++3.3.7 scala/doc
+sbt scala/doc
 check_error "!!"
 find doc/api/scala -name '*.html' -exec bin/gtag.sh {} \;
 
-# build smile-kotlin.jar and copy it to shell
-#rm shell/src/universal/bin/smile-kotlin-*.jar
-#./gradlew :kotlin:build
-#check_error "!!"
-
-#./gradlew :kotlin:dokkaGenerate
-#check_error "!!"
-#find doc/api/kotlin -name '*.html' -exec bin/gtag.sh {} \;
+./gradlew :kotlin:dokkaGenerate
+check_error "!!"
+find doc/api/kotlin -name '*.html' -exec bin/gtag.sh {} \;
 
 #cd clojure
 #./lein codox
@@ -45,13 +40,18 @@ find doc/api/scala -name '*.html' -exec bin/gtag.sh {} \;
 #find doc/api/clojure -name '*.html' -exec tidy -m {} \;
 #find doc/api/clojure -name '*.html' -exec bin/gtag.sh {} \;
 
+cd chat
+npm run build
+check_error "!!"
+
 cd web
 npm run deploy
 check_error "!!"
 
 # build binary package
 cd ..
-sbt shell/Universal/packageBin
+./gradlew :serve:build
+sbt studio/Universal/packageBin
 check_error "!!"
 
 while true; do
@@ -61,14 +61,12 @@ while true; do
             sbt publishSigned
             check_error "sbt publish"
 
-            sbt ++3.3.7 scala/publishSigned
+            sbt ++2.13.18 scala/publishSigned
             check_error "sbt scala/publish"
-            sbt ++3.3.7 json/publishSigned
+            sbt ++2.13.18 json/publishSigned
             check_error "sbt json/publish"
-            # sbt ++3.3.7 spark/publishSigned
+            # sbt ++2.13.18 spark/publishSigned
             # check_error "sbt spark/publish"
-            #./gradlew :kotlin:publishMavenJavaPublicationToMavenRepository
-            # check_error "gradlew :kotlin:publish"
             break;;
         [Nn]* ) break;;
         * ) echo "Please answer yes or no.";;

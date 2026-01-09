@@ -16,15 +16,14 @@
  */
 package smile
 
-import java.util.stream.LongStream
-import smile.base.cart.SplitRule
-import smile.base.mlp.LayerBuilder
-import smile.base.rbf.RBF
 import smile.data.DataFrame
 import smile.data.formula.Formula
 import smile.math.MathEx
 import smile.math.distance.Distance
 import smile.math.kernel.MercerKernel
+import smile.model.cart.SplitRule
+import smile.model.mlp.LayerBuilder
+import smile.model.rbf.RBF
 import smile.neighbor.KNNSearch
 import smile.stat.distribution.Distribution
 import smile.util.{time, toJavaBiFunction}

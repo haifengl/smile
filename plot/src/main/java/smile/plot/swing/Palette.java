@@ -1601,6 +1601,7 @@ public class Palette {
             BLACK
     };
 
+    /** All modern browsers support the following color names. */
     public static final Map<String, Color> NAMED_COLORS = Map.ofEntries(
             new AbstractMap.SimpleEntry<>("aliceblue", ALICE_BLUE),
             new AbstractMap.SimpleEntry<>("antiquewhite", ANTIQUE_WHITE),
