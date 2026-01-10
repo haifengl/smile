@@ -61,7 +61,6 @@ title: Smile - Quick Start
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
         <li><a href="#scala_1" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_1" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane" id="scala_1">
@@ -81,7 +80,7 @@ title: Smile - Quick Start
             </p>
 
             <pre class="prettyprint lang-sh"><code>
-    $ ./smile -J-Xmx30G
+    $ ./smile scala -J-Xmx30G
     </code></pre>
 
             <p>You can also modify the configuration file <code>./conf/smile.ini</code>
@@ -196,7 +195,7 @@ smile&gt;
             <p>It can be run directly from the shell:</p>
 
             <pre class="prettyprint lang-sh"><code>
-    $ ./smile scala examples/iris.sc
+    $ ./smile scala ../examples/iris.sc
     </code></pre>
 
             <p>In this example, we use Fisher's Iris data in the <code>data</code> directory
@@ -297,7 +296,7 @@ smile>
             <p>It can be run directly from the shell:</p>
 
             <pre class="prettyprint lang-sh"><code>
-    $ bin/jshell.sh examples/iris.jsh
+    $ ./smile shell ../examples/iris.jsh
     </code></pre>
 
             <p>In this example, we use Fisher's Iris data in the <code>data</code> directory
@@ -349,7 +348,7 @@ Commands:
   ada-boost         Adaptive Boosting
   cart              Classification and Regression Tree
   elastic-net       Least Absolute Shrinkage and Selection Operator
-  fisher            Fisher's Linear Discriminant
+  fisher            Fisher Linear Discriminant
   gaussian-process  Gaussian Process Regression
   gradient-boost    Gradient Boosting
   lasso             Least Absolute Shrinkage and Selection Operator
@@ -372,7 +371,7 @@ Commands:
         <div class="tab-pane" id="train_2">
             <div class="code" style="text-align: left;">
                 <pre class="prettyprint lang-shell"><code>
-$ ./smile train --data data/weka/iris.arff --formula "class ~ ." --model iris_random_forest.sml random-forest -h
+$ ./smile train --data ../data/weka/iris.arff --formula "class ~ ." --model iris_random_forest.sml random-forest -h
 Usage: smile train random-forest [-hV] [--regression]
                                  [--class-weight=&lt;weights&gt;]
                                  [--max-depth=&lt;depth&gt;] [--max-nodes=&lt;nodes&gt;]
@@ -444,7 +443,7 @@ Start web service for online prediction.
         <div class="tab-pane active" id="train_3">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-shell"><code style="white-space: preserve nowrap;">
-$ ./smile train --data data/weka/iris.arff --formula "class ~ ." --model iris_random_forest.sml random-forest
+$ ./smile train --data ../data/weka/iris.arff --formula "class ~ ." --model iris_random_forest.sml random-forest
 [main] INFO smile.io.Arff - Read ARFF relation iris
 [ForkJoinPool.commonPool-worker-3] INFO smile.classification.RandomForest - Decision tree OOB accuracy: 88.89%
 [ForkJoinPool.commonPool-worker-2] INFO smile.classification.RandomForest - Decision tree OOB accuracy: 95.35%
@@ -489,7 +488,7 @@ Training metrics: {
         <div class="tab-pane active" id="predict_2">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-shell"><code>
-$ ./smile predict --model iris_random_forest.sml --data data/weka/iris.arff --probability
+$ ./smile predict --model iris_random_forest.sml --data ../data/weka/iris.arff --probability
 0 0.9601 0.0205 0.0194
 0 0.9599 0.0206 0.0195
 0 0.9600 0.0206 0.0194
@@ -584,7 +583,7 @@ $ curl -X POST http://localhost:8728/v1/infer -H "Content-Type: application/json
         <div class="tab-pane active" id="serve_5">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-shell"><code style="white-space: preserve nowrap;">
-$ for i in {1..1000}; do tail -n 153 data/weka/iris.arff | head -n 150 >> iris.txt; done
+$ for i in {1..1000}; do tail -n 153 ../data/weka/iris.arff | head -n 150 >> iris.txt; done
 $ cat iris.txt | curl -H "Content-Type: text/csv" -X POST --data-binary @- http://localhost:8728/v1/infer?format=csv
   </code></pre>
             </div>
@@ -711,7 +710,7 @@ $ cat iris.txt | curl -H "Content-Type: text/csv" -X POST --data-binary @- http:
             <div class="code" style="text-align: left;">
                 <pre class="prettyprint lang-java"><code>
     import smile.io.*;
-    var weather = Read.arff("data/weka/weather.nominal.arff");
+    var weather = Read.arff("../data/weka/weather.nominal.arff");
           </code></pre>
             </div>
         </div>
@@ -719,7 +718,7 @@ $ cat iris.txt | curl -H "Content-Type: text/csv" -X POST --data-binary @- http:
             <div class="code" style="text-align: left;">
                 <pre class="prettyprint lang-scala"><code>
     import smile.io._
-    val weather = read.arff("data/weka/weather.nominal.arff")
+    val weather = read.arff("../data/weka/weather.nominal.arff")
     </code></pre>
             </div>
         </div>
