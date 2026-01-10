@@ -47,13 +47,13 @@ title: Smile - Quick Start
     $ bin/smile.sh
     </code></pre>
 
-    <p>which will build the system and enter the Smile shell in Scala.
-        If you prefer Java, you may run
+    <p>which will build the system and enter the Smile Studio.
+        If you prefer REPL, you may use Smile Shell by running
     </p>
     <pre class="prettyprint lang-sh"><code>
     $ sbt shell/stage
-    $ cd shell/target/universal/stage
-    $ bin/jshell.sh
+    $ cd shell/target/universal/stage/bin
+    $ ./smile shell
     </code></pre>
 
     <h2 id="shell">Shell</h2>
@@ -68,13 +68,10 @@ title: Smile - Quick Start
             <p>Smile comes with an interactive shell for Scala. In the home directory of Smile, type</p>
 
             <pre class="prettyprint lang-sh"><code>
-    $ bin/smile
+    $ ./smile scala
     </code></pre>
 
             <p>to enter the shell, which is based on Scala REPL.
-                If you prefer <a href="https://ammonite.io">Ammonite REPL</a>,
-                copy its jar to Smile's <code>lib</code> directory. Smile Shell
-                will switch to Ammonite once restarted.
                 In the shell, you can run any valid Scala expressions.
                 Besides, all high-level Smile operators are predefined
                 in the shell. By default, the shell uses up to 75% memory.
@@ -84,7 +81,7 @@ title: Smile - Quick Start
             </p>
 
             <pre class="prettyprint lang-sh"><code>
-    $ bin/smile -J-Xmx30G
+    $ ./smile -J-Xmx30G
     </code></pre>
 
             <p>You can also modify the configuration file <code>./conf/smile.ini</code>
@@ -199,7 +196,7 @@ smile&gt;
             <p>It can be run directly from the shell:</p>
 
             <pre class="prettyprint lang-sh"><code>
-    $ bin/smile examples/iris.sc
+    $ ./smile scala examples/iris.sc
     </code></pre>
 
             <p>In this example, we use Fisher's Iris data in the <code>data</code> directory
@@ -217,7 +214,7 @@ smile&gt;
                 In the home directory of Smile, type</p>
 
             <pre class="prettyprint lang-sh"><code>
-    $ bin/jshell.sh
+    $ ./smile shell
     </code></pre>
 
             <p>to enter the JShell with Smile libraries in the class path.
@@ -227,7 +224,7 @@ smile&gt;
                 option <code>-R-Xmx</code>. For example,</p>
 
             <pre class="prettyprint lang-sh"><code>
-    $ bin/jshell.sh -R-Xmx30G
+    $ ./smile shell -R-Xmx30G
     </code></pre>
 
             <h3 id="basics_java">Basics</h3>
@@ -313,93 +310,6 @@ smile>
                 the model on new data samples with the method <code>predict</code>.
             </p>
         </div>
-        <div class="tab-pane" id="kotlin_1">
-            <p>Smile provides an integration with Kotlin REPL.
-                In the home directory of Smile, type</p>
-
-            <pre class="prettyprint lang-sh"><code>
-    $ bin/kshell.sh
-    </code></pre>
-
-            <p>to enter the Kotlin REPL with Smile libraries in the class path.
-                In the shell, you can run any valid Kotlin expressions.
-                In the simplest case, you can use it as a calculator.
-                If you need more memory to handle large data, use the
-                option <code>-J-Xmx</code>. For example,</p>
-
-            <pre class="prettyprint lang-sh"><code>
-    $ bin/kshell.sh -J-Xmx30G
-    </code></pre>
-
-            <h3 id="basics_kotlin">Basics</h3>
-
-            <p>When the shell starts, we should see something like the following:</p>
-            <pre class="prettyprint lang-kotlin"><code>
-    Welcome to Kotlin version 2.0.0 (JRE 21.0.3+7-LTS-152)
-    Type :help for help, :quit for quit
-    >>>
-    </code></pre>
-            <p>To exit the REPL, type <code>:quit</code>. Different from
-                Smile Shell, we don't pre-import any Smile's definitions in Kotlin REPL.</p>
-
-            <h3 id="calculator_kotlin">Calculator</h3>
-
-            <p>With local variable type inference, it is easy to use JShell as a calculator.</p>
-
-            <pre class="prettyprint lang-kotlin"><code>
-    >>> "Hello, World"
-    res0: kotlin.String = Hello, World
-    >>> 2
-    res1: kotlin.Int = 2
-    >>> 2+3
-    res2: kotlin.Int = 5
-    </code></pre>
-
-            <p>We can also define variables and reuse them.</p>
-
-            <pre class="prettyprint lang-kotlin"><code>
-    >>> var x = 2 + 3
-    >>> var y = 2 * (x + 1)
-    >>> y
-    res13: kotlin.Int = 12
-    </code></pre>
-
-            <h3 id="script_kotlin">Script</h3>
-
-            <p>We may also run Smile code in a script. The script
-                <code>examples/iris.kts</code> containing the following Smile code
-            </p>
-
-            <pre class="prettyprint lang-kotlin"><code>
-    import smile.*
-    import smile.classification.*
-    import smile.data.formula.Formula
-    import smile.util.Paths
-
-    val data = read.arff(Paths.getTestData("weka/iris.arff"))
-    println(data)
-
-    val formula = Formula.lhs("class")
-    val rf = randomForest(formula, data)
-    println(rf.metrics())
-    </code></pre>
-
-            <p>It can be run directly from the shell:</p>
-
-            <pre class="prettyprint lang-sh"><code>
-    $ bin/kshell.sh -Xuse-fir-lt=false -script examples/iris.kts
-    </code></pre>
-
-            <p>In this example, we use Fisher's Iris data in the <code>data</code> directory
-                (including many open data for research purpose). The data
-                is in Weka's ARFF format. The function <code>Read.arff</code> returns an object of
-                <code>DataFrame</code>. The formula <code>Formula.lhs("class")</code> defines that
-                the column "class" will be used as the class label while the rest columns
-                are predictors. Finally, we train a random forest
-                with default parameters and print out its OOB (out of bag) error. We can apply
-                the model on new data samples with the method <code>predict</code>.
-            </p>
-        </div>
     </div>
 
     <h3 id="cli">Training and Inference CLI</h3>
@@ -416,7 +326,7 @@ smile>
         <div class="tab-pane active" id="training_1">
             <div class="code" style="text-align: left;">
                 <pre class="prettyprint lang-shell"><code style="white-space: preserve nowrap;">
-$ bin/smile train -h
+$ ./smile train -h
 Usage: smile train [-ehV] -d=&lt;file&gt; [--format=&lt;format&gt;] [--formula=&lt;formula&gt;]
                    [-k=&lt;fold&gt;] -m=&lt;file&gt; [--model-id=&lt;id&gt;]
                    [--model-version=&lt;ver&gt;] [-r=&lt;round&gt;] [-s=&lt;seed&gt;]
@@ -462,7 +372,7 @@ Commands:
         <div class="tab-pane" id="train_2">
             <div class="code" style="text-align: left;">
                 <pre class="prettyprint lang-shell"><code>
-$ bin/smile train --data data/weka/iris.arff --formula "class ~ ." --model iris_random_forest.sml random-forest -h
+$ ./smile train --data data/weka/iris.arff --formula "class ~ ." --model iris_random_forest.sml random-forest -h
 Usage: smile train random-forest [-hV] [--regression]
                                  [--class-weight=&lt;weights&gt;]
                                  [--max-depth=&lt;depth&gt;] [--max-nodes=&lt;nodes&gt;]
@@ -489,7 +399,7 @@ Random Forest
         <div class="tab-pane" id="predict_1">
             <div class="code" style="text-align: left;">
                 <pre class="prettyprint lang-shell"><code>
-$ bin/smile predict -h
+$ ./smile predict -h
 Usage: smile predict [-hpV] [--format=&lt;format&gt;] -m=&lt;file&gt; &lt;file&gt;
 Run batch prediction on a file.
 &lt;file&gt;              The data file.
@@ -507,12 +417,14 @@ Run batch prediction on a file.
         <div class="tab-pane" id="serve_1">
             <div class="code" style="text-align: left;">
                 <pre class="prettyprint lang-shell"><code>
-$ bin/smile serve
-Smile 4.0.0
-Usage: smile serve [options]
-
-  --model &lt;value&gt;  The model file
-  --probability    Output the posteriori probabilities for soft classifier
+$ ./smile serve -h
+Usage: smile serve [-hV] [--host=&lt;host&gt;] --model=&lt;path&gt; [--port=&lt;port&gt;]
+Start web service for online prediction.
+  -h, --help           Show this help message and exit.
+      --host=&lt;host&gt;    The network interface the server binds to.
+      --model=&lt;path&gt;   The model file/folder.
+      --port=&lt;port&gt;    The port for the HTTP server.
+  -V, --version        Print version information and exit.
     </code></pre>
             </div>
         </div>
@@ -532,7 +444,7 @@ Usage: smile serve [options]
         <div class="tab-pane active" id="train_3">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-shell"><code style="white-space: preserve nowrap;">
-$ bin/smile train --data data/weka/iris.arff --formula "class ~ ." --model iris_random_forest.sml random-forest
+$ ./smile train --data data/weka/iris.arff --formula "class ~ ." --model iris_random_forest.sml random-forest
 [main] INFO smile.io.Arff - Read ARFF relation iris
 [ForkJoinPool.commonPool-worker-3] INFO smile.classification.RandomForest - Decision tree OOB accuracy: 88.89%
 [ForkJoinPool.commonPool-worker-2] INFO smile.classification.RandomForest - Decision tree OOB accuracy: 95.35%
@@ -577,7 +489,7 @@ Training metrics: {
         <div class="tab-pane active" id="predict_2">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-shell"><code>
-$ bin/smile predict --model iris_random_forest.sml --data data/weka/iris.arff --probability
+$ ./smile predict --model iris_random_forest.sml --data data/weka/iris.arff --probability
 0 0.9601 0.0205 0.0194
 0 0.9599 0.0206 0.0195
 0 0.9600 0.0206 0.0194
@@ -607,10 +519,9 @@ $ bin/smile predict --model iris_random_forest.sml --data data/weka/iris.arff --
         <div class="tab-pane active" id="serve_2">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-shell"><code>
-$ bin/smile serve --model iris_random_forest.sml --probability --line
-[smile-akka.actor.default-dispatcher-4] INFO akka.event.slf4j.Slf4jLogger - Slf4jLogger started
-Smile online at http://localhost:8728/v1/infer
-Press RETURN to stop...
+$ ./smile serve --model iris_random_forest.sml
+INFO  [io.quarkus] (main) serve 5.1.0 on JVM (powered by Quarkus 3.30.5) started in 0.844s. Listening on: http://0.0.0.0:8080
+[io.quarkus] (main) Profile prod activated.
   </code></pre>
             </div>
         </div>
