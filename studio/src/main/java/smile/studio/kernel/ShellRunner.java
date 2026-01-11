@@ -30,7 +30,7 @@ import java.util.List;
  */
 public class ShellRunner extends Runner {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ShellRunner.class);
-    private PrintStream shellOut = new PrintStream(console, true, StandardCharsets.UTF_8);
+    private final PrintStream shellOut = new PrintStream(console, true, StandardCharsets.UTF_8);
     private Process process;
 
     /**
