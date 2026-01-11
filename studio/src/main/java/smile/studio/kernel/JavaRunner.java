@@ -153,7 +153,7 @@ public class JavaRunner extends Runner {
     }
 
     /**
-     * Evaluate a magic command.
+     * Evaluates a magic command.
      * @param magic the magic command line.
      */
     public void evalMagic(String magic) {
