@@ -35,7 +35,7 @@ node_modules
 
 # Generated
 doc/api
-web/_site/
+website/_site/
 serve/src/main/resources/META-INF/resources/chat
 
 # SBT
