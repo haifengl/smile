@@ -34,6 +34,7 @@ public class Workspace extends JSplitPane {
     final Analyst analyst = new Analyst(runner);
     /** The editor of notebook. */
     final Notebook notebook;
+    /** The project pane consists of explorer and notebook. */
     final JSplitPane project = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 
     /**

@@ -20,8 +20,9 @@ import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-import java.io.*;
+import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.Set;
 
 /**
  * Script execution engine.
@@ -53,10 +54,40 @@ public class ScriptRunner extends Runner {
     public Object eval(String script) {
         try {
             return engine.eval(script);
-        } catch (ScriptException | NullPointerException ex) {
-            writer.println("Failed to execute script: " + ex.getMessage());
+        } catch (ScriptException ex) {
+            var cause = ex.getCause();
+            if (cause != null) {
+                writer.append(cause.getClass().getTypeName())
+                      .append(": ")
+                      .append(cause.getMessage() == null ? "" : ex.getMessage())
+                      .append('\n');
+                for (StackTraceElement ste : cause.getStackTrace()) {
+                    writer.append("  at ")
+                          .append(ste.toString())
+                          .append('\n');
+                }
+            } else {
+                writer.println("Failed to execute script: " + ex.getMessage());
+            }
         }
         return null;
+    }
+
+    /**
+     * Returns the set of named variables.
+     * @return the set of named variables.
+     */
+    public Set<String> variables() {
+        return engine.getBindings(ScriptContext.ENGINE_SCOPE).keySet();
+    }
+
+    /**
+     * Retrieves the value of a named variable.
+     * @param name the variable name.
+     * @return the variable value.
+     */
+    public Object get(String name) {
+        return engine.get(name);
     }
 
     @Override
