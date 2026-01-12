@@ -44,7 +44,7 @@ cd chat
 npm run build
 check_error "!!"
 
-cd web
+cd website
 npm run deploy
 check_error "!!"
 
