@@ -37,8 +37,8 @@ val a = Const("a")
 val b = Const("b")
 val f = a * X + b * Y
 println(f)
-
-println(f.d(X), f.d(Y))
+println(f.d(X))
+println(f.d(Y))
 
 // The dot product (or inner product) is a scalar.
 val dot = X * Y
