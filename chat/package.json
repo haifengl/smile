@@ -1,5 +1,5 @@
 {
-  "name": "smile-chat",
+  "name": "smile-web",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -12,17 +12,17 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-markdown": "^10.1.0",
-    "react-syntax-highlighter": "^15.6.1",
+    "react-syntax-highlighter": "^16.1.0",
     "rehype-katex": "^7.0.1",
     "remark-gemoji": "^8.0.0",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
-    "sse.js": "^2.6.0"
+    "sse.js": "^2.7.2"
   },
   "devDependencies": {
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.5.1",
-    "vite": "7.1.11"
+    "@vitejs/plugin-react": "^5.1.2",
+    "vite": "7.3.1"
   }
 }
