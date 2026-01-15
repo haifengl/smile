@@ -526,7 +526,11 @@ INFO  [io.quarkus] (main) serve 5.1.0 on JVM (powered by Quarkus 3.30.5) started
         </div>
     </div>
 
-    <p>The endpoint is at <code>/v1/infer</code>. Here is an example how to make an inference request.</p>
+    <p>If the <code>--model</code> argument is a folder, it will load all model files with
+        <code>.sml</code> extension. The endpoint(s) is at <code>/api/v1/models/{modelId}</code>.
+        You may query the available models/endpoints with <code>GET /api/v1/models</code>.
+        Furthermore, you may query the input schema for each model with <code>GET /api/v1/models/{modelId}</code>
+        Here is an example how to make an inference request.</p>
     <ul class="nav nav-tabs">
         <li class="active"><a href="#serve_3" data-toggle="tab">Online Serving</a></li>
     </ul>
@@ -534,7 +538,7 @@ INFO  [io.quarkus] (main) serve 5.1.0 on JVM (powered by Quarkus 3.30.5) started
         <div class="tab-pane active" id="serve_3">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-shell"><code>
-$ curl -X POST http://localhost:8728/v1/infer -H "Content-Type: application/json" \
+$ curl -X POST http://localhost:8080/api/v1/models/iris_random_forest-1 -H "Content-Type: application/json" \
         -d '{
           "sepallength": 5.1,
           "sepalwidth": 3.5,
@@ -547,33 +551,14 @@ $ curl -X POST http://localhost:8728/v1/infer -H "Content-Type: application/json
         </div>
     </div>
 
-    <p>To infer on multiple samples, simply provides JSON array or JSON Lines (JSONL)
-        in the request body. CSV is also supported.</p>
-
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#serve_4" data-toggle="tab">Online Serving</a></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane active" id="serve_4">
-            <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-shell"><code>
-$ curl -X POST http://localhost:8728/v1/infer -H "Content-Type: application/json" \
-        -d '{"sepallength": 5.1, "sepalwidth": 3.5, "petallength": 1.4,"petalwidth": 0.2}
-          {"sepallength": 6.3, "sepalwidth": 3.3, "petallength": 6.0,"petalwidth": 2.5}'
-{"class":0,"probability":[0.9599,0.0207,0.0194]}
-{"class":2,"probability":[0.0259,0.0517,0.9224]}
-  </code></pre>
-            </div>
-        </div>
-    </div>
-
-    <p>In fact, Smile serving endpoint is an end-to-end streaming API
-        which applies back pressure throughout the entire stack. It can process the
-        request body (e.g., a JSON array or CSV stream) on an element-by-element basis,
+    <p>In addition, the endpoint <code>/api/v1/models/{modelId}/stream</code>
+        supports end-to-end streaming processing, which applies back pressure
+        throughout the entire stack. It can process the request body
+        (e.g., a JSON lines or CSV stream) on an element-by-element basis,
         and render the response immediately without waiting for the rest inference
         to complete first. Therefore, it is safe to send very large requests (multi-GB) to
         the endpoint! In the below example, we generate a dataset with 150,000 samples
-        by repeating Iris data 1000 times. It takes only 7 seconds to finish the end-to-end
+        by repeating Iris data 1000 times. It takes less than 4 seconds to finish the end-to-end
         processing including HTTP request and printing.</p>
 
     <ul class="nav nav-tabs">
@@ -584,15 +569,15 @@ $ curl -X POST http://localhost:8728/v1/infer -H "Content-Type: application/json
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-shell"><code style="white-space: preserve nowrap;">
 $ for i in {1..1000}; do tail -n 153 ../data/weka/iris.arff | head -n 150 >> iris.txt; done
-$ cat iris.txt | curl -H "Content-Type: text/csv" -X POST --data-binary @- http://localhost:8728/v1/infer?format=csv
+$ cat iris.txt | curl -H "Content-Type: text/plain" -X POST --data-binary @- http://localhost:8080/api/v1/models/iris_random_forest-1/stream
   </code></pre>
             </div>
         </div>
     </div>
 
-    <p>By default, SmileServe binds at localhost:8728. If you prefer a different port and/or
-        want to expose the server to other hosts, you may set the binding interface and port
-        with <code>--host=0.0.0.0</code> and <code>--port=8000</code>, for example.</p>
+    <p>By default, SmileServe binds at 0.0.0.0:8080. If you prefer a different interface/port,
+        you may set the binding interface and port with <code>--host=localhost</code>
+        and <code>--port=8000</code>, for example.</p>
 
     <h2 id="notebook">Notebooks</h2>
 
