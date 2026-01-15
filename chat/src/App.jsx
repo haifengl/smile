@@ -16,7 +16,6 @@
  */
 import { useEffect, useState } from 'react'
 import { SSE } from 'sse.js'
-import { Ollama } from 'ollama/browser'
 import Chat from './chat/Chat'
 import InternetIcon from './assets/internet.svg'
 import LlamaIcon from './assets/llama.svg'
@@ -78,8 +77,6 @@ function App() {
     }
   }, [])
 
-  const ollama = new Ollama({ host: 'https://smile-ai.org' });
-
   const sendMessage = async (text) => {
     messages.push({
       user: user,
@@ -110,7 +107,7 @@ function App() {
       });
     }
 
-    const url = '/v1/chat/completions';
+    const url = '/api/v1/chat/completions';
     const requestOptions = {
       method: 'POST',
       headers: {
@@ -119,111 +116,83 @@ function App() {
       },
     };
 
-    if (url.startsWith("/api")) {
-      const response = await ollama.chat(data)
-      if (data["stream"]) {
-        const history = messages;
-        const message = {
-          text: '',
-          user: bot,
-          createdAt: new Date(),
-        };
+    if (data["stream"]) {
+      requestOptions['headers']['Accept'] = 'text/event-stream';
+      requestOptions['payload'] = JSON.stringify(data);
 
-        for await (const part of response) {
-          message.text += part.message.content;
-          setMessages([...history, message]);
-        }
+      const history = messages;
+      const message = {
+        text: '',
+        user: bot,
+        createdAt: new Date(),
+      };
+
+      let source = new SSE(url, requestOptions);
+      source.addEventListener('message', (e) => {
+        message.text += e.data;
+        setMessages([...history, message]);
+      });
+
+      source.addEventListener('open', (e) => {
+        console.log('SSE open: ' + e.responseCode);
+      });
+
+      source.addEventListener('abort', (e) => {
+        console.log('SSE abort');
         setShowTypingIndicator(false);
-      } else {
-        let msg = response.message.content;
+      });
+
+      source.addEventListener('readystatechange', (e) => {
+        console.log('SSE ready state: ' + e.readyState);
+        if (e.readyState === 2) { // CLOSED
+          setShowTypingIndicator(false);
+        }
+      });
+
+      source.addEventListener('error', (e) => {
+        console.log('SSE error: ' + e.responseCode);
         messages.push({
-          text: msg,
-          user: bot,
-          createdAt: new Date(response['created_at']),
+          text: "Sorry, the service isn't available right now. Please try again later.",
+          user: server,
+          createdAt: new Date(),
         });
 
         setMessages([...messages]);
         setShowTypingIndicator(false);
-      }
+      });
+
+      source.stream();
     } else {
-      if (data["stream"]) {
-        requestOptions['headers']['Accept'] = 'text/event-stream';
-        requestOptions['payload'] = JSON.stringify(data);
-
-        const history = messages;
-        const message = {
-          text: '',
-          user: bot,
-          createdAt: new Date(),
-        };
-
-        let source = new SSE(url, requestOptions);
-        source.addEventListener('message', (e) => {
-          message.text += e.data;
-          setMessages([...history, message]);
-        });
-
-        source.addEventListener('open', (e) => {
-          console.log('SSE open: ' + e.responseCode);
-        });
-
-        source.addEventListener('abort', (e) => {
-          console.log('SSE abort');
-          setShowTypingIndicator(false);
-        });
-
-        source.addEventListener('readystatechange', (e) => {
-          console.log('SSE ready state: ' + e.readyState);
-          if (e.readyState === 2) { // CLOSED
-            setShowTypingIndicator(false);
-          }
-        });
-
-        source.addEventListener('error', (e) => {
-          console.log('SSE error: ' + e.responseCode);
-          messages.push({
-            text: "Sorry, the service isn't available right now. Please try again later.",
-            user: server,
-            createdAt: new Date(),
-          });
-
-          setMessages([...messages]);
-          setShowTypingIndicator(false);
-        });
-
-        source.stream();
-      } else {
-        requestOptions['body'] = JSON.stringify(data);
-        fetch(url, requestOptions)
-            .then(response => {
-              if (!response.ok) {
-                throw new Error(response.statusText);
-              }
-              return response.json();
-            })
-            .then(response => {
-              let msg = response.message.content;
-              messages.push({
-                text: msg,
-                user: bot,
-                createdAt: new Date(response['created_at']),
-              });
-
-              setMessages([...messages]);
-              setShowTypingIndicator(false);
-            })
-            .catch(error => {
-              console.error(error);
-              messages.push({
-                text: error.message,
-                user: server,
-                createdAt: new Date(),
-              });
-
-              setMessages([...messages]);
-              setShowTypingIndicator(false);
+      requestOptions['body'] = JSON.stringify(data);
+      fetch(url, requestOptions)
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(response.statusText);
+            }
+            return response.json();
+          })
+          .then(response => {
+            let msg = response.message.content;
+            messages.push({
+              text: msg,
+              user: bot,
+              createdAt: new Date(response['created_at']),
             });
-      }
+
+            setMessages([...messages]);
+            setShowTypingIndicator(false);
+          })
+          .catch(error => {
+            console.error(error);
+            messages.push({
+              text: error.message,
+              user: server,
+              createdAt: new Date(),
+            });
+
+            setMessages([...messages]);
+            setShowTypingIndicator(false);
+          });
     }
   }
 
