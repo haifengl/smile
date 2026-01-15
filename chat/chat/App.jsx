@@ -16,7 +16,7 @@
  */
 import { useEffect, useState } from 'react'
 import { SSE } from 'sse.js'
-import Chat from './chat/Chat'
+import Chat from './components/Chat'
 import InternetIcon from './assets/internet.svg'
 import LlamaIcon from './assets/llama.svg'
 import './App.css'
