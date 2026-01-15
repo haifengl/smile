@@ -48,11 +48,11 @@ function App() {
 
   const [showTypingIndicator, setShowTypingIndicator] = useState(false);
 
-  // Conversation thread ID
-  const [threadId, setThreadId] = useState(0);
+  // Conversation ID
+  const [conversationId, setConversationId] = useState(0);
 
   useEffect(() => {
-    if (threadId <= 0) {
+    if (conversationId <= 0) {
       const requestOptions = {
         method: 'POST',
         headers: {
@@ -61,15 +61,15 @@ function App() {
         body: JSON.stringify({}),
       };
 
-      fetch('/v1/threads', requestOptions)
+      fetch('/api/v1/conversations', requestOptions)
         .then(response => {
           if (!response.ok) {
             throw new Error(response.statusText);
           }
           return response.json();
         })
-        .then(thread => {
-          setThreadId(thread.id);
+        .then(conversation => {
+          setConversationId(conversation.id);
         })
         .catch(error => {
           console.error(error);
@@ -89,7 +89,7 @@ function App() {
 
     const data = {
       "model": "meta/llama3",
-      "threadId": threadId,
+      "conversation": conversationId,
       "stream": true,
       "messages": [
         {
