@@ -23,6 +23,8 @@ dependencies {
     implementation("org.bytedeco:cuda-platform-redist-cusolver:12.9-9.10-1.5.12")
     implementation("org.bytedeco:cuda-platform-redist-cusparse:12.9-9.10-1.5.12")
      */
+    implementation("io.quarkus:quarkus-hibernate-orm-panache")
+    implementation("io.quarkus:quarkus-jdbc-postgresql")
     implementation("io.quarkiverse.quinoa:quarkus-quinoa:2.7.1")
     testImplementation("io.quarkus:quarkus-junit5")
 }
