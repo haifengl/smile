@@ -16,6 +16,7 @@
  */
 package smile.chat;
 
+import java.util.List;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
@@ -23,10 +24,13 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import java.util.List;
+import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Sort;
+import io.smallrye.common.annotation.RunOnVirtualThread;
 import io.vertx.ext.web.RoutingContext;
 
 @Path("/conversations")
+@RunOnVirtualThread
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class ConversationResource {
@@ -34,14 +38,17 @@ public class ConversationResource {
     RoutingContext routingContext;
 
     @GET
-    public List<Conversation> list() {
-        return Conversation.listAll(); // Panache method
+    public List<Conversation> list(@QueryParam("pageIndex") @DefaultValue("0") int pageIndex,
+                                   @QueryParam("pageSize") @DefaultValue("25") int pageSize) {
+        return Conversation.findAll(Sort.by("createdAt").descending())
+                .page(Page.of(pageIndex, pageSize))
+                .list();
     }
 
     @GET
     @Path("/{id}")
     public Conversation get(@PathParam("id") Long id) {
-        return Conversation.findById(id); // Panache method
+        return Conversation.findById(id);
     }
 
     @POST
@@ -63,12 +70,22 @@ public class ConversationResource {
     @DELETE
     @Path("/{id}")
     @Transactional
-    public Response deleteProduct(@PathParam("id") Long id) {
+    public Response delete(@PathParam("id") Long id) {
         boolean deleted = Conversation.deleteById(id);
         if (deleted) {
             return Response.noContent().build(); // 204 No Content
         } else {
             return Response.status(Response.Status.NOT_FOUND).build(); // 404 Not Found
         }
+    }
+
+    @GET
+    @Path("/{id}/items")
+    public List<ConversationItem> getItems(@PathParam("id") Long id,
+                                            @QueryParam("pageIndex") @DefaultValue("0") int pageIndex,
+                                            @QueryParam("pageSize") @DefaultValue("25") int pageSize) {
+        return ConversationItem.find("conversation.id", Sort.by("createdAt"), id)
+                .page(Page.of(pageIndex, pageSize))
+                .list();
     }
 }

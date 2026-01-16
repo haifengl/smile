@@ -17,6 +17,7 @@
 package smile.chat;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,9 @@ public class Conversation extends PanacheEntity {
     @MapKeyColumn(name = "KEY") // Column for the map key
     @Column(name = "VALUE") // Column for the map value
     public Map<String, String> metadata = new HashMap<>();
+
+    @OneToMany
+    public List<ConversationItem> items = new ArrayList<>();
 
     public static List<Conversation> findByTag(String key, String value) {
         // Panache uses positional parameters (e.g., ?1, ?2) for clarity in maps
