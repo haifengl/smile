@@ -36,7 +36,8 @@ node_modules
 # Generated
 doc/api
 website/_site/
-serve/src/main/resources/META-INF/resources/chat
+serve/src/main/resources/META-INF/resources/
+serve/src/main/webui/dist/
 
 # SBT
 .bsp
