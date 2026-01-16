@@ -82,8 +82,8 @@ public class ConversationResource {
     @GET
     @Path("/{id}/items")
     public List<ConversationItem> getItems(@PathParam("id") Long id,
-                                            @QueryParam("pageIndex") @DefaultValue("0") int pageIndex,
-                                            @QueryParam("pageSize") @DefaultValue("25") int pageSize) {
+                                           @QueryParam("pageIndex") @DefaultValue("0") int pageIndex,
+                                           @QueryParam("pageSize") @DefaultValue("25") int pageSize) {
         return ConversationItem.find("conversation.id", Sort.by("createdAt"), id)
                 .page(Page.of(pageIndex, pageSize))
                 .list();

@@ -27,6 +27,7 @@ import smile.llm.Message;
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class CompletionRequest {
+    public Long conversation;
     public Message[] messages;
     public int maxTokens = 2048;
     public double temperature = 0.6;
