@@ -16,9 +16,8 @@
  */
 package smile.chat;
 
-import java.util.Map;
-import java.util.Properties;
-import java.util.TreeMap;
+import smile.llm.FinishReason;
+import smile.llm.Message;
 
 /**
  * The chat completion response.
@@ -26,5 +25,6 @@ import java.util.TreeMap;
  * @author Haifeng Li
  */
 public class CompletionResponse {
-    public String model;
+    public Message message;
+    public FinishReason finishReason;
 }
