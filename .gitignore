@@ -12,9 +12,11 @@ base/src/test/resources/data/iceberg
 deep/src/test/resources
 nlp/src/test/resources
 model
+**/smile_serve.db
 
 # Native library
 deep/lib
+/libarpack.dylib
 
 # Clojure
 .nrepl-port
