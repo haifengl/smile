@@ -23,10 +23,12 @@ import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.ServiceUnavailableException;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.smallrye.common.annotation.RunOnVirtualThread;
 import io.smallrye.mutiny.Multi;
+import io.vertx.ext.web.RoutingContext;
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.jboss.resteasy.reactive.RestStreamElementType;
 import smile.llm.ChatCompletion;
@@ -46,42 +48,49 @@ public class ChatCompletionResource {
     ObjectMapper objectMapper; // Inject the Quarkus-provided Jackson ObjectMapper
 
     @Inject
+    RoutingContext routingContext;
+
+    @Inject
     ManagedExecutor executor;
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @RestStreamElementType(MediaType.TEXT_PLAIN) // Important for streaming item by item without buffering
-    @RunOnVirtualThread
-    public Multi<String> csv(CompletionRequest request) throws ServiceUnavailableException {
+    public Multi<String> complete(@Context HttpHeaders headers, CompletionRequest request) throws ServiceUnavailableException {
         if (!service.isAvailable()) throw new ServiceUnavailableException();
-        if (request.conversation != null && request.conversation > 0) saveRequest(request);
 
         SubmissionPublisher<String> publisher = new SubmissionPublisher<>();
         executor.supplyAsync(() -> {
             var completions = service.complete(request, publisher);
-            if (request.conversation != null && request.conversation > 0) saveCompletions(request.conversation, completions);
+            saveConversation(routingContext, headers, request, completions);
             return completions;
         });
         return Multi.createFrom().publisher(publisher);
     }
 
     @Transactional
-    public void saveRequest(CompletionRequest request) {
+    public void saveConversation(RoutingContext routingContext, HttpHeaders headers,
+                                 CompletionRequest request, ChatCompletion[] completions) {
+        Long conversationId = request.conversation;
+        if (conversationId == null || conversationId <= 0) {
+            Conversation conversation = new Conversation();
+            ConversationResource.setConversationContext(conversation, routingContext, headers);
+            conversation.persist();
+            conversationId = conversation.id;
+        }
+
         for (int i = request.messages.length; i-- > 0;) {
             var message = request.messages[i];
             if (message.role() == Role.user) {
                 ConversationItem item = new ConversationItem();
-                item.conversationId = request.conversation;
+                item.conversationId = conversationId;
                 item.role = message.role().toString();
                 item.content = message.content();
                 item.persist();
                 break;
             }
         }
-    }
 
-    @Transactional
-    public void saveCompletions(Long conversationId, ChatCompletion[] completions) {
         for (var completion : completions) {
             ConversationItem item = new ConversationItem();
             item.conversationId = conversationId;
