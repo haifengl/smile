@@ -54,6 +54,12 @@ public class ConversationResource {
     @POST
     @Transactional
     public Response create(@Context HttpHeaders headers, Conversation conversation) {
+        setConversationContext(conversation, routingContext, headers);
+        conversation.persist();
+        return Response.status(Response.Status.CREATED).entity(conversation).build();
+    }
+
+    public static void setConversationContext(Conversation conversation, RoutingContext routingContext, HttpHeaders headers) {
         String clientIP = routingContext.request().remoteAddress().hostAddress();
 
         // Check for common headers if behind a proxy
@@ -63,8 +69,6 @@ public class ConversationResource {
         }
         conversation.clientIP = clientIP;
         conversation.userAgent = headers.getHeaderString("User-Agent");
-        conversation.persist();
-        return Response.status(Response.Status.CREATED).entity(conversation).build();
     }
 
     @DELETE
