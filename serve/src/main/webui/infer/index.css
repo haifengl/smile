@@ -1,13 +1,21 @@
 .site-header {
-  background-color: #333;
+  background-color: #2fa4e7;
   color: white;
-  padding: 10px;
+  padding: 4px 0px;
   text-align: left;
   position: sticky;
   top: 0;
   z-index: 1000;
   width: 100%;
   box-sizing: border-box;
+}
+
+.header-logo {
+  float: right;
+  margin-top: 8px;
+  margin-right: 16px;
+  width: 48px;
+  height: auto;
 }
 
 :root {

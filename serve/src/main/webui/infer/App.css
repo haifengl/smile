@@ -26,6 +26,7 @@
   cursor: pointer;
   border-radius: 4px;
   margin-bottom: 6px;
+  font-size: 16px;
 }
 
 .sidebar li:hover {
