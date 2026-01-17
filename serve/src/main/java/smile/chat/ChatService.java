@@ -69,7 +69,7 @@ public class ChatService {
      * @param request the chat request.
      * @param publisher the flow publisher.
      */
-    public CompletionPrediction[] complete(CompletionRequest request, SubmissionPublisher<String> publisher) {
+    public ChatCompletion[] complete(CompletionRequest request, SubmissionPublisher<String> publisher) {
         Message[][] dialogs = { request.messages };
         return model.chat(dialogs, request.maxTokens, request.temperature,
                 request.topP, request.logprobs, request.seed, publisher);

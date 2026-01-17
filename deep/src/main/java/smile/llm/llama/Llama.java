@@ -28,7 +28,7 @@ import smile.deep.tensor.Device;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
-import smile.llm.CompletionPrediction;
+import smile.llm.ChatCompletion;
 import smile.llm.FinishReason;
 import smile.llm.Message;
 import smile.util.AutoScope;
@@ -179,7 +179,7 @@ public class Llama {
      * The batch size must be 1.
      * @return The generated text completion.
      */
-    public CompletionPrediction[] generate(int[][] prompts, int maxGenLen, double temperature, double topp, boolean logprobs, long seed, SubmissionPublisher<String> publisher) {
+    public ChatCompletion[] generate(int[][] prompts, int maxGenLen, double temperature, double topp, boolean logprobs, long seed, SubmissionPublisher<String> publisher) {
         int batchSize = prompts.length;
         if (batchSize > model.params.maxBatchSize()) {
             throw new IllegalArgumentException("The number of prompts is greater than max_batch_size");
@@ -300,7 +300,7 @@ public class Llama {
             if (logprobs) {
                 logprobArray = tokenLogprobs.to(Device.CPU()).floatArray();
             }
-            CompletionPrediction[] predictions = new CompletionPrediction[batchSize];
+            ChatCompletion[] predictions = new ChatCompletion[batchSize];
             for (int i = 0; i < batchSize; i++) {
                 // cut to max gen len
                 int start = prompts[i].length;
@@ -331,7 +331,7 @@ public class Llama {
                 }
 
                 var reason = stop ? FinishReason.stop : FinishReason.length;
-                predictions[i] = new CompletionPrediction(name, tokenizer.decode(completion), prompts[i], completion, reason, probs);
+                predictions[i] = new ChatCompletion(name, tokenizer.decode(completion), prompts[i], completion, reason, probs);
             }
 
             if (publisher != null) publisher.close();
@@ -353,7 +353,7 @@ public class Llama {
      * The batch size must be 1.
      * @return The generated text completion.
      */
-    public CompletionPrediction[] complete(String[] prompts, int maxGenLen, double temperature, double topp, boolean logprobs, long seed, SubmissionPublisher<String> publisher) {
+    public ChatCompletion[] complete(String[] prompts, int maxGenLen, double temperature, double topp, boolean logprobs, long seed, SubmissionPublisher<String> publisher) {
         int batchSize = prompts.length;
         int[][] tokens = new int[batchSize][];
         for (int i = 0; i < batchSize; i++) {
@@ -375,7 +375,7 @@ public class Llama {
      * The batch size must be 1.
      * @return The generated chat responses.
      */
-    public CompletionPrediction[] chat(Message[][] dialogs, int maxGenLen, double temperature, double topp, boolean logprobs, long seed, SubmissionPublisher<String> publisher) {
+    public ChatCompletion[] chat(Message[][] dialogs, int maxGenLen, double temperature, double topp, boolean logprobs, long seed, SubmissionPublisher<String> publisher) {
         int batchSize = dialogs.length;
         int[][] tokens = new int[batchSize][];
         for (int i = 0; i < batchSize; i++) {
