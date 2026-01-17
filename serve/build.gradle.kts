@@ -25,6 +25,7 @@ dependencies {
      */
     implementation("io.quarkus:quarkus-hibernate-orm-panache")
     implementation("io.quarkus:quarkus-jdbc-postgresql")
+    implementation("io.quarkiverse.jdbc:quarkus-jdbc-sqlite:3.0.1")
     implementation("io.quarkiverse.quinoa:quarkus-quinoa:2.7.1")
     testImplementation("io.quarkus:quarkus-junit5")
 }
