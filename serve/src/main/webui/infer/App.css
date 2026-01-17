@@ -48,3 +48,32 @@
   text-align: center;
   font-size: 20px;
 }
+
+/* Basic styling for the dialog box */
+dialog {
+  background-color: #1e1e2f;
+  padding: 10px 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px lightblue;
+}
+
+/* Styling the overlay that appears behind the modal */
+dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.7);
+  /* Add an animation to the backdrop */
+  animation: backdrop-fadein 0.3s forwards;
+}
+
+@keyframes backdrop-fadein {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.json-container pre {
+  outline: 1px solid #ccc;
+
+  background-color: #f5f5f5;
+  color: #333;
+  overflow: auto; /* Adds scrollbars if data is too wide */
+}

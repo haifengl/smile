@@ -96,15 +96,20 @@ function InferenceForm({ model }) {
       })
      .then((data) => {
        setPrediction(data);
-       const dialog = document.getElementById('prediction');
+       const dialog = document.getElementById('output');
        dialog.showModal();
        setTimeout(function() {
          dialog.close();
-       }, 3000);
+       }, 10000);
      })
      .catch((err) => {
        setError(err.message);
      });
+  };
+
+  const handleClose = () => {
+    const dialog = document.getElementById('output');
+    dialog.close();
   };
 
   if (!model) return <p className="toast">Select a model for inference...</p>;
@@ -118,8 +123,12 @@ function InferenceForm({ model }) {
         validator={validator}
         onSubmit={handleSubmit}
       />
-      <dialog id="prediction">
-        <div><pre>{JSON.stringify(prediction, null, 2) }</pre></div>
+      <dialog id="output">
+        <h3 style={{ marginTop: "0px" }}>Output</h3>
+        <div className="json-container">
+          <pre>{JSON.stringify(prediction, null, 2) }</pre>
+        </div>
+        <button onClick={handleClose}>Close</button>
       </dialog>
     </div>
   );
