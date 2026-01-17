@@ -17,31 +17,40 @@
 package smile.chat;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import jakarta.persistence.*;
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
-public class Conversation extends PanacheEntity {
+public class Conversation extends PanacheEntityBase {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
+    @CreationTimestamp
+    @Column(name = "created_at")
+    public Instant createdAt;
+    @Column(name = "client_ip")
     public String clientIP;
+    @Column(name = "user_agent")
     public String userAgent;
 
-    @CreationTimestamp
-    public Instant createdAt;
-
     @ElementCollection
-    @CollectionTable(name = "CONVERSATION_METADATA") // Table name
-    @MapKeyColumn(name = "KEY") // Column for the map key
-    @Column(name = "VALUE") // Column for the map value
+    @CollectionTable(
+            name = "ConversationMetadata", // Table name
+            joinColumns = @JoinColumn(name = "conversation_id"))
+    @MapKeyColumn(name = "tag_key") // Column for the map key
+    @Column(name = "tag_value") // Column for the map value
     public Map<String, String> metadata = new HashMap<>();
 
-    @OneToMany
-    public List<ConversationItem> items = new ArrayList<>();
-
+    /**
+     * Returns the list of conversations with given key-value tag.
+     * @param key the tag key.
+     * @param value the tag value.
+     * @return the list of conversations with given key-value tag.
+     */
     public static List<Conversation> findByTag(String key, String value) {
         // Panache uses positional parameters (e.g., ?1, ?2) for clarity in maps
         return find("metadata(?1, ?2)", key, value).list();
