@@ -27,6 +27,7 @@ import jakarta.ws.rs.ServiceUnavailableException;
 import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.jboss.resteasy.reactive.RestStreamElementType;
+import smile.llm.Role;
 
 /**
  * Chat completion API.
@@ -49,8 +50,35 @@ public class ChatCompletionResource {
     @RestStreamElementType(MediaType.TEXT_PLAIN) // Important for streaming item by item without buffering
     public Multi<String> csv(CompletionRequest request) throws ServiceUnavailableException {
         if (!service.isAvailable()) throw new ServiceUnavailableException();
+
+        // Save chat request
+        if (request.conversation != null & request.conversation > 0) {
+            for (int i = request.messages.length; i-- > 0;) {
+                var message = request.messages[i];
+                if (message.role() == Role.user) {
+                    ConversationItem item = new ConversationItem();
+                    item.conversationId = request.conversation;
+                    item.role = message.role().toString();
+                    item.content = message.content();
+                    item.persist();
+                    break;
+                }
+            }
+        }
+
         SubmissionPublisher<String> publisher = new SubmissionPublisher<>();
-        executor.supplyAsync(() -> service.complete(request, publisher));
+        executor.supplyAsync(() -> {
+            var completions = service.complete(request, publisher);
+            // Save chat completion
+            for (var completion : completions) {
+                ConversationItem item = new ConversationItem();
+                item.conversationId = request.conversation;
+                item.role = Role.assistant.toString();
+                item.content = completion.content();
+                item.persist();
+            }
+            return completions;
+        });
         return Multi.createFrom().publisher(publisher);
     }
 }
