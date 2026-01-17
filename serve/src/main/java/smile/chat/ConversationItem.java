@@ -18,17 +18,19 @@ package smile.chat;
 
 import java.time.Instant;
 import jakarta.persistence.*;
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
-public class ConversationItem extends PanacheEntity {
+public class ConversationItem extends PanacheEntityBase {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
+    @Column(name = "conversation_id")
+    public Long conversationId;
+    @CreationTimestamp
+    @Column(name = "created_at")
+    public Instant createdAt;
     public String role;
     public String content;
-
-    @CreationTimestamp
-    public Instant createdAt;
-
-    @ManyToOne
-    public Conversation conversation;
 }
