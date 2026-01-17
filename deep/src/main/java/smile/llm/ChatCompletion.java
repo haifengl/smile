@@ -17,7 +17,7 @@
 package smile.llm;
 
 /**
- * Prompt completion prediction.
+ * Chat completion.
  * @param model the model used for the chat completion.
  * @param content the generated text completion.
  * @param promptTokens the list of prompt tokens.
@@ -25,6 +25,6 @@ package smile.llm;
  * @param reason the finish reason.
  * @param logprobs the optional list of log probabilities of generated tokens.
  */
-public record CompletionPrediction(String model, String content, int[] promptTokens, int[] completionTokens, FinishReason reason, float[] logprobs) {
+public record ChatCompletion(String model, String content, int[] promptTokens, int[] completionTokens, FinishReason reason, float[] logprobs) {
 
 }
