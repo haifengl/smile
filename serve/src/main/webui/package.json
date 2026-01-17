@@ -17,7 +17,9 @@
     "remark-gemoji": "^8.0.0",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
-    "sse.js": "^2.7.2"
+    "sse.js": "^2.7.2",
+    "@rjsf/core": "^6.2.4",
+    "@rjsf/validator-ajv8": "^6.2.4"
   },
   "devDependencies": {
     "@types/react": "^18.3.12",
