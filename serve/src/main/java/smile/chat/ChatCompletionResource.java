@@ -58,23 +58,26 @@ public class ChatCompletionResource {
     @RestStreamElementType(MediaType.TEXT_PLAIN) // Important for streaming item by item without buffering
     public Multi<String> complete(@Context HttpHeaders headers, CompletionRequest request) throws ServiceUnavailableException {
         if (!service.isAvailable()) throw new ServiceUnavailableException();
+        Conversation conversation = new Conversation();
+        // Must set context in the endpoint instead of supplyAsync.
+        // Otherwise, routingContext is undefined in the worker thread.
+        ConversationResource.setConversationContext(conversation, routingContext, headers);
 
         SubmissionPublisher<String> publisher = new SubmissionPublisher<>();
         executor.supplyAsync(() -> {
             var completions = service.complete(request, publisher);
-            saveConversation(routingContext, headers, request, completions);
+            saveConversation(conversation, request, completions);
             return completions;
         });
         return Multi.createFrom().publisher(publisher);
     }
 
     @Transactional
-    public void saveConversation(RoutingContext routingContext, HttpHeaders headers,
-                                 CompletionRequest request, ChatCompletion[] completions) {
+    public void saveConversation(Conversation conversation,
+                                 CompletionRequest request,
+                                 ChatCompletion[] completions) {
         Long conversationId = request.conversation;
         if (conversationId == null || conversationId <= 0) {
-            Conversation conversation = new Conversation();
-            ConversationResource.setConversationContext(conversation, routingContext, headers);
             conversation.persist();
             conversationId = conversation.id;
         }
