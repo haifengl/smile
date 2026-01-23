@@ -21,7 +21,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import jakarta.persistence.*;
+import jakarta.ws.rs.core.HttpHeaders;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.vertx.ext.web.RoutingContext;
 import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
@@ -44,6 +46,17 @@ public class Conversation extends PanacheEntityBase {
     @MapKeyColumn(name = "tag_key") // Column for the map key
     @Column(name = "tag_value") // Column for the map value
     public Map<String, String> metadata = new HashMap<>();
+
+    public void setContext(RoutingContext routingContext, HttpHeaders headers) {
+        userAgent = headers.getHeaderString("User-Agent");
+        clientIP = routingContext.request().remoteAddress().hostAddress();
+
+        // Check for common headers if behind a proxy
+        String forwardedFor = headers.getHeaderString("X-Forwarded-For");
+        if (forwardedFor != null && !forwardedFor.isBlank()) {
+            clientIP = forwardedFor.split(",")[0].trim();
+        }
+    }
 
     /**
      * Returns the list of conversations with given key-value tag.

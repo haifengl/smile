@@ -61,7 +61,7 @@ public class ChatCompletionResource {
         Conversation conversation = new Conversation();
         // Must set context in the endpoint instead of supplyAsync.
         // Otherwise, routingContext is undefined in the worker thread.
-        ConversationResource.setConversationContext(conversation, routingContext, headers);
+        conversation.setContext(routingContext, headers);
 
         SubmissionPublisher<String> publisher = new SubmissionPublisher<>();
         executor.supplyAsync(() -> {
