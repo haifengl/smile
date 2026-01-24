@@ -14,12 +14,13 @@
  * You should have received a copy of the GNU General Public License
  * along with Smile. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.studio.agent;
+package smile.agent;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import smile.llm.client.LLM;
 
 /**
  * The coding agent.
@@ -27,8 +28,20 @@ import java.util.function.Function;
  * @author Haifeng Li
  */
 public class Coder {
+    /**
+     * The instructions (developer prompt) for coding with SMILE.
+     */
+    private static final String developer = """
+            You are a highly skilled Java programming assistant.
+            You are a machine learning expert and can build highly
+            efficient model with latest SMILE library.
+            Your task is to complete code snippets, adhering to
+            the provided context and best practices. Ensure the
+            completed code is syntactically correct and logically
+            sound.""";
+
     /** The LLM service. */
-    final LLM llm;
+    private final LLM llm;
 
     /**
      * Constructor.
@@ -45,8 +58,14 @@ public class Coder {
      * @return a future of full Line completion.
      */
     public CompletableFuture<String> complete(String start, String context) {
-        var input = Prompt.completeCode(start, context);
-        return llm.complete(input);
+        String template = """
+            Complete the next line of Java code based on the provided context.
+            Returns the whole line of generated code, without explanations or markdown annotations.%n%n
+            Context:%n%s%n%n
+            Current line start: %s""";
+
+        var prompt = String.format(template, context, start);
+        return llm.complete(prompt);
     }
 
     /**
@@ -57,8 +76,14 @@ public class Coder {
      * @param handler the exception handler.
      */
     public void generate(String task, String context, Consumer<String> consumer, Function<Throwable, ? extends Void> handler) {
-        var input = Prompt.generateCode(task, context);
-        llm.complete(input, consumer, handler);
+        String template = """
+            Generate Java code based on the provided context and task.
+            Returns the generated code only, without explanations or markdown annotations.%n%n
+            Context:%n%s%n%n
+            Task:%n%s%n%n""";
+
+        var prompt = String.format(template, context, task);
+        llm.complete(prompt, consumer, handler);
     }
 
     /**
@@ -67,7 +92,7 @@ public class Coder {
      */
     public static Optional<Coder> getInstance() {
         var model = LLM.getInstance();
-        model.ifPresent(llm -> llm.context().setProperty("instructions", Prompt.smileDeveloper()));
+        model.ifPresent(llm -> llm.context().setProperty("instructions", developer));
         return model.map(Coder::new);
     }
 }

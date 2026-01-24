@@ -28,7 +28,7 @@ import com.formdev.flatlaf.util.SystemInfo;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jdesktop.swingx.JXTextField;
-import smile.studio.agent.Coder;
+import smile.agent.Coder;
 import smile.studio.kernel.PostRunNavigation;
 
 /**

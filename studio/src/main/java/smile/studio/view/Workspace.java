@@ -50,7 +50,7 @@ public class Workspace extends JSplitPane {
         project.setResizeWeight(0.15);
 
         setLeftComponent(project);
-        //setRightComponent(analyst);
+        setRightComponent(analyst);
         setResizeWeight(0.7);
     }
 
