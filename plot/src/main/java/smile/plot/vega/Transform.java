@@ -16,8 +16,8 @@
  */
 package smile.plot.vega;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * View-level data transformations such as filter and new field calculation.

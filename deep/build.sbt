@@ -10,7 +10,7 @@ Test / javaOptions ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "com.fasterxml.jackson.dataformat" % "jackson-dataformat-xml" % "2.20.1",
+  "tools.jackson.core" % "jackson-databind" % "3.0.4",
   "org.bytedeco" % "pytorch-platform" % "2.7.1-1.5.12",
   "org.bytedeco" % "cuda-platform"    % "12.9-9.10-1.5.12"
 )

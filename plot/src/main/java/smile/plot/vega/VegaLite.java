@@ -22,10 +22,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 import smile.util.Strings;
 
 /**
@@ -327,7 +327,7 @@ public class VegaLite {
      * @return the HTML of plot specification with Vega Embed.
      */
     public String html(String lang) {
-        String title = spec.has("title") ? spec.get("title").asText() : "Smile Plot";
+        String title = spec.has("title") ? spec.get("title").asString() : "Smile Plot";
         return String.format("""
                    <!DOCTYPE html>
                    <html lang=%s>

@@ -16,7 +16,7 @@
  */
 package smile.plot.vega;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * All view layout composition (facet, concat, and repeat) can have the

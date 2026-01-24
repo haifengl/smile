@@ -18,7 +18,7 @@ package smile.plot.vega;
 
 import java.util.List;
 import java.util.Map;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * The basic data model used by Vega-Lite is tabular data. Individual data sets
