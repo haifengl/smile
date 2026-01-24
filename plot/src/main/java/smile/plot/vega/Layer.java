@@ -16,7 +16,7 @@
  */
 package smile.plot.vega;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ArrayNode;
 
 /**
  * To superimpose one chart on top of another.

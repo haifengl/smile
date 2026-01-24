@@ -16,8 +16,8 @@
  */
 package smile.plot.vega;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * A facet is a trellis plot (or small multiple) of a series of similar

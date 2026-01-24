@@ -16,8 +16,8 @@
  */
 package smile.plot.vega;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * Single view specification, which describes a view that uses a single

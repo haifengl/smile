@@ -16,10 +16,9 @@
  */
 package smile.llm.llama;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.File;
 import java.io.IOException;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * LLaMA model hyperparameters.
