@@ -46,4 +46,3 @@ tasks.withType<JavaCompile> {
 tasks.withType<Javadoc> {
     enabled = false
 }
-
