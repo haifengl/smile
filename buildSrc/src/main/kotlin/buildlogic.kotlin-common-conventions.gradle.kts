@@ -23,7 +23,7 @@ tasks.withType<KotlinJvmCompile>().configureEach {
 // Configure existing Dokka task to output HTML
 dokka {
     pluginsConfiguration.html {
-        footerMessage.set("Copyright © 2010-2025 Haifeng Li. All rights reserved. Use is subject to license terms.")
+        footerMessage.set("Copyright © 2010-2026 Haifeng Li. All rights reserved. Use is subject to license terms.")
     }
 }
 

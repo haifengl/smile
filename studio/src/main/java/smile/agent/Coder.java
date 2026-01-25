@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
  *
- * Smile Shell is free software: you can redistribute it and/or modify
- * under the terms of the GNU General Public License as published by
+ * SMILE Studio is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * Smile Shell is distributed in the hope that it will be useful,
+ * SMILE Studio is distributed in the hope that it will be useful,
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
@@ -23,7 +23,7 @@ import java.util.function.Function;
 import smile.llm.client.LLM;
 
 /**
- * The coding agent.
+ * The coding assistant agent.
  *
  * @author Haifeng Li
  */
@@ -33,8 +33,6 @@ public class Coder {
      */
     private static final String developer = """
             You are a highly skilled Java programming assistant.
-            You are a machine learning expert and can build highly
-            efficient model with latest SMILE library.
             Your task is to complete code snippets, adhering to
             the provided context and best practices. Ensure the
             completed code is syntactically correct and logically
