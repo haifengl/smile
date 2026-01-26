@@ -228,7 +228,7 @@ Please read the [contributing.md](CONTRIBUTING.md) on how to build and test SMIL
   <tr>
     <td colspan="3">
       <figure>
-        <a href="/web/src/images/splom.png"><img src="/web/src/images/splom.png" alt="SPLOM"></a>
+        <a href="/website/src/images/splom.png"><img src="/website/src/images/splom.png" alt="SPLOM"></a>
         <figcaption style="text-align: center;"><h3>Scatterplot Matrix</h3></figcaption>
       </figure>
     </td>
@@ -236,19 +236,19 @@ Please read the [contributing.md](CONTRIBUTING.md) on how to build and test SMIL
   <tr>
     <td>
       <figure>
-        <a href="/web/src/images/pca.png"><img src="/web/src/images/pca.png" alt="Scatter"></a>
+        <a href="/website/src/images/pca.png"><img src="/website/src/images/pca.png" alt="Scatter"></a>
         <figcaption style="text-align: center;"><h3>Scatter Plot</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/web/src/images/heart.png"><img src="/web/src/images/heart.png" alt="Heart"></a>
+        <a href="/website/src/images/heart.png"><img src="/website/src/images/heart.png" alt="Heart"></a>
         <figcaption style="text-align: center;"><h3>Line Plot</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/web/src/images/surface.png"><img src="/web/src/images/surface.png" alt="Surface"></a>
+        <a href="/website/src/images/surface.png"><img src="/website/src/images/surface.png" alt="Surface"></a>
         <figcaption style="text-align: center;"><h3>Surface Plot</h3></figcaption>
       </figure>
     </td>
@@ -256,19 +256,19 @@ Please read the [contributing.md](CONTRIBUTING.md) on how to build and test SMIL
   <tr>
     <td>
       <figure>
-        <a href="/web/src/images/bar.png"><img src="/web/src/images/bar.png" alt="Scatter"></a>
+        <a href="/website/src/images/bar.png"><img src="/website/src/images/bar.png" alt="Scatter"></a>
         <figcaption style="text-align: center;"><h3>Bar Plot</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/web/src/images/box.png"><img src="/web/src/images/box.png" alt="Box Plot"></a>
+        <a href="/website/src/images/box.png"><img src="/website/src/images/box.png" alt="Box Plot"></a>
         <figcaption style="text-align: center;"><h3>Box Plot</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/web/src/images/histogram2d.png"><img src="/web/src/images/histogram2d.png" alt="Histogram"></a>
+        <a href="/website/src/images/histogram2d.png"><img src="/website/src/images/histogram2d.png" alt="Histogram"></a>
         <figcaption style="text-align: center;"><h3>Histogram Heatmap</h3></figcaption>
       </figure>
     </td>
@@ -276,19 +276,19 @@ Please read the [contributing.md](CONTRIBUTING.md) on how to build and test SMIL
   <tr>
     <td>
       <figure>
-        <a href="/web/src/images/rolling.png"><img src="/web/src/images/rolling.png" alt="Rolling"></a>
+        <a href="/website/src/images/rolling.png"><img src="/website/src/images/rolling.png" alt="Rolling"></a>
         <figcaption style="text-align: center;"><h3>Rolling Average</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/web/src/images/map.png"><img src="/web/src/images/map.png" alt="Map"></a>
+        <a href="/website/src/images/map.png"><img src="/website/src/images/map.png" alt="Map"></a>
         <figcaption style="text-align: center;"><h3>Geo Map</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/web/src/images/umap.png"><img src="/web/src/images/umap.png" alt="UMAP"></a>
+        <a href="/website/src/images/umap.png"><img src="/website/src/images/umap.png" alt="UMAP"></a>
         <figcaption style="text-align: center;"><h3>UMAP</h3></figcaption>
       </figure>
     </td>
@@ -296,19 +296,19 @@ Please read the [contributing.md](CONTRIBUTING.md) on how to build and test SMIL
   <tr>
     <td>
       <figure>
-        <a href="/web/src/images/text.png"><img src="/web/src/images/text.png" alt="Text"></a>
+        <a href="/website/src/images/text.png"><img src="/website/src/images/text.png" alt="Text"></a>
         <figcaption style="text-align: center;"><h3>Text Plot</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/web/src/images/contour.png"><img src="/web/src/images/contour.png" alt="Contour"></a>
+        <a href="/website/src/images/contour.png"><img src="/website/src/images/contour.png" alt="Contour"></a>
         <figcaption style="text-align: center;"><h3>Heatmap with Contour</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/web/src/images/hexmap.png"><img src="/web/src/images/hexmap.png" alt="Hexmap"></a>
+        <a href="/website/src/images/hexmap.png"><img src="/website/src/images/hexmap.png" alt="Hexmap"></a>
         <figcaption style="text-align: center;"><h3>Hexmap</h3></figcaption>
       </figure>
     </td>
@@ -316,19 +316,19 @@ Please read the [contributing.md](CONTRIBUTING.md) on how to build and test SMIL
   <tr>
     <td>
       <figure>
-        <a href="/web/src/images/isomap.png"><img src="/web/src/images/isomap.png" alt="IsoMap"></a>
+        <a href="/website/src/images/isomap.png"><img src="/website/src/images/isomap.png" alt="IsoMap"></a>
         <figcaption style="text-align: center;"><h3>IsoMap</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/web/src/images/umap.png"><img src="/web/src/images/lle.png" alt="LLE"></a>
+        <a href="/website/src/images/umap.png"><img src="/website/src/images/lle.png" alt="LLE"></a>
         <figcaption style="text-align: center;"><h3>LLE</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/web/src/gallery/smile-demo-kpca.png"><img src="/web/src/gallery/smile-demo-kpca-small.png" alt="Kernel PCA"></a>
+        <a href="/website/src/gallery/smile-demo-kpca.png"><img src="/website/src/gallery/smile-demo-kpca-small.png" alt="Kernel PCA"></a>
         <figcaption style="text-align: center;"><h3>Kernel PCA</h3></figcaption>
       </figure>
     </td>
@@ -336,19 +336,19 @@ Please read the [contributing.md](CONTRIBUTING.md) on how to build and test SMIL
   <tr>
     <td>
       <figure>
-        <a href="/web/src/gallery/smile-demo-ann.png"><img src="/web/src/gallery/smile-demo-ann-small.png" alt="Neural Network"></a>
+        <a href="/website/src/gallery/smile-demo-ann.png"><img src="/website/src/gallery/smile-demo-ann-small.png" alt="Neural Network"></a>
         <figcaption style="text-align: center;"><h3>Neural Network</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/web/src/gallery/smile-demo-svm.png"><img src="/web/src/gallery/smile-demo-svm-small.png" alt="SVM"></a>
+        <a href="/website/src/gallery/smile-demo-svm.png"><img src="/website/src/gallery/smile-demo-svm-small.png" alt="SVM"></a>
         <figcaption style="text-align: center;"><h3>SVM</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/web/src/gallery/smile-demo-agglomerative-clustering.png"><img src="/web/src/gallery/smile-demo-agglomerative-clustering-small.png" alt="Hierarchical Clustering"></a>
+        <a href="/website/src/gallery/smile-demo-agglomerative-clustering.png"><img src="/website/src/gallery/smile-demo-agglomerative-clustering-small.png" alt="Hierarchical Clustering"></a>
         <figcaption style="text-align: center;"><h3>Hierarchical Clustering</h3></figcaption>
       </figure>
     </td>
@@ -356,19 +356,19 @@ Please read the [contributing.md](CONTRIBUTING.md) on how to build and test SMIL
   <tr>
     <td>
       <figure>
-        <a href="/web/src/gallery/smile-demo-som.png"><img src="/web/src/gallery/smile-demo-som-small.png" alt="SOM"></a>
+        <a href="/website/src/gallery/smile-demo-som.png"><img src="/website/src/gallery/smile-demo-som-small.png" alt="SOM"></a>
         <figcaption style="text-align: center;"><h3>SOM</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/web/src/gallery/smile-demo-dbscan.png"><img src="/web/src/gallery/smile-demo-dbscan-small.png" alt="DBSCAN"></a>
+        <a href="/website/src/gallery/smile-demo-dbscan.png"><img src="/website/src/gallery/smile-demo-dbscan-small.png" alt="DBSCAN"></a>
         <figcaption style="text-align: center;"><h3>DBSCAN</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/web/src/gallery/smile-demo-neural-gas.png"><img src="/web/src/gallery/smile-demo-neural-gas-small.png" alt="Neural Gas"></a>
+        <a href="/website/src/gallery/smile-demo-neural-gas.png"><img src="/website/src/gallery/smile-demo-neural-gas-small.png" alt="Neural Gas"></a>
         <figcaption style="text-align: center;"><h3>Neural Gas</h3></figcaption>
       </figure>
     </td>
@@ -376,19 +376,19 @@ Please read the [contributing.md](CONTRIBUTING.md) on how to build and test SMIL
   <tr>
     <td>
       <figure>
-        <a href="/web/src/gallery/smile-demo-wavelet.png"><img src="/web/src/gallery/smile-demo-wavelet-small.png" alt="Wavelet"></a>
+        <a href="/website/src/gallery/smile-demo-wavelet.png"><img src="/website/src/gallery/smile-demo-wavelet-small.png" alt="Wavelet"></a>
         <figcaption style="text-align: center;"><h3>Wavelet</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/web/src/gallery/smile-demo-mixture.png"><img src="/web/src/gallery/smile-demo-mixture-small.png" alt="Mixture"></a>
+        <a href="/website/src/gallery/smile-demo-mixture.png"><img src="/website/src/gallery/smile-demo-mixture-small.png" alt="Mixture"></a>
         <figcaption style="text-align: center;"><h3>Exponential Family Mixture</h3></figcaption>
     </figure>
     </td>
       <td>
       <figure>
-        <a href="/web/src/images/teapot.png"><img src="/web/src/images/teapot.png" alt="Teapot"></a>
+        <a href="/website/src/images/teapot.png"><img src="/website/src/images/teapot.png" alt="Teapot"></a>
         <figcaption style="text-align: center;"><h3>Teapot Wireframe</h3></figcaption>
       </figure>
     </td>
@@ -396,7 +396,7 @@ Please read the [contributing.md](CONTRIBUTING.md) on how to build and test SMIL
   <tr>
     <td colspan="3">
       <figure>
-        <a href="/web/src/images/grid-interpolation2d.png"><img src="/web/src/images/grid-interpolation2d.png" alt="Interpolation"></a>
+        <a href="/website/src/images/grid-interpolation2d.png"><img src="/website/src/images/grid-interpolation2d.png" alt="Interpolation"></a>
         <figcaption style="text-align: center;"><h3>Grid Interpolation</h3></figcaption>
       </figure>
     </td>
