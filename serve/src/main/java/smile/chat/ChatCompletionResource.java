@@ -69,7 +69,9 @@ public class ChatCompletionResource {
             saveConversation(conversation, request, completions);
             return completions;
         });
-        return Multi.createFrom().publisher(publisher);
+        return Multi.createFrom()
+                .publisher(publisher)
+                .map(chunk -> " " + chunk); // in case client eats the space after 'data:'
     }
 
     @Transactional
