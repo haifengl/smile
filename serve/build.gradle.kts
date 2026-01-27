@@ -28,6 +28,7 @@ dependencies {
     implementation("io.quarkiverse.jdbc:quarkus-jdbc-sqlite:3.0.1")
     implementation("io.quarkiverse.quinoa:quarkus-quinoa:2.7.1")
     testImplementation("io.quarkus:quarkus-junit5")
+    testImplementation("io.rest-assured:rest-assured:6.0.0")
 }
 
 tasks.withType<Test> {
