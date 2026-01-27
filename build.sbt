@@ -192,7 +192,7 @@ lazy val spark = project.in(file("spark"))
   .dependsOn(core)
 
 lazy val kotlin = project.in(file("kotlin"))
-  .settings(commonSettings: _*)
+  .settings(javaSettings: _*)
   .enablePlugins(KotlinPlugin)
   .dependsOn(core, nlp)
 
