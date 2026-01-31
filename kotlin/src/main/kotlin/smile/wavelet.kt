@@ -30,7 +30,7 @@ package smile.wavelet
  *
  * '''Coiflet''' 6,12,18,24,30.
  *
- * Additionally "haar" is supported for Haar wavelet.
+ * Additionally, "haar" is supported for Haar wavelet.
  *
  * Besides, "d4", the simplest and most localized wavelet, uses a different centering method
  * from other Daubechies wavelet.

@@ -20,7 +20,7 @@ import java.util.function.Supplier
 import java.util.stream.Stream
 
 /**
- * Builds a FP-tree.
+ * Builds an FP-tree.
  * @param supplier the lambda to retrun a stream of item set database. Each item set
  *                 may have different length. The item identifiers have to be in [0, n),
  *                 where n is the number of items. Item set should NOT contain duplicated
