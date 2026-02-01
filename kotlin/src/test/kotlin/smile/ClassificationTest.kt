@@ -75,7 +75,7 @@ class ClassificationTest {
 
         val importance = model.importance()
         for (i in importance.indices) {
-            java.lang.System.out.format("%-15s %.4f%n", model.schema().names()[i], importance[i])
+            println(String.format("%-15s %.4f", model.schema().names()[i], importance[i]))
         }
 
         val error = Error.of(iris.y(), model.predict(iris.data))
@@ -94,7 +94,7 @@ class ClassificationTest {
 
         val importance = model.importance()
         for (i in importance.indices) {
-            println(String.format("%-15s %.4f%n", model.schema().names()[i], importance[i]))
+            println(String.format("%-15s %.4f", model.schema().names()[i], importance[i]))
         }
 
         val error = Error.of(iris.y(), model.predict(iris.data))
@@ -113,7 +113,7 @@ class ClassificationTest {
 
         val importance = model.importance()
         for (i in importance.indices) {
-            println(String.format("%-15s %.4f%n", model.schema().names()[i], importance[i]))
+            println(String.format("%-15s %.4f", model.schema().names()[i], importance[i]))
         }
 
         val error = Error.of(iris.y(), model.predict(iris.data))
@@ -132,7 +132,7 @@ class ClassificationTest {
 
         val importance = model.importance()
         for (i in importance.indices) {
-            println(String.format("%-15s %.4f%n", model.schema().names()[i], importance[i]))
+            println(String.format("%-15s %.4f", model.schema().names()[i], importance[i]))
         }
 
         val error = Error.of(iris.y(), model.predict(iris.data))
