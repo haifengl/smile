@@ -20,6 +20,10 @@ import scala.language.existentials
 import smile.json.*
 import org.specs2.mutable.*
 
+/**
+  *
+  * @author Haifeng Li
+  */
 class VegaSpec extends Specification {
 
   "VegaLite" should {

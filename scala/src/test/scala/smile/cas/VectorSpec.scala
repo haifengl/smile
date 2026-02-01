@@ -18,6 +18,10 @@ package smile.cas
 
 import org.specs2.mutable.*
 
+/**
+  *
+  * @author Haifeng Li
+  */
 class VectorSpec extends Specification {
 
   "Vector" should {
