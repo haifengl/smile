@@ -78,7 +78,8 @@ object read {
     }
 
     /** Reads a CSV file. */
-    fun csv(file: String, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', comment: Char? = null, schema: StructType? = null): DataFrame {
+    fun csv(file: String, delimiter: String = ",", header: Boolean = true, quote: Char = '"', escape: Char = '\\',
+            comment: Char? = null, schema: StructType? = null): DataFrame {
         var format = CSVFormat.Builder.create().setDelimiter(delimiter).setQuote(quote).setEscape(escape)
         if (header) format = format.setHeader().setSkipHeaderRecord(true)
         if (comment != null) format = format.setCommentMarker(comment)
@@ -86,7 +87,8 @@ object read {
     }
 
     /** Reads a CSV file. */
-    fun csv(file: Path, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', comment: Char? = null, schema: StructType? = null): DataFrame {
+    fun csv(file: Path, delimiter: String = ",", header: Boolean = true, quote: Char = '"', escape: Char = '\\',
+            comment: Char? = null, schema: StructType? = null): DataFrame {
         var format = CSVFormat.Builder.create().setDelimiter(delimiter).setQuote(quote).setEscape(escape)
         if (header) format = format.setHeader().setSkipHeaderRecord(true)
         if (comment != null) format = format.setCommentMarker(comment)
