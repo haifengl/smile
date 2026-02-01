@@ -79,7 +79,7 @@ class ReadTest {
     @Test
     fun testReadCsvZip() {
         println("csv zip")
-        val usps = read.csv(Paths.getTestData("usps/zip.train"), header = false, delimiter = ' ')
+        val usps = read.csv(Paths.getTestData("usps/zip.train"), header = false, delimiter = " ")
         println(usps)
         assertEquals(7291, usps.nrow())
         assertEquals(257, usps.ncol())
