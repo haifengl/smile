@@ -16,7 +16,6 @@
  */
 package smile.association
 
-import java.util.Arrays
 import java.util.function.Supplier
 import java.util.stream.Stream
 import org.junit.jupiter.api.*
@@ -91,7 +90,6 @@ class AssociationTest {
         assertEquals(3, rules.get(0).antecedent()[0])
         assertEquals(1, rules.get(0).consequent().size)
         assertEquals(2, rules.get(0).consequent()[0])
-
 
         assertEquals(0.3, rules.get(4).support(), 1E-2)
         assertEquals(0.6, rules.get(4).confidence(), 1E-2)
