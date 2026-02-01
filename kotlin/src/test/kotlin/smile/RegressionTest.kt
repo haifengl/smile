@@ -75,7 +75,7 @@ class RegressionTest {
 
         val importance = model.importance()
         for (i in importance.indices) {
-            java.lang.System.out.format("%-15s %.4f%n", model.schema().names()[i], importance[i])
+            println(String.format("%-15s %.4f", model.schema().names()[i], importance[i]))
         }
 
         val error = RMSE.of(longley.y(), model.predict(longley.data))
@@ -94,7 +94,7 @@ class RegressionTest {
 
         val importance = model.importance()
         for (i in importance.indices) {
-            println(String.format("%-15s %.4f%n", model.schema().names()[i], importance[i]))
+            println(String.format("%-15s %.4f", model.schema().names()[i], importance[i]))
         }
 
         val error = RMSE.of(longley.y(), model.predict(longley.data))
@@ -112,7 +112,7 @@ class RegressionTest {
 
         val importance = model.importance()
         for (i in importance.indices) {
-            println(String.format("%-15s %.4f%n", model.schema().names()[i], importance[i]))
+            println(String.format("%-15s %.4f", model.schema().names()[i], importance[i]))
         }
 
         val error = RMSE.of(longley.y(), model.predict(longley.data))
