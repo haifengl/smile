@@ -149,21 +149,25 @@ object read {
   }
 
   /** Reads a CSV file. */
-  def csv(file: String, delimiter: String = ",", header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType = null): DataFrame = {
+  def csv(file: String, delimiter: String = ",", header: Boolean = true, quote: Char = '"', escape: Char = '\\',
+          comment: Char = '\u0000', schema: StructType = null): DataFrame = {
     val format = CSVFormat.Builder.create()
       .setDelimiter(delimiter)
       .setQuote(quote)
       .setEscape(escape)
     if (header) format.setHeader().setSkipHeaderRecord(true)
+    if (comment != '\u0000') format.setCommentMarker(comment)
     Read.csv(file, format.get(), schema)
   }
 
   /** Reads a CSV file. */
-  def csv(file: Path, delimiter: String, header: Boolean, quote: Char, escape: Char, schema: StructType): DataFrame = {
+  def csv(file: Path, delimiter: String, header: Boolean, quote: Char, escape: Char,
+          comment: Char, schema: StructType): DataFrame = {
     val format = CSVFormat.Builder.create()
       .setDelimiter(delimiter)
       .setQuote(quote)
       .setEscape(escape)
+      .setCommentMarker(comment)
     if (header) format.setHeader().setSkipHeaderRecord(true)
     Read.csv(file, format.get(), schema)
   }
