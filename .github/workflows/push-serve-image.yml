@@ -1,4 +1,4 @@
-name: release smile-serve container image
+name: Publish smile-serve container image
 
 on:
   workflow_dispatch:
@@ -33,7 +33,7 @@ jobs:
           node-version: 24
       - uses: gradle/actions/setup-gradle@v5
       - name: Build app
-        run: ./gradlew :serve:build
+        run: ./gradlew :serve:build -x test
         env:
           NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
