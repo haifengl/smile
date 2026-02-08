@@ -55,8 +55,8 @@ publishing {
     }
     repositories {
         maven {
-            val nexusUsername = System.getenv("NEXUS_USERNAME") ?: project.findProperty("nexusUsername")
-            val nexusPassword = System.getenv("NEXUS_PASSWORD") ?: project.findProperty("nexusPassword")
+            val nexusUsername = System.getenv("NEXUS_USERNAME") ?: project.findProperty("nexusUsername") as String?
+            val nexusPassword = System.getenv("NEXUS_PASSWORD") ?: project.findProperty("nexusPassword") as String?
             val releasesRepoUrl = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
             val snapshotsRepoUrl = uri("https://central.sonatype.com/repositories/maven-snapshots")
             url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
