@@ -55,6 +55,8 @@ publishing {
     }
     repositories {
         maven {
+            val nexusUsername = System.getenv("NEXUS_USERNAME") ?: project.findProperty("nexusUsername")
+            val nexusPassword = System.getenv("NEXUS_PASSWORD") ?: project.findProperty("nexusPassword")
             val releasesRepoUrl = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
             val snapshotsRepoUrl = uri("https://central.sonatype.com/repositories/maven-snapshots")
             url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
@@ -62,9 +64,7 @@ publishing {
                 create<BasicAuthentication>("basic")
             }
             credentials {
-                val nexusUser: String by project
-                val nexusPassword: String by project
-                username = nexusUser
+                username = nexusUsername
                 password = nexusPassword
             }
         }
