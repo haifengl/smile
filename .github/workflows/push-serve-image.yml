@@ -32,7 +32,11 @@ jobs:
         with:
           node-version: 24
       - uses: gradle/actions/setup-gradle@v5
-      - run: ./gradlew :serve:build
+      - name: Build app
+        run: ./gradlew :serve:build
+        env:
+        NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+        NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3
