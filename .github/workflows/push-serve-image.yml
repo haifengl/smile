@@ -35,8 +35,8 @@ jobs:
       - name: Build app
         run: ./gradlew :serve:build
         env:
-        NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
-        NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3
