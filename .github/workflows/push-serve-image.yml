@@ -1,8 +1,10 @@
 name: release smile-serve container image
 
 on:
+  workflow_dispatch:
+  # No 'inputs:' section is needed
   release:
-    types: [created]
+    types: [published]
 
 env:
   REGISTRY: ghcr.io
