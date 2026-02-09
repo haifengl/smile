@@ -16,7 +16,6 @@
  */
 package smile.clustering
 
-import java.util.function.ToDoubleBiFunction
 import smile.clustering.linkage.*
 import smile.math.distance.Distance
 import smile.math.distance.EuclideanDistance
@@ -107,7 +106,7 @@ fun <T> hclust(data: Array<T>, distance: Distance<T>, method: String): Hierarchi
 
 /**
  * K-Modes clustering. K-Modes is the binary equivalent for K-Means.
- * The mean update for centroids is replace by the mode one which is
+ * The mean update for centroids is replaced by the mode one which is
  * a majority vote among element of each cluster.
  */
 fun kmodes(data: Array<IntArray>, k: Int, maxIter: Int = 100, runs: Int = 10): CentroidClustering<IntArray, IntArray> {
