@@ -823,7 +823,7 @@ fun rda(x: Array<DoubleArray>, y: IntArray, alpha: Double, priori: DoubleArray? 
  * @param x training samples.
  * @param y training labels in `[0, k)`, where k is the number of classes.
  * @param model the generation model of naive Bayes classifier.
- * @param priori the priori probability of each class. If null, equal probability is assume for each class.
+ * @param priori the priori probability of each class. If null, equal probability is assumed for each class.
  * @param sigma the prior count of add-k smoothing of evidence.
  */
 fun naiveBayes(x: Array<IntArray>, y: IntArray, model: DiscreteNaiveBayes.Model, priori: DoubleArray? = null, sigma: Double = 1.0): DiscreteNaiveBayes {

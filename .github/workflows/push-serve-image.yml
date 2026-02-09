@@ -1,8 +1,10 @@
-name: release smile-serve container image
+name: Publish smile-serve container image
 
 on:
+  workflow_dispatch:
+  # No 'inputs:' section is needed
   release:
-    types: [created]
+    types: [published]
 
 env:
   REGISTRY: ghcr.io
@@ -30,7 +32,11 @@ jobs:
         with:
           node-version: 24
       - uses: gradle/actions/setup-gradle@v5
-      - run: ./gradlew :serve:build
+      - name: Build app
+        run: ./gradlew :serve:build -x test
+        env:
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3
@@ -44,13 +50,20 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}
+          tags: |
+            # Apply semantic versioning tags (e.g., 1.2.3, 1.2, 1)
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            # Apply the 'latest' tag only on the default branch push
+            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image
         id: push
         uses: docker/build-push-action@v6
         with:
           context: ./serve
-          file: src/main/docker/Dockerfile.jvm
+          file: ./serve/src/main/docker/Dockerfile.jvm
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
