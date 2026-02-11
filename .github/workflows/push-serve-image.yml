@@ -2,11 +2,12 @@ name: Publish smile-serve container image
 
 on:
   workflow_dispatch:
-    version:
-      description: 'Custom version number (e.g., 5.2.3)'
-      required: true
-      type: string
-      default: '5.2.0'
+    inputs:
+      version:
+        description: 'Custom version number (e.g., 5.2.3)'
+        required: true
+        type: string
+        default: '5.2.0'
   release:
     types: [published]
 
