@@ -2,7 +2,12 @@ name: Publish smile-serve container image
 
 on:
   workflow_dispatch:
-  # No 'inputs:' section is needed
+    inputs:
+      version:
+        description: 'Custom version number (e.g., 5.2.3)'
+        required: true
+        type: string
+        default: '5.2.0'
   release:
     types: [published]
 
@@ -55,6 +60,7 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
+            type=raw,value=${{ github.event.inputs.version }}
             # Apply the 'latest' tag only on the default branch push
             type=raw,value=latest,enable={{is_default_branch}}
 

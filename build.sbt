@@ -37,16 +37,17 @@ lazy val commonSettings = Seq(
     "--add-opens=java.base/java.nio=ALL-UNNAMED",
     "--enable-native-access=ALL-UNNAMED"
   ),
-  Test / envVars ++= Map(
-    os match {
+  Test / envVars ++= {
+    val binDir = s"${(Test / baseDirectory).value}/studio/src/universal/bin"
+    Map(os match {
       case "windows" =>
-        "PATH" -> s"${(Test / baseDirectory).value}/studio/src/universal/bin;${System.getenv("PATH")}"
+        "PATH" -> s"$binDir;${System.getenv("PATH")}"
       case "mac" =>
-        "DYLD_LIBRARY_PATH" -> s"${(Test / baseDirectory).value}/studio/src/universal/bin:${System.getenv("DYLD_LIBRARY_PATH")}"
+        "DYLD_LIBRARY_PATH" -> s"$binDir:${System.getenv("DYLD_LIBRARY_PATH")}"
       case _ =>
-        "LD_LIBRARY_PATH" -> s"${(Test / baseDirectory).value}/studio/src/universal/bin:${System.getenv("LD_LIBRARY_PATH")}"
+        "LD_LIBRARY_PATH" -> s"$binDir:${System.getenv("LD_LIBRARY_PATH")}"
     }
-  ),
+  )},
 
   versionScheme := Some("early-semver"),
   publishTo := {
@@ -188,6 +189,7 @@ lazy val json = project.in(file("json"))
 
 lazy val scala = project.in(file("scala"))
   .settings(scalaSettings: _*)
+  .dependsOn(base % "provided->provided;compile->compile;test->test;runtime->runtime")
   .dependsOn(core, nlp, plot, json)
 
 lazy val spark = project.in(file("spark"))
@@ -198,6 +200,7 @@ lazy val spark = project.in(file("spark"))
 lazy val kotlin = project.in(file("kotlin"))
   .settings(javaSettings: _*)
   .enablePlugins(KotlinPlugin)
+  .dependsOn(base % "provided->provided;compile->compile;test->test;runtime->runtime")
   .dependsOn(core, nlp)
 
 lazy val studio = project.in(file("studio"))
