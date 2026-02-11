@@ -18,7 +18,7 @@ vision. The inference server is implemented in Java with Quarkus.
 To get started using the Docker image, please use the commands below.
 
 ```shell script
-docker run -it -v /path/to/model/folder:/model -p 8888:8080 ghcr.io/haifengl/smile-serve:master
+docker run -it -v /path/to/model/folder:/model -p 8888:8080 ghcr.io/haifengl/smile-serve:latest
 ```
 
 ## Running the inference server in dev mode
