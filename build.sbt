@@ -189,6 +189,7 @@ lazy val json = project.in(file("json"))
 
 lazy val scala = project.in(file("scala"))
   .settings(scalaSettings: _*)
+  .dependsOn(base % "provided->provided;compile->compile;test->test;runtime->runtime")
   .dependsOn(core, nlp, plot, json)
 
 lazy val spark = project.in(file("spark"))
@@ -199,6 +200,7 @@ lazy val spark = project.in(file("spark"))
 lazy val kotlin = project.in(file("kotlin"))
   .settings(javaSettings: _*)
   .enablePlugins(KotlinPlugin)
+  .dependsOn(base % "provided->provided;compile->compile;test->test;runtime->runtime")
   .dependsOn(core, nlp)
 
 lazy val studio = project.in(file("studio"))
