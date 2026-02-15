@@ -87,7 +87,8 @@ libraryDependencies ++= Seq(
   "com.formdev"       % "flatlaf"            % "3.7",
   "com.formdev"       % "flatlaf-fonts-jetbrains-mono" % "2.304",
   "org.apache.maven"  % "maven-resolver-provider" % "3.9.12",
-  "org.apache.maven.resolver" % "maven-resolver-supplier-mvn4" % "2.0.14"
+  "org.apache.maven.resolver" % "maven-resolver-supplier-mvn4" % "2.0.14",
+  "tools.jackson.dataformat"  % "jackson-dataformat-yaml" % "3.0.4"
 )
 
 libraryDependencies ++= {
