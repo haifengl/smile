@@ -30,7 +30,6 @@ import java.nio.file.Path;
  */
 public record Rule(String name,
                    String description,
-                   String scope,
                    String content) implements Memory {
     /**
      * Reads the rule from a file with UTF-8 charset.
@@ -44,7 +43,6 @@ public record Rule(String name,
         return new Rule(
                 fm.get("name"),
                 fm.get("description"),
-                fm.get("scope"),
                 md.content());
     }
 }

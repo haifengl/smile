@@ -52,10 +52,6 @@ public class Context {
      * User context: user preferences, history, etc.
      */
     private static final Context user = new Context(System.getProperty("user.dir") + "/.smile");
-    /**
-     * Project context: project-specific information, data, etc.
-     */
-    private Context project;
 
     /**
      * Top-level instructions that apply to all interactions, such as
@@ -63,7 +59,7 @@ public class Context {
      * critical pieces of information for guiding the agent's behavior
      * and should be prioritized in the context window.
      */
-    private Rule instructions;
+    private final Rule instructions;
     /**
      * Rules are mandatory, context-independent instructions that apply
      * to every interaction for consistency.
@@ -82,13 +78,30 @@ public class Context {
      */
     public Context(String path) {
         Path dir = Paths.get(path);
+        Rule rule = new Rule("SMILE.md", "blank instructions for failover", "");
+        try {
+            rule = Rule.from(dir.resolve("SMILE.md"));
+        } catch (IOException ex) {
+            logger.error("Error reading SMILE.md", ex);
+        }
+        instructions = rule;
+
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir.resolve("rules"), ".md")) {
-            instructions = Rule.from(dir.resolve("SMILE.md"));
             for (Path file : stream) {
                 rules.add(Rule.from(file));
             }
         } catch (IOException | DirectoryIteratorException ex) {
-            System.err.println("Error reading rules: " + ex.getMessage());
+            logger.error("Error reading rules", ex);
+        }
+
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir.resolve("skills"))) {
+            for (Path entry  : stream) {
+                if (Files.isDirectory(entry)) {
+                    rules.add(Rule.from(entry.resolve("SKILL.md")));
+                }
+            }
+        } catch (IOException | DirectoryIteratorException ex) {
+            logger.error("Error reading skills", ex);
         }
     }
 
