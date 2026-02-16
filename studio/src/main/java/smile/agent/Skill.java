@@ -28,8 +28,8 @@ import java.nio.file.Path;
  * @author Haifeng Li
  */
 public record Skill(String name,
-                   String description,
-                   String content) {
+                    String description,
+                    String content) implements Memory {
     /**
      * Reads the skill from a file with UTF-8 charset.
      * @param path the path to the file.

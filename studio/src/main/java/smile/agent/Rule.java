@@ -31,7 +31,7 @@ import java.nio.file.Path;
 public record Rule(String name,
                    String description,
                    String scope,
-                   String content) {
+                   String content) implements Memory {
     /**
      * Reads the rule from a file with UTF-8 charset.
      * @param path the path to the file.
