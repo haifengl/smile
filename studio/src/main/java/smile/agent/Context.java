@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Context is a critical but finite resource for AI agents.
@@ -79,10 +80,7 @@ public class Context {
     public Context(String path) {
         Path dir = Paths.get(path);
         Path smileMd = dir.resolve("SMILE.md");
-        Rule spec = new Rule("SMILE.md",
-                "blank instructions for failover",
-                "",
-                smileMd);
+        Rule spec = new Rule("", Map.of(), smileMd);
         try {
             spec = Rule.from(smileMd);
         } catch (IOException ex) {

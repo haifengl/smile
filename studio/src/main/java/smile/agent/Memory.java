@@ -31,14 +31,61 @@ import tools.jackson.dataformat.yaml.YAMLMapper;
  * context across interactions, we need to externalize memory. Long-term
  * memory is persistent and can be retrieved and updated over time.
  *
- * @param content the main content, which may be in structured format
- *                such as Markdown for readability and simplicity.
- * @param metadata the metadata of content as key-value pairs.
- * @param path the file path of the persistent memory.
- *
  * @author Haifeng Li
  */
-public record Memory(String content, Map<String, String> metadata, Path path) {
+public class Memory {
+    /**
+     * The main content, which may be in structured format
+     * such as Markdown for readability and simplicity.
+     */
+    final String content;
+    /**
+     * The metadata of memory as key-value pairs.
+     */
+    final Map<String, String> metadata;
+    /**
+     * The file path of the persistent memory.
+     */
+    final Path path;
+
+    /**
+     * Constructor.
+     *
+     * @param content the main content, which may be in structured format
+     *                such as Markdown for readability and simplicity.
+     * @param metadata the metadata of content as key-value pairs.
+     * @param path the file path of the persistent memory.
+     */
+    public Memory(String content, Map<String, String> metadata, Path path) {
+        this.content = content;
+        this.metadata = metadata;
+        this.path = path;
+    }
+
+    /**
+     * Returns the main content of the memory.
+     * @return the main content of the memory.
+     */
+    public String content() {
+        return content;
+    }
+
+    /**
+     * Returns the metadata of the memory as key-value pairs.
+     * @return the metadata of the memory as key-value pairs.
+     */
+    public Map<String, String> metadata() {
+        return metadata;
+    }
+
+    /**
+     * Returns the file path of the persistent memory.
+     * @return the file path of the persistent memory.
+     */
+    public Path path() {
+        return path;
+    }
+
     /**
      * Returns the name of the memory.
      * @return the name of the memory.

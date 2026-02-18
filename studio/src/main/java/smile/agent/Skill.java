@@ -18,6 +18,7 @@ package smile.agent;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Map;
 
 /**
  * Skills are modular, specialized, and reusable workflows
@@ -27,10 +28,19 @@ import java.nio.file.Path;
  *
  * @author Haifeng Li
  */
-public record Skill(String name,
-                    String description,
-                    String content,
-                    Path path) {
+public class Skill extends Memory {
+    /**
+     * Constructor.
+     *
+     * @param content the main content, which may be in structured format
+     *                such as Markdown for readability and simplicity.
+     * @param metadata the metadata of content as key-value pairs.
+     * @param path the file path of the persistent memory.
+     */
+    public Skill(String content, Map<String, String> metadata, Path path) {
+        super(content, metadata, path);
+    }
+
     /**
      * Reads the skill from a file with UTF-8 charset.
      * @param path the path to the file.
@@ -39,11 +49,6 @@ public record Skill(String name,
      */
     public static Skill from(Path path) throws IOException {
         Memory memory = Memory.from(path);
-        var metadata = memory.metadata();
-        return new Skill(
-                metadata.get("name"),
-                metadata.get("description"),
-                memory.content(),
-                path);
+        return new Skill(memory.content(), memory.metadata(), path);
     }
 }

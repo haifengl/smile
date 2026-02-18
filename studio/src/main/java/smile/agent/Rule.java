@@ -18,6 +18,7 @@ package smile.agent;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Map;
 
 /**
  * Rules are mandatory, context-independent instructions
@@ -28,10 +29,19 @@ import java.nio.file.Path;
  *
  * @author Haifeng Li
  */
-public record Rule(String name,
-                   String description,
-                   String content,
-                   Path path) {
+public class Rule extends Memory {
+    /**
+     * Constructor.
+     *
+     * @param content the main content, which may be in structured format
+     *                such as Markdown for readability and simplicity.
+     * @param metadata the metadata of content as key-value pairs.
+     * @param path the file path of the persistent memory.
+     */
+    public Rule(String content, Map<String, String> metadata, Path path) {
+        super(content, metadata, path);
+    }
+
     /**
      * Reads the rule from a file with UTF-8 charset.
      * @param path the path to the file.
@@ -40,11 +50,6 @@ public record Rule(String name,
      */
     public static Rule from(Path path) throws IOException {
         Memory memory = Memory.from(path);
-        var metadata = memory.metadata();
-        return new Rule(
-                metadata.get("name"),
-                metadata.get("description"),
-                memory.content(),
-                path);
+        return new Rule(memory.content(), memory.metadata(), path);
     }
 }
