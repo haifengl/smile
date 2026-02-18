@@ -29,7 +29,8 @@ import java.nio.file.Path;
  */
 public record Skill(String name,
                     String description,
-                    String content) implements Memory {
+                    String content,
+                    Path path) {
     /**
      * Reads the skill from a file with UTF-8 charset.
      * @param path the path to the file.
@@ -37,11 +38,12 @@ public record Skill(String name,
      * @throws IOException if an I/O error occurs reading from the file.
      */
     public static Skill from(Path path) throws IOException {
-        Markdown md = Markdown.from(path);
-        var fm = md.frontMatter();
+        Memory memory = Memory.from(path);
+        var metadata = memory.metadata();
         return new Skill(
-                fm.get("name"),
-                fm.get("description"),
-                md.content());
+                metadata.get("name"),
+                metadata.get("description"),
+                memory.content(),
+                path);
     }
 }

@@ -16,28 +16,122 @@
  */
 package smile.agent;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.type.TypeFactory;
+import tools.jackson.dataformat.yaml.YAMLMapper;
+
 /**
  * Long-term memory stores instructions, rules, and preferences
  * for agents to follow. LLMs are stateless functions. To maintain
  * context across interactions, we need to externalize memory. Long-term
  * memory is persistent and can be retrieved and updated over time.
  *
+ * @param content the main content, which may be in structured format
+ *                such as Markdown for readability and simplicity.
+ * @param metadata the metadata of content as key-value pairs.
+ * @param path the file path of the persistent memory.
+ *
  * @author Haifeng Li
  */
-public interface Memory {
+public record Memory(String content, Map<String, String> metadata, Path path) {
     /**
      * Returns the name of the memory.
      * @return the name of the memory.
      */
-    String name();
+    public String name() {
+        if (metadata != null) {
+            return metadata.get("name");
+        }
+        return null;
+    }
+
     /**
      * Returns the description of the memory.
      * @return the description of the memory.
      */
-    String description();
+    public String description() {
+        if (metadata != null) {
+            return metadata.get("description");
+        }
+        return null;
+    }
+
     /**
-     * Returns the content of the memory.
-     * @return the content of the memory.
+     * Reads the persistent memory from a file with UTF-8 charset.
+     * The file may have metadata placed at the top in YAML front
+     * matter, delimited by lines of at least three dashes (---).
+     * The main content follows the front matter.
+     * @param path the path to the file.
+     * @return the specification.
+     * @throws IOException if an I/O error occurs reading from the file.
      */
-    String content();
+    public static Memory from(Path path) throws IOException {
+        var lines = Files.readAllLines(path);
+        Map<String, String> metadata = null;
+
+        // detect YAML front matter
+        int i = 0;
+        String line = lines.getFirst();
+        // use at least three dashes
+        if (line.matches("[-]{3,}")) {
+            StringBuilder sb = new StringBuilder();
+            for (i = 1; i < lines.size(); i++) {
+                line = lines.get(i);
+                if (line.matches("[-]{3,}")) {
+                    break;
+                }
+                sb.append(line);
+                sb.append("\n");
+            }
+
+            ObjectMapper mapper = new YAMLMapper();
+            metadata = mapper.readValue(
+                    sb.toString(),
+                    TypeFactory.createDefaultInstance().constructMapType(HashMap.class, String.class, String.class)
+            );
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (i++; i < lines.size(); i++) {
+            sb.append(lines.get(i));
+            sb.append("\n");
+        }
+        String content = sb.toString();
+        final String delimiter = line;
+
+        return new Memory(content, metadata, path);
+    }
+
+    /**
+     * Saves the memory to the file path specified in the memory.
+     * @throws IOException if an I/O error occurs writing to the file.
+     */
+    public void save() throws IOException  {
+        writeTo(path);
+    }
+
+    /**
+     * Writes the memory to a file with UTF-8 charset.
+     * The metadata is stored at the top in YAML front matter,
+     * delimited by lines of at least three dashes (---).
+     * The main content follows the front matter.
+     * @param path the path to the file.
+     * @throws IOException if an I/O error occurs writing to the file.
+     */
+    public void writeTo(Path path) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        if (metadata != null && !metadata.isEmpty()) {
+            sb.append("---\n");
+            ObjectMapper mapper = new YAMLMapper();
+            sb.append(mapper.writeValueAsString(metadata));
+            sb.append("---\n");
+        }
+        sb.append(content);
+        Files.writeString(path, sb.toString());
+    }
 }

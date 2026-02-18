@@ -78,13 +78,17 @@ public class Context {
      */
     public Context(String path) {
         Path dir = Paths.get(path);
-        Rule rule = new Rule("SMILE.md", "blank instructions for failover", "");
+        Path smileMd = dir.resolve("SMILE.md");
+        Rule spec = new Rule("SMILE.md",
+                "blank instructions for failover",
+                "",
+                smileMd);
         try {
-            rule = Rule.from(dir.resolve("SMILE.md"));
+            spec = Rule.from(smileMd);
         } catch (IOException ex) {
             logger.error("Error reading SMILE.md", ex);
         }
-        instructions = rule;
+        instructions = spec;
 
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir.resolve("rules"), ".md")) {
             for (Path file : stream) {

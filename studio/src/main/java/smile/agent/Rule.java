@@ -30,7 +30,8 @@ import java.nio.file.Path;
  */
 public record Rule(String name,
                    String description,
-                   String content) implements Memory {
+                   String content,
+                   Path path) {
     /**
      * Reads the rule from a file with UTF-8 charset.
      * @param path the path to the file.
@@ -38,11 +39,12 @@ public record Rule(String name,
      * @throws IOException if an I/O error occurs reading from the file.
      */
     public static Rule from(Path path) throws IOException {
-        Markdown md = Markdown.from(path);
-        var fm = md.frontMatter();
+        Memory memory = Memory.from(path);
+        var metadata = memory.metadata();
         return new Rule(
-                fm.get("name"),
-                fm.get("description"),
-                md.content());
+                metadata.get("name"),
+                metadata.get("description"),
+                memory.content(),
+                path);
     }
 }
