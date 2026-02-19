@@ -36,10 +36,10 @@ class SmileClassifierSpec extends Specification with BeforeAll with AfterAll{
 
   "SmileClassifier" should {
     "have the same performances after saving and loading back the model" in {
-
+      val path = "file:///" + Paths.getTestData("libsvm/mushrooms.svm").toAbsolutePath()
       val data = spark.read
         .format("libsvm")
-        .load(Paths.getTestData("libsvm/mushrooms.svm").normalize().toString)
+        .load(path.replace("\\", "/"))
         .withColumn("label", col("label") - 1) // transform label from 1/2 to 0/1
       data.cache()
 
@@ -56,11 +56,11 @@ class SmileClassifierSpec extends Specification with BeforeAll with AfterAll{
       println(s"Evaluation result = $metric")
 
       val temp = Files.createTempFile("smile-test-", ".tmp")
-      val path = temp.normalize().toString
-      model.write.overwrite().save(path)
+      val modelPath = temp.normalize().toString
+      model.write.overwrite().save(modelPath)
       temp.toFile.deleteOnExit()
 
-      val loaded = SmileClassificationModel.load(path)
+      val loaded = SmileClassificationModel.load(modelPath)
       eval.evaluate(loaded.transform(data)) mustEqual eval.evaluate(model.transform(data))
     }
   }
