@@ -30,8 +30,11 @@ class SparkDataFrameSpec extends Specification with BeforeAll with AfterAll{
   var sparkMushrooms: DataFrame = _
 
   def beforeAll(): Unit = {
+    val path = "file:///" + Paths.getTestData("libsvm/mushrooms.svm").toAbsolutePath()
     spark = SparkSession.builder().master("local[*]").getOrCreate()
-    sparkMushrooms = spark.read.format("libsvm").load(Paths.getTestData("libsvm/mushrooms.svm").normalize().toString)
+    sparkMushrooms = spark.read
+      .format("libsvm")
+      .load(path.replace("\\", "/"))
   }
 
   "Spark DataFrame" should {

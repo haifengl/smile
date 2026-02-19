@@ -106,7 +106,7 @@ lazy val javaSettings = commonSettings ++ Seq(
   libraryDependencies ++= Seq(
     "org.slf4j" % "slf4j-api" % "2.0.17",
     "org.slf4j" % "slf4j-simple" % "2.0.17" % Test,
-    "org.junit.jupiter" % "junit-jupiter-engine" % "6.0.2" % Test,
+    "org.junit.jupiter" % "junit-jupiter-engine" % "6.0.3" % Test,
     "com.github.sbt.junit" % "jupiter-interface" % JupiterKeys.jupiterVersion.value % Test
   )
 )
@@ -163,7 +163,7 @@ lazy val root = project.in(file("."))
   .settings(
     JavaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(json, scala, spark, kotlin, studio)
   )
-  .aggregate(core, base, nlp, deep, plot, json, scala, kotlin, studio)
+  .aggregate(core, base, nlp, deep, plot, json, scala, spark, kotlin, studio)
 
 lazy val base = project.in(file("base"))
   .settings(javaSettings: _*)
@@ -194,6 +194,7 @@ lazy val scala = project.in(file("scala"))
 
 lazy val spark = project.in(file("spark"))
   .settings(scalaSettings: _*)
+  .settings(scalaVersion := scala213)
   .settings(publish / skip := true)
   .dependsOn(core)
 
