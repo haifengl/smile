@@ -48,8 +48,8 @@ public class OpenAI implements LLM {
     final OpenAIClientAsync client;
     /** The client for legacy APIs. */
     final OpenAIClientAsync legacy;
-    /** The context object. */
-    final Properties context = new Properties();
+    /** The LLM API call options. */
+    final Properties options = new Properties();
 
     /**
      * Constructor.
@@ -85,8 +85,8 @@ public class OpenAI implements LLM {
     }
 
     @Override
-    public Properties context() {
-        return context;
+    public Properties options() {
+        return options;
     }
 
     /**
@@ -98,7 +98,7 @@ public class OpenAI implements LLM {
         var params = ResponseCreateParams.builder()
                 .model(model())
                 .maxOutputTokens(maxOutputTokens(8192))
-                .instructions(context.getProperty("instructions"))
+                .instructions(options.getProperty(SYSTEM_PROMPT))
                 .input(input)
                 .build();
 
@@ -112,7 +112,7 @@ public class OpenAI implements LLM {
                 .n(1) // only 1 chat completion choice to generate
                 .temperature(0.2) // low temperature for more predictable, focused, and deterministic code
                 .stop("\n") // stop at the end of line
-                .addDeveloperMessage(context.getProperty("instructions"))
+                .addDeveloperMessage(options.getProperty(SYSTEM_PROMPT))
                 .addUserMessage(message)
                 .build();
         return legacy.chat().completions().create(params)
@@ -128,7 +128,7 @@ public class OpenAI implements LLM {
                 .n(1) // only 1 chat completion choice to generate
                 .temperature(0.2) // low temperature for more predictable, focused, and deterministic code
                 .maxCompletionTokens(maxOutputTokens(2048))
-                .addDeveloperMessage(context.getProperty("instructions"))
+                .addDeveloperMessage(options.getProperty(SYSTEM_PROMPT))
                 .addUserMessage(message)
                 .build();
         legacy.chat().completions().createStreaming(params)
@@ -145,6 +145,6 @@ public class OpenAI implements LLM {
      * @return the configured model.
      */
     String model() {
-        return context.getProperty("model", ChatModel.GPT_5_1_CODEX.toString());
+        return options.getProperty(MODEL, ChatModel.GPT_5_1_CODEX.toString());
     }
 }

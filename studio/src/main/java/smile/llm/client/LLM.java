@@ -29,11 +29,18 @@ import smile.studio.SmileStudio;
  * @author Haifeng Li
  */
 public interface LLM {
+    /** The property key for the model. */
+    String MODEL = "model";
+    /** The property key for the system prompt. */
+    String SYSTEM_PROMPT = "";
+    /** The property key for the upper bound of output tokens. */
+    String MAX_OUTPUT_TOKENS = "maxOutputTokens";
+
     /**
-     * Returns the associated context object.
-     * @return the associated context object.
+     * Returns the LLM API call options.
+     * @return the LLM API call options.
      */
-    Properties context();
+    Properties options();
 
     /**
      * Asynchronously completes a message.
@@ -62,7 +69,7 @@ public interface LLM {
             LLM llm = switch (service) {
                 case "OpenAI" -> {
                     var openai = new OpenAI();
-                    openai.context().setProperty("model", prefs.get("openaiModel", "gpt-5.1-codex"));
+                    openai.options().setProperty(MODEL, prefs.get("openaiModel", "gpt-5.1-codex"));
                     yield openai;
                 }
 
@@ -73,13 +80,13 @@ public interface LLM {
 
                 case "Anthropic" -> {
                     var anthropic = new Anthropic();
-                    anthropic.context().setProperty("model", prefs.get("anthropicModel", "claude-sonnet-4-5"));
+                    anthropic.options().setProperty(MODEL, prefs.get("anthropicModel", "claude-sonnet-4-5"));
                     yield anthropic;
                 }
 
                 case "GoogleGemini" -> {
                     var gemini = new GoogleGemini(prefs.get("googleGeminiApiKey", ""));
-                    gemini.context().setProperty("model", prefs.get("googleGeminiModel", "gemini-3-pro-preview"));
+                    gemini.options().setProperty(MODEL, prefs.get("googleGeminiModel", "gemini-3-pro-preview"));
                     yield gemini;
                 }
 
@@ -87,14 +94,14 @@ public interface LLM {
                     var vertex = new GoogleVertexAI(
                             prefs.get("googleVertexAIApiKey", ""),
                             prefs.get("googleVertexAIBaseUrl", ""));
-                    vertex.context().setProperty("model", prefs.get("googleVertexAIModel", "gemini-3-pro-preview"));
+                    vertex.options().setProperty(MODEL, prefs.get("googleVertexAIModel", "gemini-3-pro-preview"));
                     yield vertex;
                 }
 
                 default -> {
                     System.out.println("Unknown AI service: " + service);
                     var openai = new OpenAI();
-                    openai.context().setProperty("model", "gpt-5.1-codex");
+                    openai.options().setProperty(MODEL, "gpt-5.1-codex");
                     yield openai;
                 }
             };
@@ -116,7 +123,7 @@ public interface LLM {
      * @return the upper bound for the number of output tokens.
      */
     default int maxOutputTokens(int defaultValue) {
-        String maxOutputTokens = context().getProperty("maxOutputTokens", String.valueOf(defaultValue));
+        String maxOutputTokens = options().getProperty("maxOutputTokens", String.valueOf(defaultValue));
         try {
             return Integer.parseInt(maxOutputTokens);
         } catch (NumberFormatException ex) {

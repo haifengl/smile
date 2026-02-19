@@ -90,7 +90,7 @@ public class Coder {
      */
     public static Optional<Coder> getInstance() {
         var model = LLM.getInstance();
-        model.ifPresent(llm -> llm.context().setProperty("instructions", developer));
+        model.ifPresent(llm -> llm.options().setProperty(LLM.SYSTEM_PROMPT, developer));
         return model.map(Coder::new);
     }
 }

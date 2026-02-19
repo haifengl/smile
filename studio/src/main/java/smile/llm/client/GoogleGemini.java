@@ -35,8 +35,8 @@ public class GoogleGemini implements LLM {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GoogleGemini.class);
     /** Instance client will reuse connection and thread pool of singleton. */
     final Client client;
-    /** The context object. */
-    final Properties context = new Properties();
+    /** The LLM API call options. */
+    final Properties options = new Properties();
 
     /**
      * Constructor.
@@ -55,13 +55,13 @@ public class GoogleGemini implements LLM {
     }
 
     @Override
-    public Properties context() {
-        return context;
+    public Properties options() {
+        return options;
     }
 
     @Override
     public CompletableFuture<String> complete(String message) {
-        var instructions = Content.fromParts(Part.fromText(context.getProperty("instructions")));
+        var instructions = Content.fromParts(Part.fromText(options.getProperty(SYSTEM_PROMPT)));
         var config = GenerateContentConfig.builder()
                 .candidateCount(1)
                 .temperature(0.2f)
@@ -74,7 +74,7 @@ public class GoogleGemini implements LLM {
 
     @Override
     public void complete(String message, Consumer<String> consumer, Function<Throwable, ? extends Void> handler) {
-        var instructions = Content.fromParts(Part.fromText(context.getProperty("instructions")));
+        var instructions = Content.fromParts(Part.fromText(options.getProperty(SYSTEM_PROMPT)));
         var config = GenerateContentConfig.builder()
                 .candidateCount(1)
                 .temperature(0.2f)
@@ -98,6 +98,6 @@ public class GoogleGemini implements LLM {
      * @return the configured model.
      */
     String model() {
-        return context.getProperty("model", "gemini-3-pro-preview");
+        return options.getProperty(MODEL, "gemini-3-pro-preview");
     }
 }

@@ -48,8 +48,8 @@ public class Anthropic implements LLM {
     static final AnthropicClientAsync singleton = AnthropicOkHttpClientAsync.fromEnv();
     /** Instance client will reuse connection and thread pool of singleton. */
     final AnthropicClientAsync client;
-    /** The context object. */
-    final Properties context = new Properties();
+    /** The LLM API call options. */
+    final Properties options = new Properties();
 
     /**
      * Constructor.
@@ -75,8 +75,8 @@ public class Anthropic implements LLM {
     }
 
     @Override
-    public Properties context() {
-        return context;
+    public Properties options() {
+        return options;
     }
 
     @Override
@@ -85,7 +85,7 @@ public class Anthropic implements LLM {
                 .model(model())
                 .temperature(0.2) // low temperature for more predictable, focused, and deterministic code
                 .addStopSequence("\n") // stop at the end of line
-                .system(context.getProperty("instructions"))
+                .system(options.getProperty(SYSTEM_PROMPT))
                 .addUserMessage(message)
                 .build();
 
@@ -103,7 +103,7 @@ public class Anthropic implements LLM {
                 .model(model())
                 .temperature(0.2) // low temperature for more predictable, focused, and deterministic code
                 .maxTokens(maxOutputTokens(2048))
-                .system(context.getProperty("instructions"))
+                .system(options.getProperty(SYSTEM_PROMPT))
                 .addUserMessage(message)
                 .build();
 
@@ -123,6 +123,6 @@ public class Anthropic implements LLM {
      * @return the configured model.
      */
     String model() {
-        return context.getProperty("model", Model.CLAUDE_SONNET_4_5.toString());
+        return options.getProperty(MODEL, Model.CLAUDE_SONNET_4_5.toString());
     }
 }
