@@ -17,7 +17,9 @@
 package smile.agent;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -30,15 +32,24 @@ import java.util.Map;
  */
 public class Skill extends Memory {
     /**
+     * Executable scripts (fill_form.py, validate.jsh, test.java) that run
+     * via bash; scripts provide deterministic operations without consuming
+     * context.
+     */
+    private final List<Path> scripts;
+
+    /**
      * Constructor.
      *
      * @param content the main content, which may be in structured format
      *                such as Markdown for readability and simplicity.
      * @param metadata the metadata of content as key-value pairs.
+     * @param scripts the executable scripts that run via bash.
      * @param path the file path of the persistent memory.
      */
-    public Skill(String content, Map<String, String> metadata, Path path) {
+    public Skill(String content, Map<String, String> metadata, List<Path> scripts, Path path) {
         super(content, metadata, path);
+        this.scripts = scripts;
     }
 
     /**
@@ -48,7 +59,13 @@ public class Skill extends Memory {
      * @throws IOException if an I/O error occurs reading from the file.
      */
     public static Skill from(Path path) throws IOException {
-        Memory memory = Memory.from(path);
-        return new Skill(memory.content(), memory.metadata(), path);
+        Memory memory = Memory.from(path.resolve("SKILL.md"));
+        List<Path> scripts;
+        try (var stream = Files.list(path.resolve("scripts"))) {
+            scripts = stream
+                    .filter(f -> Files.isRegularFile(f) && Files.isExecutable(f))
+                    .toList();
+        }
+        return new Skill(memory.content(), memory.metadata(), scripts, path);
     }
 }

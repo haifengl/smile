@@ -18,7 +18,6 @@ package smile.studio.view;
 
 import javax.swing.*;
 import java.nio.file.Path;
-import smile.agent.Context;
 import smile.studio.kernel.JavaRunner;
 
 /**
@@ -35,8 +34,6 @@ public class Workspace extends JSplitPane {
     final Analyst analyst = new Analyst(runner);
     /** The editor of notebook. */
     final Notebook notebook;
-    /** The agent context of the workspace. */
-    Context context;
     /** The project pane consists of explorer and notebook. */
     final JSplitPane project = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 
@@ -47,9 +44,6 @@ public class Workspace extends JSplitPane {
     public Workspace(Path file) {
         super(JSplitPane.HORIZONTAL_SPLIT);
         notebook = new Notebook(file, runner, explorer::refresh);
-        if (file != null) {
-            context = new Context(file.getParent());
-        }
 
         project.setLeftComponent(explorer);
         project.setRightComponent(notebook);

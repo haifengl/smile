@@ -52,7 +52,7 @@ public class Context {
     /**
      * User context: user preferences, history, etc.
      */
-    private static final Context user = new Context(System.getProperty("user.dir") + "/.smile");
+    private static final Context user = new Context(System.getProperty("user.home") + "/.smile");
 
     /**
      * Top-level instructions that apply to all interactions, such as
