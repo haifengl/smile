@@ -21,7 +21,7 @@ import org.apache.spark.ml.evaluation.RegressionEvaluator
 import org.apache.spark.sql.SparkSession
 import org.specs2.mutable.*
 import org.specs2.specification.{AfterAll, BeforeAll}
-import smile.base.rbf.RBF
+import smile.model.rbf.RBF
 import smile.regression.RBFNetwork
 import smile.io.Paths
 
@@ -35,9 +35,10 @@ class SmileRegressionSpec extends Specification with BeforeAll with AfterAll{
 
   "SmileRegression" should {
     "have the same performances after saving and loading back the model" in {
+      val path = "file:///" + Paths.getTestData("libsvm/mushrooms.svm").toAbsolutePath()
       val data = spark.read
         .format("libsvm")
-        .load(Paths.getTestData("libsvm/mushrooms.svm").normalize().toString)
+        .load(path.replace("\\", "/"))
       data.cache()
 
       val trainer = (x: Array[Array[Double]], y: Array[Double]) => {
@@ -53,11 +54,11 @@ class SmileRegressionSpec extends Specification with BeforeAll with AfterAll{
       println(s"Evaluation result = $metric")
 
       val temp = Files.createTempFile("smile-test-", ".tmp")
-      val path = temp.normalize().toString
-      model.write.overwrite().save(path)
+      val modelPath = temp.normalize().toString
+      model.write.overwrite().save(modelPath)
       temp.toFile.deleteOnExit()
 
-      val loaded = SmileRegressionModel.load(path)
+      val loaded = SmileRegressionModel.load(modelPath)
       eval.evaluate(loaded.transform(data)) mustEqual eval.evaluate(model.transform(data))
     }
   }

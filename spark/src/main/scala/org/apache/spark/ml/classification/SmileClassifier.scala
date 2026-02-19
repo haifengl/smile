@@ -168,7 +168,7 @@ class SmileClassificationModel(override val uid: String,
     // The Spark API predictRaw function outputs a Vector with
     // "confidence scores" for each class.
     val posteriori = Array.ofDim[Double](numClasses)
-    if (model.soft()) {
+    if (model.isSoft()) {
       model.predict(features.toArray, posteriori)
     } else {
         // The "hard" confidence for the predicted class.
