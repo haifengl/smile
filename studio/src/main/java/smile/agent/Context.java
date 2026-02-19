@@ -78,8 +78,16 @@ public class Context {
      *             such as system instructions, skills, tools, etc.
      */
     public Context(String path) {
-        Path dir = Paths.get(path);
-        Path smileMd = dir.resolve("SMILE.md");
+        this(Paths.get(path));
+    }
+
+    /**
+     * Constructor.
+     * @param path the folder path of holistic context information
+     *             such as system instructions, skills, tools, etc.
+     */
+    public Context(Path path) {
+        Path smileMd = path.resolve("SMILE.md");
         Rule spec = new Rule("", Map.of(), smileMd);
         try {
             spec = Rule.from(smileMd);
@@ -88,7 +96,7 @@ public class Context {
         }
         instructions = spec;
 
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir.resolve("rules"), ".md")) {
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(path.resolve("rules"), ".md")) {
             for (Path file : stream) {
                 rules.add(Rule.from(file));
             }
@@ -96,7 +104,7 @@ public class Context {
             logger.error("Error reading rules", ex);
         }
 
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir.resolve("skills"))) {
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(path.resolve("skills"))) {
             for (Path entry  : stream) {
                 if (Files.isDirectory(entry)) {
                     rules.add(Rule.from(entry.resolve("SKILL.md")));

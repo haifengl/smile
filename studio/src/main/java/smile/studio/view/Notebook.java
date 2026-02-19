@@ -21,11 +21,11 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -55,7 +55,7 @@ public class Notebook extends JPanel implements DocumentListener {
     private final JavaRunner runner;
     private final Runnable postRunAction;
     private int runCount = 0;
-    private File file;
+    private Path file;
     private boolean saved = true;
 
     /**
@@ -64,7 +64,7 @@ public class Notebook extends JPanel implements DocumentListener {
      * @param runner Java code execution engine.
      * @param postRunAction the action to perform after running cells.
      */
-    public Notebook(File file, JavaRunner runner, Runnable postRunAction) {
+    public Notebook(Path file, JavaRunner runner, Runnable postRunAction) {
         super(new BorderLayout());
         this.file = file;
         this.runner = runner;
@@ -222,7 +222,7 @@ public class Notebook extends JPanel implements DocumentListener {
      *
      * @return the notebook file.
      */
-    public File getFile() {
+    public Path getFile() {
         return file;
     }
 
@@ -231,7 +231,7 @@ public class Notebook extends JPanel implements DocumentListener {
      *
      * @param file the notebook file.
      */
-    public void setFile(File file) {
+    public void setFile(Path file) {
         this.file = file;
     }
 
@@ -241,8 +241,8 @@ public class Notebook extends JPanel implements DocumentListener {
      * @param file the notebook file.
      * @throws IOException If an I/O error occurs.
      */
-    public void open(File file) throws IOException {
-        List<String> lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+    public void open(Path file) throws IOException {
+        List<String> lines = Files.readAllLines(file, StandardCharsets.UTF_8);
         List<String> snippets = parseCells(lines);
         cells.removeAll();
         for (String src : snippets) {
@@ -269,7 +269,7 @@ public class Notebook extends JPanel implements DocumentListener {
             Cell cell = getCell(i);
             lines.addAll(codeToLines(cell.editor().getText()));
         }
-        Files.write(file.toPath(), lines, StandardCharsets.UTF_8);
+        Files.write(file, lines, StandardCharsets.UTF_8);
         saved = true;
     }
 

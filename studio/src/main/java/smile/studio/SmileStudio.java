@@ -25,6 +25,7 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.Timer;
 import java.io.*;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.prefs.Preferences;
 
@@ -61,7 +62,7 @@ public class SmileStudio extends JFrame {
      * Constructor.
      * @param file the notebook file. If null, a new notebook will be created.
      */
-    public SmileStudio(File file) {
+    public SmileStudio(Path file) {
         super(bundle.getString("AppName"));
         setFrameIcon();
         setJMenuBar(menuBar);
@@ -435,8 +436,8 @@ public class SmileStudio extends JFrame {
      * Sets the frame title with notebook file name.
      * @param file the notebook file.
      */
-    private void setTitle(File file) {
-        setTitle(bundle.getString("AppName") + " - " + file.getName());
+    private void setTitle(Path file) {
+        setTitle(bundle.getString("AppName") + " - " + file.getFileName());
     }
 
     /**
@@ -446,7 +447,7 @@ public class SmileStudio extends JFrame {
         fileChooser.setDialogTitle(bundle.getString("OpenNotebook"));
         fileChooser.setFileFilter(new SystemFileChooser.FileNameExtensionFilter(bundle.getString("SmileFile"), fileNameExtensions));
         if (fileChooser.showOpenDialog(this) == SystemFileChooser.APPROVE_OPTION) {
-            File file = fileChooser.getSelectedFile();
+            Path file = fileChooser.getSelectedFile().toPath();
             createAndShowGUI(file);
         }
     }
@@ -465,8 +466,10 @@ public class SmileStudio extends JFrame {
                 if (!(name.endsWith(".java") || name.endsWith(".jsh"))) {
                     file = new File(file.getParentFile(), file.getName() + ".java");
                 }
-                workspace.notebook().setFile(file);
-                setTitle(file);
+
+                Path path = file.toPath();
+                workspace.notebook().setFile(path);
+                setTitle(path);
             } else {
                 return;
             }
@@ -486,7 +489,7 @@ public class SmileStudio extends JFrame {
      * invoked from the event dispatch thread.
      * @param file the notebook file.
      */
-    public static void createAndShowGUI(File file) {
+    public static void createAndShowGUI(Path file) {
         // Create and set up the window.
         SmileStudio studio = new SmileStudio(file);
         studio.setSize(new Dimension(1200, 800));
@@ -644,7 +647,7 @@ public class SmileStudio extends JFrame {
                         }
                     }
 
-                    createAndShowGUI(file);
+                    createAndShowGUI(file.toPath());
                 }
             }
         });
