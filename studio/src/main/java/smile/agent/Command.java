@@ -18,7 +18,7 @@ package smile.agent;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * Custom slash commands let users save and reuse their favorite or
@@ -39,7 +39,7 @@ public class Command extends Memory {
      * @param metadata the metadata of content as key-value pairs.
      * @param path the file path of the persistent memory.
      */
-    public Command(String content, Map<String, String> metadata, Path path) {
+    public Command(String content, ObjectNode metadata, Path path) {
         super(content, metadata, path);
     }
 

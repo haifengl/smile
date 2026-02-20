@@ -18,7 +18,12 @@ package smile.agent;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
+
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
+
 
 /**
  * Rules are mandatory, context-independent instructions
@@ -38,8 +43,38 @@ public class Rule extends Memory {
      * @param metadata the metadata of content as key-value pairs.
      * @param path the file path of the persistent memory.
      */
-    public Rule(String content, Map<String, String> metadata, Path path) {
+    public Rule(String content, ObjectNode metadata, Path path) {
         super(content, metadata, path);
+    }
+
+    /**
+     * Returns the file patterns where this rule applies.
+     * @return the file patterns.
+     */
+    public List<String> globs() {
+        var node = metadata.get("globs");
+        if (node == null) node = metadata.get("paths");
+        if (node == null) return List.of();
+
+        if (node instanceof ArrayNode array) {
+            List<String> list = new ArrayList<>();
+            for (var element : array) {
+                list.add(element.asString());
+            }
+            return list;
+        } else {
+            return List.of(node.asString());
+        }
+    }
+
+    /**
+     * Returns a boolean that, if true, forces the rule to be
+     * applied regardless of the context.
+     * @return the flag if enforcing the rule.
+     */
+    public boolean alwaysApply () {
+        var node = metadata.get("alwaysApply");
+        return node != null && node.asBoolean();
     }
 
     /**

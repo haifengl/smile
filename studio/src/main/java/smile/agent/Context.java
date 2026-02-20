@@ -88,7 +88,7 @@ public class Context {
      */
     public Context(Path path) {
         Path smileMd = path.resolve("SMILE.md");
-        Rule spec = new Rule("", Map.of(), smileMd);
+        Rule spec = new Rule("", null, smileMd);
         try {
             spec = Rule.from(smileMd);
         } catch (IOException ex) {

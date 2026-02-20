@@ -19,10 +19,8 @@ package smile.agent;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.type.TypeFactory;
+import tools.jackson.databind.node.ObjectNode;
 import tools.jackson.dataformat.yaml.YAMLMapper;
 
 /**
@@ -40,9 +38,9 @@ public class Memory {
      */
     final String content;
     /**
-     * The metadata of memory as key-value pairs.
+     * The metadata of memory.
      */
-    final Map<String, String> metadata;
+    final ObjectNode metadata;
     /**
      * The file path of the persistent memory.
      */
@@ -53,10 +51,10 @@ public class Memory {
      *
      * @param content the main content, which may be in structured format
      *                such as Markdown for readability and simplicity.
-     * @param metadata the metadata of content as key-value pairs.
+     * @param metadata the metadata of memory.
      * @param path the file path of the persistent memory.
      */
-    public Memory(String content, Map<String, String> metadata, Path path) {
+    public Memory(String content, ObjectNode metadata, Path path) {
         this.content = content;
         this.metadata = metadata;
         this.path = path;
@@ -74,7 +72,7 @@ public class Memory {
      * Returns the metadata of the memory as key-value pairs.
      * @return the metadata of the memory as key-value pairs.
      */
-    public Map<String, String> metadata() {
+    public ObjectNode metadata() {
         return metadata;
     }
 
@@ -91,10 +89,8 @@ public class Memory {
      * @return the name of the memory.
      */
     public String name() {
-        if (metadata != null) {
-            return metadata.get("name");
-        }
-        return null;
+        var node = metadata.get("name");
+        return node != null ? node.asString() : path.getFileName().toString();
     }
 
     /**
@@ -102,10 +98,8 @@ public class Memory {
      * @return the description of the memory.
      */
     public String description() {
-        if (metadata != null) {
-            return metadata.get("description");
-        }
-        return null;
+        var node = metadata.get("description");
+        return node != null ? node.asString() : "";
     }
 
     /**
@@ -119,7 +113,8 @@ public class Memory {
      */
     public static Memory from(Path path) throws IOException {
         var lines = Files.readAllLines(path);
-        Map<String, String> metadata = null;
+        ObjectMapper mapper = new YAMLMapper();
+        ObjectNode metadata = mapper.createObjectNode();
 
         // detect YAML front matter
         int i = 0;
@@ -136,11 +131,7 @@ public class Memory {
                 sb.append("\n");
             }
 
-            ObjectMapper mapper = new YAMLMapper();
-            metadata = mapper.readValue(
-                    sb.toString(),
-                    TypeFactory.createDefaultInstance().constructMapType(HashMap.class, String.class, String.class)
-            );
+            metadata = (ObjectNode) mapper.readTree(sb.toString());
         }
 
         StringBuilder sb = new StringBuilder();

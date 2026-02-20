@@ -19,8 +19,9 @@ package smile.agent;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * Skills are modular, specialized, and reusable workflows
@@ -32,11 +33,15 @@ import java.util.Map;
  */
 public class Skill extends Memory {
     /**
-     * Executable scripts (fill_form.py, validate.jsh, test.java) that run
-     * via bash; scripts provide deterministic operations without consuming
-     * context.
+     * Optional executable scripts (fill_form.py, validate.jsh, test.java)
+     * that run via bash; scripts provide deterministic operations without
+     * consuming context.
      */
-    private final List<Path> scripts;
+    private final Map<String, Path> scripts;
+    /**
+     * Optional reference documents.
+     */
+    private final Map<String, Path> references;
 
     /**
      * Constructor.
@@ -45,27 +50,67 @@ public class Skill extends Memory {
      *                such as Markdown for readability and simplicity.
      * @param metadata the metadata of content as key-value pairs.
      * @param scripts the executable scripts that run via bash.
-     * @param path the file path of the persistent memory.
+     * @param path the file path of the skill folder.
      */
-    public Skill(String content, Map<String, String> metadata, List<Path> scripts, Path path) {
+    public Skill(String content,
+                 ObjectNode metadata,
+                 Map<String, Path> scripts,
+                 Map<String, Path> references,
+                 Path path) {
         super(content, metadata, path);
         this.scripts = scripts;
+        this.references = references;
     }
 
     /**
-     * Reads the skill from a file with UTF-8 charset.
-     * @param path the path to the file.
+     * Returns the license of the skill.
+     * @return the license of the skill.
+     */
+    public String license() {
+        var node = metadata.get("license");
+        return node != null ? node.asString() : "";
+    }
+
+    /**
+     * Returns the compatibility of the skill.
+     * @return the compatibility of the skill.
+     */
+    public String compatibility() {
+        var node = metadata.get("compatibility");
+        return node != null ? node.asString() : "";
+    }
+
+    /**
+     * Reads the skill from a folder with UTF-8 charset.
+     * @param path the path to the skill folder.
      * @return the skill.
-     * @throws IOException if an I/O error occurs reading from the file.
+     * @throws IOException if an I/O error occurs reading from the files.
      */
     public static Skill from(Path path) throws IOException {
         Memory memory = Memory.from(path.resolve("SKILL.md"));
-        List<Path> scripts;
+        Map<String, Path> scripts;
         try (var stream = Files.list(path.resolve("scripts"))) {
-            scripts = stream
-                    .filter(f -> Files.isRegularFile(f) && Files.isExecutable(f))
-                    .toList();
+            scripts = stream.filter(Files::isRegularFile)
+                    .filter(Files::isExecutable)
+                    .collect(
+                            Collectors.toMap(
+                                    f -> f.getFileName().toString(),
+                                    f -> f
+                            )
+                    );
         }
-        return new Skill(memory.content(), memory.metadata(), scripts, path);
+
+        Map<String, Path> references;
+        try (var stream = Files.list(path.resolve("references"))) {
+            references = stream.filter(Files::isRegularFile)
+                    .filter(f -> f.getFileName().toString().endsWith(".md"))
+                    .collect(
+                        Collectors.toMap(
+                            f -> f.getFileName().toString(),
+                            f -> f
+                        )
+                    );
+        }
+        return new Skill(memory.content(), memory.metadata(), scripts, references, path);
     }
 }
