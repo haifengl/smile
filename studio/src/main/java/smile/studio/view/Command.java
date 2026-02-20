@@ -172,25 +172,36 @@ public class Command extends JPanel {
                 }
 
                 setEditable(false);
-                switch ((CommandType) commandType.getSelectedItem()) {
-                    case Raw -> runRaw();
-                    case Magic -> runMagic();
-                    case Shell, Python -> runShell();
-                    case Markdown -> {
-                        try {
-                            var html = markdown(editor.getText());
-                            remove(output);
-                            add(html, BorderLayout.SOUTH);
-                        } catch (Exception ex) {
-                            output.setText("ERROR rendering Markdown: " + ex.getMessage());
-                        }
+                var type = (CommandType) commandType.getSelectedItem();
+                if (type != null) {
+                    switch (type) {
+                        case Magic -> runMagic(analyst);
+                        case Shell, Python -> runShell();
+                        case Markdown -> renderMarkdown();
+                        case Instructions -> analyst.run(Command.this);
+                        case Raw -> runRaw();
                     }
-                    case Instructions -> analyst.run(Command.this);
                 }
 
                 analyst.addCommand();
             }
         });
+    }
+
+    /** Executes raw content. */
+    private void runRaw() {
+        // do nothing
+    }
+
+    /** Renders Markdown content. */
+    private void renderMarkdown() {
+        try {
+            var html = markdown(editor.getText());
+            remove(output);
+            add(html, BorderLayout.SOUTH);
+        } catch (Exception ex) {
+            output.setText("ERROR rendering Markdown: " + ex.getMessage());
+        }
     }
 
     /**
@@ -234,21 +245,14 @@ public class Command extends JPanel {
 
             @Override
             protected void done() {
-                SwingUtilities.invokeLater(() -> {
-                    output.flush();
-                });
+                SwingUtilities.invokeLater(output::flush);
             }
         };
         worker.execute();
     }
 
-    /** Executes raw content. */
-    private void runRaw() {
-        // do nothing
-    }
-
     /** Executes magic commands. */
-    private void runMagic() {
+    private void runMagic(Analyst analyst) {
         String instructions = editor.getText();
         String[] command = instructions.split("\\s+");
         switch (command[0]) {
@@ -257,13 +261,13 @@ public class Command extends JPanel {
             case "init" -> magicInit(instructions);
             case "load" -> magicLoad(command);
             case "analyze" -> magicAnalyze(command);
-            default -> output.setText("ERROR: unknown magic - " + command[0]);
+            default -> analyst.run(Command.this);
         }
     }
 
     private void magicHelp(String[] command) {
         output.setText("""
-                The following magic commands are available:
+                The following commands are available:
                 
                 /init the project with your requirements
                 /load data
@@ -372,8 +376,8 @@ public class Command extends JPanel {
     }
 
     /**
-     * Returns an XHTML panel to display markdown content.
-     * @param md the markdown content.
+     * Returns an XHTML panel to display Markdown content.
+     * @param md the Markdown content.
      * @return an XHTML panel to display markdown content.
      * @throws ParserConfigurationException if a DocumentBuilder cannot be created with default configuration.
      * @throws IOException if any IO errors occur.
