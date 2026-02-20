@@ -31,7 +31,7 @@ public class Workspace extends JSplitPane {
     /** The explorer of runtime information. */
     final Explorer explorer = new Explorer(runner);
     /** The pane of analyst agent. */
-    final Analyst analyst = new Analyst(runner);
+    final Analyst analyst;
     /** The editor of notebook. */
     final Notebook notebook;
     /** The project pane consists of explorer and notebook. */
@@ -44,6 +44,7 @@ public class Workspace extends JSplitPane {
     public Workspace(Path file) {
         super(JSplitPane.HORIZONTAL_SPLIT);
         notebook = new Notebook(file, runner, explorer::refresh);
+        analyst = new Analyst(file.getParent(), runner);
 
         project.setLeftComponent(explorer);
         project.setRightComponent(notebook);

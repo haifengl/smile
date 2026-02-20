@@ -19,6 +19,7 @@ package smile.studio.view;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.nio.file.Path;
 import smile.agent.Agent;
 import smile.plot.swing.Palette;
 import smile.shell.JShell;
@@ -36,15 +37,17 @@ public class Analyst extends JPanel {
     private final JPanel commands = new ScrollablePanel();
     /** JShell instance. */
     private final JavaRunner runner;
-    //private final Agent agent;
+    private final Agent agent;
 
     /**
      * Constructor.
+     * @param path the project folder.
      * @param runner Java code execution engine.
      */
-    public Analyst(JavaRunner runner) {
+    public Analyst(Path path, JavaRunner runner) {
         super(new BorderLayout());
         this.runner = runner;
+        this.agent = new Agent(path);
 
         setBorder(new EmptyBorder(0, 0, 0, 8));
         commands.setLayout(new BoxLayout(commands, BoxLayout.Y_AXIS));

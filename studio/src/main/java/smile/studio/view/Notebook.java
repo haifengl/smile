@@ -81,7 +81,7 @@ public class Notebook extends JPanel implements DocumentListener {
                 com.formdev.flatlaf.FlatLightLaf.setup();
             });""");
 
-        if (file != null) {
+        if (Files.exists(file)) {
             try {
                 open(file);
             } catch (IOException ex) {

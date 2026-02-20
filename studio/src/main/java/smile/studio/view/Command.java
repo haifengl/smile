@@ -52,10 +52,11 @@ import static smile.studio.model.CommandType.*;
 public class Command extends JPanel {
     private static final Color inputColor = new Color(220, 248, 198);
     private static final Color borderColor = Palette.web("#8dd4e8");
+    private static float fontSize = 1.25f;
     private final JPanel footer = new JPanel();
     private final JPanel inputPane = new JPanel(new BorderLayout());
     private final JLabel indicator = new JLabel(">", SwingConstants.CENTER);
-    private final JComboBox<CommandType> commandType = new JComboBox<>(new CommandType[] {Raw, Magic, Shell, Python, Markdown, Instructions});
+    private final JComboBox<CommandType> commandType = new JComboBox<>(CommandType.values());
     private final CodeEditor editor = new CodeEditor(1, 80, SyntaxConstants.SYNTAX_STYLE_NONE);
     private final OutputArea output = new OutputArea();
 
@@ -386,9 +387,11 @@ public class Command extends JPanel {
         String content = renderer.render(document);
 
         String html = """
-                        <html>
-                        <body style="width: 95%; height: auto; margin: 0 auto;">
-                        """ + content + "</body></html>";
+                      <html>
+                      <body style="width: 95%; height: auto; margin: 0 auto;">
+                      <div style="font-size:"""
+                      + String.format(" %.2fem;\">", fontSize)
+                      + content + "</div></body></html>";
         var factory = DocumentBuilderFactory.newInstance();
         var builder = factory.newDocumentBuilder();
         var doc = builder.parse(new InputSource(new StringReader(html)));
@@ -398,5 +401,13 @@ public class Command extends JPanel {
         browser.setOpaque(false);
         browser.setDocument(doc, null); // The second argument is for base URI, can be null
         return browser;
+    }
+
+    /**
+     * Adjusts the font size to render Markdown.
+     * @param delta the value by which the font size is adjusted.
+     */
+    public static void adjustFontSize(float delta) {
+        fontSize += delta;
     }
 }

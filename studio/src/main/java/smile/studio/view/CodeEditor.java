@@ -52,12 +52,14 @@ public class CodeEditor extends RSyntaxTextArea {
         actionMap.put("increase-font-size", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
                 Monospaced.adjustFontSize(1);
+                Command.adjustFontSize(0.1f);
             }
         });
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, InputEvent.CTRL_DOWN_MASK), "decrease-font-size");
         actionMap.put("decrease-font-size", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
                 Monospaced.adjustFontSize(-1);
+                Command.adjustFontSize(-0.1f);
             }
         });
     }
