@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Context is a critical but finite resource for AI agents.
@@ -92,26 +91,32 @@ public class Context {
         try {
             spec = Rule.from(smileMd);
         } catch (IOException ex) {
-            logger.error("Error reading SMILE.md", ex);
+            logger.debug("Error reading SMILE.md", ex);
         }
         instructions = spec;
 
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(path.resolve("rules"), ".md")) {
-            for (Path file : stream) {
-                rules.add(Rule.from(file));
+        var ruleDir = path.resolve("rules");
+        if (Files.exists(ruleDir)) {
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(ruleDir, ".md")) {
+                for (Path file : stream) {
+                    rules.add(Rule.from(file));
+                }
+            } catch (IOException | DirectoryIteratorException ex) {
+                logger.error("Error reading rules", ex);
             }
-        } catch (IOException | DirectoryIteratorException ex) {
-            logger.error("Error reading rules", ex);
         }
 
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(path.resolve("skills"))) {
-            for (Path entry  : stream) {
-                if (Files.isDirectory(entry)) {
-                    rules.add(Rule.from(entry.resolve("SKILL.md")));
+        var skillDir = path.resolve("skills");
+        if (Files.exists(ruleDir)) {
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(skillDir)) {
+                for (Path entry : stream) {
+                    if (Files.isDirectory(entry)) {
+                        rules.add(Rule.from(entry.resolve("SKILL.md")));
+                    }
                 }
+            } catch (IOException | DirectoryIteratorException ex) {
+                logger.error("Error reading skills", ex);
             }
-        } catch (IOException | DirectoryIteratorException ex) {
-            logger.error("Error reading skills", ex);
         }
     }
 
