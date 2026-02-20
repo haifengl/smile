@@ -26,6 +26,7 @@ import javax.swing.*;
 import javax.swing.Timer;
 import java.io.*;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.prefs.Preferences;
 
@@ -69,7 +70,8 @@ public class SmileStudio extends JFrame {
         initMenuAndToolBar();
 
         workspace = new Workspace(file);
-        if (file != null) setTitle(file);
+        setTitle(file);
+        fileChooser.setCurrentDirectory(file.getParent().toFile());
 
         JPanel contentPane = new JPanel(new BorderLayout());
         contentPane.add(toolBar, BorderLayout.NORTH);
@@ -619,7 +621,7 @@ public class SmileStudio extends JFrame {
 
             // Start the GUI
             if (args == null || args.length == 0) {
-                createAndShowGUI(null);
+                createAndShowGUI(Paths.get(System.getProperty("user.dir"), "Untitled.java"));
             } else {
                 for (int i = 0; i < args.length; i++) {
                     File file = new File(args[i]);

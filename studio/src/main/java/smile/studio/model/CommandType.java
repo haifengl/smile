@@ -27,8 +27,8 @@ public enum CommandType {
      */
     Raw("Raw", ""),
     /**
-     * Magic commands are special commands that extend the capabilities
-     * of Jupyter Notebooks beyond standard Python syntax.
+     * Magic commands are special commands initiated by typing a forward
+     * slash (/), that allow users to quickly execute actions.
      */
     Magic("Magic", "/"),
     /**
