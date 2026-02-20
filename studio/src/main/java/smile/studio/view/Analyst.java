@@ -24,7 +24,7 @@ import smile.agent.Agent;
 import smile.plot.swing.Palette;
 import smile.shell.JShell;
 import smile.studio.kernel.JavaRunner;
-import smile.studio.model.CommandType;
+import smile.studio.model.IntentType;
 import smile.swing.ScrollablePanel;
 
 /**
@@ -34,7 +34,7 @@ import smile.swing.ScrollablePanel;
  */
 public class Analyst extends JPanel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Analyst.class);
-    private final JPanel commands = new ScrollablePanel();
+    private final JPanel intents = new ScrollablePanel();
     /** JShell instance. */
     private final JavaRunner runner;
     private final Agent agent;
@@ -50,22 +50,22 @@ public class Analyst extends JPanel {
         this.agent = new Agent(path);
 
         setBorder(new EmptyBorder(0, 0, 0, 8));
-        commands.setLayout(new BoxLayout(commands, BoxLayout.Y_AXIS));
+        intents.setLayout(new BoxLayout(intents, BoxLayout.Y_AXIS));
 
-        JScrollPane scrollPane = new JScrollPane(commands);
+        JScrollPane scrollPane = new JScrollPane(intents);
         scrollPane.getVerticalScrollBar().setUnitIncrement(18);
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         add(scrollPane, BorderLayout.CENTER);
 
-        commands.add(welcome());
-        commands.add(new Command(this));
-        commands.add(Box.createVerticalGlue());
+        intents.add(welcome());
+        intents.add(new Intent(this));
+        intents.add(Box.createVerticalGlue());
 
         Monospaced.addListener((e) ->
                 SwingUtilities.invokeLater(() -> {
                     Font font = (Font) e.getNewValue();
-                    for (int i = 0; i < commands.getComponentCount(); i++) {
-                        if (commands.getComponent(i) instanceof Command cmd) {
+                    for (int i = 0; i < intents.getComponentCount(); i++) {
+                        if (intents.getComponent(i) instanceof Intent cmd) {
                             cmd.indicator().setFont(font);
                             cmd.editor().setFont(font);
                             cmd.output().setFont(font);
@@ -76,9 +76,9 @@ public class Analyst extends JPanel {
     }
 
     /** Returns the welcome banner. */
-    private Command welcome() {
-        Command welcome = new Command(this);
-        welcome.setCommandType(CommandType.Raw);
+    private Intent welcome() {
+        Intent welcome = new Intent(this);
+        welcome.setIntentType(IntentType.Raw);
         welcome.setEditable(false);
         welcome.setInputForeground(Palette.DARK_GRAY);
         welcome.editor().setText(JShell.logo.replaceAll("(?m)^\\s{3}", "") + """
@@ -103,7 +103,7 @@ public class Analyst extends JPanel {
     Tips for getting started:
     1. Run /init to create a SMILE.md file with instructions for agent.
     2. Be as specific as you would with another data scientist for the best result.
-    3. Use magic and shell commands to help with data analysis, git, etc.
+    3. Use slash and shell commands to help with data analysis, git, etc.
     4. Data visualization can be feed to AI agents for interpretation and advices.
     5. Python and Markdown are supported too.
     6. AI can make mistakes. Always review agent's responses.""");
@@ -111,19 +111,19 @@ public class Analyst extends JPanel {
     }
 
     /**
-     * Executes command in natural language.
-     * @param command the commands to execute.
+     * Executes intent in natural language.
+     * @param intent the instructions to execute.
      */
-    public void run(Command command) {
-        if (command.getCommandType() == CommandType.Instructions) {
-            command.output().setText(command.editor().getText());
+    public void run(Intent intent) {
+        if (intent.getIntentType() == IntentType.Instructions) {
+            intent.output().setText(intent.editor().getText());
         }
     }
 
-    /** Append a new command box. */
-    public void addCommand() {
-        Command command = new Command(this);
-        commands.add(command, commands.getComponentCount() - 1);
-        SwingUtilities.invokeLater(() -> command.editor().requestFocusInWindow());
+    /** Append a new intent box. */
+    public void addIntent() {
+        Intent intent = new Intent(this);
+        intents.add(intent, intents.getComponentCount() - 1);
+        SwingUtilities.invokeLater(() -> intent.editor().requestFocusInWindow());
     }
 }

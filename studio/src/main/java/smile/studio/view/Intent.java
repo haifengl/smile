@@ -40,23 +40,23 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import smile.plot.swing.Palette;
 import smile.studio.kernel.ShellRunner;
-import smile.studio.model.CommandType;
-import static smile.studio.model.CommandType.*;
+import smile.studio.model.IntentType;
+import static smile.studio.model.IntentType.*;
 
 /**
- * A command is a multiline text input field, and its contents can be executed
+ * An intent is a multiline text input field, and its contents can be executed
  * by a variety of engines including LLM agents.
  *
  * @author Haifeng Li
  */
-public class Command extends JPanel {
+public class Intent extends JPanel {
     private static final Color inputColor = new Color(220, 248, 198);
     private static final Color borderColor = Palette.web("#8dd4e8");
     private static float fontSize = 1.25f;
     private final JPanel footer = new JPanel();
     private final JPanel inputPane = new JPanel(new BorderLayout());
     private final JLabel indicator = new JLabel(">", SwingConstants.CENTER);
-    private final JComboBox<CommandType> commandType = new JComboBox<>(CommandType.values());
+    private final JComboBox<IntentType> intentTypeComboBox = new JComboBox<>(IntentType.values());
     private final CodeEditor editor = new CodeEditor(1, 80, SyntaxConstants.SYNTAX_STYLE_NONE);
     private final OutputArea output = new OutputArea();
 
@@ -64,7 +64,7 @@ public class Command extends JPanel {
      * Constructor.
      * @param analyst the parent analyst component.
      */
-    public Command(Analyst analyst) {
+    public Intent(Analyst analyst) {
         super(new BorderLayout(5, 5));
         setBorder(new EmptyBorder(8,8,8,8));
 
@@ -101,7 +101,7 @@ public class Command extends JPanel {
         footer.setLayout(new BoxLayout(footer, BoxLayout.X_AXIS));
         footer.setOpaque(false);
         footer.add(Box.createHorizontalStrut(indicator.getPreferredSize().width));
-        footer.add(commandType);
+        footer.add(intentTypeComboBox);
 
         inputPane.setBackground(inputColor);
         inputPane.setBorder(createRoundBorder());
@@ -111,21 +111,21 @@ public class Command extends JPanel {
     }
 
     private void initCommandType() {
-        commandType.setSelectedItem(Instructions);
-        commandType.setBorder(BorderFactory.createEmptyBorder());
-        commandType.setBackground(inputColor);
-        commandType.setForeground(Color.DARK_GRAY);
-        if (commandType.getComponentCount() > 0 && commandType.getComponent(0) instanceof AbstractButton button) {
+        intentTypeComboBox.setSelectedItem(Instructions);
+        intentTypeComboBox.setBorder(BorderFactory.createEmptyBorder());
+        intentTypeComboBox.setBackground(inputColor);
+        intentTypeComboBox.setForeground(Color.DARK_GRAY);
+        if (intentTypeComboBox.getComponentCount() > 0 && intentTypeComboBox.getComponent(0) instanceof AbstractButton button) {
             button.setVisible(false);
         }
-        commandType.addItemListener(e -> {
+        intentTypeComboBox.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
-                var command = (CommandType) e.getItem();
-                indicator.setText(command.legend());
-                indicator.setToolTipText(command.toString());
+                var intentType = (IntentType) e.getItem();
+                indicator.setText(intentType.legend());
+                indicator.setToolTipText(intentType.toString());
                 editor.requestFocusInWindow();
 
-                switch (command) {
+                switch (intentType) {
                     case Shell -> {
                         if (SystemInfo.isWindows) {
                             editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_WINDOWS_BATCH);
@@ -157,33 +157,34 @@ public class Command extends JPanel {
                     char ch = editor.getText(0, 1).charAt(0);
                     switch (editor.getText(0, 1).charAt(0)) {
                         case '/' -> {
-                            commandType.setSelectedItem(Magic);
+                            intentTypeComboBox.setSelectedItem(Command);
                             editor.replaceRange("", 0, 1);
                         }
                         case '%' -> {
-                            commandType.setSelectedItem(Shell);
+                            intentTypeComboBox.setSelectedItem(Shell);
                             editor.replaceRange("", 0, 1);
 
                         }
-                        case '#' -> commandType.setSelectedItem(Markdown);
+                        case '#' -> intentTypeComboBox.setSelectedItem(Markdown);
                     }
                 } catch (BadLocationException ex) {
                     // ignore the exception
                 }
 
                 setEditable(false);
-                var type = (CommandType) commandType.getSelectedItem();
-                if (type != null) {
-                    switch (type) {
-                        case Magic -> runMagic(analyst);
+                var intentType = (IntentType) intentTypeComboBox.getSelectedItem();
+                if (intentType != null) {
+                    switch (intentType) {
+                        case Command -> runCommand(analyst);
                         case Shell, Python -> runShell();
                         case Markdown -> renderMarkdown();
-                        case Instructions -> analyst.run(Command.this);
+                        case Instructions -> analyst.run(Intent.this);
                         case Raw -> runRaw();
                     }
                 }
 
-                analyst.addCommand();
+                // Append a new intent box for the next instructions
+                analyst.addIntent();
             }
         });
     }
@@ -209,7 +210,7 @@ public class Command extends JPanel {
      */
     private void runShell() {
         List<String> command = new ArrayList<>();
-        switch (getCommandType()) {
+        switch (getIntentType()) {
             case Python -> {
                 command.add("python");
                 command.add("-c");
@@ -225,7 +226,7 @@ public class Command extends JPanel {
                 }
                 command.add(editor.getText());
             }
-            case Magic -> {
+            case Command -> {
                 var smile = System.getProperty("smile.home", ".") + "/bin/smile";
                 if (SystemInfo.isWindows) smile += ".bat";
                 command.add(smile);
@@ -251,8 +252,8 @@ public class Command extends JPanel {
         worker.execute();
     }
 
-    /** Executes magic commands. */
-    private void runMagic(Analyst analyst) {
+    /** Executes slash commands. */
+    private void runCommand(Analyst analyst) {
         String instructions = editor.getText();
         String[] command = instructions.split("\\s+");
         switch (command[0]) {
@@ -261,7 +262,7 @@ public class Command extends JPanel {
             case "init" -> magicInit(instructions);
             case "load" -> magicLoad(command);
             case "analyze" -> magicAnalyze(command);
-            default -> analyst.run(Command.this);
+            default -> analyst.run(Intent.this);
         }
     }
 
@@ -294,17 +295,17 @@ public class Command extends JPanel {
      * @param editable the editable flag.
      */
     public void setEditable(boolean editable) {
-        commandType.setEnabled(editable);
+        intentTypeComboBox.setEnabled(editable);
         editor.setEditable(editable);
         if (editable) {
             editor.setBackground(inputColor);
             inputPane.setBackground(inputColor);
-            commandType.setBackground(inputColor);
+            intentTypeComboBox.setBackground(inputColor);
 
         } else {
             editor.setBackground(getBackground());
             inputPane.setBackground(getBackground());
-            footer.remove(commandType);
+            footer.remove(intentTypeComboBox);
         }
     }
 
@@ -327,19 +328,19 @@ public class Command extends JPanel {
     }
 
     /**
-     * Returns the command type.
-     * @return the command type.
+     * Returns the intent type.
+     * @return the intent type.
      */
-    public CommandType getCommandType() {
-        return (CommandType) commandType.getSelectedItem();
+    public IntentType getIntentType() {
+        return (IntentType) intentTypeComboBox.getSelectedItem();
     }
 
     /**
-     * Sets the command type.
-     * @param type the command type.
+     * Sets the intent type.
+     * @param type the intent type.
      */
-    public void setCommandType(CommandType type) {
-        commandType.setSelectedItem(type);
+    public void setIntentType(IntentType type) {
+        intentTypeComboBox.setSelectedItem(type);
     }
 
     /**
@@ -351,16 +352,16 @@ public class Command extends JPanel {
     }
 
     /**
-     * Returns the command editor.
-     * @return the command editor.
+     * Returns the intent editor.
+     * @return the intent editor.
      */
     public CodeEditor editor() {
         return editor;
     }
 
     /**
-     * Returns the command output.
-     * @return the command output.
+     * Returns the intent execution output.
+     * @return the intent execution output.
      */
     public OutputArea output() {
         return output;
