@@ -20,9 +20,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.BadLocationException;
@@ -39,7 +36,6 @@ import org.xhtmlrenderer.simple.XHTMLPanel;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import smile.plot.swing.Palette;
-import smile.studio.kernel.ShellRunner;
 import smile.studio.model.IntentType;
 import static smile.studio.model.IntentType.*;
 
@@ -134,11 +130,11 @@ public class Intent extends JPanel {
                         }
                     }
                     case Python ->
-                            editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_PYTHON);
+                        editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_PYTHON);
                     case Markdown ->
-                            editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_MARKDOWN);
+                        editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_MARKDOWN);
                     default ->
-                            editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);
+                        editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);
                 }
             }
         });
@@ -163,7 +159,10 @@ public class Intent extends JPanel {
                         case '%' -> {
                             intentTypeComboBox.setSelectedItem(Shell);
                             editor.replaceRange("", 0, 1);
-
+                        }
+                        case '!' -> {
+                            intentTypeComboBox.setSelectedItem(Python);
+                            editor.replaceRange("", 0, 1);
                         }
                         case '#' -> intentTypeComboBox.setSelectedItem(Markdown);
                     }
@@ -175,11 +174,9 @@ public class Intent extends JPanel {
                 var intentType = (IntentType) intentTypeComboBox.getSelectedItem();
                 if (intentType != null) {
                     switch (intentType) {
-                        case Command -> runCommand(analyst);
-                        case Shell, Python -> runShell();
-                        case Markdown -> renderMarkdown();
-                        case Instructions -> analyst.run(Intent.this);
                         case Raw -> runRaw();
+                        case Markdown -> renderMarkdown();
+                        default -> analyst.run(intentType, editor.getText(), output);
                     }
                 }
 
@@ -203,91 +200,6 @@ public class Intent extends JPanel {
         } catch (Exception ex) {
             output.setText("ERROR rendering Markdown: " + ex.getMessage());
         }
-    }
-
-    /**
-     * Executes shell commands.
-     */
-    private void runShell() {
-        List<String> command = new ArrayList<>();
-        switch (getIntentType()) {
-            case Python -> {
-                command.add("python");
-                command.add("-c");
-                command.add(editor.getText());
-            }
-            case Shell -> {
-                if (SystemInfo.isWindows) {
-                    command.add("cmd.exe");
-                    command.add("/c");
-                } else {
-                    command.add("bash");
-                    command.add("-c");
-                }
-                command.add(editor.getText());
-            }
-            case Command -> {
-                var smile = System.getProperty("smile.home", ".") + "/bin/smile";
-                if (SystemInfo.isWindows) smile += ".bat";
-                command.add(smile);
-                command.addAll(Arrays.asList(editor.getText().split("\\s+")));
-            }
-        }
-
-        SwingWorker<Void, Void> worker = new SwingWorker<>() {
-            @Override
-            protected Void doInBackground() {
-                var shell = new ShellRunner();
-                shell.setOutputArea(output);
-                int ret = shell.exec(command);
-                if (ret != 0) output.appendLine("\nCommand failed with error code " + ret);
-                return null;
-            }
-
-            @Override
-            protected void done() {
-                SwingUtilities.invokeLater(output::flush);
-            }
-        };
-        worker.execute();
-    }
-
-    /** Executes slash commands. */
-    private void runCommand(Analyst analyst) {
-        String instructions = editor.getText();
-        String[] command = instructions.split("\\s+");
-        switch (command[0]) {
-            case "help" -> magicHelp(command);
-            case "train", "predict", "serve" -> runShell();
-            case "init" -> magicInit(instructions);
-            case "load" -> magicLoad(command);
-            case "analyze" -> magicAnalyze(command);
-            default -> analyst.run(Intent.this);
-        }
-    }
-
-    private void magicHelp(String[] command) {
-        output.setText("""
-                The following commands are available:
-                
-                /init the project with your requirements
-                /load data
-                /analyze for exploratory data analysis
-                /train to build a model
-                /predict to run batch inference
-                /serve to start an inference service""");
-    }
-
-    private void magicInit(String instructions) {
-
-    }
-
-    private void magicLoad(String[] command) {
-
-    }
-
-    private void magicAnalyze(String[] command) {
-
     }
 
     /**

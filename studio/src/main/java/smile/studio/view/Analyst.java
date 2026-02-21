@@ -20,10 +20,15 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.nio.file.Path;
+import java.util.*;
+import java.util.List;
+
+import com.formdev.flatlaf.util.SystemInfo;
 import smile.agent.Agent;
 import smile.plot.swing.Palette;
 import smile.shell.JShell;
 import smile.studio.kernel.JavaRunner;
+import smile.studio.kernel.ShellRunner;
 import smile.studio.model.IntentType;
 import smile.swing.ScrollablePanel;
 
@@ -34,6 +39,7 @@ import smile.swing.ScrollablePanel;
  */
 public class Analyst extends JPanel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Analyst.class);
+    private static final ResourceBundle bundle = ResourceBundle.getBundle(Analyst.class.getName(), Locale.getDefault());
     private final JPanel intents = new ScrollablePanel();
     /** JShell instance. */
     private final JavaRunner runner;
@@ -75,6 +81,28 @@ public class Analyst extends JPanel {
         );
     }
 
+    /** Append a new intent box. */
+    public void addIntent() {
+        Intent intent = new Intent(this);
+        intents.add(intent, intents.getComponentCount() - 1);
+        SwingUtilities.invokeLater(() -> intent.editor().requestFocusInWindow());
+    }
+
+    /**
+     * Executes an intent.
+     * @param intentType the type of the intent.
+     * @param instructions the instructions to execute.
+     * @param output the output area to display the results.
+     */
+    public void run(IntentType intentType, String instructions, OutputArea output) {
+        switch (intentType) {
+            case Command -> runCommand(instructions, output);
+            case Shell, Python -> runShell(intentType, instructions, output);
+            case Instructions -> chat(instructions, output);
+            default -> logger.debug("Ignore intent type: {}", intentType);
+        }
+    }
+
     /** Returns the welcome banner. */
     private Intent welcome() {
         Intent welcome = new Intent(this);
@@ -82,48 +110,126 @@ public class Analyst extends JPanel {
         welcome.setEditable(false);
         welcome.setInputForeground(Palette.DARK_GRAY);
         welcome.editor().setText(JShell.logo.replaceAll("(?m)^\\s{3}", "") + """
-    =====================================================================
-    Welcome to Smile Analyst!
-    
-    /help for help, /init for initializing your project
-    cwd:\s""" + System.getProperty("user.dir"));
+        =====================================================================
+        Welcome to Smile Analyst!
+        
+        /help for help, /init for initializing your project
+        cwd:\s""" + System.getProperty("user.dir"));
+
         welcome.output().setText("""
-    As a state-of-the-art machine learning engineering agent,
-    Smile Analyst can help you with:
-    
-    🤖 Automatic end-to-end ML/AI solutions based on your requirements.
-    🔍 Best practices and state-of-the-art methods with web search.
-    🏅 Targeted code block refinement by ablation study.
-    🤝 Improved solution using iterative ensemble strategy.
-    💡 High-quality code completion and generation.
-    📊 Advanced interactive data visualization.
-    📂 Process data from CSV, ARFF, JSON, Avro, Parquet, Iceberg, to SQL.
-    🌐 Built-in inference server.
-    
-    Tips for getting started:
-    1. Run /init to create a SMILE.md file with instructions for agent.
-    2. Be as specific as you would with another data scientist for the best result.
-    3. Use slash and shell commands to help with data analysis, git, etc.
-    4. Data visualization can be feed to AI agents for interpretation and advices.
-    5. Python and Markdown are supported too.
-    6. AI can make mistakes. Always review agent's responses.""");
+        As a state-of-the-art machine learning engineering agent,
+        Smile Analyst can help you with:
+        
+        🤖 Automatic end-to-end ML/AI solutions based on your requirements.
+        🔍 Best practices and state-of-the-art methods with web search.
+        🏅 Targeted code block refinement by ablation study.
+        🤝 Improved solution using iterative ensemble strategy.
+        💡 High-quality code completion and generation.
+        📊 Advanced interactive data visualization.
+        📂 Process data from CSV, ARFF, JSON, Avro, Parquet, Iceberg, to SQL.
+        🌐 Built-in inference server.
+        
+        Tips for getting started:
+        1. Ctrl + ENTER to execute your intents.
+        2. Run /init to create a SMILE.md file with instructions for agent.
+        3. Be as specific as you would with another data scientist for the best result.
+        4. Data visualization can be feed to AI agents for interpretation and advices.
+        5. Create custom slash commands for reusable prompts or workflows.
+        6. Run Shell commands starting with a percentage sign (%).
+        7. Run Python expressions starting with an exclamation mark (!).
+        8. AI can make mistakes. Always review agent's responses.""");
         return welcome;
     }
 
     /**
-     * Executes intent in natural language.
-     * @param intent the instructions to execute.
+     * Executes shell commands.
      */
-    public void run(Intent intent) {
-        if (intent.getIntentType() == IntentType.Instructions) {
-            intent.output().setText(intent.editor().getText());
+    private void runShell(IntentType intentType, String instructions, OutputArea output) {
+        List<String> command = new ArrayList<>();
+        switch (intentType) {
+            case Python -> {
+                command.add("python");
+                command.add("-c");
+                command.add(instructions);
+            }
+            case Shell -> {
+                if (SystemInfo.isWindows) {
+                    command.add("cmd.exe");
+                    command.add("/c");
+                } else {
+                    command.add("bash");
+                    command.add("-c");
+                }
+                command.add(instructions);
+            }
+            case Command -> {
+                var smile = System.getProperty("smile.home", ".") + "/bin/smile";
+                if (SystemInfo.isWindows) smile += ".bat";
+                command.add(smile);
+                command.addAll(Arrays.asList(instructions.split("\\s+")));
+            }
+            default -> {
+                logger.debug("Invalid intent type: {}", intentType);
+                return;
+            }
+        }
+
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Void doInBackground() {
+                var shell = new ShellRunner();
+                shell.setOutputArea(output);
+                int ret = shell.exec(command);
+                if (ret != 0) output.appendLine("\nCommand failed with error code " + ret);
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                SwingUtilities.invokeLater(output::flush);
+            }
+        };
+        worker.execute();
+    }
+
+    /** Executes slash commands. */
+    private void runCommand(String instructions, OutputArea output) {
+        String[] command = instructions.split("\\s+");
+        switch (command[0]) {
+            case "help" -> help(command, output);
+            case "train", "predict", "serve" -> runShell(IntentType.Command, instructions, output);
+            case "init" -> init(instructions);
+            case "load" -> load(command);
+            case "analyze" -> analyze(command);
+            default -> System.out.println(instructions);//.run(Intent.this);
         }
     }
 
-    /** Append a new intent box. */
-    public void addIntent() {
-        Intent intent = new Intent(this);
-        intents.add(intent, intents.getComponentCount() - 1);
-        SwingUtilities.invokeLater(() -> intent.editor().requestFocusInWindow());
+    private void help(String[] command, OutputArea output) {
+        output.setText("""
+                The following commands are available:
+                
+                /init the project with your requirements
+                /load data
+                /analyze for exploratory data analysis
+                /train to build a model
+                /predict to run batch inference
+                /serve to start an inference service""");
+    }
+
+    private void init(String instructions) {
+
+    }
+
+    private void load(String[] command) {
+
+    }
+
+    private void analyze(String[] command) {
+
+    }
+
+    private void chat(String prompt, OutputArea output) {
+        output.setText(bundle.getString("NoAIServiceError"));
     }
 }
