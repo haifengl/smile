@@ -45,15 +45,6 @@ import java.util.List;
 public class Context {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Context.class);
     /**
-     * Global context: system instructions, skills, tools, etc.
-     */
-    private static final Context global = new Context(System.getProperty("smile.home") + "/agent");
-    /**
-     * User context: user preferences, history, etc.
-     */
-    private static final Context user = new Context(System.getProperty("user.home") + "/.smile");
-
-    /**
      * Top-level instructions that apply to all interactions, such as
      * system instructions, global rules, etc. These are the most
      * critical pieces of information for guiding the agent's behavior
@@ -118,22 +109,6 @@ public class Context {
                 logger.error("Error reading skills", ex);
             }
         }
-    }
-
-    /**
-     * Returns the global context.
-     * @return the global context.
-     */
-    public static Context global() {
-        return global;
-    }
-
-    /**
-     * Returns the user context.
-     * @return the user context.
-     */
-    public static Context user() {
-        return user;
     }
 
     /**

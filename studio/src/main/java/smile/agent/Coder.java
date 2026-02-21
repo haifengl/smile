@@ -16,7 +16,6 @@
  */
 package smile.agent;
 
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -88,9 +87,9 @@ public class Coder {
      * Returns a coder agent instance.
      * @return a coder agent instance.
      */
-    public static Optional<Coder> getInstance() {
+    public static Coder getInstance() {
         var model = LLM.getInstance();
         model.ifPresent(llm -> llm.options().setProperty(LLM.SYSTEM_PROMPT, developer));
-        return model.map(Coder::new);
+        return model.map(Coder::new).orElse(null);
     }
 }

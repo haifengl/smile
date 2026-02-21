@@ -16,9 +16,12 @@
  */
 package smile.agent;
 
-import smile.llm.client.LLM;
-
 import java.nio.file.Path;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import smile.llm.client.LLM;
 
 /**
  * An LLM agent is an advanced AI system using an LLM as its brain
@@ -31,8 +34,35 @@ import java.nio.file.Path;
 public class Agent {
     /** The LLM service. */
     private final LLM llm;
-    /** The agent context. */
+    /** Global context for system instructions, skills, tools, etc. */
+    private final Context global;
+    /** User context for user preferences, history, etc. */
+    private final Context user;
+    /** The project-specific context. */
     private final Context context;
+
+    /**
+     * Constructor.
+     * @param llm the LLM service.
+     * @param context the project-specific context.
+     * @param user the user context for user preferences, history, etc.
+     * @param global the global context for system instructions, skills, tools, etc.
+     */
+    public Agent(LLM llm, Context context, Context user, Context global) {
+        this.llm = llm;
+        this.context = context;
+        this.user = user;
+        this.global = global;
+    }
+
+    /**
+     * Constructor.
+     * @param llm the LLM service.
+     * @param context the project-specific context.
+     */
+    public Agent(LLM llm, Context context) {
+        this(llm, context, null, null);
+    }
 
     /**
      * Constructor.
@@ -40,7 +70,56 @@ public class Agent {
      * @param path the directory path for agent context.
      */
     public Agent(LLM llm, Path path) {
-        this.llm = llm;
-        context = new Context(path);
+        this(llm, new Context(path));
+    }
+
+    /**
+     * Returns the system prompt.
+     * @return the system prompt.
+     */
+    public String system() {
+        String prompt = context.instructions().content();
+        if (user != null) {
+            prompt = user.instructions().content() + "\n\n" + prompt;
+        }
+        if (global != null) {
+            prompt = global.instructions().content() + "\n\n" + prompt;
+        }
+        return prompt;
+    }
+
+    /**
+     * Returns the rules from the agent context.
+     * @return the rules.
+     */
+    public List<Rule> rules() {
+        return context.rules();
+    }
+
+    /**
+     * Returns the skills from the agent context.
+     * @return the skills.
+     */
+    public List<Skill> skills() {
+        return context.skills();
+    }
+
+    /**
+     * Asynchronously response.
+     * @param prompt the user prompt of task.
+     * @return a future of full Line completion.
+     */
+    public CompletableFuture<String> response(String prompt) {
+        return llm.complete(prompt);
+    }
+
+    /**
+     * Asynchronously response in a streaming way.
+     * @param prompt the user prompt of task.
+     * @param consumer the consumer of completion chunks.
+     * @param handler the exception handler.
+     */
+    public void stream(String prompt, Consumer<String> consumer, Function<Throwable, ? extends Void> handler) {
+        llm.complete(prompt, consumer, handler);
     }
 }

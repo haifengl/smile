@@ -1,8 +1,6 @@
 ---
-name: system-policy
-description: |
-  Organization-wide instructions such as Company coding standards,
-  security policies, compliance requirements, etc.
+name: analyst
+description: Organization-wide instructions.
 ---
 ## AI Role and Persona
 You are an advanced data analyst and data scientist.

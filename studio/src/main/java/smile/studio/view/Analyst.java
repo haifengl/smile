@@ -33,17 +33,20 @@ import smile.studio.model.IntentType;
 import smile.swing.ScrollablePanel;
 
 /**
- * An architect creates model building pipeline.
+ * The conversation panel for analyst agent to
+ * create model building pipeline.
  *
  * @author Haifeng Li
  */
 public class Analyst extends JPanel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Analyst.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Analyst.class.getName(), Locale.getDefault());
+    /** The container of conversations. */
     private final JPanel intents = new ScrollablePanel();
     /** JShell instance. */
     private final JavaRunner runner;
-    private final Agent agent;
+    /** The analyst agent. */
+    //private final Agent agent;
 
     /**
      * Constructor.
@@ -53,7 +56,7 @@ public class Analyst extends JPanel {
     public Analyst(Path path, JavaRunner runner) {
         super(new BorderLayout());
         this.runner = runner;
-        this.agent = new Agent(path);
+        //this.agent = new Agent(path);
 
         setBorder(new EmptyBorder(0, 0, 0, 8));
         intents.setLayout(new BoxLayout(intents, BoxLayout.Y_AXIS));

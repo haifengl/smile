@@ -40,7 +40,7 @@ import smile.studio.kernel.PostRunNavigation;
 public class Cell extends JPanel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Cell.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), Locale.getDefault());
-    private static final Optional<Coder> coder = Coder.getInstance();
+    private static final Coder coder = Coder.getInstance();
     private final String placeholder = bundle.getString("Prompt");
     private final CodeEditor editor = new CodeEditor(20, 80, SyntaxConstants.SYNTAX_STYLE_JAVA);
     private final OutputArea output = new OutputArea();
@@ -163,7 +163,7 @@ public class Cell extends JPanel {
      * Completes the current line of code.
      */
     private void completeCode() {
-        if (coder.isEmpty() || isCoding) return;
+        if (coder == null || isCoding) return;
 
         try {
             int caretPosition = editor.getCaretPosition();
@@ -181,7 +181,7 @@ public class Cell extends JPanel {
             SwingWorker<Void, Void> worker = new SwingWorker<>() {
                 @Override
                 protected Void doInBackground() {
-                    coder.ifPresent(llm -> llm.complete(currentLine, context).whenComplete((line, ex) -> {
+                    coder.complete(currentLine, context).whenComplete((line, ex) -> {
                         if (ex != null) {
                             logger.warn("Code completion failed: {}", ex.getMessage());
                         }
@@ -189,7 +189,7 @@ public class Cell extends JPanel {
                         if (line != null) {
                             SwingUtilities.invokeLater(() -> editor.replaceRange(line, startOffset, caretPosition));
                         }
-                    }).join());
+                    }).join();
                     return null;
                 }
 
@@ -209,7 +209,7 @@ public class Cell extends JPanel {
      * Generates code based on prompt.
      */
     private void generateCode() {
-        if (coder.isEmpty()) {
+        if (coder == null) {
             JOptionPane.showMessageDialog(this,
                     bundle.getString("NoAIServiceError"),
                     bundle.getString("AIService"),
@@ -220,54 +220,55 @@ public class Cell extends JPanel {
         if (isCoding) return;
 
         String task = prompt.getText();
-        if (!task.isBlank()) {
-            isCoding = true;
-            editor.requestFocus();
-            int position = editor.getSelectionEnd();
-            // No selected text. Append at the end.
-            if (position == 0) {
-                editor.setCaretPosition(editor.getDocument().getLength());
-            } else {
-                try {
-                    int lineNumber = editor.getLineOfOffset(position);
-                    int lineEndOffset = editor.getLineEndOffset(lineNumber);
-                    editor.setCaretPosition(lineEndOffset);
-                } catch (BadLocationException e) {
-                    editor.setCaretPosition(position);
-                }
+        if (task.isBlank()) return;
+
+        isCoding = true;
+        editor.requestFocus();
+        int position = editor.getSelectionEnd();
+        // No selected text. Append at the end.
+        if (position == 0) {
+            editor.setCaretPosition(editor.getDocument().getLength());
+        } else {
+            try {
+                int lineNumber = editor.getLineOfOffset(position);
+                int lineEndOffset = editor.getLineEndOffset(lineNumber);
+                editor.setCaretPosition(lineEndOffset);
+            } catch (BadLocationException e) {
+                editor.setCaretPosition(position);
             }
-
-            String context = getCodeGenerationContext();
-            editor.insert("\n", editor.getCaretPosition());
-            for (String line : wrap(task, 80)) {
-                editor.insert("/// " + line + "\n", editor.getCaretPosition());
-            }
-
-            // Run code completion in a worker thread as join() blocks.
-            SwingWorker<Void, Void> worker = new SwingWorker<>() {
-                @Override
-                protected Void doInBackground() {
-                    coder.ifPresent(llm -> llm.generate(task, context,
-                        chunk -> SwingUtilities.invokeLater(() -> editor.insert(chunk, editor.getCaretPosition())),
-                        ex -> {
-                            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(Cell.this,
-                                    "Code generation failed: " + ex.getMessage(),
-                                    bundle.getString("AIService"),
-                                    JOptionPane.ERROR_MESSAGE));
-                            return null;
-                    }));
-                    return null;
-                }
-
-                @Override
-                protected void done() {
-                    isCoding = false;
-                    // Appending a new line at the end of generated code.
-                    SwingUtilities.invokeLater(() -> editor.insert("\n", editor.getCaretPosition()));
-                }
-            };
-            worker.execute();
         }
+
+        String context = getCodeGenerationContext();
+        editor.insert("\n", editor.getCaretPosition());
+        for (String line : wrap(task, 80)) {
+            editor.insert("/// " + line + "\n", editor.getCaretPosition());
+        }
+
+        // Run code completion in a worker thread as join() blocks.
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Void doInBackground() {
+                coder.generate(task, context,
+                    chunk -> SwingUtilities.invokeLater(() -> editor.insert(chunk, editor.getCaretPosition())),
+                    ex -> {
+                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(Cell.this,
+                                "Code generation failed: " + ex.getMessage(),
+                                bundle.getString("AIService"),
+                                JOptionPane.ERROR_MESSAGE));
+                        return null;
+                    }
+                );
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                isCoding = false;
+                // Appending a new line at the end of generated code.
+                SwingUtilities.invokeLater(() -> editor.insert("\n", editor.getCaretPosition()));
+            }
+        };
+        worker.execute();
     }
 
     /**
