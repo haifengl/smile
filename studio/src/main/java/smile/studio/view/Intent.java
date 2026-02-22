@@ -58,14 +58,14 @@ public class Intent extends JPanel {
 
     /**
      * Constructor.
-     * @param analyst the parent analyst component.
+     * @param cli the parent component.
      */
-    public Intent(Analyst analyst) {
+    public Intent(AgentCLI cli) {
         super(new BorderLayout(5, 5));
         setBorder(new EmptyBorder(8,8,8,8));
 
         initInputPane();
-        initActionMap(analyst);
+        initActionMap(cli);
         output.setFont(Monospaced.getFont());
         output.setEditable(false);
         output.setLineWrap(true);
@@ -140,7 +140,7 @@ public class Intent extends JPanel {
         });
     }
 
-    private void initActionMap(Analyst analyst) {
+    private void initActionMap(AgentCLI cli) {
         InputMap inputMap = editor.getInputMap(JComponent.WHEN_FOCUSED);
         ActionMap actionMap = editor.getActionMap();
         inputMap.put(KeyStroke.getKeyStroke("ctrl ENTER"), "run");
@@ -176,12 +176,12 @@ public class Intent extends JPanel {
                     switch (intentType) {
                         case Raw -> runRaw();
                         case Markdown -> renderMarkdown();
-                        default -> analyst.run(intentType, editor.getText(), output);
+                        default -> cli.run(intentType, editor.getText(), output);
                     }
                 }
 
                 // Append a new intent box for the next instructions
-                analyst.addIntent();
+                cli.addIntent();
             }
         });
     }

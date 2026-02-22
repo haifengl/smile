@@ -32,8 +32,8 @@ public class Workspace extends JSplitPane {
     final JavaRunner runner = new JavaRunner();
     /** The explorer of runtime information. */
     final Explorer explorer = new Explorer(runner);
-    /** The pane of analyst agent. */
-    final Analyst analyst;
+    /** The pane of conversational agent. */
+    final AgentCLI cli;
     /** The coding assistant agent. */
     final Coder coder;
     /** The editor of notebook. */
@@ -50,14 +50,14 @@ public class Workspace extends JSplitPane {
         coder = new Coder(SmileStudio::llm, Path.of(System.getProperty("smile.home") + "/agents/java-coder"));
         coder.loadHistory(file.getParent().resolve(".smile", "coder.json"));
         notebook = new Notebook(file, runner, coder, explorer::refresh);
-        analyst = new Analyst(file.getParent(), runner);
+        cli = new AgentCLI(file.getParent(), runner);
 
         project.setLeftComponent(explorer);
         project.setRightComponent(notebook);
         project.setResizeWeight(0.15);
 
         setLeftComponent(project);
-        setRightComponent(analyst);
+        setRightComponent(cli);
         setResizeWeight(0.6);
     }
 
@@ -78,11 +78,11 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Returns the analyst agent component.
-     * @return the analyst agent component.
+     * Returns the conversational agent component.
+     * @return the conversational agent component.
      */
-    public Analyst analyst() {
-        return analyst;
+    public AgentCLI cli() {
+        return cli;
     }
 
     /**

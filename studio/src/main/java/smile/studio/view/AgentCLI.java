@@ -24,7 +24,6 @@ import java.util.*;
 import java.util.List;
 
 import com.formdev.flatlaf.util.SystemInfo;
-import smile.agent.Agent;
 import smile.plot.swing.Palette;
 import smile.shell.JShell;
 import smile.studio.kernel.JavaRunner;
@@ -33,14 +32,13 @@ import smile.studio.model.IntentType;
 import smile.swing.ScrollablePanel;
 
 /**
- * The conversation panel for analyst agent to
- * create model building pipeline.
+ * The conversation interface for agent to create model building pipeline.
  *
  * @author Haifeng Li
  */
-public class Analyst extends JPanel {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Analyst.class);
-    private static final ResourceBundle bundle = ResourceBundle.getBundle(Analyst.class.getName(), Locale.getDefault());
+public class AgentCLI extends JPanel {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AgentCLI.class);
+    private static final ResourceBundle bundle = ResourceBundle.getBundle(AgentCLI.class.getName(), Locale.getDefault());
     /** The container of conversations. */
     private final JPanel intents = new ScrollablePanel();
     /** JShell instance. */
@@ -53,7 +51,7 @@ public class Analyst extends JPanel {
      * @param path the project folder.
      * @param runner Java code execution engine.
      */
-    public Analyst(Path path, JavaRunner runner) {
+    public AgentCLI(Path path, JavaRunner runner) {
         super(new BorderLayout());
         this.runner = runner;
         //this.agent = new Agent(path);
