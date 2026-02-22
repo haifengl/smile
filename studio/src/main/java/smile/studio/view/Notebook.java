@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import jdk.jshell.*;
+import smile.agent.Coder;
 import smile.studio.kernel.PostRunNavigation;
 import smile.studio.kernel.JavaRunner;
 import smile.swing.ScrollablePanel;
@@ -52,6 +53,7 @@ public class Notebook extends JPanel implements DocumentListener {
     private final JPanel cells = new ScrollablePanel();
     private final JScrollPane scrollPane = new JScrollPane(cells);
     private final DateTimeFormatter datetime = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
+    private final Coder coder;
     private final JavaRunner runner;
     private final Runnable postRunAction;
     private int runCount = 0;
@@ -62,12 +64,14 @@ public class Notebook extends JPanel implements DocumentListener {
      * Constructor.
      * @param file the notebook file. If null, a new notebook will be created.
      * @param runner Java code execution engine.
+     * @param coder the coding assistant agent.
      * @param postRunAction the action to perform after running cells.
      */
-    public Notebook(Path file, JavaRunner runner, Runnable postRunAction) {
+    public Notebook(Path file, JavaRunner runner, Coder coder, Runnable postRunAction) {
         super(new BorderLayout());
         this.file = file;
         this.runner = runner;
+        this.coder = coder;
         this.postRunAction = postRunAction;
         cells.setLayout(new BoxLayout(cells, BoxLayout.Y_AXIS));
         scrollPane.getVerticalScrollBar().setUnitIncrement(18);
@@ -215,6 +219,14 @@ public class Notebook extends JPanel implements DocumentListener {
                     }
                 })
         );
+    }
+
+    /**
+     * Returns the coding assistant agent.
+     * @return the coding assistant agent.
+     */
+    public Coder coder() {
+        return coder;
     }
 
     /**

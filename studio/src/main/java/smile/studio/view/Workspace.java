@@ -18,6 +18,8 @@ package smile.studio.view;
 
 import javax.swing.*;
 import java.nio.file.Path;
+import smile.agent.Coder;
+import smile.studio.SmileStudio;
 import smile.studio.kernel.JavaRunner;
 
 /**
@@ -32,6 +34,8 @@ public class Workspace extends JSplitPane {
     final Explorer explorer = new Explorer(runner);
     /** The pane of analyst agent. */
     final Analyst analyst;
+    /** The coding assistant agent. */
+    final Coder coder;
     /** The editor of notebook. */
     final Notebook notebook;
     /** The project pane consists of explorer and notebook. */
@@ -43,7 +47,9 @@ public class Workspace extends JSplitPane {
      */
     public Workspace(Path file) {
         super(JSplitPane.HORIZONTAL_SPLIT);
-        notebook = new Notebook(file, runner, explorer::refresh);
+        coder = new Coder(SmileStudio::llm, Path.of(System.getProperty("smile.home") + "/agents/java-coder"));
+        coder.loadHistory(file.getParent().resolve(".smile", "coder.json"));
+        notebook = new Notebook(file, runner, coder, explorer::refresh);
         analyst = new Analyst(file.getParent(), runner);
 
         project.setLeftComponent(explorer);
