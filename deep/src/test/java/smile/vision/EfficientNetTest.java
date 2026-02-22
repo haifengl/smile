@@ -17,7 +17,7 @@
 package smile.vision;
 
 import java.io.IOException;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import javax.imageio.ImageIO;
 import smile.deep.Loss;
 import smile.deep.Optimizer;
@@ -63,8 +63,8 @@ public class EfficientNetTest {
         model.to(device);
         model.eval();
 
-        var lenna = ImageIO.read(Paths.get("deep/src/test/resources/data/image/Lenna.png").toFile());
-        var panda = ImageIO.read(Paths.get("deep/src/test/resources/data/image/panda.jpg").toFile());
+        var lenna = ImageIO.read(Path.of("deep/src/test/resources/data/image/Lenna.png").toFile());
+        var panda = ImageIO.read(Path.of("deep/src/test/resources/data/image/panda.jpg").toFile());
 
         try (var guard = Tensor.noGradGuard()) {
             // https://discuss.pytorch.org/t/libtorchs-cpu-inference-is-much-slower-on-windows-than-on-linux/166194/2

@@ -21,7 +21,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 
 /**
  * Static methods that return the InputStream/Reader of a file or URL.
@@ -64,17 +64,17 @@ public interface Input {
             String scheme = uri.getScheme();
             // If scheme is single character, assume it is the drive letter in Windows.
             if (scheme == null || scheme.length() < 2) {
-                return Files.newInputStream(Paths.get(path));
+                return Files.newInputStream(Path.of(path));
             }
 
             if ("file".equalsIgnoreCase(uri.getScheme())) {
-                return Files.newInputStream(Paths.get(uri.getPath()));
+                return Files.newInputStream(Path.of(uri.getPath()));
             }
 
             // http, ftp, ...
             return uri.toURL().openStream();
         } catch (URISyntaxException e) {
-            return Files.newInputStream(Paths.get(path));
+            return Files.newInputStream(Path.of(path));
         }
     }
 }

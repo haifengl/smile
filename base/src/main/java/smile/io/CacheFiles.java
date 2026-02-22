@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.*;
-import java.nio.file.Paths;
 import java.util.Comparator;
 
 /**
@@ -74,7 +73,7 @@ public interface CacheFiles {
      */
     static Path download(String url, boolean force) throws IOException, URISyntaxException {
         URI uri = new URI(url);
-        Path path = Paths.get(dir(), uri.getPath());
+        Path path = Path.of(dir(), uri.getPath());
         File file = path.toFile();
         if (force || !(file.exists() && !file.isDirectory())) {
             if (file.getParentFile().mkdirs()) {
@@ -92,7 +91,7 @@ public interface CacheFiles {
      * @throws IOException if fail to delete the cache files.
      */
     static void clean() throws IOException {
-        try (var files = Files.walk(Paths.get(dir()))) {
+        try (var files = Files.walk(Path.of(dir()))) {
             files.sorted(Comparator.reverseOrder())
                  .map(Path::toFile)
                  .forEach(File::delete);

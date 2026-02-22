@@ -57,7 +57,7 @@ public interface Paths {
      * @return the file path to the test data.
      */
     static Path getTestData(String... path) {
-        return java.nio.file.Paths.get(home + File.separator + "data", path);
+        return Path.of(home + File.separator + "data", path);
     }
 
     /**

@@ -19,7 +19,6 @@ package smile.nlp.pos;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import smile.math.MathEx;
 
@@ -322,7 +321,7 @@ public class HMMPOSTagger implements POSTagger, Serializable {
     static void read(String dir, List<String[]> sentences, List<PennTreebankPOS[]> tags) {
         try {
             List<File> files = new ArrayList<>();
-            walkin(Paths.get(dir), files);
+            walkin(Path.of(dir), files);
 
             for (File file : files) {
                 FileInputStream stream = new FileInputStream(file);

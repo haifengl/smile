@@ -19,7 +19,6 @@ package smile.serve;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +52,7 @@ public class InferenceService {
      */
     @Inject
     public InferenceService(InferenceServiceConfig config) {
-        var path = Paths.get(config.model()).toAbsolutePath().normalize();
+        var path = Path.of(config.model()).toAbsolutePath().normalize();
         if (Files.isRegularFile(path)) {
             loadModel(path);
         } else if (Files.isDirectory(path)) {

@@ -17,7 +17,7 @@
 package smile.chat;
 
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.concurrent.SubmissionPublisher;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -45,7 +45,7 @@ public class ChatService {
     @Inject
     public ChatService(ChatServiceConfig config) {
         try {
-            if (Files.exists(Paths.get(config.model()))) {
+            if (Files.exists(Path.of(config.model()))) {
                 model = Llama.build(config.model(), config.tokenizer(),
                         config.maxBatchSize(), config.maxSeqLen(), config.device());
             } else {
