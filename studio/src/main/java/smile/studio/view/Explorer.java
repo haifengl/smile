@@ -157,7 +157,7 @@ public class Explorer extends JPanel {
                                     // replace backslash with slash in case of Windows
                                     String path = file.getAbsolutePath().replace('\\', '/');
                                     runner.eval(String.format("""
-                                            smile.io.Write.object(%s, java.nio.file.Paths.get("%s"));
+                                            smile.io.Write.object(%s, java.nio.file.Path.of("%s"));
                                             """, name, path));
 
                                     if (snippet.typeName().equals("ClassificationModel") || snippet.typeName().equals("RegressionModel")) {

@@ -716,7 +716,7 @@ public class SmileStudio extends JFrame {
 
             // Start the GUI
             if (args == null || args.length == 0) {
-                createAndShowGUI(Paths.get(System.getProperty("user.dir"), "Untitled.java"));
+                createAndShowGUI(Path.of(System.getProperty("user.dir"), "Untitled.java"));
             } else {
                 for (int i = 0; i < args.length; i++) {
                     File file = new File(args[i]);

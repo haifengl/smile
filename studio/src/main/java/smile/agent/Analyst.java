@@ -17,6 +17,7 @@
 package smile.agent;
 
 import java.nio.file.Path;
+import java.util.function.Supplier;
 import smile.llm.client.LLM;
 
 /**
@@ -24,15 +25,16 @@ import smile.llm.client.LLM;
  *
  * @author Haifeng Li
  */
-public interface Analyst {
+public class Analyst extends Agent {
     /**
-     * Returns a data analyst agent instance.
-     * @param llm the LLM service.
+     * Constructor.
+     * @param llm the supplier of LLM service.
      * @param path the directory path for agent context.
      */
-    static Agent getInstance(LLM llm, Path path) {
-        Context global = new Context(System.getProperty("smile.home") + "/agents/analyst");
-        Context user = new Context(System.getProperty("user.home") + "/.smile/agents/analyst");
-        return new Agent(llm, new Context(path), user, global);
+    public Analyst(Supplier<LLM> llm, Path path) {
+        super(llm,
+              new Context(System.getProperty("smile.home") + "/agents/analyst"),
+              new Context(System.getProperty("user.home") + "/.smile/agents/analyst"), 
+              new Context(path));
     }
 }

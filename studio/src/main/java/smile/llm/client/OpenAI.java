@@ -144,6 +144,7 @@ public class OpenAI extends LLM {
 
         var system = params.getProperty(SYSTEM_PROMPT, "");
         if (!system.isBlank()) {
+            logger.debug("System prompt:\n{}", system);
             builder.addDeveloperMessage(system);
         }
 

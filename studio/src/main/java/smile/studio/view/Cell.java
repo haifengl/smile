@@ -18,6 +18,7 @@ package smile.studio.view;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
 import javax.swing.*;
@@ -41,7 +42,7 @@ import smile.studio.kernel.PostRunNavigation;
 public class Cell extends JPanel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Cell.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), Locale.getDefault());
-    private static final Coder coder = new Coder(SmileStudio::llm);
+    private static final Coder coder = new Coder(SmileStudio::llm, Path.of(System.getProperty("smile.home") + "/agents/java-coder"));
     private final String placeholder = bundle.getString("Prompt");
     private final CodeEditor editor = new CodeEditor(20, 80, SyntaxConstants.SYNTAX_STYLE_JAVA);
     private final OutputArea output = new OutputArea();

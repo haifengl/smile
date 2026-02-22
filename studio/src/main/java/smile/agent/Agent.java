@@ -19,6 +19,7 @@ package smile.agent;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -45,6 +46,8 @@ public class Agent {
     private final Context context;
     /** The conversation history. */
     private final List<Message> conversations = new ArrayList<>();
+    /** The parameters for LLM inference. */
+    private final Properties params = new Properties();
 
     /**
      * Constructor.
@@ -58,6 +61,7 @@ public class Agent {
         this.context = context;
         this.user = user;
         this.global = global;
+        params.setProperty(LLM.SYSTEM_PROMPT, system());
     }
 
     /**
@@ -87,6 +91,14 @@ public class Agent {
     }
 
     /**
+     * Returns the parameters for LLM inference.
+     * @return the parameters for LLM inference.
+     */
+    public Properties params() {
+        return params;
+    }
+
+    /**
      * Returns the system prompt.
      * @return the system prompt.
      */
@@ -107,7 +119,7 @@ public class Agent {
      * @return a future of full Line completion.
      */
     public CompletableFuture<String> response(String prompt) {
-        return llm.get().complete(prompt);
+        return llm.get().complete(prompt, params);
     }
 
     /**
@@ -117,6 +129,6 @@ public class Agent {
      * @param handler the exception handler.
      */
     public void stream(String prompt, Consumer<String> consumer, Function<Throwable, ? extends Void> handler) {
-        llm.get().complete(prompt, consumer, handler);
+        llm.get().complete(prompt, params, consumer, handler);
     }
 }

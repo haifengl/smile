@@ -16,7 +16,7 @@
  */
 package smile.agent;
 
-import java.util.Properties;
+import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -28,32 +28,17 @@ import smile.llm.client.LLM;
  *
  * @author Haifeng Li
  */
-public class Coder {
-    /**
-     * The instructions (developer prompt) for coding with SMILE.
-     */
-    private static final String developer = """
-            You are a highly skilled Java programming assistant.
-            Your task is to complete code snippets, adhering to
-            the provided context and best practices. Ensure the
-            completed code is syntactically correct and logically
-            sound.""";
-
-    /** The supplier of LLM service. */
-    private final Supplier<LLM> llm;
-    /** The parameters for LLM API calls. */
-    private final Properties params = new Properties();
-
+public class Coder extends Agent {
     /**
      * Constructor.
      * @param llm the supplier of LLM service.
+     * @param path the directory path for agent context.
      */
-    public Coder(Supplier<LLM> llm) {
-        this.llm = llm;
+    public Coder(Supplier<LLM> llm, Path path) {
+        super(llm, path);
         // low temperature for more predictable, focused, and deterministic code
-        params.setProperty(LLM.TEMPERATURE, "0.2");
-        // stop at the end of line
-        params.setProperty(LLM.STOP, "\n");
+        params().setProperty(LLM.TEMPERATURE, "0.2");
+        params().setProperty(LLM.MAX_OUTPUT_TOKENS, "2048");
     }
 
     /**
@@ -70,7 +55,11 @@ public class Coder {
             Current line start: %s""";
 
         var prompt = String.format(template, context, start);
-        return llm.get().complete(prompt);
+        // stop at the end of line
+        params().setProperty(LLM.STOP, "\n");
+        var future = response(prompt);
+        params().remove(LLM.STOP);
+        return future;
     }
 
     /**
@@ -88,6 +77,6 @@ public class Coder {
             Task:%n%s%n%n""";
 
         var prompt = String.format(template, context, task);
-        llm.get().complete(prompt, consumer, handler);
+        stream(prompt, consumer, handler);
     }
 }

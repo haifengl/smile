@@ -68,7 +68,7 @@ public class Context {
      *             such as system instructions, skills, tools, etc.
      */
     public Context(String path) {
-        this(Paths.get(path));
+        this(Path.of(path));
     }
 
     /**
