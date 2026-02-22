@@ -17,11 +17,14 @@
 package smile.agent;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import smile.llm.client.LLM;
+import smile.llm.client.Message;
 
 /**
  * An LLM agent is an advanced AI system using an LLM as its brain
@@ -32,23 +35,25 @@ import smile.llm.client.LLM;
  * @author Haifeng Li
  */
 public class Agent {
-    /** The LLM service. */
-    private final LLM llm;
+    /** The supplier of LLM service. */
+    private final Supplier<LLM> llm;
     /** Global context for system instructions, skills, tools, etc. */
     private final Context global;
     /** User context for user preferences, history, etc. */
     private final Context user;
     /** The project-specific context. */
     private final Context context;
+    /** The conversation history. */
+    private final List<Message> conversations = new ArrayList<>();
 
     /**
      * Constructor.
-     * @param llm the LLM service.
+     * @param llm the supplier of LLM service.
      * @param context the project-specific context.
      * @param user the user context for user preferences, history, etc.
      * @param global the global context for system instructions, skills, tools, etc.
      */
-    public Agent(LLM llm, Context context, Context user, Context global) {
+    public Agent(Supplier<LLM> llm, Context context, Context user, Context global) {
         this.llm = llm;
         this.context = context;
         this.user = user;
@@ -57,20 +62,28 @@ public class Agent {
 
     /**
      * Constructor.
-     * @param llm the LLM service.
+     * @param llm the supplier of LLM service.
      * @param context the project-specific context.
      */
-    public Agent(LLM llm, Context context) {
+    public Agent(Supplier<LLM> llm, Context context) {
         this(llm, context, null, null);
     }
 
     /**
      * Constructor.
-     * @param llm the LLM service.
+     * @param llm the supplier of LLM service.
      * @param path the directory path for agent context.
      */
-    public Agent(LLM llm, Path path) {
+    public Agent(Supplier<LLM> llm, Path path) {
         this(llm, new Context(path));
+    }
+
+    /**
+     * Returns the LLM service.
+     * @return the LLM service.
+     */
+    public LLM llm() {
+        return llm.get();
     }
 
     /**
@@ -89,28 +102,12 @@ public class Agent {
     }
 
     /**
-     * Returns the rules from the agent context.
-     * @return the rules.
-     */
-    public List<Rule> rules() {
-        return context.rules();
-    }
-
-    /**
-     * Returns the skills from the agent context.
-     * @return the skills.
-     */
-    public List<Skill> skills() {
-        return context.skills();
-    }
-
-    /**
      * Asynchronously response.
      * @param prompt the user prompt of task.
      * @return a future of full Line completion.
      */
     public CompletableFuture<String> response(String prompt) {
-        return llm.complete(prompt);
+        return llm.get().complete(prompt);
     }
 
     /**
@@ -120,6 +117,6 @@ public class Agent {
      * @param handler the exception handler.
      */
     public void stream(String prompt, Consumer<String> consumer, Function<Throwable, ? extends Void> handler) {
-        llm.complete(prompt, consumer, handler);
+        llm.get().complete(prompt, consumer, handler);
     }
 }

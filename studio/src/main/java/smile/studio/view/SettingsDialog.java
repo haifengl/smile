@@ -16,9 +16,6 @@
  */
 package smile.studio.view;
 
-import smile.llm.client.LLM;
-import smile.studio.SmileStudio;
-
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -26,6 +23,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.*;
 import java.util.prefs.Preferences;
+import smile.studio.SmileStudio;
 
 /**
  * The application preference and configuration dialog.

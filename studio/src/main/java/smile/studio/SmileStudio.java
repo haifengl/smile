@@ -166,11 +166,56 @@ public class SmileStudio extends JFrame {
             return llm;
         }
 
+        // If user doesn't set system property for api key,
+        // we will try to set it from preferences if it exists.
+        // Otherwise, the LLM client will fail to initialize with fromEnv().
+        if (System.getProperty("openai.apiKey", "").isBlank()) {
+            // Without openai.apiKey, OpenAI.client will fail to initialize.
+            String apiKey = SmileStudio.prefs.get("azureOpenAIApiKey", "").trim();
+            if (!apiKey.isEmpty()) {
+                System.setProperty("openai.apiKey", apiKey);
+            }
+        }
+        if (System.getProperty("openai.apiKey", "").isBlank()) {
+            // We will overwrite the above api key by Azure.
+            String apiKey = SmileStudio.prefs.get("openaiApiKey", "").trim();
+            if (!apiKey.isEmpty()) {
+                System.setProperty("openai.apiKey", apiKey);
+            }
+        }
+        if (System.getProperty("openai.baseUrl", "").isBlank()) {
+            String baseUrl = SmileStudio.prefs.get("openaiBaseUrl", "").trim();
+            if (!baseUrl.isEmpty()) {
+                System.setProperty("openai.baseUrl", baseUrl);
+            }
+        }
+
+        // Anthropic system properties
+        if (System.getProperty("anthropic.apiKey", "").isBlank()) {
+            String apiKey = SmileStudio.prefs.get("anthropicApiKey", "").trim();
+            if (!apiKey.isEmpty()) {
+                System.setProperty("anthropic.apiKey", apiKey);
+            }
+        }
+        if (System.getProperty("anthropic.baseUrl", "").isBlank()) {
+            String baseUrl = SmileStudio.prefs.get("anthropicBaseUrl", "").trim();
+            if (!baseUrl.isEmpty()) {
+                System.setProperty("anthropic.baseUrl", baseUrl);
+            }
+        }
+
         try {
             llm = Optional.of(switch (service) {
                 case "OpenAI" -> {
-                    var openai = new OpenAI();
-                    openai.options().setProperty(LLM.MODEL, prefs.get("openaiModel", "gpt-5.1-codex"));
+                    var openai = new OpenAI(prefs.get("openaiModel", "gpt-5.1-codex"));
+                    var apiKey = prefs.get("openaiApiKey", "");
+                    if (!apiKey.isBlank()) {
+                        openai.withApiKey(apiKey);
+                    }
+                    var baseUrl = prefs.get("openaiBaseUrl", "");
+                    if (!baseUrl.isBlank()) {
+                        openai.withBaseUrl(baseUrl);
+                    }                     
                     yield openai;
                 }
 
@@ -180,32 +225,43 @@ public class SmileStudio extends JFrame {
                         prefs.get("azureOpenAIModel", "gpt-5.1-codex"));
 
                 case "Anthropic" -> {
-                    var anthropic = new Anthropic();
-                    anthropic.options().setProperty(LLM.MODEL, prefs.get("anthropicModel", "claude-sonnet-4-5"));
+                    var anthropic = new Anthropic(prefs.get("anthropicModel", "claude-sonnet-4-5"));
+                    var apiKey = prefs.get("anthropicApiKey", "");
+                    if (!apiKey.isBlank()) {
+                        anthropic.withApiKey(apiKey);
+                    }
+                    var baseUrl = prefs.get("anthropicBaseUrl", "");
+                    if (!baseUrl.isBlank()) {
+                        anthropic.withBaseUrl(baseUrl);
+                    }
                     yield anthropic;
                 }
 
-                case "GoogleGemini" -> {
-                    var gemini = new GoogleGemini(prefs.get("googleGeminiApiKey", ""));
-                    gemini.options().setProperty(LLM.MODEL, prefs.get("googleGeminiModel", "gemini-3-pro-preview"));
-                    yield gemini;
-                }
+                case "GoogleGemini" ->
+                    new GoogleGemini(
+                            prefs.get("googleGeminiApiKey", ""),
+                            prefs.get("googleGeminiModel", "gemini-3-pro-preview"));
 
-                case "GoogleVertexAI" -> {
-                    var vertex = new GoogleVertexAI(
+                case "GoogleVertexAI" ->
+                    new GoogleVertexAI(
                             prefs.get("googleVertexAIApiKey", ""),
-                            prefs.get("googleVertexAIBaseUrl", ""));
-                    vertex.options().setProperty(LLM.MODEL, prefs.get("googleVertexAIModel", "gemini-3-pro-preview"));
-                    yield vertex;
-                }
+                            prefs.get("googleVertexAIBaseUrl", ""),
+                            prefs.get("googleVertexAIModel", "gemini-3-pro-preview"));
 
-                default ->
+                default -> {
                     // Many AI services are compatible with OpenAI ChatCompletions API,
                     // so we try to initialize OpenAI client.
-                    new AzureOpenAI(
-                            prefs.get("AIApiKey", ""),
-                            prefs.get("AIBaseUrl", "http://localhost:11434/api"),
-                            prefs.get("AIModel", service));
+                    var openai = new OpenAI(prefs.get("aiModel", service));
+                    var apiKey = prefs.get("aiApiKey", "");
+                    if (!apiKey.isBlank()) {
+                        openai.withApiKey(apiKey);
+                    }
+                    var baseUrl = prefs.get("aiBaseUrl", "");
+                    if (!baseUrl.isBlank()) {
+                        openai.withBaseUrl(baseUrl);
+                    }
+                    yield openai;
+                }
             });
         } catch (Throwable t) {
             llm = Optional.empty();
@@ -632,43 +688,6 @@ public class SmileStudio extends JFrame {
                     Run 'smile shell' for smile shell with Java.
                     Run 'smile scala' for smile shell with Scala.""");
             System.exit(1);
-        }
-
-        // If user doesn't set system property for api key,
-        // we will try to set it from preferences if it exists.
-        if (System.getProperty("openai.apiKey", "").isBlank()) {
-            // Without openai.apiKey, OpenAI.client will fail to initialize.
-            String apiKey = SmileStudio.prefs.get("azureOpenAIApiKey", "").trim();
-            if (!apiKey.isEmpty()) {
-                System.setProperty("openai.apiKey", apiKey);
-            }
-        }
-        if (System.getProperty("openai.apiKey", "").isBlank()) {
-            // We will overwrite the above api key by Azure.
-            String apiKey = SmileStudio.prefs.get("openaiApiKey", "").trim();
-            if (!apiKey.isEmpty()) {
-                System.setProperty("openai.apiKey", apiKey);
-            }
-        }
-        if (System.getProperty("openai.baseUrl", "").isBlank()) {
-            String baseUrl = SmileStudio.prefs.get("openaiBaseUrl", "").trim();
-            if (!baseUrl.isEmpty()) {
-                System.setProperty("openai.baseUrl", baseUrl);
-            }
-        }
-
-        // Anthropic system properties
-        if (System.getProperty("anthropic.apiKey", "").isBlank()) {
-            String apiKey = SmileStudio.prefs.get("anthropicApiKey", "").trim();
-            if (!apiKey.isEmpty()) {
-                System.setProperty("anthropic.apiKey", apiKey);
-            }
-        }
-        if (System.getProperty("anthropic.baseUrl", "").isBlank()) {
-            String baseUrl = SmileStudio.prefs.get("anthropicBaseUrl", "").trim();
-            if (!baseUrl.isEmpty()) {
-                System.setProperty("anthropic.baseUrl", baseUrl);
-            }
         }
 
         // Schedule a job for the event dispatch thread:

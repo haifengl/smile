@@ -22,30 +22,92 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
- * LLM inference interface.
+ * LLM inference client. Note that it is stateless and doesn't
+ * save conversation history. The conversation history is passed
+ * in the method parameter and the client is responsible for
+ * formatting the conversation history into the prompt for LLM.
+ * The client is also responsible for formatting the system prompt
+ * and user message into the prompt for LLM.
+ *
  *
  * @author Haifeng Li
  */
-public interface LLM {
+public abstract class LLM {
     /** The property key for the model. */
-    String MODEL = "model";
+    public static final String MODEL = "model";
     /** The property key for the system prompt. */
-    String SYSTEM_PROMPT = "";
+    public static final String SYSTEM_PROMPT = "systemPrompt";
+    /** The property key for the conversation history. */
+    public static final String HISTORY = "history";
+    /** The property key for the temperature. */
+    public static final String TEMPERATURE = "temperature";
     /** The property key for the upper bound of output tokens. */
-    String MAX_OUTPUT_TOKENS = "maxOutputTokens";
+    public static final String MAX_OUTPUT_TOKENS = "maxOutputTokens";
+    /** The property key for the stop token. */
+    public static final String STOP = "stop";
+    /** The model name in requests. */
+    private String model;
 
     /**
-     * Returns the LLM API call options.
-     * @return the LLM API call options.
+     * Constructor.
+     * @param model the model name, aka the deployment name in Azure.
      */
-    Properties options();
+    public LLM(String model) {
+        this.model = model;
+    }
+
+    /**
+     * Returns the model name.
+     * @return the model name.
+     */
+    public String model() {
+        return model;
+    }
+
+    /**
+     * Sets the LLM model.
+     * @param model the model name.
+     * @return this object.
+     */
+    public LLM withModel(String model) {
+        this.model = model;
+        return this;
+    }
+
+    /**
+     * Sets the base URL of LLM service.
+     * @param baseUrl the base URL of LLM service.
+     * @return this object.
+     */
+    public LLM withBaseUrl(String baseUrl) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Sets the API key.
+     * @param apiKey the API key.
+     * @return this object.
+     */
+    public LLM withApiKey(String apiKey) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Asynchronously completes a message.
      * @param message the user message.
      * @return a future of completion.
      */
-    CompletableFuture<String> complete(String message);
+    public CompletableFuture<String> complete(String message) {
+        return complete(message, new Properties());
+    }
+
+    /**
+     * Asynchronously completes a message.
+     * @param message the user message.
+     * @param params the request parameters.
+     * @return a future of completion.
+     */
+    public abstract CompletableFuture<String> complete(String message, Properties params);
 
     /**
      * Asynchronously completes a message in a streaming way.
@@ -53,21 +115,17 @@ public interface LLM {
      * @param consumer the consumer of completion chunks.
      * @param handler the exception handler.
      */
-    void complete(String message, Consumer<String> consumer, Function<Throwable, ? extends Void> handler);
+    public void complete(String message, Consumer<String> consumer, Function<Throwable, ? extends Void> handler) {
+        complete(message, new Properties(), consumer, handler);
+    }
 
     /**
-     * Returns the upper bound for the number of tokens that can be generated
-     * for a response, including visible output tokens and reasoning tokens.
-     * @param defaultValue the default value if the user doesn't set the context property.
-     * @return the upper bound for the number of output tokens.
+     * Asynchronously completes a message in a streaming way.
+     * @param message the user message.
+     * @param params the request parameters.
+     * @param consumer the consumer of completion chunks.
+     * @param handler the exception handler.
      */
-    default int maxOutputTokens(int defaultValue) {
-        String maxOutputTokens = options().getProperty("maxOutputTokens", String.valueOf(defaultValue));
-        try {
-            return Integer.parseInt(maxOutputTokens);
-        } catch (NumberFormatException ex) {
-            System.err.println("Invalid maxOutputTokens: " + maxOutputTokens);
-            return defaultValue;
-        }
-    }
+    public abstract void complete(String message, Properties params, Consumer<String> consumer,
+                                  Function<Throwable, ? extends Void> handler);
 }

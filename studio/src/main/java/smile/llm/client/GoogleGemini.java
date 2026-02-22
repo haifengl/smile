@@ -16,6 +16,8 @@
  */
 package smile.llm.client;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -31,73 +33,122 @@ import com.google.genai.types.Part;
  *
  * @author Haifeng Li
  */
-public class GoogleGemini implements LLM {
+public class GoogleGemini extends LLM {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GoogleGemini.class);
     /** Instance client will reuse connection and thread pool of singleton. */
     final Client client;
-    /** The LLM API call options. */
-    final Properties options = new Properties();
 
     /**
      * Constructor.
      * @param apiKey API key for authentication and authorization.
+     * @param model the model name.
      */
-    public GoogleGemini(String apiKey) {
-        this(Client.builder().apiKey(apiKey).build());
+    public GoogleGemini(String apiKey, String model) {
+        this(Client.builder().apiKey(apiKey).build(), model);
     }
 
     /**
      * Constructor with customized client.
      * @param client a client instance.
+     * @param model the model name.
      */
-    GoogleGemini(Client client) {
+    public GoogleGemini(Client client, String model) {
+        super(model);
         this.client = client;
     }
 
-    @Override
-    public Properties options() {
-        return options;
+    /**
+     * Returns a chat request configuration.
+     * @param params the request parameters.
+     * @return a chat request configuration.
+     */
+    private GenerateContentConfig config(Properties params) {
+        // only 1 chat completion choice to generate
+        var builder = GenerateContentConfig.builder().candidateCount(1);
+
+        var temperature = params.getProperty(TEMPERATURE, "");
+        if (!temperature.isBlank()) {
+            try {
+                builder.temperature(Float.parseFloat(temperature));
+            } catch (NumberFormatException ex) {
+                logger.error("Invalid temperature: {}", temperature);
+            }
+        }
+
+        var stop = params.getProperty(STOP, "");
+        if (!stop.isBlank()) {
+            builder.stopSequences(stop);
+        }
+
+        String maxOutputTokens = params.getProperty(MAX_OUTPUT_TOKENS, "");
+        if (!maxOutputTokens.isBlank()) {
+            try {
+                builder.maxOutputTokens(Integer.parseInt(maxOutputTokens));
+            } catch (NumberFormatException ex) {
+                logger.error("Invalid maxOutputTokens: {}", maxOutputTokens);
+            }
+        }
+
+        var system = params.getProperty(SYSTEM_PROMPT, "");
+        if (!system.isBlank()) {
+            var instructions = Content.fromParts(Part.fromText(system));
+            builder.systemInstruction(instructions);
+        }
+        return builder.build();
+    }
+
+    /**
+     * Returns the request contents.
+     * @param message the user message.
+     * @param params the request parameters.
+     * @return the request contents.
+     */
+    private List<Content> contents(String message, Properties params) {
+        List<Content> contents = new ArrayList<>();
+        if (params.getOrDefault(HISTORY, List.of()) instanceof List<?> history) {
+            for (var item : history) {
+                if (item instanceof Message msg) {
+                    switch (msg.role()) {
+                        case user -> contents.add(Content.builder()
+                                .role("user")
+                                .parts(Part.fromText(msg.content()))
+                                .build());
+                        case assistant -> contents.add(Content.builder()
+                                .role("assistant")
+                                .parts(Part.fromText(msg.content()))
+                                .build());
+                    }
+                }
+            }
+        }
+
+        contents.add(Content.builder()
+                .role("user")
+                .parts(Part.fromText(message))
+                .build());
+
+        return contents;
     }
 
     @Override
-    public CompletableFuture<String> complete(String message) {
-        var instructions = Content.fromParts(Part.fromText(options.getProperty(SYSTEM_PROMPT)));
-        var config = GenerateContentConfig.builder()
-                .candidateCount(1)
-                .temperature(0.2f)
-                .stopSequences("\n")
-                .systemInstruction(instructions)
-                .build();
-        return client.async.models.generateContent(model(), message, config)
+    public CompletableFuture<String> complete(String message, Properties params) {
+        var config = config(params);
+        return client.async.models
+                .generateContent(model(), contents(message, params), config(params))
                 .thenApply(GenerateContentResponse::text);
     }
 
     @Override
-    public void complete(String message, Consumer<String> consumer, Function<Throwable, ? extends Void> handler) {
-        var instructions = Content.fromParts(Part.fromText(options.getProperty(SYSTEM_PROMPT)));
-        var config = GenerateContentConfig.builder()
-                .candidateCount(1)
-                .temperature(0.2f)
-                .maxOutputTokens(maxOutputTokens(2048))
-                .systemInstruction(instructions)
-                .build();
-
+    public void complete(String message, Properties params, Consumer<String> consumer,
+                         Function<Throwable, ? extends Void> handler) {
         // To save resources and avoid connection leaks, close the
         // response stream after consumption.
-        try (var stream = client.models.generateContentStream(model(), message, config)) {
+        try (var stream = client.models.generateContentStream(model(), contents(message, params), config(params))) {
             for (var response : stream) {
                 consumer.accept(response.text());
             }
         } catch (Throwable t) {
             handler.apply(t);
         }
-    }
-
-    /**
-     * Returns the configured model.
-     * @return the configured model.
-     */
-    String model() {
-        return options.getProperty(MODEL, "gemini-3-pro-preview");
     }
 }

@@ -26,9 +26,6 @@ import com.openai.azure.credential.AzureApiKeyCredential;
  * @author Haifeng Li
  */
 public class AzureOpenAI extends OpenAI {
-    /** The deployment name serves as the model name in requests. */
-    private final String model;
-
     /**
      * Constructor.
      * @param apiKey API key for authentication and authorization.
@@ -44,12 +41,7 @@ public class AzureOpenAI extends OpenAI {
               OpenAI.singleton.withOptions(builder -> builder.baseUrl(baseUrl)
                     .credential(AzureApiKeyCredential.create(apiKey))
                     .azureServiceVersion(AzureOpenAIServiceVersion.fromString("2025-04-01-preview"))
-                    .azureUrlPathMode(AzureUrlPathMode.LEGACY)));
-        this.model = model;
-    }
-
-    @Override
-    public String model() {
-        return model;
+                    .azureUrlPathMode(AzureUrlPathMode.LEGACY)),
+              model);
     }
 }

@@ -16,6 +16,7 @@
  */
 package smile.agent;
 
+import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -40,6 +41,8 @@ public class Coder {
 
     /** The supplier of LLM service. */
     private final Supplier<LLM> llm;
+    /** The parameters for LLM API calls. */
+    private final Properties params = new Properties();
 
     /**
      * Constructor.
@@ -47,6 +50,10 @@ public class Coder {
      */
     public Coder(Supplier<LLM> llm) {
         this.llm = llm;
+        // low temperature for more predictable, focused, and deterministic code
+        params.setProperty(LLM.TEMPERATURE, "0.2");
+        // stop at the end of line
+        params.setProperty(LLM.STOP, "\n");
     }
 
     /**

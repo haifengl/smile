@@ -16,6 +16,7 @@
  */
 package smile.llm.client;
 
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -26,7 +27,6 @@ import com.anthropic.client.AnthropicClientAsync;
 import com.anthropic.client.okhttp.AnthropicOkHttpClientAsync;
 import com.anthropic.helpers.MessageAccumulator;
 import com.anthropic.models.messages.MessageCreateParams;
-import com.anthropic.models.messages.Model;
 import com.anthropic.models.messages.TextBlock;
 import com.anthropic.models.messages.TextDelta;
 
@@ -35,7 +35,7 @@ import com.anthropic.models.messages.TextDelta;
  *
  * @author Haifeng Li
  */
-public class Anthropic implements LLM {
+public class Anthropic extends LLM {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Anthropic.class);
     /**
      * Don't create more than one client in the same application. Each client has
@@ -47,50 +47,94 @@ public class Anthropic implements LLM {
      */
     static final AnthropicClientAsync singleton = AnthropicOkHttpClientAsync.fromEnv();
     /** Instance client will reuse connection and thread pool of singleton. */
-    final AnthropicClientAsync client;
-    /** The LLM API call options. */
-    final Properties options = new Properties();
+    AnthropicClientAsync client;
 
     /**
      * Constructor.
+     * @param model the model name.
      */
-    public Anthropic() {
-        this(singleton);
-    }
-
-    /**
-     * Constructor.
-     * @param baseUrl the base URL for the service.
-     */
-    public Anthropic(String baseUrl) {
-        this(singleton.withOptions(builder -> builder.baseUrl(baseUrl)));
+    public Anthropic(String model) {
+        this(singleton, model);
     }
 
     /**
      * Constructor with customized client.
      * @param client a client instance.
+     * @param model the model name.
      */
-    Anthropic(AnthropicClientAsync client) {
+    public Anthropic(AnthropicClientAsync client, String model) {
+        super(model);
         this.client = client;
     }
 
     @Override
-    public Properties options() {
-        return options;
+    public Anthropic withBaseUrl(String baseUrl) {
+        client = client.withOptions(builder -> builder.baseUrl(baseUrl));
+        return this;
     }
 
     @Override
-    public CompletableFuture<String> complete(String message) {
-        var params = MessageCreateParams.builder()
-                .model(model())
-                .temperature(0.2) // low temperature for more predictable, focused, and deterministic code
-                .addStopSequence("\n") // stop at the end of line
-                .system(options.getProperty(SYSTEM_PROMPT))
-                .addUserMessage(message)
-                .build();
+    public Anthropic withApiKey(String apiKey) {
+        client = client.withOptions(builder -> builder.replaceHeaders("x-api-key", apiKey));
+        return this;
+    }
 
+    /**
+     * Returns a chat request parameters.
+     * @param message the user message.
+     * @param params the request parameters.
+     * @return a chat request parameters.
+     */
+    private MessageCreateParams build(String message, Properties params) {
+        var builder = MessageCreateParams.builder().model(model());
+
+        var temperature = params.getProperty(TEMPERATURE, "");
+        if (!temperature.isBlank()) {
+            try {
+                builder.temperature(Double.parseDouble(temperature));
+            } catch (NumberFormatException ex) {
+                logger.error("Invalid temperature: {}", temperature);
+            }
+        }
+
+        var stop = params.getProperty(STOP, "");
+        if (!stop.isBlank()) {
+            builder.addStopSequence(stop);
+        }
+
+        String maxOutputTokens = params.getProperty(MAX_OUTPUT_TOKENS, "");
+        if (!maxOutputTokens.isBlank()) {
+            try {
+                builder.maxTokens(Integer.parseInt(maxOutputTokens));
+            } catch (NumberFormatException ex) {
+                logger.error("Invalid maxOutputTokens: {}", maxOutputTokens);
+            }
+        }
+
+        var system = params.getProperty(SYSTEM_PROMPT, "");
+        if (!system.isBlank()) {
+            builder.system(system);
+        }
+
+        if (params.getOrDefault(HISTORY, List.of()) instanceof List<?> history) {
+            for (var item : history) {
+                if (item instanceof Message msg) {
+                    switch (msg.role()) {
+                        case user -> builder.addUserMessage(msg.content());
+                        case assistant -> builder.addAssistantMessage(msg.content());
+                    }
+                }
+            }
+        }
+        builder.addUserMessage(message);
+        return builder.build();
+    }
+
+    @Override
+    public CompletableFuture<String> complete(String message, Properties params) {
+        var request = build(message, params);
         var accumulator = MessageAccumulator.create();
-        return client.messages().create(params)
+        return client.messages().create(request)
                 .thenApply(msg -> msg.content().stream()
                         .flatMap(block -> block.text().stream())
                         .map(TextBlock::text)
@@ -98,17 +142,11 @@ public class Anthropic implements LLM {
     }
 
     @Override
-    public void complete(String message, Consumer<String> consumer, Function<Throwable, ? extends Void> handler) {
-        var params = MessageCreateParams.builder()
-                .model(model())
-                .temperature(0.2) // low temperature for more predictable, focused, and deterministic code
-                .maxTokens(maxOutputTokens(2048))
-                .system(options.getProperty(SYSTEM_PROMPT))
-                .addUserMessage(message)
-                .build();
-
+    public void complete(String message, Properties params, Consumer<String> consumer,
+                         Function<Throwable, ? extends Void> handler) {
+        var request = build(message, params);
         var accumulator = MessageAccumulator.create();
-        client.messages().createStreaming(params)
+        client.messages().createStreaming(request)
                 .subscribe(event -> accumulator.accumulate(event).contentBlockDelta().stream()
                         .flatMap(block -> block.delta().text().stream())
                         .map(TextDelta::text)
@@ -116,13 +154,5 @@ public class Anthropic implements LLM {
                 .onCompleteFuture()
                 .exceptionally(handler)
                 .join();
-    }
-
-    /**
-     * Returns the configured model.
-     * @return the configured model.
-     */
-    String model() {
-        return options.getProperty(MODEL, Model.CLAUDE_SONNET_4_5.toString());
     }
 }

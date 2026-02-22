@@ -16,6 +16,7 @@
  */
 package smile.llm.client;
 
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -23,7 +24,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import com.openai.client.OpenAIClientAsync;
 import com.openai.client.okhttp.OpenAIOkHttpClientAsync;
-import com.openai.models.ChatModel;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import com.openai.models.responses.Response;
 import com.openai.models.responses.ResponseCreateParams;
@@ -33,7 +33,7 @@ import com.openai.models.responses.ResponseCreateParams;
  *
  * @author Haifeng Li
  */
-public class OpenAI implements LLM {
+public class OpenAI extends LLM {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OpenAI.class);
     /**
      * Don't create more than one client in the same application. Each client has
@@ -45,106 +45,141 @@ public class OpenAI implements LLM {
      */
     static final OpenAIClientAsync singleton = OpenAIOkHttpClientAsync.fromEnv();
     /** Instance client will reuse connection and thread pool of singleton. */
-    final OpenAIClientAsync client;
+    OpenAIClientAsync client;
     /** The client for legacy APIs. */
-    final OpenAIClientAsync legacy;
-    /** The LLM API call options. */
-    final Properties options = new Properties();
+    OpenAIClientAsync legacy;
 
     /**
      * Constructor.
+     * @param model the model name, aka the deployment name in Azure.
      */
-    public OpenAI() {
-        this(singleton, singleton);
-    }
-
-    /**
-     * Constructor.
-     * @param apiKey API key for authentication and authorization.
-     */
-    public OpenAI(String apiKey) {
-        this(singleton.withOptions(builder -> builder.apiKey(apiKey)));
+    public OpenAI(String model) {
+        this(singleton, model);
     }
 
     /**
      * Constructor with customized client.
      * @param client a client instance for responses API class.
+     * @param model the model name, aka the deployment name in Azure.
      */
-    OpenAI(OpenAIClientAsync client) {
-        this(client, client);
+    public OpenAI(OpenAIClientAsync client, String model) {
+        this(client, client, model);
     }
 
     /**
      * Constructor with customized clients.
      * @param client a client instance for responses API class.
      * @param legacy a client instance for legacy API calls.
+     * @param model the model name, aka the deployment name in Azure.
      */
-    OpenAI(OpenAIClientAsync client, OpenAIClientAsync legacy) {
+    OpenAI(OpenAIClientAsync client, OpenAIClientAsync legacy, String model) {
+        super(model);
         this.client = client;
         this.legacy = legacy;
     }
 
     @Override
-    public Properties options() {
-        return options;
+    public OpenAI withBaseUrl(String baseUrl) {
+        client = client.withOptions(builder -> builder.baseUrl(baseUrl));
+        legacy = legacy.withOptions(builder -> builder.baseUrl(baseUrl));
+        return this;
+    }
+
+    @Override
+    public OpenAI withApiKey(String apiKey) {
+        client = client.withOptions(builder -> builder.apiKey(apiKey));
+        legacy = legacy.withOptions(builder -> builder.apiKey(apiKey));
+        return this;
     }
 
     /**
      * Returns a future of response from OpenAI service.
      * @param input the input message.
+     * @param instructions the system instructions.
      * @return a future of response.
      */
-    public CompletableFuture<Response> response(String input) {
+    public CompletableFuture<Response> response(String input, String instructions) {
         var params = ResponseCreateParams.builder()
                 .model(model())
-                .maxOutputTokens(maxOutputTokens(8192))
-                .instructions(options.getProperty(SYSTEM_PROMPT))
+                .maxOutputTokens(8192)
+                .instructions(instructions)
                 .input(input)
                 .build();
 
         return client.responses().create(params);
     }
 
+    /**
+     * Returns a chat request parameters.
+     * @param message the user message.
+     * @param params the request parameters.
+     * @return a chat request parameters.
+     */
+    private ChatCompletionCreateParams build(String message, Properties params) {
+        // only 1 chat completion choice to generate
+        var builder = ChatCompletionCreateParams.builder().model(model()).n(1);
+
+        var temperature = params.getProperty(TEMPERATURE, "");
+        if (!temperature.isBlank()) {
+            try {
+                builder.temperature(Double.parseDouble(temperature));
+            } catch (NumberFormatException ex) {
+                logger.error("Invalid temperature: {}", temperature);
+            }
+        }
+
+        var stop = params.getProperty(STOP, "");
+        if (!stop.isBlank()) {
+            builder.stop(stop);
+        }
+
+        String maxOutputTokens = params.getProperty(MAX_OUTPUT_TOKENS, "");
+        if (!maxOutputTokens.isBlank()) {
+            try {
+                builder.maxCompletionTokens(Integer.parseInt(maxOutputTokens));
+            } catch (NumberFormatException ex) {
+                logger.error("Invalid maxOutputTokens: {}", maxOutputTokens);
+            }
+        }
+
+        var system = params.getProperty(SYSTEM_PROMPT, "");
+        if (!system.isBlank()) {
+            builder.addDeveloperMessage(system);
+        }
+
+        if (params.getOrDefault(HISTORY, List.of()) instanceof List<?> history) {
+            for (var item : history) {
+                if (item instanceof Message msg) {
+                    switch (msg.role()) {
+                        case user -> builder.addUserMessage(msg.content());
+                        case assistant -> builder.addAssistantMessage(msg.content());
+                    }
+                }
+            }
+        }
+        builder.addUserMessage(message);
+        return builder.build();
+    }
+
     @Override
-    public CompletableFuture<String> complete(String message) {
-        var params = ChatCompletionCreateParams.builder()
-                .model(model())
-                .n(1) // only 1 chat completion choice to generate
-                .temperature(0.2) // low temperature for more predictable, focused, and deterministic code
-                .stop("\n") // stop at the end of line
-                .addDeveloperMessage(options.getProperty(SYSTEM_PROMPT))
-                .addUserMessage(message)
-                .build();
-        return legacy.chat().completions().create(params)
+    public CompletableFuture<String> complete(String message, Properties params) {
+        var request = build(message, params);
+        return legacy.chat().completions().create(request)
                 .thenApply(completion -> completion.choices().stream()
                             .flatMap(choice -> choice.message().content().stream())
                             .collect(Collectors.joining()));
     }
 
     @Override
-    public void complete(String message, Consumer<String> consumer, Function<Throwable, ? extends Void> handler) {
-        var params = ChatCompletionCreateParams.builder()
-                .model(model())
-                .n(1) // only 1 chat completion choice to generate
-                .temperature(0.2) // low temperature for more predictable, focused, and deterministic code
-                .maxCompletionTokens(maxOutputTokens(2048))
-                .addDeveloperMessage(options.getProperty(SYSTEM_PROMPT))
-                .addUserMessage(message)
-                .build();
-        legacy.chat().completions().createStreaming(params)
+    public void complete(String message, Properties params, Consumer<String> consumer,
+                         Function<Throwable, ? extends Void> handler) {
+        var request = build(message, params);
+        legacy.chat().completions().createStreaming(request)
                 .subscribe(completion -> completion.choices().stream()
                         .flatMap(choice -> choice.delta().content().stream())
                         .forEach(consumer))
                 .onCompleteFuture()
                 .exceptionally(handler)
                 .join();
-    }
-
-    /**
-     * Returns the configured model.
-     * @return the configured model.
-     */
-    String model() {
-        return options.getProperty(MODEL, ChatModel.GPT_5_1_CODEX.toString());
     }
 }

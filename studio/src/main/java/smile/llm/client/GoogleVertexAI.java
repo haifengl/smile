@@ -29,12 +29,14 @@ public class GoogleVertexAI extends GoogleGemini {
      * Constructor.
      * @param apiKey API key for authentication and authorization.
      * @param baseUrl the base URL for the service.
+     * @param model the model name.
      */
-    public GoogleVertexAI(String apiKey, String baseUrl) {
+    public GoogleVertexAI(String apiKey, String baseUrl, String model) {
         super(Client.builder()
                 .apiKey(apiKey)
                 .httpOptions(HttpOptions.builder().baseUrl(baseUrl).build())
                 .vertexAI(true)
-                .build());
+                .build(),
+              model);
     }
 }
