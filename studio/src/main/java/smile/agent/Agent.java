@@ -16,7 +16,11 @@
  */
 package smile.agent;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -24,8 +28,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import smile.llm.client.LLM;
 import smile.llm.client.Message;
+import smile.llm.client.Role;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * An LLM agent is an advanced AI system using an LLM as its brain
@@ -36,6 +43,7 @@ import smile.llm.client.Message;
  * @author Haifeng Li
  */
 public class Agent {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Agent.class);
     /** The supplier of LLM service. */
     private final Supplier<LLM> llm;
     /** Global context for system instructions, skills, tools, etc. */
@@ -44,10 +52,14 @@ public class Agent {
     private final Context user;
     /** The project-specific context. */
     private final Context context;
-    /** The conversation history. */
-    private final List<Message> conversations = new ArrayList<>();
     /** The parameters for LLM inference. */
     private final Properties params = new Properties();
+    /** The conversation history. */
+    private final List<Message> conversations = new ArrayList<>();
+    /** The file path for conversation history. */
+    private Path history;
+    /** The JSON object mapper. */
+    private ObjectMapper mapper = new ObjectMapper();
 
     /**
      * Constructor.
@@ -83,6 +95,34 @@ public class Agent {
     }
 
     /**
+     * Loads the conversation history from the file if it exists.
+     * New messages will be saved to the file after each conversation.
+     * @param path the file path for conversation history.
+     */
+    public void loadHistory(Path path) {
+        this.history = path;
+        if (!Files.exists(path)) {
+            // Creates all parent directories
+            try {
+                Files.createDirectories(path.getParent());
+            } catch (IOException ex) {
+                logger.error("Failed to create folder of conversation history", ex);
+            }
+        } else {
+            try (Stream<String> lines = Files.lines(path)) {
+                lines.forEach(line -> {
+                    if (!line.trim().isEmpty()) {
+                        Message message = mapper.readValue(line, Message.class);
+                        conversations.add(message);
+                    }
+                });
+            } catch (IOException ex) {
+                logger.error("Failed to load conversation history", ex);
+            }
+        }
+    }
+
+    /**
      * Returns the LLM service.
      * @return the LLM service.
      */
@@ -114,12 +154,36 @@ public class Agent {
     }
 
     /**
+     * Adds a message to the conversation history and saves it to the file
+     * if history is enabled.
+     * @param message the message to add.
+     */
+    private void addConversation(Message message) {
+        conversations.add(message);
+        if (history != null) {
+            try {
+                String jsonLine = mapper.writeValueAsString(message) + System.lineSeparator();
+                Files.writeString(history, jsonLine, StandardOpenOption.APPEND, StandardOpenOption.CREATE);
+            } catch (Exception ex) {
+                logger.error("Failed to save conversation", ex);
+            }
+        }
+    }
+
+    /**
      * Asynchronously response.
      * @param prompt the user prompt of task.
      * @return a future of full Line completion.
      */
     public CompletableFuture<String> response(String prompt) {
-        return llm.get().complete(prompt, params);
+        var message = new Message(Role.user, prompt, Instant.now());
+        addConversation(message);
+
+        return llm.get().complete(prompt, params)
+                .thenApply(response -> {
+                    addConversation(new Message(Role.assistant, response, Instant.now()));
+                    return response;
+                });
     }
 
     /**
