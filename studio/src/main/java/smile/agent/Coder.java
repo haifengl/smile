@@ -19,6 +19,7 @@ package smile.agent;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import smile.llm.client.LLM;
 
 /**
@@ -37,14 +38,14 @@ public class Coder {
             completed code is syntactically correct and logically
             sound.""";
 
-    /** The LLM service. */
-    private final LLM llm;
+    /** The supplier of LLM service. */
+    private final Supplier<LLM> llm;
 
     /**
      * Constructor.
-     * @param llm the LLM service.
+     * @param llm the supplier of LLM service.
      */
-    public Coder(LLM llm) {
+    public Coder(Supplier<LLM> llm) {
         this.llm = llm;
     }
 
@@ -62,7 +63,7 @@ public class Coder {
             Current line start: %s""";
 
         var prompt = String.format(template, context, start);
-        return llm.complete(prompt);
+        return llm.get().complete(prompt);
     }
 
     /**
@@ -80,16 +81,6 @@ public class Coder {
             Task:%n%s%n%n""";
 
         var prompt = String.format(template, context, task);
-        llm.complete(prompt, consumer, handler);
-    }
-
-    /**
-     * Returns a coder agent instance.
-     * @return a coder agent instance.
-     */
-    public static Coder getInstance() {
-        var model = LLM.getInstance();
-        model.ifPresent(llm -> llm.options().setProperty(LLM.SYSTEM_PROMPT, developer));
-        return model.map(Coder::new).orElse(null);
+        llm.get().complete(prompt, consumer, handler);
     }
 }

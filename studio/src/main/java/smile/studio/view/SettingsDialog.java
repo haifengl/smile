@@ -16,6 +16,9 @@
  */
 package smile.studio.view;
 
+import smile.llm.client.LLM;
+import smile.studio.SmileStudio;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -170,6 +173,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
                 prefs.put(service + BASE_URL, baseUrlFields.get(service).getText());
                 prefs.put(service + MODEL, modelFields.get(service).getText());
             }
+            SmileStudio.initLLM();
             dispose();
         });
 

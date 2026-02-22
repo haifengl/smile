@@ -36,6 +36,7 @@ import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import com.formdev.flatlaf.util.SystemFileChooser;
 import com.formdev.flatlaf.util.SystemInfo;
+import smile.llm.client.*;
 import smile.studio.view.*;
 import smile.swing.Button;
 import static smile.swing.SmileUtilities.scaleImageIcon;
@@ -47,11 +48,14 @@ import static smile.swing.SmileUtilities.scaleImageIcon;
  */
 public class SmileStudio extends JFrame {
     private static final ResourceBundle bundle = ResourceBundle.getBundle(SmileStudio.class.getName(), Locale.getDefault());
+    /** Source code file name extensions. */
+    private static final String[] JAVA_FILE_EXTENSIONS = {"java", "jsh"};
     /** Application preference and configuration. */
     private static final Preferences prefs = Preferences.userNodeForPackage(SmileStudio.class);
-    /** Source code file name extensions. */
-    private static final String[] fileNameExtensions = {"java", "jsh"};
+    /** The key for auto save preference. */
     private static final String AUTO_SAVE_KEY = "autoSave";
+    /** The LLM model. */
+    private static Optional<LLM> llm = initLLM();
     /** Each window has its own FileChooser so that it points to its own recent directory. */
     private final SystemFileChooser fileChooser = new SystemFileChooser();
     private final JMenuBar menuBar = new JMenuBar();
@@ -141,6 +145,78 @@ public class SmileStudio extends JFrame {
         if (SwingUtilities.getWindowAncestor(comp) instanceof SmileStudio studio) {
             studio.statusBar.setStatus(status);
         }
+    }
+
+    /**
+     * Returns an LLM instance if initialized successfully.
+     * @return an LLM instance if initialized successfully.
+     */
+    public static LLM llm() {
+        return llm.orElse(null);
+    }
+
+    /**
+     * Returns an LLM instance specified by app settings.
+     * @return an LLM instance specified by app settings.
+     */
+    public static Optional<LLM> initLLM() {
+        var service = prefs.get("aiService", "");
+        if (service.isBlank()) {
+            llm = Optional.empty();
+            return llm;
+        }
+
+        try {
+            llm = Optional.of(switch (service) {
+                case "OpenAI" -> {
+                    var openai = new OpenAI();
+                    openai.options().setProperty(LLM.MODEL, prefs.get("openaiModel", "gpt-5.1-codex"));
+                    yield openai;
+                }
+
+                case "Azure OpenAI" -> new AzureOpenAI(
+                        prefs.get("azureOpenAIApiKey", ""),
+                        prefs.get("azureOpenAIBaseUrl", ""),
+                        prefs.get("azureOpenAIModel", "gpt-5.1-codex"));
+
+                case "Anthropic" -> {
+                    var anthropic = new Anthropic();
+                    anthropic.options().setProperty(LLM.MODEL, prefs.get("anthropicModel", "claude-sonnet-4-5"));
+                    yield anthropic;
+                }
+
+                case "GoogleGemini" -> {
+                    var gemini = new GoogleGemini(prefs.get("googleGeminiApiKey", ""));
+                    gemini.options().setProperty(LLM.MODEL, prefs.get("googleGeminiModel", "gemini-3-pro-preview"));
+                    yield gemini;
+                }
+
+                case "GoogleVertexAI" -> {
+                    var vertex = new GoogleVertexAI(
+                            prefs.get("googleVertexAIApiKey", ""),
+                            prefs.get("googleVertexAIBaseUrl", ""));
+                    vertex.options().setProperty(LLM.MODEL, prefs.get("googleVertexAIModel", "gemini-3-pro-preview"));
+                    yield vertex;
+                }
+
+                default ->
+                    // Many AI services are compatible with OpenAI ChatCompletions API,
+                    // so we try to initialize OpenAI client.
+                    new AzureOpenAI(
+                            prefs.get("AIApiKey", ""),
+                            prefs.get("AIBaseUrl", "http://localhost:11434/api"),
+                            prefs.get("AIModel", service));
+            });
+        } catch (Throwable t) {
+            llm = Optional.empty();
+            // It is often a rethrow exception
+            JOptionPane.showMessageDialog(null,
+                    "Failed to initialize AI service: " + t.getCause(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+
+        }
+
+        return llm;
     }
 
     /**
@@ -447,7 +523,7 @@ public class SmileStudio extends JFrame {
      */
     private void openNotebook() {
         fileChooser.setDialogTitle(bundle.getString("OpenNotebook"));
-        fileChooser.setFileFilter(new SystemFileChooser.FileNameExtensionFilter(bundle.getString("SmileFile"), fileNameExtensions));
+        fileChooser.setFileFilter(new SystemFileChooser.FileNameExtensionFilter(bundle.getString("SmileFile"), JAVA_FILE_EXTENSIONS));
         if (fileChooser.showOpenDialog(this) == SystemFileChooser.APPROVE_OPTION) {
             Path file = fileChooser.getSelectedFile().toPath();
             createAndShowGUI(file);
@@ -461,7 +537,7 @@ public class SmileStudio extends JFrame {
     private void saveNotebook(boolean saveAs) {
         if (workspace.notebook().getFile() == null || saveAs) {
             fileChooser.setDialogTitle(bundle.getString("SaveNotebook"));
-            fileChooser.setFileFilter(new SystemFileChooser.FileNameExtensionFilter(bundle.getString("SmileFile"), fileNameExtensions));
+            fileChooser.setFileFilter(new SystemFileChooser.FileNameExtensionFilter(bundle.getString("SmileFile"), JAVA_FILE_EXTENSIONS));
             if (fileChooser.showSaveDialog(this) == SystemFileChooser.APPROVE_OPTION) {
                 File file = fileChooser.getSelectedFile();
                 String name = file.getName().toLowerCase();

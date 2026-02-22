@@ -16,12 +16,10 @@
  */
 package smile.llm.client;
 
-import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import smile.studio.SmileStudio;
 
 /**
  * LLM inference interface.
@@ -56,65 +54,6 @@ public interface LLM {
      * @param handler the exception handler.
      */
     void complete(String message, Consumer<String> consumer, Function<Throwable, ? extends Void> handler);
-
-    /**
-     * Returns an LLM instance specified by app settings.
-     * @return an LLM instance specified by app settings.
-     */
-    static Optional<LLM> getInstance() {
-        try {
-            var prefs = SmileStudio.preferences();
-            var service = prefs.get("aiService", "OpenAI");
-
-            LLM llm = switch (service) {
-                case "OpenAI" -> {
-                    var openai = new OpenAI();
-                    openai.options().setProperty(MODEL, prefs.get("openaiModel", "gpt-5.1-codex"));
-                    yield openai;
-                }
-
-                case "Azure OpenAI" -> new AzureOpenAI(
-                        prefs.get("azureOpenAIApiKey", ""),
-                        prefs.get("azureOpenAIBaseUrl", ""),
-                        prefs.get("azureOpenAIModel", "gpt-5.1-codex"));
-
-                case "Anthropic" -> {
-                    var anthropic = new Anthropic();
-                    anthropic.options().setProperty(MODEL, prefs.get("anthropicModel", "claude-sonnet-4-5"));
-                    yield anthropic;
-                }
-
-                case "GoogleGemini" -> {
-                    var gemini = new GoogleGemini(prefs.get("googleGeminiApiKey", ""));
-                    gemini.options().setProperty(MODEL, prefs.get("googleGeminiModel", "gemini-3-pro-preview"));
-                    yield gemini;
-                }
-
-                case "GoogleVertexAI" -> {
-                    var vertex = new GoogleVertexAI(
-                            prefs.get("googleVertexAIApiKey", ""),
-                            prefs.get("googleVertexAIBaseUrl", ""));
-                    vertex.options().setProperty(MODEL, prefs.get("googleVertexAIModel", "gemini-3-pro-preview"));
-                    yield vertex;
-                }
-
-                default -> {
-                    System.out.println("Unknown AI service: " + service);
-                    var openai = new OpenAI();
-                    openai.options().setProperty(MODEL, "gpt-5.1-codex");
-                    yield openai;
-                }
-            };
-
-            return Optional.of(llm);
-        } catch (Throwable t) {
-            // It is often a rethrow exception
-            System.err.println("Failed to initialize AI service: " + t.getCause());
-        }
-
-        return Optional.empty();
-    }
-
 
     /**
      * Returns the upper bound for the number of tokens that can be generated

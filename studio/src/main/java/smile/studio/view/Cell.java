@@ -29,6 +29,7 @@ import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jdesktop.swingx.JXTextField;
 import smile.agent.Coder;
+import smile.studio.SmileStudio;
 import smile.studio.kernel.PostRunNavigation;
 
 /**
@@ -40,7 +41,7 @@ import smile.studio.kernel.PostRunNavigation;
 public class Cell extends JPanel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Cell.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), Locale.getDefault());
-    private static final Coder coder = Coder.getInstance();
+    private static final Coder coder = new Coder(SmileStudio::llm);
     private final String placeholder = bundle.getString("Prompt");
     private final CodeEditor editor = new CodeEditor(20, 80, SyntaxConstants.SYNTAX_STYLE_JAVA);
     private final OutputArea output = new OutputArea();
