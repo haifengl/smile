@@ -149,12 +149,24 @@ public class Agent {
      * Saves the project instructions.
      * @param instructions the project instructions.
      */
-    public void init(String instructions) throws IOException {
+    public void initMemory(String instructions) throws IOException {
         Path path = context.path().resolve(Context.SMILE_MD);
         var metadata = mapper.createObjectNode();
         metadata.put("name", context.path().getFileName().toString().toLowerCase().replaceAll("[\\s_]+", "-"));
         metadata.put("description", "Project instruction manual.");
         Rule rule = new Rule(instructions, metadata, path);
+        rule.save();
+        context.setInstructions(rule);
+    }
+
+    /**
+     * Saves the project instructions.
+     * @param instructions the project instructions.
+     */
+    public void addMemory(String instructions) throws IOException {
+        Rule rule = context.getInstructions();
+        var content = rule.content() + "\n\n" + instructions;
+        rule = new Rule(content, rule.metadata(), rule.path());
         rule.save();
         context.setInstructions(rule);
     }

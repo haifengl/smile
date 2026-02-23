@@ -39,7 +39,7 @@ public class Analyst extends Agent {
     }
 
     @Override
-    public void init(String instructions) throws IOException {
+    public void initMemory(String instructions) throws IOException {
         String template = """
 ## Project
 Your task is to analyze the data and provide insights based on the user's instructions.
@@ -55,6 +55,6 @@ Your task is to analyze the data and provide insights based on the user's instru
     *   The complete, runnable Java code used for the analysis.
     *   Any generated visualizations (e.g., plots saved as PNG files).""";
 
-        super.init(String.format(template, instructions));
+        super.initMemory(String.format(template, instructions));
     }
 }

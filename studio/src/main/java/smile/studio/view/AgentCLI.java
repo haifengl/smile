@@ -46,8 +46,10 @@ public class AgentCLI extends JPanel {
     private final JPanel intents = new ScrollablePanel();
     /** JShell instance. */
     private final JavaRunner runner;
+    /** The project folder. */
+    private final Path path;
     /** The analyst agent. */
-    private final Analyst analyst;
+    private Analyst analyst;
 
     /**
      * Constructor.
@@ -57,7 +59,8 @@ public class AgentCLI extends JPanel {
     public AgentCLI(Path path, JavaRunner runner) {
         super(new BorderLayout());
         this.runner = runner;
-        this.analyst = new Analyst(SmileStudio::llm, path);
+        this.path = path;
+        initAnalyst();
 
         setBorder(new EmptyBorder(0, 0, 0, 8));
         intents.setLayout(new BoxLayout(intents, BoxLayout.Y_AXIS));
@@ -83,6 +86,11 @@ public class AgentCLI extends JPanel {
                     }
                 })
         );
+    }
+
+    private void initAnalyst() {
+        analyst = new Analyst(SmileStudio::llm, path);
+        analyst.loadHistory(path.resolve(".smile", "analyst.json"));
     }
 
     /** Append a new intent box. */
@@ -203,8 +211,10 @@ public class AgentCLI extends JPanel {
             switch (command[0]) {
                 case "help" -> help(command, output);
                 case "train", "predict", "serve" -> runShell(IntentType.Command, instructions, output);
-                case "init" -> init(instructions, output);
+                case "init" -> initMemory(instructions, output);
+                case "add-memory" -> addMemory(instructions, output);
                 case "show-memory" -> showMemory(output);
+                case "refresh-memory" -> refreshMemory(output);
                 case "load" -> load(command);
                 case "analyze" -> analyze(command);
                 default -> System.out.println(instructions);//analyst.run(Intent.this);
@@ -218,30 +228,52 @@ public class AgentCLI extends JPanel {
         output.setText("""
                 The following commands are available:
                 
-                /init the project with your requirements
+                /init\t\tInitialize the project with your tasks and requirements
+                /add-memory\tAdd facts or notes to long-term memory
+                /show-memory\tDisplay the content of long-term memory
+                /refresh-memory\tReload the context from disk
                 /load data
                 /analyze for exploratory data analysis
-                /train to build a model
-                /predict to run batch inference
-                /serve to start an inference service""");
+                /train\t\tTrain a machine learning model
+                /predict\tRun batch inference
+                /serve\t\tStart an inference service""");
     }
 
-    private void init(String instructions, OutputArea output) throws IOException {
+    /** Generates a starter SMILE.md. */
+    private void initMemory(String instructions, OutputArea output) throws IOException {
         String md = instructions.substring(5).trim();
         if (md.isBlank()) {
             output.appendLine("/init should be followed with the project instructions.");
         } else {
-            analyst.init(md);
+            analyst.initMemory(md);
             output.appendLine("SMILE.md created with instructions.");
         }
     }
 
+    /** Appends notes to SMILE.md. */
+    private void addMemory(String instructions, OutputArea output) throws IOException {
+        String md = instructions.substring(10).trim();
+        if (md.isBlank()) {
+            output.appendLine("/add-memory should be followed with notes.");
+        } else {
+            analyst.addMemory(md);
+            output.appendLine("SMILE.md appended with notes.");
+        }
+    }
+
+    /** Displays the content of long-term memory. */
     private void showMemory(OutputArea output) {
         output.setText(analyst.system());
         var html = new Markdown(analyst.system());
         var parent = output.getParent();
         parent.remove(output);
         parent.add(html, BorderLayout.SOUTH);
+    }
+
+    /** Reloads the context from disk. */
+    private void refreshMemory(OutputArea output) {
+        initAnalyst();
+        output.appendLine("Long-term memory was reloaded.");
     }
 
     private void load(String[] command) {
