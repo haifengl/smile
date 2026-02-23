@@ -1,4 +1,3 @@
-//--- CELL ---
 import java.awt.Color;
 import java.util.*;
 import java.util.stream.*;
@@ -10,6 +9,16 @@ import smile.interpolation.BicubicInterpolation;
 import smile.plot.swing.*;
 import static smile.swing.SmileUtilities.*;
 
+double[][] heart = new double[200][2];
+for (int i = 0; i < heart.length; i++) {
+    double t = PI * (i - 100) / 100;
+    heart[i][0] = 16 * pow(sin(t), 3);
+    heart[i][1] = 13 * cos(t) - 5 * cos(2*t) - 2 * cos(3*t) - cos(4*t);
+}
+var figure = LinePlot.of(heart, Color.RED).figure();
+figure.setTitle("Mathematical Beauty");
+show(figure);
+//--- CELL ---
 var home = System.getProperty("smile.home");
 var iris = Read.arff(home + "/data/weka/iris.arff");
 var figure = ScatterPlot.of(iris, "sepallength", "sepalwidth", "class", '*').figure();
