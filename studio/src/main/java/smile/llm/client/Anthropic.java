@@ -17,16 +17,16 @@
 package smile.llm.client;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-
 import com.anthropic.client.AnthropicClientAsync;
 import com.anthropic.client.okhttp.AnthropicOkHttpClientAsync;
+import com.anthropic.core.http.AsyncStreamResponse;
 import com.anthropic.helpers.MessageAccumulator;
 import com.anthropic.models.messages.MessageCreateParams;
+import com.anthropic.models.messages.RawMessageStreamEvent;
 import com.anthropic.models.messages.TextBlock;
 import com.anthropic.models.messages.TextDelta;
 
@@ -142,17 +142,23 @@ public class Anthropic extends LLM {
     }
 
     @Override
-    public void complete(String message, Properties params, Consumer<String> consumer,
-                         Function<Throwable, ? extends Void> handler) {
+    public void complete(String message, Properties params, StreamResponseHandler handler) {
         var request = build(message, params);
         var accumulator = MessageAccumulator.create();
         client.messages().createStreaming(request)
-                .subscribe(event -> accumulator.accumulate(event).contentBlockDelta().stream()
-                        .flatMap(block -> block.delta().text().stream())
-                        .map(TextDelta::text)
-                        .forEach(consumer))
-                .onCompleteFuture()
-                .exceptionally(handler)
-                .join();
+                .subscribe(new AsyncStreamResponse.Handler<>() {
+                    @Override
+                    public void onNext(RawMessageStreamEvent chunk) {
+                        accumulator.accumulate(chunk).contentBlockDelta().stream()
+                                .flatMap(block -> block.delta().text().stream())
+                                .map(TextDelta::text)
+                                .forEach(handler::onNext);
+                    }
+
+                    @Override
+                    public void onComplete(Optional<Throwable> error) {
+                        handler.onComplete(error);
+                    }
+        });
     }
 }

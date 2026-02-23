@@ -20,19 +20,19 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import smile.llm.client.LLM;
 import smile.llm.client.Message;
-import smile.llm.client.Role;
+import smile.llm.client.StreamResponseHandler;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 /**
  * An LLM agent is an advanced AI system using an LLM as its brain
@@ -54,12 +54,14 @@ public class Agent {
     private final Context context;
     /** The parameters for LLM inference. */
     private final Properties params = new Properties();
+    /** The JSON object mapper. */
+    private final ObjectMapper mapper;
     /** The conversation history. */
     private final List<Message> conversations = new ArrayList<>();
     /** The file path for conversation history. */
     private Path history;
-    /** The JSON object mapper. */
-    private ObjectMapper mapper = new ObjectMapper();
+    /** The number of recent conversations to keep in context. */
+    private int window = 5;
 
     /**
      * Constructor.
@@ -74,6 +76,11 @@ public class Agent {
         this.user = user;
         this.global = global;
         params.setProperty(LLM.SYSTEM_PROMPT, system());
+        // Ignore null fields
+        mapper = JsonMapper.builder()
+                .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
+                .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL))
+                .build();
     }
 
     /**
@@ -92,6 +99,22 @@ public class Agent {
      */
     public Agent(Supplier<LLM> llm, Path path) {
         this(llm, new Context(path));
+    }
+
+    /**
+     * Returns the number of recent conversations to keep in context.
+     * @return the number of recent conversations to keep in context.
+     */
+    public int getWindow() {
+        return window;
+    }
+
+    /**
+     * Sets the number of recent conversations to keep in context.
+     * @param size the number of recent conversations to keep in context.
+     */
+    public void setWindow(int size) {
+        window = size;
     }
 
     /**
@@ -171,17 +194,30 @@ public class Agent {
     }
 
     /**
+     * Sets the conversation history in the parameters for LLM inference.
+     * Only the recent conversations within the window size will be kept.
+     */
+    private void setHistory() {
+        if (window > 0) {
+            // keeps only the recent conversations within the window size
+            int fromIndex = Math.max(conversations.size() - window, 0);
+            params.put(LLM.HISTORY, conversations.subList(fromIndex, conversations.size()));
+        }
+    }
+
+    /**
      * Asynchronously response.
      * @param prompt the user prompt of task.
      * @return a future of full Line completion.
      */
     public CompletableFuture<String> response(String prompt) {
-        var message = new Message(Role.user, prompt, Instant.now());
-        addConversation(message);
+        setHistory();
+        addConversation(new Message(prompt));
 
         return llm.get().complete(prompt, params)
-                .thenApply(response -> {
-                    addConversation(new Message(Role.assistant, response, Instant.now()));
+                .handle((response, ex) -> {
+                    String error = Optional.ofNullable(ex).map(Throwable::getMessage).orElse(null);
+                    addConversation(new Message(response, error));
                     return response;
                 });
     }
@@ -189,10 +225,28 @@ public class Agent {
     /**
      * Asynchronously response in a streaming way.
      * @param prompt the user prompt of task.
-     * @param consumer the consumer of completion chunks.
-     * @param handler the exception handler.
+     * @param handler the stream response handler.
      */
-    public void stream(String prompt, Consumer<String> consumer, Function<Throwable, ? extends Void> handler) {
-        llm.get().complete(prompt, params, consumer, handler);
+    public void stream(String prompt, StreamResponseHandler handler) {
+        setHistory();
+        addConversation(new Message(prompt));
+
+        StringBuilder sb = new StringBuilder();
+        var accumulator = new StreamResponseHandler() {
+            @Override
+            public void onNext(String chunk) {
+                sb.append(chunk);
+                handler.onNext(chunk);
+            }
+
+            @Override
+            public void onComplete(Optional<Throwable> ex) {
+                String error = ex.map(Throwable::getMessage).orElse(null);
+                addConversation(new Message(sb.toString(), error));
+                handler.onComplete(ex);
+            }
+        };
+
+        llm.get().complete(prompt, params, accumulator);
     }
 }

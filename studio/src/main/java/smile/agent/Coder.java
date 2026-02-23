@@ -22,6 +22,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import smile.llm.client.LLM;
+import smile.llm.client.StreamResponseHandler;
 
 /**
  * The coding assistant agent.
@@ -36,6 +37,8 @@ public class Coder extends Agent {
      */
     public Coder(Supplier<LLM> llm, Path path) {
         super(llm, path);
+        // no window for code generation and completion
+        setWindow(0);
         // low temperature for more predictable, focused, and deterministic code
         params().setProperty(LLM.TEMPERATURE, "0.2");
         params().setProperty(LLM.MAX_OUTPUT_TOKENS, "2048");
@@ -49,8 +52,7 @@ public class Coder extends Agent {
      */
     public CompletableFuture<String> complete(String start, String context) {
         String template = """
-            Complete the next line of Java code based on the provided context.
-            Returns the whole line of generated code, without explanations or markdown annotations.%n%n
+            Complete the next line of code based on the provided context.
             Context:%n%s%n%n
             Current line start: %s""";
 
@@ -66,17 +68,15 @@ public class Coder extends Agent {
      * Asynchronously generates code based on prompt in a streaming way.
      * @param task the user prompt of task.
      * @param context the selected or previous lines of code.
-     * @param consumer the consumer of completion chunks.
-     * @param handler the exception handler.
+     * @param handler the stream response handler.
      */
-    public void generate(String task, String context, Consumer<String> consumer, Function<Throwable, ? extends Void> handler) {
+    public void generate(String task, String context, StreamResponseHandler handler) {
         String template = """
-            Generate Java code based on the provided context and task.
-            Returns the generated code only, without explanations or markdown annotations.%n%n
+            Generate code based on the provided context and task.
             Context:%n%s%n%n
             Task:%n%s%n%n""";
 
         var prompt = String.format(template, context, task);
-        stream(prompt, consumer, handler);
+        stream(prompt, handler);
     }
 }

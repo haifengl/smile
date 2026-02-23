@@ -18,8 +18,6 @@ package smile.llm.client;
 
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 /**
  * LLM inference client. Note that it is stateless and doesn't
@@ -112,20 +110,17 @@ public abstract class LLM {
     /**
      * Asynchronously completes a message in a streaming way.
      * @param message the user message.
-     * @param consumer the consumer of completion chunks.
-     * @param handler the exception handler.
+     * @param handler the stream response handler.
      */
-    public void complete(String message, Consumer<String> consumer, Function<Throwable, ? extends Void> handler) {
-        complete(message, new Properties(), consumer, handler);
+    public void complete(String message, StreamResponseHandler handler) {
+        complete(message, new Properties(), handler);
     }
 
     /**
      * Asynchronously completes a message in a streaming way.
      * @param message the user message.
      * @param params the request parameters.
-     * @param consumer the consumer of completion chunks.
-     * @param handler the exception handler.
+     * @param handler the stream response handler.
      */
-    public abstract void complete(String message, Properties params, Consumer<String> consumer,
-                                  Function<Throwable, ? extends Void> handler);
+    public abstract void complete(String message, Properties params, StreamResponseHandler handler);
 }

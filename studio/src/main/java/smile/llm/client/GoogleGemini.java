@@ -18,10 +18,9 @@ package smile.llm.client;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import com.google.genai.Client;
 import com.google.genai.types.Content;
 import com.google.genai.types.GenerateContentConfig;
@@ -139,16 +138,16 @@ public class GoogleGemini extends LLM {
     }
 
     @Override
-    public void complete(String message, Properties params, Consumer<String> consumer,
-                         Function<Throwable, ? extends Void> handler) {
+    public void complete(String message, Properties params, StreamResponseHandler handler) {
         // To save resources and avoid connection leaks, close the
         // response stream after consumption.
         try (var stream = client.models.generateContentStream(model(), contents(message, params), config(params))) {
             for (var response : stream) {
-                consumer.accept(response.text());
+                handler.onNext(response.text());
             }
+            handler.onComplete(Optional.empty());
         } catch (Throwable t) {
-            handler.apply(t);
+            handler.onComplete(Optional.of(t));
         }
     }
 }

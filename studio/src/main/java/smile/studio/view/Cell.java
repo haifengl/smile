@@ -18,7 +18,6 @@ package smile.studio.view;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
 import javax.swing.*;
@@ -30,7 +29,7 @@ import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jdesktop.swingx.JXTextField;
 import smile.agent.Coder;
-import smile.studio.SmileStudio;
+import smile.llm.client.StreamResponseHandler;
 import smile.studio.kernel.PostRunNavigation;
 
 /**
@@ -39,7 +38,7 @@ import smile.studio.kernel.PostRunNavigation;
  *
  * @author Haifeng Li
  */
-public class Cell extends JPanel {
+public class Cell extends JPanel implements StreamResponseHandler {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Cell.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), Locale.getDefault());
     private final String placeholder = bundle.getString("Prompt");
@@ -251,27 +250,33 @@ public class Cell extends JPanel {
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() {
-                coder.generate(task, context,
-                    chunk -> SwingUtilities.invokeLater(() -> editor.insert(chunk, editor.getCaretPosition())),
-                    ex -> {
-                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(Cell.this,
-                                "Code generation failed: " + ex.getMessage(),
-                                bundle.getString("AIService"),
-                                JOptionPane.ERROR_MESSAGE));
-                        return null;
-                    }
-                );
+                coder.generate(task, context, Cell.this);
                 return null;
             }
 
             @Override
             protected void done() {
                 isCoding = false;
-                // Appending a new line at the end of generated code.
-                SwingUtilities.invokeLater(() -> editor.insert("\n", editor.getCaretPosition()));
             }
         };
         worker.execute();
+    }
+
+    @Override
+    public void onNext(String chunk) {
+        SwingUtilities.invokeLater(() -> editor.insert(chunk, editor.getCaretPosition()));
+    }
+
+    @Override
+    public void onComplete(Optional<Throwable> ex) {
+        // Appending a new line at the end of generated code.
+        SwingUtilities.invokeLater(() -> editor.insert("\n", editor.getCaretPosition()));
+        if (ex.isPresent()) {
+            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(Cell.this,
+                    "Code generation failed: " + ex.map(Throwable::getMessage).orElse("Unknown error"),
+                    bundle.getString("AIService"),
+                    JOptionPane.ERROR_MESSAGE));
+        }
     }
 
     /**
