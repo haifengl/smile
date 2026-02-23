@@ -34,8 +34,6 @@ public class Workspace extends JSplitPane {
     final Explorer explorer = new Explorer(runner);
     /** The pane of conversational agent. */
     final AgentCLI cli;
-    /** The coding assistant agent. */
-    final Coder coder;
     /** The editor of notebook. */
     final Notebook notebook;
     /** The project pane consists of explorer and notebook. */
@@ -47,9 +45,7 @@ public class Workspace extends JSplitPane {
      */
     public Workspace(Path file) {
         super(JSplitPane.HORIZONTAL_SPLIT);
-        coder = new Coder(SmileStudio::llm, Path.of(System.getProperty("smile.home") + "/agents/java-coder"));
-        coder.loadHistory(file.getParent().resolve(".smile", "coder.json"));
-        notebook = new Notebook(file, runner, coder, explorer::refresh);
+        notebook = new Notebook(file, runner, explorer::refresh);
         cli = new AgentCLI(file.getParent(), runner);
 
         project.setLeftComponent(explorer);

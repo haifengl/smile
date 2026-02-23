@@ -35,6 +35,7 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 import jdk.jshell.*;
 import smile.agent.Coder;
+import smile.studio.SmileStudio;
 import smile.studio.kernel.PostRunNavigation;
 import smile.studio.kernel.JavaRunner;
 import smile.swing.ScrollablePanel;
@@ -53,6 +54,7 @@ public class Notebook extends JPanel implements DocumentListener {
     private final JPanel cells = new ScrollablePanel();
     private final JScrollPane scrollPane = new JScrollPane(cells);
     private final DateTimeFormatter datetime = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
+    /** The coding assistant agent. */
     private final Coder coder;
     private final JavaRunner runner;
     private final Runnable postRunAction;
@@ -64,15 +66,16 @@ public class Notebook extends JPanel implements DocumentListener {
      * Constructor.
      * @param file the notebook file. If null, a new notebook will be created.
      * @param runner Java code execution engine.
-     * @param coder the coding assistant agent.
      * @param postRunAction the action to perform after running cells.
      */
-    public Notebook(Path file, JavaRunner runner, Coder coder, Runnable postRunAction) {
+    public Notebook(Path file, JavaRunner runner, Runnable postRunAction) {
         super(new BorderLayout());
         this.file = file;
         this.runner = runner;
-        this.coder = coder;
         this.postRunAction = postRunAction;
+        this.coder = new Coder(SmileStudio::llm, Path.of(System.getProperty("smile.home") + "/agents/java-coder"));
+
+        coder.loadHistory(file.getParent().resolve(".smile", "coder.json"));
         cells.setLayout(new BoxLayout(cells, BoxLayout.Y_AXIS));
         scrollPane.getVerticalScrollBar().setUnitIncrement(18);
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
@@ -144,59 +147,11 @@ public class Notebook extends JPanel implements DocumentListener {
                     import smile.validation.*;
                     import smile.validation.metric.*;
                     import smile.hpo.*;
-                    import smile.vq.*;
-                    
-                    double[][] heart = new double[200][2];
-                    for (int i = 0; i < heart.length; i++) {
-                        double t = PI * (i - 100) / 100;
-                        heart[i][0] = 16 * pow(sin(t), 3);
-                        heart[i][1] = 13 * cos(t) - 5 * cos(2*t) - 2 * cos(3*t) - cos(4*t);
-                    }
-                    var figure = LinePlot.of(heart, Color.RED).figure();
-                    figure.setTitle("Mathematical Beauty");
-                    show(figure);""");
+                    import smile.vq.*;""");
             cell.editor().setPreferredRows();
-
+            // Add an empty cell for user to start with
             cell = addCell(null);
-            cell.editor().setText("""
-                    var home = System.getProperty("smile.home");
-                    var iris = Read.arff(home + "/data/weka/iris.arff");
-                    show(iris);
-                    
-                    figure = ScatterPlot.of(iris, "sepallength", "sepalwidth", "class", '*').figure();
-                    figure.setAxisLabels("sepallength", "sepalwidth");
-                    figure.setTitle("Iris");
-                    show(figure);
-                    
-                    var formula = Formula.lhs("class");
-                    var rf = RandomForest.fit(formula, iris);
-                    IO.println("OOB metrics = " + rf.metrics());
-                    
-                    var params = new Properties();
-                    params.setProperty("smile.random_forest.trees", "100");
-                    params.setProperty("smile.random_forest.max_nodes", "100");
-                    var model = Model.classification("random-forest", formula, iris, null, params);""");
-            cell.editor().setPreferredRows();
-
-            cell = addCell(null);
-            cell.editor().setText("""
-                    var format = CSVFormat.DEFAULT.withDelimiter(' ');
-                    var mnist = Read.csv(home + "/data/mnist/mnist2500_X.txt", format).toArray();
-                    var label = Read.csv(home + "/data/mnist/mnist2500_labels.txt", format).column(0).toIntArray();
-                    
-                    var pca = PCA.fit(mnist).getProjection(50);
-                    var X = pca.apply(mnist);
-                    var tsne = TSNE.fit(X, new TSNE.Options(2, 20, 200, 12, 550));
-                    
-                    figure = ScatterPlot.of(tsne.coordinates(), label, '@').figure();
-                    figure.setTitle("MNIST - t-SNE");
-                    show(figure);
-                    
-                    var umap = UMAP.fit(mnist, new UMAP.Options(15));
-                    figure = ScatterPlot.of(umap, label, '@').figure();
-                    figure.setTitle("MNIST - UMAP");
-                    show(figure);""");
-            cell.editor().setPreferredRows();
+            cell.editor().requestFocus();
         }
 
         if (cells.getComponentCount() > 0 && cells.getComponent(0) instanceof Cell first) {
