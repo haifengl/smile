@@ -37,6 +37,9 @@ import org.xml.sax.SAXException;
  */
 public class Markdown extends JPanel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Markdown.class);
+    private static final Parser parser = Parser.builder().build();
+    private static final HtmlRenderer renderer = HtmlRenderer.builder().build();
+    private static float fontSize = 1.25f;
 
     /**
      * Constructor.
@@ -44,15 +47,15 @@ public class Markdown extends JPanel {
      */
     public Markdown(String text) {
         super(new BorderLayout());
-        Parser parser = Parser.builder().build();
         Node document = parser.parse(text);
-        HtmlRenderer renderer = HtmlRenderer.builder().build();
         String content = renderer.render(document);
 
         String html = """
-                        <html>
-                        <body style="width: 95%; height: auto; margin: 0 auto;">
-                        """ + content + "</body></html>";
+                      <html>
+                      <body style="width: 95%; height: auto; margin: 0 auto;">
+                      <div style="font-size:"""
+                + String.format(" %.2fem;\">", fontSize)
+                + content + "</div></body></html>";
 
         try {
             XHTMLPanel browser = new XHTMLPanel();
@@ -72,5 +75,13 @@ public class Markdown extends JPanel {
             setFont(Monospaced.getFont());
             add(area, BorderLayout.CENTER);
         }
+    }
+
+    /**
+     * Adjusts the font size to render Markdown.
+     * @param delta the value by which the font size is adjusted.
+     */
+    public static void adjustFontSize(float delta) {
+        fontSize += delta;
     }
 }

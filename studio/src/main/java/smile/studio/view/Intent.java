@@ -18,23 +18,12 @@ package smile.studio.view;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.io.IOException;
-import java.io.StringReader;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.BadLocationException;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
 import com.formdev.flatlaf.ui.FlatLineBorder;
 import com.formdev.flatlaf.util.SystemInfo;
-import org.commonmark.node.Node;
-import org.commonmark.parser.Parser;
-import org.commonmark.renderer.html.HtmlRenderer;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
-import org.xhtmlrenderer.simple.XHTMLPanel;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 import smile.plot.swing.Palette;
 import smile.studio.model.IntentType;
 import static smile.studio.model.IntentType.*;
@@ -48,7 +37,6 @@ import static smile.studio.model.IntentType.*;
 public class Intent extends JPanel {
     private static final Color inputColor = new Color(220, 248, 198);
     private static final Color borderColor = Palette.web("#8dd4e8");
-    private static float fontSize = 1.25f;
     private final JPanel footer = new JPanel();
     private final JPanel inputPane = new JPanel(new BorderLayout());
     private final JLabel indicator = new JLabel(">", SwingConstants.CENTER);
@@ -193,13 +181,9 @@ public class Intent extends JPanel {
 
     /** Renders Markdown content. */
     private void renderMarkdown() {
-        try {
-            var html = markdown(editor.getText());
-            remove(output);
-            add(html, BorderLayout.SOUTH);
-        } catch (Exception ex) {
-            output.setText("ERROR rendering Markdown: " + ex.getMessage());
-        }
+        var html = new Markdown(editor.getText());
+        remove(output);
+        add(html, BorderLayout.SOUTH);
     }
 
     /**
@@ -286,45 +270,5 @@ public class Intent extends JPanel {
     static FlatLineBorder createRoundBorder() {
         return new FlatLineBorder(new Insets(5, 5, 5, 5),
                 borderColor, 1, 20);
-    }
-
-    /**
-     * Returns an XHTML panel to display Markdown content.
-     * @param md the Markdown content.
-     * @return an XHTML panel to display markdown content.
-     * @throws ParserConfigurationException if a DocumentBuilder cannot be created with default configuration.
-     * @throws IOException if any IO errors occur.
-     * @throws SAXException if any parse errors occur.
-     */
-    static XHTMLPanel markdown(String md) throws IOException, ParserConfigurationException, SAXException {
-        // Parse Markdown to HTML
-        Parser parser = Parser.builder().build();
-        Node document = parser.parse(md);
-        HtmlRenderer renderer = HtmlRenderer.builder().build();
-        String content = renderer.render(document);
-
-        String html = """
-                      <html>
-                      <body style="width: 95%; height: auto; margin: 0 auto;">
-                      <div style="font-size:"""
-                      + String.format(" %.2fem;\">", fontSize)
-                      + content + "</div></body></html>";
-        var factory = DocumentBuilderFactory.newInstance();
-        var builder = factory.newDocumentBuilder();
-        var doc = builder.parse(new InputSource(new StringReader(html)));
-
-        XHTMLPanel browser = new XHTMLPanel();
-        browser.setInteractive(false);
-        browser.setOpaque(false);
-        browser.setDocument(doc, null); // The second argument is for base URI, can be null
-        return browser;
-    }
-
-    /**
-     * Adjusts the font size to render Markdown.
-     * @param delta the value by which the font size is adjusted.
-     */
-    public static void adjustFontSize(float delta) {
-        fontSize += delta;
     }
 }

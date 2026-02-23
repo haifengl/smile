@@ -19,6 +19,7 @@ package smile.studio.view;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
@@ -202,7 +203,8 @@ public class AgentCLI extends JPanel {
             switch (command[0]) {
                 case "help" -> help(command, output);
                 case "train", "predict", "serve" -> runShell(IntentType.Command, instructions, output);
-                case "init" -> analyst.init(instructions.substring(5).trim());
+                case "init" -> init(instructions, output);
+                case "show-memory" -> showMemory(output);
                 case "load" -> load(command);
                 case "analyze" -> analyze(command);
                 default -> System.out.println(instructions);//analyst.run(Intent.this);
@@ -222,6 +224,24 @@ public class AgentCLI extends JPanel {
                 /train to build a model
                 /predict to run batch inference
                 /serve to start an inference service""");
+    }
+
+    private void init(String instructions, OutputArea output) throws IOException {
+        String md = instructions.substring(5).trim();
+        if (md.isBlank()) {
+            output.appendLine("/init should be followed with the project instructions.");
+        } else {
+            analyst.init(md);
+            output.appendLine("SMILE.md created with instructions.");
+        }
+    }
+
+    private void showMemory(OutputArea output) {
+        output.setText(analyst.system());
+        var html = new Markdown(analyst.system());
+        var parent = output.getParent();
+        parent.remove(output);
+        parent.add(html, BorderLayout.SOUTH);
     }
 
     private void load(String[] command) {
