@@ -32,9 +32,8 @@ public class Analyst extends Agent {
      * @param path the directory path for agent context.
      */
     public Analyst(Supplier<LLM> llm, Path path) {
-        super(llm,
-              new Context(System.getProperty("smile.home") + "/agents/analyst"),
-              new Context(System.getProperty("user.home") + "/.smile/agents/analyst"), 
-              new Context(path));
+        super(llm, new Context(path),
+              new Context(System.getProperty("user.home") + "/.smile/agents/data-analyst"),
+              new Context(System.getProperty("smile.home") + "/agents/data-analyst"));
     }
 }

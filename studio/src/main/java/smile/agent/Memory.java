@@ -164,7 +164,6 @@ public class Memory {
     public void writeTo(Path path) throws IOException {
         StringBuilder sb = new StringBuilder();
         if (metadata != null && !metadata.isEmpty()) {
-            sb.append("---\n");
             ObjectMapper mapper = new YAMLMapper();
             sb.append(mapper.writeValueAsString(metadata));
             sb.append("---\n");

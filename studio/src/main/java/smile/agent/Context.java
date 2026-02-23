@@ -44,13 +44,19 @@ import java.util.List;
  */
 public class Context {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Context.class);
+    /** The file name of project instructions. */
+    public static final String SMILE_MD = "SMILE.md";
+    /** The file name of skill instructions. */
+    public static final String SKILL_MD = "SKILL.md";
+    /** The folder path of context information. */
+    private final Path path;
     /**
      * Top-level instructions that apply to all interactions, such as
      * system instructions, global rules, etc. These are the most
      * critical pieces of information for guiding the agent's behavior
      * and should be prioritized in the context window.
      */
-    private final Rule instructions;
+    private Rule instructions;
     /**
      * Rules are mandatory, context-independent instructions that apply
      * to every interaction for consistency.
@@ -77,11 +83,12 @@ public class Context {
      *             such as system instructions, skills, tools, etc.
      */
     public Context(Path path) {
-        Path smileMd = path.resolve("SMILE.md");
+        this.path = path;
+        Path smileMd = path.resolve(SMILE_MD);
         Rule spec = new Rule("", null, smileMd);
         try {
             spec = Rule.from(smileMd);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             logger.debug("Error reading SMILE.md", ex);
         }
         instructions = spec;
@@ -102,7 +109,7 @@ public class Context {
             try (DirectoryStream<Path> stream = Files.newDirectoryStream(skillDir)) {
                 for (Path entry : stream) {
                     if (Files.isDirectory(entry)) {
-                        rules.add(Rule.from(entry.resolve("SKILL.md")));
+                        skills.add(Skill.from(entry.resolve(SKILL_MD)));
                     }
                 }
             } catch (IOException | DirectoryIteratorException ex) {
@@ -112,11 +119,27 @@ public class Context {
     }
 
     /**
+     * Returns the folder path of context information.
+     * @return the folder path of context information.
+     */
+    public Path path() {
+        return path;
+    }
+
+    /**
      * Returns the top-level instructions.
      * @return the top-level instructions.
      */
-    public Rule instructions() {
+    public Rule getInstructions() {
         return instructions;
+    }
+
+    /**
+     * Sets the project instructions.
+     * @param instructions the project instructions.
+     */
+    public void setInstructions(Rule instructions) {
+        this.instructions = instructions;
     }
 
     /**

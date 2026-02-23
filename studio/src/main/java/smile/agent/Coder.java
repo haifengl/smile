@@ -18,8 +18,6 @@ package smile.agent;
 
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import smile.llm.client.LLM;
 import smile.llm.client.StreamResponseHandler;

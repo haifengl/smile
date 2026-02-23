@@ -146,6 +146,20 @@ public class Agent {
     }
 
     /**
+     * Saves the project instructions.
+     * @param instructions the project instructions.
+     */
+    public void init(String instructions) throws IOException {
+        Path path = context.path().resolve(Context.SMILE_MD);
+        var metadata = mapper.createObjectNode();
+        metadata.put("name", context.path().getFileName().toString().toLowerCase().replaceAll("[\\s_]+", "-"));
+        metadata.put("description", "Project instruction manual.");
+        Rule rule = new Rule(instructions, metadata, path);
+        rule.save();
+        context.setInstructions(rule);
+    }
+
+    /**
      * Returns the LLM service.
      * @return the LLM service.
      */
@@ -166,12 +180,12 @@ public class Agent {
      * @return the system prompt.
      */
     public String system() {
-        String prompt = context.instructions().content();
+        String prompt = context.getInstructions().content();
         if (user != null) {
-            prompt = user.instructions().content() + "\n\n" + prompt;
+            prompt = user.getInstructions().content() + "\n\n" + prompt;
         }
         if (global != null) {
-            prompt = global.instructions().content() + "\n\n" + prompt;
+            prompt = global.getInstructions().content() + "\n\n" + prompt;
         }
         return prompt;
     }

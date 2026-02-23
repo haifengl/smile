@@ -24,7 +24,6 @@ import java.util.List;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
-
 /**
  * Rules are mandatory, context-independent instructions
  * that apply to every interaction for consistency.

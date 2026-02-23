@@ -24,8 +24,10 @@ import java.util.*;
 import java.util.List;
 
 import com.formdev.flatlaf.util.SystemInfo;
+import smile.agent.Analyst;
 import smile.plot.swing.Palette;
 import smile.shell.JShell;
+import smile.studio.SmileStudio;
 import smile.studio.kernel.JavaRunner;
 import smile.studio.kernel.ShellRunner;
 import smile.studio.model.IntentType;
@@ -44,7 +46,7 @@ public class AgentCLI extends JPanel {
     /** JShell instance. */
     private final JavaRunner runner;
     /** The analyst agent. */
-    //private final Agent agent;
+    private final Analyst analyst;
 
     /**
      * Constructor.
@@ -54,7 +56,7 @@ public class AgentCLI extends JPanel {
     public AgentCLI(Path path, JavaRunner runner) {
         super(new BorderLayout());
         this.runner = runner;
-        //this.agent = new Agent(path);
+        this.analyst = new Analyst(SmileStudio::llm, path);
 
         setBorder(new EmptyBorder(0, 0, 0, 8));
         intents.setLayout(new BoxLayout(intents, BoxLayout.Y_AXIS));
@@ -195,14 +197,18 @@ public class AgentCLI extends JPanel {
 
     /** Executes slash commands. */
     private void runCommand(String instructions, OutputArea output) {
-        String[] command = instructions.split("\\s+");
-        switch (command[0]) {
-            case "help" -> help(command, output);
-            case "train", "predict", "serve" -> runShell(IntentType.Command, instructions, output);
-            case "init" -> init(instructions);
-            case "load" -> load(command);
-            case "analyze" -> analyze(command);
-            default -> System.out.println(instructions);//.run(Intent.this);
+        try {
+            String[] command = instructions.split("\\s+");
+            switch (command[0]) {
+                case "help" -> help(command, output);
+                case "train", "predict", "serve" -> runShell(IntentType.Command, instructions, output);
+                case "init" -> analyst.init(instructions.substring(5).trim());
+                case "load" -> load(command);
+                case "analyze" -> analyze(command);
+                default -> System.out.println(instructions);//analyst.run(Intent.this);
+            }
+        } catch (Throwable t) {
+            output.appendLine("Error: " + t.getMessage());
         }
     }
 
@@ -216,10 +222,6 @@ public class AgentCLI extends JPanel {
                 /train to build a model
                 /predict to run batch inference
                 /serve to start an inference service""");
-    }
-
-    private void init(String instructions) {
-
     }
 
     private void load(String[] command) {
