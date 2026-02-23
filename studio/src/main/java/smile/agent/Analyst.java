@@ -16,6 +16,7 @@
  */
 package smile.agent;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.function.Supplier;
 import smile.llm.client.LLM;
@@ -35,5 +36,25 @@ public class Analyst extends Agent {
         super(llm, new Context(path),
               new Context(System.getProperty("user.home") + "/.smile/agents/data-analyst"),
               new Context(System.getProperty("smile.home") + "/agents/data-analyst"));
+    }
+
+    @Override
+    public void init(String instructions) throws IOException {
+        String template = """
+## Project
+Your task is to analyze the data and provide insights based on the user's instructions.
+%s
+
+## Workflow Instructions
+*   **Initial Step:** Always start by examining the shape and form of the datasets, not the raw data itself, to understand data types and identify missing values or outliers.
+*   **Task Breakdown:** Break down complex analysis tasks into smaller, manageable steps (e.g., data loading, cleaning, analysis, visualization, reporting).
+*   **Code Quality:** Ensure all Java code are modular, well-commented, and follow standard best practices.
+*   **Data Quality:** Data quality assessment is a mandatory pre-analysis step.
+*   **Deliverables:** For each task, provide:
+    *   A summary of insights generated in a Markdown format.
+    *   The complete, runnable Java code used for the analysis.
+    *   Any generated visualizations (e.g., plots saved as PNG files).""";
+
+        super.init(String.format(template, instructions));
     }
 }
