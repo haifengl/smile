@@ -218,7 +218,7 @@ public class AgentCLI extends JPanel {
                 case "refresh-memory" -> refreshMemory(output);
                 case "load" -> load(command);
                 case "analyze" -> analyze(command);
-                default -> System.out.println(instructions);//analyst.run(Intent.this);
+                default -> runCustomCommand(command[0], instructions, output);
             }
         } catch (Throwable t) {
             output.appendLine("Error: " + t.getMessage());
@@ -226,7 +226,7 @@ public class AgentCLI extends JPanel {
     }
 
     private void help(String[] command, OutputArea output) {
-        output.setText("""
+        String text = """
                 The following commands are available:
                 
                 /init\t\tInitialize the project with your tasks and requirements
@@ -237,7 +237,12 @@ public class AgentCLI extends JPanel {
                 /analyze for exploratory data analysis
                 /train\t\tTrain a machine learning model
                 /predict\tRun batch inference
-                /serve\t\tStart an inference service""");
+                /serve\t\tStart an inference service""";
+        for (var cmd : analyst.commands()) {
+            var sep = cmd.name().length() > 7 ? "\t" : "\t\t";
+            text += "\n/" + cmd.name() + sep + cmd.description();
+        }
+        output.setText(text);
     }
 
     /** Generates a starter SMILE.md. */
@@ -290,6 +295,23 @@ public class AgentCLI extends JPanel {
 
     }
 
+    private void runCustomCommand(String command, String instructions, OutputArea output) {
+        var cmd = analyst.commands().stream()
+                .filter(c -> c.name().equals(command))
+                .findFirst();
+        if (cmd.isPresent()) {
+            var args = instructions.substring(command.length()).trim();
+            if (args.isBlank() && cmd.get().content().contains("{{args}}")) {
+                output.setText("Error: /" + command + " requires arguments.");
+            } else {
+                var prompt = cmd.get().prompt(args);
+                chat(prompt, output);
+            }
+        } else {
+            output.setText("Error: Unknown command /" + command);
+        }
+    }
+
     private void chat(String prompt, OutputArea output) {
         if (prompt.isBlank()) {
             output.setText(bundle.getString("Hello"));
@@ -316,7 +338,8 @@ public class AgentCLI extends JPanel {
                             SwingUtilities.invokeLater(() ->
                                     output.append("\nError: " + ex.map(Throwable::getMessage).orElse("Unknown")));
                         } else {
-                            if (output.getText().contains("##")) {
+                            var text = output.getText();
+                            if (text.contains("##") || text.contains("**")) {
                                 toMarkdown(output);
                             }
                         }
@@ -327,7 +350,7 @@ public class AgentCLI extends JPanel {
 
             @Override
             protected void done() {
-
+                SwingUtilities.invokeLater(output::flush);
             }
         };
         worker.execute();

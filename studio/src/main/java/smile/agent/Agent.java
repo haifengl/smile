@@ -203,6 +203,21 @@ public class Agent {
     }
 
     /**
+     * Returns the custom commands.
+     * @return the custom commands.
+     */
+    public List<Command> commands() {
+        List<Command> commands = new ArrayList<>(context.commands());
+        if (user != null) {
+            commands.addAll(user.commands());
+        }
+        if (global != null) {
+            commands.addAll(global.commands());
+        }
+        return commands;
+    }
+
+    /**
      * Adds a message to the conversation history and saves it to the file
      * if history is enabled.
      * @param message the message to add.

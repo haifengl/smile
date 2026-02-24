@@ -67,6 +67,11 @@ public class Context {
      * invoke to perform specific tasks.
      */
     private final List<Skill> skills = new ArrayList<>();
+    /**
+     * Custom slash commands. Commands are essentially pre-defined
+     * prompt templates.
+     */
+    private final List<Command> commands = new ArrayList<>();
 
     /**
      * Constructor.
@@ -95,7 +100,7 @@ public class Context {
 
         var ruleDir = path.resolve("rules");
         if (Files.exists(ruleDir)) {
-            try (DirectoryStream<Path> stream = Files.newDirectoryStream(ruleDir, ".md")) {
+            try (var stream = Files.newDirectoryStream(ruleDir, "*.md")) {
                 for (Path file : stream) {
                     rules.add(Rule.from(file));
                 }
@@ -104,9 +109,20 @@ public class Context {
             }
         }
 
+        var commandDir = path.resolve("commands");
+        if (Files.exists(commandDir)) {
+            try (var stream = Files.newDirectoryStream(commandDir, "*.md")) {
+                for (Path file : stream) {
+                    commands.add(Command.from(file));
+                }
+            } catch (IOException | DirectoryIteratorException ex) {
+                logger.error("Error reading commands", ex);
+            }
+        }
+
         var skillDir = path.resolve("skills");
         if (Files.exists(ruleDir)) {
-            try (DirectoryStream<Path> stream = Files.newDirectoryStream(skillDir)) {
+            try (var stream = Files.newDirectoryStream(skillDir)) {
                 for (Path entry : stream) {
                     if (Files.isDirectory(entry)) {
                         skills.add(Skill.from(entry.resolve(SKILL_MD)));
@@ -156,5 +172,13 @@ public class Context {
      */
     public List<Skill> skills() {
         return skills;
+    }
+
+    /**
+     * Returns the commands.
+     * @return the commands.
+     */
+    public List<Command> commands() {
+        return commands;
     }
 }
