@@ -44,6 +44,7 @@ public class Markdown extends JPanel {
     private static final Parser parser = Parser.builder().build();
     private static final HtmlRenderer renderer = HtmlRenderer.builder().build();
     private static float fontSize = SmileStudio.preferences().getFloat("markdownFontSize", 1.25f);
+    private final String text;
 
     /**
      * Constructor.
@@ -51,6 +52,12 @@ public class Markdown extends JPanel {
      */
     public Markdown(String text) {
         super(new BorderLayout());
+        this.text = text;
+        render();
+    }
+
+    /** Renders the Markdown content. */
+    private void render() {
         Node document = parser.parse(text);
         String content = renderer.render(document);
 

@@ -17,6 +17,7 @@
 package smile.studio.view;
 
 import javax.swing.*;
+import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.io.IOException;
@@ -217,7 +218,7 @@ public class AgentCLI extends JPanel {
                 case "show-memory" -> showMemory(output);
                 case "refresh-memory" -> refreshMemory(output);
                 case "load" -> load(command);
-                case "analyze" -> analyze(command);
+                //case "analyze" -> analyze(command);
                 default -> runCustomCommand(command[0], instructions, output);
             }
         } catch (Throwable t) {
@@ -239,7 +240,7 @@ public class AgentCLI extends JPanel {
                 /predict\tRun batch inference
                 /serve\t\tStart an inference service""";
         for (var cmd : analyst.commands()) {
-            var sep = cmd.name().length() > 7 ? "\t" : "\t\t";
+            var sep = cmd.name().length() > 6 ? "\t" : "\t\t";
             text += "\n/" + cmd.name() + sep + cmd.description();
         }
         output.setText(text);
@@ -323,36 +324,44 @@ public class AgentCLI extends JPanel {
             return;
         }
 
-        SwingWorker<Void, Void> worker = new SwingWorker<>() {
-            @Override
-            protected Void doInBackground() {
-                analyst.stream(prompt, new StreamResponseHandler() {
-                    @Override
-                    public void onNext(String chunk) {
-                        SwingUtilities.invokeLater(() -> output.append(chunk));
-                    }
+        output.setText("Thinking...");
+        var timer = new Timer(500, e -> output.append("."));
+        timer.start();
 
-                    @Override
-                    public void onComplete(Optional<Throwable> ex) {
-                        if (ex.isPresent()) {
-                            SwingUtilities.invokeLater(() ->
-                                    output.append("\nError: " + ex.map(Throwable::getMessage).orElse("Unknown")));
-                        } else {
-                            var text = output.getText();
-                            if (text.contains("##") || text.contains("**")) {
+        // Stream processing runs in a background thread so that we don't
+        // need to create a SwingWorker thread.
+        analyst.stream(prompt, new StreamResponseHandler() {
+            boolean firstChunk = true;
+            @Override
+            public void onNext(String chunk) {
+                SwingUtilities.invokeLater(() -> {
+                    if (firstChunk) {
+                        timer.stop();
+                        output.clear();
+                        firstChunk = false;
+                    }
+                    output.append(chunk);
+                });
+            }
+
+            @Override
+            public void onComplete(Optional<Throwable> ex) {
+                if (ex.isPresent()) {
+                    SwingUtilities.invokeLater(() ->
+                            output.append("\nError: " + ex.map(Throwable::getMessage).orElse("Unknown")));
+                } else {
+                    SwingUtilities.invokeLater(() -> {
+                        var text = output.getText();
+                        // simple heuristic to detect Markdown syntax
+                        if (text.contains("##") || text.contains("**")) {
+                            // commonmark doesn't render table nicely
+                            if (!text.contains("|--")) {
                                 toMarkdown(output);
                             }
                         }
-                    }
-                });
-                return null;
+                    });
+                }
             }
-
-            @Override
-            protected void done() {
-                SwingUtilities.invokeLater(output::flush);
-            }
-        };
-        worker.execute();
+        });
     }
 }
