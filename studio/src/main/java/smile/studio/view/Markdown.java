@@ -22,13 +22,17 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.awt.*;
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.URI;
 
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.xhtmlrenderer.simple.XHTMLPanel;
+import org.xhtmlrenderer.swing.BasicPanel;
+import org.xhtmlrenderer.swing.LinkListener;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import smile.studio.SmileStudio;
 
 /**
  * A component to render Markdown text.
@@ -39,7 +43,7 @@ public class Markdown extends JPanel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Markdown.class);
     private static final Parser parser = Parser.builder().build();
     private static final HtmlRenderer renderer = HtmlRenderer.builder().build();
-    private static float fontSize = 1.25f;
+    private static float fontSize = SmileStudio.preferences().getFloat("markdownFontSize", 1.25f);
 
     /**
      * Constructor.
@@ -62,6 +66,27 @@ public class Markdown extends JPanel {
             browser.setInteractive(false);
             browser.setOpaque(false); // transparent background
 
+            // Remove pre-installed LinkListeners
+            for (var listener : browser.getMouseTrackingListeners()) {
+                if (listener instanceof LinkListener) {
+                    browser.removeMouseTrackingListener(listener);
+                }
+            }
+            // Add a custom LinkListener to handle link clicks
+            browser.addMouseTrackingListener(new LinkListener() {
+                @Override
+                public void linkClicked(BasicPanel panel, String uri) {
+                    try {
+                        // Use the Java Desktop API to open the URI in the default browser
+                        if (Desktop.isDesktopSupported()) {
+                            Desktop.getDesktop().browse(new URI(uri));
+                        }
+                    } catch (Exception ex) {
+                        logger.error("Failed to open browser: ", ex);
+                    }
+                }
+            });
+
             var factory = DocumentBuilderFactory.newInstance();
             var builder = factory.newDocumentBuilder();
             var doc = builder.parse(new InputSource(new StringReader(html)));
@@ -83,5 +108,6 @@ public class Markdown extends JPanel {
      */
     public static void adjustFontSize(float delta) {
         fontSize += delta;
+        SmileStudio.preferences().putFloat("markdownFontSize", fontSize);
     }
 }
