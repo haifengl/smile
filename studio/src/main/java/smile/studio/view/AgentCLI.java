@@ -217,6 +217,7 @@ public class AgentCLI extends JPanel {
                 case "add-memory" -> addMemory(instructions, output);
                 case "show-memory" -> showMemory(output);
                 case "refresh-memory" -> refreshMemory(output);
+                case "show-system" -> showSystemPrompt(output); // for debugging
                 case "load" -> load(command);
                 //case "analyze" -> analyze(command);
                 default -> runCustomCommand(command[0], instructions, output);
@@ -272,6 +273,11 @@ public class AgentCLI extends JPanel {
     private void showMemory(OutputArea output) {
         output.setText(analyst.instructions());
         toMarkdown(output);
+    }
+
+    /** Displays the system prompt. */
+    private void showSystemPrompt(OutputArea output) {
+        output.setText(analyst.system());
     }
 
     /** Renders output as Markdown. */
@@ -347,6 +353,7 @@ public class AgentCLI extends JPanel {
             @Override
             public void onComplete(Optional<Throwable> ex) {
                 if (ex.isPresent()) {
+                    timer.stop();
                     SwingUtilities.invokeLater(() ->
                             output.append("\nError: " + ex.map(Throwable::getMessage).orElse("Unknown")));
                 } else {

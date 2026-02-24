@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -196,21 +197,6 @@ public class Agent {
     }
 
     /**
-     * Returns the system prompt.
-     * @return the system prompt.
-     */
-    public String system() {
-        String prompt = context.getInstructions().content();
-        if (user != null) {
-            prompt = user.getInstructions().content() + "\n\n" + prompt;
-        }
-        if (global != null) {
-            prompt = global.getInstructions().content() + "\n\n" + prompt;
-        }
-        return prompt;
-    }
-
-    /**
      * Returns the custom commands.
      * @return the custom commands.
      */
@@ -223,6 +209,54 @@ public class Agent {
             commands.addAll(global.commands());
         }
         return commands;
+    }
+
+    /**
+     * Returns the constitution, which will be injected into the system prompt.
+     * @return the constitution.
+     */
+    public String constitution() {
+        return "";
+    }
+
+    /**
+     * Returns the system reminder, which will be injected into the user message.
+     * @return the system reminder.
+     */
+    public String reminder() {
+        return "";
+    }
+
+    /**
+     * Returns the system prompt.
+     * @return the system prompt.
+     */
+    public String system() {
+        String prompt = constitution();
+        if (global != null) {
+            prompt += "\n\n" + global.getInstructions().content();
+        }
+        if (user != null) {
+            prompt += "\n\n" + user.getInstructions().content();
+        }
+        prompt += "\n\n" + context.getInstructions().content();
+        prompt += "\n\n" + String.format("""
+                Here is useful information about the environment you are running in:
+                <env>
+                Working directory: %s
+                Is directory a git repo: %s
+                Platform: %s
+                OS Version: %s
+                Today's date: %s
+                </env>
+                """,
+                System.getProperty("user.dir"),
+                Files.exists(Path.of(System.getProperty("user.dir"), ".git")) ? "Yes" : "No",
+                System.getProperty("os.name"),
+                System.getProperty("os.version"),
+                LocalDate.now());
+
+        return prompt;
     }
 
     /**
@@ -297,6 +331,7 @@ public class Agent {
             }
         };
 
+        prompt = reminder() + prompt;
         llm.get().complete(prompt, history, params, accumulator);
     }
 }

@@ -10,7 +10,7 @@ completed code is syntactically correct and logically sound.
 *   **Focus:** Adhere to "Clean Code" principles. Avoid external libraries unless explicitly approved.
 *   **Output Style:** Returns the generated code only, without explanations or Markdown annotations.
 
-## Coding Conventions
+## Guidelines
 *   Avoid using wildcard imports (e.g., import java.util.*).
 *   Declare variables close to where they are first used to minimize their scope.
 *   Use parentheses liberally in expressions to avoid operator precedence issues.

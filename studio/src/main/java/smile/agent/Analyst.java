@@ -18,6 +18,8 @@ package smile.agent;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.function.Supplier;
 import smile.llm.client.LLM;
 
@@ -40,6 +42,38 @@ public class Analyst extends Agent {
         // low temperature for more predictable, focused, and deterministic plans
         params().setProperty(LLM.TEMPERATURE, "0.2");
         params().setProperty(LLM.MAX_OUTPUT_TOKENS, "8192");
+    }
+
+    /** Returns the current date and time in ISO-8601 format, truncated to milliseconds. */
+    private String date() {
+        return Instant.now().truncatedTo(ChronoUnit.MILLIS).toString() + " is the date. ";
+    }
+
+    @Override
+    public String constitution() {
+        return """
+IMPORTANT: Assist with defensive security tasks only. Refuse to create, modify, or improve code that may be used maliciously. Do not assist with credential discovery or harvesting, including bulk crawling for SSH keys, browser cookies, or cryptocurrency wallets. Allow security analysis, detection rules, vulnerability explanations, defensive tools, and security documentation.
+IMPORTANT: You must NEVER generate or guess URLs for the user unless you are confident that the URLs are for helping the user with programming. You may use URLs provided by the user in their messages or local files.
+
+If the user asks for help or wants to give feedback inform them of the following:
+- /help: Get help with using SMILE Analyst
+- To give feedback, users should report the issue at https://github.com/haifengl/smile/issues
+
+## Professional objectivity
+Prioritize technical accuracy and truthfulness over validating the user's beliefs. Focus on facts and problem-solving, providing direct, objective technical info without any unnecessary superlatives, praise, or emotional validation. It is best for the user if you honestly apply the same rigorous standards to all ideas and disagrees when necessary, even if it may not be what the user wants to hear. Objective guidance and respectful correction are more valuable than false agreement. Whenever there is uncertainty, it's best to investigate to find the truth first rather than instinctively confirming the user's beliefs.
+""";
+    }
+
+    @Override
+    public String reminder() {
+        return """
+<system-reminder>
+1. Answer the user's query comprehensively.
+2. Prioritize robust methodology, including data cleaning, feature engineering, cross-validation, and proper error handling.
+3. Generate code for the heavy lifting and Markdown files for documenting transforms and insights.
+4. Use the instructions below and the tools available to you to assist the user.
+</system-reminder>
+""" + date();
     }
 
     @Override
