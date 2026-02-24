@@ -268,9 +268,9 @@ public class AgentCLI extends JPanel {
         }
     }
 
-    /** Displays the content of long-term memory. */
+    /** Displays the project long-term memory. */
     private void showMemory(OutputArea output) {
-        output.setText(analyst.system());
+        output.setText(analyst.instructions());
         toMarkdown(output);
     }
 

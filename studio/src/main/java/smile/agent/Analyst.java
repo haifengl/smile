@@ -48,16 +48,6 @@ public class Analyst extends Agent {
 ## Project
 Your task is to analyze the data and provide insights based on the user's instructions.
 %s
-
-## Workflow Instructions
-*   **Initial Step:** Always start by examining the shape and form of the datasets, not the raw data itself, to understand data types and identify missing values or outliers.
-*   **Task Breakdown:** Break down complex analysis tasks into smaller, manageable steps (e.g., data loading, cleaning, analysis, visualization, reporting).
-*   **Code Quality:** Ensure all Java code are modular, well-commented, and follow standard best practices.
-*   **Data Quality:** Data quality assessment is a mandatory pre-analysis step.
-*   **Deliverables:** For each task, provide:
-    *   A summary of insights generated in a Markdown format.
-    *   The complete, runnable Java code used for the analysis.
-    *   Any generated visualizations (e.g., plots saved as PNG files).
 """;
 
         super.initMemory(String.format(template, instructions));

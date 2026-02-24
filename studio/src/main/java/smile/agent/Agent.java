@@ -188,6 +188,14 @@ public class Agent {
     }
 
     /**
+     * Returns the project instructions.
+     * @return the project instructions.
+     */
+    public String instructions() {
+        return context.getInstructions().content();
+    }
+
+    /**
      * Returns the system prompt.
      * @return the system prompt.
      */
