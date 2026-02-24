@@ -121,11 +121,11 @@ public class Context {
         }
 
         var skillDir = path.resolve("skills");
-        if (Files.exists(ruleDir)) {
+        if (Files.exists(skillDir)) {
             try (var stream = Files.newDirectoryStream(skillDir)) {
-                for (Path entry : stream) {
-                    if (Files.isDirectory(entry)) {
-                        skills.add(Skill.from(entry.resolve(SKILL_MD)));
+                for (Path folder : stream) {
+                    if (Files.isDirectory(folder)) {
+                        skills.add(Skill.from(folder));
                     }
                 }
             } catch (IOException | DirectoryIteratorException ex) {

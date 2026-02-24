@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -212,6 +213,36 @@ public class Agent {
     }
 
     /**
+     * Returns the rules.
+     * @return the rules.
+     */
+    public List<Rule> rules() {
+        List<Rule> rules = new ArrayList<>(context.rules());
+        if (user != null) {
+            rules.addAll(user.rules());
+        }
+        if (global != null) {
+            rules.addAll(global.rules());
+        }
+        return rules;
+    }
+
+    /**
+     * Returns the skills.
+     * @return the skills.
+     */
+    public List<Skill> skills() {
+        List<Skill> skills = new ArrayList<>(context.skills());
+        if (user != null) {
+            skills.addAll(user.skills());
+        }
+        if (global != null) {
+            skills.addAll(global.skills());
+        }
+        return skills;
+    }
+
+    /**
      * Returns the constitution, which will be injected into the system prompt.
      * @return the constitution.
      */
@@ -240,6 +271,32 @@ public class Agent {
             prompt += "\n\n" + user.getInstructions().content();
         }
         prompt += "\n\n" + context.getInstructions().content();
+
+        var rules = rules();
+        if (!rules.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            for (var rule : rules) {
+                sb.append("\n\n");
+                sb.append(rule.content());
+            }
+            prompt += sb.toString();
+        }
+
+        var skills = skills();
+        if (!skills.isEmpty()) {
+            StringBuilder sb = new StringBuilder("\n\nHere are the skills you can use:\n");
+            sb.append("<skills>\n");
+            for (var skill : skills) {
+                sb.append(String.format("""
+                        <skill name="%s">
+                        %s
+                        </skill>
+                        """, skill.name(), skill.description()));
+            }
+            sb.append("</skills>\n");
+            prompt += sb.toString();
+        }
+
         prompt += "\n\n" + String.format("""
                 Here is useful information about the environment you are running in:
                 <env>
@@ -248,13 +305,15 @@ public class Agent {
                 Platform: %s
                 OS Version: %s
                 Today's date: %s
+                Time zone: %s
                 </env>
                 """,
                 System.getProperty("user.dir"),
                 Files.exists(Path.of(System.getProperty("user.dir"), ".git")) ? "Yes" : "No",
                 System.getProperty("os.name"),
                 System.getProperty("os.version"),
-                LocalDate.now());
+                LocalDate.now(),
+                ZoneId.systemDefault());
 
         return prompt;
     }

@@ -88,28 +88,34 @@ public class Skill extends Memory {
      */
     public static Skill from(Path path) throws IOException {
         Memory memory = Memory.from(path.resolve("SKILL.md"));
-        Map<String, Path> scripts;
-        try (var stream = Files.list(path.resolve("scripts"))) {
-            scripts = stream.filter(Files::isRegularFile)
-                    .filter(Files::isExecutable)
-                    .collect(
-                            Collectors.toMap(
-                                    f -> f.getFileName().toString(),
-                                    f -> f
-                            )
-                    );
+        Map<String, Path> scripts = Map.of();
+        var scriptDir = path.resolve("scripts");
+        if (Files.exists(scriptDir)) {
+            try (var stream = Files.list(scriptDir)) {
+                scripts = stream.filter(Files::isRegularFile)
+                        .filter(Files::isExecutable)
+                        .collect(
+                                Collectors.toMap(
+                                        f -> f.getFileName().toString(),
+                                        f -> f
+                                )
+                        );
+            }
         }
 
-        Map<String, Path> references;
-        try (var stream = Files.list(path.resolve("references"))) {
-            references = stream.filter(Files::isRegularFile)
-                    .filter(f -> f.getFileName().toString().endsWith(".md"))
-                    .collect(
-                        Collectors.toMap(
-                            f -> f.getFileName().toString(),
-                            f -> f
-                        )
-                    );
+        Map<String, Path> references = Map.of();
+        var refDir = path.resolve("references");
+        if (Files.exists(refDir)) {
+            try (var stream = Files.list(refDir)) {
+                references = stream.filter(Files::isRegularFile)
+                        .filter(f -> f.getFileName().toString().endsWith(".md"))
+                        .collect(
+                                Collectors.toMap(
+                                        f -> f.getFileName().toString(),
+                                        f -> f
+                                )
+                        );
+            }
         }
         return new Skill(memory.content(), memory.metadata(), scripts, references, path);
     }
