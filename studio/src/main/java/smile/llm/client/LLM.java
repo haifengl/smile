@@ -16,6 +16,7 @@
  */
 package smile.llm.client;
 
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 
@@ -96,16 +97,17 @@ public abstract class LLM {
      * @return a future of completion.
      */
     public CompletableFuture<String> complete(String message) {
-        return complete(message, new Properties());
+        return complete(message, List.of(), new Properties());
     }
 
     /**
      * Asynchronously completes a message.
      * @param message the user message.
+     * @param history the conversation history, which is a list of messages in chronological order.
      * @param params the request parameters.
      * @return a future of completion.
      */
-    public abstract CompletableFuture<String> complete(String message, Properties params);
+    public abstract CompletableFuture<String> complete(String message, List<Message> history, Properties params);
 
     /**
      * Asynchronously completes a message in a streaming way.
@@ -113,14 +115,16 @@ public abstract class LLM {
      * @param handler the stream response handler.
      */
     public void complete(String message, StreamResponseHandler handler) {
-        complete(message, new Properties(), handler);
+        complete(message, List.of(), new Properties(), handler);
     }
 
     /**
      * Asynchronously completes a message in a streaming way.
      * @param message the user message.
+     * @param history the conversation history, which is a list of messages in chronological order.
      * @param params the request parameters.
      * @param handler the stream response handler.
      */
-    public abstract void complete(String message, Properties params, StreamResponseHandler handler);
+    public abstract void complete(String message, List<Message> history,
+                                  Properties params, StreamResponseHandler handler);
 }

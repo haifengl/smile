@@ -26,6 +26,7 @@ import java.util.List;
 
 import com.formdev.flatlaf.util.SystemInfo;
 import smile.agent.Analyst;
+import smile.llm.client.StreamResponseHandler;
 import smile.plot.swing.Palette;
 import smile.shell.JShell;
 import smile.studio.SmileStudio;
@@ -264,7 +265,12 @@ public class AgentCLI extends JPanel {
     /** Displays the content of long-term memory. */
     private void showMemory(OutputArea output) {
         output.setText(analyst.system());
-        var html = new Markdown(analyst.system());
+        toMarkdown(output);
+    }
+
+    /** Renders output as Markdown. */
+    private void toMarkdown(OutputArea output) {
+        var html = new Markdown(output.getText());
         var parent = output.getParent();
         parent.remove(output);
         parent.add(html, BorderLayout.SOUTH);
@@ -285,6 +291,45 @@ public class AgentCLI extends JPanel {
     }
 
     private void chat(String prompt, OutputArea output) {
-        output.setText(bundle.getString("NoAIServiceError"));
+        if (prompt.isBlank()) {
+            output.setText(bundle.getString("Hello"));
+            return;
+        }
+
+        if (analyst.llm() == null) {
+            output.setText(bundle.getString("NoAIServiceError"));
+            return;
+        }
+
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Void doInBackground() {
+                analyst.stream(prompt, new StreamResponseHandler() {
+                    @Override
+                    public void onNext(String chunk) {
+                        SwingUtilities.invokeLater(() -> output.append(chunk));
+                    }
+
+                    @Override
+                    public void onComplete(Optional<Throwable> ex) {
+                        if (ex.isPresent()) {
+                            SwingUtilities.invokeLater(() ->
+                                    output.append("\nError: " + ex.map(Throwable::getMessage).orElse("Unknown")));
+                        } else {
+                            if (output.getText().contains("##")) {
+                                toMarkdown(output);
+                            }
+                        }
+                    }
+                });
+                return null;
+            }
+
+            @Override
+            protected void done() {
+
+            }
+        };
+        worker.execute();
     }
 }

@@ -220,15 +220,16 @@ public class Agent {
     }
 
     /**
-     * Sets the conversation history in the parameters for LLM inference.
+     * Returns the conversation history in the parameters for LLM inference.
      * Only the recent conversations within the window size will be kept.
      */
-    private void setHistory() {
-        if (window > 0) {
-            // keeps only the recent conversations within the window size
-            int fromIndex = Math.max(conversations.size() - window, 0);
-            params.put(LLM.HISTORY, conversations.subList(fromIndex, conversations.size()));
-        }
+    private List<Message> getHistoryWindow() {
+        if (window <= 0) return List.of();
+        // keeps only the recent conversations within the window size
+        int fromIndex = Math.max(conversations.size() - window, 0);
+        // subList returns a view that becomes inconsistent if the original list is modified.
+        // We need to create a new list due to the following call of addConversation().
+        return new ArrayList<>(conversations.subList(fromIndex, conversations.size()));
     }
 
     /**
@@ -237,10 +238,10 @@ public class Agent {
      * @return a future of full Line completion.
      */
     public CompletableFuture<String> response(String prompt) {
-        setHistory();
+        var history = getHistoryWindow();
         addConversation(new Message(prompt));
 
-        return llm.get().complete(prompt, params)
+        return llm.get().complete(prompt, history, params)
                 .handle((response, ex) -> {
                     String error = Optional.ofNullable(ex).map(Throwable::getMessage).orElse(null);
                     addConversation(new Message(response, error));
@@ -254,7 +255,7 @@ public class Agent {
      * @param handler the stream response handler.
      */
     public void stream(String prompt, StreamResponseHandler handler) {
-        setHistory();
+        var history = getHistoryWindow();
         addConversation(new Message(prompt));
 
         StringBuilder sb = new StringBuilder();
@@ -273,6 +274,6 @@ public class Agent {
             }
         };
 
-        llm.get().complete(prompt, params, accumulator);
+        llm.get().complete(prompt, history, params, accumulator);
     }
 }

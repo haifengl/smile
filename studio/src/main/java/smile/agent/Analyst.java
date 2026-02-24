@@ -36,6 +36,10 @@ public class Analyst extends Agent {
         super(llm, new Context(path),
               new Context(System.getProperty("user.home") + "/.smile/agents/data-analyst"),
               new Context(System.getProperty("smile.home") + "/agents/data-analyst"));
+
+        // low temperature for more predictable, focused, and deterministic plans
+        params().setProperty(LLM.TEMPERATURE, "0.2");
+        params().setProperty(LLM.MAX_OUTPUT_TOKENS, "8192");
     }
 
     @Override
@@ -53,7 +57,8 @@ Your task is to analyze the data and provide insights based on the user's instru
 *   **Deliverables:** For each task, provide:
     *   A summary of insights generated in a Markdown format.
     *   The complete, runnable Java code used for the analysis.
-    *   Any generated visualizations (e.g., plots saved as PNG files).""";
+    *   Any generated visualizations (e.g., plots saved as PNG files).
+""";
 
         super.initMemory(String.format(template, instructions));
     }

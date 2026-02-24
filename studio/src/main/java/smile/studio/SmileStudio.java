@@ -26,7 +26,6 @@ import javax.swing.*;
 import javax.swing.Timer;
 import java.io.*;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.prefs.Preferences;
 
@@ -121,7 +120,7 @@ public class SmileStudio extends JFrame {
             public void windowOpened(WindowEvent e) {
                 // JSplitPane.setDividerLocation() set the location based on
                 // current pane size. We should set it after window is opened.
-                workspace.setDividerLocation(0.7);
+                workspace.setDividerLocation(0.6);
                 // Invoker later so that splitPane.invalidate() be done
                 SwingUtilities.invokeLater(() -> workspace.project().setDividerLocation(0.15));
             }

@@ -116,7 +116,7 @@ public class OpenAI extends LLM {
      * @param params the request parameters.
      * @return a chat request parameters.
      */
-    private ChatCompletionCreateParams build(String message, Properties params) {
+    private ChatCompletionCreateParams build(String message, List<Message> history, Properties params) {
         // only 1 chat completion choice to generate
         var builder = ChatCompletionCreateParams.builder().model(model()).n(1);
 
@@ -149,14 +149,10 @@ public class OpenAI extends LLM {
             builder.addDeveloperMessage(system);
         }
 
-        if (params.getOrDefault(HISTORY, List.of()) instanceof List<?> history) {
-            for (var item : history) {
-                if (item instanceof Message msg) {
-                    switch (msg.role()) {
-                        case user -> builder.addUserMessage(msg.content());
-                        case assistant -> builder.addAssistantMessage(msg.content());
-                    }
-                }
+        for (var msg : history) {
+            switch (msg.role()) {
+                case user -> builder.addUserMessage(msg.content());
+                case assistant -> builder.addAssistantMessage(msg.content());
             }
         }
         builder.addUserMessage(message);
@@ -164,8 +160,8 @@ public class OpenAI extends LLM {
     }
 
     @Override
-    public CompletableFuture<String> complete(String message, Properties params) {
-        var request = build(message, params);
+    public CompletableFuture<String> complete(String message, List<Message> history, Properties params) {
+        var request = build(message, history, params);
         return legacy.chat().completions().create(request)
                 .thenApply(completion -> completion.choices().stream()
                             .flatMap(choice -> choice.message().content().stream())
@@ -173,21 +169,21 @@ public class OpenAI extends LLM {
     }
 
     @Override
-    public void complete(String message, Properties params, StreamResponseHandler handler) {
-        var request = build(message, params);
+    public void complete(String message, List<Message> history, Properties params, StreamResponseHandler handler) {
+        var request = build(message, history, params);
         legacy.chat().completions().createStreaming(request)
                 .subscribe(new AsyncStreamResponse.Handler<>() {
-                            @Override
-                            public void onNext(ChatCompletionChunk chunk) {
-                                chunk.choices().stream()
-                                        .flatMap(choice -> choice.delta().content().stream())
-                                        .forEach(handler::onNext);
-                            }
+                        @Override
+                        public void onNext(ChatCompletionChunk chunk) {
+                            chunk.choices().stream()
+                                    .flatMap(choice -> choice.delta().content().stream())
+                                    .forEach(handler::onNext);
+                        }
 
-                            @Override
-                            public void onComplete(Optional<Throwable> error) {
-                                handler.onComplete(error);
-                            }
+                        @Override
+                        public void onComplete(Optional<Throwable> error) {
+                            handler.onComplete(error);
+                        }
                 });
     }
 }

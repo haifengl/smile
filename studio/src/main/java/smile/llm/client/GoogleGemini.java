@@ -99,25 +99,21 @@ public class GoogleGemini extends LLM {
     /**
      * Returns the request contents.
      * @param message the user message.
-     * @param params the request parameters.
+     * @param history the conversation history.
      * @return the request contents.
      */
-    private List<Content> contents(String message, Properties params) {
+    private List<Content> contents(String message, List<Message> history) {
         List<Content> contents = new ArrayList<>();
-        if (params.getOrDefault(HISTORY, List.of()) instanceof List<?> history) {
-            for (var item : history) {
-                if (item instanceof Message msg) {
-                    switch (msg.role()) {
-                        case user -> contents.add(Content.builder()
-                                .role("user")
-                                .parts(Part.fromText(msg.content()))
-                                .build());
-                        case assistant -> contents.add(Content.builder()
-                                .role("assistant")
-                                .parts(Part.fromText(msg.content()))
-                                .build());
-                    }
-                }
+        for (var msg : history) {
+            switch (msg.role()) {
+                case user -> contents.add(Content.builder()
+                        .role("user")
+                        .parts(Part.fromText(msg.content()))
+                        .build());
+                case assistant -> contents.add(Content.builder()
+                        .role("assistant")
+                        .parts(Part.fromText(msg.content()))
+                        .build());
             }
         }
 
@@ -130,18 +126,18 @@ public class GoogleGemini extends LLM {
     }
 
     @Override
-    public CompletableFuture<String> complete(String message, Properties params) {
+    public CompletableFuture<String> complete(String message, List<Message> history, Properties params) {
         var config = config(params);
         return client.async.models
-                .generateContent(model(), contents(message, params), config(params))
+                .generateContent(model(), contents(message, history), config(params))
                 .thenApply(GenerateContentResponse::text);
     }
 
     @Override
-    public void complete(String message, Properties params, StreamResponseHandler handler) {
+    public void complete(String message, List<Message> history, Properties params, StreamResponseHandler handler) {
         // To save resources and avoid connection leaks, close the
         // response stream after consumption.
-        try (var stream = client.models.generateContentStream(model(), contents(message, params), config(params))) {
+        try (var stream = client.models.generateContentStream(model(), contents(message, history), config(params))) {
             for (var response : stream) {
                 handler.onNext(response.text());
             }
