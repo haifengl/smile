@@ -1,0 +1,79 @@
+/*
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
+ *
+ * SMILE Studio is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * SMILE Studio is distributed in the hope that it will be useful,
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
+ */
+package smile.studio.model;
+
+/**
+ * The type of Intents.
+ *
+ * @author Haifeng Li
+ */
+public enum IntentType {
+    /**
+     * Raw, unformatted text that is not evaluated by the analyst.
+     */
+    Raw("Raw", ""),
+    /**
+     * Commands initiated by typing a forward slash (/), that allow
+     * users to quickly execute actions.
+     */
+    Command("Command", "/"),
+    /**
+     * Shell commands.
+     */
+    Shell("Shell", "%"),
+    /**
+     * Python code.
+     */
+    Python("Python", "!"),
+    /**
+     * Text in Markdown format, providing explanations,
+     * documentation, or narrative content.
+     */
+    Markdown("Markdown", "#"),
+    /**
+     * Instructions in natural language for LLM agents to execute.
+     */
+    Instructions("Instructions", ">");
+
+    /** The description. */
+    private final String description;
+    /** The legend. */
+    private final String legend;
+
+    /**
+     * Constructor.
+     * @param description the description.
+     * @param legend the legend.
+     */
+    IntentType(String description, String legend) {
+        this.description = description;
+        this.legend = legend;
+    }
+
+    /**
+     * Returns the legend.
+     * @return the legend.
+     */
+    public String legend() {
+        return legend;
+    }
+
+    @Override
+    public String toString() {
+        return description;
+    }
+}

@@ -13,7 +13,7 @@ hs_err_pid*
 base/src/test/resources/data/iceberg
 deep/src/test/resources
 nlp/src/test/resources
-model
+/model
 **/smile_serve.db
 
 # Native library
