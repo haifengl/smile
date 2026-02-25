@@ -220,8 +220,6 @@ public class AgentCLI extends JPanel {
                 case "refresh-memory" -> refreshMemory(output);
                 case "show-system" -> showSystemPrompt(output); // for debugging
                 case "clear" -> clear(output);
-                case "load" -> load(command);
-                //case "analyze" -> analyze(command);
                 default -> runCustomCommand(command[0], instructions, output);
             }
         } catch (Throwable t) {
@@ -230,7 +228,7 @@ public class AgentCLI extends JPanel {
     }
 
     private void help(String[] command, OutputArea output) {
-        String text = """
+        StringBuilder sb = new StringBuilder("""
                 The following commands are available:
                 
                 /init\t\tInitialize the project with your tasks and requirements
@@ -238,16 +236,16 @@ public class AgentCLI extends JPanel {
                 /show-memory\tDisplay the content of long-term memory
                 /refresh-memory\tReload the context from disk
                 /clear\t\tClear the current conversation history.
-                /load data
-                /analyze for exploratory data analysis
                 /train\t\tTrain a machine learning model
                 /predict\tRun batch inference
-                /serve\t\tStart an inference service""";
+                /serve\t\tStart an inference service""");
         for (var cmd : analyst.commands()) {
-            var sep = cmd.name().length() > 6 ? "\t" : "\t\t";
-            text += "\n/" + cmd.name() + sep + cmd.description();
+            sb.append("\n/")
+              .append(cmd.name())
+              .append(cmd.name().length() > 6 ? "\t" : "\t\t")
+              .append(cmd.description());
         }
-        output.setText(text);
+        output.setText(sb.toString());
     }
 
     /** Generates a starter SMILE.md. */
