@@ -443,10 +443,8 @@ public class Agent {
         String message = reminder();
         if (!compact && memory != null) {
             message += String.format("""
-                Here is the summary of previous conversations:
-                <summary>
+                Here is the analysis and summary of previous conversations:
                 %s
-                </summary>
                 """, memory.content());
         }
         message += "\n\n" + prompt;

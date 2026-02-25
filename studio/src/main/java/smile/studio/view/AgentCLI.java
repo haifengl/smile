@@ -125,14 +125,14 @@ public class AgentCLI extends JPanel {
         welcome.setInputForeground(Palette.DARK_GRAY);
         welcome.editor().setText(JShell.logo.replaceAll("(?m)^\\s{3}", "") + """
         =====================================================================
-        Welcome to Smile Analyst!
+        Welcome! I am Clair, your AI assistant for machine learning modeling.
         
         /help for help, /init for initializing your project
         cwd:\s""" + System.getProperty("user.dir"));
 
         welcome.output().setText("""
         As a state-of-the-art machine learning engineering agent,
-        Smile Analyst can help you with:
+        I can help you with:
         
         🤖 Automatic end-to-end ML/AI solutions based on your requirements.
         🔍 Best practices and state-of-the-art methods with web search.
