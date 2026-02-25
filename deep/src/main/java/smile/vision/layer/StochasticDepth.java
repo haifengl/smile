@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2024 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
  *
  * SMILE is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
