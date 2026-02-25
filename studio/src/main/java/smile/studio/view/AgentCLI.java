@@ -218,6 +218,7 @@ public class AgentCLI extends JPanel {
                 case "show-memory" -> showMemory(output);
                 case "refresh-memory" -> refreshMemory(output);
                 case "show-system" -> showSystemPrompt(output); // for debugging
+                case "clear" -> clear(output);
                 case "load" -> load(command);
                 //case "analyze" -> analyze(command);
                 default -> runCustomCommand(command[0], instructions, output);
@@ -235,6 +236,7 @@ public class AgentCLI extends JPanel {
                 /add-memory\tAdd facts or notes to long-term memory
                 /show-memory\tDisplay the content of long-term memory
                 /refresh-memory\tReload the context from disk
+                /clear\t\tClear the current conversation history.
                 /load data
                 /analyze for exploratory data analysis
                 /train\t\tTrain a machine learning model
@@ -292,6 +294,12 @@ public class AgentCLI extends JPanel {
     private void refreshMemory(OutputArea output) {
         initAnalyst();
         output.appendLine("Long-term memory was reloaded.");
+    }
+
+    /** Clears the current conversation history. */
+    private void clear(OutputArea output) {
+        analyst.clear();
+        output.appendLine("Current conversation history was cleared.");
     }
 
     private void load(String[] command) {

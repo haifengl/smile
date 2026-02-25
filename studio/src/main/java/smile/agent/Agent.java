@@ -264,6 +264,13 @@ public class Agent {
     }
 
     /**
+     * Clears the in-memory conversation history.
+     */
+    public void clear() {
+        conversations.clear();
+    }
+
+    /**
      * Returns the constitution, which will be injected into the system prompt.
      * @return the constitution.
      */
@@ -414,6 +421,7 @@ public class Agent {
             public void onComplete(Optional<Throwable> t) {
                 String error = t.map(Throwable::getMessage).orElse(null);
                 var response = sb.toString();
+                logger.debug("assistant: {}", response);
                 addConversation(new Message(response, error));
                 if (compact) {
                     try {
@@ -442,6 +450,7 @@ public class Agent {
                 """, memory.content());
         }
         message += "\n\n" + prompt;
+        logger.debug("user: {}", message);
         llm.get().complete(message, history, params, accumulator);
     }
 }
