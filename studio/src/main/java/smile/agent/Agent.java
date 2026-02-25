@@ -294,7 +294,7 @@ public class Agent {
     }
 
     /**
-     * Asynchronously response.
+     * Asynchronously response to a user prompt.
      * @param prompt the user prompt of task.
      * @return a future of response.
      */
@@ -311,8 +311,8 @@ public class Agent {
     }
 
     /**
-     * Asynchronously response in a streaming way.
-     * @param command the command name of prompt, may be null.
+     * Asynchronously response to a user prompt in a streaming way.
+     * @param command the command name associated with the prompt, may be null.
      * @param prompt the user prompt of task.
      * @param handler the stream response handler.
      */

@@ -25,10 +25,7 @@ import com.anthropic.client.AnthropicClientAsync;
 import com.anthropic.client.okhttp.AnthropicOkHttpClientAsync;
 import com.anthropic.core.http.AsyncStreamResponse;
 import com.anthropic.helpers.MessageAccumulator;
-import com.anthropic.models.messages.MessageCreateParams;
-import com.anthropic.models.messages.RawMessageStreamEvent;
-import com.anthropic.models.messages.TextBlock;
-import com.anthropic.models.messages.TextDelta;
+import com.anthropic.models.messages.*;
 
 /**
  * Anthropic service.
@@ -80,12 +77,12 @@ public class Anthropic extends LLM {
     }
 
     /**
-     * Returns a chat request parameters.
+     * Returns a chat completion request builder.
      * @param message the user message.
      * @param params the request parameters.
-     * @return a chat request parameters.
+     * @return a chat completion request builder.
      */
-    private MessageCreateParams build(String message, List<Message> history, Properties params) {
+    private MessageCreateParams.Builder requestBuilder(String message, List<Message> history, Properties params) {
         var builder = MessageCreateParams.builder().model(model());
 
         var temperature = params.getProperty(TEMPERATURE, "");
@@ -123,14 +120,14 @@ public class Anthropic extends LLM {
             }
         }
         builder.addUserMessage(message);
-        return builder.build();
+        return builder;
     }
 
     @Override
     public CompletableFuture<String> complete(String message, List<Message> history, Properties params) {
-        var request = build(message, history, params);
+        var request = requestBuilder(message, history, params);
         var accumulator = MessageAccumulator.create();
-        return client.messages().create(request)
+        return client.messages().create(request.build())
                 .thenApply(msg -> msg.content().stream()
                         .flatMap(block -> block.text().stream())
                         .map(TextBlock::text)
@@ -139,13 +136,23 @@ public class Anthropic extends LLM {
 
     @Override
     public void complete(String message, List<Message> history, Properties params, StreamResponseHandler handler) {
-        var request = build(message, history, params);
+        var request = requestBuilder(message, history, params);
+        complete(request, handler);
+    }
+
+    /**
+     * Completes a chat message in a streaming way, with tool calls handling.
+     * @param request the chat completion request builder.
+     * @param handler the stream response handler.
+     */
+    private void complete(MessageCreateParams.Builder request, StreamResponseHandler handler) {
         var accumulator = MessageAccumulator.create();
-        client.messages().createStreaming(request)
+        client.messages().createStreaming(request.build())
                 .subscribe(new AsyncStreamResponse.Handler<>() {
                     @Override
                     public void onNext(RawMessageStreamEvent chunk) {
-                        accumulator.accumulate(chunk).contentBlockDelta().stream()
+                        accumulator.accumulate(chunk);
+                        chunk.contentBlockDelta().stream()
                                 .flatMap(block -> block.delta().text().stream())
                                 .map(TextDelta::text)
                                 .forEach(handler::onNext);
@@ -153,8 +160,44 @@ public class Anthropic extends LLM {
 
                     @Override
                     public void onComplete(Optional<Throwable> error) {
-                        handler.onComplete(error);
+                        if (error.isEmpty()) {
+                            long toolCallCount = accumulator.message().content().stream()
+                                    .flatMap(block -> block.toolUse().stream())
+                                    .map(toolUse -> request
+                                            // Add a message indicating that the tool use was requested.
+                                            .addAssistantMessageOfBlockParams(
+                                                    List.of(ContentBlockParam.ofToolUse(ToolUseBlockParam.builder()
+                                                            .name(toolUse.name())
+                                                            .id(toolUse.id())
+                                                            .input(toolUse._input())
+                                                            .build())))
+                                            // Add a message with the result of the requested tool use.
+                                            .addUserMessageOfBlockParams(
+                                                    List.of(ContentBlockParam.ofToolResult(ToolResultBlockParam.builder()
+                                                            .toolUseId(toolUse.id())
+                                                            .contentAsJson(callTool(toolUse))
+                                                            .build()))))
+                                    .count();
+
+                            if (toolCallCount > 0) {
+                                // Continue the conversation after tool calls.
+                                complete(request, handler);
+                            } else {
+                                handler.onComplete(error);
+                            }
+                        } else {
+                            handler.onComplete(error);
+                        }
                     }
-        });
+                });
+    }
+
+    /**
+     * Calls the tool and returns the result.
+     * @param tool the tool function to call.
+     * @return the tool call result.
+     */
+    private static Object callTool(ToolUseBlock tool) {
+        return null;
     }
 }

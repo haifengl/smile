@@ -16,16 +16,14 @@
  */
 package smile.llm.client;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import com.openai.client.OpenAIClientAsync;
 import com.openai.client.okhttp.OpenAIOkHttpClientAsync;
 import com.openai.core.http.AsyncStreamResponse;
-import com.openai.models.chat.completions.ChatCompletionChunk;
-import com.openai.models.chat.completions.ChatCompletionCreateParams;
+import com.openai.helpers.ChatCompletionAccumulator;
+import com.openai.models.chat.completions.*;
 import com.openai.models.responses.Response;
 import com.openai.models.responses.ResponseCreateParams;
 
@@ -111,12 +109,12 @@ public class OpenAI extends LLM {
     }
 
     /**
-     * Returns a chat request parameters.
+     * Returns a chat completion request builder.
      * @param message the user message.
      * @param params the request parameters.
-     * @return a chat request parameters.
+     * @return a chat completion request builder.
      */
-    private ChatCompletionCreateParams build(String message, List<Message> history, Properties params) {
+    private ChatCompletionCreateParams.Builder requestBuilder(String message, List<Message> history, Properties params) {
         // only 1 chat completion choice to generate
         var builder = ChatCompletionCreateParams.builder().model(model()).n(1);
 
@@ -156,13 +154,13 @@ public class OpenAI extends LLM {
             }
         }
         builder.addUserMessage(message);
-        return builder.build();
+        return builder;
     }
 
     @Override
     public CompletableFuture<String> complete(String message, List<Message> history, Properties params) {
-        var request = build(message, history, params);
-        return legacy.chat().completions().create(request)
+        var request = requestBuilder(message, history, params);
+        return legacy.chat().completions().create(request.build())
                 .thenApply(completion -> completion.choices().stream()
                             .flatMap(choice -> choice.message().content().stream())
                             .collect(Collectors.joining()));
@@ -170,20 +168,63 @@ public class OpenAI extends LLM {
 
     @Override
     public void complete(String message, List<Message> history, Properties params, StreamResponseHandler handler) {
-        var request = build(message, history, params);
-        legacy.chat().completions().createStreaming(request)
-                .subscribe(new AsyncStreamResponse.Handler<>() {
-                        @Override
-                        public void onNext(ChatCompletionChunk chunk) {
-                            chunk.choices().stream()
-                                    .flatMap(choice -> choice.delta().content().stream())
-                                    .forEach(handler::onNext);
-                        }
+        var request = requestBuilder(message, history, params);
+        complete(request, handler);
+    }
 
-                        @Override
-                        public void onComplete(Optional<Throwable> error) {
+    /**
+     * Completes a chat message in a streaming way, with tool calls handling.
+     * @param request the chat completion request builder.
+     * @param handler the stream response handler.
+     */
+    private void complete(ChatCompletionCreateParams.Builder request, StreamResponseHandler handler) {
+        var accumulator = ChatCompletionAccumulator.create();
+        legacy.chat().completions().createStreaming(request.build())
+                .subscribe(new AsyncStreamResponse.Handler<>() {
+                    @Override
+                    public void onNext(ChatCompletionChunk chunk) {
+                        accumulator.accumulate(chunk);
+                        chunk.choices().stream()
+                                .flatMap(choice -> choice.delta().content().stream())
+                                .forEach(handler::onNext);
+                    }
+
+                    @Override
+                    public void onComplete(Optional<Throwable> error) {
+                        if (error.isEmpty()) {
+                            long toolCallCount = accumulator.chatCompletion().choices().stream()
+                                    .map(ChatCompletion.Choice::message)
+                                    .peek(request::addMessage)
+                                    .flatMap(message -> message.toolCalls().stream().flatMap(Collection::stream))
+                                    .map(toolCall -> {
+                                        Object result = callTool(toolCall.asFunction().function());
+                                        // Add the tool call result to the conversation.
+                                        request.addMessage(ChatCompletionToolMessageParam.builder()
+                                                .toolCallId(toolCall.asFunction().id())
+                                                .contentAsJson(result)
+                                                .build());
+                                        return result;
+                                    }).count();
+
+                            if (toolCallCount > 0) {
+                                // Continue the conversation after tool calls.
+                                complete(request, handler);
+                            } else {
+                                handler.onComplete(error);
+                            }
+                        } else {
                             handler.onComplete(error);
                         }
+                    }
                 });
+    }
+
+    /**
+     * Calls the tool and returns the result.
+     * @param tool the tool function to call.
+     * @return the tool call result.
+     */
+    private Object callTool(ChatCompletionMessageFunctionToolCall.Function tool) {
+        return null;
     }
 }
