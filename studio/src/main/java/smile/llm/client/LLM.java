@@ -19,6 +19,7 @@ package smile.llm.client;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
+import smile.llm.Message;
 
 /**
  * LLM inference client. Note that it is stateless and doesn't

@@ -26,6 +26,7 @@ import com.anthropic.client.okhttp.AnthropicOkHttpClientAsync;
 import com.anthropic.core.http.AsyncStreamResponse;
 import com.anthropic.helpers.MessageAccumulator;
 import com.anthropic.models.messages.*;
+import smile.llm.Message;
 
 /**
  * Anthropic service.
@@ -169,7 +170,7 @@ public class Anthropic extends LLM {
                                                     List.of(ContentBlockParam.ofToolUse(ToolUseBlockParam.builder()
                                                             .name(toolUse.name())
                                                             .id(toolUse.id())
-                                                            .input(toolUse._input())
+                                                            .input(toolUse.toParam()._input())
                                                             .build())))
                                             // Add a message with the result of the requested tool use.
                                             .addUserMessageOfBlockParams(

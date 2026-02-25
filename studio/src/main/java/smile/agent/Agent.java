@@ -28,8 +28,8 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
+import smile.llm.Message;
 import smile.llm.client.LLM;
-import smile.llm.client.Message;
 import smile.llm.client.StreamResponseHandler;
 
 /**

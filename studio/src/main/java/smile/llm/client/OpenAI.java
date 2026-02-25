@@ -26,6 +26,7 @@ import com.openai.helpers.ChatCompletionAccumulator;
 import com.openai.models.chat.completions.*;
 import com.openai.models.responses.Response;
 import com.openai.models.responses.ResponseCreateParams;
+import smile.llm.Message;
 
 /**
  * OpenAI service.
