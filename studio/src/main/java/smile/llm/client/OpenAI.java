@@ -27,6 +27,8 @@ import com.openai.models.chat.completions.*;
 import com.openai.models.responses.Response;
 import com.openai.models.responses.ResponseCreateParams;
 import smile.llm.Message;
+import smile.llm.tool.Read;
+import smile.llm.tool.Write;
 
 /**
  * OpenAI service.
@@ -117,7 +119,11 @@ public class OpenAI extends LLM {
      */
     private ChatCompletionCreateParams.Builder requestBuilder(String message, List<Message> history, Properties params) {
         // only 1 chat completion choice to generate
-        var builder = ChatCompletionCreateParams.builder().model(model()).n(1);
+        var builder = ChatCompletionCreateParams.builder()
+                .model(model())
+                .n(1)
+                .addTool(Read.class)
+                .addTool(Write.class);
 
         var temperature = params.getProperty(TEMPERATURE, "");
         if (!temperature.isBlank()) {
@@ -198,7 +204,9 @@ public class OpenAI extends LLM {
                                     .peek(request::addMessage)
                                     .flatMap(message -> message.toolCalls().stream().flatMap(Collection::stream))
                                     .map(toolCall -> {
+                                        var function = toolCall.asFunction().function();
                                         Object result = callTool(toolCall.asFunction().function());
+                                        logger.debug("ToolCall({}) -> {}", function.name(), result);
                                         // Add the tool call result to the conversation.
                                         request.addMessage(ChatCompletionToolMessageParam.builder()
                                                 .toolCallId(toolCall.asFunction().id())
@@ -226,6 +234,11 @@ public class OpenAI extends LLM {
      * @return the tool call result.
      */
     private Object callTool(ChatCompletionMessageFunctionToolCall.Function tool) {
-        return null;
+        return switch (tool.name()) {
+            case "Read" -> tool.arguments(Read.class).run();
+            case "Write" -> tool.arguments(Write.class).run();
+            default ->
+                throw new IllegalArgumentException("Unknown tool: " + tool.name());
+        };
     }
 }

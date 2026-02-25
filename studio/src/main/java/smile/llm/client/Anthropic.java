@@ -27,6 +27,7 @@ import com.anthropic.core.http.AsyncStreamResponse;
 import com.anthropic.helpers.MessageAccumulator;
 import com.anthropic.models.messages.*;
 import smile.llm.Message;
+import smile.llm.tool.Read;
 
 /**
  * Anthropic service.
