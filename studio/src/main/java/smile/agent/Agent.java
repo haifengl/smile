@@ -19,7 +19,6 @@ package smile.agent;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
@@ -29,15 +28,9 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 import smile.llm.client.LLM;
 import smile.llm.client.Message;
 import smile.llm.client.StreamResponseHandler;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import tools.jackson.databind.node.ObjectNode;
-import tools.jackson.dataformat.yaml.YAMLMapper;
 
 /**
  * An LLM agent is an advanced AI system using an LLM as its brain
@@ -49,10 +42,6 @@ import tools.jackson.dataformat.yaml.YAMLMapper;
  */
 public class Agent {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Agent.class);
-    /** The file name for conversation history. */
-    private static final String HISTORY_FILE = "history.jsonl";
-    /** The file name of conversation summary. */
-    private static final String MEMORY_MD = "MEMORY.md";
     /** The supplier of LLM service. */
     private final Supplier<LLM> llm;
     /** Global context for system instructions, skills, tools, etc. */
@@ -63,35 +52,27 @@ public class Agent {
     private final Context context;
     /** The parameters for LLM inference. */
     private final Properties params = new Properties();
-    /** The JSON object mapper. */
-    private final ObjectMapper mapper;
     /** The conversation history. */
-    private final List<Message> conversations = new ArrayList<>();
-    /** The directory path for conversation history and summary. */
-    private Path historyDir;
-    /** The summary of conversations. */
-    private Memory summary;
+    private final Conversations conversations;
     /** The number of recent conversations to keep in context. */
     private int window = 5;
 
     /**
      * Constructor.
      * @param llm the supplier of LLM service.
+     * @param conversations the conversation history.
      * @param context the project-specific context.
      * @param user the user context for user rules, skills, etc.
      * @param global the global context for system instructions, skills, tools, etc.
      */
-    public Agent(Supplier<LLM> llm, Context context, Context user, Context global) {
+    public Agent(Supplier<LLM> llm, Conversations conversations,
+                 Context context, Context user, Context global) {
         this.llm = llm;
+        this.conversations = conversations;
         this.context = context;
         this.user = user;
         this.global = global;
         params.setProperty(LLM.SYSTEM_PROMPT, system());
-        // Ignore null fields
-        mapper = JsonMapper.builder()
-                .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
-                .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL))
-                .build();
     }
 
     /**
@@ -99,17 +80,18 @@ public class Agent {
      * @param llm the supplier of LLM service.
      * @param context the project-specific context.
      */
-    public Agent(Supplier<LLM> llm, Context context) {
-        this(llm, context, null, null);
+    public Agent(Supplier<LLM> llm, Conversations conversations, Context context) {
+        this(llm, conversations, context, null, null);
     }
 
     /**
      * Constructor.
      * @param llm the supplier of LLM service.
-     * @param path the directory path for agent context.
+     * @param history the directory path for conversation history.
+     * @param context the directory path for agent context.
      */
-    public Agent(Supplier<LLM> llm, Path path) {
-        this(llm, new Context(path));
+    public Agent(Supplier<LLM> llm, Path history, Path context) {
+        this(llm, new Conversations(history), new Context(context));
     }
 
     /**
@@ -129,52 +111,12 @@ public class Agent {
     }
 
     /**
-     * Loads the conversation history if it exists.
-     * New messages will be saved after each conversation.
-     * @param path the directory path for conversation history.
-     */
-    public void loadMemory(Path path) {
-        this.historyDir = path;
-        if (!Files.exists(path)) {
-            // Creates all parent directories
-            try {
-                Files.createDirectories(path);
-            } catch (IOException ex) {
-                logger.error("Failed to create folder of conversation history", ex);
-            }
-        } else {
-            Path historyFile = historyDir.resolve(HISTORY_FILE);
-            if (Files.exists(historyFile)) {
-                try (Stream<String> lines = Files.lines(historyFile)) {
-                    lines.forEach(line -> {
-                        if (!line.trim().isEmpty()) {
-                            Message message = mapper.readValue(line, Message.class);
-                            conversations.add(message);
-                        }
-                    });
-                } catch (IOException ex) {
-                    logger.error("Failed to load conversation history", ex);
-                }
-            }
-
-            Path memoryFile = path.resolve(MEMORY_MD);
-            if (Files.exists(memoryFile)) {
-                try {
-                    summary = Memory.from(memoryFile);
-                } catch (IOException ex) {
-                    logger.error("Failed to load conversation summary", ex);
-                }
-            }
-        }
-    }
-
-    /**
      * Saves the project instructions.
      * @param instructions the project instructions.
      */
     public void initMemory(String instructions) throws IOException {
         Path path = context.path().resolve(Context.SMILE_MD);
-        var metadata = mapper.createObjectNode();
+        var metadata = Memory.mapper.createObjectNode();
         metadata.put("name", context.path().getFileName().toString().toLowerCase().replaceAll("[\\s_]+", "-"));
         metadata.put("description", "Project instruction manual.");
         Rule rule = new Rule(instructions, metadata, path);
@@ -352,48 +294,18 @@ public class Agent {
     }
 
     /**
-     * Adds a message to the conversation history and saves it to the file
-     * if history is enabled.
-     * @param message the message to add.
-     */
-    private void addConversation(Message message) {
-        conversations.add(message);
-        if (historyDir != null) {
-            try {
-                String jsonLine = mapper.writeValueAsString(message) + System.lineSeparator();
-                Files.writeString(historyDir.resolve(HISTORY_FILE), jsonLine, StandardOpenOption.APPEND, StandardOpenOption.CREATE);
-            } catch (Exception ex) {
-                logger.error("Failed to save conversation", ex);
-            }
-        }
-    }
-
-    /**
-     * Returns the conversation history in the parameters for LLM inference.
-     * Only the recent conversations within the window size will be kept.
-     */
-    private List<Message> getHistoryWindow(int window) {
-        if (window <= 0) return List.of();
-        // keeps only the recent conversations within the window size
-        int fromIndex = Math.max(conversations.size() - window, 0);
-        // subList returns a view that becomes inconsistent if the original list is modified.
-        // We need to create a new list due to the following call of addConversation().
-        return new ArrayList<>(conversations.subList(fromIndex, conversations.size()));
-    }
-
-    /**
      * Asynchronously response.
      * @param prompt the user prompt of task.
      * @return a future of response.
      */
     public CompletableFuture<String> response(String prompt) {
-        var history = getHistoryWindow(window);
-        addConversation(new Message(prompt));
+        var history = conversations.getLast(window);
+        conversations.add(new Message(prompt));
 
         return llm.get().complete(prompt, history, params)
                 .handle((response, ex) -> {
                     String error = Optional.ofNullable(ex).map(Throwable::getMessage).orElse(null);
-                    addConversation(new Message(response, error));
+                    conversations.add(new Message(response, error));
                     return response;
                 });
     }
@@ -406,8 +318,8 @@ public class Agent {
      */
     public void stream(String command, String prompt, StreamResponseHandler handler) {
         boolean compact = "compact".equals(command);
-        var history = getHistoryWindow(compact ? 20 : window);
-        addConversation(new Message(prompt));
+        var history = conversations.getLast(compact ? 20 : window);
+        conversations.add(new Message(prompt));
 
         StringBuilder sb = new StringBuilder();
         var accumulator = new StreamResponseHandler() {
@@ -422,30 +334,21 @@ public class Agent {
                 String error = t.map(Throwable::getMessage).orElse(null);
                 var response = sb.toString();
                 logger.debug("assistant: {}", response);
-                addConversation(new Message(response, error));
+                conversations.add(new Message(response, error));
                 if (compact) {
-                    try {
-                        Path memoryFile = historyDir.resolve(MEMORY_MD);
-                        ObjectMapper mapper = new YAMLMapper();
-                        ObjectNode metadata = mapper.createObjectNode();
-                        metadata.put("name", "conversation-summary");
-                        metadata.put("description", "Summary of previous conversations.");
-                        summary = new Memory(response, metadata, memoryFile);
-                        summary.save();
-                    } catch (IOException ex) {
-                        logger.error("Failed to load conversation summary", ex);
-                    }
+                    conversations.setSummary(response);
                 }
                 handler.onComplete(t);
             }
         };
 
         String message = reminder();
-        if (!compact && summary != null) {
+        var summary = conversations.getSummary();
+        if (!compact && !summary.isBlank()) {
             message += String.format("""
                 Here is the analysis and summary of previous conversations:
                 %s
-                """, summary.content());
+                """, summary);
         }
         message += "\n\n" + prompt;
         logger.debug("user: {}", message);

@@ -30,10 +30,11 @@ public class Analyst extends Agent {
     /**
      * Constructor.
      * @param llm the supplier of LLM service.
-     * @param path the directory path for agent context.
+     * @param history the directory path for conversation history.
+     * @param context the directory path for agent context.
      */
-    public Analyst(Supplier<LLM> llm, Path path) {
-        super(llm, new Context(path),
+    public Analyst(Supplier<LLM> llm, Path history, Path context) {
+        super(llm, new Conversations(history), new Context(context),
               new Context(System.getProperty("user.home") + "/.smile/agents/data-analyst"),
               new Context(System.getProperty("smile.home") + "/agents/data-analyst"));
 

@@ -32,6 +32,8 @@ import tools.jackson.dataformat.yaml.YAMLMapper;
  * @author Haifeng Li
  */
 public class Memory {
+    /** The YAML object mapper for parsing Markdown frontmatter. */
+    public static final ObjectMapper mapper = new YAMLMapper();
     /**
      * The main content, which may be in structured format
      * such as Markdown for readability and simplicity.
@@ -113,7 +115,6 @@ public class Memory {
      */
     public static Memory from(Path path) throws IOException {
         var lines = Files.readAllLines(path);
-        ObjectMapper mapper = new YAMLMapper();
         ObjectNode metadata = mapper.createObjectNode();
 
         // detect YAML front matter
@@ -164,7 +165,6 @@ public class Memory {
     public void writeTo(Path path) throws IOException {
         StringBuilder sb = new StringBuilder();
         if (metadata != null && !metadata.isEmpty()) {
-            ObjectMapper mapper = new YAMLMapper();
             sb.append(mapper.writeValueAsString(metadata));
             sb.append("---\n");
         }

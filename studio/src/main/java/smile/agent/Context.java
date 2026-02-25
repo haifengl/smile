@@ -20,9 +20,6 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.node.ObjectNode;
-import tools.jackson.dataformat.yaml.YAMLMapper;
 
 /**
  * Context is a critical but finite resource for AI agents.
@@ -93,16 +90,19 @@ public class Context {
     public Context(Path path) {
         this.path = path;
         Path smileMd = path.resolve(SMILE_MD);
-        Rule spec;
+        Memory spec = null;
         try {
-            spec = Rule.from(smileMd);
+            if (Files.exists(smileMd)) {
+                spec = Memory.from(smileMd);
+            }
         } catch (Exception ex) {
-            logger.debug("Error reading SMILE.md", ex);
-            ObjectMapper mapper = new YAMLMapper();
-            ObjectNode metadata = mapper.createObjectNode();
+            logger.error("Error reading {}", smileMd, ex);
+        }
+        if (spec == null) {
+            var metadata = Memory.mapper.createObjectNode();
             metadata.put("name", "project-instructions");
             metadata.put("description", "Placeholder of project instructions before user runs /init.");
-            spec = new Rule("", metadata, smileMd);
+            spec = new Memory("", metadata, smileMd);
         }
         instructions = spec;
 

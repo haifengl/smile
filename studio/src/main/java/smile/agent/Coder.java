@@ -31,10 +31,11 @@ public class Coder extends Agent {
     /**
      * Constructor.
      * @param llm the supplier of LLM service.
-     * @param path the directory path for agent context.
+     * @param history the directory path for conversation history.
+     * @param context the directory path for agent context.
      */
-    public Coder(Supplier<LLM> llm, Path path) {
-        super(llm, path);
+    public Coder(Supplier<LLM> llm, Path history, Path context) {
+        super(llm, history, context);
         // no window for code generation and completion
         setWindow(0);
         // low temperature for more predictable, focused, and deterministic code

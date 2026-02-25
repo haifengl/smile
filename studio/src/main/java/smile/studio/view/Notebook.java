@@ -73,9 +73,10 @@ public class Notebook extends JPanel implements DocumentListener {
         this.file = file;
         this.runner = runner;
         this.postRunAction = postRunAction;
-        this.coder = new Coder(SmileStudio::llm, Path.of(System.getProperty("smile.home") + "/agents/java-coder"));
+        this.coder = new Coder(SmileStudio::llm,
+                file.getParent().resolve(".smile", "coder"),
+                Path.of(System.getProperty("smile.home") + "/agents/java-coder"));
 
-        coder.loadMemory(file.getParent().resolve(".smile", "coder"));
         cells.setLayout(new BoxLayout(cells, BoxLayout.Y_AXIS));
         scrollPane.getVerticalScrollBar().setUnitIncrement(18);
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);

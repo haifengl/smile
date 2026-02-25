@@ -34,6 +34,11 @@ import tools.jackson.databind.node.ObjectNode;
  * @author Haifeng Li
  */
 public class Rule extends Memory {
+    /** If true, forces the rule to be applied regardless of the context. */
+    private final boolean alwaysApply;
+    /** The file patterns where this rule applies. */
+    private final List<String> globs;
+
     /**
      * Constructor.
      *
@@ -44,6 +49,23 @@ public class Rule extends Memory {
      */
     public Rule(String content, ObjectNode metadata, Path path) {
         super(content, metadata, path);
+
+        var node = metadata.get("alwaysApply");
+        alwaysApply = node != null && node.asBoolean();
+
+        node = metadata.get("globs");
+        if (node == null) node = metadata.get("paths");
+        if (node == null) {
+            globs = List.of();
+        } else if (node instanceof ArrayNode array) {
+            List<String> list = new ArrayList<>();
+            for (var element : array) {
+                list.add(element.asString());
+            }
+            globs = list;
+        } else {
+            globs = List.of(node.asString());
+        }
     }
 
     /**
@@ -51,19 +73,7 @@ public class Rule extends Memory {
      * @return the file patterns.
      */
     public List<String> globs() {
-        var node = metadata.get("globs");
-        if (node == null) node = metadata.get("paths");
-        if (node == null) return List.of();
-
-        if (node instanceof ArrayNode array) {
-            List<String> list = new ArrayList<>();
-            for (var element : array) {
-                list.add(element.asString());
-            }
-            return list;
-        } else {
-            return List.of(node.asString());
-        }
+        return globs;
     }
 
     /**
@@ -71,9 +81,8 @@ public class Rule extends Memory {
      * applied regardless of the context.
      * @return the flag if enforcing the rule.
      */
-    public boolean alwaysApply () {
-        var node = metadata.get("alwaysApply");
-        return node != null && node.asBoolean();
+    public boolean alwaysApply() {
+        return alwaysApply;
     }
 
     /**
