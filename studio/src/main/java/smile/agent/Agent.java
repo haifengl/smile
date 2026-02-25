@@ -46,6 +46,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  */
 public class Agent {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Agent.class);
+    /** The file name for conversation history. */
+    private static final String HISTORY_FILE = "history.jsonl";
     /** The supplier of LLM service. */
     private final Supplier<LLM> llm;
     /** Global context for system instructions, skills, tools, etc. */
@@ -60,8 +62,10 @@ public class Agent {
     private final ObjectMapper mapper;
     /** The conversation history. */
     private final List<Message> conversations = new ArrayList<>();
-    /** The file path for conversation history. */
-    private Path history;
+    /** The directory path for conversation history and summary. */
+    private Path historyDir;
+    /** The summary of conversations. */
+    private Memory memory;
     /** The number of recent conversations to keep in context. */
     private int window = 5;
 
@@ -69,7 +73,7 @@ public class Agent {
      * Constructor.
      * @param llm the supplier of LLM service.
      * @param context the project-specific context.
-     * @param user the user context for user preferences, history, etc.
+     * @param user the user context for user rules, skills, etc.
      * @param global the global context for system instructions, skills, tools, etc.
      */
     public Agent(Supplier<LLM> llm, Context context, Context user, Context global) {
@@ -120,29 +124,41 @@ public class Agent {
     }
 
     /**
-     * Loads the conversation history from the file if it exists.
-     * New messages will be saved to the file after each conversation.
-     * @param path the file path for conversation history.
+     * Loads the conversation history if it exists.
+     * New messages will be saved after each conversation.
+     * @param path the directory path for conversation history.
      */
-    public void loadHistory(Path path) {
-        this.history = path;
+    public void loadMemory(Path path) {
+        this.historyDir = path;
         if (!Files.exists(path)) {
             // Creates all parent directories
             try {
-                Files.createDirectories(path.getParent());
+                Files.createDirectories(path);
             } catch (IOException ex) {
                 logger.error("Failed to create folder of conversation history", ex);
             }
         } else {
-            try (Stream<String> lines = Files.lines(path)) {
-                lines.forEach(line -> {
-                    if (!line.trim().isEmpty()) {
-                        Message message = mapper.readValue(line, Message.class);
-                        conversations.add(message);
-                    }
-                });
-            } catch (IOException ex) {
-                logger.error("Failed to load conversation history", ex);
+            Path historyFile = historyDir.resolve(HISTORY_FILE);
+            if (Files.exists(historyFile)) {
+                try (Stream<String> lines = Files.lines(historyFile)) {
+                    lines.forEach(line -> {
+                        if (!line.trim().isEmpty()) {
+                            Message message = mapper.readValue(line, Message.class);
+                            conversations.add(message);
+                        }
+                    });
+                } catch (IOException ex) {
+                    logger.error("Failed to load conversation history", ex);
+                }
+            }
+
+            Path memoryFile = path.resolve(Context.MEMORY_MD);
+            if (Files.exists(memoryFile)) {
+                try {
+                    memory = Memory.from(memoryFile);
+                } catch (IOException ex) {
+                    logger.error("Failed to load conversation summary", ex);
+                }
             }
         }
     }
@@ -325,10 +341,10 @@ public class Agent {
      */
     private void addConversation(Message message) {
         conversations.add(message);
-        if (history != null) {
+        if (historyDir != null) {
             try {
                 String jsonLine = mapper.writeValueAsString(message) + System.lineSeparator();
-                Files.writeString(history, jsonLine, StandardOpenOption.APPEND, StandardOpenOption.CREATE);
+                Files.writeString(historyDir.resolve(HISTORY_FILE), jsonLine, StandardOpenOption.APPEND, StandardOpenOption.CREATE);
             } catch (Exception ex) {
                 logger.error("Failed to save conversation", ex);
             }

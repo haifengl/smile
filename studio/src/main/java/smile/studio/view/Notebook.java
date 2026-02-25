@@ -75,14 +75,14 @@ public class Notebook extends JPanel implements DocumentListener {
         this.postRunAction = postRunAction;
         this.coder = new Coder(SmileStudio::llm, Path.of(System.getProperty("smile.home") + "/agents/java-coder"));
 
-        coder.loadHistory(file.getParent().resolve(".smile", "coder.json"));
+        coder.loadMemory(file.getParent().resolve(".smile", "coder"));
         cells.setLayout(new BoxLayout(cells, BoxLayout.Y_AXIS));
         scrollPane.getVerticalScrollBar().setUnitIncrement(18);
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         add(scrollPane, BorderLayout.CENTER);
 
         // Note that JShell runs in another JVM so that
-        // we need to setup FlatLaf again.
+        // we need to set up FlatLaf again.
         runner.eval("""
             javax.swing.SwingUtilities.invokeLater(() -> {
                 com.formdev.flatlaf.FlatLightLaf.setup();

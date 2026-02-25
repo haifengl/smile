@@ -92,7 +92,7 @@ public class AgentCLI extends JPanel {
 
     private void initAnalyst() {
         analyst = new Analyst(SmileStudio::llm, path);
-        analyst.loadHistory(path.resolve(".smile", "analyst.json"));
+        analyst.loadMemory(path.resolve(".smile", "analyst"));
     }
 
     /** Append a new intent box. */

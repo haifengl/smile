@@ -48,6 +48,8 @@ public class Context {
     public static final String SMILE_MD = "SMILE.md";
     /** The file name of skill instructions. */
     public static final String SKILL_MD = "SKILL.md";
+    /** The file name of conversation summary. */
+    public static final String MEMORY_MD = "MEMORY.md";
     /** The folder path of context information. */
     private final Path path;
     /**
