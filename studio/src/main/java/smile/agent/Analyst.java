@@ -18,8 +18,6 @@ package smile.agent;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.function.Supplier;
 import smile.llm.client.LLM;
 
@@ -42,11 +40,6 @@ public class Analyst extends Agent {
         // low temperature for more predictable, focused, and deterministic plans
         params().setProperty(LLM.TEMPERATURE, "0.2");
         params().setProperty(LLM.MAX_OUTPUT_TOKENS, "8192");
-    }
-
-    /** Returns the current date and time in ISO-8601 format, truncated to milliseconds. */
-    private String date() {
-        return Instant.now().truncatedTo(ChronoUnit.MILLIS).toString() + " is the date. ";
     }
 
     @Override
@@ -73,7 +66,7 @@ Prioritize technical accuracy and truthfulness over validating the user's belief
 3. Generate code for the heavy lifting and Markdown files for documenting transforms and insights.
 4. Use the instructions below and the tools available to you to assist the user.
 </system-reminder>
-""" + date();
+""";
     }
 
     @Override

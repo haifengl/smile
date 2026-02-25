@@ -20,8 +20,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.time.LocalDate;
+import java.time.Instant;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -320,7 +321,7 @@ public class Agent {
                 Is directory a git repo: %s
                 Platform: %s
                 OS Version: %s
-                Today's date: %s
+                Current time: %s
                 Time zone: %s
                 </env>
                 """,
@@ -328,10 +329,15 @@ public class Agent {
                 Files.exists(Path.of(System.getProperty("user.dir"), ".git")) ? "Yes" : "No",
                 System.getProperty("os.name"),
                 System.getProperty("os.version"),
-                LocalDate.now(),
+                date(),
                 ZoneId.systemDefault());
 
         return prompt;
+    }
+
+    /** Returns the current date and time in ISO-8601 format, truncated to milliseconds. */
+    private String date() {
+        return Instant.now().truncatedTo(ChronoUnit.MILLIS).toString() + " is the date. ";
     }
 
     /**
