@@ -316,10 +316,16 @@ public class AgentCLI extends JPanel {
                 .findFirst();
         if (cmd.isPresent()) {
             var args = instructions.substring(command.length()).trim();
-            if (args.isBlank() && cmd.get().content().contains("{{args}}")) {
-                output.setText("Error: /" + command + " requires arguments.");
+            if (cmd.get().content().contains("{{args}}")) {
+                if (args.isBlank()) {
+                    output.setText("Error: /" + command + " requires arguments.");
+                } else {
+                    var prompt = cmd.get().prompt(args);
+                    chat(command, prompt, output);
+                }
             } else {
-                var prompt = cmd.get().prompt(args);
+                // append instructions to command without {{args}} placeholder.
+                var prompt = cmd.get().content() + "\n\n" + args;
                 chat(command, prompt, output);
             }
         } else {
