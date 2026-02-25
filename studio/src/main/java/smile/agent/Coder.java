@@ -75,6 +75,6 @@ public class Coder extends Agent {
             Task:%n%s%n%n""";
 
         var prompt = String.format(template, context, task);
-        stream(prompt, handler);
+        stream("code-generation", prompt, handler);
     }
 }

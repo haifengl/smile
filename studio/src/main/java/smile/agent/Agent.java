@@ -36,6 +36,8 @@ import smile.llm.client.StreamResponseHandler;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import tools.jackson.databind.node.ObjectNode;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 
 /**
  * An LLM agent is an advanced AI system using an LLM as its brain
@@ -49,6 +51,8 @@ public class Agent {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Agent.class);
     /** The file name for conversation history. */
     private static final String HISTORY_FILE = "history.jsonl";
+    /** The file name of conversation summary. */
+    private static final String MEMORY_MD = "MEMORY.md";
     /** The supplier of LLM service. */
     private final Supplier<LLM> llm;
     /** Global context for system instructions, skills, tools, etc. */
@@ -153,7 +157,7 @@ public class Agent {
                 }
             }
 
-            Path memoryFile = path.resolve(Context.MEMORY_MD);
+            Path memoryFile = path.resolve(MEMORY_MD);
             if (Files.exists(memoryFile)) {
                 try {
                     memory = Memory.from(memoryFile);
@@ -361,7 +365,7 @@ public class Agent {
      * Returns the conversation history in the parameters for LLM inference.
      * Only the recent conversations within the window size will be kept.
      */
-    private List<Message> getHistoryWindow() {
+    private List<Message> getHistoryWindow(int window) {
         if (window <= 0) return List.of();
         // keeps only the recent conversations within the window size
         int fromIndex = Math.max(conversations.size() - window, 0);
@@ -373,10 +377,10 @@ public class Agent {
     /**
      * Asynchronously response.
      * @param prompt the user prompt of task.
-     * @return a future of full Line completion.
+     * @return a future of response.
      */
     public CompletableFuture<String> response(String prompt) {
-        var history = getHistoryWindow();
+        var history = getHistoryWindow(window);
         addConversation(new Message(prompt));
 
         return llm.get().complete(prompt, history, params)
@@ -389,11 +393,13 @@ public class Agent {
 
     /**
      * Asynchronously response in a streaming way.
+     * @param command the command name of prompt, may be null.
      * @param prompt the user prompt of task.
      * @param handler the stream response handler.
      */
-    public void stream(String prompt, StreamResponseHandler handler) {
-        var history = getHistoryWindow();
+    public void stream(String command, String prompt, StreamResponseHandler handler) {
+        boolean compact = "compact".equals(command);
+        var history = getHistoryWindow(compact ? 20 : window);
         addConversation(new Message(prompt));
 
         StringBuilder sb = new StringBuilder();
@@ -405,14 +411,37 @@ public class Agent {
             }
 
             @Override
-            public void onComplete(Optional<Throwable> ex) {
-                String error = ex.map(Throwable::getMessage).orElse(null);
-                addConversation(new Message(sb.toString(), error));
-                handler.onComplete(ex);
+            public void onComplete(Optional<Throwable> t) {
+                String error = t.map(Throwable::getMessage).orElse(null);
+                var response = sb.toString();
+                addConversation(new Message(response, error));
+                if (compact) {
+                    try {
+                        Path memoryFile = historyDir.resolve(MEMORY_MD);
+                        ObjectMapper mapper = new YAMLMapper();
+                        ObjectNode metadata = mapper.createObjectNode();
+                        metadata.put("name", "conversation-summary");
+                        metadata.put("description", "Summary of previous conversations.");
+                        memory = new Memory(response, metadata, memoryFile);
+                        memory.save();
+                    } catch (IOException ex) {
+                        logger.error("Failed to load conversation summary", ex);
+                    }
+                }
+                handler.onComplete(t);
             }
         };
 
-        prompt = reminder() + prompt;
-        llm.get().complete(prompt, history, params, accumulator);
+        String message = reminder();
+        if (!compact && memory != null) {
+            message += String.format("""
+                Here is the summary of previous conversations:
+                <summary>
+                %s
+                </summary>
+                """, memory.content());
+        }
+        message += "\n\n" + prompt;
+        llm.get().complete(message, history, params, accumulator);
     }
 }

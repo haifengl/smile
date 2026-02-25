@@ -112,7 +112,7 @@ public class AgentCLI extends JPanel {
         switch (intentType) {
             case Command -> runCommand(instructions, output);
             case Shell, Python -> runShell(intentType, instructions, output);
-            case Instructions -> chat(instructions, output);
+            case Instructions -> chat(null, instructions, output);
             default -> logger.debug("Ignore intent type: {}", intentType);
         }
     }
@@ -312,14 +312,14 @@ public class AgentCLI extends JPanel {
                 output.setText("Error: /" + command + " requires arguments.");
             } else {
                 var prompt = cmd.get().prompt(args);
-                chat(prompt, output);
+                chat(command, prompt, output);
             }
         } else {
             output.setText("Error: Unknown command /" + command);
         }
     }
 
-    private void chat(String prompt, OutputArea output) {
+    private void chat(String command, String prompt, OutputArea output) {
         if (prompt.isBlank()) {
             output.setText(bundle.getString("Hello"));
             return;
@@ -336,7 +336,7 @@ public class AgentCLI extends JPanel {
 
         // Stream processing runs in a background thread so that we don't
         // need to create a SwingWorker thread.
-        analyst.stream(prompt, new StreamResponseHandler() {
+        analyst.stream(command, prompt, new StreamResponseHandler() {
             boolean firstChunk = true;
             @Override
             public void onNext(String chunk) {
