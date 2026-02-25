@@ -70,7 +70,7 @@ public class Agent {
     /** The directory path for conversation history and summary. */
     private Path historyDir;
     /** The summary of conversations. */
-    private Memory memory;
+    private Memory summary;
     /** The number of recent conversations to keep in context. */
     private int window = 5;
 
@@ -160,7 +160,7 @@ public class Agent {
             Path memoryFile = path.resolve(MEMORY_MD);
             if (Files.exists(memoryFile)) {
                 try {
-                    memory = Memory.from(memoryFile);
+                    summary = Memory.from(memoryFile);
                 } catch (IOException ex) {
                     logger.error("Failed to load conversation summary", ex);
                 }
@@ -187,11 +187,11 @@ public class Agent {
      * @param instructions the project instructions.
      */
     public void addMemory(String instructions) throws IOException {
-        Rule rule = context.getInstructions();
-        var content = rule.content() + "\n\n" + instructions;
-        rule = new Rule(content, rule.metadata(), rule.path());
-        rule.save();
-        context.setInstructions(rule);
+        Memory memory = context.getInstructions();
+        var content = memory.content() + "\n\n" + instructions;
+        memory = new Rule(content, memory.metadata(), memory.path());
+        memory.save();
+        context.setInstructions(memory);
     }
 
     /**
@@ -430,8 +430,8 @@ public class Agent {
                         ObjectNode metadata = mapper.createObjectNode();
                         metadata.put("name", "conversation-summary");
                         metadata.put("description", "Summary of previous conversations.");
-                        memory = new Memory(response, metadata, memoryFile);
-                        memory.save();
+                        summary = new Memory(response, metadata, memoryFile);
+                        summary.save();
                     } catch (IOException ex) {
                         logger.error("Failed to load conversation summary", ex);
                     }
@@ -441,11 +441,11 @@ public class Agent {
         };
 
         String message = reminder();
-        if (!compact && memory != null) {
+        if (!compact && summary != null) {
             message += String.format("""
                 Here is the analysis and summary of previous conversations:
                 %s
-                """, memory.content());
+                """, summary.content());
         }
         message += "\n\n" + prompt;
         logger.debug("user: {}", message);

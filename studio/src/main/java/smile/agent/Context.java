@@ -59,7 +59,7 @@ public class Context {
      * critical pieces of information for guiding the agent's behavior
      * and should be prioritized in the context window.
      */
-    private Rule instructions;
+    private Memory instructions;
     /**
      * Rules are mandatory, context-independent instructions that apply
      * to every interaction for consistency.
@@ -154,7 +154,7 @@ public class Context {
      * Returns the top-level instructions.
      * @return the top-level instructions.
      */
-    public Rule getInstructions() {
+    public Memory getInstructions() {
         return instructions;
     }
 
@@ -162,7 +162,7 @@ public class Context {
      * Sets the project instructions.
      * @param instructions the project instructions.
      */
-    public void setInstructions(Rule instructions) {
+    public void setInstructions(Memory instructions) {
         this.instructions = instructions;
     }
 
