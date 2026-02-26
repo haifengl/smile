@@ -27,8 +27,7 @@ import com.openai.models.chat.completions.*;
 import com.openai.models.responses.Response;
 import com.openai.models.responses.ResponseCreateParams;
 import smile.llm.Message;
-import smile.llm.tool.Read;
-import smile.llm.tool.Write;
+import smile.llm.tool.*;
 
 /**
  * OpenAI service.
@@ -123,7 +122,10 @@ public class OpenAI extends LLM {
                 .model(model())
                 .n(1)
                 .addTool(Read.class)
-                .addTool(Write.class);
+                .addTool(Write.class)
+                .addTool(Appendable.class)
+                .addTool(Edit.class)
+                .addTool(Bash.class);
 
         var temperature = params.getProperty(TEMPERATURE, "");
         if (!temperature.isBlank()) {
@@ -237,6 +239,9 @@ public class OpenAI extends LLM {
         return switch (tool.name()) {
             case "Read" -> tool.arguments(Read.class).run();
             case "Write" -> tool.arguments(Write.class).run();
+            case "Append" -> tool.arguments(Append.class).run();
+            case "Edit" -> tool.arguments(Edit.class).run();
+            case "Bash" -> tool.arguments(Bash.class).run();
             default ->
                 throw new IllegalArgumentException("Unknown tool: " + tool.name());
         };

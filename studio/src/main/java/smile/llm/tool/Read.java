@@ -50,7 +50,7 @@ public class Read {
     @JsonPropertyDescription("The number of lines to read. Only provide if the file is too large to read at once.")
     public int limit = 2000;
 
-    /** Executes the tool and returns the file contents. */
+    /** Executes the tool. */
     public String run() {
         var path = Path.of(filePath);
         if (Files.exists(path)) {

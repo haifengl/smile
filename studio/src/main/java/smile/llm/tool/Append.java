@@ -18,27 +18,28 @@ package smile.llm.tool;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 
 @JsonClassDescription("""
-Writes a file to the local filesystem.
+Appends to a file in the local filesystem.
 
 Usage:
-- This tool will overwrite the existing file if there is one at the provided path.
-- If this is an existing file, you MUST use the Read tool first to read the file's contents. This tool will fail if you did not read the file first.
+- This tool will append to the existing file if there is one at the provided path.
+- If the file doesn't exist, this tool will create the file.
 - ALWAYS prefer editing existing files in the codebase. NEVER write new files unless explicitly required.
 - NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
 - Only use emojis if the user explicitly requests it. Avoid writing emojis to files unless asked.
 """)
-public class Write {
+public class Append {
     @JsonProperty(required = true)
-    @JsonPropertyDescription("The absolute path to the file to write (must be absolute, not relative)")
+    @JsonPropertyDescription("The absolute path to the file to append (must be absolute, not relative)")
     public String filePath;
 
     @JsonProperty(required = true)
-    @JsonPropertyDescription("The content to write to the file")
+    @JsonPropertyDescription("The content to append to the file")
     public String content;
 
     /** Executes the tool. */
@@ -49,10 +50,10 @@ public class Write {
         }
 
         try {
-            Files.writeString(path, content);
-            return String.format("File '%s' written successfully.", filePath);
+            Files.writeString(path, content, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            return String.format("File '%s' appended successfully.", filePath);
         } catch (Exception e) {
-            return String.format("Failed to write file '%s': %s", filePath, e.getMessage());
+            return String.format("Failed to append file '%s': %s", filePath, e.getMessage());
         }
     }
 }
