@@ -27,8 +27,8 @@ import tools.jackson.databind.node.ObjectNode;
  *
  * @author Haifeng Li
  */
-public record Tool(String name,
-                   String description,
-                   ObjectNode inputSchema,
-                   List<Object> inputExamples) {
+public record ToolSpec(String name,
+                       String description,
+                       ObjectNode inputSchema,
+                       List<Object> inputExamples) {
 }

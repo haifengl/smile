@@ -19,6 +19,10 @@ package smile.llm.client;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+
+import com.openai.azure.AzureOpenAIServiceVersion;
+import com.openai.azure.AzureUrlPathMode;
+import com.openai.azure.credential.AzureApiKeyCredential;
 import com.openai.client.OpenAIClientAsync;
 import com.openai.client.okhttp.OpenAIOkHttpClientAsync;
 import com.openai.core.http.AsyncStreamResponse;
@@ -63,6 +67,38 @@ public class OpenAI extends LLM {
     public OpenAI(OpenAIClientAsync client, String model) {
         super(model);
         this.client = client;
+    }
+
+    /**
+     * Returns an instance of Azure OpenAI deployment.
+     * @param apiKey API key for authentication and authorization.
+     * @param baseUrl the base URL for the service.
+     * @param model the model name, aka the deployment name in Azure.
+     * @return an instance of Azure OpenAI deployment.
+     */
+    public static OpenAI azure(String apiKey, String baseUrl, String model) {
+        // The new client will reuse connection and thread pool
+        var client = OpenAI.singleton.withOptions(builder -> builder.baseUrl(baseUrl + "/openai")
+                .credential(AzureApiKeyCredential.create(apiKey))
+                .azureServiceVersion(AzureOpenAIServiceVersion.fromString("2025-04-01-preview"))
+                .azureUrlPathMode(AzureUrlPathMode.UNIFIED));
+        return new OpenAI(client, model);
+    }
+
+    /**
+     * Returns an instance of Azure OpenAI deployment with legacy URL path.
+     * @param apiKey API key for authentication and authorization.
+     * @param baseUrl the base URL for the service.
+     * @param model the model name, aka the deployment name in Azure.
+     * @return an instance of Azure OpenAI deployment with legacy URL path.
+     */
+    public static OpenAI legacy(String apiKey, String baseUrl, String model) {
+        // The new client will reuse connection and thread pool
+        var client = OpenAI.singleton.withOptions(builder -> builder.baseUrl(baseUrl)
+                .credential(AzureApiKeyCredential.create(apiKey))
+                .azureServiceVersion(AzureOpenAIServiceVersion.fromString("2025-04-01-preview"))
+                .azureUrlPathMode(AzureUrlPathMode.LEGACY));
+        return new OpenAI(client, model);
     }
 
     @Override

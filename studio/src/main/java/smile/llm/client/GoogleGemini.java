@@ -57,6 +57,22 @@ public class GoogleGemini extends LLM {
     }
 
     /**
+     * Returns an instance of VertexAI deployment.
+     * @param apiKey API key for authentication and authorization.
+     * @param baseUrl the base URL for the service.
+     * @param model the model name.
+     * @return an instance of VertexAI deployment.
+     */
+    public static GoogleGemini vertex(String apiKey, String baseUrl, String model) {
+        var client = Client.builder()
+                .apiKey(apiKey)
+                .httpOptions(HttpOptions.builder().baseUrl(baseUrl).build())
+                .vertexAI(true)
+                .build();
+        return new GoogleGemini(client, model);
+    }
+
+    /**
      * Returns a chat request configuration.
      * @param params the request parameters.
      * @return a chat request configuration.

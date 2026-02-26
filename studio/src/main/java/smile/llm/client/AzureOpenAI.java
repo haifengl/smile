@@ -54,7 +54,7 @@ public interface AzureOpenAI {
         var client = OpenAI.singleton.withOptions(builder -> builder.baseUrl(baseUrl)
                 .credential(AzureApiKeyCredential.create(apiKey))
                 .azureServiceVersion(AzureOpenAIServiceVersion.fromString("2025-04-01-preview"))
-                .azureUrlPathMode(AzureUrlPathMode.LEGACY);
+                .azureUrlPathMode(AzureUrlPathMode.LEGACY));
         return new OpenAI(client, model);
     }
 }

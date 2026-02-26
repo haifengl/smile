@@ -218,7 +218,7 @@ public class SmileStudio extends JFrame {
                     yield openai;
                 }
 
-                case "Azure OpenAI" -> new AzureOpenAI(
+                case "Azure OpenAI" -> OpenAI.legacy(
                         prefs.get("azureOpenAIApiKey", ""),
                         prefs.get("azureOpenAIBaseUrl", ""),
                         prefs.get("azureOpenAIModel", "gpt-5.1-codex"));
@@ -242,7 +242,7 @@ public class SmileStudio extends JFrame {
                             prefs.get("googleGeminiModel", "gemini-3-pro-preview"));
 
                 case "GoogleVertexAI" ->
-                    new GoogleVertexAI(
+                    GoogleGemini.vertex(
                             prefs.get("googleVertexAIApiKey", ""),
                             prefs.get("googleVertexAIBaseUrl", ""),
                             prefs.get("googleVertexAIModel", "gemini-3-pro-preview"));
