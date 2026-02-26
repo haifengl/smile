@@ -80,7 +80,7 @@ libraryDependencies ++= Seq(
   "org.slf4j"         % "slf4j-simple"       % "2.0.17",
   "com.openai"        % "openai-java"        % "4.23.0",
   "com.anthropic"     % "anthropic-java"     % "2.15.0",
-  "com.google.genai"  % "google-genai"       % "1.40.0",
+  "com.google.genai"  % "google-genai"       % "1.41.0",
   "org.commonmark"    % "commonmark"         % "0.27.1",
   "org.xhtmlrenderer" % "flying-saucer-core" % "10.0.6",
   "com.fifesoft"      % "rsyntaxtextarea"    % "3.6.1",

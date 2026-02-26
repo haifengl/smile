@@ -16,17 +16,16 @@
  */
 package smile.llm.client;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import com.google.genai.Client;
-import com.google.genai.types.Content;
-import com.google.genai.types.GenerateContentConfig;
-import com.google.genai.types.GenerateContentResponse;
-import com.google.genai.types.Part;
+import com.google.genai.types.*;
 import smile.llm.Message;
+import smile.llm.tool.*;
 
 /**
  * Google Gemini.
@@ -63,8 +62,26 @@ public class GoogleGemini extends LLM {
      * @return a chat request configuration.
      */
     private GenerateContentConfig config(Properties params) {
+        List<Tool> tools = new ArrayList<>();
+        try {
+            Method readFile = Read.class.getMethod("readFile", String.class, int.class, int.class);
+            Method writeFile = Write.class.getMethod("writeFile", String.class, String.class);
+            Method appendFile = Append.class.getMethod("appendFile", String.class, String.class);
+            Method editFile = Edit.class.getMethod("editFile", String.class, String.class, String.class, boolean.class);
+            Method runCommand = Bash.class.getMethod("runCommand", String.class, int.class, boolean.class);
+            tools.add(Tool.builder().functions(readFile).build());
+            tools.add(Tool.builder().functions(writeFile).build());
+            tools.add(Tool.builder().functions(appendFile).build());
+            tools.add(Tool.builder().functions(editFile).build());
+            tools.add(Tool.builder().functions(runCommand).build());
+        } catch (NoSuchMethodException | SecurityException e) {
+            logger.error("Failed to get method: {}", e.getMessage());
+        }
+
         // only 1 chat completion choice to generate
-        var builder = GenerateContentConfig.builder().candidateCount(1);
+        var builder = GenerateContentConfig.builder()
+                .candidateCount(1)
+                .tools(tools);
 
         var temperature = params.getProperty(TEMPERATURE, "");
         if (!temperature.isBlank()) {

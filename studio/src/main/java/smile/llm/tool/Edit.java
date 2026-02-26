@@ -51,6 +51,11 @@ public class Edit {
 
     /** Executes the tool. */
     public String run() {
+        return editFile(filePath, oldString, newString, replaceAll);
+    }
+
+    /** Static helper method to edit a file. */
+    public static String editFile(String filePath, String oldString, String newString, boolean replaceAll) {
         var path = Path.of(filePath);
         if (!Files.exists(path)) {
             return String.format("Error: File '%s' does not exist.", path);

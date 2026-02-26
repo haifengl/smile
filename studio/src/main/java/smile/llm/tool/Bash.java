@@ -93,6 +93,11 @@ public class Bash {
 
     /** Executes the tool. */
     public String run() {
+        return runCommand(command, timeout, runInBackground);
+    }
+
+    /** Static helper method to run a bash command with timeout and background execution option. */
+    public static String runCommand(String command, int timeout, boolean runInBackground) {
         List<String> cmd = new ArrayList<>();
         if (System.getProperty("os.name").toLowerCase().contains("win")) {
             cmd.add("cmd.exe");
@@ -105,9 +110,9 @@ public class Bash {
         // Parse the command string into arguments, respecting quoted substrings
         Pattern pattern = Pattern.compile("\"[^\"]+\"|\\S+");
         pattern.matcher(command)
-               .results()
-               .map(MatchResult::group)
-               .forEach(cmd::add);
+                .results()
+                .map(MatchResult::group)
+                .forEach(cmd::add);
 
         try {
             var process = new ProcessBuilder(cmd)

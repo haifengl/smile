@@ -60,6 +60,11 @@ public class Read {
 
     /** Executes the tool. */
     public String run() {
+        return readFile(filePath, offset, limit);
+    }
+
+    /** Static helper method to read a file. */
+    public static String readFile(String filePath, int offset, int limit) {
         var path = Path.of(filePath);
         if (Files.exists(path)) {
             try {

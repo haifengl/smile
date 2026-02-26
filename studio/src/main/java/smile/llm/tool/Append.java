@@ -44,6 +44,11 @@ public class Append {
 
     /** Executes the tool. */
     public String run() {
+        return appendFile(filePath, content);
+    }
+
+    /** Static helper method to append to a file. */
+    public static String appendFile(String filePath, String content) {
         var path = Path.of(filePath);
         if (!Files.exists(path.getParent())) {
             return String.format("Error: Directory '%s' does not exist.", path.getParent());

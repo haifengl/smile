@@ -91,6 +91,7 @@ lazy val javaSettings = commonSettings ++ Seq(
     "-g:lines,vars,source",
     "-Xlint:deprecation",
     "-Xlint:unchecked",
+    "-parameters", // for Gemini AFC
     "-source", "25",
     "-target", "25"
   ),
