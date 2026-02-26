@@ -14,13 +14,14 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.agent;
+package smile.llm.tool;
 
 import java.util.List;
 import tools.jackson.databind.node.ObjectNode;
+
 /**
- * Tools enable models to interact with external systems, such as
- * querying databases, calling APIs, or performing computations.
+ * Tool specification. Tools enable models to interact with external systems,
+ * such as querying databases, calling APIs, or performing computations.
  * Each tool is uniquely identified by a name and includes metadata
  * describing its schema.
  *
