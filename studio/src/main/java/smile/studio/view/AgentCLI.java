@@ -29,6 +29,7 @@ import java.util.regex.Pattern;
 
 import com.formdev.flatlaf.util.SystemInfo;
 import smile.agent.Analyst;
+import smile.agent.Memory;
 import smile.llm.client.StreamResponseHandler;
 import smile.plot.swing.Palette;
 import smile.shell.JShell;
@@ -245,12 +246,21 @@ public class AgentCLI extends JPanel {
                 /train\t\tTrain a machine learning model
                 /predict\tRun batch inference
                 /serve\t\tStart an inference service""");
+
         for (var cmd : analyst.commands()) {
             sb.append("\n/")
               .append(cmd.name())
               .append(cmd.name().length() > 6 ? "\t" : "\t\t")
               .append(cmd.description());
         }
+
+        for (var skill : analyst.skills()) {
+            sb.append("\n/")
+                    .append(skill.name())
+                    .append(skill.name().length() > 6 ? "\t" : "\t\t")
+                    .append(skill.description());
+        }
+
         output.setText(sb.toString());
     }
 
@@ -316,25 +326,33 @@ public class AgentCLI extends JPanel {
     }
 
     private void runCustomCommand(String command, String instructions, OutputArea output) {
-        var cmd = analyst.commands().stream()
+        Optional<? extends Memory> cmd = analyst.commands().stream()
                 .filter(c -> c.name().equals(command))
                 .findFirst();
-        if (cmd.isPresent()) {
-            var args = instructions.substring(command.length()).trim();
-            if (cmd.get().content().contains("{{args}}")) {
-                if (args.isBlank()) {
-                    output.setText("Error: /" + command + " requires arguments.");
-                } else {
-                    var prompt = cmd.get().prompt(args);
-                    chat(command, prompt, output);
-                }
+
+        if (cmd.isEmpty()) {
+            cmd = analyst.skills().stream()
+                    .filter(s -> s.name().equals(command))
+                    .findFirst();
+        }
+
+        if (cmd.isEmpty()) {
+            output.setText("Error: Unknown command /" + command);
+            return;
+        }
+
+        var args = instructions.substring(command.length()).trim();
+        if (cmd.get().content().contains("{{args}}")) {
+            if (args.isBlank()) {
+                output.setText("Error: /" + command + " requires arguments.");
             } else {
-                // append instructions to command without {{args}} placeholder.
-                var prompt = cmd.get().content() + "\n\n" + args;
+                var prompt = cmd.get().prompt(args);
                 chat(command, prompt, output);
             }
         } else {
-            output.setText("Error: Unknown command /" + command);
+            // append instructions to command without {{args}} placeholder.
+            var prompt = cmd.get().content() + "\n\n" + args;
+            chat(command, prompt, output);
         }
     }
 

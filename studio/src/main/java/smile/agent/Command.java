@@ -44,16 +44,6 @@ public class Command extends Memory {
     }
 
     /**
-     * Generates the prompt by replacing the {{args}} placeholder
-     * in the content with the provided arguments.
-     * @param args the arguments to replace in the content.
-     * @return the generated prompt.
-     */
-    public String prompt(String args) {
-        return content.replace("{{args}}", args);
-    }
-
-    /**
      * Reads the rule from a file with UTF-8 charset.
      * @param path the path to the file.
      * @return the rule.

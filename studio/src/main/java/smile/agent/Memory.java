@@ -105,6 +105,42 @@ public class Memory {
     }
 
     /**
+     * Generates the prompt by replacing the {{args}} placeholder
+     * in the content with the provided arguments.
+     * @param args the arguments to replace in the content.
+     * @return the generated prompt.
+     */
+    public String prompt(String args) {
+        return content.replace("{{args}}", args);
+    }
+
+    /**
+     * Saves the memory to the file path specified in the memory.
+     * @throws IOException if an I/O error occurs writing to the file.
+     */
+    public void save() throws IOException  {
+        writeTo(path);
+    }
+
+    /**
+     * Writes the memory to a file with UTF-8 charset.
+     * The metadata is stored at the top in YAML front matter,
+     * delimited by lines of at least three dashes (---).
+     * The main content follows the front matter.
+     * @param path the path to the file.
+     * @throws IOException if an I/O error occurs writing to the file.
+     */
+    public void writeTo(Path path) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        if (metadata != null && !metadata.isEmpty()) {
+            sb.append(mapper.writeValueAsString(metadata));
+            sb.append("---\n");
+        }
+        sb.append(content);
+        Files.writeString(path, sb.toString());
+    }
+
+    /**
      * Reads the persistent memory from a file with UTF-8 charset.
      * The file may have metadata placed at the top in YAML front
      * matter, delimited by lines of at least three dashes (---).
@@ -144,31 +180,5 @@ public class Memory {
         final String delimiter = line;
 
         return new Memory(content, metadata, path);
-    }
-
-    /**
-     * Saves the memory to the file path specified in the memory.
-     * @throws IOException if an I/O error occurs writing to the file.
-     */
-    public void save() throws IOException  {
-        writeTo(path);
-    }
-
-    /**
-     * Writes the memory to a file with UTF-8 charset.
-     * The metadata is stored at the top in YAML front matter,
-     * delimited by lines of at least three dashes (---).
-     * The main content follows the front matter.
-     * @param path the path to the file.
-     * @throws IOException if an I/O error occurs writing to the file.
-     */
-    public void writeTo(Path path) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        if (metadata != null && !metadata.isEmpty()) {
-            sb.append(mapper.writeValueAsString(metadata));
-            sb.append("---\n");
-        }
-        sb.append(content);
-        Files.writeString(path, sb.toString());
     }
 }
