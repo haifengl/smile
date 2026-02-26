@@ -123,7 +123,7 @@ public class OpenAI extends LLM {
                 .n(1)
                 .addTool(Read.class)
                 .addTool(Write.class)
-                .addTool(Appendable.class)
+                .addTool(Append.class)
                 .addTool(Edit.class)
                 .addTool(Bash.class);
 
