@@ -78,17 +78,17 @@ libraryDependencies ++= Seq(
   "org.scala-lang"   %% "scala3-compiler"    % scalaVersion.value,
   "info.picocli"      % "picocli"            % "4.7.7",
   "org.slf4j"         % "slf4j-simple"       % "2.0.17",
-  "com.openai"        % "openai-java"        % "4.16.1",
-  "com.anthropic"     % "anthropic-java"     % "2.11.1",
-  "com.google.genai"  % "google-genai"       % "1.36.0",
+  "com.openai"        % "openai-java"        % "4.23.0",
+  "com.anthropic"     % "anthropic-java"     % "2.15.0",
+  "com.google.genai"  % "google-genai"       % "1.40.0",
   "org.commonmark"    % "commonmark"         % "0.27.1",
   "org.xhtmlrenderer" % "flying-saucer-core" % "10.0.6",
   "com.fifesoft"      % "rsyntaxtextarea"    % "3.6.1",
   "com.formdev"       % "flatlaf"            % "3.7",
   "com.formdev"       % "flatlaf-fonts-jetbrains-mono" % "2.304",
   "org.apache.maven"  % "maven-resolver-provider" % "3.9.12",
-  "org.apache.maven.resolver" % "maven-resolver-supplier-mvn4" % "2.0.14",
-  "tools.jackson.dataformat"  % "jackson-dataformat-yaml" % "3.0.4"
+  "org.apache.maven.resolver" % "maven-resolver-supplier-mvn4" % "2.0.16",
+  "tools.jackson.dataformat"  % "jackson-dataformat-yaml" % "3.1.0"
 )
 
 libraryDependencies ++= {

@@ -24,10 +24,10 @@ import java.util.stream.Collectors;
 import com.anthropic.client.AnthropicClientAsync;
 import com.anthropic.client.okhttp.AnthropicOkHttpClientAsync;
 import com.anthropic.core.http.AsyncStreamResponse;
-import com.anthropic.helpers.MessageAccumulator;
-import com.anthropic.models.messages.*;
+import com.anthropic.helpers.BetaMessageAccumulator;
+import com.anthropic.models.beta.messages.*;
 import smile.llm.Message;
-import smile.llm.tool.Read;
+import smile.llm.tool.*;
 
 /**
  * Anthropic service.
@@ -85,7 +85,13 @@ public class Anthropic extends LLM {
      * @return a chat completion request builder.
      */
     private MessageCreateParams.Builder requestBuilder(String message, List<Message> history, Properties params) {
-        var builder = MessageCreateParams.builder().model(model());
+        var builder = MessageCreateParams.builder()
+                .model(model())
+                .addTool(Read.class)
+                .addTool(Write.class)
+                .addTool(Append.class)
+                .addTool(Edit.class)
+                .addTool(Bash.class);
 
         var temperature = params.getProperty(TEMPERATURE, "");
         if (!temperature.isBlank()) {
@@ -128,11 +134,10 @@ public class Anthropic extends LLM {
     @Override
     public CompletableFuture<String> complete(String message, List<Message> history, Properties params) {
         var request = requestBuilder(message, history, params);
-        var accumulator = MessageAccumulator.create();
-        return client.messages().create(request.build())
+        return client.beta().messages().create(request.build())
                 .thenApply(msg -> msg.content().stream()
                         .flatMap(block -> block.text().stream())
-                        .map(TextBlock::text)
+                        .map(BetaTextBlock::text)
                         .collect(Collectors.joining()));
     }
 
@@ -148,15 +153,15 @@ public class Anthropic extends LLM {
      * @param handler the stream response handler.
      */
     private void complete(MessageCreateParams.Builder request, StreamResponseHandler handler) {
-        var accumulator = MessageAccumulator.create();
-        client.messages().createStreaming(request.build())
+        var accumulator = BetaMessageAccumulator.create();
+        client.beta().messages().createStreaming(request.build())
                 .subscribe(new AsyncStreamResponse.Handler<>() {
                     @Override
-                    public void onNext(RawMessageStreamEvent chunk) {
+                    public void onNext(BetaRawMessageStreamEvent chunk) {
                         accumulator.accumulate(chunk);
                         chunk.contentBlockDelta().stream()
                                 .flatMap(block -> block.delta().text().stream())
-                                .map(TextDelta::text)
+                                .map(BetaTextDelta::text)
                                 .forEach(handler::onNext);
                     }
 
@@ -167,15 +172,15 @@ public class Anthropic extends LLM {
                                     .flatMap(block -> block.toolUse().stream())
                                     .map(toolUse -> request
                                             // Add a message indicating that the tool use was requested.
-                                            .addAssistantMessageOfBlockParams(
-                                                    List.of(ContentBlockParam.ofToolUse(ToolUseBlockParam.builder()
+                                            .addAssistantMessageOfBetaContentBlockParams(
+                                                    List.of(BetaContentBlockParam.ofToolUse(BetaToolUseBlockParam.builder()
                                                             .name(toolUse.name())
                                                             .id(toolUse.id())
                                                             .input(toolUse.toParam()._input())
                                                             .build())))
                                             // Add a message with the result of the requested tool use.
-                                            .addUserMessageOfBlockParams(
-                                                    List.of(ContentBlockParam.ofToolResult(ToolResultBlockParam.builder()
+                                            .addUserMessageOfBetaContentBlockParams(
+                                                    List.of(BetaContentBlockParam.ofToolResult(BetaToolResultBlockParam.builder()
                                                             .toolUseId(toolUse.id())
                                                             .contentAsJson(callTool(toolUse))
                                                             .build()))))
@@ -199,7 +204,15 @@ public class Anthropic extends LLM {
      * @param tool the tool function to call.
      * @return the tool call result.
      */
-    private static Object callTool(ToolUseBlock tool) {
-        return null;
+    private Object callTool(BetaToolUseBlock tool) {
+        return switch (tool.name()) {
+            case "Read" -> tool.input(Read.class).run();
+            case "Write" -> tool.input(Write.class).run();
+            case "Append" -> tool.input(Append.class).run();
+            case "Edit" -> tool.input(Edit.class).run();
+            case "Bash" -> tool.input(Bash.class).run();
+            default ->
+                    throw new IllegalArgumentException("Unknown tool: " + tool.name());
+        };
     }
 }
