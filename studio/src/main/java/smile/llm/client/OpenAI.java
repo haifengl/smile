@@ -24,8 +24,7 @@ import com.openai.client.okhttp.OpenAIOkHttpClientAsync;
 import com.openai.core.http.AsyncStreamResponse;
 import com.openai.helpers.ChatCompletionAccumulator;
 import com.openai.models.chat.completions.*;
-import com.openai.models.responses.Response;
-import com.openai.models.responses.ResponseCreateParams;
+import com.openai.models.responses.*;
 import smile.llm.Message;
 import smile.llm.tool.*;
 
@@ -95,19 +94,70 @@ public class OpenAI extends LLM {
 
     /**
      * Returns a future of response from OpenAI service.
-     * @param input the input message.
-     * @param instructions the system instructions.
+     * @param message the user message.
+     * @param params the request parameters.
      * @return a future of response.
      */
-    public CompletableFuture<Response> response(String input, String instructions) {
-        var params = ResponseCreateParams.builder()
+    private ResponseCreateParams.Builder responseBuilder(String message, List<Message> history, Properties params) {
+        var builder = ResponseCreateParams.builder()
                 .model(model())
-                .maxOutputTokens(8192)
-                .instructions(instructions)
-                .input(input)
-                .build();
+                .addTool(Read.class)
+                .addTool(Write.class)
+                .addTool(Append.class)
+                .addTool(Edit.class)
+                .addTool(Bash.class);
 
-        return client.responses().create(params);
+        var temperature = params.getProperty(TEMPERATURE, "");
+        if (!temperature.isBlank()) {
+            try {
+                builder.temperature(Double.parseDouble(temperature));
+            } catch (NumberFormatException ex) {
+                logger.error("Invalid temperature: {}", temperature);
+            }
+        }
+
+        var stop = params.getProperty(STOP, "");
+        if (!stop.isBlank()) {
+            logger.warn("Stop sequences are not supported in the new responses API. The stop parameter is ignored: {}", stop);
+            // builder.stop(stop);
+        }
+
+        String maxOutputTokens = params.getProperty(MAX_OUTPUT_TOKENS, "");
+        if (!maxOutputTokens.isBlank()) {
+            try {
+                builder.maxOutputTokens(Integer.parseInt(maxOutputTokens));
+            } catch (NumberFormatException ex) {
+                logger.error("Invalid maxOutputTokens: {}", maxOutputTokens);
+            }
+        }
+
+        var system = params.getProperty(SYSTEM_PROMPT, "");
+        if (!system.isBlank()) {
+            logger.debug("System prompt:\n{}", system);
+            builder.instructions(system);
+        }
+
+        List<ResponseInputItem> input = new ArrayList<>();
+        for (var msg : history) {
+            var role = switch (msg.role()) {
+                case user -> EasyInputMessage.Role.USER;
+                case assistant -> EasyInputMessage.Role.ASSISTANT;
+                default -> null;
+            };
+            if (role != null) {
+                input.add(ResponseInputItem.ofEasyInputMessage(EasyInputMessage.builder()
+                        .role(role)
+                        .content(msg.content())
+                        .build()));
+            }
+        }
+
+        input.add(ResponseInputItem.ofEasyInputMessage(EasyInputMessage.builder()
+                .role(EasyInputMessage.Role.USER)
+                .content(message)
+                .build()));
+        builder.inputOfResponse(input);
+        return builder;
     }
 
     /**
