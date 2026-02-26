@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
+import java.util.regex.MatchResult;
+import java.util.regex.Pattern;
 
 import com.formdev.flatlaf.util.SystemInfo;
 import smile.agent.Analyst;
@@ -165,7 +167,6 @@ public class AgentCLI extends JPanel {
             case Python -> {
                 command.add("python");
                 command.add("-c");
-                command.add(instructions);
             }
             case Shell -> {
                 if (SystemInfo.isWindows) {
@@ -175,19 +176,24 @@ public class AgentCLI extends JPanel {
                     command.add("bash");
                     command.add("-c");
                 }
-                command.add(instructions);
             }
             case Command -> {
                 var smile = System.getProperty("smile.home", ".") + "/bin/smile";
                 if (SystemInfo.isWindows) smile += ".bat";
                 command.add(smile);
-                command.addAll(Arrays.asList(instructions.split("\\s+")));
             }
             default -> {
                 logger.debug("Invalid intent type: {}", intentType);
                 return;
             }
         }
+
+        // Parse the command string into arguments, respecting quoted substrings
+        Pattern pattern = Pattern.compile("\"[^\"]+\"|\\S+");
+        pattern.matcher(instructions)
+                .results()
+                .map(MatchResult::group)
+                .forEach(command::add);
 
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override

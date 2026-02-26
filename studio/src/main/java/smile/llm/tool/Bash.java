@@ -22,6 +22,9 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.MatchResult;
+import java.util.regex.Pattern;
+
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -98,7 +101,13 @@ public class Bash {
             cmd.add("bash");
             cmd.add("-c");
         }
-        cmd.add(command);
+
+        // Parse the command string into arguments, respecting quoted substrings
+        Pattern pattern = Pattern.compile("\"[^\"]+\"|\\S+");
+        pattern.matcher(command)
+               .results()
+               .map(MatchResult::group)
+               .forEach(cmd::add);
 
         try {
             var process = new ProcessBuilder(cmd)
