@@ -24,19 +24,20 @@ import com.google.genai.types.HttpOptions;
  *
  * @author Haifeng Li
  */
-public class GoogleVertexAI extends GoogleGemini {
+public interface GoogleVertexAI {
     /**
-     * Constructor.
+     * Returns an instance of VertexAI deployment.
      * @param apiKey API key for authentication and authorization.
      * @param baseUrl the base URL for the service.
      * @param model the model name.
+     * @return an instance of VertexAI deployment.
      */
-    public GoogleVertexAI(String apiKey, String baseUrl, String model) {
-        super(Client.builder()
+    static GoogleGemini vertex(String apiKey, String baseUrl, String model) {
+        var client = Client.builder()
                 .apiKey(apiKey)
                 .httpOptions(HttpOptions.builder().baseUrl(baseUrl).build())
                 .vertexAI(true)
-                .build(),
-              model);
+                .build();
+        return new GoogleGemini(client, model);
     }
 }

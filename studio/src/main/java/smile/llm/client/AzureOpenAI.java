@@ -25,23 +25,36 @@ import com.openai.azure.credential.AzureApiKeyCredential;
  *
  * @author Haifeng Li
  */
-public class AzureOpenAI extends OpenAI {
+public interface AzureOpenAI {
     /**
-     * Constructor.
+     * Returns an instance of Azure OpenAI deployment.
      * @param apiKey API key for authentication and authorization.
      * @param baseUrl the base URL for the service.
      * @param model the model name, aka the deployment name in Azure.
+     * @return an instance of Azure OpenAI deployment.
      */
-    public AzureOpenAI(String apiKey, String baseUrl, String model) {
+    static OpenAI unified(String apiKey, String baseUrl, String model) {
         // The new client will reuse connection and thread pool
-        super(OpenAI.singleton.withOptions(builder -> builder.baseUrl(baseUrl + "/openai")
-                    .credential(AzureApiKeyCredential.create(apiKey))
-                    .azureServiceVersion(AzureOpenAIServiceVersion.fromString("2025-04-01-preview"))
-                    .azureUrlPathMode(AzureUrlPathMode.UNIFIED)),
-              OpenAI.singleton.withOptions(builder -> builder.baseUrl(baseUrl)
-                    .credential(AzureApiKeyCredential.create(apiKey))
-                    .azureServiceVersion(AzureOpenAIServiceVersion.fromString("2025-04-01-preview"))
-                    .azureUrlPathMode(AzureUrlPathMode.LEGACY)),
-              model);
+        var client = OpenAI.singleton.withOptions(builder -> builder.baseUrl(baseUrl + "/openai")
+                .credential(AzureApiKeyCredential.create(apiKey))
+                .azureServiceVersion(AzureOpenAIServiceVersion.fromString("2025-04-01-preview"))
+                .azureUrlPathMode(AzureUrlPathMode.UNIFIED));
+        return new OpenAI(client, model);
+    }
+
+    /**
+     * Returns an instance of Azure OpenAI deployment with legacy URL path.
+     * @param apiKey API key for authentication and authorization.
+     * @param baseUrl the base URL for the service.
+     * @param model the model name, aka the deployment name in Azure.
+     * @return an instance of Azure OpenAI deployment with legacy URL path.
+     */
+    static OpenAI legacy(String apiKey, String baseUrl, String model) {
+        // The new client will reuse connection and thread pool
+        var client = OpenAI.singleton.withOptions(builder -> builder.baseUrl(baseUrl)
+                .credential(AzureApiKeyCredential.create(apiKey))
+                .azureServiceVersion(AzureOpenAIServiceVersion.fromString("2025-04-01-preview"))
+                .azureUrlPathMode(AzureUrlPathMode.LEGACY);
+        return new OpenAI(client, model);
     }
 }

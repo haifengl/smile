@@ -46,8 +46,6 @@ public class OpenAI extends LLM {
     static final OpenAIClientAsync singleton = OpenAIOkHttpClientAsync.fromEnv();
     /** Instance client will reuse connection and thread pool of singleton. */
     OpenAIClientAsync client;
-    /** The client for legacy APIs. */
-    OpenAIClientAsync legacy;
 
     /**
      * Constructor.
@@ -59,36 +57,23 @@ public class OpenAI extends LLM {
 
     /**
      * Constructor with customized client.
-     * @param client a client instance for responses API class.
+     * @param client a client instance.
      * @param model the model name, aka the deployment name in Azure.
      */
     public OpenAI(OpenAIClientAsync client, String model) {
-        this(client, client, model);
-    }
-
-    /**
-     * Constructor with customized clients.
-     * @param client a client instance for responses API class.
-     * @param legacy a client instance for legacy API calls.
-     * @param model the model name, aka the deployment name in Azure.
-     */
-    OpenAI(OpenAIClientAsync client, OpenAIClientAsync legacy, String model) {
         super(model);
         this.client = client;
-        this.legacy = legacy;
     }
 
     @Override
     public OpenAI withBaseUrl(String baseUrl) {
         client = client.withOptions(builder -> builder.baseUrl(baseUrl));
-        legacy = legacy.withOptions(builder -> builder.baseUrl(baseUrl));
         return this;
     }
 
     @Override
     public OpenAI withApiKey(String apiKey) {
         client = client.withOptions(builder -> builder.apiKey(apiKey));
-        legacy = legacy.withOptions(builder -> builder.apiKey(apiKey));
         return this;
     }
 
@@ -219,7 +204,7 @@ public class OpenAI extends LLM {
     @Override
     public CompletableFuture<String> complete(String message, List<Message> history, Properties params) {
         var request = requestBuilder(message, history, params);
-        return legacy.chat().completions().create(request.build())
+        return client.chat().completions().create(request.build())
                 .thenApply(completion -> completion.choices().stream()
                             .flatMap(choice -> choice.message().content().stream())
                             .collect(Collectors.joining()));
@@ -238,7 +223,7 @@ public class OpenAI extends LLM {
      */
     private void complete(ChatCompletionCreateParams.Builder request, StreamResponseHandler handler) {
         var accumulator = ChatCompletionAccumulator.create();
-        legacy.chat().completions().createStreaming(request.build())
+        client.chat().completions().createStreaming(request.build())
                 .subscribe(new AsyncStreamResponse.Handler<>() {
                     @Override
                     public void onNext(ChatCompletionChunk chunk) {
