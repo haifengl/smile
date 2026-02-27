@@ -72,9 +72,9 @@ public class SmileStudio extends JFrame {
         setJMenuBar(menuBar);
         initMenuAndToolBar();
 
-        workspace = new Workspace(file);
-        setTitle(file);
         fileChooser.setCurrentDirectory(file.getParent().toFile());
+        workspace = new Workspace(file, fileChooser);
+        setTitle(file);
 
         JPanel contentPane = new JPanel(new BorderLayout());
         contentPane.add(toolBar, BorderLayout.NORTH);

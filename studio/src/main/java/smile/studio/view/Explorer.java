@@ -29,10 +29,10 @@ import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.ResourceBundle;
+import com.formdev.flatlaf.util.SystemFileChooser;
 import jdk.jshell.VarSnippet;
 import smile.studio.kernel.JavaRunner;
 import smile.studio.model.PersistedModel;
-import smile.swing.FileChooser;
 import static smile.swing.SmileUtilities.scaleImageIcon;
 
 /**
@@ -62,14 +62,18 @@ public class Explorer extends JPanel {
     private final DefaultTreeModel treeModel = (DefaultTreeModel) tree.getModel();
     /** JShell instance. */
     private final JavaRunner runner;
+    /** File chooser for saving models. */
+    private final SystemFileChooser fileChooser;
 
     /**
      * Constructor.
      * @param runner Java code execution engine.
+     * @param fileChooser the file chooser for saving models.
      */
-    public Explorer(JavaRunner runner) {
+    public Explorer(JavaRunner runner, SystemFileChooser fileChooser) {
         super(new BorderLayout());
         this.runner = runner;
+        this.fileChooser = fileChooser;
 
         setBorder(new EmptyBorder(0, 8, 0, 0));
         initTree();
@@ -145,11 +149,12 @@ public class Explorer extends JPanel {
                                         %sWindow.setTitle("%s");
                                         """, name, name, name, name));
                             } else if (parent == models) {
-                                JFileChooser chooser = FileChooser.getInstance();
-                                chooser.setDialogTitle(bundle.getString("SaveModel"));
-                                chooser.setFileFilter(new FileNameExtensionFilter(bundle.getString("ModelFile"), "sml"));
-                                if (chooser.showSaveDialog(SwingUtilities.getWindowAncestor(Explorer.this)) == JFileChooser.APPROVE_OPTION) {
-                                    File file = chooser.getSelectedFile();
+                                var title = fileChooser.getDialogTitle();
+                                fileChooser.setDialogTitle(bundle.getString("SaveModel"));
+                                var filter = new SystemFileChooser.FileNameExtensionFilter(bundle.getString("ModelFile"), "sml");
+                                fileChooser.setFileFilter(filter);
+                                if (fileChooser.showSaveDialog(SwingUtilities.getWindowAncestor(Explorer.this)) == JFileChooser.APPROVE_OPTION) {
+                                    File file = fileChooser.getSelectedFile();
                                     if (!file.getName().toLowerCase().endsWith(".sml")) {
                                         file = new File(file.getParentFile(), file.getName() + ".sml");
                                     }
@@ -168,6 +173,8 @@ public class Explorer extends JPanel {
                                         tree.expandPath(new TreePath(new Object[]{root, services}));
                                     }
                                 }
+                                // Restore the original dialog title after the file chooser is closed
+                                fileChooser.setDialogTitle(title);
                             } else if (parent == services) {
                                 PersistedModel service = (PersistedModel) node.getUserObject();
                                 StartServiceDialog dialog = new StartServiceDialog(SwingUtilities.getWindowAncestor(Explorer.this), service);

@@ -18,8 +18,7 @@ package smile.studio.view;
 
 import javax.swing.*;
 import java.nio.file.Path;
-import smile.agent.Coder;
-import smile.studio.SmileStudio;
+import com.formdev.flatlaf.util.SystemFileChooser;
 import smile.studio.kernel.JavaRunner;
 
 /**
@@ -31,7 +30,7 @@ public class Workspace extends JSplitPane {
     /** Java execution engine. */
     final JavaRunner runner = new JavaRunner();
     /** The explorer of runtime information. */
-    final Explorer explorer = new Explorer(runner);
+    final Explorer explorer;
     /** The pane of conversational agent. */
     final AgentCLI cli;
     /** The editor of notebook. */
@@ -42,9 +41,11 @@ public class Workspace extends JSplitPane {
     /**
      * Constructor.
      * @param file the notebook file. If null, a new notebook will be created.
+     * @param fileChooser the file chooser for saving models.
      */
-    public Workspace(Path file) {
+    public Workspace(Path file, SystemFileChooser fileChooser) {
         super(JSplitPane.HORIZONTAL_SPLIT);
+        explorer = new Explorer(runner, fileChooser);
         notebook = new Notebook(file, runner, explorer::refresh);
         cli = new AgentCLI(file.getParent(), runner);
 
