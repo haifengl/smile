@@ -70,7 +70,6 @@ public class Conversation {
             } catch (IOException ex) {
                 logger.error("Failed to create folder of conversation history", ex);
             }
-            return;
         }
     }
 
@@ -82,7 +81,7 @@ public class Conversation {
     }
 
     /**
-     * Adds a message to the conversation history and saves it to the file.
+     * Adds a message to the conversation session and saves it to the file.
      * @param message the message to add.
      */
     public void add(Message message) {
@@ -96,10 +95,10 @@ public class Conversation {
     }
 
     /**
-     * Returns the recent conversation history.
-     * @param size the number of recent conversations.
-     *             If size is <= 0, return the full conversations.
-     * @return the recent conversation history.
+     * Returns the recent conversation messages.
+     * @param size the number of recent messages.
+     *             If size is <= 0, return the full conversation.
+     * @return the recent conversation messages.
      */
     public List<Message> getLast(int size) {
         if (size <= 0) return messages;
