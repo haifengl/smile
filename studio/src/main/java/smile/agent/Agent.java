@@ -28,6 +28,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
+import smile.llm.Conversation;
 import smile.llm.Message;
 import smile.llm.client.LLM;
 import smile.llm.client.StreamResponseHandler;
@@ -52,23 +53,23 @@ public class Agent {
     private final Context context;
     /** The parameters for LLM inference. */
     private final Properties params = new Properties();
-    /** The conversation history. */
-    private final Conversations conversations;
+    /** The conversation session. */
+    private final Conversation conversation;
     /** The number of recent conversations to keep in context. */
     private int window = 5;
 
     /**
      * Constructor.
      * @param llm the supplier of LLM service.
-     * @param conversations the conversation history.
+     * @param conversation the conversation session.
      * @param context the project-specific context.
      * @param user the user context for user rules, skills, etc.
      * @param global the global context for system instructions, skills, tools, etc.
      */
-    public Agent(Supplier<LLM> llm, Conversations conversations,
+    public Agent(Supplier<LLM> llm, Conversation conversation,
                  Context context, Context user, Context global) {
         this.llm = llm;
-        this.conversations = conversations;
+        this.conversation = conversation;
         this.context = context;
         this.user = user;
         this.global = global;
@@ -78,20 +79,21 @@ public class Agent {
     /**
      * Constructor.
      * @param llm the supplier of LLM service.
+     * @param conversation the conversation session.
      * @param context the project-specific context.
      */
-    public Agent(Supplier<LLM> llm, Conversations conversations, Context context) {
-        this(llm, conversations, context, null, null);
+    public Agent(Supplier<LLM> llm, Conversation conversation, Context context) {
+        this(llm, conversation, context, null, null);
     }
 
     /**
      * Constructor.
      * @param llm the supplier of LLM service.
-     * @param history the directory path for conversation history.
+     * @param session the directory path for conversations.
      * @param context the directory path for agent context.
      */
-    public Agent(Supplier<LLM> llm, Path history, Path context) {
-        this(llm, new Conversations(history), new Context(context));
+    public Agent(Supplier<LLM> llm, Path session, Path context) {
+        this(llm, new Conversation(session), new Context(context));
     }
 
     /**
@@ -206,10 +208,10 @@ public class Agent {
     }
 
     /**
-     * Clears the in-memory conversation history.
+     * Clears the in-memory conversation session.
      */
     public void clear() {
-        conversations.clear();
+        conversation.clear();
     }
 
     /**
@@ -299,14 +301,14 @@ public class Agent {
      * @return a future of response.
      */
     public CompletableFuture<String> response(String prompt) {
-        var history = conversations.getLast(window);
-        conversations.add(Message.user(prompt));
+        var history = conversation.getLast(window);
+        conversation.add(Message.user(prompt));
 
         return llm.get().complete(prompt, history, params)
                 .handle((response, ex) -> {
                     var message = Optional.ofNullable(ex).map(t -> Message.error(t.getMessage()))
                             .orElse(Message.assistant(response));
-                    conversations.add(message);
+                    conversation.add(message);
                     return response;
                 });
     }
@@ -319,8 +321,8 @@ public class Agent {
      */
     public void stream(String command, String prompt, StreamResponseHandler handler) {
         boolean compact = "compact".equals(command);
-        var history = conversations.getLast(compact ? 20 : window);
-        conversations.add(Message.user(prompt));
+        var history = conversation.getLast(compact ? 20 : window);
+        conversation.add(Message.user(prompt));
 
         StringBuilder sb = new StringBuilder();
         var accumulator = new StreamResponseHandler() {
@@ -337,17 +339,17 @@ public class Agent {
 
                 var message = ex.map(t -> Message.error(t.getMessage()))
                         .orElse(Message.assistant(response));
-                conversations.add(message);
+                conversation.add(message);
 
                 if (compact) {
-                    conversations.setSummary(response);
+                    conversation.setSummary(response);
                 }
                 handler.onComplete(ex);
             }
         };
 
         String message = reminder();
-        var summary = conversations.getSummary();
+        var summary = conversation.getSummary();
         if (!compact && !summary.isBlank()) {
             message += String.format("""
                 Here is the analysis and summary of previous conversations:

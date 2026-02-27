@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.agent;
+package smile.llm;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -22,21 +22,19 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
-import smile.llm.Message;
+import java.util.UUID;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.PropertyNamingStrategies;
 import tools.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import tools.jackson.databind.node.ObjectNode;
 
 /**
- * The conversation history.
+ * The conversation session.
  *
  * @author Haifeng Li
  */
-public class Conversations {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Conversations.class);
+public class Conversation {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Conversation.class);
     /** The file name for conversation history. */
     private static final String HISTORY_FILE = "history.jsonl";
     /** The file name of conversation summary. */
@@ -48,19 +46,21 @@ public class Conversations {
             .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL))
             .build();
 
+    /** The unique identifier of the conversation. */
+    private final UUID uuid = UUID.randomUUID();
     /** The conversation history. */
-    private final List<Message> conversations = new ArrayList<>();
+    private final List<Message> messages = new ArrayList<>();
     /** The directory path for conversation history and summary. */
     private final Path path;
     /** The summary of conversations. */
-    private Memory summary;
+    private String summary = "";
 
     /**
-     * Constructor. Loads the conversation history if it exists.
-     * New messages will be saved after each conversation.
-     * @param path the directory path for conversation history.
+     * Constructor. New messages will be saved to history file.
+     * @param path the directory path for conversations.
      */
-    public Conversations(Path path) {
+    public Conversation(Path path) {
+        path = path.resolve(uuid.toString());
         this.path = path;
         if (!Files.exists(path)) {
             // Creates all parent directories
@@ -71,40 +71,13 @@ public class Conversations {
             }
             return;
         }
-
-        Path historyFile = path.resolve(HISTORY_FILE);
-        if (Files.exists(historyFile)) {
-            try (Stream<String> lines = Files.lines(historyFile)) {
-                lines.forEach(line -> {
-                    if (!line.trim().isEmpty()) {
-                        Message message = mapper.readValue(line, Message.class);
-                        conversations.add(message);
-                    }
-                });
-
-                if (conversations.size() > 100) {
-                    conversations.subList(0, conversations.size() - 100).clear();
-                }
-            } catch (IOException ex) {
-                logger.error("Failed to load conversation history", ex);
-            }
-        }
-
-        Path memoryFile = path.resolve(MEMORY_MD);
-        if (Files.exists(memoryFile)) {
-            try {
-                summary = Memory.from(memoryFile);
-            } catch (IOException ex) {
-                logger.error("Failed to load conversation summary", ex);
-            }
-        }
     }
 
     /**
-     * Clears the in-memory conversation history.
+     * Clears the in-memory conversation session.
      */
     public void clear() {
-        conversations.clear();
+        messages.clear();
     }
 
     /**
@@ -112,7 +85,7 @@ public class Conversations {
      * @param message the message to add.
      */
     public void add(Message message) {
-        conversations.add(message);
+        messages.add(message);
         try {
             String jsonLine = mapper.writeValueAsString(message) + System.lineSeparator();
             Files.writeString(path.resolve(HISTORY_FILE), jsonLine, StandardOpenOption.APPEND, StandardOpenOption.CREATE);
@@ -128,11 +101,11 @@ public class Conversations {
      * @return the recent conversation history.
      */
     public List<Message> getLast(int size) {
-        if (size <= 0) return conversations;
+        if (size <= 0) return messages;
         // keeps only the recent conversations within the window size
-        int fromIndex = Math.max(conversations.size() - size, 0);
+        int fromIndex = Math.max(messages.size() - size, 0);
         // subList returns a view that becomes inconsistent if the original list is modified.
-        return new ArrayList<>(conversations.subList(fromIndex, conversations.size()));
+        return new ArrayList<>(messages.subList(fromIndex, messages.size()));
     }
 
     /**
@@ -140,7 +113,7 @@ public class Conversations {
      * @return the summary of conversations.
      */
     public String getSummary() {
-        return summary != null ? summary.content() : "";
+        return summary;
     }
 
     /**
@@ -149,12 +122,8 @@ public class Conversations {
      */
     public void setSummary(String text) {
         try {
-            Path memoryFile = path.resolve(MEMORY_MD);
-            ObjectNode metadata = Memory.mapper.createObjectNode();
-            metadata.put("name", "conversation-summary");
-            metadata.put("description", "Summary of previous conversations.");
-            summary = new Memory(text, metadata, memoryFile);
-            summary.save();
+            Files.writeString(path.resolve(MEMORY_MD), text);
+            summary = text;
         } catch (IOException ex) {
             logger.error("Failed to save conversation summary", ex);
         }
