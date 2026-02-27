@@ -139,6 +139,11 @@ public class Anthropic extends LLM {
             switch (msg.role()) {
                 case user -> builder.addUserMessage(msg.content());
                 case assistant -> builder.addAssistantMessage(msg.content());
+                case tool -> builder.addUserMessageOfBetaContentBlockParams(
+                                List.of(BetaContentBlockParam.ofToolResult(BetaToolResultBlockParam.builder()
+                                        .toolUseId(msg.toolCall().id())
+                                        .contentAsJson(msg.toolCall().output())
+                                        .build())));
             }
         }
         builder.addUserMessage(message);
@@ -189,7 +194,7 @@ public class Anthropic extends LLM {
                     @Override
                     public void onComplete(Optional<Throwable> error) {
                         if (error.isEmpty()) {
-                            long toolCallCount = accumulator.message().content().stream()
+                            boolean hasToolCalls = accumulator.message().content().stream()
                                     .flatMap(block -> block.toolUse().stream())
                                     .map(toolUse -> request
                                             // Add a message indicating that the tool use was requested.
@@ -204,10 +209,11 @@ public class Anthropic extends LLM {
                                                     List.of(BetaContentBlockParam.ofToolResult(BetaToolResultBlockParam.builder()
                                                             .toolUseId(toolUse.id())
                                                             .contentAsJson(callTool(toolUse))
-                                                            .build()))))
-                                    .count();
+                                                            .build())))
+                                    )
+                                    .anyMatch(s -> true);
 
-                            if (toolCallCount > 0) {
+                            if (hasToolCalls) {
                                 // Continue the conversation after tool calls.
                                 complete(request, handler);
                             } else {

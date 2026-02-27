@@ -112,9 +112,9 @@ public class AgentCLI extends JPanel {
      */
     public void run(IntentType intentType, String instructions, OutputArea output) {
         switch (intentType) {
-            case Command -> runCommand(instructions, output);
-            case Shell, Python -> runShell(intentType, instructions, output);
-            case Instructions -> chat(null, instructions, output);
+            case Command -> runSlashCommand(instructions, output);
+            case Shell, Python -> runShellCommand(intentType, instructions, output);
+            case Instructions -> chat(instructions, output);
             default -> logger.debug("Ignore intent type: {}", intentType);
         }
     }
@@ -160,7 +160,7 @@ public class AgentCLI extends JPanel {
     /**
      * Executes shell commands.
      */
-    private void runShell(IntentType intentType, String instructions, OutputArea output) {
+    private void runShellCommand(IntentType intentType, String instructions, OutputArea output) {
         List<String> command = new ArrayList<>();
         switch (intentType) {
             case Python -> {
@@ -207,12 +207,12 @@ public class AgentCLI extends JPanel {
     }
 
     /** Executes slash commands. */
-    private void runCommand(String instructions, OutputArea output) {
+    private void runSlashCommand(String instructions, OutputArea output) {
         try {
             String[] command = instructions.split("\\s+");
             switch (command[0]) {
                 case "help" -> help(command, output);
-                case "train", "predict", "serve" -> runShell(IntentType.Command, instructions, output);
+                case "train", "predict", "serve" -> runShellCommand(IntentType.Command, instructions, output);
                 case "init" -> initMemory(instructions, output);
                 case "add-memory" -> addMemory(instructions, output);
                 case "show-memory" -> showMemory(output);
@@ -339,16 +339,16 @@ public class AgentCLI extends JPanel {
                 output.setText("Error: /" + command + " requires arguments.");
             } else {
                 var prompt = cmd.get().prompt(args);
-                chat(command, prompt, output);
+                chat(prompt, output);
             }
         } else {
             // append instructions to command without {{args}} placeholder.
             var prompt = cmd.get().content() + "\n\n" + args;
-            chat(command, prompt, output);
+            chat(prompt, output);
         }
     }
 
-    private void chat(String command, String prompt, OutputArea output) {
+    private void chat(String prompt, OutputArea output) {
         if (prompt.isBlank()) {
             output.setText(bundle.getString("Hello"));
             return;

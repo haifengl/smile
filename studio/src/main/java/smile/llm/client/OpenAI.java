@@ -251,6 +251,10 @@ public class OpenAI extends LLM {
             switch (msg.role()) {
                 case user -> builder.addUserMessage(msg.content());
                 case assistant -> builder.addAssistantMessage(msg.content());
+                case tool -> builder.addMessage(ChatCompletionToolMessageParam.builder()
+                        .toolCallId(msg.toolCall().id())
+                        .contentAsJson(msg.toolCall().output())
+                        .build());
             }
         }
         builder.addUserMessage(message);
@@ -299,23 +303,22 @@ public class OpenAI extends LLM {
                     @Override
                     public void onComplete(Optional<Throwable> error) {
                         if (error.isEmpty()) {
-                            long toolCallCount = accumulator.chatCompletion().choices().stream()
+                            boolean hasToolCalls = accumulator.chatCompletion().choices().stream()
                                     .map(ChatCompletion.Choice::message)
                                     .peek(request::addMessage)
                                     .flatMap(message -> message.toolCalls().stream().flatMap(Collection::stream))
                                     .map(toolCall -> {
-                                        var function = toolCall.asFunction().function();
-                                        Object result = callTool(toolCall.asFunction().function());
-                                        logger.debug("ToolCall({}) -> {}", function.name(), result);
+                                        var func = toolCall.asFunction();
                                         // Add the tool call result to the conversation.
                                         request.addMessage(ChatCompletionToolMessageParam.builder()
-                                                .toolCallId(toolCall.asFunction().id())
-                                                .contentAsJson(result)
+                                                .toolCallId(func.id())
+                                                .contentAsJson(callTool(func.function()))
                                                 .build());
-                                        return result;
-                                    }).count();
+                                        return func;
+                                    })
+                                    .anyMatch(s -> true);
 
-                            if (toolCallCount > 0) {
+                            if (hasToolCalls) {
                                 // Continue the conversation after tool calls.
                                 complete(request, handler);
                             } else {
