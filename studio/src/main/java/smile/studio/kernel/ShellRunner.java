@@ -16,12 +16,12 @@
  */
 package smile.studio.kernel;
 
-import java.io.BufferedReader;
+import smile.util.OS;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Command execution engine.
@@ -40,19 +40,14 @@ public class ShellRunner extends Runner {
      */
     public int exec(List<String> command) {
         try {
-            process = new ProcessBuilder(command)
-                    .redirectErrorStream(true)
-                    .start();
-
-            // Read output from the command
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                shellOut.println(line);
-            }
-
+            process = OS.exec(command, shellOut::println);
             // Wait for the process to complete and return the exit code
-            return process.waitFor();
+            if (process.waitFor(600000, TimeUnit.MILLISECONDS)) {
+                return process.exitValue();
+            } else {
+                process.destroyForcibly();
+                return -1;
+            }
         } catch (IOException | InterruptedException ex) {
             shellOut.println("Failed to execute '" + String.join(" " , command) + "': " + ex.getMessage());
         }

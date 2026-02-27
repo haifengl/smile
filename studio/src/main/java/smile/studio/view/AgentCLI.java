@@ -24,9 +24,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
-import java.util.regex.MatchResult;
-import java.util.regex.Pattern;
-
 import com.formdev.flatlaf.util.SystemInfo;
 import smile.agent.Analyst;
 import smile.agent.Memory;
@@ -38,6 +35,7 @@ import smile.studio.kernel.JavaRunner;
 import smile.studio.kernel.ShellRunner;
 import smile.studio.model.IntentType;
 import smile.swing.ScrollablePanel;
+import smile.util.OS;
 
 /**
  * The conversation interface for agent to create model building pipeline.
@@ -171,8 +169,8 @@ public class AgentCLI extends JPanel {
             }
             case Shell -> {
                 if (SystemInfo.isWindows) {
-                    command.add("cmd.exe");
-                    command.add("/c");
+                    command.add("powershell.exe");
+                    command.add("-Command");
                 } else {
                     command.add("bash");
                     command.add("-c");
@@ -189,13 +187,7 @@ public class AgentCLI extends JPanel {
             }
         }
 
-        // Parse the command string into arguments, respecting quoted substrings
-        Pattern pattern = Pattern.compile("\"[^\"]+\"|\\S+");
-        pattern.matcher(instructions)
-                .results()
-                .map(MatchResult::group)
-                .forEach(command::add);
-
+        command.addAll(OS.parse(instructions));
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() {

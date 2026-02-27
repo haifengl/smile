@@ -52,7 +52,6 @@ public abstract class Runner {
         isRunning = flag;
     }
 
-
     /**
      * Sets the output area.
      * @param area the output area for redirected stream.

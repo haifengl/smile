@@ -24,12 +24,12 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.ResourceBundle;
 import jdk.jshell.VarSnippet;
-import com.formdev.flatlaf.util.SystemInfo;
 import smile.studio.kernel.JavaRunner;
 import smile.studio.model.PersistedModel;
 import smile.swing.FileChooser;
@@ -41,6 +41,7 @@ import static smile.swing.SmileUtilities.scaleImageIcon;
  * @author Haifeng Li
  */
 public class Explorer extends JPanel {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Explorer.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Explorer.class.getName(), Locale.getDefault());
     /** Tree nodes. */
     private final DefaultMutableTreeNode root = new DefaultMutableTreeNode(bundle.getString("Root"));
@@ -293,16 +294,27 @@ public class Explorer extends JPanel {
                 frame.setTitle(model.name());
 
                 String home = System.getProperty("smile.home", ".");
+                String host = hostField.getText();
+                String port = portField.getText();
                 // jvm options should be before -jar argument
                 frame.start( "java",
                         "--add-opens", "java.base/java.lang=ALL-UNNAMED",
                         "--add-opens", "java.base/java.nio=ALL-UNNAMED",
                         "--enable-native-access", "ALL-UNNAMED",
                         "-Dsmile.serve.model=" + model.path(),
-                        "-Dquarkus.http.host=" + hostField.getText(),
-                        "-Dquarkus.http.port=" + portField.getText(),
+                        "-Dquarkus.http.host=" + host,
+                        "-Dquarkus.http.port=" + port,
                         "-jar", Path.of(home, "serve", "quarkus-run.jar").normalize().toString());
                 frame.setVisible(true);
+
+                try {
+                    // Use the Java Desktop API to open the service UI in the default browser
+                    if (Desktop.isDesktopSupported()) {
+                        Desktop.getDesktop().browse(new URI("http://" + host + ":" + port));
+                    }
+                } catch (Exception ex) {
+                    logger.error("Failed to open browser: ", ex);
+                }
             });
 
             cancelButton.addActionListener((e) -> dispose());

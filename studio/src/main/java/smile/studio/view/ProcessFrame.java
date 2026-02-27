@@ -22,6 +22,8 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.*;
+import java.util.Arrays;
+import smile.util.OS;
 
 /**
  * A frame to run a process and displays its output.
@@ -75,39 +77,25 @@ public class ProcessFrame extends JFrame {
         output.setText("");
 
         try {
-            process = new ProcessBuilder(command)
-                    .redirectErrorStream(true)
-                    .start();
+            process = OS.exec(Arrays.asList(command), line -> {
+                // Append the line to the JTextArea on the Event Dispatch Thread (EDT)
+                SwingUtilities.invokeLater(() -> {
+                    output.append(line + "\n");
+                    int numLinesToTrunk = output.getLineCount() - scrollback;
+                    // trunk every 100 overflow lines to minimize the overhead
+                    if (numLinesToTrunk > 100) {
+                        try {
+                            int posOfLastLineToTrunk = output.getLineEndOffset(numLinesToTrunk - 1);
+                            output.replaceRange("",0, posOfLastLineToTrunk);
+                        } catch (BadLocationException ex) {
+                            logger.warn("Failed to trunk scrollback: {}", ex.getMessage());
+                        }
+                    }
+                });
+            });
 
             // Gracefully shutdown
             Runtime.getRuntime().addShutdownHook(new Thread(process::destroy));
-
-            // Create a thread to read the process's output
-            Thread thread = new Thread(() -> {
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                    do {
-                        String line = reader.readLine();
-                        if (line == null) break;
-                        // Append the line to the JTextArea on the Event Dispatch Thread (EDT)
-                        SwingUtilities.invokeLater(() -> {
-                            output.append(line + "\n");
-                            int numLinesToTrunk = output.getLineCount() - scrollback;
-                            // trunk every 100 overflow lines to minimize the overhead
-                            if (numLinesToTrunk > 100) {
-                                try {
-                                    int posOfLastLineToTrunk = output.getLineEndOffset(numLinesToTrunk - 1);
-                                    output.replaceRange("",0, posOfLastLineToTrunk);
-                                } catch (BadLocationException ex) {
-                                    logger.warn("Failed to trunk scrollback: {}", ex.getMessage());
-                                }
-                            }
-                        });
-                    } while (true);
-                } catch (IOException ex) {
-                    SwingUtilities.invokeLater(() -> output.append("ERROR reading process output: " + ex.getMessage() + "\n"));
-                }
-            });
-            thread.start();
         } catch (IOException ex) {
             output.append("Failed to start process: " + ex.getMessage() + "\n");
         }

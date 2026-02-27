@@ -84,6 +84,19 @@ public interface OS {
     }
 
     /**
+     * Parses a command line into a list of arguments, respecting quoted substrings.
+     * @param command the command line to parse.
+     * @return the list of command arguments.
+     */
+    static List<String> parse(String command) {
+        Pattern pattern = Pattern.compile("\"[^\"]+\"|\\S+");
+        return pattern.matcher(command)
+                .results()
+                .map(MatchResult::group)
+                .toList();
+    }
+
+    /**
      * Executes a shell command in a separate process.
      * @param command the command line to run.
      * @param outputConsumer the consumer to handle the output lines from the command.
@@ -92,20 +105,14 @@ public interface OS {
     static Process exec(String command, Consumer<String> outputConsumer) throws IOException {
         List<String> cmd = new ArrayList<>();
         if (OS.isWindows()) {
-            cmd.add("cmd.exe");
-            cmd.add("/c");
+            cmd.add("powershell.exe");
+            cmd.add("-Command");
         } else {
             cmd.add("bash");
             cmd.add("-c");
         }
 
-        // Parse the command string into arguments, respecting quoted substrings
-        Pattern pattern = Pattern.compile("\"[^\"]+\"|\\S+");
-        pattern.matcher(command)
-                .results()
-                .map(MatchResult::group)
-                .forEach(cmd::add);
-
+        cmd.addAll(parse(command));
         return exec(cmd, outputConsumer);
     }
 
