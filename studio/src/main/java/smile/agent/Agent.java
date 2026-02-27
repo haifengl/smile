@@ -43,28 +43,43 @@ import smile.llm.client.StreamResponseHandler;
  */
 public class Agent {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Agent.class);
-    /** The supplier of LLM service. */
+    /**
+     * The supplier of LLM service.
+     */
     private final Supplier<LLM> llm;
-    /** Global context for system instructions, skills, tools, etc. */
+    /**
+     * Global context for system instructions, skills, tools, etc.
+     */
     private final Context global;
-    /** User context for user preferences, history, etc. */
+    /**
+     * User context for user preferences, history, etc.
+     */
     private final Context user;
-    /** The project-specific context. */
+    /**
+     * The project-specific context.
+     */
     private final Context context;
-    /** The parameters for LLM inference. */
+    /**
+     * The parameters for LLM inference.
+     */
     private final Properties params = new Properties();
-    /** The conversation session. */
+    /**
+     * The conversation session.
+     */
     private final Conversation conversation;
-    /** The number of recent conversations to keep in context. */
+    /**
+     * The number of recent conversations to keep in context.
+     */
     private int window = 5;
 
     /**
      * Constructor.
-     * @param llm the supplier of LLM service.
+     *
+     * @param llm          the supplier of LLM service.
      * @param conversation the conversation session.
-     * @param context the project-specific context.
-     * @param user the user context for user rules, skills, etc.
-     * @param global the global context for system instructions, skills, tools, etc.
+     * @param context      the project-specific context.
+     * @param user         the user context for user rules, skills, etc.
+     * @param global       the global context for system instructions, skills, tools, etc.
      */
     public Agent(Supplier<LLM> llm, Conversation conversation,
                  Context context, Context user, Context global) {
@@ -78,9 +93,10 @@ public class Agent {
 
     /**
      * Constructor.
-     * @param llm the supplier of LLM service.
+     *
+     * @param llm          the supplier of LLM service.
      * @param conversation the conversation session.
-     * @param context the project-specific context.
+     * @param context      the project-specific context.
      */
     public Agent(Supplier<LLM> llm, Conversation conversation, Context context) {
         this(llm, conversation, context, null, null);
@@ -88,7 +104,8 @@ public class Agent {
 
     /**
      * Constructor.
-     * @param llm the supplier of LLM service.
+     *
+     * @param llm     the supplier of LLM service.
      * @param session the directory path for conversations.
      * @param context the directory path for agent context.
      */
@@ -98,6 +115,7 @@ public class Agent {
 
     /**
      * Returns the number of recent conversations to keep in context.
+     *
      * @return the number of recent conversations to keep in context.
      */
     public int getWindow() {
@@ -106,6 +124,7 @@ public class Agent {
 
     /**
      * Sets the number of recent conversations to keep in context.
+     *
      * @param size the number of recent conversations to keep in context.
      */
     public void setWindow(int size) {
@@ -114,6 +133,7 @@ public class Agent {
 
     /**
      * Saves the project instructions.
+     *
      * @param instructions the project instructions.
      */
     public void initMemory(String instructions) throws IOException {
@@ -128,6 +148,7 @@ public class Agent {
 
     /**
      * Saves the project instructions.
+     *
      * @param instructions the project instructions.
      */
     public void addMemory(String instructions) throws IOException {
@@ -140,6 +161,7 @@ public class Agent {
 
     /**
      * Returns the LLM service.
+     *
      * @return the LLM service.
      */
     public LLM llm() {
@@ -148,6 +170,7 @@ public class Agent {
 
     /**
      * Returns the parameters for LLM inference.
+     *
      * @return the parameters for LLM inference.
      */
     public Properties params() {
@@ -156,6 +179,7 @@ public class Agent {
 
     /**
      * Returns the project instructions.
+     *
      * @return the project instructions.
      */
     public String instructions() {
@@ -164,6 +188,7 @@ public class Agent {
 
     /**
      * Returns the custom commands.
+     *
      * @return the custom commands.
      */
     public List<Command> commands() {
@@ -179,6 +204,7 @@ public class Agent {
 
     /**
      * Returns the rules.
+     *
      * @return the rules.
      */
     public List<Rule> rules() {
@@ -194,6 +220,7 @@ public class Agent {
 
     /**
      * Returns the skills.
+     *
      * @return the skills.
      */
     public List<Skill> skills() {
@@ -216,6 +243,7 @@ public class Agent {
 
     /**
      * Returns the constitution, which will be injected into the system prompt.
+     *
      * @return the constitution.
      */
     public String constitution() {
@@ -224,6 +252,7 @@ public class Agent {
 
     /**
      * Returns the system reminder, which will be injected into the user message.
+     *
      * @return the system reminder.
      */
     public String reminder() {
@@ -232,6 +261,7 @@ public class Agent {
 
     /**
      * Returns the system prompt.
+     *
      * @return the system prompt.
      */
     public String system() {
@@ -270,16 +300,16 @@ public class Agent {
         }
 
         prompt += "\n\n" + String.format("""
-                Here is useful information about the environment you are running in:
-                <env>
-                Working directory: %s
-                Is directory a git repo: %s
-                Platform: %s
-                OS Version: %s
-                Current time: %s
-                Time zone: %s
-                </env>
-                """,
+                        Here is useful information about the environment you are running in:
+                        <env>
+                        Working directory: %s
+                        Is directory a git repo: %s
+                        Platform: %s
+                        OS Version: %s
+                        Current time: %s
+                        Time zone: %s
+                        </env>
+                        """,
                 System.getProperty("user.dir"),
                 Files.exists(Path.of(System.getProperty("user.dir"), ".git")) ? "Yes" : "No",
                 System.getProperty("os.name"),
@@ -290,13 +320,16 @@ public class Agent {
         return prompt;
     }
 
-    /** Returns the current date and time in ISO-8601 format, truncated to milliseconds. */
+    /**
+     * Returns the current date and time in ISO-8601 format, truncated to milliseconds.
+     */
     private String date() {
         return Instant.now().truncatedTo(ChronoUnit.MILLIS).toString() + " is the date. ";
     }
 
     /**
      * Asynchronously response to a user prompt without conversation history.
+     *
      * @param prompt the user prompt of task.
      * @return a future of response.
      */
@@ -315,12 +348,11 @@ public class Agent {
 
     /**
      * Asynchronously response to a user prompt in a streaming way.
-     * @param command the command name associated with the prompt, may be null.
-     * @param prompt the user prompt of task.
+     *
+     * @param prompt  the user prompt of task.
      * @param handler the stream response handler.
      */
-    public void stream(String command, String prompt, StreamResponseHandler handler) {
-        boolean compact = "compact".equals(command);
+    public void stream(String prompt, StreamResponseHandler handler) {
         conversation.add(Message.user(prompt));
 
         StringBuilder sb = new StringBuilder();
@@ -336,26 +368,27 @@ public class Agent {
                 var response = sb.toString();
                 logger.debug("assistant: {}", response);
 
-                var message = ex.map(t -> Message.error(t.getMessage()))
-                        .orElse(Message.assistant(response));
-                conversation.add(message);
-
-                if (compact) {
-                    conversation.setSummary(response);
+                if (ex.isPresent()) {
+                    conversation.add(Message.error(ex.get().getMessage()));
+                } else {
+                    if (response.contains("<summary>") && response.contains("</summary>")) {
+                        conversation.compact(response);
+                    } else {
+                        conversation.add(Message.assistant(response));
+                    }
                 }
+
                 handler.onComplete(ex);
             }
         };
 
         String message = reminder();
-        var summary = conversation.getSummary();
-        if (!compact && !summary.isBlank()) {
-            message += String.format("""
-                Here is the analysis and summary of previous conversations:
-                %s
-                """, summary);
+        if (message.isBlank()) {
+            message = prompt;
+        } else {
+            message += "\n\n" + prompt;
         }
-        message += "\n\n" + prompt;
+
         logger.debug("user: {}", message);
         llm.get().complete(message, conversation, params, accumulator);
     }

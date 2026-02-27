@@ -365,7 +365,7 @@ public class AgentCLI extends JPanel {
 
         // Stream processing runs in a background thread so that we don't
         // need to create a SwingWorker thread.
-        analyst.stream(command, prompt, new StreamResponseHandler() {
+        analyst.stream(prompt, new StreamResponseHandler() {
             boolean firstChunk = true;
             @Override
             public void onNext(String chunk) {

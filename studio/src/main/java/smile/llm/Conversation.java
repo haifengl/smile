@@ -51,8 +51,6 @@ public class Conversation {
     private final List<Message> messages = new ArrayList<>();
     /** The directory path for conversation history and summary. */
     private final Path path;
-    /** The summary of conversations. */
-    private String summary = "";
     /** The cached request object for the conversation. */
     private Object request;
 
@@ -76,10 +74,11 @@ public class Conversation {
     }
 
     /**
-     * Clears the in-memory conversation session.
+     * Returns the conversation messages.
+     * @return the conversation messages.
      */
-    public void clear() {
-        messages.clear();
+    public List<Message> messages() {
+        return messages;
     }
 
     /**
@@ -97,29 +96,22 @@ public class Conversation {
     }
 
     /**
-     * Returns the conversation messages.
-     * @return the conversation messages.
+     * Clears the in-memory conversation session.
      */
-    public List<Message> messages() {
-        return messages;
+    public void clear() {
+        messages.clear();
+        request = null; // request caches previous messages.
     }
 
     /**
-     * Returns the summary of conversations.
-     * @return the summary of conversations.
+     * Compacts the conversation with a summary to set context space.
+     * @param summary the summary of conversation.
      */
-    public String getSummary() {
-        return summary;
-    }
-
-    /**
-     * Sets the summary of conversations and saves it to the file.
-     * @param text the summary of conversations.
-     */
-    public void setSummary(String text) {
+    public void compact(String summary) {
         try {
-            Files.writeString(path.resolve(MEMORY_MD), text);
-            summary = text;
+            clear();
+            add(Message.assistant(summary));
+            Files.writeString(path.resolve(MEMORY_MD), summary);
         } catch (IOException ex) {
             logger.error("Failed to save conversation summary", ex);
         }
