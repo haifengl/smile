@@ -24,10 +24,10 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
-
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import smile.util.OS;
 
 @JsonClassDescription("""
 Executes a given bash command in a persistent shell session with optional timeout, ensuring proper handling and security measures.
@@ -99,7 +99,7 @@ public class Bash {
     /** Static helper method to run a bash command with timeout and background execution option. */
     public static String runCommand(String command, int timeout, boolean runInBackground) {
         List<String> cmd = new ArrayList<>();
-        if (System.getProperty("os.name").toLowerCase().contains("win")) {
+        if (OS.isWindows()) {
             cmd.add("cmd.exe");
             cmd.add("/c");
         } else {

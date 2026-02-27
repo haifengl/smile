@@ -22,6 +22,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.*;
 import java.util.Comparator;
+import smile.util.OS;
 
 /**
  * Static methods that manage cache files.
@@ -37,12 +38,11 @@ public interface CacheFiles {
         String smile = File.separator + "smile";
         String path = System.getenv("SMILE_CACHE");
         if (path == null) {
-            String os = System.getProperty("os.name");
             String home = System.getProperty("user.home");
-            if (os.startsWith("Windows")) {
+            if (OS.isWindows()) {
                 String localAppData = System.getenv("LocalAppData");
                 path = localAppData + smile;
-            } else if (os.startsWith("Mac")) {
+            } else if (OS.isMacOS()) {
                 path = home + "/Library/Caches" + smile;
             } else {
                 // Linux or others

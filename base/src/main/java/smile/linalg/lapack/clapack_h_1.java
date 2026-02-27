@@ -55,12 +55,12 @@ public class clapack_h_1 {
         };
     }
 
-    static final String OS = System.getProperty("os.name", "linux").toLowerCase().split(" ")[0];
-    static final String LIBRARY_NAME = System.getProperty("smile.lib.lapack", switch (OS) {
+    static final String DEFAULT_LIBRARY_NAME = switch (System.getProperty("os.name", "linux").toLowerCase().split(" ")[0]) {
         case "mac" -> "lapack"; // macOS's builtin Accelerate framework
         case "windows" -> "libopenblas"; // ARPACK depends on this name
         default -> "openblas"; // OpenBLAS
-    });
+    };
+    static final String LIBRARY_NAME = System.getProperty("smile.lib.lapack", DEFAULT_LIBRARY_NAME);
     static final SymbolLookup SYMBOL_LOOKUP = SymbolLookup.libraryLookup(System.mapLibraryName(LIBRARY_NAME), LIBRARY_ARENA)
             .or(SymbolLookup.loaderLookup())
             .or(Linker.nativeLinker().defaultLookup());
