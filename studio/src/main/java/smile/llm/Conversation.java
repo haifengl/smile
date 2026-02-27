@@ -20,9 +20,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.PropertyNamingStrategies;
 import tools.jackson.databind.json.JsonMapper;
@@ -46,8 +47,6 @@ public class Conversation {
             .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL))
             .build();
 
-    /** The unique identifier of the conversation. */
-    private final UUID uuid = UUID.randomUUID();
     /** The conversation history. */
     private final List<Message> messages = new ArrayList<>();
     /** The directory path for conversation history and summary. */
@@ -60,7 +59,9 @@ public class Conversation {
      * @param path the directory path for conversations.
      */
     public Conversation(Path path) {
-        path = path.resolve(uuid.toString());
+        var formatter = DateTimeFormatter.ofPattern("yyMMddhhmmssSSS");
+        String id = formatter.format(LocalDateTime.now());
+        path = path.resolve(id);
         this.path = path;
         if (!Files.exists(path)) {
             // Creates all parent directories
