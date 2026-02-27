@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.stream.Stream;
 import smile.llm.Message;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.PropertyNamingStrategies;
 import tools.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import tools.jackson.databind.node.ObjectNode;
@@ -40,12 +41,17 @@ public class Conversations {
     private static final String HISTORY_FILE = "history.jsonl";
     /** The file name of conversation summary. */
     private static final String MEMORY_MD = "MEMORY.md";
+    /** The JSON object mapper with sneak case and ignoring null fields. */
+    private static final ObjectMapper mapper = JsonMapper.builder()
+            .propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
+            .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
+            .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL))
+            .build();
+
     /** The conversation history. */
     private final List<Message> conversations = new ArrayList<>();
     /** The directory path for conversation history and summary. */
     private final Path path;
-    /** The JSON object mapper. */
-    private final ObjectMapper mapper;
     /** The summary of conversations. */
     private Memory summary;
 
@@ -56,12 +62,6 @@ public class Conversations {
      */
     public Conversations(Path path) {
         this.path = path;
-        // Ignore null fields
-        this.mapper = JsonMapper.builder()
-                .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
-                .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL))
-                .build();
-
         if (!Files.exists(path)) {
             // Creates all parent directories
             try {

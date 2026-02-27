@@ -17,7 +17,7 @@
 package smile.llm;
 
 /**
- * The role of message speaker in a dialog.
+ * The role of message speaker in a conversation.
  *
  * @author Haifeng Li
  */
@@ -27,5 +27,9 @@ public enum Role {
     /** End user. */
     user,
     /** AI assistant. */
-    assistant
+    assistant,
+    /** Tool calls. */
+    tool,
+    /** Error messages. */
+    error
 }

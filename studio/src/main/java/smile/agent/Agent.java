@@ -300,12 +300,13 @@ public class Agent {
      */
     public CompletableFuture<String> response(String prompt) {
         var history = conversations.getLast(window);
-        conversations.add(new Message(prompt));
+        conversations.add(Message.user(prompt));
 
         return llm.get().complete(prompt, history, params)
                 .handle((response, ex) -> {
-                    String error = Optional.ofNullable(ex).map(Throwable::getMessage).orElse(null);
-                    conversations.add(new Message(response, error));
+                    var message = Optional.ofNullable(ex).map(t -> Message.error(t.getMessage()))
+                            .orElse(Message.assistant(response));
+                    conversations.add(message);
                     return response;
                 });
     }
@@ -319,7 +320,7 @@ public class Agent {
     public void stream(String command, String prompt, StreamResponseHandler handler) {
         boolean compact = "compact".equals(command);
         var history = conversations.getLast(compact ? 20 : window);
-        conversations.add(new Message(prompt));
+        conversations.add(Message.user(prompt));
 
         StringBuilder sb = new StringBuilder();
         var accumulator = new StreamResponseHandler() {
@@ -330,15 +331,18 @@ public class Agent {
             }
 
             @Override
-            public void onComplete(Optional<Throwable> t) {
-                String error = t.map(Throwable::getMessage).orElse(null);
+            public void onComplete(Optional<Throwable> ex) {
                 var response = sb.toString();
                 logger.debug("assistant: {}", response);
-                conversations.add(new Message(response, error));
+
+                var message = ex.map(t -> Message.error(t.getMessage()))
+                        .orElse(Message.assistant(response));
+                conversations.add(message);
+
                 if (compact) {
                     conversations.setSummary(response);
                 }
-                handler.onComplete(t);
+                handler.onComplete(ex);
             }
         };
 
