@@ -16,14 +16,6 @@
  */
 package smile.llm.tool;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.MatchResult;
-import java.util.regex.Pattern;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -83,7 +75,7 @@ public class Bash {
     public String command;
 
     @JsonPropertyDescription("Optional timeout in milliseconds (max 600000)")
-    public int timeout = 600000;
+    public int timeout = 240000;
 
     @JsonPropertyDescription("Clear, concise description of what this command does in 5-10 words, in active voice. Examples:\\nInput: ls\\nOutput: List files in current directory\\n\\nInput: git status\\nOutput: Show working tree status\\n\\nInput: npm install\\nOutput: Install package dependencies\\n\\nInput: mkdir foo\\nOutput: Create directory 'foo")
     public String description;
@@ -98,45 +90,10 @@ public class Bash {
 
     /** Static helper method to run a bash command with timeout and background execution option. */
     public static String runCommand(String command, int timeout, boolean runInBackground) {
-        List<String> cmd = new ArrayList<>();
-        if (OS.isWindows()) {
-            cmd.add("cmd.exe");
-            cmd.add("/c");
-        } else {
-            cmd.add("bash");
-            cmd.add("-c");
+        String output = OS.exec(command, timeout);
+        if (output.length() > 30000) {
+            output = output.substring(0, 30000) + "\n[Output truncated due to length]";
         }
-
-        // Parse the command string into arguments, respecting quoted substrings
-        Pattern pattern = Pattern.compile("\"[^\"]+\"|\\S+");
-        pattern.matcher(command)
-                .results()
-                .map(MatchResult::group)
-                .forEach(cmd::add);
-
-        try {
-            var process = new ProcessBuilder(cmd)
-                    .redirectErrorStream(true)
-                    .start();
-
-            // Read output from the command
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            StringBuilder output = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                output.append(line).append("\n");
-            }
-
-            // Wait for the process to complete and return the exit code
-            if (process.waitFor(timeout, TimeUnit.MILLISECONDS)) {
-                return output.toString();
-            } else {
-                process.destroyForcibly();
-                return "Command timed out after " + timeout + " milliseconds.";
-            }
-        } catch (InterruptedException | IOException e) {
-            Thread.currentThread().interrupt();
-            return "Command execution failed: " + e.getMessage();
-        }
+        return output;
     }
 }

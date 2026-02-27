@@ -118,18 +118,19 @@ public interface OS {
     static String exec(String command, int timeout) {
         try {
             StringBuilder output = new StringBuilder();
-            var process = exec(command, line -> output.append(line).append("\n")));
+            var process = exec(command, line -> output.append(line).append("\n"));
 
             // Wait for the process to complete and return the exit code
-            if (process.waitFor(timeout, TimeUnit.MILLISECONDS)) {
-                return output.toString();
-            } else {
+            if (!process.waitFor(timeout, TimeUnit.MILLISECONDS)) {
                 process.destroyForcibly();
-                return "Command timed out after " + timeout + " milliseconds.";
+                output.append("\nCommand timed out after ")
+                      .append(timeout)
+                      .append(" milliseconds.\n");
             }
-        } catch (InterruptedException | IOException e) {
+            return output.toString();
+        } catch (InterruptedException | IOException ex) {
             Thread.currentThread().interrupt();
-            return "Command execution failed: " + e.getMessage();
+            return "Command execution failed: " + ex.getMessage();
         }
     }
 }
