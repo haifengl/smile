@@ -145,7 +145,7 @@ public class GoogleGemini extends LLM {
                         .parts(Part.fromText(msg.content()))
                         .build());
                 case assistant -> contents.add(Content.builder()
-                        .role("assistant")
+                        .role("model")
                         .parts(Part.fromText(msg.content()))
                         .build());
             }
