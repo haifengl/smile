@@ -67,10 +67,6 @@ public class Agent {
      * The conversation session.
      */
     private final Conversation conversation;
-    /**
-     * The number of recent conversations to keep in context.
-     */
-    private int window = 5;
 
     /**
      * Constructor.
@@ -111,24 +107,6 @@ public class Agent {
      */
     public Agent(Supplier<LLM> llm, Path session, Path context) {
         this(llm, new Conversation(session), new Context(context));
-    }
-
-    /**
-     * Returns the number of recent conversations to keep in context.
-     *
-     * @return the number of recent conversations to keep in context.
-     */
-    public int getWindow() {
-        return window;
-    }
-
-    /**
-     * Sets the number of recent conversations to keep in context.
-     *
-     * @param size the number of recent conversations to keep in context.
-     */
-    public void setWindow(int size) {
-        window = size;
     }
 
     /**
@@ -200,6 +178,34 @@ public class Agent {
             commands.addAll(global.commands());
         }
         return commands;
+    }
+
+    /**
+     * Finds a command by name.
+     *
+     * @param name the command name.
+     * @return the command if it exists in the context.
+     */
+    public Optional<Command> command(String name) {
+        var command = context.commands().stream()
+                .filter(cmd -> cmd.name().equals(name))
+                .findFirst();
+        if (command.isPresent()) return command;
+
+        if (user != null) {
+            command = user.commands().stream()
+                    .filter(cmd -> cmd.name().equals(name))
+                    .findFirst();
+            if (command.isPresent()) return command;
+        }
+
+        if (global != null) {
+            command = global.commands().stream()
+                    .filter(cmd -> cmd.name().equals(name))
+                    .findFirst();
+        }
+
+        return command;
     }
 
     /**

@@ -17,6 +17,7 @@
 package smile.agent;
 
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import smile.llm.client.LLM;
@@ -36,46 +37,55 @@ public class Coder extends Agent {
      */
     public Coder(Supplier<LLM> llm, Path history, Path context) {
         super(llm, history, context);
-        // no window for code generation and completion
-        setWindow(0);
         // low temperature for more predictable, focused, and deterministic code
         params().setProperty(LLM.TEMPERATURE, "0.2");
         params().setProperty(LLM.MAX_OUTPUT_TOKENS, "2048");
     }
 
     /**
-     * Asynchronously completes the current line of code.
-     * @param start the start of current line.
-     * @param context the previous lines of code.
+     * Asynchronously completes a line of code.
+     * @param prefix the beginning of the line to complete.
+     * @param before the code context before the line.
+     * @param after the code context after the line.
      * @return a future of full Line completion.
      */
-    public CompletableFuture<String> complete(String start, String context) {
-        String template = """
-            Complete the next line of code based on the provided context.
-            Context:%n%s%n%n
-            Current line start: %s""";
+    public CompletableFuture<String> complete(String prefix, String before, String after) {
+        var command = command("complete");
+        return command.map(cmd -> {
+            var prompt = cmd.content
+                    .replace("{{prefix}}", prefix)
+                    .replace("{{before}}", before)
+                    .replace("{{after}}", after);
 
-        var prompt = String.format(template, context, start);
-        // stop at the end of line
-        params().setProperty(LLM.STOP, "\n");
-        var future = response(prompt);
-        params().remove(LLM.STOP);
-        return future;
+            // stop at the end of line
+            params().setProperty(LLM.STOP, "\n");
+            var future = response(prompt);
+            params().remove(LLM.STOP);
+            return future;
+        }
+        ).orElse(CompletableFuture.completedFuture("Code completion prompt cannot be found. Check your smile/agents/java-coder/complete.md file."));
     }
 
     /**
-     * Asynchronously generates code based on prompt in a streaming way.
-     * @param task the user prompt of task.
-     * @param context the selected or previous lines of code.
+     * Asynchronously generates code snippet in a streaming way.
+     * @param task the task prompt.
+     * @param before the code context before the line.
+     * @param after the code context after the line.
      * @param handler the stream response handler.
      */
-    public void generate(String task, String context, StreamResponseHandler handler) {
-        String template = """
-            Generate code based on the provided context and task.
-            Context:%n%s%n%n
-            Task:%n%s%n%n""";
+    public void generate(String task, String before, String after,
+                         StreamResponseHandler handler) {
+        var command = command("generate");
+        if (command.isPresent()) {
+            var prompt = command.get().content
+                    .replace("{{args}}", task)
+                    .replace("{{before}}", before)
+                    .replace("{{after}}", after);
 
-        var prompt = String.format(template, context, task);
-        stream(prompt, handler);
+            stream(prompt, handler);
+        } else {
+            var ex = new IllegalStateException("Code generation prompt cannot be found. Check your smile/agents/java-coder/generate.md file.");
+            handler.onComplete(Optional.of(ex));
+        }
     }
 }

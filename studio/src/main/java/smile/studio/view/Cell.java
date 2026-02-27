@@ -176,20 +176,21 @@ public class Cell extends JPanel implements StreamResponseHandler {
             isCoding = true;
             int startOffset = editor.getLineStartOffset(lineNum);
             int endOffset = editor.getLineEndOffset(lineNum);
-            String context = editor.getText(0, startOffset);
-            String currentLine = editor.getText(startOffset, endOffset - startOffset);
+            String prefix = editor.getText(startOffset, endOffset - startOffset);
+            String before = editor.getText(0, startOffset);
+            String after = editor.getText(endOffset, editor.getDocument().getLength() - endOffset);
 
             // Run code completion in a worker thread as join() blocks.
             SwingWorker<Void, Void> worker = new SwingWorker<>() {
                 @Override
                 protected Void doInBackground() {
-                    coder.complete(currentLine, context).whenComplete((line, ex) -> {
+                    coder.complete(prefix, before, after).whenComplete((line, ex) -> {
                         if (ex != null) {
                             logger.warn("Code completion failed: {}", ex.getMessage());
                         }
 
                         if (line != null) {
-                            SwingUtilities.invokeLater(() -> editor.replaceRange(line, startOffset, caretPosition));
+                            SwingUtilities.invokeLater(() -> editor.insert(line, caretPosition));
                         }
                     }).join();
                     return null;
@@ -240,7 +241,8 @@ public class Cell extends JPanel implements StreamResponseHandler {
             }
         }
 
-        String context = getCodeGenerationContext();
+        String before = getCodeGenerationBeforeContext();
+        String after = getCodeGenerationAfterContext();
         editor.insert("\n", editor.getCaretPosition());
         for (String line : wrap(task, 80)) {
             editor.insert("/// " + line + "\n", editor.getCaretPosition());
@@ -250,7 +252,7 @@ public class Cell extends JPanel implements StreamResponseHandler {
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() {
-                coder.generate(task, context, Cell.this);
+                coder.generate(task, before, after, Cell.this);
                 return null;
             }
 
@@ -280,15 +282,46 @@ public class Cell extends JPanel implements StreamResponseHandler {
     }
 
     /**
-     * Returns the context for code generation.
-     * @return the context for code generation.
+     * Returns the before context for code generation.
+     * @return the before context for code generation.
      */
-    private String getCodeGenerationContext() {
-        String context = editor.getSelectedText();
-        if (context == null || context.isBlank()) {
-            context = editor.getText();
+    private String getCodeGenerationBeforeContext() {
+        Cell prev = null; // previous cell before current cell
+        Container parent = getParent(); // Get the notebook container
+        if (parent != null) {
+            Component[] siblings = parent.getComponents(); // Get all children
+            for (Component comp : siblings) {
+                if (comp instanceof Cell cell) {
+                    if (comp == this) break;
+                    prev = cell;
+                }
+            }
         }
-        return context;
+
+        if (prev == null) return editor.getText();
+        return prev.editor.getText() + "\n\n" + editor.getText();
+    }
+
+    /**
+     * Returns the before context for code generation.
+     * @return the before context for code generation.
+     */
+    private String getCodeGenerationAfterContext() {
+        Cell next = null; // next cell after current cell
+        Container parent = getParent(); // Get the notebook container
+        if (parent != null) {
+            boolean found = false;
+            Component[] siblings = parent.getComponents(); // Get all children
+            for (Component comp : siblings) {
+                if (comp instanceof Cell cell) {
+                    if (found) next = cell;
+                    else if (comp == this) found = true;
+                }
+            }
+        }
+
+        if (next == null) return "";
+        return next.editor.getText();
     }
 
     /**

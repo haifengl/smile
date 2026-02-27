@@ -318,10 +318,7 @@ public class AgentCLI extends JPanel {
     }
 
     private void runCustomCommand(String command, String instructions, OutputArea output) {
-        Optional<? extends Memory> cmd = analyst.commands().stream()
-                .filter(c -> c.name().equals(command))
-                .findFirst();
-
+        Optional<? extends Memory> cmd = analyst.command(command);
         if (cmd.isEmpty()) {
             cmd = analyst.skills().stream()
                     .filter(s -> s.name().equals(command))

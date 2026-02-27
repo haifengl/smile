@@ -59,7 +59,7 @@ public class Conversation {
      * @param path the directory path for conversations.
      */
     public Conversation(Path path) {
-        var formatter = DateTimeFormatter.ofPattern("yyMMddhhmmssSSS");
+        var formatter = DateTimeFormatter.ofPattern("yyMMddHHmmssSSS");
         String id = formatter.format(LocalDateTime.now());
         path = path.resolve(id);
         this.path = path;
