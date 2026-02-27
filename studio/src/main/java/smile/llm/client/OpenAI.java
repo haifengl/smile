@@ -19,7 +19,6 @@ package smile.llm.client;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
-
 import com.openai.azure.AzureOpenAIServiceVersion;
 import com.openai.azure.AzureUrlPathMode;
 import com.openai.azure.credential.AzureApiKeyCredential;
@@ -114,19 +113,21 @@ public class OpenAI extends LLM {
     }
 
     /**
-     * Returns a future of response from OpenAI service.
-     * @param message the user message.
+     * Returns a response request builder.
      * @param params the request parameters.
-     * @return a future of response.
+     * @param toolCalls If true, the request will be configured to handle tool calls.
+     * @return a response request builder.
      */
-    private ResponseCreateParams.Builder responseBuilder(String message, List<Message> history, Properties params) {
-        var builder = ResponseCreateParams.builder()
-                .model(model())
-                .addTool(Read.class)
-                .addTool(Write.class)
-                .addTool(Append.class)
-                .addTool(Edit.class)
-                .addTool(Bash.class);
+    private ResponseCreateParams.Builder responseBuilder(Properties params, boolean toolCalls) {
+        var builder = ResponseCreateParams.builder().model(model());
+
+        if (toolCalls) {
+            builder.addTool(Read.class)
+                   .addTool(Write.class)
+                   .addTool(Append.class)
+                   .addTool(Edit.class)
+                   .addTool(Bash.class);
+        }
 
         var temperature = params.getProperty(TEMPERATURE, "");
         if (!temperature.isBlank()) {
@@ -158,13 +159,24 @@ public class OpenAI extends LLM {
             builder.instructions(system);
         }
 
+        return builder;
+    }
+
+    /**
+     * Returns an input to response request.
+     * @param message the user message.
+     * @param conversation the conversation history.
+     * @return an input to response request.
+     */
+    private List<ResponseInputItem> input(String message, List<Message> conversation) {
         List<ResponseInputItem> input = new ArrayList<>();
-        for (var msg : history) {
+        for (var msg : conversation) {
             var role = switch (msg.role()) {
                 case user -> EasyInputMessage.Role.USER;
                 case assistant -> EasyInputMessage.Role.ASSISTANT;
                 default -> null;
             };
+
             if (role != null) {
                 input.add(ResponseInputItem.ofEasyInputMessage(EasyInputMessage.builder()
                         .role(role)
@@ -173,30 +185,26 @@ public class OpenAI extends LLM {
             }
         }
 
-        input.add(ResponseInputItem.ofEasyInputMessage(EasyInputMessage.builder()
-                .role(EasyInputMessage.Role.USER)
-                .content(message)
-                .build()));
-        builder.inputOfResponse(input);
-        return builder;
+        return input;
     }
 
     /**
      * Returns a chat completion request builder.
-     * @param message the user message.
      * @param params the request parameters.
+     * @param toolCalls If true, the request will be configured to handle tool calls.
      * @return a chat completion request builder.
      */
-    private ChatCompletionCreateParams.Builder requestBuilder(String message, List<Message> history, Properties params) {
+    private ChatCompletionCreateParams.Builder requestBuilder(Properties params, boolean toolCalls) {
         // only 1 chat completion choice to generate
-        var builder = ChatCompletionCreateParams.builder()
-                .model(model())
-                .n(1)
-                .addTool(Read.class)
-                .addTool(Write.class)
-                .addTool(Append.class)
-                .addTool(Edit.class)
-                .addTool(Bash.class);
+        var builder = ChatCompletionCreateParams.builder().model(model()).n(1);
+
+        if (toolCalls) {
+            builder.addTool(Read.class)
+                   .addTool(Write.class)
+                   .addTool(Append.class)
+                   .addTool(Edit.class)
+                   .addTool(Bash.class);
+        }
 
         var temperature = params.getProperty(TEMPERATURE, "");
         if (!temperature.isBlank()) {
@@ -227,7 +235,18 @@ public class OpenAI extends LLM {
             builder.addDeveloperMessage(system);
         }
 
-        for (var msg : history) {
+        return builder;
+    }
+
+    /**
+     * Adds the request input to the request builder.
+     * @param message the user message.
+     * @param conversation the conversation history.
+     * @return the updated request builder.
+     */
+    private ChatCompletionCreateParams.Builder input(ChatCompletionCreateParams.Builder builder,
+                                                     String message, List<Message> conversation) {
+        for (var msg : conversation) {
             switch (msg.role()) {
                 case user -> builder.addUserMessage(msg.content());
                 case assistant -> builder.addAssistantMessage(msg.content());
@@ -238,18 +257,18 @@ public class OpenAI extends LLM {
     }
 
     @Override
-    public CompletableFuture<String> complete(String message, List<Message> history, Properties params) {
-        var request = requestBuilder(message, history, params);
-        return client.chat().completions().create(request.build())
+    public CompletableFuture<String> complete(String message, Properties params) {
+        var request = requestBuilder(params, false);
+        return client.chat().completions().create(request.addUserMessage(message).build())
                 .thenApply(completion -> completion.choices().stream()
                             .flatMap(choice -> choice.message().content().stream())
                             .collect(Collectors.joining()));
     }
 
     @Override
-    public void complete(String message, List<Message> history, Properties params, StreamResponseHandler handler) {
-        var request = requestBuilder(message, history, params);
-        complete(request, handler);
+    public void complete(String message, List<Message> conversation, Properties params, StreamResponseHandler handler) {
+        var request = requestBuilder(params, true);
+        complete(input(request, message, conversation), handler);
     }
 
     /**

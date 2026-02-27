@@ -75,29 +75,32 @@ public class GoogleGemini extends LLM {
     /**
      * Returns a chat request configuration.
      * @param params the request parameters.
+     * @param toolCalls If true, the request will be configured to handle tool calls.
      * @return a chat request configuration.
      */
-    private GenerateContentConfig config(Properties params) {
-        List<Tool> tools = new ArrayList<>();
-        try {
-            Method readFile = Read.class.getMethod("readFile", String.class, int.class, int.class);
-            Method writeFile = Write.class.getMethod("writeFile", String.class, String.class);
-            Method appendFile = Append.class.getMethod("appendFile", String.class, String.class);
-            Method editFile = Edit.class.getMethod("editFile", String.class, String.class, String.class, boolean.class);
-            Method runCommand = Bash.class.getMethod("runCommand", String.class, int.class, boolean.class);
-            tools.add(Tool.builder().functions(readFile).build());
-            tools.add(Tool.builder().functions(writeFile).build());
-            tools.add(Tool.builder().functions(appendFile).build());
-            tools.add(Tool.builder().functions(editFile).build());
-            tools.add(Tool.builder().functions(runCommand).build());
-        } catch (NoSuchMethodException | SecurityException e) {
-            logger.error("Failed to get method: {}", e.getMessage());
-        }
-
+    private GenerateContentConfig config(Properties params, boolean toolCalls) {
         // only 1 chat completion choice to generate
-        var builder = GenerateContentConfig.builder()
-                .candidateCount(1)
-                .tools(tools);
+        var builder = GenerateContentConfig.builder().candidateCount(1);
+
+        if (toolCalls) {
+            List<Tool> tools = new ArrayList<>();
+            try {
+                Method readFile = Read.class.getMethod("readFile", String.class, int.class, int.class);
+                Method writeFile = Write.class.getMethod("writeFile", String.class, String.class);
+                Method appendFile = Append.class.getMethod("appendFile", String.class, String.class);
+                Method editFile = Edit.class.getMethod("editFile", String.class, String.class, String.class, boolean.class);
+                Method runCommand = Bash.class.getMethod("runCommand", String.class, int.class, boolean.class);
+                tools.add(Tool.builder().functions(readFile).build());
+                tools.add(Tool.builder().functions(writeFile).build());
+                tools.add(Tool.builder().functions(appendFile).build());
+                tools.add(Tool.builder().functions(editFile).build());
+                tools.add(Tool.builder().functions(runCommand).build());
+            } catch (NoSuchMethodException | SecurityException e) {
+                logger.error("Failed to get method: {}", e.getMessage());
+            }
+
+            builder.tools(tools);
+        }
 
         var temperature = params.getProperty(TEMPERATURE, "");
         if (!temperature.isBlank()) {
@@ -127,18 +130,19 @@ public class GoogleGemini extends LLM {
             var instructions = Content.fromParts(Part.fromText(system));
             builder.systemInstruction(instructions);
         }
+
         return builder.build();
     }
 
     /**
-     * Returns the request contents.
+     * Returns the request input.
      * @param message the user message.
-     * @param history the conversation history.
-     * @return the request contents.
+     * @param conversation the conversation history.
+     * @return the request input.
      */
-    private List<Content> contents(String message, List<Message> history) {
+    private List<Content> input(String message, List<Message> conversation) {
         List<Content> contents = new ArrayList<>();
-        for (var msg : history) {
+        for (var msg : conversation) {
             switch (msg.role()) {
                 case user -> contents.add(Content.builder()
                         .role("user")
@@ -160,18 +164,18 @@ public class GoogleGemini extends LLM {
     }
 
     @Override
-    public CompletableFuture<String> complete(String message, List<Message> history, Properties params) {
-        var config = config(params);
+    public CompletableFuture<String> complete(String message, Properties params) {
         return client.async.models
-                .generateContent(model(), contents(message, history), config(params))
+                .generateContent(model(), message, config(params, false))
                 .thenApply(GenerateContentResponse::text);
     }
 
     @Override
-    public void complete(String message, List<Message> history, Properties params, StreamResponseHandler handler) {
+    public void complete(String message, List<Message> conversation, Properties params, StreamResponseHandler handler) {
         // To save resources and avoid connection leaks, close the
         // response stream after consumption.
-        try (var stream = client.models.generateContentStream(model(), contents(message, history), config(params))) {
+        try (var stream = client.models
+                .generateContentStream(model(), input(message, conversation), config(params, true))) {
             for (var response : stream) {
                 handler.onNext(response.text());
             }

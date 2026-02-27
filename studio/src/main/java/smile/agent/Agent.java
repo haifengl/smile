@@ -296,7 +296,7 @@ public class Agent {
     }
 
     /**
-     * Asynchronously response to a user prompt.
+     * Asynchronously response to a user prompt without conversation history.
      * @param prompt the user prompt of task.
      * @return a future of response.
      */
@@ -304,9 +304,10 @@ public class Agent {
         var history = conversation.getLast(window);
         conversation.add(Message.user(prompt));
 
-        return llm.get().complete(prompt, history, params)
+        return llm.get().complete(prompt, params)
                 .handle((response, ex) -> {
-                    var message = Optional.ofNullable(ex).map(t -> Message.error(t.getMessage()))
+                    var message = Optional.ofNullable(ex)
+                            .map(t -> Message.error(t.getMessage()))
                             .orElse(Message.assistant(response));
                     conversation.add(message);
                     return response;

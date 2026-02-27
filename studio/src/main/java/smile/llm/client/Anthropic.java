@@ -80,18 +80,20 @@ public class Anthropic extends LLM {
 
     /**
      * Returns a chat completion request builder.
-     * @param message the user message.
      * @param params the request parameters.
+     * @param toolCalls If true, the request will be configured to handle tool calls.
      * @return a chat completion request builder.
      */
-    private MessageCreateParams.Builder requestBuilder(String message, List<Message> history, Properties params) {
-        var builder = MessageCreateParams.builder()
-                .model(model())
-                .addTool(Read.class)
-                .addTool(Write.class)
-                .addTool(Append.class)
-                .addTool(Edit.class)
-                .addTool(Bash.class);
+    private MessageCreateParams.Builder requestBuilder(Properties params, boolean toolCalls) {
+        var builder = MessageCreateParams.builder().model(model());
+
+        if (toolCalls) {
+            builder.addTool(Read.class)
+                   .addTool(Write.class)
+                   .addTool(Append.class)
+                   .addTool(Edit.class)
+                   .addTool(Bash.class);
+        }
 
         var temperature = params.getProperty(TEMPERATURE, "");
         if (!temperature.isBlank()) {
@@ -121,7 +123,18 @@ public class Anthropic extends LLM {
             builder.system(system);
         }
 
-        for (var msg : history) {
+        return builder;
+    }
+
+    /**
+     * Adds the request input to the request builder.
+     * @param message the user message.
+     * @param conversation the conversation history.
+     * @return the updated request builder.
+     */
+    private MessageCreateParams.Builder input(MessageCreateParams.Builder builder,
+                                              String message, List<Message> conversation) {
+        for (var msg : conversation) {
             switch (msg.role()) {
                 case user -> builder.addUserMessage(msg.content());
                 case assistant -> builder.addAssistantMessage(msg.content());
@@ -132,9 +145,9 @@ public class Anthropic extends LLM {
     }
 
     @Override
-    public CompletableFuture<String> complete(String message, List<Message> history, Properties params) {
-        var request = requestBuilder(message, history, params);
-        return client.beta().messages().create(request.build())
+    public CompletableFuture<String> complete(String message, Properties params) {
+        var request = requestBuilder(params, false);
+        return client.beta().messages().create(request.addUserMessage(message).build())
                 .thenApply(msg -> msg.content().stream()
                         .flatMap(block -> block.text().stream())
                         .map(BetaTextBlock::text)
@@ -142,9 +155,9 @@ public class Anthropic extends LLM {
     }
 
     @Override
-    public void complete(String message, List<Message> history, Properties params, StreamResponseHandler handler) {
-        var request = requestBuilder(message, history, params);
-        complete(request, handler);
+    public void complete(String message, List<Message> conversation, Properties params, StreamResponseHandler handler) {
+        var request = requestBuilder(params, true);
+        complete(input(request, message, conversation), handler);
     }
 
     /**

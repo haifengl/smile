@@ -93,25 +93,26 @@ public abstract class LLM {
     }
 
     /**
-     * Asynchronously completes a message.
+     * Asynchronously completes a message, without conversation history
+     * and tool calls handling.
      * @param message the user message.
      * @return a future of completion.
      */
     public CompletableFuture<String> complete(String message) {
-        return complete(message, List.of(), new Properties());
+        return complete(message, new Properties());
     }
 
     /**
-     * Asynchronously completes a message.
+     * Asynchronously completes a message, without conversation history
+     * and tool calls handling.
      * @param message the user message.
-     * @param history the conversation history, which is a list of messages in chronological order.
      * @param params the request parameters.
      * @return a future of completion.
      */
-    public abstract CompletableFuture<String> complete(String message, List<Message> history, Properties params);
+    public abstract CompletableFuture<String> complete(String message, Properties params);
 
     /**
-     * Asynchronously completes a message in a streaming way.
+     * Asynchronously completes a message in a streaming way, with tool calls handling.
      * @param message the user message.
      * @param handler the stream response handler.
      */
@@ -120,12 +121,12 @@ public abstract class LLM {
     }
 
     /**
-     * Asynchronously completes a message in a streaming way.
+     * Asynchronously completes a message in a streaming way, with tool calls handling.
      * @param message the user message.
-     * @param history the conversation history, which is a list of messages in chronological order.
+     * @param conversation the conversation history in chronological order.
      * @param params the request parameters.
      * @param handler the stream response handler.
      */
-    public abstract void complete(String message, List<Message> history,
+    public abstract void complete(String message, List<Message> conversation,
                                   Properties params, StreamResponseHandler handler);
 }
