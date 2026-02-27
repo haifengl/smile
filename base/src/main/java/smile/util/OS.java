@@ -16,6 +16,16 @@
  */
 package smile.util;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+import java.util.regex.MatchResult;
+import java.util.regex.Pattern;
+
 /**
  * Operating system utility functions.
  *
@@ -43,5 +53,83 @@ public interface OS {
      */
     static boolean isUnix() {
         return name.contains("nix") || name.contains("nux") || name.contains("aix");
+    }
+
+    /**
+     * Executes a system command in a separate process.
+     * @param command the program and its arguments.
+     * @param outputConsumer the consumer to handle the output lines from the command.
+     * @return the process.
+     */
+    static Process exec(List<String> command, Consumer<String> outputConsumer) throws IOException {
+        var process = new ProcessBuilder(command)
+                .redirectErrorStream(true)
+                .start();
+
+        // Create a thread to read the process's output
+        if (outputConsumer != null) {
+            new Thread(() -> {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        outputConsumer.accept(line);
+                    }
+                } catch (IOException ex) {
+                    outputConsumer.accept("ERROR reading process output: " + ex.getMessage());
+                }
+            }).start();
+        }
+
+        return process;
+    }
+
+    /**
+     * Executes a shell command in a separate process.
+     * @param command the command line to run.
+     * @param outputConsumer the consumer to handle the output lines from the command.
+     * @return the process.
+     */
+    static Process exec(String command, Consumer<String> outputConsumer) throws IOException {
+        List<String> cmd = new ArrayList<>();
+        if (OS.isWindows()) {
+            cmd.add("cmd.exe");
+            cmd.add("/c");
+        } else {
+            cmd.add("bash");
+            cmd.add("-c");
+        }
+
+        // Parse the command string into arguments, respecting quoted substrings
+        Pattern pattern = Pattern.compile("\"[^\"]+\"|\\S+");
+        pattern.matcher(command)
+                .results()
+                .map(MatchResult::group)
+                .forEach(cmd::add);
+
+        return exec(cmd, outputConsumer);
+    }
+
+    /**
+     * Runs a bash command with timeout.
+     * @param command the command line to run.
+     * @param timeout the timeout in milliseconds.
+     * @return the output of the command, or error message if failed.
+     */
+    static String exec(String command, int timeout) {
+        try {
+            StringBuilder output = new StringBuilder();
+            var process = exec(command, line -> output.append(line).append("\n")));
+
+            // Wait for the process to complete and return the exit code
+            if (process.waitFor(timeout, TimeUnit.MILLISECONDS)) {
+                return output.toString();
+            } else {
+                process.destroyForcibly();
+                return "Command timed out after " + timeout + " milliseconds.";
+            }
+        } catch (InterruptedException | IOException e) {
+            Thread.currentThread().interrupt();
+            return "Command execution failed: " + e.getMessage();
+        }
     }
 }

@@ -48,8 +48,8 @@ public class Serve implements Callable<Integer> {
                 "-Dquarkus.http.host=" + host,
                 "-Dquarkus.http.port=" + port,
                 "-jar",
-                Path.of(home, "serve", "quarkus-run.jar").normalize().toString())
-                .inheritIO().start();
+                Path.of(home, "serve", "quarkus-run.jar").normalize().toString()
+        ).inheritIO().start();
         return process.waitFor();
     }
 }

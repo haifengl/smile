@@ -46,6 +46,7 @@ public class ConsoleOutputStream extends OutputStream {
             buffer.append((char) b);
         }
     }
+
     @Override
     public void write(byte[] b, int off, int len) {
         if (area != null) {
