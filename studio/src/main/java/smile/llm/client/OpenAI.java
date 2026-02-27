@@ -28,6 +28,7 @@ import com.openai.core.http.AsyncStreamResponse;
 import com.openai.helpers.ChatCompletionAccumulator;
 import com.openai.models.chat.completions.*;
 import com.openai.models.responses.*;
+import smile.llm.Conversation;
 import smile.llm.Message;
 import smile.llm.tool.*;
 
@@ -266,9 +267,16 @@ public class OpenAI extends LLM {
     }
 
     @Override
-    public void complete(String message, List<Message> conversation, Properties params, StreamResponseHandler handler) {
-        var request = requestBuilder(params, true);
-        complete(input(request, message, conversation), handler);
+    public void complete(String message, Conversation conversation, Properties params, StreamResponseHandler handler) {
+        ChatCompletionCreateParams.Builder request = (ChatCompletionCreateParams.Builder) conversation.getRequest();
+        if (request == null) {
+            request = requestBuilder(params, true);
+            conversation.setRequest(request);
+        } else {
+            request.addUserMessage(message);
+        }
+
+        complete(request, handler);
     }
 
     /**

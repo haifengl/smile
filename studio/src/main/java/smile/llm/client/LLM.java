@@ -16,10 +16,9 @@
  */
 package smile.llm.client;
 
-import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
-import smile.llm.Message;
+import smile.llm.Conversation;
 
 /**
  * LLM inference client. Note that it is stateless and doesn't
@@ -114,19 +113,10 @@ public abstract class LLM {
     /**
      * Asynchronously completes a message in a streaming way, with tool calls handling.
      * @param message the user message.
-     * @param handler the stream response handler.
-     */
-    public void complete(String message, StreamResponseHandler handler) {
-        complete(message, List.of(), new Properties(), handler);
-    }
-
-    /**
-     * Asynchronously completes a message in a streaming way, with tool calls handling.
-     * @param message the user message.
      * @param conversation the conversation history in chronological order.
      * @param params the request parameters.
      * @param handler the stream response handler.
      */
-    public abstract void complete(String message, List<Message> conversation,
+    public abstract void complete(String message, Conversation conversation,
                                   Properties params, StreamResponseHandler handler);
 }

@@ -53,6 +53,8 @@ public class Conversation {
     private final Path path;
     /** The summary of conversations. */
     private String summary = "";
+    /** The cached request object for the conversation. */
+    private Object request;
 
     /**
      * Constructor. New messages will be saved to history file.
@@ -95,17 +97,11 @@ public class Conversation {
     }
 
     /**
-     * Returns the recent conversation messages.
-     * @param size the number of recent messages.
-     *             If size is <= 0, return the full conversation.
-     * @return the recent conversation messages.
+     * Returns the conversation messages.
+     * @return the conversation messages.
      */
-    public List<Message> getLast(int size) {
-        if (size <= 0) return messages;
-        // keeps only the recent conversations within the window size
-        int fromIndex = Math.max(messages.size() - size, 0);
-        // subList returns a view that becomes inconsistent if the original list is modified.
-        return new ArrayList<>(messages.subList(fromIndex, messages.size()));
+    public List<Message> messages() {
+        return messages;
     }
 
     /**
@@ -127,5 +123,21 @@ public class Conversation {
         } catch (IOException ex) {
             logger.error("Failed to save conversation summary", ex);
         }
+    }
+
+    /**
+     * Returns the cached request for the conversation.
+     * @return the cached request for the conversation.
+     */
+    public Object getRequest() {
+        return request;
+    }
+
+    /**
+     * Sets the cached request for the conversation.
+     * @param request the request for the conversation.
+     */
+    public  void setRequest(Object request) {
+        this.request = request;
     }
 }

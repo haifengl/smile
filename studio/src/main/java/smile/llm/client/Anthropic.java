@@ -26,6 +26,7 @@ import com.anthropic.client.okhttp.AnthropicOkHttpClientAsync;
 import com.anthropic.core.http.AsyncStreamResponse;
 import com.anthropic.helpers.BetaMessageAccumulator;
 import com.anthropic.models.beta.messages.*;
+import smile.llm.Conversation;
 import smile.llm.Message;
 import smile.llm.tool.*;
 
@@ -155,9 +156,16 @@ public class Anthropic extends LLM {
     }
 
     @Override
-    public void complete(String message, List<Message> conversation, Properties params, StreamResponseHandler handler) {
-        var request = requestBuilder(params, true);
-        complete(input(request, message, conversation), handler);
+    public void complete(String message, Conversation conversation, Properties params, StreamResponseHandler handler) {
+        MessageCreateParams.Builder request = (MessageCreateParams.Builder) conversation.getRequest();
+        if (request == null) {
+            request = requestBuilder(params, true);
+            conversation.setRequest(input(request, message, conversation.messages()));
+        } else {
+            request.addUserMessage(message);
+        }
+
+        complete(request, handler);
     }
 
     /**

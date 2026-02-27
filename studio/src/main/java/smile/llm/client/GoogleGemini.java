@@ -24,6 +24,7 @@ import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import com.google.genai.Client;
 import com.google.genai.types.*;
+import smile.llm.Conversation;
 import smile.llm.Message;
 import smile.llm.tool.*;
 
@@ -171,11 +172,23 @@ public class GoogleGemini extends LLM {
     }
 
     @Override
-    public void complete(String message, List<Message> conversation, Properties params, StreamResponseHandler handler) {
+    public void complete(String message, Conversation conversation, Properties params, StreamResponseHandler handler) {
+        @SuppressWarnings("unchecked")
+        List<Content> request = (List<Content>) conversation.getRequest();
+        if (request == null) {
+            request = input(message, conversation.messages());
+            conversation.setRequest(request);
+        } else {
+            var content = Content.builder().role("user")
+                    .parts(Part.fromText(message))
+                    .build();
+            request.add(content);
+        }
+
         // To save resources and avoid connection leaks, close the
         // response stream after consumption.
         try (var stream = client.models
-                .generateContentStream(model(), input(message, conversation), config(params, true))) {
+                .generateContentStream(model(), request, config(params, true))) {
             for (var response : stream) {
                 handler.onNext(response.text());
             }

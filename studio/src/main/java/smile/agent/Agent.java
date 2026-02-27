@@ -301,7 +301,6 @@ public class Agent {
      * @return a future of response.
      */
     public CompletableFuture<String> response(String prompt) {
-        var history = conversation.getLast(window);
         conversation.add(Message.user(prompt));
 
         return llm.get().complete(prompt, params)
@@ -322,7 +321,6 @@ public class Agent {
      */
     public void stream(String command, String prompt, StreamResponseHandler handler) {
         boolean compact = "compact".equals(command);
-        var history = conversation.getLast(compact ? 20 : window);
         conversation.add(Message.user(prompt));
 
         StringBuilder sb = new StringBuilder();
@@ -359,6 +357,6 @@ public class Agent {
         }
         message += "\n\n" + prompt;
         logger.debug("user: {}", message);
-        llm.get().complete(message, history, params, accumulator);
+        llm.get().complete(message, conversation, params, accumulator);
     }
 }
