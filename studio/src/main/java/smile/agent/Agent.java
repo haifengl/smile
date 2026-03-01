@@ -101,9 +101,7 @@ public class Agent {
      * @param context the directory path for agent context.
      */
     public Agent(Supplier<LLM> llm, Path session, Path context) {
-        this(llm,
-             new Conversation(List.of(), session),
-             new Context(context));
+        this(llm, new Conversation(session), new Context(context));
     }
 
     /**
@@ -254,17 +252,6 @@ public class Agent {
     }
 
     /**
-     * Returns the system reminder to keep the agent focused, enforce safety,
-     * and guide tool usage, which will be injected into the user message.
-     * These injected messages appear before user messages to prevent drift.
-     *
-     * @return the system reminder.
-     */
-    public String reminder() {
-        return "";
-    }
-
-    /**
      * Returns the system prompt.
      *
      * @return the system prompt.
@@ -372,14 +359,9 @@ public class Agent {
                 var response = sb.toString();
                 logger.debug("assistant: {}", response);
 
-                //conversation.add(Message.user(prompt));
-                if (ex.isPresent()) {
-                    conversation.add(Message.error(ex.get().getMessage()));
-                } else {
+                if (ex.isEmpty()) {
                     if (response.contains("<summary>") && response.contains("</summary>")) {
                         conversation.compact(response);
-                    } else {
-                        //conversation.add(Message.assistant(response));
                     }
                 }
 
@@ -387,14 +369,6 @@ public class Agent {
             }
         };
 
-        String reminder = reminder();
-        String message = reminder.isBlank() ? prompt : String.format("""
-<system-reminder>
-%s
-</system-reminder>
-%s
-""", reminder, prompt);
-
-        llm.get().complete(message, conversation, accumulator);
+        llm.get().complete(prompt, conversation, accumulator);
     }
 }

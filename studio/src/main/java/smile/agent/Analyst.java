@@ -37,11 +37,18 @@ public class Analyst extends Agent {
      * @param context the directory path for agent context.
      */
     public Analyst(Supplier<LLM> llm, Path session, Path context) {
-        super(llm,
-              new Conversation(List.of(Read.class, Write.class, Edit.class, Append.class, Bash.class), session),
-              new Context(context),
+        super(llm, new Conversation(session), new Context(context),
               new Context(System.getProperty("user.home") + "/.smile/agents/data-analyst"),
               new Context(System.getProperty("smile.home") + "/agents/data-analyst"));
+
+        var tools = List.of(Read.class, Write.class, Edit.class, Append.class, Bash.class);
+        conversation().withTools(tools);
+        conversation().withReminder("""
+1. Answer the user's query comprehensively.
+2. Prioritize robust methodology, including data cleaning, feature engineering, cross-validation, and proper error handling.
+3. Generate code for the heavy lifting and Markdown files for documenting transforms and insights.
+4. Use the instructions below and the tools available to you to assist the user.
+""");
 
         // low temperature for more predictable, focused, and deterministic plans
         conversation().params().setProperty(LLM.TEMPERATURE, "0.2");
@@ -60,16 +67,6 @@ If the user asks for help or wants to give feedback inform them of the following
 
 ## Professional objectivity
 Prioritize technical accuracy and truthfulness over validating the user's beliefs. Focus on facts and problem-solving, providing direct, objective technical info without any unnecessary superlatives, praise, or emotional validation. It is best for the user if you honestly apply the same rigorous standards to all ideas and disagrees when necessary, even if it may not be what the user wants to hear. Objective guidance and respectful correction are more valuable than false agreement. Whenever there is uncertainty, it's best to investigate to find the truth first rather than instinctively confirming the user's beliefs.
-""";
-    }
-
-    @Override
-    public String reminder() {
-        return """
-1. Answer the user's query comprehensively.
-2. Prioritize robust methodology, including data cleaning, feature engineering, cross-validation, and proper error handling.
-3. Generate code for the heavy lifting and Markdown files for documenting transforms and insights.
-4. Use the instructions below and the tools available to you to assist the user.
 """;
     }
 

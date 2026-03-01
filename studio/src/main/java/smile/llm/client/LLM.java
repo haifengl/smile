@@ -94,28 +94,28 @@ public abstract class LLM {
     /**
      * Asynchronously completes a message, without conversation history
      * and tool calls handling.
-     * @param message the user message.
+     * @param prompt the user prompt.
      * @return a future of completion.
      */
-    public CompletableFuture<String> complete(String message) {
-        return complete(message, new Properties());
+    public CompletableFuture<String> complete(String prompt) {
+        return complete(prompt, new Properties());
     }
 
     /**
      * Asynchronously completes a message, without conversation history
      * and tool calls handling.
-     * @param message the user message.
+     * @param prompt the user prompt.
      * @param params the request parameters.
      * @return a future of completion.
      */
-    public abstract CompletableFuture<String> complete(String message, Properties params);
+    public abstract CompletableFuture<String> complete(String prompt, Properties params);
 
     /**
      * Asynchronously completes a message in a streaming way, with tool calls handling.
-     * @param message the user message.
+     * @param prompt the user prompt.
      * @param conversation the conversation history in chronological order.
      * @param handler the stream response handler.
      */
-    public abstract void complete(String message, Conversation conversation,
+    public abstract void complete(String prompt, Conversation conversation,
                                   StreamResponseHandler handler);
 }

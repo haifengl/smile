@@ -24,6 +24,7 @@ import java.util.concurrent.CompletableFuture;
 import com.google.genai.Client;
 import com.google.genai.types.*;
 import smile.llm.Conversation;
+import smile.llm.Message;
 
 /**
  * Google Gemini.
@@ -135,14 +136,14 @@ public class GoogleGemini extends LLM {
     }
 
     @Override
-    public CompletableFuture<String> complete(String message, Properties params) {
+    public CompletableFuture<String> complete(String prompt, Properties params) {
         return client.async.models
-                .generateContent(model(), message, config(params, List.of()))
+                .generateContent(model(), prompt, config(params, List.of()))
                 .thenApply(GenerateContentResponse::text);
     }
 
     @Override
-    public void complete(String message, Conversation conversation, StreamResponseHandler handler) {
+    public void complete(String prompt, Conversation conversation, StreamResponseHandler handler) {
         List<Content> contents = new ArrayList<>();
         for (var msg : conversation.messages()) {
             switch (msg.role()) {
@@ -159,18 +160,24 @@ public class GoogleGemini extends LLM {
 
         contents.add(Content.builder()
                 .role("user")
-                .parts(Part.fromText(message))
+                .parts(Part.fromText(conversation.prompt(prompt)))
                 .build());
 
+        conversation.add(Message.user(prompt));
         var params = config(conversation.params(), conversation.tools());
         // To save resources and avoid connection leaks, close the
         // response stream after consumption.
         try (var stream = client.models.generateContentStream(model(), contents, params)) {
+            StringBuilder sb = new StringBuilder();
             for (var response : stream) {
-                handler.onNext(response.text());
+                var chunk = response.text();
+                sb.append(chunk);
+                handler.onNext(chunk);
             }
+            conversation.add(Message.assistant(sb.toString()));
             handler.onComplete(Optional.empty());
         } catch (Throwable t) {
+            conversation.add(Message.error(t.getMessage()));
             handler.onComplete(Optional.of(t));
         }
     }

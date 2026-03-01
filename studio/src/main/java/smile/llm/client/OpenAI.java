@@ -242,16 +242,16 @@ public class OpenAI extends LLM {
     }
 
     @Override
-    public CompletableFuture<String> complete(String message, Properties params) {
+    public CompletableFuture<String> complete(String prompt, Properties params) {
         var request = paramsBuilder(params, List.of());
-        request.addUserMessage(message);
+        request.addUserMessage(prompt);
         return client.chat().completions().create(request.build())
                 .thenApply(this::response);
     }
 
     @Override
-    public void complete(String message, Conversation conversation, StreamResponseHandler handler) {
-        conversation.add(Message.user(message));
+    public void complete(String prompt, Conversation conversation, StreamResponseHandler handler) {
+        conversation.add(Message.user(prompt));
         var request = paramsBuilder(conversation.params(), conversation.tools());
         for (var msg : conversation.messages()) {
             switch (msg.role()) {
@@ -269,7 +269,7 @@ public class OpenAI extends LLM {
             }
         }
 
-        request.addUserMessage(message);
+        request.addUserMessage(conversation.prompt(prompt));
         // For streaming chat completions, token usage data is not included by default.
         // This will cause an additional, final chunk to be streamed at the end of the response.
         request.streamOptions(ChatCompletionStreamOptions.builder().includeUsage(true).build());

@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.PropertyNamingStrategies;
@@ -53,18 +54,17 @@ public class Conversation {
     private final Properties params = new Properties();
     /** The conversation history. */
     private final List<Message> messages = new ArrayList<>();
-    /** The tools available for LLM. */
-    private final List<Class<? extends Tool>> tools;
     /** The directory path for conversation history and summary. */
     private final Path path;
+    /** The tools available for LLM. */
+    private List<Class<? extends Tool>> tools;
+    private String reminder;
 
     /**
      * Constructor. New messages will be saved to history file.
-     * @param tools the tools available for the LLM inference.
      * @param path the directory path for conversations.
      */
-    public Conversation(List<Class<? extends Tool>> tools, Path path) {
-        this.tools = tools;
+    public Conversation(Path path) {
         var formatter = DateTimeFormatter.ofPattern("yyMMddHHmmssSSS");
         String id = formatter.format(LocalDateTime.now());
         path = path.resolve(id);
@@ -93,6 +93,52 @@ public class Conversation {
      */
     public List<Class<? extends Tool>> tools() {
         return tools;
+    }
+
+    /**
+     * Sets the tools available for LLM.
+     * @param tools the tools available for LLM.
+     * @return this object.
+     */
+    public Conversation withTools(List<Class<? extends Tool>> tools) {
+        this.tools = tools;
+        return this;
+    }
+
+    /**
+     * Returns the optional system reminder.
+     *
+     * @return the system reminder.
+     */
+     public Optional<String> reminder() {
+        return Optional.ofNullable(reminder);
+    }
+
+    /**
+     * Sets the system reminder to keep the AI focused, enforce safety,
+     * and guide tool usage, which will be injected into the user message.
+     * These injected messages appear before user messages to prevent drift.
+     *
+     * @return this object.
+     */
+    public Conversation withReminder(String reminder) {
+        this.reminder = reminder;
+        return this;
+    }
+
+    /**
+     * Injects the system reminder into the user prompt if present.
+     *
+     * @param message the original user message.
+     * @return the user prompt with system reminder injected if present.
+     */
+    public String prompt(String message) {
+        return reminder().map(reminder -> String.format("""
+<system-reminder>
+%s
+</system-reminder>
+%s
+""", reminder, message)).orElse(message);
     }
 
     /**
