@@ -25,12 +25,11 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
 import com.formdev.flatlaf.util.SystemInfo;
-import smile.agent.Analyst;
+import smile.agent.Agent;
 import smile.agent.Memory;
 import smile.llm.client.StreamResponseHandler;
 import smile.plot.swing.Palette;
 import smile.shell.JShell;
-import smile.studio.SmileStudio;
 import smile.studio.kernel.JavaRunner;
 import smile.studio.kernel.ShellRunner;
 import smile.studio.model.IntentType;
@@ -38,32 +37,33 @@ import smile.swing.ScrollablePanel;
 import smile.util.OS;
 
 /**
- * The conversation interface for agent to create model building pipeline.
+ * The conversation interface for agent.
  *
  * @author Haifeng Li
  */
 public class AgentCLI extends JPanel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AgentCLI.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(AgentCLI.class.getName(), Locale.getDefault());
-    /** The container of conversations. */
+    /** The container of conversation. */
     private final JPanel intents = new ScrollablePanel();
     /** JShell instance. */
     private final JavaRunner runner;
     /** The project folder. */
     private final Path path;
-    /** The analyst agent. */
-    private Analyst analyst;
+    /** The agent. */
+    private final Agent agent;
 
     /**
      * Constructor.
      * @param path the project folder.
+     * @param agent the agent.
      * @param runner Java code execution engine.
      */
-    public AgentCLI(Path path, JavaRunner runner) {
+    public AgentCLI(Path path, Agent agent, JavaRunner runner) {
         super(new BorderLayout());
-        this.runner = runner;
         this.path = path;
-        initAnalyst();
+        this.agent = agent;
+        this.runner = runner;
 
         setBorder(new EmptyBorder(0, 0, 0, 8));
         intents.setLayout(new BoxLayout(intents, BoxLayout.Y_AXIS));
@@ -89,12 +89,6 @@ public class AgentCLI extends JPanel {
                     }
                 })
         );
-    }
-
-    private void initAnalyst() {
-        analyst = new Analyst(SmileStudio::llm,
-                path.resolve(".smile", "analyst"),
-                path);
     }
 
     /** Append a new intent box. */
@@ -239,14 +233,14 @@ public class AgentCLI extends JPanel {
                 /predict\tRun batch inference
                 /serve\t\tStart an inference service""");
 
-        for (var cmd : analyst.commands()) {
+        for (var cmd : agent.commands()) {
             sb.append("\n/")
               .append(cmd.name())
               .append(cmd.name().length() > 6 ? "\t" : "\t\t")
               .append(cmd.description());
         }
 
-        for (var skill : analyst.skills()) {
+        for (var skill : agent.skills()) {
             sb.append("\n/")
                     .append(skill.name())
                     .append(skill.name().length() > 6 ? "\t" : "\t\t")
@@ -262,7 +256,7 @@ public class AgentCLI extends JPanel {
         if (md.isBlank()) {
             output.appendLine("/init should be followed with the project instructions.");
         } else {
-            analyst.initMemory(md);
+            agent.initMemory(md);
             output.appendLine("SMILE.md created with instructions.");
         }
     }
@@ -273,20 +267,20 @@ public class AgentCLI extends JPanel {
         if (md.isBlank()) {
             output.appendLine("/add-memory should be followed with notes.");
         } else {
-            analyst.addMemory(md);
+            agent.addMemory(md);
             output.appendLine("SMILE.md appended with notes.");
         }
     }
 
     /** Displays the project long-term memory. */
     private void showMemory(OutputArea output) {
-        output.setText(analyst.instructions());
+        output.setText(agent.instructions());
         toMarkdown(output);
     }
 
     /** Displays the system prompt. */
     private void showSystemPrompt(OutputArea output) {
-        output.setText(analyst.system());
+        output.setText(agent.system());
     }
 
     /** Renders output as Markdown. */
@@ -299,13 +293,13 @@ public class AgentCLI extends JPanel {
 
     /** Reloads the context from disk. */
     private void refreshMemory(OutputArea output) {
-        initAnalyst();
+        agent.refresh();
         output.appendLine("Long-term memory was reloaded.");
     }
 
     /** Clears the current conversation history. */
     private void clear(OutputArea output) {
-        analyst.clear();
+        agent.clear();
         output.appendLine("Current conversation history was cleared.");
     }
 
@@ -318,9 +312,9 @@ public class AgentCLI extends JPanel {
     }
 
     private void runCustomCommand(String command, String instructions, OutputArea output) {
-        Optional<? extends Memory> cmd = analyst.command(command);
+        Optional<? extends Memory> cmd = agent.command(command);
         if (cmd.isEmpty()) {
-            cmd = analyst.skills().stream()
+            cmd = agent.skills().stream()
                     .filter(s -> s.name().equals(command))
                     .findFirst();
         }
@@ -351,7 +345,7 @@ public class AgentCLI extends JPanel {
             return;
         }
 
-        if (analyst.llm() == null) {
+        if (agent.llm() == null) {
             output.setText(bundle.getString("NoAIServiceError"));
             return;
         }
@@ -362,7 +356,7 @@ public class AgentCLI extends JPanel {
 
         // Stream processing runs in a background thread so that we don't
         // need to create a SwingWorker thread.
-        analyst.stream(prompt, new StreamResponseHandler() {
+        agent.stream(prompt, new StreamResponseHandler() {
             boolean firstChunk = true;
             @Override
             public void onNext(String chunk) {

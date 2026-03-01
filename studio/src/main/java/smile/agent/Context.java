@@ -89,6 +89,11 @@ public class Context {
      */
     public Context(Path path) {
         this.path = path;
+        load();
+    }
+
+    /** Loads the context from disk. */
+    private void load() {
         Path smileMd = path.resolve(SMILE_MD);
         Memory spec = null;
         try {
@@ -140,6 +145,14 @@ public class Context {
                 logger.error("Error reading skills", ex);
             }
         }
+    }
+
+    /** Reloads the context from disk. */
+    public void refresh() {
+        rules.clear();
+        skills.clear();
+        commands.clear();
+        load();
     }
 
     /**

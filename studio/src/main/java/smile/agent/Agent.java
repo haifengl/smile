@@ -104,6 +104,17 @@ public class Agent {
         this(llm, new Conversation(session), new Context(context));
     }
 
+    /** Reloads the agent context from disk. */
+    public void refresh() {
+        context.refresh();
+        if (user != null) {
+            user.refresh();
+        }
+        if (global != null) {
+            global.refresh();
+        }
+    }
+
     /**
      * Saves the project instructions.
      *

@@ -19,6 +19,8 @@ package smile.studio.view;
 import javax.swing.*;
 import java.nio.file.Path;
 import com.formdev.flatlaf.util.SystemFileChooser;
+import smile.agent.Analyst;
+import smile.studio.SmileStudio;
 import smile.studio.kernel.JavaRunner;
 
 /**
@@ -47,7 +49,9 @@ public class Workspace extends JSplitPane {
         super(JSplitPane.HORIZONTAL_SPLIT);
         explorer = new Explorer(runner, fileChooser);
         notebook = new Notebook(file, runner, explorer::refresh);
-        cli = new AgentCLI(file.getParent(), runner);
+
+        var folder = file.getParent();
+        cli = new AgentCLI(folder, analyst(folder), runner);
 
         project.setLeftComponent(explorer);
         project.setRightComponent(notebook);
@@ -56,6 +60,13 @@ public class Workspace extends JSplitPane {
         setLeftComponent(project);
         setRightComponent(cli);
         setResizeWeight(0.6);
+    }
+
+    /** Creates an analyst agent. */
+    private Analyst analyst(Path path) {
+        return new Analyst(SmileStudio::llm,
+                path.resolve(".smile", "analyst"),
+                path);
     }
 
     /**
