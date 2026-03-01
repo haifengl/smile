@@ -792,6 +792,18 @@ public class BFGS {
             if (t[index[i]] > 0) break;
         }
 
+        // Cannot find a Cauchy point > 0. It usually indicates that
+        // the gradient is already zero (convergence), the trust region
+        // is too small to move, or the approximation of the Hessian
+        // has become extremely ill-conditioned or non-positive definite.
+        if (i == n) {
+            logger.warn("""
+                Cauchy point is at the current point, which may be caused by convergence,
+                too small trust region or ill-conditioned Hessian approximation.""");
+            System.arraycopy(cauchy, 0, c, 0, c.length);
+            return c;
+        }
+
         double dt = t[i];
         for (; dt_min >= dt && i < n; i++) {
             int b = index[i];
