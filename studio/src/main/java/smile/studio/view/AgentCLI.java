@@ -21,7 +21,6 @@ import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
 import com.formdev.flatlaf.util.SystemInfo;
@@ -30,7 +29,6 @@ import smile.agent.Memory;
 import smile.llm.client.StreamResponseHandler;
 import smile.plot.swing.Palette;
 import smile.shell.JShell;
-import smile.studio.kernel.JavaRunner;
 import smile.studio.kernel.ShellRunner;
 import smile.studio.model.IntentType;
 import smile.swing.ScrollablePanel;
@@ -46,24 +44,16 @@ public class AgentCLI extends JPanel {
     private static final ResourceBundle bundle = ResourceBundle.getBundle(AgentCLI.class.getName(), Locale.getDefault());
     /** The container of conversation. */
     private final JPanel intents = new ScrollablePanel();
-    /** JShell instance. */
-    private final JavaRunner runner;
-    /** The project folder. */
-    private final Path path;
     /** The agent. */
     private final Agent agent;
 
     /**
      * Constructor.
-     * @param path the project folder.
      * @param agent the agent.
-     * @param runner Java code execution engine.
      */
-    public AgentCLI(Path path, Agent agent, JavaRunner runner) {
+    public AgentCLI(Agent agent) {
         super(new BorderLayout());
-        this.path = path;
         this.agent = agent;
-        this.runner = runner;
 
         setBorder(new EmptyBorder(0, 0, 0, 8));
         intents.setLayout(new BoxLayout(intents, BoxLayout.Y_AXIS));

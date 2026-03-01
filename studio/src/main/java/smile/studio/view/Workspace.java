@@ -49,9 +49,7 @@ public class Workspace extends JSplitPane {
         super(JSplitPane.HORIZONTAL_SPLIT);
         explorer = new Explorer(runner, fileChooser);
         notebook = new Notebook(file, runner, explorer::refresh);
-
-        var folder = file.getParent();
-        cli = new AgentCLI(folder, analyst(folder), runner);
+        cli = new AgentCLI(analyst(file.getParent()));
 
         project.setLeftComponent(explorer);
         project.setRightComponent(notebook);
