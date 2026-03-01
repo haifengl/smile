@@ -30,6 +30,7 @@ import com.openai.models.chat.completions.*;
 import com.openai.models.responses.*;
 import smile.llm.Conversation;
 import smile.llm.Message;
+import smile.llm.ToolCallOutput;
 import smile.llm.tool.*;
 
 /**
@@ -233,27 +234,38 @@ public class OpenAI extends LLM {
         return builder;
     }
 
+    /** Extracts the text response. */
+    private String response(ChatCompletion completion) {
+        return completion.choices().stream()
+                .flatMap(choice -> choice.message().content().stream())
+                .collect(Collectors.joining());
+    }
+
     @Override
     public CompletableFuture<String> complete(String message, Properties params) {
         var request = paramsBuilder(params, List.of());
         request.addUserMessage(message);
         return client.chat().completions().create(request.build())
-                .thenApply(completion -> completion.choices().stream()
-                            .flatMap(choice -> choice.message().content().stream())
-                            .collect(Collectors.joining()));
+                .thenApply(this::response);
     }
 
     @Override
     public void complete(String message, Conversation conversation, StreamResponseHandler handler) {
-        var request =  paramsBuilder(conversation.params(), conversation.tools());
+        conversation.add(Message.user(message));
+        var request = paramsBuilder(conversation.params(), conversation.tools());
         for (var msg : conversation.messages()) {
             switch (msg.role()) {
                 case user -> request.addUserMessage(msg.content());
                 case assistant -> request.addAssistantMessage(msg.content());
-                case tool -> request.addMessage(ChatCompletionToolMessageParam.builder()
-                        .toolCallId(msg.toolCall().id())
-                        .contentAsJson(msg.toolCall().output())
-                        .build());
+                case tool -> {
+                    request.addMessage((ChatCompletionMessage) msg.toolCall().message());
+                    for (var toolCall : msg.toolCall().outputs()) {
+                        request.addMessage(ChatCompletionToolMessageParam.builder()
+                                .toolCallId(toolCall.id())
+                                .contentAsJson(toolCall.output())
+                                .build());
+                    }
+                }
             }
         }
 
@@ -271,59 +283,68 @@ public class OpenAI extends LLM {
      */
     private void complete(ChatCompletionCreateParams.Builder request, Conversation conversation, StreamResponseHandler handler) {
         var accumulator = ChatCompletionAccumulator.create();
-        client.chat().completions().createStreaming(request.build())
-                .subscribe(new AsyncStreamResponse.Handler<>() {
-                    @Override
-                    public void onNext(ChatCompletionChunk chunk) {
-                        accumulator.accumulate(chunk);
-                        chunk.choices().stream()
-                                .flatMap(choice -> choice.delta().content().stream())
-                                .forEach(handler::onNext);
-                    }
+        var stream = client.chat().completions().createStreaming(request.build());
+        stream.subscribe(new AsyncStreamResponse.Handler<>() {
+            @Override
+            public void onNext(ChatCompletionChunk chunk) {
+                accumulator.accumulate(chunk);
+                chunk.choices().stream()
+                        .flatMap(choice -> choice.delta().content().stream())
+                        .forEach(handler::onNext);
+            }
 
-                    @Override
-                    public void onComplete(Optional<Throwable> error) {
-                        if (error.isEmpty()) {
-                            var completion = accumulator.chatCompletion();
-                            completion.usage().ifPresent(usage ->
-                                logger.info("Chat completion completed with {} total tokens, {} completion tokens and {} prompt tokens",
-                                        usage.totalTokens(), usage.completionTokens(), usage.promptTokens()));
+            @Override
+            public void onComplete(Optional<Throwable> error) {
+                if (error.isEmpty()) {
+                    var completion = accumulator.chatCompletion();
+                    completion.usage().ifPresent(usage ->
+                            logger.info("Chat completion completed with {} total tokens, {} completion tokens and {} prompt tokens",
+                                    usage.totalTokens(), usage.completionTokens(), usage.promptTokens()));
 
-                            boolean hasToolCalls = completion.choices().stream()
-                                    .map(ChatCompletion.Choice::message)
-                                    .peek(request::addMessage)
-                                    .flatMap(message -> message.toolCalls().stream().flatMap(Collection::stream))
-                                    .map(toolCall -> {
-                                        var tool = toolCall.asFunction();
-                                        var id = tool.id();
-                                        var func = tool.function();
-                                        var input = func.arguments();
-                                        logger.info("Tool call: name={}, input={}", func.name(), input);
+                    var toolCalling = completion.choices().stream()
+                            .map(ChatCompletion.Choice::message)
+                            .peek(request::addMessage)
+                            .map(message -> {
+                                var toolCalls = message.toolCalls().stream().flatMap(Collection::stream).map(toolCall -> {
+                                    var tool = toolCall.asFunction();
+                                    var id = tool.id();
+                                    var func = tool.function();
+                                    var input = func.arguments();
+                                    logger.info("Tool call: name={}, input={}", func.name(), input);
 
-                                        var output = callTool(func);
-                                        var toolCallMessage = Message.toolCall(id, func.name(), input, output);
-                                        conversation.add(toolCallMessage);
+                                    var output = callTool(func);
+                                    var toolCallOutput = new ToolCallOutput(id, output);
 
-                                        // Add the tool call result to the conversation.
-                                        request.addMessage(ChatCompletionToolMessageParam.builder()
-                                                .toolCallId(id)
-                                                .contentAsJson(output)
-                                                .build());
-                                        return toolCallMessage;
-                                    })
-                                    .anyMatch(s -> true);
+                                    // Add the tool call result to the conversation.
+                                    request.addMessage(ChatCompletionToolMessageParam.builder()
+                                            .toolCallId(id)
+                                            .contentAsJson(output)
+                                            .build());
+                                    return toolCallOutput;
+                                }).toList();
+                                return Message.toolCall(message, toolCalls);
+                            }).toList();
 
-                            if (hasToolCalls) {
-                                // Continue the conversation after tool calls.
-                                complete(request, conversation, handler);
-                            } else {
-                                handler.onComplete(error);
-                            }
-                        } else {
-                            handler.onComplete(error);
+                    boolean anyToolCalled = false;
+                    for (var msg : toolCalling) {
+                        if (!msg.toolCall().outputs().isEmpty()) {
+                            anyToolCalled = true;
+                            conversation.add(msg);
                         }
                     }
-                });
+
+                    if (anyToolCalled) {
+                        // Continue the conversation after tool calls.
+                        complete(request, conversation, handler);
+                    } else {
+                        conversation.add(Message.assistant(response(completion)));
+                    }
+                } else {
+                    conversation.add(Message.error(error.get().getMessage()));
+                    handler.onComplete(error);
+                }
+            }
+        });
     }
 
     /**

@@ -372,14 +372,14 @@ public class Agent {
                 var response = sb.toString();
                 logger.debug("assistant: {}", response);
 
-                conversation.add(Message.user(prompt));
+                //conversation.add(Message.user(prompt));
                 if (ex.isPresent()) {
                     conversation.add(Message.error(ex.get().getMessage()));
                 } else {
                     if (response.contains("<summary>") && response.contains("</summary>")) {
                         conversation.compact(response);
                     } else {
-                        conversation.add(Message.assistant(response));
+                        //conversation.add(Message.assistant(response));
                     }
                 }
 

@@ -16,14 +16,16 @@
  */
 package smile.llm;
 
+import java.util.List;
+
 /**
- * The tool call record.
- * @param id the id of tool call.
- * @param name the tool name.
- * @param input the input of tool call.
- * @param output the output of tool call.
+ * Tool calling gives models access to new functionality and data
+ * that they can use to follow instructions and respond to prompts.
+ * A message may involve multiple tool calls.
+ * @param message the tool calling message.
+ * @param outputs the output of tool calls.
  *
  * @author Haifeng Li
  */
-public record ToolCall(String id, String name, Object input, String output) {
+public record ToolCalling(Object message, List<ToolCallOutput> outputs) {
 }
