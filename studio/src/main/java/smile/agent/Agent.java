@@ -121,13 +121,7 @@ public class Agent {
      * @param instructions the project instructions.
      */
     public void initMemory(String instructions) throws IOException {
-        Path path = context.path().resolve(Context.SMILE_MD);
-        var metadata = Memory.mapper.createObjectNode();
-        metadata.put("name", context.path().getFileName().toString().toLowerCase().replaceAll("[\\s_]+", "-"));
-        metadata.put("description", "Project instruction manual.");
-        Rule rule = new Rule(instructions, metadata, path);
-        rule.save();
-        context.setInstructions(rule);
+        context.addInstructions(instructions);
     }
 
     /**
@@ -136,11 +130,7 @@ public class Agent {
      * @param instructions the project instructions.
      */
     public void addMemory(String instructions) throws IOException {
-        Memory memory = context.getInstructions();
-        var content = memory.content() + "\n\n" + instructions;
-        memory = new Rule(content, memory.metadata(), memory.path());
-        memory.save();
-        context.setInstructions(memory);
+        context.addInstructions(instructions);
     }
 
     /**
@@ -158,7 +148,7 @@ public class Agent {
      * @return the project instructions.
      */
     public String instructions() {
-        return context.getInstructions().content();
+        return context.instructions();
     }
 
     /**
@@ -270,12 +260,12 @@ public class Agent {
     public String system() {
         String prompt = constitution();
         if (global != null) {
-            prompt += "\n\n" + global.getInstructions().content();
+            prompt += "\n\n" + global.instructions();
         }
         if (user != null) {
-            prompt += "\n\n" + user.getInstructions().content();
+            prompt += "\n\n" + user.instructions();
         }
-        prompt += "\n\n" + context.getInstructions().content();
+        prompt += "\n\n" + context.instructions();
 
         var rules = rules();
         if (!rules.isEmpty()) {

@@ -56,12 +56,18 @@ public class Context {
      * critical pieces of information for guiding the agent's behavior
      * and should be prioritized in the context window.
      */
-    private Memory instructions;
+    private final List<Memory> instructions = new ArrayList<>();
     /**
      * Rules are mandatory, context-independent instructions that apply
      * to every interaction for consistency.
      */
     private final List<Rule> rules = new ArrayList<>();
+    /**
+     * Specs (Specifications) are the documents that define the requirements,
+     * intent, data structure, metadata, and statistics, serving
+     * as the blueprint for the AI to follow.
+     */
+    private final List<Spec> specs = new ArrayList<>();
     /**
      * Skills are reusable capabilities or tools that the agent can
      * invoke to perform specific tasks.
@@ -76,7 +82,7 @@ public class Context {
     /**
      * Constructor.
      * @param path the folder path of holistic context information
-     *             such as system instructions, skills, tools, etc.
+     *             such as system instructions, skills, specs, etc.
      */
     public Context(String path) {
         this(Path.of(path));
@@ -85,7 +91,7 @@ public class Context {
     /**
      * Constructor.
      * @param path the folder path of holistic context information
-     *             such as system instructions, skills, tools, etc.
+     *             such as system instructions, skills, specs, etc.
      */
     public Context(Path path) {
         this.path = path;
@@ -95,21 +101,13 @@ public class Context {
     /** Loads the context from disk. */
     private void load() {
         Path smileMd = path.resolve(SMILE_MD);
-        Memory spec = null;
         try {
             if (Files.exists(smileMd)) {
-                spec = Memory.from(smileMd);
+                instructions.add(Memory.from(smileMd));
             }
         } catch (Exception ex) {
             logger.error("Error reading {}", smileMd, ex);
         }
-        if (spec == null) {
-            var metadata = Memory.mapper.createObjectNode();
-            metadata.put("name", "project-instructions");
-            metadata.put("description", "Placeholder of project instructions before user runs /init.");
-            spec = new Memory("", metadata, smileMd);
-        }
-        instructions = spec;
 
         var ruleDir = path.resolve("rules");
         if (Files.exists(ruleDir)) {
@@ -119,6 +117,17 @@ public class Context {
                 }
             } catch (IOException | DirectoryIteratorException ex) {
                 logger.error("Error reading rules", ex);
+            }
+        }
+
+        var specDir = path.resolve("specs");
+        if (Files.exists(specDir)) {
+            try (var stream = Files.newDirectoryStream(specDir, "*.md")) {
+                for (Path file : stream) {
+                    specs.add(Spec.from(file));
+                }
+            } catch (IOException | DirectoryIteratorException ex) {
+                logger.error("Error reading specs", ex);
             }
         }
 
@@ -149,7 +158,9 @@ public class Context {
 
     /** Reloads the context from disk. */
     public void refresh() {
+        instructions.clear();
         rules.clear();
+        specs.clear();
         skills.clear();
         commands.clear();
         load();
@@ -167,16 +178,33 @@ public class Context {
      * Returns the top-level instructions.
      * @return the top-level instructions.
      */
-    public Memory getInstructions() {
-        return instructions;
+    public String instructions() {
+        return instructions.stream()
+                .map(Memory::content)
+                .reduce((a, b) -> a + "\n\n" + b)
+                .orElse("");
     }
 
     /**
-     * Sets the project instructions.
+     * Adds the project instructions.
      * @param instructions the project instructions.
      */
-    public void setInstructions(Memory instructions) {
-        this.instructions = instructions;
+    public void addInstructions(String instructions) throws IOException {
+        if (this.instructions.isEmpty()) {
+            Path smileMd = path.resolve(SMILE_MD);
+            var metadata = Memory.mapper.createObjectNode();
+            metadata.put("name", "project-instructions");
+            metadata.put("description", "Project instruction manual.");
+            Memory memory = new Memory(instructions, metadata, smileMd);
+            this.instructions.add(memory);
+            memory.save();
+        } else {
+            Memory memory = this.instructions.getFirst();
+            var content = memory.content() + "\n\n" + instructions;
+            memory = new Memory(content, memory.metadata(), memory.path());
+            this.instructions.set(0, memory);
+            memory.save();
+        }
     }
 
     /**
@@ -185,6 +213,14 @@ public class Context {
      */
     public List<Rule> rules() {
         return rules;
+    }
+
+    /**
+     * Returns the specs.
+     * @return the specs.
+     */
+    public List<Spec> specs() {
+        return specs;
     }
 
     /**
