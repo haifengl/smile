@@ -16,8 +16,6 @@
  */
 package smile.llm.tool;
 
-import java.lang.reflect.Method;
-
 /**
  * Tools enable models to interact with external systems,
  * such as querying databases, calling APIs, or performing
@@ -28,7 +26,4 @@ import java.lang.reflect.Method;
 public interface Tool {
     /** Executes the tool. */
     String run();
-
-    /** Returns the execution method. */
-    //Method method();
 }

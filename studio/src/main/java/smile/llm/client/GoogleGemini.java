@@ -16,7 +16,6 @@
  */
 package smile.llm.client;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -25,7 +24,6 @@ import java.util.concurrent.CompletableFuture;
 import com.google.genai.Client;
 import com.google.genai.types.*;
 import smile.llm.Conversation;
-import smile.llm.tool.*;
 
 /**
  * Google Gemini.
@@ -82,6 +80,7 @@ public class GoogleGemini extends LLM {
                                          List<Class<? extends smile.llm.tool.Tool>> tools) {
         // only 1 chat completion choice to generate
         var builder = GenerateContentConfig.builder().candidateCount(1);
+
 /*
         if (toolCalls) {
             List<Tool> tools = new ArrayList<>();
