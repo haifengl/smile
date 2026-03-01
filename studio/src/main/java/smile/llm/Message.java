@@ -59,11 +59,14 @@ public record Message(Role role, String content, ToolCall toolCall, Instant time
 
     /**
      * Returns a tool call message.
-     * @param toolCall the tool call record.
+     * @param id the id of tool call.
+     * @param name the tool name.
+     * @param input the input of tool call.
+     * @param output the output of tool call.
      * @return a tool call message with the current timestamp.
      */
-    public static Message toolCall(ToolCall toolCall) {
-        return new Message(Role.tool, null, toolCall, Instant.now());
+    public static Message toolCall(String id, String name, Object input, String output) {
+        return new Message(Role.tool, null, new ToolCall(id, name, input, output), Instant.now());
     }
 
     /**

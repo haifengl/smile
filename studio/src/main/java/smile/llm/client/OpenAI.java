@@ -116,18 +116,15 @@ public class OpenAI extends LLM {
     /**
      * Returns a response request builder.
      * @param params the request parameters.
-     * @param toolCalls If true, the request will be configured to handle tool calls.
+     * @param tools the tools available for LLM.
      * @return a response request builder.
      */
-    private ResponseCreateParams.Builder responseBuilder(Properties params, boolean toolCalls) {
+    private ResponseCreateParams.Builder responseBuilder(Properties params,
+                                                         List<Class<? extends smile.llm.tool.Tool>> tools) {
         var builder = ResponseCreateParams.builder().model(model());
 
-        if (toolCalls) {
-            builder.addTool(Read.class)
-                   .addTool(Write.class)
-                   .addTool(Append.class)
-                   .addTool(Edit.class)
-                   .addTool(Bash.class);
+        for (var tool : tools) {
+            builder.addTool(tool);
         }
 
         var temperature = params.getProperty(TEMPERATURE, "");
@@ -166,12 +163,12 @@ public class OpenAI extends LLM {
     /**
      * Returns an input to response request.
      * @param message the user message.
-     * @param conversation the conversation history.
+     * @param messages the conversation history.
      * @return an input to response request.
      */
-    private List<ResponseInputItem> input(String message, List<Message> conversation) {
+    private List<ResponseInputItem> input(String message, List<Message> messages) {
         List<ResponseInputItem> input = new ArrayList<>();
-        for (var msg : conversation) {
+        for (var msg : messages) {
             var role = switch (msg.role()) {
                 case user -> EasyInputMessage.Role.USER;
                 case assistant -> EasyInputMessage.Role.ASSISTANT;
@@ -261,6 +258,9 @@ public class OpenAI extends LLM {
         }
 
         request.addUserMessage(message);
+        // For streaming chat completions, token usage data is not included by default.
+        // This will cause an additional, final chunk to be streamed at the end of the response.
+        request.streamOptions(ChatCompletionStreamOptions.builder().includeUsage(true).build());
         complete(request, conversation, handler);
     }
 
@@ -298,8 +298,10 @@ public class OpenAI extends LLM {
                                         var id = tool.id();
                                         var func = tool.function();
                                         var input = func.arguments();
+                                        logger.info("Tool call: name={}, input={}", func.name(), input);
+
                                         var output = callTool(func);
-                                        var toolCallMessage = Message.toolCall(new smile.llm.ToolCall(id, func.name(), input, output));
+                                        var toolCallMessage = Message.toolCall(id, func.name(), input, output);
                                         conversation.add(toolCallMessage);
 
                                         // Add the tool call result to the conversation.

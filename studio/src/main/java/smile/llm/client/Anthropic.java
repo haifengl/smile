@@ -184,8 +184,10 @@ public class Anthropic extends LLM {
                                     .flatMap(block -> block.toolUse().stream())
                                     .map(toolUse -> {
                                         var input = toolUse._input();
+                                        logger.info("Tool call: name={}, input={}", toolUse.name(), input);
+
                                         var output = callTool(toolUse);
-                                        var toolCallMessage = Message.toolCall(new smile.llm.ToolCall(toolUse.id(), toolUse.name(), input, output));
+                                        var toolCallMessage = Message.toolCall(toolUse.id(), toolUse.name(), input, output);
                                         conversation.add(toolCallMessage);
 
                                         // Add a message indicating that the tool use was requested.
