@@ -18,6 +18,10 @@ package smile.agent;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 /**
@@ -31,6 +35,11 @@ import tools.jackson.databind.node.ObjectNode;
  * @author Haifeng Li
  */
 public class Command extends Memory {
+    /** The model to execute the command. */
+    private final String model;
+    /** The tools command can use. */
+    private final List<String> allowedTools = new ArrayList<>();
+
     /**
      * Constructor.
      *
@@ -41,10 +50,46 @@ public class Command extends Memory {
      */
     public Command(String content, ObjectNode metadata, Path path) {
         super(content, metadata, path);
+        var node = metadata.get("model");
+        model = node != null ? node.asString() : null;
+
+        node = metadata.get("allowed-tools");
+        if (node instanceof ArrayNode array) {
+            for (var element : array) {
+                allowedTools.add(element.asString());
+            }
+        } else if (node.isString()) {
+            allowedTools.add(node.asString());
+        }
     }
 
     /**
-     * Reads the rule from a file with UTF-8 charset.
+     * Returns the model to execute the command. If missing, the model from
+     * conversation will be used.
+     * @return the model to execute the command.
+     */
+    public Optional<String> model() {
+        return Optional.ofNullable(model);
+    }
+
+    @Override
+    public String description() {
+        var node = metadata.get("description");
+        // If missing, returns the first line of command prompt.
+        return node != null ? node.asString() : content.split("\\n", 2)[0];
+    }
+
+    /**
+     * Returns the tools command can use. If empty, command will inherit all
+     * available tools from conversation permissions.
+     * @return the tools command can use.
+     */
+    public List<String> allowedTools() {
+        return allowedTools;
+    }
+
+    /**
+     * Reads the slash command from a file with UTF-8 charset.
      * @param path the path to the file.
      * @return the rule.
      * @throws IOException if an I/O error occurs reading from the file.
