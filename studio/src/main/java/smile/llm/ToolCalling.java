@@ -21,7 +21,7 @@ import java.util.List;
 /**
  * Tool calling gives models access to new functionality and data
  * that they can use to follow instructions and respond to prompts.
- * A message may involve multiple tool calls.
+ * A tool calling message may involve multiple tool calls.
  * @param message the tool calling message.
  * @param outputs the output of tool calls.
  *
