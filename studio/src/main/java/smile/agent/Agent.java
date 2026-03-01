@@ -320,7 +320,7 @@ public class Agent {
     }
 
     /**
-     * Asynchronously response to a user prompt without conversation history.
+     * Asynchronously responses to a user prompt without conversation history.
      *
      * @param prompt the user prompt of task.
      * @return a future of response.
@@ -328,7 +328,7 @@ public class Agent {
     public CompletableFuture<String> response(String prompt) {
         conversation.add(Message.user(prompt));
 
-        return llm.get().complete(prompt, conversation.params())
+        return llm.get().complete(conversation.prompt(prompt), conversation.params())
                 .handle((response, ex) -> {
                     var message = Optional.ofNullable(ex)
                             .map(t -> Message.error(t.getMessage()))
@@ -339,7 +339,7 @@ public class Agent {
     }
 
     /**
-     * Asynchronously response to a user prompt in a streaming way.
+     * Asynchronously responses to a user prompt in a streaming way.
      *
      * @param prompt  the user prompt of task.
      * @param handler the stream response handler.
