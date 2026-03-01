@@ -18,9 +18,11 @@ package smile.agent;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.function.Supplier;
 import smile.llm.Conversation;
 import smile.llm.client.LLM;
+import smile.llm.tool.*;
 
 /**
  * The data analyst agent.
@@ -35,13 +37,15 @@ public class Analyst extends Agent {
      * @param context the directory path for agent context.
      */
     public Analyst(Supplier<LLM> llm, Path session, Path context) {
-        super(llm, new Conversation(session), new Context(context),
+        super(llm,
+              new Conversation(List.of(Read.class, Write.class, Edit.class, Append.class, Bash.class), session),
+              new Context(context),
               new Context(System.getProperty("user.home") + "/.smile/agents/data-analyst"),
               new Context(System.getProperty("smile.home") + "/agents/data-analyst"));
 
         // low temperature for more predictable, focused, and deterministic plans
-        params().setProperty(LLM.TEMPERATURE, "0.2");
-        params().setProperty(LLM.MAX_OUTPUT_TOKENS, "8192");
+        conversation().params().setProperty(LLM.TEMPERATURE, "0.2");
+        conversation().params().setProperty(LLM.MAX_OUTPUT_TOKENS, "8192");
     }
 
     @Override
@@ -62,12 +66,10 @@ Prioritize technical accuracy and truthfulness over validating the user's belief
     @Override
     public String reminder() {
         return """
-<system-reminder>
 1. Answer the user's query comprehensively.
 2. Prioritize robust methodology, including data cleaning, feature engineering, cross-validation, and proper error handling.
 3. Generate code for the heavy lifting and Markdown files for documenting transforms and insights.
 4. Use the instructions below and the tools available to you to assist the user.
-</system-reminder>
 """;
     }
 

@@ -14,16 +14,21 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.llm;
+package smile.llm.tool;
+
+import java.lang.reflect.Method;
 
 /**
- * The tool call record.
- * @param id the id of tool call.
- * @param name the tool name.
- * @param input the input of tool call.
- * @param output the output of tool call.
+ * Tools enable models to interact with external systems,
+ * such as querying databases, calling APIs, or performing
+ * computations.
  *
  * @author Haifeng Li
  */
-public record ToolCall(String id, String name, Object input, String output) {
+public interface Tool {
+    /** Executes the tool. */
+    String run();
+
+    /** Returns the execution method. */
+    //Method method();
 }

@@ -38,8 +38,8 @@ public class Coder extends Agent {
     public Coder(Supplier<LLM> llm, Path history, Path context) {
         super(llm, history, context);
         // low temperature for more predictable, focused, and deterministic code
-        params().setProperty(LLM.TEMPERATURE, "0.2");
-        params().setProperty(LLM.MAX_OUTPUT_TOKENS, "2048");
+        conversation().params().setProperty(LLM.TEMPERATURE, "0.2");
+        conversation().params().setProperty(LLM.MAX_OUTPUT_TOKENS, "2048");
     }
 
     /**
@@ -58,9 +58,9 @@ public class Coder extends Agent {
                     .replace("{{after}}", after);
 
             // stop at the end of line
-            params().setProperty(LLM.STOP, "\n");
+            conversation().params().setProperty(LLM.STOP, "\n");
             var future = response(prompt);
-            params().remove(LLM.STOP);
+            conversation().params().remove(LLM.STOP);
             return future;
         }
         ).orElse(CompletableFuture.completedFuture("Code completion prompt cannot be found. Check your smile/agents/java-coder/complete.md file."));

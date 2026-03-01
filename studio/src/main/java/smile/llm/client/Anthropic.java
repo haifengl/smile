@@ -82,18 +82,15 @@ public class Anthropic extends LLM {
     /**
      * Returns a chat completion request builder.
      * @param params the request parameters.
-     * @param toolCalls If true, the request will be configured to handle tool calls.
+     * @param tools the tools available for LLM.
      * @return a chat completion request builder.
      */
-    private MessageCreateParams.Builder requestBuilder(Properties params, boolean toolCalls) {
+    private MessageCreateParams.Builder paramsBuilder(Properties params,
+                                                      List<Class<? extends smile.llm.tool.Tool>> tools) {
         var builder = MessageCreateParams.builder().model(model());
 
-        if (toolCalls) {
-            builder.addTool(Read.class)
-                   .addTool(Write.class)
-                   .addTool(Append.class)
-                   .addTool(Edit.class)
-                   .addTool(Bash.class);
+        for (var tool : tools) {
+            builder.addTool(tool);
         }
 
         var temperature = params.getProperty(TEMPERATURE, "");
@@ -127,33 +124,11 @@ public class Anthropic extends LLM {
         return builder;
     }
 
-    /**
-     * Adds the request input to the request builder.
-     * @param message the user message.
-     * @param conversation the conversation history.
-     * @return the updated request builder.
-     */
-    private MessageCreateParams.Builder input(MessageCreateParams.Builder builder,
-                                              String message, List<Message> conversation) {
-        for (var msg : conversation) {
-            switch (msg.role()) {
-                case user -> builder.addUserMessage(msg.content());
-                case assistant -> builder.addAssistantMessage(msg.content());
-                case tool -> builder.addUserMessageOfBetaContentBlockParams(
-                                List.of(BetaContentBlockParam.ofToolResult(BetaToolResultBlockParam.builder()
-                                        .toolUseId(msg.toolCall().id())
-                                        .contentAsJson(msg.toolCall().output())
-                                        .build())));
-            }
-        }
-        builder.addUserMessage(message);
-        return builder;
-    }
-
     @Override
     public CompletableFuture<String> complete(String message, Properties params) {
-        var request = requestBuilder(params, false);
-        return client.beta().messages().create(request.addUserMessage(message).build())
+        var request = paramsBuilder(params, List.of());
+        request.addUserMessage(message);
+        return client.beta().messages().create(request.build())
                 .thenApply(msg -> msg.content().stream()
                         .flatMap(block -> block.text().stream())
                         .map(BetaTextBlock::text)
@@ -161,16 +136,22 @@ public class Anthropic extends LLM {
     }
 
     @Override
-    public void complete(String message, Conversation conversation, Properties params, StreamResponseHandler handler) {
-        MessageCreateParams.Builder request = (MessageCreateParams.Builder) conversation.getRequest();
-        if (request == null) {
-            request = requestBuilder(params, true);
-            conversation.setRequest(input(request, message, conversation.messages()));
-        } else {
-            request.addUserMessage(message);
+    public void complete(String message, Conversation conversation, StreamResponseHandler handler) {
+        var request = paramsBuilder(conversation.params(), conversation.tools());
+        for (var msg : conversation.messages()) {
+            switch (msg.role()) {
+                case user -> request.addUserMessage(msg.content());
+                case assistant -> request.addAssistantMessage(msg.content());
+                case tool -> request.addUserMessageOfBetaContentBlockParams(
+                        List.of(BetaContentBlockParam.ofToolResult(BetaToolResultBlockParam.builder()
+                                .toolUseId(msg.toolCall().id())
+                                .contentAsJson(msg.toolCall().output())
+                                .build())));
+            }
         }
 
-        complete(request, handler);
+        request.addUserMessage(message);
+        complete(request, conversation, handler);
     }
 
     /**
@@ -178,7 +159,7 @@ public class Anthropic extends LLM {
      * @param request the chat completion request builder.
      * @param handler the stream response handler.
      */
-    private void complete(MessageCreateParams.Builder request, StreamResponseHandler handler) {
+    private void complete(MessageCreateParams.Builder request, Conversation conversation, StreamResponseHandler handler) {
         var accumulator = BetaMessageAccumulator.create();
         client.beta().messages().createStreaming(request.build())
                 .subscribe(new AsyncStreamResponse.Handler<>() {
@@ -194,28 +175,39 @@ public class Anthropic extends LLM {
                     @Override
                     public void onComplete(Optional<Throwable> error) {
                         if (error.isEmpty()) {
-                            boolean hasToolCalls = accumulator.message().content().stream()
+                            var completion = accumulator.message();
+                            var usage = completion.usage();
+                            logger.info("Chat completion completed with {} completion tokens and {} prompt tokens",
+                                    usage.outputTokens(), usage.inputTokens());
+
+                            boolean hasToolCalls = completion.content().stream()
                                     .flatMap(block -> block.toolUse().stream())
-                                    .map(toolUse -> request
-                                            // Add a message indicating that the tool use was requested.
-                                            .addAssistantMessageOfBetaContentBlockParams(
-                                                    List.of(BetaContentBlockParam.ofToolUse(BetaToolUseBlockParam.builder()
-                                                            .name(toolUse.name())
-                                                            .id(toolUse.id())
-                                                            .input(toolUse.toParam()._input())
-                                                            .build())))
-                                            // Add a message with the result of the requested tool use.
-                                            .addUserMessageOfBetaContentBlockParams(
-                                                    List.of(BetaContentBlockParam.ofToolResult(BetaToolResultBlockParam.builder()
-                                                            .toolUseId(toolUse.id())
-                                                            .contentAsJson(callTool(toolUse))
-                                                            .build())))
-                                    )
+                                    .map(toolUse -> {
+                                        var input = toolUse._input();
+                                        var output = callTool(toolUse);
+                                        var toolCallMessage = Message.toolCall(new smile.llm.ToolCall(toolUse.id(), toolUse.name(), input, output));
+                                        conversation.add(toolCallMessage);
+
+                                        // Add a message indicating that the tool use was requested.
+                                        request.addAssistantMessageOfBetaContentBlockParams(
+                                                        List.of(BetaContentBlockParam.ofToolUse(BetaToolUseBlockParam.builder()
+                                                                .name(toolUse.name())
+                                                                .id(toolUse.id())
+                                                                .input(toolUse.toParam()._input())
+                                                                .build())))
+                                                // Add a message with the result of the requested tool use.
+                                                .addUserMessageOfBetaContentBlockParams(
+                                                        List.of(BetaContentBlockParam.ofToolResult(BetaToolResultBlockParam.builder()
+                                                                .toolUseId(toolUse.id())
+                                                                .contentAsJson(output)
+                                                                .build())));
+                                        return toolCallMessage;
+                                    })
                                     .anyMatch(s -> true);
 
                             if (hasToolCalls) {
                                 // Continue the conversation after tool calls.
-                                complete(request, handler);
+                                complete(request, conversation, handler);
                             } else {
                                 handler.onComplete(error);
                             }
@@ -231,15 +223,14 @@ public class Anthropic extends LLM {
      * @param tool the tool function to call.
      * @return the tool call result.
      */
-    private Object callTool(BetaToolUseBlock tool) {
+    private String callTool(BetaToolUseBlock tool) {
         return switch (tool.name()) {
             case "Read" -> tool.input(Read.class).run();
             case "Write" -> tool.input(Write.class).run();
             case "Append" -> tool.input(Append.class).run();
             case "Edit" -> tool.input(Edit.class).run();
             case "Bash" -> tool.input(Bash.class).run();
-            default ->
-                    throw new IllegalArgumentException("Unknown tool: " + tool.name());
+            default -> "Error: unsupported tool " + tool.name();
         };
     }
 }

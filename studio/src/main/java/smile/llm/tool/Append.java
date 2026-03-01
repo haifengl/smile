@@ -16,6 +16,7 @@
  */
 package smile.llm.tool;
 
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -33,7 +34,7 @@ Usage:
 - NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
 - Only use emojis if the user explicitly requests it. Avoid writing emojis to files unless asked.
 """)
-public class Append {
+public class Append implements Tool {
     @JsonProperty(required = true)
     @JsonPropertyDescription("The absolute path to the file to append (must be absolute, not relative)")
     public String filePath;
@@ -42,7 +43,7 @@ public class Append {
     @JsonPropertyDescription("The content to append to the file")
     public String content;
 
-    /** Executes the tool. */
+    @Override
     public String run() {
         return appendFile(filePath, content);
     }

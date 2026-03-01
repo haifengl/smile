@@ -25,7 +25,6 @@ import java.util.concurrent.CompletableFuture;
 import com.google.genai.Client;
 import com.google.genai.types.*;
 import smile.llm.Conversation;
-import smile.llm.Message;
 import smile.llm.tool.*;
 
 /**
@@ -76,13 +75,14 @@ public class GoogleGemini extends LLM {
     /**
      * Returns a chat request configuration.
      * @param params the request parameters.
-     * @param toolCalls If true, the request will be configured to handle tool calls.
+     * @param tools the tools available for LLM.
      * @return a chat request configuration.
      */
-    private GenerateContentConfig config(Properties params, boolean toolCalls) {
+    private GenerateContentConfig config(Properties params,
+                                         List<Class<? extends smile.llm.tool.Tool>> tools) {
         // only 1 chat completion choice to generate
         var builder = GenerateContentConfig.builder().candidateCount(1);
-
+/*
         if (toolCalls) {
             List<Tool> tools = new ArrayList<>();
             try {
@@ -102,7 +102,7 @@ public class GoogleGemini extends LLM {
 
             builder.tools(tools);
         }
-
+*/
         var temperature = params.getProperty(TEMPERATURE, "");
         if (!temperature.isBlank()) {
             try {
@@ -135,15 +135,17 @@ public class GoogleGemini extends LLM {
         return builder.build();
     }
 
-    /**
-     * Returns the request input.
-     * @param message the user message.
-     * @param conversation the conversation history.
-     * @return the request input.
-     */
-    private List<Content> input(String message, List<Message> conversation) {
+    @Override
+    public CompletableFuture<String> complete(String message, Properties params) {
+        return client.async.models
+                .generateContent(model(), message, config(params, List.of()))
+                .thenApply(GenerateContentResponse::text);
+    }
+
+    @Override
+    public void complete(String message, Conversation conversation, StreamResponseHandler handler) {
         List<Content> contents = new ArrayList<>();
-        for (var msg : conversation) {
+        for (var msg : conversation.messages()) {
             switch (msg.role()) {
                 case user -> contents.add(Content.builder()
                         .role("user")
@@ -161,34 +163,10 @@ public class GoogleGemini extends LLM {
                 .parts(Part.fromText(message))
                 .build());
 
-        return contents;
-    }
-
-    @Override
-    public CompletableFuture<String> complete(String message, Properties params) {
-        return client.async.models
-                .generateContent(model(), message, config(params, false))
-                .thenApply(GenerateContentResponse::text);
-    }
-
-    @Override
-    public void complete(String message, Conversation conversation, Properties params, StreamResponseHandler handler) {
-        @SuppressWarnings("unchecked")
-        List<Content> request = (List<Content>) conversation.getRequest();
-        if (request == null) {
-            request = input(message, conversation.messages());
-            conversation.setRequest(request);
-        } else {
-            var content = Content.builder().role("user")
-                    .parts(Part.fromText(message))
-                    .build();
-            request.add(content);
-        }
-
+        var params = config(conversation.params(), conversation.tools());
         // To save resources and avoid connection leaks, close the
         // response stream after consumption.
-        try (var stream = client.models
-                .generateContentStream(model(), request, config(params, true))) {
+        try (var stream = client.models.generateContentStream(model(), contents, params)) {
             for (var response : stream) {
                 handler.onNext(response.text());
             }

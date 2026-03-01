@@ -32,7 +32,7 @@ Usage:
 - NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
 - Only use emojis if the user explicitly requests it. Avoid writing emojis to files unless asked.
 """)
-public class Write {
+public class Write implements Tool {
     @JsonProperty(required = true)
     @JsonPropertyDescription("The absolute path to the file to write (must be absolute, not relative)")
     public String filePath;
@@ -41,7 +41,7 @@ public class Write {
     @JsonPropertyDescription("The content to write to the file")
     public String content;
 
-    /** Executes the tool. */
+    @Override
     public String run() {
         return writeFile(filePath, content);
     }

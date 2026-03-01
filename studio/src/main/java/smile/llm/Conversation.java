@@ -24,10 +24,12 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.PropertyNamingStrategies;
 import tools.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import smile.llm.tool.Tool;
 
 /**
  * The conversation session.
@@ -47,18 +49,22 @@ public class Conversation {
             .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL))
             .build();
 
+    /** The parameters for LLM. */
+    private final Properties params = new Properties();
     /** The conversation history. */
     private final List<Message> messages = new ArrayList<>();
+    /** The tools available for LLM. */
+    private final List<Class<? extends Tool>> tools;
     /** The directory path for conversation history and summary. */
     private final Path path;
-    /** The cached request object for the conversation. */
-    private Object request;
 
     /**
      * Constructor. New messages will be saved to history file.
+     * @param tools the tools available for the LLM inference.
      * @param path the directory path for conversations.
      */
-    public Conversation(Path path) {
+    public Conversation(List<Class<? extends Tool>> tools, Path path) {
+        this.tools = tools;
         var formatter = DateTimeFormatter.ofPattern("yyMMddHHmmssSSS");
         String id = formatter.format(LocalDateTime.now());
         path = path.resolve(id);
@@ -71,6 +77,22 @@ public class Conversation {
                 logger.error("Failed to create folder of conversation history", ex);
             }
         }
+    }
+
+    /**
+     * Returns the parameters for LLM.
+     * @return the parameters for LLM.
+     */
+    public Properties params() {
+        return params;
+    }
+
+    /**
+     * Returns the tools available for LLM.
+     * @return the tools available for LLM.
+     */
+    public List<Class<? extends Tool>> tools() {
+        return tools;
     }
 
     /**
@@ -100,7 +122,6 @@ public class Conversation {
      */
     public void clear() {
         messages.clear();
-        request = null; // request caches previous messages.
     }
 
     /**
@@ -115,21 +136,5 @@ public class Conversation {
         } catch (IOException ex) {
             logger.error("Failed to save conversation summary", ex);
         }
-    }
-
-    /**
-     * Returns the cached request for the conversation.
-     * @return the cached request for the conversation.
-     */
-    public Object getRequest() {
-        return request;
-    }
-
-    /**
-     * Sets the cached request for the conversation.
-     * @param request the request for the conversation.
-     */
-    public  void setRequest(Object request) {
-        this.request = request;
     }
 }

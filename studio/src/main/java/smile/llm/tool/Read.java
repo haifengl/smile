@@ -47,7 +47,7 @@ Usage:
 - You will regularly be asked to read screenshots. If the user provides a path to a screenshot, ALWAYS use this tool to view the file at the path. This tool will work with all temporary file paths.
 - If you read a file that exists but has empty contents you will receive a system reminder warning in place of file contents.
 """)
-public class Read {
+public class Read implements Tool {
     @JsonProperty(required = true)
     @JsonPropertyDescription("The absolute path to the file to read")
     public String filePath;
@@ -58,7 +58,7 @@ public class Read {
     @JsonPropertyDescription("The number of lines to read. Only provide if the file is too large to read at once.")
     public int limit = 2000;
 
-    /** Executes the tool. */
+    @Override
     public String run() {
         return readFile(filePath, offset, limit);
     }
@@ -92,7 +92,7 @@ public class Read {
                         return writer.toString();
                     }
                 } else {
-                    AtomicInteger index = new AtomicInteger();
+                    AtomicInteger index = new AtomicInteger(offset);
                     return Files.lines(path)
                             .skip(offset)
                             .limit(limit)

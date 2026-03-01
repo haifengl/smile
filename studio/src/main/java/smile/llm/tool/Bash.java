@@ -69,7 +69,7 @@ Usage notes:
   cd /foo/bar && pytest tests
   </bad-example>
 """)
-public class Bash {
+public class Bash implements Tool {
     @JsonProperty(required = true)
     @JsonPropertyDescription("The command to execute")
     public String command;
@@ -83,7 +83,7 @@ public class Bash {
     @JsonPropertyDescription("Set to true to run this command in the background.")
     boolean runInBackground = false;
 
-    /** Executes the tool. */
+    @Override
     public String run() {
         return runCommand(command, timeout, runInBackground);
     }

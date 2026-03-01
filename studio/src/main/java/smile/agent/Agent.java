@@ -25,7 +25,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import smile.llm.Conversation;
@@ -60,10 +59,6 @@ public class Agent {
      */
     private final Context context;
     /**
-     * The parameters for LLM inference.
-     */
-    private final Properties params = new Properties();
-    /**
      * The conversation session.
      */
     private final Conversation conversation;
@@ -84,7 +79,7 @@ public class Agent {
         this.context = context;
         this.user = user;
         this.global = global;
-        params.setProperty(LLM.SYSTEM_PROMPT, system());
+        conversation.params().setProperty(LLM.SYSTEM_PROMPT, system());
     }
 
     /**
@@ -106,7 +101,9 @@ public class Agent {
      * @param context the directory path for agent context.
      */
     public Agent(Supplier<LLM> llm, Path session, Path context) {
-        this(llm, new Conversation(session), new Context(context));
+        this(llm,
+             new Conversation(List.of(), session),
+             new Context(context));
     }
 
     /**
@@ -147,21 +144,21 @@ public class Agent {
     }
 
     /**
-     * Returns the parameters for LLM inference.
-     *
-     * @return the parameters for LLM inference.
-     */
-    public Properties params() {
-        return params;
-    }
-
-    /**
      * Returns the project instructions.
      *
      * @return the project instructions.
      */
     public String instructions() {
         return context.getInstructions().content();
+    }
+
+    /**
+     * Returns the conversation session.
+     *
+     * @return the conversation session.
+     */
+    public Conversation conversation() {
+        return conversation;
     }
 
     /**
@@ -257,7 +254,9 @@ public class Agent {
     }
 
     /**
-     * Returns the system reminder, which will be injected into the user message.
+     * Returns the system reminder to keep the agent focused, enforce safety,
+     * and guide tool usage, which will be injected into the user message.
+     * These injected messages appear before user messages to prevent drift.
      *
      * @return the system reminder.
      */
@@ -312,7 +311,7 @@ public class Agent {
                         Is directory a git repo: %s
                         Platform: %s
                         OS Version: %s
-                        Current time: %s
+                        Current date time: %s
                         Time zone: %s
                         </env>
                         """,
@@ -330,7 +329,7 @@ public class Agent {
      * Returns the current date and time in ISO-8601 format, truncated to milliseconds.
      */
     private String date() {
-        return Instant.now().truncatedTo(ChronoUnit.MILLIS).toString() + " is the date. ";
+        return Instant.now().truncatedTo(ChronoUnit.MILLIS).toString();
     }
 
     /**
@@ -342,7 +341,7 @@ public class Agent {
     public CompletableFuture<String> response(String prompt) {
         conversation.add(Message.user(prompt));
 
-        return llm.get().complete(prompt, params)
+        return llm.get().complete(prompt, conversation.params())
                 .handle((response, ex) -> {
                     var message = Optional.ofNullable(ex)
                             .map(t -> Message.error(t.getMessage()))
@@ -359,8 +358,7 @@ public class Agent {
      * @param handler the stream response handler.
      */
     public void stream(String prompt, StreamResponseHandler handler) {
-        conversation.add(Message.user(prompt));
-
+        logger.debug("user: {}", prompt);
         StringBuilder sb = new StringBuilder();
         var accumulator = new StreamResponseHandler() {
             @Override
@@ -374,6 +372,7 @@ public class Agent {
                 var response = sb.toString();
                 logger.debug("assistant: {}", response);
 
+                conversation.add(Message.user(prompt));
                 if (ex.isPresent()) {
                     conversation.add(Message.error(ex.get().getMessage()));
                 } else {
@@ -388,14 +387,14 @@ public class Agent {
             }
         };
 
-        String message = reminder();
-        if (message.isBlank()) {
-            message = prompt;
-        } else {
-            message += "\n\n" + prompt;
-        }
+        String reminder = reminder();
+        String message = reminder.isBlank() ? prompt : String.format("""
+<system-reminder>
+%s
+</system-reminder>
+%s
+""", reminder, prompt);
 
-        logger.debug("user: {}", message);
-        llm.get().complete(message, conversation, params, accumulator);
+        llm.get().complete(message, conversation, accumulator);
     }
 }

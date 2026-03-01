@@ -114,9 +114,8 @@ public abstract class LLM {
      * Asynchronously completes a message in a streaming way, with tool calls handling.
      * @param message the user message.
      * @param conversation the conversation history in chronological order.
-     * @param params the request parameters.
      * @param handler the stream response handler.
      */
     public abstract void complete(String message, Conversation conversation,
-                                  Properties params, StreamResponseHandler handler);
+                                  StreamResponseHandler handler);
 }

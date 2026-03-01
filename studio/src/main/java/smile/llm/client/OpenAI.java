@@ -192,19 +192,16 @@ public class OpenAI extends LLM {
     /**
      * Returns a chat completion request builder.
      * @param params the request parameters.
-     * @param toolCalls If true, the request will be configured to handle tool calls.
+     * @param tools the tools available for LLM.
      * @return a chat completion request builder.
      */
-    private ChatCompletionCreateParams.Builder requestBuilder(Properties params, boolean toolCalls) {
+    private ChatCompletionCreateParams.Builder paramsBuilder(Properties params,
+                                                             List<Class<? extends smile.llm.tool.Tool>> tools) {
         // only 1 chat completion choice to generate
         var builder = ChatCompletionCreateParams.builder().model(model()).n(1);
 
-        if (toolCalls) {
-            builder.addTool(Read.class)
-                   .addTool(Write.class)
-                   .addTool(Append.class)
-                   .addTool(Edit.class)
-                   .addTool(Bash.class);
+        for (var tool : tools) {
+            builder.addTool(tool);
         }
 
         var temperature = params.getProperty(TEMPERATURE, "");
@@ -239,48 +236,32 @@ public class OpenAI extends LLM {
         return builder;
     }
 
-    /**
-     * Adds the request input to the request builder.
-     * @param message the user message.
-     * @param conversation the conversation history.
-     * @return the updated request builder.
-     */
-    private ChatCompletionCreateParams.Builder input(ChatCompletionCreateParams.Builder builder,
-                                                     String message, List<Message> conversation) {
-        for (var msg : conversation) {
-            switch (msg.role()) {
-                case user -> builder.addUserMessage(msg.content());
-                case assistant -> builder.addAssistantMessage(msg.content());
-                case tool -> builder.addMessage(ChatCompletionToolMessageParam.builder()
-                        .toolCallId(msg.toolCall().id())
-                        .contentAsJson(msg.toolCall().output())
-                        .build());
-            }
-        }
-        builder.addUserMessage(message);
-        return builder;
-    }
-
     @Override
     public CompletableFuture<String> complete(String message, Properties params) {
-        var request = requestBuilder(params, false);
-        return client.chat().completions().create(request.addUserMessage(message).build())
+        var request = paramsBuilder(params, List.of());
+        request.addUserMessage(message);
+        return client.chat().completions().create(request.build())
                 .thenApply(completion -> completion.choices().stream()
                             .flatMap(choice -> choice.message().content().stream())
                             .collect(Collectors.joining()));
     }
 
     @Override
-    public void complete(String message, Conversation conversation, Properties params, StreamResponseHandler handler) {
-        ChatCompletionCreateParams.Builder request = (ChatCompletionCreateParams.Builder) conversation.getRequest();
-        if (request == null) {
-            request = requestBuilder(params, true);
-            conversation.setRequest(request);
-        } else {
-            request.addUserMessage(message);
+    public void complete(String message, Conversation conversation, StreamResponseHandler handler) {
+        var request =  paramsBuilder(conversation.params(), conversation.tools());
+        for (var msg : conversation.messages()) {
+            switch (msg.role()) {
+                case user -> request.addUserMessage(msg.content());
+                case assistant -> request.addAssistantMessage(msg.content());
+                case tool -> request.addMessage(ChatCompletionToolMessageParam.builder()
+                        .toolCallId(msg.toolCall().id())
+                        .contentAsJson(msg.toolCall().output())
+                        .build());
+            }
         }
 
-        complete(request, handler);
+        request.addUserMessage(message);
+        complete(request, conversation, handler);
     }
 
     /**
@@ -288,7 +269,7 @@ public class OpenAI extends LLM {
      * @param request the chat completion request builder.
      * @param handler the stream response handler.
      */
-    private void complete(ChatCompletionCreateParams.Builder request, StreamResponseHandler handler) {
+    private void complete(ChatCompletionCreateParams.Builder request, Conversation conversation, StreamResponseHandler handler) {
         var accumulator = ChatCompletionAccumulator.create();
         client.chat().completions().createStreaming(request.build())
                 .subscribe(new AsyncStreamResponse.Handler<>() {
@@ -303,24 +284,36 @@ public class OpenAI extends LLM {
                     @Override
                     public void onComplete(Optional<Throwable> error) {
                         if (error.isEmpty()) {
-                            boolean hasToolCalls = accumulator.chatCompletion().choices().stream()
+                            var completion = accumulator.chatCompletion();
+                            completion.usage().ifPresent(usage ->
+                                logger.info("Chat completion completed with {} total tokens, {} completion tokens and {} prompt tokens",
+                                        usage.totalTokens(), usage.completionTokens(), usage.promptTokens()));
+
+                            boolean hasToolCalls = completion.choices().stream()
                                     .map(ChatCompletion.Choice::message)
                                     .peek(request::addMessage)
                                     .flatMap(message -> message.toolCalls().stream().flatMap(Collection::stream))
                                     .map(toolCall -> {
-                                        var func = toolCall.asFunction();
+                                        var tool = toolCall.asFunction();
+                                        var id = tool.id();
+                                        var func = tool.function();
+                                        var input = func.arguments();
+                                        var output = callTool(func);
+                                        var toolCallMessage = Message.toolCall(new smile.llm.ToolCall(id, func.name(), input, output));
+                                        conversation.add(toolCallMessage);
+
                                         // Add the tool call result to the conversation.
                                         request.addMessage(ChatCompletionToolMessageParam.builder()
-                                                .toolCallId(func.id())
-                                                .contentAsJson(callTool(func.function()))
+                                                .toolCallId(id)
+                                                .contentAsJson(output)
                                                 .build());
-                                        return func;
+                                        return toolCallMessage;
                                     })
                                     .anyMatch(s -> true);
 
                             if (hasToolCalls) {
                                 // Continue the conversation after tool calls.
-                                complete(request, handler);
+                                complete(request, conversation, handler);
                             } else {
                                 handler.onComplete(error);
                             }
@@ -336,15 +329,14 @@ public class OpenAI extends LLM {
      * @param tool the tool function to call.
      * @return the tool call result.
      */
-    private Object callTool(ChatCompletionMessageFunctionToolCall.Function tool) {
+    private String callTool(ChatCompletionMessageFunctionToolCall.Function tool) {
         return switch (tool.name()) {
             case "Read" -> tool.arguments(Read.class).run();
             case "Write" -> tool.arguments(Write.class).run();
             case "Append" -> tool.arguments(Append.class).run();
             case "Edit" -> tool.arguments(Edit.class).run();
             case "Bash" -> tool.arguments(Bash.class).run();
-            default ->
-                throw new IllegalArgumentException("Unknown tool: " + tool.name());
+            default -> "Error: unsupported tool " + tool.name();
         };
     }
 }

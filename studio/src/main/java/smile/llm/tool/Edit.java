@@ -33,7 +33,7 @@ Usage:
 - The edit will FAIL if `old_string` is not unique in the file. Either provide a larger string with more surrounding context to make it unique or use `replace_all` to change every instance of `old_string`.
 - Use `replace_all` for replacing and renaming strings across the file. This parameter is useful if you want to rename a variable for instance.
 """)
-public class Edit {
+public class Edit implements Tool {
     @JsonProperty(required = true)
     @JsonPropertyDescription("The absolute path to the file to modify (must be absolute, not relative)")
     public String filePath;
@@ -49,7 +49,7 @@ public class Edit {
     @JsonPropertyDescription("Replace all occurrences of old_string (default false)")
     public boolean replaceAll = false;
 
-    /** Executes the tool. */
+    @Override
     public String run() {
         return editFile(filePath, oldString, newString, replaceAll);
     }
