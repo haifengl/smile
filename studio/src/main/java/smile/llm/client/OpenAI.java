@@ -194,12 +194,12 @@ public class OpenAI extends LLM {
      * @return a chat completion request builder.
      */
     private ChatCompletionCreateParams.Builder paramsBuilder(Properties params,
-                                                             List<Class<? extends smile.llm.tool.Tool>> tools) {
+                                                             List<ToolSpec> tools) {
         // only 1 chat completion choice to generate
         var builder = ChatCompletionCreateParams.builder().model(model()).n(1);
 
         for (var tool : tools) {
-            builder.addTool(tool);
+            builder.addTool(tool.clazz());
         }
 
         var temperature = params.getProperty(TEMPERATURE, "");

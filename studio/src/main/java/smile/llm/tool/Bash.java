@@ -16,6 +16,7 @@
  */
 package smile.llm.tool;
 
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -95,5 +96,19 @@ public class Bash implements Tool {
             output = output.substring(0, 30000) + "\n[Output truncated due to length]";
         }
         return output;
+    }
+
+    /**
+     * The specification for Bash tool.
+     * @return the tool specification.
+     */
+    public static ToolSpec spec() {
+        try {
+            return new ToolSpec(Append.class,
+                    List.of(Bash.class.getMethod("runCommand", String.class, int.class, boolean.class)));
+        } catch (Exception e) {
+            System.err.println("Failed to load ToolSpec: " + e.getMessage());
+        }
+        return new ToolSpec(Append.class, null);
     }
 }

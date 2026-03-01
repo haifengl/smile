@@ -18,6 +18,7 @@ package smile.llm.tool;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -70,5 +71,19 @@ public class Edit implements Tool {
         } catch (Exception e) {
             return String.format("Failed to edit file '%s': %s", filePath, e.getMessage());
         }
+    }
+
+    /**
+     * The specification for Edit tool.
+     * @return the tool specification.
+     */
+    public static ToolSpec spec() {
+        try {
+            return new ToolSpec(Append.class,
+                    List.of(Edit.class.getMethod("editFile", String.class, String.class, String.class, boolean.class)));
+        } catch (Exception e) {
+            System.err.println("Failed to load ToolSpec: " + e.getMessage());
+        }
+        return new ToolSpec(Append.class, null);
     }
 }

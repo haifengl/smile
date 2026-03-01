@@ -26,11 +26,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import smile.llm.tool.ToolSpec;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.PropertyNamingStrategies;
 import tools.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import smile.llm.tool.Tool;
 
 /**
  * The conversation session.
@@ -57,7 +57,8 @@ public class Conversation {
     /** The directory path for conversation history and summary. */
     private final Path path;
     /** The tools available for LLM. */
-    private List<Class<? extends Tool>> tools;
+    private List<ToolSpec> tools;
+    /** The optional system reminder to keep the AI focused, enforce safety, and guide tool usage. */
     private String reminder;
 
     /**
@@ -91,7 +92,7 @@ public class Conversation {
      * Returns the tools available for LLM.
      * @return the tools available for LLM.
      */
-    public List<Class<? extends Tool>> tools() {
+    public List<ToolSpec> tools() {
         return tools;
     }
 
@@ -100,7 +101,7 @@ public class Conversation {
      * @param tools the tools available for LLM.
      * @return this object.
      */
-    public Conversation withTools(List<Class<? extends Tool>> tools) {
+    public Conversation withTools(List<ToolSpec> tools) {
         this.tools = tools;
         return this;
     }

@@ -41,7 +41,7 @@ public class Analyst extends Agent {
               new Context(System.getProperty("user.home") + "/.smile/agents/data-analyst"),
               new Context(System.getProperty("smile.home") + "/agents/data-analyst"));
 
-        var tools = List.of(Read.class, Write.class, Edit.class, Append.class, Bash.class);
+        var tools = List.of(Read.spec(), Write.spec(), Edit.spec(), Append.spec(), Bash.spec());
         conversation().withTools(tools);
         conversation().withReminder("""
 1. Answer the user's query comprehensively.

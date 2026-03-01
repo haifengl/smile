@@ -87,11 +87,11 @@ public class Anthropic extends LLM {
      * @return a chat completion request builder.
      */
     private MessageCreateParams.Builder paramsBuilder(Properties params,
-                                                      List<Class<? extends smile.llm.tool.Tool>> tools) {
+                                                      List<ToolSpec> tools) {
         var builder = MessageCreateParams.builder().model(model());
 
         for (var tool : tools) {
-            builder.addTool(tool);
+            builder.addTool(tool.clazz());
         }
 
         var temperature = params.getProperty(TEMPERATURE, "");

@@ -16,10 +16,10 @@
  */
 package smile.llm.tool;
 
-import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -61,5 +61,19 @@ public class Append implements Tool {
         } catch (Exception e) {
             return String.format("Failed to append file '%s': %s", filePath, e.getMessage());
         }
+    }
+
+    /**
+     * The specification for Append tool.
+     * @return the tool specification.
+     */
+    public static ToolSpec spec() {
+        try {
+            return new ToolSpec(Append.class,
+                    List.of(Append.class.getMethod("appendFile", String.class, String.class)));
+        } catch (Exception e) {
+            System.err.println("Failed to load ToolSpec: " + e.getMessage());
+        }
+        return new ToolSpec(Append.class, null);
     }
 }

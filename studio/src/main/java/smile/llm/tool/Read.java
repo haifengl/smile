@@ -107,4 +107,18 @@ public class Read implements Tool {
 
         return String.format("Error: File '%s' does not exist.", filePath);
     }
+
+    /**
+     * The specification for Read tool.
+     * @return the tool specification.
+     */
+    public static ToolSpec spec() {
+        try {
+            return new ToolSpec(Append.class,
+                    List.of(Read.class.getMethod("readFile", String.class, int.class, int.class)));
+        } catch (Exception e) {
+            System.err.println("Failed to load ToolSpec: " + e.getMessage());
+        }
+        return new ToolSpec(Append.class, null);
+    }
 }

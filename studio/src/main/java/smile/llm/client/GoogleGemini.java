@@ -25,6 +25,7 @@ import com.google.genai.Client;
 import com.google.genai.types.*;
 import smile.llm.Conversation;
 import smile.llm.Message;
+import smile.llm.tool.ToolSpec;
 
 /**
  * Google Gemini.
@@ -78,31 +79,16 @@ public class GoogleGemini extends LLM {
      * @return a chat request configuration.
      */
     private GenerateContentConfig config(Properties params,
-                                         List<Class<? extends smile.llm.tool.Tool>> tools) {
+                                         List<ToolSpec> tools) {
         // only 1 chat completion choice to generate
         var builder = GenerateContentConfig.builder().candidateCount(1);
 
-/*
-        if (toolCalls) {
-            List<Tool> tools = new ArrayList<>();
-            try {
-                Method readFile = Read.class.getMethod("readFile", String.class, int.class, int.class);
-                Method writeFile = Write.class.getMethod("writeFile", String.class, String.class);
-                Method appendFile = Append.class.getMethod("appendFile", String.class, String.class);
-                Method editFile = Edit.class.getMethod("editFile", String.class, String.class, String.class, boolean.class);
-                Method runCommand = Bash.class.getMethod("runCommand", String.class, int.class, boolean.class);
-                tools.add(Tool.builder().functions(readFile).build());
-                tools.add(Tool.builder().functions(writeFile).build());
-                tools.add(Tool.builder().functions(appendFile).build());
-                tools.add(Tool.builder().functions(editFile).build());
-                tools.add(Tool.builder().functions(runCommand).build());
-            } catch (NoSuchMethodException | SecurityException e) {
-                logger.error("Failed to get method: {}", e.getMessage());
-            }
-
-            builder.tools(tools);
+        if (!tools.isEmpty()) {
+            builder.tools(tools.stream()
+                    .map(tool -> Tool.builder().functions(tool.methods()).build())
+                    .toList());
         }
-*/
+
         var temperature = params.getProperty(TEMPERATURE, "");
         if (!temperature.isBlank()) {
             try {
