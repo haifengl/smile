@@ -82,13 +82,14 @@ libraryDependencies ++= Seq(
   "com.anthropic"     % "anthropic-java"     % "2.15.0",
   "com.google.genai"  % "google-genai"       % "1.41.0",
   "org.commonmark"    % "commonmark"         % "0.27.1",
-  "org.xhtmlrenderer" % "flying-saucer-core" % "10.0.6",
-  "com.fifesoft"      % "rsyntaxtextarea"    % "3.6.1",
+  "org.xhtmlrenderer" % "flying-saucer-core" % "10.0.7",
+  "com.fifesoft"      % "rsyntaxtextarea"    % "3.6.2",
   "com.formdev"       % "flatlaf"            % "3.7",
   "com.formdev"       % "flatlaf-fonts-jetbrains-mono" % "2.304",
   "org.apache.maven"  % "maven-resolver-provider" % "3.9.12",
-  "org.apache.maven.resolver" % "maven-resolver-supplier-mvn4" % "2.0.16",
-  "tools.jackson.dataformat"  % "jackson-dataformat-yaml" % "3.1.0"
+  "org.apache.maven.resolver"   % "maven-resolver-supplier-mvn4" % "2.0.16",
+  "tools.jackson.dataformat"    % "jackson-dataformat-yaml" % "3.1.0",
+  "io.modelcontextprotocol.sdk" % "mcp" % "1.0.0"
 )
 
 libraryDependencies ++= {

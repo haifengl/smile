@@ -35,9 +35,9 @@ import tools.jackson.databind.node.ObjectNode;
  */
 public class Rule extends Memory {
     /** If true, forces the rule to be applied regardless of the context. */
-    private final boolean alwaysApply;
+    final boolean alwaysApply;
     /** The file patterns where this rule applies. */
-    private final List<String> globs;
+    final List<String> globs = new ArrayList<>();
 
     /**
      * Constructor.
@@ -50,22 +50,18 @@ public class Rule extends Memory {
     public Rule(String content, ObjectNode metadata, Path path) {
         super(content, metadata, path);
 
-        var node = metadata.get("alwaysApply");
-        alwaysApply = node != null && node.asBoolean();
-
-        node = metadata.get("globs");
+        var node = metadata.get("globs");
         if (node == null) node = metadata.get("paths");
-        if (node == null) {
-            globs = List.of();
-        } else if (node instanceof ArrayNode array) {
-            List<String> list = new ArrayList<>();
+        if (node instanceof ArrayNode array) {
             for (var element : array) {
-                list.add(element.asString());
+                globs.add(element.asString());
             }
-            globs = list;
-        } else {
-            globs = List.of(node.asString());
+        } else if (node.isString()) {
+            globs.add(node.asString());
         }
+
+        node = metadata.get("alwaysApply");
+        alwaysApply = node != null ? node.asBoolean() : globs.isEmpty();
     }
 
     /**

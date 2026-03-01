@@ -19,6 +19,7 @@ package smile.agent;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
 import tools.jackson.databind.node.ObjectNode;
@@ -50,6 +51,7 @@ public class Skill extends Memory {
      *                such as Markdown for readability and simplicity.
      * @param metadata the metadata of content as key-value pairs.
      * @param scripts the executable scripts that run via bash.
+     * @param references the reference documents.
      * @param path the file path of the skill folder.
      */
     public Skill(String content,
@@ -81,6 +83,22 @@ public class Skill extends Memory {
     }
 
     /**
+     * Returns the executable scripts that run via bash.
+     * @return the executable scripts that run via bash.
+     */
+    public Collection<Path> scripts() {
+        return scripts.values();
+    }
+
+    /**
+     * Returns the reference documents.
+     * @return the reference documents.
+     */
+    public Collection<Path> references() {
+        return references.values();
+    }
+
+    /**
      * Reads the skill from a folder with UTF-8 charset.
      * @param path the path to the skill folder.
      * @return the skill.
@@ -88,6 +106,15 @@ public class Skill extends Memory {
      */
     public static Skill from(Path path) throws IOException {
         Memory memory = Memory.from(path.resolve("SKILL.md"));
+
+        if (memory.metadata().get("name") == null) {
+            throw new IOException("The 'name' field is missing in skill " + path);
+        }
+
+        if (memory.metadata().get("description") == null) {
+            throw new IOException("The 'description' field is missing in skill " + path);
+        }
+
         Map<String, Path> scripts = Map.of();
         var scriptDir = path.resolve("scripts");
         if (Files.exists(scriptDir)) {

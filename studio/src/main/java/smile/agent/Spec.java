@@ -16,9 +16,12 @@
  */
 package smile.agent;
 
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Specs (Specifications) are the documents that define the requirements,
@@ -29,15 +32,73 @@ import java.nio.file.Path;
  *
  * @author Haifeng Li
  */
-public record Spec(String content) {
+public class Spec extends Memory {
+    /** If true, forces the spec to be applied regardless of the context. */
+    final boolean alwaysApply;
+    /** The file patterns where this spec applies. */
+    final List<String> globs = new ArrayList<>();
+
     /**
-     * Reads the specification from a file with UTF-8 charset.
+     * Constructor.
+     *
+     * @param content  the main content, which may be in structured format
+     *                 such as Markdown for readability and simplicity.
+     * @param metadata the metadata of content as key-value pairs.
+     * @param path     the file path of the persistent memory.
+     */
+    public Spec(String content, ObjectNode metadata, Path path) {
+        super(content, metadata, path);
+
+        var node = metadata.get("globs");
+        if (node == null) node = metadata.get("paths");
+        if (node instanceof ArrayNode array) {
+            for (var element : array) {
+                globs.add(element.asString());
+            }
+        } else if (node.isString()) {
+            globs.add(node.asString());
+        }
+
+        node = metadata.get("alwaysApply");
+        alwaysApply = node != null && node.asBoolean();
+    }
+
+    /**
+     * Returns the file patterns where this rule applies.
+     *
+     * @return the file patterns.
+     */
+    public List<String> globs() {
+        return globs;
+    }
+
+    /**
+     * Returns a boolean that, if true, forces the rule to be
+     * applied regardless of the context.
+     *
+     * @return the flag if enforcing the rule.
+     */
+    public boolean alwaysApply() {
+        return alwaysApply;
+    }
+
+    /**
+     * Reads the spec from a file with UTF-8 charset.
+     *
      * @param path the path to the file.
-     * @return the specification.
+     * @return the spec.
      * @throws IOException if an I/O error occurs reading from the file.
      */
     public static Spec from(Path path) throws IOException {
-        String content = Files.readString(path);
-        return new Spec(content);
+        Memory memory = Memory.from(path);
+        if (memory.metadata().get("name") == null) {
+            throw new IOException("The 'name' field is missing in spec " + path);
+        }
+
+        if (memory.metadata().get("description") == null) {
+            throw new IOException("The 'description' field is missing in spec " + path);
+        }
+
+        return new Spec(memory.content(), memory.metadata(), path);
     }
 }

@@ -37,6 +37,8 @@ import tools.jackson.databind.node.ObjectNode;
 public class Command extends Memory {
     /** The model to execute the command. */
     private final String model;
+    /** argument-hint. */
+    private final String hint;
     /** The tools command can use. */
     private final List<String> allowedTools = new ArrayList<>();
 
@@ -52,6 +54,9 @@ public class Command extends Memory {
         super(content, metadata, path);
         var node = metadata.get("model");
         model = node != null ? node.asString() : null;
+
+        node = metadata.get("argument-hint");
+        hint = node != null ? node.asString() : null;
 
         node = metadata.get("allowed-tools");
         if (node instanceof ArrayNode array) {
@@ -70,6 +75,20 @@ public class Command extends Memory {
      */
     public Optional<String> model() {
         return Optional.ofNullable(model);
+    }
+
+    /// Returns the expected arguments from users.
+    ///
+    /// **Best practices:**
+    /// - Use square brackets `[]` for each argument
+    /// - Use descriptive names (not `arg1`, `arg2`)
+    /// - Indicate optional vs required in description
+    /// - Match order to positional arguments in command
+    /// - Keep concise but clear
+    ///
+    /// @return the expected arguments from users.
+    public Optional<String> hint() {
+        return Optional.ofNullable(hint);
     }
 
     @Override

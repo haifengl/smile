@@ -171,14 +171,12 @@ public class Memory {
             metadata = (ObjectNode) mapper.readTree(sb.toString());
         }
 
-        StringBuilder sb = new StringBuilder();
+        StringBuilder content = new StringBuilder();
         for (i++; i < lines.size(); i++) {
-            sb.append(lines.get(i));
-            sb.append("\n");
+            content.append(lines.get(i));
+            content.append("\n");
         }
-        String content = sb.toString();
-        final String delimiter = line;
 
-        return new Memory(content, metadata, path);
+        return new Memory(content.toString(), metadata, path);
     }
 }
