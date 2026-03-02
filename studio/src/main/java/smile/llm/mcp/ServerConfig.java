@@ -16,12 +16,14 @@
  */
 package smile.llm.mcp;
 
+import java.time.Duration;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.modelcontextprotocol.client.McpSyncClient;
 import io.modelcontextprotocol.json.McpJsonDefaults;
 import io.modelcontextprotocol.json.McpJsonMapper;
-import io.modelcontextprotocol.spec.McpTransport;
+import io.modelcontextprotocol.spec.McpClientTransport;
 
 /**
  * Sealed interface representing a single MCP server entry inside the
@@ -57,6 +59,23 @@ public sealed interface ServerConfig permits StdioServerConfig, HttpServerConfig
      */
     boolean disabled();
 
-    /** Returns the transport configuration for this server. */
-    McpTransport transport();
+    /**
+     * Returns the client transport configuration for this server.
+     * @return the client transport configuration for this server.
+     */
+    McpClientTransport transport();
+
+    /**
+     * Creates and initializes a new client for this server.
+     * @return the initialized MCP client connected to this server.
+     */
+    default McpClient client() {
+        // Create a sync client with custom configuration
+        McpSyncClient client = io.modelcontextprotocol.client.McpClient.sync(transport())
+                .requestTimeout(Duration.ofSeconds(60))
+                .build();
+
+        client.initialize();
+        return new McpClient(client);
+    }
 }

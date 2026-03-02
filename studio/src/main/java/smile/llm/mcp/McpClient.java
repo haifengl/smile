@@ -16,12 +16,9 @@
  */
 package smile.llm.mcp;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
+import io.modelcontextprotocol.client.McpSyncClient;
+import io.modelcontextprotocol.spec.McpSchema;
 
 /**
  * MCP (Model Context Protocol) client that manages connections to one or more
@@ -38,84 +35,55 @@ import java.util.Map;
 public class McpClient implements AutoCloseable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(McpClient.class);
 
-    /** The parsed MCP configuration. */
-    private final McpConfig config;
-    /** The active server connections. */
-    private final List<McpServer> servers;
+    /** The sync MCP client. */
+    private final McpSyncClient client;
 
     /**
-     * Creates an {@code McpClient} from the given configuration.
+     * Constructor.
      *
-     * @param config the MCP configuration.
+     * @param client a sync MCP client.
      */
-    public McpClient(McpConfig config) {
-        this.config = config;
-        this.servers = new ArrayList<>();
+    public McpClient(McpSyncClient client) {
+        this.client = client;
+    }
+
+    /** List available tools. */
+    public McpSchema.ListToolsResult tools() {
+        return client.listTools();
+    }
+
+    /** List available resources. */
+    public McpSchema.ListResourcesResult resources() {
+        return client.listResources();
     }
 
     /**
-     * Parses the given configuration file and returns a new {@code McpClient}.
-     *
-     * @param path path to the MCP JSON configuration file.
-     * @return a new {@code McpClient} instance.
-     * @throws IOException if the configuration file cannot be read or parsed.
+     * Reads a resource.
+     * @param uri the URI of the resource to read.
+     * @return the result of the read resource request.
      */
-    public static McpClient of(Path path) throws IOException {
-        return new McpClient(McpConfig.parse(path));
+    public McpSchema.ReadResourceResult resource(String uri) {
+        return client.readResource(new McpSchema.ReadResourceRequest(uri));
+    }
+
+    /** List available prompts. */
+    public McpSchema.ListPromptsResult prompts() {
+        return client.listPrompts();
     }
 
     /**
-     * Returns the parsed MCP configuration.
-     *
-     * @return the {@link McpConfig}.
+     * Gets a prompt.
+     * @param name the name of prompt template.
+     * @param arguments the arguments to customize prompt.
      */
-    public McpConfig config() {
-        return config;
-    }
-
-    /**
-     * Connects to all enabled servers declared in the configuration and
-     * returns the list of active {@link McpServer} connections.
-     *
-     * @return an unmodifiable list of connected {@link McpServer} instances.
-     * @throws IOException if any server fails to connect.
-     */
-    public List<McpServer> connect() throws IOException {
-        servers.clear();
-        for (Map.Entry<String, ServerConfig> entry : config.enabledServers().entrySet()) {
-            String name = entry.getKey();
-            ServerConfig cfg = entry.getValue();
-            try {
-                McpServer server = McpServer.connect(name, cfg);
-                servers.add(server);
-                logger.info("Connected to MCP server '{}'", name);
-            } catch (IOException ex) {
-                logger.error("Failed to connect to MCP server '{}'", name, ex);
-                throw ex;
-            }
-        }
-        return Collections.unmodifiableList(servers);
-    }
-
-    /**
-     * Returns the currently active server connections. Call {@link #connect()}
-     * first to populate this list.
-     *
-     * @return an unmodifiable list of active {@link McpServer} instances.
-     */
-    public List<McpServer> servers() {
-        return Collections.unmodifiableList(servers);
+    public McpSchema.GetPromptResult prompt(String name, Map<String, Object> arguments) {
+         return client.getPrompt(
+                new McpSchema.GetPromptRequest(name, arguments)
+        );
     }
 
     @Override
     public void close() {
-        for (McpServer server : servers) {
-            try {
-                server.close();
-            } catch (Exception ex) {
-                logger.warn("Error closing MCP server '{}'", server.name(), ex);
-            }
-        }
-        servers.clear();
+        client.closeGracefully();
     }
 }

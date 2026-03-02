@@ -30,11 +30,6 @@ public enum ServerType {
      */
     STDIO("stdio"),
     /**
-     * Server-Sent Events transport. The client connects to a remote server
-     * over HTTP using SSE for server-to-client streaming.
-     */
-    SSE("sse"),
-    /**
      * Streamable HTTP transport (MCP 2025-03-26 spec). The client connects
      * to a remote server over HTTP with optional streaming.
      */

@@ -21,7 +21,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.modelcontextprotocol.client.transport.ServerParameters;
 import io.modelcontextprotocol.client.transport.StdioClientTransport;
-import io.modelcontextprotocol.spec.McpTransport;
+import io.modelcontextprotocol.spec.McpClientTransport;
 import smile.util.OS;
 
 /**
@@ -79,7 +79,7 @@ public record StdioServerConfig(
     public record WindowsOverride(String command, List<String> args) {}
 
     @Override
-    public McpTransport transport() {
+    public McpClientTransport transport() {
         var params = ServerParameters.builder(command);
         if (args != null) params.args(args);
 

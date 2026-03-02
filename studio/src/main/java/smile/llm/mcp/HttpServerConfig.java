@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.modelcontextprotocol.client.transport.HttpClientStreamableHttpTransport;
+import io.modelcontextprotocol.spec.McpClientTransport;
 import io.modelcontextprotocol.spec.McpTransport;
 
 /**
@@ -66,7 +67,7 @@ public record HttpServerConfig(
         boolean disabled) implements ServerConfig, Consumer<HttpRequest.Builder> {
 
     @Override
-    public McpTransport transport() {
+    public McpClientTransport transport() {
         return HttpClientStreamableHttpTransport
                 .builder(url)
                 .endpoint("") // override the default endpoint /mcp
