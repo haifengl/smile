@@ -19,6 +19,10 @@ package smile.llm.mcp;
 import java.util.List;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.modelcontextprotocol.client.transport.ServerParameters;
+import io.modelcontextprotocol.client.transport.StdioClientTransport;
+import io.modelcontextprotocol.spec.McpTransport;
+import smile.util.OS;
 
 /**
  * Configuration for an MCP server that uses the {@code stdio} transport.
@@ -45,8 +49,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  * @param args     Optional command-line arguments passed to the executable.
  * @param env      Optional environment variables to set for the subprocess.
  *                 Values may reference input variables as {@code ${input:id}}.
- * @param envFile  Optional path to a {@code .env} file whose variables are
- *                 merged into the subprocess environment.
  * @param windows  Optional Windows-specific override for {@code command} and
  *                 {@code args}, applied only when running on Windows.
  * @param inputs   Optional list of input variable definitions used to resolve
@@ -61,7 +63,6 @@ public record StdioServerConfig(
         String command,
         List<String> args,
         Map<String, String> env,
-        String envFile,
         WindowsOverride windows,
         List<McpInput> inputs,
         boolean disabled) implements ServerConfig {
@@ -76,5 +77,19 @@ public record StdioServerConfig(
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record WindowsOverride(String command, List<String> args) {}
-}
 
+    @Override
+    public McpTransport transport() {
+        var params = ServerParameters.builder(command);
+        if (args != null) params.args(args);
+
+        // Apply Windows-specific override when running on Windows.
+        if (OS.isWindows() && windows != null) {
+            params = ServerParameters.builder(windows.command);
+            if (windows.args() != null) params.args(windows.args());
+        }
+
+        if (env != null) params.env(env);
+        return new StdioClientTransport(params.build(), JSON_MAPPER);
+    }
+}

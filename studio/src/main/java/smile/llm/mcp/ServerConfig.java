@@ -19,6 +19,9 @@ package smile.llm.mcp;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.modelcontextprotocol.json.McpJsonDefaults;
+import io.modelcontextprotocol.json.McpJsonMapper;
+import io.modelcontextprotocol.spec.McpTransport;
 
 /**
  * Sealed interface representing a single MCP server entry inside the
@@ -39,6 +42,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
         @JsonSubTypes.Type(value = HttpServerConfig.class,  name = "http")
 })
 public sealed interface ServerConfig permits StdioServerConfig, HttpServerConfig {
+    /** The JSON mapper for MCP serialization/deserialization. */
+    McpJsonMapper JSON_MAPPER = McpJsonDefaults.getMapper();
 
     /** Returns the transport type of this server. */
     ServerType type();
@@ -51,4 +56,7 @@ public sealed interface ServerConfig permits StdioServerConfig, HttpServerConfig
      * A disabled server is not started or connected by the MCP client.
      */
     boolean disabled();
+
+    /** Returns the transport configuration for this server. */
+    McpTransport transport();
 }

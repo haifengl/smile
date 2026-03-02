@@ -16,9 +16,13 @@
  */
 package smile.llm.mcp;
 
+import java.net.http.HttpRequest;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.modelcontextprotocol.client.transport.HttpClientStreamableHttpTransport;
+import io.modelcontextprotocol.spec.McpTransport;
 
 /**
  * Configuration for an MCP server that uses the {@code sse} or {@code http}
@@ -59,5 +63,21 @@ public record HttpServerConfig(
         String url,
         Map<String, String> headers,
         List<McpInput> inputs,
-        boolean disabled) implements ServerConfig {
+        boolean disabled) implements ServerConfig, Consumer<HttpRequest.Builder> {
+
+    @Override
+    public McpTransport transport() {
+        return HttpClientStreamableHttpTransport
+                .builder(url)
+                .endpoint("") // override the default endpoint /mcp
+                .customizeRequest(this)
+                .build();
+    }
+
+    @Override
+    public void accept(HttpRequest.Builder builder) {
+        if (headers != null) {
+            headers.forEach(builder::header);
+        }
+    }
 }
