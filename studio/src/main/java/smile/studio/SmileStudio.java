@@ -691,17 +691,19 @@ public class SmileStudio extends JFrame {
             System.exit(1);
         }
 
-        // Starts MCP services
-        try {
-            var path = Path.of(System.getProperty("smile.home"), "agents", "/mcp.json");
-            if (Files.exists(path)) MCP.connect(path);
-            path = Path.of(System.getProperty("user.home"), ".smile", "/mcp.json");
-            if (Files.exists(path)) MCP.connect(path);
-            path = Path.of(System.getProperty("user.dir"), ".smile", "/mcp.json");
-            if (Files.exists(path)) MCP.connect(path);
-        } catch (Throwable ex) {
-            System.out.println("Failed to start MCP services: " + ex.getMessage());
-        }
+        // Starts MCP services in background
+        new Thread(() -> {
+            try {
+                var path = Path.of(System.getProperty("smile.home"), "agents", "/mcp.json");
+                if (Files.exists(path)) MCP.connect(path);
+                path = Path.of(System.getProperty("user.home"), ".smile", "/mcp.json");
+                if (Files.exists(path)) MCP.connect(path);
+                path = Path.of(System.getProperty("user.dir"), ".smile", "/mcp.json");
+                if (Files.exists(path)) MCP.connect(path);
+            } catch (Throwable ex) {
+                System.out.println("Failed to start MCP services: " + ex.getMessage());
+            }
+        }).start();
 
         // Schedule a job for the event dispatch thread:
         // creating and showing this application's GUI.

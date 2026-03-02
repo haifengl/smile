@@ -1,0 +1,22 @@
+{
+  "servers": {
+    "markitdown": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "markitdown-mcp-npx"],
+      "windows": {
+        "command": "cmd.exe",
+        "args": ["/c", "npx", "-y", "markitdown-mcp-npx"]
+      }
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"],
+      "windows": {
+        "command": "cmd.exe",
+        "args": ["/c", "npx", "-y", "@playwright/mcp@latest"]
+      }
+    }
+  }
+}

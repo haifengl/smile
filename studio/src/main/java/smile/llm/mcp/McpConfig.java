@@ -18,13 +18,10 @@ package smile.llm.mcp;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import tools.jackson.databind.DeserializationFeature;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.PropertyNamingStrategies;
-import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Represents a parsed MCP (Model Context Protocol) configuration file.
@@ -67,6 +64,7 @@ import tools.jackson.databind.json.JsonMapper;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record McpConfig(Map<String, McpServerConfig> servers, List<McpInput> inputs) {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(McpConfig.class);
 
     /**
      * Parses an MCP configuration file.
@@ -85,10 +83,20 @@ public record McpConfig(Map<String, McpServerConfig> servers, List<McpInput> inp
      * @return an unmodifiable map of enabled server name to its client.
      */
     public List<McpClient> connect() {
-        if (servers == null) return List.of();
-        return servers.entrySet().stream()
-                .filter(e -> !e.getValue().disabled())
-                .map(entry -> McpClient.connect(entry.getKey(), entry.getValue()))
-                .toList();
+        List<McpClient> clients = new ArrayList<>();
+        if (servers != null) {
+            for (var entry : servers.entrySet()) {
+                var name = entry.getKey();
+                var server = entry.getValue();
+                if (!server.disabled()) {
+                    try {
+                        clients.add(McpClient.connect(name, server));
+                    } catch (Throwable ex) {
+                        logger.error("Failed to connect to MCP server '{}'", name, ex);
+                    }
+                }
+            }
+        }
+        return clients;
     }
 }

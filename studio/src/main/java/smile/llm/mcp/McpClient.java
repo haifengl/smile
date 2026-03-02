@@ -77,8 +77,13 @@ public class McpClient implements AutoCloseable {
                     return new McpToolSpec(tool.name(), tool.description(), schema);
                 })
                 .toList();
-        this.resources = client.listResources().resources().stream().toList();
-        this.prompts = client.listPrompts().prompts();
+
+        var capabilities = client.getServerCapabilities();
+        this.resources = capabilities.resources() != null ?
+            client.listResources().resources().stream().toList() : List.of();
+
+        this.prompts = capabilities.resources() != null ?
+                client.listPrompts().prompts() : List.of();
     }
 
     /**
@@ -93,7 +98,8 @@ public class McpClient implements AutoCloseable {
                 .requestTimeout(Duration.ofSeconds(60))
                 .build();
 
-        client.initialize();
+        logger.info("Connecting to MCP server: {}", name);
+        var result = client.initialize();
         return new McpClient(name, server, client);
     }
 
