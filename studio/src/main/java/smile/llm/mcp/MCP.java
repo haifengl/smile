@@ -73,7 +73,11 @@ public class MCP {
     public static String call(String tool, String arguments) {
         var client = tools.get(tool);
         if (client == null) return "Error: unknown tool " + tool;
-        return client.call(tool, MAPPER.readValue(arguments, MAP_TYPE_REF));
+        try {
+            return client.call(tool, MAPPER.readValue(arguments, MAP_TYPE_REF));
+        } catch (Exception ex) {
+            return "Error: tool calling exception " + ex.getMessage();
+        }
     }
 
     /** Returns the available clients. */

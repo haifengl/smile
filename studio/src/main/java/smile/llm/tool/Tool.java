@@ -22,7 +22,6 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import tools.jackson.databind.JsonNode;
 
 /**
  * Tools enable models to interact with external systems,
@@ -59,7 +58,7 @@ public interface Tool {
             @JsonProperty("type")
             String type,
             @JsonProperty("properties")
-            Map<String, JsonNode> properties,
+            Map<String, Object> properties,
             @JsonProperty("required")
             List<String> required,
             @JsonProperty("additionalProperties")

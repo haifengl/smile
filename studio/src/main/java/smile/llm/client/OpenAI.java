@@ -363,10 +363,11 @@ public class OpenAI extends LLM {
 
         // Add MCP tools.
         for (var tool : conversation.mcp()) {
-            var parameters = FunctionParameters.builder();
-            for (var prop : tool.inputSchema().properties().entrySet()) {
-                parameters.putAdditionalProperty(prop.getKey(), JsonValue.from(prop.getValue()));
-            }
+            var parameters = FunctionParameters.builder()
+                    .putAdditionalProperty("type", JsonValue.from("object"))
+                    .putAdditionalProperty("required", JsonValue.from(tool.inputSchema().required()))
+                    .putAdditionalProperty("additionalProperties", JsonValue.from(false))
+                    .putAdditionalProperty("properties", JsonValue.from(tool.inputSchema().properties()));
 
             // `strict` mode ensures that the output will conform to the schema.
             var func = FunctionDefinition.builder()

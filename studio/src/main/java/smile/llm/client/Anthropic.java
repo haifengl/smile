@@ -245,11 +245,11 @@ public class Anthropic extends LLM {
 
         // Add MCP tools.
         for (var tool : conversation.mcp()) {
+            @SuppressWarnings("unchecked")
             var inputSchema = BetaTool.InputSchema.builder()
-                    .required(tool.inputSchema().required());
-            for (var prop : tool.inputSchema().properties().entrySet()) {
-                inputSchema.putAdditionalProperty(prop.getKey(), JsonValue.from(prop.getValue()));
-            }
+                    .properties(JsonValue.from(tool.inputSchema().properties()))
+                    .required(tool.inputSchema().required())
+                    .putAdditionalProperty("additionalProperties", JsonValue.from(tool.inputSchema().additionalProperties()));
 
             // `strict` mode ensures that the output will conform to the schema.
             builder.addTool(BetaTool.builder()
