@@ -30,6 +30,7 @@ import com.anthropic.models.beta.messages.*;
 import smile.llm.Conversation;
 import smile.llm.Message;
 import smile.llm.ToolCallOutput;
+import smile.llm.mcp.MCP;
 import smile.llm.tool.*;
 
 /**
@@ -243,7 +244,7 @@ public class Anthropic extends LLM {
         }
 
         // Add MCP tools.
-        for (var tool : conversation.mcp().values()) {
+        for (var tool : conversation.mcp()) {
             var inputSchema = BetaTool.InputSchema.builder()
                     .required(tool.inputSchema().required());
             for (var prop : tool.inputSchema().properties().entrySet()) {
@@ -272,7 +273,7 @@ public class Anthropic extends LLM {
             case "Append" -> tool.input(Append.class).run();
             case "Edit" -> tool.input(Edit.class).run();
             case "Bash" -> tool.input(Bash.class).run();
-            default -> "Error: unsupported tool " + tool.name();
+            default -> MCP.call(tool.name(), tool._input().toString());
         };
     }
 }

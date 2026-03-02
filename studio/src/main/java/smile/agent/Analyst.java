@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.function.Supplier;
 import smile.llm.Conversation;
 import smile.llm.client.LLM;
-import smile.llm.mcp.McpConfig;
+import smile.llm.mcp.MCP;
 import smile.llm.tool.*;
 
 /**
@@ -42,8 +42,6 @@ public class Analyst extends Agent {
               new Context(System.getProperty("user.home") + "/.smile/agents/data-analyst"),
               new Context(System.getProperty("smile.home") + "/agents/data-analyst"));
 
-        var tools = List.of(Read.spec(), Write.spec(), Edit.spec(), Append.spec(), Bash.spec());
-        conversation().withTools(tools);
         conversation().withReminder("""
 1. Answer the user's query comprehensively.
 2. Prioritize robust methodology, including data cleaning, feature engineering, cross-validation, and proper error handling.
@@ -51,13 +49,9 @@ public class Analyst extends Agent {
 4. Use the instructions below and the tools available to you to assist the user.
 """);
 
-        try {
-            var config = McpConfig.from(Path.of(System.getProperty("smile.home") + "/mcp.json"));
-            var clients = config.connect();
-            conversation().withMcp(clients);
-        } catch (IOException ex) {
-            System.out.println("Failed to load MCP configuration" + ex.getMessage());
-        }
+        var tools = List.of(Read.spec(), Write.spec(), Edit.spec(), Append.spec(), Bash.spec());
+        conversation().withTools(tools);
+        conversation().withMcp(MCP.specs());
 
         // low temperature for more predictable, focused, and deterministic plans
         conversation().params().setProperty(LLM.TEMPERATURE, "0.2");

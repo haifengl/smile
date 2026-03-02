@@ -25,6 +25,7 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.Timer;
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.prefs.Preferences;
@@ -36,6 +37,7 @@ import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import com.formdev.flatlaf.util.SystemFileChooser;
 import com.formdev.flatlaf.util.SystemInfo;
 import smile.llm.client.*;
+import smile.llm.mcp.MCP;
 import smile.studio.view.*;
 import smile.swing.Button;
 import static smile.swing.SmileUtilities.scaleImageIcon;
@@ -687,6 +689,18 @@ public class SmileStudio extends JFrame {
                     Run 'smile shell' for smile shell with Java.
                     Run 'smile scala' for smile shell with Scala.""");
             System.exit(1);
+        }
+
+        // Starts MCP services
+        try {
+            var path = Path.of(System.getProperty("smile.home"), "agents", "/mcp.json");
+            if (Files.exists(path)) MCP.connect(path);
+            path = Path.of(System.getProperty("user.home"), ".smile", "/mcp.json");
+            if (Files.exists(path)) MCP.connect(path);
+            path = Path.of(System.getProperty("user.dir"), ".smile", "/mcp.json");
+            if (Files.exists(path)) MCP.connect(path);
+        } catch (Throwable ex) {
+            System.out.println("Failed to start MCP services: " + ex.getMessage());
         }
 
         // Schedule a job for the event dispatch thread:

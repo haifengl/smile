@@ -34,6 +34,7 @@ import com.openai.models.responses.*;
 import smile.llm.Conversation;
 import smile.llm.Message;
 import smile.llm.ToolCallOutput;
+import smile.llm.mcp.MCP;
 import smile.llm.tool.*;
 
 /**
@@ -361,7 +362,7 @@ public class OpenAI extends LLM {
         }
 
         // Add MCP tools.
-        for (var tool : conversation.mcp().values()) {
+        for (var tool : conversation.mcp()) {
             var parameters = FunctionParameters.builder();
             for (var prop : tool.inputSchema().properties().entrySet()) {
                 parameters.putAdditionalProperty(prop.getKey(), JsonValue.from(prop.getValue()));
@@ -389,7 +390,7 @@ public class OpenAI extends LLM {
             case "Append" -> tool.arguments(Append.class).run();
             case "Edit" -> tool.arguments(Edit.class).run();
             case "Bash" -> tool.arguments(Bash.class).run();
-            default -> "Error: unsupported tool " + tool.name();
+            default -> MCP.call(tool.name(), tool.arguments());
         };
     }
 }

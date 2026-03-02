@@ -24,5 +24,9 @@ import smile.llm.tool.Tool;
  * @param description the description of the tool.
  * @param inputSchema the JSON schema of the tool input.
  */
-public record McpToolSpec(String name, String description, Tool.JsonSchema inputSchema, McpClient client) {
+public record McpToolSpec(String name, String description, Tool.JsonSchema inputSchema) {
+    @Override
+    public int hashCode() {
+        return name.hashCode();
+    }
 }

@@ -68,12 +68,6 @@ import tools.jackson.databind.json.JsonMapper;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record McpConfig(Map<String, McpServerConfig> servers, List<McpInput> inputs) {
 
-    /** Shared Jackson mapper with camelCase property names. */
-    static final ObjectMapper MAPPER = JsonMapper.builder()
-            .propertyNamingStrategy(PropertyNamingStrategies.LOWER_CAMEL_CASE)
-            .configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false)
-            .build();
-
     /**
      * Parses an MCP configuration file.
      *
@@ -82,7 +76,7 @@ public record McpConfig(Map<String, McpServerConfig> servers, List<McpInput> inp
      * @throws IOException if the file cannot be read or parsed.
      */
     public static McpConfig from(Path path) throws IOException {
-        return MAPPER.readValue(path.toFile(), McpConfig.class);
+        return MCP.MAPPER.readValue(path.toFile(), McpConfig.class);
     }
 
     /**

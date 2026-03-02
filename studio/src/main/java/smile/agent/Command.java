@@ -59,12 +59,14 @@ public class Command extends Memory {
         hint = node != null ? node.asString() : null;
 
         node = metadata.get("allowed-tools");
-        if (node instanceof ArrayNode array) {
-            for (var element : array) {
-                allowedTools.add(element.asString());
+        if (node != null) {
+            if (node instanceof ArrayNode array) {
+                for (var element : array) {
+                    allowedTools.add(element.asString());
+                }
+            } else if (node.isString()) {
+                allowedTools.add(node.asString());
             }
-        } else if (node.isString()) {
-            allowedTools.add(node.asString());
         }
     }
 

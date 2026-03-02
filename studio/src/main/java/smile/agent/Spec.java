@@ -51,12 +51,14 @@ public class Spec extends Memory {
 
         var node = metadata.get("globs");
         if (node == null) node = metadata.get("paths");
-        if (node instanceof ArrayNode array) {
-            for (var element : array) {
-                globs.add(element.asString());
+        if (node != null) {
+            if (node instanceof ArrayNode array) {
+                for (var element : array) {
+                    globs.add(element.asString());
+                }
+            } else if (node.isString()) {
+                globs.add(node.asString());
             }
-        } else if (node.isString()) {
-            globs.add(node.asString());
         }
 
         node = metadata.get("alwaysApply");

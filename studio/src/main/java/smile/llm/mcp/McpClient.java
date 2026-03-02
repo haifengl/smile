@@ -63,7 +63,7 @@ public class McpClient implements AutoCloseable {
                     var properties = tool.inputSchema().properties().entrySet().stream()
                             .map(entry ->
                                     Map.entry(entry.getKey(),
-                                            (JsonNode) McpConfig.MAPPER.valueToTree(entry.getValue())))
+                                            (JsonNode) MCP.MAPPER.valueToTree(entry.getValue())))
                             .collect(Collectors.toMap(
                                     Map.Entry::getKey,
                                     Map.Entry::getValue
@@ -74,7 +74,7 @@ public class McpClient implements AutoCloseable {
                             tool.inputSchema().required(),
                             false
                     );
-                    return new McpToolSpec(tool.name(), tool.description(), schema, this);
+                    return new McpToolSpec(tool.name(), tool.description(), schema);
                 })
                 .toList();
         this.resources = client.listResources().resources().stream().toList();
@@ -95,10 +95,6 @@ public class McpClient implements AutoCloseable {
 
         client.initialize();
         return new McpClient(name, server, client);
-    }
-
-    public static List<McpClient> of(Path path) {
-        return connect(name, server);
     }
 
     /** Returns the server name. */

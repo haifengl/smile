@@ -59,7 +59,7 @@ public class Conversation {
     /** The built-in tools available for LLM. */
     private List<Tool.Spec> tools;
     /** The MCP tools available for LLM. */
-    private Map<String, McpToolSpec> mcp;
+    private List<McpToolSpec> mcp;
     /** The optional system reminder to keep the AI focused, enforce safety, and guide tool usage. */
     private String reminder;
 
@@ -94,19 +94,17 @@ public class Conversation {
      * Returns the MCP services available for LLM.
      * @return the MCP services available for LLM.
      */
-    public Map<String, McpToolSpec> mcp() {
+    public List<McpToolSpec> mcp() {
         return mcp;
     }
 
     /**
      * Sets the MCP services available for LLM.
-     * @param clients the MCP services available for LLM.
+     * @param mcp the MCP services available for LLM.
      * @return this object.
      */
-    public Conversation withMcp(List<McpClient> clients) {
-        mcp = clients.stream().flatMap(client ->
-            client.tools().stream().map(tool -> Map.entry(tool.name(), tool))
-        ).collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue));
+    public Conversation withMcp(List<McpToolSpec> mcp) {
+        this.mcp = mcp;
         return this;
     }
 
