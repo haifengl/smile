@@ -25,7 +25,6 @@ import com.google.genai.Client;
 import com.google.genai.types.*;
 import smile.llm.Conversation;
 import smile.llm.Message;
-import smile.llm.tool.ToolSpec;
 
 /**
  * Google Gemini.
@@ -75,19 +74,11 @@ public class GoogleGemini extends LLM {
     /**
      * Returns a chat request configuration.
      * @param params the request parameters.
-     * @param tools the tools available for LLM.
      * @return a chat request configuration.
      */
-    private GenerateContentConfig config(Properties params,
-                                         List<ToolSpec> tools) {
+    private GenerateContentConfig config(Properties params) {
         // only 1 chat completion choice to generate
         var builder = GenerateContentConfig.builder().candidateCount(1);
-
-        if (!tools.isEmpty()) {
-            builder.tools(tools.stream()
-                    .map(tool -> Tool.builder().functions(tool.methods()).build())
-                    .toList());
-        }
 
         var temperature = params.getProperty(TEMPERATURE, "");
         if (!temperature.isBlank()) {
@@ -124,7 +115,7 @@ public class GoogleGemini extends LLM {
     @Override
     public CompletableFuture<String> complete(String prompt, Properties params) {
         return client.async.models
-                .generateContent(model(), prompt, config(params, List.of()))
+                .generateContent(model(), prompt, config(params))
                 .thenApply(GenerateContentResponse::text);
     }
 
@@ -150,7 +141,8 @@ public class GoogleGemini extends LLM {
                 .build());
 
         conversation.add(Message.user(prompt));
-        var params = config(conversation.params(), conversation.tools());
+        var params = config(conversation.params());
+
         // To save resources and avoid connection leaks, close the
         // response stream after consumption.
         try (var stream = client.models.generateContentStream(model(), contents, params)) {
@@ -165,6 +157,20 @@ public class GoogleGemini extends LLM {
         } catch (Throwable t) {
             conversation.add(Message.error(t.getMessage()));
             handler.onComplete(Optional.of(t));
+        }
+    }
+
+    /**
+     * Returns a chat completion request builder with tools.
+     * @param builder the chat completion request builder.
+     * @param conversation the conversation session.
+     */
+    private void addTools(GenerateContentConfig.Builder builder, Conversation conversation) {
+        var tools = conversation.tools();
+        if (!tools.isEmpty()) {
+            builder.tools(tools.stream()
+                    .map(tool -> Tool.builder().functions(tool.methods()).build())
+                    .toList());
         }
     }
 }

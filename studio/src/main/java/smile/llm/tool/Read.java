@@ -112,13 +112,13 @@ public class Read implements Tool {
      * The specification for Read tool.
      * @return the tool specification.
      */
-    public static ToolSpec spec() {
+    public static Tool.Spec spec() {
         try {
-            return new ToolSpec(Append.class,
+            return new Tool.Spec(Append.class,
                     List.of(Read.class.getMethod("readFile", String.class, int.class, int.class)));
         } catch (Exception e) {
             System.err.println("Failed to load ToolSpec: " + e.getMessage());
         }
-        return new ToolSpec(Append.class, null);
+        return new Tool.Spec(Append.class, null);
     }
 }

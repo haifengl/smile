@@ -16,7 +16,10 @@
  */
 package smile.llm.mcp;
 
+import java.time.Duration;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import io.modelcontextprotocol.client.McpSyncClient;
 import io.modelcontextprotocol.spec.McpSchema;
 
@@ -37,6 +40,9 @@ public class McpClient implements AutoCloseable {
 
     /** The sync MCP client. */
     private final McpSyncClient client;
+    private final List<McpToolSpec> tools;
+    private final List<McpSchema.Resource> resources;
+    private final List<McpSchema.Prompt> prompts;
 
     /**
      * Constructor.
@@ -45,16 +51,50 @@ public class McpClient implements AutoCloseable {
      */
     public McpClient(McpSyncClient client) {
         this.client = client;
+        this.tools = client.listTools().tools().stream()
+                .map(tool -> new McpToolSpec(tool.name(), tool.description(), tool.inputSchema(), this))
+                .toList();
+        this.resources = client.listResources().resources().stream().toList();
+        this.prompts = client.listPrompts().prompts();
+    }
+
+    /**
+     * Creates and initializes a new client for an MCP server.
+     * @param server the server configuration.
+     * @return the initialized MCP client.
+     */
+    public static McpClient connect(McpServerConfig server) {
+        // Create a sync client with custom configuration
+        McpSyncClient client = io.modelcontextprotocol.client.McpClient.sync(server.transport())
+                .requestTimeout(Duration.ofSeconds(60))
+                .build();
+
+        client.initialize();
+        return new McpClient(client);
+    }
+
+    /**
+     * Calls a tool.
+     * @param tool the name of the tool to call.
+     * @param arguments the arguments to pass to the tool.
+     */
+    public String call(String tool, Map<String, Object> arguments) {
+        McpSchema.CallToolRequest request = new McpSchema.CallToolRequest(
+                tool,
+                arguments
+        );
+        var result = client.callTool(request);
+        return result.content().stream().map(Object::toString).collect(Collectors.joining());
     }
 
     /** List available tools. */
-    public McpSchema.ListToolsResult tools() {
-        return client.listTools();
+    public List<McpToolSpec> tools() {
+        return tools;
     }
 
     /** List available resources. */
-    public McpSchema.ListResourcesResult resources() {
-        return client.listResources();
+    public List<McpSchema.Resource> resources() {
+        return resources;
     }
 
     /**
@@ -62,13 +102,13 @@ public class McpClient implements AutoCloseable {
      * @param uri the URI of the resource to read.
      * @return the result of the read resource request.
      */
-    public McpSchema.ReadResourceResult resource(String uri) {
-        return client.readResource(new McpSchema.ReadResourceRequest(uri));
+    public List<McpSchema.ResourceContents> resource(String uri) {
+        return client.readResource(new McpSchema.ReadResourceRequest(uri)).contents();
     }
 
     /** List available prompts. */
-    public McpSchema.ListPromptsResult prompts() {
-        return client.listPrompts();
+    public List<McpSchema.Prompt> prompts() {
+        return prompts;
     }
 
     /**
@@ -76,10 +116,10 @@ public class McpClient implements AutoCloseable {
      * @param name the name of prompt template.
      * @param arguments the arguments to customize prompt.
      */
-    public McpSchema.GetPromptResult prompt(String name, Map<String, Object> arguments) {
-         return client.getPrompt(
+    public List<McpSchema.PromptMessage> prompt(String name, Map<String, Object> arguments) {
+        return client.getPrompt(
                 new McpSchema.GetPromptRequest(name, arguments)
-        );
+        ).messages();
     }
 
     @Override

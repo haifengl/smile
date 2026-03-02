@@ -20,11 +20,11 @@ import java.lang.reflect.Method;
 import java.util.List;
 
 /**
- * Tool specification
+ * The specification of built-in tools. 
  *
  * @param clazz the class of tool.
  * @param methods the methods of tool.
  * @author Haifeng Li
  */
-public record ToolSpec(Class<? extends Tool> clazz, List<Method> methods) {
+public record BuiltinToolSpec(Class<? extends Tool> clazz, List<Method> methods) {
 }

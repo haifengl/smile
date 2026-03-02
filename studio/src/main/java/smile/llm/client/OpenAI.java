@@ -26,6 +26,7 @@ import com.openai.client.OpenAIClientAsync;
 import com.openai.client.okhttp.OpenAIOkHttpClientAsync;
 import com.openai.core.http.AsyncStreamResponse;
 import com.openai.helpers.ChatCompletionAccumulator;
+import com.openai.models.FunctionDefinition;
 import com.openai.models.chat.completions.*;
 import com.openai.models.responses.*;
 import smile.llm.Conversation;
@@ -190,17 +191,11 @@ public class OpenAI extends LLM {
     /**
      * Returns a chat completion request builder.
      * @param params the request parameters.
-     * @param tools the tools available for LLM.
      * @return a chat completion request builder.
      */
-    private ChatCompletionCreateParams.Builder paramsBuilder(Properties params,
-                                                             List<ToolSpec> tools) {
+    private ChatCompletionCreateParams.Builder paramsBuilder(Properties params) {
         // only 1 chat completion choice to generate
         var builder = ChatCompletionCreateParams.builder().model(model()).n(1);
-
-        for (var tool : tools) {
-            builder.addTool(tool.clazz());
-        }
 
         var temperature = params.getProperty(TEMPERATURE, "");
         if (!temperature.isBlank()) {
@@ -243,7 +238,7 @@ public class OpenAI extends LLM {
 
     @Override
     public CompletableFuture<String> complete(String prompt, Properties params) {
-        var request = paramsBuilder(params, List.of());
+        var request = paramsBuilder(params);
         request.addUserMessage(prompt);
         return client.chat().completions().create(request.build())
                 .thenApply(this::response);
@@ -251,8 +246,7 @@ public class OpenAI extends LLM {
 
     @Override
     public void complete(String prompt, Conversation conversation, StreamResponseHandler handler) {
-        conversation.add(Message.user(prompt));
-        var request = paramsBuilder(conversation.params(), conversation.tools());
+        var request = paramsBuilder(conversation.params());
         for (var msg : conversation.messages()) {
             switch (msg.role()) {
                 case user -> request.addUserMessage(msg.content());
@@ -269,7 +263,13 @@ public class OpenAI extends LLM {
             }
         }
 
+        // Adds the new user message to conversation.
+        // This must be done after adding the conversation history to the request,
+        // otherwise the new user message will be sent twice.
+        conversation.add(Message.user(prompt));
         request.addUserMessage(conversation.prompt(prompt));
+        addTools(request, conversation);
+
         // For streaming chat completions, token usage data is not included by default.
         // This will cause an additional, final chunk to be streamed at the end of the response.
         request.streamOptions(ChatCompletionStreamOptions.builder().includeUsage(true).build());
@@ -345,6 +345,29 @@ public class OpenAI extends LLM {
                 }
             }
         });
+    }
+
+    /**
+     * Returns a chat completion request builder with tools.
+     * @param builder the chat completion request builder.
+     * @param conversation the conversation session.
+     */
+    private void addTools(ChatCompletionCreateParams.Builder builder, Conversation conversation) {
+        // Add built-in tools.
+        for (var tool : conversation.tools()) {
+            builder.addTool(tool.clazz());
+        }
+
+        // Add MCP tools.
+        for (var tool : conversation.mcp().values()) {
+            // `strict` mode ensures that the output will conform to the schema.
+            var func = FunctionDefinition.builder()
+                    .name(tool.name())
+                    .description(tool.description())
+                    //.parameters(inputSchema)
+                    .build();
+            builder.addTool(ChatCompletionFunctionTool.builder().function(func).build());
+        }
     }
 
     /**

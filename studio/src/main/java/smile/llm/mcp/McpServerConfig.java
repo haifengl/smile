@@ -64,18 +64,4 @@ public sealed interface McpServerConfig permits StdioMcpServerConfig, HttpMcpSer
      * @return the client transport configuration for this server.
      */
     McpClientTransport transport();
-
-    /**
-     * Creates and initializes a new client for this server.
-     * @return the initialized MCP client connected to this server.
-     */
-    default McpClient client() {
-        // Create a sync client with custom configuration
-        McpSyncClient client = io.modelcontextprotocol.client.McpClient.sync(transport())
-                .requestTimeout(Duration.ofSeconds(60))
-                .build();
-
-        client.initialize();
-        return new McpClient(client);
-    }
 }

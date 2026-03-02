@@ -93,7 +93,7 @@ public record McpConfig(Map<String, McpServerConfig> servers, List<McpInput> inp
         if (servers == null) return Map.of();
         return servers.entrySet().stream()
                 .filter(e -> !e.getValue().disabled())
-                .map(entry -> Map.entry(entry.getKey(), entry.getValue().client()))
+                .map(entry -> Map.entry(entry.getKey(), McpClient.connect(entry.getValue())))
                 .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 }

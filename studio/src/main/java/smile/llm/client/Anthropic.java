@@ -83,16 +83,10 @@ public class Anthropic extends LLM {
     /**
      * Returns a chat completion request builder.
      * @param params the request parameters.
-     * @param tools the tools available for LLM.
      * @return a chat completion request builder.
      */
-    private MessageCreateParams.Builder paramsBuilder(Properties params,
-                                                      List<ToolSpec> tools) {
+    private MessageCreateParams.Builder paramsBuilder(Properties params) {
         var builder = MessageCreateParams.builder().model(model());
-
-        for (var tool : tools) {
-            builder.addTool(tool.clazz());
-        }
 
         var temperature = params.getProperty(TEMPERATURE, "");
         if (!temperature.isBlank()) {
@@ -135,7 +129,7 @@ public class Anthropic extends LLM {
 
     @Override
     public CompletableFuture<String> complete(String prompt, Properties params) {
-        var request = paramsBuilder(params, List.of());
+        var request = paramsBuilder(params);
         request.addUserMessage(prompt);
         return client.beta().messages().create(request.build())
                 .thenApply(this::response);
@@ -143,8 +137,7 @@ public class Anthropic extends LLM {
 
     @Override
     public void complete(String prompt, Conversation conversation, StreamResponseHandler handler) {
-        conversation.add(Message.user(prompt));
-        var request = paramsBuilder(conversation.params(), conversation.tools());
+        var request = paramsBuilder(conversation.params());
         for (var msg : conversation.messages()) {
             switch (msg.role()) {
                 case user -> request.addUserMessage(msg.content());
@@ -161,7 +154,12 @@ public class Anthropic extends LLM {
             }
         }
 
+        // Adds the new user message to conversation.
+        // This must be done after adding the conversation history to the request,
+        // otherwise the new user message will be sent twice.
+        conversation.add(Message.user(prompt));
         request.addUserMessage(conversation.prompt(prompt));
+        addTools(request, conversation);
         complete(request, conversation, handler);
     }
 
@@ -230,6 +228,33 @@ public class Anthropic extends LLM {
                         }
                     }
                 });
+    }
+
+    /**
+     * Returns a chat completion request builder with tools.
+     * @param builder the chat completion request builder.
+     * @param conversation the conversation session.
+     */
+    private void addTools(MessageCreateParams.Builder builder, Conversation conversation) {
+        // Add built-in tools.
+        for (var tool : conversation.tools()) {
+            builder.addTool(tool.clazz());
+        }
+
+        // Add MCP tools.
+        for (var tool : conversation.mcp().values()) {
+            var inputSchema = BetaTool.InputSchema.builder()
+                    //.properties(tool.inputSchema().properties())
+                    .required(tool.inputSchema().required())
+                    .build();
+            // `strict` mode ensures that the output will conform to the schema.
+            builder.addTool(BetaTool.builder()
+                    .name(tool.name())
+                    .description(tool.description())
+                    .inputSchema(inputSchema)
+                    .strict(true)
+                    .build());
+        }
     }
 
     /**

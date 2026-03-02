@@ -22,11 +22,11 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
-import smile.llm.tool.ToolSpec;
+import java.util.*;
+import java.util.stream.Collectors;
+import smile.llm.mcp.McpClient;
+import smile.llm.mcp.McpToolSpec;
+import smile.llm.tool.Tool;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.PropertyNamingStrategies;
 import tools.jackson.databind.json.JsonMapper;
@@ -56,8 +56,10 @@ public class Conversation {
     private final List<Message> messages = new ArrayList<>();
     /** The directory path for conversation history and summary. */
     private final Path path;
-    /** The tools available for LLM. */
-    private List<ToolSpec> tools;
+    /** The built-in tools available for LLM. */
+    private List<Tool.Spec> tools;
+    /** The MCP tools available for LLM. */
+    private Map<String, McpToolSpec> mcp;
     /** The optional system reminder to keep the AI focused, enforce safety, and guide tool usage. */
     private String reminder;
 
@@ -89,19 +91,39 @@ public class Conversation {
     }
 
     /**
-     * Returns the tools available for LLM.
-     * @return the tools available for LLM.
+     * Returns the MCP services available for LLM.
+     * @return the MCP services available for LLM.
      */
-    public List<ToolSpec> tools() {
+    public Map<String, McpToolSpec> mcp() {
+        return mcp;
+    }
+
+    /**
+     * Sets the MCP services available for LLM.
+     * @param mcp the MCP services available for LLM.
+     * @return this object.
+     */
+    public Conversation withMcp(List<McpClient> mcp) {
+        this.mcp = mcp.stream().flatMap(client ->
+            client.tools().stream().map(tool -> Map.entry(tool.name(), tool))
+        ).collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue));
+        return this;
+    }
+
+    /**
+     * Returns the built-in tools available for LLM.
+     * @return the built-in tools available for LLM.
+     */
+    public List<Tool.Spec> tools() {
         return tools;
     }
 
     /**
-     * Sets the tools available for LLM.
-     * @param tools the tools available for LLM.
+     * Sets the built-in tools available for LLM.
+     * @param tools the built-in tools available for LLM.
      * @return this object.
      */
-    public Conversation withTools(List<ToolSpec> tools) {
+    public Conversation withTools(List<Tool.Spec> tools) {
         this.tools = tools;
         return this;
     }

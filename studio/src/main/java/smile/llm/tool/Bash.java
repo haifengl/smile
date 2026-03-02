@@ -102,13 +102,13 @@ public class Bash implements Tool {
      * The specification for Bash tool.
      * @return the tool specification.
      */
-    public static ToolSpec spec() {
+    public static Tool.Spec spec() {
         try {
-            return new ToolSpec(Append.class,
+            return new Tool.Spec(Append.class,
                     List.of(Bash.class.getMethod("runCommand", String.class, int.class, boolean.class)));
         } catch (Exception e) {
             System.err.println("Failed to load ToolSpec: " + e.getMessage());
         }
-        return new ToolSpec(Append.class, null);
+        return new Tool.Spec(Append.class, null);
     }
 }

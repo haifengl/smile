@@ -77,13 +77,13 @@ public class Edit implements Tool {
      * The specification for Edit tool.
      * @return the tool specification.
      */
-    public static ToolSpec spec() {
+    public static Tool.Spec spec() {
         try {
-            return new ToolSpec(Append.class,
+            return new Tool.Spec(Append.class,
                     List.of(Edit.class.getMethod("editFile", String.class, String.class, String.class, boolean.class)));
         } catch (Exception e) {
             System.err.println("Failed to load ToolSpec: " + e.getMessage());
         }
-        return new ToolSpec(Append.class, null);
+        return new Tool.Spec(Append.class, null);
     }
 }

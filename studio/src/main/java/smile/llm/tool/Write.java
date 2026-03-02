@@ -66,13 +66,13 @@ public class Write implements Tool {
      * The specification for Write tool.
      * @return the tool specification.
      */
-    public static ToolSpec spec() {
+    public static Tool.Spec spec() {
         try {
-            return new ToolSpec(Append.class,
+            return new Tool.Spec(Append.class,
                     List.of(Write.class.getMethod("writeFile", String.class, String.class)));
         } catch (Exception e) {
             System.err.println("Failed to load ToolSpec: " + e.getMessage());
         }
-        return new ToolSpec(Append.class, null);
+        return new Tool.Spec(Append.class, null);
     }
 }
