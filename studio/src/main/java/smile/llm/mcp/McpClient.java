@@ -40,7 +40,8 @@ import tools.jackson.databind.JsonNode;
 public class McpClient implements AutoCloseable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(McpClient.class);
 
-    /** The sync MCP client. */
+    private final String name;
+    private final McpServerConfig server;
     private final McpSyncClient client;
     private final List<McpToolSpec> tools;
     private final List<McpSchema.Resource> resources;
@@ -49,9 +50,13 @@ public class McpClient implements AutoCloseable {
     /**
      * Constructor.
      *
+     * @param name the server name.
+     * @param server the server configuration.
      * @param client a sync MCP client.
      */
-    public McpClient(McpSyncClient client) {
+    public McpClient(String name, McpServerConfig server, McpSyncClient client) {
+        this.name = name;
+        this.server = server;
         this.client = client;
         this.tools = client.listTools().tools().stream()
                 .map(tool -> {
@@ -78,17 +83,32 @@ public class McpClient implements AutoCloseable {
 
     /**
      * Creates and initializes a new client for an MCP server.
+     * @param name the MCP server name.
      * @param server the server configuration.
      * @return the initialized MCP client.
      */
-    public static McpClient connect(McpServerConfig server) {
+    public static McpClient connect(String name, McpServerConfig server) {
         // Create a sync client with custom configuration
         McpSyncClient client = io.modelcontextprotocol.client.McpClient.sync(server.transport())
                 .requestTimeout(Duration.ofSeconds(60))
                 .build();
 
         client.initialize();
-        return new McpClient(client);
+        return new McpClient(name, server, client);
+    }
+
+    public static List<McpClient> of(Path path) {
+        return connect(name, server);
+    }
+
+    /** Returns the server name. */
+    public String name() {
+        return name;
+    }
+
+    /** Returns the server configuration. */
+    public McpServerConfig server() {
+        return server;
     }
 
     /**

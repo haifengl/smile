@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.function.Supplier;
 import smile.llm.Conversation;
 import smile.llm.client.LLM;
+import smile.llm.mcp.McpConfig;
 import smile.llm.tool.*;
 
 /**
@@ -49,6 +50,14 @@ public class Analyst extends Agent {
 3. Generate code for the heavy lifting and Markdown files for documenting transforms and insights.
 4. Use the instructions below and the tools available to you to assist the user.
 """);
+
+        try {
+            var config = McpConfig.from(Path.of(System.getProperty("smile.home") + "/mcp.json"));
+            var clients = config.connect();
+            conversation().withMcp(clients);
+        } catch (IOException ex) {
+            System.out.println("Failed to load MCP configuration" + ex.getMessage());
+        }
 
         // low temperature for more predictable, focused, and deterministic plans
         conversation().params().setProperty(LLM.TEMPERATURE, "0.2");

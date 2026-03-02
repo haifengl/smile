@@ -100,11 +100,11 @@ public class Conversation {
 
     /**
      * Sets the MCP services available for LLM.
-     * @param mcp the MCP services available for LLM.
+     * @param clients the MCP services available for LLM.
      * @return this object.
      */
-    public Conversation withMcp(List<McpClient> mcp) {
-        this.mcp = mcp.stream().flatMap(client ->
+    public Conversation withMcp(List<McpClient> clients) {
+        mcp = clients.stream().flatMap(client ->
             client.tools().stream().map(tool -> Map.entry(tool.name(), tool))
         ).collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue));
         return this;

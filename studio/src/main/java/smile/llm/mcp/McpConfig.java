@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
@@ -91,11 +90,11 @@ public record McpConfig(Map<String, McpServerConfig> servers, List<McpInput> inp
      *
      * @return an unmodifiable map of enabled server name to its client.
      */
-    public Map<String, McpClient> connect() {
-        if (servers == null) return Map.of();
+    public List<McpClient> connect() {
+        if (servers == null) return List.of();
         return servers.entrySet().stream()
                 .filter(e -> !e.getValue().disabled())
-                .map(entry -> Map.entry(entry.getKey(), McpClient.connect(entry.getValue())))
-                .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue));
+                .map(entry -> McpClient.connect(entry.getKey(), entry.getValue()))
+                .toList();
     }
 }
