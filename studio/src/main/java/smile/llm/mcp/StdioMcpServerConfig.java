@@ -58,14 +58,14 @@ import smile.util.OS;
  * @author Haifeng Li
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record StdioServerConfig(
+public record StdioMcpServerConfig(
         ServerType type,
         String command,
         List<String> args,
         Map<String, String> env,
         WindowsOverride windows,
         List<McpInput> inputs,
-        boolean disabled) implements ServerConfig {
+        boolean disabled) implements McpServerConfig {
 
     /**
      * Windows-specific override for the command and arguments of a stdio

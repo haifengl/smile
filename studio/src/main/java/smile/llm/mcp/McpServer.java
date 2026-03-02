@@ -28,7 +28,7 @@ import java.util.List;
  * A live connection to a single MCP (Model Context Protocol) server.
  *
  * <p>Use {@link McpClient} to manage multiple servers from an {@link McpConfig}
- * configuration file, or call {@link #connect(String, ServerConfig)} directly
+ * configuration file, or call {@link #connect(String, McpServerConfig)} directly
  * to open a single connection.
  *
  * <p>Stdio servers are started as a subprocess; the connection is closed by
@@ -43,7 +43,7 @@ public class McpServer implements AutoCloseable {
     /** The logical name identifying this server in the configuration. */
     private final String name;
     /** The resolved server configuration. */
-    private final ServerConfig config;
+    private final McpServerConfig config;
     /** The subprocess handle for stdio servers; {@code null} for HTTP/SSE servers. */
     private final Process process;
 
@@ -53,7 +53,7 @@ public class McpServer implements AutoCloseable {
      * @param name   the server name.
      * @param config the server configuration.
      */
-    private McpServer(String name, HttpServerConfig config) {
+    private McpServer(String name, HttpMcpServerConfig config) {
         this.name  = name;
         this.config = config;
         this.process = null;
@@ -66,7 +66,7 @@ public class McpServer implements AutoCloseable {
      * @param config  the server configuration.
      * @param process the running subprocess.
      */
-    private McpServer(String name, StdioServerConfig config, Process process) {
+    private McpServer(String name, StdioMcpServerConfig config, Process process) {
         this.name   = name;
         this.config = config;
         this.process = process;
@@ -76,10 +76,10 @@ public class McpServer implements AutoCloseable {
      * Opens a connection to the MCP server described by {@code config}.
      *
      * <ul>
-     *   <li>For {@link StdioServerConfig}: launches a subprocess with the
+     *   <li>For {@link StdioMcpServerConfig}: launches a subprocess with the
      *       specified command and arguments, inheriting the current environment
      *       merged with any configured {@code env} overrides.</li>
-     *   <li>For {@link HttpServerConfig} ({@code sse} or {@code http}): no
+     *   <li>For {@link HttpMcpServerConfig} ({@code sse} or {@code http}): no
      *       persistent connection is established; the URL and headers are stored
      *       for use in per-request calls.</li>
      * </ul>
@@ -90,21 +90,21 @@ public class McpServer implements AutoCloseable {
      * @throws IOException if a stdio subprocess cannot be started.
      * @throws IllegalArgumentException if the config type is unrecognized.
      */
-    public static McpServer connect(String name, ServerConfig config) throws IOException {
+    public static McpServer connect(String name, McpServerConfig config) throws IOException {
         return switch (config) {
-            case StdioServerConfig stdio -> connectStdio(name, stdio);
-            case HttpServerConfig  http  -> new McpServer(name, http);
+            case StdioMcpServerConfig stdio -> connectStdio(name, stdio);
+            case HttpMcpServerConfig http  -> new McpServer(name, http);
         };
     }
 
     /** Launches the subprocess for a stdio server. */
-    private static McpServer connectStdio(String name, StdioServerConfig cfg) throws IOException {
+    private static McpServer connectStdio(String name, StdioMcpServerConfig cfg) throws IOException {
         String command = cfg.command();
         List<String> args = cfg.args() != null ? cfg.args() : List.of();
 
         // Apply Windows-specific override when running on Windows.
         if (OS.isWindows() && cfg.windows() != null) {
-            StdioServerConfig.WindowsOverride win = cfg.windows();
+            StdioMcpServerConfig.WindowsOverride win = cfg.windows();
             command = win.command();
             args = win.args() != null ? win.args() : List.of();
         }
@@ -138,9 +138,9 @@ public class McpServer implements AutoCloseable {
     /**
      * Returns the server configuration.
      *
-     * @return the {@link ServerConfig}.
+     * @return the {@link McpServerConfig}.
      */
-    public ServerConfig config() {
+    public McpServerConfig config() {
         return config;
     }
 

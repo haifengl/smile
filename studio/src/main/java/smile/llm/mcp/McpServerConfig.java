@@ -31,19 +31,19 @@ import io.modelcontextprotocol.spec.McpClientTransport;
  *
  * <p>Concrete implementations:
  * <ul>
- *   <li>{@link StdioServerConfig} – {@code "type": "stdio"}</li>
- *   <li>{@link HttpServerConfig}  – {@code "type": "sse"} or {@code "type": "http"}</li>
+ *   <li>{@link StdioMcpServerConfig} – {@code "type": "stdio"}</li>
+ *   <li>{@link HttpMcpServerConfig}  – {@code "type": "sse"} or {@code "type": "http"}</li>
  * </ul>
  *
  * @author Haifeng Li
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", visible = true)
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = StdioServerConfig.class, name = "stdio"),
-        @JsonSubTypes.Type(value = HttpServerConfig.class,  name = "sse"),
-        @JsonSubTypes.Type(value = HttpServerConfig.class,  name = "http")
+        @JsonSubTypes.Type(value = StdioMcpServerConfig.class, name = "stdio"),
+        @JsonSubTypes.Type(value = HttpMcpServerConfig.class,  name = "sse"),
+        @JsonSubTypes.Type(value = HttpMcpServerConfig.class,  name = "http")
 })
-public sealed interface ServerConfig permits StdioServerConfig, HttpServerConfig {
+public sealed interface McpServerConfig permits StdioMcpServerConfig, HttpMcpServerConfig {
     /** The JSON mapper for MCP serialization/deserialization. */
     McpJsonMapper JSON_MAPPER = McpJsonDefaults.getMapper();
 

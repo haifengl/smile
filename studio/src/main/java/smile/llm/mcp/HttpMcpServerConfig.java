@@ -23,7 +23,6 @@ import java.util.function.Consumer;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.modelcontextprotocol.client.transport.HttpClientStreamableHttpTransport;
 import io.modelcontextprotocol.spec.McpClientTransport;
-import io.modelcontextprotocol.spec.McpTransport;
 
 /**
  * Configuration for an MCP server that uses the {@code sse} or {@code http}
@@ -46,8 +45,7 @@ import io.modelcontextprotocol.spec.McpTransport;
  * }
  * }</pre>
  *
- * @param type     The transport type; {@link ServerType#SSE} or
- *                 {@link ServerType#HTTP} for this record.
+ * @param type     The transport type; Must be {@link ServerType#HTTP} for this record.
  * @param url      The URL of the remote MCP server endpoint.
  * @param headers  Optional HTTP headers sent with every request.
  *                 Values may reference input variables as {@code ${input:id}}.
@@ -59,12 +57,12 @@ import io.modelcontextprotocol.spec.McpTransport;
  * @author Haifeng Li
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record HttpServerConfig(
+public record HttpMcpServerConfig(
         ServerType type,
         String url,
         Map<String, String> headers,
         List<McpInput> inputs,
-        boolean disabled) implements ServerConfig, Consumer<HttpRequest.Builder> {
+        boolean disabled) implements McpServerConfig, Consumer<HttpRequest.Builder> {
 
     @Override
     public McpClientTransport transport() {

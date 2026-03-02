@@ -54,19 +54,19 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
  * }
  * }</pre>
  *
- * <p>The {@code servers} key maps each server name to a {@link ServerConfig}:
+ * <p>The {@code servers} key maps each server name to a {@link McpServerConfig}:
  * <ul>
- *   <li>{@link StdioServerConfig} for {@code "type": "stdio"}</li>
- *   <li>{@link HttpServerConfig} for {@code "type": "sse"} or {@code "type": "http"}</li>
+ *   <li>{@link StdioMcpServerConfig} for {@code "type": "stdio"}</li>
+ *   <li>{@link HttpMcpServerConfig} for {@code "type": "sse"} or {@code "type": "http"}</li>
  * </ul>
  *
  * @param inputs  Top-level input variable definitions shared across all servers.
- * @param servers Map of server name to its {@link ServerConfig}.
+ * @param servers Map of server name to its {@link McpServerConfig}.
  *
  * @author Haifeng Li
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record McpConfig(Map<String, ServerConfig> servers, List<McpInput> inputs) {
+public record McpConfig(Map<String, McpServerConfig> servers, List<McpInput> inputs) {
 
     /** Shared Jackson mapper with camelCase property names. */
     private static final ObjectMapper MAPPER = JsonMapper.builder()
@@ -101,7 +101,7 @@ public record McpConfig(Map<String, ServerConfig> servers, List<McpInput> inputs
      *
      * @return an unmodifiable map of enabled server name to its config.
      */
-    public Map<String, ServerConfig> enabledServers() {
+    public Map<String, McpServerConfig> enabledServers() {
         if (servers == null) return Map.of();
         return servers.entrySet().stream()
                 .filter(e -> !e.getValue().disabled())
@@ -109,29 +109,29 @@ public record McpConfig(Map<String, ServerConfig> servers, List<McpInput> inputs
     }
 
     /**
-     * Returns the {@link StdioServerConfig} entries from the enabled servers.
+     * Returns the {@link StdioMcpServerConfig} entries from the enabled servers.
      *
      * @return an unmodifiable map of stdio server name to its config.
      */
-    public Map<String, StdioServerConfig> stdioServers() {
+    public Map<String, StdioMcpServerConfig> stdioServers() {
         return enabledServers().entrySet().stream()
-                .filter(e -> e.getValue() instanceof StdioServerConfig)
+                .filter(e -> e.getValue() instanceof StdioMcpServerConfig)
                 .collect(Collectors.toUnmodifiableMap(
                         Map.Entry::getKey,
-                        e -> (StdioServerConfig) e.getValue()));
+                        e -> (StdioMcpServerConfig) e.getValue()));
     }
 
     /**
-     * Returns the {@link HttpServerConfig} entries from the enabled servers
+     * Returns the {@link HttpMcpServerConfig} entries from the enabled servers
      * (covers both {@code sse} and {@code http} transport types).
      *
      * @return an unmodifiable map of HTTP/SSE server name to its config.
      */
-    public Map<String, HttpServerConfig> httpServers() {
+    public Map<String, HttpMcpServerConfig> httpServers() {
         return enabledServers().entrySet().stream()
-                .filter(e -> e.getValue() instanceof HttpServerConfig)
+                .filter(e -> e.getValue() instanceof HttpMcpServerConfig)
                 .collect(Collectors.toUnmodifiableMap(
                         Map.Entry::getKey,
-                        e -> (HttpServerConfig) e.getValue()));
+                        e -> (HttpMcpServerConfig) e.getValue()));
     }
 }
