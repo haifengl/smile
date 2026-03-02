@@ -14,17 +14,15 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.llm.tool;
+package smile.llm.mcp;
 
-import java.lang.reflect.Method;
-import java.util.List;
+import smile.llm.tool.Tool;
 
 /**
- * The specification of built-in tools. 
- *
- * @param clazz the class of tool.
- * @param methods the methods of tool.
- * @author Haifeng Li
+ * The specification of MCP tools.
+ * @param name the name of the tool.
+ * @param description the description of the tool.
+ * @param inputSchema the JSON schema of the tool input.
  */
-public record BuiltinToolSpec(Class<? extends Tool> clazz, List<Method> methods) {
+public record McpToolSpec(String name, String description, Tool.JsonSchema inputSchema, McpClient client) {
 }

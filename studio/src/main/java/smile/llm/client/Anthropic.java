@@ -23,6 +23,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import com.anthropic.client.AnthropicClientAsync;
 import com.anthropic.client.okhttp.AnthropicOkHttpClientAsync;
+import com.anthropic.core.JsonValue;
 import com.anthropic.core.http.AsyncStreamResponse;
 import com.anthropic.helpers.BetaMessageAccumulator;
 import com.anthropic.models.beta.messages.*;
@@ -244,14 +245,16 @@ public class Anthropic extends LLM {
         // Add MCP tools.
         for (var tool : conversation.mcp().values()) {
             var inputSchema = BetaTool.InputSchema.builder()
-                    //.properties(tool.inputSchema().properties())
-                    .required(tool.inputSchema().required())
-                    .build();
+                    .required(tool.inputSchema().required());
+            for (var prop : tool.inputSchema().properties().entrySet()) {
+                inputSchema.putAdditionalProperty(prop.getKey(), JsonValue.from(prop.getValue()));
+            }
+
             // `strict` mode ensures that the output will conform to the schema.
             builder.addTool(BetaTool.builder()
                     .name(tool.name())
                     .description(tool.description())
-                    .inputSchema(inputSchema)
+                    .inputSchema(inputSchema.build())
                     .strict(true)
                     .build());
         }

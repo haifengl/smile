@@ -68,7 +68,6 @@ public record HttpMcpServerConfig(
     public McpClientTransport transport() {
         return HttpClientStreamableHttpTransport
                 .builder(url)
-                .endpoint("") // override the default endpoint /mcp
                 .customizeRequest(this)
                 .build();
     }

@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.PropertyNamingStrategies;
 import tools.jackson.databind.json.JsonMapper;
@@ -69,8 +70,9 @@ import tools.jackson.databind.json.JsonMapper;
 public record McpConfig(Map<String, McpServerConfig> servers, List<McpInput> inputs) {
 
     /** Shared Jackson mapper with camelCase property names. */
-    private static final ObjectMapper MAPPER = JsonMapper.builder()
+    static final ObjectMapper MAPPER = JsonMapper.builder()
             .propertyNamingStrategy(PropertyNamingStrategies.LOWER_CAMEL_CASE)
+            .configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false)
             .build();
 
     /**

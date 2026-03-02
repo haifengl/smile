@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import io.modelcontextprotocol.client.McpSyncClient;
 import io.modelcontextprotocol.spec.McpSchema;
+import smile.llm.tool.Tool;
+import tools.jackson.databind.JsonNode;
 
 /**
  * MCP (Model Context Protocol) client that manages connections to one or more
@@ -52,7 +54,23 @@ public class McpClient implements AutoCloseable {
     public McpClient(McpSyncClient client) {
         this.client = client;
         this.tools = client.listTools().tools().stream()
-                .map(tool -> new McpToolSpec(tool.name(), tool.description(), tool.inputSchema(), this))
+                .map(tool -> {
+                    var properties = tool.inputSchema().properties().entrySet().stream()
+                            .map(entry ->
+                                    Map.entry(entry.getKey(),
+                                            (JsonNode) McpConfig.MAPPER.valueToTree(entry.getValue())))
+                            .collect(Collectors.toMap(
+                                    Map.Entry::getKey,
+                                    Map.Entry::getValue
+                            ));
+                    var schema = new Tool.JsonSchema(
+                            tool.inputSchema().type(),
+                            properties,
+                            tool.inputSchema().required(),
+                            false
+                    );
+                    return new McpToolSpec(tool.name(), tool.description(), schema, this);
+                })
                 .toList();
         this.resources = client.listResources().resources().stream().toList();
         this.prompts = client.listPrompts().prompts();

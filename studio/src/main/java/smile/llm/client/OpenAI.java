@@ -24,9 +24,11 @@ import com.openai.azure.AzureUrlPathMode;
 import com.openai.azure.credential.AzureApiKeyCredential;
 import com.openai.client.OpenAIClientAsync;
 import com.openai.client.okhttp.OpenAIOkHttpClientAsync;
+import com.openai.core.JsonValue;
 import com.openai.core.http.AsyncStreamResponse;
 import com.openai.helpers.ChatCompletionAccumulator;
 import com.openai.models.FunctionDefinition;
+import com.openai.models.FunctionParameters;
 import com.openai.models.chat.completions.*;
 import com.openai.models.responses.*;
 import smile.llm.Conversation;
@@ -360,11 +362,16 @@ public class OpenAI extends LLM {
 
         // Add MCP tools.
         for (var tool : conversation.mcp().values()) {
+            var parameters = FunctionParameters.builder();
+            for (var prop : tool.inputSchema().properties().entrySet()) {
+                parameters.putAdditionalProperty(prop.getKey(), JsonValue.from(prop.getValue()));
+            }
+
             // `strict` mode ensures that the output will conform to the schema.
             var func = FunctionDefinition.builder()
                     .name(tool.name())
                     .description(tool.description())
-                    //.parameters(inputSchema)
+                    .parameters(parameters.build())
                     .build();
             builder.addTool(ChatCompletionFunctionTool.builder().function(func).build());
         }
