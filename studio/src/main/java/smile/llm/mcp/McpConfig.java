@@ -22,9 +22,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-import com.fasterxml.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.PropertyNamingStrategies;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Represents a parsed MCP (Model Context Protocol) configuration file.
@@ -80,58 +80,20 @@ public record McpConfig(Map<String, McpServerConfig> servers, List<McpInput> inp
      * @return the parsed {@link McpConfig}.
      * @throws IOException if the file cannot be read or parsed.
      */
-    public static McpConfig parse(Path path) throws IOException {
+    public static McpConfig from(Path path) throws IOException {
         return MAPPER.readValue(path.toFile(), McpConfig.class);
     }
 
     /**
-     * Parses an MCP configuration from a JSON string.
+     * Connects to enabled servers.
      *
-     * @param json the JSON string.
-     * @return the parsed {@link McpConfig}.
-     * @throws IOException if the string cannot be parsed.
+     * @return an unmodifiable map of enabled server name to its client.
      */
-    public static McpConfig parse(String json) throws IOException {
-        return MAPPER.readValue(json, McpConfig.class);
-    }
-
-    /**
-     * Returns the map of enabled servers, i.e., servers whose
-     * {@code disabled} flag is absent or {@code false}.
-     *
-     * @return an unmodifiable map of enabled server name to its config.
-     */
-    public Map<String, McpServerConfig> enabledServers() {
+    public Map<String, McpClient> connect() {
         if (servers == null) return Map.of();
         return servers.entrySet().stream()
                 .filter(e -> !e.getValue().disabled())
+                .map(entry -> Map.entry(entry.getKey(), entry.getValue().client()))
                 .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue));
-    }
-
-    /**
-     * Returns the {@link StdioMcpServerConfig} entries from the enabled servers.
-     *
-     * @return an unmodifiable map of stdio server name to its config.
-     */
-    public Map<String, StdioMcpServerConfig> stdioServers() {
-        return enabledServers().entrySet().stream()
-                .filter(e -> e.getValue() instanceof StdioMcpServerConfig)
-                .collect(Collectors.toUnmodifiableMap(
-                        Map.Entry::getKey,
-                        e -> (StdioMcpServerConfig) e.getValue()));
-    }
-
-    /**
-     * Returns the {@link HttpMcpServerConfig} entries from the enabled servers
-     * (covers both {@code sse} and {@code http} transport types).
-     *
-     * @return an unmodifiable map of HTTP/SSE server name to its config.
-     */
-    public Map<String, HttpMcpServerConfig> httpServers() {
-        return enabledServers().entrySet().stream()
-                .filter(e -> e.getValue() instanceof HttpMcpServerConfig)
-                .collect(Collectors.toUnmodifiableMap(
-                        Map.Entry::getKey,
-                        e -> (HttpMcpServerConfig) e.getValue()));
     }
 }
