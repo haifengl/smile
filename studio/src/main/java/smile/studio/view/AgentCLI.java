@@ -28,7 +28,6 @@ import smile.agent.Agent;
 import smile.agent.Memory;
 import smile.llm.client.StreamResponseHandler;
 import smile.plot.swing.Palette;
-import smile.shell.JShell;
 import smile.studio.kernel.ShellRunner;
 import smile.studio.model.IntentType;
 import smile.swing.ScrollablePanel;
@@ -63,7 +62,6 @@ public class AgentCLI extends JPanel {
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         add(scrollPane, BorderLayout.CENTER);
 
-        intents.add(welcome());
         intents.add(new Intent(this));
         intents.add(Box.createVerticalGlue());
 
@@ -103,42 +101,19 @@ public class AgentCLI extends JPanel {
         }
     }
 
-    /** Returns the welcome banner. */
-    private Intent welcome() {
+    /**
+     * Adds the welcome banner.
+     * @param banner the welcome banner.
+     * @param text the welcome text.
+     */
+    public void welcome(String banner, String text) {
         Intent welcome = new Intent(this);
         welcome.setIntentType(IntentType.Raw);
         welcome.setEditable(false);
         welcome.setInputForeground(Palette.DARK_GRAY);
-        welcome.editor().setText(JShell.logo.replaceAll("(?m)^\\s{3}", "") + """
-        =====================================================================
-        Welcome! I am Clair, your AI assistant for machine learning modeling.
-        
-        /help for help, /init for initializing your project
-        cwd:\s""" + System.getProperty("user.dir"));
-
-        welcome.output().setText("""
-        As a state-of-the-art machine learning engineering agent,
-        I can help you with:
-        
-        🤖 Automatic end-to-end ML/AI solutions based on your requirements.
-        🔍 Best practices and state-of-the-art methods with web search.
-        🏅 Targeted code block refinement by ablation study.
-        🤝 Improved solution using iterative ensemble strategy.
-        💡 High-quality code completion and generation.
-        📊 Advanced interactive data visualization.
-        📂 Process data from CSV, ARFF, JSON, Avro, Parquet, Iceberg, to SQL.
-        🌐 Built-in inference server.
-        
-        Tips for getting started:
-        1. Ctrl + ENTER to execute your intents.
-        2. Run /init to create a SMILE.md file with instructions for agent.
-        3. Be as specific as you would with another data scientist for the best result.
-        4. Data visualization can be feed to AI agents for interpretation and advices.
-        5. Create custom slash commands for reusable prompts or workflows.
-        6. Run Shell commands starting with a percentage sign (%).
-        7. Run Python expressions starting with an exclamation mark (!).
-        8. AI can make mistakes. Always review agent's responses.""");
-        return welcome;
+        welcome.editor().setText(banner);
+        welcome.output().setText(text);
+        intents.add(welcome, 0);
     }
 
     /**

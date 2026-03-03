@@ -20,6 +20,7 @@ import javax.swing.*;
 import java.nio.file.Path;
 import com.formdev.flatlaf.util.SystemFileChooser;
 import smile.agent.Analyst;
+import smile.shell.JShell;
 import smile.studio.SmileStudio;
 import smile.studio.kernel.JavaRunner;
 
@@ -50,6 +51,36 @@ public class Workspace extends JSplitPane {
         explorer = new Explorer(runner, fileChooser);
         notebook = new Notebook(file, runner, explorer::refresh);
         cli = new AgentCLI(analyst(file.getParent()));
+
+        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") + """
+        =====================================================================
+        Welcome! I am Clair, your AI assistant for machine learning modeling.
+        
+        /help for help, /init for initializing your project
+        cwd:\s""" + System.getProperty("user.dir"),
+
+        """
+        As a state-of-the-art machine learning engineering agent,
+        I can help you with:
+        
+        🤖 Automatic end-to-end ML/AI solutions based on your requirements.
+        🔍 Best practices and state-of-the-art methods with web search.
+        🏅 Targeted code block refinement by ablation study.
+        🤝 Improved solution using iterative ensemble strategy.
+        💡 High-quality code completion and generation.
+        📊 Advanced interactive data visualization.
+        📂 Process data from CSV, ARFF, JSON, Avro, Parquet, Iceberg, to SQL.
+        🌐 Built-in inference server.
+        
+        Tips for getting started:
+        1. Ctrl + ENTER to execute your intents.
+        2. Run /init to create a SMILE.md file with instructions for agent.
+        3. Be as specific as you would with another data scientist for the best result.
+        4. Data visualization can be feed to AI agents for interpretation and advices.
+        5. Create custom slash commands for reusable prompts or workflows.
+        6. Run Shell commands starting with a percentage sign (%).
+        7. Run Python expressions starting with an exclamation mark (!).
+        8. AI can make mistakes. Always review agent's responses.""");
 
         project.setLeftComponent(explorer);
         project.setRightComponent(notebook);
