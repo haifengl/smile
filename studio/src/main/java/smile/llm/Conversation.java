@@ -23,9 +23,7 @@ import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
-import smile.llm.mcp.McpClient;
-import smile.llm.mcp.McpToolSpec;
+import io.modelcontextprotocol.spec.McpSchema;
 import smile.llm.tool.Tool;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.PropertyNamingStrategies;
@@ -59,7 +57,7 @@ public class Conversation {
     /** The built-in tools available for LLM. */
     private List<Tool.Spec> tools;
     /** The MCP tools available for LLM. */
-    private List<McpToolSpec> mcp;
+    private List<McpSchema.Tool> mcp;
     /** The optional system reminder to keep the AI focused, enforce safety, and guide tool usage. */
     private String reminder;
 
@@ -94,7 +92,7 @@ public class Conversation {
      * Returns the MCP services available for LLM.
      * @return the MCP services available for LLM.
      */
-    public List<McpToolSpec> mcp() {
+    public List<McpSchema.Tool> mcp() {
         return mcp;
     }
 
@@ -103,7 +101,7 @@ public class Conversation {
      * @param mcp the MCP services available for LLM.
      * @return this object.
      */
-    public Conversation withMcp(List<McpToolSpec> mcp) {
+    public Conversation withMcp(List<McpSchema.Tool> mcp) {
         this.mcp = mcp;
         return this;
     }

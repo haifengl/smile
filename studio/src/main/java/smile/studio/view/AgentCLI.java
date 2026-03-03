@@ -293,14 +293,6 @@ public class AgentCLI extends JPanel {
         output.appendLine("Current conversation history was cleared.");
     }
 
-    private void load(String[] command) {
-
-    }
-
-    private void analyze(String[] command) {
-
-    }
-
     private void runCustomCommand(String command, String instructions, OutputArea output) {
         Optional<? extends Memory> cmd = agent.command(command);
         if (cmd.isEmpty()) {

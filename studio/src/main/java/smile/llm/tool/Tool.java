@@ -18,10 +18,6 @@ package smile.llm.tool;
 
 import java.lang.reflect.Method;
 import java.util.List;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Tools enable models to interact with external systems,
@@ -41,27 +37,5 @@ public interface Tool {
      * @param methods the methods of tool.
      * @author Haifeng Li
      */
-    record Spec(Class<? extends Tool> clazz, List<Method> methods) {
-    }
-
-    /**
-     * A JSON Schema object that describes the expected structure of arguments or output.
-     *
-     * @param type The type of the schema (e.g., "object")
-     * @param properties The properties of the schema object
-     * @param required List of required property names
-     * @param additionalProperties Whether additional properties are allowed
-     */
-    @JsonInclude(JsonInclude.Include.NON_ABSENT)
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    record JsonSchema(
-            @JsonProperty("type")
-            String type,
-            @JsonProperty("properties")
-            Map<String, Object> properties,
-            @JsonProperty("required")
-            List<String> required,
-            @JsonProperty("additionalProperties")
-            boolean additionalProperties
-    ) { }
+    record Spec(Class<? extends Tool> clazz, List<Method> methods) { }
 }

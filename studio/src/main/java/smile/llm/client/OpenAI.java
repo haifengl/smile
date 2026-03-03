@@ -363,17 +363,24 @@ public class OpenAI extends LLM {
 
         // Add MCP tools.
         for (var tool : conversation.mcp()) {
+            var inputSchema = tool.inputSchema();
+            var type = JsonValue.from(tool.inputSchema().type());
+            var properties = JsonValue.from(Optional.ofNullable(tool.inputSchema().properties()).orElse(Map.of()));
+            var required = JsonValue.from(Optional.ofNullable(tool.inputSchema().required()).orElse(List.of()));
+            var additionalProperties = JsonValue.from(Optional.ofNullable(tool.inputSchema().additionalProperties()).orElse(false));
             var parameters = FunctionParameters.builder()
-                    .putAdditionalProperty("type", JsonValue.from("object"))
-                    .putAdditionalProperty("required", JsonValue.from(tool.inputSchema().required()))
-                    .putAdditionalProperty("additionalProperties", JsonValue.from(false))
-                    .putAdditionalProperty("properties", JsonValue.from(tool.inputSchema().properties()));
+                    .putAdditionalProperty("type", type)
+                    .putAdditionalProperty("properties", properties)
+                    .putAdditionalProperty("required", required)
+                    .putAdditionalProperty("additionalProperties", additionalProperties)
+                    .build();
 
-            // `strict` mode ensures that the output will conform to the schema.
+            // comment out `strict` mode as it causes schema validation issues
             var func = FunctionDefinition.builder()
                     .name(tool.name())
                     .description(tool.description())
-                    .parameters(parameters.build())
+                    .parameters(parameters)
+                    //.strict(true)
                     .build();
             builder.addTool(ChatCompletionFunctionTool.builder().function(func).build());
         }

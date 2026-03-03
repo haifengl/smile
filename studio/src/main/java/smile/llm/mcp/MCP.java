@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import io.modelcontextprotocol.spec.McpSchema;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
@@ -44,9 +45,12 @@ public class MCP {
     private static final TypeReference<HashMap<String, Object>> MAP_TYPE_REF = new TypeReference<>() {
     };
 
+    /** Connected MCP clients. */
     private static final List<McpClient> clients = new ArrayList<>();
-    private static final List<McpToolSpec> specs = new ArrayList<>();
-    private static final Map<String, McpClient> tools = new HashMap<>();
+    /** Tool specifications. */
+    private static final List<McpSchema.Tool> tools = new ArrayList<>();
+    /** Tool name -> client mapping. */
+    private static final Map<String, McpClient> tool2client = new HashMap<>();
 
     /**
      * Connects to MCP servers declared in the configuration file
@@ -59,9 +63,9 @@ public class MCP {
         McpConfig config = McpConfig.from(path);
         var clients = config.connect();
         MCP.clients.addAll(clients);
-        specs.addAll(clients.stream().flatMap(client -> client.tools().stream()).toList());
+        tools.addAll(clients.stream().flatMap(client -> client.tools().stream()).toList());
         clients.forEach(client ->
-            client.tools().forEach(tool -> tools.put(tool.name(), client))
+            client.tools().forEach(tool -> tool2client.put(tool.name(), client))
         );
     }
 
@@ -71,7 +75,7 @@ public class MCP {
      * @param arguments the arguments in serialized JSON.
      */
     public static String call(String tool, String arguments) {
-        var client = tools.get(tool);
+        var client = tool2client.get(tool);
         if (client == null) return "Error: unknown tool " + tool;
         try {
             return client.call(tool, MAPPER.readValue(arguments, MAP_TYPE_REF));
@@ -85,9 +89,9 @@ public class MCP {
         return clients;
     }
 
-    /** Returns the available tool specs. */
-    public static List<McpToolSpec> specs() {
-        return specs;
+    /** Returns the available tools. */
+    public static List<McpSchema.Tool> tools() {
+        return tools;
     }
 
     /** Closes all clients and releases resources. */

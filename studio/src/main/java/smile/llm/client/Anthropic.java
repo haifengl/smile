@@ -17,6 +17,7 @@
 package smile.llm.client;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
@@ -245,17 +246,25 @@ public class Anthropic extends LLM {
 
         // Add MCP tools.
         for (var tool : conversation.mcp()) {
+            var inputSchema = tool.inputSchema();
+            var type = JsonValue.from(tool.inputSchema().type());
+            var properties = JsonValue.from(Optional.ofNullable(tool.inputSchema().properties()).orElse(Map.of()));
+            var required = JsonValue.from(Optional.ofNullable(tool.inputSchema().required()).orElse(List.of()));
+            var additionalProperties = JsonValue.from(Optional.ofNullable(tool.inputSchema().additionalProperties()).orElse(false));
+
             @SuppressWarnings("unchecked")
-            var inputSchema = BetaTool.InputSchema.builder()
-                    .properties(JsonValue.from(tool.inputSchema().properties()))
-                    .required(tool.inputSchema().required())
-                    .putAdditionalProperty("additionalProperties", JsonValue.from(tool.inputSchema().additionalProperties()));
+            var parameters = BetaTool.InputSchema.builder()
+                    .type(type)
+                    .properties(properties)
+                    .required(required)
+                    .putAdditionalProperty("additionalProperties", additionalProperties)
+                    .build();
 
             // `strict` mode ensures that the output will conform to the schema.
             builder.addTool(BetaTool.builder()
                     .name(tool.name())
                     .description(tool.description())
-                    .inputSchema(inputSchema.build())
+                    .inputSchema(parameters)
                     .strict(true)
                     .build());
         }

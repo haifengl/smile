@@ -19,11 +19,9 @@ package smile.llm.mcp;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import io.modelcontextprotocol.client.McpSyncClient;
 import io.modelcontextprotocol.spec.McpSchema;
-import smile.llm.tool.Tool;
 
 /**
  * MCP (Model Context Protocol) client that manages connections to one or more
@@ -43,7 +41,7 @@ public class McpClient implements AutoCloseable {
     private final String name;
     private final McpServerConfig server;
     private final McpSyncClient client;
-    private final List<McpToolSpec> tools;
+    private final List<McpSchema.Tool> tools;
     private final List<McpSchema.Resource> resources;
     private final List<McpSchema.Prompt> prompts;
 
@@ -58,17 +56,7 @@ public class McpClient implements AutoCloseable {
         this.name = name;
         this.server = server;
         this.client = client;
-        this.tools = client.listTools().tools().stream()
-                .map(tool -> {
-                    var schema = new Tool.JsonSchema(
-                            tool.inputSchema().type(),
-                            Optional.ofNullable(tool.inputSchema().properties()).orElse(Map.of()),
-                            Optional.ofNullable(tool.inputSchema().required()).orElse(List.of()),
-                            Optional.ofNullable(tool.inputSchema().additionalProperties()).orElse(false)
-                    );
-                    return new McpToolSpec(tool.name(), tool.description(), schema);
-                })
-                .toList();
+        this.tools = client.listTools().tools();
 
         var capabilities = client.getServerCapabilities();
         this.resources = capabilities.resources() != null ?
@@ -120,7 +108,7 @@ public class McpClient implements AutoCloseable {
     }
 
     /** List available tools. */
-    public List<McpToolSpec> tools() {
+    public List<McpSchema.Tool> tools() {
         return tools;
     }
 

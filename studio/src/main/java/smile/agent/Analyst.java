@@ -51,7 +51,7 @@ public class Analyst extends Agent {
 
         var tools = List.of(Read.spec(), Write.spec(), Edit.spec(), Append.spec(), Bash.spec());
         conversation().withTools(tools);
-        conversation().withMcp(MCP.specs());
+        conversation().withMcp(MCP.tools());
 
         // low temperature for more predictable, focused, and deterministic plans
         conversation().params().setProperty(LLM.TEMPERATURE, "0.2");

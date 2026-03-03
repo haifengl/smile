@@ -16,7 +16,7 @@
  */
 package smile.llm.mcp;
 
-import smile.llm.tool.Tool;
+import io.modelcontextprotocol.spec.McpSchema;
 
 /**
  * The specification of MCP tools.
@@ -24,7 +24,7 @@ import smile.llm.tool.Tool;
  * @param description the description of the tool.
  * @param inputSchema the JSON schema of the tool input.
  */
-public record McpToolSpec(String name, String description, Tool.JsonSchema inputSchema) {
+public record McpToolSpec(String name, String description, McpSchema.JsonSchema inputSchema) {
     @Override
     public int hashCode() {
         return name.hashCode();
