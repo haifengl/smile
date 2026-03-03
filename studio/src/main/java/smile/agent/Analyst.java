@@ -18,7 +18,6 @@ package smile.agent;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.function.Supplier;
 import smile.llm.Conversation;
 import smile.llm.client.LLM;
@@ -49,8 +48,7 @@ public class Analyst extends Agent {
 4. Use the instructions below and the tools available to you to assist the user.
 """);
 
-        var tools = List.of(Read.spec(), Write.spec(), Edit.spec(), Append.spec(), Bash.spec());
-        conversation().withTools(tools);
+        conversation().withTools(Tool.basics());
         conversation().withMcp(MCP.tools());
 
         // low temperature for more predictable, focused, and deterministic plans

@@ -38,4 +38,12 @@ public interface Tool {
      * @author Haifeng Li
      */
     record Spec(Class<? extends Tool> clazz, List<Method> methods) { }
+
+    /**
+     * Returns the specifications of basic tools for file operations.
+     * @return the specifications of basic tools for file operations.
+     */
+    static List<Spec> basics() {
+        return List.of(Read.spec(), Write.spec(), Edit.spec(), Append.spec(), Bash.spec());
+    }
 }
