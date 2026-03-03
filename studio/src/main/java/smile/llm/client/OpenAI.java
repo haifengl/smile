@@ -341,6 +341,7 @@ public class OpenAI extends LLM {
                         complete(request, conversation, handler);
                     } else {
                         conversation.add(Message.assistant(response(completion)));
+                        handler.onComplete(error);
                     }
                 } else {
                     conversation.add(Message.error(error.get().getMessage()));
