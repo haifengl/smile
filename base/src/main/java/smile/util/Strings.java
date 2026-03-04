@@ -18,6 +18,8 @@ package smile.util;
 
 import java.text.DecimalFormat;
 import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * String utility functions.
@@ -35,6 +37,39 @@ public interface Strings {
      */
     static boolean isNullOrEmpty(String s) {
         return s == null || s.isEmpty();
+    }
+
+    /**
+     * Interpolates environment variables in a given string.
+     * Placeholders should be in the format ${ENV_VAR_NAME}.
+     *
+     * @param input The string containing environment variable placeholders.
+     * @return The string with placeholders replaced by environment variable values.
+     */
+    static String interpolate(String input) {
+        if (input == null) {
+            return null;
+        }
+
+        // Pattern to find placeholders like ${ENV_VAR_NAME}
+        Pattern pattern = Pattern.compile("\\$\\{([^}]+)\\}");
+        Matcher matcher = pattern.matcher(input);
+
+        // Use StringBuilder for efficient string manipulation during replacement
+        StringBuilder sb = new StringBuilder();
+        while (matcher.find()) {
+            String envVarName = matcher.group(1);
+            // Retrieve the environment variable value using System.getenv()
+            String envVarValue = System.getenv(envVarName);
+
+            // Replace the placeholder with the environment variable value if found,
+            // otherwise use an empty string or handle as needed
+            String replacement = (envVarValue != null) ? Matcher.quoteReplacement(envVarValue) : "";
+            matcher.appendReplacement(sb, replacement);
+        }
+        matcher.appendTail(sb);
+
+        return sb.toString();
     }
 
     /**

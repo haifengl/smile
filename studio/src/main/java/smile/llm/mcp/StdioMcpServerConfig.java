@@ -23,6 +23,7 @@ import io.modelcontextprotocol.client.transport.ServerParameters;
 import io.modelcontextprotocol.client.transport.StdioClientTransport;
 import io.modelcontextprotocol.spec.McpClientTransport;
 import smile.util.OS;
+import smile.util.Strings;
 
 /**
  * Configuration for an MCP server that uses the {@code stdio} transport.
@@ -81,15 +82,20 @@ public record StdioMcpServerConfig(
     @Override
     public McpClientTransport transport() {
         var params = ServerParameters.builder(command);
-        if (args != null) params.args(args);
+        if (args != null) params.args(interpolate(args));
 
         // Apply Windows-specific override when running on Windows.
         if (OS.isWindows() && windows != null) {
             params = ServerParameters.builder(windows.command);
-            if (windows.args() != null) params.args(windows.args());
+            if (windows.args() != null) params.args(interpolate(windows.args()));
         }
 
         if (env != null) params.env(env);
         return new StdioClientTransport(params.build(), JSON_MAPPER);
+    }
+
+    /** Interpolates input variable placeholders with environment variables. */
+    private List<String> interpolate(List<String> args) {
+        return args.stream().map(Strings::interpolate).toList();
     }
 }
