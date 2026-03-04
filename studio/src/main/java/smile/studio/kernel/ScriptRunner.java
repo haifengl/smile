@@ -36,7 +36,8 @@ public class ScriptRunner extends Runner {
 
     /**
      * Constructor.
-     * @param name the short name of the ScriptEngine implementation.
+     * @param name the short name of the ScriptEngine implementation,
+     *             e.g., "scala", "kotlin".
      */
     public ScriptRunner(String name) {
         ScriptEngineManager manager = new ScriptEngineManager();

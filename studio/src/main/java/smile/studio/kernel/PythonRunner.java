@@ -64,7 +64,8 @@ public class PythonRunner extends Runner {
                 sb.append(line).append('\n');
             }
         } catch (IOException ex) {
-            logger.error("Error reading Python output", ex);
+            sb.append("Error reading Python output: ")
+              .append(ex.getMessage());
         }
         return sb.toString();
     }
