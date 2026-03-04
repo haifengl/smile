@@ -31,6 +31,10 @@ import smile.studio.kernel.JavaRunner;
  * @author Haifeng Li
  */
 public class Workspace extends JSplitPane {
+    /** The project pane consists of explorer and notebook. */
+    final JSplitPane project = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+    /** The tabbed pane for agent CLIs. */
+    final JTabbedPane tabs = new JTabbedPane();
     /** Java execution engine. */
     final JavaRunner runner = new JavaRunner();
     /** The explorer of runtime information. */
@@ -41,10 +45,6 @@ public class Workspace extends JSplitPane {
     final Analyst analyst;
         /** The coding agent for Java programming. */
     final Coder coder;
-    /** The project pane consists of explorer and notebook. */
-    final JSplitPane project = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-    /** The tabbed pane for agent CLIs. */
-    final JTabbedPane tabs = new JTabbedPane();
 
     /**
      * Constructor.
@@ -81,29 +81,28 @@ public class Workspace extends JSplitPane {
         /help for help, /init for initializing your project
         cwd:\s""" + System.getProperty("user.dir"),
 
-                """
-                As a state-of-the-art machine learning engineering agent,
-                I can help you with:
-                
-                🤖 Automatic end-to-end ML/AI solutions based on your requirements.
-                🔍 Best practices and state-of-the-art methods with web search.
-                🏅 Targeted code block refinement by ablation study.
-                🤝 Improved solution using iterative ensemble strategy.
-                💡 High-quality code completion and generation.
-                📊 Advanced interactive data visualization.
-                📂 Process data from CSV, ARFF, JSON, Avro, Parquet, Iceberg, to SQL.
-                🌐 Built-in inference server.
-                
-                Tips for getting started:
-                1. Ctrl + ENTER to execute your intents.
-                2. Ctrl + SPACE to show slash command argument hint.
-                3. Run /init to create a SMILE.md file with instructions for agent.
-                4. Be as specific as you would with another data scientist for the best result.
-                5. Data visualization can be feed to AI agents for interpretation and advices.
-                6. Create custom slash commands for reusable prompts or workflows.
-                7. Run Shell commands starting with a percentage sign (%).
-                8. Run Python expressions starting with an exclamation mark (!).
-                9. AI can make mistakes. Always review agent's responses.""");
+        """
+        As a state-of-the-art machine learning engineering agent,
+        I can help you with:
+        
+        🤖 Automatic end-to-end ML/AI solutions based on your requirements.
+        🔍 Best practices and state-of-the-art methods with web search.
+        🏅 Targeted code block refinement by ablation study.
+        🤝 Improved solution using iterative ensemble strategy.
+        📊 Advanced interactive data visualization.
+        📂 Process data from CSV, ARFF, JSON, Avro, Parquet, Iceberg, to SQL.
+        🌐 Built-in inference server.
+        
+        💡 Tips for getting started:
+        1. Ctrl + ENTER to execute your intents.
+        2. Ctrl + SPACE to show slash command argument hint.
+        3. Run /init to create a SMILE.md file with instructions for agents.
+        4. Be as specific as you would with another data scientist for the best result.
+        5. Data visualization can be feed to AI agents for interpretation and advices.
+        6. Create custom slash commands for reusable prompts or workflows.
+        7. Run Shell commands starting with a percentage sign (%).
+        8. Run Python expressions starting with an exclamation mark (!).
+        9. AI can make mistakes. Always review agent's responses.""");
 
         return cli;
     }
@@ -115,32 +114,19 @@ public class Workspace extends JSplitPane {
         =====================================================================
         Welcome! I am James, your AI assistant for Java programming.
         
-        /help for help, /init for initializing your project
+        I can help with code completion and generation in the notebook too.
         cwd:\s""" + System.getProperty("user.dir"),
 
-                """
-                As a state-of-the-art machine learning engineering agent,
-                I can help you with:
-                
-                🤖 Automatic end-to-end ML/AI solutions based on your requirements.
-                🔍 Best practices and state-of-the-art methods with web search.
-                🏅 Targeted code block refinement by ablation study.
-                🤝 Improved solution using iterative ensemble strategy.
-                💡 High-quality code completion and generation.
-                📊 Advanced interactive data visualization.
-                📂 Process data from CSV, ARFF, JSON, Avro, Parquet, Iceberg, to SQL.
-                🌐 Built-in inference server.
-                
-                Tips for getting started:
-                1. Ctrl + ENTER to execute your intents.
-                2. Ctrl + SPACE to show slash command argument hint.
-                3. Run /init to create a SMILE.md file with instructions for agent.
-                4. Be as specific as you would with another data scientist for the best result.
-                5. Data visualization can be feed to AI agents for interpretation and advices.
-                6. Create custom slash commands for reusable prompts or workflows.
-                7. Run Shell commands starting with a percentage sign (%).
-                8. Run Python expressions starting with an exclamation mark (!).
-                9. AI can make mistakes. Always review agent's responses.""");
+        """
+        💡 Tips for getting started:
+        1. Ctrl + ENTER to execute your intents.
+        2. Ctrl + SPACE to show slash command argument hint.
+        3. TAB to complete code in the notebook.
+        3. Be as specific as you would with another programmer for the best result.
+        4. Create custom slash commands for reusable prompts or workflows.
+        5. Run Shell commands starting with a percentage sign (%).
+        6. Run Python expressions starting with an exclamation mark (!).
+        7. AI can make mistakes. Always review agent's responses.""");
 
         return cli;
     }
