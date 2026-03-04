@@ -20,6 +20,7 @@ import javax.swing.*;
 import java.nio.file.Path;
 import com.formdev.flatlaf.util.SystemFileChooser;
 import smile.agent.Analyst;
+import smile.agent.Coder;
 import smile.shell.JShell;
 import smile.studio.SmileStudio;
 import smile.studio.kernel.JavaRunner;
@@ -34,12 +35,12 @@ public class Workspace extends JSplitPane {
     final JavaRunner runner = new JavaRunner();
     /** The explorer of runtime information. */
     final Explorer explorer;
-    /** The pane of conversational agent. */
-    final AgentCLI cli;
     /** The editor of notebook. */
     final Notebook notebook;
     /** The project pane consists of explorer and notebook. */
     final JSplitPane project = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+    /** The tabbed pane for agent CLIs. */
+    final JTabbedPane tabs = new JTabbedPane();
 
     /**
      * Constructor.
@@ -50,7 +51,24 @@ public class Workspace extends JSplitPane {
         super(JSplitPane.HORIZONTAL_SPLIT);
         explorer = new Explorer(runner, fileChooser);
         notebook = new Notebook(file, runner, explorer::refresh);
-        cli = new AgentCLI(analyst(file.getParent()));
+        tabs.addTab("Clair the Analyst", analyst(file.getParent()));
+        tabs.addTab("James the Java Guru", coder(file.getParent()));
+
+        project.setLeftComponent(explorer);
+        project.setRightComponent(notebook);
+        project.setResizeWeight(0.15);
+
+        setLeftComponent(project);
+        setRightComponent(tabs);
+        setResizeWeight(0.5);
+    }
+
+    /** Creates an analyst agent cli. */
+    private AgentCLI analyst(Path path) {
+        var analyst = new Analyst(SmileStudio::llm,
+                path.resolve(".smile", "analyst"),
+                path);
+        var cli = new AgentCLI(analyst);
 
         cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") + """
         =====================================================================
@@ -59,44 +77,39 @@ public class Workspace extends JSplitPane {
         /help for help, /init for initializing your project
         cwd:\s""" + System.getProperty("user.dir"),
 
-        """
-        As a state-of-the-art machine learning engineering agent,
-        I can help you with:
-        
-        🤖 Automatic end-to-end ML/AI solutions based on your requirements.
-        🔍 Best practices and state-of-the-art methods with web search.
-        🏅 Targeted code block refinement by ablation study.
-        🤝 Improved solution using iterative ensemble strategy.
-        💡 High-quality code completion and generation.
-        📊 Advanced interactive data visualization.
-        📂 Process data from CSV, ARFF, JSON, Avro, Parquet, Iceberg, to SQL.
-        🌐 Built-in inference server.
-        
-        Tips for getting started:
-        1. Ctrl + ENTER to execute your intents.
-        2. Ctrl + SPACE to show slash command argument hint.
-        3. Run /init to create a SMILE.md file with instructions for agent.
-        4. Be as specific as you would with another data scientist for the best result.
-        5. Data visualization can be feed to AI agents for interpretation and advices.
-        6. Create custom slash commands for reusable prompts or workflows.
-        7. Run Shell commands starting with a percentage sign (%).
-        8. Run Python expressions starting with an exclamation mark (!).
-        9. AI can make mistakes. Always review agent's responses.""");
+                """
+                As a state-of-the-art machine learning engineering agent,
+                I can help you with:
+                
+                🤖 Automatic end-to-end ML/AI solutions based on your requirements.
+                🔍 Best practices and state-of-the-art methods with web search.
+                🏅 Targeted code block refinement by ablation study.
+                🤝 Improved solution using iterative ensemble strategy.
+                💡 High-quality code completion and generation.
+                📊 Advanced interactive data visualization.
+                📂 Process data from CSV, ARFF, JSON, Avro, Parquet, Iceberg, to SQL.
+                🌐 Built-in inference server.
+                
+                Tips for getting started:
+                1. Ctrl + ENTER to execute your intents.
+                2. Ctrl + SPACE to show slash command argument hint.
+                3. Run /init to create a SMILE.md file with instructions for agent.
+                4. Be as specific as you would with another data scientist for the best result.
+                5. Data visualization can be feed to AI agents for interpretation and advices.
+                6. Create custom slash commands for reusable prompts or workflows.
+                7. Run Shell commands starting with a percentage sign (%).
+                8. Run Python expressions starting with an exclamation mark (!).
+                9. AI can make mistakes. Always review agent's responses.""");
 
-        project.setLeftComponent(explorer);
-        project.setRightComponent(notebook);
-        project.setResizeWeight(0.15);
-
-        setLeftComponent(project);
-        setRightComponent(cli);
-        setResizeWeight(0.6);
+        return cli;
     }
-
-    /** Creates an analyst agent. */
-    private Analyst analyst(Path path) {
-        return new Analyst(SmileStudio::llm,
-                path.resolve(".smile", "analyst"),
+    /** Creates a coding agent cli. */
+    private AgentCLI coder(Path path) {
+        var coder = new Coder(SmileStudio::llm,
+                path.resolve(".smile", "coder"),
                 path);
+        var cli = new AgentCLI(coder);
+        return cli;
     }
 
     /**
@@ -113,14 +126,6 @@ public class Workspace extends JSplitPane {
      */
     public Explorer explorer() {
         return explorer;
-    }
-
-    /**
-     * Returns the conversational agent component.
-     * @return the conversational agent component.
-     */
-    public AgentCLI cli() {
-        return cli;
     }
 
     /**
