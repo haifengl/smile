@@ -21,6 +21,7 @@ import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
 import com.formdev.flatlaf.util.SystemInfo;
@@ -133,6 +134,8 @@ public class AgentCLI extends JPanel {
         provider.addCompletion(new BasicCompletion(provider,
                 "/add-memory [instructions]"));
         provider.addCompletion(new BasicCompletion(provider,
+                "/open [file path]"));
+        provider.addCompletion(new BasicCompletion(provider,
                 "/train [-h for helps]"));
         provider.addCompletion(new BasicCompletion(provider,
                 "/predict [-h for helps]"));
@@ -213,6 +216,7 @@ public class AgentCLI extends JPanel {
             String[] command = instructions.split("\\s+");
             switch (command[0]) {
                 case "help" -> help(command, output);
+                case "open" -> open(command, output);
                 case "train", "predict", "serve" -> runShellCommand(IntentType.Command, instructions, output);
                 case "init" -> initMemory(instructions, output);
                 case "add-memory" -> addMemory(instructions, output);
@@ -236,6 +240,7 @@ public class AgentCLI extends JPanel {
                 /show-memory\tDisplay the content of long-term memory
                 /refresh-memory\tReload the context from disk
                 /clear\t\tClear the current conversation history.
+                /open\t\tOpen a text file to edit.
                 /train\t\tTrain a machine learning model
                 /predict\tRun batch inference
                 /serve\t\tStart an inference service""");
@@ -288,6 +293,17 @@ public class AgentCLI extends JPanel {
     /** Displays the system prompt. */
     private void showSystemPrompt(OutputArea output) {
         output.setText(agent.system());
+    }
+
+    /** Opens a notepad to edit file. */
+    private void open(String[] command, OutputArea output) {
+        if (command.length < 2) {
+            output.appendLine("Usage: /open [file path]");
+            return;
+        }
+
+        String path = command[1];
+        Notepad.open(Path.of(path));
     }
 
     /** Renders output as Markdown. */
