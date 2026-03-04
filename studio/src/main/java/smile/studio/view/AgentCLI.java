@@ -27,7 +27,6 @@ import com.formdev.flatlaf.util.SystemInfo;
 import org.fife.ui.autocomplete.BasicCompletion;
 import org.fife.ui.autocomplete.CompletionProvider;
 import org.fife.ui.autocomplete.DefaultCompletionProvider;
-import org.fife.ui.autocomplete.ShorthandCompletion;
 import smile.agent.Agent;
 import smile.agent.Memory;
 import smile.llm.client.StreamResponseHandler;
