@@ -95,12 +95,11 @@ public class Context {
      */
     public Context(Path path) {
         this.path = path;
-        load();
+        load(smileMd());
     }
 
     /** Loads the context from disk. */
-    private void load() {
-        Path smileMd = path.resolve(SMILE_MD);
+    private void load(Path smileMd) {
         try {
             if (Files.exists(smileMd)) {
                 instructions.add(Memory.from(smileMd));
@@ -163,7 +162,20 @@ public class Context {
         specs.clear();
         skills.clear();
         commands.clear();
-        load();
+        load(smileMd());
+    }
+
+    /** Returns the path to SMILE.md. */
+    private Path smileMd() {
+        // Shared project instructions from parent folder .smile.
+        Path smileMd = path.getParent().resolve(SMILE_MD);
+        // For system or user context, only load SMILE.md from agent's folder.
+        if (path.startsWith(Path.of(System.getProperty("user.home"))) ||
+            path.startsWith(Path.of(System.getProperty("smile.home")))) {
+            smileMd = path.resolve(SMILE_MD);
+        }
+
+        return smileMd;
     }
 
     /**

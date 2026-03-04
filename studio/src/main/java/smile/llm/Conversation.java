@@ -55,9 +55,9 @@ public class Conversation {
     /** The directory path for conversation history and summary. */
     private final Path path;
     /** The built-in tools available for LLM. */
-    private List<Tool.Spec> tools;
+    private List<Tool.Spec> tools = List.of();
     /** The MCP tools available for LLM. */
-    private List<McpSchema.Tool> mcp;
+    private List<McpSchema.Tool> mcp = List.of();
     /** The optional system reminder to keep the AI focused, enforce safety, and guide tool usage. */
     private String reminder;
     /** Prompt repetition improves non-reasoning LLMs. */

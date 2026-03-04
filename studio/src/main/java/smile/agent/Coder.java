@@ -31,12 +31,12 @@ import smile.llm.client.StreamResponseHandler;
 public class Coder extends Agent {
     /**
      * Constructor.
-     * @param llm the supplier of LLM service.
-     * @param history the directory path for conversation history.
-     * @param context the directory path for agent context.
+     * @param name the agent name.
+     * @param path the project directory path.
+     * @param llm  the supplier of LLM service.
      */
-    public Coder(Supplier<LLM> llm, Path history, Path context) {
-        super(llm, history, context);
+    public Coder(String name, Path path, Supplier<LLM> llm) {
+        super(name, path, llm);
         // low temperature for more predictable, focused, and deterministic code
         conversation().params().setProperty(LLM.TEMPERATURE, "0.2");
         conversation().params().setProperty(LLM.MAX_OUTPUT_TOKENS, "2048");

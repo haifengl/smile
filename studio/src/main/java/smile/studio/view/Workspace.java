@@ -37,6 +37,10 @@ public class Workspace extends JSplitPane {
     final Explorer explorer;
     /** The editor of notebook. */
     final Notebook notebook;
+    /** The analyst agent for data science and machine learning. */
+    final Analyst analyst;
+        /** The coding agent for Java programming. */
+    final Coder coder;
     /** The project pane consists of explorer and notebook. */
     final JSplitPane project = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
     /** The tabbed pane for agent CLIs. */
@@ -49,10 +53,13 @@ public class Workspace extends JSplitPane {
      */
     public Workspace(Path file, SystemFileChooser fileChooser) {
         super(JSplitPane.HORIZONTAL_SPLIT);
+        var folder = file.getParent();
+        analyst = new Analyst("data-analyst", folder, SmileStudio::llm);
+        coder = new Coder("java-coder", folder, SmileStudio::llm);
         explorer = new Explorer(runner, fileChooser);
-        notebook = new Notebook(file, runner, explorer::refresh);
-        tabs.addTab("Clair the Analyst", analyst(file.getParent()));
-        tabs.addTab("James the Java Guru", coder(file.getParent()));
+        notebook = new Notebook(file, coder, runner, explorer::refresh);
+        tabs.addTab("Clair the Analyst", analystCLI(analyst));
+        tabs.addTab("James the Java Guru", coderCLI(coder));
 
         project.setLeftComponent(explorer);
         project.setRightComponent(notebook);
@@ -64,10 +71,7 @@ public class Workspace extends JSplitPane {
     }
 
     /** Creates an analyst agent cli. */
-    private AgentCLI analyst(Path path) {
-        var analyst = new Analyst(SmileStudio::llm,
-                path.resolve(".smile", "analyst"),
-                path);
+    private AgentCLI analystCLI(Analyst analyst) {
         var cli = new AgentCLI(analyst);
 
         cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") + """
@@ -103,12 +107,41 @@ public class Workspace extends JSplitPane {
 
         return cli;
     }
+
     /** Creates a coding agent cli. */
-    private AgentCLI coder(Path path) {
-        var coder = new Coder(SmileStudio::llm,
-                path.resolve(".smile", "coder"),
-                path);
+    private AgentCLI coderCLI(Coder coder) {
         var cli = new AgentCLI(coder);
+        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") + """
+        =====================================================================
+        Welcome! I am James, your AI assistant for Java programming.
+        
+        /help for help, /init for initializing your project
+        cwd:\s""" + System.getProperty("user.dir"),
+
+                """
+                As a state-of-the-art machine learning engineering agent,
+                I can help you with:
+                
+                🤖 Automatic end-to-end ML/AI solutions based on your requirements.
+                🔍 Best practices and state-of-the-art methods with web search.
+                🏅 Targeted code block refinement by ablation study.
+                🤝 Improved solution using iterative ensemble strategy.
+                💡 High-quality code completion and generation.
+                📊 Advanced interactive data visualization.
+                📂 Process data from CSV, ARFF, JSON, Avro, Parquet, Iceberg, to SQL.
+                🌐 Built-in inference server.
+                
+                Tips for getting started:
+                1. Ctrl + ENTER to execute your intents.
+                2. Ctrl + SPACE to show slash command argument hint.
+                3. Run /init to create a SMILE.md file with instructions for agent.
+                4. Be as specific as you would with another data scientist for the best result.
+                5. Data visualization can be feed to AI agents for interpretation and advices.
+                6. Create custom slash commands for reusable prompts or workflows.
+                7. Run Shell commands starting with a percentage sign (%).
+                8. Run Python expressions starting with an exclamation mark (!).
+                9. AI can make mistakes. Always review agent's responses.""");
+
         return cli;
     }
 

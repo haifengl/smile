@@ -19,7 +19,6 @@ package smile.agent;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.function.Supplier;
-import smile.llm.Conversation;
 import smile.llm.client.LLM;
 import smile.llm.mcp.MCP;
 import smile.llm.tool.*;
@@ -32,14 +31,12 @@ import smile.llm.tool.*;
 public class Analyst extends Agent {
     /**
      * Constructor.
-     * @param llm the supplier of LLM service.
-     * @param session the directory path for conversations.
-     * @param context the directory path for agent context.
+     * @param name the agent name.
+     * @param path the project directory path.
+     * @param llm  the supplier of LLM service.
      */
-    public Analyst(Supplier<LLM> llm, Path session, Path context) {
-        super(llm, new Conversation(session), new Context(context),
-              new Context(System.getProperty("user.home") + "/.smile/agents/data-analyst"),
-              new Context(System.getProperty("smile.home") + "/agents/data-analyst"));
+    public Analyst(String name, Path path, Supplier<LLM> llm) {
+        super(name, path, llm);
 
         conversation().withReminder("""
 1. Answer the user's query comprehensively.

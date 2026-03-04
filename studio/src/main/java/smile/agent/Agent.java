@@ -65,43 +65,17 @@ public class Agent {
 
     /**
      * Constructor.
-     *
-     * @param llm          the supplier of LLM service.
-     * @param conversation the conversation session.
-     * @param context      the project-specific context.
-     * @param user         the user context for user rules, skills, etc.
-     * @param global       the global context for system instructions, skills, tools, etc.
+     * @param name the agent name.
+     * @param path the project directory path.
+     * @param llm  the supplier of LLM service.
      */
-    public Agent(Supplier<LLM> llm, Conversation conversation,
-                 Context context, Context user, Context global) {
+    public Agent(String name, Path path, Supplier<LLM> llm) {
         this.llm = llm;
-        this.conversation = conversation;
-        this.context = context;
-        this.user = user;
-        this.global = global;
+        this.conversation = new Conversation(path.resolve(".smile", name, "memory"));
+        this.context = new Context(path.resolve(".smile", name));
+        this.user = new Context(Path.of(System.getProperty("user.home"), "/agents", name));
+        this.global = new Context(Path.of(System.getProperty("smile.home"), "/agents", name));
         conversation.params().setProperty(LLM.SYSTEM_PROMPT, system());
-    }
-
-    /**
-     * Constructor.
-     *
-     * @param llm          the supplier of LLM service.
-     * @param conversation the conversation session.
-     * @param context      the project-specific context.
-     */
-    public Agent(Supplier<LLM> llm, Conversation conversation, Context context) {
-        this(llm, conversation, context, null, null);
-    }
-
-    /**
-     * Constructor.
-     *
-     * @param llm     the supplier of LLM service.
-     * @param session the directory path for conversations.
-     * @param context the directory path for agent context.
-     */
-    public Agent(Supplier<LLM> llm, Path session, Path context) {
-        this(llm, new Conversation(session), new Context(context));
     }
 
     /** Reloads the agent context from disk. */

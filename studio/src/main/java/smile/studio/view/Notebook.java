@@ -35,7 +35,6 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 import jdk.jshell.*;
 import smile.agent.Coder;
-import smile.studio.SmileStudio;
 import smile.studio.kernel.PostRunNavigation;
 import smile.studio.kernel.JavaRunner;
 import smile.swing.ScrollablePanel;
@@ -65,17 +64,16 @@ public class Notebook extends JPanel implements DocumentListener {
     /**
      * Constructor.
      * @param file the notebook file. If null, a new notebook will be created.
+     * @param coder the coding assistant agent.
      * @param runner Java code execution engine.
      * @param postRunAction the action to perform after running cells.
      */
-    public Notebook(Path file, JavaRunner runner, Runnable postRunAction) {
+    public Notebook(Path file, Coder coder, JavaRunner runner, Runnable postRunAction) {
         super(new BorderLayout());
         this.file = file;
         this.runner = runner;
         this.postRunAction = postRunAction;
-        this.coder = new Coder(SmileStudio::llm,
-                file.getParent().resolve(".smile", "coder"),
-                Path.of(System.getProperty("smile.home") + "/agents/java-coder"));
+        this.coder = coder;
 
         cells.setLayout(new BoxLayout(cells, BoxLayout.Y_AXIS));
         scrollPane.getVerticalScrollBar().setUnitIncrement(18);
