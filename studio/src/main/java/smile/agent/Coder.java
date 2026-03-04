@@ -22,6 +22,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import smile.llm.client.LLM;
 import smile.llm.client.StreamResponseHandler;
+import smile.llm.mcp.MCP;
+import smile.llm.tool.Tool;
 
 /**
  * The coding assistant agent.
@@ -37,6 +39,9 @@ public class Coder extends Agent {
      */
     public Coder(String name, Path path, Supplier<LLM> llm) {
         super(name, path, llm);
+        conversation().withTools(Tool.basics());
+        conversation().withMcp(MCP.tools());
+
         // low temperature for more predictable, focused, and deterministic code
         conversation().params().setProperty(LLM.TEMPERATURE, "0.2");
         conversation().params().setProperty(LLM.MAX_OUTPUT_TOKENS, "2048");

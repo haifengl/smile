@@ -17,6 +17,15 @@
         "command": "cmd.exe",
         "args": ["/c", "npx", "-y", "@playwright/mcp@latest"]
       }
+    },
+    "context7": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"],
+      "windows": {
+        "command": "cmd.exe",
+        "args": ["/c", "npx", "-y", "@upstash/context7-mcp"]
+      }
     }
   }
 }
