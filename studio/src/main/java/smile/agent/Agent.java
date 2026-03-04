@@ -329,7 +329,7 @@ public class Agent {
     public CompletableFuture<String> response(String prompt) {
         conversation.add(Message.user(prompt));
 
-        return llm.get().complete(conversation.prompt(prompt), conversation.params())
+        return llm.get().complete(conversation.hydrate(prompt), conversation.params())
                 .handle((response, ex) -> {
                     var message = Optional.ofNullable(ex)
                             .map(t -> Message.error(t.getMessage()))

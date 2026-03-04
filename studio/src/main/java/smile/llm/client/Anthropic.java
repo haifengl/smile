@@ -161,7 +161,7 @@ public class Anthropic extends LLM {
         // This must be done after adding the conversation history to the request,
         // otherwise the new user message will be sent twice.
         conversation.add(Message.user(prompt));
-        request.addUserMessage(conversation.prompt(prompt));
+        request.addUserMessage(conversation.hydrate(prompt));
         addTools(request, conversation);
         complete(request, conversation, handler);
     }

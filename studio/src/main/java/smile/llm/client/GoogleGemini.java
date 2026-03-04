@@ -137,7 +137,7 @@ public class GoogleGemini extends LLM {
 
         contents.add(Content.builder()
                 .role("user")
-                .parts(Part.fromText(conversation.prompt(prompt)))
+                .parts(Part.fromText(conversation.hydrate(prompt)))
                 .build());
 
         conversation.add(Message.user(prompt));

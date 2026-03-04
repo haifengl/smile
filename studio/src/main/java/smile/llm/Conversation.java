@@ -60,6 +60,8 @@ public class Conversation {
     private List<McpSchema.Tool> mcp;
     /** The optional system reminder to keep the AI focused, enforce safety, and guide tool usage. */
     private String reminder;
+    /** Prompt repetition improves non-reasoning LLMs. */
+    private boolean repetition = true;
 
     /**
      * Constructor. New messages will be saved to history file.
@@ -145,19 +147,44 @@ public class Conversation {
         return this;
     }
 
+   /**
+    * Returns whether prompt repetition is enabled.
+    *
+    * @return true if prompt repetition is enabled, false otherwise.
+    */
+    public boolean repetition() {
+        return repetition;
+    }
+
     /**
-     * Injects the system reminder into the user prompt if present.
+     * Enables or disables prompt repetition. When enabled, the user prompt
+     * will be repeated in the hydrated prompt, which can improve non-reasoning LLMs
      *
-     * @param message the original user message.
-     * @return the user prompt with system reminder injected if present.
+     * @param repetition true to enable prompt repetition, false to disable.
+     * @return this object.
      */
-    public String prompt(String message) {
-        return reminder().map(reminder -> String.format("""
+    public Conversation withRepetition(boolean repetition) {
+        this.repetition = repetition;
+        return this;
+    }
+
+    /**
+     * Enriches a prompt with system reminder, prompt repetition, etc.
+     *
+     * @param prompt the original user prompt.
+     * @return the hydrated prompt.
+     */
+    public String hydrate(String prompt) {
+        if (repetition) prompt += prompt;
+        if (reminder != null) {
+            prompt = String.format("""
 <system-reminder>
 %s
 </system-reminder>
 %s
-""", reminder, message)).orElse(message);
+""", reminder, prompt);
+        }
+        return prompt;
     }
 
     /**

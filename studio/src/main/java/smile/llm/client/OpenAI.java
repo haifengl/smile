@@ -270,7 +270,7 @@ public class OpenAI extends LLM {
         // This must be done after adding the conversation history to the request,
         // otherwise the new user message will be sent twice.
         conversation.add(Message.user(prompt));
-        request.addUserMessage(conversation.prompt(prompt));
+        request.addUserMessage(conversation.hydrate(prompt));
         addTools(request, conversation);
 
         // For streaming chat completions, token usage data is not included by default.
