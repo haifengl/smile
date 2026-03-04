@@ -116,6 +116,22 @@ public class AgentCLI extends JPanel {
         intents.add(welcome, 0);
     }
 
+    public Map<String, String> hints() {
+        Map<String, String> hints = new HashMap<>();
+        hints.put("/init", "[project goals, requirements, tasks, instructions, etc]");
+        hints.put("/add-memory", "[instructions]");
+        hints.put("/train", "[-h for helps]");
+        hints.put("/predict", "[-h for helps]");
+        hints.put("/serve", "[-h for helps]");
+        for (var cmd : agent.commands()) {
+            cmd.hint().ifPresent(hint -> hints.put("/" + cmd.name(), hint));
+        }
+        for (var skill : agent.skills()) {
+            skill.hint().ifPresent(hint -> hints.put("/" + skill.name(), hint));
+        }
+        return hints;
+    }
+
     /**
      * Executes shell commands.
      */

@@ -17,9 +17,11 @@
 package smile.studio.view;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyEvent;
+import javax.swing.text.BadLocationException;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.geom.Rectangle2D;
+import java.util.Map;
 import org.fife.ui.rsyntaxtextarea.*;
 
 /**
@@ -69,5 +71,45 @@ public class CodeEditor extends RSyntaxTextArea {
      */
     public void setPreferredRows() {
         setRows(Math.min(30, getLineCount()));
+    }
+
+    /**
+     * Adds hints for commands.
+     * the corresponding hint will be shown as a tooltip.
+     * @param hints a map of command to hint.
+     */
+    public void addHints(Map<String, String> hints) {
+        addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                try {
+                    if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+                        String text = getText(0, getCaretPosition()).trim();
+                        setToolTipText(hints.get(text));
+                    }
+                } catch (BadLocationException ex) {
+                    // ignore and do not update tooltip
+                }
+            }
+        });
+    }
+
+    @Override
+    public Point getToolTipLocation(MouseEvent e) {
+        try {
+            int caretPosition = getCaretPosition();
+            Rectangle2D caretCoords = modelToView2D(caretPosition);
+            if (caretCoords != null) {
+                int x = (int) caretCoords.getX();
+                int y = (int) caretCoords.getY();
+                return new Point(x + 5, y + 5);
+            }
+        } catch (BadLocationException ex) {
+            // ignore and fallback to cursor location
+        }
+
+        // Return the tooltip location near the cursor
+        // Adding small offset (e.g., 5 pixels right and 5 down)
+        return new Point(e.getX() + 5, e.getY() + 5);
     }
 }

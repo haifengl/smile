@@ -37,7 +37,7 @@ import tools.jackson.databind.node.ObjectNode;
 public class Command extends Memory {
     /** The model to execute the command. */
     private final String model;
-    /** argument-hint. */
+    /** The argument hint. */
     private final String hint;
     /** The tools command can use. */
     private final List<String> allowedTools = new ArrayList<>();

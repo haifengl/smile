@@ -54,6 +54,7 @@ public class Intent extends JPanel {
 
         initInputPane();
         initActionMap(cli);
+        editor.addHints(cli.hints());
         output.setFont(Monospaced.getFont());
         output.setEditable(false);
         output.setLineWrap(true);

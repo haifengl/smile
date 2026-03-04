@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import tools.jackson.databind.node.ObjectNode;
 
@@ -29,6 +30,7 @@ import tools.jackson.databind.node.ObjectNode;
  * that an agent activates on-demand when relevant, acting
  * like "optional expertise". Skills enhance productivity
  * by automating specific tasks without manual prompting.
+ * A skill may be used as a slash command too.
  *
  * @author Haifeng Li
  */
@@ -43,6 +45,8 @@ public class Skill extends Memory {
      * Optional reference documents.
      */
     private final Map<String, Path> references;
+    /** The argument hint. */
+    private final String hint;
 
     /**
      * Constructor.
@@ -60,6 +64,9 @@ public class Skill extends Memory {
                  Map<String, Path> references,
                  Path path) {
         super(content, metadata, path);
+        var node = metadata.get("argument-hint");
+        hint = node != null ? node.asString() : null;
+
         this.scripts = scripts;
         this.references = references;
     }
@@ -80,6 +87,20 @@ public class Skill extends Memory {
     public String compatibility() {
         var node = metadata.get("compatibility");
         return node != null ? node.asString() : "";
+    }
+
+    /// Returns the expected arguments from users.
+    ///
+    /// **Best practices:**
+    /// - Use square brackets `[]` for each argument
+    /// - Use descriptive names (not `arg1`, `arg2`)
+    /// - Indicate optional vs required in description
+    /// - Match order to positional arguments in command
+    /// - Keep concise but clear
+    ///
+    /// @return the expected arguments from users.
+    public Optional<String> hint() {
+        return Optional.ofNullable(hint);
     }
 
     /**
