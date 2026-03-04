@@ -24,6 +24,10 @@ import java.io.IOException;
 import java.util.*;
 import java.util.List;
 import com.formdev.flatlaf.util.SystemInfo;
+import org.fife.ui.autocomplete.BasicCompletion;
+import org.fife.ui.autocomplete.CompletionProvider;
+import org.fife.ui.autocomplete.DefaultCompletionProvider;
+import org.fife.ui.autocomplete.ShorthandCompletion;
 import smile.agent.Agent;
 import smile.agent.Memory;
 import smile.llm.client.StreamResponseHandler;
@@ -45,6 +49,8 @@ public class AgentCLI extends JPanel {
     private final JPanel intents = new ScrollablePanel();
     /** The agent. */
     private final Agent agent;
+    /** The provider of slash command hints. */
+    private final CompletionProvider hints;
 
     /**
      * Constructor.
@@ -53,6 +59,7 @@ public class AgentCLI extends JPanel {
     public AgentCLI(Agent agent) {
         super(new BorderLayout());
         this.agent = agent;
+        this.hints = createCompletionProvider();
 
         setBorder(new EmptyBorder(0, 0, 0, 8));
         intents.setLayout(new BoxLayout(intents, BoxLayout.Y_AXIS));
@@ -116,19 +123,39 @@ public class AgentCLI extends JPanel {
         intents.add(welcome, 0);
     }
 
-    public Map<String, String> hints() {
-        Map<String, String> hints = new HashMap<>();
-        hints.put("/init", "[project goals, requirements, tasks, instructions, etc]");
-        hints.put("/add-memory", "[instructions]");
-        hints.put("/train", "[-h for helps]");
-        hints.put("/predict", "[-h for helps]");
-        hints.put("/serve", "[-h for helps]");
+    /**
+     * Creates a provider of slash command argument hint.
+     */
+    private CompletionProvider createCompletionProvider() {
+        DefaultCompletionProvider provider = new DefaultCompletionProvider();
+
+        provider.addCompletion(new BasicCompletion(provider,
+                "/init [project goals, requirements, tasks, instructions, etc]"));
+        provider.addCompletion(new BasicCompletion(provider,
+                "/add-memory [instructions]"));
+        provider.addCompletion(new BasicCompletion(provider,
+                "/train [-h for helps]"));
+        provider.addCompletion(new BasicCompletion(provider,
+                "/predict [-h for helps]"));
+        provider.addCompletion(new BasicCompletion(provider,
+                "/serve [-h for helps]"));
         for (var cmd : agent.commands()) {
-            cmd.hint().ifPresent(hint -> hints.put("/" + cmd.name(), hint));
+            cmd.hint().ifPresent(hint -> provider.addCompletion(
+                    new BasicCompletion(provider, "/" + cmd.name() + " " + hint)));
         }
+
         for (var skill : agent.skills()) {
-            skill.hint().ifPresent(hint -> hints.put("/" + skill.name(), hint));
+            skill.hint().ifPresent(hint -> provider.addCompletion(
+                    new BasicCompletion(provider, "/" + skill.name() + " " + hint)));
         }
+
+        return provider;
+    }
+
+    /**
+     * Returns a provider of slash command argument hint.
+     */
+    public CompletionProvider hints() {
         return hints;
     }
 

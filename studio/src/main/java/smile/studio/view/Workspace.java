@@ -74,13 +74,14 @@ public class Workspace extends JSplitPane {
         
         Tips for getting started:
         1. Ctrl + ENTER to execute your intents.
-        2. Run /init to create a SMILE.md file with instructions for agent.
-        3. Be as specific as you would with another data scientist for the best result.
-        4. Data visualization can be feed to AI agents for interpretation and advices.
-        5. Create custom slash commands for reusable prompts or workflows.
-        6. Run Shell commands starting with a percentage sign (%).
-        7. Run Python expressions starting with an exclamation mark (!).
-        8. AI can make mistakes. Always review agent's responses.""");
+        2. Ctrl + SPACE to show slash command argument hint.
+        3. Run /init to create a SMILE.md file with instructions for agent.
+        4. Be as specific as you would with another data scientist for the best result.
+        5. Data visualization can be feed to AI agents for interpretation and advices.
+        6. Create custom slash commands for reusable prompts or workflows.
+        7. Run Shell commands starting with a percentage sign (%).
+        8. Run Python expressions starting with an exclamation mark (!).
+        9. AI can make mistakes. Always review agent's responses.""");
 
         project.setLeftComponent(explorer);
         project.setRightComponent(notebook);

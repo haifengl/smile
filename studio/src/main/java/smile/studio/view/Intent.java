@@ -23,6 +23,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.text.BadLocationException;
 import com.formdev.flatlaf.ui.FlatLineBorder;
 import com.formdev.flatlaf.util.SystemInfo;
+import org.fife.ui.autocomplete.AutoCompletion;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import smile.plot.swing.Palette;
 import smile.studio.model.IntentType;
@@ -54,7 +55,12 @@ public class Intent extends JPanel {
 
         initInputPane();
         initActionMap(cli);
-        editor.addHints(cli.hints());
+
+        var ac = new AutoCompletion(cli.hints());
+        ac.setAutoActivationEnabled(true);
+        ac.setAutoActivationDelay(500);
+        ac.install(editor);
+
         output.setFont(Monospaced.getFont());
         output.setEditable(false);
         output.setLineWrap(true);
