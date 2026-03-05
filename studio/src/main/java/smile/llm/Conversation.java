@@ -62,6 +62,8 @@ public class Conversation {
     private String reminder;
     /** Prompt repetition improves non-reasoning LLMs. */
     private boolean repetition = true;
+    /** Plan mode. */
+    private boolean planMode = false;
 
     /**
      * Constructor. New messages will be saved to history file.
@@ -169,6 +171,29 @@ public class Conversation {
     }
 
     /**
+     * Returns whether plan mode is active.
+     *
+     * @return true if plan mode is active, false otherwise.
+     */
+    public boolean planMode() {
+        return planMode;
+    }
+
+    /**
+     * Sets whether plan mode is active. When plan mode is active, AI will
+     * only answer the user's query and present a plan without taking any
+     * actions, which can be useful for complex tasks that require careful
+     * planning before execution.
+     *
+     * @param planning true to enable plan mode, false to disable.
+     * @return this object.
+     */
+    public Conversation withPlanMode(boolean planning) {
+        this.planMode = planning;
+        return this;
+    }
+
+    /**
      * Enriches a prompt with system reminder, prompt repetition, etc.
      *
      * @param prompt the original user prompt.
@@ -176,14 +201,26 @@ public class Conversation {
      */
     public String hydrate(String prompt) {
         if (repetition) prompt += prompt;
+
+        String systemReminder = !planMode ? "" : """
+Plan mode is active. The user indicated that they do not want you to execute yet -- you MUST NOT make any edits, run any non-readonly tools (including changing configs or making commits), or otherwise make any changes to the system. This supersedes any other instructions you have received (for example, to make edits). Instead, you should:
+1. Answer the user's query comprehensively
+2. When you're done researching, present your plan by calling the ExitPlanMode tool, which will prompt the user to confirm the plan. Do NOT make any file changes or run any tools that modify the system state in any way until the user has confirmed the plan.
+""";
+
         if (reminder != null) {
+            systemReminder += "\n\n" + reminder;
+        }
+
+        if (!systemReminder.isBlank()) {
             prompt = String.format("""
 <system-reminder>
 %s
 </system-reminder>
 %s
-""", reminder, prompt);
+""", systemReminder, prompt);
         }
+
         return prompt;
     }
 
