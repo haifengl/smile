@@ -42,7 +42,7 @@ public class Cell extends JPanel implements StreamResponseHandler {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Cell.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), Locale.getDefault());
     private final String placeholder = bundle.getString("Prompt");
-    private final CodeEditor editor = new CodeEditor(20, 80, SyntaxConstants.SYNTAX_STYLE_JAVA);
+    private final Editor editor = new Editor(20, 80, SyntaxConstants.SYNTAX_STYLE_JAVA);
     private final OutputArea output = new OutputArea();
     private final JTextField prompt = new JXTextField(placeholder);
     private final TitledBorder border = BorderFactory.createTitledBorder("[ ]");
@@ -388,7 +388,7 @@ public class Cell extends JPanel implements StreamResponseHandler {
      * Returns the code editor.
      * @return the code editor.
      */
-    public CodeEditor editor() {
+    public Editor editor() {
         return editor;
     }
 

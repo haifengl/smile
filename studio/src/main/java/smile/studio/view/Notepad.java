@@ -50,7 +50,7 @@ public final class Notepad extends JFrame implements SearchListener {
 
     private final Path file;
     private final CollapsibleSectionPanel csp = new CollapsibleSectionPanel();
-    private final RSyntaxTextArea editor = new CodeEditor(40, 120);
+    private final RSyntaxTextArea editor = new Editor(40, 120);
     private final StatusBar statusBar = new StatusBar();
     private final FindDialog findDialog = new FindDialog(this, this);
     private final ReplaceDialog replaceDialog = new ReplaceDialog(this, this);

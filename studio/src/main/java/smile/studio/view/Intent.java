@@ -42,7 +42,7 @@ public class Intent extends JPanel {
     private final JPanel inputPane = new JPanel(new BorderLayout());
     private final JLabel indicator = new JLabel(">", SwingConstants.CENTER);
     private final JComboBox<IntentType> intentTypeComboBox = new JComboBox<>(IntentType.values());
-    private final CodeEditor editor = new CodeEditor(1, 80, SyntaxConstants.SYNTAX_STYLE_NONE);
+    private final Editor editor = new Editor(1, 80, SyntaxConstants.SYNTAX_STYLE_NONE);
     private final OutputArea output = new OutputArea();
 
     /**
@@ -258,7 +258,7 @@ public class Intent extends JPanel {
      * Returns the intent editor.
      * @return the intent editor.
      */
-    public CodeEditor editor() {
+    public Editor editor() {
         return editor;
     }
 

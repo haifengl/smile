@@ -17,22 +17,21 @@
 package smile.studio.view;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.*;
 import org.fife.ui.rsyntaxtextarea.*;
 
 /**
- * Code editor with syntax highlighting.
+ * Text editor with syntax highlighting.
  *
  * @author Haifeng Li
  */
-public class CodeEditor extends RSyntaxTextArea {
+public class Editor extends RSyntaxTextArea {
     /**
      * Constructor.
      * @param rows the number of rows.
      * @param cols the number of columns.
      */
-    public CodeEditor(int rows, int cols) {
+    public Editor(int rows, int cols) {
         this(rows, cols, SyntaxConstants.SYNTAX_STYLE_NONE);
     }
 
@@ -42,7 +41,7 @@ public class CodeEditor extends RSyntaxTextArea {
      * @param cols the number of columns.
      * @param style language highlighting style.
      */
-    public CodeEditor(int rows, int cols, String style) {
+    public Editor(int rows, int cols, String style) {
         super(rows, cols);
         putClientProperty("FlatLaf.styleClass", "monospaced");
         setSyntaxEditingStyle(style);
