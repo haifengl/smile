@@ -20,8 +20,9 @@ import java.awt.*;
 import java.awt.event.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Locale;
+import java.util.ResourceBundle;
 import javax.swing.*;
-import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.text.BadLocationException;
 import org.fife.rsta.ui.CollapsibleSectionPanel;
 import org.fife.rsta.ui.GoToDialog;
@@ -45,9 +46,11 @@ import org.fife.ui.rtextarea.SearchResult;
  * @author Haifeng Li
  */
 public final class Notepad extends JFrame implements SearchListener {
+    private static final ResourceBundle bundle = ResourceBundle.getBundle(Notepad.class.getName(), Locale.getDefault());
 
+    private final Path file;
     private final CollapsibleSectionPanel csp = new CollapsibleSectionPanel();
-    private final RSyntaxTextArea editor = new RSyntaxTextArea(25, 80);
+    private final RSyntaxTextArea editor = new CodeEditor(40, 120);
     private final StatusBar statusBar = new StatusBar();
     private final FindDialog findDialog = new FindDialog(this, this);
     private final ReplaceDialog replaceDialog = new ReplaceDialog(this, this);
@@ -59,6 +62,7 @@ public final class Notepad extends JFrame implements SearchListener {
      * @param file the file to open.
      */
     private Notepad(Path file) {
+        this.file = file;
         JPanel contentPane = new JPanel(new BorderLayout());
         setContentPane(contentPane);
         contentPane.add(csp, BorderLayout.CENTER);
@@ -66,12 +70,14 @@ public final class Notepad extends JFrame implements SearchListener {
         setJMenuBar(createMenuBar());
         initSearchDialogs();
 
+        editor.setFont(Monospaced.getFont());
         editor.setCodeFoldingEnabled(true);
         editor.setMarkOccurrences(true);
 
         try {
             String content = Files.readString(file);
             editor.setText(content);
+            editor.setCaretPosition(0);
 
             switch (Files.probeContentType(file)) {
                 case "text/markdown":
@@ -118,7 +124,7 @@ public final class Notepad extends JFrame implements SearchListener {
         contentPane.add(errorStrip, BorderLayout.LINE_END);
 
         setTitle(file.normalize().toAbsolutePath().toString());
-        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         pack();
         setLocationRelativeTo(null);
     }
@@ -131,33 +137,29 @@ public final class Notepad extends JFrame implements SearchListener {
 
     private JMenuBar createMenuBar() {
         JMenuBar menubar = new JMenuBar();
-        JMenu menu = new JMenu("Search");
-        menu.add(new JMenuItem(new ShowFindDialogAction()));
-        menu.add(new JMenuItem(new ShowReplaceDialogAction()));
-        menu.add(new JMenuItem(new GoToLineAction()));
-        menu.addSeparator();
+        JMenu fileMenu = new JMenu(bundle.getString("File"));
+        fileMenu.add(new JMenuItem(new SaveFileAction()));
+        fileMenu.add(new JMenuItem(new ExitAction()));
+        menubar.add(fileMenu);
+
+        JMenu searchMenu = new JMenu(bundle.getString("Search"));
+        searchMenu.add(new JMenuItem(new ShowFindDialogAction()));
+        searchMenu.add(new JMenuItem(new ShowReplaceDialogAction()));
+        searchMenu.add(new JMenuItem(new GoToLineAction()));
+        searchMenu.addSeparator();
 
         int ctrl = getToolkit().getMenuShortcutKeyMaskEx();
         int shift = InputEvent.SHIFT_DOWN_MASK;
         KeyStroke key = KeyStroke.getKeyStroke(KeyEvent.VK_F, ctrl|shift);
         Action action = csp.addBottomComponent(key, findToolBar);
-        action.putValue(Action.NAME, "Show Find Search Bar");
-        menu.add(new JMenuItem(action));
+        action.putValue(Action.NAME, bundle.getString("ShowFindBar"));
+        searchMenu.add(new JMenuItem(action));
         key = KeyStroke.getKeyStroke(KeyEvent.VK_H, ctrl|shift);
         action = csp.addBottomComponent(key, replaceToolBar);
-        action.putValue(Action.NAME, "Show Replace Search Bar");
-        menu.add(new JMenuItem(action));
+        action.putValue(Action.NAME, bundle.getString("ShowReplaceBar"));
+        searchMenu.add(new JMenuItem(action));
 
-        menubar.add(menu);
-
-        menu = new JMenu("LookAndFeel");
-        ButtonGroup bg = new ButtonGroup();
-        LookAndFeelInfo[] infos = UIManager.getInstalledLookAndFeels();
-        for (LookAndFeelInfo info : infos) {
-            addMenuItem(new LookAndFeelAction(info), bg, menu);
-        }
-        menubar.add(menu);
-
+        menubar.add(searchMenu);
         return menubar;
     }
 
@@ -206,8 +208,9 @@ public final class Notepad extends JFrame implements SearchListener {
                 break;
             case REPLACE_ALL:
                 result = SearchEngine.replaceAll(editor, context);
-                JOptionPane.showMessageDialog(null, result.getCount() +
-                        " occurrences replaced.");
+                JOptionPane.showMessageDialog(
+                        null,
+                        result.getCount() + " occurrences replaced.");
                 break;
             default:
                 return;
@@ -237,7 +240,7 @@ public final class Notepad extends JFrame implements SearchListener {
      */
     private class GoToLineAction extends AbstractAction {
         GoToLineAction() {
-            super("Go To Line...");
+            super(bundle.getString("GoToLine"));
             int c = getToolkit().getMenuShortcutKeyMaskEx();
             putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_L, c));
         }
@@ -266,38 +269,11 @@ public final class Notepad extends JFrame implements SearchListener {
     }
 
     /**
-     * Changes the Look and Feel.
-     */
-    private class LookAndFeelAction extends AbstractAction {
-        private final LookAndFeelInfo info;
-
-        LookAndFeelAction(LookAndFeelInfo info) {
-            putValue(NAME, info.getName());
-            this.info = info;
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            try {
-                UIManager.setLookAndFeel(info.getClassName());
-                SwingUtilities.updateComponentTreeUI(Notepad.this);
-                if (findDialog!=null) {
-                    findDialog.updateUI();
-                    replaceDialog.updateUI();
-                }
-                pack();
-            } catch (Exception ex) {
-                System.err.println("Error: " + ex.getMessage());
-            }
-        }
-    }
-
-    /**
      * Shows the Find dialog.
      */
     private class ShowFindDialogAction extends AbstractAction {
         ShowFindDialogAction() {
-            super("Find...");
+            super(bundle.getString("Find"));
             int c = getToolkit().getMenuShortcutKeyMaskEx();
             putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_F, c));
         }
@@ -317,7 +293,7 @@ public final class Notepad extends JFrame implements SearchListener {
      */
     private class ShowReplaceDialogAction extends AbstractAction {
         ShowReplaceDialogAction() {
-            super("Replace...");
+            super(bundle.getString("Replace"));
             int c = getToolkit().getMenuShortcutKeyMaskEx();
             putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_H, c));
         }
@@ -330,5 +306,39 @@ public final class Notepad extends JFrame implements SearchListener {
             replaceDialog.setVisible(true);
         }
 
+    }
+
+    private class SaveFileAction extends AbstractAction {
+        public SaveFileAction() {
+            super(bundle.getString("Save"));
+            int c = getToolkit().getMenuShortcutKeyMaskEx();
+            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_S, c));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            try {
+                Files.writeString(file, editor.getText());
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(
+                        Notepad.this,
+                        ex.getMessage(),
+                        bundle.getString("Error"),
+                        JOptionPane.ERROR_MESSAGE
+                );
+            }
+        }
+    }
+
+    private class ExitAction extends AbstractAction {
+        public ExitAction() {
+            super(bundle.getString("Exit"));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            var notepad = Notepad.this;
+            dispatchEvent(new WindowEvent(notepad, WindowEvent.WINDOW_CLOSING));
+        }
     }
 }

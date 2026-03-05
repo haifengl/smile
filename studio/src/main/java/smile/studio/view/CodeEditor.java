@@ -31,6 +31,15 @@ public class CodeEditor extends RSyntaxTextArea {
      * Constructor.
      * @param rows the number of rows.
      * @param cols the number of columns.
+     */
+    public CodeEditor(int rows, int cols) {
+        this(rows, cols, SyntaxConstants.SYNTAX_STYLE_NONE);
+    }
+
+    /**
+     * Constructor.
+     * @param rows the number of rows.
+     * @param cols the number of columns.
      * @param style language highlighting style.
      */
     public CodeEditor(int rows, int cols, String style) {

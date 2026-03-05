@@ -78,6 +78,14 @@ public class Agent {
         conversation.params().setProperty(LLM.SYSTEM_PROMPT, system());
     }
 
+    /**
+     * Returns the project context.
+     * @return the project context.
+     */
+    public Context context() {
+        return context;
+    }
+
     /** Reloads the agent context from disk. */
     public void refresh() {
         context.refresh();

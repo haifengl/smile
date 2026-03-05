@@ -220,6 +220,7 @@ public class AgentCLI extends JPanel {
                 case "train", "predict", "serve" -> runShellCommand(IntentType.Command, instructions, output);
                 case "init" -> initMemory(instructions, output);
                 case "add-memory" -> addMemory(instructions, output);
+                case "edit-memory" -> editMemory();
                 case "show-memory" -> showMemory(output);
                 case "refresh-memory" -> refreshMemory(output);
                 case "show-system" -> showSystemPrompt(output); // for debugging
@@ -237,6 +238,7 @@ public class AgentCLI extends JPanel {
                 
                 /init\t\tInitialize the project with your tasks and requirements
                 /add-memory\tAdd facts or notes to long-term memory
+                /edit-memory\tOpen a notepad to edit to long-term memory
                 /show-memory\tDisplay the content of long-term memory
                 /refresh-memory\tReload the context from disk
                 /clear\t\tClear the current conversation history.
@@ -282,6 +284,11 @@ public class AgentCLI extends JPanel {
             agent.addMemory(md);
             output.appendLine("SMILE.md appended with notes.");
         }
+    }
+
+    /** Open a notepad to edit the project long-term memory. */
+    private void editMemory() {
+        Notepad.open(agent.context().path().getParent().resolve("SMILE.md"));
     }
 
     /** Displays the project long-term memory. */
