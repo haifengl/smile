@@ -85,6 +85,7 @@ libraryDependencies ++= Seq(
   "org.xhtmlrenderer" % "flying-saucer-core" % "10.0.7",
   "com.fifesoft"      % "rsyntaxtextarea"    % "3.6.2",
   "com.fifesoft"      % "rstaui"             % "3.3.2",
+  "com.fifesoft"      % "spellchecker"       % "3.4.1",
   "com.formdev"       % "flatlaf"            % "3.7",
   "com.formdev"       % "flatlaf-fonts-jetbrains-mono" % "2.304",
   "org.apache.maven"  % "maven-resolver-provider" % "3.9.12",

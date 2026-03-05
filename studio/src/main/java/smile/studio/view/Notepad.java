@@ -18,6 +18,7 @@ package smile.studio.view;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Locale;
@@ -32,6 +33,7 @@ import org.fife.rsta.ui.search.ReplaceToolBar;
 import org.fife.rsta.ui.search.SearchEvent;
 import org.fife.rsta.ui.search.SearchListener;
 import org.fife.rsta.ui.search.FindToolBar;
+import org.fife.ui.rsyntaxtextarea.spell.SpellingParser;
 import org.fife.ui.rsyntaxtextarea.ErrorStrip;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
@@ -48,6 +50,8 @@ import org.fife.ui.rtextarea.SearchResult;
 public final class Notepad extends JFrame implements SearchListener {
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Notepad.class.getName(), Locale.getDefault());
 
+    // TODO: update to lazy constant with Java 25+ (still preview)
+    private static SpellingParser dict = null;
     private final Path file;
     private final CollapsibleSectionPanel csp = new CollapsibleSectionPanel();
     private final RSyntaxTextArea editor = new Editor(40, 120);
@@ -73,6 +77,22 @@ public final class Notepad extends JFrame implements SearchListener {
         editor.setFont(Monospaced.getFont());
         editor.setCodeFoldingEnabled(true);
         editor.setMarkOccurrences(true);
+
+        if (dict != null) {
+            editor.addParser(dict);
+        } else {
+            new Thread(() -> {
+                try {
+                    File zip = Path.of(System.getProperty("smile.home"))
+                            .resolve("bin", "eng_dic.zip")
+                            .toFile();
+                    dict = SpellingParser.createEnglishSpellingParser(zip, true, false);
+                    SwingUtilities.invokeLater(() -> editor.addParser(dict));
+                } catch (Exception ex) {
+                    System.err.println("Failed to load dictionary: " + ex.getMessage());
+                }
+            }).start();
+        }
 
         try {
             String content = Files.readString(file);
@@ -117,6 +137,7 @@ public final class Notepad extends JFrame implements SearchListener {
                 )
             );
         }
+
         RTextScrollPane sp = new RTextScrollPane(editor);
         csp.add(sp);
 
