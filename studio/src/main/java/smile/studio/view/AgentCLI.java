@@ -132,7 +132,9 @@ public class AgentCLI extends JPanel {
         provider.addCompletion(new BasicCompletion(provider,
                 "/init [project goals, requirements, tasks, instructions, etc]"));
         provider.addCompletion(new BasicCompletion(provider,
-                "/add-memory [instructions]"));
+                "/memory [show|add|edit|refresh]"));
+        provider.addCompletion(new BasicCompletion(provider,
+                "/plan [on|off]"));
         provider.addCompletion(new BasicCompletion(provider,
                 "/open [file path]"));
         provider.addCompletion(new BasicCompletion(provider,
@@ -213,34 +215,33 @@ public class AgentCLI extends JPanel {
     /** Executes slash commands. */
     private void runSlashCommand(String instructions, OutputArea output) {
         try {
-            String[] command = instructions.split("\\s+");
-            switch (command[0]) {
-                case "help" -> help(command, output);
-                case "open" -> open(command, output);
+            String[] args = instructions.split("\\s+");
+            switch (args[0]) {
+                case "help" -> help(output);
+                case "open" -> open(args, output);
                 case "train", "predict", "serve" -> runShellCommand(IntentType.Command, instructions, output);
                 case "init" -> initMemory(instructions, output);
-                case "add-memory" -> addMemory(instructions, output);
-                case "edit-memory" -> editMemory();
-                case "show-memory" -> showMemory(output);
-                case "refresh-memory" -> refreshMemory(output);
-                case "show-system" -> showSystemPrompt(output); // for debugging
+                case "memory" -> memory(args, instructions, output);
+                case "system" -> showSystemPrompt(output); // for debugging
                 case "clear" -> clear(output);
-                default -> runCustomCommand(command[0], instructions, output);
+                case "plan" -> plan(args, output);
+                default -> runCustomCommand(args[0], instructions, output);
             }
         } catch (Throwable t) {
             output.appendLine("Error: " + t.getMessage());
         }
     }
 
-    private void help(String[] command, OutputArea output) {
+    private void help(OutputArea output) {
         StringBuilder sb = new StringBuilder("""
                 The following commands are available:
                 
                 /init\t\tInitialize the project with your tasks and requirements
-                /add-memory\tAdd facts or notes to long-term memory
-                /edit-memory\tOpen a notepad to edit to long-term memory
-                /show-memory\tDisplay the content of long-term memory
-                /refresh-memory\tReload the context from disk
+                /memory show\tDisplay the content of long-term memory
+                /memory add\tAdd facts or notes to long-term memory
+                /memory edit\tOpen a notepad to edit to long-term memory
+                /memory refresh\tReload the context from disk
+                /plan\t\tEnter or exit plan mode.
                 /clear\t\tClear the current conversation history.
                 /open\t\tOpen a text file to edit.
                 /train\t\tTrain a machine learning model
@@ -275,11 +276,50 @@ public class AgentCLI extends JPanel {
         }
     }
 
+    /** Enters or exits the plan mode. */
+    private void plan(String[] args, OutputArea output) {
+        if (args.length > 2) {
+            output.appendLine("Usage: /plan [on or off]");
+            return;
+        }
+
+        boolean on = true;
+        if (args.length == 2) {
+            if (args[1].equalsIgnoreCase("on")) {
+                on = true;
+            } else if (args[1].equalsIgnoreCase("off")) {
+                on = false;
+            } else {
+                output.appendLine("Invalid argument for /plan command. Use 'on' or 'off'.");
+                return;
+            }
+        }
+
+        agent.conversation().withPlanMode(on);
+        output.appendLine((on ? "Enter" : "Exit") + " plan mode.");
+    }
+
+    /** Executes memory commands. */
+    private void memory(String[] args, String instructions, OutputArea output) throws IOException {
+        if (args.length < 2) {
+            output.appendLine("Usage: /memory [show|add|edit|refresh]");
+            return;
+        }
+
+        switch (args[1]) {
+            case "show" -> showMemory(output);
+            case "add" -> addMemory(instructions, output);
+            case "edit" -> editMemory(output);
+            case "refresh" -> refreshMemory(output);
+            default -> output.appendLine("Unknown subcommand for /memory: " + args[1]);
+        }
+    }
+
     /** Appends notes to SMILE.md. */
     private void addMemory(String instructions, OutputArea output) throws IOException {
-        String md = instructions.substring(10).trim();
+        String md = instructions.substring(instructions.indexOf("add") + 3).trim();
         if (md.isBlank()) {
-            output.appendLine("/add-memory should be followed with notes.");
+            output.appendLine("/memory add should be followed with notes.");
         } else {
             agent.addMemory(md);
             output.appendLine("SMILE.md appended with notes.");
@@ -287,8 +327,9 @@ public class AgentCLI extends JPanel {
     }
 
     /** Open a notepad to edit the project long-term memory. */
-    private void editMemory() {
+    private void editMemory(OutputArea output) {
         Notepad.open(agent.context().path().getParent().resolve("SMILE.md"));
+        output.setText("SMILE.md is opened in a notepad window. Edit and save the file to update the long-term memory.");
     }
 
     /** Displays the project long-term memory. */
@@ -303,13 +344,13 @@ public class AgentCLI extends JPanel {
     }
 
     /** Opens a notepad to edit file. */
-    private void open(String[] command, OutputArea output) {
-        if (command.length < 2) {
+    private void open(String[] args, OutputArea output) {
+        if (args.length < 2) {
             output.appendLine("Usage: /open [file path]");
             return;
         }
 
-        String path = command[1];
+        String path = args[1];
         Notepad.open(Path.of(path));
     }
 
