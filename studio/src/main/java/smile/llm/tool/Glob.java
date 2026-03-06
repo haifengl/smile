@@ -46,8 +46,7 @@ public class Glob implements Tool {
     @Override
     public String run(Conversation conversation) {
         if (path == null) {
-            path = conversation.path().resolve("../..")
-                    .normalize().toAbsolutePath().toString();
+            path = Tool.cwd(conversation).toString();
         }
         return globFiles(pattern, path);
     }

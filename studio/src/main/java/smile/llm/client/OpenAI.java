@@ -404,6 +404,9 @@ public class OpenAI extends LLM {
             case "Append" -> tool.arguments(Append.class).run(conversation);
             case "Edit" -> tool.arguments(Edit.class).run(conversation);
             case "Bash" -> tool.arguments(Bash.class).run(conversation);
+            case "Glob" -> tool.arguments(Glob.class).run(conversation);
+            case "Grep" -> tool.arguments(Grep.class).run(conversation);
+            case "ExitPlanMode" -> tool.arguments(ExitPlanMode.class).run(conversation);
             default -> MCP.call(tool.name(), tool.arguments());
         };
     }

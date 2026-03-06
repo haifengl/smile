@@ -17,6 +17,7 @@
 package smile.llm.tool;
 
 import java.lang.reflect.Method;
+import java.nio.file.Path;
 import java.util.List;
 import smile.llm.Conversation;
 
@@ -52,5 +53,11 @@ public interface Tool {
         return List.of(Read.spec(), Write.spec(), Edit.spec(), Append.spec(),
                 Glob.spec(), Grep.spec(),
                 Bash.spec(), ExitPlanMode.spec());
+    }
+
+    /** Returns the current working directory of the conversation. */
+    static Path cwd(Conversation conversation) {
+        return conversation.path().resolve("../..")
+                    .normalize().toAbsolutePath();
     }
 }
