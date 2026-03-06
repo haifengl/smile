@@ -45,6 +45,13 @@ import smile.util.OS;
 public class AgentCLI extends JPanel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AgentCLI.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(AgentCLI.class.getName(), Locale.getDefault());
+    /**
+     * The threshold for compacting conversation session by summarization.
+     * If the total tokens of conversation session exceeds this threshold,
+     * a compact command will be automatically executed to free up space
+     * in the context window.
+     */
+    private static final int COMPACT_THRESHOLD = Integer.parseInt(System.getProperty("smile.agent.context.compaction", "180000")); // px
     /** The container of conversation. */
     private final JPanel intents = new ScrollablePanel();
     /** The agent. */
@@ -133,6 +140,8 @@ public class AgentCLI extends JPanel {
                 "/init [project goals, requirements, tasks, instructions, etc]"));
         provider.addCompletion(new BasicCompletion(provider,
                 "/memory [show|add|edit|refresh]"));
+        provider.addCompletion(new BasicCompletion(provider,
+                "/compact [instructions]"));
         provider.addCompletion(new BasicCompletion(provider,
                 "/plan [off|short description of goals or tasks]"));
         provider.addCompletion(new BasicCompletion(provider,
@@ -224,6 +233,7 @@ public class AgentCLI extends JPanel {
                 case "memory" -> memory(args, instructions, output);
                 case "system" -> showSystemPrompt(output); // for debugging
                 case "clear" -> clear(output);
+                case "compact" -> compact(instructions, output);
                 case "plan" -> plan(args, instructions, output);
                 default -> runCustomCommand(args[0], instructions, output);
             }
@@ -243,7 +253,8 @@ public class AgentCLI extends JPanel {
                 /memory refresh\tReload the context from disk
                 /plan\t\tEnter the plan mode.
                 /plan off\tExit the plan mode.
-                /clear\t\tClear the current conversation history.
+                /clear\t\tClear the current conversation session.
+                /compact\tSummarize the conversation and retain critical details.
                 /open\t\tOpen a text file to edit.
                 /train\t\tTrain a machine learning model
                 /predict\tRun batch inference
@@ -363,10 +374,10 @@ public class AgentCLI extends JPanel {
         output.appendLine("Long-term memory was reloaded.");
     }
 
-    /** Clears the current conversation history. */
+    /** Clears the current conversation session. */
     private void clear(OutputArea output) {
         agent.clear();
-        output.appendLine("Current conversation history was cleared.");
+        output.appendLine("Current conversation session was cleared.");
     }
 
     private void runCustomCommand(String command, String instructions, OutputArea output) {
@@ -395,6 +406,82 @@ public class AgentCLI extends JPanel {
             var prompt = cmd.get().content() + "\n\n" + args;
             chat(prompt, output);
         }
+    }
+
+    /** Compacts conversation session by summarization. */
+    private void compact(String instructions, OutputArea output) {
+        var prompt = """
+Your task is to create a detailed summary of the conversation so far, paying close attention to the user's explicit requests and your previous actions.
+This summary should be thorough in capturing technical details, code patterns, and architectural decisions that would be essential for continuing development work without losing context.
+
+Before providing your final summary, wrap your analysis in <analysis> tags to organize your thoughts and ensure you've covered all necessary points. In your analysis process:
+
+1. Chronologically analyze each message and section of the conversation. For each section thoroughly identify:
+    - The user's explicit requests and intents
+    - Your approach to addressing the user's requests
+    - Key decisions, technical concepts and code patterns
+    - Specific details like file names, full code snippets, function signatures, file edits, etc
+2. Double-check for technical accuracy and completeness, addressing each required element thoroughly.
+
+Your summary should include the following sections:
+
+1. Primary Request and Intent: Capture all of the user's explicit requests and intents in detail
+2. Key Technical Concepts: List all important technical concepts, technologies, and frameworks discussed.
+3. Files and Code Sections: Enumerate specific files and code sections examined, modified, or created. Pay special attention to the most recent messages and include full code snippets where applicable and include a summary of why this file read or edit is important.
+4. Problem Solving: Document problems solved and any ongoing troubleshooting efforts.
+5. Pending Tasks: Outline any pending tasks that you have explicitly been asked to work on.
+6. Current Work: Describe in detail precisely what was being worked on immediately before this summary request, paying special attention to the most recent messages from both user and assistant. Include file names and code snippets where applicable.
+7. Optional Next Step: List the next step that you will take that is related to the most recent work you were doing. IMPORTANT: ensure that this step is DIRECTLY in line with the user's explicit requests, and the task you were working on immediately before this summary request. If your last task was concluded, then only list next steps if they are explicitly in line with the users request. Do not start on tangential requests without confirming with the user first.
+8. If there is a next step, include direct quotes from the most recent conversation showing exactly what task you were working on and where you left off. This should be verbatim to ensure there's no drift in task interpretation.
+
+Here's an example of how your output should be structured:
+
+<example>
+<analysis>
+[Your thought process, ensuring all points are covered thoroughly and accurately]
+</analysis>
+
+<summary>
+1. Primary Request and Intent:
+   [Detailed description]
+
+2. Key Technical Concepts:
+    - [Concept 1]
+    - [Concept 2]
+    - [...]
+
+3. Files and Code Sections:
+    - [File Name 1]
+        - [Summary of why this file is important]
+        - [Summary of the changes made to this file, if any]
+        - [Important Code Snippet]
+    - [File Name 2]
+        - [Important Code Snippet]
+    - [...]
+
+4. Problem Solving:
+   [Description of solved problems and ongoing troubleshooting]
+
+5. Pending Tasks:
+    - [Task 1]
+    - [Task 2]
+    - [...]
+
+6. Current Work:
+   [Precise description of current work]
+
+7. Optional Next Step:
+   [Optional Next step to take]
+
+</summary>
+</example>
+
+Please provide your summary based on the conversation so far, following this structure and ensuring precision and thoroughness in your response.""";
+
+        if (!instructions.isBlank()) {
+            prompt = prompt + "\n\n" + instructions;
+        }
+        chat(prompt, output);
     }
 
     private void chat(String prompt, OutputArea output) {
@@ -429,22 +516,28 @@ public class AgentCLI extends JPanel {
             }
 
             @Override
-            public void onComplete(Optional<Throwable> ex) {
-                if (ex.isPresent()) {
+            public void onComplete(Throwable ex, long totalTokens, long outputTokens, long inputTokens) {
+                if (ex != null) {
                     timer.stop();
                     SwingUtilities.invokeLater(() ->
-                            output.append("\nError: " + ex.map(Throwable::getMessage).orElse("Unknown")));
+                            output.append("\nError: " + ex.getMessage()));
                 } else {
-                    SwingUtilities.invokeLater(() -> {
-                        var text = output.getText();
-                        // simple heuristic to detect Markdown syntax
-                        if (text.contains("##") || text.contains("**")) {
-                            // commonmark doesn't render table nicely
-                            if (!text.contains("|--")) {
-                                toMarkdown(output);
+                    // Auto compact if total tokens exceed the threshold, otherwise render Markdown if applicable.
+                    if (totalTokens > COMPACT_THRESHOLD) {
+                        output.append("\n\n[The conversation session is too long, a compact command will be executed to summarize conversation.]\n");
+                        compact("", output);
+                    } else {
+                        SwingUtilities.invokeLater(() -> {
+                            var text = output.getText();
+                            // simple heuristic to detect Markdown syntax
+                            if (text.contains("##") || text.contains("**")) {
+                                // commonmark doesn't render table nicely
+                                if (!text.contains("|--")) {
+                                    toMarkdown(output);
+                                }
                             }
-                        }
-                    });
+                        });
+                    }
                 }
             }
         });

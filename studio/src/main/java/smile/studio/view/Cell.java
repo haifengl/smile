@@ -270,12 +270,12 @@ public class Cell extends JPanel implements StreamResponseHandler {
     }
 
     @Override
-    public void onComplete(Optional<Throwable> ex) {
+    public void onComplete(Throwable ex, long totalTokens, long outputTokens, long inputTokens) {
         // Appending a new line at the end of generated code.
         SwingUtilities.invokeLater(() -> editor.insert("\n", editor.getCaretPosition()));
-        if (ex.isPresent()) {
+        if (ex != null) {
             SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(Cell.this,
-                    "Code generation failed: " + ex.map(Throwable::getMessage).orElse("Unknown error"),
+                    "Code generation failed: " + ex.getMessage(),
                     bundle.getString("AIService"),
                     JOptionPane.ERROR_MESSAGE));
         }

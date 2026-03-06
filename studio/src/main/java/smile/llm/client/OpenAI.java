@@ -341,11 +341,16 @@ public class OpenAI extends LLM {
                         complete(request, conversation, handler);
                     } else {
                         conversation.add(Message.assistant(response(completion)));
-                        handler.onComplete(error);
+                        if (completion.usage().isPresent()) {
+                            var usage = completion.usage().get();
+                            handler.onComplete(null, usage.totalTokens(), usage.completionTokens(), usage.promptTokens());
+                        } else {
+                            handler.onComplete(null);
+                        }
                     }
                 } else {
                     conversation.add(Message.error(error.get().getMessage()));
-                    handler.onComplete(error);
+                    handler.onComplete(error.get());
                 }
             }
         });

@@ -16,8 +16,6 @@
  */
 package smile.llm.client;
 
-import java.util.Optional;
-
 /**
  * The handler for streaming response from LLM service.
  *
@@ -29,10 +27,21 @@ public interface StreamResponseHandler {
      * @param chunk the next chunk of response.
      */
     void onNext(String chunk);
-    
+
     /**
      * Handles the completion of response stream.
-     * @param error the error if any, or empty if the stream is completed successfully.
+     * @param error the error if any, or null if the stream is completed successfully.
+     * @param totalTokens the total number of tokens.
+     * @param outputTokens the number of output tokens.
+     * @param inputTokens the number of input tokens.
      */
-    void onComplete(Optional<Throwable> error);
+    void onComplete(Throwable error, long totalTokens, long outputTokens, long inputTokens);
+
+    /**
+     * Handles the completion of response stream.
+     * @param error the error if any, or null if the stream is completed successfully.
+     */
+    default void onComplete(Throwable error) {
+        onComplete(error, 0, 0, 0);
+    }
 }

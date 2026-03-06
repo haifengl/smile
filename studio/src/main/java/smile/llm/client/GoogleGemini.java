@@ -18,7 +18,6 @@ package smile.llm.client;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
@@ -154,10 +153,10 @@ public class GoogleGemini extends LLM {
                 handler.onNext(chunk);
             }
             conversation.add(Message.assistant(sb.toString()));
-            handler.onComplete(Optional.empty());
+            handler.onComplete(null);
         } catch (Throwable t) {
             conversation.add(Message.error(t.getMessage()));
-            handler.onComplete(Optional.of(t));
+            handler.onComplete(t);
         }
     }
 

@@ -94,12 +94,13 @@ public class Read implements Tool {
                     }
                 } else {
                     AtomicInteger index = new AtomicInteger(offset);
-                    return Files.lines(path)
-                            .skip(offset)
-                            .limit(limit)
-                            .map(line -> String.format("%6d\t%s", index.incrementAndGet(),
-                                    line.length() > 2000 ? line.substring(0, 2000) : line))
-                            .collect(Collectors.joining("\n"));
+                    try (var lines = Files.lines(path)) {
+                        return lines.skip(offset)
+                                .limit(limit)
+                                .map(line -> String.format("%6d\t%s", index.incrementAndGet(),
+                                        line.length() > 2000 ? line.substring(0, 2000) : line))
+                                .collect(Collectors.joining("\n"));
+                    }
                 }
             } catch (Exception e) {
                 return String.format("Failed to read file '%s': %s", filePath, e.getMessage());

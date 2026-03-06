@@ -189,8 +189,11 @@ public class Anthropic extends LLM {
                         if (error.isEmpty()) {
                             var completion = accumulator.message();
                             var usage = completion.usage();
-                            logger.info("Chat completion completed with {} completion tokens and {} prompt tokens",
-                                    usage.outputTokens(), usage.inputTokens());
+                            long outputTokens = usage.outputTokens();
+                            long inputTokens = usage.inputTokens();
+                            long totalTokens = outputTokens + inputTokens;
+                            logger.info("Chat completion completed with {} total tokens, {} completion tokens and {} prompt tokens",
+                                    totalTokens, outputTokens, inputTokens);
 
                             boolean hasToolCalls = completion.content().stream()
                                     .flatMap(block -> block.toolUse().stream())
@@ -224,11 +227,11 @@ public class Anthropic extends LLM {
                                 complete(request, conversation, handler);
                             } else {
                                 conversation.add(Message.assistant(response(completion)));
-                                handler.onComplete(error);
+                                handler.onComplete(null, totalTokens, outputTokens, inputTokens);
                             }
                         } else {
                             conversation.add(Message.error(error.get().getMessage()));
-                            handler.onComplete(error);
+                            handler.onComplete(error.get());
                         }
                     }
                 });

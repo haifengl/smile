@@ -78,7 +78,7 @@ public class Workspace extends JSplitPane {
         =====================================================================
         Welcome! I am Clair, your AI assistant for machine learning modeling.
         
-        /help for help, /init for initializing your project
+        /help for available commands, /init for initializing your project
         cwd:\s""" + System.getProperty("user.dir"),
 
         """

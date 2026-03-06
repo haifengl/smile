@@ -409,11 +409,11 @@ You can use the following tools without requiring user approval: Read(//workspac
             }
 
             @Override
-            public void onComplete(Optional<Throwable> ex) {
+            public void onComplete(Throwable ex, long totalTokens, long outputTokens, long inputTokens) {
                 var response = sb.toString();
                 logger.debug("assistant: {}", response);
 
-                if (ex.isEmpty()) {
+                if (ex == null) {
                     if (response.contains("<summary>") && response.contains("</summary>")) {
                         conversation.compact(response);
                     }

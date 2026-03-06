@@ -89,7 +89,7 @@ public class Coder extends Agent {
             stream(prompt, handler);
         } else {
             var ex = new IllegalStateException("Code generation prompt cannot be found. Check your smile/agents/java-coder/generate.md file.");
-            handler.onComplete(Optional.of(ex));
+            handler.onComplete(ex);
         }
     }
 }
