@@ -16,6 +16,7 @@
  */
 package smile.llm.tool;
 
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -53,6 +54,6 @@ public class ExitPlanMode implements Tool {
      * @return the tool specification.
      */
     public static Tool.Spec spec() {
-        return new Tool.Spec(ExitPlanMode.class, null);
+        return new Tool.Spec(ExitPlanMode.class, List.of());
     }
 }

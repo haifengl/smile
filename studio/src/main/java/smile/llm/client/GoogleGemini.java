@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Predicate;
 import com.google.genai.Client;
 import com.google.genai.types.*;
 import smile.llm.Conversation;
@@ -169,8 +170,10 @@ public class GoogleGemini extends LLM {
         var tools = conversation.tools();
         if (!tools.isEmpty()) {
             builder.tools(tools.stream()
-                    .map(tool -> Tool.builder().functions(tool.methods()).build())
-                    .toList());
+                         .map(smile.llm.tool.Tool.Spec::methods)
+                         .filter(Predicate.not(List::isEmpty))
+                         .map(methods -> Tool.builder().functions(methods).build())
+                         .toList());
         }
     }
 }

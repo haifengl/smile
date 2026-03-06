@@ -74,6 +74,6 @@ public class Write implements Tool {
         } catch (Exception e) {
             System.err.println("Failed to load ToolSpec: " + e.getMessage());
         }
-        return new Tool.Spec(Append.class, null);
+        return new Tool.Spec(Append.class, List.of());
     }
 }

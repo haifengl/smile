@@ -49,6 +49,7 @@ public interface Tool {
      * @return the specifications of basic tools for file operations.
      */
     static List<Spec> basics() {
-        return List.of(Read.spec(), Write.spec(), Edit.spec(), Append.spec(), Bash.spec());
+        return List.of(Read.spec(), Write.spec(), Edit.spec(), Append.spec(),
+                Bash.spec(), ExitPlanMode.spec());
     }
 }
