@@ -105,11 +105,11 @@ public class Bash implements Tool {
      */
     public static Tool.Spec spec() {
         try {
-            return new Tool.Spec(Append.class,
+            return new Tool.Spec(Bash.class,
                     List.of(Bash.class.getMethod("runCommand", String.class, int.class, boolean.class)));
         } catch (Exception e) {
             System.err.println("Failed to load ToolSpec: " + e.getMessage());
         }
-        return new Tool.Spec(Append.class, List.of());
+        return new Tool.Spec(Bash.class, List.of());
     }
 }

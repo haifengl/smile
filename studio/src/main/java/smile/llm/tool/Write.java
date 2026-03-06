@@ -69,11 +69,11 @@ public class Write implements Tool {
      */
     public static Tool.Spec spec() {
         try {
-            return new Tool.Spec(Append.class,
+            return new Tool.Spec(Write.class,
                     List.of(Write.class.getMethod("writeFile", String.class, String.class)));
         } catch (Exception e) {
             System.err.println("Failed to load ToolSpec: " + e.getMessage());
         }
-        return new Tool.Spec(Append.class, List.of());
+        return new Tool.Spec(Write.class, List.of());
     }
 }

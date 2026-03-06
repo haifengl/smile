@@ -93,6 +93,14 @@ public class Conversation {
     }
 
     /**
+     * Returns the agent working directory.
+     * @return the agent working directory.
+     */
+    public Path path() {
+        return path.resolve("../..").normalize();
+    }
+
+    /**
      * Returns the MCP services available for LLM.
      * @return the MCP services available for LLM.
      */
@@ -190,7 +198,7 @@ public class Conversation {
      */
     public void planMode(String name) {
         String file = Strings.isNullOrBlank(name) ? "PLAN.md" : (Strings.kebab(name) + ".md");
-        planFile = path.resolve("../../plans", name).normalize();
+        planFile = path().resolve("plans", name).normalize();
     }
 
     /**

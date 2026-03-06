@@ -115,11 +115,11 @@ public class Read implements Tool {
      */
     public static Tool.Spec spec() {
         try {
-            return new Tool.Spec(Append.class,
+            return new Tool.Spec(Read.class,
                     List.of(Read.class.getMethod("readFile", String.class, int.class, int.class)));
         } catch (Exception e) {
             System.err.println("Failed to load ToolSpec: " + e.getMessage());
         }
-        return new Tool.Spec(Append.class, List.of());
+        return new Tool.Spec(Read.class, List.of());
     }
 }
