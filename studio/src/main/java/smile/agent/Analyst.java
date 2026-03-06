@@ -43,8 +43,7 @@ public class Analyst extends Agent {
                 .withReminder("""
 Your task is to analyze the data and provide insights based on the user's instructions.
 1. Prioritize robust methodology, including data cleaning, feature engineering, cross-validation, and proper error handling.
-2. Generate code for the heavy lifting and Markdown files for documenting transforms and insights.
-""");
+2. Generate code for the heavy lifting and Markdown files for documenting transforms and insights.""");
 
         // low temperature for more predictable, focused, and deterministic plans
         conversation().params().setProperty(LLM.TEMPERATURE, "0.2");

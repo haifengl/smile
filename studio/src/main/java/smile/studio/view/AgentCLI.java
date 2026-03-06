@@ -134,7 +134,7 @@ public class AgentCLI extends JPanel {
         provider.addCompletion(new BasicCompletion(provider,
                 "/memory [show|add|edit|refresh]"));
         provider.addCompletion(new BasicCompletion(provider,
-                "/plan [on|off]"));
+                "/plan [off|edit|short description of goals or tasks]"));
         provider.addCompletion(new BasicCompletion(provider,
                 "/open [file path]"));
         provider.addCompletion(new BasicCompletion(provider,
@@ -224,7 +224,7 @@ public class AgentCLI extends JPanel {
                 case "memory" -> memory(args, instructions, output);
                 case "system" -> showSystemPrompt(output); // for debugging
                 case "clear" -> clear(output);
-                case "plan" -> plan(args, output);
+                case "plan" -> plan(args, instructions, output);
                 default -> runCustomCommand(args[0], instructions, output);
             }
         } catch (Throwable t) {
@@ -241,7 +241,9 @@ public class AgentCLI extends JPanel {
                 /memory add\tAdd facts or notes to long-term memory
                 /memory edit\tOpen a notepad to edit to long-term memory
                 /memory refresh\tReload the context from disk
-                /plan\t\tEnter or exit plan mode.
+                /plan\t\tEnter the plan mode.
+                /plan off\tExit the plan mode.
+                /plan edit\tOpen the plan file to edit.
                 /clear\t\tClear the current conversation history.
                 /open\t\tOpen a text file to edit.
                 /train\t\tTrain a machine learning model
@@ -276,27 +278,32 @@ public class AgentCLI extends JPanel {
         }
     }
 
-    /** Enters or exits the plan mode. */
-    private void plan(String[] args, OutputArea output) {
-        if (args.length > 2) {
-            output.appendLine("Usage: /plan [on or off]");
+    /** Enters the plan mode. */
+    private void plan(String[] args, String instructions, OutputArea output) {
+        if (args.length < 2) {
+            output.appendLine("Usage: /plan [short description of goals or tasks]");
             return;
         }
 
-        boolean on = true;
         if (args.length == 2) {
-            if (args[1].equalsIgnoreCase("on")) {
-                on = true;
+            if (args[1].equalsIgnoreCase("edit")) {
+                var path = agent.conversation().planFile();
+                if (path.isEmpty()) {
+                    output.appendLine("No plan is currently active. Use '/plan [description]' to enter the plan mode.");
+                } else {
+                    Notepad.open(path.get());
+                    output.setText("A plan is currently active. The plan file is opened in a notepad window. Edit and save the file to update the plan.");
+                }
+                return;
             } else if (args[1].equalsIgnoreCase("off")) {
-                on = false;
-            } else {
-                output.appendLine("Invalid argument for /plan command. Use 'on' or 'off'.");
+                agent.conversation().exitPlanMode();
+                output.setText("Exit the plan mode.");
                 return;
             }
         }
 
-        agent.conversation().withPlanMode(on);
-        output.appendLine((on ? "Enter" : "Exit") + " plan mode.");
+        agent.conversation().planMode(instructions.substring(5).trim());
+        output.appendLine("Enter the plan mode.");
     }
 
     /** Executes memory commands. */

@@ -25,6 +25,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import io.modelcontextprotocol.spec.McpSchema;
 import smile.llm.tool.Tool;
+import smile.util.Strings;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.PropertyNamingStrategies;
 import tools.jackson.databind.json.JsonMapper;
@@ -62,8 +63,8 @@ public class Conversation {
     private String reminder;
     /** Prompt repetition improves non-reasoning LLMs. */
     private boolean repetition = true;
-    /** Plan mode. */
-    private boolean planMode = false;
+    /** The plan file path if in the plan mode. */
+    private Path planFile = null;
 
     /**
      * Constructor. New messages will be saved to history file.
@@ -72,12 +73,11 @@ public class Conversation {
     public Conversation(Path path) {
         var formatter = DateTimeFormatter.ofPattern("yyMMddHHmmssSSS");
         String id = formatter.format(LocalDateTime.now());
-        path = path.resolve(id);
-        this.path = path;
-        if (!Files.exists(path)) {
+        this.path = path.resolve(id);
+        if (!Files.exists(this.path)) {
             // Creates all parent directories
             try {
-                Files.createDirectories(path);
+                Files.createDirectories(this.path);
             } catch (IOException ex) {
                 logger.error("Failed to create folder of conversation history", ex);
             }
@@ -171,12 +171,11 @@ public class Conversation {
     }
 
     /**
-     * Returns whether plan mode is active.
-     *
-     * @return true if plan mode is active, false otherwise.
+     * Returns the plan file path if in the plan mode.
+     * @return the plan file path if in the plan mode, empty otherwise.
      */
-    public boolean planMode() {
-        return planMode;
+    public Optional<Path> planFile() {
+        return Optional.ofNullable(planFile);
     }
 
     /**
@@ -185,12 +184,35 @@ public class Conversation {
      * actions, which can be useful for complex tasks that require careful
      * planning before execution.
      *
-     * @param planning true to enable plan mode, false to disable.
-     * @return this object.
+     * @param name the plan file name. If null, it will default to "PLAN.md".
+     *             The file will be saved in the "plans" subdirectory of the
+     *             conversation path.
      */
-    public Conversation withPlanMode(boolean planning) {
-        this.planMode = planning;
-        return this;
+    public void planMode(String name) {
+        String file = Strings.isNullOrBlank(name) ? "PLAN.md" : (Strings.kebab(name) + ".md");
+        planFile = path.resolve("../../plans", name).normalize();
+    }
+
+    /**
+     * Saves a plan to the disk and exits the plan mode.
+     * @param plan the plan content to save.
+     * @return the plan file path.
+     */
+    public Path exitPlanMode(String plan) throws IOException {
+        var file = planFile;
+        if (planFile != null) {
+            Files.createDirectories(planFile.getParent());
+            Files.writeString(planFile, plan);
+            planFile = null;
+        }
+        return file;
+    }
+
+    /**
+     * Exits the plan mode.
+     */
+    public void exitPlanMode() {
+        planFile = null;
     }
 
     /**
@@ -202,14 +224,15 @@ public class Conversation {
     public String hydrate(String prompt) {
         if (repetition) prompt += prompt;
 
-        String systemReminder = !planMode ? "" : """
+        String systemReminder = planFile == null ? "" : """
 Plan mode is active. The user indicated that they do not want you to execute yet -- you MUST NOT make any edits, run any non-readonly tools (including changing configs or making commits), or otherwise make any changes to the system. This supersedes any other instructions you have received (for example, to make edits). Instead, you should:
 1. Answer the user's query comprehensively
 2. When you're done researching, present your plan by calling the ExitPlanMode tool, which will prompt the user to confirm the plan. Do NOT make any file changes or run any tools that modify the system state in any way until the user has confirmed the plan.
 """;
 
         if (reminder != null) {
-            systemReminder += "\n\n" + reminder;
+            if (!systemReminder.isBlank()) systemReminder += "\n\n";
+            systemReminder += reminder;
         }
 
         if (!systemReminder.isBlank()) {

@@ -40,6 +40,30 @@ public interface Strings {
     }
 
     /**
+     * Returns true if the string is null or blank.
+     * @param s the string.
+     * @return true if the string is null or blank.
+     */
+    static boolean isNullOrBlank(String s) {
+        return s == null || s.isBlank();
+    }
+
+    /**
+     * Converts an input string into kebab-case.
+     *
+     * @param input The string to convert.
+     * @return The kebab-cased string.
+     */
+    static String kebab(String input) {
+        // Replace locations between a lowercase letter/digit and an uppercase letter with a hyphen.
+        // Also, replace any spaces or underscores with a hyphen.
+        String s = input.replaceAll("(?<=[a-z0-9])(?=[A-Z])|\\s+|_", "-");
+
+        // Convert the entire string to lowercase.
+        return s.toLowerCase();
+    }
+
+    /**
      * Interpolates environment variables in a given string.
      * Placeholders should be in the format ${ENV_VAR_NAME}.
      *
