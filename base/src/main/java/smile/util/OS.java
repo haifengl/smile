@@ -19,6 +19,7 @@ package smile.util;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -56,6 +57,61 @@ public interface OS {
     }
 
     /**
+     * Parses a command line into a list of arguments, respecting quoted substrings.
+     * @param command the command line to parse.
+     * @return the list of command arguments.
+     */
+    static List<String> parse(String command) {
+        Pattern pattern = Pattern.compile("\"[^\"]+\"|\\S+");
+        return pattern.matcher(command)
+                .results()
+                .map(MatchResult::group)
+                .toList();
+    }
+
+    /**
+     * Returns the shell command with parsed arguments, respecting quoted substrings.
+     * @param command the command line to parse.
+     * @return the list of command arguments.
+     */
+    static List<String> shell(String command) {
+        List<String> args = new ArrayList<>();
+        if (OS.isWindows()) {
+            args.add("powershell.exe");
+            args.add("-Command");
+        } else {
+            args.add("bash");
+            args.add("-c");
+        }
+
+        args.addAll(parse(command));
+        return args;
+    }
+
+    /**
+     * Runs a bash command and redirects output to a file.
+     * @param command the command line to run.
+     * @param file the output file.
+     * @return the output of the command, or error message if failed.
+     */
+    static Process exec(String command, Path file) throws IOException {
+        return exec(shell(command), file);
+    }
+
+    /**
+     * Executes a system command in a separate process.
+     * @param command the program and its arguments.
+     * @param file the file to redirect output to.
+     * @return the process.
+     */
+    static Process exec(List<String> command, Path file) throws IOException {
+        return new ProcessBuilder(command)
+                .redirectErrorStream(true)
+                .redirectOutput(file.toFile())
+                .start();
+    }
+
+    /**
      * Executes a system command in a separate process.
      * @param command the program and its arguments.
      * @param outputConsumer the consumer to handle the output lines from the command.
@@ -84,36 +140,13 @@ public interface OS {
     }
 
     /**
-     * Parses a command line into a list of arguments, respecting quoted substrings.
-     * @param command the command line to parse.
-     * @return the list of command arguments.
-     */
-    static List<String> parse(String command) {
-        Pattern pattern = Pattern.compile("\"[^\"]+\"|\\S+");
-        return pattern.matcher(command)
-                .results()
-                .map(MatchResult::group)
-                .toList();
-    }
-
-    /**
      * Executes a shell command in a separate process.
      * @param command the command line to run.
      * @param outputConsumer the consumer to handle the output lines from the command.
      * @return the process.
      */
     static Process exec(String command, Consumer<String> outputConsumer) throws IOException {
-        List<String> cmd = new ArrayList<>();
-        if (OS.isWindows()) {
-            cmd.add("powershell.exe");
-            cmd.add("-Command");
-        } else {
-            cmd.add("bash");
-            cmd.add("-c");
-        }
-
-        cmd.addAll(parse(command));
-        return exec(cmd, outputConsumer);
+        return exec(shell(command), outputConsumer);
     }
 
     /**

@@ -38,22 +38,22 @@ Usage:
 public class Edit implements Tool {
     @JsonProperty(required = true)
     @JsonPropertyDescription("The absolute path to the file to modify (must be absolute, not relative)")
-    public String filePath;
+    public String file_path;
 
     @JsonProperty(required = true)
     @JsonPropertyDescription("The text to replace")
-    public String oldString;
+    public String old_string;
 
     @JsonProperty(required = true)
     @JsonPropertyDescription("The text to replace it with (must be different from old_string)")
-    public String newString;
+    public String new_string;
 
     @JsonPropertyDescription("Replace all occurrences of old_string (default false)")
-    public boolean replaceAll = false;
+    public boolean replace_all = false;
 
     @Override
     public String run(Conversation conversation) {
-        return editFile(filePath, oldString, newString, replaceAll);
+        return editFile(file_path, old_string, new_string, replace_all);
     }
 
     /** Static helper method to edit a file. */

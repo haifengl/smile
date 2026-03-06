@@ -18,7 +18,7 @@ package smile.llm.tool;
 
 import java.util.List;
 import java.util.Optional;
-
+import java.util.concurrent.TimeUnit;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -34,11 +34,11 @@ import smile.llm.Conversation;
 public class KillShell implements Tool {
     @JsonProperty(required = true)
     @JsonPropertyDescription("The ID of the background shell to kill")
-    public String shellId;
+    public String shell_id;
 
     @Override
     public String run(Conversation conversation) {
-        return killShell(shellId);
+        return killShell(shell_id);
     }
 
     /** Static helper method to kill a process. */
@@ -46,15 +46,25 @@ public class KillShell implements Tool {
         try {
             long pid = Long.parseLong(shellId);
             Optional<ProcessHandle> handle = ProcessHandle.of(pid);
-            if (handle.isPresent()) {
-                ProcessHandle ph = handle.get();
-                boolean destroyed = ph.destroy(); // Try graceful termination
-                if (!destroyed) {
-                    ph.destroyForcibly(); // Forceful kill if needed
-                }
-                return "Process " + shellId + " terminated.";
-            } else {
+            if (handle.isEmpty()) {
                 return "Process " + shellId + " not found.";
+            } else {
+                ProcessHandle ph = handle.get();
+                ph.destroy(); // Try graceful termination
+                var onExitFuture = ph.onExit();
+                try {
+                    // wait 10 seconds for the process to exit on its own
+                    onExitFuture.get(10, TimeUnit.SECONDS);
+                } catch (Exception e) {
+                    try {
+                        // Forceful kill if needed
+                        ph.destroyForcibly();
+                    } catch (Exception ex) {
+                        return "Failed to kill process " + shellId + ": " + ex.getMessage();
+                    }
+                }
+
+                return "Process " + shellId + " terminated.";
             }
         } catch (NumberFormatException e) {
             return "Error: " + shellId + " is not a valid pid.";

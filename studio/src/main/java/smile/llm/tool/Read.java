@@ -51,7 +51,7 @@ Usage:
 public class Read implements Tool {
     @JsonProperty(required = true)
     @JsonPropertyDescription("The absolute path to the file to read")
-    public String filePath;
+    public String file_path;
 
     @JsonPropertyDescription("The line number to start reading from. Only provide if the file is too large to read at once.")
     public int offset = 0;
@@ -61,7 +61,7 @@ public class Read implements Tool {
 
     @Override
     public String run(Conversation conversation) {
-        return readFile(filePath, offset, limit);
+        return readFile(file_path, offset, limit);
     }
 
     /** Static helper method to read a file. */

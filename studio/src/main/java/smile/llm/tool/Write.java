@@ -37,7 +37,7 @@ Usage:
 public class Write implements Tool {
     @JsonProperty(required = true)
     @JsonPropertyDescription("The absolute path to the file to write (must be absolute, not relative)")
-    public String filePath;
+    public String file_path;
 
     @JsonProperty(required = true)
     @JsonPropertyDescription("The content to write to the file")
@@ -45,7 +45,7 @@ public class Write implements Tool {
 
     @Override
     public String run(Conversation conversation) {
-        return writeFile(filePath, content);
+        return writeFile(file_path, content);
     }
 
     /** Static helper method to write a file. */

@@ -16,6 +16,8 @@
  */
 package smile.llm.tool;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -83,15 +85,27 @@ public class Bash implements Tool {
     public String description;
 
     @JsonPropertyDescription("Set to true to run this command in the background.")
-    boolean runInBackground = false;
+    public boolean run_in_background = false;
 
     @Override
     public String run(Conversation conversation) {
-        return runCommand(command, timeout, runInBackground);
+        if (run_in_background) {
+            try {
+                Path dir = conversation.path().resolve("tasks");
+                Files.createDirectories(dir);
+                Path file = Files.createTempFile(dir, null, ".out");
+                var process = OS.exec(command, file);
+                return String.format("Command running in background with ID: %d. Output is being written to: %s", process.pid(), file);
+            } catch (Exception e) {
+                return "Failed to run command in background: " + e.getMessage();
+            }
+        } else {
+            return runCommand(command, timeout);
+        }
     }
 
-    /** Static helper method to run a bash command with timeout and background execution option. */
-    public static String runCommand(String command, int timeout, boolean runInBackground) {
+    /** Static helper method to run a bash command with timeout. */
+    public static String runCommand(String command, int timeout) {
         String output = OS.exec(command, timeout);
         if (output.length() > 30000) {
             output = output.substring(0, 30000) + "\n[Output truncated due to length]";
@@ -106,7 +120,7 @@ public class Bash implements Tool {
     public static Tool.Spec spec() {
         try {
             return new Tool.Spec(Bash.class,
-                    List.of(Bash.class.getMethod("runCommand", String.class, int.class, boolean.class)));
+                    List.of(Bash.class.getMethod("runCommand", String.class, int.class)));
         } catch (Exception e) {
             System.err.println("Failed to load ToolSpec: " + e.getMessage());
         }

@@ -80,7 +80,7 @@ public class Grep implements Tool {
         }
         command += " \"" + path + '"';
 
-        return Bash.runCommand(command, 240000, false);
+        return Bash.runCommand(command, 240000);
     }
 
     /**

@@ -38,7 +38,7 @@ Usage:
 public class Append implements Tool {
     @JsonProperty(required = true)
     @JsonPropertyDescription("The absolute path to the file to append (must be absolute, not relative)")
-    public String filePath;
+    public String file_path;
 
     @JsonProperty(required = true)
     @JsonPropertyDescription("The content to append to the file")
@@ -46,7 +46,7 @@ public class Append implements Tool {
 
     @Override
     public String run(Conversation conversation) {
-        return appendFile(filePath, content);
+        return appendFile(file_path, content);
     }
 
     /** Static helper method to append to a file. */
