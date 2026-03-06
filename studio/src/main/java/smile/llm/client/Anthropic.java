@@ -286,6 +286,7 @@ public class Anthropic extends LLM {
             case "Append" -> tool.input(Append.class).run(conversation);
             case "Edit" -> tool.input(Edit.class).run(conversation);
             case "Bash" -> tool.input(Bash.class).run(conversation);
+            case "KillShell" -> tool.input(KillShell.class).run(conversation);
             case "Glob" -> tool.input(Glob.class).run(conversation);
             case "Grep" -> tool.input(Grep.class).run(conversation);
             case "ExitPlanMode" -> tool.input(ExitPlanMode.class).run(conversation);

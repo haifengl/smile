@@ -52,7 +52,7 @@ public interface Tool {
     static List<Spec> basics() {
         return List.of(Read.spec(), Write.spec(), Edit.spec(), Append.spec(),
                 Glob.spec(), Grep.spec(),
-                Bash.spec(), ExitPlanMode.spec());
+                Bash.spec(), KillShell.spec(), ExitPlanMode.spec());
     }
 
     /** Returns the current working directory of the conversation. */
