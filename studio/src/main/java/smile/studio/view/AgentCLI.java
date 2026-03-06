@@ -134,7 +134,7 @@ public class AgentCLI extends JPanel {
         provider.addCompletion(new BasicCompletion(provider,
                 "/memory [show|add|edit|refresh]"));
         provider.addCompletion(new BasicCompletion(provider,
-                "/plan [off|edit|short description of goals or tasks]"));
+                "/plan [off|short description of goals or tasks]"));
         provider.addCompletion(new BasicCompletion(provider,
                 "/open [file path]"));
         provider.addCompletion(new BasicCompletion(provider,
@@ -243,7 +243,6 @@ public class AgentCLI extends JPanel {
                 /memory refresh\tReload the context from disk
                 /plan\t\tEnter the plan mode.
                 /plan off\tExit the plan mode.
-                /plan edit\tOpen the plan file to edit.
                 /clear\t\tClear the current conversation history.
                 /open\t\tOpen a text file to edit.
                 /train\t\tTrain a machine learning model
@@ -285,21 +284,10 @@ public class AgentCLI extends JPanel {
             return;
         }
 
-        if (args.length == 2) {
-            if (args[1].equalsIgnoreCase("edit")) {
-                var path = agent.conversation().planFile();
-                if (path.isEmpty()) {
-                    output.appendLine("No plan is currently active. Use '/plan [description]' to enter the plan mode.");
-                } else {
-                    Notepad.open(path.get());
-                    output.setText("A plan is currently active. The plan file is opened in a notepad window. Edit and save the file to update the plan.");
-                }
-                return;
-            } else if (args[1].equalsIgnoreCase("off")) {
-                agent.conversation().exitPlanMode();
-                output.setText("Exit the plan mode.");
-                return;
-            }
+        if (args.length == 2 && args[1].equalsIgnoreCase("off")) {
+            agent.conversation().exitPlanMode();
+            output.setText("Exit the plan mode.");
+            return;
         }
 
         agent.conversation().planMode(instructions.substring(5).trim());
