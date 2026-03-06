@@ -24,6 +24,8 @@ import java.nio.file.Path;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import org.fife.rsta.ui.CollapsibleSectionPanel;
 import org.fife.rsta.ui.GoToDialog;
@@ -47,7 +49,7 @@ import org.fife.ui.rtextarea.SearchResult;
  *
  * @author Haifeng Li
  */
-public final class Notepad extends JFrame implements SearchListener {
+public final class Notepad extends JFrame implements SearchListener, DocumentListener {
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Notepad.class.getName(), Locale.getDefault());
 
     // TODO: update to lazy constant with Java 25+ (still preview)
@@ -60,6 +62,7 @@ public final class Notepad extends JFrame implements SearchListener {
     private final ReplaceDialog replaceDialog = new ReplaceDialog(this, this);
     private final FindToolBar findToolBar = new FindToolBar(this);
     private final ReplaceToolBar replaceToolBar = new ReplaceToolBar(this);
+    private boolean changed = false;
 
     /**
      * Constructor.
@@ -145,9 +148,27 @@ public final class Notepad extends JFrame implements SearchListener {
         contentPane.add(errorStrip, BorderLayout.LINE_END);
 
         setTitle(file.normalize().toAbsolutePath().toString());
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        pack();
-        setLocationRelativeTo(null);
+        editor.getDocument().addDocumentListener(this);
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                switch (confirmSaveNotebook()) {
+                    case JOptionPane.YES_OPTION:
+                        if (save()) {
+                            dispose();
+                        }
+                        break;
+
+                    case JOptionPane.NO_OPTION:
+                        dispose();
+                        break;
+
+                    case JOptionPane.CANCEL_OPTION:
+                        return;
+                }
+            }
+        });
     }
 
     private void addMenuItem(Action action, ButtonGroup group, JMenu menu) {
@@ -253,7 +274,12 @@ public final class Notepad extends JFrame implements SearchListener {
      * @param file the file to open.
      */
     public static void open(Path file) {
-        SwingUtilities.invokeLater(() -> new Notepad(file).setVisible(true));
+        SwingUtilities.invokeLater(() -> {
+            var notepad = new Notepad(file);
+            notepad.pack();
+            notepad.setLocationRelativeTo(null);
+            notepad.setVisible(true);
+        });
     }
 
     /**
@@ -338,16 +364,7 @@ public final class Notepad extends JFrame implements SearchListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            try {
-                Files.writeString(file, editor.getText());
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(
-                        Notepad.this,
-                        ex.getMessage(),
-                        bundle.getString("Error"),
-                        JOptionPane.ERROR_MESSAGE
-                );
-            }
+            save();
         }
     }
 
@@ -361,5 +378,53 @@ public final class Notepad extends JFrame implements SearchListener {
             var notepad = Notepad.this;
             dispatchEvent(new WindowEvent(notepad, WindowEvent.WINDOW_CLOSING));
         }
+    }
+
+    /**
+     * Saves the file.
+     * @return true if the file is saved successfully, false otherwise.
+     */
+    private boolean save() {
+        try {
+            Files.writeString(file, editor.getText());
+            changed = false;
+            return true;
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(
+                    Notepad.this,
+                    ex.getMessage(),
+                    bundle.getString("Error"),
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
+        return false;
+    }
+
+    /**
+     * Prompts if the file is not saved.
+     * @return an integer indicating the option selected by the user.
+     */
+    private int confirmSaveNotebook() {
+        if (!changed) return JOptionPane.NO_OPTION;
+        return JOptionPane.showConfirmDialog(this,
+                bundle.getString("SaveMessage"),
+                bundle.getString("SaveTitle"),
+                JOptionPane.YES_NO_CANCEL_OPTION);
+    }
+
+    @Override
+    public void insertUpdate(DocumentEvent e) {
+        changed = true;
+    }
+
+    @Override
+    public void removeUpdate(DocumentEvent e) {
+        changed = true;
+    }
+
+    @Override
+    public void changedUpdate(DocumentEvent e) {
+        // Plain text components like JTextArea don't use attributes,
+        // so this is rarely triggered in a simple scenario.
     }
 }
