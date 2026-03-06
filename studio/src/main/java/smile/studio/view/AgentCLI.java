@@ -51,7 +51,7 @@ public class AgentCLI extends JPanel {
      * a compact command will be automatically executed to free up space
      * in the context window.
      */
-    private static final int COMPACT_THRESHOLD = Integer.parseInt(System.getProperty("smile.agent.context.compaction", "180000")); // px
+    private static final int COMPACT_THRESHOLD = Integer.parseInt(System.getProperty("smile.agent.auto.compact", "180000"));
     /** The container of conversation. */
     private final JPanel intents = new ScrollablePanel();
     /** The agent. */
@@ -481,10 +481,14 @@ Please provide your summary based on the conversation so far, following this str
         if (!instructions.isBlank()) {
             prompt = prompt + "\n\n" + instructions;
         }
-        chat(prompt, output);
+        chat(prompt, output, "Compacting...");
     }
 
     private void chat(String prompt, OutputArea output) {
+        chat(prompt, output, "Thinking...");
+    }
+
+    private void chat(String prompt, OutputArea output, String pause) {
         if (prompt.isBlank()) {
             output.setText(bundle.getString("Hello"));
             return;
@@ -495,7 +499,7 @@ Please provide your summary based on the conversation so far, following this str
             return;
         }
 
-        output.setText("Thinking...");
+        output.setText(pause);
         var timer = new Timer(500, e -> output.append("."));
         timer.start();
 
@@ -508,7 +512,7 @@ Please provide your summary based on the conversation so far, following this str
                 SwingUtilities.invokeLater(() -> {
                     if (firstChunk) {
                         timer.stop();
-                        output.clear();
+                        if (output.getText().startsWith(pause)) output.clear();
                         firstChunk = false;
                     }
                     output.append(chunk);
