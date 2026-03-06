@@ -75,9 +75,13 @@ public class Glob implements Tool {
         // Sort from newest to oldest (descending order)
         files.sort((f1, f2) -> Long.compare(f2.toFile().lastModified(), f1.toFile().lastModified()));
 
-        StringBuilder sb = new StringBuilder();
-        return files.stream().map(Path::toString)
+        int limit = 2000;
+        String result = files.stream().limit(limit).map(Path::toString)
                 .collect(Collectors.joining("\n"));
+        if (files.size() > limit) {
+            result += String.format("\n[%d files skipped]", files.size() - limit);
+        }
+        return result;
     }
 
     /**
