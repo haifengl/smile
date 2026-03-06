@@ -20,6 +20,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import smile.llm.Conversation;
 import smile.util.OS;
 
 @JsonClassDescription("""
@@ -85,7 +86,7 @@ public class Bash implements Tool {
     boolean runInBackground = false;
 
     @Override
-    public String run() {
+    public String run(Conversation conversation) {
         return runCommand(command, timeout, runInBackground);
     }
 

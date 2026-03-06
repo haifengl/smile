@@ -23,6 +23,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import smile.llm.Conversation;
 
 @JsonClassDescription("""
 Appends to a file in the local filesystem.
@@ -44,7 +45,7 @@ public class Append implements Tool {
     public String content;
 
     @Override
-    public String run() {
+    public String run(Conversation conversation) {
         return appendFile(filePath, content);
     }
 

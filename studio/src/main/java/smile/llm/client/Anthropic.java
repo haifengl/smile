@@ -198,7 +198,7 @@ public class Anthropic extends LLM {
                                         var input = toolUse._input();
                                         logger.info("Tool call: name={}, input={}", toolUse.name(), input);
 
-                                        var output = callTool(toolUse);
+                                        var output = callTool(toolUse, conversation);
                                         var message = BetaContentBlockParam.ofToolUse(BetaToolUseBlockParam.builder()
                                                 .name(toolUse.name())
                                                 .id(toolUse.id())
@@ -276,13 +276,13 @@ public class Anthropic extends LLM {
      * @param tool the tool function to call.
      * @return the tool call result.
      */
-    private String callTool(BetaToolUseBlock tool) {
+    private String callTool(BetaToolUseBlock tool, Conversation conversation) {
         return switch (tool.name()) {
-            case "Read" -> tool.input(Read.class).run();
-            case "Write" -> tool.input(Write.class).run();
-            case "Append" -> tool.input(Append.class).run();
-            case "Edit" -> tool.input(Edit.class).run();
-            case "Bash" -> tool.input(Bash.class).run();
+            case "Read" -> tool.input(Read.class).run(conversation);
+            case "Write" -> tool.input(Write.class).run(conversation);
+            case "Append" -> tool.input(Append.class).run(conversation);
+            case "Edit" -> tool.input(Edit.class).run(conversation);
+            case "Bash" -> tool.input(Bash.class).run(conversation);
             default -> MCP.call(tool.name(), tool._input().toString());
         };
     }

@@ -22,6 +22,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import smile.llm.Conversation;
 
 @JsonClassDescription("""
 Performs exact string replacements in files.
@@ -51,7 +52,7 @@ public class Edit implements Tool {
     public boolean replaceAll = false;
 
     @Override
-    public String run() {
+    public String run(Conversation conversation) {
         return editFile(filePath, oldString, newString, replaceAll);
     }
 

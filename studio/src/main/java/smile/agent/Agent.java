@@ -71,7 +71,7 @@ public class Agent {
      */
     public Agent(String name, Path path, Supplier<LLM> llm) {
         this.llm = llm;
-        this.conversation = new Conversation(path.resolve(".smile", name, "memory"));
+        this.conversation = new Conversation(path.resolve(".smile", name, "sessions"));
         this.context = new Context(path.resolve(".smile", name));
         this.user = new Context(Path.of(System.getProperty("user.home"), "/agents", name));
         this.global = new Context(Path.of(System.getProperty("smile.home"), "/agents", name));

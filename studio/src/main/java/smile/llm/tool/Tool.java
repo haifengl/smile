@@ -18,6 +18,7 @@ package smile.llm.tool;
 
 import java.lang.reflect.Method;
 import java.util.List;
+import smile.llm.Conversation;
 
 /**
  * Tools enable models to interact with external systems,
@@ -27,8 +28,12 @@ import java.util.List;
  * @author Haifeng Li
  */
 public interface Tool {
-    /** Executes the tool. */
-    String run();
+    /**
+     * Executes the tool.
+     * @param conversation the conversation session that the tool calling belongs to.
+     * @return the result of tool execution.
+     */
+    String run(Conversation conversation);
 
     /**
      * The specification of built-in tools. 

@@ -22,6 +22,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import smile.llm.Conversation;
 
 @JsonClassDescription("""
 Writes a file to the local filesystem.
@@ -43,7 +44,7 @@ public class Write implements Tool {
     public String content;
 
     @Override
-    public String run() {
+    public String run(Conversation conversation) {
         return writeFile(filePath, content);
     }
 

@@ -315,7 +315,7 @@ public class OpenAI extends LLM {
                                     var input = func.arguments();
                                     logger.info("Tool call: name={}, input={}", func.name(), input);
 
-                                    var output = callTool(func);
+                                    var output = callTool(func, conversation);
                                     var toolCallOutput = new ToolCallOutput(id, output);
 
                                     // Add the tool call result to the conversation.
@@ -392,13 +392,13 @@ public class OpenAI extends LLM {
      * @param tool the tool function to call.
      * @return the tool call result.
      */
-    private String callTool(ChatCompletionMessageFunctionToolCall.Function tool) {
+    private String callTool(ChatCompletionMessageFunctionToolCall.Function tool, Conversation conversation) {
         return switch (tool.name()) {
-            case "Read" -> tool.arguments(Read.class).run();
-            case "Write" -> tool.arguments(Write.class).run();
-            case "Append" -> tool.arguments(Append.class).run();
-            case "Edit" -> tool.arguments(Edit.class).run();
-            case "Bash" -> tool.arguments(Bash.class).run();
+            case "Read" -> tool.arguments(Read.class).run(conversation);
+            case "Write" -> tool.arguments(Write.class).run(conversation);
+            case "Append" -> tool.arguments(Append.class).run(conversation);
+            case "Edit" -> tool.arguments(Edit.class).run(conversation);
+            case "Bash" -> tool.arguments(Bash.class).run(conversation);
             default -> MCP.call(tool.name(), tool.arguments());
         };
     }

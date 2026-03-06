@@ -30,6 +30,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import smile.data.Tuple;
 import smile.io.Parquet;
+import smile.llm.Conversation;
 
 @JsonClassDescription("""
 Reads a file from the local filesystem. You can access any file directly by using this tool.
@@ -59,7 +60,7 @@ public class Read implements Tool {
     public int limit = 2000;
 
     @Override
-    public String run() {
+    public String run(Conversation conversation) {
         return readFile(filePath, offset, limit);
     }
 
