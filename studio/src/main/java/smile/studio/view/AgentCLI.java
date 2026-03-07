@@ -36,6 +36,7 @@ import smile.studio.kernel.ShellRunner;
 import smile.studio.model.IntentType;
 import smile.swing.ScrollablePanel;
 import smile.util.OS;
+import smile.util.Strings;
 
 /**
  * The conversation interface for agent.
@@ -102,15 +103,15 @@ public class AgentCLI extends JPanel {
 
     /**
      * Executes an intent.
+     * @param intent the intent widget.
      * @param intentType the type of the intent.
-     * @param instructions the instructions to execute.
-     * @param output the output area to display the results.
      */
-    public void run(IntentType intentType, String instructions, OutputArea output) {
+    public void run(Intent intent, IntentType intentType) {
+        String instructions = intent.editor().getText();
         switch (intentType) {
-            case Command -> runSlashCommand(instructions, output);
-            case Shell, Python -> runShellCommand(intentType, instructions, output);
-            case Instructions -> chat(instructions, output);
+            case Command -> runSlashCommand(intent, instructions);
+            case Shell, Python -> runShellCommand(intent, intentType, instructions);
+            case Instructions -> chat(intent, instructions);
             default -> logger.debug("Ignore intent type: {}", intentType);
         }
     }
@@ -175,7 +176,8 @@ public class AgentCLI extends JPanel {
     /**
      * Executes shell commands.
      */
-    private void runShellCommand(IntentType intentType, String instructions, OutputArea output) {
+    private void runShellCommand(Intent intent, IntentType intentType, String instructions) {
+        var output = intent.output();
         List<String> command = new ArrayList<>();
         switch (intentType) {
             case Python -> {
@@ -222,23 +224,23 @@ public class AgentCLI extends JPanel {
     }
 
     /** Executes slash commands. */
-    private void runSlashCommand(String instructions, OutputArea output) {
+    private void runSlashCommand(Intent intent, String instructions) {
         try {
             String[] args = instructions.split("\\s+");
             switch (args[0]) {
-                case "help" -> help(output);
-                case "open" -> open(args, output);
-                case "train", "predict", "serve" -> runShellCommand(IntentType.Command, instructions, output);
-                case "init" -> initMemory(instructions, output);
-                case "memory" -> memory(args, instructions, output);
-                case "system" -> showSystemPrompt(output); // for debugging
-                case "clear" -> clear(output);
-                case "compact" -> compact(instructions, output);
-                case "plan" -> plan(args, instructions, output);
-                default -> runCustomCommand(args[0], instructions, output);
+                case "help" -> help(intent.output());
+                case "open" -> open(args, intent.output());
+                case "train", "predict", "serve" -> runShellCommand(intent, IntentType.Command, instructions);
+                case "init" -> initMemory(instructions, intent.output());
+                case "memory" -> memory(args, instructions, intent.output());
+                case "system" -> showSystemPrompt(intent.output()); // for debugging
+                case "clear" -> clear(intent.output());
+                case "compact" -> compact(instructions, intent);
+                case "plan" -> plan(args, instructions, intent.output());
+                default -> runCustomCommand(args[0], instructions, intent);
             }
         } catch (Throwable t) {
-            output.appendLine("Error: " + t.getMessage());
+            intent.output().appendLine("Error: " + t.getMessage());
         }
     }
 
@@ -380,7 +382,7 @@ public class AgentCLI extends JPanel {
         output.appendLine("Current conversation session was cleared.");
     }
 
-    private void runCustomCommand(String command, String instructions, OutputArea output) {
+    private void runCustomCommand(String command, String instructions, Intent intent) {
         Optional<? extends Memory> cmd = agent.command(command);
         if (cmd.isEmpty()) {
             cmd = agent.skills().stream()
@@ -389,27 +391,27 @@ public class AgentCLI extends JPanel {
         }
 
         if (cmd.isEmpty()) {
-            output.setText("Error: Unknown command /" + command);
+            intent.output().setText("Error: Unknown command /" + command);
             return;
         }
 
         var args = instructions.substring(command.length()).trim();
         if (cmd.get().content().contains("{{args}}")) {
             if (args.isBlank()) {
-                output.setText("Error: /" + command + " requires arguments.");
+                intent.output().setText("Error: /" + command + " requires arguments.");
             } else {
                 var prompt = cmd.get().prompt(args);
-                chat(prompt, output);
+                chat(intent, prompt);
             }
         } else {
             // append instructions to command without {{args}} placeholder.
             var prompt = cmd.get().content() + "\n\n" + args;
-            chat(prompt, output);
+            chat(intent, prompt);
         }
     }
 
     /** Compacts conversation session by summarization. */
-    private void compact(String instructions, OutputArea output) {
+    private void compact(String instructions, Intent intent) {
         var prompt = """
 Your task is to create a detailed summary of the conversation so far, paying close attention to the user's explicit requests and your previous actions.
 This summary should be thorough in capturing technical details, code patterns, and architectural decisions that would be essential for continuing development work without losing context.
@@ -481,27 +483,31 @@ Please provide your summary based on the conversation so far, following this str
         if (!instructions.isBlank()) {
             prompt = prompt + "\n\n" + instructions;
         }
-        chat(prompt, output, "Compacting...");
+
+        chat(intent, prompt, "Compacting...");
     }
 
-    private void chat(String prompt, OutputArea output) {
-        chat(prompt, output, "Thinking...");
+    private void chat(Intent intent, String prompt) {
+        chat(intent, prompt, "Thinking...");
     }
 
-    private void chat(String prompt, OutputArea output, String pause) {
+    private void chat(Intent intent, String prompt, String status) {
         if (prompt.isBlank()) {
-            output.setText(bundle.getString("Hello"));
+            intent.output().setText(bundle.getString("Hello"));
             return;
         }
 
         if (agent.llm() == null) {
-            output.setText(bundle.getString("NoAIServiceError"));
+            intent.output().setText(bundle.getString("NoAIServiceError"));
             return;
         }
 
-        output.setText(pause);
-        var timer = new Timer(500, e -> output.append("."));
-        timer.start();
+        if (!Strings.isNullOrBlank(status)) {
+            intent.status().setText(status);
+        }
+
+        //var timer = new Timer(500, e -> intent.status().append("."));
+        //timer.start();
 
         // Stream processing runs in a background thread so that we don't
         // need to create a SwingWorker thread.
@@ -511,33 +517,40 @@ Please provide your summary based on the conversation so far, following this str
             public void onNext(String chunk) {
                 SwingUtilities.invokeLater(() -> {
                     if (firstChunk) {
-                        timer.stop();
-                        if (output.getText().startsWith(pause)) output.clear();
+                        //timer.stop();
+                        //intent.status().setText("");
                         firstChunk = false;
                     }
-                    output.append(chunk);
+                    intent.output().append(chunk);
                 });
             }
 
             @Override
             public void onComplete(Throwable ex, long totalTokens, long outputTokens, long inputTokens) {
+                //intent.status().setText("");
                 if (ex != null) {
-                    timer.stop();
+                    //timer.stop();
                     SwingUtilities.invokeLater(() ->
-                            output.append("\nError: " + ex.getMessage()));
+                            intent.output().append("\nError: " + ex.getMessage()));
                 } else {
+                    //if (outputTokens > 0) {
+                        SwingUtilities.invokeLater(() ->
+                                intent.status().setText(outputTokens + " output tokens"));
+                    //}
+
                     // Auto compact if total tokens exceed the threshold, otherwise render Markdown if applicable.
                     if (totalTokens > COMPACT_THRESHOLD) {
-                        output.append("\n\n[The conversation session is too long, a compact command will be executed to summarize conversation.]\n");
-                        compact("", output);
+                        SwingUtilities.invokeLater(() ->
+                                intent.output().append("\n\n[The conversation session is too long, a compact command will be executed to summarize conversation.]\n"));
+                        compact("", intent);
                     } else {
                         SwingUtilities.invokeLater(() -> {
-                            var text = output.getText();
+                            var text = intent.output().getText();
                             // simple heuristic to detect Markdown syntax
                             if (text.contains("##") || text.contains("**")) {
                                 // commonmark doesn't render table nicely
                                 if (!text.contains("|--")) {
-                                    toMarkdown(output);
+                                    toMarkdown(intent.output());
                                 }
                             }
                         });
@@ -546,8 +559,10 @@ Please provide your summary based on the conversation so far, following this str
             }
 
             @Override
-            public void accept(String status) {
-                // do nothing, we handle the status update in onNext and onComplete.
+            public void onStatus(String status) {
+                if (!Strings.isNullOrBlank(status)) {
+                    SwingUtilities.invokeLater(() -> intent.status().setText(status));
+                }
             }
         });
     }

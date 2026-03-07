@@ -281,6 +281,11 @@ public class Cell extends JPanel implements StreamResponseHandler {
         }
     }
 
+    @Override
+    public void onStatus(String status) {
+        logger.info("Code generation status: {}", status);
+    }
+
     /**
      * Returns the before context for code generation.
      * @return the before context for code generation.

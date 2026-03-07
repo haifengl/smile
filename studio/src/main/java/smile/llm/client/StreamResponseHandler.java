@@ -47,8 +47,14 @@ public interface StreamResponseHandler extends Consumer<String> {
         onComplete(error, 0, 0, 0);
     }
 
+    /**
+     * Handles the status update, e.g. tool calling.
+     * @param status the status update.
+     */
+    void onStatus(String status);
+
     @Override
     default void accept(String status) {
-        System.out.print(status);
+        onStatus(status);
     }
 }

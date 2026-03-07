@@ -46,6 +46,7 @@ public class Write implements Tool {
 
     @Override
     public String run(Conversation conversation, Consumer<String> statusUpdate) {
+        statusUpdate.accept("Writing " + file_path);
         return writeFile(file_path, content);
     }
 

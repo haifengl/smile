@@ -62,6 +62,7 @@ public class Read implements Tool {
 
     @Override
     public String run(Conversation conversation, Consumer<String> statusUpdate) {
+        statusUpdate.accept("Reading " + file_path);
         return readFile(file_path, offset, limit);
     }
 

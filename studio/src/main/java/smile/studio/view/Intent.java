@@ -62,6 +62,7 @@ public class Intent extends JPanel {
         ac.setAutoActivationDelay(500);
         ac.install(editor);
 
+        status.setFont(Monospaced.getFont());
         output.setFont(Monospaced.getFont());
         output.setEditable(false);
         output.setLineWrap(true);
@@ -173,7 +174,7 @@ public class Intent extends JPanel {
                     switch (intentType) {
                         case Raw -> runRaw();
                         case Markdown -> renderMarkdown();
-                        default -> cli.run(intentType, editor.getText(), output);
+                        default -> cli.run(Intent.this, intentType);
                     }
                 }
 
@@ -262,13 +263,6 @@ public class Intent extends JPanel {
      */
     public JLabel status() {
         return status;
-    }
-
-    /**
-     * Removes the status label from the intent view.
-     */
-    public void removeStatus() {
-        remove(status);
     }
 
     /**

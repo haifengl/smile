@@ -422,7 +422,12 @@ You can use the following tools without requiring user approval: Read(//workspac
                     }
                 }
 
-                handler.onComplete(ex);
+                handler.onComplete(ex, totalTokens, outputTokens, inputTokens);
+            }
+
+            @Override
+            public void onStatus(String status) {
+                handler.onStatus(status);
             }
         };
 
