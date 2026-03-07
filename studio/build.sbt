@@ -91,7 +91,9 @@ libraryDependencies ++= Seq(
   "org.apache.maven"  % "maven-resolver-provider" % "3.9.13",
   "org.apache.maven.resolver"   % "maven-resolver-supplier-mvn4" % "2.0.16",
   "tools.jackson.dataformat"    % "jackson-dataformat-yaml" % "3.1.0",
-  "io.modelcontextprotocol.sdk" % "mcp" % "1.0.0"
+  "io.modelcontextprotocol.sdk" % "mcp"       % "1.0.0",
+  "io.github.furstenheim"       % "copy_down" % "1.1",
+  "org.jsoup"                   % "jsoup"     % "1.22.1"
 )
 
 libraryDependencies ++= {

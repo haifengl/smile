@@ -25,10 +25,10 @@ import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import io.github.furstenheim.CopyDown;
 import smile.llm.Conversation;
 
 @JsonClassDescription("""
@@ -96,11 +96,9 @@ public class WebFetch implements Tool {
 
             String contentType = response.headers().firstValue("Content-Type").orElse("");
             String body = response.body();
-            String markdown;
+            String markdown = body;
             if (contentType.contains("text/html")) {
-                markdown = htmlToMarkdown(body);
-            } else {
-                markdown = body;
+                markdown = converter.convert(body);
             }
 
             // Trim to a reasonable size (~50k chars)
@@ -114,54 +112,6 @@ public class WebFetch implements Tool {
             return "Error fetching URL: " + e.getMessage();
         }
     }
-
-    /** Converts HTML content to Markdown-like plain text. */
-    static String htmlToMarkdown(String html) {
-        // Remove <head> section
-        html = PATTERN_HEAD.matcher(html).replaceAll("");
-        // Remove script and style blocks
-        html = PATTERN_SCRIPT.matcher(html).replaceAll("");
-        html = PATTERN_STYLE.matcher(html).replaceAll("");
-        // Convert headings
-        html = PATTERN_H1.matcher(html).replaceAll("\n# $1\n");
-        html = PATTERN_H2.matcher(html).replaceAll("\n## $1\n");
-        html = PATTERN_H3.matcher(html).replaceAll("\n### $1\n");
-        html = PATTERN_H4.matcher(html).replaceAll("\n#### $1\n");
-        html = PATTERN_H5.matcher(html).replaceAll("\n##### $1\n");
-        html = PATTERN_H6.matcher(html).replaceAll("\n###### $1\n");
-        // Convert links
-        html = PATTERN_LINK.matcher(html).replaceAll("[$2]($1)");
-        // Convert bold/italic
-        html = PATTERN_BOLD.matcher(html).replaceAll("**$1**");
-        html = PATTERN_ITALIC.matcher(html).replaceAll("*$1*");
-        // Convert code
-        html = PATTERN_CODE.matcher(html).replaceAll("`$1`");
-        html = PATTERN_PRE.matcher(html).replaceAll("\n```\n$1\n```\n");
-        // Convert list items
-        html = PATTERN_LI.matcher(html).replaceAll("\n- $1");
-        // Convert paragraphs and line breaks
-        html = PATTERN_P.matcher(html).replaceAll("\n\n");
-        html = PATTERN_BR.matcher(html).replaceAll("\n");
-        html = PATTERN_HR.matcher(html).replaceAll("\n---\n");
-        // Remove all remaining tags
-        html = PATTERN_TAG.matcher(html).replaceAll("");
-        // Decode common HTML entities
-        html = html.replace("&amp;", "&")
-                   .replace("&lt;", "<")
-                   .replace("&gt;", ">")
-                   .replace("&quot;", "\"")
-                   .replace("&apos;", "'")
-                   .replace("&nbsp;", " ")
-                   .replace("&#39;", "'")
-                   .replace("&mdash;", "—")
-                   .replace("&ndash;", "–")
-                   .replace("&hellip;", "…");
-        // Collapse multiple blank lines
-        html = PATTERN_BLANK_LINES.matcher(html).replaceAll("\n\n");
-        return html.strip();
-    }
-
-    // ---- Constants ----
 
     /** 15-minute TTL cache for fetched URLs. */
     private static final Map<String, String> CACHE = new LinkedHashMap<>() {
@@ -205,33 +155,14 @@ public class WebFetch implements Tool {
         }
     };
 
+    /** HTML to Markdown converter. */
+    private static final CopyDown converter = new CopyDown();
+
     /** Shared HTTP client that does NOT follow redirects automatically. */
     private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
             .followRedirects(HttpClient.Redirect.NEVER)
             .connectTimeout(Duration.ofSeconds(15))
             .build();
-
-    // Regex patterns for HTML-to-Markdown conversion (CASE_INSENSITIVE | DOTALL)
-    private static final Pattern PATTERN_HEAD    = Pattern.compile("<head[^>]*>.*?</head>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    private static final Pattern PATTERN_SCRIPT  = Pattern.compile("<script[^>]*>.*?</script>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    private static final Pattern PATTERN_STYLE   = Pattern.compile("<style[^>]*>.*?</style>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    private static final Pattern PATTERN_H1      = Pattern.compile("<h1[^>]*>(.*?)</h1>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    private static final Pattern PATTERN_H2      = Pattern.compile("<h2[^>]*>(.*?)</h2>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    private static final Pattern PATTERN_H3      = Pattern.compile("<h3[^>]*>(.*?)</h3>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    private static final Pattern PATTERN_H4      = Pattern.compile("<h4[^>]*>(.*?)</h4>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    private static final Pattern PATTERN_H5      = Pattern.compile("<h5[^>]*>(.*?)</h5>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    private static final Pattern PATTERN_H6      = Pattern.compile("<h6[^>]*>(.*?)</h6>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    private static final Pattern PATTERN_LINK    = Pattern.compile("<a[^>]*\\shref=[\"']([^\"']*)[\"'][^>]*>(.*?)</a>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    private static final Pattern PATTERN_BOLD    = Pattern.compile("<(?:b|strong)[^>]*>(.*?)</(?:b|strong)>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    private static final Pattern PATTERN_ITALIC  = Pattern.compile("<(?:i|em)[^>]*>(.*?)</(?:i|em)>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    private static final Pattern PATTERN_CODE    = Pattern.compile("<code[^>]*>(.*?)</code>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    private static final Pattern PATTERN_PRE     = Pattern.compile("<pre[^>]*>(.*?)</pre>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    private static final Pattern PATTERN_LI      = Pattern.compile("<li[^>]*>(.*?)</li>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    private static final Pattern PATTERN_P       = Pattern.compile("</?p[^>]*>", Pattern.CASE_INSENSITIVE);
-    private static final Pattern PATTERN_BR      = Pattern.compile("<br\\s*/?>", Pattern.CASE_INSENSITIVE);
-    private static final Pattern PATTERN_HR      = Pattern.compile("<hr\\s*/?>", Pattern.CASE_INSENSITIVE);
-    private static final Pattern PATTERN_TAG     = Pattern.compile("<[^>]+>", Pattern.DOTALL);
-    private static final Pattern PATTERN_BLANK_LINES = Pattern.compile("\n{3,}");
 
     /**
      * The specification for WebFetch tool.
