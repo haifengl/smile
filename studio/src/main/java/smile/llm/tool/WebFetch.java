@@ -52,22 +52,13 @@ public class WebFetch implements Tool {
     @JsonPropertyDescription("The URL to fetch content from")
     public String url;
 
-    @JsonProperty(required = true)
-    @JsonPropertyDescription("The prompt to run on the fetched content")
-    public String prompt;
-
     @Override
     public String run(Conversation conversation) {
-        return webFetch(url, prompt, conversation);
+        return webFetch(url);
     }
 
     /** Static helper method to fetch a webpage. */
-    public static String webFetch(String url, String prompt) {
-        return webFetch(url, prompt, null);
-    }
-
-    /** Static helper method to fetch a webpage, optionally using an LLM from the conversation. */
-    static String webFetch(String url, String prompt, Conversation conversation) {
+    public static String webFetch(String url) {
         // Upgrade HTTP to HTTPS
         if (url.startsWith("http://")) {
             url = "https://" + url.substring(7);
@@ -76,14 +67,14 @@ public class WebFetch implements Tool {
         // Check cache
         String cached = CACHE.get(url);
         if (cached != null) {
-            return processWithLLM(cached, prompt);
+            return cached;
         }
 
         try {
             URI uri = URI.create(url);
             HttpRequest request = HttpRequest.newBuilder(uri)
                     .timeout(Duration.ofSeconds(30))
-                    .header("User-Agent", "Mozilla/5.0 (compatible; SmileBot/1.0)")
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36")
                     .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
                     .GET()
                     .build();
@@ -118,17 +109,10 @@ public class WebFetch implements Tool {
             }
 
             CACHE.put(url, markdown);
-            return processWithLLM(markdown, prompt);
+            return markdown;
         } catch (Exception e) {
             return "Error fetching URL: " + e.getMessage();
         }
-    }
-
-    /** Processes the fetched content with the prompt using an LLM. */
-    private static String processWithLLM(String content, String prompt) {
-        return "Given the following web page content, answer this question or perform this task:\n\n" +
-                    "Task: " + prompt + "\n\n" +
-                    "Content:\n" + content;
     }
 
     /** Converts HTML content to Markdown-like plain text. */
@@ -256,7 +240,7 @@ public class WebFetch implements Tool {
     public static Tool.Spec spec() {
         try {
             return new Tool.Spec(WebFetch.class,
-                    List.of(WebFetch.class.getMethod("webFetch", String.class, String.class)));
+                    List.of(WebFetch.class.getMethod("webFetch", String.class)));
         } catch (Exception e) {
             System.err.println("Failed to load ToolSpec: " + e.getMessage());
         }
