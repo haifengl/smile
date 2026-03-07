@@ -16,9 +16,8 @@
  */
 package smile.llm.tool;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
+import java.util.function.Consumer;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -228,7 +227,7 @@ public class TodoWrite implements Tool {
     }
 
     @Override
-    public String run(Conversation conversation) {
+    public String run(Conversation conversation, Consumer<String> statusUpdate) {
         return todoWrite(todos);
     }
 

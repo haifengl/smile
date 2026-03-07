@@ -17,6 +17,7 @@
 package smile.llm.tool;
 
 import java.util.List;
+import java.util.function.Consumer;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -36,7 +37,7 @@ public class ExitPlanMode implements Tool {
     public String plan;
 
     @Override
-    public String run(Conversation conversation) {
+    public String run(Conversation conversation, Consumer<String> statusUpdate) {
         try {
             var path = conversation.exitPlanMode(plan);
             if (path != null) {

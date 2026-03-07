@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -60,7 +61,7 @@ public class Read implements Tool {
     public int limit = 2000;
 
     @Override
-    public String run(Conversation conversation) {
+    public String run(Conversation conversation, Consumer<String> statusUpdate) {
         return readFile(file_path, offset, limit);
     }
 

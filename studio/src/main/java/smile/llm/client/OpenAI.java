@@ -284,7 +284,9 @@ public class OpenAI extends LLM {
      * @param request the chat completion request builder.
      * @param handler the stream response handler.
      */
-    private void complete(ChatCompletionCreateParams.Builder request, Conversation conversation, StreamResponseHandler handler) {
+    private void complete(ChatCompletionCreateParams.Builder request,
+                          Conversation conversation,
+                          StreamResponseHandler handler) {
         var accumulator = ChatCompletionAccumulator.create();
         var stream = client.chat().completions().createStreaming(request.build());
         stream.subscribe(new AsyncStreamResponse.Handler<>() {
@@ -315,7 +317,7 @@ public class OpenAI extends LLM {
                                     var input = func.arguments();
                                     logger.info("Tool call: name={}, input={}", func.name(), input);
 
-                                    var output = callTool(func, conversation);
+                                    var output = callTool(func, conversation, handler);
                                     var toolCallOutput = new ToolCallOutput(id, output);
 
                                     // Add the tool call result to the conversation.
@@ -397,18 +399,20 @@ public class OpenAI extends LLM {
      * @param tool the tool function to call.
      * @return the tool call result.
      */
-    private String callTool(ChatCompletionMessageFunctionToolCall.Function tool, Conversation conversation) {
+    private String callTool(ChatCompletionMessageFunctionToolCall.Function tool,
+                            Conversation conversation,
+                            StreamResponseHandler handler) {
         return switch (tool.name()) {
-            case "Read" -> tool.arguments(Read.class).run(conversation);
-            case "Write" -> tool.arguments(Write.class).run(conversation);
-            case "Append" -> tool.arguments(Append.class).run(conversation);
-            case "Edit" -> tool.arguments(Edit.class).run(conversation);
-            case "Bash" -> tool.arguments(Bash.class).run(conversation);
-            case "KillShell" -> tool.arguments(KillShell.class).run(conversation);
-            case "Glob" -> tool.arguments(Glob.class).run(conversation);
-            case "Grep" -> tool.arguments(Grep.class).run(conversation);
-            case "ExitPlanMode" -> tool.arguments(ExitPlanMode.class).run(conversation);
-            case "WebFetch" -> tool.arguments(WebFetch.class).run(conversation);
+            case "Read" -> tool.arguments(Read.class).run(conversation, handler);
+            case "Write" -> tool.arguments(Write.class).run(conversation, handler);
+            case "Append" -> tool.arguments(Append.class).run(conversation, handler);
+            case "Edit" -> tool.arguments(Edit.class).run(conversation, handler);
+            case "Bash" -> tool.arguments(Bash.class).run(conversation, handler);
+            case "KillShell" -> tool.arguments(KillShell.class).run(conversation, handler);
+            case "Glob" -> tool.arguments(Glob.class).run(conversation, handler);
+            case "Grep" -> tool.arguments(Grep.class).run(conversation, handler);
+            case "ExitPlanMode" -> tool.arguments(ExitPlanMode.class).run(conversation, handler);
+            case "WebFetch" -> tool.arguments(WebFetch.class).run(conversation, handler);
             default -> MCP.call(tool.name(), tool.arguments());
         };
     }

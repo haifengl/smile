@@ -171,7 +171,9 @@ public class Anthropic extends LLM {
      * @param request the chat completion request builder.
      * @param handler the stream response handler.
      */
-    private void complete(MessageCreateParams.Builder request, Conversation conversation, StreamResponseHandler handler) {
+    private void complete(MessageCreateParams.Builder request,
+                          Conversation conversation,
+                          StreamResponseHandler handler) {
         var accumulator = BetaMessageAccumulator.create();
         client.beta().messages().createStreaming(request.build())
                 .subscribe(new AsyncStreamResponse.Handler<>() {
@@ -201,7 +203,7 @@ public class Anthropic extends LLM {
                                         var input = toolUse._input();
                                         logger.info("Tool call: name={}, input={}", toolUse.name(), input);
 
-                                        var output = callTool(toolUse, conversation);
+                                        var output = callTool(toolUse, conversation, handler);
                                         var message = BetaContentBlockParam.ofToolUse(BetaToolUseBlockParam.builder()
                                                 .name(toolUse.name())
                                                 .id(toolUse.id())
@@ -283,18 +285,20 @@ public class Anthropic extends LLM {
      * @param tool the tool function to call.
      * @return the tool call result.
      */
-    private String callTool(BetaToolUseBlock tool, Conversation conversation) {
+    private String callTool(BetaToolUseBlock tool,
+                            Conversation conversation,
+                            StreamResponseHandler handler) {
         return switch (tool.name()) {
-            case "Read" -> tool.input(Read.class).run(conversation);
-            case "Write" -> tool.input(Write.class).run(conversation);
-            case "Append" -> tool.input(Append.class).run(conversation);
-            case "Edit" -> tool.input(Edit.class).run(conversation);
-            case "Bash" -> tool.input(Bash.class).run(conversation);
-            case "KillShell" -> tool.input(KillShell.class).run(conversation);
-            case "Glob" -> tool.input(Glob.class).run(conversation);
-            case "Grep" -> tool.input(Grep.class).run(conversation);
-            case "ExitPlanMode" -> tool.input(ExitPlanMode.class).run(conversation);
-            case "WebFetch" -> tool.input(WebFetch.class).run(conversation);
+            case "Read" -> tool.input(Read.class).run(conversation, handler);
+            case "Write" -> tool.input(Write.class).run(conversation, handler);
+            case "Append" -> tool.input(Append.class).run(conversation, handler);
+            case "Edit" -> tool.input(Edit.class).run(conversation, handler);
+            case "Bash" -> tool.input(Bash.class).run(conversation, handler);
+            case "KillShell" -> tool.input(KillShell.class).run(conversation, handler);
+            case "Glob" -> tool.input(Glob.class).run(conversation, handler);
+            case "Grep" -> tool.input(Grep.class).run(conversation, handler);
+            case "ExitPlanMode" -> tool.input(ExitPlanMode.class).run(conversation, handler);
+            case "WebFetch" -> tool.input(WebFetch.class).run(conversation, handler);
             default -> MCP.call(tool.name(), tool._input().toString());
         };
     }

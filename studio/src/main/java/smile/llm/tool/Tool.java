@@ -19,6 +19,7 @@ package smile.llm.tool;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.function.Consumer;
 import smile.llm.Conversation;
 
 /**
@@ -34,7 +35,7 @@ public interface Tool {
      * @param conversation the conversation session that the tool calling belongs to.
      * @return the result of tool execution.
      */
-    String run(Conversation conversation);
+    String run(Conversation conversation, Consumer<String> statusUpdate);
 
     /**
      * The specification of built-in tools. 

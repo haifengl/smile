@@ -25,6 +25,7 @@ import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -53,7 +54,7 @@ public class WebFetch implements Tool {
     public String url;
 
     @Override
-    public String run(Conversation conversation) {
+    public String run(Conversation conversation, Consumer<String> statusUpdate) {
         return webFetch(url);
     }
 

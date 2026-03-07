@@ -17,6 +17,7 @@
 package smile.llm.tool;
 
 import java.util.List;
+import java.util.function.Consumer;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -59,7 +60,7 @@ public class Grep implements Tool {
     public boolean multiline = false;
 
     @Override
-    public String run(Conversation conversation) {
+    public String run(Conversation conversation, Consumer<String> statusUpdate) {
         if (path == null) {
             path = Tool.cwd(conversation).toString();
         }

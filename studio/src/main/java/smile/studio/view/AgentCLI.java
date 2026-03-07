@@ -544,6 +544,11 @@ Please provide your summary based on the conversation so far, following this str
                     }
                 }
             }
+
+            @Override
+            public void accept(String status) {
+                // do nothing, we handle the status update in onNext and onComplete.
+            }
         });
     }
 }

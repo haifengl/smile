@@ -17,6 +17,7 @@
 package smile.llm.tool;
 
 import java.util.List;
+import java.util.function.Consumer;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -99,7 +100,10 @@ public class Task implements Tool {
     public String subagent_type;
 
     @Override
-    public String run(Conversation conversation) {
+    public String run(Conversation conversation, Consumer<String> statusUpdate) {
+        if (description != null) {
+            statusUpdate.accept(description);
+        }
         return runTask(description, prompt, subagent_type);
     }
 

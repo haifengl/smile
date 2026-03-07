@@ -44,6 +44,7 @@ public class Intent extends JPanel {
     private final JComboBox<IntentType> intentTypeComboBox = new JComboBox<>(IntentType.values());
     private final Editor editor = new Editor(1, 80, SyntaxConstants.SYNTAX_STYLE_NONE);
     private final OutputArea output = new OutputArea();
+    private final JLabel status = new JLabel();
 
     /**
      * Constructor.
@@ -66,6 +67,7 @@ public class Intent extends JPanel {
         output.setLineWrap(true);
         output.setWrapStyleWord(true);
 
+        add(status, BorderLayout.NORTH);
         add(inputPane, BorderLayout.CENTER);
         add(output, BorderLayout.SOUTH);
     }
@@ -252,6 +254,21 @@ public class Intent extends JPanel {
      */
     public JLabel indicator() {
         return indicator;
+    }
+
+    /**
+     * Returns the status label.
+     * @return the status label.
+     */
+    public JLabel status() {
+        return status;
+    }
+
+    /**
+     * Removes the status label from the intent view.
+     */
+    public void removeStatus() {
+        remove(status);
     }
 
     /**

@@ -17,6 +17,7 @@
 package smile.llm.tool;
 
 import java.util.List;
+import java.util.function.Consumer;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -46,7 +47,7 @@ public class WebSearch implements Tool {
     public List<String> blocked_domains;
 
     @Override
-    public String run(Conversation conversation) {
+    public String run(Conversation conversation, Consumer<String> statusUpdate) {
         return webSearch(query, allowed_domains, blocked_domains);
     }
 
