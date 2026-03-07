@@ -62,13 +62,11 @@ public class Intent extends JPanel {
         ac.setAutoActivationDelay(500);
         ac.install(editor);
 
-        status.setFont(Monospaced.getFont());
         output.setFont(Monospaced.getFont());
         output.setEditable(false);
         output.setLineWrap(true);
         output.setWrapStyleWord(true);
 
-        add(status, BorderLayout.NORTH);
         add(inputPane, BorderLayout.CENTER);
         add(output, BorderLayout.SOUTH);
     }
@@ -96,6 +94,7 @@ public class Intent extends JPanel {
         footer.setOpaque(false);
         footer.add(Box.createHorizontalStrut(indicator.getPreferredSize().width));
         footer.add(intentTypeComboBox);
+        footer.add(status);
 
         inputPane.setBackground(inputColor);
         inputPane.setBorder(createRoundBorder());

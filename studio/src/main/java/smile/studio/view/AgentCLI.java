@@ -533,10 +533,10 @@ Please provide your summary based on the conversation so far, following this str
                     SwingUtilities.invokeLater(() ->
                             intent.output().append("\nError: " + ex.getMessage()));
                 } else {
-                    //if (outputTokens > 0) {
+                    if (outputTokens > 0) {
                         SwingUtilities.invokeLater(() ->
                                 intent.status().setText(outputTokens + " output tokens"));
-                    //}
+                    }
 
                     // Auto compact if total tokens exceed the threshold, otherwise render Markdown if applicable.
                     if (totalTokens > COMPACT_THRESHOLD) {
