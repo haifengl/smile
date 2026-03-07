@@ -26,6 +26,15 @@
         "command": "cmd.exe",
         "args": ["/c", "npx", "-y", "@upstash/context7-mcp"]
       }
+    },
+    "firecrawl": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "firecrawl-mcp"],
+      "windows": {
+        "command": "cmd.exe",
+        "args": ["/c", "npx", "-y", "firecrawl-mcp"]
+      }
     }
   }
 }
