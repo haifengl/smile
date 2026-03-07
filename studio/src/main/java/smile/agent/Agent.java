@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -352,7 +353,8 @@ You can use the following tools without requiring user approval: Read(//workspac
                         Is directory a git repo: %s
                         Platform: %s
                         OS Version: %s
-                        Current date time: %s
+                        Today's date: %s
+                        Current UTC time: %s
                         Time zone: %s
                         </env>
                         """,
@@ -360,16 +362,17 @@ You can use the following tools without requiring user approval: Read(//workspac
                 Files.exists(Path.of(System.getProperty("user.dir"), ".git")) ? "Yes" : "No",
                 System.getProperty("os.name"),
                 System.getProperty("os.version"),
-                date(),
+                LocalDate.now(),
+                utc(),
                 ZoneId.systemDefault());
 
         return prompt;
     }
 
     /**
-     * Returns the current date and time in ISO-8601 format, truncated to milliseconds.
+     * Returns the UTC date and time in ISO-8601 format, truncated to milliseconds.
      */
-    private String date() {
+    private String utc() {
         return Instant.now().truncatedTo(ChronoUnit.MILLIS).toString();
     }
 
