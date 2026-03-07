@@ -45,6 +45,7 @@ public class Intent extends JPanel {
     private final Editor editor = new Editor(1, 80, SyntaxConstants.SYNTAX_STYLE_NONE);
     private final OutputArea output = new OutputArea();
     private final JLabel status = new JLabel();
+    private final JProgressBar progress = new JProgressBar();
 
     /**
      * Constructor.
@@ -89,12 +90,16 @@ public class Intent extends JPanel {
         editor.setHighlightCurrentLine(false);
         editor.setBackground(inputColor);
 
+        status.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
+        progress.setMaximumSize(new Dimension(200, 12));
+
         initCommandType();
         footer.setLayout(new BoxLayout(footer, BoxLayout.X_AXIS));
         footer.setOpaque(false);
         footer.add(Box.createHorizontalStrut(indicator.getPreferredSize().width));
         footer.add(intentTypeComboBox);
         footer.add(status);
+        footer.add(Box.createHorizontalGlue());
 
         inputPane.setBackground(inputColor);
         inputPane.setBorder(createRoundBorder());
@@ -108,9 +113,11 @@ public class Intent extends JPanel {
         intentTypeComboBox.setBorder(BorderFactory.createEmptyBorder());
         intentTypeComboBox.setBackground(inputColor);
         intentTypeComboBox.setForeground(Color.DARK_GRAY);
-        if (intentTypeComboBox.getComponentCount() > 0 && intentTypeComboBox.getComponent(0) instanceof AbstractButton button) {
+        if (intentTypeComboBox.getComponentCount() > 0 &&
+            intentTypeComboBox.getComponent(0) instanceof AbstractButton button) {
             button.setVisible(false);
         }
+
         intentTypeComboBox.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
                 var intentType = (IntentType) e.getItem();
@@ -249,19 +256,36 @@ public class Intent extends JPanel {
     }
 
     /**
+     * Sets the status label.
+     */
+    public void setStatus(String text) {
+        status.setText(text);
+    }
+
+    /**
+     * Turns on/off the progress bar.
+     */
+    public void setProgress(boolean on) {
+        if (on) {
+            progress.setIndeterminate(true);
+            progress.setEnabled(true);
+            footer.add(progress);
+        } else {
+            progress.setIndeterminate(false);
+            progress.setEnabled(false);
+            footer.remove(progress);
+            // Repaint the footer to reflect the removal of the progress bar.
+            // This is necessary as Swing is optimized for lazy evaluation.
+            footer.repaint();
+        }
+    }
+
+    /**
      * Returns the indicator component.
      * @return the indicator component.
      */
     public JLabel indicator() {
         return indicator;
-    }
-
-    /**
-     * Returns the status label.
-     * @return the status label.
-     */
-    public JLabel status() {
-        return status;
     }
 
     /**

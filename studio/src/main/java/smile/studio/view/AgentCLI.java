@@ -17,7 +17,6 @@
 package smile.studio.view;
 
 import javax.swing.*;
-import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.io.IOException;
@@ -111,7 +110,10 @@ public class AgentCLI extends JPanel {
         switch (intentType) {
             case Command -> runSlashCommand(intent, instructions);
             case Shell, Python -> runShellCommand(intent, intentType, instructions);
-            case Instructions -> chat(intent, instructions);
+            case Instructions -> {
+                intent.setStatus("Thinking...");
+                chat(intent, instructions);
+            }
             default -> logger.debug("Ignore intent type: {}", intentType);
         }
     }
@@ -396,16 +398,22 @@ public class AgentCLI extends JPanel {
         }
 
         var args = instructions.substring(command.length()).trim();
-        if (cmd.get().content().contains("{{args}}")) {
+        var memory = cmd.get();
+        var description = memory.description();
+        if (!Strings.isNullOrBlank(description)) {
+            intent.setStatus(description);
+        }
+
+        if (memory.content().contains("{{args}}")) {
             if (args.isBlank()) {
                 intent.output().setText("Error: /" + command + " requires arguments.");
             } else {
-                var prompt = cmd.get().prompt(args);
+                var prompt = memory.prompt(args);
                 chat(intent, prompt);
             }
         } else {
             // append instructions to command without {{args}} placeholder.
-            var prompt = cmd.get().content() + "\n\n" + args;
+            var prompt = memory.content() + "\n\n" + args;
             chat(intent, prompt);
         }
     }
@@ -484,14 +492,11 @@ Please provide your summary based on the conversation so far, following this str
             prompt = prompt + "\n\n" + instructions;
         }
 
-        chat(intent, prompt, "Compacting...");
+        intent.setStatus("Compacting...");
+        chat(intent, prompt);
     }
 
     private void chat(Intent intent, String prompt) {
-        chat(intent, prompt, "Thinking...");
-    }
-
-    private void chat(Intent intent, String prompt, String status) {
         if (prompt.isBlank()) {
             intent.output().setText(bundle.getString("Hello"));
             return;
@@ -502,40 +507,28 @@ Please provide your summary based on the conversation so far, following this str
             return;
         }
 
-        if (!Strings.isNullOrBlank(status)) {
-            intent.status().setText(status);
-        }
-
-        //var timer = new Timer(500, e -> intent.status().append("."));
-        //timer.start();
+        intent.setProgress(true);
 
         // Stream processing runs in a background thread so that we don't
         // need to create a SwingWorker thread.
         agent.stream(prompt, new StreamResponseHandler() {
-            boolean firstChunk = true;
             @Override
             public void onNext(String chunk) {
                 SwingUtilities.invokeLater(() -> {
-                    if (firstChunk) {
-                        //timer.stop();
-                        //intent.status().setText("");
-                        firstChunk = false;
-                    }
                     intent.output().append(chunk);
                 });
             }
 
             @Override
             public void onComplete(Throwable ex, long totalTokens, long outputTokens, long inputTokens) {
-                //intent.status().setText("");
+                SwingUtilities.invokeLater(() -> intent.setProgress(false));
+
                 if (ex != null) {
-                    //timer.stop();
                     SwingUtilities.invokeLater(() ->
                             intent.output().append("\nError: " + ex.getMessage()));
                 } else {
                     if (outputTokens > 0) {
-                        SwingUtilities.invokeLater(() ->
-                                intent.status().setText(outputTokens + " output tokens"));
+                        onStatus(outputTokens + " output tokens");
                     }
 
                     // Auto compact if total tokens exceed the threshold, otherwise render Markdown if applicable.
@@ -561,7 +554,7 @@ Please provide your summary based on the conversation so far, following this str
             @Override
             public void onStatus(String status) {
                 if (!Strings.isNullOrBlank(status)) {
-                    SwingUtilities.invokeLater(() -> intent.status().setText(status));
+                    SwingUtilities.invokeLater(() -> intent.setStatus(status));
                 }
             }
         });
