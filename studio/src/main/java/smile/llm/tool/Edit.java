@@ -54,6 +54,7 @@ public class Edit implements Tool {
 
     @Override
     public String run(Conversation conversation, Consumer<String> statusUpdate) {
+        statusUpdate.accept("Editing " + file_path);
         return editFile(file_path, old_string, new_string, replace_all);
     }
 

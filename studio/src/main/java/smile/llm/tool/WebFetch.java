@@ -55,6 +55,7 @@ public class WebFetch implements Tool {
 
     @Override
     public String run(Conversation conversation, Consumer<String> statusUpdate) {
+        statusUpdate.accept("Fetching " + url);
         return webFetch(url);
     }
 

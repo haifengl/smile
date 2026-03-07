@@ -48,6 +48,7 @@ public class WebSearch implements Tool {
 
     @Override
     public String run(Conversation conversation, Consumer<String> statusUpdate) {
+        statusUpdate.accept("Searching web with keywords " + query);
         return webSearch(query, allowed_domains, blocked_domains);
     }
 

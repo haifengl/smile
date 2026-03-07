@@ -49,6 +49,7 @@ public class Glob implements Tool {
         if (path == null) {
             path = Tool.cwd(conversation).toString();
         }
+        statusUpdate.accept("Searching files " + pattern + " in " + path);
         return globFiles(pattern, path);
     }
 

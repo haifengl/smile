@@ -47,6 +47,7 @@ public class Append implements Tool {
 
     @Override
     public String run(Conversation conversation, Consumer<String> statusUpdate) {
+        statusUpdate.accept("Appending " + file_path);
         return appendFile(file_path, content);
     }
 
