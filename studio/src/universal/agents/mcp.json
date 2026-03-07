@@ -35,6 +35,10 @@
         "command": "cmd.exe",
         "args": ["/c", "npx", "-y", "firecrawl-mcp"]
       }
+    },
+    "exa": {
+      "type": "http",
+      "url": "https://mcp.exa.ai/"
     }
   }
 }
