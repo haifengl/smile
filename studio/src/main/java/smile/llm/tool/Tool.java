@@ -52,8 +52,15 @@ public interface Tool {
     static List<Spec> basics() {
         return List.of(Read.spec(), Write.spec(), Edit.spec(), Append.spec(),
                 Glob.spec(), Grep.spec(),
-                Bash.spec(), KillShell.spec(), ExitPlanMode.spec(),
-                WebFetch.spec());
+                Bash.spec(), KillShell.spec(), ExitPlanMode.spec());
+    }
+
+    /**
+     * Returns the specifications of web tools.
+     * @return the specifications of web tools.
+     */
+    static List<Spec> web() {
+        return List.of(WebFetch.spec(), WebSearch.spec());
     }
 
     /** Returns the current working directory of the conversation. */

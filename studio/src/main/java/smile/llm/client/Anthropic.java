@@ -243,6 +243,10 @@ public class Anthropic extends LLM {
      * @param conversation the conversation session.
      */
     private void addTools(MessageCreateParams.Builder builder, Conversation conversation) {
+        // Add server side tools.
+        builder.addTool(BetaWebFetchTool20260209.builder().build())
+               .addTool(BetaWebSearchTool20260209.builder().build());
+
         // Add built-in tools.
         for (var tool : conversation.tools()) {
             builder.addTool(tool.clazz());
