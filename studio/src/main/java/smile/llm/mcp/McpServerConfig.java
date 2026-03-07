@@ -16,7 +16,6 @@
  */
 package smile.llm.mcp;
 
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.modelcontextprotocol.json.McpJsonDefaults;
@@ -47,9 +46,6 @@ public sealed interface McpServerConfig permits StdioMcpServerConfig, HttpMcpSer
 
     /** Returns the transport type of this server. */
     ServerType type();
-
-    /** Returns the input variable definitions, or {@code null} if none. */
-    List<McpInput> inputs();
 
     /**
      * Returns {@code true} if this server is disabled.

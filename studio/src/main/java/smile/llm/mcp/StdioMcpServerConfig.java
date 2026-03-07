@@ -52,8 +52,6 @@ import smile.util.Strings;
  *                 Values may reference input variables as {@code ${input:id}}.
  * @param windows  Optional Windows-specific override for {@code command} and
  *                 {@code args}, applied only when running on Windows.
- * @param inputs   Optional list of input variable definitions used to resolve
- *                 {@code ${input:id}} placeholders in {@code env} values.
  * @param disabled If {@code true}, this server is disabled and will not be started.
  *
  * @author Haifeng Li
@@ -65,7 +63,6 @@ public record StdioMcpServerConfig(
         List<String> args,
         Map<String, String> env,
         WindowsOverride windows,
-        List<McpInput> inputs,
         boolean disabled) implements McpServerConfig {
 
     /**

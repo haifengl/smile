@@ -49,8 +49,6 @@ import io.modelcontextprotocol.spec.McpClientTransport;
  * @param url      The URL of the remote MCP server endpoint.
  * @param headers  Optional HTTP headers sent with every request.
  *                 Values may reference input variables as {@code ${input:id}}.
- * @param inputs   Optional list of input variable definitions used to resolve
- *                 {@code ${input:id}} placeholders in {@code headers} values.
  * @param disabled If {@code true}, this server is disabled and will not be
  *                 connected.
  *
@@ -61,7 +59,6 @@ public record HttpMcpServerConfig(
         ServerType type,
         String url,
         Map<String, String> headers,
-        List<McpInput> inputs,
         boolean disabled) implements McpServerConfig, Consumer<HttpRequest.Builder> {
 
     @Override

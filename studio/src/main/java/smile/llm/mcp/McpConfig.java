@@ -33,9 +33,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  *
  * <pre>{@code
  * {
- *   "inputs": [
- *     { "id": "api-key", "type": "promptString", "description": "API key", "password": true }
- *   ],
  *   "servers": {
  *     "filesystem": {
  *       "type": "stdio",
@@ -57,13 +54,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  *   <li>{@link HttpMcpServerConfig} for {@code "type": "sse"} or {@code "type": "http"}</li>
  * </ul>
  *
- * @param inputs  Top-level input variable definitions shared across all servers.
  * @param servers Map of server name to its {@link McpServerConfig}.
  *
  * @author Haifeng Li
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record McpConfig(Map<String, McpServerConfig> servers, List<McpInput> inputs) {
+public record McpConfig(Map<String, McpServerConfig> servers) {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(McpConfig.class);
 
     /**
