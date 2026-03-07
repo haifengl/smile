@@ -299,7 +299,7 @@ public class Anthropic extends LLM {
             case "Grep" -> tool.input(Grep.class).run(conversation, handler);
             case "ExitPlanMode" -> tool.input(ExitPlanMode.class).run(conversation, handler);
             case "WebFetch" -> tool.input(WebFetch.class).run(conversation, handler);
-            default -> MCP.call(tool.name(), tool._input().toString());
+            default -> MCP.call(tool.name(), tool._input().toString(), handler);
         };
     }
 }

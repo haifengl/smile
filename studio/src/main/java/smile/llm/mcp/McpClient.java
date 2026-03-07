@@ -59,11 +59,17 @@ public class McpClient implements AutoCloseable {
         this.tools = client.listTools().tools();
 
         var capabilities = client.getServerCapabilities();
-        this.resources = capabilities.resources() != null ?
-            client.listResources().resources().stream().toList() : List.of();
+        if (capabilities.resources() != null) {
+            resources = client.listResources().resources().stream().toList();
+        } else {
+            resources = List.of();
+        }
 
-        this.prompts = capabilities.resources() != null ?
-                client.listPrompts().prompts() : List.of();
+        if (capabilities.prompts() != null) {
+            prompts = client.listPrompts().prompts();
+        } else {
+            prompts = List.of();
+        }
     }
 
     /**

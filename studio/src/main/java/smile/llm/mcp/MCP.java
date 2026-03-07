@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import io.modelcontextprotocol.spec.McpSchema;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.DeserializationFeature;
@@ -74,10 +75,11 @@ public class MCP {
      * @param tool the name of the tool to call.
      * @param arguments the arguments in serialized JSON.
      */
-    public static String call(String tool, String arguments) {
+    public static String call(String tool, String arguments, Consumer<String> statusUpdate) {
         var client = tool2client.get(tool);
         if (client == null) return "Error: unknown tool " + tool;
         try {
+            statusUpdate.accept("Calling " + tool);
             return client.call(tool, MAPPER.readValue(arguments, MAP_TYPE_REF));
         } catch (Exception ex) {
             return "Error: tool calling exception " + ex.getMessage();

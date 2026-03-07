@@ -38,7 +38,7 @@
     },
     "exa": {
       "type": "http",
-      "url": "https://mcp.exa.ai/"
+      "url": "https://mcp.exa.ai"
     }
   }
 }

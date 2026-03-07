@@ -413,7 +413,7 @@ public class OpenAI extends LLM {
             case "Grep" -> tool.arguments(Grep.class).run(conversation, handler);
             case "ExitPlanMode" -> tool.arguments(ExitPlanMode.class).run(conversation, handler);
             case "WebFetch" -> tool.arguments(WebFetch.class).run(conversation, handler);
-            default -> MCP.call(tool.name(), tool.arguments());
+            default -> MCP.call(tool.name(), tool.arguments(), handler);
         };
     }
 }
