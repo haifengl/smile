@@ -16,7 +16,6 @@
  */
 package smile.llm.tool;
 
-import java.net.http.HttpClient;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -72,7 +71,7 @@ public class WebFetch implements Tool {
 
         try {
             var body = Jsoup.connect(url).execute().body();
-            var markdown = converter.convert(body);
+            var markdown = copydown.convert(body);
             // Trim to a reasonable size (~50k chars)
             if (markdown.length() > 50_000) {
                 markdown = markdown.substring(0, 50_000) + "\n\n[Content truncated due to size]";
@@ -128,13 +127,7 @@ public class WebFetch implements Tool {
     };
 
     /** HTML to Markdown converter. */
-    private static final CopyDown converter = new CopyDown();
-
-    /** Shared HTTP client that does NOT follow redirects automatically. */
-    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
-            .followRedirects(HttpClient.Redirect.NEVER)
-            .connectTimeout(Duration.ofSeconds(15))
-            .build();
+    private static final CopyDown copydown = new CopyDown();
 
     /**
      * The specification for WebFetch tool.

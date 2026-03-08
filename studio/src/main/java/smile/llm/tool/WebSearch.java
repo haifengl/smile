@@ -17,10 +17,12 @@
 package smile.llm.tool;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import serpapi.SerpApi;
 import smile.llm.Conversation;
 
 @JsonClassDescription("""
@@ -31,7 +33,6 @@ import smile.llm.Conversation;
 - Searches are performed automatically within a single API call
 
 Usage notes:
-  - Domain filtering is supported to include or block specific websites
   - Web search is only available in the US
   - Account for "Today's date" in <env>. For example, if <env> says "Today's date: 2026-07-01", and the user wants the latest docs, use 2026 in the search query.
 """)
@@ -40,22 +41,47 @@ public class WebSearch implements Tool {
     @JsonPropertyDescription("The search query to use")
     public String query;
 
-    @JsonPropertyDescription("Only include search results from these domains")
-    public List<String> allowed_domains;
-
-    @JsonPropertyDescription("Never include search results from these domains")
-    public List<String> blocked_domains;
-
     @Override
     public String run(Conversation conversation, Consumer<String> statusUpdate) {
         statusUpdate.accept("Searching web with keywords " + query);
-        return webSearch(query, allowed_domains, blocked_domains);
+        return webSearch(query);
     }
 
     /** Static helper method to search the web. */
-    public static String webSearch(String query, List<String> allowed_domains, List<String> blocked_domains) {
-        return "WebFetch is not implemented yet.";
+    public static String webSearch(String query) {
+        if (System.getenv("SERPAPI_API_KEY") == null) {
+            return "Error: SERPAPI_API_KEY environment variable not set. Web search is not available. You may get a free API Key at https://serpapi.com/dashboard";
+        }
+
+        try {
+            Map<String, String> parameter = Map.of("q", query);
+            var data = serpapi.search(parameter);
+            var results = data.getAsJsonArray("organic_results");
+
+            if (results == null) {
+                var metadata = data.getAsJsonObject("search_metadata");
+                String status = metadata.getAsJsonPrimitive("status").getAsString();
+                return "No results found for query: " + status;
+            } else {
+                StringBuilder sb = new StringBuilder("# Search Results\n");
+                for (var item : results) {
+                    String title = item.getAsJsonPrimitive("title").getAsString();
+                    String link = item.getAsJsonPrimitive("link").getAsString();
+                    String snippet = item.getAsJsonPrimitive("snippet").getAsString();
+
+                    sb.append("\n## ").append(title).append("\n");
+                    sb.append("Link: ").append(link).append("\n\n");
+                    sb.append(snippet).append("\n");
+                }
+            }
+            return sb.toString();
+        } catch (Throwable t) {
+            return "Error searching web: " + t.getMessage();
+        }
     }
+
+    /** SerpApi scrapes Google and other search engines. */
+    private static final SerpApi serpapi = new SerpApi();
 
     /**
      * The specification for WebSearch tool.
