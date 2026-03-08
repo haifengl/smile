@@ -24,6 +24,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import io.modelcontextprotocol.spec.McpSchema;
+import smile.agent.Command;
+import smile.agent.Skill;
 import smile.llm.tool.Tool;
 import smile.util.Strings;
 import tools.jackson.databind.ObjectMapper;
@@ -56,9 +58,13 @@ public class Conversation {
     /** The directory path for conversation history and summary. */
     private final Path path;
     /** The built-in tools available for LLM. */
-    private List<Tool.Spec> tools = new ArrayList<>();
+    private final List<Tool.Spec> tools = new ArrayList<>();
     /** The MCP tools available for LLM. */
-    private List<McpSchema.Tool> mcp = new ArrayList<>();
+    private final List<McpSchema.Tool> mcp = new ArrayList<>();
+    /** The custom slash commands. */
+    private final List<Command> commands = new ArrayList<>();
+    /** The skills available to agent. */
+    private final List<Skill> skills = new ArrayList<>();
     /** The optional system reminder to keep the AI focused, enforce safety, and guide tool usage. */
     private String reminder;
     /** Prompt repetition improves non-reasoning LLMs. */
@@ -133,6 +139,42 @@ public class Conversation {
      */
     public Conversation addTools(List<Tool.Spec> tools) {
         this.tools.addAll(tools);
+        return this;
+    }
+
+    /**
+     * Returns the custom slash commands.
+     * @return the custom slash commands.
+     */
+    public List<Command> commands() {
+        return commands;
+    }
+
+    /**
+     * Adds the custom slash commands.
+     * @param commands the custom slash commands.
+     * @return this object.
+     */
+    public Conversation addCommands(List<Command> commands) {
+        this.commands.addAll(commands);
+        return this;
+    }
+
+    /**
+     * Returns the skills available to agent.
+     * @return the skills available to agent.
+     */
+    public List<Skill> skills() {
+        return skills;
+    }
+
+    /**
+     * Adds the skills available to agent.
+     * @param skills the skills available to agent.
+     * @return this object.
+     */
+    public Conversation addSkills(List<Skill> skills) {
+        this.skills.addAll(skills);
         return this;
     }
 
