@@ -38,8 +38,9 @@ public class Analyst extends Agent {
     public Analyst(String name, Path path, Supplier<LLM> llm) {
         super(name, path, llm);
 
-        conversation().withTools(Tool.basics())
-                .withMcp(MCP.tools())
+        conversation().addTools(Tool.basics())
+                .addTools(Tool.web())
+                .addMcp(MCP.tools())
                 .withReminder("""
 Your task is to analyze the data and provide insights based on the user's instructions.
 1. Prioritize robust methodology, including data cleaning, feature engineering, cross-validation, and proper error handling.

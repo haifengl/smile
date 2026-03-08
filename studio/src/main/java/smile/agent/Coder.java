@@ -17,7 +17,6 @@
 package smile.agent;
 
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import smile.llm.client.LLM;
@@ -39,7 +38,9 @@ public class Coder extends Agent {
      */
     public Coder(String name, Path path, Supplier<LLM> llm) {
         super(name, path, llm);
-        conversation().withTools(Tool.basics()).withMcp(MCP.tools());
+        conversation().addTools(Tool.basics())
+                .addTools(Tool.web())
+                .addMcp(MCP.tools());
 
         // low temperature for more predictable, focused, and deterministic code
         conversation().params().setProperty(LLM.TEMPERATURE, "0.2");

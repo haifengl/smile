@@ -56,9 +56,9 @@ public class Conversation {
     /** The directory path for conversation history and summary. */
     private final Path path;
     /** The built-in tools available for LLM. */
-    private List<Tool.Spec> tools = List.of();
+    private List<Tool.Spec> tools = new ArrayList<>();
     /** The MCP tools available for LLM. */
-    private List<McpSchema.Tool> mcp = List.of();
+    private List<McpSchema.Tool> mcp = new ArrayList<>();
     /** The optional system reminder to keep the AI focused, enforce safety, and guide tool usage. */
     private String reminder;
     /** Prompt repetition improves non-reasoning LLMs. */
@@ -109,12 +109,12 @@ public class Conversation {
     }
 
     /**
-     * Sets the MCP services available for LLM.
+     * Adds the MCP services available for LLM.
      * @param mcp the MCP services available for LLM.
      * @return this object.
      */
-    public Conversation withMcp(List<McpSchema.Tool> mcp) {
-        this.mcp = mcp;
+    public Conversation addMcp(List<McpSchema.Tool> mcp) {
+        this.mcp.addAll(mcp);
         return this;
     }
 
@@ -127,12 +127,12 @@ public class Conversation {
     }
 
     /**
-     * Sets the built-in tools available for LLM.
+     * Adds the built-in tools available for LLM.
      * @param tools the built-in tools available for LLM.
      * @return this object.
      */
-    public Conversation withTools(List<Tool.Spec> tools) {
-        this.tools = tools;
+    public Conversation addTools(List<Tool.Spec> tools) {
+        this.tools.addAll(tools);
         return this;
     }
 

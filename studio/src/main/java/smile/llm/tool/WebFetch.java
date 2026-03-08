@@ -16,10 +16,7 @@
  */
 package smile.llm.tool;
 
-import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -30,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import io.github.furstenheim.CopyDown;
+import org.jsoup.Jsoup;
 import smile.llm.Conversation;
 
 @JsonClassDescription("""
@@ -73,36 +71,8 @@ public class WebFetch implements Tool {
         }
 
         try {
-            URI uri = URI.create(url);
-            HttpRequest request = HttpRequest.newBuilder(uri)
-                    .timeout(Duration.ofSeconds(30))
-                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36")
-                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-                    .GET()
-                    .build();
-
-            HttpResponse<String> response = HTTP_CLIENT.send(request,
-                    HttpResponse.BodyHandlers.ofString());
-
-            // Detect cross-host redirects
-            URI finalUri = response.uri();
-            if (finalUri != null && !finalUri.getHost().equalsIgnoreCase(uri.getHost())) {
-                return "The URL redirected to a different host: " + finalUri +
-                        "\nPlease make a new WebFetch request with the redirect URL: " + finalUri;
-            }
-
-            int status = response.statusCode();
-            if (status < 200 || status >= 300) {
-                return "Error fetching URL: HTTP " + status;
-            }
-
-            String contentType = response.headers().firstValue("Content-Type").orElse("");
-            String body = response.body();
-            String markdown = body;
-            if (contentType.contains("text/html")) {
-                markdown = converter.convert(body);
-            }
-
+            var body = Jsoup.connect(url).execute().body();
+            var markdown = converter.convert(body);
             // Trim to a reasonable size (~50k chars)
             if (markdown.length() > 50_000) {
                 markdown = markdown.substring(0, 50_000) + "\n\n[Content truncated due to size]";
@@ -110,8 +80,8 @@ public class WebFetch implements Tool {
 
             CACHE.put(url, markdown);
             return markdown;
-        } catch (Exception e) {
-            return "Error fetching URL: " + e.getMessage();
+        } catch (Throwable t) {
+            return "Error fetching URL: " + t.getMessage();
         }
     }
 
