@@ -47,13 +47,13 @@ public interface Tool {
     record Spec(Class<? extends Tool> clazz, List<Method> methods) { }
 
     /**
-     * Returns the specifications of basic tools for file operations.
-     * @return the specifications of basic tools for file operations.
+     * Returns the specifications of basic tools for file operations, shell, skill, planning.
+     * @return the specifications of basic tools for file operations, shell, skill, planning.
      */
     static List<Spec> basics() {
         return List.of(Read.spec(), Write.spec(), Edit.spec(), Append.spec(),
-                Glob.spec(), Grep.spec(),
-                Bash.spec(), KillShell.spec(), ExitPlanMode.spec());
+                Glob.spec(), Grep.spec(), Bash.spec(), KillShell.spec(),
+                LoadSkill.spec(), SlashCommand.spec(), ExitPlanMode.spec());
     }
 
     /**

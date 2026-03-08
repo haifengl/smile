@@ -93,7 +93,7 @@ Note: file list is sampled.
     }
 
     /**
-     * The specification for Skill tool.
+     * The specification for LoadSkill tool.
      * @return the tool specification.
      */
     public static Tool.Spec spec() {

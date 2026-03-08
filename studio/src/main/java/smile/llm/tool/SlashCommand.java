@@ -17,10 +17,13 @@
 package smile.llm.tool;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import smile.agent.Command;
 import smile.llm.Conversation;
 
 @JsonClassDescription("""
@@ -54,12 +57,52 @@ public class SlashCommand implements Tool {
     @Override
     public String run(Conversation conversation, Consumer<String> statusUpdate) {
         statusUpdate.accept("Running " + command);
-        return runSlashCommand(command);
-    }
+        if (!command.startsWith("/")) {
+            return "Error: Invalid command format. Command must start with '/'.";
+        }
 
-    /** Static helper method to run a custom slash command. */
-    public static String runSlashCommand(String command) {
-        return String.format("<command-message>%s is running...</command-message>", command);
+        // Remove the leading '/'
+        String name = command.split("\\s+")[0].substring(1);
+        Optional<Command> availableCommand = conversation.commands().stream()
+                .filter(skill -> skill.name().equalsIgnoreCase(name))
+                .findFirst();
+
+        if (availableCommand.isEmpty()) {
+            String availableCommands = conversation.commands()
+                    .stream()
+                    .map(Command::name)
+                    .map(s -> "/" + s) // Prepend '/' to command names
+                    .collect(Collectors.joining(", "));
+            if (availableCommands.isEmpty()) {
+                availableCommands = "No custom commands are currently available.";
+            } else {
+                availableCommands = "Available custom commands: " + availableCommands;
+            }
+
+            return String.format("Error: Command /%s not found. %s", name, availableCommands);
+        } else {
+            Command cmd = availableCommand.get();
+            var args = command.substring(name.length()+1).trim();
+
+            String prompt;
+            if (cmd.content().contains("{{args}}")) {
+                if (args.isBlank()) {
+                    return "Error: /" + name + " requires arguments.";
+                } else {
+                    prompt = cmd.prompt(args);
+                }
+            } else {
+                // append instructions to command without {{args}} placeholder.
+                prompt = cmd.content() + "\n\n" + args;
+            }
+
+            return String.format("""
+"Please execute the following instructions precisely:
+""\"
+%s
+""\"
+""", prompt);
+        }
     }
 
     /**
@@ -67,12 +110,6 @@ public class SlashCommand implements Tool {
      * @return the tool specification.
      */
     public static Tool.Spec spec() {
-        try {
-            return new Tool.Spec(SlashCommand.class,
-                    List.of(SlashCommand.class.getMethod("runSlashCommand", String.class)));
-        } catch (Exception e) {
-            System.err.println("Failed to load ToolSpec: " + e.getMessage());
-        }
         return new Tool.Spec(SlashCommand.class, List.of());
     }
 }
