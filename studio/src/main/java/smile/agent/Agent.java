@@ -334,15 +334,18 @@ You can use the following tools without requiring user approval: Read(//workspac
         var skills = skills();
         if (!skills.isEmpty()) {
             StringBuilder sb = new StringBuilder("\n\nHere are the skills you can use:\n");
-            sb.append("<skills>\n");
+            
+            sb.append("<available_skills>\n");
             for (var skill : skills) {
                 sb.append(String.format("""
-                        <skill name="%s">
-                        %s
+                        <skill">
+                          <name>%s</name>
+                          <description>%s</description>
+                          <location>%s</location>
                         </skill>
-                        """, skill.name(), skill.description()));
+                        """, skill.name(), skill.description(), skill.path().toAbsolutePath()));
             }
-            sb.append("</skills>\n");
+            sb.append("</available_skills>\n");
             prompt += sb.toString();
         }
 

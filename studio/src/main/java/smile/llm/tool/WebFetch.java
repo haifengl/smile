@@ -52,7 +52,7 @@ public class WebFetch implements Tool {
 
     @Override
     public String run(Conversation conversation, Consumer<String> statusUpdate) {
-        statusUpdate.accept("Fetching " + url);
+        statusUpdate.accept("GET " + url);
         return webFetch(url);
     }
 
