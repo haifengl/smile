@@ -10,6 +10,8 @@ plugins {
 
 dependencies {
     implementation(kotlin("stdlib"))
+    testImplementation("org.junit.jupiter:junit-jupiter:5.14.3")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 // Compile bytecode to Java 25
@@ -18,6 +20,11 @@ tasks.withType<KotlinJvmCompile>().configureEach {
         jvmTarget.set(JvmTarget.JVM_25)
         freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
     }
+}
+
+// JUnit5
+tasks.getByName<Test>("test") {
+    useJUnitPlatform()
 }
 
 // Configure existing Dokka task to output HTML
