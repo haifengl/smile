@@ -61,7 +61,7 @@ public class LoadSkill implements Tool {
             } else {
                 availableSkills = "Available skills: " + availableSkills;
             }
-            
+
             return String.format("Error: Skill %s not found. %s", name, availableSkills);
         } else {
             Skill skill = availableSkill.get();
@@ -70,10 +70,10 @@ public class LoadSkill implements Tool {
                     .map(Path::toString)
                     .collect(Collectors.joining("\n"));
             files += skill.scripts().stream()
-                    .map(path -> path.relativize(skill.path()))
+                    .map(path -> skill.path().relativize(path))
                     .map(Path::toString)
                     .collect(Collectors.joining("\n"));
-                    
+
             return String.format("""
 <skill_content name="%s">
 # Skill: %s
@@ -82,7 +82,6 @@ public class LoadSkill implements Tool {
 
 Base directory for this skill: %s,
 Relative paths in this skill (e.g., scripts/, reference/) are relative to this base directory.
-Note: file list is sampled.
 
 <skill_files>,
 %s
