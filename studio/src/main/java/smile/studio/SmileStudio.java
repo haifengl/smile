@@ -25,9 +25,11 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.Timer;
 import java.io.*;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.List;
 import java.util.prefs.Preferences;
 
 import com.formdev.flatlaf.*;
@@ -59,6 +61,8 @@ public class SmileStudio extends JFrame {
     private static Optional<LLM> llm = initLLM();
     /** Each window has its own FileChooser so that it points to its own recent directory. */
     private final SystemFileChooser fileChooser = new SystemFileChooser();
+    /** Application icons in different sizes. */
+    private final List<Image> icons = new ArrayList<>();
     private final JMenuBar menuBar = new JMenuBar();
     private final JToolBar toolBar = new JToolBar();
     private final StatusBar statusBar = new StatusBar();
@@ -287,7 +291,6 @@ public class SmileStudio extends JFrame {
             }
 
             BufferedImage icon = ImageIO.read(input);
-            ArrayList<Image> icons = new ArrayList<>();
             int[] sizes = {16, 24, 32, 48, 64, 128, 256};
             for (int size : sizes) {
                 BufferedImage image = new BufferedImage(size, size, Transparency.TRANSLUCENT);
@@ -319,7 +322,7 @@ public class SmileStudio extends JFrame {
 
         var autoSaveMenuItem = new JCheckBoxMenuItem(autoSave);
         if (prefs.getBoolean(AUTO_SAVE_KEY, false)) {
-            SwingUtilities.invokeLater(() -> autoSaveMenuItem.doClick());
+            SwingUtilities.invokeLater(autoSaveMenuItem::doClick);
         }
 
         JMenu fileMenu = new JMenu(bundle.getString("File"));
@@ -338,6 +341,12 @@ public class SmileStudio extends JFrame {
         cellMenu.add(new JMenuItem(clearAll));
         cellMenu.add(new JMenuItem(stop));
         menuBar.add(cellMenu);
+
+        JMenu helpMenu = new JMenu(bundle.getString("Help"));
+        helpMenu.add(new JMenuItem(new TutorialAction()));
+        helpMenu.add(new JMenuItem(new JavaDocAction()));
+        helpMenu.add(new JMenuItem(new AboutAction()));
+        menuBar.add(helpMenu);
 
         // Don't allow the toolbar to be dragged and undocked
         toolBar.setFloatable(false);
@@ -527,7 +536,7 @@ public class SmileStudio extends JFrame {
         }
     }
 
-    private class ExitAction extends AbstractAction {
+    private static class ExitAction extends AbstractAction {
         static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(SmileStudio.class.getResource("images/exit.png")));
         static final ImageIcon icon16 = scaleImageIcon(icon, 16);
         static final ImageIcon icon24 = scaleImageIcon(icon, 24);
@@ -545,6 +554,73 @@ public class SmileStudio extends JFrame {
                     studio.dispatchEvent(new WindowEvent(studio, WindowEvent.WINDOW_CLOSING));
                 }
             }
+        }
+    }
+
+    private class TutorialAction extends AbstractAction {
+        public TutorialAction() {
+            super(bundle.getString("Tutorials"));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String url = "https://haifengl.github.io/quickstart.html";
+            try {
+                // Use the Java Desktop API to open the URI in the default browser
+                if (Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().browse(new URI(url));
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(SmileStudio.this,
+                        String.format("See tutorials at %s", url),
+                        bundle.getString("Tutorials"),
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
+        }
+    }
+
+    private class JavaDocAction extends AbstractAction {
+        public JavaDocAction() {
+            super(bundle.getString("JavaDocs"));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String url = "https://haifengl.github.io/api/java/index.html";
+            try {
+                // Use the Java Desktop API to open the URI in the default browser
+                if (Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().browse(new URI(url));
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(SmileStudio.this,
+                        String.format("See javadocs at %s", url),
+                        bundle.getString("JavaDocs"),
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
+        }
+    }
+
+    private class AboutAction extends AbstractAction {
+        public AboutAction() {
+            super(bundle.getString("About"));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String message = String.format("""
+                    Smile Studio %s
+                    Copyright (c) 2010-2026 Haifeng Li.
+                    All rights reserved.
+                    
+                    Smile Studio is free for research and educational use.
+                    For commercial use, please contact smile.sales@outlook.com
+                    """, SmileStudio.class.getPackage().getImplementationVersion());
+            JOptionPane.showMessageDialog(SmileStudio.this,
+                    message,
+                    bundle.getString("About"),
+                    JOptionPane.INFORMATION_MESSAGE,
+                    new ImageIcon(icons.get(4)));
         }
     }
 
