@@ -411,8 +411,11 @@ public class OpenAI extends LLM {
             case "KillShell" -> tool.arguments(KillShell.class).run(conversation, handler);
             case "Glob" -> tool.arguments(Glob.class).run(conversation, handler);
             case "Grep" -> tool.arguments(Grep.class).run(conversation, handler);
+            case "LoadSkill" -> tool.arguments(LoadSkill.class).run(conversation, handler);
+            case "SlashCommand" -> tool.arguments(SlashCommand.class).run(conversation, handler);
             case "ExitPlanMode" -> tool.arguments(ExitPlanMode.class).run(conversation, handler);
             case "WebFetch" -> tool.arguments(WebFetch.class).run(conversation, handler);
+            case "WebSearch" -> tool.arguments(WebSearch.class).run(conversation, handler);
             default -> MCP.call(tool.name(), tool.arguments(), handler);
         };
     }

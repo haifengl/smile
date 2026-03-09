@@ -40,7 +40,9 @@ public class Coder extends Agent {
         super(name, path, llm);
         conversation().addTools(Tool.basics())
                 .addTools(Tool.web())
-                .addMcp(MCP.tools());
+                .addMcp(MCP.tools())
+                .addCommands(commands())
+                .addSkills(skills());
 
         // low temperature for more predictable, focused, and deterministic code
         conversation().params().setProperty(LLM.TEMPERATURE, "0.2");

@@ -41,6 +41,8 @@ public class Analyst extends Agent {
         conversation().addTools(Tool.basics())
                 .addTools(Tool.web())
                 .addMcp(MCP.tools())
+                .addCommands(commands())
+                .addSkills(skills())
                 .withReminder("""
 Your task is to analyze the data and provide insights based on the user's instructions.
 1. Prioritize robust methodology, including data cleaning, feature engineering, cross-validation, and proper error handling.
