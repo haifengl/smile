@@ -96,7 +96,8 @@ libraryDependencies ++= Seq(
   "io.modelcontextprotocol.sdk" % "mcp"          % "1.0.0",
   "io.github.furstenheim"       % "copy_down"    % "1.1",
   "org.jsoup"                   % "jsoup"        % "1.22.1",
-  "com.github.serpapi"          % "serpapi-java" % "1.0.0"
+  "com.github.serpapi"          % "serpapi-java" % "1.0.0",
+  "com.google.code.gson"        % "gson"         % "2.13.2" // evict older version used by serpapi
 )
 
 libraryDependencies ++= {

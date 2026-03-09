@@ -64,7 +64,8 @@ public class WebSearch implements Tool {
                 return "No results found for query: " + status;
             } else {
                 StringBuilder sb = new StringBuilder("# Search Results\n");
-                for (var item : results) {
+                for (int i = 0; i < results.size(); i++) {
+                    var item = results.get(i).getAsJsonObject();
                     String title = item.getAsJsonPrimitive("title").getAsString();
                     String link = item.getAsJsonPrimitive("link").getAsString();
                     String snippet = item.getAsJsonPrimitive("snippet").getAsString();
@@ -73,8 +74,8 @@ public class WebSearch implements Tool {
                     sb.append("Link: ").append(link).append("\n\n");
                     sb.append(snippet).append("\n");
                 }
+                return sb.toString();
             }
-            return sb.toString();
         } catch (Throwable t) {
             return "Error searching web: " + t.getMessage();
         }
@@ -90,7 +91,7 @@ public class WebSearch implements Tool {
     public static Tool.Spec spec() {
         try {
             return new Tool.Spec(WebSearch.class,
-                    List.of(WebSearch.class.getMethod("webSearch", String.class, List.class, List.class)));
+                    List.of(WebSearch.class.getMethod("webSearch", String.class)));
         } catch (Exception e) {
             System.err.println("Failed to load ToolSpec: " + e.getMessage());
         }
