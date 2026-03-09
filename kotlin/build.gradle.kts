@@ -7,6 +7,11 @@ dependencies {
     api(project(":nlp"))
 }
 
+// Sets test working directory to parent (root) directory
+tasks.withType<Test> {
+    workingDir = rootProject.projectDir
+}
+
 // Configure existing Dokka task to output HTML
 dokka {
     moduleName.set("smile-kotlin")
