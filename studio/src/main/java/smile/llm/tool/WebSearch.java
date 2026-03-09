@@ -49,12 +49,13 @@ public class WebSearch implements Tool {
 
     /** Static helper method to search the web. */
     public static String webSearch(String query) {
-        if (System.getenv("SERPAPI_API_KEY") == null) {
+        String apiKey = System.getenv("SERPAPI_KEY");
+        if (apiKey == null) {
             return "Error: SERPAPI_API_KEY environment variable not set. Web search is not available. You may get a free API Key at https://serpapi.com/dashboard";
         }
 
         try {
-            Map<String, String> parameter = Map.of("q", query);
+            Map<String, String> parameter = Map.of("q", query, "api_key", apiKey);
             var data = serpapi.search(parameter);
             var results = data.getAsJsonArray("organic_results");
 
