@@ -67,7 +67,8 @@ public interface Tool {
      * @return the tool specifications for planning operations.
      */
     static List<Spec> planning() {
-        return List.of(LoadSkill.spec(), SlashCommand.spec(), ExitPlanMode.spec());
+        return List.of(LoadSkill.spec(), SlashCommand.spec(), TodoWrite.spec(),
+                AskUserQuestion.spec(), EnterPlanMode.spec(), ExitPlanMode.spec());
     }
 
     /**
