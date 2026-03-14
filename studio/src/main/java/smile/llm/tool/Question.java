@@ -35,8 +35,8 @@ public class Question extends JPanel implements ActionListener {
     private final List<String> choices;
     private final List<JToggleButton> choiceButtons = new ArrayList<>();
     private final JTextArea customTextInput = new JTextArea(3, 40);;
-    private final JButton okButton = new JButton("OK");
-    private final JButton cancelButton = new JButton("Cancel");
+    private final JButton okButton;
+    private final JButton cancelButton;
     private final CompletableFuture<String> answer = new CompletableFuture<>();
 
     /**
@@ -103,37 +103,49 @@ public class Question extends JPanel implements ActionListener {
             add(choicePane, BorderLayout.CENTER);
         }
 
-        // Disable buttons until user makes a selection or provides input
-        okButton.setEnabled(false);
-        cancelButton.setEnabled(false);
-
         // Add buttons
         JPanel buttonPanel = new JPanel();
-        okButton.addActionListener(this);
-        buttonPanel.add(okButton);
-        // Only show Cancel button if there are no choices, since otherwise
-        // users can skip answering the question.
-        if (choices.isEmpty()) {
-            buttonPanel.add(Box.createRigidArea(new Dimension(10, 0)));
-            cancelButton.addActionListener(this);
-            buttonPanel.add(cancelButton);
-            okButton.setEnabled(true);
-            cancelButton.setEnabled(true);
-        }
         add(buttonPanel, BorderLayout.SOUTH);
+        if (!choices.isEmpty()) {
+            okButton = new JButton("OK");
+            cancelButton = new JButton("Cancel");
+            // Disable buttons until user makes a selection or provides input
+            okButton.setEnabled(false);
+            cancelButton.setEnabled(false);
+            buttonPanel.add(okButton);
+        } else {
+            okButton = new JButton("Yes");
+            cancelButton = new JButton("No");
+            okButton.setEnabled(true);
+            // Show Cancel button only if there are no choices.
+            // Otherwise, user can skip answering the question.
+            cancelButton.setEnabled(true);
+
+            buttonPanel.add(okButton);
+            buttonPanel.add(Box.createRigidArea(new Dimension(10, 0)));
+            buttonPanel.add(cancelButton);
+        }
+        okButton.addActionListener(this);
+        cancelButton.addActionListener(this);
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == okButton) {
-            String answer = getAnswer();
-            if (!answer.isBlank()) {
-                this.answer.complete(answer);
+            if (choices.isEmpty()) {
+                this.answer.complete("Yes");
+            } else {
+                String answer = getAnswer();
+                if (!answer.isBlank()) {
+                    this.answer.complete(answer);
+                }
             }
-
         } else if (e.getSource() == cancelButton) {
-            answer.complete(null); // Indicate cancellation
-
+            if (choices.isEmpty()) {
+                this.answer.complete("No");
+            } else {
+                answer.complete(null); // Indicate cancellation
+            }
         } else {
             // Handle choice button selection to enable/disable text area
             if (((JToggleButton) e.getSource()).getText().equals(choices.getLast())) {
@@ -162,7 +174,7 @@ public class Question extends JPanel implements ActionListener {
         for (int i = 0; i < choiceButtons.size(); i++) {
             if (choiceButtons.get(i).isSelected()) {
                 String choice;
-                if (choices.get(i).equals(choices.getLast())) {
+                if (i == choices.size() - 1) { // "Other" option
                     choice = customTextInput.getText();
                 } else {
                     choice = choices.get(i);
