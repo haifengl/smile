@@ -17,6 +17,8 @@
 package smile.llm.tool;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -34,9 +36,9 @@ public class Question extends JPanel implements ActionListener {
     static final String OTHER = "Other";
     private final List<String> choices;
     private final List<JToggleButton> choiceButtons = new ArrayList<>();
-    private final ButtonGroup buttonGroup = new ButtonGroup();
     private final JTextArea customTextInput = new JTextArea(3, 40);;
-    private final JButton okButton, cancelButton;
+    private final JButton okButton = new JButton("OK");
+    private final JButton cancelButton = new JButton("Cancel");
     private final CompletableFuture<String> answer = new CompletableFuture<>();
 
     /**
@@ -59,39 +61,68 @@ public class Question extends JPanel implements ActionListener {
         questionLabel.setWrapStyleWord(true);
         add(questionLabel, BorderLayout.NORTH);
 
-        // Create the choice panel with a vertical layout
-        JPanel choicePane = new JPanel();
-        choicePane.setLayout(new BoxLayout(choicePane, BoxLayout.Y_AXIS));
+        if (!choices.isEmpty()) {
+            // Create the choice panel with a vertical layout
+            JPanel choicePane = new JPanel();
+            choicePane.setLayout(new BoxLayout(choicePane, BoxLayout.Y_AXIS));
 
-        // Add radio buttons to the panel and group
-        for (var choice : choices) {
-            var button = multiSelect ? new JCheckBox(choice) : new JRadioButton(choice);
-            button.addActionListener(this);
-            button.add(button);
-            buttonGroup.add(button);
-            choicePane.add(button);
+            // Add radio buttons to the panel and group
+            ButtonGroup buttonGroup = new ButtonGroup();
+            for (var choice : choices) {
+                JToggleButton button;
+                if (multiSelect) {
+                    button = new JCheckBox(choice);
+                } else {
+                    button = new JRadioButton(choice);
+                    buttonGroup.add(button);
+                }
+                button.addActionListener(this);
+                choiceButtons.add(button);
+                choicePane.add(button);
+            }
+
+            // Add the text area below the "Other" radio button
+            // Use a JScrollPane for the text area for better usability
+            if (choices.contains(OTHER)) {
+                // Initialize components
+                customTextInput.setEnabled(false);
+                customTextInput.setLineWrap(true);
+                customTextInput.setWrapStyleWord(true);
+                JScrollPane scrollPane = new JScrollPane(customTextInput);
+                choicePane.add(scrollPane);
+
+                customTextInput.getDocument().addDocumentListener(new DocumentListener() {
+                    public void removeUpdate(DocumentEvent e) {
+                        checkCustomInput();
+                    }
+                    public void insertUpdate(DocumentEvent e) {
+                        checkCustomInput();
+                    }
+                    public void changedUpdate(DocumentEvent e) {
+                        // This method is for attribute changes, not relevant for plain text
+                    }
+                });
+            }
+            add(choicePane, BorderLayout.CENTER);
         }
-        
-        // Add the text area below the "Other" radio button
-        // Use a JScrollPane for the text area for better usability
-        if (choices.contains(OTHER)) {
-            // Initialize components
-            customTextInput.setEnabled(false);
-            customTextInput.setLineWrap(true);
-            customTextInput.setWrapStyleWord(true);
-            JScrollPane scrollPane = new JScrollPane(customTextInput);
-            choicePane.add(scrollPane);
-        }
-        add(choicePane, BorderLayout.CENTER);
+
+        // Disable buttons until user makes a selection or provides input
+        okButton.setEnabled(false);
+        cancelButton.setEnabled(false);
 
         // Add buttons
         JPanel buttonPanel = new JPanel();
-        okButton = new JButton("OK");
         okButton.addActionListener(this);
-        cancelButton = new JButton("Cancel");
-        cancelButton.addActionListener(this);
         buttonPanel.add(okButton);
-        buttonPanel.add(cancelButton);
+        // Only show Cancel button if there are no choices, since otherwise
+        // users can skip answering the question.
+        if (choices.isEmpty()) {
+            buttonPanel.add(Box.createRigidArea(new Dimension(10, 0)));
+            cancelButton.addActionListener(this);
+            buttonPanel.add(cancelButton);
+            okButton.setEnabled(true);
+            cancelButton.setEnabled(true);
+        }
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
@@ -111,9 +142,20 @@ public class Question extends JPanel implements ActionListener {
             if (((JToggleButton) e.getSource()).getText().equals(OTHER)) {
                 customTextInput.setEnabled(true);
                 customTextInput.requestFocus(); // Set focus for typing
+                checkCustomInput();
             } else {
+                okButton.setEnabled(true);
+                cancelButton.setEnabled(true);
                 customTextInput.setEnabled(false);
             }
+        }
+    }
+
+    /** Enables or disables the OK and Cancel buttons based on the custom text input. */
+    private void checkCustomInput() {
+        if (customTextInput.getText().isBlank()) {
+            okButton.setEnabled(false);
+            cancelButton.setEnabled(false);
         }
     }
 

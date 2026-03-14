@@ -65,7 +65,7 @@ public class AskUserQuestion implements Tool {
             if (result != null) {
                 return "User has answered your question: " + result + ". You can now continue with the user's answers in mind.";
             } else {
-                return "Usr didn't answer your question.";
+                return "User didn't answer your question.";
             }
         } catch (Exception e) {
             return "Error while asking user question: " + e.getMessage();
