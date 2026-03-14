@@ -62,7 +62,7 @@ public class Grep implements Tool {
     @Override
     public String run(Conversation conversation, Consumer<String> statusUpdate) {
         if (path == null) {
-            path = Tool.cwd(conversation).toString();
+            path = conversation.cwd().toString();
         }
         statusUpdate.accept("Searching files matching" + pattern + " in " + path);
         return grepFiles(pattern, path, glob, type, multiline);

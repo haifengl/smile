@@ -47,7 +47,7 @@ public class Glob implements Tool {
     @Override
     public String run(Conversation conversation, Consumer<String> statusUpdate) {
         if (path == null) {
-            path = Tool.cwd(conversation).toString();
+            path = conversation.cwd().toString();
         }
         statusUpdate.accept("Searching files " + pattern + " in " + path);
         return globFiles(pattern, path);

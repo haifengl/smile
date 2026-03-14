@@ -305,7 +305,7 @@ public class AgentCLI extends JPanel {
             return;
         }
 
-        agent.conversation().planMode(instructions.substring(5).trim());
+        agent.conversation().enterPlanMode(instructions.substring(5).trim());
         output.appendLine("Enter the plan mode.");
     }
 
