@@ -218,10 +218,10 @@ public class Intent extends JPanel {
         if (output.getText().isBlank()) {
             // keep the output area at the bottom for subsequent outputs
             outputPane.remove(output);
-            outputPane.add(question);
+            outputPane.add(question.createGUI());
             outputPane.add(output);
         } else {
-            outputPane.add(question);
+            outputPane.add(question.createGUI());
             // add a new output area for subsequent outputs
             output = createOutputArea();
             outputPane.add(output);

@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import smile.llm.Conversation;
+import smile.util.Strings;
 
 @JsonClassDescription("""
 Use this tool when you need to ask the user questions during execution. This allows you to:
@@ -42,37 +43,49 @@ public class AskUserQuestion implements Tool {
     private static final String OTHER = "Other";
 
     @JsonProperty(required = true)
-    @JsonPropertyDescription("Clear, concise description of the question you want to ask the user.")
-    public String question;
-
-    @JsonProperty(required = true)
-    @JsonPropertyDescription("The available choices for the user to select. Users will also have the option to select 'Other' to provide custom input.")
-    public List<String> choices;
-
-    @JsonPropertyDescription("Set to true to allow multiple answers to be selected for a question.")
-    public boolean multiSelect = false;
+    @JsonPropertyDescription("Questions to ask")
+    public List<Question> questions;
 
     @Override
     public String run(Conversation conversation, ToolCallListener listener) {
-        // Ensure "Other" is always an option for users to provide custom input
-        if (!choices.contains(OTHER)) {
-            // In case the original list is immutable, create a new mutable list.
-            choices = new ArrayList<>(choices);
-            choices.add(OTHER);
+        List<String> answers = new ArrayList<>();
+        for (Question question : questions) {
+            var choices = question.choices;
+            // Ensure "Other" is always an option for users to provide custom input
+            if (!choices.contains(OTHER)) {
+                // In case the original list is immutable, create a new mutable list.
+                choices = new ArrayList<>(question.choices);
+                choices.add(OTHER);
+            }
+
+            Question dialog = new Question(question.question, choices, question.multiSelect);
+            listener.onQuestion(dialog);
+            try {
+                String answer = dialog.ask().get();
+                if (Strings.isNullOrBlank(answer)) {
+                    answer = "Unanswered";
+                }
+                answers.add(answer);
+            } catch (Exception e) {
+                return "Error while asking user question: " + e.getMessage();
+            }
         }
 
-        Question dialog = new Question(question, choices, multiSelect);
-        listener.onQuestion(dialog);
-        try {
-            String result = dialog.ask().get();
-            if (result != null) {
-                return "User has answered your question: " + result + ". You can now continue with the user's answers in mind.";
-            } else {
-                return "User didn't answer your question.";
-            }
-        } catch (Exception e) {
-            return "Error while asking user question: " + e.getMessage();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < questions.size(); i++) {
+            sb.append(questions.get(i).question)
+              .append("=")
+              .append(answers.get(i))
+              .append("\n");
         }
+
+        return String.format("""
+User has answered your questions:
+
+%s.
+
+You can now continue with the user's answers in mind.
+""", sb);
     }
 
     /**
