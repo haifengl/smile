@@ -16,18 +16,13 @@
  */
 package smile.llm.tool;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
-
-import javax.swing.JOptionPane;
-
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import smile.llm.Conversation;
-import smile.util.OS;
 
 @JsonClassDescription("""
 Use this tool when you need to ask the user questions during execution. This allows you to:
@@ -45,11 +40,11 @@ Plan mode note: In plan mode, use this tool to clarify requirements or choose be
 """)
 public class AskUserQuestion implements Tool {
     @JsonProperty(required = true)
-    @JsonPropertyDescription("Clear, concise description of what this command does in 5-10 words, in active voice. Examples:\\nInput: ls\\nOutput: List files in current directory\\n\\nInput: git status\\nOutput: Show working tree status\\n\\nInput: npm install\\nOutput: Install package dependencies\\n\\nInput: mkdir foo\\nOutput: Create directory 'foo")
+    @JsonPropertyDescription("Clear, concise description of the question you want to ask the user.")
     public String question;
 
     @JsonProperty(required = true)
-    @JsonPropertyDescription("The choices to execute")
+    @JsonPropertyDescription("The available choices for the user to select. Users will also have the option to select 'Other' to provide custom input.")
     public List<String> choices;
 
     @JsonPropertyDescription("Set to true to allow multiple answers to be selected for a question.")
@@ -62,13 +57,23 @@ public class AskUserQuestion implements Tool {
 
     /** Static helper method to ask user a question. */
     public static String askUserQuestion(String question, List<String> choices, boolean multiSelect) {
-        QuestionDialog dialog = new QuestionDialog(question, choices, multiSelect);
-        dialog.setVisible(true); // Blocks until dialog is closed
-        String result = dialog.getSelectedValue();
-        if (result != null) {
-            return "User has answered your question: " + result + ". You can now continue with the user's answers in mind.";
-        } else {
-            return "Usr didn't answer your question.";
+        // Ensure "Other" is always an option for users to provide custom input
+        if (!choices.contains(Question.OTHER)) {
+            // In case the original list is immutable, create a new mutable list.
+            choices = new ArrayList<>(choices);
+            choices.add(Question.OTHER);
+        }
+
+        Question dialog = new Question(question, choices, multiSelect);
+        try {
+            String result = dialog.ask().get();
+            if (result != null) {
+                return "User has answered your question: " + result + ". You can now continue with the user's answers in mind.";
+            } else {
+                return "Usr didn't answer your question.";
+            }
+        } catch (Exception e) {
+            return "Error while asking user question: " + e.getMessage();
         }
     }
 
