@@ -54,7 +54,6 @@ public class ExitPlanMode implements Tool {
         }
 
         try {
-            conversation.exitPlanMode();
             var path = conversation.planFile();
             if (path.isPresent()) {
                 if (!Files.exists(path.get())) {
@@ -68,6 +67,7 @@ public class ExitPlanMode implements Tool {
                 listener.onQuestion(dialog);
                 String result = dialog.ask().get();
                 if (choices.getFirst().equals(result)) {
+                    conversation.exitPlanMode(plan);
                     return "User has approved your plan. You can now proceed to implement the plan.";
                 } else {
                     return "User request changes: " + result + ". Please continue refining the plan.";
