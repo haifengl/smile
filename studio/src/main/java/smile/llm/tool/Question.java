@@ -33,7 +33,7 @@ public class Question extends JPanel implements ActionListener {
     /** Users may select "Other" to provide custom text input. */
     static final String OTHER = "Other";
     private final List<String> choices;
-    private final List<JRadioButton> radioButtons = new ArrayList<>();
+    private final List<JToggleButton> choiceButtons = new ArrayList<>();
     private final ButtonGroup buttonGroup = new ButtonGroup();
     private final JTextArea customTextInput = new JTextArea(3, 40);;
     private final JButton okButton, cancelButton;
@@ -59,11 +59,11 @@ public class Question extends JPanel implements ActionListener {
 
         // Add radio buttons to the panel and group
         for (var choice : choices) {
-            var radioButton = new JRadioButton(choice);
-            radioButton.addActionListener(this);
-            radioButtons.add(radioButton); 
-            buttonGroup.add(radioButton);
-            choicePane.add(radioButton);
+            var button = multiSelect ? new JCheckBox(choice) : new JRadioButton(choice);
+            button.addActionListener(this);
+            button.add(button);
+            buttonGroup.add(button);
+            choicePane.add(button);
         }
         
         // Add the text area below the "Other" radio button
@@ -92,32 +92,41 @@ public class Question extends JPanel implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == okButton) {
-            // Get the selected value
-            for (int i = 0; i < radioButtons.size(); i++) {
-                if (radioButtons.get(i).isSelected()) {
-                    if (choices.get(i).equals(OTHER)) {
-                        answer.complete(customTextInput.getText());
-                    } else {
-                        answer.complete(choices.get(i));
-                    }
-                    break;
-                }
+            String answer = getAnswer();
+            if (!answer.isBlank()) {
+                this.answer.complete(answer);
             }
-            setVisible(false); // Close the dialog
 
         } else if (e.getSource() == cancelButton) {
             answer.complete(null); // Indicate cancellation
-            setVisible(false); // Close the dialog
 
         } else {
-            // Handle radio button selection to enable/disable text area
-            if (((JRadioButton) e.getSource()).getText().equals(OTHER)) {
+            // Handle choice button selection to enable/disable text area
+            if (((JToggleButton) e.getSource()).getText().equals(OTHER)) {
                 customTextInput.setEnabled(true);
                 customTextInput.requestFocus(); // Set focus for typing
             } else {
                 customTextInput.setEnabled(false);
             }
         }
+    }
+
+    /** Retrieves the user's answer based on their selection. */
+    private String getAnswer() {
+        StringBuilder answer = new StringBuilder();
+        for (int i = 0; i < choiceButtons.size(); i++) {
+            if (choiceButtons.get(i).isSelected()) {
+                String choice;
+                if (choices.get(i).equals(OTHER)) {
+                    choice = customTextInput.getText();
+                } else {
+                    choice = choices.get(i);
+                }
+                if (!answer.isEmpty()) answer.append(", ");
+                answer.append(choice);
+            }
+        }
+        return answer.toString();
     }
 
     /**
