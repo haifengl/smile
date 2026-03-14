@@ -214,20 +214,6 @@ public class TodoWrite implements Tool {
     @JsonPropertyDescription("The updated todo lis")
     public List<Todo> todos;
 
-    public static class Todo {
-        @JsonProperty(required = true)
-        @JsonPropertyDescription("The description of the task in imperative form")
-        public String content;
-
-        @JsonProperty(required = true)
-        @JsonPropertyDescription("The status of the task: pending, in_progress, or completed")
-        public String status;
-
-        @JsonProperty(required = true)
-        @JsonPropertyDescription("The description of the task in active form, shown during execution (e.g., 'Running tests', 'Building the project')")
-        public String activeForm;
-    }
-
     @Override
     public String run(Conversation conversation, ToolCallListener listener) {
         Optional<Todo> inProgressTask = todos.stream()
