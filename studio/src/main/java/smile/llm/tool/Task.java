@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import smile.llm.Conversation;
-import smile.llm.client.ResponseHandler;
 
 @JsonClassDescription("""
 Launch a new agent to handle complex, multi-step tasks autonomously.
@@ -100,9 +99,9 @@ public class Task implements Tool {
     public String subagent_type;
 
     @Override
-    public String run(Conversation conversation, ResponseHandler handler) {
+    public String run(Conversation conversation, ToolCallListener listener) {
         if (description != null) {
-            handler.onStatus(description);
+            listener.onStatus(description);
         }
         return runTask(description, prompt, subagent_type);
     }

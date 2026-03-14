@@ -22,7 +22,6 @@ import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import smile.llm.Conversation;
-import smile.llm.client.ResponseHandler;
 
 @JsonClassDescription("""
 Use this tool when you need to ask the user questions during execution. This allows you to:
@@ -51,7 +50,7 @@ public class AskUserQuestion implements Tool {
     public boolean multiSelect = false;
 
     @Override
-    public String run(Conversation conversation, ResponseHandler handler) {
+    public String run(Conversation conversation, ToolCallListener listener) {
         // Ensure "Other" is always an option for users to provide custom input
         if (!choices.contains(Question.OTHER)) {
             // In case the original list is immutable, create a new mutable list.
@@ -60,7 +59,7 @@ public class AskUserQuestion implements Tool {
         }
 
         Question dialog = new Question(question, choices, multiSelect);
-        handler.onQuestion(dialog);
+        listener.onQuestion(dialog);
         try {
             String result = dialog.ask().get();
             if (result != null) {

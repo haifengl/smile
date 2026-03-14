@@ -16,12 +16,14 @@
  */
 package smile.llm.client;
 
+import smile.llm.tool.ToolCallListener;
+
 /**
  * The handler for streaming response from LLM service.
  *
  * @author Haifeng Li
  */
-public interface StreamResponseHandler extends ResponseHandler {
+public interface StreamResponseHandler extends ToolCallListener {
     /**
      * Handles the next chunk of response.
      * @param chunk the next chunk of response.

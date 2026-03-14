@@ -23,7 +23,6 @@ import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import smile.llm.Conversation;
-import smile.llm.client.ResponseHandler;
 import smile.util.OS;
 
 @JsonClassDescription("""
@@ -89,9 +88,9 @@ public class Bash implements Tool {
     public boolean run_in_background = false;
 
     @Override
-    public String run(Conversation conversation, ResponseHandler handler) {
+    public String run(Conversation conversation, ToolCallListener listener) {
         if (description != null) {
-            handler.onStatus(description);
+            listener.onStatus(description);
         }
 
         if (run_in_background) {

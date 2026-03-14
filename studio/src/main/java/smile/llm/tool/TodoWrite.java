@@ -24,7 +24,6 @@ import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import smile.llm.Conversation;
-import smile.llm.client.ResponseHandler;
 
 @JsonClassDescription("""
 Use this tool to create and manage a structured task list for your current session. This helps you track progress, organize complex tasks, and demonstrate thoroughness to the user.
@@ -230,18 +229,18 @@ public class TodoWrite implements Tool {
     }
 
     @Override
-    public String run(Conversation conversation, ResponseHandler handler) {
+    public String run(Conversation conversation, ToolCallListener listener) {
         Optional<Todo> inProgressTask = todos.stream()
                 .filter(todo -> todo.status.equalsIgnoreCase("in_progress"))
                 .findFirst();
 
         if (inProgressTask.isPresent()) {
-            handler.onStatus(inProgressTask.get().activeForm);
+            listener.onStatus(inProgressTask.get().activeForm);
         } else {
             long numTasks = todos.stream()
                 .filter(todo -> !todo.status.equalsIgnoreCase("completed"))
                 .count();
-            handler.onStatus(numTasks + " todos");
+            listener.onStatus(numTasks + " todos");
         }
 
         Path path = conversation.path().resolve("TODO.json");

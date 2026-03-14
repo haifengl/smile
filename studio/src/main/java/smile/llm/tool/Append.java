@@ -24,7 +24,6 @@ import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import smile.llm.Conversation;
-import smile.llm.client.ResponseHandler;
 
 @JsonClassDescription("""
 Appends to a file in the local filesystem.
@@ -46,8 +45,8 @@ public class Append implements Tool {
     public String content;
 
     @Override
-    public String run(Conversation conversation, ResponseHandler handler) {
-        handler.onStatus("Appending " + file_path);
+    public String run(Conversation conversation, ToolCallListener listener) {
+        listener.onStatus("Appending " + file_path);
         return appendFile(file_path, content);
     }
 

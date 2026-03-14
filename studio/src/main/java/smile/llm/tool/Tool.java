@@ -19,7 +19,6 @@ package smile.llm.tool;
 import java.lang.reflect.Method;
 import java.util.List;
 import smile.llm.Conversation;
-import smile.llm.client.ResponseHandler;
 
 /**
  * Tools enable models to interact with external systems,
@@ -35,7 +34,7 @@ public interface Tool {
      * @param handler the handler to display status updates, questions, etc.
      * @return the result of tool execution.
      */
-    String run(Conversation conversation, ResponseHandler handler);
+    String run(Conversation conversation, ToolCallListener handler);
 
     /**
      * The specification of built-in tools. 

@@ -14,19 +14,18 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.llm.client;
+package smile.llm.tool;
 
-import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 
 /**
- * The handler for response from LLM service.
+ * The listener of tool calling.
  *
  * @author Haifeng Li
  */
-public interface ResponseHandler {
+public interface ToolCallListener {
     /**
-     * Handles the status update, e.g. tool calling.
+     * Handles the status update from tool calling.
      * @param status the status update.
      */
     void onStatus(String status);
@@ -34,12 +33,12 @@ public interface ResponseHandler {
     /**
      * Display an interactive UI component when agent need to ask the user
      * questions during execution.
-     * @param comp the question component.
+     * @param question the question component.
      */
-    default void onQuestion(JComponent comp) {
+    default void onQuestion(Question question) {
         JOptionPane.showConfirmDialog(
                 null,
-                comp,
+                question,
                 "Agent Question",
                 JOptionPane.OK_CANCEL_OPTION,
                 JOptionPane.PLAIN_MESSAGE // Message type (removes default icon)

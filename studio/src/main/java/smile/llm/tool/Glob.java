@@ -26,7 +26,6 @@ import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import smile.llm.Conversation;
-import smile.llm.client.ResponseHandler;
 
 @JsonClassDescription("""
 - Fast file pattern matching tool that works with any codebase size
@@ -45,11 +44,11 @@ public class Glob implements Tool {
     public String path;
 
     @Override
-    public String run(Conversation conversation, ResponseHandler handler) {
+    public String run(Conversation conversation, ToolCallListener listener) {
         if (path == null) {
             path = conversation.cwd().toString();
         }
-        handler.onStatus("Searching files " + pattern + " in " + path);
+        listener.onStatus("Searching files " + pattern + " in " + path);
         return globFiles(pattern, path);
     }
 

@@ -28,11 +28,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
-import javax.swing.JComponent;
 import smile.llm.Conversation;
 import smile.llm.Message;
 import smile.llm.client.LLM;
 import smile.llm.client.StreamResponseHandler;
+import smile.llm.tool.Question;
 
 /**
  * An LLM agent is an advanced AI system using an LLM as its brain
@@ -435,8 +435,8 @@ You can use the following tools without requiring user approval: Read(//workspac
             }
 
             @Override
-            public void onQuestion(JComponent comp) {
-                handler.onQuestion(comp);
+            public void onQuestion(Question question) {
+                handler.onQuestion(question);
             }
         };
 

@@ -28,7 +28,7 @@ import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.PropertyNamingStrategies;
 import tools.jackson.databind.json.JsonMapper;
-import smile.llm.client.ResponseHandler;
+import smile.llm.tool.ToolCallListener;
 
 /**
  * MCP (Model Context Protocol) tools.
@@ -75,11 +75,11 @@ public class MCP {
      * @param tool the name of the tool to call.
      * @param arguments the arguments in serialized JSON.
      */
-    public static String call(String tool, String arguments, ResponseHandler handler) {
+    public static String call(String tool, String arguments, ToolCallListener listener) {
         var client = tool2client.get(tool);
         if (client == null) return "Error: unknown tool " + tool;
         try {
-            handler.onStatus("Calling " + tool);
+            listener.onStatus("Calling " + tool);
             return client.call(tool, MAPPER.readValue(arguments, MAP_TYPE_REF));
         } catch (Exception ex) {
             return "Error: tool calling exception " + ex.getMessage();

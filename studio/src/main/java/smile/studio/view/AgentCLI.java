@@ -30,6 +30,7 @@ import org.fife.ui.autocomplete.DefaultCompletionProvider;
 import smile.agent.Agent;
 import smile.agent.Memory;
 import smile.llm.client.StreamResponseHandler;
+import smile.llm.tool.Question;
 import smile.plot.swing.Palette;
 import smile.studio.kernel.ShellRunner;
 import smile.studio.model.IntentType;
@@ -559,8 +560,8 @@ Please provide your summary based on the conversation so far, following this str
             }
 
             @Override
-            public void onQuestion(JComponent comp) {
-                SwingUtilities.invokeLater(() -> intents.add(comp));
+            public void onQuestion(Question question) {
+                SwingUtilities.invokeLater(() -> intents.add(question));
             }
         });
     }

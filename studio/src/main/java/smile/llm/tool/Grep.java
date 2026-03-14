@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import smile.llm.Conversation;
-import smile.llm.client.ResponseHandler;
 import smile.util.OS;
 import smile.util.Strings;
 
@@ -60,11 +59,11 @@ public class Grep implements Tool {
     public boolean multiline = false;
 
     @Override
-    public String run(Conversation conversation, ResponseHandler handler) {
+    public String run(Conversation conversation, ToolCallListener listener) {
         if (path == null) {
             path = conversation.cwd().toString();
         }
-        handler.onStatus("Searching files matching" + pattern + " in " + path);
+        listener.onStatus("Searching files matching" + pattern + " in " + path);
         return grepFiles(pattern, path, glob, type, multiline);
     }
 

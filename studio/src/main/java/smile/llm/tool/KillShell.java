@@ -23,7 +23,6 @@ import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import smile.llm.Conversation;
-import smile.llm.client.ResponseHandler;
 
 @JsonClassDescription("""
 - Kills a running background bash shell by its ID
@@ -38,8 +37,8 @@ public class KillShell implements Tool {
     public String shell_id;
 
     @Override
-    public String run(Conversation conversation, ResponseHandler handler) {
-        handler.onStatus("Killing process " + shell_id);
+    public String run(Conversation conversation, ToolCallListener listener) {
+        listener.onStatus("Killing process " + shell_id);
         return killShell(shell_id);
     }
 

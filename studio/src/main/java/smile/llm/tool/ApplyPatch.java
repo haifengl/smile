@@ -23,7 +23,6 @@ import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import smile.llm.Conversation;
-import smile.llm.client.ResponseHandler;
 import smile.util.OS;
 
 @JsonClassDescription("""
@@ -59,8 +58,8 @@ public class ApplyPatch implements Tool {
     public String patch;
 
     @Override
-    public String run(Conversation conversation, ResponseHandler handler) {
-        handler.onStatus("Applying patch");
+    public String run(Conversation conversation, ToolCallListener listener) {
+        listener.onStatus("Applying patch");
         return applyPatch(patch);
     }
 

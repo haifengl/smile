@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import smile.llm.Conversation;
-import smile.llm.client.ResponseHandler;
 import smile.util.Strings;
 
 @JsonClassDescription("""
@@ -107,11 +106,11 @@ public class EnterPlanMode implements Tool {
     public String reason;
 
     @Override
-    public String run(Conversation conversation, ResponseHandler handler) {
+    public String run(Conversation conversation, ToolCallListener listener) {
         if (Strings.isNullOrBlank(reason)) {
-            handler.onStatus("Entering the plan model");
+            listener.onStatus("Entering the plan model");
         } else {
-            handler.onStatus(reason);
+            listener.onStatus(reason);
         }
         conversation.enterPlanMode(reason);
         return "Plan mode is active.";

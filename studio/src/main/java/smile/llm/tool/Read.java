@@ -31,7 +31,6 @@ import org.apache.commons.csv.CSVPrinter;
 import smile.data.Tuple;
 import smile.io.Parquet;
 import smile.llm.Conversation;
-import smile.llm.client.ResponseHandler;
 
 @JsonClassDescription("""
 Reads a file from the local filesystem. You can access any file directly by using this tool.
@@ -61,8 +60,8 @@ public class Read implements Tool {
     public int limit = 2000;
 
     @Override
-    public String run(Conversation conversation, ResponseHandler handler) {
-        handler.onStatus("Reading " + file_path);
+    public String run(Conversation conversation, ToolCallListener listener) {
+        listener.onStatus("Reading " + file_path);
         return readFile(file_path, offset, limit);
     }
 

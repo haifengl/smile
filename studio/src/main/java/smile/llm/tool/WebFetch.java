@@ -27,7 +27,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import io.github.furstenheim.CopyDown;
 import org.jsoup.Jsoup;
 import smile.llm.Conversation;
-import smile.llm.client.ResponseHandler;
 
 @JsonClassDescription("""
 - Fetches content from a specified URL
@@ -51,8 +50,8 @@ public class WebFetch implements Tool {
     public String url;
 
     @Override
-    public String run(Conversation conversation, ResponseHandler handler) {
-        handler.onStatus("GET " + url);
+    public String run(Conversation conversation, ToolCallListener listener) {
+        listener.onStatus("GET " + url);
         return webFetch(url);
     }
 
