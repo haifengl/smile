@@ -69,7 +69,9 @@ public class Conversation {
     private String reminder;
     /** Prompt repetition improves non-reasoning LLMs. */
     private boolean repetition = true;
-    /** The plan file path if in the plan mode. */
+    /** Whether the plan mode is active. */
+    private boolean planMode = false;
+    /** The plan file path. */
     private Path planFile = null;
 
     /**
@@ -247,8 +249,19 @@ public class Conversation {
     }
 
     /**
-     * Returns the plan file path if in the plan mode.
-     * @return the plan file path if in the plan mode, empty otherwise.
+     * Returns whether the plan mode is active.
+     * @return true if the plan mode is active, false otherwise.
+     */
+    public boolean planMode() {
+        return planMode;
+    }
+
+    /**
+     * Returns the plan file path. The plan file will be generated when the
+     * plan mode is active, which is used to save the plan presented by AI.
+     * After exiting the plan model, the plan file still exists on disk for
+     * AI to reference.
+     * @return the plan file path if it exists, empty otherwise.
      */
     public Optional<Path> planFile() {
         return Optional.ofNullable(planFile);
@@ -263,34 +276,21 @@ public class Conversation {
      * @param reason a brief explanation for entering plan mode, such as
      * describing the bug to be fixed. Its kebab case will be used as plan
      * file name. If null, the file name default to "PLAN.md".
+     * @return the plan file path where the plan will be saved.
      */
-    public void enterPlanMode(String reason) {
+    public Path enterPlanMode(String reason) throws IOException {
+        planMode = true;
         String filename = Strings.isNullOrBlank(reason) ? "PLAN.md" : (Strings.kebab(reason) + ".md");
         planFile = awd().resolve("plans", filename).normalize();
-    }
-
-    /**
-     * Saves a plan to the disk and exits the plan mode.
-     * @param plan the plan content to save.
-     * @return the plan file path.
-     */
-    public Path exitPlanMode(String plan) throws IOException {
-        var file = planFile;
-        if (planFile == null) {
-            planFile = awd().resolve("plans", "PLAN.md").normalize();
-        }
-
         Files.createDirectories(planFile.getParent());
-        Files.writeString(planFile, plan);
-        planFile = null;
-        return file;
+        return planFile;
     }
 
     /**
      * Exits the plan mode.
      */
     public void exitPlanMode() {
-        planFile = null;
+        planMode = false;
     }
 
     /**
