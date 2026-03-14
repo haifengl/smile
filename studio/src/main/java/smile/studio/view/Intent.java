@@ -25,6 +25,7 @@ import com.formdev.flatlaf.ui.FlatLineBorder;
 import com.formdev.flatlaf.util.SystemInfo;
 import org.fife.ui.autocomplete.AutoCompletion;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import smile.llm.tool.Question;
 import smile.plot.swing.Palette;
 import smile.studio.model.IntentType;
 import static smile.studio.model.IntentType.*;
@@ -43,9 +44,10 @@ public class Intent extends JPanel {
     private final JLabel indicator = new JLabel(">", SwingConstants.CENTER);
     private final JComboBox<IntentType> intentTypeComboBox = new JComboBox<>(IntentType.values());
     private final Editor editor = new Editor(1, 80, SyntaxConstants.SYNTAX_STYLE_NONE);
-    private final OutputArea output = new OutputArea();
     private final JLabel status = new JLabel();
     private final JProgressBar progress = new JProgressBar();
+    private final JPanel outputPane = new JPanel();
+    private OutputArea output = createOutputArea();
 
     /**
      * Constructor.
@@ -63,13 +65,11 @@ public class Intent extends JPanel {
         ac.setAutoActivationDelay(500);
         ac.install(editor);
 
-        output.setFont(Monospaced.getFont());
-        output.setEditable(false);
-        output.setLineWrap(true);
-        output.setWrapStyleWord(true);
+        outputPane.setLayout(new BoxLayout(outputPane, BoxLayout.Y_AXIS));
+        outputPane.add(output);
 
         add(inputPane, BorderLayout.CENTER);
-        add(output, BorderLayout.SOUTH);
+        add(outputPane, BorderLayout.SOUTH);
     }
 
     private void initInputPane() {
@@ -178,8 +178,8 @@ public class Intent extends JPanel {
                 var intentType = (IntentType) intentTypeComboBox.getSelectedItem();
                 if (intentType != null) {
                     switch (intentType) {
-                        case Raw -> runRaw();
-                        case Markdown -> renderMarkdown();
+                        case Raw -> {} // do nothing
+                        case Markdown -> renderMarkdown(editor.getText());
                         default -> cli.run(Intent.this, intentType);
                     }
                 }
@@ -190,16 +190,42 @@ public class Intent extends JPanel {
         });
     }
 
-    /** Executes raw content. */
-    private void runRaw() {
-        // do nothing
+    /** Creates an output area. */
+    private OutputArea createOutputArea() {
+        OutputArea output = new OutputArea();
+        output.setFont(Monospaced.getFont());
+        output.setEditable(false);
+        output.setLineWrap(true);
+        output.setWrapStyleWord(true);
+        return output;
     }
 
-    /** Renders Markdown content. */
-    private void renderMarkdown() {
-        var html = new Markdown(editor.getText());
-        remove(output);
-        add(html, BorderLayout.SOUTH);
+    /**
+     * Renders Markdown text in output area.
+     * @param text the Markdown text.
+     */
+    public void renderMarkdown(String text) {
+        var html = new Markdown(text);
+        outputPane.remove(output);
+        outputPane.add(html);
+    }
+
+    /**
+     * Adds a question to the output pane.
+     * @param question the question to add.
+     */
+    public void addQuestion(Question question) {
+        if (output.getText().isBlank()) {
+            // keep the output area at the bottom for subsequent outputs
+            outputPane.remove(output);
+            outputPane.add(question);
+            outputPane.add(output);
+        } else {
+            outputPane.add(question);
+            // add a new output area for subsequent outputs
+            output = createOutputArea();
+            outputPane.add(output);
+        }
     }
 
     /**

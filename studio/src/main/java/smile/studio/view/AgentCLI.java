@@ -235,7 +235,7 @@ public class AgentCLI extends JPanel {
                 case "open" -> open(args, intent.output());
                 case "train", "predict", "serve" -> runShellCommand(intent, IntentType.Command, instructions);
                 case "init" -> initMemory(instructions, intent.output());
-                case "memory" -> memory(args, instructions, intent.output());
+                case "memory" -> memory(args, instructions, intent);
                 case "system" -> showSystemPrompt(intent.output()); // for debugging
                 case "clear" -> clear(intent.output());
                 case "compact" -> compact(instructions, intent);
@@ -315,14 +315,15 @@ public class AgentCLI extends JPanel {
     }
 
     /** Executes memory commands. */
-    private void memory(String[] args, String instructions, OutputArea output) throws IOException {
+    private void memory(String[] args, String instructions, Intent intent) throws IOException {
+        var output = intent.output();
         if (args.length < 2) {
             output.appendLine("Usage: /memory [show|add|edit|refresh]");
             return;
         }
 
         switch (args[1]) {
-            case "show" -> showMemory(output);
+            case "show" -> showMemory(intent);
             case "add" -> addMemory(instructions, output);
             case "edit" -> editMemory(output);
             case "refresh" -> refreshMemory(output);
@@ -348,9 +349,8 @@ public class AgentCLI extends JPanel {
     }
 
     /** Displays the project long-term memory. */
-    private void showMemory(OutputArea output) {
-        output.setText(agent.instructions());
-        toMarkdown(output);
+    private void showMemory(Intent intent) {
+        intent.renderMarkdown(agent.instructions());
     }
 
     /** Displays the system prompt. */
@@ -367,14 +367,6 @@ public class AgentCLI extends JPanel {
 
         String path = args[1];
         Notepad.open(Path.of(path));
-    }
-
-    /** Renders output as Markdown. */
-    private void toMarkdown(OutputArea output) {
-        var html = new Markdown(output.getText());
-        var parent = output.getParent();
-        parent.remove(output);
-        parent.add(html, BorderLayout.SOUTH);
     }
 
     /** Reloads the context from disk. */
@@ -548,7 +540,7 @@ Please provide your summary based on the conversation so far, following this str
                             if (text.contains("##") || text.contains("**")) {
                                 // commonmark doesn't render table nicely
                                 if (!text.contains("|--")) {
-                                    toMarkdown(intent.output());
+                                    intent.renderMarkdown(text);
                                 }
                             }
                         });
@@ -565,7 +557,7 @@ Please provide your summary based on the conversation so far, following this str
 
             @Override
             public void onQuestion(Question question) {
-                SwingUtilities.invokeLater(() -> intents.add(question));
+                SwingUtilities.invokeLater(() -> intent.addQuestion(question));
             }
         });
     }
