@@ -301,7 +301,7 @@ public class AgentCLI extends JPanel {
         }
 
         if (args.length == 2 && args[1].equalsIgnoreCase("off")) {
-            agent.conversation().exitPlanMode();
+            agent.conversation().exitPlanMode(null);
             output.setText("Exit the plan mode.");
             return;
         }
