@@ -74,12 +74,7 @@ public class Notebook extends JPanel implements DocumentListener {
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         add(scrollPane, BorderLayout.CENTER);
 
-        // Note that JShell runs in another JVM so that
-        // we need to setup FlatLaf again.
-        runner.eval("""
-            javax.swing.SwingUtilities.invokeLater(() -> {
-                com.formdev.flatlaf.FlatLightLaf.setup();
-            });""");
+        initializeRunnerEnvironment();
 
         if (file != null) {
             try {
@@ -218,6 +213,18 @@ public class Notebook extends JPanel implements DocumentListener {
     }
 
     /**
+     * Initializes the JShell runtime with UI defaults required by plot windows.
+     */
+    public void initializeRunnerEnvironment() {
+        // Note that JShell runs in another JVM so that
+        // we need to setup FlatLaf again.
+        runner.eval("""
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                com.formdev.flatlaf.FlatLightLaf.setup();
+            });""");
+    }
+
+    /**
      * Returns the notebook file.
      *
      * @return the notebook file.
@@ -248,12 +255,17 @@ public class Notebook extends JPanel implements DocumentListener {
         for (String src : snippets) {
             Cell cell = new Cell(this);
             cell.editor().setText(src);
+            cell.editor().setPreferredRows();
             cell.editor().getDocument().addDocumentListener(this);
             cells.add(cell);
         }
         if (snippets.isEmpty()) addCell(null);
         cells.revalidate();
         cells.repaint();
+        SwingUtilities.invokeLater(() -> {
+            cells.revalidate();
+            cells.repaint();
+        });
         this.file = file;
     }
 
