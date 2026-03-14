@@ -95,6 +95,16 @@ public class Workspace extends JSplitPane {
     }
 
     /**
+     * Restarts the execution environment and refreshes dependent views.
+     */
+    public void restartEnvironment() {
+        runner.stop();
+        runner.restart();
+        notebook.initializeRunnerEnvironment();
+        explorer.refresh();
+    }
+
+    /**
      * Closes the execution engine and frees resources.
      */
     public void close() {
