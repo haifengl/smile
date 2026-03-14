@@ -38,7 +38,10 @@ public class Coder extends Agent {
      */
     public Coder(String name, Path path, Supplier<LLM> llm) {
         super(name, path, llm);
-        conversation().addTools(Tool.basics())
+        conversation().addTools(Tool.file())
+                .addTools(Tool.shell())
+                .addTools(Tool.planning())
+                .addTools(Tool.web())
                 .addTools(Tool.web())
                 .addMcp(MCP.tools())
                 .addCommands(commands())

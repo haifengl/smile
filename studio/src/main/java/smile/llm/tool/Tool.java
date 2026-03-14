@@ -17,7 +17,6 @@
 package smile.llm.tool;
 
 import java.lang.reflect.Method;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Consumer;
 import smile.llm.Conversation;
@@ -47,26 +46,35 @@ public interface Tool {
     record Spec(Class<? extends Tool> clazz, List<Method> methods) { }
 
     /**
-     * Returns the specifications of basic tools for file operations, shell, skill, planning.
-     * @return the specifications of basic tools for file operations, shell, skill, planning.
+     * Returns the tool specifications for file operations.
+     * @return the tool specifications for file operations.
      */
-    static List<Spec> basics() {
+    static List<Spec> file() {
         return List.of(Read.spec(), Write.spec(), Edit.spec(), Append.spec(),
-                Glob.spec(), Grep.spec(), Bash.spec(), KillShell.spec(),
-                LoadSkill.spec(), SlashCommand.spec(), ExitPlanMode.spec());
+                ApplyPatch.spec(), Glob.spec(), Grep.spec());
     }
 
     /**
-     * Returns the specifications of web tools.
-     * @return the specifications of web tools.
+     * Returns the tool specifications for shell operations.
+     * @return the tool specifications for shell operations.
+     */
+    static List<Spec> shell() {
+        return List.of(Bash.spec(), KillShell.spec());
+    }
+
+    /**
+     * Returns the tool specifications for planning operations.
+     * @return the tool specifications for planning operations.
+     */
+    static List<Spec> planning() {
+        return List.of(LoadSkill.spec(), SlashCommand.spec(), ExitPlanMode.spec());
+    }
+
+    /**
+     * Returns the tool specifications for web operations.
+     * @return the tool specifications for web operations.
      */
     static List<Spec> web() {
         return List.of(WebFetch.spec(), WebSearch.spec());
-    }
-
-    /** Returns the current working directory of the conversation. */
-    static Path cwd(Conversation conversation) {
-        return conversation.path().resolve("../..")
-                    .normalize().toAbsolutePath();
     }
 }
