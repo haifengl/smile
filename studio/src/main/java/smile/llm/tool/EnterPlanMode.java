@@ -16,6 +16,7 @@
  */
 package smile.llm.tool;
 
+import java.io.IOException;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -55,7 +56,7 @@ Use this tool proactively when you're about to start a non-trivial implementatio
    - Example: "Fix the bug in checkout" - need to investigate root cause
 
 7. **User Preferences Matter**: The implementation could reasonably go multiple ways
-   - If you would use ${ASK_USER_QUESTION_TOOL_NAME} to clarify the approach, use EnterPlanMode instead
+   - If you would use AskUserQuestion to clarify the approach, use EnterPlanMode instead
    - Plan mode lets you explore first, then present options with context
 
 ## When NOT to Use This Tool
@@ -66,7 +67,7 @@ Only skip EnterPlanMode for simple tasks:
 - Tasks where the user has given very specific, detailed instructions
 - Pure research/exploration tasks (use the Agent tool with explore agent instead)
 
-${CONDITIONAL_WHAT_HAPPENS_NOTE}## Examples
+## Examples
 
 ### GOOD - Use EnterPlanMode:
 User: "Add user authentication to the app"
@@ -108,12 +109,17 @@ public class EnterPlanMode implements Tool {
     @Override
     public String run(Conversation conversation, ToolCallListener listener) {
         if (Strings.isNullOrBlank(reason)) {
-            listener.onStatus("Entering the plan model");
+            listener.onStatus("Entering the plan mode");
         } else {
-            listener.onStatus(reason);
+            listener.onStatus("Planning for " + reason);
         }
-        conversation.enterPlanMode(reason);
-        return "Plan mode is active.";
+
+        try {
+            var path = conversation.enterPlanMode(reason);
+            return "Plan mode is active. Save your plan to the file " + path + ". Begin planning.";
+        } catch (IOException e) {
+            return "Error entering plan mode: " + e.getMessage();
+        }
     }
 
     /**

@@ -16,10 +16,9 @@
  */
 package smile.llm.tool;
 
+import java.nio.file.Files;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import smile.llm.Conversation;
 
 @JsonClassDescription("""
@@ -48,18 +47,33 @@ Ensure your plan is complete and unambiguous:
 3. Initial task: "Add a new feature to handle user authentication" - If unsure about auth method (OAuth, JWT, etc.), use AskUserQuestion first, then use exit plan mode tool after clarifying the approach.
 """)
 public class ExitPlanMode implements Tool {
-    @JsonProperty(required = true)
-    @JsonPropertyDescription("The plan you came up with, that you want to run by the user for approval. Supports markdown. The plan should be pretty concise.")
-    public String plan;
-
     @Override
     public String run(Conversation conversation, ToolCallListener listener) {
+        if (!conversation.planMode()) {
+            return "Invalid tool call of ExitPlanMode as agent is not in plan mode.";
+        }
+
         try {
-            var path = conversation.exitPlanMode(plan);
-            if (path != null) {
-                return "User has approved your plan. You can now proceed to implement the plan. I've saved your plan to " + path.toAbsolutePath() + " for your reference.";
+            conversation.exitPlanMode();
+            var path = conversation.planFile();
+            if (path.isPresent()) {
+                if (!Files.exists(path.get())) {
+                    return "Error exiting plan mode: Plan file " + path.get() + " doesn't exist.";
+                }
+                String plan = Files.readString(path.get());
+                String question = "Your plan is ready for review. Please review the plan below and let me know if you approve it or if you have any feedback or questions about it."
+                        + "\n\n" + plan;
+                List<String> choices = List.of("Approve", "Request changes");
+                Question dialog = new Question(question, choices, false);
+                listener.onQuestion(dialog);
+                String result = dialog.ask().get();
+                if (choices.getFirst().equals(result)) {
+                    return "User has approved your plan. You can now proceed to implement the plan.";
+                } else {
+                    return "User request changes: " + result + ". Please continue refining the plan.";
+                }
             } else {
-                return "Invalid tool call of ExitPlanMode as agent is not in plan mode.";
+                return "Error exiting plan mode: Plan file path is not available.";
             }
         } catch (Exception ex) {
             return "Error to exit the plan mode: " + ex.getMessage();
