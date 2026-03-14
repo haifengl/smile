@@ -41,7 +41,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 public class Conversation {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Conversation.class);
     /** The file name for conversation history. */
-    private static final String HISTORY_FILE = "history.jsonl";
+    private static final String HISTORY_FILE = "conversation.jsonl";
     /** The file name of conversation summary. */
     private static final String MEMORY_MD = "MEMORY.md";
     /** The JSON object mapper with sneak case and ignoring null fields. */
@@ -73,8 +73,8 @@ public class Conversation {
     private Path planFile = null;
 
     /**
-     * Constructor. New messages will be saved to history file.
-     * @param path the directory path for conversations.
+     * Constructor.
+     * @param path the directory path for conversation sessions.
      */
     public Conversation(Path path) {
         var formatter = DateTimeFormatter.ofPattern("yyMMddHHmmssSSS");
@@ -85,8 +85,10 @@ public class Conversation {
             try {
                 Files.createDirectories(this.path);
             } catch (IOException ex) {
-                logger.error("Failed to create folder of conversation history", ex);
+                logger.error("Failed to create folder of conversation session", ex);
             }
+        } else {
+            logger.warn("Conversation session folder already exists: {}", id);
         }
     }
 
@@ -99,11 +101,35 @@ public class Conversation {
     }
 
     /**
+     * Returns the conversation session directory.
+     * @return the conversation session directory.
+     */
+    public Path path() {
+        return path;
+    }
+
+    /**
      * Returns the agent working directory.
      * @return the agent working directory.
      */
-    public Path path() {
+    public Path awd() {
         return path.resolve("../..").normalize();
+    }
+
+    /**
+     * Returns the current working directory, i.e. project root directory.
+     * @return the current working directory, i.e. project root directory.
+     */
+    public Path cwd() {
+        return path.resolve("../../../..").normalize();
+    }
+
+    /**
+     * Returns the JSON object mapper.
+     * @return the JSON object mapper.
+     */
+    public static ObjectMapper mapper() {
+        return mapper;
     }
 
     /**
@@ -229,18 +255,18 @@ public class Conversation {
     }
 
     /**
-     * Sets whether plan mode is active. When plan mode is active, AI will
+     * Enters the plan mode. When the plan mode is active, AI will
      * only answer the user's query and present a plan without taking any
      * actions, which can be useful for complex tasks that require careful
      * planning before execution.
      *
-     * @param name the plan file name. If null, it will default to "PLAN.md".
-     *             The file will be saved in the "plans" subdirectory of the
-     *             conversation path.
+     * @param reason a brief explanation for entering plan mode, such as
+     * describing the bug to be fixed. Its kebab case will be used as plan
+     * file name. If null, the file name default to "PLAN.md".
      */
-    public void planMode(String name) {
-        String file = Strings.isNullOrBlank(name) ? "PLAN.md" : (Strings.kebab(name) + ".md");
-        planFile = path().resolve("plans", name).normalize();
+    public void enterPlanMode(String reason) {
+        String filename = Strings.isNullOrBlank(reason) ? "PLAN.md" : (Strings.kebab(reason) + ".md");
+        planFile = awd().resolve("plans", filename).normalize();
     }
 
     /**
@@ -250,11 +276,13 @@ public class Conversation {
      */
     public Path exitPlanMode(String plan) throws IOException {
         var file = planFile;
-        if (planFile != null) {
-            Files.createDirectories(planFile.getParent());
-            Files.writeString(planFile, plan);
-            planFile = null;
+        if (planFile == null) {
+            planFile = awd().resolve("plans", "PLAN.md").normalize();
         }
+
+        Files.createDirectories(planFile.getParent());
+        Files.writeString(planFile, plan);
+        planFile = null;
         return file;
     }
 
