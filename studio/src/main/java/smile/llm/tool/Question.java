@@ -32,8 +32,6 @@ import java.util.concurrent.CompletableFuture;
  * @author Haifeng Li
  */
 public class Question extends JPanel implements ActionListener {
-    /** Users may select "Other" to provide custom text input. */
-    static final String OTHER = "Other";
     private final List<String> choices;
     private final List<JToggleButton> choiceButtons = new ArrayList<>();
     private final JTextArea customTextInput = new JTextArea(3, 40);;
@@ -61,6 +59,7 @@ public class Question extends JPanel implements ActionListener {
         questionLabel.setWrapStyleWord(true);
         add(questionLabel, BorderLayout.NORTH);
 
+        // Initialize choice panel if there are choices to display
         if (!choices.isEmpty()) {
             // Create the choice panel with a vertical layout
             JPanel choicePane = new JPanel();
@@ -82,27 +81,25 @@ public class Question extends JPanel implements ActionListener {
             }
 
             // Add the text area below the "Other" radio button
+            customTextInput.setEnabled(false);
+            customTextInput.setLineWrap(true);
+            customTextInput.setWrapStyleWord(true);
             // Use a JScrollPane for the text area for better usability
-            if (choices.contains(OTHER)) {
-                // Initialize components
-                customTextInput.setEnabled(false);
-                customTextInput.setLineWrap(true);
-                customTextInput.setWrapStyleWord(true);
-                JScrollPane scrollPane = new JScrollPane(customTextInput);
-                choicePane.add(scrollPane);
+            JScrollPane scrollPane = new JScrollPane(customTextInput);
+            choicePane.add(scrollPane);
 
-                customTextInput.getDocument().addDocumentListener(new DocumentListener() {
-                    public void removeUpdate(DocumentEvent e) {
-                        checkCustomInput();
-                    }
-                    public void insertUpdate(DocumentEvent e) {
-                        checkCustomInput();
-                    }
-                    public void changedUpdate(DocumentEvent e) {
-                        // This method is for attribute changes, not relevant for plain text
-                    }
-                });
-            }
+            customTextInput.getDocument().addDocumentListener(new DocumentListener() {
+                public void removeUpdate(DocumentEvent e) {
+                    checkCustomInput();
+                }
+                public void insertUpdate(DocumentEvent e) {
+                    checkCustomInput();
+                }
+                public void changedUpdate(DocumentEvent e) {
+                    // This method is for attribute changes, not relevant for plain text
+                }
+            });
+
             add(choicePane, BorderLayout.CENTER);
         }
 
@@ -139,7 +136,7 @@ public class Question extends JPanel implements ActionListener {
 
         } else {
             // Handle choice button selection to enable/disable text area
-            if (((JToggleButton) e.getSource()).getText().equals(OTHER)) {
+            if (((JToggleButton) e.getSource()).getText().equals(choices.getLast())) {
                 customTextInput.setEnabled(true);
                 customTextInput.requestFocus(); // Set focus for typing
                 checkCustomInput();
@@ -165,7 +162,7 @@ public class Question extends JPanel implements ActionListener {
         for (int i = 0; i < choiceButtons.size(); i++) {
             if (choiceButtons.get(i).isSelected()) {
                 String choice;
-                if (choices.get(i).equals(OTHER)) {
+                if (choices.get(i).equals(choices.getLast())) {
                     choice = customTextInput.getText();
                 } else {
                     choice = choices.get(i);

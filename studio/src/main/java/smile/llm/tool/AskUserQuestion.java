@@ -38,6 +38,9 @@ Usage notes:
 Plan mode note: In plan mode, use this tool to clarify requirements or choose between approaches BEFORE finalizing your plan. Do NOT use this tool to ask "Is my plan ready?" or "Should I proceed?" If you need plan approval, use ExitPlanMode instead. IMPORTANT: Do not reference "the plan" in your questions (e.g., "Do you have feedback about the plan?", "Does the plan look good?") because the user cannot see the plan in the UI until you call ExitPlanMode.
 """)
 public class AskUserQuestion implements Tool {
+    /** Users may select "Other" to provide custom text input. */
+    private static final String OTHER = "Other";
+
     @JsonProperty(required = true)
     @JsonPropertyDescription("Clear, concise description of the question you want to ask the user.")
     public String question;
@@ -52,10 +55,10 @@ public class AskUserQuestion implements Tool {
     @Override
     public String run(Conversation conversation, ToolCallListener listener) {
         // Ensure "Other" is always an option for users to provide custom input
-        if (!choices.contains(Question.OTHER)) {
+        if (!choices.contains(OTHER)) {
             // In case the original list is immutable, create a new mutable list.
             choices = new ArrayList<>(choices);
-            choices.add(Question.OTHER);
+            choices.add(OTHER);
         }
 
         Question dialog = new Question(question, choices, multiSelect);
