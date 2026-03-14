@@ -20,11 +20,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import smile.llm.Conversation;
+import smile.llm.client.ResponseHandler;
 
 @JsonClassDescription("""
 Use this tool to create and manage a structured task list for your current session. This helps you track progress, organize complex tasks, and demonstrate thoroughness to the user.
@@ -230,18 +230,18 @@ public class TodoWrite implements Tool {
     }
 
     @Override
-    public String run(Conversation conversation, Consumer<String> statusUpdate) {
+    public String run(Conversation conversation, ResponseHandler handler) {
         Optional<Todo> inProgressTask = todos.stream()
                 .filter(todo -> todo.status.equalsIgnoreCase("in_progress"))
                 .findFirst();
 
         if (inProgressTask.isPresent()) {
-            statusUpdate.accept(inProgressTask.get().activeForm);
+            handler.onStatus(inProgressTask.get().activeForm);
         } else {
             long numTasks = todos.stream()
                 .filter(todo -> !todo.status.equalsIgnoreCase("completed"))
                 .count();
-            statusUpdate.accept(numTasks + " todos");
+            handler.onStatus(numTasks + " todos");
         }
 
         Path path = conversation.path().resolve("TODO.json");

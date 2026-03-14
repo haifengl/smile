@@ -22,7 +22,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -32,6 +31,7 @@ import org.apache.commons.csv.CSVPrinter;
 import smile.data.Tuple;
 import smile.io.Parquet;
 import smile.llm.Conversation;
+import smile.llm.client.ResponseHandler;
 
 @JsonClassDescription("""
 Reads a file from the local filesystem. You can access any file directly by using this tool.
@@ -61,8 +61,8 @@ public class Read implements Tool {
     public int limit = 2000;
 
     @Override
-    public String run(Conversation conversation, Consumer<String> statusUpdate) {
-        statusUpdate.accept("Reading " + file_path);
+    public String run(Conversation conversation, ResponseHandler handler) {
+        handler.onStatus("Reading " + file_path);
         return readFile(file_path, offset, limit);
     }
 

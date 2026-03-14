@@ -18,12 +18,12 @@ package smile.llm.tool;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import serpapi.SerpApi;
 import smile.llm.Conversation;
+import smile.llm.client.ResponseHandler;
 
 @JsonClassDescription("""
 - Allows AI to search the web and use the results to inform responses
@@ -42,8 +42,8 @@ public class WebSearch implements Tool {
     public String query;
 
     @Override
-    public String run(Conversation conversation, Consumer<String> statusUpdate) {
-        statusUpdate.accept("Searching web with keywords " + query);
+    public String run(Conversation conversation, ResponseHandler handler) {
+        handler.onStatus("Searching web with keywords " + query);
         return webSearch(query);
     }
 

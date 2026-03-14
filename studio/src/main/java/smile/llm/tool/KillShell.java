@@ -19,11 +19,11 @@ package smile.llm.tool;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import smile.llm.Conversation;
+import smile.llm.client.ResponseHandler;
 
 @JsonClassDescription("""
 - Kills a running background bash shell by its ID
@@ -38,7 +38,8 @@ public class KillShell implements Tool {
     public String shell_id;
 
     @Override
-    public String run(Conversation conversation, Consumer<String> statusUpdate) {
+    public String run(Conversation conversation, ResponseHandler handler) {
+        handler.onStatus("Killing process " + shell_id);
         return killShell(shell_id);
     }
 

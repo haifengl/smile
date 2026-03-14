@@ -21,12 +21,12 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import smile.llm.Conversation;
+import smile.llm.client.ResponseHandler;
 
 @JsonClassDescription("""
 - Fast file pattern matching tool that works with any codebase size
@@ -45,11 +45,11 @@ public class Glob implements Tool {
     public String path;
 
     @Override
-    public String run(Conversation conversation, Consumer<String> statusUpdate) {
+    public String run(Conversation conversation, ResponseHandler handler) {
         if (path == null) {
             path = conversation.cwd().toString();
         }
-        statusUpdate.accept("Searching files " + pattern + " in " + path);
+        handler.onStatus("Searching files " + pattern + " in " + path);
         return globFiles(pattern, path);
     }
 

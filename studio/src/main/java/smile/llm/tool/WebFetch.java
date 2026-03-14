@@ -21,13 +21,13 @@ import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import io.github.furstenheim.CopyDown;
 import org.jsoup.Jsoup;
 import smile.llm.Conversation;
+import smile.llm.client.ResponseHandler;
 
 @JsonClassDescription("""
 - Fetches content from a specified URL
@@ -51,8 +51,8 @@ public class WebFetch implements Tool {
     public String url;
 
     @Override
-    public String run(Conversation conversation, Consumer<String> statusUpdate) {
-        statusUpdate.accept("GET " + url);
+    public String run(Conversation conversation, ResponseHandler handler) {
+        handler.onStatus("GET " + url);
         return webFetch(url);
     }
 

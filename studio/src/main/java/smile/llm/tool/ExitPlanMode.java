@@ -17,11 +17,11 @@
 package smile.llm.tool;
 
 import java.util.List;
-import java.util.function.Consumer;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import smile.llm.Conversation;
+import smile.llm.client.ResponseHandler;
 
 @JsonClassDescription("""
 Use this tool when you are in plan mode and have finished writing your plan to the plan file and are ready for user approval.
@@ -54,7 +54,7 @@ public class ExitPlanMode implements Tool {
     public String plan;
 
     @Override
-    public String run(Conversation conversation, Consumer<String> statusUpdate) {
+    public String run(Conversation conversation, ResponseHandler handler) {
         try {
             var path = conversation.exitPlanMode(plan);
             if (path != null) {

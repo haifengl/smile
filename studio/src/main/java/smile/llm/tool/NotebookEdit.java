@@ -17,11 +17,11 @@
 package smile.llm.tool;
 
 import java.util.List;
-import java.util.function.Consumer;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import smile.llm.Conversation;
+import smile.llm.client.ResponseHandler;
 
 @JsonClassDescription("""
 Completely replaces the contents of a specific cell in a SMILE notebook (.java file) with new source. SMILE notebooks are interactive documents that combine code, text, and visualizations, commonly used for data analysis and scientific computing. The notebook_path parameter must be an absolute path, not a relative path. The cell_number is 0-indexed. Use edit_mode=insert to add a new cell at the index specified by cell_number. Use edit_mode=delete to delete the cell at the index specified by cell_number.
@@ -39,8 +39,8 @@ public class NotebookEdit implements Tool {
     public String cell_id;
 
     @Override
-    public String run(Conversation conversation, Consumer<String> statusUpdate) {
-        statusUpdate.accept("Editing " + notebook_path);
+    public String run(Conversation conversation, ResponseHandler handler) {
+        handler.onStatus("Editing " + notebook_path);
         return editNotebook(notebook_path, new_source, cell_id);
     }
 

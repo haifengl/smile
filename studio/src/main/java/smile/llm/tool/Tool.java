@@ -18,8 +18,8 @@ package smile.llm.tool;
 
 import java.lang.reflect.Method;
 import java.util.List;
-import java.util.function.Consumer;
 import smile.llm.Conversation;
+import smile.llm.client.ResponseHandler;
 
 /**
  * Tools enable models to interact with external systems,
@@ -32,9 +32,10 @@ public interface Tool {
     /**
      * Executes the tool.
      * @param conversation the conversation session that the tool calling belongs to.
+     * @param handler the handler to display status updates, questions, etc.
      * @return the result of tool execution.
      */
-    String run(Conversation conversation, Consumer<String> statusUpdate);
+    String run(Conversation conversation, ResponseHandler handler);
 
     /**
      * The specification of built-in tools. 

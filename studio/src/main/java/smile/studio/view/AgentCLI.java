@@ -557,6 +557,11 @@ Please provide your summary based on the conversation so far, following this str
                     SwingUtilities.invokeLater(() -> intent.setStatus(status));
                 }
             }
+
+            @Override
+            public void onQuestion(JComponent comp) {
+                SwingUtilities.invokeLater(() -> intents.add(comp));
+            }
         });
     }
 }

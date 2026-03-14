@@ -39,6 +39,12 @@ public class Question extends JPanel implements ActionListener {
     private final JButton okButton, cancelButton;
     private final CompletableFuture<String> answer = new CompletableFuture<>();
 
+    /**
+     * Constructor.
+     * @param question the question to ask.
+     * @param choices the list of choices. If the list contains "Other", a text area will be provided for custom input.
+     * @param multiSelect whether to allow multiple selections (checkboxes) or single selection (radio buttons).
+     */
     public Question(String question, List<String> choices, boolean multiSelect) {
         super(new BorderLayout());
         this.choices = choices;

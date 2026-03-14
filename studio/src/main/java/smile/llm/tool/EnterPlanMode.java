@@ -17,11 +17,11 @@
 package smile.llm.tool;
 
 import java.util.List;
-import java.util.function.Consumer;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import smile.llm.Conversation;
+import smile.llm.client.ResponseHandler;
 import smile.util.Strings;
 
 @JsonClassDescription("""
@@ -107,11 +107,11 @@ public class EnterPlanMode implements Tool {
     public String reason;
 
     @Override
-    public String run(Conversation conversation, Consumer<String> statusUpdate) {
+    public String run(Conversation conversation, ResponseHandler handler) {
         if (Strings.isNullOrBlank(reason)) {
-            statusUpdate.accept("Entering the plan model");
+            handler.onStatus("Entering the plan model");
         } else {
-            statusUpdate.equals(reason);
+            handler.onStatus(reason);
         }
         conversation.enterPlanMode(reason);
         return "Plan mode is active.";

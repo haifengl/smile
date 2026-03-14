@@ -18,13 +18,13 @@ package smile.llm.tool;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import smile.agent.Command;
 import smile.llm.Conversation;
+import smile.llm.client.ResponseHandler;
 
 @JsonClassDescription("""
 Execute a slash command within the main conversation
@@ -55,8 +55,8 @@ public class SlashCommand implements Tool {
     public String command;
 
     @Override
-    public String run(Conversation conversation, Consumer<String> statusUpdate) {
-        statusUpdate.accept("Running " + command);
+    public String run(Conversation conversation, ResponseHandler handler) {
+        handler.onStatus("Running " + command);
         if (!command.startsWith("/")) {
             return "Error: Invalid command format. Command must start with '/'.";
         }

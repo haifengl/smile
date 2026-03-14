@@ -17,11 +17,11 @@
 package smile.llm.tool;
 
 import java.util.List;
-import java.util.function.Consumer;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import smile.llm.Conversation;
+import smile.llm.client.ResponseHandler;
 import smile.util.OS;
 import smile.util.Strings;
 
@@ -60,11 +60,11 @@ public class Grep implements Tool {
     public boolean multiline = false;
 
     @Override
-    public String run(Conversation conversation, Consumer<String> statusUpdate) {
+    public String run(Conversation conversation, ResponseHandler handler) {
         if (path == null) {
             path = conversation.cwd().toString();
         }
-        statusUpdate.accept("Searching files matching" + pattern + " in " + path);
+        handler.onStatus("Searching files matching" + pattern + " in " + path);
         return grepFiles(pattern, path, glob, type, multiline);
     }
 

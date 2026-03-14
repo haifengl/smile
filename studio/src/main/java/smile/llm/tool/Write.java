@@ -19,11 +19,11 @@ package smile.llm.tool;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.function.Consumer;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import smile.llm.Conversation;
+import smile.llm.client.ResponseHandler;
 
 @JsonClassDescription("""
 Writes a file to the local filesystem.
@@ -45,8 +45,8 @@ public class Write implements Tool {
     public String content;
 
     @Override
-    public String run(Conversation conversation, Consumer<String> statusUpdate) {
-        statusUpdate.accept("Writing " + file_path);
+    public String run(Conversation conversation, ResponseHandler handler) {
+        handler.onStatus("Writing " + file_path);
         return writeFile(file_path, content);
     }
 

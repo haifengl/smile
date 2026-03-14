@@ -20,11 +20,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
-import java.util.function.Consumer;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import smile.llm.Conversation;
+import smile.llm.client.ResponseHandler;
 
 @JsonClassDescription("""
 Appends to a file in the local filesystem.
@@ -46,8 +46,8 @@ public class Append implements Tool {
     public String content;
 
     @Override
-    public String run(Conversation conversation, Consumer<String> statusUpdate) {
-        statusUpdate.accept("Appending " + file_path);
+    public String run(Conversation conversation, ResponseHandler handler) {
+        handler.onStatus("Appending " + file_path);
         return appendFile(file_path, content);
     }
 

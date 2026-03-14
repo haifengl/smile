@@ -16,14 +16,12 @@
  */
 package smile.llm.client;
 
-import java.util.function.Consumer;
-
 /**
  * The handler for streaming response from LLM service.
  *
  * @author Haifeng Li
  */
-public interface StreamResponseHandler extends Consumer<String> {
+public interface StreamResponseHandler extends ResponseHandler {
     /**
      * Handles the next chunk of response.
      * @param chunk the next chunk of response.
@@ -45,16 +43,5 @@ public interface StreamResponseHandler extends Consumer<String> {
      */
     default void onComplete(Throwable error) {
         onComplete(error, 0, 0, 0);
-    }
-
-    /**
-     * Handles the status update, e.g. tool calling.
-     * @param status the status update.
-     */
-    void onStatus(String status);
-
-    @Override
-    default void accept(String status) {
-        onStatus(status);
     }
 }

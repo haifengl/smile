@@ -19,13 +19,13 @@ package smile.llm.tool;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import smile.agent.Skill;
 import smile.llm.Conversation;
+import smile.llm.client.ResponseHandler;
 
 @JsonClassDescription("""
 Load a specialized skill that provides domain-specific instructions and workflows.
@@ -45,8 +45,8 @@ public class LoadSkill implements Tool {
     public String name;
 
     @Override
-    public String run(Conversation conversation, Consumer<String> statusUpdate) {
-        statusUpdate.accept("Loading Skill " + name);
+    public String run(Conversation conversation, ResponseHandler handler) {
+        handler.onStatus("Loading Skill " + name);
         Optional<Skill> availableSkill = conversation.skills().stream()
                 .filter(skill -> skill.name().equalsIgnoreCase(name))
                 .findFirst();

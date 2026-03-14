@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
+import javax.swing.JComponent;
 import smile.llm.Conversation;
 import smile.llm.Message;
 import smile.llm.client.LLM;
@@ -431,6 +432,11 @@ You can use the following tools without requiring user approval: Read(//workspac
             @Override
             public void onStatus(String status) {
                 handler.onStatus(status);
+            }
+
+            @Override
+            public void onQuestion(JComponent comp) {
+                handler.onQuestion(comp);
             }
         };
 

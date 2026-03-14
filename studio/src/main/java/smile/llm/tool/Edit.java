@@ -19,11 +19,11 @@ package smile.llm.tool;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.function.Consumer;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import smile.llm.Conversation;
+import smile.llm.client.ResponseHandler;
 
 @JsonClassDescription("""
 Performs exact string replacements in files.
@@ -53,8 +53,8 @@ public class Edit implements Tool {
     public boolean replace_all = false;
 
     @Override
-    public String run(Conversation conversation, Consumer<String> statusUpdate) {
-        statusUpdate.accept("Editing " + file_path);
+    public String run(Conversation conversation, ResponseHandler handler) {
+        handler.onStatus("Editing " + file_path);
         return editFile(file_path, old_string, new_string, replace_all);
     }
 

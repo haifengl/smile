@@ -18,11 +18,11 @@ package smile.llm.tool;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import smile.llm.Conversation;
+import smile.llm.client.ResponseHandler;
 
 @JsonClassDescription("""
 Use this tool when you need to ask the user questions during execution. This allows you to:
@@ -51,12 +51,7 @@ public class AskUserQuestion implements Tool {
     public boolean multiSelect = false;
 
     @Override
-    public String run(Conversation conversation, Consumer<String> statusUpdate) {
-        return askUserQuestion(question, choices, multiSelect);
-    }
-
-    /** Static helper method to ask user a question. */
-    public static String askUserQuestion(String question, List<String> choices, boolean multiSelect) {
+    public String run(Conversation conversation, ResponseHandler handler) {
         // Ensure "Other" is always an option for users to provide custom input
         if (!choices.contains(Question.OTHER)) {
             // In case the original list is immutable, create a new mutable list.
@@ -65,6 +60,7 @@ public class AskUserQuestion implements Tool {
         }
 
         Question dialog = new Question(question, choices, multiSelect);
+        handler.onQuestion(dialog);
         try {
             String result = dialog.ask().get();
             if (result != null) {
@@ -82,12 +78,6 @@ public class AskUserQuestion implements Tool {
      * @return the tool specification.
      */
     public static Tool.Spec spec() {
-        try {
-            return new Tool.Spec(AskUserQuestion.class,
-                    List.of(AskUserQuestion.class.getMethod("askUserQuestion", String.class, List.class, boolean.class)));
-        } catch (Exception e) {
-            System.err.println("Failed to load ToolSpec: " + e.getMessage());
-        }
         return new Tool.Spec(AskUserQuestion.class, List.of());
     }
 }
