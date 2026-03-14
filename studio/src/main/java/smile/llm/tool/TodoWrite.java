@@ -16,7 +16,10 @@
  */
 package smile.llm.tool;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -228,12 +231,28 @@ public class TodoWrite implements Tool {
 
     @Override
     public String run(Conversation conversation, Consumer<String> statusUpdate) {
-        return todoWrite(todos);
-    }
+        Optional<Todo> inProgressTask = todos.stream()
+                .filter(todo -> todo.status.equalsIgnoreCase("in_progress"))
+                .findFirst();
 
-    /** Static helper method to write todos. */
-    public static String todoWrite(List<Todo> todos) {
-        return "TodoWrite is not implemented yet.";
+        if (inProgressTask.isPresent()) {
+            statusUpdate.accept(inProgressTask.get().activeForm);
+        } else {
+            long numTasks = todos.stream()
+                .filter(todo -> !todo.status.equalsIgnoreCase("completed"))
+                .count();
+            statusUpdate.accept(numTasks + " todos");
+        }
+
+        Path path = conversation.path().resolve("TODO.json");
+        try {
+            String content = conversation.mapper().writerWithDefaultPrettyPrinter().writeValueAsString(todos);
+            Files.writeString(path, content);
+            // TODOs will be part of context window as a record of tool calling.
+            return content;
+        } catch (Exception e) {
+            return String.format("Failed to write '%s': %s", path, e.getMessage());
+        }
     }
 
     /**
@@ -241,12 +260,6 @@ public class TodoWrite implements Tool {
      * @return the tool specification.
      */
     public static Tool.Spec spec() {
-        try {
-            return new Tool.Spec(TodoWrite.class,
-                    List.of(TodoWrite.class.getMethod("todoWrite", List.class)));
-        } catch (Exception e) {
-            System.err.println("Failed to load ToolSpec: " + e.getMessage());
-        }
         return new Tool.Spec(TodoWrite.class, List.of());
     }
 }
