@@ -17,8 +17,10 @@
 package smile.agent;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -96,6 +98,29 @@ public class Context {
     public Context(Path path) {
         this.path = path;
         load(smileMd());
+    }
+
+    /**
+     * Loads the context from a resource path.
+     * @param clazz the class whose classloader will be used to load the resource.
+     * @param path the resource path.
+     */
+    public static Context load(Class<?> clazz, String path) throws IOException, URISyntaxException {
+        var url = clazz.getResource(path);
+        if (url == null) throw new IOException("Resource not found: " + path);
+        var uri = url.toURI();
+        Path dirPath;
+        try {
+            dirPath = Path.of(uri);
+        } catch (FileSystemNotFoundException e) {
+            // This exception is expected if the filesystem for the JAR hasn't been created
+            // Initialize a ZipFileSystem
+            try (var fileSystem = FileSystems.newFileSystem(uri, Collections.emptyMap())) {
+                dirPath = fileSystem.getPath(path);
+            }
+        }
+
+        return new Context(dirPath);
     }
 
     /** Loads the context from disk. */
