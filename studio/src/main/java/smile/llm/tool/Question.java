@@ -208,6 +208,8 @@ public class Question {
             if (answer.isDone()) {
                 okButton.setEnabled(false);
                 cancelButton.setEnabled(false);
+                customTextInput.setRows(Math.min(4, customTextInput.getLineCount()));
+                customTextInput.setEnabled(false);
                 for (var button : choiceButtons) {
                     button.setEnabled(false);
                 }
