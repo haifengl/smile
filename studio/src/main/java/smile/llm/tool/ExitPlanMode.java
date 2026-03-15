@@ -55,23 +55,19 @@ public class ExitPlanMode implements Tool {
 
     @Override
     public String run(Conversation conversation, ToolCallListener listener) {
-        if (!conversation.planMode()) {
-            return "Invalid tool call of ExitPlanMode as agent is not in plan mode.";
-        }
-
+        listener.onStatus("Waiting for user to review and approve the plan");
         try {
             var path = conversation.planFile();
-            if (path.isEmpty()) {
-                return "Error exiting plan mode: Plan file path is not available.";
+            if (conversation.planMode() && path.isPresent()) {
+                Files.writeString(path.get(), plan);
             }
 
-            Files.writeString(path.get(), plan);
-            String question = "Your plan is ready for review. Please review the plan below and let me know if you approve it or if you have any feedback or questions about it."
+            String review = "Your plan is ready for review. Please review the plan below and let me know if you approve it or if you have any feedback or questions about it."
                     + "\n\n" + plan;
             List<String> choices = List.of("Approve", "Request changes");
-            Question dialog = new Question(question, choices, false);
-            listener.onQuestion(dialog);
-            String result = dialog.ask().get();
+            Question question = new Question("Plan Review", review, choices, false);
+            listener.onQuestion(question);
+            String result = question.ask().get();
             if (choices.getFirst().equals(result)) {
                 conversation.exitPlanMode(plan);
                 return "User has approved your plan. You can now proceed to implement the plan.";

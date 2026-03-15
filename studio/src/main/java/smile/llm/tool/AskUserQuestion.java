@@ -48,6 +48,7 @@ public class AskUserQuestion implements Tool {
 
     @Override
     public String run(Conversation conversation, ToolCallListener listener) {
+        listener.onStatus("Waiting for user to answer questions");
         List<String> answers = new ArrayList<>();
         for (Question question : questions) {
             var choices = question.choices;
@@ -58,10 +59,9 @@ public class AskUserQuestion implements Tool {
                 choices.add(OTHER);
             }
 
-            Question dialog = new Question(question.question, choices, question.multiSelect);
-            listener.onQuestion(dialog);
+            listener.onQuestion(question);
             try {
-                String answer = dialog.ask().get();
+                String answer = question.ask().get();
                 if (Strings.isNullOrBlank(answer)) {
                     answer = "Unanswered";
                 }

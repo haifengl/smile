@@ -35,6 +35,10 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
  */
 public class Question {
     @JsonProperty(required = true)
+    @JsonPropertyDescription("Very short label (max 30 chars).")
+    public String header;
+
+    @JsonProperty(required = true)
     @JsonPropertyDescription("Clear, concise description of the question you want to ask the user.")
     public String question;
 
@@ -49,11 +53,13 @@ public class Question {
 
     /**
      * Constructor.
+     * @param header a very short label for the question.
      * @param question the question to ask.
      * @param choices the list of choices. If the list contains "Other", a text area will be provided for custom input.
      * @param multiSelect whether to allow multiple selections (checkboxes) or single selection (radio buttons).
      */
-    public Question(String question, List<String> choices, boolean multiSelect) {
+    public Question(String header, String question, List<String> choices, boolean multiSelect) {
+        this.header = header;
         this.question = question;
         this.choices = choices;
         this.multiSelect = multiSelect;
@@ -74,12 +80,18 @@ public class Question {
 
     private class GUI extends JPanel implements ActionListener {
         private final List<JToggleButton> choiceButtons = new ArrayList<>();
-        private final JTextArea customTextInput = new JTextArea(3, 40);;
+        private final JTextArea customTextInput = new JTextArea(4, 80);
+        // Use a JScrollPane for the text area for better usability
+        private final JScrollPane customTextPane = new JScrollPane(customTextInput);
+        private final JPanel choicePane = new JPanel();
         private final JButton okButton;
         private final JButton cancelButton;
 
         public GUI() {
             super(new BorderLayout());
+            setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createEmptyBorder(16,8,8,8),
+                    BorderFactory.createTitledBorder(header)));
 
             // Add the question label at the top
             JTextArea questionLabel = new JTextArea(question);
@@ -93,9 +105,9 @@ public class Question {
 
             // Initialize choice panel if there are choices to display
             if (!choices.isEmpty()) {
-                // Create the choice panel with a vertical layout
-                JPanel choicePane = new JPanel();
+                // Choice panel with a vertical layout
                 choicePane.setLayout(new BoxLayout(choicePane, BoxLayout.Y_AXIS));
+                choicePane.setBorder(BorderFactory.createEmptyBorder(16,8,8,8));
 
                 // Add radio buttons to the panel and group
                 ButtonGroup buttonGroup = new ButtonGroup();
@@ -107,18 +119,19 @@ public class Question {
                         button = new JRadioButton(choice);
                         buttonGroup.add(button);
                     }
+                    button.setAlignmentX(Component.LEFT_ALIGNMENT);
+                    button.setBorder(null);
                     button.addActionListener(this);
                     choiceButtons.add(button);
                     choicePane.add(button);
+                    choicePane.add(Box.createRigidArea(new Dimension(0, 8)));
                 }
 
                 // Add the text area below the "Other" radio button
-                customTextInput.setEnabled(false);
                 customTextInput.setLineWrap(true);
                 customTextInput.setWrapStyleWord(true);
-                // Use a JScrollPane for the text area for better usability
-                JScrollPane scrollPane = new JScrollPane(customTextInput);
-                choicePane.add(scrollPane);
+                customTextPane.setAlignmentX(Component.LEFT_ALIGNMENT);
+                customTextPane.setBorder(BorderFactory.createEmptyBorder(8,24,8,8));
 
                 customTextInput.getDocument().addDocumentListener(new DocumentListener() {
                     public void removeUpdate(DocumentEvent e) {
@@ -136,15 +149,16 @@ public class Question {
             }
 
             // Add buttons
-            JPanel buttonPanel = new JPanel();
-            add(buttonPanel, BorderLayout.SOUTH);
+            JPanel buttonPane = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            buttonPane.setBorder(BorderFactory.createEmptyBorder(8,8,8,8));
+            add(buttonPane, BorderLayout.SOUTH);
             if (!choices.isEmpty()) {
                 okButton = new JButton("OK");
                 cancelButton = new JButton("Cancel");
                 // Disable buttons until user makes a selection or provides input
                 okButton.setEnabled(false);
                 cancelButton.setEnabled(false);
-                buttonPanel.add(okButton);
+                buttonPane.add(okButton);
             } else {
                 okButton = new JButton("Yes");
                 cancelButton = new JButton("No");
@@ -153,9 +167,9 @@ public class Question {
                 // Otherwise, user can skip answering the question.
                 cancelButton.setEnabled(true);
 
-                buttonPanel.add(okButton);
-                buttonPanel.add(Box.createRigidArea(new Dimension(10, 0)));
-                buttonPanel.add(cancelButton);
+                buttonPane.add(okButton);
+                buttonPane.add(Box.createRigidArea(new Dimension(20, 0)));
+                buttonPane.add(cancelButton);
             }
             okButton.addActionListener(this);
             cancelButton.addActionListener(this);
@@ -181,23 +195,30 @@ public class Question {
             } else {
                 // Handle choice button selection to enable/disable text area
                 if (((JToggleButton) e.getSource()).getText().equals(choices.getLast())) {
-                    customTextInput.setEnabled(true);
+                    choicePane.add(customTextPane);
                     customTextInput.requestFocus(); // Set focus for typing
                     checkCustomInput();
                 } else {
+                    choicePane.remove(customTextPane);
                     okButton.setEnabled(true);
                     cancelButton.setEnabled(true);
-                    customTextInput.setEnabled(false);
+                }
+            }
+
+            if (answer.isDone()) {
+                okButton.setEnabled(false);
+                cancelButton.setEnabled(false);
+                for (var button : choiceButtons) {
+                    button.setEnabled(false);
                 }
             }
         }
 
         /** Enables or disables the OK and Cancel buttons based on the custom text input. */
         private void checkCustomInput() {
-            if (customTextInput.getText().isBlank()) {
-                okButton.setEnabled(false);
-                cancelButton.setEnabled(false);
-            }
+            boolean enabled = !customTextInput.getText().isBlank();
+            okButton.setEnabled(enabled);
+            cancelButton.setEnabled(enabled);
         }
 
         /** Retrieves the user's answer based on their selection. */

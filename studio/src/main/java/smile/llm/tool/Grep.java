@@ -63,7 +63,7 @@ public class Grep implements Tool {
         if (path == null) {
             path = conversation.cwd().toString();
         }
-        listener.onStatus("Searching files matching" + pattern + " in " + path);
+        listener.onStatus("Searching files matching " + pattern + " in " + path);
         return grepFiles(pattern, path, glob, type, multiline);
     }
 

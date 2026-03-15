@@ -326,16 +326,19 @@ public class Conversation {
     }
 
     private String planFileSystemReminder() {
-        if (Strings.isNullOrBlank(plan) || planFile == null) return "";
-        return String.format("""
-A plan file exists from plan mode at: %s
+        if (Strings.isNullOrBlank(plan)) return "";
+        String planFileInfo = "";
+        if (planFile != null) {
+            planFileInfo = String.format("A plan file exists from plan mode at: %s\n\n", planFile);
+        }
 
+        return planFileInfo + String.format("""
 Plan contents:
 
 %s
 
 If this plan is relevant to the current work and not already complete, continue working on it.
-""", planFile, plan);
+""", plan);
     }
 
     private String planModeSystemReinder() {
