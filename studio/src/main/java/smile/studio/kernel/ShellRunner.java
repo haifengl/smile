@@ -33,6 +33,11 @@ public class ShellRunner extends Runner {
     private final PrintStream shellOut = new PrintStream(console, true, StandardCharsets.UTF_8);
     private Process process;
 
+    @Override
+    public Integer eval(String command) {
+        return exec(List.of(command));
+    }
+
     /**
      * Executes the specified system command in a separate process.
      * @param command the program and its arguments.
@@ -57,6 +62,11 @@ public class ShellRunner extends Runner {
             shellOut.println("Failed to execute '" + String.join(" " , command) + "': " + ex.getMessage());
         }
         return -1;
+    }
+
+    @Override
+    public void reset() {
+        // do nothing as every command runs in its own process
     }
 
     @Override
