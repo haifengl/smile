@@ -221,10 +221,11 @@ public class Notebook extends JPanel implements DocumentListener {
             });""");
     }
 
-    /** Resets the runner. */
+    /** Resets the runner and clears all output. */
     public void reset() {
         runner.reset();
         initRunner();
+        clearAllOutputs();
     }
 
     /**

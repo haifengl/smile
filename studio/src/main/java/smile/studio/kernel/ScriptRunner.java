@@ -32,25 +32,19 @@ import java.util.Set;
 public class ScriptRunner extends Runner {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScriptRunner.class);
     private final PrintWriter writer = new PrintWriter(console, true, StandardCharsets.UTF_8);
-    private final ScriptEngine engine;
+    private final String name;
+    private ScriptEngine engine;
 
     /**
      * Constructor.
      * @param name the short name of the ScriptEngine implementation.
      */
     public ScriptRunner(String name) {
-        ScriptEngineManager manager = new ScriptEngineManager();
-        engine = manager.getEngineByName(name);
-        ScriptContext context = engine.getContext();
-        context.setWriter(writer);
-        context.setErrorWriter(writer);
+        this.name = name;
+        reset();
     }
 
-    /**
-     * Executes the specified script.
-     * @param script the source code to be executed.
-     * @return the value returned from the execution of the script.
-     */
+    @Override
     public Object eval(String script) {
         try {
             return engine.eval(script);
@@ -88,6 +82,15 @@ public class ScriptRunner extends Runner {
      */
     public Object get(String name) {
         return engine.get(name);
+    }
+
+    @Override
+    public void reset() {
+        ScriptEngineManager manager = new ScriptEngineManager();
+        engine = manager.getEngineByName(name);
+        ScriptContext context = engine.getContext();
+        context.setWriter(writer);
+        context.setErrorWriter(writer);
     }
 
     @Override
