@@ -262,10 +262,6 @@ public class Notebook extends JPanel implements DocumentListener {
         if (snippets.isEmpty()) addCell(null);
         cells.revalidate();
         cells.repaint();
-        SwingUtilities.invokeLater(() -> {
-            cells.revalidate();
-            cells.repaint();
-        });
         this.file = file;
     }
 
