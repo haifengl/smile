@@ -59,6 +59,7 @@ public class Cell extends JPanel {
     private final JLabel collapsedInfo = new JLabel();
     private final RTextScrollPane editorScroll;
     private boolean collapsed = false;
+    private int lastResizeLineCount = 1;
     /** Running code generation. */
     private volatile boolean isCoding = false;
 
@@ -106,21 +107,22 @@ public class Cell extends JPanel {
             }
             e.consume();
         };
-        editor.addMouseWheelListener(wheelRelay);
-        editorScroll.addMouseWheelListener(wheelRelay);
-        editorScroll.getViewport().addMouseWheelListener(wheelRelay);
 
+        editorScroll.addMouseWheelListener(wheelRelay);
+
+        lastResizeLineCount = Math.max(editor.getLineCount(), 1);
         editor.getDocument().addDocumentListener(new DocumentListener() {
             @Override public void insertUpdate(DocumentEvent e) { resize(); }
             @Override public void removeUpdate(DocumentEvent e) { resize(); }
             @Override public void changedUpdate(DocumentEvent e) { resize(); }
             private void resize() {
-                SwingUtilities.invokeLater(() -> {
-                    editor.setPreferredRows();
-                    editor.revalidate();
-                    revalidate();
-                    repaint();
-                });
+                int lineCount = Math.max(editor.getLineCount(), 1);
+                if (lineCount == lastResizeLineCount) return;
+                lastResizeLineCount = lineCount;
+                editor.setPreferredRows();
+                editor.revalidate();
+                revalidate();
+                repaint();
             }
         });
 
