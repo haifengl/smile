@@ -70,6 +70,13 @@ public class JavaRunner extends Runner {
         jshell.close();
     }
 
+    /**
+     * Reset the jshell tool.
+     */
+    public void reset() {
+        jshell.eval("/reset");
+    }
+
     @Override
     public void stop() {
         jshell.stop();

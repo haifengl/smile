@@ -74,13 +74,7 @@ public class Notebook extends JPanel implements DocumentListener {
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         add(scrollPane, BorderLayout.CENTER);
 
-        // Note that JShell runs in another JVM so that
-        // we need to setup FlatLaf again.
-        runner.eval("""
-            javax.swing.SwingUtilities.invokeLater(() -> {
-                com.formdev.flatlaf.FlatLightLaf.setup();
-            });""");
-
+        initRunner();
         if (file != null) {
             try {
                 open(file);
@@ -215,6 +209,22 @@ public class Notebook extends JPanel implements DocumentListener {
                     }
                 })
         );
+    }
+
+    /** Initialize the runner. */
+    private void initRunner() {
+        // Note that JShell runs in another JVM so that
+        // we need to setup FlatLaf again.
+        runner.eval("""
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                com.formdev.flatlaf.FlatLightLaf.setup();
+            });""");
+    }
+
+    /** Resets the runner. */
+    public void reset() {
+        runner.reset();
+        initRunner();
     }
 
     /**
