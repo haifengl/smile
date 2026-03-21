@@ -35,14 +35,21 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
 public class JavaRunner extends Runner {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JavaRunner.class);
     /** JShell instance. */
-    private final JShell jshell;
+    private JShell jshell;
     /** Analysis utilities for source code input. */
-    private final SourceCodeAnalysis sourceAnalyzer;
+    private SourceCodeAnalysis sourceAnalyzer;
 
     /**
      * Constructor.
      */
     public JavaRunner() {
+        initShell();
+    }
+
+    /**
+     * Initializes JShell and source analyzer.
+     */
+    private void initShell() {
         PrintStream shellOut = new PrintStream(console, true, StandardCharsets.UTF_8);
         PrintStream shellErr = new PrintStream(console, true, StandardCharsets.UTF_8);
         var builder = JShell.builder().out(shellOut).err(shellErr)
@@ -66,7 +73,7 @@ public class JavaRunner extends Runner {
     /**
      * Closes this engine and frees resources.
      */
-    public void close() {
+    public synchronized void close() {
         jshell.close();
     }
 
@@ -81,6 +88,14 @@ public class JavaRunner extends Runner {
     @Override
     public void stop() {
         jshell.stop();
+    }
+
+    /**
+     * Restarts JShell and clears all environment state.
+     */
+    public synchronized void restart() {
+        jshell.close();
+        initShell();
     }
 
     /**

@@ -18,6 +18,7 @@ package smile.studio.view;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
+import java.awt.Dimension;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import org.fife.ui.rsyntaxtextarea.*;
@@ -66,6 +67,20 @@ public class CodeEditor extends RSyntaxTextArea {
      * Sets the number of rows to fit the content.
      */
     public void setPreferredRows() {
-        setRows(Math.min(30, getLineCount()));
+        setRows(Math.max(1, getLineCount()));
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+        Dimension d = super.getPreferredSize();
+        int lines = Math.max(getLineCount(), 1);
+        int lineHeight = getFontMetrics(getFont()).getHeight();
+        int height = lines * lineHeight + getInsets().top + getInsets().bottom + 4;
+        return new Dimension(d.width, height);
+    }
+
+    @Override
+    public Dimension getPreferredScrollableViewportSize() {
+        return getPreferredSize();
     }
 }
