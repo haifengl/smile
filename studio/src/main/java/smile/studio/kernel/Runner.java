@@ -52,7 +52,6 @@ public abstract class Runner {
         isRunning = flag;
     }
 
-
     /**
      * Sets the output area.
      * @param area the output area for redirected stream.
@@ -67,6 +66,18 @@ public abstract class Runner {
     public void removeOutputArea() {
         console.removeOutputArea();
     }
+
+    /**
+     * Evaluates a code block.
+     * @param code a code block.
+     * @return the value returned by execution engine. Maybe null.
+     */
+    public abstract Object eval(String code);
+
+    /**
+     * Reset the internal state of execution engine.
+     */
+    public abstract void reset();
 
     /**
      * Attempt to stop currently running code.
