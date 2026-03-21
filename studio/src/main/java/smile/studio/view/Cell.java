@@ -23,6 +23,8 @@ import java.util.List;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import com.formdev.flatlaf.util.SystemInfo;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
@@ -42,17 +44,22 @@ public class Cell extends JPanel {
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), Locale.getDefault());
     private static final Optional<Coder> coder = Coder.getInstance();
     private final String placeholder = bundle.getString("Prompt");
-    private final CodeEditor editor = new CodeEditor(20, 80, SyntaxConstants.SYNTAX_STYLE_JAVA);
+    private final CodeEditor editor = new CodeEditor(1, 80, SyntaxConstants.SYNTAX_STYLE_JAVA);
     private final OutputArea output = new OutputArea();
     private final JTextField prompt = new JXTextField(placeholder);
     private final TitledBorder border = BorderFactory.createTitledBorder("[ ]");
     private final JButton runButton = new JButton("▶");
     private final JButton runBelowButton = new JButton("⏭");
+    private final JButton collapseButton = new JButton("▾");
     private final JButton upButton = new JButton("↑");
     private final JButton downButton = new JButton("↓");
     // Windows doesn't show broom emoji properly
     private final JButton clearButton = new JButton(SystemInfo.isMacOS ? "🧹" : "⌫");
     private final JButton deleteButton = new JButton("⌦");
+    private final JLabel collapsedInfo = new JLabel();
+    private final RTextScrollPane editorScroll;
+    private boolean collapsed = false;
+    private int lastResizeLineCount = 1;
     /** Running code generation. */
     private volatile boolean isCoding = false;
 
@@ -70,9 +77,54 @@ public class Cell extends JPanel {
         // Cell editor and output configuration
         output.setFont(Monospaced.getFont());
         editor.setFont(Monospaced.getFont());
-        RTextScrollPane editorScroll = new RTextScrollPane(editor);
+        editorScroll = new RTextScrollPane(editor);
         editorScroll.setBorder(border);
         editorScroll.putClientProperty("JScrollBar.showButtons", true);
+        editorScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+        editorScroll.setWheelScrollingEnabled(false);
+
+        MouseWheelListener wheelRelay = e -> {
+            JScrollPane notebookScroll = (JScrollPane) SwingUtilities.getAncestorOfClass(JScrollPane.class, Cell.this);
+            if (notebookScroll == null) return;
+
+            JScrollBar bar = notebookScroll.getVerticalScrollBar();
+            double rotation = e.getPreciseWheelRotation();
+            if (rotation != 0.0) {
+                int direction = rotation > 0 ? 1 : -1;
+                int base = bar.getUnitIncrement(direction);
+                int delta = (int) Math.round(base * rotation * 3.0);
+                if (delta == 0) {
+                    delta = direction;
+                }
+                bar.setValue(bar.getValue() + delta);
+            } else {
+                int units = e.getUnitsToScroll();
+                if (units != 0) {
+                    int direction = units > 0 ? 1 : -1;
+                    int delta = bar.getUnitIncrement(direction) * units;
+                    bar.setValue(bar.getValue() + delta);
+                }
+            }
+            e.consume();
+        };
+
+        editorScroll.addMouseWheelListener(wheelRelay);
+
+        lastResizeLineCount = Math.max(editor.getLineCount(), 1);
+        editor.getDocument().addDocumentListener(new DocumentListener() {
+            @Override public void insertUpdate(DocumentEvent e) { resize(); }
+            @Override public void removeUpdate(DocumentEvent e) { resize(); }
+            @Override public void changedUpdate(DocumentEvent e) { resize(); }
+            private void resize() {
+                int lineCount = Math.max(editor.getLineCount(), 1);
+                if (lineCount == lastResizeLineCount) return;
+                lastResizeLineCount = lineCount;
+                editor.setPreferredRows();
+                editor.revalidate();
+                revalidate();
+                repaint();
+            }
+        });
 
         add(header, BorderLayout.NORTH);
         add(editorScroll, BorderLayout.CENTER);
@@ -92,6 +144,8 @@ public class Cell extends JPanel {
         header.add(Box.createHorizontalStrut(6));
         header.add(runBelowButton);
         header.add(Box.createHorizontalStrut(6));
+        header.add(collapseButton);
+        header.add(Box.createHorizontalStrut(6));
         header.add(upButton);
         header.add(Box.createHorizontalStrut(6));
         header.add(downButton);
@@ -99,6 +153,11 @@ public class Cell extends JPanel {
         header.add(clearButton);
         header.add(Box.createHorizontalStrut(6));
         header.add(deleteButton);
+        header.add(Box.createHorizontalStrut(10));
+        collapsedInfo.setVisible(false);
+        collapsedInfo.setForeground(UIManager.getColor("Label.disabledForeground"));
+        header.add(collapsedInfo);
+        header.add(Box.createHorizontalGlue());
         header.add(Box.createHorizontalStrut(20));
         header.add(prompt);
         header.add(Box.createHorizontalStrut(2));
@@ -108,6 +167,7 @@ public class Cell extends JPanel {
 
         runButton.setToolTipText(bundle.getString("Run"));
         runBelowButton.setToolTipText(bundle.getString("RunBelow"));
+        collapseButton.setToolTipText(bundle.getString("Collapse"));
         upButton.setToolTipText(bundle.getString("MoveUp"));
         downButton.setToolTipText(bundle.getString("MoveDown"));
         clearButton.setToolTipText(bundle.getString("Clear"));
@@ -115,6 +175,7 @@ public class Cell extends JPanel {
 
         runButton.addActionListener(e -> notebook.runCell(this, PostRunNavigation.STAY));
         runBelowButton.addActionListener(e -> notebook.runCellAndBelow(this));
+        collapseButton.addActionListener(e -> setCollapsed(!collapsed));
         upButton.addActionListener(e -> notebook.moveCellUp(this));
         downButton.addActionListener(e -> notebook.moveCellDown(this));
         clearButton.addActionListener(e -> output.setText(""));
@@ -135,7 +196,11 @@ public class Cell extends JPanel {
         inputMap.put(KeyStroke.getKeyStroke("TAB"), "complete-code");
         actionMap.put("complete-code", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
-                completeCode();
+                if (coder.isEmpty() || isCoding) {
+                    editor.insert("\t", editor.getCaretPosition());
+                } else {
+                    completeCode();
+                }
             }
         });
         inputMap.put(KeyStroke.getKeyStroke("shift ENTER"), "run-next");
@@ -324,14 +389,55 @@ public class Cell extends JPanel {
     public void setRunning(boolean running) {
         runButton.setEnabled(!running);
         runBelowButton.setEnabled(!running);
+        collapseButton.setEnabled(!running);
         upButton.setEnabled(!running);
         downButton.setEnabled(!running);
         deleteButton.setEnabled(!running);
         editor.setEnabled(!running);
         if (running) {
+            if (collapsed) setCollapsed(false);
             border.setTitle("[*]");
             output.setText("");
         }
+    }
+
+    /**
+     * Sets collapsed/expanded state of the cell body.
+     * @param collapsed true to collapse body; false to expand.
+     */
+    private void setCollapsed(boolean collapsed) {
+        this.collapsed = collapsed;
+        editorScroll.setVisible(!collapsed);
+        output.setVisible(!collapsed);
+        prompt.setVisible(!collapsed);
+        collapsedInfo.setVisible(collapsed);
+        collapseButton.setText(collapsed ? "▸" : "▾");
+        collapseButton.setToolTipText(bundle.getString(collapsed ? "Expand" : "Collapse"));
+        if (collapsed) {
+            updateCollapsedInfo();
+        }
+        revalidate();
+        repaint();
+    }
+
+    /**
+     * Updates collapsed cell header with a short code preview.
+     */
+    private void updateCollapsedInfo() {
+        String first = bundle.getString("CollapsedEmpty");
+        for (String line : editor.getText().split("\\R")) {
+            String trimmed = line.trim();
+            if (!trimmed.isEmpty()) {
+                first = trimmed;
+                break;
+            }
+        }
+
+        final int max = 72;
+        if (first.length() > max) {
+            first = first.substring(0, max - 3) + "...";
+        }
+        collapsedInfo.setText(first + "  (" + Math.max(editor.getLineCount(), 1) + " lines)");
     }
 
     /**
