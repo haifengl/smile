@@ -78,6 +78,14 @@ public class JavaRunner extends Runner {
     }
 
     @Override
+    public void reset() {
+        // This command removes all previously entered snippets and resets
+        // the JShell session to its initial state, including reloading
+        // the default startup scripts.
+        jshell.eval("/reset");
+    }
+
+    @Override
     public void stop() {
         jshell.stop();
     }
@@ -95,6 +103,7 @@ public class JavaRunner extends Runner {
      * @param code a code block.
      * @return the value of last variable snippet. Or null if no variables.
      */
+    @Override
     public String eval(String code) {
         var wrapper = new Object() { String value = null; };
         eval(code, (events) -> {
