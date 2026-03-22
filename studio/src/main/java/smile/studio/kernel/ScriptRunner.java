@@ -23,6 +23,8 @@ import javax.script.ScriptException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Script execution engine.
@@ -32,6 +34,7 @@ import java.util.Set;
 public class ScriptRunner extends Runner {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScriptRunner.class);
     private final PrintWriter writer = new PrintWriter(console, true, StandardCharsets.UTF_8);
+    private final ExecutorService executor = Executors.newFixedThreadPool(1);
     private final String name;
     private ScriptEngine engine;
 
@@ -41,7 +44,7 @@ public class ScriptRunner extends Runner {
      */
     public ScriptRunner(String name) {
         this.name = name;
-        reset();
+        restart();
     }
 
     @Override
@@ -85,12 +88,25 @@ public class ScriptRunner extends Runner {
     }
 
     @Override
-    public void reset() {
+    public synchronized void close() {
+        if (engine != null) {
+            engine = null;
+        }
+    }
+
+    @Override
+    public synchronized void restart() {
+        close();
         ScriptEngineManager manager = new ScriptEngineManager();
         engine = manager.getEngineByName(name);
         ScriptContext context = engine.getContext();
         context.setWriter(writer);
         context.setErrorWriter(writer);
+    }
+
+    @Override
+    public void reset() {
+        engine.getBindings(ScriptContext.ENGINE_SCOPE).clear();
     }
 
     @Override
