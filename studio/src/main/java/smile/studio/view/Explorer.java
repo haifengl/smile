@@ -29,8 +29,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.ResourceBundle;
 import jdk.jshell.VarSnippet;
-import com.formdev.flatlaf.util.SystemInfo;
-import smile.studio.kernel.JavaRunner;
+import smile.studio.kernel.JavaKernel;
 import smile.studio.model.PersistedModel;
 import smile.swing.FileChooser;
 import static smile.swing.SmileUtilities.scaleImageIcon;
@@ -60,13 +59,13 @@ public class Explorer extends JPanel {
      */
     private final DefaultTreeModel treeModel = (DefaultTreeModel) tree.getModel();
     /** JShell instance. */
-    private final JavaRunner runner;
+    private final JavaKernel runner;
 
     /**
      * Constructor.
      * @param runner Java code execution engine.
      */
-    public Explorer(JavaRunner runner) {
+    public Explorer(JavaKernel runner) {
         super(new BorderLayout());
         this.runner = runner;
 

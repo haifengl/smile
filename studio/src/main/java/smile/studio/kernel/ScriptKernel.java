@@ -31,8 +31,8 @@ import java.util.concurrent.Executors;
  *
  * @author Haifeng Li
  */
-public class ScriptRunner extends Runner {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScriptRunner.class);
+public class ScriptKernel extends Kernel {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScriptKernel.class);
     private final PrintWriter writer = new PrintWriter(console, true, StandardCharsets.UTF_8);
     private final ExecutorService executor = Executors.newFixedThreadPool(1);
     private final String name;
@@ -42,7 +42,7 @@ public class ScriptRunner extends Runner {
      * Constructor.
      * @param name the short name of the ScriptEngine implementation.
      */
-    public ScriptRunner(String name) {
+    public ScriptKernel(String name) {
         this.name = name;
         restart();
     }

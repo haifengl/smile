@@ -35,7 +35,7 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 import jdk.jshell.*;
 import smile.studio.kernel.PostRunNavigation;
-import smile.studio.kernel.JavaRunner;
+import smile.studio.kernel.JavaKernel;
 import smile.swing.ScrollablePanel;
 
 /**
@@ -52,7 +52,7 @@ public class Notebook extends JPanel implements DocumentListener {
     private final JPanel cells = new ScrollablePanel();
     private final JScrollPane scrollPane = new JScrollPane(cells);
     private final DateTimeFormatter datetime = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
-    private final JavaRunner runner;
+    private final JavaKernel runner;
     private final Runnable postRunAction;
     private int runCount = 0;
     private File file;
@@ -64,7 +64,7 @@ public class Notebook extends JPanel implements DocumentListener {
      * @param runner Java code execution engine.
      * @param postRunAction the action to perform after running cells.
      */
-    public Notebook(File file, JavaRunner runner, Runnable postRunAction) {
+    public Notebook(File file, JavaKernel runner, Runnable postRunAction) {
         super(new BorderLayout());
         this.file = file;
         this.runner = runner;

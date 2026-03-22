@@ -18,7 +18,7 @@ package smile.studio.view;
 
 import javax.swing.*;
 import java.io.*;
-import smile.studio.kernel.JavaRunner;
+import smile.studio.kernel.JavaKernel;
 
 /**
  * A notebook workspace.
@@ -27,7 +27,7 @@ import smile.studio.kernel.JavaRunner;
  */
 public class Workspace extends JSplitPane {
     /** Java execution engine. */
-    final JavaRunner runner = new JavaRunner();
+    final JavaKernel runner = new JavaKernel();
     /** The explorer of runtime information. */
     final Explorer explorer = new Explorer(runner);
     /** The pane of analyst agent. */
@@ -90,7 +90,7 @@ public class Workspace extends JSplitPane {
      * Returns the Java execution engine.
      * @return the Java execution engine.
      */
-    public JavaRunner runner() {
+    public JavaKernel runner() {
         return runner;
     }
 

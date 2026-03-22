@@ -21,7 +21,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import smile.plot.swing.Palette;
 import smile.shell.JShell;
-import smile.studio.kernel.JavaRunner;
+import smile.studio.kernel.JavaKernel;
 import smile.studio.model.CommandType;
 import smile.swing.ScrollablePanel;
 
@@ -34,13 +34,13 @@ public class Analyst extends JPanel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Analyst.class);
     private final JPanel commands = new ScrollablePanel();
     /** JShell instance. */
-    private final JavaRunner runner;
+    private final JavaKernel runner;
 
     /**
      * Constructor.
      * @param runner Java code execution engine.
      */
-    public Analyst(JavaRunner runner) {
+    public Analyst(JavaKernel runner) {
         super(new BorderLayout());
         this.runner = runner;
 

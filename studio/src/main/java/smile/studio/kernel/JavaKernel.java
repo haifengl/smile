@@ -32,8 +32,8 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
  *
  * @author Haifeng Li
  */
-public class JavaRunner extends Runner {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JavaRunner.class);
+public class JavaKernel extends Kernel {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JavaKernel.class);
     /** JShell instance. */
     private JShell jshell;
     /** Analysis utilities for source code input. */
@@ -42,7 +42,7 @@ public class JavaRunner extends Runner {
     /**
      * Constructor.
      */
-    public JavaRunner() {
+    public JavaKernel() {
         restart();
     }
 
