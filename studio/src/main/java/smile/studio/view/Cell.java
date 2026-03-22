@@ -56,7 +56,6 @@ public class Cell extends JPanel {
     // Windows doesn't show broom emoji properly
     private final JButton clearButton = new JButton(SystemInfo.isMacOS ? "🧹" : "⌫");
     private final JButton deleteButton = new JButton("⌦");
-    private final JLabel collapsedInfo = new JLabel();
     private final RTextScrollPane editorScroll;
     private boolean collapsed = false;
     private int lastResizeLineCount = 1;
@@ -154,12 +153,7 @@ public class Cell extends JPanel {
         header.add(clearButton);
         header.add(Box.createHorizontalStrut(6));
         header.add(deleteButton);
-        header.add(Box.createHorizontalStrut(10));
-        collapsedInfo.setVisible(false);
-        collapsedInfo.setForeground(UIManager.getColor("Label.disabledForeground"));
-        header.add(collapsedInfo);
-        header.add(Box.createHorizontalGlue());
-        header.add(Box.createHorizontalStrut(20));
+        header.add(Box.createHorizontalStrut(30));
         header.add(prompt);
         header.add(Box.createHorizontalStrut(2));
 
@@ -410,13 +404,10 @@ public class Cell extends JPanel {
         this.collapsed = collapsed;
         editorScroll.setVisible(!collapsed);
         output.setVisible(!collapsed);
-        prompt.setVisible(!collapsed);
-        collapsedInfo.setVisible(collapsed);
+        prompt.setEnabled(!collapsed);
         collapseButton.setText(collapsed ? "▸" : "▾");
         collapseButton.setToolTipText(bundle.getString(collapsed ? "Expand" : "Collapse"));
-        if (collapsed) {
-            updateCollapsedInfo();
-        }
+        updateCollapsedInfo();
         revalidate();
         repaint();
     }
@@ -425,20 +416,18 @@ public class Cell extends JPanel {
      * Updates collapsed cell header with a short code preview.
      */
     private void updateCollapsedInfo() {
-        String first = bundle.getString("CollapsedEmpty");
-        for (String line : editor.getText().split("\\R")) {
-            String trimmed = line.trim();
-            if (!trimmed.isEmpty()) {
-                first = trimmed;
-                break;
-            }
+        if (!collapsed) {
+            prompt.setText("");
+            return;
         }
 
-        final int max = 72;
-        if (first.length() > max) {
-            first = first.substring(0, max - 3) + "...";
+        String info = bundle.getString("CollapsedEmpty");
+        String text = editor.getText();
+        if (text != null && !text.isBlank()) {
+            var lines = text.split("\\R", 2);
+            info = lines[0].trim() + "  (" + Math.max(editor.getLineCount(), 1) + " lines)";
         }
-        collapsedInfo.setText(first + "  (" + Math.max(editor.getLineCount(), 1) + " lines)");
+        prompt.setText(info);
     }
 
     /**
