@@ -19,11 +19,12 @@ package smile.studio.kernel;
 import smile.studio.view.OutputArea;
 
 /**
- * Base class of code execution engines.
+ * A kernel is an execution engine that runs the user's code in a specific
+ * programming language. It may run as a standalone process (e.g. JShell).
  *
  * @author Haifeng Li
  */
-public abstract class Runner implements AutoCloseable {
+public abstract class Kernel implements AutoCloseable {
     /** Output capture. */
     final ConsoleOutputStream console = new ConsoleOutputStream();
     /** Running state. */
@@ -32,7 +33,7 @@ public abstract class Runner implements AutoCloseable {
     /**
      * Constructor.
      */
-    public Runner() {
+    public Kernel() {
 
     }
 
