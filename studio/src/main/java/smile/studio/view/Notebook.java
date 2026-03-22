@@ -221,23 +221,11 @@ public class Notebook extends JPanel implements DocumentListener {
             });""");
     }
 
-    /** Resets the runner and clears all output. */
-    public void reset() {
-        runner.reset();
+    /** Resarts the runner and clears all output. */
+    public void restart() {
+        runner.restart();
         initRunner();
         clearAllOutputs();
-    }
-
-    /**
-     * Initializes the JShell runtime with UI defaults required by plot windows.
-     */
-    public void initializeRunnerEnvironment() {
-        // Note that JShell runs in another JVM so that
-        // we need to setup FlatLaf again.
-        runner.eval("""
-            javax.swing.SwingUtilities.invokeLater(() -> {
-                com.formdev.flatlaf.FlatLightLaf.setup();
-            });""");
     }
 
     /**

@@ -43,13 +43,13 @@ public class JavaRunner extends Runner {
      * Constructor.
      */
     public JavaRunner() {
-        initShell();
+        restart();
     }
 
-    /**
-     * Initializes JShell and source analyzer.
-     */
-    private void initShell() {
+    @Override
+    public synchronized void restart() {
+        close();
+
         PrintStream shellOut = new PrintStream(console, true, StandardCharsets.UTF_8);
         PrintStream shellErr = new PrintStream(console, true, StandardCharsets.UTF_8);
         var builder = JShell.builder().out(shellOut).err(shellErr)
@@ -70,11 +70,14 @@ public class JavaRunner extends Runner {
         sourceAnalyzer = jshell.sourceCodeAnalysis();
     }
 
-    /**
-     * Closes this engine and frees resources.
-     */
+    @Override
     public synchronized void close() {
-        jshell.close();
+        if (jshell != null) {
+            jshell.stop();
+            jshell.close();
+            jshell = null;
+            sourceAnalyzer = null;
+        }
     }
 
     @Override
@@ -88,14 +91,6 @@ public class JavaRunner extends Runner {
     @Override
     public void stop() {
         jshell.stop();
-    }
-
-    /**
-     * Restarts JShell and clears all environment state.
-     */
-    public synchronized void restart() {
-        jshell.close();
-        initShell();
     }
 
     /**

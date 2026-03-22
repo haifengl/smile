@@ -23,7 +23,7 @@ import smile.studio.view.OutputArea;
  *
  * @author Haifeng Li
  */
-public abstract class Runner {
+public abstract class Runner implements AutoCloseable {
     /** Output capture. */
     final ConsoleOutputStream console = new ConsoleOutputStream();
     /** Running state. */
@@ -75,12 +75,17 @@ public abstract class Runner {
     public abstract Object eval(String code);
 
     /**
-     * Reset the internal state of execution engine.
+     * Restarts the execution engine.
+     */
+    public abstract void restart();
+
+    /**
+     * Resets the internal state of execution engine.
      */
     public abstract void reset();
 
     /**
-     * Attempt to stop currently running code.
+     * Attempts to stop currently running code.
      */
     public abstract void stop();
 }

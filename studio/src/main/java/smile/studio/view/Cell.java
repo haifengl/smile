@@ -114,10 +114,11 @@ public class Cell extends JPanel {
         editor.getDocument().addDocumentListener(new DocumentListener() {
             @Override public void insertUpdate(DocumentEvent e) { resize(); }
             @Override public void removeUpdate(DocumentEvent e) { resize(); }
-            @Override public void changedUpdate(DocumentEvent e) { resize(); }
+            @Override public void changedUpdate(DocumentEvent e) { }
+            /** Resizes the editor height based on the line count. */
             private void resize() {
                 int lineCount = Math.max(editor.getLineCount(), 1);
-                if (lineCount == lastResizeLineCount) return;
+                if (lineCount <= lastResizeLineCount) return;
                 lastResizeLineCount = lineCount;
                 editor.setPreferredRows();
                 editor.revalidate();

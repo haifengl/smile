@@ -177,7 +177,7 @@ public class SmileStudio extends JFrame {
         var addCell = new AddCellAction();
         var runAll = new RunAllAction();
         var clearAll = new ClearAllAction();
-        var restart = new RestartEnvironmentAction();
+        var restart = new RestartKernelAction();
         var stop = new StopAction();
         var settings = new SettingsAction();
         var exit = new ExitAction();
@@ -378,12 +378,12 @@ public class SmileStudio extends JFrame {
         }
     }
 
-    private class RestartEnvironmentAction extends AbstractAction {
+    private class RestartKernelAction extends AbstractAction {
         static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(SmileStudio.class.getResource("images/refresh.png")));
         static final ImageIcon icon16 = scaleImageIcon(icon, 16);
         static final ImageIcon icon24 = scaleImageIcon(icon, 24);
-        public RestartEnvironmentAction() {
-            super(bundle.getString("RestartEnvironment"), icon16);
+        public RestartKernelAction() {
+            super(bundle.getString("RestartKernel"), icon16);
             putValue(LARGE_ICON_KEY, icon24);
         }
 
@@ -391,15 +391,15 @@ public class SmileStudio extends JFrame {
         public void actionPerformed(ActionEvent e) {
             int option = JOptionPane.showConfirmDialog(
                     SmileStudio.this,
-                    bundle.getString("RestartEnvironmentMessage"),
-                    bundle.getString("RestartEnvironmentTitle"),
+                    bundle.getString("RestartKernelMessage"),
+                    bundle.getString("RestartKernelTitle"),
                     JOptionPane.OK_CANCEL_OPTION,
                     JOptionPane.WARNING_MESSAGE
             );
 
             if (option == JOptionPane.OK_OPTION) {
-                workspace.restartEnvironment();
-                statusBar.setStatus(bundle.getString("RestartEnvironmentDone"));
+                workspace.restart();
+                statusBar.setStatus(bundle.getString("RestartKernelDone"));
             }
         }
     }

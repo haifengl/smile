@@ -18,8 +18,8 @@ package smile.studio.view;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.io.IOException;
-import java.io.StringReader;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -39,7 +39,7 @@ import org.xhtmlrenderer.simple.XHTMLPanel;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import smile.plot.swing.Palette;
-import smile.studio.kernel.ShellRunner;
+import smile.studio.kernel.ConsoleOutputStream;
 import smile.studio.model.CommandType;
 import static smile.studio.model.CommandType.*;
 
@@ -224,18 +224,33 @@ public class Command extends JPanel {
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() {
-                var shell = new ShellRunner();
-                shell.setOutputArea(output);
-                int ret = shell.exec(command);
-                if (ret != 0) output.appendLine("\nCommand failed with error code " + ret);
+                try {
+                    ConsoleOutputStream console = new ConsoleOutputStream();
+                    console.setOutputArea(output);
+                    PrintStream shellOut = new PrintStream(console, true, StandardCharsets.UTF_8);
+                    Process process = new ProcessBuilder(command)
+                            .redirectErrorStream(true)
+                            .start();
+
+                    // Read output from the command
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        shellOut.println(line);
+                    }
+
+                    // Wait for the process to complete and return the exit code
+                    int code = process.waitFor();
+                    if (code != 0) output.appendLine("\nCommand failed with error code " + code);
+                } catch (IOException | InterruptedException ex) {
+                    output.appendLine("Failed to execute '" + String.join(" " , command) + "': " + ex.getMessage());
+                }
                 return null;
             }
 
             @Override
             protected void done() {
-                SwingUtilities.invokeLater(() -> {
-                    output.flush();
-                });
+                SwingUtilities.invokeLater(output::flush);
             }
         };
         worker.execute();
