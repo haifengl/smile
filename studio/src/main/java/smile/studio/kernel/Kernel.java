@@ -24,7 +24,7 @@ import smile.studio.view.OutputArea;
  *
  * @author Haifeng Li
  */
-public abstract class Kernel implements AutoCloseable {
+public abstract class Kernel {
     /** Output capture. */
     final ConsoleOutputStream console = new ConsoleOutputStream();
     /** Running state. */
@@ -89,4 +89,9 @@ public abstract class Kernel implements AutoCloseable {
      * Attempts to stop currently running code.
      */
     public abstract void stop();
+
+    /**
+     * Shuts down the execution engine and frees resources.
+     */
+    public abstract void close();
 }
