@@ -304,7 +304,7 @@ public class AgentCLI extends JPanel {
                 /predict\tRun batch inference
                 /serve\t\tStart an inference service""");
 
-        if (agent != null) {
+        if (agent != null && agent.llm() != null) {
             for (var skill : agent.skills()) {
                 if (skill.isUserInvocable()) {
                     sb.append("\n/")
@@ -316,7 +316,6 @@ public class AgentCLI extends JPanel {
         }
 
         output.setText(sb.toString());
-        isAgentAvailable(output);
     }
 
     /** Enters the plan mode. */
