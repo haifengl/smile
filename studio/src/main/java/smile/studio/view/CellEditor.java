@@ -17,6 +17,8 @@
 package smile.studio.view;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.Dimension;
 import java.awt.event.*;
 import org.fife.ui.rsyntaxtextarea.*;
@@ -28,7 +30,7 @@ import org.fife.ui.rtextarea.RTextScrollPane;
  *
  * @author Haifeng Li
  */
-public class CellEditor extends Editor {
+public class CellEditor extends Editor implements DocumentListener {
     /**
      * Constructor.
      * @param rows the number of rows.
@@ -37,13 +39,20 @@ public class CellEditor extends Editor {
      */
     public CellEditor(int rows, int cols, String style) {
         super(rows, cols, style);
+        setPreferredRows();
+        getDocument().addDocumentListener(this);
     }
 
     /**
      * Gets the number of rows to fit the content.
      */
     public int getPreferredRows() {
-        return Math.max(1, getLineCount());
+        // getLineCount returns the number of logical lines,
+        // where a new logical line is defined by the presence
+        // of a newline character (\n).
+        // Therefore, the last line without newline character
+        // is not counted. To compenstate, we always add 1.
+        return getLineCount() + 1;
     }
 
     /**
@@ -51,16 +60,6 @@ public class CellEditor extends Editor {
      */
     public void setPreferredRows() {
         setRows(getPreferredRows());
-    }
-
-    @Override
-    public Dimension getPreferredSize() {
-        Dimension d = super.getPreferredSize();
-        var insets = getInsets();
-        int lines = Math.max(getLineCount(), 1);
-        int lineHeight = getFontMetrics(getFont()).getHeight();
-        int height = lines * lineHeight + insets.top + insets.bottom + 4;
-        return new Dimension(d.width, height);
     }
 
     @Override
@@ -106,5 +105,20 @@ public class CellEditor extends Editor {
         });
 
         return scroll;
+    }
+
+    @Override
+    public void insertUpdate(DocumentEvent e) {
+        setPreferredRows();
+    }
+
+    @Override
+    public void removeUpdate(DocumentEvent e) {
+        setPreferredRows();
+    }
+
+    @Override
+    public void changedUpdate(DocumentEvent e) {
+        // attribute changes. no needs to set preferred rows.
     }
 }
