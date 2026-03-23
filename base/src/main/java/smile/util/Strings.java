@@ -1,23 +1,25 @@
 /*
- * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
  *
- * Smile is free software: you can redistribute it and/or modify it
+ * SMILE is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * Smile is distributed in the hope that it will be useful, but
+ * SMILE is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Smile. If not, see <https://www.gnu.org/licenses/>.
+ * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
 package smile.util;
 
 import java.text.DecimalFormat;
 import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * String utility functions.
@@ -35,6 +37,63 @@ public interface Strings {
      */
     static boolean isNullOrEmpty(String s) {
         return s == null || s.isEmpty();
+    }
+
+    /**
+     * Returns true if the string is null or blank.
+     * @param s the string.
+     * @return true if the string is null or blank.
+     */
+    static boolean isNullOrBlank(String s) {
+        return s == null || s.isBlank();
+    }
+
+    /**
+     * Converts an input string into kebab-case.
+     *
+     * @param input The string to convert.
+     * @return The kebab-cased string.
+     */
+    static String kebab(String input) {
+        // Replace locations between a lowercase letter/digit and an uppercase letter with a hyphen.
+        // Also, replace any spaces or underscores with a hyphen.
+        String s = input.replaceAll("(?<=[a-z0-9])(?=[A-Z])|\\s+|_", "-");
+
+        // Convert the entire string to lowercase.
+        return s.toLowerCase();
+    }
+
+    /**
+     * Interpolates environment variables in a given string.
+     * Placeholders should be in the format ${ENV_VAR_NAME}.
+     *
+     * @param input The string containing environment variable placeholders.
+     * @return The string with placeholders replaced by environment variable values.
+     */
+    static String interpolate(String input) {
+        if (input == null) {
+            return null;
+        }
+
+        // Pattern to find placeholders like ${ENV_VAR_NAME}
+        Pattern pattern = Pattern.compile("\\$\\{([^}]+)\\}");
+        Matcher matcher = pattern.matcher(input);
+
+        // Use StringBuilder for efficient string manipulation during replacement
+        StringBuilder sb = new StringBuilder();
+        while (matcher.find()) {
+            String envVarName = matcher.group(1);
+            // Retrieve the environment variable value using System.getenv()
+            String envVarValue = System.getenv(envVarName);
+
+            // Replace the placeholder with the environment variable value if found,
+            // otherwise use an empty string or handle as needed
+            String replacement = (envVarValue != null) ? Matcher.quoteReplacement(envVarValue) : "";
+            matcher.appendReplacement(sb, replacement);
+        }
+        matcher.appendTail(sb);
+
+        return sb.toString();
     }
 
     /**

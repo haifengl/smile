@@ -1,36 +1,36 @@
 /*
- * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
  *
- * Smile Shell is free software: you can redistribute it and/or modify
- * under the terms of the GNU General Public License as published by
+ * SMILE Studio is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * Smile Shell is distributed in the hope that it will be useful,
+ * SMILE Studio is distributed in the hope that it will be useful,
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Smile. If not, see <https://www.gnu.org/licenses/>.
+ * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
 package smile.studio.model;
 
 /**
- * The type of Analyst Commands.
+ * The type of Intents.
  *
  * @author Haifeng Li
  */
-public enum CommandType {
+public enum IntentType {
     /**
      * Raw, unformatted text that is not evaluated by the analyst.
      */
     Raw("Raw", ""),
     /**
-     * Magic commands are special commands that extend the capabilities
-     * of Jupyter Notebooks beyond standard Python syntax.
+     * Commands initiated by typing a forward slash (/), that allow
+     * users to quickly execute actions.
      */
-    Magic("Magic", "/"),
+    Command("Command", "/"),
     /**
      * Shell commands.
      */
@@ -59,7 +59,7 @@ public enum CommandType {
      * @param description the description.
      * @param legend the legend.
      */
-    CommandType(String description, String legend) {
+    IntentType(String description, String legend) {
         this.description = description;
         this.legend = legend;
     }

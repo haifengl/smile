@@ -1,8 +1,7 @@
-// t-SNE on MNIST
-
 import smile.io.Read;
 import smile.io.Paths;
 import smile.manifold.TSNE;
+import smile.manifold.UMAP;
 import smile.feature.extraction.PCA;
 import smile.plot.swing.ScatterPlot;
 import static smile.swing.SmileUtilities.*;
@@ -15,9 +14,15 @@ var labels = Read.csv(Paths.getTestData("mnist/mnist2500_labels.txt"), format).c
 var pca = PCA.fit(mnist).getProjection(50);
 var X = pca.apply(mnist);
 
-var perplexity = 20;
+// t-SNE on MNIST
 var tsne = TSNE.fit(X, new TSNE.Options(2, 20, 200, 12, 550));
 
 var figure = ScatterPlot.of(tsne.coordinates(), labels, '@').figure();
 figure.setTitle("MNIST - t-SNE");
+show(figure);
+
+// UMAP on MNIST
+var umap = UMAP.fit(mnist, new UMAP.Options(15));
+figure = ScatterPlot.of(umap, labels, '@').figure();
+figure.setTitle("MNIST - UMAP");
 show(figure);

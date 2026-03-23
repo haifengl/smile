@@ -2,10 +2,11 @@
 arrow = "18.3.0"
 
 [libraries]
-sqlite = { module = "org.xerial:sqlite-jdbc", version = "3.51.1.0" }
-jackson = { module = "tools.jackson.core:jackson-databind", version = "3.0.4" }
 arrow-dataset = { module = "org.apache.arrow:arrow-dataset", version.ref = "arrow" }
 arrow-memory-netty = { module = "org.apache.arrow:arrow-memory-netty", version.ref = "arrow" }
+jackson = { module = "tools.jackson.core:jackson-databind", version = "3.0.4" }
+sqlite = { module = "org.xerial:sqlite-jdbc", version = "3.51.1.0" }
+swingx = { module = "org.swinglabs:swingx", version = "1.6.1" }
 
 [bundles]
 arrow = ["arrow-dataset", "arrow-memory-netty"]
