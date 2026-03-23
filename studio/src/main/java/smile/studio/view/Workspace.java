@@ -18,12 +18,14 @@ package smile.studio.view;
 
 import javax.swing.*;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import com.formdev.flatlaf.util.SystemFileChooser;
 import ioa.agent.Analyst;
 import ioa.agent.Coder;
 import smile.shell.JShell;
 import smile.studio.SmileStudio;
 import smile.studio.kernel.JavaKernel;
+import smile.swing.FileExplorer;
 
 /**
  * A notebook workspace.
@@ -34,12 +36,18 @@ public class Workspace extends JSplitPane {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Workspace.class);
     /** The project pane consists of explorer and notebook. */
     final JSplitPane project = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+    /** The tabbed pane for file/environment explorers. */
+    final JTabbedPane explorerTabs = new JTabbedPane();
+    /** The tabbed pane for notebooks. */
+    final JTabbedPane notebookTabs = new JTabbedPane();
     /** The tabbed pane for agent CLIs. */
-    final JTabbedPane tabs = new JTabbedPane();
+    final JTabbedPane agentTabs = new JTabbedPane();
     /** Java execution engine. */
     final JavaKernel runner = new JavaKernel();
+    /** The file explorer of current working directory. */
+    final FileExplorer fileExplorer = new FileExplorer(Paths.get("").toAbsolutePath());
     /** The explorer of runtime information. */
-    final Explorer explorer;
+    final Explorer kernelExplorer;
     /** The editor of notebook. */
     final Notebook notebook;
 
@@ -61,17 +69,20 @@ public class Workspace extends JSplitPane {
             logger.error("Failed to initialize agents", ex);
         }
 
-        explorer = new Explorer(runner, fileChooser);
-        notebook = new Notebook(file, coder, runner, explorer::refresh);
-        tabs.addTab("📊 Clair the Analyst", analystCLI(analyst));
-        tabs.addTab("☕ James the Java Guru", coderCLI(coder));
+        kernelExplorer = new Explorer(runner, fileChooser);
+        explorerTabs.addTab("Project", new JScrollPane(fileExplorer));
+        explorerTabs.addTab("Kernel", new JScrollPane(kernelExplorer));
 
-        project.setLeftComponent(explorer);
+        notebook = new Notebook(file, coder, runner, kernelExplorer::refresh);
+        agentTabs.addTab("📊 Clair the Analyst", analystCLI(analyst));
+        agentTabs.addTab("☕ James the Java Guru", coderCLI(coder));
+
+        project.setLeftComponent(explorerTabs);
         project.setRightComponent(notebook);
         project.setResizeWeight(0.15);
 
         setLeftComponent(project);
-        setRightComponent(tabs);
+        setRightComponent(agentTabs);
         setResizeWeight(0.5);
     }
 
@@ -149,7 +160,7 @@ public class Workspace extends JSplitPane {
      * @return the explorer component.
      */
     public Explorer explorer() {
-        return explorer;
+        return kernelExplorer;
     }
 
     /**
@@ -173,7 +184,7 @@ public class Workspace extends JSplitPane {
      */
     public void restart() {
         notebook.restart();
-        explorer.refresh();
+        kernelExplorer.refresh();
     }
 
     /**
