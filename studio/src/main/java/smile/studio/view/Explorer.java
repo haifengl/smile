@@ -1,37 +1,37 @@
 /*
- * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
  *
- * Smile Shell is free software: you can redistribute it and/or modify
- * under the terms of the GNU General Public License as published by
+ * SMILE Studio is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * Smile Shell is distributed in the hope that it will be useful,
+ * SMILE Studio is distributed in the hope that it will be useful,
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Smile. If not, see <https://www.gnu.org/licenses/>.
+ * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
 package smile.studio.view;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.tree.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.ResourceBundle;
+import com.formdev.flatlaf.util.SystemFileChooser;
 import jdk.jshell.VarSnippet;
 import smile.studio.kernel.JavaKernel;
 import smile.studio.model.PersistedModel;
-import smile.swing.FileChooser;
 import static smile.swing.SmileUtilities.scaleImageIcon;
 
 /**
@@ -40,6 +40,7 @@ import static smile.swing.SmileUtilities.scaleImageIcon;
  * @author Haifeng Li
  */
 public class Explorer extends JPanel {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Explorer.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Explorer.class.getName(), Locale.getDefault());
     /** Tree nodes. */
     private final DefaultMutableTreeNode root = new DefaultMutableTreeNode(bundle.getString("Root"));
@@ -60,14 +61,18 @@ public class Explorer extends JPanel {
     private final DefaultTreeModel treeModel = (DefaultTreeModel) tree.getModel();
     /** JShell instance. */
     private final JavaKernel runner;
+    /** File chooser for saving models. */
+    private final SystemFileChooser fileChooser;
 
     /**
      * Constructor.
      * @param runner Java code execution engine.
+     * @param fileChooser the file chooser for saving models.
      */
-    public Explorer(JavaKernel runner) {
+    public Explorer(JavaKernel runner, SystemFileChooser fileChooser) {
         super(new BorderLayout());
         this.runner = runner;
+        this.fileChooser = fileChooser;
 
         setBorder(new EmptyBorder(0, 8, 0, 0));
         initTree();
@@ -143,11 +148,12 @@ public class Explorer extends JPanel {
                                         %sWindow.setTitle("%s");
                                         """, name, name, name, name));
                             } else if (parent == models) {
-                                JFileChooser chooser = FileChooser.getInstance();
-                                chooser.setDialogTitle(bundle.getString("SaveModel"));
-                                chooser.setFileFilter(new FileNameExtensionFilter(bundle.getString("ModelFile"), "sml"));
-                                if (chooser.showSaveDialog(SwingUtilities.getWindowAncestor(Explorer.this)) == JFileChooser.APPROVE_OPTION) {
-                                    File file = chooser.getSelectedFile();
+                                var title = fileChooser.getDialogTitle();
+                                fileChooser.setDialogTitle(bundle.getString("SaveModel"));
+                                var filter = new SystemFileChooser.FileNameExtensionFilter(bundle.getString("ModelFile"), "sml");
+                                fileChooser.setFileFilter(filter);
+                                if (fileChooser.showSaveDialog(SwingUtilities.getWindowAncestor(Explorer.this)) == JFileChooser.APPROVE_OPTION) {
+                                    File file = fileChooser.getSelectedFile();
                                     if (!file.getName().toLowerCase().endsWith(".sml")) {
                                         file = new File(file.getParentFile(), file.getName() + ".sml");
                                     }
@@ -156,7 +162,7 @@ public class Explorer extends JPanel {
                                     // replace backslash with slash in case of Windows
                                     String path = file.getAbsolutePath().replace('\\', '/');
                                     runner.eval(String.format("""
-                                            smile.io.Write.object(%s, java.nio.file.Paths.get("%s"));
+                                            smile.io.Write.object(%s, java.nio.file.Path.of("%s"));
                                             """, name, path));
 
                                     if (snippet.typeName().equals("ClassificationModel") || snippet.typeName().equals("RegressionModel")) {
@@ -166,6 +172,8 @@ public class Explorer extends JPanel {
                                         tree.expandPath(new TreePath(new Object[]{root, services}));
                                     }
                                 }
+                                // Restore the original dialog title after the file chooser is closed
+                                fileChooser.setDialogTitle(title);
                             } else if (parent == services) {
                                 PersistedModel service = (PersistedModel) node.getUserObject();
                                 StartServiceDialog dialog = new StartServiceDialog(SwingUtilities.getWindowAncestor(Explorer.this), service);
@@ -292,16 +300,27 @@ public class Explorer extends JPanel {
                 frame.setTitle(model.name());
 
                 String home = System.getProperty("smile.home", ".");
+                String host = hostField.getText();
+                String port = portField.getText();
                 // jvm options should be before -jar argument
                 frame.start( "java",
                         "--add-opens", "java.base/java.lang=ALL-UNNAMED",
                         "--add-opens", "java.base/java.nio=ALL-UNNAMED",
                         "--enable-native-access", "ALL-UNNAMED",
                         "-Dsmile.serve.model=" + model.path(),
-                        "-Dquarkus.http.host=" + hostField.getText(),
-                        "-Dquarkus.http.port=" + portField.getText(),
+                        "-Dquarkus.http.host=" + host,
+                        "-Dquarkus.http.port=" + port,
                         "-jar", Path.of(home, "serve", "quarkus-run.jar").normalize().toString());
                 frame.setVisible(true);
+
+                try {
+                    // Use the Java Desktop API to open the service UI in the default browser
+                    if (Desktop.isDesktopSupported()) {
+                        Desktop.getDesktop().browse(new URI("http://" + host + ":" + port));
+                    }
+                } catch (Exception ex) {
+                    logger.error("Failed to open browser: ", ex);
+                }
             });
 
             cancelButton.addActionListener((e) -> dispose());

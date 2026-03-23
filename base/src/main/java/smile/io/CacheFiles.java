@@ -1,18 +1,18 @@
 /*
- * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
  *
- * Smile is free software: you can redistribute it and/or modify it
+ * SMILE is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * Smile is distributed in the hope that it will be useful, but
+ * SMILE is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Smile. If not, see <https://www.gnu.org/licenses/>.
+ * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
 package smile.io;
 
@@ -21,8 +21,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.*;
-import java.nio.file.Paths;
 import java.util.Comparator;
+import smile.util.OS;
 
 /**
  * Static methods that manage cache files.
@@ -38,12 +38,11 @@ public interface CacheFiles {
         String smile = File.separator + "smile";
         String path = System.getenv("SMILE_CACHE");
         if (path == null) {
-            String os = System.getProperty("os.name");
             String home = System.getProperty("user.home");
-            if (os.startsWith("Windows")) {
+            if (OS.isWindows()) {
                 String localAppData = System.getenv("LocalAppData");
                 path = localAppData + smile;
-            } else if (os.startsWith("Mac")) {
+            } else if (OS.isMacOS()) {
                 path = home + "/Library/Caches" + smile;
             } else {
                 // Linux or others
@@ -74,7 +73,7 @@ public interface CacheFiles {
      */
     static Path download(String url, boolean force) throws IOException, URISyntaxException {
         URI uri = new URI(url);
-        Path path = Paths.get(dir(), uri.getPath());
+        Path path = Path.of(dir(), uri.getPath());
         File file = path.toFile();
         if (force || !(file.exists() && !file.isDirectory())) {
             if (file.getParentFile().mkdirs()) {
@@ -92,7 +91,7 @@ public interface CacheFiles {
      * @throws IOException if fail to delete the cache files.
      */
     static void clean() throws IOException {
-        try (var files = Files.walk(Paths.get(dir()))) {
+        try (var files = Files.walk(Path.of(dir()))) {
             files.sorted(Comparator.reverseOrder())
                  .map(Path::toFile)
                  .forEach(File::delete);

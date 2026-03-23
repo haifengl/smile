@@ -1,18 +1,18 @@
 /*
- * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
  *
- * Smile Shell is free software: you can redistribute it and/or modify
- * under the terms of the GNU General Public License as published by
+ * SMILE Studio is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * Smile Shell is distributed in the hope that it will be useful,
+ * SMILE Studio is distributed in the hope that it will be useful,
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Smile. If not, see <https://www.gnu.org/licenses/>.
+ * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
 package smile.studio.view;
 
@@ -21,11 +21,11 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import jdk.jshell.*;
+import ioa.agent.Coder;
 import smile.studio.kernel.PostRunNavigation;
 import smile.studio.kernel.JavaKernel;
 import smile.swing.ScrollablePanel;
@@ -52,30 +53,35 @@ public class Notebook extends JPanel implements DocumentListener {
     private final JPanel cells = new ScrollablePanel();
     private final JScrollPane scrollPane = new JScrollPane(cells);
     private final DateTimeFormatter datetime = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
+    /** The coding assistant agent. */
+    private final Coder coder;
     private final JavaKernel runner;
     private final Runnable postRunAction;
     private int runCount = 0;
-    private File file;
+    private Path file;
     private boolean saved = true;
 
     /**
      * Constructor.
      * @param file the notebook file. If null, a new notebook will be created.
+     * @param coder the coding assistant agent.
      * @param runner Java code execution engine.
      * @param postRunAction the action to perform after running cells.
      */
-    public Notebook(File file, JavaKernel runner, Runnable postRunAction) {
+    public Notebook(Path file, Coder coder, JavaKernel runner, Runnable postRunAction) {
         super(new BorderLayout());
         this.file = file;
         this.runner = runner;
         this.postRunAction = postRunAction;
+        this.coder = coder;
+
         cells.setLayout(new BoxLayout(cells, BoxLayout.Y_AXIS));
         scrollPane.getVerticalScrollBar().setUnitIncrement(18);
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         add(scrollPane, BorderLayout.CENTER);
 
         initRunner();
-        if (file != null) {
+        if (file != null && Files.exists(file)) {
             try {
                 open(file);
             } catch (IOException ex) {
@@ -134,59 +140,10 @@ public class Notebook extends JPanel implements DocumentListener {
                     import smile.validation.*;
                     import smile.validation.metric.*;
                     import smile.hpo.*;
-                    import smile.vq.*;
-                    
-                    double[][] heart = new double[200][2];
-                    for (int i = 0; i < heart.length; i++) {
-                        double t = PI * (i - 100) / 100;
-                        heart[i][0] = 16 * pow(sin(t), 3);
-                        heart[i][1] = 13 * cos(t) - 5 * cos(2*t) - 2 * cos(3*t) - cos(4*t);
-                    }
-                    var figure = LinePlot.of(heart, Color.RED).figure();
-                    figure.setTitle("Mathematical Beauty");
-                    show(figure);""");
-            cell.editor().setPreferredRows();
-
+                    import smile.vq.*;""");
+            // Add an empty cell for user to start with
             cell = addCell(null);
-            cell.editor().setText("""
-                    var home = System.getProperty("smile.home");
-                    var iris = Read.arff(home + "/data/weka/iris.arff");
-                    show(iris);
-                    
-                    figure = ScatterPlot.of(iris, "sepallength", "sepalwidth", "class", '*').figure();
-                    figure.setAxisLabels("sepallength", "sepalwidth");
-                    figure.setTitle("Iris");
-                    show(figure);
-                    
-                    var formula = Formula.lhs("class");
-                    var rf = RandomForest.fit(formula, iris);
-                    IO.println("OOB metrics = " + rf.metrics());
-                    
-                    var params = new Properties();
-                    params.setProperty("smile.random_forest.trees", "100");
-                    params.setProperty("smile.random_forest.max_nodes", "100");
-                    var model = Model.classification("random-forest", formula, iris, null, params);""");
-            cell.editor().setPreferredRows();
-
-            cell = addCell(null);
-            cell.editor().setText("""
-                    var format = CSVFormat.DEFAULT.withDelimiter(' ');
-                    var mnist = Read.csv(home + "/data/mnist/mnist2500_X.txt", format).toArray();
-                    var label = Read.csv(home + "/data/mnist/mnist2500_labels.txt", format).column(0).toIntArray();
-                    
-                    var pca = PCA.fit(mnist).getProjection(50);
-                    var X = pca.apply(mnist);
-                    var tsne = TSNE.fit(X, new TSNE.Options(2, 20, 200, 12, 550));
-                    
-                    figure = ScatterPlot.of(tsne.coordinates(), label, '@').figure();
-                    figure.setTitle("MNIST - t-SNE");
-                    show(figure);
-                    
-                    var umap = UMAP.fit(mnist, new UMAP.Options(15));
-                    figure = ScatterPlot.of(umap, label, '@').figure();
-                    figure.setTitle("MNIST - UMAP");
-                    show(figure);""");
-            cell.editor().setPreferredRows();
+            cell.editor().requestFocus();
         }
 
         if (cells.getComponentCount() > 0 && cells.getComponent(0) instanceof Cell first) {
@@ -229,11 +186,19 @@ public class Notebook extends JPanel implements DocumentListener {
     }
 
     /**
+     * Returns the coding assistant agent.
+     * @return the coding assistant agent.
+     */
+    public Coder coder() {
+        return coder;
+    }
+
+    /**
      * Returns the notebook file.
      *
      * @return the notebook file.
      */
-    public File getFile() {
+    public Path getFile() {
         return file;
     }
 
@@ -242,7 +207,7 @@ public class Notebook extends JPanel implements DocumentListener {
      *
      * @param file the notebook file.
      */
-    public void setFile(File file) {
+    public void setFile(Path file) {
         this.file = file;
     }
 
@@ -252,14 +217,13 @@ public class Notebook extends JPanel implements DocumentListener {
      * @param file the notebook file.
      * @throws IOException If an I/O error occurs.
      */
-    public void open(File file) throws IOException {
-        List<String> lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+    public void open(Path file) throws IOException {
+        List<String> lines = Files.readAllLines(file, StandardCharsets.UTF_8);
         List<String> snippets = parseCells(lines);
         cells.removeAll();
         for (String src : snippets) {
             Cell cell = new Cell(this);
             cell.editor().setText(src);
-            cell.editor().setPreferredRows();
             cell.editor().getDocument().addDocumentListener(this);
             cells.add(cell);
         }
@@ -281,7 +245,7 @@ public class Notebook extends JPanel implements DocumentListener {
             Cell cell = getCell(i);
             lines.addAll(codeToLines(cell.editor().getText()));
         }
-        Files.write(file.toPath(), lines, StandardCharsets.UTF_8);
+        Files.write(file, lines, StandardCharsets.UTF_8);
         saved = true;
     }
 

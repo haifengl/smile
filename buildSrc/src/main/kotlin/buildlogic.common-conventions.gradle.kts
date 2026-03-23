@@ -5,6 +5,7 @@ extra["isReleaseVersion"] = !version.toString().endsWith("SNAPSHOT")
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
+    maven { url = uri("https://jitpack.io") }
 }
 
 tasks.withType<Test>().all {

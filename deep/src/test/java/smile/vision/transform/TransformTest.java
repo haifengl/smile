@@ -1,27 +1,26 @@
 /*
- * Copyright (c) 2010-2024 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
  *
- * Smile is free software: you can redistribute it and/or modify it
+ * SMILE is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * Smile is distributed in the hope that it will be useful, but
+ * SMILE is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Smile. If not, see <https://www.gnu.org/licenses/>.
+ * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
 package smile.vision.transform;
 
 import java.io.IOException;
 import java.awt.Image;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import javax.imageio.ImageIO;
 import org.junit.jupiter.api.*;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static smile.deep.tensor.Index.*;
 
@@ -53,7 +52,7 @@ public class TransformTest {
     @Test
     public void test() throws IOException {
         var t = Transform.classification(384, 384);
-        var img = ImageIO.read(Paths.get("deep/src/test/resources/data/image/panda.jpg").toFile());
+        var img = ImageIO.read(Path.of("deep/src/test/resources/data/image/panda.jpg").toFile());
 
         // warm up AWT
         var resized = t.resize(img, 384, Image.SCALE_FAST);

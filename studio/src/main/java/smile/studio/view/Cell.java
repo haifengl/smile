@@ -1,18 +1,18 @@
 /*
- * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
  *
- * Smile Shell is free software: you can redistribute it and/or modify
- * under the terms of the GNU General Public License as published by
+ * SMILE Studio is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * Smile Shell is distributed in the hope that it will be useful,
+ * SMILE Studio is distributed in the hope that it will be useful,
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Smile. If not, see <https://www.gnu.org/licenses/>.
+ * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
 package smile.studio.view;
 
@@ -23,14 +23,13 @@ import java.util.List;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import com.formdev.flatlaf.util.SystemInfo;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jdesktop.swingx.JXTextField;
-import smile.studio.agent.Coder;
+import ioa.agent.Coder;
+import ioa.llm.client.StreamResponseHandler;
 import smile.studio.kernel.PostRunNavigation;
 
 /**
@@ -39,12 +38,12 @@ import smile.studio.kernel.PostRunNavigation;
  *
  * @author Haifeng Li
  */
-public class Cell extends JPanel {
+public class Cell extends JPanel implements StreamResponseHandler {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Cell.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), Locale.getDefault());
-    private static final Optional<Coder> coder = Coder.getInstance();
     private final String placeholder = bundle.getString("Prompt");
-    private final CodeEditor editor = new CodeEditor(1, 80, SyntaxConstants.SYNTAX_STYLE_JAVA);
+    private final CellEditor editor = new CellEditor(1, 80, SyntaxConstants.SYNTAX_STYLE_JAVA);
+    private final RTextScrollPane editorScroll = editor.scroll();
     private final OutputArea output = new OutputArea();
     private final JTextField prompt = new JXTextField(placeholder);
     private final TitledBorder border = BorderFactory.createTitledBorder("[ ]");
@@ -56,9 +55,8 @@ public class Cell extends JPanel {
     // Windows doesn't show broom emoji properly
     private final JButton clearButton = new JButton(SystemInfo.isMacOS ? "🧹" : "⌫");
     private final JButton deleteButton = new JButton("⌦");
-    private final RTextScrollPane editorScroll;
+    private final Coder coder;
     private boolean collapsed = false;
-    private int lastResizeLineCount = 1;
     /** Running code generation. */
     private volatile boolean isCoding = false;
 
@@ -70,62 +68,14 @@ public class Cell extends JPanel {
         super(new BorderLayout(5, 5));
         setBorder(new EmptyBorder(8,8,8,8));
 
+        coder = notebook.coder();
         JPanel header = createHeader(notebook);
         initActionMap(notebook);
 
         // Cell editor and output configuration
         output.setFont(Monospaced.getFont());
         editor.setFont(Monospaced.getFont());
-        editorScroll = new RTextScrollPane(editor);
         editorScroll.setBorder(border);
-        editorScroll.putClientProperty("JScrollBar.showButtons", true);
-        editorScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
-        editorScroll.setWheelScrollingEnabled(false);
-
-        MouseWheelListener wheelRelay = e -> {
-            JScrollPane notebookScroll = (JScrollPane) SwingUtilities.getAncestorOfClass(JScrollPane.class, Cell.this);
-            if (notebookScroll == null) return;
-
-            JScrollBar bar = notebookScroll.getVerticalScrollBar();
-            double rotation = e.getPreciseWheelRotation();
-            if (rotation != 0.0) {
-                int direction = rotation > 0 ? 1 : -1;
-                int base = bar.getUnitIncrement(direction);
-                int delta = (int) Math.round(base * rotation * 3.0);
-                if (delta == 0) {
-                    delta = direction;
-                }
-                bar.setValue(bar.getValue() + delta);
-            } else {
-                int units = e.getUnitsToScroll();
-                if (units != 0) {
-                    int direction = units > 0 ? 1 : -1;
-                    int delta = bar.getUnitIncrement(direction) * units;
-                    bar.setValue(bar.getValue() + delta);
-                }
-            }
-            e.consume();
-        };
-
-        editorScroll.addMouseWheelListener(wheelRelay);
-
-        lastResizeLineCount = Math.max(editor.getLineCount(), 1);
-        editor.getDocument().addDocumentListener(new DocumentListener() {
-            @Override public void insertUpdate(DocumentEvent e) { resize(); }
-            @Override public void removeUpdate(DocumentEvent e) { resize(); }
-            @Override public void changedUpdate(DocumentEvent e) { }
-            /** Resizes the editor height based on the line count. */
-            private void resize() {
-                int lineCount = Math.max(editor.getLineCount(), 1);
-                if (lineCount <= lastResizeLineCount) return;
-                lastResizeLineCount = lineCount;
-                editor.setPreferredRows();
-                editor.revalidate();
-                revalidate();
-                repaint();
-            }
-        });
-
         add(header, BorderLayout.NORTH);
         add(editorScroll, BorderLayout.CENTER);
         add(output, BorderLayout.SOUTH);
@@ -191,7 +141,7 @@ public class Cell extends JPanel {
         inputMap.put(KeyStroke.getKeyStroke("TAB"), "complete-code");
         actionMap.put("complete-code", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
-                if (coder.isEmpty() || isCoding) {
+                if (coder == null || isCoding) {
                     editor.insert("\t", editor.getCaretPosition());
                 } else {
                     completeCode();
@@ -223,7 +173,7 @@ public class Cell extends JPanel {
      * Completes the current line of code.
      */
     private void completeCode() {
-        if (coder.isEmpty() || isCoding) return;
+        if (coder == null || isCoding) return;
 
         try {
             int caretPosition = editor.getCaretPosition();
@@ -234,22 +184,23 @@ public class Cell extends JPanel {
             isCoding = true;
             int startOffset = editor.getLineStartOffset(lineNum);
             int endOffset = editor.getLineEndOffset(lineNum);
-            String context = editor.getText(0, startOffset);
-            String currentLine = editor.getText(startOffset, endOffset - startOffset);
+            String prefix = editor.getText(startOffset, endOffset - startOffset);
+            String before = editor.getText(0, startOffset);
+            String after = editor.getText(endOffset, editor.getDocument().getLength() - endOffset);
 
             // Run code completion in a worker thread as join() blocks.
             SwingWorker<Void, Void> worker = new SwingWorker<>() {
                 @Override
                 protected Void doInBackground() {
-                    coder.ifPresent(llm -> llm.complete(currentLine, context).whenComplete((line, ex) -> {
+                    coder.complete(prefix, before, after).whenComplete((line, ex) -> {
                         if (ex != null) {
                             logger.warn("Code completion failed: {}", ex.getMessage());
                         }
 
                         if (line != null) {
-                            SwingUtilities.invokeLater(() -> editor.replaceRange(line, startOffset, caretPosition));
+                            SwingUtilities.invokeLater(() -> editor.insert(line, caretPosition));
                         }
-                    }).join());
+                    }).join();
                     return null;
                 }
 
@@ -269,7 +220,7 @@ public class Cell extends JPanel {
      * Generates code based on prompt.
      */
     private void generateCode() {
-        if (coder.isEmpty()) {
+        if (coder == null) {
             JOptionPane.showMessageDialog(this,
                     bundle.getString("NoAIServiceError"),
                     bundle.getString("AIService"),
@@ -280,66 +231,112 @@ public class Cell extends JPanel {
         if (isCoding) return;
 
         String task = prompt.getText();
-        if (!task.isBlank()) {
-            isCoding = true;
-            editor.requestFocus();
-            int position = editor.getSelectionEnd();
-            // No selected text. Append at the end.
-            if (position == 0) {
-                editor.setCaretPosition(editor.getDocument().getLength());
-            } else {
-                try {
-                    int lineNumber = editor.getLineOfOffset(position);
-                    int lineEndOffset = editor.getLineEndOffset(lineNumber);
-                    editor.setCaretPosition(lineEndOffset);
-                } catch (BadLocationException e) {
-                    editor.setCaretPosition(position);
-                }
+        if (task.isBlank()) return;
+
+        isCoding = true;
+        editor.requestFocus();
+        int position = editor.getSelectionEnd();
+        // No selected text. Append at the end.
+        if (position == 0) {
+            editor.setCaretPosition(editor.getDocument().getLength());
+        } else {
+            try {
+                int lineNumber = editor.getLineOfOffset(position);
+                int lineEndOffset = editor.getLineEndOffset(lineNumber);
+                editor.setCaretPosition(lineEndOffset);
+            } catch (BadLocationException e) {
+                editor.setCaretPosition(position);
             }
-
-            String context = getCodeGenerationContext();
-            editor.insert("\n", editor.getCaretPosition());
-            for (String line : wrap(task, 80)) {
-                editor.insert("/// " + line + "\n", editor.getCaretPosition());
-            }
-
-            // Run code completion in a worker thread as join() blocks.
-            SwingWorker<Void, Void> worker = new SwingWorker<>() {
-                @Override
-                protected Void doInBackground() {
-                    coder.ifPresent(llm -> llm.generate(task, context,
-                        chunk -> SwingUtilities.invokeLater(() -> editor.insert(chunk, editor.getCaretPosition())),
-                        ex -> {
-                            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(Cell.this,
-                                    "Code generation failed: " + ex.getMessage(),
-                                    bundle.getString("AIService"),
-                                    JOptionPane.ERROR_MESSAGE));
-                            return null;
-                    }));
-                    return null;
-                }
-
-                @Override
-                protected void done() {
-                    isCoding = false;
-                    // Appending a new line at the end of generated code.
-                    SwingUtilities.invokeLater(() -> editor.insert("\n", editor.getCaretPosition()));
-                }
-            };
-            worker.execute();
         }
+
+        String before = getCodeGenerationBeforeContext();
+        String after = getCodeGenerationAfterContext();
+        editor.insert("\n", editor.getCaretPosition());
+        for (String line : wrap(task, 80)) {
+            editor.insert("/// " + line + "\n", editor.getCaretPosition());
+        }
+
+        // Run code completion in a worker thread as join() blocks.
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Void doInBackground() {
+                coder.generate(task, before, after, Cell.this);
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                isCoding = false;
+            }
+        };
+        worker.execute();
+    }
+
+    @Override
+    public void onNext(String chunk) {
+        SwingUtilities.invokeLater(() -> editor.insert(chunk, editor.getCaretPosition()));
+    }
+
+    @Override
+    public void onComplete(long totalTokens, long outputTokens, long inputTokens) {
+        // Appending a new line at the end of generated code.
+        SwingUtilities.invokeLater(() -> editor.insert("\n", editor.getCaretPosition()));
+    }
+
+    @Override
+    public void onException(Throwable ex) {
+        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(Cell.this,
+                "Code generation failed: " + ex.getMessage(),
+                bundle.getString("AIService"),
+                JOptionPane.ERROR_MESSAGE));
+    }
+
+    @Override
+    public void onStatus(String status) {
+        logger.info("Code generation status: {}", status);
     }
 
     /**
-     * Returns the context for code generation.
-     * @return the context for code generation.
+     * Returns the before context for code generation.
+     * @return the before context for code generation.
      */
-    private String getCodeGenerationContext() {
-        String context = editor.getSelectedText();
-        if (context == null || context.isBlank()) {
-            context = editor.getText();
+    private String getCodeGenerationBeforeContext() {
+        Cell prev = null; // previous cell before current cell
+        Container parent = getParent(); // Get the notebook container
+        if (parent != null) {
+            Component[] siblings = parent.getComponents(); // Get all children
+            for (Component comp : siblings) {
+                if (comp instanceof Cell cell) {
+                    if (comp == this) break;
+                    prev = cell;
+                }
+            }
         }
-        return context;
+
+        if (prev == null) return editor.getText();
+        return prev.editor.getText() + "\n\n" + editor.getText();
+    }
+
+    /**
+     * Returns the before context for code generation.
+     * @return the before context for code generation.
+     */
+    private String getCodeGenerationAfterContext() {
+        Cell next = null; // next cell after current cell
+        Container parent = getParent(); // Get the notebook container
+        if (parent != null) {
+            boolean found = false;
+            Component[] siblings = parent.getComponents(); // Get all children
+            for (Component comp : siblings) {
+                if (comp instanceof Cell cell) {
+                    if (found) next = cell;
+                    else if (comp == this) found = true;
+                }
+            }
+        }
+
+        if (next == null) return "";
+        return next.editor.getText();
     }
 
     /**
@@ -442,7 +439,7 @@ public class Cell extends JPanel {
      * Returns the code editor.
      * @return the code editor.
      */
-    public CodeEditor editor() {
+    public CellEditor editor() {
         return editor;
     }
 

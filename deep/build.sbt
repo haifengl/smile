@@ -10,15 +10,15 @@ Test / javaOptions ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "tools.jackson.core" % "jackson-databind" % "3.0.4",
-  "org.bytedeco" % "pytorch-platform" % "2.7.1-1.5.12",
-  "org.bytedeco" % "cuda-platform"    % "12.9-9.10-1.5.12"
+  "tools.jackson.core" % "jackson-databind" % "3.1.0",
+  "org.bytedeco" % "pytorch-platform" % "2.10.0-1.5.13",
+  "org.bytedeco" % "cuda-platform"    % "13.1-9.19-1.5.13"
 )
 
 val os = sys.props.get("os.name").get.toLowerCase.split(" ")(0)
 val gpu = Seq(
-  "org.bytedeco" % "pytorch-platform-gpu" % "2.7.1-1.5.12" % Provided,
-  "org.bytedeco" % "cuda" % "12.9-9.10-1.5.12" % Provided classifier s"$os-x86_64"
+  "org.bytedeco" % "pytorch-platform-gpu" % "2.10.0-1.5.13" % Provided,
+  "org.bytedeco" % "cuda" % "13.1-9.19-1.5.13" % Provided classifier s"$os-x86_64"
 )
 
 libraryDependencies ++= (
