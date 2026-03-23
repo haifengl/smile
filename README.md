@@ -100,7 +100,7 @@ following to your project pom.xml file.
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-core</artifactId>
-      <version>5.2.1</version>
+      <version>5.2.2</version>
     </dependency>
 ```
 
@@ -108,13 +108,13 @@ For deep learning and NLP, use the artifactId `smile-deep` and `smile-nlp`, resp
 
 For Scala API, please add the below into your sbt script.
 ```
-    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "5.2.1"
+    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "5.2.2"
 ```
 
 For Kotlin API, add the below into the `dependencies` section
 of Gradle build script.
 ```
-    implementation("com.github.haifengl:smile-kotlin:5.2.1")
+    implementation("com.github.haifengl:smile-kotlin:5.2.2")
 ```
 
 Some algorithms rely on BLAS and LAPACK (e.g. manifold learning,
@@ -198,7 +198,7 @@ To use `smile-plot`, add the following to dependencies
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-plot</artifactId>
-      <version>5.2.1</version>
+      <version>5.2.2</version>
     </dependency>
 ```
 
