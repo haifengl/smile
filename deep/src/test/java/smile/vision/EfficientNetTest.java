@@ -23,7 +23,6 @@ import smile.deep.Loss;
 import smile.deep.Optimizer;
 import smile.deep.metric.Accuracy;
 import smile.deep.tensor.Device;
-import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import org.junit.jupiter.api.*;
 import smile.util.function.TimeFunction;
@@ -120,13 +119,14 @@ public class EfficientNetTest {
 
     @Test
     public void train() throws IOException {
-        // half precision to lower memory usage.
-        var dtype = ScalarType.BFloat16;
-        Device device = Device.CUDA();
-        device.setDefaultDevice();
-
         var model = EfficientNet.V2S();
-        model.to(device, dtype);
+
+        // half precision to lower memory usage.
+        // This is not supported on all platforms, e.g., macOS.
+        // var dtype = smile.deep.tensor.ScalarType.BFloat16;
+        // Device device = Device.CUDA();
+        // device.setDefaultDevice();
+        // model.to(device, dtype);
 
         var transform = Transform.classification(384, 384);
         var data = new ImageDataset(64, "deep/src/test/resources/data/imagenet-mini/train", transform, ImageNet.folder2Target);
