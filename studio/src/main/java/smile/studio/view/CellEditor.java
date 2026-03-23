@@ -23,6 +23,7 @@ import java.awt.Dimension;
 import java.awt.event.*;
 import org.fife.ui.rsyntaxtextarea.*;
 import org.fife.ui.rtextarea.RTextScrollPane;
+import smile.util.OS;
 
 /**
  * Notebook cell editor that automatically sets the height
@@ -31,6 +32,14 @@ import org.fife.ui.rtextarea.RTextScrollPane;
  * @author Haifeng Li
  */
 public class CellEditor extends Editor implements DocumentListener {
+    /**
+     * The minimum number of rows to display. On Windows, the last line is always
+     * counted even without a newline character, so we set it to 0. On Unix/Linux/macOS,
+     * the last line is not counted without a newline character, so we
+     * set it to 1.
+     */
+    private static final int MIN_ROWS = OS.isWindows() ? 0 : 1;
+
     /**
      * Constructor.
      * @param rows the number of rows.
@@ -51,8 +60,8 @@ public class CellEditor extends Editor implements DocumentListener {
         // where a new logical line is defined by the presence
         // of a newline character (\n).
         // Therefore, the last line without newline character
-        // is not counted. To compenstate, we always add 1.
-        return getLineCount() + 1;
+        // is not counted. To compenstate, we always add MIN_ROWS.
+        return getLineCount() + MIN_ROWS;
     }
 
     /**
