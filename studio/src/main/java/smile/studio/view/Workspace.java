@@ -63,8 +63,8 @@ public class Workspace extends JSplitPane {
 
         explorer = new Explorer(runner, fileChooser);
         notebook = new Notebook(file, coder, runner, explorer::refresh);
-        tabs.addTab("Clair the Analyst", analystCLI(analyst));
-        tabs.addTab("James the Java Guru", coderCLI(coder));
+        tabs.addTab("📊 Clair the Analyst", analystCLI(analyst));
+        tabs.addTab("☕ James the Java Guru", coderCLI(coder));
 
         project.setLeftComponent(explorer);
         project.setRightComponent(notebook);
