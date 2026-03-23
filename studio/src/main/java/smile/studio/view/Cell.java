@@ -138,16 +138,19 @@ public class Cell extends JPanel implements StreamResponseHandler {
         InputMap inputMap = editor.getInputMap(JComponent.WHEN_FOCUSED);
         ActionMap actionMap = editor.getActionMap();
 
-        inputMap.put(KeyStroke.getKeyStroke("TAB"), "complete-code");
-        actionMap.put("complete-code", new AbstractAction() {
-            @Override public void actionPerformed(ActionEvent e) {
-                if (coder == null || isCoding) {
-                    editor.insert("\t", editor.getCaretPosition());
-                } else {
-                    completeCode();
+        if (coder != null && coder.llm() != null) {
+            inputMap.put(KeyStroke.getKeyStroke("TAB"), "complete-code");
+            actionMap.put("complete-code", new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if (isCoding) {
+                        editor.insert("\t", editor.getCaretPosition());
+                    } else {
+                        completeCode();
+                    }
                 }
-            }
-        });
+            });
+        }
         inputMap.put(KeyStroke.getKeyStroke("shift ENTER"), "run-next");
         actionMap.put("run-next", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
