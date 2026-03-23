@@ -519,7 +519,7 @@ public class SmileStudio extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            workspace.runner().stop();
+            workspace.kernel().stop();
         }
     }
 

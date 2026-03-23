@@ -35,23 +35,23 @@ import smile.studio.model.PersistedModel;
 import static smile.swing.SmileUtilities.scaleImageIcon;
 
 /**
- * A workspace explorer.
+ * A kernel workspace explorer.
  *
  * @author Haifeng Li
  */
-public class Explorer extends JPanel {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Explorer.class);
-    private static final ResourceBundle bundle = ResourceBundle.getBundle(Explorer.class.getName(), Locale.getDefault());
+public class KernelExplorer extends JPanel {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(KernelExplorer.class);
+    private static final ResourceBundle bundle = ResourceBundle.getBundle(KernelExplorer.class.getName(), Locale.getDefault());
     /** Tree nodes. */
     private final DefaultMutableTreeNode root = new DefaultMutableTreeNode(bundle.getString("Root"));
     private final DefaultMutableTreeNode frames = new DefaultMutableTreeNode(bundle.getString("DataFrames"));;
     private final DefaultMutableTreeNode matrix = new DefaultMutableTreeNode(bundle.getString("Matrix"));
     private final DefaultMutableTreeNode models = new DefaultMutableTreeNode(bundle.getString("Models"));
     private final DefaultMutableTreeNode services = new DefaultMutableTreeNode(bundle.getString("Services"));
-    private static final ImageIcon matrixIcon = scaleImageIcon(new ImageIcon(Objects.requireNonNull(Explorer.class.getResource("images/matrix.png"))), 24);
-    private static final ImageIcon modelIcon = scaleImageIcon(new ImageIcon(Objects.requireNonNull(Explorer.class.getResource("images/model.png"))), 24);
-    private static final ImageIcon serverIcon = scaleImageIcon(new ImageIcon(Objects.requireNonNull(Explorer.class.getResource("images/server.png"))), 24);
-    private static final ImageIcon tableIcon = scaleImageIcon(new ImageIcon(Objects.requireNonNull(Explorer.class.getResource("images/table.png"))), 24);
+    private static final ImageIcon matrixIcon = scaleImageIcon(new ImageIcon(Objects.requireNonNull(KernelExplorer.class.getResource("images/matrix.png"))), 24);
+    private static final ImageIcon modelIcon = scaleImageIcon(new ImageIcon(Objects.requireNonNull(KernelExplorer.class.getResource("images/model.png"))), 24);
+    private static final ImageIcon serverIcon = scaleImageIcon(new ImageIcon(Objects.requireNonNull(KernelExplorer.class.getResource("images/server.png"))), 24);
+    private static final ImageIcon tableIcon = scaleImageIcon(new ImageIcon(Objects.requireNonNull(KernelExplorer.class.getResource("images/table.png"))), 24);
     /** Tree of workspace runtime information. */
     private final JTree tree = new JTree(root);
     /**
@@ -60,18 +60,18 @@ public class Explorer extends JPanel {
      */
     private final DefaultTreeModel treeModel = (DefaultTreeModel) tree.getModel();
     /** JShell instance. */
-    private final JavaKernel runner;
+    private final JavaKernel kernel;
     /** File chooser for saving models. */
     private final SystemFileChooser fileChooser;
 
     /**
      * Constructor.
-     * @param runner Java code execution engine.
+     * @param kernel Java code execution engine.
      * @param fileChooser the file chooser for saving models.
      */
-    public Explorer(JavaKernel runner, SystemFileChooser fileChooser) {
+    public KernelExplorer(JavaKernel kernel, SystemFileChooser fileChooser) {
         super(new BorderLayout());
-        this.runner = runner;
+        this.kernel = kernel;
         this.fileChooser = fileChooser;
 
         setBorder(new EmptyBorder(0, 8, 0, 0));
@@ -143,7 +143,7 @@ public class Explorer extends JPanel {
                             if (parent == frames || parent == matrix) {
                                 var snippet = (VarSnippet) node.getUserObject();
                                 var name = snippet.name();
-                                runner.eval(String.format("""
+                                kernel.eval(String.format("""
                                         var %sWindow = smile.swing.SmileUtilities.show(%s);
                                         %sWindow.setTitle("%s");
                                         """, name, name, name, name));
@@ -152,7 +152,7 @@ public class Explorer extends JPanel {
                                 fileChooser.setDialogTitle(bundle.getString("SaveModel"));
                                 var filter = new SystemFileChooser.FileNameExtensionFilter(bundle.getString("ModelFile"), "sml");
                                 fileChooser.setFileFilter(filter);
-                                if (fileChooser.showSaveDialog(SwingUtilities.getWindowAncestor(Explorer.this)) == JFileChooser.APPROVE_OPTION) {
+                                if (fileChooser.showSaveDialog(SwingUtilities.getWindowAncestor(KernelExplorer.this)) == JFileChooser.APPROVE_OPTION) {
                                     File file = fileChooser.getSelectedFile();
                                     if (!file.getName().toLowerCase().endsWith(".sml")) {
                                         file = new File(file.getParentFile(), file.getName() + ".sml");
@@ -161,12 +161,12 @@ public class Explorer extends JPanel {
                                     var name = snippet.name();
                                     // replace backslash with slash in case of Windows
                                     String path = file.getAbsolutePath().replace('\\', '/');
-                                    runner.eval(String.format("""
+                                    kernel.eval(String.format("""
                                             smile.io.Write.object(%s, java.nio.file.Path.of("%s"));
                                             """, name, path));
 
                                     if (snippet.typeName().equals("ClassificationModel") || snippet.typeName().equals("RegressionModel")) {
-                                        var schema = runner.eval(name + ".schema();");
+                                        var schema = kernel.eval(name + ".schema();");
                                         var serviceNode = new DefaultMutableTreeNode(new PersistedModel(name, schema, path));
                                         treeModel.insertNodeInto(serviceNode, services, services.getChildCount());
                                         tree.expandPath(new TreePath(new Object[]{root, services}));
@@ -176,7 +176,7 @@ public class Explorer extends JPanel {
                                 fileChooser.setDialogTitle(title);
                             } else if (parent == services) {
                                 PersistedModel service = (PersistedModel) node.getUserObject();
-                                StartServiceDialog dialog = new StartServiceDialog(SwingUtilities.getWindowAncestor(Explorer.this), service);
+                                StartServiceDialog dialog = new StartServiceDialog(SwingUtilities.getWindowAncestor(KernelExplorer.this), service);
                                 dialog.setVisible(true);
                             }
                         }
@@ -195,7 +195,7 @@ public class Explorer extends JPanel {
         models.removeAllChildren();
         treeModel.reload(root);
 
-        runner.variables().forEach(snippet -> {
+        kernel.variables().forEach(snippet -> {
             var node = new DefaultMutableTreeNode(snippet);
             String typeName = snippet.typeName();
             switch (typeName) {

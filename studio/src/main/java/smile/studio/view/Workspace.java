@@ -43,11 +43,11 @@ public class Workspace extends JSplitPane {
     /** The tabbed pane for agent CLIs. */
     final JTabbedPane agentTabs = new JTabbedPane();
     /** Java execution engine. */
-    final JavaKernel runner = new JavaKernel();
+    final JavaKernel kernel = new JavaKernel();
     /** The file explorer of current working directory. */
     final FileExplorer fileExplorer = new FileExplorer(Paths.get("").toAbsolutePath());
     /** The explorer of runtime information. */
-    final Explorer kernelExplorer;
+    final KernelExplorer kernelExplorer;
     /** The editor of notebook. */
     final Notebook notebook;
 
@@ -69,11 +69,11 @@ public class Workspace extends JSplitPane {
             logger.error("Failed to initialize agents", ex);
         }
 
-        kernelExplorer = new Explorer(runner, fileChooser);
+        kernelExplorer = new KernelExplorer(kernel, fileChooser);
         explorerTabs.addTab("Project", new JScrollPane(fileExplorer));
         explorerTabs.addTab("Kernel", new JScrollPane(kernelExplorer));
 
-        notebook = new Notebook(file, coder, runner, kernelExplorer::refresh);
+        notebook = new Notebook(file, coder, kernel, kernelExplorer::refresh);
         agentTabs.addTab("📊 Clair the Analyst", analystCLI(analyst));
         agentTabs.addTab("☕ James the Java Guru", coderCLI(coder));
 
@@ -159,7 +159,7 @@ public class Workspace extends JSplitPane {
      * Returns the explorer component.
      * @return the explorer component.
      */
-    public Explorer explorer() {
+    public KernelExplorer explorer() {
         return kernelExplorer;
     }
 
@@ -175,8 +175,8 @@ public class Workspace extends JSplitPane {
      * Returns the Java execution engine.
      * @return the Java execution engine.
      */
-    public JavaKernel runner() {
-        return runner;
+    public JavaKernel kernel() {
+        return kernel;
     }
 
     /**
@@ -188,9 +188,9 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Closes the execution engine and frees resources.
+     * Shuts down the execution engine and frees resources.
      */
     public void close() {
-        runner.close();
+        kernel.close();
     }
 }
