@@ -1,5 +1,5 @@
 group = "com.github.haifengl"
-version = "5.2.1"
+version = "5.2.2"
 extra["isReleaseVersion"] = !version.toString().endsWith("SNAPSHOT")
 
 repositories {

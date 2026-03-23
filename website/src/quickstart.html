@@ -2,6 +2,7 @@
 layout: layout.njk
 permalink: "{{ page.filePathStem }}.html"
 title: Smile - Quick Start
+version: "5.2.2"
 ---
 {% include "toc.njk" %}
 
@@ -519,7 +520,7 @@ $ ./smile predict --model iris_random_forest.sml --data ../data/weka/iris.arff -
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-shell"><code>
 $ ./smile serve --model iris_random_forest.sml
-INFO  [io.quarkus] (main) serve 5.2.1 on JVM (powered by Quarkus 3.30.5) started in 0.844s. Listening on: http://0.0.0.0:8080
+INFO  [io.quarkus] (main) serve {{ version }} on JVM (powered by Quarkus 3.30.5) started in 0.844s. Listening on: http://0.0.0.0:8080
 [io.quarkus] (main) Profile prod activated.
   </code></pre>
             </div>
@@ -601,7 +602,7 @@ $ cat iris.txt | curl -H "Content-Type: text/plain" -X POST --data-binary @- htt
         <div class="tab-pane active" id="notebook_1">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code style="white-space: preserve nowrap;">
-    import $ivy.`com.github.haifengl::smile-scala:5.2.1`
+    import $ivy.`com.github.haifengl::smile-scala:{{ version }}`
 
     import scala.language.postfixOps
     import org.apache.commons.csv.CSVFormat
