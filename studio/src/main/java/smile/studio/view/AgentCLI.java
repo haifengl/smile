@@ -115,7 +115,7 @@ public class AgentCLI extends JPanel {
         String instructions = intent.editor().getText();
         switch (intentType) {
             case Command -> runSlashCommand(intent, instructions);
-            case Shell, Python -> runShellCommand(intent, intentType, instructions);
+            case Shell -> runShellCommand(intent, intentType, instructions);
             case Instructions -> {
                 intent.setStatus("Thinking...");
                 chat(intent, instructions);
@@ -186,10 +186,6 @@ public class AgentCLI extends JPanel {
         var output = intent.output();
         List<String> command = new ArrayList<>();
         switch (intentType) {
-            case Python -> {
-                command.add("python");
-                command.add("-c");
-            }
             case Shell -> {
                 if (SystemInfo.isWindows) {
                     command.add("powershell.exe");
