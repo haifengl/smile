@@ -31,6 +31,7 @@ import java.util.ResourceBundle;
 import com.formdev.flatlaf.util.SystemFileChooser;
 import jdk.jshell.VarSnippet;
 import smile.studio.kernel.Kernel;
+import smile.studio.kernel.Variable;
 import smile.studio.model.PersistedModel;
 import static smile.swing.SmileUtilities.scaleImageIcon;
 
@@ -137,8 +138,8 @@ public class KernelExplorer extends JPanel {
                             if (kernel == null) return;
                             var parent = node.getParent();
                             if (parent == frames || parent == matrix) {
-                                var snippet = (VarSnippet) node.getUserObject();
-                                var name = snippet.name();
+                                var variable = (Variable) node.getUserObject();
+                                var name = variable.name();
                                 kernel.eval(String.format("""
                                         var %sWindow = smile.swing.SmileUtilities.show(%s);
                                         %sWindow.setTitle("%s");
@@ -196,9 +197,9 @@ public class KernelExplorer extends JPanel {
         models.removeAllChildren();
         treeModel.reload(root);
 
-        kernel.variables().forEach(snippet -> {
-            var node = new DefaultMutableTreeNode(snippet);
-            String typeName = snippet.typeName();
+        kernel.variables().forEach(variable -> {
+            var node = new DefaultMutableTreeNode(variable);
+            String typeName = variable.typeName();
             switch (typeName) {
                 case "DataFrame", "smile.data.DataFrame":
                     treeModel.insertNodeInto(node, frames, frames.getChildCount());
