@@ -31,6 +31,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
+
 import jdk.jshell.*;
 import ioa.agent.Coder;
 import smile.studio.kernel.PostRunNavigation;
@@ -51,10 +53,11 @@ public class Notebook extends JPanel implements DocumentListener {
     private final JPanel cells = new ScrollablePanel();
     private final JScrollPane scrollPane = new JScrollPane(cells);
     private final DateTimeFormatter datetime = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
+    /** Java execution engine. */
+    private final JavaKernel kernel = new JavaKernel();
     /** The coding assistant agent. */
     private final Coder coder;
-    private final JavaKernel runner;
-    private final Runnable postRunAction;
+    private final Consumer<JavaKernel> postRunAction;
     private int runCount = 0;
     private Path file;
     private boolean saved = true;
@@ -63,13 +66,11 @@ public class Notebook extends JPanel implements DocumentListener {
      * Constructor.
      * @param file the notebook file. If null, a new notebook will be created.
      * @param coder the coding assistant agent.
-     * @param runner Java code execution engine.
      * @param postRunAction the action to perform after running cells.
      */
-    public Notebook(Path file, Coder coder, JavaKernel runner, Runnable postRunAction) {
+    public Notebook(Path file, Coder coder, Consumer<JavaKernel> postRunAction) {
         super(new BorderLayout());
         this.file = file;
-        this.runner = runner;
         this.postRunAction = postRunAction;
         this.coder = coder;
 
@@ -166,21 +167,41 @@ public class Notebook extends JPanel implements DocumentListener {
         );
     }
 
+    /**
+     * Returns the execution engine.
+     * @return the execution engine.
+     */
+    public JavaKernel kernel() {
+        return kernel;
+    }
+
     /** Initialize the kernel. */
     private void initKernel() {
         // Note that JShell runs in another JVM so that
         // we need to setup FlatLaf again.
-        runner.eval("""
+        kernel.eval("""
             javax.swing.SwingUtilities.invokeLater(() -> {
                 com.formdev.flatlaf.FlatLightLaf.setup();
             });""");
     }
 
+    /**
+     * Shuts down the execution engine and frees resources.
+     */
+    public void close() {
+        kernel.close();
+    }
+
     /** Restarts the kernel and clears all output. */
     public void restart() {
-        runner.restart();
+        kernel.restart();
         initKernel();
         clearAllOutputs();
+    }
+
+    /** Attempts to stop currently running code. */
+    public void stop() {
+        kernel.stop();
     }
 
     /**
@@ -436,7 +457,7 @@ public class Notebook extends JPanel implements DocumentListener {
      */
     private boolean runCell(Cell cell) {
         runCount++;
-        runner.setOutputArea(cell.output()); // Direct JShell prints
+        kernel.setOutputArea(cell.output()); // Direct JShell prints
         SwingUtilities.invokeLater(() -> {
             cell.setRunning(true);
             cell.editor().setPreferredRows();
@@ -446,7 +467,7 @@ public class Notebook extends JPanel implements DocumentListener {
             cell.output().clear();
             ZonedDateTime start = ZonedDateTime.now();
             cell.output().appendLine("⏵ " + datetime.format(start) + " started");
-            boolean okay = runner.eval(cell.editor().getText(), (events) -> {
+            boolean okay = kernel.eval(cell.editor().getText(), (events) -> {
                 // The number of errors;
                 int errors = 0;
                 // Capture values, diagnostics, and exceptions in order
@@ -481,11 +502,11 @@ public class Notebook extends JPanel implements DocumentListener {
                         cell.output().appendLine("⚠ Recoverable issue: " + event.snippet().source());
                         if (event.snippet() instanceof DeclarationSnippet snippet) {
                             cell.output().appendLine("⚠ Unresolved dependencies:");
-                            runner.unresolvedDependencies(snippet).forEach(name -> cell.output().appendLine("  └ " + name));
+                            kernel.unresolvedDependencies(snippet).forEach(name -> cell.output().appendLine("  └ " + name));
                         }
                     }
 
-                    errors += runner.diagnostics(event.snippet()).mapToInt(diag -> {
+                    errors += kernel.diagnostics(event.snippet()).mapToInt(diag -> {
                         String kind = diag.isError() ? "ERROR" : "WARN";
                         cell.output().appendLine(String.format("%s: %s",
                                 kind, diag.getMessage(Locale.getDefault())));
@@ -513,7 +534,7 @@ public class Notebook extends JPanel implements DocumentListener {
             logger.error("Error during execution: ", t);
             return false;
         } finally {
-            runner.removeOutputArea();;
+            kernel.removeOutputArea();;
             // Generates title before calling invokeLater
             // as runCount may have changed in case of runAllCells.
             String title = "[" + runCount + "]";
@@ -541,7 +562,7 @@ public class Notebook extends JPanel implements DocumentListener {
      * @param behavior post-run navigation behavior.
      */
     public synchronized void runCell(Cell cell, PostRunNavigation behavior) {
-        if (runner.isRunning()) {
+        if (kernel.isRunning()) {
             showRaceConditionDialog();
             return;
         }
@@ -556,17 +577,17 @@ public class Notebook extends JPanel implements DocumentListener {
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() {
-                runner.setRunning(true);
+                kernel.setRunning(true);
                 runCell(cell);
                 return null;
             }
 
             @Override
             protected void done() {
-                runner.setRunning(false);
+                kernel.setRunning(false);
                 // Post-run actions
                 handlePostRunNav(cell, behavior);
-                SwingUtilities.invokeLater(postRunAction);
+                SwingUtilities.invokeLater(() -> postRunAction.accept(kernel));
             }
         };
         worker.execute();
@@ -614,7 +635,7 @@ public class Notebook extends JPanel implements DocumentListener {
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() {
-                runner.setRunning(true);
+                kernel.setRunning(true);
                 for (Cell cell : cells) {
                     if (cell.editor().getText().trim().isEmpty()) continue;
                     if (!runCell(cell)) break;
@@ -624,8 +645,8 @@ public class Notebook extends JPanel implements DocumentListener {
 
             @Override
             protected void done() {
-                runner.setRunning(false);
-                SwingUtilities.invokeLater(postRunAction);
+                kernel.setRunning(false);
+                SwingUtilities.invokeLater(() -> postRunAction.accept(kernel));
             }
         };
         worker.execute();
@@ -636,7 +657,7 @@ public class Notebook extends JPanel implements DocumentListener {
      * @param cell the selected cell.
      */
     public synchronized void runCellAndBelow(Cell cell) {
-        if (runner.isRunning()) {
+        if (kernel.isRunning()) {
             showRaceConditionDialog();
             return;
         }
@@ -655,7 +676,7 @@ public class Notebook extends JPanel implements DocumentListener {
      * Runs all cells.
      */
     public synchronized void runAllCells() {
-        if (runner.isRunning()) {
+        if (kernel.isRunning()) {
             showRaceConditionDialog();
             return;
         }

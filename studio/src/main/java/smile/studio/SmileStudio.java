@@ -497,7 +497,7 @@ public class SmileStudio extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            workspace.kernel().stop();
+            workspace.notebook().ifPresent(Notebook::stop);
         }
     }
 
