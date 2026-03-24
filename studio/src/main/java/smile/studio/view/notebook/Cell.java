@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.studio.view;
+package smile.studio.view.notebook;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -30,6 +30,8 @@ import org.jdesktop.swingx.JXTextField;
 import ioa.agent.Coder;
 import ioa.llm.client.StreamResponseHandler;
 import smile.studio.kernel.PostRunNavigation;
+import smile.studio.view.Monospaced;
+import smile.studio.view.OutputArea;
 
 /**
  * A cell is a multiline coding field, and its contents can be executed

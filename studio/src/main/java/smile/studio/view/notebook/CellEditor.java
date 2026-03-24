@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.studio.view;
+package smile.studio.view.notebook;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -23,6 +23,7 @@ import java.awt.Dimension;
 import java.awt.event.*;
 import org.fife.ui.rsyntaxtextarea.*;
 import org.fife.ui.rtextarea.RTextScrollPane;
+import smile.studio.view.Editor;
 import smile.util.OS;
 
 /**
