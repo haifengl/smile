@@ -86,6 +86,10 @@ public class SmileStudio extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
+                // Save open files first. Otherwise, notebooks/files lists become empty
+                // after saving notebooks.
+                workspace.saveOpenFilePaths();
+
                 // Make a copy first as closeNotebook() may modify the notebooks list.
                 List<Notebook> notebooks = new ArrayList<>(workspace.notebooks());
                 for (Notebook notebook : notebooks) {
@@ -95,7 +99,6 @@ public class SmileStudio extends JFrame {
                     }
                 }
 
-                workspace.saveOpenFilePaths();
                 // Shutdown the execution engine.
                 workspace.close();
                 System.exit(0);
