@@ -20,6 +20,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
 /**
  * Python code execution engine.
@@ -30,10 +31,14 @@ public class PythonKernel extends Kernel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PythonKernel.class);
     /** Print Python output to the output area. */
     private final PrintWriter out = new PrintWriter(console, true, StandardCharsets.UTF_8);
+    /** Regex to detect Python errors. */
+    private final Pattern pythonErrorRegex = Pattern.compile("^(\\w+Error:)");
     /** Python process. */
     private Process process;
     /** Send commands to the Python process's input. */
     private PrintWriter writer;
+    /** Read output from the Python process. */
+    private BufferedReader reader;
 
     /**
      * Constructor.
@@ -56,10 +61,12 @@ public class PythonKernel extends Kernel {
     public void restart() {
         close();
         try {
+            // -i flag forces interactive mode
             ProcessBuilder builder = new ProcessBuilder("python3", "-i");
             builder.redirectErrorStream(true);
             process = builder.start();
             writer = new PrintWriter(new OutputStreamWriter(process.getOutputStream(), StandardCharsets.UTF_8));
+            reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
         } catch (IOException e) {
             logger.error("Failed to start Python REPL: {}", e.getMessage());
         }
@@ -81,23 +88,27 @@ public class PythonKernel extends Kernel {
     public boolean eval(String code, List<Object> values, Consumer<Object> eventListener) {
         writer.println(code);
         writer.flush();
-        StringBuilder sb = new StringBuilder();
-        try (var reader = new BufferedReader(
-                new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+        try {
             String line;
-            // Code has finished executing when the primary prompt (>>>) appears.
-            while ((line = reader.readLine()) != null && !line.startsWith(">>>")) {
+            while ((line = reader.readLine()) != null) {
                 eventListener.accept(line);
                 out.write(line);
-                out.print('\n');
+                out.write('\n');
                 out.flush();
-                sb.append(line).append('\n');
+
+                logger.info(line);
+                // Code has finished executing when the primary prompt ('>>> ')
+                // or secondary prompt ('... ') appears.
+                if (line.equals(">>> ") || line.equals("... ")) break;
+                // Or error happens
+                if (pythonErrorRegex.matcher(line).find()) break;
             }
-            values.add(sb.toString());
             return true;
         } catch (IOException ex) {
-            sb.append("Error reading Python output: ")
-              .append(ex.getMessage());
+            out.write("Error reading Python output: ");
+            out.write(ex.getMessage());
+            out.write('\n');
+            out.flush();
             return false;
         }
     }
