@@ -31,7 +31,6 @@ import ioa.agent.Coder;
 import smile.io.Paths;
 import smile.shell.JShell;
 import smile.studio.SmileStudio;
-import smile.studio.kernel.JavaKernel;
 import smile.swing.FileExplorer;
 import smile.swing.tree.DirectoryTreeNode;
 
@@ -55,8 +54,6 @@ public class Workspace extends JSplitPane {
     final JTabbedPane notebookTabs = new JTabbedPane();
     /** The tabbed pane for agent CLIs. */
     final JTabbedPane agentTabs = new JTabbedPane();
-    /** Java execution engine. */
-    final JavaKernel kernel = new JavaKernel();
     /** The opened files. */
     final List<Path> files = new ArrayList<>();
     /** The editor of notebook. */
@@ -83,8 +80,7 @@ public class Workspace extends JSplitPane {
         Analyst analyst = initAnalyst(cwd);
         coder = initCoder(cwd);
         fileExplorer = new FileExplorer(cwd);
-        setFileExplorerMouseListener();
-        kernelExplorer = new KernelExplorer(kernel, fileChooser);
+        kernelExplorer = new KernelExplorer(fileChooser);
         explorerTabs.addTab("Project", new JScrollPane(fileExplorer));
         explorerTabs.addTab("Kernel", new JScrollPane(kernelExplorer));
 
@@ -97,7 +93,6 @@ public class Workspace extends JSplitPane {
             openNotebook(Path.of("Untitled.java"));
         }
 
-        setNotebookTabCloseCallback();
         for (var notebook : notebooks) {
             notebookTabs.addTab(notebook.getFile().getFileName().toString(), notebook);
         }
@@ -109,6 +104,9 @@ public class Workspace extends JSplitPane {
         project.setRightComponent(notebookTabs);
         project.setResizeWeight(0.15);
 
+        setFileExplorerMouseListener();
+        setNotebookTabsListener();
+        setNotebookTabCloseCallback();
         setLeftComponent(project);
         setRightComponent(agentTabs);
         setResizeWeight(0.5);
@@ -233,6 +231,16 @@ public class Workspace extends JSplitPane {
                 });
     }
 
+    /** Sets the listener for switching notebook tabs to refresh the kernel explorer. */
+    private void setNotebookTabsListener() {
+        notebookTabs.addChangeListener(e -> {
+            int tabIndex = notebookTabs.getSelectedIndex();
+            if (notebookTabs.getSelectedComponent() instanceof Notebook notebook) {
+                kernelExplorer.refresh(notebook.kernel());
+            }
+        });
+    }
+
     /**
      * Saves the list of opened file paths to a local properties file.
      */
@@ -305,7 +313,7 @@ public class Workspace extends JSplitPane {
      */
     public void openNotebook(Path path) {
         if (files.contains(path)) return; // already opened
-        Notebook notebook = new Notebook(path, coder, kernel, kernelExplorer::refresh);
+        Notebook notebook = new Notebook(path, coder, kernelExplorer::refresh);
         notebookTabs.addTab(notebook.getFile().getFileName().toString(), notebook);
         notebookTabs.setSelectedComponent(notebook);
         notebooks.add(notebook);
@@ -408,27 +416,21 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Returns the Java execution engine.
-     * @return the Java execution engine.
-     */
-    public JavaKernel kernel() {
-        return kernel;
-    }
-
-    /**
      * Restarts the execution environment and refreshes dependent views.
      */
     public void restart() {
         notebook().ifPresent(book -> {
             book.restart();
-            kernelExplorer.refresh();
+            kernelExplorer.refresh(book.kernel());
         });
     }
 
     /**
-     * Shuts down the execution engine and frees resources.
+     * Shuts down the execution engines and frees resources.
      */
     public void close() {
-        kernel.close();
+        for (var notebook : notebooks) {
+            notebook.close();
+        }
     }
 }

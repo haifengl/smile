@@ -60,18 +60,16 @@ public class KernelExplorer extends JPanel {
      */
     private final DefaultTreeModel treeModel = (DefaultTreeModel) tree.getModel();
     /** JShell instance. */
-    private final JavaKernel kernel;
+    private JavaKernel kernel = null;
     /** File chooser for saving models. */
     private final SystemFileChooser fileChooser;
 
     /**
      * Constructor.
-     * @param kernel Java code execution engine.
      * @param fileChooser the file chooser for saving models.
      */
-    public KernelExplorer(JavaKernel kernel, SystemFileChooser fileChooser) {
+    public KernelExplorer(SystemFileChooser fileChooser) {
         super(new BorderLayout());
-        this.kernel = kernel;
         this.fileChooser = fileChooser;
 
         setBorder(new EmptyBorder(0, 8, 0, 0));
@@ -139,6 +137,7 @@ public class KernelExplorer extends JPanel {
                     if (treePath != null) {
                         DefaultMutableTreeNode node = (DefaultMutableTreeNode) treePath.getLastPathComponent();
                         if (node.isLeaf()) {
+                            if (kernel == null) return;
                             var parent = node.getParent();
                             if (parent == frames || parent == matrix) {
                                 var snippet = (VarSnippet) node.getUserObject();
@@ -148,6 +147,7 @@ public class KernelExplorer extends JPanel {
                                         %sWindow.setTitle("%s");
                                         """, name, name, name, name));
                             } else if (parent == models) {
+                                if (kernel == null) return;
                                 var title = fileChooser.getDialogTitle();
                                 fileChooser.setDialogTitle(bundle.getString("SaveModel"));
                                 var filter = new SystemFileChooser.FileNameExtensionFilter(bundle.getString("ModelFile"), "sml");
@@ -188,8 +188,10 @@ public class KernelExplorer extends JPanel {
 
     /**
      * Refreshes the tree with JShell active variables.
+     * @param kernel the JavaKernel instance to get variables from.
      */
-    public void refresh() {
+    public void refresh(JavaKernel kernel) {
+        this.kernel = kernel;
         frames.removeAllChildren();
         matrix.removeAllChildren();
         models.removeAllChildren();
