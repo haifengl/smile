@@ -20,6 +20,7 @@ import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -59,6 +60,14 @@ public class ScriptKernel extends Kernel {
 
     @Override
     public boolean eval(String script, List<Object> values, Consumer<Object> eventListener) {
+        boolean success;
+        // Scala/Kotlin ignore context writers, so we have to
+        // redirect System.out and System.err to the console.
+        PrintStream out = System.out;
+        PrintStream err = System.err;
+        PrintStream printer = new PrintStream(console, true, StandardCharsets.UTF_8);
+        System.setOut(printer);
+        System.setErr(printer);
         try {
             Object result = engine.eval(script);
             if (result instanceof Map) {
@@ -73,7 +82,7 @@ public class ScriptKernel extends Kernel {
                 values.add(result);
                 eventListener.accept(result);
             }
-            return true;
+            success = true;
         } catch (ScriptException ex) {
             var cause = ex.getCause();
             if (cause != null) {
@@ -89,8 +98,13 @@ public class ScriptKernel extends Kernel {
             } else {
                 writer.println("Failed to execute script: " + ex.getMessage());
             }
-            return false;
+            success = false;
         }
+
+        // Restore System.out and System.err
+        System.setOut(out);
+        System.setErr(err);
+        return success;
     }
 
     @Override
