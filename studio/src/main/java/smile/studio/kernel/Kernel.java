@@ -18,11 +18,8 @@ package smile.studio.kernel;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Consumer;
 import smile.studio.view.OutputArea;
-
-import javax.script.ScriptContext;
 
 /**
  * A kernel is an execution engine that runs the user's code in a specific
