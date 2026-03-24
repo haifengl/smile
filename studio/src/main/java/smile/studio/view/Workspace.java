@@ -17,6 +17,7 @@
 package smile.studio.view;
 
 import javax.swing.*;
+import javax.swing.Timer;
 import javax.swing.tree.TreePath;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -43,7 +44,12 @@ public class Workspace extends JSplitPane {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Workspace.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Workspace.class.getName(), Locale.getDefault());
     /** Source code file name extensions. */
-    private static final String[] JAVA_FILE_EXTENSIONS = {"java", "jsh"};
+    private static final String[] SMILE_FILE_EXTENSIONS = {
+            "java", "jsh", // Java source files and JShell snippets
+            "scala", "sc", // Scala source files and Ammonite scripts
+            "kt", "kts",   // Kotlin source files and scripts
+            "py", "ipynb"  // Python source files and Jupyter notebooks
+    };
     /** Workspace FileChooser that points to its own recent directory. */
     private final SystemFileChooser fileChooser;
     /** The project pane consists of explorer and notebook. */
@@ -91,6 +97,12 @@ public class Workspace extends JSplitPane {
         // Open a default notebook if there is no previously opened file.
         if (files.isEmpty()) {
             openNotebook(Path.of("Untitled.java"));
+            // TODO: we still save the file
+            // Initialized as true so that we won't try to save sample code.
+            // Delay 200ms so that it be called after DocumentUpdate events.
+            Timer timer = new Timer(200, e -> notebooks.getFirst().setSaved(true));
+            timer.setRepeats(false); // Ensures the action only runs once
+            timer.start();
         }
 
         for (var notebook : notebooks) {
@@ -127,8 +139,10 @@ public class Workspace extends JSplitPane {
                             Path path = node.path();
                             if (Files.isRegularFile(path)) {
                                 String fileExtension = Paths.getFileExtension(path);
-                                if (Arrays.asList(JAVA_FILE_EXTENSIONS).contains(fileExtension)) {
+                                if (Arrays.asList(SMILE_FILE_EXTENSIONS).contains(fileExtension)) {
                                     openNotebook(path);
+                                } else if (!Paths.isBinary(path)) {
+                                    Notepad.open(path);
                                 }
                             }
                         }
@@ -325,7 +339,8 @@ public class Workspace extends JSplitPane {
      */
     public void openNotebook() {
         fileChooser.setDialogTitle(bundle.getString("OpenNotebook"));
-        fileChooser.setFileFilter(new SystemFileChooser.FileNameExtensionFilter(bundle.getString("SmileFile"), JAVA_FILE_EXTENSIONS));
+        fileChooser.setFileFilter(new SystemFileChooser.FileNameExtensionFilter(
+                bundle.getString("SmileFile"), SMILE_FILE_EXTENSIONS));
         if (fileChooser.showOpenDialog(this) == SystemFileChooser.APPROVE_OPTION) {
             Path file = fileChooser.getSelectedFile().toPath();
             openNotebook(file);
@@ -373,7 +388,8 @@ public class Workspace extends JSplitPane {
     public boolean saveNotebook(Notebook notebook, boolean saveAs) {
         if (notebook.getFile() == null || saveAs) {
             fileChooser.setDialogTitle(bundle.getString("SaveNotebook"));
-            fileChooser.setFileFilter(new SystemFileChooser.FileNameExtensionFilter(bundle.getString("SmileFile"), JAVA_FILE_EXTENSIONS));
+            fileChooser.setFileFilter(new SystemFileChooser.FileNameExtensionFilter(
+                    bundle.getString("SmileFile"), SMILE_FILE_EXTENSIONS));
             if (fileChooser.showSaveDialog(this) != SystemFileChooser.APPROVE_OPTION) {
                 return false;
             }
