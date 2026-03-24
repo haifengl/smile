@@ -16,6 +16,7 @@
  */
 package smile.studio.kernel;
 
+import javax.swing.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -31,6 +32,8 @@ public class PythonKernel extends Kernel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PythonKernel.class);
     /** Print Python output to the output area. */
     private final PrintWriter out = new PrintWriter(console, true, StandardCharsets.UTF_8);
+    /** Regex to detect iPython prompt. */
+    private final Pattern pythonPromptRegex = Pattern.compile("^(In [\\d+]:)");
     /** Regex to detect Python errors. */
     private final Pattern pythonErrorRegex = Pattern.compile("^(\\w+Error:)");
     /** Python process. */
@@ -61,14 +64,21 @@ public class PythonKernel extends Kernel {
     public void restart() {
         close();
         try {
-            // -i flag forces interactive mode
-            ProcessBuilder builder = new ProcessBuilder("python3", "-i");
+            ProcessBuilder builder = new ProcessBuilder(
+                    "ipython", "--simple-prompt", "--colors", "NoColor",
+                    "--no-banner", "--no-pdb", "--quick");
             builder.redirectErrorStream(true);
             process = builder.start();
-            writer = new PrintWriter(new OutputStreamWriter(process.getOutputStream(), StandardCharsets.UTF_8));
             reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
+            writer = new PrintWriter(new OutputStreamWriter(process.getOutputStream(), StandardCharsets.UTF_8));
         } catch (IOException e) {
-            logger.error("Failed to start Python REPL: {}", e.getMessage());
+            logger.error("Failed to start iPython REPL: {}", e.getMessage());
+            logger.info("To install iPython, run `pip install ipython` in your terminal.");
+            JOptionPane.showMessageDialog(null,
+                    "To install iPython, run `pip install ipython` in your terminal.",
+                    "iPython",
+                    JOptionPane.INFORMATION_MESSAGE);
+
         }
     }
 
@@ -80,34 +90,35 @@ public class PythonKernel extends Kernel {
     @Override
     public void stop() {
         // Ctrl-C to stop the current execution.
-        writer.print(3);
+        writer.write(3);
         writer.flush();
     }
 
     @Override
     public boolean eval(String code, List<Object> values, Consumer<Object> eventListener) {
+        // paste magic command allows us to send multi-line code to iPython REPL.
+        writer.println("%cpaste");
         writer.println(code);
+        //writer.write(4); // Ctrl-D to indicate the end of code input.
+        writer.println("--"); // Or by a line with only "--".
         writer.flush();
         try {
             String line;
             while ((line = reader.readLine()) != null) {
                 eventListener.accept(line);
-                out.write(line);
-                out.write('\n');
+                out.println(line);
                 out.flush();
 
                 logger.info(line);
-                // Code has finished executing when the primary prompt ('>>> ')
-                // or secondary prompt ('... ') appears.
-                if (line.equals(">>> ") || line.equals("... ")) break;
+                System.out.println(pythonPromptRegex.matcher(line).find());
+                // Code has finished executing when the prompt appears.
+                if (pythonPromptRegex.matcher(line).find()) break;
                 // Or error happens
-                if (pythonErrorRegex.matcher(line).find()) break;
+                //if (pythonErrorRegex.matcher(line).find()) break;
             }
             return true;
         } catch (IOException ex) {
-            out.write("Error reading Python output: ");
-            out.write(ex.getMessage());
-            out.write('\n');
+            out.println("Error reading Python output: " + ex.getMessage());
             out.flush();
             return false;
         }
