@@ -32,9 +32,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
-
 import jdk.jshell.*;
 import ioa.agent.Coder;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import smile.io.Paths;
 import smile.studio.kernel.*;
 import smile.swing.ScrollablePanel;
@@ -55,11 +55,15 @@ public class Notebook extends JPanel implements DocumentListener {
     private final JPanel cells = new ScrollablePanel();
     private final JScrollPane scrollPane = new JScrollPane(cells);
     private final DateTimeFormatter datetime = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
-    /** Java execution engine. */
-    private final JavaKernel kernel = new JavaKernel();
+    /** Programming language. */
+    private final String lang;
+    /** Programming language syntax highlight style. */
+    private final String syntaxStyle;
+    /** Execution engine. */
+    private final Kernel kernel;
     /** The coding assistant agent. */
     private final Coder coder;
-    private final Consumer<JavaKernel> postRunAction;
+    private final Consumer<Kernel> postRunAction;
     private int runCount = 0;
     private Path file;
     private boolean saved = true;
@@ -70,7 +74,7 @@ public class Notebook extends JPanel implements DocumentListener {
      * @param coder the coding assistant agent.
      * @param postRunAction the action to perform after running cells.
      */
-    public Notebook(Path file, Coder coder, Consumer<JavaKernel> postRunAction) {
+    public Notebook(Path file, Coder coder, Consumer<Kernel> postRunAction) {
         super(new BorderLayout());
         this.file = file;
         this.postRunAction = postRunAction;
@@ -81,7 +85,9 @@ public class Notebook extends JPanel implements DocumentListener {
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         add(scrollPane, BorderLayout.CENTER);
 
-        initKernel();
+        lang = initLang();
+        syntaxStyle = initSyntaxStyle();
+        kernel = initKernel();
         if (file != null && Files.exists(file)) {
             try {
                 open(file);
@@ -170,29 +176,59 @@ public class Notebook extends JPanel implements DocumentListener {
     }
 
     /**
+     * Returns the programming language.
+     * @return the programming language.
+     */
+    public String lang() {
+        return lang;
+    }
+
+    /**
+     * Returns the programming language syntax highlight style.
+     * @return the programming language syntax highlight style.
+     */
+    public String syntaxStyle() {
+        return syntaxStyle;
+    }
+
+    /**
      * Returns the execution engine.
      * @return the execution engine.
      */
-    public JavaKernel kernel() {
+    public Kernel kernel() {
         return kernel;
+    }
+
+    /** Initialize the programming language. */
+    private String initLang() {
+        var ext = Paths.getFileExtension(file);
+        return switch (ext) {
+            case "java", "jsh" -> "Java";
+            case "scala", "sc" -> "Scala";
+            case "kt", "kts" -> "Kotlin";
+            case "py", "ipynb" -> "Python";
+            default -> ext;
+        };
+    }
+
+    /** Initialize the programming language syntax highlight style. */
+    private String initSyntaxStyle() {
+        return switch (lang) {
+            case "Java" -> SyntaxConstants.SYNTAX_STYLE_JAVA;
+            case "Scala" -> SyntaxConstants.SYNTAX_STYLE_SCALA;
+            case "Kotlin" -> SyntaxConstants.SYNTAX_STYLE_KOTLIN;
+            case "Python" -> SyntaxConstants.SYNTAX_STYLE_PYTHON;
+            default -> SyntaxConstants.SYNTAX_STYLE_NONE;
+        };
     }
 
     /** Initialize the kernel. */
     private Kernel initKernel() {
-        return switch (Paths.getFileExtension(file)) {
-            case "java", "jsh" -> {
-                var kernel = new JavaKernel();
-                // Note that JShell runs in another JVM so that
-                // we need to setup FlatLaf again.
-                kernel.eval("""
-            javax.swing.SwingUtilities.invokeLater(() -> {
-                com.formdev.flatlaf.FlatLightLaf.setup();
-            });""");
-                yield kernel;
-            }
-            case "scala", "sc" -> new ScriptKernel("scala");
-            case "kt", "kts" -> new ScriptKernel("kotlin");
-            case "py", "ipynb" -> {
+        return switch (lang) {
+            case "Java" -> new JavaKernel();
+            case "Scala" -> new ScriptKernel("scala");
+            case "Kotlin" -> new ScriptKernel("kotlin");
+            case "Python" -> {
                 try {
                     yield new PythonKernel();
                 } catch (IOException ex) {
@@ -223,7 +259,6 @@ public class Notebook extends JPanel implements DocumentListener {
     /** Restarts the kernel and clears all output. */
     public void restart() {
         kernel.restart();
-        initKernel();
         clearAllOutputs();
     }
 
@@ -520,63 +555,66 @@ public class Notebook extends JPanel implements DocumentListener {
             cell.output().clear();
             ZonedDateTime start = ZonedDateTime.now();
             cell.output().appendLine("⏵ " + datetime.format(start) + " started");
-            boolean okay = kernel.eval(cell.editor().getText(), (events) -> {
-                // The number of errors;
-                int errors = 0;
-                // Capture values, diagnostics, and exceptions in order
-                for (SnippetEvent event : events) {
-                    if (event.status() == Snippet.Status.VALID && event.snippet() instanceof VarSnippet variable) {
-                        if (!variable.name().matches("\\$\\d+")) {
-                            String typeName = variable.typeName();
-                            cell.output().appendBuffer("⇒ " + typeName + " " + variable.name() + " = ");
 
-                            String value = event.value();
-                            if (value == null) {
-                                cell.output().appendLine("null");
-                            } else {
-                                if (typeName.endsWith("DataFrame")) {
-                                    cell.output().appendBuffer("\n");
-                                } else if (typeName.contains("[]")) {
-                                    // The type may be generic with array, e.g., SVM<double[]>
-                                    int index = value.indexOf('{');
-                                    if (index > 0) {
-                                        value = value.substring(0, index);
+            boolean okay;
+            List<Object> values = new ArrayList<>();
+            var code = cell.editor().getText();
+            if (kernel instanceof JavaKernel javaKernel) {
+                okay = javaKernel.eval(code, values, e -> {
+                    @SuppressWarnings("unchecked")
+                    List<SnippetEvent> events = (List<SnippetEvent>) e;
+                    // Capture values, diagnostics, and exceptions in order
+                    for (SnippetEvent event : events) {
+                        if (event.status() == Snippet.Status.VALID && event.snippet() instanceof VarSnippet variable) {
+                            if (!variable.name().matches("\\$\\d+")) {
+                                String typeName = variable.typeName();
+                                cell.output().appendBuffer("⇒ " + typeName + " " + variable.name() + " = ");
+
+                                String value = event.value();
+                                if (value == null) {
+                                    cell.output().appendLine("null");
+                                } else {
+                                    if (typeName.endsWith("DataFrame")) {
+                                        cell.output().appendBuffer("\n");
+                                    } else if (typeName.contains("[]")) {
+                                        // The type may be generic with array, e.g., SVM<double[]>
+                                        int index = value.indexOf('{');
+                                        if (index > 0) {
+                                            value = value.substring(0, index);
+                                        }
                                     }
+                                    cell.output().appendLine(value);
                                 }
-                                cell.output().appendLine(value);
+                            }
+                        } else if (event.status() == Snippet.Status.REJECTED) {
+                            cell.output().appendLine("✖ Rejected snippet: " + event.snippet().source());
+                        } else if (event.status() == Snippet.Status.RECOVERABLE_DEFINED ||
+                                event.status() == Snippet.Status.RECOVERABLE_NOT_DEFINED) {
+                            cell.output().appendLine("⚠ Recoverable issue: " + event.snippet().source());
+                            if (event.snippet() instanceof DeclarationSnippet snippet) {
+                                cell.output().appendLine("⚠ Unresolved dependencies:");
+                                javaKernel.unresolvedDependencies(snippet).forEach(name -> cell.output().appendLine("  └ " + name));
                             }
                         }
-                    } else if (event.status() == Snippet.Status.REJECTED) {
-                        errors++;
-                        cell.output().appendLine("✖ Rejected snippet: " + event.snippet().source());
-                    } else if (event.status() == Snippet.Status.RECOVERABLE_DEFINED ||
-                               event.status() == Snippet.Status.RECOVERABLE_NOT_DEFINED) {
-                        errors++;
-                        cell.output().appendLine("⚠ Recoverable issue: " + event.snippet().source());
-                        if (event.snippet() instanceof DeclarationSnippet snippet) {
-                            cell.output().appendLine("⚠ Unresolved dependencies:");
-                            kernel.unresolvedDependencies(snippet).forEach(name -> cell.output().appendLine("  └ " + name));
+
+                        javaKernel.diagnostics(event.snippet()).forEach(diag -> {
+                            String kind = diag.isError() ? "ERROR" : "WARN";
+                            cell.output().appendLine(String.format("%s: %s",
+                                    kind, diag.getMessage(Locale.getDefault())));
+                        });
+
+                        if (event.exception() instanceof EvalException ex) {
+                            cell.output().appendLine(ex.getExceptionClassName() + ": " + (ex.getMessage() != null ? ex.getMessage() : ""));
+                            // JShell exception stack trace is often concise
+                            for (StackTraceElement ste : ex.getStackTrace()) {
+                                cell.output().appendLine("  at " + ste.toString());
+                            }
                         }
                     }
-
-                    errors += kernel.diagnostics(event.snippet()).mapToInt(diag -> {
-                        String kind = diag.isError() ? "ERROR" : "WARN";
-                        cell.output().appendLine(String.format("%s: %s",
-                                kind, diag.getMessage(Locale.getDefault())));
-                        return diag.isError() ? 1 : 0;
-                    }).sum();
-
-                    if (event.exception() instanceof EvalException ex) {
-                        errors++;
-                        cell.output().appendLine(ex.getExceptionClassName() + ": " + (ex.getMessage() != null ? ex.getMessage() : ""));
-                        // JShell exception stack trace is often concise
-                        for (StackTraceElement ste : ex.getStackTrace()) {
-                            cell.output().appendLine("  at " + ste.toString());
-                        }
-                    }
-                }
-                return errors;
-            });
+                });
+            } else {
+                okay = kernel.eval(code, values, e -> {});
+            }
 
             ZonedDateTime end = ZonedDateTime.now();
             Duration duration = Duration.between(start, end);

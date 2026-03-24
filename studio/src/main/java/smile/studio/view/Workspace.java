@@ -113,14 +113,14 @@ public class Workspace extends JSplitPane {
 
         project.setLeftComponent(explorerTabs);
         project.setRightComponent(notebookTabs);
-        project.setResizeWeight(0.15);
+        project.setResizeWeight(0.2);
 
         setFileExplorerMouseListener();
         setNotebookTabsListener();
         setNotebookTabCloseCallback();
         setLeftComponent(project);
         setRightComponent(agentTabs);
-        setResizeWeight(0.5);
+        setResizeWeight(0.55);
     }
 
     /** Opens a notebook when double-clicking a supported file in the explorer. */
@@ -434,9 +434,9 @@ public class Workspace extends JSplitPane {
      * Restarts the execution environment and refreshes dependent views.
      */
     public void restart() {
-        notebook().ifPresent(book -> {
-            book.restart();
-            kernelExplorer.refresh(book.kernel());
+        notebook().ifPresent(notebook -> {
+            notebook.restart();
+            kernelExplorer.refresh(notebook.kernel());
         });
     }
 
