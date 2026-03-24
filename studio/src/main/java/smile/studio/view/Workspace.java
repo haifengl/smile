@@ -37,7 +37,7 @@ import smile.swing.FileExplorer;
  */
 public class Workspace extends JSplitPane {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Workspace.class);
-    private static final ResourceBundle bundle = ResourceBundle.getBundle(SmileStudio.class.getName(), Locale.getDefault());
+    private static final ResourceBundle bundle = ResourceBundle.getBundle(Workspace.class.getName(), Locale.getDefault());
     /** Source code file name extensions. */
     private static final String[] JAVA_FILE_EXTENSIONS = {"java", "jsh"};
     /** Workspace FileChooser that points to its own recent directory. */
@@ -66,22 +66,14 @@ public class Workspace extends JSplitPane {
     /**
      * Constructor.
      * @param cwd the current working directory for the workspace.
-     * @param fileChooser the file chooser for saving models.
      */
-    public Workspace(Path cwd, SystemFileChooser fileChooser) {
+    public Workspace(Path cwd) {
         super(JSplitPane.HORIZONTAL_SPLIT);
-        this.fileChooser = fileChooser;
+        this.fileChooser = new SystemFileChooser();
+        fileChooser.setCurrentDirectory(cwd.toFile());
 
-        Analyst analyst = null;
-        Coder javaCoder = null;
-        try {
-            analyst = new Analyst("data-analyst", SmileStudio.llm(), cwd);
-            javaCoder = new Coder("java-coder", SmileStudio.llm(), cwd);
-        } catch (Exception ex) {
-            logger.error("Failed to initialize agents", ex);
-        }
-        coder = javaCoder;
-
+        Analyst analyst = initAnalyst(cwd);
+        coder = initCoder(cwd);
         fileExplorer = new FileExplorer(cwd);
         kernelExplorer = new KernelExplorer(kernel, fileChooser);
         explorerTabs.addTab("Project", new JScrollPane(fileExplorer));
@@ -103,6 +95,26 @@ public class Workspace extends JSplitPane {
         setLeftComponent(project);
         setRightComponent(agentTabs);
         setResizeWeight(0.5);
+    }
+
+    /** Initializes the analyst agent. */
+    private Analyst initAnalyst(Path cwd) {
+        try {
+            return new Analyst("data-analyst", SmileStudio.llm(), cwd);
+        } catch (Exception ex) {
+            logger.error("Failed to initialize data analyst agent", ex);
+        }
+        return null;
+    }
+
+    /** Initializes the coding agent. */
+    private Coder initCoder(Path cwd) {
+        try {
+            return new Coder("java-coder", SmileStudio.llm(), cwd);
+        } catch (Exception ex) {
+            logger.error("Failed to initialize Java coding agent", ex);
+        }
+        return null;
     }
 
     /** Creates an analyst agent cli. */
@@ -200,6 +212,7 @@ public class Workspace extends JSplitPane {
 
     /**
      * Opens a notebook.
+     * @param path the notebook file path.
      */
     public void openNotebook(Path path) {
         Notebook notebook = new Notebook(path, coder, kernel, kernelExplorer::refresh);
@@ -207,6 +220,18 @@ public class Workspace extends JSplitPane {
         notebookTabs.setSelectedComponent(notebook);
         notebooks.add(notebook);
         files.add(path);
+    }
+
+    /**
+     * Opens a notebook with file chooser.
+     */
+    public void openNotebook() {
+        fileChooser.setDialogTitle(bundle.getString("OpenNotebook"));
+        fileChooser.setFileFilter(new SystemFileChooser.FileNameExtensionFilter(bundle.getString("SmileFile"), JAVA_FILE_EXTENSIONS));
+        if (fileChooser.showOpenDialog(this) == SystemFileChooser.APPROVE_OPTION) {
+            Path file = fileChooser.getSelectedFile().toPath();
+            openNotebook(file);
+        }
     }
 
     /**

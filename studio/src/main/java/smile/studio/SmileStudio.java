@@ -51,16 +51,12 @@ import static smile.swing.SmileUtilities.scaleImageIcon;
  */
 public class SmileStudio extends JFrame {
     private static final ResourceBundle bundle = ResourceBundle.getBundle(SmileStudio.class.getName(), Locale.getDefault());
-    /** Source code file name extensions. */
-    private static final String[] JAVA_FILE_EXTENSIONS = {"java", "jsh"};
     /** Application preference and configuration. */
     private static final Preferences prefs = Preferences.userNodeForPackage(SmileStudio.class);
     /** The key for auto save preference. */
     private static final String AUTO_SAVE_KEY = "autoSave";
     /** The LLM model. */
     private static final LLM llm = initLLM().orElse(null);
-    /** Each window has its own FileChooser so that it points to its own recent directory. */
-    private final SystemFileChooser fileChooser = new SystemFileChooser();
     /** Application icons in different sizes. */
     private final List<Image> icons = new ArrayList<>();
     private final JMenuBar menuBar = new JMenuBar();
@@ -78,8 +74,7 @@ public class SmileStudio extends JFrame {
         initMenuAndToolBar();
 
         Path cwd = Path.of(System.getProperty("user.dir"));
-        fileChooser.setCurrentDirectory(cwd.toFile());
-        workspace = new Workspace(cwd, fileChooser);
+        workspace = new Workspace(cwd);
 
         JPanel contentPane = new JPanel(new BorderLayout());
         contentPane.add(toolBar, BorderLayout.NORTH);
@@ -93,7 +88,6 @@ public class SmileStudio extends JFrame {
             @Override
             public void windowClosing(WindowEvent e) {
                 for (Notebook notebook : workspace.notebooks()) {
-                    System.out.println(notebook.getFile());
                     if (!workspace.saveNotebook(notebook, false)) {
                         // cancel the closing operation if saving failed or canceled.
                         return;
@@ -374,7 +368,7 @@ public class SmileStudio extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            openNotebook();
+            workspace.openNotebook();
         }
     }
 
@@ -643,18 +637,6 @@ public class SmileStudio extends JFrame {
     private void newNotebook() {
         Path file = Path.of("Untitled.java");
         workspace.openNotebook(file);
-    }
-
-    /**
-     * Opens a notebook.
-     */
-    private void openNotebook() {
-        fileChooser.setDialogTitle(bundle.getString("OpenNotebook"));
-        fileChooser.setFileFilter(new SystemFileChooser.FileNameExtensionFilter(bundle.getString("SmileFile"), JAVA_FILE_EXTENSIONS));
-        if (fileChooser.showOpenDialog(this) == SystemFileChooser.APPROVE_OPTION) {
-            Path file = fileChooser.getSelectedFile().toPath();
-            workspace.openNotebook(file);
-        }
     }
 
     /**
