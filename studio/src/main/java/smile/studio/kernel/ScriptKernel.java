@@ -37,6 +37,7 @@ import java.util.function.Consumer;
  */
 public class ScriptKernel extends Kernel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScriptKernel.class);
+    private final PrintStream printer = new PrintStream(console, true, StandardCharsets.UTF_8);
     private final PrintWriter writer = new PrintWriter(console, true, StandardCharsets.UTF_8);
     private final ExecutorService executor = Executors.newFixedThreadPool(1);
     private final String name;
@@ -65,7 +66,6 @@ public class ScriptKernel extends Kernel {
         // redirect System.out and System.err to the console.
         PrintStream out = System.out;
         PrintStream err = System.err;
-        PrintStream printer = new PrintStream(console, true, StandardCharsets.UTF_8);
         System.setOut(printer);
         System.setErr(printer);
         try {

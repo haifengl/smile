@@ -20,7 +20,6 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.ToIntFunction;
 
 /**
  * Python code execution engine.
@@ -29,6 +28,8 @@ import java.util.function.ToIntFunction;
  */
 public class PythonKernel extends Kernel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PythonKernel.class);
+    /** Print Python output to the output area. */
+    private final PrintWriter out = new PrintWriter(console, true, StandardCharsets.UTF_8);
     /** Python process. */
     private Process process;
     /** Send commands to the Python process's input. */
@@ -55,8 +56,6 @@ public class PythonKernel extends Kernel {
     public void restart() {
         close();
         try {
-            PrintStream shellOut = new PrintStream(console, true, StandardCharsets.UTF_8);
-            PrintStream shellErr = new PrintStream(console, true, StandardCharsets.UTF_8);
             ProcessBuilder builder = new ProcessBuilder("python3", "-i");
             builder.redirectErrorStream(true);
             process = builder.start();
@@ -89,6 +88,9 @@ public class PythonKernel extends Kernel {
             // Code has finished executing when the primary prompt (>>>) appears.
             while ((line = reader.readLine()) != null && !line.startsWith(">>>")) {
                 eventListener.accept(line);
+                out.write(line);
+                out.print('\n');
+                out.flush();
                 sb.append(line).append('\n');
             }
             values.add(sb.toString());

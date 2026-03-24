@@ -70,7 +70,7 @@ public class JavaKernel extends Kernel {
         sourceAnalyzer = jshell.sourceCodeAnalysis();
 
         // Note that JShell runs in another JVM so that
-        // we need to setup FlatLaf again.
+        // we need to set up FlatLaf again.
         eval("""
             javax.swing.SwingUtilities.invokeLater(() -> {
                 com.formdev.flatlaf.FlatLightLaf.setup();
