@@ -41,6 +41,12 @@ public class ScriptKernel extends Kernel {
     private final String name;
     private ScriptEngine engine;
 
+    static {
+        // Kotlin Script Engine often fails to inherit the host JVM classpath.
+        // To fix this, explicitly add required jars via system property.
+        System.setProperty("kotlin.script.classpath", System.getProperty("java.class.path"));
+    }
+
     /**
      * Constructor.
      * @param name the short name of the ScriptEngine implementation,
