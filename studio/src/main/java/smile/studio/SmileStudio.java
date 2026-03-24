@@ -93,6 +93,7 @@ public class SmileStudio extends JFrame {
                     }
                 }
 
+                workspace.saveOpenFilePaths();
                 // Shutdown the execution engine.
                 workspace.close();
                 System.exit(0);

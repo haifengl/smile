@@ -20,8 +20,7 @@ import javax.swing.*;
 import javax.swing.tree.TreePath;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -59,7 +58,7 @@ public class Workspace extends JSplitPane {
     /** Java execution engine. */
     final JavaKernel kernel = new JavaKernel();
     /** The opened files. */
-    final Set<Path> files = new HashSet<>();
+    final List<Path> files = new ArrayList<>();
     /** The editor of notebook. */
     final List<Notebook> notebooks = new ArrayList<>();
     /** The file explorer of current working directory. */
@@ -68,6 +67,8 @@ public class Workspace extends JSplitPane {
     final KernelExplorer kernelExplorer;
     /** The coding agent. */
     final Coder coder;
+    /** The current working directory for the workspace. */
+    final Path cwd;
 
     /**
      * Constructor.
@@ -75,6 +76,7 @@ public class Workspace extends JSplitPane {
      */
     public Workspace(Path cwd) {
         super(JSplitPane.HORIZONTAL_SPLIT);
+        this.cwd = cwd;
         this.fileChooser = new SystemFileChooser();
         fileChooser.setCurrentDirectory(cwd.toFile());
 
@@ -86,8 +88,16 @@ public class Workspace extends JSplitPane {
         explorerTabs.addTab("Project", new JScrollPane(fileExplorer));
         explorerTabs.addTab("Kernel", new JScrollPane(kernelExplorer));
 
-        openNotebook(Path.of("Untitled.java"));
-        setTabCloseCallback();
+        for (var file : getOpenFilePaths()) {
+            openNotebook(file);
+        }
+
+        // Open a default notebook if there is no previously opened file.
+        if (files.isEmpty()) {
+            openNotebook(Path.of("Untitled.java"));
+        }
+
+        setNotebookTabCloseCallback();
         for (var notebook : notebooks) {
             notebookTabs.addTab(notebook.getFile().getFileName().toString(), notebook);
         }
@@ -212,7 +222,7 @@ public class Workspace extends JSplitPane {
     }
 
     /** Sets the callback for closing notebook tabs. */
-    private void setTabCloseCallback() {
+    private void setNotebookTabCloseCallback() {
         notebookTabs.putClientProperty("JTabbedPane.tabClosable", true);
         notebookTabs.putClientProperty("JTabbedPane.tabCloseCallback",
                 (IntConsumer) tabIndex -> {
@@ -221,6 +231,52 @@ public class Workspace extends JSplitPane {
                         notebookTabs.removeTabAt(tabIndex);
                     }
                 });
+    }
+
+    /**
+     * Saves the list of opened file paths to a local properties file.
+     */
+    public void saveOpenFilePaths() {
+        Path path = cwd.resolve(".smile", "studio.properties");
+        Properties properties = new Properties();
+
+        // Store each file path with a unique key (e.g., file.1, file.2, ...)
+        for (int i = 0; i < files.size(); i++) {
+            // Using a simple numeric key allows for a list-like structure
+            properties.setProperty("file." + (i + 1), files.get(i).toAbsolutePath().toString());
+        }
+
+        try (OutputStream output = new FileOutputStream(path.toFile())) {
+            properties.store(output, "Smile Studio Properties");
+        } catch (IOException e) {
+            logger.error("Error saving studio properties file: ", e);
+        }
+    }
+
+    /**
+     * Gets the list of opened file paths in previous session from a local properties file.
+     */
+    public List<Path> getOpenFilePaths() {
+        Path path = cwd.resolve(".smile", "studio.properties");
+        List<Path> files = new ArrayList<>();
+        if (Files.exists(path)) {
+            Properties properties = new Properties();
+            try (FileInputStream input = new FileInputStream(path.toFile())) {
+                properties.load(input);
+                for (int i = 1; i <= 100; i++) {
+                    String file = properties.getProperty("file." + i);
+                    if (file != null) {
+                        files.add(Path.of(file));
+                    } else {
+                        break; // stop if no more file entries
+                    }
+                }
+            } catch (IOException ex) {
+                logger.error("Error reading studio properties file: ", ex);
+            }
+        }
+
+        return files;
     }
 
     /**
@@ -248,6 +304,7 @@ public class Workspace extends JSplitPane {
      * @param path the notebook file path.
      */
     public void openNotebook(Path path) {
+        if (files.contains(path)) return; // already opened
         Notebook notebook = new Notebook(path, coder, kernel, kernelExplorer::refresh);
         notebookTabs.addTab(notebook.getFile().getFileName().toString(), notebook);
         notebookTabs.setSelectedComponent(notebook);
