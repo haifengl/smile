@@ -17,8 +17,7 @@
 package smile.swing;
 
 import javax.swing.*;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
+import javax.swing.event.*;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import java.nio.file.Path;
@@ -29,7 +28,7 @@ import smile.swing.tree.DirectoryTreeNode;
  *
  * @author Haifeng Li
  */
-public class FileExplorer extends JTree implements TreeSelectionListener {
+public class FileExplorer extends JTree implements TreeSelectionListener, TreeWillExpandListener {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileExplorer.class);
 
     /**
@@ -40,6 +39,7 @@ public class FileExplorer extends JTree implements TreeSelectionListener {
         super(new DefaultTreeModel(new DirectoryTreeNode(root)));
         setShowsRootHandles(true);
         addTreeSelectionListener(this);
+        addTreeWillExpandListener(this);
         DefaultTreeModel model = (DefaultTreeModel) getModel();
         var rootNode = (DirectoryTreeNode) model.getRoot();
         rootNode.addChildren(model);
@@ -52,5 +52,16 @@ public class FileExplorer extends JTree implements TreeSelectionListener {
         if (getLastSelectedPathComponent() instanceof DirectoryTreeNode node) {
             node.addChildren((DefaultTreeModel) getModel());
         }
+    }
+
+    @Override
+    public void treeWillExpand(TreeExpansionEvent event) {
+        if (event.getPath().getLastPathComponent() instanceof DirectoryTreeNode node) {
+            node.addChildren((DefaultTreeModel) getModel());
+        }
+    }
+
+    @Override
+    public void treeWillCollapse(TreeExpansionEvent event) {
     }
 }
