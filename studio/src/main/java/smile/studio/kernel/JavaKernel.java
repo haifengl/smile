@@ -20,7 +20,7 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.function.ToIntFunction;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import jdk.jshell.*;
 import com.formdev.flatlaf.util.SystemInfo;
@@ -68,6 +68,13 @@ public class JavaKernel extends Kernel {
         }
         jshell = builder.build();
         sourceAnalyzer = jshell.sourceCodeAnalysis();
+
+        // Note that JShell runs in another JVM so that
+        // we need to setup FlatLaf again.
+        eval("""
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                com.formdev.flatlaf.FlatLightLaf.setup();
+            });""");
     }
 
     @Override
@@ -93,33 +100,8 @@ public class JavaKernel extends Kernel {
         jshell.stop();
     }
 
-    /**
-     * Evaluates a code block.
-     * @param code a code block.
-     * @return the value of last variable snippet. Or null if no variables.
-     */
     @Override
-    public String eval(String code) {
-        var wrapper = new Object() { String value = null; };
-        eval(code, (events) -> {
-            for (var event : events) {
-                if (event.status() == Snippet.Status.VALID && event.snippet() instanceof VarSnippet variable) {
-                    wrapper.value = event.value();
-                }
-            }
-            return 0;
-        });
-        return wrapper.value;
-    }
-
-    /**
-     * Evaluates a code block.
-     * @param code a code block.
-     * @param callback the callback function for each snippet evaluation results,
-     *                 which returns the number of execution errors.
-     * @return true if no errors reported by callback.
-     */
-    public boolean eval(String code, ToIntFunction<List<SnippetEvent>> callback) {
+    public boolean eval(String code, List<Object> values, Consumer<Object> eventListener) {
         SourceCodeAnalysis.CompletionInfo info = sourceAnalyzer.analyzeCompletion(code);
         while (info.completeness().isComplete()) {
             String source = info.source();
@@ -132,9 +114,17 @@ public class JavaKernel extends Kernel {
             }
 
             List<SnippetEvent> events = jshell.eval(source);
-            if (callback != null && callback.applyAsInt(events) > 0) {
-                return false;
+            eventListener.accept(events);
+            for (var event : events) {
+                if (event.status() == Snippet.Status.VALID) {
+                    if (event.snippet() instanceof VarSnippet variable) {
+                        values.add(event.value());
+                    }
+                } else {
+                    return false;
+                }
             }
+
             info = sourceAnalyzer.analyzeCompletion(info.remaining());
         }
 
@@ -158,8 +148,10 @@ public class JavaKernel extends Kernel {
      * Returns the active variable snippets.
      * @return the active variable snippets.
      */
-    public Stream<VarSnippet> variables() {
-        return jshell.variables();
+    public List<Variable> variables() {
+        return jshell.variables()
+                .map(v -> new Variable(v.name(), v.typeName()))
+                .toList();
     }
 
     /**
