@@ -30,7 +30,7 @@ import java.util.Objects;
 import java.util.ResourceBundle;
 import com.formdev.flatlaf.util.SystemFileChooser;
 import jdk.jshell.VarSnippet;
-import smile.studio.kernel.JavaKernel;
+import smile.studio.kernel.Kernel;
 import smile.studio.model.PersistedModel;
 import static smile.swing.SmileUtilities.scaleImageIcon;
 
@@ -59,8 +59,8 @@ public class KernelExplorer extends JPanel {
      * DefaultTreeModel's methods to manage the nodes.
      */
     private final DefaultTreeModel treeModel = (DefaultTreeModel) tree.getModel();
-    /** JShell instance. */
-    private JavaKernel kernel = null;
+    /** Kernel instance. */
+    private Kernel kernel = null;
     /** File chooser for saving models. */
     private final SystemFileChooser fileChooser;
 
@@ -89,9 +89,6 @@ public class KernelExplorer extends JPanel {
         treeModel.insertNodeInto(models, root, root.getChildCount());
         treeModel.insertNodeInto(services, root, root.getChildCount());
 
-        Monospaced.addListener((e) ->
-                SwingUtilities.invokeLater(() -> tree.setFont((Font) e.getNewValue())));
-        tree.setFont(Monospaced.getFont());
         // Allow one selection at a time.
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         // Expand the tree
@@ -167,9 +164,11 @@ public class KernelExplorer extends JPanel {
 
                                     if (snippet.typeName().equals("ClassificationModel") || snippet.typeName().equals("RegressionModel")) {
                                         var schema = kernel.eval(name + ".schema();");
-                                        var serviceNode = new DefaultMutableTreeNode(new PersistedModel(name, schema, path));
-                                        treeModel.insertNodeInto(serviceNode, services, services.getChildCount());
-                                        tree.expandPath(new TreePath(new Object[]{root, services}));
+                                        if (schema != null) {
+                                            var serviceNode = new DefaultMutableTreeNode(new PersistedModel(name, schema.toString(), path));
+                                            treeModel.insertNodeInto(serviceNode, services, services.getChildCount());
+                                            tree.expandPath(new TreePath(new Object[]{root, services}));
+                                        }
                                     }
                                 }
                                 // Restore the original dialog title after the file chooser is closed
@@ -190,7 +189,7 @@ public class KernelExplorer extends JPanel {
      * Refreshes the tree with JShell active variables.
      * @param kernel the JavaKernel instance to get variables from.
      */
-    public void refresh(JavaKernel kernel) {
+    public void refresh(Kernel kernel) {
         this.kernel = kernel;
         frames.removeAllChildren();
         matrix.removeAllChildren();
