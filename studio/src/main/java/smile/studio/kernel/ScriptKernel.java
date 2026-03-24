@@ -135,11 +135,23 @@ public class ScriptKernel extends Kernel {
     @Override
     public synchronized void restart() {
         close();
+        // Sets System.out/err before creating the engine so that
+        // Scala Console picks it up during engine initialization.
+        // Otherwise, println won't be redirected properly.
+        PrintStream out = System.out;
+        PrintStream err = System.err;
+        System.setOut(printer);
+        System.setErr(printer);
+
         ScriptEngineManager manager = new ScriptEngineManager();
         engine = manager.getEngineByName(name);
         ScriptContext context = engine.getContext();
         context.setWriter(writer);
         context.setErrorWriter(writer);
+
+        // Restore System.out and System.err
+        System.setOut(out);
+        System.setErr(err);
     }
 
     @Override
