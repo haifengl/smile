@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.studio.view;
+package smile.studio.view.notebook;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -37,6 +37,7 @@ import ioa.agent.Coder;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import smile.io.Paths;
 import smile.studio.kernel.*;
+import smile.studio.view.Monospaced;
 import smile.swing.ScrollablePanel;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
