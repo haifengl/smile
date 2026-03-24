@@ -17,18 +17,24 @@
 package smile.studio.view;
 
 import javax.swing.*;
+import javax.swing.tree.TreePath;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.IntConsumer;
 import com.formdev.flatlaf.util.SystemFileChooser;
 import ioa.agent.Analyst;
 import ioa.agent.Coder;
+import smile.io.Paths;
 import smile.shell.JShell;
 import smile.studio.SmileStudio;
 import smile.studio.kernel.JavaKernel;
 import smile.swing.FileExplorer;
+import smile.swing.tree.DirectoryTreeNode;
 
 /**
  * A notebook workspace.
@@ -75,6 +81,7 @@ public class Workspace extends JSplitPane {
         Analyst analyst = initAnalyst(cwd);
         coder = initCoder(cwd);
         fileExplorer = new FileExplorer(cwd);
+        setFileExplorerMouseListener();
         kernelExplorer = new KernelExplorer(kernel, fileChooser);
         explorerTabs.addTab("Project", new JScrollPane(fileExplorer));
         explorerTabs.addTab("Kernel", new JScrollPane(kernelExplorer));
@@ -95,6 +102,32 @@ public class Workspace extends JSplitPane {
         setLeftComponent(project);
         setRightComponent(agentTabs);
         setResizeWeight(0.5);
+    }
+
+    /** Opens a notebook when double-clicking a supported file in the explorer. */
+    private void setFileExplorerMouseListener() {
+        fileExplorer.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                // Check if the event is a double click
+                if (e.getClickCount() == 2) {
+                    // Determine which row/path was clicked at the coordinates
+                    int selRow = fileExplorer.getRowForLocation(e.getX(), e.getY());
+                    TreePath selPath = fileExplorer.getPathForLocation(e.getX(), e.getY());
+
+                    if (selRow != -1 && selPath != null) {
+                        if (selPath.getLastPathComponent() instanceof DirectoryTreeNode node) {
+                            Path path = node.path();
+                            if (Files.isRegularFile(path)) {
+                                String fileExtension = Paths.getFileExtension(path);
+                                if (Arrays.asList(JAVA_FILE_EXTENSIONS).contains(fileExtension)) {
+                                    openNotebook(path);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
     }
 
     /** Initializes the analyst agent. */
