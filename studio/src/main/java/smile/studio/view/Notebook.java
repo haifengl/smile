@@ -209,6 +209,14 @@ public class Notebook extends JPanel implements DocumentListener {
      */
     public void setFile(Path file) {
         this.file = file;
+        if (SwingUtilities.getAncestorOfClass(JTabbedPane.class, this) instanceof JTabbedPane tabs) {
+            for(int i = 0; i < tabs.getTabCount(); i++) {
+                if (SwingUtilities.isDescendingFrom(this, tabs.getComponentAt(i))) {
+                    tabs.setTitleAt(i, file.getFileName().toString());
+                    break;
+                }
+            }
+        }
     }
 
     /**

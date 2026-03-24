@@ -58,7 +58,7 @@ public class SmileStudio extends JFrame {
     /** The key for auto save preference. */
     private static final String AUTO_SAVE_KEY = "autoSave";
     /** The LLM model. */
-    private static Optional<LLM> llm = initLLM();
+    private static final LLM llm = initLLM().orElse(null);
     /** Each window has its own FileChooser so that it points to its own recent directory. */
     private final SystemFileChooser fileChooser = new SystemFileChooser();
     /** Application icons in different sizes. */
@@ -70,17 +70,16 @@ public class SmileStudio extends JFrame {
 
     /**
      * Constructor.
-     * @param file the notebook file. If null, a new notebook will be created.
      */
-    public SmileStudio(Path file) {
+    public SmileStudio() {
         super(bundle.getString("AppName"));
         setFrameIcon();
         setJMenuBar(menuBar);
         initMenuAndToolBar();
 
-        fileChooser.setCurrentDirectory(file.getParent().toFile());
-        workspace = new Workspace(file, fileChooser);
-        setTitle(file);
+        Path cwd = Path.of(System.getProperty("user.dir"));
+        fileChooser.setCurrentDirectory(cwd.toFile());
+        workspace = new Workspace(cwd, fileChooser);
 
         JPanel contentPane = new JPanel(new BorderLayout());
         contentPane.add(toolBar, BorderLayout.NORTH);
@@ -89,22 +88,24 @@ public class SmileStudio extends JFrame {
         setContentPane(contentPane);
 
         // Initialized as true so that we won't try to save sample code.
-        workspace.notebook().setSaved(true);
+        workspace.notebook().ifPresent(book -> book.setSaved(true));
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                switch (confirmSaveNotebook()) {
-                    case JOptionPane.YES_OPTION:
-                        saveNotebook(false);
-                        dispose();
-                        break;
+                for (Notebook notebook : workspace.notebooks()) {
+                    switch (confirmSaveNotebook(notebook)) {
+                        case JOptionPane.YES_OPTION:
+                            saveNotebook(notebook, false);
+                            dispose();
+                            break;
 
-                    case JOptionPane.NO_OPTION:
-                        dispose();
-                        break;
+                        case JOptionPane.NO_OPTION:
+                            dispose();
+                            break;
 
-                    case JOptionPane.CANCEL_OPTION:
-                        return;
+                        case JOptionPane.CANCEL_OPTION:
+                            return;
+                    }
                 }
 
                 // Shutdown the execution engine.
@@ -157,7 +158,7 @@ public class SmileStudio extends JFrame {
      * @return an LLM instance if initialized successfully.
      */
     public static LLM llm() {
-        return llm.orElse(null);
+        return llm;
     }
 
     /**
@@ -165,9 +166,9 @@ public class SmileStudio extends JFrame {
      * @return an LLM instance specified by app settings.
      */
     public static Optional<LLM> initLLM() {
+        Optional<LLM> llm = Optional.empty();
         var service = prefs.get("aiService", "");
         if (service.isBlank()) {
-            llm = Optional.empty();
             return llm;
         }
 
@@ -269,7 +270,6 @@ public class SmileStudio extends JFrame {
                 }
             });
         } catch (Throwable t) {
-            llm = Optional.empty();
             // It is often a rethrow exception
             JOptionPane.showMessageDialog(null,
                     "Failed to initialize AI service: " + t.getCause(),
@@ -407,7 +407,7 @@ public class SmileStudio extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            saveNotebook(false);
+            workspace.notebook().ifPresent(book -> saveNotebook(book, false));
         }
     }
 
@@ -422,7 +422,7 @@ public class SmileStudio extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            saveNotebook(true);
+            workspace.notebook().ifPresent(book -> saveNotebook(book, true));
         }
     }
 
@@ -431,8 +431,10 @@ public class SmileStudio extends JFrame {
         static final ImageIcon icon16 = scaleImageIcon(icon, 16);
         static final ImageIcon icon24 = scaleImageIcon(icon, 24);
         final Timer timer = new Timer(60000, e -> {
-            if (workspace.notebook().getFile() != null && !workspace.notebook().isSaved()) {
-                saveNotebook(false);
+            for (var notebook : workspace.notebooks()) {
+                if (notebook.getFile() != null && !notebook.isSaved()) {
+                    saveNotebook(notebook, false);
+                }
             }
         });
 
@@ -474,7 +476,7 @@ public class SmileStudio extends JFrame {
         public void actionPerformed(ActionEvent e) {
             var focus = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
             Cell insertAfter = (Cell) SwingUtilities.getAncestorOfClass(Cell.class, focus);
-            workspace.notebook().addCell(insertAfter);
+            workspace.notebook().ifPresent(book -> book.addCell(insertAfter));
         }
     }
 
@@ -489,7 +491,7 @@ public class SmileStudio extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            workspace.notebook().runAllCells();
+            workspace.notebook().ifPresent(Notebook::runAllCells);
         }
     }
 
@@ -504,7 +506,7 @@ public class SmileStudio extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            workspace.notebook().clearAllOutputs();
+            workspace.notebook().ifPresent(Notebook::clearAllOutputs);
         }
     }
 
@@ -657,10 +659,10 @@ public class SmileStudio extends JFrame {
      * Prompts if the notebook is not saved.
      * @return an integer indicating the option selected by the user.
      */
-    private int confirmSaveNotebook() {
-        if (workspace.notebook().isSaved()) return JOptionPane.NO_OPTION;
+    private int confirmSaveNotebook(Notebook notebook) {
+        if (notebook.isSaved()) return JOptionPane.NO_OPTION;
         return JOptionPane.showConfirmDialog(this,
-                bundle.getString("SaveMessage"),
+                String.format(bundle.getString("SaveMessage"), notebook.getFile().getFileName()),
                 bundle.getString("SaveTitle"),
                 JOptionPane.YES_NO_CANCEL_OPTION);
     }
@@ -669,15 +671,8 @@ public class SmileStudio extends JFrame {
      * Creates a new notebook.
      */
     private void newNotebook() {
-        SwingUtilities.invokeLater(() -> createAndShowGUI(null));
-    }
-
-    /**
-     * Sets the frame title with notebook file name.
-     * @param file the notebook file.
-     */
-    private void setTitle(Path file) {
-        setTitle(bundle.getString("AppName") + " - " + file.getFileName());
+        Path file = Path.of("Untitled.java");
+        workspace.openNotebook(file);
     }
 
     /**
@@ -688,16 +683,17 @@ public class SmileStudio extends JFrame {
         fileChooser.setFileFilter(new SystemFileChooser.FileNameExtensionFilter(bundle.getString("SmileFile"), JAVA_FILE_EXTENSIONS));
         if (fileChooser.showOpenDialog(this) == SystemFileChooser.APPROVE_OPTION) {
             Path file = fileChooser.getSelectedFile().toPath();
-            createAndShowGUI(file);
+            workspace.openNotebook(file);
         }
     }
 
     /**
      * Saves the notebook.
+     * @param notebook the notebook to save.
      * @param saveAs save the notebook to a new file if true.
      */
-    private void saveNotebook(boolean saveAs) {
-        if (workspace.notebook().getFile() == null || saveAs) {
+    private void saveNotebook(Notebook notebook, boolean saveAs) {
+        if (notebook.getFile() == null || saveAs) {
             fileChooser.setDialogTitle(bundle.getString("SaveNotebook"));
             fileChooser.setFileFilter(new SystemFileChooser.FileNameExtensionFilter(bundle.getString("SmileFile"), JAVA_FILE_EXTENSIONS));
             if (fileChooser.showSaveDialog(this) == SystemFileChooser.APPROVE_OPTION) {
@@ -708,15 +704,14 @@ public class SmileStudio extends JFrame {
                 }
 
                 Path path = file.toPath();
-                workspace.notebook().setFile(path);
-                setTitle(path);
+                notebook.setFile(path);
             } else {
                 return;
             }
         }
 
         try {
-            workspace.notebook().save();
+            notebook.save();
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(this,
                     "Failed to save: " + ex.getMessage(),
@@ -727,11 +722,10 @@ public class SmileStudio extends JFrame {
     /**
      * Creates and shows the GUI. For thread safety, this method should be
      * invoked from the event dispatch thread.
-     * @param file the notebook file.
      */
-    public static void createAndShowGUI(Path file) {
+    public static void createAndShowGUI() {
         // Create and set up the window.
-        SmileStudio studio = new SmileStudio(file);
+        SmileStudio studio = new SmileStudio();
         studio.setSize(new Dimension(1200, 800));
         studio.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
@@ -835,38 +829,10 @@ public class SmileStudio extends JFrame {
             }
 
             // Start the GUI
-            if (args == null || args.length == 0) {
-                createAndShowGUI(Path.of(System.getProperty("user.dir"), "Untitled.java"));
-            } else {
-                for (int i = 0; i < args.length; i++) {
-                    File file = new File(args[i]);
-                    if (file.isDirectory()) {
-                        JOptionPane.showMessageDialog(
-                                null,
-                                args[i] + bundle.getString("DirectoryError"),
-                                "Error",
-                                JOptionPane.ERROR_MESSAGE
-                        );
-                        return;
-                    }
-
-                    if (!file.exists()) {
-                        try {
-                            file.createNewFile();
-                        } catch (IOException ex) {
-                            JOptionPane.showMessageDialog(
-                                    null,
-                                    ex.getMessage(),
-                                    "Error",
-                                    JOptionPane.ERROR_MESSAGE
-                            );
-                            return;
-                        }
-                    }
-
-                    createAndShowGUI(file.toPath());
-                }
+            if (args != null && args.length > 0) {
+                System.err.println("Smile Studio doesn't take arguments. Please start Smile Studio in your project directory.");
             }
+            createAndShowGUI();
         });
     }
 }

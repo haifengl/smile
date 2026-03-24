@@ -18,7 +18,7 @@ package smile.studio.view;
 
 import javax.swing.*;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.*;
 import com.formdev.flatlaf.util.SystemFileChooser;
 import ioa.agent.Analyst;
 import ioa.agent.Coder;
@@ -44,41 +44,50 @@ public class Workspace extends JSplitPane {
     final JTabbedPane agentTabs = new JTabbedPane();
     /** Java execution engine. */
     final JavaKernel kernel = new JavaKernel();
+    /** The opened files. */
+    final Set<Path> files = new HashSet<>();
+    /** The editor of notebook. */
+    final List<Notebook> notebooks = new ArrayList<>();
     /** The file explorer of current working directory. */
-    final FileExplorer fileExplorer = new FileExplorer(Paths.get("").toAbsolutePath());
+    final FileExplorer fileExplorer;
     /** The explorer of runtime information. */
     final KernelExplorer kernelExplorer;
-    /** The editor of notebook. */
-    final Notebook notebook;
+    /** The coding agent. */
+    final Coder coder;
 
     /**
      * Constructor.
-     * @param file the notebook file. If null, a new notebook will be created.
+     * @param cwd the current working directory for the workspace.
      * @param fileChooser the file chooser for saving models.
      */
-    public Workspace(Path file, SystemFileChooser fileChooser) {
+    public Workspace(Path cwd, SystemFileChooser fileChooser) {
         super(JSplitPane.HORIZONTAL_SPLIT);
 
         Analyst analyst = null;
-        Coder coder = null;
+        Coder javaCoder = null;
         try {
-            var dir = file.getParent(); // working directory
-            analyst = new Analyst("data-analyst", SmileStudio.llm(), dir);
-            coder = new Coder("java-coder", SmileStudio.llm(), dir);
+            analyst = new Analyst("data-analyst", SmileStudio.llm(), cwd);
+            javaCoder = new Coder("java-coder", SmileStudio.llm(), cwd);
         } catch (Exception ex) {
             logger.error("Failed to initialize agents", ex);
         }
+        coder = javaCoder;
 
+        fileExplorer = new FileExplorer(cwd);
         kernelExplorer = new KernelExplorer(kernel, fileChooser);
         explorerTabs.addTab("Project", new JScrollPane(fileExplorer));
         explorerTabs.addTab("Kernel", new JScrollPane(kernelExplorer));
 
-        notebook = new Notebook(file, coder, kernel, kernelExplorer::refresh);
+        openNotebook(Path.of("Untitled.java"));
+        for (var notebook : notebooks) {
+            notebookTabs.addTab(notebook.getFile().getFileName().toString(), notebook);
+        }
+
         agentTabs.addTab("📊 Clair the Analyst", analystCLI(analyst));
         agentTabs.addTab("☕ James the Java Guru", coderCLI(coder));
 
         project.setLeftComponent(explorerTabs);
-        project.setRightComponent(notebook);
+        project.setRightComponent(notebookTabs);
         project.setResizeWeight(0.15);
 
         setLeftComponent(project);
@@ -148,11 +157,34 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Returns the notebook component.
-     * @return the notebook component.
+     * Returns the opened notebooks.
+     * @return the opened notebooks.
      */
-    public Notebook notebook() {
-        return notebook;
+    public List<Notebook> notebooks() {
+        return notebooks;
+    }
+
+    /**
+     * Returns the selected notebook.
+     * @return the selected notebook.
+     */
+    public Optional<Notebook> notebook() {
+        if (notebookTabs.getSelectedComponent() instanceof Notebook notebook) {
+            return Optional.of(notebook);
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Opens a notebook.
+     */
+    public void openNotebook(Path path) {
+        Notebook notebook = new Notebook(path, coder, kernel, kernelExplorer::refresh);
+        notebookTabs.addTab(notebook.getFile().getFileName().toString(), notebook);
+        notebookTabs.setSelectedComponent(notebook);
+        notebooks.add(notebook);
+        files.add(path);
     }
 
     /**
@@ -183,8 +215,10 @@ public class Workspace extends JSplitPane {
      * Restarts the execution environment and refreshes dependent views.
      */
     public void restart() {
-        notebook.restart();
-        kernelExplorer.refresh();
+        notebook().ifPresent(book -> {
+            book.restart();
+            kernelExplorer.refresh();
+        });
     }
 
     /**
