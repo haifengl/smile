@@ -325,12 +325,22 @@ public class Workspace extends JSplitPane {
      * @param path the notebook file path.
      */
     public void openNotebook(Path path) {
-        if (files.contains(path)) return; // already opened
-        Notebook notebook = new Notebook(path, coder, kernelExplorer::refresh);
-        notebookTabs.addTab(notebook.getFile().getFileName().toString(), notebook);
-        notebookTabs.setSelectedComponent(notebook);
-        notebooks.add(notebook);
-        files.add(path);
+        var filename = path.getFileName().toString();
+        // already opened
+        if (files.contains(path)) {
+            int index = notebookTabs.indexOfTab(filename);
+            if (index != -1) {
+                notebookTabs.setSelectedIndex(index);
+            } else {
+                logger.warn("Tab {} not found", filename);
+            }
+        } else {
+            Notebook notebook = new Notebook(path, coder, kernelExplorer::refresh);
+            notebookTabs.addTab(filename, notebook);
+            notebookTabs.setSelectedComponent(notebook);
+            notebooks.add(notebook);
+            files.add(path);
+        }
     }
 
     /**
