@@ -17,8 +17,11 @@
 package smile.studio.view;
 
 import javax.swing.*;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.IntConsumer;
 import com.formdev.flatlaf.util.SystemFileChooser;
 import ioa.agent.Analyst;
 import ioa.agent.Coder;
@@ -34,6 +37,11 @@ import smile.swing.FileExplorer;
  */
 public class Workspace extends JSplitPane {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Workspace.class);
+    private static final ResourceBundle bundle = ResourceBundle.getBundle(SmileStudio.class.getName(), Locale.getDefault());
+    /** Source code file name extensions. */
+    private static final String[] JAVA_FILE_EXTENSIONS = {"java", "jsh"};
+    /** Workspace FileChooser that points to its own recent directory. */
+    private final SystemFileChooser fileChooser;
     /** The project pane consists of explorer and notebook. */
     final JSplitPane project = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
     /** The tabbed pane for file/environment explorers. */
@@ -62,6 +70,7 @@ public class Workspace extends JSplitPane {
      */
     public Workspace(Path cwd, SystemFileChooser fileChooser) {
         super(JSplitPane.HORIZONTAL_SPLIT);
+        this.fileChooser = fileChooser;
 
         Analyst analyst = null;
         Coder javaCoder = null;
@@ -79,6 +88,7 @@ public class Workspace extends JSplitPane {
         explorerTabs.addTab("Kernel", new JScrollPane(kernelExplorer));
 
         openNotebook(Path.of("Untitled.java"));
+        setTabCloseCallback();
         for (var notebook : notebooks) {
             notebookTabs.addTab(notebook.getFile().getFileName().toString(), notebook);
         }
@@ -156,6 +166,18 @@ public class Workspace extends JSplitPane {
         return cli;
     }
 
+    /** Sets the callback for closing notebook tabs. */
+    private void setTabCloseCallback() {
+        notebookTabs.putClientProperty("JTabbedPane.tabClosable", true);
+        notebookTabs.putClientProperty("JTabbedPane.tabCloseCallback",
+                (IntConsumer) tabIndex -> {
+                    Notebook notebook = (Notebook) notebookTabs.getComponentAt(tabIndex);
+                    if (closeNotebook(notebook)) {
+                        notebookTabs.removeTabAt(tabIndex);
+                    }
+                });
+    }
+
     /**
      * Returns the opened notebooks.
      * @return the opened notebooks.
@@ -185,6 +207,73 @@ public class Workspace extends JSplitPane {
         notebookTabs.setSelectedComponent(notebook);
         notebooks.add(notebook);
         files.add(path);
+    }
+
+    /**
+     * Closes a notebook with prompt to save if there are unsaved changes.
+     * @param notebook the notebook to close.
+     * @return true if the notebook is closed, false if the close operation is cancelled.
+     */
+    public boolean closeNotebook(Notebook notebook) {
+        boolean closed = switch (confirmSaveNotebook(notebook)) {
+            case JOptionPane.YES_OPTION -> saveNotebook(notebook, false);
+            case JOptionPane.NO_OPTION -> true;
+            default -> false;
+        };
+
+        if (closed) {
+            notebooks.remove(notebook);
+            files.remove(notebook.getFile());
+        }
+        return closed;
+    }
+
+    /**
+     * Prompts if the notebook is not saved.
+     * @return an integer indicating the option selected by the user.
+     */
+    private int confirmSaveNotebook(Notebook notebook) {
+        if (notebook.isSaved()) return JOptionPane.NO_OPTION;
+        return JOptionPane.showConfirmDialog(this,
+                String.format(bundle.getString("SaveMessage"), notebook.getFile().getFileName()),
+                bundle.getString("SaveTitle"),
+                JOptionPane.YES_NO_CANCEL_OPTION);
+    }
+
+    /**
+     * Saves the notebook.
+     * @param notebook the notebook to save.
+     * @param saveAs save the notebook to a new file if true.
+     * @return true if the notebook is saved successfully, false otherwise
+     *              or the save operation is cancelled.
+     */
+    public boolean saveNotebook(Notebook notebook, boolean saveAs) {
+        if (notebook.getFile() == null || saveAs) {
+            fileChooser.setDialogTitle(bundle.getString("SaveNotebook"));
+            fileChooser.setFileFilter(new SystemFileChooser.FileNameExtensionFilter(bundle.getString("SmileFile"), JAVA_FILE_EXTENSIONS));
+            if (fileChooser.showSaveDialog(this) != SystemFileChooser.APPROVE_OPTION) {
+                return false;
+            }
+
+            File file = fileChooser.getSelectedFile();
+            String name = file.getName().toLowerCase();
+            if (!(name.endsWith(".java") || name.endsWith(".jsh"))) {
+                file = new File(file.getParentFile(), file.getName() + ".java");
+            }
+
+            Path path = file.toPath();
+            notebook.setFile(path);
+        }
+
+        try {
+            notebook.save();
+            return true;
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Failed to save: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        return false;
     }
 
     /**
