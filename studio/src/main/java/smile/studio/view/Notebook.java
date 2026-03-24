@@ -20,9 +20,7 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -247,13 +245,17 @@ public class Notebook extends JPanel implements DocumentListener {
      * @throws IOException If an I/O error occurs.
      */
     public void save() throws IOException {
-        if (file == null) throw new IOException("Notebook file is null");
-        List<String> lines = new ArrayList<>();
+        if (file == null) {
+            logger.error("Notebook file is null");
+        }
+
+        List<String> blocks = new ArrayList<>();
         for (int i = 0; i < cells.getComponentCount(); i++) {
             Cell cell = getCell(i);
-            lines.addAll(codeToLines(cell.editor().getText()));
+            blocks.add(getCell(i).editor().getText());
         }
-        Files.write(file, lines, StandardCharsets.UTF_8);
+        String sep = "\n" + CELL_SEPARATOR + "\n";
+        Files.writeString(file, String.join(sep, blocks), StandardCharsets.UTF_8);
         saved = true;
     }
 
@@ -293,23 +295,6 @@ public class Notebook extends JPanel implements DocumentListener {
         // The last cell may not end with separator.
         if (!current.isEmpty()) cells.add(current.toString());
         return cells;
-    }
-
-    /**
-     * Splits code snippet into lines.
-     *
-     * @param code the code snippet.
-     * @return the code lines.
-     * @throws IOException if
-     */
-    private static List<String> codeToLines(String code) throws IOException {
-        String line = CELL_SEPARATOR;
-        List<String> lines = new ArrayList<>();
-        lines.add(line);
-        try (BufferedReader br = new BufferedReader(new StringReader(code))) {
-            while ((line = br.readLine()) != null) lines.add(line);
-        }
-        return lines;
     }
 
     @Override
