@@ -93,34 +93,16 @@ public class SmileStudio extends JFrame {
             @Override
             public void windowClosing(WindowEvent e) {
                 for (Notebook notebook : workspace.notebooks()) {
-                    switch (confirmSaveNotebook(notebook)) {
-                        case JOptionPane.YES_OPTION:
-                            saveNotebook(notebook, false);
-                            dispose();
-                            break;
-
-                        case JOptionPane.NO_OPTION:
-                            dispose();
-                            break;
-
-                        case JOptionPane.CANCEL_OPTION:
-                            return;
+                    System.out.println(notebook.getFile());
+                    if (!workspace.saveNotebook(notebook, false)) {
+                        // cancel the closing operation if saving failed or canceled.
+                        return;
                     }
                 }
 
                 // Shutdown the execution engine.
                 workspace.close();
-
-                // Exit the app if this is the last window.
-                int count = 0;
-                for (Window window : Window.getWindows()) {
-                    if (window.isVisible() && window instanceof SmileStudio) {
-                        count++;
-                    }
-                }
-                if (count == 0) {
-                    System.exit(0);
-                }
+                System.exit(0);
             }
 
             @Override
@@ -407,7 +389,7 @@ public class SmileStudio extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            workspace.notebook().ifPresent(book -> saveNotebook(book, false));
+            workspace.notebook().ifPresent(book -> workspace.saveNotebook(book, false));
         }
     }
 
@@ -422,7 +404,7 @@ public class SmileStudio extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            workspace.notebook().ifPresent(book -> saveNotebook(book, true));
+            workspace.notebook().ifPresent(book -> workspace.saveNotebook(book, true));
         }
     }
 
@@ -433,7 +415,7 @@ public class SmileStudio extends JFrame {
         final Timer timer = new Timer(60000, e -> {
             for (var notebook : workspace.notebooks()) {
                 if (notebook.getFile() != null && !notebook.isSaved()) {
-                    saveNotebook(notebook, false);
+                    workspace.saveNotebook(notebook, false);
                 }
             }
         });
@@ -656,18 +638,6 @@ public class SmileStudio extends JFrame {
     }
 
     /**
-     * Prompts if the notebook is not saved.
-     * @return an integer indicating the option selected by the user.
-     */
-    private int confirmSaveNotebook(Notebook notebook) {
-        if (notebook.isSaved()) return JOptionPane.NO_OPTION;
-        return JOptionPane.showConfirmDialog(this,
-                String.format(bundle.getString("SaveMessage"), notebook.getFile().getFileName()),
-                bundle.getString("SaveTitle"),
-                JOptionPane.YES_NO_CANCEL_OPTION);
-    }
-
-    /**
      * Creates a new notebook.
      */
     private void newNotebook() {
@@ -684,38 +654,6 @@ public class SmileStudio extends JFrame {
         if (fileChooser.showOpenDialog(this) == SystemFileChooser.APPROVE_OPTION) {
             Path file = fileChooser.getSelectedFile().toPath();
             workspace.openNotebook(file);
-        }
-    }
-
-    /**
-     * Saves the notebook.
-     * @param notebook the notebook to save.
-     * @param saveAs save the notebook to a new file if true.
-     */
-    private void saveNotebook(Notebook notebook, boolean saveAs) {
-        if (notebook.getFile() == null || saveAs) {
-            fileChooser.setDialogTitle(bundle.getString("SaveNotebook"));
-            fileChooser.setFileFilter(new SystemFileChooser.FileNameExtensionFilter(bundle.getString("SmileFile"), JAVA_FILE_EXTENSIONS));
-            if (fileChooser.showSaveDialog(this) == SystemFileChooser.APPROVE_OPTION) {
-                File file = fileChooser.getSelectedFile();
-                String name = file.getName().toLowerCase();
-                if (!(name.endsWith(".java") || name.endsWith(".jsh"))) {
-                    file = new File(file.getParentFile(), file.getName() + ".java");
-                }
-
-                Path path = file.toPath();
-                notebook.setFile(path);
-            } else {
-                return;
-            }
-        }
-
-        try {
-            notebook.save();
-        } catch (IOException ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Failed to save: " + ex.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
