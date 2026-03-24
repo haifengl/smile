@@ -33,7 +33,7 @@ public class PythonKernel extends Kernel {
     /** Print Python output to the output area. */
     private final PrintWriter out = new PrintWriter(console, true, StandardCharsets.UTF_8);
     /** Regex to detect iPython prompt. */
-    private final Pattern pythonPromptRegex = Pattern.compile("^(In [\\d+]:)");
+    private final Pattern pythonPromptRegex = Pattern.compile("^In \\[(\\d+)\\]:");
     /** Regex to detect Python errors. */
     private final Pattern pythonErrorRegex = Pattern.compile("^(\\w+Error:)");
     /** Python process. */
@@ -66,7 +66,7 @@ public class PythonKernel extends Kernel {
         try {
             ProcessBuilder builder = new ProcessBuilder(
                     "ipython", "--simple-prompt", "--colors", "NoColor",
-                    "--no-banner", "--no-pdb", "--quick");
+                    "--no-banner", "--no-pdb");
             builder.redirectErrorStream(true);
             process = builder.start();
             reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
@@ -96,25 +96,27 @@ public class PythonKernel extends Kernel {
 
     @Override
     public boolean eval(String code, List<Object> values, Consumer<Object> eventListener) {
-        // paste magic command allows us to send multi-line code to iPython REPL.
-        writer.println("%cpaste");
-        writer.println(code);
-        //writer.write(4); // Ctrl-D to indicate the end of code input.
-        writer.println("--"); // Or by a line with only "--".
-        writer.flush();
         try {
+            // paste magic command allows us to send multi-line code to iPython REPL.
+            writer.println("%cpaste");
+            writer.println(code);
+            // Stop paste mode. Two newlines are needed to end paste mode.
+            writer.println("--\n");
+            writer.flush();
+
             String line;
             while ((line = reader.readLine()) != null) {
-                eventListener.accept(line);
-                out.println(line);
-                out.flush();
+                boolean output = !line.contains("Pasting code;");
+                if (output) {
+                    eventListener.accept(line);
+                    out.println(line);
+                    out.flush();
 
-                logger.info(line);
-                System.out.println(pythonPromptRegex.matcher(line).find());
-                // Code has finished executing when the prompt appears.
-                if (pythonPromptRegex.matcher(line).find()) break;
-                // Or error happens
-                //if (pythonErrorRegex.matcher(line).find()) break;
+                    // Code has finished executing when the prompt appears.
+                    if (pythonPromptRegex.matcher(line).find()) break;
+                    // Or error happens
+                    //if (pythonErrorRegex.matcher(line).find()) break;
+                }
             }
             return true;
         } catch (IOException ex) {
