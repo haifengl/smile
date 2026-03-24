@@ -18,7 +18,10 @@ package smile.studio.view;
 
 import javax.swing.*;
 import java.awt.event.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.fife.ui.rsyntaxtextarea.*;
+import smile.io.Paths;
 
 /**
  * Text editor with syntax highlighting.
@@ -69,5 +72,38 @@ public class Editor extends RSyntaxTextArea {
                 Markdown.adjustFontSize(-0.1f);
             }
         });
+    }
+
+    /** Probes the syntax style based on the file content type. */
+    public static String probeSyntaxStyle(Path file) {
+        try {
+            return switch (Files.probeContentType(file)) {
+                case "text/markdown" -> SyntaxConstants.SYNTAX_STYLE_MARKDOWN;
+                case "text/x-java-source" -> SyntaxConstants.SYNTAX_STYLE_JAVA;
+                case "text/x-python" -> SyntaxConstants.SYNTAX_STYLE_PYTHON;
+                case "application/sql" -> SyntaxConstants.SYNTAX_STYLE_SQL;
+                case "text/x-scala" -> SyntaxConstants.SYNTAX_STYLE_SCALA;
+                case "text/x-kotlin" -> SyntaxConstants.SYNTAX_STYLE_KOTLIN; // less standardized
+                case "text/x-c++src" -> SyntaxConstants.SYNTAX_STYLE_CPLUSPLUS;
+                case "text/x-csrc" -> SyntaxConstants.SYNTAX_STYLE_C;
+                case "text/x-javascript" -> SyntaxConstants.SYNTAX_STYLE_JAVASCRIPT;
+                case "text/x-rustsrc" -> SyntaxConstants.SYNTAX_STYLE_RUST;
+                case "text/csv" -> SyntaxConstants.SYNTAX_STYLE_CSV;
+                case "text/json", "text/x-json", "application/json" -> SyntaxConstants.SYNTAX_STYLE_JSON;
+                case "application/x-sh" -> SyntaxConstants.SYNTAX_STYLE_UNIX_SHELL;
+                case "application/bat", "application/x-bat" -> SyntaxConstants.SYNTAX_STYLE_WINDOWS_BATCH;
+                case "text/html" -> SyntaxConstants.SYNTAX_STYLE_HTML;
+                case "text/xml", "application/xml" -> SyntaxConstants.SYNTAX_STYLE_XML;
+                case "application/yaml" -> SyntaxConstants.SYNTAX_STYLE_YAML;
+                default -> switch (Paths.getFileExtension(file)) {
+                    case "kt", "kts" -> SyntaxConstants.SYNTAX_STYLE_KOTLIN;
+                    case "bat" -> SyntaxConstants.SYNTAX_STYLE_WINDOWS_BATCH;
+                    case "properties" -> SyntaxConstants.SYNTAX_STYLE_PROPERTIES_FILE;
+                    default -> SyntaxConstants.SYNTAX_STYLE_NONE;
+                };
+            };
+        } catch (Exception ex) {
+            return SyntaxConstants.SYNTAX_STYLE_NONE;
+        }
     }
 }
