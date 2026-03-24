@@ -22,9 +22,12 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 /**
  * Script execution engine.
@@ -49,9 +52,22 @@ public class ScriptKernel extends Kernel {
     }
 
     @Override
-    public Object eval(String script) {
+    public boolean eval(String script, List<Object> values, Consumer<Object> eventListener) {
         try {
-            return engine.eval(script);
+            Object result = engine.eval(script);
+            if (result instanceof Map) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> map = (Map<String, Object>) result;
+                for (var entry : map.entrySet()) {
+                    engine.put(entry.getKey(), entry.getValue());
+                }
+            }
+
+            if (result != null) {
+                values.add(result);
+                eventListener.accept(result);
+            }
+            return true;
         } catch (ScriptException ex) {
             var cause = ex.getCause();
             if (cause != null) {
@@ -67,16 +83,17 @@ public class ScriptKernel extends Kernel {
             } else {
                 writer.println("Failed to execute script: " + ex.getMessage());
             }
+            return false;
         }
-        return null;
     }
 
-    /**
-     * Returns the set of named variables.
-     * @return the set of named variables.
-     */
-    public Set<String> variables() {
-        return engine.getBindings(ScriptContext.ENGINE_SCOPE).keySet();
+    @Override
+    public List<Variable> variables() {
+        List<Variable> variables = new ArrayList<>();
+        for (var entry : engine.getBindings(ScriptContext.ENGINE_SCOPE).entrySet()) {
+            variables.add(new Variable(entry.getKey(), entry.getValue().getClass().getTypeName()));
+        }
+        return variables;
     }
 
     /**
@@ -112,6 +129,6 @@ public class ScriptKernel extends Kernel {
 
     @Override
     public void stop() {
-        throw new UnsupportedOperationException();
+        logger.warn("Script engine does not support stopping execution. Restarting the kernel instead.");
     }
 }

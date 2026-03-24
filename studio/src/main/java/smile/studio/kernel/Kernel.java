@@ -16,7 +16,13 @@
  */
 package smile.studio.kernel;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Consumer;
 import smile.studio.view.OutputArea;
+
+import javax.script.ScriptContext;
 
 /**
  * A kernel is an execution engine that runs the user's code in a specific
@@ -71,9 +77,29 @@ public abstract class Kernel {
     /**
      * Evaluates a code block.
      * @param code a code block.
-     * @return the value returned by execution engine. Maybe null.
+     * @return the value of last variable snippet. Or null if no variables.
      */
-    public abstract Object eval(String code);
+    public Object eval(String code) {
+        List<Object> values = new ArrayList<>();
+        eval(code, values, (e) -> { });
+        return values.isEmpty() ? null : values.getLast();
+    }
+
+    /**
+     * Evaluates a code block.
+     * @param code a code block, which may be split into multiple snippets
+     *             to be evaluated by execution engine.
+     * @param values the container for the values returned by execution engine.
+     * @param eventListener the callback function for each snippet evaluation result.
+     * @return true if no errors detected.
+     */
+    public abstract boolean eval(String code, List<Object> values, Consumer<Object> eventListener);
+
+    /**
+     * Returns the list of named variables.
+     * @return the list of named variables.
+     */
+    public abstract List<Variable> variables();
 
     /**
      * Restarts the execution engine.

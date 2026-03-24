@@ -18,6 +18,9 @@ package smile.studio.kernel;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.ToIntFunction;
 
 /**
  * Python code execution engine.
@@ -75,12 +78,8 @@ public class PythonKernel extends Kernel {
         writer.flush();
     }
 
-    /**
-     * Evaluates a code block.
-     * @param code a code block.
-     * @return the value of last variable snippet. Or null if no variables.
-     */
-    public String eval(String code) {
+    @Override
+    public boolean eval(String code, List<Object> values, Consumer<Object> eventListener) {
         writer.println(code);
         writer.flush();
         StringBuilder sb = new StringBuilder();
@@ -89,12 +88,20 @@ public class PythonKernel extends Kernel {
             String line;
             // Code has finished executing when the primary prompt (>>>) appears.
             while ((line = reader.readLine()) != null && !line.startsWith(">>>")) {
+                eventListener.accept(line);
                 sb.append(line).append('\n');
             }
+            values.add(sb.toString());
+            return true;
         } catch (IOException ex) {
             sb.append("Error reading Python output: ")
               .append(ex.getMessage());
+            return false;
         }
-        return sb.toString();
+    }
+
+    @Override
+    public List<Variable> variables() {
+        return List.of();
     }
 }

@@ -27,7 +27,7 @@ import smile.studio.view.OutputArea;
  * @author Haifeng Li
  */
 public class ConsoleOutputStream extends OutputStream {
-    /** JShell running cell. */
+    /** Kernel running cell. */
     private OutputArea area;
     /** Timestamp of last time updating cell output. */
     private long stamp;
@@ -62,6 +62,14 @@ public class ConsoleOutputStream extends OutputStream {
                 });
             }
         }
+    }
+
+    /**
+     * Returns the output area.
+     * @return the output area for redirected stream.
+     */
+    public OutputArea getOutputArea() {
+        return area;
     }
 
     /**
