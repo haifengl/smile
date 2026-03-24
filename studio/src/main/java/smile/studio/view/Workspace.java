@@ -97,7 +97,6 @@ public class Workspace extends JSplitPane {
         // Open a default notebook if there is no previously opened file.
         if (files.isEmpty()) {
             openNotebook(Path.of("Untitled.java"));
-            // TODO: we still save the file
             // Initialized as true so that we won't try to save sample code.
             // Delay 200ms so that it be called after DocumentUpdate events.
             Timer timer = new Timer(200, e -> notebooks.getFirst().setSaved(true));

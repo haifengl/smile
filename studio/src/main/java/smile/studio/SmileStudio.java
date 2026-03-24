@@ -86,8 +86,10 @@ public class SmileStudio extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                for (Notebook notebook : workspace.notebooks()) {
-                    if (!workspace.saveNotebook(notebook, false)) {
+                // Make a copy first as closeNotebook() may modify the notebooks list.
+                List<Notebook> notebooks = new ArrayList<>(workspace.notebooks());
+                for (Notebook notebook : notebooks) {
+                    if (!workspace.closeNotebook(notebook)) {
                         // cancel the closing operation if saving failed or canceled.
                         return;
                     }
