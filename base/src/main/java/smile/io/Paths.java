@@ -16,9 +16,7 @@
  */
 package smile.io;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.URISyntaxException;
 import java.nio.file.*;
 import java.util.Collections;
@@ -122,6 +120,30 @@ public interface Paths {
 
         // Return empty string if no extension or file name starts/ends with a dot
         return "";
+    }
+
+    /**
+     * Heuristically checks if a file is likely a binary file.
+     * The method considers a file binary if it contains any null bytes
+     * within the first 1024 bytes.
+     *
+     * @param path The file to check.
+     * @return true if the file is likely binary, false otherwise.
+     */
+    static boolean isBinary(Path path) {
+        try (FileInputStream fis = new FileInputStream(path.toFile());
+            BufferedInputStream bis = new BufferedInputStream(fis)) {
+            // Read up to 1024 bytes
+            for (int b, count = 0; (b = bis.read()) != -1 && count < 1024; count++) {
+                if (b == 0) { // Check for the null byte
+                    return true;
+                }
+            }
+        } catch (IOException _) {
+            // If we can't read the file, we can't determine if it's binary.
+            // So we return false.
+        }
+        return false;
     }
 
     /**
