@@ -34,11 +34,7 @@ public enum IntentType {
     /**
      * Shell commands.
      */
-    Shell("Shell", "%"),
-    /**
-     * Python code.
-     */
-    Python("Python", "!"),
+    Shell("Shell", "!"),
     /**
      * Text in Markdown format, providing explanations,
      * documentation, or narrative content.

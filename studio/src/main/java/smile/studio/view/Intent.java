@@ -133,8 +133,6 @@ public class Intent extends JPanel {
                             editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_UNIX_SHELL);
                         }
                     }
-                    case Python ->
-                        editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_PYTHON);
                     case Markdown ->
                         editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_MARKDOWN);
                     default ->
@@ -160,12 +158,8 @@ public class Intent extends JPanel {
                             intentTypeComboBox.setSelectedItem(Command);
                             editor.replaceRange("", 0, 1);
                         }
-                        case '%' -> {
-                            intentTypeComboBox.setSelectedItem(Shell);
-                            editor.replaceRange("", 0, 1);
-                        }
                         case '!' -> {
-                            intentTypeComboBox.setSelectedItem(Python);
+                            intentTypeComboBox.setSelectedItem(Shell);
                             editor.replaceRange("", 0, 1);
                         }
                         case '#' -> intentTypeComboBox.setSelectedItem(Markdown);
