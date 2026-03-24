@@ -25,7 +25,6 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.text.BadLocationException;
 import com.formdev.flatlaf.util.SystemInfo;
-import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jdesktop.swingx.JXTextField;
 import ioa.agent.Coder;
@@ -42,8 +41,8 @@ public class Cell extends JPanel implements StreamResponseHandler {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Cell.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), Locale.getDefault());
     private final String placeholder = bundle.getString("Prompt");
-    private final CellEditor editor = new CellEditor(1, 80, SyntaxConstants.SYNTAX_STYLE_JAVA);
-    private final RTextScrollPane editorScroll = editor.scroll();
+    private final CellEditor editor;
+    private final RTextScrollPane editorScroll;
     private final OutputArea output = new OutputArea();
     private final JTextField prompt = new JXTextField(placeholder);
     private final TitledBorder border = BorderFactory.createTitledBorder("[ ]");
@@ -69,6 +68,8 @@ public class Cell extends JPanel implements StreamResponseHandler {
         setBorder(new EmptyBorder(8,8,8,8));
 
         coder = notebook.coder();
+        editor = new CellEditor(1, 80, notebook.syntaxStyle());
+        editorScroll = editor.scroll();
         JPanel header = createHeader(notebook);
         initActionMap(notebook);
 
