@@ -35,9 +35,11 @@ import java.util.function.Consumer;
 
 import jdk.jshell.*;
 import ioa.agent.Coder;
-import smile.studio.kernel.PostRunNavigation;
-import smile.studio.kernel.JavaKernel;
+import smile.io.Paths;
+import smile.studio.kernel.*;
 import smile.swing.ScrollablePanel;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Interactive environment to write and execute Java code combining code,
@@ -176,13 +178,39 @@ public class Notebook extends JPanel implements DocumentListener {
     }
 
     /** Initialize the kernel. */
-    private void initKernel() {
-        // Note that JShell runs in another JVM so that
-        // we need to setup FlatLaf again.
-        kernel.eval("""
+    private Kernel initKernel() {
+        return switch (Paths.getFileExtension(file)) {
+            case "java", "jsh" -> {
+                var kernel = new JavaKernel();
+                // Note that JShell runs in another JVM so that
+                // we need to setup FlatLaf again.
+                kernel.eval("""
             javax.swing.SwingUtilities.invokeLater(() -> {
                 com.formdev.flatlaf.FlatLightLaf.setup();
             });""");
+                yield kernel;
+            }
+            case "scala", "sc" -> new ScriptKernel("scala");
+            case "kt", "kts" -> new ScriptKernel("kotlin");
+            case "py", "ipynb" -> {
+                try {
+                    yield new PythonKernel();
+                } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(this,
+                            "Failed to initialize Python kernel: " + ex.getMessage(),
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    yield null;
+                }
+            }
+            default -> {
+                JOptionPane.showMessageDialog(this,
+                        String.format(bundle.getString("UnsupportedNotebookMessage"), file.getFileName()),
+                        bundle.getString("UnsupportedNotebookTitle"),
+                        JOptionPane.ERROR_MESSAGE);
+                yield null;
+            }
+        };
     }
 
     /**
@@ -246,7 +274,10 @@ public class Notebook extends JPanel implements DocumentListener {
      */
     public void open(Path file) throws IOException {
         List<String> lines = Files.readAllLines(file, StandardCharsets.UTF_8);
-        List<String> snippets = parseCells(lines);
+        List<String> snippets = Paths.getFileExtension(file).equals("ipynb")
+                ? readIpynb(file)
+                : readSource(file);
+
         cells.removeAll();
         for (String src : snippets) {
             Cell cell = new Cell(this);
@@ -258,6 +289,49 @@ public class Notebook extends JPanel implements DocumentListener {
         cells.revalidate();
         cells.repaint();
         this.file = file;
+    }
+
+    /**
+     * Reads source code into cells.
+     * @param file the source code file.
+     * @return the list of cells.
+     */
+    private List<String> readSource(Path file) throws IOException{
+        List<String> lines = Files.readAllLines(file, StandardCharsets.UTF_8);
+        List<String> snippets = new ArrayList<>();
+
+        StringBuilder current = new StringBuilder();
+        for (String line : lines) {
+            if (line.trim().equals(CELL_SEPARATOR)) {
+                if (!current.isEmpty()) snippets.add(current.toString());
+                current = new StringBuilder();
+            } else {
+                current.append(line).append('\n');
+            }
+        }
+
+        // The last cell may not end with separator.
+        if (!current.isEmpty()) snippets.add(current.toString());
+        return snippets;
+    }
+
+    /**
+     * Reads Jupyter file into cells.
+     * @param file the Jupyter file.
+     * @return the list of cells.
+     */
+    private List<String> readIpynb(Path file) {
+        List<String> snippets = new ArrayList<>();
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode root = mapper.readTree(file);
+        JsonNode cells = root.get("cells");
+        if (cells != null && cells.isArray()) {
+            for (JsonNode cell : cells) {
+                // TODO: cell.get("cell_type")
+                snippets.add(cell.get("source").toString());
+            }
+        }
+        return snippets;
     }
 
     /**
@@ -295,27 +369,6 @@ public class Notebook extends JPanel implements DocumentListener {
      */
     public void setSaved(boolean saved) {
         this.saved = saved;
-    }
-
-    /**
-     * Parses code lines into cells.
-     * @param lines code lines.
-     * @return the list of cells.
-     */
-    private static List<String> parseCells(List<String> lines) {
-        List<String> cells = new ArrayList<>();
-        StringBuilder current = new StringBuilder();
-        for (String line : lines) {
-            if (line.trim().equals(CELL_SEPARATOR)) {
-                if (!current.isEmpty()) cells.add(current.toString());
-                current = new StringBuilder();
-            } else {
-                current.append(line).append('\n');
-            }
-        }
-        // The last cell may not end with separator.
-        if (!current.isEmpty()) cells.add(current.toString());
-        return cells;
     }
 
     @Override
