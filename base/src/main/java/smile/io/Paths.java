@@ -104,6 +104,27 @@ public interface Paths {
     }
 
     /**
+     * Returns the file extension in lower case.
+     * @param path the file path.
+     * @return the file extension in lower case, or empty string if no extension is found.
+     */
+    static String getFileExtension(Path path) {
+        Path file = path.getFileName();
+        if (file == null) {
+            return ""; // Handle cases where the path doesn't have a filename component
+        }
+
+        String name = file.toString();
+        int lastDotIndex = name.lastIndexOf('.');
+        if (lastDotIndex > 0 && lastDotIndex < name.length() - 1) {
+            return name.substring(lastDotIndex + 1).toLowerCase();
+        }
+
+        // Return empty string if no extension or file name starts/ends with a dot
+        return "";
+    }
+
+    /**
      * Get the file path of a test sample dataset.
      * @param path the path strings to be joined to form the path.
      * @return the file path to the test data.
