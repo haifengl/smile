@@ -38,7 +38,6 @@ import org.fife.rsta.ui.search.FindToolBar;
 import org.fife.ui.rsyntaxtextarea.spell.SpellingParser;
 import org.fife.ui.rsyntaxtextarea.ErrorStrip;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.fife.ui.rtextarea.SearchContext;
 import org.fife.ui.rtextarea.SearchEngine;
@@ -101,35 +100,7 @@ public final class Notepad extends JFrame implements SearchListener, DocumentLis
             String content = Files.readString(file);
             editor.setText(content);
             editor.setCaretPosition(0);
-
-            switch (Files.probeContentType(file)) {
-                case "text/markdown":
-                    editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_MARKDOWN);
-                    break;
-                case "text/x-java-source":
-                    editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);
-                    break;
-                case "text/x-python":
-                    editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_PYTHON);
-                    break;
-                case "text/x-scala":
-                    editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_SCALA);
-                    break;
-                case "text/x-c++src":
-                    editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_CPLUSPLUS);
-                    break;
-                case "text/x-csrc":
-                    editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_C);
-                    break;
-                case "text/x-javascript":
-                    editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVASCRIPT);
-                    break;
-                case "text/x-rustsrc":
-                    editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_RUST);
-                    break;
-                default:
-                    editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);
-            }
+            editor.setSyntaxEditingStyle(Editor.probeSyntaxStyle(file));
         } catch (Exception ex) {
             SwingUtilities.invokeLater(() ->
                 JOptionPane.showMessageDialog(
