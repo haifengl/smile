@@ -24,4 +24,8 @@ package smile.studio.kernel;
  * @author Haifeng Li
  */
 public record Variable(String name, String typeName) {
+    @Override
+    public String toString() {
+        return name;
+    }
 }
