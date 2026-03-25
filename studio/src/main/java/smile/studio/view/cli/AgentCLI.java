@@ -22,11 +22,11 @@ import java.awt.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import com.formdev.flatlaf.util.SystemInfo;
 import ioa.agent.Context;
 import org.fife.ui.autocomplete.BasicCompletion;
@@ -37,7 +37,6 @@ import ioa.agent.memory.Skill;
 import ioa.llm.client.StreamResponseHandler;
 import ioa.llm.tool.Question;
 import smile.plot.swing.Palette;
-import smile.studio.kernel.ConsoleOutputStream;
 import smile.studio.model.IntentType;
 import smile.studio.view.Monospaced;
 import smile.studio.view.Notepad;
@@ -210,13 +209,10 @@ public class AgentCLI extends JPanel {
         }
 
         command.addAll(OS.parse(instructions));
-        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+        SwingWorker<Integer, String> worker = new SwingWorker<>() {
             @Override
-            protected Void doInBackground() {
+            protected Integer doInBackground() {
                 try {
-                    ConsoleOutputStream console = new ConsoleOutputStream();
-                    console.setOutputArea(output);
-                    PrintStream shellOut = new PrintStream(console, true, StandardCharsets.UTF_8);
                     Process process = new ProcessBuilder(command)
                             .redirectErrorStream(true)
                             .start();
@@ -226,22 +222,45 @@ public class AgentCLI extends JPanel {
                             new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
                     String line;
                     while ((line = reader.readLine()) != null) {
-                        shellOut.println(line);
+                        publish(line);
                     }
 
-                    // Wait for the process to complete and return the exit code
-                    int code = process.waitFor();
-                    if (code != 0) output.println("\nCommand failed with error code " + code);
-                } catch (IOException | InterruptedException ex) {
-                    output.println("Failed to execute '" + String.join(" " , command) + "': " + ex.getMessage());
+                    try {
+                        // Wait for the process to complete and return the exit code
+                        if (process.waitFor(600_000, TimeUnit.MILLISECONDS)) {
+                            int exitCode = process.exitValue();
+                            if (exitCode != 0) {
+                                publish("\nCommand failed with error code " + exitCode);
+                            }
+                            return exitCode;
+                        } else {
+                            publish("\nTimeout waiting for process to exit.");
+                            return -1;
+                        }
+                    } catch (InterruptedException e) {
+                        publish("Error waiting for process to exit: " + e.getMessage());
+                        return -1;
+                    }
+                } catch (IOException ex) {
+                    publish("Failed to execute '" + String.join(" " , command) + "': " + ex.getMessage());
+                    return -1;
                 }
-                return null;
+            }
+
+            @Override
+            protected void process(List<String> chunks) {
+                for (String line : chunks) {
+                    output.append(line + "\n");
+                }
+
+                // Auto scroll to the bottom
+                output.setCaretPosition(output.getDocument().getLength());
             }
 
             @Override
             protected void done() {
                 // process and done are called in EDT, so we can safely update the UI here.
-                output.flush();
+                output.highlight();
             }
         };
         worker.execute();
