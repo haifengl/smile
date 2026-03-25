@@ -100,14 +100,16 @@ public class PythonKernel extends Kernel {
             // paste magic command allows us to send multi-line code to iPython REPL.
             writer.println("%cpaste");
             writer.println(code);
-            // Stop paste mode. Two newlines are needed to end paste mode.
-            writer.println("--\n");
+            // Stop paste mode. Two ending newlines are critical.
+            writer.println("\n--\n");
             writer.flush();
 
             String line;
             while ((line = reader.readLine()) != null) {
                 boolean output = !line.contains("Pasting code;");
                 if (output) {
+                    // Remove iPython's paste prefix
+                    line = line.replaceFirst("^:.+", "");
                     eventListener.accept(line);
                     out.println(line);
                     out.flush();
