@@ -564,54 +564,7 @@ public class Notebook extends JPanel implements DocumentListener {
                 okay = javaKernel.eval(code, values, e -> {
                     @SuppressWarnings("unchecked")
                     List<SnippetEvent> events = (List<SnippetEvent>) e;
-                    // Capture values, diagnostics, and exceptions in order
-                    for (SnippetEvent event : events) {
-                        if (event.status() == Snippet.Status.VALID && event.snippet() instanceof VarSnippet variable) {
-                            if (!variable.name().matches("\\$\\d+")) {
-                                String typeName = variable.typeName();
-                                cell.output().print("⇒ " + typeName + " " + variable.name() + " = ");
-
-                                String value = event.value();
-                                if (value == null) {
-                                    cell.output().println("null");
-                                } else {
-                                    if (typeName.endsWith("DataFrame")) {
-                                        cell.output().println();
-                                    } else if (typeName.contains("[]")) {
-                                        // The type may be generic with array, e.g., SVM<double[]>
-                                        int index = value.indexOf('{');
-                                        if (index > 0) {
-                                            value = value.substring(0, index);
-                                        }
-                                    }
-                                    cell.output().println(value);
-                                }
-                            }
-                        } else if (event.status() == Snippet.Status.REJECTED) {
-                            cell.output().println("✖ Rejected snippet: " + event.snippet().source());
-                        } else if (event.status() == Snippet.Status.RECOVERABLE_DEFINED ||
-                                event.status() == Snippet.Status.RECOVERABLE_NOT_DEFINED) {
-                            cell.output().println("⚠ Recoverable issue: " + event.snippet().source());
-                            if (event.snippet() instanceof DeclarationSnippet snippet) {
-                                cell.output().println("⚠ Unresolved dependencies:");
-                                javaKernel.unresolvedDependencies(snippet).forEach(name -> cell.output().println("  └ " + name));
-                            }
-                        }
-
-                        javaKernel.diagnostics(event.snippet()).forEach(diag -> {
-                            String kind = diag.isError() ? "ERROR" : "WARN";
-                            cell.output().println(String.format("%s: %s",
-                                    kind, diag.getMessage(Locale.getDefault())));
-                        });
-
-                        if (event.exception() instanceof EvalException ex) {
-                            cell.output().println(ex.getExceptionClassName() + ": " + (ex.getMessage() != null ? ex.getMessage() : ""));
-                            // JShell exception stack trace is often concise
-                            for (StackTraceElement ste : ex.getStackTrace()) {
-                                cell.output().println("  at " + ste.toString());
-                            }
-                        }
-                    }
+                    javaKernel.process(events);
                 });
             } else {
                 okay = kernel.eval(code, values, e -> {});
