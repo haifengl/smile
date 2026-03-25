@@ -111,12 +111,14 @@ public class PythonKernel extends Kernel {
                 if (output) {
                     // Remove iPython's paste prefix
                     line = line.replaceFirst("^:.+", "");
-                    eventListener.accept(line);
                     out.println(line);
                     out.flush();
 
                     // If error happens
-                    if (pythonErrorRegex.matcher(line).find()) success = false;
+                    if (pythonErrorRegex.matcher(line).find()) {
+                        eventListener.accept(line);
+                        success = false;
+                    }
                     // Code has finished executing when the prompt appears.
                     if (pythonPromptRegex.matcher(line).find()) break;
                 }
