@@ -224,12 +224,12 @@ public class SmileStudio extends JFrame {
                     yield anthropic;
                 }
 
-                case "GoogleGemini" ->
+                case "Google Gemini" ->
                     new GoogleGemini(
                             prefs.get("googleGeminiApiKey", ""),
                             prefs.get("googleGeminiModel", "gemini-3-pro-preview"));
 
-                case "GoogleVertexAI" ->
+                case "Google VertexAI" ->
                     GoogleGemini.vertex(
                             prefs.get("googleVertexAIApiKey", ""),
                             prefs.get("googleVertexAIBaseUrl", ""),
