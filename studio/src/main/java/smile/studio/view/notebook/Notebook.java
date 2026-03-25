@@ -566,6 +566,10 @@ public class Notebook extends JPanel implements DocumentListener {
                     List<SnippetEvent> events = (List<SnippetEvent>) e;
                     javaKernel.process(events);
                 });
+            } else if (kernel instanceof ScriptKernel scriptKernel) {
+                okay = kernel.eval(code, values, e -> {
+                    cell.output().println(String.format("$result: %s = %s", e.getClass().getName(), e));
+                });
             } else {
                 okay = kernel.eval(code, values, e -> {});
             }
