@@ -96,6 +96,7 @@ public class PythonKernel extends Kernel {
 
     @Override
     public boolean eval(String code, List<Object> values, Consumer<Object> eventListener) {
+        boolean success = true;
         try {
             // paste magic command allows us to send multi-line code to iPython REPL.
             writer.println("%cpaste");
@@ -114,18 +115,19 @@ public class PythonKernel extends Kernel {
                     out.println(line);
                     out.flush();
 
+                    // If error happens
+                    if (pythonErrorRegex.matcher(line).find()) success = false;
                     // Code has finished executing when the prompt appears.
                     if (pythonPromptRegex.matcher(line).find()) break;
-                    // Or error happens
-                    //if (pythonErrorRegex.matcher(line).find()) break;
                 }
             }
-            return true;
         } catch (IOException ex) {
             out.println("Error reading Python output: " + ex.getMessage());
             out.flush();
-            return false;
+            success = false;
         }
+
+        return success;
     }
 
     @Override
