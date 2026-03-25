@@ -231,16 +231,17 @@ public class AgentCLI extends JPanel {
 
                     // Wait for the process to complete and return the exit code
                     int code = process.waitFor();
-                    if (code != 0) output.appendLine("\nCommand failed with error code " + code);
+                    if (code != 0) output.println("\nCommand failed with error code " + code);
                 } catch (IOException | InterruptedException ex) {
-                    output.appendLine("Failed to execute '" + String.join(" " , command) + "': " + ex.getMessage());
+                    output.println("Failed to execute '" + String.join(" " , command) + "': " + ex.getMessage());
                 }
                 return null;
             }
 
             @Override
             protected void done() {
-                SwingUtilities.invokeLater(output::flush);
+                // process and done are called in EDT, so we can safely update the UI here.
+                output.flush();
             }
         };
         worker.execute();
@@ -262,14 +263,14 @@ public class AgentCLI extends JPanel {
                 default -> runSkill(args[0], instructions, intent);
             }
         } catch (Throwable t) {
-            intent.output().appendLine("Error: " + t.getMessage());
+            intent.output().println("Error: " + t.getMessage());
         }
     }
 
     /** Opens a notepad to edit file. */
     private void open(String[] args, OutputArea output) {
         if (args.length < 2) {
-            output.appendLine("Usage: /open [file path]");
+            output.println("Usage: /open [file path]");
             return;
         }
 
@@ -280,7 +281,7 @@ public class AgentCLI extends JPanel {
     private boolean isAgentAvailable(OutputArea output) {
         if (agent == null || agent.llm() == null) {
             if (output.getLineCount() > 0) output.append("\n\n");
-            output.appendLine(bundle.getString("NoAIServiceError"));
+            output.println(bundle.getString("NoAIServiceError"));
             return false;
         }
         return true;
@@ -322,7 +323,7 @@ public class AgentCLI extends JPanel {
         if (!isAgentAvailable(output)) return;
 
         if (args.length < 2) {
-            output.appendLine("Usage: /plan [short description of goals or tasks]");
+            output.println("Usage: /plan [short description of goals or tasks]");
             return;
         }
 
@@ -334,9 +335,9 @@ public class AgentCLI extends JPanel {
 
         try {
             agent.conversation().enterPlanMode(instructions.substring(5).trim());
-            output.appendLine("Enter the plan mode.");
+            output.println("Enter the plan mode.");
         } catch (IOException e) {
-            output.appendLine("Failed to enter the plan mode: " + e.getMessage());
+            output.println("Failed to enter the plan mode: " + e.getMessage());
         }
     }
 
@@ -346,7 +347,7 @@ public class AgentCLI extends JPanel {
         if (!isAgentAvailable(output)) return;
 
         if (args.length < 2) {
-            output.appendLine("Usage: /memory [show|add|edit|refresh]");
+            output.println("Usage: /memory [show|add|edit|refresh]");
             return;
         }
 
@@ -355,7 +356,7 @@ public class AgentCLI extends JPanel {
             case "add" -> addMemory(instructions, output);
             case "edit" -> editMemory(output);
             case "refresh" -> refreshMemory(output);
-            default -> output.appendLine("Unknown subcommand for /memory: " + args[1]);
+            default -> output.println("Unknown subcommand for /memory: " + args[1]);
         }
     }
 
@@ -363,10 +364,10 @@ public class AgentCLI extends JPanel {
     private void addMemory(String instructions, OutputArea output) throws IOException {
         String md = instructions.substring(instructions.indexOf("add") + 3).trim();
         if (md.isBlank()) {
-            output.appendLine("/memory add should be followed with notes.");
+            output.println("/memory add should be followed with notes.");
         } else {
             agent.addMemory(md);
-            output.appendLine("SMILE.md appended with notes.");
+            output.println("SMILE.md appended with notes.");
         }
     }
 
@@ -389,14 +390,14 @@ public class AgentCLI extends JPanel {
     /** Reloads the context from disk. */
     private void refreshMemory(OutputArea output) {
         agent.refresh();
-        output.appendLine("Long-term memory was reloaded.");
+        output.println("Long-term memory was reloaded.");
     }
 
     /** Clears the current conversation session. */
     private void clear(OutputArea output) {
         if (!isAgentAvailable(output)) return;
         agent.clear();
-        output.appendLine("Current conversation session was cleared.");
+        output.println("Current conversation session was cleared.");
     }
 
     private void runSkill(String command, String instructions, Intent intent) {

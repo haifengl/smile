@@ -72,7 +72,7 @@ public class OutputArea extends JTextArea {
      * @param str a string.
      * @return this object.
      */
-    public OutputArea appendBuffer(String str) {
+    public OutputArea print(String str) {
         buffer.append(str);
         return this;
     }
@@ -83,8 +83,19 @@ public class OutputArea extends JTextArea {
      * @param str a string.
      * @return this object.
      */
-    public OutputArea appendLine(String str) {
+    public OutputArea println(String str) {
         buffer.append(str).append('\n');
+        flush();
+        return this;
+    }
+
+    /**
+     * Appends a newline to buffer and flush context to the output area.
+     *
+     * @return this object.
+     */
+    public OutputArea println() {
+        buffer.append('\n');
         flush();
         return this;
     }
