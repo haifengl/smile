@@ -35,11 +35,12 @@ import smile.studio.view.OutputArea;
 
 /**
  * A cell is a multiline coding field, and its contents can be executed
- * by Java engine.
+ * by Java engine. If AI service is configured, it can also complete code
+ * triggered by TAB and generate code based on natural language prompt.
  *
  * @author Haifeng Li
  */
-public class Cell extends JPanel implements StreamResponseHandler {
+public class Cell extends JPanel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Cell.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), Locale.getDefault());
     private final String placeholder = bundle.getString("Prompt");
@@ -195,19 +196,31 @@ public class Cell extends JPanel implements StreamResponseHandler {
             String after = editor.getText(endOffset, editor.getDocument().getLength() - endOffset);
 
             // Run code completion in a worker thread as join() blocks.
-            SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            SwingWorker<Void, String> worker = new SwingWorker<>() {
                 @Override
                 protected Void doInBackground() {
                     coder.complete(prefix, before, after).whenComplete((line, ex) -> {
                         if (ex != null) {
                             logger.warn("Code completion failed: {}", ex.getMessage());
+                            SwingUtilities.invokeLater(() ->
+                                    JOptionPane.showMessageDialog(Cell.this,
+                                            "Code completion failed: " + ex.getMessage(),
+                                            bundle.getString("AIService"),
+                                            JOptionPane.ERROR_MESSAGE));
                         }
 
                         if (line != null) {
-                            SwingUtilities.invokeLater(() -> editor.insert(line, caretPosition));
+                            publish(line);
                         }
                     }).join();
                     return null;
+                }
+
+                @Override
+                protected void process(List<String> chunks) {
+                    // process and done are called in EDT, so we can safely update the UI here.
+                    // Only one line is expected for code completion.
+                    editor.insert(chunks.getFirst(), caretPosition);
                 }
 
                 @Override
@@ -263,11 +276,46 @@ public class Cell extends JPanel implements StreamResponseHandler {
         }
 
         // Run code completion in a worker thread as join() blocks.
-        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+        SwingWorker<Void, String> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() {
-                coder.generate(task, before, after, Cell.this);
+                coder.generate(task, before, after, new StreamResponseHandler() {
+                    @Override
+                    public void onNext(String chunk) {
+                        publish(chunk);
+                    }
+
+                    @Override
+                    public void onComplete(long totalTokens, long outputTokens, long inputTokens) {
+                        logger.info("Code generation completed: totalTokens={}, outputTokens={}, inputTokens={}",
+                                totalTokens, outputTokens, inputTokens);
+                        // Appending a new line at the end of generated code.
+                        publish("\n");
+                    }
+
+                    @Override
+                    public void onException(Throwable ex) {
+                        SwingUtilities.invokeLater(() ->
+                                JOptionPane.showMessageDialog(Cell.this,
+                                        "Code generation failed: " + ex.getMessage(),
+                                        bundle.getString("AIService"),
+                                        JOptionPane.ERROR_MESSAGE));
+                    }
+
+                    @Override
+                    public void onStatus(String status) {
+                        logger.info("Code generation status: {}", status);
+                    }
+
+                });
                 return null;
+            }
+
+            @Override
+            protected void process(List<String> chunks) {
+                // process and done are called in EDT, so we can safely update the UI here.
+                String lines = String.join("", chunks);
+                editor.insert(lines, editor.getCaretPosition());
             }
 
             @Override
@@ -276,30 +324,6 @@ public class Cell extends JPanel implements StreamResponseHandler {
             }
         };
         worker.execute();
-    }
-
-    @Override
-    public void onNext(String chunk) {
-        SwingUtilities.invokeLater(() -> editor.insert(chunk, editor.getCaretPosition()));
-    }
-
-    @Override
-    public void onComplete(long totalTokens, long outputTokens, long inputTokens) {
-        // Appending a new line at the end of generated code.
-        SwingUtilities.invokeLater(() -> editor.insert("\n", editor.getCaretPosition()));
-    }
-
-    @Override
-    public void onException(Throwable ex) {
-        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(Cell.this,
-                "Code generation failed: " + ex.getMessage(),
-                bundle.getString("AIService"),
-                JOptionPane.ERROR_MESSAGE));
-    }
-
-    @Override
-    public void onStatus(String status) {
-        logger.info("Code generation status: {}", status);
     }
 
     /**
