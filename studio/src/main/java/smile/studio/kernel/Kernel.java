@@ -18,16 +18,16 @@ package smile.studio.kernel;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 import smile.studio.view.OutputArea;
 
 /**
  * A kernel is an execution engine that runs the user's code in a specific
  * programming language. It may run as a standalone process (e.g. JShell).
  *
+ * @param <T> the type of code evaluation events.
  * @author Haifeng Li
  */
-public abstract class Kernel {
+public abstract class Kernel<T> {
     /** Output capture. */
     final ConsoleOutputStream console = new ConsoleOutputStream();
     /** Running state. */
@@ -78,7 +78,7 @@ public abstract class Kernel {
      */
     public Object eval(String code) {
         List<Object> values = new ArrayList<>();
-        eval(code, values, (e) -> { });
+        eval(code, values);
         return values.isEmpty() ? null : values.getLast();
     }
 
@@ -87,10 +87,16 @@ public abstract class Kernel {
      * @param code a code block, which may be split into multiple snippets
      *             to be evaluated by execution engine.
      * @param values the container for the values returned by execution engine.
-     * @param eventListener the callback function for each snippet evaluation result.
      * @return true if no errors detected.
      */
-    public abstract boolean eval(String code, List<Object> values, Consumer<Object> eventListener);
+    public abstract boolean eval(String code, List<Object> values);
+
+    /**
+     * Processes the events caused by the code evaluation,
+     * or the returned values by execution engine.
+     * @param events the events caused by the code evaluation.
+     */
+    public abstract void process(List<T> events);
 
     /**
      * Returns the list of named variables.
