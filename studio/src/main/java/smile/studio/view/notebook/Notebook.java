@@ -621,9 +621,7 @@ public class Notebook extends JPanel implements DocumentListener {
                 kernel.setRunning(true);
                 for (Cell cell : cells) {
                     if (cell.editor().getText().trim().isEmpty()) continue;
-                    boolean success = cell.run(kernel, ++runCount);
-                    System.out.println(success);
-                    if (!success) break;
+                    if (!cell.run(kernel, ++runCount)) break;
                 }
                 return null;
             }

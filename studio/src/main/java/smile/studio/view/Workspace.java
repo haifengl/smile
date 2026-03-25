@@ -359,20 +359,22 @@ public class Workspace extends JSplitPane {
     /**
      * Closes a notebook with prompt to save if there are unsaved changes.
      * @param notebook the notebook to close.
-     * @return true if the notebook is closed, false if the close operation is cancelled.
+     * @return true if the notebook is closed, false if the close operation is canceled.
      */
     public boolean closeNotebook(Notebook notebook) {
-        boolean closed = switch (confirmSaveNotebook(notebook)) {
+        boolean confirmed = switch (confirmSaveNotebook(notebook)) {
             case JOptionPane.YES_OPTION -> saveNotebook(notebook, false);
             case JOptionPane.NO_OPTION -> true;
             default -> false;
         };
 
-        if (closed) {
+        if (confirmed) {
+            // Shuts down the execution engines and frees resources.
+            notebook.close();
             notebooks.remove(notebook);
             files.remove(notebook.getFile());
         }
-        return closed;
+        return confirmed;
     }
 
     /**
@@ -448,14 +450,5 @@ public class Workspace extends JSplitPane {
             notebook.restart();
             kernelExplorer.refresh(notebook.kernel());
         });
-    }
-
-    /**
-     * Shuts down the execution engines and frees resources.
-     */
-    public void close() {
-        for (var notebook : notebooks) {
-            notebook.close();
-        }
     }
 }
