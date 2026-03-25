@@ -103,6 +103,21 @@ public class OutputArea extends JTextArea {
     @Override
     public void setText(String text) {
         super.setText(text);
+        highlight(text);
+    }
+
+    /**
+     * Highlights lines with errors or issues.
+     */
+    public void highlight() {
+        highlight(getText());
+    }
+
+    /**
+     * Highlights lines with errors or issues.
+     * @param text the text to be highlighted.
+     */
+    private void highlight(String text) {
         try {
             var highlighter = getHighlighter();
             String[] lines = text.split("\\r?\\n");
