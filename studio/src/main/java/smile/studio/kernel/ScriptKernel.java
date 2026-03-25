@@ -70,14 +70,6 @@ public class ScriptKernel extends Kernel {
         System.setErr(printer);
         try {
             Object result = engine.eval(script);
-            if (result instanceof Map) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> map = (Map<String, Object>) result;
-                for (var entry : map.entrySet()) {
-                    engine.put(entry.getKey(), entry.getValue());
-                }
-            }
-
             if (result != null) {
                 values.add(result);
                 eventListener.accept(result);
