@@ -555,7 +555,7 @@ public class Notebook extends JPanel implements DocumentListener {
         try {
             cell.output().clear();
             ZonedDateTime start = ZonedDateTime.now();
-            cell.output().appendLine("⏵ " + datetime.format(start) + " started");
+            cell.output().println("⏵ " + datetime.format(start) + " started");
 
             boolean okay;
             List<Object> values = new ArrayList<>();
@@ -569,14 +569,14 @@ public class Notebook extends JPanel implements DocumentListener {
                         if (event.status() == Snippet.Status.VALID && event.snippet() instanceof VarSnippet variable) {
                             if (!variable.name().matches("\\$\\d+")) {
                                 String typeName = variable.typeName();
-                                cell.output().appendBuffer("⇒ " + typeName + " " + variable.name() + " = ");
+                                cell.output().print("⇒ " + typeName + " " + variable.name() + " = ");
 
                                 String value = event.value();
                                 if (value == null) {
-                                    cell.output().appendLine("null");
+                                    cell.output().println("null");
                                 } else {
                                     if (typeName.endsWith("DataFrame")) {
-                                        cell.output().appendBuffer("\n");
+                                        cell.output().println();
                                     } else if (typeName.contains("[]")) {
                                         // The type may be generic with array, e.g., SVM<double[]>
                                         int index = value.indexOf('{');
@@ -584,31 +584,31 @@ public class Notebook extends JPanel implements DocumentListener {
                                             value = value.substring(0, index);
                                         }
                                     }
-                                    cell.output().appendLine(value);
+                                    cell.output().println(value);
                                 }
                             }
                         } else if (event.status() == Snippet.Status.REJECTED) {
-                            cell.output().appendLine("✖ Rejected snippet: " + event.snippet().source());
+                            cell.output().println("✖ Rejected snippet: " + event.snippet().source());
                         } else if (event.status() == Snippet.Status.RECOVERABLE_DEFINED ||
                                 event.status() == Snippet.Status.RECOVERABLE_NOT_DEFINED) {
-                            cell.output().appendLine("⚠ Recoverable issue: " + event.snippet().source());
+                            cell.output().println("⚠ Recoverable issue: " + event.snippet().source());
                             if (event.snippet() instanceof DeclarationSnippet snippet) {
-                                cell.output().appendLine("⚠ Unresolved dependencies:");
-                                javaKernel.unresolvedDependencies(snippet).forEach(name -> cell.output().appendLine("  └ " + name));
+                                cell.output().println("⚠ Unresolved dependencies:");
+                                javaKernel.unresolvedDependencies(snippet).forEach(name -> cell.output().println("  └ " + name));
                             }
                         }
 
                         javaKernel.diagnostics(event.snippet()).forEach(diag -> {
                             String kind = diag.isError() ? "ERROR" : "WARN";
-                            cell.output().appendLine(String.format("%s: %s",
+                            cell.output().println(String.format("%s: %s",
                                     kind, diag.getMessage(Locale.getDefault())));
                         });
 
                         if (event.exception() instanceof EvalException ex) {
-                            cell.output().appendLine(ex.getExceptionClassName() + ": " + (ex.getMessage() != null ? ex.getMessage() : ""));
+                            cell.output().println(ex.getExceptionClassName() + ": " + (ex.getMessage() != null ? ex.getMessage() : ""));
                             // JShell exception stack trace is often concise
                             for (StackTraceElement ste : ex.getStackTrace()) {
-                                cell.output().appendLine("  at " + ste.toString());
+                                cell.output().println("  at " + ste.toString());
                             }
                         }
                     }
@@ -619,10 +619,10 @@ public class Notebook extends JPanel implements DocumentListener {
 
             ZonedDateTime end = ZonedDateTime.now();
             Duration duration = Duration.between(start, end);
-            cell.output().appendLine("⏹ " + datetime.format(end) + " finished (" + duration + ")");
+            cell.output().println("⏹ " + datetime.format(end) + " finished (" + duration + ")");
             return okay;
         } catch (Throwable t) {
-            cell.output().appendLine("✖ ERROR during execution: " + t);
+            cell.output().println("✖ ERROR during execution: " + t);
             logger.error("Error during execution: ", t);
             return false;
         } finally {
@@ -679,7 +679,7 @@ public class Notebook extends JPanel implements DocumentListener {
                 kernel.setRunning(false);
                 // Post-run actions
                 handlePostRunNav(cell, behavior);
-                SwingUtilities.invokeLater(() -> postRunAction.accept(kernel));
+                postRunAction.accept(kernel);
             }
         };
         worker.execute();
@@ -738,7 +738,7 @@ public class Notebook extends JPanel implements DocumentListener {
             @Override
             protected void done() {
                 kernel.setRunning(false);
-                SwingUtilities.invokeLater(() -> postRunAction.accept(kernel));
+                postRunAction.accept(kernel);
             }
         };
         worker.execute();
