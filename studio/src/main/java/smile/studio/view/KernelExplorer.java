@@ -61,7 +61,7 @@ public class KernelExplorer extends JPanel {
      */
     private final DefaultTreeModel treeModel = (DefaultTreeModel) tree.getModel();
     /** Kernel instance. */
-    private Kernel kernel = null;
+    private Kernel<?> kernel = null;
     /** File chooser for saving models. */
     private final SystemFileChooser fileChooser;
 
@@ -190,7 +190,7 @@ public class KernelExplorer extends JPanel {
      * Refreshes the tree with JShell active variables.
      * @param kernel the JavaKernel instance to get variables from.
      */
-    public void refresh(Kernel kernel) {
+    public void refresh(Kernel<?> kernel) {
         this.kernel = kernel;
         frames.removeAllChildren();
         matrix.removeAllChildren();
@@ -240,9 +240,9 @@ public class KernelExplorer extends JPanel {
 
     /** The dialog to start model inference service. */
     static class StartServiceDialog extends JDialog {
-        private final PersistedModel model;
         private final JTextField hostField = new JTextField(25);
         private final JTextField portField = new JTextField(25);
+        private final PersistedModel model;
 
         /**
          * Constructor.

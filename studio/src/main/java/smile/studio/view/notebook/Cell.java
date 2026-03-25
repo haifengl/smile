@@ -18,6 +18,9 @@ package smile.studio.view.notebook;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.time.Duration;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
 import javax.swing.*;
@@ -29,6 +32,7 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jdesktop.swingx.JXTextField;
 import ioa.agent.Coder;
 import ioa.llm.client.StreamResponseHandler;
+import smile.studio.kernel.Kernel;
 import smile.studio.kernel.PostRunNavigation;
 import smile.studio.view.Monospaced;
 import smile.studio.view.OutputArea;
@@ -43,6 +47,8 @@ import smile.studio.view.OutputArea;
 public class Cell extends JPanel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Cell.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Cell.class.getName(), Locale.getDefault());
+    private static final DateTimeFormatter datetime = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
+
     private final String placeholder = bundle.getString("Prompt");
     private final CellEditor editor;
     private final RTextScrollPane editorScroll;
@@ -402,6 +408,50 @@ public class Cell extends JPanel {
         }
 
         return lines;
+    }
+
+    /**
+     * Runs the code in the cell using the given kernel,
+     * and updates the output area with execution results.
+     * @param kernel the kernel to execute code.
+     * @param runCount the current run count of cells, used for generating title after execution.
+     * @return true if code runs successfully; false if any error occurs during execution.
+     */
+    public boolean run(Kernel<?> kernel, int runCount) {
+        kernel.setOutputArea(output()); // Direct JShell prints
+        SwingUtilities.invokeLater(() -> {
+            setRunning(true);
+            editor().setPreferredRows();
+        });
+
+        try {
+            output().clear();
+            ZonedDateTime start = ZonedDateTime.now();
+            output().println("⏵ " + datetime.format(start) + " started");
+
+            List<Object> values = new ArrayList<>();
+            var code = editor().getText();
+            boolean success = kernel.eval(code, values);
+
+            ZonedDateTime end = ZonedDateTime.now();
+            Duration duration = Duration.between(start, end);
+            output().println("⏹ " + datetime.format(end) + " finished (" + duration + ")");
+            return success;
+        } catch (Throwable t) {
+            output().println("✖ ERROR during execution: " + t);
+            logger.error("Error during execution: ", t);
+            return false;
+        } finally {
+            kernel.removeOutputArea();;
+            // Generates title before calling invokeLater
+            // as runCount may have changed in case of runAllCells.
+            String title = "[" + runCount + "]";
+            SwingUtilities.invokeLater(() -> {
+                setRunning(false);
+                setTitle(title);
+                output().flush();
+            });
+        }
     }
 
     /**
