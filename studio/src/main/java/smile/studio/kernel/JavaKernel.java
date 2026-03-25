@@ -20,6 +20,7 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import jdk.jshell.*;
@@ -152,6 +153,62 @@ public class JavaKernel extends Kernel {
         return jshell.variables()
                 .map(v -> new Variable(v.name(), v.typeName()))
                 .toList();
+    }
+
+    /**
+     * Processes the snippet events and prints the results to the console.
+     * @param events the snippet events to process.
+     */
+    public void process(List<SnippetEvent> events) {
+        var output = console.getOutputArea();
+        // Capture values, diagnostics, and exceptions in order
+        for (SnippetEvent event : events) {
+            if (event.status() == Snippet.Status.VALID && event.snippet() instanceof VarSnippet variable) {
+                if (!variable.name().matches("\\$\\d+")) {
+                    String typeName = variable.typeName();
+                    output.print("⇒ " + typeName + " " + variable.name() + " = ");
+
+                    String value = event.value();
+                    if (value == null) {
+                        output.println("null");
+                    } else {
+                        if (typeName.endsWith("DataFrame")) {
+                            output.println();
+                        } else if (typeName.contains("[]")) {
+                            // The type may be generic with array, e.g., SVM<double[]>
+                            int index = value.indexOf('{');
+                            if (index > 0) {
+                                value = value.substring(0, index);
+                            }
+                        }
+                        output.println(value);
+                    }
+                }
+            } else if (event.status() == Snippet.Status.REJECTED) {
+                output.println("✖ Rejected snippet: " + event.snippet().source());
+            } else if (event.status() == Snippet.Status.RECOVERABLE_DEFINED ||
+                    event.status() == Snippet.Status.RECOVERABLE_NOT_DEFINED) {
+                output.println("⚠ Recoverable issue: " + event.snippet().source());
+                if (event.snippet() instanceof DeclarationSnippet snippet) {
+                    output.println("⚠ Unresolved dependencies:");
+                    unresolvedDependencies(snippet).forEach(name -> output.println("  └ " + name));
+                }
+            }
+
+            diagnostics(event.snippet()).forEach(diag -> {
+                String kind = diag.isError() ? "ERROR" : "WARN";
+                output.println(String.format("%s: %s",
+                        kind, diag.getMessage(Locale.getDefault())));
+            });
+
+            if (event.exception() instanceof EvalException ex) {
+                output.println(ex.getExceptionClassName() + ": " + (ex.getMessage() != null ? ex.getMessage() : ""));
+                // JShell exception stack trace is often concise
+                for (StackTraceElement ste : ex.getStackTrace()) {
+                    output.println("  at " + ste.toString());
+                }
+            }
+        }
     }
 
     /**
