@@ -85,7 +85,10 @@ public interface OS {
             args.add("-c");
         }
 
-        args.addAll(parse(command));
+        // Shell takes the whole command as a single argument.
+        // DO NOT parse it. Otherwise, the command arguments will
+        // be treated as Bash arguments.
+        args.add(command);
         return args;
     }
 
