@@ -25,17 +25,15 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Consumer;
 
 /**
  * Script execution engine.
  *
  * @author Haifeng Li
  */
-public class ScriptKernel extends Kernel {
+public class ScriptKernel extends Kernel<Object> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScriptKernel.class);
     private final PrintStream printer = new PrintStream(console, true, StandardCharsets.UTF_8);
     private final PrintWriter writer = new PrintWriter(console, true, StandardCharsets.UTF_8);
@@ -60,7 +58,7 @@ public class ScriptKernel extends Kernel {
     }
 
     @Override
-    public boolean eval(String script, List<Object> values, Consumer<Object> eventListener) {
+    public boolean eval(String script, List<Object> values) {
         boolean success;
         // Scala/Kotlin ignore context writers, so we have to
         // redirect System.out and System.err to the console.
@@ -72,7 +70,7 @@ public class ScriptKernel extends Kernel {
             Object result = engine.eval(script);
             if (result != null) {
                 values.add(result);
-                eventListener.accept(result);
+                process(List.of(result));
             }
             success = true;
         } catch (ScriptException ex) {
@@ -97,6 +95,21 @@ public class ScriptKernel extends Kernel {
         System.setOut(out);
         System.setErr(err);
         return success;
+    }
+
+    /**
+     * Processes the values returned from the code execution.
+     * @param values the values returned from the code execution.
+     */
+    @Override
+    public void process(List<Object> values) {
+        for (int i = 0; i < values.size(); i++) {
+            Object value = values.get(i);
+            if (value != null) {
+                console.getOutputArea().println(
+                        String.format("$result%d: %s = %s", i, value.getClass().getName(), value));
+            }
+        }
     }
 
     @Override

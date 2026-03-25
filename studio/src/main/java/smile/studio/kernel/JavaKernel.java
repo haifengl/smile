@@ -21,7 +21,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 import jdk.jshell.*;
 import com.formdev.flatlaf.util.SystemInfo;
@@ -33,7 +32,7 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
  *
  * @author Haifeng Li
  */
-public class JavaKernel extends Kernel {
+public class JavaKernel extends Kernel<SnippetEvent> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JavaKernel.class);
     /** JShell instance. */
     private JShell jshell;
@@ -102,7 +101,7 @@ public class JavaKernel extends Kernel {
     }
 
     @Override
-    public boolean eval(String code, List<Object> values, Consumer<Object> eventListener) {
+    public boolean eval(String code, List<Object> values) {
         SourceCodeAnalysis.CompletionInfo info = sourceAnalyzer.analyzeCompletion(code);
         while (info.completeness().isComplete()) {
             String source = info.source();
@@ -115,14 +114,14 @@ public class JavaKernel extends Kernel {
             }
 
             List<SnippetEvent> events = jshell.eval(source);
-            eventListener.accept(events);
+            process(events);
             for (var event : events) {
-                if (event.status() == Snippet.Status.VALID) {
-                    if (event.snippet() instanceof VarSnippet variable) {
-                        values.add(event.value());
-                    }
-                } else {
+                if (event.status() != Snippet.Status.VALID) {
                     return false;
+                }
+
+                if (event.snippet() instanceof VarSnippet variable) {
+                    values.add(event.value());
                 }
             }
 
@@ -137,28 +136,10 @@ public class JavaKernel extends Kernel {
     }
 
     /**
-     * Diagnoses a code snippet.
-     * @param snippet a code snippet.
-     * @return the diagnostics result stream.
-     */
-    public Stream<Diag> diagnostics(Snippet snippet) {
-        return jshell.diagnostics(snippet);
-    }
-
-    /**
-     * Returns the active variable snippets.
-     * @return the active variable snippets.
-     */
-    public List<Variable> variables() {
-        return jshell.variables()
-                .map(v -> new Variable(v.name(), v.typeName()))
-                .toList();
-    }
-
-    /**
      * Processes the snippet events and prints the results to the console.
      * @param events the snippet events to process.
      */
+    @Override
     public void process(List<SnippetEvent> events) {
         var output = console.getOutputArea();
         // Capture values, diagnostics, and exceptions in order
@@ -209,6 +190,25 @@ public class JavaKernel extends Kernel {
                 }
             }
         }
+    }
+
+    /**
+     * Diagnoses a code snippet.
+     * @param snippet a code snippet.
+     * @return the diagnostics result stream.
+     */
+    public Stream<Diag> diagnostics(Snippet snippet) {
+        return jshell.diagnostics(snippet);
+    }
+
+    /**
+     * Returns the active variable snippets.
+     * @return the active variable snippets.
+     */
+    public List<Variable> variables() {
+        return jshell.variables()
+                .map(v -> new Variable(v.name(), v.typeName()))
+                .toList();
     }
 
     /**

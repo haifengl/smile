@@ -20,7 +20,6 @@ import javax.swing.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 /**
@@ -28,7 +27,7 @@ import java.util.regex.Pattern;
  *
  * @author Haifeng Li
  */
-public class PythonKernel extends Kernel {
+public class PythonKernel extends Kernel<String> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PythonKernel.class);
     /** Print Python output to the output area. */
     private final PrintWriter out = new PrintWriter(console, true, StandardCharsets.UTF_8);
@@ -95,7 +94,7 @@ public class PythonKernel extends Kernel {
     }
 
     @Override
-    public boolean eval(String code, List<Object> values, Consumer<Object> eventListener) {
+    public boolean eval(String code, List<Object> values) {
         boolean success = true;
         try {
             // paste magic command allows us to send multi-line code to iPython REPL.
@@ -116,7 +115,7 @@ public class PythonKernel extends Kernel {
 
                     // If error happens
                     if (pythonErrorRegex.matcher(line).find()) {
-                        eventListener.accept(line);
+                        process(List.of(line));
                         success = false;
                     }
                     // Code has finished executing when the prompt appears.
@@ -130,6 +129,13 @@ public class PythonKernel extends Kernel {
         }
 
         return success;
+    }
+
+    @Override
+    public void process(List<String> errors) {
+        for (String error : errors) {
+            logger.error(error);
+        }
     }
 
     @Override
