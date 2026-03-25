@@ -24,9 +24,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -55,16 +52,15 @@ public class Notebook extends JPanel implements DocumentListener {
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Notebook.class.getName(), Locale.getDefault());
     private final JPanel cells = new ScrollablePanel();
     private final JScrollPane scrollPane = new JScrollPane(cells);
-    private final DateTimeFormatter datetime = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
     /** Programming language. */
     private final String lang;
     /** Programming language syntax highlight style. */
     private final String syntaxStyle;
     /** Execution engine. */
-    private final Kernel kernel;
+    private final Kernel<?> kernel;
     /** The coding assistant agent. */
     private final Coder coder;
-    private final Consumer<Kernel> postRunAction;
+    private final Consumer<Kernel<?>> postRunAction;
     private int runCount = 0;
     private Path file;
     private boolean saved = true;
@@ -75,7 +71,7 @@ public class Notebook extends JPanel implements DocumentListener {
      * @param coder the coding assistant agent.
      * @param postRunAction the action to perform after running cells.
      */
-    public Notebook(Path file, Coder coder, Consumer<Kernel> postRunAction) {
+    public Notebook(Path file, Coder coder, Consumer<Kernel<?>> postRunAction) {
         super(new BorderLayout());
         this.file = file;
         this.postRunAction = postRunAction;
@@ -196,7 +192,7 @@ public class Notebook extends JPanel implements DocumentListener {
      * Returns the execution engine.
      * @return the execution engine.
      */
-    public Kernel kernel() {
+    public Kernel<?> kernel() {
         return kernel;
     }
 
@@ -224,7 +220,7 @@ public class Notebook extends JPanel implements DocumentListener {
     }
 
     /** Initialize the kernel. */
-    private Kernel initKernel() {
+    private Kernel<?> initKernel() {
         return switch (lang) {
             case "Java" -> new JavaKernel();
             case "Scala" -> new ScriptKernel("scala");
@@ -540,62 +536,6 @@ public class Notebook extends JPanel implements DocumentListener {
     }
 
     /**
-     * Evaluates the code of cell.
-     * @param cell the cell to evaluate.
-     * @return true if code evaluation succeeded without exceptions.
-     */
-    private boolean runCell(Cell cell) {
-        runCount++;
-        kernel.setOutputArea(cell.output()); // Direct JShell prints
-        SwingUtilities.invokeLater(() -> {
-            cell.setRunning(true);
-            cell.editor().setPreferredRows();
-        });
-
-        try {
-            cell.output().clear();
-            ZonedDateTime start = ZonedDateTime.now();
-            cell.output().println("⏵ " + datetime.format(start) + " started");
-
-            boolean okay;
-            List<Object> values = new ArrayList<>();
-            var code = cell.editor().getText();
-            if (kernel instanceof JavaKernel javaKernel) {
-                okay = javaKernel.eval(code, values, e -> {
-                    @SuppressWarnings("unchecked")
-                    List<SnippetEvent> events = (List<SnippetEvent>) e;
-                    javaKernel.process(events);
-                });
-            } else if (kernel instanceof ScriptKernel scriptKernel) {
-                okay = kernel.eval(code, values, e -> {
-                    cell.output().println(String.format("$result: %s = %s", e.getClass().getName(), e));
-                });
-            } else {
-                okay = kernel.eval(code, values, e -> {});
-            }
-
-            ZonedDateTime end = ZonedDateTime.now();
-            Duration duration = Duration.between(start, end);
-            cell.output().println("⏹ " + datetime.format(end) + " finished (" + duration + ")");
-            return okay;
-        } catch (Throwable t) {
-            cell.output().println("✖ ERROR during execution: " + t);
-            logger.error("Error during execution: ", t);
-            return false;
-        } finally {
-            kernel.removeOutputArea();;
-            // Generates title before calling invokeLater
-            // as runCount may have changed in case of runAllCells.
-            String title = "[" + runCount + "]";
-            SwingUtilities.invokeLater(() -> {
-                cell.setRunning(false);
-                cell.setTitle(title);
-                cell.output().flush();
-            });
-        }
-    }
-
-    /**
      * Shows the dialog that code evaluation is running.
      */
     private void showRaceConditionDialog() {
@@ -619,7 +559,7 @@ public class Notebook extends JPanel implements DocumentListener {
         final String code = cell.editor().getText();
         if (code.trim().isEmpty()) {
             // Honor the navigation behavior even on empty run
-            handlePostRunNav(cell, behavior);
+            SwingUtilities.invokeLater(() -> handlePostRunNav(cell, behavior));
             return;
         }
 
@@ -627,7 +567,7 @@ public class Notebook extends JPanel implements DocumentListener {
             @Override
             protected Void doInBackground() {
                 kernel.setRunning(true);
-                runCell(cell);
+                cell.run(kernel, ++runCount);
                 return null;
             }
 
@@ -649,29 +589,23 @@ public class Notebook extends JPanel implements DocumentListener {
      */
     private void handlePostRunNav(Cell cell, PostRunNavigation behavior) {
         switch (behavior) {
-            case STAY -> SwingUtilities.invokeLater(cell.editor()::requestFocusInWindow);
+            case STAY -> cell.editor().requestFocusInWindow();
             case NEXT_OR_NEW -> {
                 int idx = indexOf(cell);
                 if (idx < cells.getComponentCount() - 1) {
                     Cell next = getCell(idx + 1);
-                    SwingUtilities.invokeLater(() -> {
-                        next.editor().requestFocusInWindow();
-                        scrollTo(next.editor());
-                    });
+                    next.editor().requestFocusInWindow();
+                    scrollTo(next.editor());
                 } else {
                     Cell next = addCell(cell);
-                    SwingUtilities.invokeLater(() -> {
-                        next.editor().requestFocusInWindow();
-                        scrollTo(next.editor());
-                    });
+                    next.editor().requestFocusInWindow();
+                    scrollTo(next.editor());
                 }
             }
             case INSERT_BELOW -> {
                 Cell next = addCell(cell);
-                SwingUtilities.invokeLater(() -> {
-                    next.editor().requestFocusInWindow();
-                    scrollTo(next.editor());
-                });
+                next.editor().requestFocusInWindow();
+                scrollTo(next.editor());
             }
         }
     }
@@ -687,7 +621,9 @@ public class Notebook extends JPanel implements DocumentListener {
                 kernel.setRunning(true);
                 for (Cell cell : cells) {
                     if (cell.editor().getText().trim().isEmpty()) continue;
-                    if (!runCell(cell)) break;
+                    boolean success = cell.run(kernel, ++runCount);
+                    System.out.println(success);
+                    if (!success) break;
                 }
                 return null;
             }

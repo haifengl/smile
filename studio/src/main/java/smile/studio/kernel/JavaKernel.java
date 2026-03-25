@@ -116,7 +116,16 @@ public class JavaKernel extends Kernel<SnippetEvent> {
             List<SnippetEvent> events = jshell.eval(source);
             process(events);
             for (var event : events) {
-                if (event.status() != Snippet.Status.VALID) {
+                if (event.exception() != null) {
+                    logger.error("Evaluation error: ", event.exception());
+                    return false;
+                }
+
+                // A previous snippet may be overwritten by a later snippet,
+                // e.g., when a variable is re-assigned. In that case, we should
+                // not treat it as an error.
+                if (event.status() != Snippet.Status.VALID && event.status() != Snippet.Status.OVERWRITTEN) {
+                    logger.error("Evaluation status: {}", event.status());
                     return false;
                 }
 
@@ -168,7 +177,7 @@ public class JavaKernel extends Kernel<SnippetEvent> {
             } else if (event.status() == Snippet.Status.REJECTED) {
                 output.println("✖ Rejected snippet: " + event.snippet().source());
             } else if (event.status() == Snippet.Status.RECOVERABLE_DEFINED ||
-                    event.status() == Snippet.Status.RECOVERABLE_NOT_DEFINED) {
+                       event.status() == Snippet.Status.RECOVERABLE_NOT_DEFINED) {
                 output.println("⚠ Recoverable issue: " + event.snippet().source());
                 if (event.snippet() instanceof DeclarationSnippet snippet) {
                     output.println("⚠ Unresolved dependencies:");
