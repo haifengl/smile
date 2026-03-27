@@ -16,8 +16,14 @@
  */
 package smile.studio.view;
 
+import java.awt.*;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.regex.Pattern;
 import javax.swing.*;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
 import javax.swing.text.*;
 import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
 import smile.plot.swing.Palette;
@@ -27,7 +33,7 @@ import smile.plot.swing.Palette;
  *
  * @author Haifeng Li
  */
-public class OutputArea extends JTextArea {
+public class OutputArea extends JTextArea implements HyperlinkListener {
     private final DefaultHighlightPainter painter = new DefaultHighlightPainter(Palette.LIGHT_PINK);
     private final Pattern pattern = Pattern.compile("ERROR|WARN|Recoverable issue|Rejected snippet|Unresolved dependencies|Exception:");
     /** The output buffer. StringBuffer is multi-thread safe while StringBuilder isn't. */
@@ -41,6 +47,19 @@ public class OutputArea extends JTextArea {
         setEditable(false);
         setLineWrap(true);
         setWrapStyleWord(true);
+        /*
+        // RSyntaxTextArea related settings.
+        // However, it doesn't support emoji.
+        setHighlightCurrentLine(false);
+        // Set transparent background
+        setBackground(new Color(255, 255, 255, 0));
+        setOpaque(false);
+        // Enable hyperlink support
+        setHyperlinksEnabled(true);
+        // Remove the requirement for a modifier key (default CTRL) to activate hyperlinks
+        //setLinkScanningMask(0);
+        addHyperlinkListener(this);
+         */
     }
 
     /**
@@ -131,6 +150,21 @@ public class OutputArea extends JTextArea {
             }
         } catch (BadLocationException ex) {
             System.err.println(ex.getMessage());
+        }
+    }
+    @Override
+    public void hyperlinkUpdate(HyperlinkEvent e) {
+        if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+            // A link was clicked
+            try {
+                // Open the URL in the system's default browser
+                Desktop.getDesktop().browse(new URI(e.getURL().toString()));
+            } catch (IOException | URISyntaxException ex) {
+                JOptionPane.showMessageDialog(this,
+                        "Cannot open URL: " + e.getURL().toString(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 }
