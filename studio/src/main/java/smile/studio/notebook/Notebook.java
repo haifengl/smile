@@ -24,10 +24,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Locale;
-import java.util.ResourceBundle;
 import java.util.function.Consumer;
 
 import ioa.agent.Coder;
@@ -496,13 +494,28 @@ public class Notebook extends JPanel implements DocumentListener {
         var notebook = new JupyterNotebook(cells, jupyter.metadata(), jupyter.nbformat(), jupyter.nbformatMinor());
         for (int i = 0; i < this.cells.getComponentCount(); i++) {
             var c = getCell(i);
-            var cell = new smile.util.ipynb.CodeCell(
-                    "cell-" + (i + 1),
-                    new smile.util.ipynb.CellMetadata(),
-                    new smile.util.ipynb.MultilineString(List.of(c.editor().getText())),
-                    List.of(), // TODO: support outputs
-                    c.getExecutionCount()
-            );
+            var cell = switch (c.type()) {
+                case Code -> new smile.util.ipynb.CodeCell(
+                        "cell-" + (i + 1),
+                        new smile.util.ipynb.CellMetadata(),
+                        new smile.util.ipynb.MultilineString(List.of(c.editor().getText())),
+                        List.of(), // TODO: support outputs
+                        c.getExecutionCount()
+                );
+                case Markdown -> new smile.util.ipynb.MarkdownCell(
+                        "cell-" + (i + 1),
+                        new smile.util.ipynb.CellMetadata(),
+                        new smile.util.ipynb.MultilineString(List.of(c.editor().getText())),
+                        Map.of()
+                );
+                case Raw -> new smile.util.ipynb.RawCell(
+                        "cell-" + (i + 1),
+                        new smile.util.ipynb.CellMetadata(),
+                        new smile.util.ipynb.MultilineString(List.of(c.editor().getText())),
+                        Map.of()
+                );
+            };
+            
             notebook.cells().add(cell);
         }
         notebook.write(file);
