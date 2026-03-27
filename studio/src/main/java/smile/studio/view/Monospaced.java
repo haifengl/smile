@@ -1,25 +1,26 @@
 package smile.studio.view;
 
 import java.awt.Font;
+import java.awt.font.TextAttribute;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
-import com.formdev.flatlaf.util.FontUtils;
-import com.formdev.flatlaf.util.SystemInfo;
+import java.util.Map;
+import javax.swing.*;
 import smile.studio.SmileStudio;
 
 /**
  * The monospaced font for view components.
  */
 public class Monospaced {
+    /** The text attributes for the monospaced font. */
+    private static final Map<TextAttribute, Object> attributes = Map.of(
+            TextAttribute.WEIGHT, TextAttribute.WEIGHT_SEMIBOLD
+    );
     /** The shared font for consistency. */
-    private static Font font = FontUtils.getCompositeFont(
-            // FlatLaF doesn't support NL (no ligatures) flavor.
-            // On Mac, ligatures will cause uneven spaces sometimes.
-            // For example, SMILE ascii art doesn't show properly.
-            SystemInfo.isMacOS ? Font.MONOSPACED : FlatJetBrainsMonoFont.FAMILY,
-            Font.PLAIN,
-            SmileStudio.preferences().getInt("monospaced", 14));
+    private static Font font = UIManager.getFont("monospaced.font")
+            .deriveFont(attributes)
+            .deriveFont(SmileStudio.preferences().getFloat("monospaced", 14));
+
     /** A singleton instance used as the source object for font changes. */
     private static final Monospaced bean = new Monospaced();
     /** The utility to support bound properties. */
