@@ -30,13 +30,15 @@ import tools.jackson.databind.JsonNode;
  * @param executionCount the cell execution counter at the time the output was produced.
  * @param data           the MIME-bundle mapping MIME types to their content.
  * @param metadata       optional MIME-type-specific metadata.
+ * @param transientData  transient data not saved with the notebook (e.g. display ids).
  *
  * @author Haifeng Li
  */
 public record ExecuteResultOutput(
         @JsonProperty("execution_count") Integer executionCount,
         @JsonProperty("data") Map<String, JsonNode> data,
-        @JsonProperty("metadata") Map<String, JsonNode> metadata
+        @JsonProperty("metadata") Map<String, JsonNode> metadata,
+        @JsonProperty("transient") Map<String, JsonNode> transientData
 ) implements Output {
 
     @Override
