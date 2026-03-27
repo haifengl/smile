@@ -56,7 +56,7 @@ public record JupyterNotebook(
      * @param path the path to the notebook file.
      * @return the notebook read from the specified path.
      */
-    public JupyterNotebook from(Path path) throws IOException {
+    public static JupyterNotebook from(Path path) throws IOException {
         return mapper.readValue(path, JupyterNotebook.class);
     }
 

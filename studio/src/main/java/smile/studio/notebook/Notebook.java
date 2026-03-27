@@ -29,15 +29,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
-import jdk.jshell.*;
+
 import ioa.agent.Coder;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import smile.io.Paths;
 import smile.studio.kernel.*;
 import smile.studio.Monospaced;
+import smile.studio.notebook.nbformat.JupyterNotebook;
 import smile.swing.ScrollablePanel;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 
 /**
  * Interactive environment to write and execute Java code combining code,
@@ -47,7 +46,8 @@ import tools.jackson.databind.ObjectMapper;
  * @author Haifeng Li
  */
 public class Notebook extends JPanel implements DocumentListener {
-    private static final String CELL_SEPARATOR = "//--- CELL ---";
+    private static final String JAVA_CELL_SEPARATOR = "//--- CELL ---";
+    private static final String PY_CELL_SEPARATOR = "#--- CELL ---";
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Notebook.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Notebook.class.getName(), Locale.getDefault());
     private final JPanel cells = new ScrollablePanel();
@@ -323,6 +323,13 @@ public class Notebook extends JPanel implements DocumentListener {
         this.file = file;
     }
 
+    /** Determines the cell separator based on file extension. */
+    private String separator(Path file) {
+        return file.getFileName().toString().endsWith(".py") ?
+                PY_CELL_SEPARATOR :
+                JAVA_CELL_SEPARATOR;
+    }
+
     /**
      * Reads source code into cells.
      * @param file the source code file.
@@ -331,10 +338,11 @@ public class Notebook extends JPanel implements DocumentListener {
     private List<String> readSource(Path file) throws IOException{
         List<String> lines = Files.readAllLines(file, StandardCharsets.UTF_8);
         List<String> snippets = new ArrayList<>();
+        String separator = separator(file);
 
         StringBuilder current = new StringBuilder();
         for (String line : lines) {
-            if (line.trim().equals(CELL_SEPARATOR)) {
+            if (line.trim().equals(separator)) {
                 if (!current.isEmpty()) snippets.add(current.toString());
                 current = new StringBuilder();
             } else {
@@ -352,16 +360,11 @@ public class Notebook extends JPanel implements DocumentListener {
      * @param file the Jupyter file.
      * @return the list of cells.
      */
-    private List<String> readIpynb(Path file) {
+    private List<String> readIpynb(Path file) throws IOException {
+        JupyterNotebook notebook = JupyterNotebook.from(file);
         List<String> snippets = new ArrayList<>();
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode root = mapper.readTree(file);
-        JsonNode cells = root.get("cells");
-        if (cells != null && cells.isArray()) {
-            for (JsonNode cell : cells) {
-                // TODO: cell.get("cell_type")
-                snippets.add(cell.get("source").toString());
-            }
+        for (var cell : notebook.cells()) {
+            snippets.add(cell.source().value());
         }
         return snippets;
     }
@@ -374,6 +377,7 @@ public class Notebook extends JPanel implements DocumentListener {
     public void save() throws IOException {
         if (file == null) {
             logger.error("Notebook file is null");
+            return;
         }
 
         List<String> blocks = new ArrayList<>();
@@ -381,7 +385,7 @@ public class Notebook extends JPanel implements DocumentListener {
             Cell cell = getCell(i);
             blocks.add(getCell(i).editor().getText());
         }
-        String sep = "\n" + CELL_SEPARATOR + "\n";
+        String sep = "\n" + separator(file) + "\n";
         Files.writeString(file, String.join(sep, blocks), StandardCharsets.UTF_8);
         saved = true;
     }
