@@ -75,6 +75,7 @@ public class Intent extends JPanel {
         add(outputPane, BorderLayout.SOUTH);
     }
 
+    /** Initializes the input pane. */
     private void initInputPane() {
         indicator.setFont(Monospaced.getFont());
         indicator.setToolTipText(Instructions.toString());
@@ -96,7 +97,7 @@ public class Intent extends JPanel {
         status.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
         progress.setMaximumSize(new Dimension(200, 12));
 
-        initCommandType();
+        initIntentTypeComboBox();
         footer.setLayout(new BoxLayout(footer, BoxLayout.X_AXIS));
         footer.setOpaque(false);
         footer.add(Box.createHorizontalStrut(indicator.getPreferredSize().width));
@@ -111,7 +112,8 @@ public class Intent extends JPanel {
         inputPane.add(footer, BorderLayout.SOUTH);
     }
 
-    private void initCommandType() {
+    /** Initializes the intent type combo box. */
+    private void initIntentTypeComboBox() {
         intentTypeComboBox.setSelectedItem(Instructions);
         intentTypeComboBox.setBorder(BorderFactory.createEmptyBorder());
         intentTypeComboBox.setBackground(inputColor);
