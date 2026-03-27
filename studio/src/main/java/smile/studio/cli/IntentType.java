@@ -30,7 +30,7 @@ public enum IntentType {
      * Commands initiated by typing a forward slash (/), that allow
      * users to quickly execute actions.
      */
-    Command("Command", "/"),
+    Command("Slash Command", "/"),
     /**
      * Shell commands.
      */
