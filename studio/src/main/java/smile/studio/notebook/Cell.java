@@ -453,13 +453,15 @@ public class Cell extends JPanel {
         // Render markdown content and remove editor.
         if (cellType == CellType.Markdown) {
             String text = editor.getText();
-            var html = new Markdown(text);
+            var markdown = new Markdown(text);
+            var html = markdown.contentPane();
+            if (html == null) return false;
+
             remove(editorScroll);
             add(html, BorderLayout.CENTER);
             html.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    System.out.println(e);
                     // Return to edit mode when double-click
                     if (e.getClickCount() == 2) {
                         remove(html);
