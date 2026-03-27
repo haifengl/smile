@@ -105,15 +105,17 @@ public class Notebook extends JPanel implements DocumentListener {
         syntaxStyle = initSyntaxStyle();
         initKernel();
 
-        try {
-            loadCells(file);
-        } catch (IOException ex) {
-            JOptionPane.showMessageDialog(
-                    null,
-                    ex.getMessage(),
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE
-            );
+        if (Files.exists(file)) {
+            try {
+                loadCells(file);
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(
+                        null,
+                        ex.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
+            }
         }
 
         // If the file is empty or failed to read,
@@ -258,6 +260,8 @@ public class Notebook extends JPanel implements DocumentListener {
         // Add an empty cell for user to start with
         var cell = addCell(null);
         cell.editor().requestFocus();
+        // Mark the notebook as saved for starter content
+        setSaved(true);
     }
 
     /** Creates the kernel instance. */
@@ -481,7 +485,7 @@ public class Notebook extends JPanel implements DocumentListener {
         } else {
             saveAsSource();
         }
-        saved = true;
+        setSaved(true);
     }
 
     /**
@@ -555,12 +559,12 @@ public class Notebook extends JPanel implements DocumentListener {
 
     @Override
     public void insertUpdate(DocumentEvent e) {
-        saved = false;
+        setSaved(false);
     }
 
     @Override
     public void removeUpdate(DocumentEvent e) {
-        saved = false;
+        setSaved(false);
     }
 
     @Override
