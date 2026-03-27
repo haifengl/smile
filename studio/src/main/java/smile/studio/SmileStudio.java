@@ -39,7 +39,7 @@ import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import com.formdev.flatlaf.util.SystemInfo;
 import ioa.llm.client.*;
 import ioa.llm.mcp.MCP;
-import smile.studio.view.*;
+import smile.studio.workspace.Workspace;
 import smile.swing.Button;
 import smile.studio.notebook.Cell;
 import smile.studio.notebook.Notebook;

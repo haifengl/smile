@@ -27,10 +27,10 @@ import org.fife.ui.autocomplete.AutoCompletion;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import ioa.llm.tool.Question;
 import smile.plot.swing.Palette;
-import smile.studio.view.Editor;
-import smile.studio.view.Markdown;
-import smile.studio.view.Monospaced;
-import smile.studio.view.OutputArea;
+import smile.studio.Editor;
+import smile.studio.Markdown;
+import smile.studio.Monospaced;
+import smile.studio.OutputArea;
 import static smile.studio.cli.IntentType.*;
 
 /**

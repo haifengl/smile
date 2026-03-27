@@ -34,7 +34,7 @@ import ioa.agent.Coder;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import smile.io.Paths;
 import smile.studio.kernel.*;
-import smile.studio.view.Monospaced;
+import smile.studio.Monospaced;
 import smile.swing.ScrollablePanel;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;

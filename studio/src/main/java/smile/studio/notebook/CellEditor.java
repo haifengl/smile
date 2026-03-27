@@ -23,7 +23,7 @@ import java.awt.Dimension;
 import java.awt.event.*;
 import org.fife.ui.rsyntaxtextarea.*;
 import org.fife.ui.rtextarea.RTextScrollPane;
-import smile.studio.view.Editor;
+import smile.studio.Editor;
 import smile.util.OS;
 
 /**

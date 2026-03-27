@@ -34,8 +34,8 @@ import ioa.agent.Coder;
 import ioa.llm.client.StreamResponseHandler;
 import smile.studio.kernel.Kernel;
 import smile.studio.kernel.PostRunNavigation;
-import smile.studio.view.Monospaced;
-import smile.studio.view.OutputArea;
+import smile.studio.Monospaced;
+import smile.studio.OutputArea;
 
 /**
  * A cell is a multiline coding field, and its contents can be executed
