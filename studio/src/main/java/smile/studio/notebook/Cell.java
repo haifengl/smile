@@ -156,17 +156,8 @@ public class Cell extends JPanel {
         cellTypeComboBox.setSelectedItem(CellType.Code);
         cellTypeComboBox.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
-                cellType = (CellType) e.getItem();
+                setType((CellType) e.getItem());
                 editor.requestFocusInWindow();
-
-                switch (cellType) {
-                    case Code ->
-                            editor.setSyntaxEditingStyle(syntaxStyle);
-                    case Markdown ->
-                            editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_MARKDOWN);
-                    case Raw ->
-                            editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);
-                }
             }
         });
     }
@@ -579,6 +570,22 @@ public class Cell extends JPanel {
     public void setType(CellType type) {
         cellType = type;
         cellTypeComboBox.setSelectedItem(type);
+        if (type == CellType.Code) {
+            editor.setLineWrap(false);
+            editor.setWrapStyleWord(false);
+        } else {
+            editor.setLineWrap(true);
+            editor.setWrapStyleWord(true);
+        }
+
+        switch (type) {
+            case Code ->
+                    editor.setSyntaxEditingStyle(syntaxStyle);
+            case Markdown ->
+                    editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_MARKDOWN);
+            case Raw ->
+                    editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);
+        }
     }
 
     /**
