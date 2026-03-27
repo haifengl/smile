@@ -61,5 +61,11 @@ public record CellMetadata(
         @JsonProperty("jupyter") Map<String, Object> jupyter,
         @JsonProperty("execution") Map<String, Object> execution
 ) {
+    /**
+     * Constructs a {@code CellMetadata} with all fields set to {@code null}.
+     */
+    public CellMetadata() {
+        this(null, null, null, null, null, null, null, null, null, null);
+    }
 }
 
