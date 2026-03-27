@@ -84,7 +84,7 @@ public class SmileStudio extends JFrame {
         setContentPane(contentPane);
 
         // Initialized as true so that we won't try to save sample code.
-        workspace.notebook().ifPresent(book -> book.setSaved(true));
+        workspace.notebook().ifPresent(notebook -> notebook.setSaved(true));
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
