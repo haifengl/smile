@@ -28,10 +28,12 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.text.BadLocationException;
 import com.formdev.flatlaf.util.SystemInfo;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jdesktop.swingx.JXTextField;
 import ioa.agent.Coder;
 import ioa.llm.client.StreamResponseHandler;
+import smile.studio.Markdown;
 import smile.studio.kernel.Kernel;
 import smile.studio.kernel.PostRunNavigation;
 import smile.studio.Monospaced;
@@ -53,6 +55,7 @@ public class Cell extends JPanel {
     private final CellEditor editor;
     private final RTextScrollPane editorScroll;
     private final OutputArea output = new OutputArea();
+    private final JComboBox<CellType> cellTypeComboBox = new JComboBox<>(CellType.values());
     private final JTextField prompt = new JXTextField(placeholder);
     private final TitledBorder border = BorderFactory.createTitledBorder("[ ]");
     private final JButton runButton = new JButton("▶");
@@ -64,6 +67,8 @@ public class Cell extends JPanel {
     private final JButton clearButton = new JButton(SystemInfo.isMacOS ? "🧹" : "⌫");
     private final JButton deleteButton = new JButton("⌦");
     private final Coder coder;
+    private final String syntaxStyle;
+    private CellType cellType = CellType.Code;
     private boolean collapsed = false;
     /** Running code generation. */
     private volatile boolean isCoding = false;
@@ -77,7 +82,8 @@ public class Cell extends JPanel {
         setBorder(new EmptyBorder(8,8,8,8));
 
         coder = notebook.coder();
-        editor = new CellEditor(1, 80, notebook.syntaxStyle());
+        syntaxStyle = notebook.syntaxStyle();
+        editor = new CellEditor(1, 80, syntaxStyle);
         editorScroll = editor.scroll();
         JPanel header = createHeader(notebook);
         initActionMap(notebook);
@@ -113,7 +119,12 @@ public class Cell extends JPanel {
         header.add(clearButton);
         header.add(Box.createHorizontalStrut(6));
         header.add(deleteButton);
-        header.add(Box.createHorizontalStrut(30));
+
+        initCellTypeComboBox();
+        header.add(Box.createHorizontalStrut(20));
+        header.add(cellTypeComboBox);
+
+        header.add(Box.createHorizontalStrut(20));
         header.add(prompt);
         header.add(Box.createHorizontalStrut(2));
 
@@ -137,6 +148,26 @@ public class Cell extends JPanel {
         deleteButton.addActionListener(e -> notebook.deleteCell(this));
 
         return header;
+    }
+
+    /** Initializes the cell type combo box. */
+    private void initCellTypeComboBox() {
+        cellTypeComboBox.setSelectedItem(CellType.Code);
+        cellTypeComboBox.addItemListener(e -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                cellType = (CellType) e.getItem();
+                editor.requestFocusInWindow();
+
+                switch (cellType) {
+                    case Code ->
+                            editor.setSyntaxEditingStyle(syntaxStyle);
+                    case Markdown ->
+                            editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_MARKDOWN);
+                    case Raw ->
+                            editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);
+                }
+            }
+        });
     }
 
     /**
@@ -418,6 +449,25 @@ public class Cell extends JPanel {
      * @return true if code runs successfully; false if any error occurs during execution.
      */
     public boolean run(Kernel<?> kernel, int runCount) {
+        if (cellType == CellType.Raw) return true;
+        if (cellType == CellType.Markdown) {
+            String text = editor.getText();
+            var html = new Markdown(text);
+            remove(editorScroll);
+            add(html, BorderLayout.CENTER);
+            html.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    // Return to edit mode when double-click
+                    if (e.getClickCount() == 2) {
+                        remove(html);
+                        add(editorScroll, BorderLayout.CENTER);
+                    }
+                }
+            });
+            return true;
+        }
+
         kernel.setOutputArea(output()); // Direct JShell prints
         SwingUtilities.invokeLater(() -> {
             setRunning(true);
@@ -505,6 +555,23 @@ public class Cell extends JPanel {
             info = lines[0].trim() + "  (" + Math.max(editor.getLineCount(), 1) + " lines)";
         }
         prompt.setText(info);
+    }
+
+    /**
+     * Returns the cell type.
+     * @return the cell type.
+     */
+    public CellType type() {
+        return cellType;
+    }
+
+    /**
+     * Sets the cell type.
+     * @param type the cell type.
+     */
+    public void setType(CellType type) {
+        cellType = type;
+        cellTypeComboBox.setSelectedItem(type);
     }
 
     /**

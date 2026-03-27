@@ -35,8 +35,8 @@ import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import smile.io.Paths;
 import smile.studio.kernel.*;
 import smile.studio.Monospaced;
-import smile.studio.notebook.nbformat.JupyterNotebook;
 import smile.swing.ScrollablePanel;
+import smile.util.ipynb.JupyterNotebook;
 
 /**
  * Interactive environment to write and execute Java code combining code,
