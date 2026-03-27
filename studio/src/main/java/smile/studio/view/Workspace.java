@@ -394,7 +394,7 @@ public class Workspace extends JSplitPane {
      * @param notebook the notebook to save.
      * @param saveAs save the notebook to a new file if true.
      * @return true if the notebook is saved successfully, false otherwise
-     *              or the save operation is cancelled.
+     *              or the save operation is canceled.
      */
     public boolean saveNotebook(Notebook notebook, boolean saveAs) {
         if (notebook.getFile() == null || saveAs) {

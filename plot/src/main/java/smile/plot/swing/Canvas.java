@@ -704,7 +704,7 @@ public class Canvas extends JComponent implements ComponentListener,
         // In fact what should happen is for the method stopCellEditing()
         // on CellEditor to be called when focus is lost.
         // So the editor can choose whether to accept the new value and stop
-        // editing, or have the editing cancelled without committing.
+        // editing, or have the editing canceled without committing.
         // There is a magic property which you have to set on the JTable
         // instance to turn this feature on.
         propertyTable.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
