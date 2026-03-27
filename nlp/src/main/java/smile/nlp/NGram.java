@@ -43,7 +43,7 @@ public class NGram {
 
     @Override
     public String toString() {
-        return Arrays.stream(words).collect(Collectors.joining(", ", "[", "]"));
+        return '[' + String.join(", ", words) + ']';
     }
 
     @Override
