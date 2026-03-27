@@ -22,8 +22,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * A code cell. Code cells contain executable source code in the kernel language
  * and may carry a list of outputs generated during execution.
+ * <p>
+ * The {@code id} field is required in nbformat 5 (nbformat_minor &ge; 4).
  *
- * @param id             the unique cell identifier (nbformat &ge; 4.5).
+ * @param id             the unique cell identifier (required in nbformat 5).
  * @param metadata       the cell-level metadata.
  * @param source         the source code of the cell.
  * @param outputs        the list of outputs produced by executing the cell.

@@ -24,6 +24,12 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  * A single cell in a Jupyter notebook. The cell type is determined by the
  * {@code cell_type} field and can be one of {@code "code"}, {@code "markdown"},
  * or {@code "raw"}.
+ * <p>
+ * The {@code id} field was added in <em>nbformat 4.5</em> and is
+ * <strong>required</strong> in nbformat 5 (nbformat_minor &ge; 4). It must
+ * be a string of 1–64 characters matching {@code [a-zA-Z0-9_\-]}. When
+ * reading legacy notebooks (nbformat_minor &lt; 4) the field may be absent;
+ * in that case {@link #id()} returns {@code null}.
  *
  * @author Haifeng Li
  */
@@ -63,8 +69,13 @@ public sealed interface Cell permits CodeCell, MarkdownCell, RawCell {
     MultilineString source();
 
     /**
-     * Returns the unique cell identifier (nbformat &ge; 4.5).
-     * @return the cell id, or {@code null} for older notebooks.
+     * Returns the unique cell identifier.
+     * <p>
+     * Required in nbformat 5 (nbformat_minor &ge; 4). Must be a string of 1–64
+     * characters matching {@code [a-zA-Z0-9_\-]}. May be {@code null} when
+     * reading notebooks saved with an older minor version.
+     *
+     * @return the cell id, or {@code null} for legacy notebooks.
      */
     @JsonProperty("id")
     String id();

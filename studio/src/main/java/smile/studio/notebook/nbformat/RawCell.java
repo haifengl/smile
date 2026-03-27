@@ -16,24 +16,32 @@
  */
 package smile.studio.notebook.nbformat;
 
+import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import tools.jackson.databind.JsonNode;
 
 /**
  * A raw cell. Raw cells contain content that should be passed through
- * unmodified by nbconvert. The intended conversion format is indicated in the
- * cell metadata via the {@code format} field of {@link CellMetadata}.
+ * unmodified by nbconvert. The target conversion format is indicated by
+ * {@link CellMetadata#rawMimetype()} (nbformat 5) or the legacy
+ * {@link CellMetadata#format()} field.
+ * <p>
+ * Since nbformat 4.5 / nbformat 5, raw cells may also carry
+ * {@code attachments}: inline files stored as a map of filename → MIME bundle.
  *
- * @param id       the unique cell identifier (nbformat &ge; 4.5).
- * @param metadata the cell-level metadata. Use {@link CellMetadata#format()} to
- *                 specify the target MIME type (e.g. {@code "text/restructuredtext"}).
- * @param source   the raw source content of the cell.
+ * @param id          the unique cell identifier (nbformat &ge; 4.5, required in nbformat 5).
+ * @param metadata    the cell-level metadata. Use {@link CellMetadata#rawMimetype()} to
+ *                    specify the target MIME type (e.g. {@code "text/restructuredtext"}).
+ * @param source      the raw source content of the cell.
+ * @param attachments optional map of filename to MIME bundle for inline attachments.
  *
  * @author Haifeng Li
  */
 public record RawCell(
         @JsonProperty("id") String id,
         @JsonProperty("metadata") CellMetadata metadata,
-        @JsonProperty("source") MultilineString source
+        @JsonProperty("source") MultilineString source,
+        @JsonProperty("attachments") Map<String, Map<String, JsonNode>> attachments
 ) implements Cell {
 
     @Override

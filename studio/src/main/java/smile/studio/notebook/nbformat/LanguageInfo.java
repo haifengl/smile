@@ -16,18 +16,26 @@
  */
 package smile.studio.notebook.nbformat;
 
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Information about the programming language of the kernel.
+ * <p>
+ * All fields are optional; only {@code name} is required by the spec.
+ * The {@code codemirror_mode} field may be either a plain string or an
+ * object (e.g. {@code {"name":"ipython","version":3}}) so it is modelled
+ * as {@link tools.jackson.databind.JsonNode} to handle both forms.
  *
  * @param name              the language name (e.g. {@code "python"}, {@code "scala"}).
- * @param version           the language version string.
+ * @param version           the language version string (e.g. {@code "3.10.4"}).
  * @param mimeType          the MIME type for the language (e.g. {@code "text/x-python"}).
- * @param fileExtension     the standard file extension for source files (e.g. {@code ".py"}).
- * @param pygmentsLexer     the name of the Pygments lexer used for syntax highlighting.
- * @param nbconvertExporter the name of the nbconvert exporter to use for this language.
- * @param codemirrorMode    the CodeMirror mode for syntax highlighting in the front end.
+ * @param fileExtension     the standard file extension (e.g. {@code ".py"}).
+ * @param pygmentsLexer     the name of the Pygments lexer for syntax highlighting.
+ * @param nbconvertExporter the name of the nbconvert exporter for this language.
+ * @param codemirrorMode    the CodeMirror mode — either a plain string or an object.
+ * @param versionInfo       the language version broken into components as a list of integers
+ *                          (e.g. {@code [3, 10, 4, "final", 0]} for Python 3.10.4).
  *
  * @author Haifeng Li
  */
@@ -38,7 +46,8 @@ public record LanguageInfo(
         @JsonProperty("file_extension") String fileExtension,
         @JsonProperty("pygments_lexer") String pygmentsLexer,
         @JsonProperty("nbconvert_exporter") String nbconvertExporter,
-        @JsonProperty("codemirror_mode") tools.jackson.databind.JsonNode codemirrorMode
+        @JsonProperty("codemirror_mode") tools.jackson.databind.JsonNode codemirrorMode,
+        @JsonProperty("version_info") List<Object> versionInfo
 ) {
 }
 

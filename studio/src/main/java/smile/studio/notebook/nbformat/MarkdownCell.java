@@ -16,22 +16,30 @@
  */
 package smile.studio.notebook.nbformat;
 
+import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import tools.jackson.databind.JsonNode;
 
 /**
  * A markdown cell. Markdown cells contain formatted text written in the
  * Markdown lightweight markup language and have no outputs.
+ * <p>
+ * Since nbformat 4.5 / nbformat 5, markdown cells may also carry
+ * {@code attachments}: inline files (e.g. dragged-in images) stored as
+ * a map of filename → MIME bundle.
  *
- * @param id       the unique cell identifier (nbformat &ge; 4.5).
- * @param metadata the cell-level metadata.
- * @param source   the Markdown source of the cell.
+ * @param id          the unique cell identifier (nbformat &ge; 4.5, required in nbformat 5).
+ * @param metadata    the cell-level metadata.
+ * @param source      the Markdown source of the cell.
+ * @param attachments optional map of filename to MIME bundle for inline attachments.
  *
  * @author Haifeng Li
  */
 public record MarkdownCell(
         @JsonProperty("id") String id,
         @JsonProperty("metadata") CellMetadata metadata,
-        @JsonProperty("source") MultilineString source
+        @JsonProperty("source") MultilineString source,
+        @JsonProperty("attachments") Map<String, Map<String, JsonNode>> attachments
 ) implements Cell {
 
     @Override

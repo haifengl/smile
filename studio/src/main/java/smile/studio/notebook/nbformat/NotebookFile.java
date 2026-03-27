@@ -20,17 +20,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 /**
- * The top-level Jupyter notebook document (nbformat 4).
+ * The top-level Jupyter notebook document (nbformat 5).
  * <p>
  * A notebook document consists of an ordered list of cells, metadata about
- * the notebook, and version information.
+ * the notebook, and version information. The current major version is
+ * {@code 5} with the minor version indicating incremental additions (e.g.
+ * {@code 5.4} added the cell {@code id} field as a required property).
  *
- * @param cells      the list of cells in document order.
- * @param metadata   the notebook-level metadata.
- * @param nbformat   the major version of the notebook format (4).
+ * @param cells         the list of cells in document order.
+ * @param metadata      the notebook-level metadata.
+ * @param nbformat      the major version of the notebook format ({@code 5}).
  * @param nbformatMinor the minor version of the notebook format.
  *
- * @see <a href="https://nbformat.readthedocs.io/en/latest/format_description.html">nbformat spec</a>
+ * @see <a href="https://nbformat.readthedocs.io/en/latest/format_description.html">nbformat 5 spec</a>
  * @author Haifeng Li
  */
 public record NotebookFile(
@@ -39,5 +41,9 @@ public record NotebookFile(
         @JsonProperty("nbformat") int nbformat,
         @JsonProperty("nbformat_minor") int nbformatMinor
 ) {
+    /** The current (latest) major format version. */
+    public static final int NBFORMAT = 5;
+    /** The current (latest) minor format version. */
+    public static final int NBFORMAT_MINOR = 5;
 }
 
