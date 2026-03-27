@@ -57,7 +57,11 @@ public class Notebook extends JPanel implements DocumentListener {
     /** Programming language syntax highlight style. */
     private final String syntaxStyle;
     /** Execution engine. */
-    private final Kernel<?> kernel;
+    private Kernel<?> kernel;
+    // TODO: Use LazyConstant as kernel initialization is expensive and
+    // we want to delay it until first run. For now, we initialize it
+    // in constructor as LazyConstant is still in preview.
+    //private final LazyConstant<Kernel<?>> kernel = LazyConstant.of(() -> createKernel());
     /** The coding assistant agent. */
     private final Coder coder;
     private final Consumer<Kernel<?>> postRunAction;
@@ -84,7 +88,8 @@ public class Notebook extends JPanel implements DocumentListener {
 
         lang = initLang();
         syntaxStyle = initSyntaxStyle();
-        kernel = initKernel();
+        initKernel();
+
         if (file != null && Files.exists(file)) {
             try {
                 open(file);
@@ -219,8 +224,8 @@ public class Notebook extends JPanel implements DocumentListener {
         };
     }
 
-    /** Initialize the kernel. */
-    private Kernel<?> initKernel() {
+    /** Creates the kernel instance. */
+    private Kernel<?> createKernel() {
         return switch (lang) {
             case "Java" -> new JavaKernel();
             case "Scala" -> new ScriptKernel("scala");
@@ -244,6 +249,41 @@ public class Notebook extends JPanel implements DocumentListener {
                 yield null;
             }
         };
+    }
+
+    /** Initialize the kernel. */
+    private void initKernel() {
+        SwingWorker<Kernel<?>, Kernel<?>> worker = new SwingWorker<>() {
+            @Override
+            protected Kernel<?> doInBackground() throws IOException, UnsupportedOperationException {
+                kernel = switch (lang) {
+                    case "Java" -> new JavaKernel();
+                    case "Scala" -> new ScriptKernel("scala");
+                    case "Kotlin" -> new ScriptKernel("kotlin");
+                    case "Python" -> new PythonKernel();
+                    default -> throw new UnsupportedOperationException();
+                };
+                return kernel;
+            }
+
+            @Override
+            protected void done() {
+                if (kernel == null) {
+                    if (lang.equals("Python")) {
+                        JOptionPane.showMessageDialog(Notebook.this,
+                                bundle.getString("PythonKernelInitErrorMessage"),
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                    } else {
+                        JOptionPane.showMessageDialog(Notebook.this,
+                                String.format(bundle.getString("UnsupportedKernelMessage"), lang),
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            }
+        };
+        worker.execute();
     }
 
     /**

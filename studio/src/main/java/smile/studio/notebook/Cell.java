@@ -94,7 +94,6 @@ public class Cell extends JPanel {
         editorScroll.setBorder(border);
         add(header, BorderLayout.NORTH);
         add(editorScroll, BorderLayout.CENTER);
-        add(output, BorderLayout.SOUTH);
     }
 
     /**
@@ -450,6 +449,8 @@ public class Cell extends JPanel {
      */
     public boolean run(Kernel<?> kernel, int runCount) {
         if (cellType == CellType.Raw) return true;
+
+        // Render markdown content and remove editor.
         if (cellType == CellType.Markdown) {
             String text = editor.getText();
             var html = new Markdown(text);
@@ -458,10 +459,13 @@ public class Cell extends JPanel {
             html.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
+                    System.out.println(e);
                     // Return to edit mode when double-click
                     if (e.getClickCount() == 2) {
                         remove(html);
                         add(editorScroll, BorderLayout.CENTER);
+                        revalidate();
+                        repaint();
                     }
                 }
             });
@@ -472,6 +476,7 @@ public class Cell extends JPanel {
         SwingUtilities.invokeLater(() -> {
             setRunning(true);
             editor().setPreferredRows();
+            add(output, BorderLayout.SOUTH);
         });
 
         try {

@@ -32,7 +32,6 @@ import org.xhtmlrenderer.swing.BasicPanel;
 import org.xhtmlrenderer.swing.LinkListener;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-import smile.studio.SmileStudio;
 
 /**
  * A component to render Markdown text.
