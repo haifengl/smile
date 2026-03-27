@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.studio.view;
+package smile.studio.workspace;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -30,9 +30,9 @@ import java.util.Objects;
 import java.util.ResourceBundle;
 import com.formdev.flatlaf.util.SystemFileChooser;
 import jdk.jshell.VarSnippet;
+import smile.studio.ProcessFrame;
 import smile.studio.kernel.Kernel;
 import smile.studio.kernel.Variable;
-import smile.studio.model.PersistedModel;
 import static smile.swing.SmileUtilities.scaleImageIcon;
 
 /**

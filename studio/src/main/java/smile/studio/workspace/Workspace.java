@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.studio.view;
+package smile.studio.workspace;
 
 import javax.swing.*;
 import javax.swing.Timer;
@@ -31,6 +31,7 @@ import ioa.agent.Analyst;
 import ioa.agent.Coder;
 import smile.io.Paths;
 import smile.shell.JShell;
+import smile.studio.Notepad;
 import smile.studio.SmileStudio;
 import smile.swing.FileExplorer;
 import smile.swing.tree.DirectoryTreeNode;

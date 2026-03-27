@@ -1,4 +1,4 @@
-package smile.studio.view;
+package smile.studio;
 
 import java.awt.Font;
 import java.awt.font.TextAttribute;
