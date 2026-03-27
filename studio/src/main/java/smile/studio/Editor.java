@@ -48,7 +48,7 @@ public class Editor extends RSyntaxTextArea {
         super(rows, cols);
         putClientProperty("FlatLaf.styleClass", "monospaced");
         setSyntaxEditingStyle(style);
-        if (!style.equals(SyntaxConstants.SYNTAX_STYLE_NONE)) {
+        if (!style.equals(SYNTAX_STYLE_NONE)) {
             setCodeFoldingEnabled(true);
             setTabSize(4);
             setLineWrap(false);
@@ -78,32 +78,32 @@ public class Editor extends RSyntaxTextArea {
     public static String probeSyntaxStyle(Path file) {
         try {
             return switch (Files.probeContentType(file)) {
-                case "text/markdown" -> SyntaxConstants.SYNTAX_STYLE_MARKDOWN;
-                case "text/x-java-source" -> SyntaxConstants.SYNTAX_STYLE_JAVA;
-                case "text/x-python" -> SyntaxConstants.SYNTAX_STYLE_PYTHON;
-                case "application/sql" -> SyntaxConstants.SYNTAX_STYLE_SQL;
-                case "text/x-scala" -> SyntaxConstants.SYNTAX_STYLE_SCALA;
-                case "text/x-kotlin" -> SyntaxConstants.SYNTAX_STYLE_KOTLIN; // less standardized
-                case "text/x-c++src" -> SyntaxConstants.SYNTAX_STYLE_CPLUSPLUS;
-                case "text/x-csrc" -> SyntaxConstants.SYNTAX_STYLE_C;
-                case "text/x-javascript" -> SyntaxConstants.SYNTAX_STYLE_JAVASCRIPT;
-                case "text/x-rustsrc" -> SyntaxConstants.SYNTAX_STYLE_RUST;
-                case "text/csv" -> SyntaxConstants.SYNTAX_STYLE_CSV;
-                case "text/json", "text/x-json", "application/json" -> SyntaxConstants.SYNTAX_STYLE_JSON;
-                case "application/x-sh" -> SyntaxConstants.SYNTAX_STYLE_UNIX_SHELL;
-                case "application/bat", "application/x-bat" -> SyntaxConstants.SYNTAX_STYLE_WINDOWS_BATCH;
+                case "text/markdown" -> SYNTAX_STYLE_MARKDOWN;
+                case "text/x-java-source" -> SYNTAX_STYLE_JAVA;
+                case "text/x-python" -> SYNTAX_STYLE_PYTHON;
+                case "application/sql" -> SYNTAX_STYLE_SQL;
+                case "text/x-scala" -> SYNTAX_STYLE_SCALA;
+                case "text/x-kotlin" -> SYNTAX_STYLE_KOTLIN; // less standardized
+                case "text/x-c++src" -> SYNTAX_STYLE_CPLUSPLUS;
+                case "text/x-csrc" -> SYNTAX_STYLE_C;
+                case "text/x-javascript" -> SYNTAX_STYLE_JAVASCRIPT;
+                case "text/x-rustsrc" -> SYNTAX_STYLE_RUST;
+                case "text/csv" -> SYNTAX_STYLE_CSV;
+                case "text/json", "text/x-json", "application/json" -> SYNTAX_STYLE_JSON;
+                case "application/x-sh" -> SYNTAX_STYLE_UNIX_SHELL;
+                case "application/bat", "application/x-bat" -> SYNTAX_STYLE_WINDOWS_BATCH;
                 case "text/html" -> SyntaxConstants.SYNTAX_STYLE_HTML;
-                case "text/xml", "application/xml" -> SyntaxConstants.SYNTAX_STYLE_XML;
-                case "application/yaml" -> SyntaxConstants.SYNTAX_STYLE_YAML;
+                case "text/xml", "application/xml" -> SYNTAX_STYLE_XML;
+                case "application/yaml" -> SYNTAX_STYLE_YAML;
                 default -> switch (Paths.getFileExtension(file)) {
-                    case "kt", "kts" -> SyntaxConstants.SYNTAX_STYLE_KOTLIN;
-                    case "bat" -> SyntaxConstants.SYNTAX_STYLE_WINDOWS_BATCH;
-                    case "properties" -> SyntaxConstants.SYNTAX_STYLE_PROPERTIES_FILE;
-                    default -> SyntaxConstants.SYNTAX_STYLE_NONE;
+                    case "kt", "kts" -> SYNTAX_STYLE_KOTLIN;
+                    case "bat" -> SYNTAX_STYLE_WINDOWS_BATCH;
+                    case "properties" -> SYNTAX_STYLE_PROPERTIES_FILE;
+                    default -> SYNTAX_STYLE_NONE;
                 };
             };
         } catch (Exception ex) {
-            return SyntaxConstants.SYNTAX_STYLE_NONE;
+            return SYNTAX_STYLE_NONE;
         }
     }
 }
