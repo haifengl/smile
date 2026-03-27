@@ -84,7 +84,7 @@ libraryDependencies ++= Seq(
   "org.scala-lang"   %% "scala3-compiler"    % scalaVersion.value,
   "info.picocli"      % "picocli"            % "4.7.7",
   "org.slf4j"         % "slf4j-simple"       % "2.0.17",
-  "com.openai"        % "openai-java"        % "4.29.1",
+  "com.openai"        % "openai-java"        % "4.30.0",
   "com.anthropic"     % "anthropic-java"     % "2.18.0",
   "com.google.genai"  % "google-genai"       % "1.44.0",
   "org.commonmark"    % "commonmark"         % "0.27.1",
