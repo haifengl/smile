@@ -158,6 +158,9 @@ public class Cell extends JPanel {
             if (e.getStateChange() == ItemEvent.SELECTED) {
                 setType((CellType) e.getItem());
                 editor.requestFocusInWindow();
+                if (SwingUtilities.getAncestorOfClass(Notebook.class, this) instanceof Notebook notebook) {
+                    notebook.setSaved(false);
+                }
             }
         });
     }
