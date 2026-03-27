@@ -56,6 +56,8 @@ public class Notebook extends JPanel implements DocumentListener {
     private final String lang;
     /** Programming language syntax highlight style. */
     private final String syntaxStyle;
+    /** The original Jupyter notebook read from .ipynb file. */
+    private final JupyterNotebook jupyter;
     /** Execution engine. */
     private Kernel<?> kernel;
     // TODO: Use LazyConstant as kernel initialization is expensive and
@@ -86,13 +88,10 @@ public class Notebook extends JPanel implements DocumentListener {
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         add(scrollPane, BorderLayout.CENTER);
 
-        lang = initLang();
-        syntaxStyle = initSyntaxStyle();
-        initKernel();
-
-        if (file != null && Files.exists(file)) {
+        JupyterNotebook ipynb = null;
+        if (Files.exists(file) && Paths.getFileExtension(file).equals("ipynb")) {
             try {
-                open(file);
+                ipynb = JupyterNotebook.from(file);
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(
                         null,
@@ -101,58 +100,28 @@ public class Notebook extends JPanel implements DocumentListener {
                         JOptionPane.ERROR_MESSAGE
                 );
             }
-        } else {
-            // Start with one cell
-            Cell cell = addCell(null);
-            cell.editor().setText("""
-                    import java.awt.Color;
-                    import java.time.*;
-                    import java.util.*;
-                    import static java.lang.Math.*;
-                    import smile.plot.swing.*;
-                    import static smile.swing.SmileUtilities.*;
-                    
-                    import org.apache.commons.csv.CSVFormat;
-                    import smile.io.*;
-                    import smile.data.*;
-                    import smile.data.formula.*;
-                    import smile.data.measure.*;
-                    import smile.data.type.*;
-                    import smile.data.vector.*;
-                    import static smile.data.formula.Terms.*;
-                    import smile.feature.extraction.*;
-                    import smile.feature.importance.*;
-                    import smile.feature.imputation.*;
-                    import smile.feature.selection.*;
-                    import smile.feature.transform.*;
-                    import smile.tensor.*;
-                    import smile.graph.*;
-                    import smile.math.*;
-                    import smile.math.distance.*;
-                    import smile.math.kernel.*;
-                    import smile.math.rbf.*;
-                    import smile.stat.*;
-                    import smile.stat.distribution.*;
-                    import smile.stat.hypothesis.*;
-                    import smile.model.*;
-                    import smile.model.mlp.*;
-                    import smile.association.*;
-                    import smile.classification.*;
-                    import smile.clustering.*;
-                    import smile.manifold.*;
-                    import smile.regression.OLS;
-                    import smile.regression.LASSO;
-                    import smile.regression.ElasticNet;
-                    import smile.regression.RidgeRegression;
-                    import smile.regression.GaussianProcessRegression;
-                    import smile.regression.RegressionTree;
-                    import smile.validation.*;
-                    import smile.validation.metric.*;
-                    import smile.hpo.*;
-                    import smile.vq.*;""");
-            // Add an empty cell for user to start with
-            cell = addCell(null);
-            cell.editor().requestFocus();
+        }
+
+        jupyter = ipynb;
+        lang = initLang();
+        syntaxStyle = initSyntaxStyle();
+        initKernel();
+
+        try {
+            loadCells(file);
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(
+                    null,
+                    ex.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
+
+        // If the file is empty or failed to read,
+        // initialize with a starter cell.
+        if (cells.getComponentCount() == 0) {
+            initStarter();
         }
 
         if (cells.getComponentCount() > 0 && cells.getComponent(0) instanceof Cell first) {
@@ -203,6 +172,17 @@ public class Notebook extends JPanel implements DocumentListener {
 
     /** Initialize the programming language. */
     private String initLang() {
+        if (jupyter != null) {
+            var lang = jupyter.metadata().kernelspec().language();
+            return switch (lang.toLowerCase()) {
+                case "java" -> "Java";
+                case "scala" -> "Scala";
+                case "kotlin" -> "Kotlin";
+                case "python" -> "Python";
+                default -> lang;
+            };
+        }
+
         var ext = Paths.getFileExtension(file);
         return switch (ext) {
             case "java", "jsh" -> "Java";
@@ -222,6 +202,64 @@ public class Notebook extends JPanel implements DocumentListener {
             case "Python" -> SyntaxConstants.SYNTAX_STYLE_PYTHON;
             default -> SyntaxConstants.SYNTAX_STYLE_NONE;
         };
+    }
+
+    /** Initialize the notebook with a starter cell. */
+    private void initStarter() {
+        if (lang.equals("Java")) {
+            // Import essential SMILE packages
+            var cell = addCell(null);
+            cell.editor().setText("""
+                    import java.awt.Color;
+                    import java.time.*;
+                    import java.util.*;
+                    import static java.lang.Math.*;
+                    import smile.plot.swing.*;
+                    import static smile.swing.SmileUtilities.*;
+                    
+                    import org.apache.commons.csv.CSVFormat;
+                    import smile.io.*;
+                    import smile.data.*;
+                    import smile.data.formula.*;
+                    import smile.data.measure.*;
+                    import smile.data.type.*;
+                    import smile.data.vector.*;
+                    import static smile.data.formula.Terms.*;
+                    import smile.feature.extraction.*;
+                    import smile.feature.importance.*;
+                    import smile.feature.imputation.*;
+                    import smile.feature.selection.*;
+                    import smile.feature.transform.*;
+                    import smile.tensor.*;
+                    import smile.graph.*;
+                    import smile.math.*;
+                    import smile.math.distance.*;
+                    import smile.math.kernel.*;
+                    import smile.math.rbf.*;
+                    import smile.stat.*;
+                    import smile.stat.distribution.*;
+                    import smile.stat.hypothesis.*;
+                    import smile.model.*;
+                    import smile.model.mlp.*;
+                    import smile.association.*;
+                    import smile.classification.*;
+                    import smile.clustering.*;
+                    import smile.manifold.*;
+                    import smile.regression.OLS;
+                    import smile.regression.LASSO;
+                    import smile.regression.ElasticNet;
+                    import smile.regression.RidgeRegression;
+                    import smile.regression.GaussianProcessRegression;
+                    import smile.regression.RegressionTree;
+                    import smile.validation.*;
+                    import smile.validation.metric.*;
+                    import smile.hpo.*;
+                    import smile.vq.*;""");
+        }
+
+        // Add an empty cell for user to start with
+        var cell = addCell(null);
+        cell.editor().requestFocus();
     }
 
     /** Creates the kernel instance. */
@@ -339,28 +377,45 @@ public class Notebook extends JPanel implements DocumentListener {
     }
 
     /**
-     * Opens a notebook.
+     * Loads cells from a notebook file.
      *
      * @param file the notebook file.
      * @throws IOException If an I/O error occurs.
      */
-    public void open(Path file) throws IOException {
-        List<String> lines = Files.readAllLines(file, StandardCharsets.UTF_8);
-        List<String> snippets = Paths.getFileExtension(file).equals("ipynb")
-                ? readIpynb(file)
-                : readSource(file);
+    private void loadCells(Path file) throws IOException {
+        List<Cell> snippets = jupyter != null ? getJupyterCells(jupyter) : getSourceCells(file);
 
         cells.removeAll();
-        for (String src : snippets) {
-            Cell cell = new Cell(this);
-            cell.editor().setText(src);
-            cell.editor().getDocument().addDocumentListener(this);
+        for (var cell : snippets) {
             cells.add(cell);
         }
-        if (snippets.isEmpty()) addCell(null);
-        cells.revalidate();
-        cells.repaint();
-        this.file = file;
+    }
+
+    /**
+     * Returns the cell type enum.
+     * @param type the cell type string.
+     * @return the cell type.
+     */
+    private CellType cellType(String type) {
+        return switch (type) {
+            case "code" -> CellType.Code;
+            case "markdown" -> CellType.Markdown;
+            default -> CellType.Raw;
+        };
+    }
+
+    /**
+     * Creates a cell with source code and type.
+     * @param source the source code.
+     * @param type the cell type.
+     * @return the created cell.
+     */
+    private Cell createCell(String source, String type) {
+        Cell cell = new Cell(this);
+        cell.editor().setText(source);
+        cell.setType(cellType(type));
+        cell.editor().getDocument().addDocumentListener(this);
+        return cell;
     }
 
     /** Determines the cell separator based on file extension. */
@@ -371,19 +426,21 @@ public class Notebook extends JPanel implements DocumentListener {
     }
 
     /**
-     * Reads source code into cells.
+     * Returns the cells from a source code file.
      * @param file the source code file.
      * @return the list of cells.
      */
-    private List<String> readSource(Path file) throws IOException{
+    private List<Cell> getSourceCells(Path file) throws IOException{
         List<String> lines = Files.readAllLines(file, StandardCharsets.UTF_8);
-        List<String> snippets = new ArrayList<>();
+        List<Cell> cells = new ArrayList<>();
         String separator = separator(file);
 
         StringBuilder current = new StringBuilder();
         for (String line : lines) {
             if (line.trim().equals(separator)) {
-                if (!current.isEmpty()) snippets.add(current.toString());
+                if (!current.isEmpty()) {
+                    cells.add(createCell(current.toString(), "code"));
+                }
                 current = new StringBuilder();
             } else {
                 current.append(line).append('\n');
@@ -391,22 +448,23 @@ public class Notebook extends JPanel implements DocumentListener {
         }
 
         // The last cell may not end with separator.
-        if (!current.isEmpty()) snippets.add(current.toString());
-        return snippets;
+        if (!current.isEmpty()) {
+            cells.add(createCell(current.toString(), "code"));
+        }
+        return cells;
     }
 
     /**
-     * Reads Jupyter file into cells.
-     * @param file the Jupyter file.
+     * Returns cells from a Jupyter notebook.
+     * @param jupyter the Jupyter notebook.
      * @return the list of cells.
      */
-    private List<String> readIpynb(Path file) throws IOException {
-        JupyterNotebook notebook = JupyterNotebook.from(file);
-        List<String> snippets = new ArrayList<>();
-        for (var cell : notebook.cells()) {
-            snippets.add(cell.source().value());
+    private List<Cell> getJupyterCells(JupyterNotebook jupyter) throws IOException {
+        List<Cell> cells = new ArrayList<>();
+        for (var cell : jupyter.cells()) {
+            cells.add(createCell(cell.source().value(), cell.cellType()));
         }
-        return snippets;
+        return cells;
     }
 
     /**
@@ -420,6 +478,42 @@ public class Notebook extends JPanel implements DocumentListener {
             return;
         }
 
+        if (Paths.getFileExtension(file).equals("ipynb")) {
+            saveAsIpynb();
+        } else {
+            saveAsSource();
+        }
+        saved = true;
+    }
+
+    /**
+     * Saves the notebook as Jupyter file.
+     *
+     * @throws IOException If an I/O error occurs.
+     */
+    private void saveAsIpynb() throws IOException {
+        List<smile.util.ipynb.Cell> cells = new ArrayList<>();
+        var notebook = new JupyterNotebook(cells, jupyter.metadata(), jupyter.nbformat(), jupyter.nbformatMinor());
+        for (int i = 0; i < this.cells.getComponentCount(); i++) {
+            var c = getCell(i);
+            var cell = new smile.util.ipynb.CodeCell(
+                    "cell-" + (i + 1),
+                    new smile.util.ipynb.CellMetadata(),
+                    new smile.util.ipynb.MultilineString(List.of(c.editor().getText())),
+                    List.of(), // TODO: support outputs
+                    c.getExecutionCount()
+            );
+            notebook.cells().add(cell);
+        }
+        notebook.write(file);
+    }
+
+    /**
+     * Saves the notebook as source code file.
+     *
+     * @throws IOException If an I/O error occurs.
+     */
+    private void saveAsSource() throws IOException {
         List<String> blocks = new ArrayList<>();
         for (int i = 0; i < cells.getComponentCount(); i++) {
             Cell cell = getCell(i);
@@ -427,7 +521,6 @@ public class Notebook extends JPanel implements DocumentListener {
         }
         String sep = "\n" + separator(file) + "\n";
         Files.writeString(file, String.join(sep, blocks), StandardCharsets.UTF_8);
-        saved = true;
     }
 
     /**
