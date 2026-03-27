@@ -26,6 +26,7 @@ import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 import javax.swing.text.*;
 import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import smile.plot.swing.Palette;
 
 /**
@@ -33,7 +34,7 @@ import smile.plot.swing.Palette;
  *
  * @author Haifeng Li
  */
-public class OutputArea extends JTextArea implements HyperlinkListener {
+public class OutputArea extends RSyntaxTextArea implements HyperlinkListener {
     private final DefaultHighlightPainter painter = new DefaultHighlightPainter(Palette.LIGHT_PINK);
     private final Pattern pattern = Pattern.compile("ERROR|WARN|Recoverable issue|Rejected snippet|Unresolved dependencies|Exception:");
     /** The output buffer. StringBuffer is multi-thread safe while StringBuilder isn't. */
@@ -47,9 +48,9 @@ public class OutputArea extends JTextArea implements HyperlinkListener {
         setEditable(false);
         setLineWrap(true);
         setWrapStyleWord(true);
-        /*
+
         // RSyntaxTextArea related settings.
-        // However, it doesn't support emoji.
+        setSyntaxEditingStyle(SYNTAX_STYLE_MARKDOWN);
         setHighlightCurrentLine(false);
         // Set transparent background
         setBackground(new Color(255, 255, 255, 0));
@@ -59,7 +60,6 @@ public class OutputArea extends JTextArea implements HyperlinkListener {
         // Remove the requirement for a modifier key (default CTRL) to activate hyperlinks
         //setLinkScanningMask(0);
         addHyperlinkListener(this);
-         */
     }
 
     /**
