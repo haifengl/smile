@@ -49,6 +49,7 @@ public class CellEditor extends Editor implements DocumentListener {
      */
     public CellEditor(int rows, int cols, String style) {
         super(rows, cols, style);
+        setHighlightCurrentLine(false);
         setPreferredRows();
         getDocument().addDocumentListener(this);
     }
