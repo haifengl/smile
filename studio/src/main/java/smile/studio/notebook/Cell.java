@@ -72,6 +72,8 @@ public class Cell extends JPanel {
     private boolean collapsed = false;
     /** Running code generation. */
     private volatile boolean isCoding = false;
+    // null means never executed, otherwise shows the prompt number in title.
+    private Integer executionCount = null;
 
     /**
      * Constructor.
@@ -444,10 +446,11 @@ public class Cell extends JPanel {
      * Runs the code in the cell using the given kernel,
      * and updates the output area with execution results.
      * @param kernel the kernel to execute code.
-     * @param runCount the current run count of cells, used for generating title after execution.
+     * @param executionCount the execution count of cells.
+     *                       It is also used for generating title after execution.
      * @return true if code runs successfully; false if any error occurs during execution.
      */
-    public boolean run(Kernel<?> kernel, int runCount) {
+    public boolean run(Kernel<?> kernel, int executionCount) {
         if (cellType == CellType.Raw) return true;
 
         // Render markdown content and remove editor.
@@ -500,12 +503,9 @@ public class Cell extends JPanel {
             return false;
         } finally {
             kernel.removeOutputArea();;
-            // Generates title before calling invokeLater
-            // as runCount may have changed in case of runAllCells.
-            String title = "[" + runCount + "]";
             SwingUtilities.invokeLater(() -> {
                 setRunning(false);
-                setTitle(title);
+                setExecutionCount(executionCount);
                 output().flush();
             });
         }
@@ -603,5 +603,22 @@ public class Cell extends JPanel {
      */
     public OutputArea output() {
         return output;
+    }
+
+    /**
+     * Returns the execution count of the cell, or null if never executed.
+     * @return the execution count of the cell, or null if never executed.
+     */
+    public Integer getExecutionCount() {
+        return executionCount;
+    }
+
+    /**
+     * Sets the execution count of the cell and updates the title.
+     * @param count the execution count of the cell.
+     */
+    private void setExecutionCount(int count) {
+        executionCount = count;
+        setTitle("[" + count + "]");
     }
 }
