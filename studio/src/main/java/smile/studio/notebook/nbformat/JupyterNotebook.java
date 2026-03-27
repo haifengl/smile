@@ -16,8 +16,11 @@
  */
 package smile.studio.notebook.nbformat;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * The top-level Jupyter notebook document (nbformat 5).
@@ -35,15 +38,33 @@ import java.util.List;
  * @see <a href="https://nbformat.readthedocs.io/en/latest/format_description.html">nbformat 5 spec</a>
  * @author Haifeng Li
  */
-public record NotebookFile(
+public record JupyterNotebook(
         @JsonProperty("cells") List<Cell> cells,
-        @JsonProperty("metadata") NotebookMetadata metadata,
+        @JsonProperty("metadata") Metadata metadata,
         @JsonProperty("nbformat") int nbformat,
         @JsonProperty("nbformat_minor") int nbformatMinor
 ) {
+    /** For JSON serialization and deserialization. */
+    private static final ObjectMapper mapper = new ObjectMapper();
     /** The current (latest) major format version. */
     public static final int NBFORMAT = 5;
     /** The current (latest) minor format version. */
-    public static final int NBFORMAT_MINOR = 5;
-}
+    public static final int NBFORMAT_MINOR = 10;
 
+    /**
+     * Reads a notebook file.
+     * @param path the path to the notebook file.
+     * @return the notebook read from the specified path.
+     */
+    public JupyterNotebook from(Path path) throws IOException {
+        return mapper.readValue(path, JupyterNotebook.class);
+    }
+
+    /**
+     * Writes the notebook to the specified file.
+     * @param path the file path to write the notebook to.
+     */
+    public void write(Path path) throws IOException {
+        mapper.writerWithDefaultPrettyPrinter().writeValue(path, this);
+    }
+}
