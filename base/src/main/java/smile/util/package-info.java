@@ -16,7 +16,8 @@
  */
 
 /**
- * Primitive data collections, string, date and time facilities, and miscellaneous utility classes.
+ * Primitive data collections, string, date and time facilities,
+ * and miscellaneous utility classes.
  * 
  * @author Haifeng Li
  */

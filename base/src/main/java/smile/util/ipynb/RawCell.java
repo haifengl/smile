@@ -1,41 +1,43 @@
 /*
  * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
  *
- * SMILE Studio is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * SMILE is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * SMILE Studio is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * SMILE is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.studio.notebook.nbformat;
+package smile.util.ipynb;
 
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import tools.jackson.databind.JsonNode;
 
 /**
- * A markdown cell. Markdown cells contain formatted text written in the
- * Markdown lightweight markup language and have no outputs.
+ * A raw cell. Raw cells contain content that should be passed through
+ * unmodified by nbconvert. The target conversion format is indicated by
+ * {@link CellMetadata#rawMimetype()} (nbformat 5) or the legacy
+ * {@link CellMetadata#format()} field.
  * <p>
- * Since nbformat 4.5 / nbformat 5, markdown cells may also carry
- * {@code attachments}: inline files (e.g. dragged-in images) stored as
- * a map of filename → MIME bundle.
+ * Since nbformat 4.5 / nbformat 5, raw cells may also carry
+ * {@code attachments}: inline files stored as a map of filename → MIME bundle.
  *
  * @param id          the unique cell identifier (nbformat &ge; 4.5, required in nbformat 5).
- * @param metadata    the cell-level metadata.
- * @param source      the Markdown source of the cell.
+ * @param metadata    the cell-level metadata. Use {@link CellMetadata#rawMimetype()} to
+ *                    specify the target MIME type (e.g. {@code "text/restructuredtext"}).
+ * @param source      the raw source content of the cell.
  * @param attachments optional map of filename to MIME bundle for inline attachments.
  *
  * @author Haifeng Li
  */
-public record MarkdownCell(
+public record RawCell(
         @JsonProperty("id") String id,
         @JsonProperty("metadata") CellMetadata metadata,
         @JsonProperty("source") MultilineString source,
@@ -44,7 +46,7 @@ public record MarkdownCell(
 
     @Override
     public String cellType() {
-        return "markdown";
+        return "raw";
     }
 }
 
