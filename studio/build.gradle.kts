@@ -7,6 +7,7 @@ dependencies {
     implementation(project(":core"))
     implementation(project(":nlp"))
     implementation(project(":plot"))
+    implementation(libs.jackson)
     implementation(libs.swingx)
     implementation("org.scala-lang:scala3-compiler_3:3.3.7")
     implementation("info.picocli:picocli:4.7.7")
