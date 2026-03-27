@@ -44,6 +44,7 @@ public class Markdown extends JPanel {
     private static final HtmlRenderer renderer = HtmlRenderer.builder().build();
     private static float fontSize = SmileStudio.preferences().getFloat("markdownFontSize", 1.25f);
     private final String text;
+    private final XHTMLPanel html;
 
     /**
      * Constructor.
@@ -52,11 +53,22 @@ public class Markdown extends JPanel {
     public Markdown(String text) {
         super(new BorderLayout());
         this.text = text;
-        render();
+        this.html = render();
+    }
+
+    /** Returns the original Markdown text. */
+    public String text() {
+        return text;
+    }
+
+    /**
+     * Returns the content pane for rendering Markdown. */
+    public XHTMLPanel contentPane() {
+        return html;
     }
 
     /** Renders the Markdown content. */
-    private void render() {
+    private XHTMLPanel render() {
         Node document = parser.parse(text);
         String content = renderer.render(document);
 
@@ -98,6 +110,7 @@ public class Markdown extends JPanel {
             var doc = builder.parse(new InputSource(new StringReader(html)));
             browser.setDocument(doc);
             add(browser, BorderLayout.CENTER);
+            return browser;
         } catch (ParserConfigurationException | SAXException | IOException ex) {
             logger.error("Failed to process Markdown: ", ex);
             JTextArea area = new JTextArea(text);
@@ -106,6 +119,7 @@ public class Markdown extends JPanel {
             setFont(Monospaced.getFont());
             add(area, BorderLayout.CENTER);
         }
+        return null;
     }
 
     /**
