@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.studio.view.cli;
+package smile.studio.cli;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -27,12 +27,11 @@ import org.fife.ui.autocomplete.AutoCompletion;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import ioa.llm.tool.Question;
 import smile.plot.swing.Palette;
-import smile.studio.model.IntentType;
 import smile.studio.view.Editor;
 import smile.studio.view.Markdown;
 import smile.studio.view.Monospaced;
 import smile.studio.view.OutputArea;
-import static smile.studio.model.IntentType.*;
+import static smile.studio.cli.IntentType.*;
 
 /**
  * An intent is a multiline text input field, and its contents can be executed

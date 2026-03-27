@@ -34,8 +34,8 @@ import smile.shell.JShell;
 import smile.studio.SmileStudio;
 import smile.swing.FileExplorer;
 import smile.swing.tree.DirectoryTreeNode;
-import smile.studio.view.cli.AgentCLI;
-import smile.studio.view.notebook.Notebook;
+import smile.studio.cli.AgentCLI;
+import smile.studio.notebook.Notebook;
 
 /**
  * A notebook workspace.
