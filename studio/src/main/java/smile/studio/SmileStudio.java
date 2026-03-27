@@ -41,8 +41,8 @@ import ioa.llm.client.*;
 import ioa.llm.mcp.MCP;
 import smile.studio.view.*;
 import smile.swing.Button;
-import smile.studio.view.notebook.Cell;
-import smile.studio.view.notebook.Notebook;
+import smile.studio.notebook.Cell;
+import smile.studio.notebook.Notebook;
 import static smile.swing.SmileUtilities.scaleImageIcon;
 
 /**

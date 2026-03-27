@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.studio.view.cli;
+package smile.studio.cli;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -37,7 +37,6 @@ import ioa.agent.memory.Skill;
 import ioa.llm.client.StreamResponseHandler;
 import ioa.llm.tool.Question;
 import smile.plot.swing.Palette;
-import smile.studio.model.IntentType;
 import smile.studio.view.Monospaced;
 import smile.studio.view.Notepad;
 import smile.studio.view.OutputArea;
