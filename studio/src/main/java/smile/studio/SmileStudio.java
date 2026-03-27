@@ -729,31 +729,29 @@ public class SmileStudio extends JFrame {
             }
         }).start();
 
-        // Schedule a job for the event dispatch thread:
-        // creating and showing this application's GUI.
-        SwingUtilities.invokeLater(() -> {
-            // Install font
-            FlatJetBrainsMonoFont.install();
-            // Set application monospaced font before setting up FlatLaf
-            FlatLaf.setPreferredMonospacedFontFamily(FlatJetBrainsMonoFont.FAMILY);
-            // Application specific UI defaults
-            FlatLaf.registerCustomDefaultsSource("smile.studio");
-
-            String theme = SmileStudio.prefs.get("Theme", SystemInfo.isMacOS ? "macLight" : "Light");
-            switch (theme) {
-                case "Light" -> FlatLightLaf.setup();
-                case "Dark" -> FlatDarkLaf.setup();
-                case "IntelliJ" -> FlatIntelliJLaf.setup();
-                case "Darcula" -> FlatDarculaLaf.setup();
-                case "macLight" -> FlatMacLightLaf.setup();
-                case "macDark" -> FlatMacDarkLaf.setup();
-                default -> {
-                    System.err.println("Unknown theme: " + theme);
-                    FlatLightLaf.setup();
-                }
+        // Install font
+        FlatJetBrainsMonoFont.install();
+        // Application specific UI defaults
+        FlatLaf.registerCustomDefaultsSource("smile.studio");
+        // FlatLaf.setup() must be called in the main method, before creating
+        // any Swing components or the Event Dispatch Thread (EDT).
+        String theme = SmileStudio.prefs.get("Theme",
+                SystemInfo.isMacOS ? "macLight" : "Light");
+        switch (theme) {
+            case "Light" -> FlatLightLaf.setup();
+            case "Dark" -> FlatDarkLaf.setup();
+            case "IntelliJ" -> FlatIntelliJLaf.setup();
+            case "Darcula" -> FlatDarculaLaf.setup();
+            case "macLight" -> FlatMacLightLaf.setup();
+            case "macDark" -> FlatMacDarkLaf.setup();
+            default -> {
+                System.err.println("Unknown theme: " + theme);
+                FlatLightLaf.setup();
             }
+        }
 
-            // Start the GUI
+        // Creating and showing GUI in EDT.
+        SwingUtilities.invokeLater(() -> {
             if (args != null && args.length > 0) {
                 System.err.println("Smile Studio doesn't take arguments. Please start Smile Studio in your project directory.");
             }
