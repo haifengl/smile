@@ -111,7 +111,7 @@ public class Notebook extends JPanel implements DocumentListener {
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(
                         null,
-                        ex.getMessage(),
+                        bundle.getString("OpenNotebookErrorMessage") + ": " + ex.getMessage(),
                         "Error",
                         JOptionPane.ERROR_MESSAGE
                 );
