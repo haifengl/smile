@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *
  * @author Haifeng Li
  */
-public record NotebookMetadata(
+public record Metadata(
         @JsonProperty("kernelspec") KernelSpec kernelspec,
         @JsonProperty("language_info") LanguageInfo languageInfo,
         @JsonProperty("title") String title,
