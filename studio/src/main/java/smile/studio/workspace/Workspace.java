@@ -22,9 +22,9 @@ import javax.swing.tree.TreePath;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.function.IntConsumer;
 import com.formdev.flatlaf.util.SystemFileChooser;
 import ioa.agent.Analyst;
@@ -46,38 +46,93 @@ import smile.studio.notebook.Notebook;
 public class Workspace extends JSplitPane {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Workspace.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Workspace.class.getName(), Locale.getDefault());
-    /** Source code file name extensions. */
+    /**
+     * Source code file name extensions.
+     */
     private static final String[] SMILE_FILE_EXTENSIONS = {
             "java", "jsh", // Java source files and JShell snippets
             "scala", "sc", // Scala source files and Ammonite scripts
             "kt", "kts",   // Kotlin source files and scripts
             "py", "ipynb"  // Python source files and Jupyter notebooks
     };
-    /** Workspace FileChooser that points to its own recent directory. */
+    /**
+     * Workspace FileChooser that points to its own recent directory.
+     */
     private final SystemFileChooser fileChooser;
-    /** The project pane consists of explorer and notebook. */
+    /**
+     * The project pane consists of explorer and notebook.
+     */
     final JSplitPane project = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-    /** The tabbed pane for file/environment explorers. */
+    /**
+     * The tabbed pane for file/environment explorers.
+     */
     final JTabbedPane explorerTabs = new JTabbedPane();
-    /** The tabbed pane for notebooks. */
+    /**
+     * The tabbed pane for notebooks.
+     */
     final JTabbedPane notebookTabs = new JTabbedPane();
-    /** The tabbed pane for agent CLIs. */
+    /**
+     * The tabbed pane for agent CLIs.
+     */
     final JTabbedPane agentTabs = new JTabbedPane();
-    /** The absolute paths of opened files. */
+    /**
+     * The absolute paths of opened files.
+     */
     final List<String> files = new ArrayList<>();
-    /** The editor of notebook. */
+    /**
+     * The editor of notebook.
+     */
     final List<Notebook> notebooks = new ArrayList<>();
-    /** The file explorer of current working directory. */
+    /**
+     * The file explorer of current working directory.
+     */
     final FileExplorer fileExplorer;
-    /** The explorer of runtime information. */
+    /**
+     * The explorer of runtime information.
+     */
     final KernelExplorer kernelExplorer;
-    /** The coding agent. */
+    /**
+     * The coding agent.
+     */
     final Coder coder;
-    /** The current working directory for the workspace. */
+    /**
+     * The current working directory for the workspace.
+     */
     final Path cwd;
+
+    // -----------------------------------------------------------------------
+    // File-change watching (WatchService)
+    // -----------------------------------------------------------------------
+
+    /**
+     * OS-level file-change watcher.
+     */
+    private WatchService watchService;
+    /**
+     * Maps each WatchKey to the directory it was registered for.
+     */
+    private final Map<WatchKey, Path> watchKeys = new ConcurrentHashMap<>();
+    /**
+     * Records the last modification time (ms) of every open file as of the
+     * most recent save/open performed by <em>this</em> process. Used to
+     * distinguish our own writes from external changes.
+     */
+    private final Map<String, Long> knownModTimes = new ConcurrentHashMap<>();
+    /**
+     * Pending reload-prompt timers keyed by absolute file path string.
+     * A timer is started when the first MODIFY event arrives; it fires after a
+     * short debounce period so that rapid sequences of events produce only one
+     * dialog.
+     */
+    private final Map<String, javax.swing.Timer> pendingReloads = new ConcurrentHashMap<>();
+    /**
+     * Background thread that polls the WatchService.
+     */
+    private Thread watchThread;
 
     /**
      * Constructor.
+     *
      * @param cwd the current working directory for the workspace.
      */
     public Workspace(Path cwd) {
@@ -124,9 +179,12 @@ public class Workspace extends JSplitPane {
         setLeftComponent(project);
         setRightComponent(agentTabs);
         setResizeWeight(0.55);
+        startFileWatcher();
     }
 
-    /** Opens a notebook when double-clicking a supported file in the explorer. */
+    /**
+     * Opens a notebook when double-clicking a supported file in the explorer.
+     */
     private void setFileExplorerMouseListener() {
         fileExplorer.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
@@ -154,7 +212,9 @@ public class Workspace extends JSplitPane {
         });
     }
 
-    /** Initializes the analyst agent. */
+    /**
+     * Initializes the analyst agent.
+     */
     private Analyst initAnalyst(Path cwd) {
         try {
             return new Analyst("data-analyst", SmileStudio.llm(), cwd);
@@ -164,7 +224,9 @@ public class Workspace extends JSplitPane {
         return null;
     }
 
-    /** Initializes the coding agent. */
+    /**
+     * Initializes the coding agent.
+     */
     private Coder initCoder(Path cwd) {
         try {
             return new Coder("java-coder", SmileStudio.llm(), cwd);
@@ -174,68 +236,74 @@ public class Workspace extends JSplitPane {
         return null;
     }
 
-    /** Creates an analyst agent cli. */
+    /**
+     * Creates an analyst agent cli.
+     */
     private AgentCLI analystCLI(Analyst analyst) {
         var cli = new AgentCLI(analyst);
 
         cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") + """
-        =====================================================================
-        Welcome! I am Clair, your AI assistant for machine learning modeling.
-        
-        /help for available commands, /init for initializing your project
-        cwd:\s""" + System.getProperty("user.dir"),
+                        =====================================================================
+                        Welcome! I am Clair, your AI assistant for machine learning modeling.
+                        
+                        /help for available commands, /init for initializing your project
+                        cwd:\s""" + System.getProperty("user.dir"),
 
-        """
-        As a state-of-the-art machine learning engineering agent,
-        I can help you with:
-        
-        🤖 Automatic end-to-end ML/AI solutions based on your requirements.
-        🔍 Best practices and state-of-the-art methods with web search.
-        🏅 Targeted code block refinement by ablation study.
-        🤝 Improved solution using iterative ensemble strategy.
-        📊 Advanced interactive data visualization.
-        📂 Process data from CSV, ARFF, JSON, Avro, Parquet, Iceberg, to SQL.
-        🌐 Built-in inference server.
-        
-        💡 Tips for getting started:
-        1. Ctrl + ENTER to execute your intents.
-        2. Ctrl + SPACE to show slash command argument hint.
-        3. Ctrl + Click on output links to open browser.
-        4. Run /init to create a SMILE.md file with instructions for agents.
-        5. Be as specific as you would with another data scientist for the best result.
-        6. Data visualization can be feed to AI agents for interpretation and advices.
-        7. Create custom slash commands for reusable prompts or workflows.
-        8. Run Shell commands starting with an exclamation mark (!).
-        9. AI can make mistakes. Always review agent's responses.""");
+                """
+                        As a state-of-the-art machine learning engineering agent,
+                        I can help you with:
+                        
+                        🤖 Automatic end-to-end ML/AI solutions based on your requirements.
+                        🔍 Best practices and state-of-the-art methods with web search.
+                        🏅 Targeted code block refinement by ablation study.
+                        🤝 Improved solution using iterative ensemble strategy.
+                        📊 Advanced interactive data visualization.
+                        📂 Process data from CSV, ARFF, JSON, Avro, Parquet, Iceberg, to SQL.
+                        🌐 Built-in inference server.
+                        
+                        💡 Tips for getting started:
+                        1. Ctrl + ENTER to execute your intents.
+                        2. Ctrl + SPACE to show slash command argument hint.
+                        3. Ctrl + Click on output links to open browser.
+                        4. Run /init to create a SMILE.md file with instructions for agents.
+                        5. Be as specific as you would with another data scientist for the best result.
+                        6. Data visualization can be feed to AI agents for interpretation and advices.
+                        7. Create custom slash commands for reusable prompts or workflows.
+                        8. Run Shell commands starting with an exclamation mark (!).
+                        9. AI can make mistakes. Always review agent's responses.""");
 
         return cli;
     }
 
-    /** Creates a coding agent cli. */
+    /**
+     * Creates a coding agent cli.
+     */
     private AgentCLI coderCLI(Coder coder) {
         var cli = new AgentCLI(coder);
         cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") + """
-        =====================================================================
-        Welcome! I am James, your AI assistant for Java programming.
-        
-        I can help with code completion and generation in the notebook too.
-        cwd:\s""" + System.getProperty("user.dir"),
+                        =====================================================================
+                        Welcome! I am James, your AI assistant for Java programming.
+                        
+                        I can help with code completion and generation in the notebook too.
+                        cwd:\s""" + System.getProperty("user.dir"),
 
-        """
-        💡 Tips for getting started:
-        1. Ctrl + ENTER to execute your intents.
-        2. Ctrl + SPACE to show slash command argument hint.
-        3. Ctrl + Click on output links to open browser.
-        4. TAB to complete code in the notebook.
-        5. Be as specific as you would with another programmer for the best result.
-        6. Create custom slash commands for reusable prompts or workflows.
-        7. Run Shell commands starting with an exclamation mark (!).
-        8. AI can make mistakes. Always review agent's responses.""");
+                """
+                        💡 Tips for getting started:
+                        1. Ctrl + ENTER to execute your intents.
+                        2. Ctrl + SPACE to show slash command argument hint.
+                        3. Ctrl + Click on output links to open browser.
+                        4. TAB to complete code in the notebook.
+                        5. Be as specific as you would with another programmer for the best result.
+                        6. Create custom slash commands for reusable prompts or workflows.
+                        7. Run Shell commands starting with an exclamation mark (!).
+                        8. AI can make mistakes. Always review agent's responses.""");
 
         return cli;
     }
 
-    /** Sets the callback for closing notebook tabs. */
+    /**
+     * Sets the callback for closing notebook tabs.
+     */
     private void setNotebookTabCloseCallback() {
         notebookTabs.putClientProperty("JTabbedPane.tabClosable", true);
         notebookTabs.putClientProperty("JTabbedPane.tabCloseCallback",
@@ -248,7 +316,9 @@ public class Workspace extends JSplitPane {
                 });
     }
 
-    /** Sets the listener for switching notebook tabs to refresh the kernel explorer. */
+    /**
+     * Sets the listener for switching notebook tabs to refresh the kernel explorer.
+     */
     private void setNotebookTabsListener() {
         notebookTabs.addChangeListener(e -> {
             int tabIndex = notebookTabs.getSelectedIndex();
@@ -306,6 +376,7 @@ public class Workspace extends JSplitPane {
 
     /**
      * Returns the opened notebooks.
+     *
      * @return the opened notebooks.
      */
     public List<Notebook> notebooks() {
@@ -314,6 +385,7 @@ public class Workspace extends JSplitPane {
 
     /**
      * Returns the selected notebook.
+     *
      * @return the selected notebook.
      */
     public Optional<Notebook> notebook() {
@@ -326,6 +398,7 @@ public class Workspace extends JSplitPane {
 
     /**
      * Opens a notebook.
+     *
      * @param path the notebook file path.
      */
     public void openNotebook(Path path) {
@@ -345,6 +418,8 @@ public class Workspace extends JSplitPane {
             notebookTabs.setSelectedComponent(notebook);
             notebooks.add(notebook);
             files.add(path.toString());
+            recordModTime(path);
+            watchDirectory(path.getParent());
         }
     }
 
@@ -363,6 +438,7 @@ public class Workspace extends JSplitPane {
 
     /**
      * Closes a notebook with prompt to save if there are unsaved changes.
+     *
      * @param notebook the notebook to close.
      * @return true if the notebook is closed, false if the close operation is canceled.
      */
@@ -377,13 +453,14 @@ public class Workspace extends JSplitPane {
             // Shuts down the execution engines and frees resources.
             notebook.close();
             notebooks.remove(notebook);
-            files.remove(notebook.getFile());
+            files.remove(notebook.getFile().toString());
         }
         return confirmed;
     }
 
     /**
      * Prompts if the notebook is not saved.
+     *
      * @return an integer indicating the option selected by the user.
      */
     private int confirmSaveNotebook(Notebook notebook) {
@@ -396,10 +473,11 @@ public class Workspace extends JSplitPane {
 
     /**
      * Saves the notebook.
+     *
      * @param notebook the notebook to save.
-     * @param saveAs save the notebook to a new file if true.
+     * @param saveAs   save the notebook to a new file if true.
      * @return true if the notebook is saved successfully, false otherwise
-     *              or the save operation is canceled.
+     * or the save operation is canceled.
      */
     public boolean saveNotebook(Notebook notebook, boolean saveAs) {
         if (notebook.getFile() == null || saveAs) {
@@ -422,6 +500,10 @@ public class Workspace extends JSplitPane {
 
         try {
             notebook.save();
+            // Update the known mod time so our own write is not mistaken
+            // for an external change when the WatchService event arrives.
+            recordModTime(notebook.getFile().toAbsolutePath().normalize());
+            watchDirectory(notebook.getFile().toAbsolutePath().normalize().getParent());
             return true;
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(this,
@@ -433,6 +515,7 @@ public class Workspace extends JSplitPane {
 
     /**
      * Returns the explorer component.
+     *
      * @return the explorer component.
      */
     public KernelExplorer explorer() {
@@ -441,6 +524,7 @@ public class Workspace extends JSplitPane {
 
     /**
      * Returns the project split pane of explorer and notebook.
+     *
      * @return the project split pane of explorer and notebook.
      */
     public JSplitPane project() {
@@ -455,5 +539,214 @@ public class Workspace extends JSplitPane {
             notebook.restart();
             kernelExplorer.refresh(notebook.kernel());
         });
+    }
+
+    // -----------------------------------------------------------------------
+    // File-change watcher implementation
+    // -----------------------------------------------------------------------
+
+    /**
+     * Starts the background {@link WatchService} thread.
+     * Must be called once during construction after all notebooks are opened.
+     */
+    private void startFileWatcher() {
+        try {
+            watchService = FileSystems.getDefault().newWatchService();
+        } catch (IOException ex) {
+            logger.error("Failed to create WatchService; external change detection disabled.", ex);
+            return;
+        }
+
+        watchThread = Thread.ofVirtual().name("workspace-file-watcher").start(() -> {
+            try {
+                while (!Thread.currentThread().isInterrupted()) {
+                    WatchKey key = watchService.poll(500, TimeUnit.MILLISECONDS);
+                    if (key == null) continue;
+
+                    Path dir = watchKeys.get(key);
+                    if (dir == null) {
+                        key.cancel();
+                        continue;
+                    }
+
+                    for (WatchEvent<?> event : key.pollEvents()) {
+                        WatchEvent.Kind<?> kind = event.kind();
+                        if (kind == StandardWatchEventKinds.OVERFLOW) continue;
+
+                        @SuppressWarnings("unchecked")
+                        Path changed = dir.resolve(((WatchEvent<Path>) event).context())
+                                .toAbsolutePath().normalize();
+
+                        if (kind == StandardWatchEventKinds.ENTRY_MODIFY
+                                && files.contains(changed.toString())) {
+                            scheduleReloadPrompt(changed);
+                        }
+                    }
+
+                    if (!key.reset()) {
+                        watchKeys.remove(key);
+                    }
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
+    }
+
+    /**
+     * Registers a directory with the {@link WatchService} if not already
+     * registered. Safe to call multiple times for the same directory.
+     *
+     * @param dir the directory to watch.
+     */
+    private void watchDirectory(Path dir) {
+        if (watchService == null || dir == null) return;
+        // Skip if already watching this directory
+        if (watchKeys.containsValue(dir)) return;
+        try {
+            WatchKey key = dir.register(watchService,
+                    StandardWatchEventKinds.ENTRY_MODIFY);
+            watchKeys.put(key, dir);
+            logger.debug("Watching directory: {}", dir);
+        } catch (IOException ex) {
+            logger.warn("Cannot watch directory {}: {}", dir, ex.getMessage());
+        }
+    }
+
+    /**
+     * Records the current on-disk modification time of {@code path} in
+     * {@link #knownModTimes}. Call this after opening or saving a file so
+     * that the watcher can tell apart our own writes from external ones.
+     *
+     * @param path the absolute, normalized file path.
+     */
+    private void recordModTime(Path path) {
+        try {
+            if (Files.exists(path)) {
+                knownModTimes.put(path.toString(),
+                        Files.getLastModifiedTime(path).toMillis());
+            }
+        } catch (IOException ex) {
+            logger.warn("Cannot record mod time for {}: {}", path, ex.getMessage());
+        }
+    }
+
+    /**
+     * Schedules (or re-schedules) a debounced reload prompt for the given
+     * file.  Multiple MODIFY events arriving within {@code DEBOUNCE_MS}
+     * milliseconds are coalesced into a single dialog.
+     *
+     * @param path the changed file path (absolute, normalized).
+     */
+    private void scheduleReloadPrompt(Path path) {
+        final int DEBOUNCE_MS = 500;
+        String key = path.toString();
+
+        // Cancel any existing timer for this file
+        javax.swing.Timer existing = pendingReloads.remove(key);
+        if (existing != null) existing.stop();
+
+        javax.swing.Timer timer = new javax.swing.Timer(DEBOUNCE_MS, e -> {
+            pendingReloads.remove(key);
+            // Double-check: is the mod time actually different from what we know?
+            try {
+                long diskMod = Files.getLastModifiedTime(path).toMillis();
+                Long known = knownModTimes.get(key);
+                if (known != null && diskMod <= known) {
+                    // Ignore our own save.
+                    return;
+                }
+                // Update the recorded time so we don't prompt again for the
+                // same modification if the user chooses not to reload.
+                knownModTimes.put(key, diskMod);
+            } catch (IOException ex) {
+                logger.warn("Cannot read mod time for {}: {}", path, ex.getMessage());
+            }
+            SwingUtilities.invokeLater(() -> handleFileChanged(path));
+        });
+        timer.setRepeats(false);
+        pendingReloads.put(key, timer);
+        timer.start();
+    }
+
+    /**
+     * Called on the Swing EDT when an external change to {@code path} has
+     * been detected.  Presents a confirm dialog and reloads the notebook if
+     * the user agrees.
+     *
+     * @param path the changed file path (absolute, normalized).
+     */
+    private void handleFileChanged(Path path) {
+        // Find the open notebook for this path
+        Notebook target = null;
+        for (Notebook nb : notebooks) {
+            if (nb.getFile().toAbsolutePath().normalize().equals(path)) {
+                target = nb;
+                break;
+            }
+        }
+        if (target == null) return;
+
+        final Notebook notebook = target;
+        String filename = path.getFileName().toString();
+
+        int choice = JOptionPane.showConfirmDialog(
+                this,
+                String.format(bundle.getString("ExternalChangeMessage"), filename),
+                bundle.getString("ExternalChangeTitle"),
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE);
+
+        if (choice == JOptionPane.YES_OPTION) {
+            reloadNotebook(notebook, path);
+        }
+    }
+
+    /**
+     * Reloads the content of {@code notebook} from disk, preserving its
+     * position in the tab strip.
+     *
+     * @param notebook the notebook to reload.
+     * @param path     the file to reload from.
+     */
+    private void reloadNotebook(Notebook notebook, Path path) {
+        int tabIndex = notebookTabs.indexOfComponent(notebook);
+        if (tabIndex < 0) return;
+
+        // Close the old notebook silently (skip unsaved-changes check
+        // as the user just confirmed they want the disk version).
+        notebook.close();
+        notebooks.remove(notebook);
+        files.remove(path.toString());
+
+        // Open fresh copy
+        Notebook fresh = new Notebook(path, coder, kernelExplorer::refresh);
+        notebookTabs.setComponentAt(tabIndex, fresh);
+        notebookTabs.setSelectedIndex(tabIndex);
+        notebooks.add(fresh);
+        files.add(path.toString());
+        recordModTime(path);
+
+        logger.info("Reloaded notebook from disk: {}", path);
+    }
+
+    /**
+     * Shuts down the file-change watcher.  Should be called when the
+     * workspace is being disposed (e.g. application shutdown).
+     */
+    public void shutdown() {
+        if (watchThread != null) {
+            watchThread.interrupt();
+        }
+        // Cancel all pending debounce timers
+        pendingReloads.values().forEach(javax.swing.Timer::stop);
+        pendingReloads.clear();
+        if (watchService != null) {
+            try {
+                watchService.close();
+            } catch (IOException ex) {
+                logger.warn("Error closing WatchService", ex);
+            }
+        }
     }
 }
