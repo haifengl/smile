@@ -183,8 +183,8 @@ title: Smile - Clustering
 
     var x = Read.csv("data/clustering/rem.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
     var clusters = HierarchicalClustering.fit(CompleteLinkage.of(x));
-    var plot = new Dendrogram(clusters.tree(), clusters.height());
-    plot.canvas().window();
+    var figure = new Dendrogram(clusters.tree(), clusters.height()).figure();
+    show(figure);
           </code></pre>
             </div>
         </div>
@@ -341,8 +341,9 @@ title: Smile - Clustering
         <div class="tab-pane active" id="java_5">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var clusters = Clustering.run(20, () -> KMeans.fit(x, 6));
-    ScatterPlot.of(x, clusters.y, '.').canvas().window();
+    var clusters = Clustering.run(20, () -> KMeans.fit(x, 6, 100));
+    var figure = ScatterPlot.of(x, clusters.group(), '.').figure();
+    show(figure);
           </code></pre>
             </div>
         </div>
@@ -384,8 +385,9 @@ title: Smile - Clustering
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var x = Read.csv("data/clustering/elongate.txt", CSVFormat.DEFAULT.withDelimiter('\t')).toArray();
-    var clusters = Clustering.run(20, () -> KMeans.fit(x, 2));
-    ScatterPlot.of(x, clusters.y, '.').canvas().window();
+    var clusters = Clustering.run(20, () -> KMeans.fit(elongate, 2, 100));
+    var figure = ScatterPlot.of(elongate, clusters.group(), '.').figure();
+    show(figure);
           </code></pre>
             </div>
         </div>
@@ -472,8 +474,9 @@ title: Smile - Clustering
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var x = Read.csv("data/clustering/rem.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
-    var clusters = XMeans.fit(x, 50);
-    ScatterPlot.of(x, clusters.y, '.').canvas().window();
+    var clusters = XMeans.fit(x, 50, 100);
+    var figure = ScatterPlot.of(x, clusters.group(), '.').figure();
+    show(figure);
           </code></pre>
             </div>
         </div>
@@ -557,8 +560,9 @@ title: Smile - Clustering
         <div class="tab-pane active" id="java_10">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var clusters = GMeans.fit(x, 50);
-    ScatterPlot.of(x, clusters.y, '.').canvas().window();
+    var clusters = GMeans.fit(x, 50, 100);
+    var figure = ScatterPlot.of(x, clusters.group(), '.').figure();
+    show(figure);
           </code></pre>
             </div>
         </div>
@@ -701,7 +705,7 @@ title: Smile - Clustering
         <div class="tab-pane active" id="java_12">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    smile> DeterministicAnnealing.fit(x, 12, 0.9, 100, 1E-4, 1E-2)
+    smile> DeterministicAnnealing.fit(x, 12, 0.9, 100)
     $126 ==> Cluster distortion: 2862.52100
     Cluster size of 1800 data points:
     Cluster    1    297 (16.5%)
@@ -852,7 +856,7 @@ title: Smile - Clustering
         </div>
     </div>
 
-    <h2 id="clarans">CLARANS</h2>
+    <h2 id="clarans">K-Medoids</h2>
 
     <p>The K-Medoids algorithm is an adaptation of the k-means algorithm.
         Rather than calculate the mean of the items in each cluster,
@@ -864,7 +868,7 @@ title: Smile - Clustering
         matrix of distances between data points instead of L<sub>2</sub>.
         It is also more robust to noise and outliers as compared to K-Means.</p>
 
-    <p>The most common realisation of K-Medoids clustering is the Partitioning
+    <p>The most common realization of K-Medoids clustering is the Partitioning
         Around Medoids (PAM) algorithm. PAM uses a greedy search which may not
         find the optimum solution, but it is faster than exhaustive search.</p>
 
@@ -933,8 +937,9 @@ title: Smile - Clustering
         <div class="tab-pane active" id="java_16">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var clusters = Clustering.run(20, () -> CLARANS.fit(x, new EuclideanDistance(), 6, 10));
-    ScatterPlot.of(x, clusters.y, '.').canvas().window();
+    var clusters = Clustering.run(20, () -> KMedoids.fit(x, new EuclideanDistance(), 10));
+    var figure = ScatterPlot.of(x, clusters.group(), '.').figure();
+    show(figure);
           </code></pre>
             </div>
         </div>
@@ -1047,9 +1052,11 @@ title: Smile - Clustering
         <div class="tab-pane active" id="java_18">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var x = Read.csv("data/clustering/chameleon/t4.8k.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
-    var clusters = DBSCAN.fit(x, 20, 10);
-    ScatterPlot.of(x, clusters.y, '.').canvas().window();
+    CSVFormat format = CSVFormat.Builder.create().setDelimiter('\t').get();
+    var d4 = Read.csv("data/clustering/d4.txt", format).toArray();
+    var clusters = DBSCAN.fit(d4, 20, 10);
+    var figure = ScatterPlot.of(d4, clusters.group(), 'o').figure();
+    show(figure);
           </code></pre>
             </div>
         </div>
@@ -1177,7 +1184,8 @@ title: Smile - Clustering
           <pre class="prettyprint lang-java"><code>
     var x = Read.csv("data/clustering/rem.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
     var clusters = DENCLUE.fit(x, 1.0, 50);
-    ScatterPlot.of(x, clusters.y, '.').canvas().window();
+    var figure = ScatterPlot.of(x, clusters.group(), '.').figure();
+    show(figure);
           </code></pre>
             </div>
         </div>
@@ -1285,9 +1293,11 @@ title: Smile - Clustering
         <div class="tab-pane active" id="java_22">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var x = Read.csv("data/clustering/sincos.txt", CSVFormat.DEFAULT.withDelimiter('\t')).toArray();
-    var clusters = SpectralClustering.fit(x, 2, 0.2);
-    ScatterPlot.of(x, clusters.y, 'o').canvas().window();
+    CSVFormat format = CSVFormat.Builder.create().setDelimiter('\t').get();
+    var sincos = Read.csv("data/clustering/sincos.txt", format).toArray();
+    var clusters = SpectralClustering.fit(sincos, new SpectralClustering.Options(2, 0.2, 100));
+    var figure = ScatterPlot.of(sincos, clusters.group(), 'o').figure();
+    show(figure);
           </code></pre>
             </div>
         </div>
@@ -1389,7 +1399,8 @@ title: Smile - Clustering
           <pre class="prettyprint lang-java"><code>
     var x = Read.csv("data/clustering/rem.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
     var clusters = MEC.fit(x, new EuclideanDistance(), 20, 2.0);
-    ScatterPlot.of(x, clusters.y, '.').canvas().window();
+    var figure = ScatterPlot.of(x, clusters.group(), '.').figure();
+    show(figure);
           </code></pre>
             </div>
         </div>
