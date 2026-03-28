@@ -34,17 +34,20 @@ import java.util.regex.Pattern;
  * @author Haifeng Li
  */
 public interface OS {
+    /** The name of the operating system. */
     String name = System.getProperty("os.name").toLowerCase();
 
     /**
      * Returns true if the operating system is Windows.
+     * @return true if the operating system is Windows.
      */
     static boolean isWindows() {
         return name.contains("win");
     }
 
     /**
-     * Returns true if the operating system is MacOS.
+     * Returns true if the operating system is macOS.
+     * @return true if the operating system is macOS.
      */
     static boolean isMacOS() {
         return name.contains("mac");
@@ -52,6 +55,7 @@ public interface OS {
 
     /**
      * Returns true if the operating system is Linux or Unix.
+     * @return true if the operating system is Linux or Unix.
      */
     static boolean isUnix() {
         return name.contains("nix") || name.contains("nux") || name.contains("aix");
@@ -97,6 +101,7 @@ public interface OS {
      * @param command the command line to run.
      * @param file the output file.
      * @return the output of the command, or error message if failed.
+     * @throws IOException when fails to execute the command.
      */
     static Process exec(String command, Path file) throws IOException {
         return exec(shell(command), file);
@@ -107,6 +112,7 @@ public interface OS {
      * @param command the program and its arguments.
      * @param file the file to redirect output to.
      * @return the process.
+     * @throws IOException when fails to execute the command.
      */
     static Process exec(List<String> command, Path file) throws IOException {
         return new ProcessBuilder(command)
@@ -120,6 +126,7 @@ public interface OS {
      * @param command the program and its arguments.
      * @param outputConsumer the consumer to handle the output lines from the command.
      * @return the process.
+     * @throws IOException when fails to execute the command.
      */
     static Process exec(List<String> command, Consumer<String> outputConsumer) throws IOException {
         var process = new ProcessBuilder(command)
@@ -149,6 +156,7 @@ public interface OS {
      * @param command the command line to run.
      * @param outputConsumer the consumer to handle the output lines from the command.
      * @return the process.
+     * @throws IOException when fails to execute the command.
      */
     static Process exec(String command, Consumer<String> outputConsumer) throws IOException {
         return exec(shell(command), outputConsumer);
