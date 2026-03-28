@@ -1,3 +1,5 @@
+.smile
+
 # Class and package files
 *.class
 *.jar
@@ -11,10 +13,12 @@ hs_err_pid*
 base/src/test/resources/data/iceberg
 deep/src/test/resources
 nlp/src/test/resources
-model
+/model
+**/smile_serve.db
 
 # Native library
 deep/lib
+/libarpack.dylib
 
 # Clojure
 .nrepl-port
@@ -35,8 +39,9 @@ node_modules
 
 # Generated
 doc/api
-web/_site/
-serve/src/main/resources/META-INF/resources/chat
+website/_site/
+serve/src/main/resources/META-INF/resources/
+serve/src/main/webui/dist/
 
 # SBT
 .bsp

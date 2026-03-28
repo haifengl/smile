@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sbt shell/stage
-cd shell/target/universal/stage/
-bin/smile
-cd ../../../..
+sbt studio/stage
+cd studio/target/universal/stage/bin
+./smile
+cd ../../../../..

@@ -1,29 +1,28 @@
 /*
- * Copyright (c) 2010-2024 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
  *
- * Smile is free software: you can redistribute it and/or modify it
+ * SMILE is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * Smile is distributed in the hope that it will be useful, but
+ * SMILE is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Smile. If not, see <https://www.gnu.org/licenses/>.
+ * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
 package smile.vision;
 
 import java.io.IOException;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import javax.imageio.ImageIO;
 import smile.deep.Loss;
 import smile.deep.Optimizer;
 import smile.deep.metric.Accuracy;
 import smile.deep.tensor.Device;
-import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import org.junit.jupiter.api.*;
 import smile.util.function.TimeFunction;
@@ -63,8 +62,8 @@ public class EfficientNetTest {
         model.to(device);
         model.eval();
 
-        var lenna = ImageIO.read(Paths.get("deep/src/test/resources/data/image/Lenna.png").toFile());
-        var panda = ImageIO.read(Paths.get("deep/src/test/resources/data/image/panda.jpg").toFile());
+        var lenna = ImageIO.read(Path.of("deep/src/test/resources/data/image/Lenna.png").toFile());
+        var panda = ImageIO.read(Path.of("deep/src/test/resources/data/image/panda.jpg").toFile());
 
         try (var guard = Tensor.noGradGuard()) {
             // https://discuss.pytorch.org/t/libtorchs-cpu-inference-is-much-slower-on-windows-than-on-linux/166194/2
@@ -120,13 +119,14 @@ public class EfficientNetTest {
 
     @Test
     public void train() throws IOException {
-        // half precision to lower memory usage.
-        var dtype = ScalarType.BFloat16;
-        Device device = Device.CUDA();
-        device.setDefaultDevice();
-
         var model = EfficientNet.V2S();
-        model.to(device, dtype);
+
+        // half precision to lower memory usage.
+        // This is not supported on all platforms, e.g., macOS.
+        // var dtype = smile.deep.tensor.ScalarType.BFloat16;
+        // Device device = Device.CUDA();
+        // device.setDefaultDevice();
+        // model.to(device, dtype);
 
         var transform = Transform.classification(384, 384);
         var data = new ImageDataset(64, "deep/src/test/resources/data/imagenet-mini/train", transform, ImageNet.folder2Target);

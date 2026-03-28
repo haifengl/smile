@@ -1,18 +1,18 @@
 /*
- * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
  *
- * Smile is free software: you can redistribute it and/or modify it
+ * SMILE is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * Smile is distributed in the hope that it will be useful, but
+ * SMILE is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Smile. If not, see <https://www.gnu.org/licenses/>.
+ * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
 package smile.classification
 
@@ -823,7 +823,7 @@ fun rda(x: Array<DoubleArray>, y: IntArray, alpha: Double, priori: DoubleArray? 
  * @param x training samples.
  * @param y training labels in `[0, k)`, where k is the number of classes.
  * @param model the generation model of naive Bayes classifier.
- * @param priori the priori probability of each class. If null, equal probability is assume for each class.
+ * @param priori the priori probability of each class. If null, equal probability is assumed for each class.
  * @param sigma the prior count of add-k smoothing of evidence.
  */
 fun naiveBayes(x: Array<IntArray>, y: IntArray, model: DiscreteNaiveBayes.Model, priori: DoubleArray? = null, sigma: Double = 1.0): DiscreteNaiveBayes {

@@ -17,7 +17,7 @@ lazy val commonSettings = Seq(
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("https://haifengl.github.io/")),
-  version := "5.1.0",
+  version := "5.2.2",
 
   // Run in a separate JVM, to make sure sbt waits until all threads have
   // finished before returning.
@@ -37,16 +37,17 @@ lazy val commonSettings = Seq(
     "--add-opens=java.base/java.nio=ALL-UNNAMED",
     "--enable-native-access=ALL-UNNAMED"
   ),
-  Test / envVars ++= Map(
-    os match {
+  Test / envVars ++= {
+    val binDir = s"${(Test / baseDirectory).value}/studio/src/universal/bin"
+    Map(os match {
       case "windows" =>
-        "PATH" -> s"${(Test / baseDirectory).value}/studio/src/universal/bin;${System.getenv("PATH")}"
+        "PATH" -> s"$binDir;${System.getenv("PATH")}"
       case "mac" =>
-        "DYLD_LIBRARY_PATH" -> s"${(Test / baseDirectory).value}/studio/src/universal/bin:${System.getenv("DYLD_LIBRARY_PATH")}"
+        "DYLD_LIBRARY_PATH" -> s"$binDir:${System.getenv("DYLD_LIBRARY_PATH")}"
       case _ =>
-        "LD_LIBRARY_PATH" -> s"${(Test / baseDirectory).value}/studio/src/universal/bin:${System.getenv("LD_LIBRARY_PATH")}"
+        "LD_LIBRARY_PATH" -> s"$binDir:${System.getenv("LD_LIBRARY_PATH")}"
     }
-  ),
+  )},
 
   versionScheme := Some("early-semver"),
   publishTo := {
@@ -90,6 +91,7 @@ lazy val javaSettings = commonSettings ++ Seq(
     "-g:lines,vars,source",
     "-Xlint:deprecation",
     "-Xlint:unchecked",
+    "-parameters", // for Gemini AFC
     "-source", "25",
     "-target", "25"
   ),
@@ -98,14 +100,14 @@ lazy val javaSettings = commonSettings ++ Seq(
     "--allow-script-in-comments",
     "-doctitle", """Smile &mdash; Statistical Machine Intelligence &amp; Learning Engine""",
     "--add-script", "project/gtag.js",
-    "-bottom", """Copyright &copy; 2010-2025 Haifeng Li. All rights reserved.
+    "-bottom", """Copyright &copy; 2010-2026 Haifeng Li. All rights reserved.
                  |Use is subject to <a href="https://raw.githubusercontent.com/haifengl/smile/master/LICENSE">license terms.</a>
                  |<script async src="https://www.googletagmanager.com/gtag/js?id=G-57GD08QCML"></script>""".stripMargin
   ),
   libraryDependencies ++= Seq(
     "org.slf4j" % "slf4j-api" % "2.0.17",
     "org.slf4j" % "slf4j-simple" % "2.0.17" % Test,
-    "org.junit.jupiter" % "junit-jupiter-engine" % "6.0.2" % Test,
+    "org.junit.jupiter" % "junit-jupiter-engine" % "6.0.3" % Test,
     "com.github.sbt.junit" % "jupiter-interface" % JupiterKeys.jupiterVersion.value % Test
   )
 )
@@ -121,16 +123,20 @@ lazy val scalaSettings = commonSettings ++ Seq(
     "-encoding", "utf8",
     "-release:25"
   ),
-  scalacOptions ++= Seq(
-    if (scalaVersion.value.startsWith("2.13")) "-Xsource:3"
-    else "-source:3.0"
-  ),
+  scalacOptions ++= {
+    val scalaV = scalaVersion.value
+    if (scalaV.startsWith("2.13"))
+      Seq("-Xsource:3")
+    else if (scalaV.startsWith("3"))
+      Seq("-no-indent")
+    else Seq.empty
+  },
   Compile / doc / scalacOptions ++= Seq(
     "-groups",
     "-dynamic-side-menu",
-    "-project-version", "4.3.0",
-    "-project-logo", "web/src/images/smile.jpg",
-    "-project-footer", """Copyright © 2010-2025 Haifeng Li. All rights reserved.
+    "-project-version", version.value,
+    "-project-logo", "website/src/images/smile.jpg",
+    "-project-footer", """Copyright © 2010-2026 Haifeng Li. All rights reserved.
                          |Use is subject to license terms.""".stripMargin
   ),
   libraryDependencies ++= Seq(
@@ -140,20 +146,12 @@ lazy val scalaSettings = commonSettings ++ Seq(
   ),
 )
 
-lazy val javaCppSettings = Seq(
-  libraryDependencies ++= Seq(
-    "org.bytedeco" % "javacpp"   % "1.5.12"        classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
-    "org.bytedeco" % "openblas"  % "0.3.30-1.5.12" classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
-    "org.bytedeco" % "arpack-ng" % "3.9.1-1.5.12"  classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
-  )
-)
-
 JavaUnidoc / unidoc / javacOptions ++= Seq(
   "-Xdoclint:none",
   "--allow-script-in-comments",
   "-doctitle", """Smile &mdash; Statistical Machine Intelligence &amp; Learning Engine""",
   "--add-script", "project/gtag.js",
-  "-bottom", """Copyright &copy; 2010-2025 Haifeng Li. All rights reserved.
+  "-bottom", """Copyright &copy; 2010-2026 Haifeng Li. All rights reserved.
                |Use is subject to <a href="https://raw.githubusercontent.com/haifengl/smile/master/LICENSE">license terms.</a>
                |<script async src="https://www.googletagmanager.com/gtag/js?id=G-57GD08QCML"></script>""".stripMargin
 )
@@ -166,7 +164,7 @@ lazy val root = project.in(file("."))
   .settings(
     JavaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(json, scala, spark, kotlin, studio)
   )
-  .aggregate(core, base, nlp, deep, plot, json, scala, kotlin, studio)
+  .aggregate(core, base, nlp, deep, plot, json, scala, spark, kotlin, studio)
 
 lazy val base = project.in(file("base"))
   .settings(javaSettings: _*)
@@ -192,16 +190,19 @@ lazy val json = project.in(file("json"))
 
 lazy val scala = project.in(file("scala"))
   .settings(scalaSettings: _*)
+  .dependsOn(base % "provided->provided;compile->compile;test->test;runtime->runtime")
   .dependsOn(core, nlp, plot, json)
 
 lazy val spark = project.in(file("spark"))
   .settings(scalaSettings: _*)
+  .settings(scalaVersion := scala213)
   .settings(publish / skip := true)
   .dependsOn(core)
 
 lazy val kotlin = project.in(file("kotlin"))
-  .settings(commonSettings: _*)
+  .settings(javaSettings: _*)
   .enablePlugins(KotlinPlugin)
+  .dependsOn(base % "provided->provided;compile->compile;test->test;runtime->runtime")
   .dependsOn(core, nlp)
 
 lazy val studio = project.in(file("studio"))

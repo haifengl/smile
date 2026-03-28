@@ -40,11 +40,7 @@ find doc/api/kotlin -name '*.html' -exec bin/gtag.sh {} \;
 #find doc/api/clojure -name '*.html' -exec tidy -m {} \;
 #find doc/api/clojure -name '*.html' -exec bin/gtag.sh {} \;
 
-cd chat
-npm run build
-check_error "!!"
-
-cd web
+cd website
 npm run deploy
 check_error "!!"
 

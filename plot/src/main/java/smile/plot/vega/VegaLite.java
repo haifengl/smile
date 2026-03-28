@@ -1,18 +1,18 @@
 /*
- * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
  *
- * Smile is free software: you can redistribute it and/or modify it
+ * SMILE is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * Smile is distributed in the hope that it will be useful, but
+ * SMILE is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Smile. If not, see <https://www.gnu.org/licenses/>.
+ * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
 package smile.plot.vega;
 
@@ -22,10 +22,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 import smile.util.Strings;
 
 /**
@@ -285,7 +285,7 @@ public class VegaLite {
 
     /**
      * Displays the plot with the default browser.
-     * @throws IOException if fails to create html file of plot.
+     * @throws IOException if fails to create HTML file of plot.
      * @throws HeadlessException if the VM runs in headless mode.
      */
     public void show() throws IOException, HeadlessException {
@@ -295,7 +295,7 @@ public class VegaLite {
     /**
      * Displays the plot with the default browser.
      * @param silent If true, silently swallow any exception.
-     * @throws IOException if fails to create html file of plot.
+     * @throws IOException if fails to create HTML file of plot.
      * @throws HeadlessException if the VM runs in headless mode.
      */
     public void show(boolean silent) throws IOException, HeadlessException {
@@ -327,7 +327,7 @@ public class VegaLite {
      * @return the HTML of plot specification with Vega Embed.
      */
     public String html(String lang) {
-        String title = spec.has("title") ? spec.get("title").asText() : "Smile Plot";
+        String title = spec.has("title") ? spec.get("title").asString() : "Smile Plot";
         return String.format("""
                    <!DOCTYPE html>
                    <html lang=%s>

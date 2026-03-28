@@ -1,18 +1,18 @@
 /*
- * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
  *
- * Smile is free software: you can redistribute it and/or modify it
+ * SMILE is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * Smile is distributed in the hope that it will be useful, but
+ * SMILE is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Smile. If not, see <https://www.gnu.org/licenses/>.
+ * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
 package smile.math;
 
@@ -790,6 +790,18 @@ public class BFGS {
         int i = 0;
         for (; i < n; i++) {
             if (t[index[i]] > 0) break;
+        }
+
+        // Cannot find a Cauchy point > 0. It usually indicates that
+        // the gradient is already zero (convergence), the trust region
+        // is too small to move, or the approximation of the Hessian
+        // has become extremely ill-conditioned or non-positive definite.
+        if (i == n) {
+            logger.warn("""
+                Cauchy point is at the current point, which may be caused by convergence,
+                too small trust region or ill-conditioned Hessian approximation.""");
+            System.arraycopy(cauchy, 0, c, 0, c.length);
+            return c;
         }
 
         double dt = t[i];
