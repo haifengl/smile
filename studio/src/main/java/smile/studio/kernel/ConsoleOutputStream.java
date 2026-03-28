@@ -29,10 +29,10 @@ import smile.studio.OutputArea;
 public class ConsoleOutputStream extends OutputStream {
     /** Kernel running cell. */
     private OutputArea area;
+    /** Timestamp of last time updating cell output. */
+    private long stamp;
 
-    /**
-     * Constructor.
-     */
+    /** Constructor. */
     public ConsoleOutputStream() {
 
     }
@@ -55,11 +55,17 @@ public class ConsoleOutputStream extends OutputStream {
 
     @Override
     public void flush() {
-        SwingUtilities.invokeLater(() -> {
-            if (area != null) {
-                area.flush();
-            }
-        });
+        long time = System.currentTimeMillis();
+        // Throttle the update to avoid too much overhead of updating cell output.
+        // Update cell output at most every 100 milliseconds.
+        if (time - stamp >= 100) {
+            stamp = time;
+            SwingUtilities.invokeLater(() -> {
+                if (area != null) {
+                    area.flush();
+                }
+            });
+        }
     }
 
     /**
@@ -76,6 +82,7 @@ public class ConsoleOutputStream extends OutputStream {
      */
     public void setOutputArea(OutputArea area) {
         this.area = area;
+        stamp = System.currentTimeMillis();
     }
 
     /**
