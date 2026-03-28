@@ -728,6 +728,7 @@ public class Notebook extends JPanel implements DocumentListener {
             @Override
             protected void done() {
                 kernel.setRunning(false);
+                cell.output().highlight();
                 // Post-run actions
                 handlePostRunNav(cell, behavior);
                 postRunAction.accept(kernel);
@@ -773,7 +774,7 @@ public class Notebook extends JPanel implements DocumentListener {
             @Override
             protected Void doInBackground() {
                 kernel.setRunning(true);
-                for (Cell cell : cells) {
+                for (var cell : cells) {
                     if (cell.editor().getText().trim().isEmpty()) continue;
                     if (!cell.run(kernel, ++runCount)) break;
                 }
@@ -783,6 +784,9 @@ public class Notebook extends JPanel implements DocumentListener {
             @Override
             protected void done() {
                 kernel.setRunning(false);
+                for (var cell : cells) {
+                    cell.output().highlight();
+                }
                 postRunAction.accept(kernel);
             }
         };
