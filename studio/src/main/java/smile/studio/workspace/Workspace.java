@@ -243,6 +243,7 @@ public class Workspace extends JSplitPane {
                     Notebook notebook = (Notebook) notebookTabs.getComponentAt(tabIndex);
                     if (closeNotebook(notebook)) {
                         notebookTabs.removeTabAt(tabIndex);
+                        files.remove(notebook.getFile().toString());
                     }
                 });
     }
