@@ -285,7 +285,7 @@ public class VegaLite {
 
     /**
      * Displays the plot with the default browser.
-     * @throws IOException if fails to create html file of plot.
+     * @throws IOException if fails to create HTML file of plot.
      * @throws HeadlessException if the VM runs in headless mode.
      */
     public void show() throws IOException, HeadlessException {
@@ -295,7 +295,7 @@ public class VegaLite {
     /**
      * Displays the plot with the default browser.
      * @param silent If true, silently swallow any exception.
-     * @throws IOException if fails to create html file of plot.
+     * @throws IOException if fails to create HTML file of plot.
      * @throws HeadlessException if the VM runs in headless mode.
      */
     public void show(boolean silent) throws IOException, HeadlessException {
