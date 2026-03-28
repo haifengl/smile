@@ -48,11 +48,11 @@ public class Editor extends RSyntaxTextArea {
         super(rows, cols);
         putClientProperty("FlatLaf.styleClass", "monospaced");
         setSyntaxEditingStyle(style);
+        setLineWrap(true);
+        setWrapStyleWord(true);
         if (!style.equals(SYNTAX_STYLE_NONE)) {
             setCodeFoldingEnabled(true);
             setTabSize(4);
-            setLineWrap(false);
-            setWrapStyleWord(false);
         }
 
         InputMap inputMap = getInputMap(JComponent.WHEN_FOCUSED);

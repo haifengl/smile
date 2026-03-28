@@ -573,13 +573,6 @@ public class Cell extends JPanel {
     public void setType(CellType type) {
         cellType = type;
         cellTypeComboBox.setSelectedItem(type);
-        if (type == CellType.Code) {
-            editor.setLineWrap(false);
-            editor.setWrapStyleWord(false);
-        } else {
-            editor.setLineWrap(true);
-            editor.setWrapStyleWord(true);
-        }
 
         switch (type) {
             case Code ->
