@@ -130,6 +130,32 @@ public class Environment implements AutoCloseable {
     }
 
     /**
+     * Creates an {@code InferenceSession} that shares this environment using
+     * default session options.
+     *
+     * @param modelPath path to the {@code .onnx} model file.
+     * @return the loaded session.
+     */
+    public InferenceSession createSession(String modelPath) {
+        try (SessionOptions opts = new SessionOptions()) {
+            return createSession(modelPath, opts);
+        }
+    }
+
+    /**
+     * Creates an {@code InferenceSession} from an in-memory model that shares
+     * this environment, using default session options.
+     *
+     * @param modelBytes the serialised ONNX model bytes.
+     * @return the loaded session.
+     */
+    public InferenceSession createSession(byte[] modelBytes) {
+        try (SessionOptions opts = new SessionOptions()) {
+            return createSession(modelBytes, opts);
+        }
+    }
+
+    /**
      * Creates an {@code InferenceSession} that shares this environment.
      *
      * @param modelPath      path to the {@code .onnx} model file.
