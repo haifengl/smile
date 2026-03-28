@@ -63,8 +63,8 @@ public class Workspace extends JSplitPane {
     final JTabbedPane notebookTabs = new JTabbedPane();
     /** The tabbed pane for agent CLIs. */
     final JTabbedPane agentTabs = new JTabbedPane();
-    /** The opened files. */
-    final List<Path> files = new ArrayList<>();
+    /** The absolute paths of opened files. */
+    final List<String> files = new ArrayList<>();
     /** The editor of notebook. */
     final List<Notebook> notebooks = new ArrayList<>();
     /** The file explorer of current working directory. */
@@ -267,7 +267,7 @@ public class Workspace extends JSplitPane {
         // Store each file path with a unique key (e.g., file.1, file.2, ...)
         for (int i = 0; i < files.size(); i++) {
             // Using a simple numeric key allows for a list-like structure
-            properties.setProperty("file." + (i + 1), files.get(i).toAbsolutePath().toString());
+            properties.setProperty("file." + (i + 1), files.get(i));
         }
 
         try (OutputStream output = new FileOutputStream(path.toFile())) {
@@ -328,9 +328,10 @@ public class Workspace extends JSplitPane {
      * @param path the notebook file path.
      */
     public void openNotebook(Path path) {
+        path = path.toAbsolutePath().normalize();
         var filename = path.getFileName().toString();
         // already opened
-        if (files.contains(path)) {
+        if (files.contains(path.toString())) {
             int index = notebookTabs.indexOfTab(filename);
             if (index != -1) {
                 notebookTabs.setSelectedIndex(index);
@@ -342,7 +343,7 @@ public class Workspace extends JSplitPane {
             notebookTabs.addTab(filename, notebook);
             notebookTabs.setSelectedComponent(notebook);
             notebooks.add(notebook);
-            files.add(path);
+            files.add(path.toString());
         }
     }
 
