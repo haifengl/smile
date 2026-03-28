@@ -196,6 +196,7 @@ public class KernelExplorer extends JPanel {
         matrix.removeAllChildren();
         models.removeAllChildren();
         treeModel.reload(root);
+        if (kernel == null) return;
 
         kernel.variables().forEach(variable -> {
             var node = new DefaultMutableTreeNode(variable);
