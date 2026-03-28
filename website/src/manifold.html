@@ -147,13 +147,15 @@ title: Smile - Manifold Learning
     var data = Arrays.copyOf(swissroll, 2000);
     var nng = NearestNeighborGraph.descent(data, MathEx::distance, 7).largest(false);
     var map = IsoMap.fit(nng, 2, false);
+
     var graph = nng.graph(false);
     var edges = IntStream.range(0, data.length)
             .mapToObj(graph::getEdges)
             .flatMap(List::stream)
-            .map(edge -&gt; new int[]{edge.u(), edge.v()})
+            .map(edge -> new int[]{edge.u(), edge.v()})
             .toArray(int[][]::new);
-    Wireframe.of(map, edges).canvas().window();
+    var figure = Wireframe.of(map, edges).figure();
+    show(figure);
           </code></pre>
             </div>
         </div>
@@ -438,13 +440,11 @@ title: Smile - Manifold Learning
 
     var pca = PCA.fit(mnist).getProjection(50);
     var X = pca.apply(mnist);
+    var tsne = TSNE.fit(X, new TSNE.Options(2, 20, 200, 12, 550));
 
-    var perplexity = 20;
-    var tsne = new TSNE(X, 2, perplexity, 200, 1000);
-
-    var canvas = ScatterPlot.of(tsne.coordinates(), label, '@').canvas();
-    canvas.setTitle("t-SNE of MNIST");
-    canvas.window();
+    var figure = ScatterPlot.of(tsne.coordinates(), label, '@').figure();
+    figure.setTitle("t-SNE of MNIST");
+    show(figure);
           </code></pre>
             </div>
         </div>

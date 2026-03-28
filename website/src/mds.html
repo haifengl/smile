@@ -118,9 +118,10 @@ title: Smile - MDS
           <pre class="prettyprint lang-java"><code>
     var eurodist = Read.csv("data/mds/eurodist.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
     var dist = eurodist.drop(0).toArray();
-    var citys = eurodist.stringVector(0).toArray();
-    var x = MDS.fit(dist, 2).coordinates();
-    TextPlot.of(citys, x).canvas().window();
+    var citys = eurodist.column(0).toStringArray();
+    var x = MDS.fit(dist, new MDS.Options(2, true)).coordinates();
+    var figure = TextPlot.of(citys, x).figure();
+    show(figure);
           </code></pre>
             </div>
         </div>
@@ -208,8 +209,9 @@ title: Smile - MDS
         <div class="tab-pane active" id="java_4">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var x = IsotonicMDS.fit(dist, 2).coordinates();
-    TextPlot.of(citys, x).canvas().window();
+    var x = IsotonicMDS.fit(dist).coordinates();
+    var figure = TextPlot.of(citys, x).figure();
+    show(figure);
           </code></pre>
             </div>
         </div>
@@ -308,8 +310,9 @@ title: Smile - MDS
         <div class="tab-pane active" id="java_6">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var x = SammonMapping.fit(dist, 2).coordinates();
-    TextPlot.of(citys, x).canvas().window();
+    var x = SammonMapping.fit(dist).coordinates();
+    var figure = TextPlot.of(citys, x).figure();
+    show(figure);
           </code></pre>
             </div>
         </div>
