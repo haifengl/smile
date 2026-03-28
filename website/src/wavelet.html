@@ -374,9 +374,10 @@ title: Smile - Wavelet
     var d4 = new D4Wavelet();
     var smooth = sp500.clone();
     WaveletShrinkage.denoise(smooth, d4);
-    var canvas = LinePlot.of(sp500).canvas();
-    canvas.add(LinePlot.of(smooth, Color.BLUE));
-    canvas.window();
+
+    var figure = LinePlot.of(sp500).figure();
+    figure.add(LinePlot.of(smooth, Color.BLUE));
+    show(figure);
           </code></pre>
             </div>
         </div>
