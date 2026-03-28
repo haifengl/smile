@@ -1,5 +1,7 @@
 name := "smile-studio"
 
+resolvers += "jitpack" at "https://jitpack.io"
+
 Compile / mainClass := Some("smile.Main")
 
 // native packager
@@ -58,7 +60,9 @@ bashScriptExtraDefines ++= Seq(
   """addJava "--enable-native-access=ALL-UNNAMED"""",
   """addJava "-Dsmile.home=${app_home}/.."""",
   """addJava "-Dscala.usejavacp=true"""", // for Scala REPL
-  """addJava "-Dscala.repl.autoruncode=${app_home}/predef.sc""""
+  """addJava "-Dscala.repl.autoruncode=${app_home}/predef.sc"""",
+  """export PYTHONPATH="${PYTHONPATH}:${app_home}/../lib/ioa-agent-0.1.0.jar"""",
+  """export PYTHONUTF8=1"""
 )
 
 batScriptExtraDefines ++= Seq(
@@ -71,23 +75,34 @@ batScriptExtraDefines ++= Seq(
   """call :add_java -Dscala.repl.autoruncode=%APP_HOME%\bin\predef.sc""",
   """set OPENBLAS_NO_AVX512=1""",
   """set OPENBLAS_NUM_THREAD=1""",
-  """set "PATH=%~dp0;!PATH!""""
+  """set "PATH=%~dp0;!PATH!"""",
+  """set PYTHONPATH=%PYTHONPATH%;%APP_HOME%\lib\ioa-agent-0.1.0.jar""",
+  """set PYTHONUTF8=1"""
 )
 
 libraryDependencies ++= Seq(
   "org.scala-lang"   %% "scala3-compiler"    % scalaVersion.value,
   "info.picocli"      % "picocli"            % "4.7.7",
   "org.slf4j"         % "slf4j-simple"       % "2.0.17",
-  "com.openai"        % "openai-java"        % "4.14.0",
-  "com.anthropic"     % "anthropic-java"     % "2.11.1",
-  "com.google.genai"  % "google-genai"       % "1.32.0",
-  "org.commonmark"    % "commonmark"         % "0.27.0",
-  "org.xhtmlrenderer" % "flying-saucer-core" % "10.0.6",
-  "com.fifesoft"      % "rsyntaxtextarea"    % "3.6.1",
-  "com.formdev"       % "flatlaf"            % "3.7",
+  "com.openai"        % "openai-java"        % "4.30.0",
+  "com.anthropic"     % "anthropic-java"     % "2.18.0",
+  "com.google.genai"  % "google-genai"       % "1.44.0",
+  "org.commonmark"    % "commonmark"         % "0.27.1",
+  "org.xhtmlrenderer" % "flying-saucer-core" % "10.2.0",
+  "com.fifesoft"      % "rsyntaxtextarea"    % "3.6.2",
+  "com.fifesoft"      % "rstaui"             % "3.3.2",
+  "com.fifesoft"      % "spellchecker"       % "3.4.1",
+  "com.formdev"       % "flatlaf"            % "3.7.1",
   "com.formdev"       % "flatlaf-fonts-jetbrains-mono" % "2.304",
-  "org.apache.maven"  % "maven-resolver-provider" % "3.9.12",
-  "org.apache.maven.resolver" % "maven-resolver-supplier-mvn4" % "2.0.14"
+  "org.apache.maven"  % "maven-resolver-provider" % "3.9.14",
+  "org.apache.maven.resolver"   % "maven-resolver-supplier-mvn4" % "2.0.16",
+  "org.jetbrains.kotlin"        % "kotlin-scripting-jsr223" % "2.3.20",
+  "tools.jackson.dataformat"    % "jackson-dataformat-yaml" % "3.1.0",
+  "io.modelcontextprotocol.sdk" % "mcp"          % "1.1.0",
+  "io.github.furstenheim"       % "copy_down"    % "1.1",
+  "org.jsoup"                   % "jsoup"        % "1.22.1",
+  "com.github.serpapi"          % "serpapi-java" % "1.0.0",
+  "com.google.code.gson"        % "gson"         % "2.13.2" // evict older version used by serpapi
 )
 
 libraryDependencies ++= {

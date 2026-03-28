@@ -23,7 +23,12 @@ dependencies {
     implementation("org.bytedeco:cuda-platform-redist-cusolver:12.9-9.10-1.5.12")
     implementation("org.bytedeco:cuda-platform-redist-cusparse:12.9-9.10-1.5.12")
      */
+    implementation("io.quarkus:quarkus-hibernate-orm-panache")
+    implementation("io.quarkus:quarkus-jdbc-postgresql")
+    implementation("io.quarkiverse.jdbc:quarkus-jdbc-sqlite:3.0.1")
+    implementation("io.quarkiverse.quinoa:quarkus-quinoa:2.7.1")
     testImplementation("io.quarkus:quarkus-junit5")
+    testImplementation("io.rest-assured:rest-assured:6.0.0")
 }
 
 tasks.withType<Test> {
@@ -42,4 +47,3 @@ tasks.withType<JavaCompile> {
 tasks.withType<Javadoc> {
     enabled = false
 }
-

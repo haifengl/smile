@@ -9,5 +9,5 @@ val data = read.arff(Paths.getTestData("weka/iris.arff"))
 println(data)
 
 val formula = Formula.lhs("class")
-val rf = randomForest(formula, data)
+val rf = RandomForest.fit(formula, data)
 println(rf.metrics())

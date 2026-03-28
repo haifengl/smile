@@ -1,23 +1,24 @@
 /*
  * Copyright (c) 2010-2024 Haifeng Li. All rights reserved.
  *
- * Smile is free software: you can redistribute it and/or modify it
+ * SMILE is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * Smile is distributed in the hope that it will be useful, but
+ * SMILE is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Smile. If not, see <https://www.gnu.org/licenses/>.
+ * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
 package smile.plot.swing
 
 import java.awt.Color.{BLUE, RED}
 import java.lang.Math.*
+import scala.language.implicitConversions
 import org.specs2.mutable.*
 import smile.read
 import smile.interpolation.*
@@ -26,6 +27,10 @@ import smile.plot.show
 import smile.stat.distribution.*
 import smile.tensor.*
 
+/**
+  *
+  * @author Haifeng Li
+  */
 class PlotSpec extends Specification {
   val iris = read.arff(Paths.getTestData("weka/iris.arff"))
   // the matrix to display
@@ -43,6 +48,14 @@ class PlotSpec extends Specification {
   for (i <- 0 to 100) {
     for (j <- 0 to 100)
       Z(i)(j) = bicubic.interpolate(i * 0.03, j * 0.03)
+  }
+
+  implicit def render(canvas: Canvas): Unit = {
+    smile.plot.swing.JWindow(canvas)
+  }
+
+  implicit def render(canvas: MultiFigurePane): Unit = {
+    smile.plot.swing.JWindow(canvas)
   }
 
   "Plot" should {
@@ -76,7 +89,9 @@ class PlotSpec extends Specification {
     "Box" in {
       val groups = (iris("sepallength").toDoubleArray zip iris("class").toStringArray).groupBy(_._2)
       val labels = groups.keys.toArray
-      val data = groups.values.map { a => a.map(_._1) }.toArray
+      // Instead of calling .map directly on an Array, convert it to a Seq first
+      // using .toSeq to avoid specialized array issues.
+      val data = groups.values.map { a => a.toSeq.map(b => b._1).toArray }.toArray
       val canvas = boxplot(data, labels)
       canvas.figure().setAxisLabels("", "sepallength")
       show(canvas)

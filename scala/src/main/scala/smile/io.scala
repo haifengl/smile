@@ -1,18 +1,18 @@
 /*
- * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
  *
- * Smile is free software: you can redistribute it and/or modify it
+ * SMILE is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * Smile is distributed in the hope that it will be useful, but
+ * SMILE is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Smile. If not, see <https://www.gnu.org/licenses/>.
+ * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
 package smile
 
@@ -149,21 +149,25 @@ object read {
   }
 
   /** Reads a CSV file. */
-  def csv(file: String, delimiter: String = ",", header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType = null): DataFrame = {
+  def csv(file: String, delimiter: String = ",", header: Boolean = true, quote: Char = '"', escape: Char = '\\',
+          comment: Char = '\u0000', schema: StructType = null): DataFrame = {
     val format = CSVFormat.Builder.create()
       .setDelimiter(delimiter)
       .setQuote(quote)
       .setEscape(escape)
     if (header) format.setHeader().setSkipHeaderRecord(true)
+    if (comment != '\u0000') format.setCommentMarker(comment)
     Read.csv(file, format.get(), schema)
   }
 
   /** Reads a CSV file. */
-  def csv(file: Path, delimiter: String, header: Boolean, quote: Char, escape: Char, schema: StructType): DataFrame = {
+  def csv(file: Path, delimiter: String, header: Boolean, quote: Char, escape: Char,
+          comment: Char, schema: StructType): DataFrame = {
     val format = CSVFormat.Builder.create()
       .setDelimiter(delimiter)
       .setQuote(quote)
       .setEscape(escape)
+      .setCommentMarker(comment)
     if (header) format.setHeader().setSkipHeaderRecord(true)
     Read.csv(file, format.get(), schema)
   }

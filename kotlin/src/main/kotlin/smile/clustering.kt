@@ -1,22 +1,21 @@
 /*
- * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
  *
- * Smile is free software: you can redistribute it and/or modify it
+ * SMILE is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * Smile is distributed in the hope that it will be useful, but
+ * SMILE is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Smile. If not, see <https://www.gnu.org/licenses/>.
+ * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
 package smile.clustering
 
-import java.util.function.ToDoubleBiFunction
 import smile.clustering.linkage.*
 import smile.math.distance.Distance
 import smile.math.distance.EuclideanDistance
@@ -107,7 +106,7 @@ fun <T> hclust(data: Array<T>, distance: Distance<T>, method: String): Hierarchi
 
 /**
  * K-Modes clustering. K-Modes is the binary equivalent for K-Means.
- * The mean update for centroids is replace by the mode one which is
+ * The mean update for centroids is replaced by the mode one which is
  * a majority vote among element of each cluster.
  */
 fun kmodes(data: Array<IntArray>, k: Int, maxIter: Int = 100, runs: Int = 10): CentroidClustering<IntArray, IntArray> {

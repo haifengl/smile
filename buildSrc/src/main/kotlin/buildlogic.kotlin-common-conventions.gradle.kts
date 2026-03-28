@@ -10,6 +10,8 @@ plugins {
 
 dependencies {
     implementation(kotlin("stdlib"))
+    testImplementation("org.junit.jupiter:junit-jupiter:5.14.3")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 // Compile bytecode to Java 25
@@ -20,10 +22,15 @@ tasks.withType<KotlinJvmCompile>().configureEach {
     }
 }
 
+// JUnit5
+tasks.getByName<Test>("test") {
+    useJUnitPlatform()
+}
+
 // Configure existing Dokka task to output HTML
 dokka {
     pluginsConfiguration.html {
-        footerMessage.set("Copyright © 2010-2025 Haifeng Li. All rights reserved. Use is subject to license terms.")
+        footerMessage.set("Copyright © 2010-2026 Haifeng Li. All rights reserved. Use is subject to license terms.")
     }
 }
 

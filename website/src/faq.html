@@ -1,0 +1,309 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+title: Smile - FAQ
+version: "5.2.2"
+---
+{% include "toc.njk" %}
+
+<div class="col-md-9 col-md-pull-3">
+    <h1 id="faq-top" class="title">FAQ</h1>
+
+    <h2 class="question" id="cite">How should I cite Smile?</h2>
+    <p class="answer">Please cite Smile in your publications if it helps your research. Here is an example BibTeX entry:</p>
+    <pre><code>
+    @misc{Li2014Smile,
+      title={Smile},
+      author={Haifeng Li},
+      year={2014},
+      howpublished={\url{https://haifengl.github.io}},
+    }
+    </code></pre>
+
+    <h2 class="question" id="link-with-smile">Link with Smile</h2>
+    <p class="answer">
+        Smile artifacts are hosted in <a href="https://oss.sonatype.org/#nexus-search;quick~smile-core">Sonatype Nexus</a>.
+        You can add the following dependency into your pom.xml:</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#maven_1" data-toggle="tab">Maven</a></li>
+        <li><a href="#gradle_1" data-toggle="tab">Gradle (Kotlin)</a></li>
+        <li><a href="#sbt_1" data-toggle="tab">SBT</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="maven_1">
+            <div class="code" style="text-align: left;">
+                <pre class="prettyprint"><code>
+    &lt;dependency&gt;
+        &lt;groupId&gt;com.github.haifengl&lt;/groupId&gt;
+        &lt;artifactId&gt;smile-core&lt;/artifactId&gt;
+        &lt;version&gt;{{ version }}&lt;/version&gt;
+    &lt;/dependency&gt;
+                </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="gradle_1">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint"><code>
+    implementation("com.github.haifengl:smile-core:{{ version }}")
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="sbt_1">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint"><code>
+    libraryDependencies += "com.github.haifengl" % "smile-core" % "{{ version }}"
+            </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>To leverage GPU and deep learning, add</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#maven_2" data-toggle="tab">Maven</a></li>
+        <li><a href="#gradle_2" data-toggle="tab">Gradle (Kotlin)</a></li>
+        <li><a href="#sbt_2" data-toggle="tab">SBT</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="maven_2">
+            <div class="code" style="text-align: left;">
+                <pre class="prettyprint"><code>
+    &lt;dependency&gt;
+        &lt;groupId&gt;com.github.haifengl&lt;/groupId&gt;
+        &lt;artifactId&gt;smile-deep&lt;/artifactId&gt;
+        &lt;version&gt;{{ version }}&lt;/version&gt;
+    &lt;/dependency&gt;
+                </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="gradle_2">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint"><code>
+    implementation("com.github.haifengl:smile-deep:{{ version }}")
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="sbt_2">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint"><code>
+    libraryDependencies += "com.github.haifengl" %% "smile-deep" % "{{ version }}"
+            </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>For Scala API, add</p>
+    <div class="code" style="text-align: left;">
+    <pre class="prettyprint"><code>
+    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "{{ version }}"
+    </code></pre>
+    </div>
+
+    <p>Some algorithms rely on BLAS and LAPACK (e.g. manifold learning,
+        some clustering algorithms, Gaussian Process regression, MLP, etc.).
+        By default, Smile includes OpenBLAS for macOS, Windows, and Linux:</p>
+    <div class="code" style="text-align: left;">
+    <pre class="prettyprint"><code style="white-space: preserve nowrap;">
+    libraryDependencies ++= Seq(
+      "org.bytedeco" % "javacpp"   % "1.5.11"        classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+      "org.bytedeco" % "openblas"  % "0.3.28-1.5.11" classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+      "org.bytedeco" % "arpack-ng" % "3.9.1-1.5.11"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
+    )
+    </code></pre>
+    </div>
+
+    <p>For mobile platform, you may need add <code>classifier "android-arm64"</code>
+        or <code>classifier "ios-arm64"</code>. In general, you should include only
+        the needed platforms to save spaces.</p>
+
+    <p>If you prefer other BLAS implementations, you can use any library found
+        on the "java.library.path" or on the class path, by specifying it with
+        the "org.bytedeco.openblas.load" system property. For example, to use
+        the BLAS library from the Accelerate framework on Mac OS X, we can pass
+        options such as `-Djava.library.path=/usr/lib/ -Dorg.bytedeco.openblas.load=blas`.</p>
+
+    <p>For a default installation of MKL that would be `-Dorg.bytedeco.openblas.load=mkl_rt`.
+        Or you may add the following dependencies to your project, which
+        includes MKL binaries. Smile will automatically switch to MKL.</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#maven_3" data-toggle="tab">Maven</a></li>
+        <li><a href="#gradle_3" data-toggle="tab">Gradle (Kotlin)</a></li>
+        <li><a href="#sbt_3" data-toggle="tab">SBT</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="maven_3">
+            <div class="code" style="text-align: left;">
+                <pre class="prettyprint"><code>
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.bytedeco&lt;/groupId&gt;
+        &lt;artifactId&gt;mkl-platform&lt;/artifactId&gt;
+        &lt;version&gt;2024.0-1.5.10&lt;/version&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.bytedeco&lt;/groupId&gt;
+        &lt;artifactId&gt;mkl-platform-redist&lt;/artifactId&gt;
+        &lt;version&gt;2024.0-1.5.10&lt;/version&gt;
+    &lt;/dependency&gt;
+                </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="gradle_3">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint"><code>
+    implementation("org.bytedeco:mkl-platform:2024.0-1.5.10")
+    implementation("org.bytedeco:mkl-platform-redist:2024.0-1.5.10")
+            </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="sbt_3">
+            <div class="code" style="text-align: left;">
+            <pre class="prettyprint"><code>
+    libraryDependencies ++= {
+      val version = "2024.0-1.5.10"
+      Seq(
+        "org.bytedeco" % "mkl-platform"        % version,
+        "org.bytedeco" % "mkl-platform-redist" % version
+      )
+    }
+            </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <h2 class="question" id="model-serialization">Model serialization</h2>
+    <p class="answer">To serialize a model, you may use</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_3" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane" id="scala_3">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    import smile._
+    write(model, file)
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane active" id="java_3">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-java"><code>
+    import smile.io.Write;
+    Write.object(model, file)
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>This method serializes the model in Java serialization format. This is handy
+        if you want to use a model in Spark.</p>
+
+    <h2 class="question" id="data-format">Data Format</h2>
+    <p class="answer">
+        Most Smile algorithms take simple <code>double[]</code> or <code>DataFrame</code>as input.
+        <code>DataFrame</code> can be easily constructed from <code>double[][]</code> too.
+        So you can use your favorite methods
+        or library to import the data as long as the samples are in double arrays. Meanwhile, Smile provides
+        a couple of parsers in <code>smile.io</code> for popular data formats, such as CSV, Weka's ARFF files,
+        LibSVM's file format, delimited text files, SAS, Parquet, Avro, Arrow, JSON, and binary sparse data.
+    </p>
+
+    <h2 class="question" id="pom">Cannot build Smile with maven</h2>
+    <p class="answer">
+        We have moved to SBT to build packages. The maven pom.xml files were deprecated and were removed in v1.2.0.
+    </p>
+
+    <h2 class="question" id="headless-plot">Headless Plot</h2>
+    <p class="answer">
+        In case that your environment does not have a display, or you need to generate and save
+        a lot of plots without showing them on the screen, you may run Smile in headless model.
+    </p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_1" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane" id="scala_1">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-sh"><code>
+    bin/smile -Djava.awt.headless=true
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane active" id="java_1">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-sh"><code>
+    bin/jshell.sh -R-Djava.awt.headless=true
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>The following example shows how to save a plot in the headless mode.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_2" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane" id="scala_2">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val toy = read.csv("data/classification/toy200.txt", delimiter="\t", header=false)
+    val canvas = plot(toy, "V2", "V3", "V1", '.')
+    val image = canvas.toBufferedImage(400, 400)
+    javax.imageio.ImageIO.write(image, "png", new java.io.File("headless.png"))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane active" id="java_2">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    import java.awt.Color;
+    import smile.io.*;
+    import smile.plot.swing.*;
+    import org.apache.commons.csv.CSVFormat;
+
+    var toy = Read.csv("data/classification/toy200.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
+    var canvas = ScatterPlot.of(toy, "V2", "V3", "V1", '.').canvas();
+    var image = canvas.toBufferedImage(400, 400);
+    javax.imageio.ImageIO.write(image, "png", new java.io.File("headless.png"));
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <h2 class="question" id="seed">How can I set the random number generator seed for random forest?</h2>
+    <p class="answer">
+        This is a common question for stochastic algorithms like random forest.
+        In general, this is discouraged because people often choose bad seed due to the lack
+        of sufficient knowledge of random number generation. However, one may want the repeatable
+        result for testing purpose. In this case, call <code>smile.math.MathEx.setSeed</code> before
+        training the model.
+    </p>
+
+    <p>
+        Note that we don't provide a method to set the seed for a particular algorithm.
+        Many algorithms are multithreaded and each thread has their own random number
+        generator. We choose this design because each random number generator maintains
+        an internal state so that it is not multithread-safe. If multithreads share a
+        random number generator, we have to use locks, which significant reduce the
+        performance.
+    </p>
+
+    <p>
+        A method <code>setSeed()</code> in the algorithm is also troublesome.
+        For algorithms like random forest, it is not right to initialize every thread
+        with the same seed. Otherwise, same decision trees will be created,
+        and we lose the randomness of "random" forest. It is also complicated
+        to pass a sequence of random numbers because it is not clear
+        how many random number generators are needed for many algorithms. Even worse, it breaks
+        the encapsulation as the caller has to know the details of algorithms.
+    </p>
+
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>

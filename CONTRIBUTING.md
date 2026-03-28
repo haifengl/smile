@@ -8,7 +8,7 @@ and discuss issues. You can also contribute by opening an issue and
 submitting a pull request with code changes.
 
 ## Build ##
-To build SMILE from source, please first install Java 25, Scala 2.13
+To build SMILE from source, please first install Java 25, Scala 3
 and SBT 1.0+. Then clone the repo and build the package:
 
 ```bash
@@ -20,34 +20,37 @@ sbt package
 sbt test
 ```
 
-To build with Scala 3, run
+To build SMILE Serve, we need to use Gradle as Quarkus doesn't
+support SBT.
 ```bash
-sbt ++3.3.7 scala/package
+# Build SMILE Serve
+./gradlew :serve:build
+# Or run in development mode
+./gradlew :serve:quarkusDev
 ```
 
-To use Clojure package, run
+To build with Scala 2.13, run
 ```bash
-cd clojure
-./lein repl
+sbt ++2.13.18 scala/package
 ```
 
-For Clojure to pick up your changes in Java, you should
+For a software to pick up your changes, you should
 first publish SMILE packages locally.
 ```bash
 sbt publishM2
 ```
 
-To test the latest code, run the following
+To play with the latest code, run the following
 ```bash
 git pull
 bin/smile.sh
 ```
-which will build the system and enter the SMILE shell in Scala.
-If you prefer Java, you may run
+which will build the system and start SMILE Studio.
+If you prefer REPL, you may run
 ```bash
-sbt shell/stage
-cd shell/target/universal/stage
-bin/jshell.sh
+sbt studio/stage
+cd studio/target/universal/stage/bin
+./smile shell
 ```
 
 ## Open an issue ##
