@@ -174,7 +174,7 @@ try (var session = InferenceSession.create("resnet50.onnx")) {
 
 ### InferenceSession
 
-`InferenceSession` is the central object.  It loads an ONNX model, optimises
+`InferenceSession` is the central object.  It loads an ONNX model, optimizes
 its graph, and executes inference.
 
 #### Creating a session
@@ -305,7 +305,7 @@ try (var opts = new SessionOptions()) {
     // Graph optimisation (higher = faster inference, slower first load)
     opts.setGraphOptimizationLevel(GraphOptimizationLevel.ENABLE_ALL);
 
-    // Save the optimised graph to disk for faster future loads
+    // Save the optimized graph to disk for faster future loads
     opts.setOptimizedModelFilePath("resnet50_opt.onnx");
 
     // Execution mode
@@ -669,13 +669,13 @@ try (var env = new Environment(LoggingLevel.WARNING, "my-app")) {
 
 ## Performance Tuning
 
-| Concern | Recommendation |
-|---|---|
-| First-load latency | Use `GraphOptimizationLevel.ENABLE_ALL` and save the optimised model with `setOptimizedModelFilePath` |
-| Throughput (single process) | Use `ExecutionMode.PARALLEL` and tune `setInterOpNumThreads` |
-| Latency (single request) | Use `ExecutionMode.SEQUENTIAL` (default); tune `setIntraOpNumThreads` |
-| Many models in one process | Share a single `Environment` to avoid creating redundant thread pools |
-| Memory | Call `disableCpuMemArena()` and `disableMemPattern()` to minimise peak memory at the cost of some speed |
+| Concern | Recommendation                                                                                           |
+|---|----------------------------------------------------------------------------------------------------------|
+| First-load latency | Use `GraphOptimizationLevel.ENABLE_ALL` and save the optimized model with `setOptimizedModelFilePath`   |
+| Throughput (single process) | Use `ExecutionMode.PARALLEL` and tune `setInterOpNumThreads`                                             |
+| Latency (single request) | Use `ExecutionMode.SEQUENTIAL` (default); tune `setIntraOpNumThreads`                                    |
+| Many models in one process | Share a single `Environment` to avoid creating redundant thread pools                                    |
+| Memory | Call `disableCpuMemArena()` and `disableMemPattern()` to minimise peak memory at the cost of some speed  |
 | Benchmarking | Call `enableProfiling("profile_run")` to generate a Chrome-trace JSON you can load at `chrome://tracing` |
 
 ---
@@ -1004,7 +1004,7 @@ public class ProfilingExample {
             opts.enableProfiling("my_profile");
             opts.setGraphOptimizationLevel(GraphOptimizationLevel.ENABLE_BASIC);
             // Note: use DISABLE_ALL or ENABLE_BASIC when profiling so that
-            // the profile reflects the unoptimised operator graph.
+            // the profile reflects the unoptimized operator graph.
 
             try (var session = InferenceSession.create("resnet50.onnx", opts)) {
                 float[] data  = new float[3 * 224 * 224];
@@ -1133,25 +1133,25 @@ public class CancellableInferenceExample {
 
 ### `SessionOptions`
 
-| Method | Description |
-|---|---|
-| `setIntraOpNumThreads(int)` | Threads per operator (0 = auto) |
+| Method | Description                         |
+|---|-------------------------------------|
+| `setIntraOpNumThreads(int)` | Threads per operator (0 = auto)     |
 | `setInterOpNumThreads(int)` | Threads across operators (0 = auto) |
-| `setGraphOptimizationLevel(GraphOptimizationLevel)` | Optimisation depth |
-| `setExecutionMode(ExecutionMode)` | SEQUENTIAL or PARALLEL |
-| `setLogId(String)` | Session log identifier |
-| `setLogSeverityLevel(LoggingLevel)` | Minimum log severity |
-| `setLogVerbosityLevel(int)` | Verbosity (0 = default) |
-| `setOptimizedModelFilePath(String)` | Save optimised graph to file |
-| `enableCpuMemArena()` / `disableCpuMemArena()` | CPU memory arena |
-| `enableMemPattern()` / `disableMemPattern()` | Memory pattern planner |
-| `enableProfiling(String)` / `disableProfiling()` | Chrome-trace profiling |
-| `appendCudaExecutionProvider(int)` | Add CUDA EP |
-| `appendTensorRTExecutionProvider(int)` | Add TensorRT EP |
-| `appendRocmExecutionProvider(int)` | Add ROCM EP |
-| `appendDirectMLExecutionProvider(int)` | Add DirectML EP (Windows) |
-| `addConfigEntry(String, String)` | Low-level key-value config |
-| `close()` | Release native resources |
+| `setGraphOptimizationLevel(GraphOptimizationLevel)` | Optimisation depth                  |
+| `setExecutionMode(ExecutionMode)` | SEQUENTIAL or PARALLEL              |
+| `setLogId(String)` | Session log identifier              |
+| `setLogSeverityLevel(LoggingLevel)` | Minimum log severity                |
+| `setLogVerbosityLevel(int)` | Verbosity (0 = default)             |
+| `setOptimizedModelFilePath(String)` | Save optimized graph to file       |
+| `enableCpuMemArena()` / `disableCpuMemArena()` | CPU memory arena                    |
+| `enableMemPattern()` / `disableMemPattern()` | Memory pattern planner              |
+| `enableProfiling(String)` / `disableProfiling()` | Chrome-trace profiling              |
+| `appendCudaExecutionProvider(int)` | Add CUDA EP                         |
+| `appendTensorRTExecutionProvider(int)` | Add TensorRT EP                     |
+| `appendRocmExecutionProvider(int)` | Add ROCM EP                         |
+| `appendDirectMLExecutionProvider(int)` | Add DirectML EP (Windows)           |
+| `addConfigEntry(String, String)` | Low-level key-value config          |
+| `close()` | Release native resources            |
 
 ### `RunOptions`
 
@@ -1204,5 +1204,5 @@ public class CancellableInferenceExample {
 
 ---
 
-*SMILE Core — © 2010-2026 Haifeng Li. Apache / GNU GPL licensed.*
+*SMILE — © 2010-2026 Haifeng Li. GNU GPL licensed.*
 
