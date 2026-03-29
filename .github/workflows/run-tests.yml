@@ -5,11 +5,6 @@ on:
     branches:
       - master
   workflow_dispatch:
-    inputs:
-      ref:
-        description: 'branch or tag'
-        required: false
-        default: 'master'
 
 jobs:
   test-project:
@@ -84,8 +79,8 @@ jobs:
           run_full=false
           module_tasks=""
 
-          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.ref }}" ]; then
-            echo "workflow_dispatch ref exists; running full test suite."
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            echo "workflow_dispatch event; running full test suite."
             run_full=true
           elif [ ${#modules[@]} -gt 0 ]; then
             module_tasks=$(IFS=","; echo "${modules[*]}")
