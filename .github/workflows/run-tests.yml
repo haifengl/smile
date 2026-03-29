@@ -12,7 +12,7 @@ on:
         default: 'master'
 
 jobs:
-  test-serve:
+  test-project:
     runs-on: ubuntu-latest
 
     permissions:
@@ -37,6 +37,45 @@ jobs:
           echo "GITHUB_BASE_REF=${GITHUB_BASE_REF}"
           echo "workflow_dispatch ref input=${{ github.event.inputs.ref }}"
 
-      - name: Run full project tests
-        run: ./gradlew test
+      - name: Detect changed modules
+        id: changed
+        run: |
+          echo "Fetching base branch for diff..."
+          if [ -n "${GITHUB_BASE_REF}" ]; then
+            git fetch --no-tags --depth=1 origin ${GITHUB_BASE_REF}
+            base_ref=${GITHUB_BASE_REF}
+          else
+            git fetch --no-tags --depth=1 origin master
+            base_ref=master
+          fi
+          echo "Base ref=$base_ref"
+
+          changed_files=$(git diff --name-only origin/$base_ref...HEAD)
+          echo "Changed files:\n$changed_files"
+
+          modules=()
+          for module in base core deep json kotlin nlp plot scala serve spark studio website; do
+            if echo "$changed_files" | grep -q "^${module}/"; then
+              modules+=(":${module}:test")
+            fi
+          done
+
+          if [ ${#modules[@]} -eq 0 ]; then
+            echo "No module-specific changes detected. Running full test suite."
+            echo "modules=test" >> $GITHUB_OUTPUT
+          else
+            module_tasks=$(IFS=","; echo "${modules[*]}")
+            echo "Detected modules: $module_tasks"
+            echo "modules=$module_tasks" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run tests
+        run: |
+          module_tasks="${{ steps.changed.outputs.modules }}"
+          if [ "$module_tasks" = "test" ]; then
+            ./gradlew test
+          else
+            echo "Running selected modules: $module_tasks"
+            ./gradlew $module_tasks
+          fi
 
