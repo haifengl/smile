@@ -1,0 +1,131 @@
+name: Run tests
+
+on:
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  test-project:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          java-version: 25
+          distribution: 'temurin'
+          cache: 'gradle'
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - uses: gradle/actions/setup-gradle@v5
+
+      - name: Show branch info
+        run: |
+          echo "GITHUB_REF=${GITHUB_REF}"
+          echo "GITHUB_HEAD_REF=${GITHUB_HEAD_REF}"
+          echo "GITHUB_BASE_REF=${GITHUB_BASE_REF}"
+          echo "workflow_dispatch ref input=${{ github.event.inputs.ref }}"
+
+      - name: Detect changed modules
+        id: changed
+        run: |
+          echo "Fetching base branch for diff..."
+
+          # Ensure we have a common history for diff.
+          git fetch --no-tags --prune origin "+refs/heads/*:refs/remotes/origin/*"
+          git fetch --no-tags --prune origin "+refs/pull/*/head:refs/remotes/origin/pr/*" || true
+          git fetch --no-tags --prune --unshallow origin || true
+
+          if [ -n "${GITHUB_BASE_REF}" ]; then
+            base_ref=${GITHUB_BASE_REF}
+          else
+            # For manual dispatch and non-PR triggers, use previous commit as base if available.
+            base_ref=HEAD~1
+          fi
+          echo "Base ref=$base_ref"
+
+          # If base_ref is branch name, map to origin ref for compare.
+          if [ "$base_ref" != "HEAD~1" ]; then
+            if git show-ref --verify --quiet refs/remotes/origin/$base_ref; then
+              compare_ref=origin/$base_ref
+            else
+              compare_ref=$base_ref
+            fi
+          else
+            compare_ref=$base_ref
+          fi
+
+          changed_files=$(git diff --name-only $compare_ref...HEAD || true)
+          if [ -z "$changed_files" ]; then
+            echo "No changed files detected from diff; fallback to full test run."
+          else
+            echo "Changed files:\n$changed_files"
+          fi
+
+          modules=()
+          for module in base core deep json kotlin nlp plot scala serve spark studio website; do
+            if echo "$changed_files" | grep -q "^${module}/"; then
+              modules+=(":${module}:test")
+            fi
+          done
+
+          # Default is to run module-specific tests if we found modules.
+          run_full=false
+          module_tasks=""
+
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            echo "workflow_dispatch event; running full test suite."
+            run_full=true
+          elif [ ${#modules[@]} -gt 0 ]; then
+            module_tasks=$(IFS=","; echo "${modules[*]}")
+            echo "Detected modules: $module_tasks"
+          else
+            # no module dirs matched: if gradle files changed (root or module), run full test suite; else skip.
+            must_full=false
+            for f in $changed_files; do
+              base=$(basename "$f")
+              if [[ "$f" == gradle/* ]] || [[ "$base" =~ ^(build\.gradle|settings\.gradle|gradle\.properties|.*\.gradle\.kts)$ ]]; then
+                must_full=true
+                break
+              fi
+            done
+
+            if [ "$must_full" = true ]; then
+              echo "Detected gradle-related change; running full test suite."
+              run_full=true
+            else
+              echo "No module-specific or gradle-related changes found; skipping tests."
+            fi
+          fi
+
+          if [ "$run_full" = true ]; then
+            echo "modules=test" >> $GITHUB_OUTPUT
+          elif [ -n "$module_tasks" ]; then
+            echo "modules=$module_tasks" >> $GITHUB_OUTPUT
+          else
+            echo "modules=none" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run tests
+        run: |
+          module_tasks="${{ steps.changed.outputs.modules }}"
+          case "$module_tasks" in
+            test)
+              echo "Running full test suite..."
+              ./gradlew test
+              ;;
+            none)
+              echo "Skipping tests for non-module-only changes."
+              ;;
+            *)
+              echo "Running selected modules: $module_tasks"
+              ./gradlew $module_tasks
+              ;;
+          esac
+
