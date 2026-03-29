@@ -88,9 +88,13 @@ public class Workspace extends JSplitPane {
      */
     private final KernelExplorer kernelExplorer;
     /**
-     * The coding agent.
+     * The Java coding agent.
      */
-    private final Coder coder;
+    private final Coder javaCoder;
+    /**
+     * The Python coding agent.
+     */
+    private final Coder pythonCoder;
     /**
      * The current working directory for the workspace.
      */
@@ -116,7 +120,8 @@ public class Workspace extends JSplitPane {
         fileChooser.setCurrentDirectory(cwd.toFile());
 
         Analyst analyst = initAnalyst(cwd);
-        coder = initCoder(cwd);
+        javaCoder = initJavaCoder(cwd);
+        pythonCoder = initPythonCoder(cwd);
         fileExplorer = new FileExplorer(cwd);
         kernelExplorer = new KernelExplorer(fileChooser);
         explorerTabs.addTab("Project", new JScrollPane(fileExplorer));
@@ -141,7 +146,8 @@ public class Workspace extends JSplitPane {
         }
 
         agentTabs.addTab("📊 Clair the Analyst", analystCLI(analyst));
-        agentTabs.addTab("☕ James the Java Guru", coderCLI(coder));
+        agentTabs.addTab("☕ James the Java Guru", javaCoderCLI(javaCoder));
+        agentTabs.addTab("\uD83D\uDC0D Guido the Pythonista", pythonCoderCLI(pythonCoder));
 
         project.setLeftComponent(explorerTabs);
         project.setRightComponent(notebookTabs);
@@ -198,13 +204,25 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Initializes the coding agent.
+     * Initializes the Java coding agent.
      */
-    private Coder initCoder(Path cwd) {
+    private Coder initJavaCoder(Path cwd) {
         try {
             return new Coder("java-coder", SmileStudio.llm(), cwd);
         } catch (Exception ex) {
             logger.error("Failed to initialize Java coding agent", ex);
+        }
+        return null;
+    }
+
+    /**
+     * Initializes the Python coding agent.
+     */
+    private Coder initPythonCoder(Path cwd) {
+        try {
+            return new Coder("pythonista", SmileStudio.llm(), cwd);
+        } catch (Exception ex) {
+            logger.error("Failed to initialize Python coding agent", ex);
         }
         return null;
     }
@@ -249,13 +267,39 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Creates a coding agent cli.
+     * Creates a Java coding agent cli.
      */
-    private AgentCLI coderCLI(Coder coder) {
+    private AgentCLI javaCoderCLI(Coder coder) {
         var cli = new AgentCLI(coder);
         cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") + """
                         =====================================================================
                         Welcome! I am James, your AI assistant for Java programming.
+                        
+                        I can help with code completion and generation in the notebook too.
+                        cwd:\s""" + System.getProperty("user.dir"),
+
+                """
+                        💡 Tips for getting started:
+                        1. Ctrl + ENTER to execute your intents.
+                        2. Ctrl + SPACE to show slash command argument hint.
+                        3. Ctrl + Click on output links to open browser.
+                        4. TAB to complete code in the notebook.
+                        5. Be as specific as you would with another programmer for the best result.
+                        6. Create custom slash commands for reusable prompts or workflows.
+                        7. Run Shell commands starting with an exclamation mark (!).
+                        8. AI can make mistakes. Always review agent's responses.""");
+
+        return cli;
+    }
+
+    /**
+     * Creates a Python coding agent cli.
+     */
+    private AgentCLI pythonCoderCLI(Coder coder) {
+        var cli = new AgentCLI(coder);
+        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") + """
+                        =====================================================================
+                        Welcome! I am Guido, your AI assistant for Python programming.
                         
                         I can help with code completion and generation in the notebook too.
                         cwd:\s""" + System.getProperty("user.dir"),
@@ -386,7 +430,7 @@ public class Workspace extends JSplitPane {
                 logger.warn("Tab {} not found", filename);
             }
         } else {
-            Notebook notebook = new Notebook(path, coder, kernelExplorer::refresh);
+            Notebook notebook = new Notebook(path, javaCoder, kernelExplorer::refresh);
             notebookTabs.addTab(filename, notebook);
             notebookTabs.setSelectedComponent(notebook);
             notebooks.add(notebook);
@@ -565,7 +609,7 @@ public class Workspace extends JSplitPane {
         files.remove(path.toString());
 
         // Open fresh copy
-        Notebook fresh = new Notebook(path, coder, kernelExplorer::refresh);
+        Notebook fresh = new Notebook(path, javaCoder, kernelExplorer::refresh);
         notebookTabs.setComponentAt(tabIndex, fresh);
         notebookTabs.setSelectedIndex(tabIndex);
         notebooks.add(fresh);
