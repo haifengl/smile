@@ -54,7 +54,7 @@ bashScriptConfigLocation := Some("${app_home}/../conf/smile.ini")
 batScriptConfigLocation := Some("%APP_HOME%\\conf\\smile.ini")
 
 bashScriptExtraDefines ++= Seq(
-  """export SMILE_HOME=$(realpath "${app_home}/..")""",
+  """export SMILE_HOME="${app_home}/.."""",
   """addJava "-XX:MaxMetaspaceSize=1024M"""",
   """addJava "-Xss4M"""",
   """addJava "--add-opens=java.base/java.nio=ALL-UNNAMED"""",
@@ -68,19 +68,19 @@ bashScriptExtraDefines ++= Seq(
     |VENV_DIR="$SMILE_HOME/venv"
     |
     |# Check if venv directory exists
-    |if [ ! -d "$VENV_DIR" ]; then
+    |if [ ! -f "$VENV_DIR/bin/activate" ]; then
     |    echo "Creating Python virtual environment..."
     |    python3 -m venv "$VENV_DIR"
     |    if [ $? -ne 0 ]; then
     |        echo "Failed to create the virtual environment. Ensure Python is installed and added to PATH."
     |    else
-    |        echo "Virtual environment %VENV_DIR% created successfully."
+    |        echo "Virtual environment created successfully."
     |    fi
     |fi
     |
     |# Activate the venv
     |source "$VENV_DIR/bin/activate"
-    |pip install -r "$SMILE_HOME/conf/requirements.txt
+    |pip install -r "$SMILE_HOME/conf/requirements.txt"
     |""".stripMargin
 )
 
@@ -108,7 +108,7 @@ batScriptExtraDefines ++= Seq(
     |    IF ERRORLEVEL 1 (
     |        ECHO Failed to create the virtual environment. Ensure Python is installed and added to PATH.
     |    ) ELSE (
-    |        ECHO Virtual environment "%VENV_DIR%" created successfully.
+    |        ECHO Virtual environment created successfully.
     |    )
     |)
     |
