@@ -54,15 +54,34 @@ bashScriptConfigLocation := Some("${app_home}/../conf/smile.ini")
 batScriptConfigLocation := Some("%APP_HOME%\\conf\\smile.ini")
 
 bashScriptExtraDefines ++= Seq(
+  """export SMILE_HOME=$(realpath "${app_home}/..")""",
   """addJava "-XX:MaxMetaspaceSize=1024M"""",
   """addJava "-Xss4M"""",
   """addJava "--add-opens=java.base/java.nio=ALL-UNNAMED"""",
   """addJava "--enable-native-access=ALL-UNNAMED"""",
-  """addJava "-Dsmile.home=${app_home}/.."""",
+  """addJava "-Dsmile.home=${SMILE_HOME}"""",
   """addJava "-Dscala.usejavacp=true"""", // for Scala REPL
   """addJava "-Dscala.repl.autoruncode=${app_home}/predef.sc"""",
   """export PYTHONPATH="${PYTHONPATH}:${app_home}/../lib/ioa-agent-0.1.0.jar"""",
-  """export PYTHONUTF8=1"""
+  """export PYTHONUTF8=1""",
+  """
+    |VENV_DIR="$SMILE_HOME/venv"
+    |
+    |# Check if venv directory exists
+    |if [ ! -d "$VENV_DIR" ]; then
+    |    echo "Creating Python virtual environment..."
+    |    python3 -m venv "$VENV_DIR"
+    |    if [ $? -ne 0 ]; then
+    |        echo "Failed to create the virtual environment. Ensure Python is installed and added to PATH."
+    |    else
+    |        echo "Virtual environment %VENV_DIR% created successfully."
+    |    fi
+    |fi
+    |
+    |# Activate the venv
+    |source "$VENV_DIR/bin/activate"
+    |pip install -r "$SMILE_HOME/conf/requirements.txt
+    |""".stripMargin
 )
 
 batScriptExtraDefines ++= Seq(
@@ -77,7 +96,26 @@ batScriptExtraDefines ++= Seq(
   """set OPENBLAS_NUM_THREAD=1""",
   """set "PATH=%~dp0;!PATH!"""",
   """set PYTHONPATH=%PYTHONPATH%;%APP_HOME%\lib\ioa-agent-0.1.0.jar""",
-  """set PYTHONUTF8=1"""
+  """set PYTHONUTF8=1""",
+  """
+    |@echo off
+    |SET "VENV_DIR=%APP_HOME%\\venv"
+    |
+    |REM Check if the venv directory exists by checking for a known file/folder inside it
+    |IF NOT EXIST "%VENV_DIR%\\Scripts\\activate.bat" (
+    |    ECHO Creating Python virtual environment...
+    |    python -m venv %VENV_DIR%
+    |    IF ERRORLEVEL 1 (
+    |        ECHO Failed to create the virtual environment. Ensure Python is installed and added to PATH.
+    |    ) ELSE (
+    |        ECHO Virtual environment "%VENV_DIR%" created successfully.
+    |    )
+    |)
+    |
+    |ECHO Activating the virtual environment...
+    |CALL "%VENV_DIR%\\Scripts\\activate.bat"
+    |pip install -r %APP_HOME%\\conf\\requirements.txt
+    |""".stripMargin
 )
 
 libraryDependencies ++= Seq(
