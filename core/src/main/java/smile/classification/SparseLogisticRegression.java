@@ -24,6 +24,7 @@ import smile.data.SparseDataset;
 import smile.math.MathEx;
 import smile.math.BFGS;
 import smile.util.IntSet;
+import smile.util.OS;
 import smile.util.SparseArray;
 import smile.util.function.DifferentiableMultivariateFunction;
 import smile.validation.ModelSelection;
@@ -406,7 +407,7 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
             this.lambda = lambda;
             this.p = p;
 
-            partitionSize = Integer.parseInt(System.getProperty("smile.data.partition.size", "1000"));
+            partitionSize = OS.getProperty("smile.data.partition.size", 1000);
             partitions = x.length / partitionSize + (x.length % partitionSize == 0 ? 0 : 1);
             gradients = new double[partitions][p+1];
         }
@@ -524,7 +525,7 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
             this.lambda = lambda;
             this.p = p;
 
-            partitionSize = Integer.parseInt(System.getProperty("smile.data.partition.size", "1000"));
+            partitionSize = OS.getProperty("smile.data.partition.size", 1000);
             partitions = x.length / partitionSize + (x.length % partitionSize == 0 ? 0 : 1);
             gradients = new double[partitions][(k-1)*(p+1)];
             posterioris = new double[partitions][k];

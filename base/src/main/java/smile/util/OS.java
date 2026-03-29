@@ -62,6 +62,69 @@ public interface OS {
     }
 
     /**
+     * Returns the value of the system property as an integer,
+     * or the default value if the property is not set or invalid.
+     * @param key the name of the system property.
+     * @param defaultValue the default value to return if the property is not set or invalid.
+     * @return the integer value of the system property, or the default value if not set or invalid.
+     */
+    static int getProperty(String key, int defaultValue) {
+        String value = System.getProperty(key, Integer.toString(defaultValue));
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException ex) {
+            System.err.println("Invalid system property '" + key + "': " + value);
+        }
+        return defaultValue;
+    }
+
+    /**
+     * Returns the value of the system property as a float,
+     * or the default value if the property is not set or invalid.
+     * @param key the name of the system property.
+     * @param defaultValue the default value to return if the property is not set or invalid.
+     * @return the float value of the system property, or the default value if not set or invalid.
+     */
+    static float getProperty(String key, float defaultValue) {
+        String value = System.getProperty(key, Float.toString(defaultValue));
+        try {
+            return Float.parseFloat(value);
+        } catch (NumberFormatException ex) {
+            System.err.println("Invalid system property '" + key + "': " + value);
+        }
+        return defaultValue;
+    }
+
+    /**
+     * Returns the value of the system property as a double,
+     * or the default value if the property is not set or invalid.
+     * @param key the name of the system property.
+     * @param defaultValue the default value to return if the property is not set or invalid.
+     * @return the double value of the system property, or the default value if not set or invalid.
+     */
+    static double getProperty(String key, double defaultValue) {
+        String value = System.getProperty(key, Double.toString(defaultValue));
+        try {
+            return Double.parseDouble(value);
+        } catch (NumberFormatException ex) {
+            System.err.println("Invalid system property '" + key + "': " + value);
+        }
+        return defaultValue;
+    }
+
+    /**
+     * Returns the value of the system property as a boolean,
+     * or the default value if the property is not set.
+     * @param key the name of the system property.
+     * @param defaultValue the default value to return if the property is not set.
+     * @return the boolean value of the system property, or the default value if not set.
+     */
+    static boolean getProperty(String key, boolean defaultValue) {
+        String value = System.getProperty(key, Boolean.toString(defaultValue));
+        return Boolean.parseBoolean(value);
+    }
+
+    /**
      * Parses a command line into a list of arguments, respecting quoted substrings.
      * @param command the command line to parse.
      * @return the list of command arguments.

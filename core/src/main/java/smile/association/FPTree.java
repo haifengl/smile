@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import smile.sort.QuickSort;
+import smile.util.OS;
 
 /**
  * FP-tree data structure used in FP-growth (frequent pattern growth)
@@ -294,7 +295,7 @@ public class FPTree {
      * @return the frequency of single items
      */
     private int[] freq(Stream<int[]> itemsets) {
-        int n = Integer.parseInt(System.getProperty("smile.arm.items", "65536"));
+        int n = OS.getProperty("smile.arm.items", 65536);
         int[] f = new int[n];
         itemsets.forEach(itemset -> {
             numTransactions++;

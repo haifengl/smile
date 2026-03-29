@@ -16,6 +16,8 @@
  */
 package smile.util.function;
 
+import smile.util.OS;
+
 /**
  * A differentiable function is a function whose derivative exists at each point
  * in its domain.
@@ -24,7 +26,7 @@ package smile.util.function;
  */
 public interface DifferentiableMultivariateFunction extends MultivariateFunction {
     /** A number close to zero, between machine epsilon and its square root. */
-    double EPSILON = Double.parseDouble(System.getProperty("smile.gradient.epsilon", "1E-8"));
+    double EPSILON = OS.getProperty("smile.gradient.epsilon", 1E-8);
 
     /**
      * Computes the value and gradient at x. The default implementation
