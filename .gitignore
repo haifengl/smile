@@ -84,6 +84,9 @@ nb-configuration.xml
 # Local environment
 .env
 
+# Python virtual environment
+venv
+
 # Plugin directory
 /.quarkus/cli/plugins/
 
