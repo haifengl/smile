@@ -1,0 +1,42 @@
+name: Run tests
+
+on:
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'branch or tag'
+        required: false
+        default: 'master'
+
+jobs:
+  test-serve:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          java-version: 25
+          distribution: 'temurin'
+          cache: 'gradle'
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - uses: gradle/actions/setup-gradle@v5
+
+      - name: Show branch info
+        run: |
+          echo "GITHUB_REF=${GITHUB_REF}"
+          echo "GITHUB_HEAD_REF=${GITHUB_HEAD_REF}"
+          echo "GITHUB_BASE_REF=${GITHUB_BASE_REF}"
+          echo "workflow_dispatch ref input=${{ github.event.inputs.ref }}"
+
+      - name: Run full project tests
+        run: ./gradlew test
+
