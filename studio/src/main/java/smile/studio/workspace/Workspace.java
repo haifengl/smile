@@ -88,13 +88,9 @@ public class Workspace extends JSplitPane {
      */
     private final KernelExplorer kernelExplorer;
     /**
-     * The Java coding agent.
+     * The coding agents for each programming language.
      */
-    private final Coder javaCoder;
-    /**
-     * The Python coding agent.
-     */
-    private final Coder pythonCoder;
+    private final Map<String, Coder> coders = new HashMap<>();
     /**
      * The current working directory for the workspace.
      */
@@ -120,8 +116,8 @@ public class Workspace extends JSplitPane {
         fileChooser.setCurrentDirectory(cwd.toFile());
 
         Analyst analyst = initAnalyst(cwd);
-        javaCoder = initJavaCoder(cwd);
-        pythonCoder = initPythonCoder(cwd);
+        coders.put("Java", initJavaCoder(cwd));
+        coders.put("Python", initPythonCoder(cwd));
         fileExplorer = new FileExplorer(cwd);
         kernelExplorer = new KernelExplorer(fileChooser);
         explorerTabs.addTab("Project", new JScrollPane(fileExplorer));
@@ -146,8 +142,8 @@ public class Workspace extends JSplitPane {
         }
 
         agentTabs.addTab("📊 Clair the Analyst", analystCLI(analyst));
-        agentTabs.addTab("☕ James the Java Guru", javaCoderCLI(javaCoder));
-        agentTabs.addTab("\uD83D\uDC0D Guido the Pythonista", pythonCoderCLI(pythonCoder));
+        agentTabs.addTab("☕ James the Java Guru", javaCoderCLI(coders.get("Java")));
+        agentTabs.addTab("\uD83D\uDC0D Guido the Pythonista", pythonCoderCLI(coders.get("Python")));
 
         project.setLeftComponent(explorerTabs);
         project.setRightComponent(notebookTabs);
@@ -430,7 +426,7 @@ public class Workspace extends JSplitPane {
                 logger.warn("Tab {} not found", filename);
             }
         } else {
-            Notebook notebook = new Notebook(path, javaCoder, kernelExplorer::refresh);
+            Notebook notebook = new Notebook(path, coders, kernelExplorer::refresh);
             notebookTabs.addTab(filename, notebook);
             notebookTabs.setSelectedComponent(notebook);
             notebooks.add(notebook);
@@ -609,7 +605,7 @@ public class Workspace extends JSplitPane {
         files.remove(path.toString());
 
         // Open fresh copy
-        Notebook fresh = new Notebook(path, javaCoder, kernelExplorer::refresh);
+        Notebook fresh = new Notebook(path, coders, kernelExplorer::refresh);
         notebookTabs.setComponentAt(tabIndex, fresh);
         notebookTabs.setSelectedIndex(tabIndex);
         notebooks.add(fresh);

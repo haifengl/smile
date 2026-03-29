@@ -72,14 +72,13 @@ public class Notebook extends JPanel implements DocumentListener {
     /**
      * Constructor.
      * @param file the notebook file. If null, a new notebook will be created.
-     * @param coder the coding assistant agent.
+     * @param coders the coding assistant agents.
      * @param postRunAction the action to perform after running cells.
      */
-    public Notebook(Path file, Coder coder, Consumer<Kernel<?>> postRunAction) {
+    public Notebook(Path file, Map<String, Coder> coders, Consumer<Kernel<?>> postRunAction) {
         super(new BorderLayout());
         this.file = file;
         this.postRunAction = postRunAction;
-        this.coder = coder;
 
         cells.setLayout(new BoxLayout(cells, BoxLayout.Y_AXIS));
         scrollPane.getVerticalScrollBar().setUnitIncrement(18);
@@ -103,6 +102,7 @@ public class Notebook extends JPanel implements DocumentListener {
         jupyter = ipynb;
         lang = initLang();
         syntaxStyle = initSyntaxStyle();
+        coder = coders.get(lang);
         initKernel();
 
         if (Files.exists(file)) {
