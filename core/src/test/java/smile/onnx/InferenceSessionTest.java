@@ -16,8 +16,6 @@
  */
 package smile.onnx;
 
-import org.junit.jupiter.api.*;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -28,7 +26,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
+import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
