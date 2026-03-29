@@ -26,6 +26,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.text.BadLocationException;
 import com.formdev.flatlaf.ui.FlatLineBorder;
 import com.formdev.flatlaf.util.SystemInfo;
+import ioa.llm.client.LLM;
 import org.fife.ui.autocomplete.AutoCompletion;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import ioa.llm.tool.Question;
@@ -68,6 +69,7 @@ public class Intent extends JPanel {
         setBorder(new EmptyBorder(8,8,8,8));
 
         effortComboBox = initEffortComboBox(cli);
+        effortComboBox.setSelectedItem(cli.getReasoningEffort());
         initInputPane();
         initActionMap(cli);
 
@@ -129,7 +131,7 @@ public class Intent extends JPanel {
     /** Initializes the reasoning effort combo box. */
     private JComboBox<String> initEffortComboBox(AgentCLI cli) {
         ArrayList<String> effortLevels =new ArrayList<>();
-        effortLevels.add("default"); // default level, which is model specific.
+        effortLevels.add(LLM.DEFAULT_REASONING_EFFORT);
         var llm = cli.agent().llm();
         if (llm != null) {
             effortLevels.addAll(llm.reasoningEffortLevels());
@@ -145,6 +147,12 @@ public class Intent extends JPanel {
             effortComboBox.getComponent(0) instanceof AbstractButton button) {
             button.setVisible(false);
         }
+
+        effortComboBox.addItemListener(e -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                cli.setReasoningEffort((String) effortComboBox.getSelectedItem());
+            }
+        });
         return effortComboBox;
     }
 

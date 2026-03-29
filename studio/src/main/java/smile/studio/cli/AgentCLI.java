@@ -66,6 +66,8 @@ public class AgentCLI extends JPanel {
     private final Agent agent;
     /** The provider of slash command hints. */
     private final CompletionProvider hints;
+    /** The reasoning effort level. */
+    private String reasoningEffort = LLM.DEFAULT_REASONING_EFFORT;
 
     /**
      * Constructor.
@@ -107,6 +109,22 @@ public class AgentCLI extends JPanel {
      */
     public Agent agent() {
         return agent;
+    }
+
+    /**
+     * Returns the reasoning effort level.
+     * @return the reasoning effort level.
+     */
+    public String getReasoningEffort() {
+        return reasoningEffort;
+    }
+
+    /**
+     * Sets the reasoning effort level.
+     * @param reasoningEffort the reasoning effort level.
+     */
+    public void setReasoningEffort(String reasoningEffort) {
+        this.reasoningEffort = reasoningEffort;
     }
 
     /** Append a new intent box. */
@@ -531,7 +549,11 @@ Please provide your summary based on the conversation so far, following this str
         }
 
         intent.setProgress(true);
-        agent.conversation().params().setProperty(LLM.REASONING_EFFORT, intent.getReasoningEffort());
+        if (LLM.DEFAULT_REASONING_EFFORT.equals(reasoningEffort)) {
+            agent.conversation().params().setProperty(LLM.REASONING_EFFORT, "");
+        } else {
+            agent.conversation().params().setProperty(LLM.REASONING_EFFORT, reasoningEffort);
+        }
 
         // Stream processing runs in a background thread so that we don't
         // need to create a SwingWorker thread.
