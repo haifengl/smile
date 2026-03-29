@@ -18,6 +18,9 @@ package smile.studio.cli;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.Locale;
+import java.util.ResourceBundle;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.BadLocationException;
@@ -40,6 +43,7 @@ import static smile.studio.cli.IntentType.*;
  * @author Haifeng Li
  */
 public class Intent extends JPanel {
+    private static final ResourceBundle bundle = ResourceBundle.getBundle(Intent.class.getName(), Locale.getDefault());
     private static final Color inputColor = new Color(220, 248, 198);
     private static final Color borderColor = Palette.web("#8dd4e8");
     private final JPanel footer = new JPanel();
@@ -50,6 +54,9 @@ public class Intent extends JPanel {
     private final JLabel status = new JLabel();
     private final JProgressBar progress = new JProgressBar();
     private final JPanel outputPane = new JPanel();
+    private final JLabel effortLabel = new JLabel(bundle.getString("ReasoningEffort"));
+    private final JComboBox<String> effortComboBox;
+    private final JPanel controlPane = new JPanel(new FlowLayout(FlowLayout.LEFT));
     private OutputArea output = createOutputArea();
 
     /**
@@ -60,6 +67,7 @@ public class Intent extends JPanel {
         super(new BorderLayout(5, 5));
         setBorder(new EmptyBorder(8,8,8,8));
 
+        effortComboBox = initEffortComboBox(cli);
         initInputPane();
         initActionMap(cli);
 
@@ -101,7 +109,13 @@ public class Intent extends JPanel {
         footer.setLayout(new BoxLayout(footer, BoxLayout.X_AXIS));
         footer.setOpaque(false);
         footer.add(Box.createHorizontalStrut(indicator.getPreferredSize().width));
-        footer.add(intentTypeComboBox);
+
+        controlPane.setBackground(inputColor);
+        controlPane.add(intentTypeComboBox);
+        controlPane.add(Box.createHorizontalStrut(20));
+        controlPane.add(effortLabel);
+        controlPane.add(effortComboBox);
+        footer.add(controlPane);
         footer.add(status);
         footer.add(Box.createHorizontalGlue());
 
@@ -110,6 +124,28 @@ public class Intent extends JPanel {
         inputPane.add(sidebar, BorderLayout.WEST);
         inputPane.add(editor, BorderLayout.CENTER);
         inputPane.add(footer, BorderLayout.SOUTH);
+    }
+
+    /** Initializes the reasoning effort combo box. */
+    private JComboBox<String> initEffortComboBox(AgentCLI cli) {
+        ArrayList<String> effortLevels =new ArrayList<>();
+        effortLevels.add("default"); // default level, which is model specific.
+        var llm = cli.agent().llm();
+        if (llm != null) {
+            effortLevels.addAll(llm.reasoningEffortLevels());
+        }
+
+        var levels = effortLevels.toArray(new String[0]);
+        var effortComboBox = new JComboBox<>(levels);
+        effortComboBox.setSelectedItem(levels[0]);
+        effortComboBox.setBorder(BorderFactory.createEmptyBorder());
+        effortComboBox.setBackground(inputColor);
+        effortComboBox.setForeground(Color.DARK_GRAY);
+        if (effortComboBox.getComponentCount() > 0 &&
+            effortComboBox.getComponent(0) instanceof AbstractButton button) {
+            button.setVisible(false);
+        }
+        return effortComboBox;
     }
 
     /** Initializes the intent type combo box. */
@@ -129,6 +165,16 @@ public class Intent extends JPanel {
                 indicator.setText(intentType.legend());
                 indicator.setToolTipText(intentType.toString());
                 editor.requestFocusInWindow();
+
+                if (effortComboBox != null) {
+                    if (intentType == Instructions || intentType == Command) {
+                        effortLabel.setVisible(true);
+                        effortComboBox.setVisible(true);
+                    } else {
+                        effortLabel.setVisible(false);
+                        effortComboBox.setVisible(false);
+                    }
+                }
 
                 switch (intentType) {
                     case Shell -> {
@@ -200,6 +246,15 @@ public class Intent extends JPanel {
     }
 
     /**
+     * Returns the reasoning effort level.
+     * @return the reasoning effort level.
+     */
+    public String getReasoningEffort() {
+        return effortComboBox.getSelectedIndex() == 0 ? ""
+                : (String) effortComboBox.getSelectedItem();
+    }
+
+    /**
      * Renders Markdown text in output area.
      * @param text the Markdown text.
      */
@@ -238,11 +293,11 @@ public class Intent extends JPanel {
             editor.setBackground(inputColor);
             inputPane.setBackground(inputColor);
             intentTypeComboBox.setBackground(inputColor);
-
+            effortComboBox.setBackground(inputColor);
         } else {
             editor.setBackground(getBackground());
             inputPane.setBackground(getBackground());
-            footer.remove(intentTypeComboBox);
+            footer.remove(controlPane);
         }
     }
 

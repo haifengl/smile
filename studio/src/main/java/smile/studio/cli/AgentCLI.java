@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import com.formdev.flatlaf.util.SystemInfo;
 import ioa.agent.Context;
+import ioa.llm.client.LLM;
 import org.fife.ui.autocomplete.BasicCompletion;
 import org.fife.ui.autocomplete.CompletionProvider;
 import org.fife.ui.autocomplete.DefaultCompletionProvider;
@@ -98,6 +99,14 @@ public class AgentCLI extends JPanel {
                     }
                 })
         );
+    }
+
+    /**
+     * Returns the agent.
+     * @return the agent.
+     */
+    public Agent agent() {
+        return agent;
     }
 
     /** Append a new intent box. */
@@ -522,6 +531,7 @@ Please provide your summary based on the conversation so far, following this str
         }
 
         intent.setProgress(true);
+        agent.conversation().params().setProperty(LLM.REASONING_EFFORT, intent.getReasoningEffort());
 
         // Stream processing runs in a background thread so that we don't
         // need to create a SwingWorker thread.
