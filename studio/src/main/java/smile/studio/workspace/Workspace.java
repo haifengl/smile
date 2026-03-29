@@ -62,73 +62,47 @@ public class Workspace extends JSplitPane {
     /**
      * The project pane consists of explorer and notebook.
      */
-    final JSplitPane project = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+    private final JSplitPane project = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
     /**
      * The tabbed pane for file/environment explorers.
      */
-    final JTabbedPane explorerTabs = new JTabbedPane();
+    private final JTabbedPane explorerTabs = new JTabbedPane();
     /**
      * The tabbed pane for notebooks.
      */
-    final JTabbedPane notebookTabs = new JTabbedPane();
+    private final JTabbedPane notebookTabs = new JTabbedPane();
     /**
      * The tabbed pane for agent CLIs.
      */
-    final JTabbedPane agentTabs = new JTabbedPane();
+    private final JTabbedPane agentTabs = new JTabbedPane();
+    /**
+     * The editor of notebook.
+     */
+    private final List<Notebook> notebooks = new ArrayList<>();
+    /**
+     * The file explorer of current working directory.
+     */
+    private final FileExplorer fileExplorer;
+    /**
+     * The explorer of runtime information.
+     */
+    private final KernelExplorer kernelExplorer;
+    /**
+     * The coding agent.
+     */
+    private final Coder coder;
+    /**
+     * The current working directory for the workspace.
+     */
+    private final Path cwd;
     /**
      * The absolute paths of opened files.
      */
     final List<String> files = new ArrayList<>();
     /**
-     * The editor of notebook.
+     * File-change watching (WatchService)
      */
-    final List<Notebook> notebooks = new ArrayList<>();
-    /**
-     * The file explorer of current working directory.
-     */
-    final FileExplorer fileExplorer;
-    /**
-     * The explorer of runtime information.
-     */
-    final KernelExplorer kernelExplorer;
-    /**
-     * The coding agent.
-     */
-    final Coder coder;
-    /**
-     * The current working directory for the workspace.
-     */
-    final Path cwd;
-
-    // -----------------------------------------------------------------------
-    // File-change watching (WatchService)
-    // -----------------------------------------------------------------------
-
-    /**
-     * OS-level file-change watcher.
-     */
-    private WatchService watchService;
-    /**
-     * Maps each WatchKey to the directory it was registered for.
-     */
-    private final Map<WatchKey, Path> watchKeys = new ConcurrentHashMap<>();
-    /**
-     * Records the last modification time (ms) of every open file as of the
-     * most recent save/open performed by <em>this</em> process. Used to
-     * distinguish our own writes from external changes.
-     */
-    private final Map<String, Long> knownModTimes = new ConcurrentHashMap<>();
-    /**
-     * Pending reload-prompt timers keyed by absolute file path string.
-     * A timer is started when the first MODIFY event arrives; it fires after a
-     * short debounce period so that rapid sequences of events produce only one
-     * dialog.
-     */
-    private final Map<String, javax.swing.Timer> pendingReloads = new ConcurrentHashMap<>();
-    /**
-     * Background thread that polls the WatchService.
-     */
-    private Thread watchThread;
+    private final OpenFileWatcher fileWatcher = new OpenFileWatcher(files, this::handleFileChanged);
 
     /**
      * Constructor.
@@ -179,7 +153,6 @@ public class Workspace extends JSplitPane {
         setLeftComponent(project);
         setRightComponent(agentTabs);
         setResizeWeight(0.55);
-        startFileWatcher();
     }
 
     /**
@@ -418,8 +391,8 @@ public class Workspace extends JSplitPane {
             notebookTabs.setSelectedComponent(notebook);
             notebooks.add(notebook);
             files.add(path.toString());
-            recordModTime(path);
-            watchDirectory(path.getParent());
+            fileWatcher.recordModTime(path);
+            fileWatcher.watchDirectory(path.getParent());
         }
     }
 
@@ -502,8 +475,8 @@ public class Workspace extends JSplitPane {
             notebook.save();
             // Update the known mod time so our own write is not mistaken
             // for an external change when the WatchService event arrives.
-            recordModTime(notebook.getFile().toAbsolutePath().normalize());
-            watchDirectory(notebook.getFile().toAbsolutePath().normalize().getParent());
+            fileWatcher.recordModTime(notebook.getFile().toAbsolutePath().normalize());
+            fileWatcher.watchDirectory(notebook.getFile().toAbsolutePath().normalize().getParent());
             return true;
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(this,
@@ -539,134 +512,6 @@ public class Workspace extends JSplitPane {
             notebook.restart();
             kernelExplorer.refresh(notebook.kernel());
         });
-    }
-
-    // -----------------------------------------------------------------------
-    // File-change watcher implementation
-    // -----------------------------------------------------------------------
-
-    /**
-     * Starts the background {@link WatchService} thread.
-     * Must be called once during construction after all notebooks are opened.
-     */
-    private void startFileWatcher() {
-        try {
-            watchService = FileSystems.getDefault().newWatchService();
-        } catch (IOException ex) {
-            logger.error("Failed to create WatchService; external change detection disabled.", ex);
-            return;
-        }
-
-        watchThread = Thread.ofVirtual().name("workspace-file-watcher").start(() -> {
-            try {
-                while (!Thread.currentThread().isInterrupted()) {
-                    WatchKey key = watchService.poll(500, TimeUnit.MILLISECONDS);
-                    if (key == null) continue;
-
-                    Path dir = watchKeys.get(key);
-                    if (dir == null) {
-                        key.cancel();
-                        continue;
-                    }
-
-                    for (WatchEvent<?> event : key.pollEvents()) {
-                        WatchEvent.Kind<?> kind = event.kind();
-                        if (kind == StandardWatchEventKinds.OVERFLOW) continue;
-
-                        @SuppressWarnings("unchecked")
-                        Path changed = dir.resolve(((WatchEvent<Path>) event).context())
-                                .toAbsolutePath().normalize();
-
-                        if (kind == StandardWatchEventKinds.ENTRY_MODIFY
-                                && files.contains(changed.toString())) {
-                            scheduleReloadPrompt(changed);
-                        }
-                    }
-
-                    if (!key.reset()) {
-                        watchKeys.remove(key);
-                    }
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        });
-    }
-
-    /**
-     * Registers a directory with the {@link WatchService} if not already
-     * registered. Safe to call multiple times for the same directory.
-     *
-     * @param dir the directory to watch.
-     */
-    private void watchDirectory(Path dir) {
-        if (watchService == null || dir == null) return;
-        // Skip if already watching this directory
-        if (watchKeys.containsValue(dir)) return;
-        try {
-            WatchKey key = dir.register(watchService,
-                    StandardWatchEventKinds.ENTRY_MODIFY);
-            watchKeys.put(key, dir);
-            logger.debug("Watching directory: {}", dir);
-        } catch (IOException ex) {
-            logger.warn("Cannot watch directory {}: {}", dir, ex.getMessage());
-        }
-    }
-
-    /**
-     * Records the current on-disk modification time of {@code path} in
-     * {@link #knownModTimes}. Call this after opening or saving a file so
-     * that the watcher can tell apart our own writes from external ones.
-     *
-     * @param path the absolute, normalized file path.
-     */
-    private void recordModTime(Path path) {
-        try {
-            if (Files.exists(path)) {
-                knownModTimes.put(path.toString(),
-                        Files.getLastModifiedTime(path).toMillis());
-            }
-        } catch (IOException ex) {
-            logger.warn("Cannot record mod time for {}: {}", path, ex.getMessage());
-        }
-    }
-
-    /**
-     * Schedules (or re-schedules) a debounced reload prompt for the given
-     * file.  Multiple MODIFY events arriving within {@code DEBOUNCE_MS}
-     * milliseconds are coalesced into a single dialog.
-     *
-     * @param path the changed file path (absolute, normalized).
-     */
-    private void scheduleReloadPrompt(Path path) {
-        final int DEBOUNCE_MS = 500;
-        String key = path.toString();
-
-        // Cancel any existing timer for this file
-        javax.swing.Timer existing = pendingReloads.remove(key);
-        if (existing != null) existing.stop();
-
-        javax.swing.Timer timer = new javax.swing.Timer(DEBOUNCE_MS, e -> {
-            pendingReloads.remove(key);
-            // Double-check: is the mod time actually different from what we know?
-            try {
-                long diskMod = Files.getLastModifiedTime(path).toMillis();
-                Long known = knownModTimes.get(key);
-                if (known != null && diskMod <= known) {
-                    // Ignore our own save.
-                    return;
-                }
-                // Update the recorded time so we don't prompt again for the
-                // same modification if the user chooses not to reload.
-                knownModTimes.put(key, diskMod);
-            } catch (IOException ex) {
-                logger.warn("Cannot read mod time for {}: {}", path, ex.getMessage());
-            }
-            SwingUtilities.invokeLater(() -> handleFileChanged(path));
-        });
-        timer.setRepeats(false);
-        pendingReloads.put(key, timer);
-        timer.start();
     }
 
     /**
@@ -725,7 +570,7 @@ public class Workspace extends JSplitPane {
         notebookTabs.setSelectedIndex(tabIndex);
         notebooks.add(fresh);
         files.add(path.toString());
-        recordModTime(path);
+        fileWatcher.recordModTime(path);
 
         logger.info("Reloaded notebook from disk: {}", path);
     }
@@ -735,18 +580,6 @@ public class Workspace extends JSplitPane {
      * workspace is being disposed (e.g. application shutdown).
      */
     public void shutdown() {
-        if (watchThread != null) {
-            watchThread.interrupt();
-        }
-        // Cancel all pending debounce timers
-        pendingReloads.values().forEach(javax.swing.Timer::stop);
-        pendingReloads.clear();
-        if (watchService != null) {
-            try {
-                watchService.close();
-            } catch (IOException ex) {
-                logger.warn("Error closing WatchService", ex);
-            }
-        }
+        fileWatcher.shutdown();
     }
 }

@@ -30,15 +30,14 @@ import java.util.function.Consumer;
  */
 public class OpenFileWatcher {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OpenFileWatcher.class);
-    private static final ResourceBundle bundle = ResourceBundle.getBundle(OpenFileWatcher.class.getName(), Locale.getDefault());
-    /**
-     * The absolute paths of opened files.
-     */
-    final List<String> files = new ArrayList<>();
     /**
      * OS-level file-change watcher.
      */
     private WatchService watchService;
+    /**
+     * Background thread that polls the WatchService.
+     */
+    private Thread watchThread;
     /**
      * Maps each WatchKey to the directory it was registered for.
      */
@@ -61,18 +60,28 @@ public class OpenFileWatcher {
      */
     private final Consumer<Path> onFileChanged;
     /**
-     * Background thread that polls the WatchService.
+     * The absolute paths of files to watch.
      */
-    private Thread watchThread;
+    private final List<String> files;
 
     /**
      * Constructor.
      *
      * @param onFileChanged the callback to invoke when a file change is detected.
      */
-    public OpenFileWatcher(Consumer<Path> onFileChanged) {
+    public OpenFileWatcher(List<String> files, Consumer<Path> onFileChanged) {
+        this.files = files;
         this.onFileChanged = onFileChanged;
         start();
+    }
+
+    /**
+     * Returns the list of currently opened files being watched.
+     *
+     * @return the list of currently opened files being watched.
+     */
+    public List<String> files() {
+        return files;
     }
 
     /**
@@ -129,7 +138,7 @@ public class OpenFileWatcher {
      *
      * @param dir the directory to watch.
      */
-    private void watchDirectory(Path dir) {
+    public void watchDirectory(Path dir) {
         if (watchService == null || dir == null) return;
         // Skip if already watching this directory
         if (watchKeys.containsValue(dir)) return;
@@ -150,7 +159,7 @@ public class OpenFileWatcher {
      *
      * @param path the absolute, normalized file path.
      */
-    private void recordModTime(Path path) {
+    public void recordModTime(Path path) {
         try {
             if (Files.exists(path)) {
                 knownModTimes.put(path.toString(),
