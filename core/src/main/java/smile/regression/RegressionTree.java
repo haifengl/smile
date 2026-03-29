@@ -29,6 +29,7 @@ import smile.data.type.StructType;
 import smile.data.vector.ValueVector;
 import smile.math.MathEx;
 import smile.model.cart.*;
+import smile.util.OS;
 
 /**
  * Regression tree. A classification/regression tree can be learned by
@@ -187,7 +188,7 @@ public class RegressionTree extends CART implements DataFrameRegression {
             }
         } else {
             int[] orderj = order[j];
-            int bins = Integer.parseInt(System.getProperty("smile.regression_tree.bins", "100"));
+            int bins = OS.getProperty("smile.regression_tree.bins", 100);
             int step = bins > 10 ? Math.max(1, y.length / bins) : 1;
             int k = 0;
             if ( step > 1) {

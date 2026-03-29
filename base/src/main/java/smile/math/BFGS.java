@@ -22,6 +22,7 @@ import smile.tensor.DenseMatrix;
 import smile.sort.QuickSort;
 import smile.tensor.LU;
 import smile.tensor.Vector;
+import smile.util.OS;
 import smile.util.function.DifferentiableMultivariateFunction;
 import smile.util.function.MultivariateFunction;
 import static java.lang.Math.abs;
@@ -86,7 +87,7 @@ import static smile.tensor.ScalarType.*;
 public class BFGS {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BFGS.class);
     /** A number close to zero, between machine epsilon and its square root. */
-    private static final double EPSILON = Double.parseDouble(System.getProperty("smile.bfgs.epsilon", "1E-8"));
+    private static final double EPSILON = OS.getProperty("smile.bfgs.epsilon", 1E-8);
     /** The convergence criterion on x values. */
     private static final double TOLX = 4 * EPSILON;
     /** The convergence criterion on function value. */

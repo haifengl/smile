@@ -59,7 +59,7 @@ public class AgentCLI extends JPanel {
      * a compact command will be automatically executed to free up space
      * in the context window.
      */
-    private static final int COMPACT_THRESHOLD = Integer.parseInt(System.getProperty("smile.agent.auto.compact", "180000"));
+    private static final int COMPACT_THRESHOLD = OS.getProperty("smile.agent.auto.compact", 180000);
     /** The container of conversation. */
     private final JPanel intents = new ScrollablePanel();
     /** The agent. */
