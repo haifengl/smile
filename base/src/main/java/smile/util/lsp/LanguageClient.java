@@ -86,6 +86,8 @@ public class LanguageClient implements AutoCloseable {
     private Launcher<LanguageServer> launcher;
     /** True once {@link #start()} has completed the initialize handshake. */
     private final AtomicBoolean initialized = new AtomicBoolean(false);
+    /** Guards {@link #start()} and {@link #close()} against concurrent invocations. */
+    private final Object lifecycleLock = new Object();
 
     // -----------------------------------------------------------------------
     // Construction
@@ -139,47 +141,53 @@ public class LanguageClient implements AutoCloseable {
      */
     public void start()
             throws IOException, InterruptedException, ExecutionException, TimeoutException {
-        logger.info("Starting language server: {}", command);
-
-        // 1. Launch the server process.  stdin/stdout are inherited as
-        //    PIPE so the LSP4J launcher can wire them up directly.
-        serverProcess = new ProcessBuilder(command)
-                .redirectErrorStream(false)   // keep stderr separate
-                .start();
-
-        // Drain stderr in the background so the server is never blocked on it.
-        Thread.ofVirtual().name("lsp-stderr-drain").start(() -> {
-            try (var reader = new BufferedReader(
-                    new InputStreamReader(serverProcess.getErrorStream()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    logger.debug("[LSP-ERR] {}", line);
-                }
-            } catch (IOException ex) {
-                logger.warn("LSP stderr drain error", ex);
+        synchronized (lifecycleLock) {
+            if (initialized.get()) {
+                logger.warn("LanguageClient is already started; ignoring duplicate start().");
+                return;
             }
-        });
+            logger.info("Starting language server: {}", command);
 
-        // 2. Build a no-op client stub for the LSP4J launcher.
-        //    The server may send notifications (e.g. publishDiagnostics) back
-        //    to the client; they are logged at DEBUG level.
-        var clientStub = new NoOpLanguageClientImpl();
+            // 1. Launch the server process.  stdin/stdout are inherited as
+            //    PIPE so the LSP4J launcher can wire them up directly.
+            serverProcess = new ProcessBuilder(command)
+                    .redirectErrorStream(false)   // keep stderr separate
+                    .start();
 
-        // 3. Wire the LSP4J launcher to the process streams.
-        //    The launcher starts two internal threads: one to read JSON-RPC
-        //    messages from stdout and one to dispatch them.
-        launcher = LSPLauncher.createClientLauncher(
-                clientStub,
-                serverProcess.getInputStream(),
-                serverProcess.getOutputStream());
-        launcher.startListening();
-        server = launcher.getRemoteProxy();
+            // Drain stderr in the background so the server is never blocked on it.
+            Thread.ofVirtual().name("lsp-stderr-drain").start(() -> {
+                try (var reader = new BufferedReader(
+                        new InputStreamReader(serverProcess.getErrorStream()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        logger.debug("[LSP-ERR] {}", line);
+                    }
+                } catch (IOException ex) {
+                    logger.warn("LSP stderr drain error", ex);
+                }
+            });
 
-        // 4. Send the LSP initialize request.
-        sendInitialize();
+            // 2. Build a no-op client stub for the LSP4J launcher.
+            //    The server may send notifications (e.g. publishDiagnostics) back
+            //    to the client; they are logged at DEBUG level.
+            var clientStub = new NoOpLanguageClientImpl();
 
-        initialized.set(true);
-        logger.info("Language server ready. Workspace: {}", workspaceRoot);
+            // 3. Wire the LSP4J launcher to the process streams.
+            //    The launcher starts two internal threads: one to read JSON-RPC
+            //    messages from stdout and one to dispatch them.
+            launcher = LSPLauncher.createClientLauncher(
+                    clientStub,
+                    serverProcess.getInputStream(),
+                    serverProcess.getOutputStream());
+            launcher.startListening();
+            server = launcher.getRemoteProxy();
+
+            // 4. Send the LSP initialize request.
+            sendInitialize();
+
+            initialized.set(true);
+            logger.info("Language server ready. Workspace: {}", workspaceRoot);
+        }
     }
 
     /**
@@ -243,25 +251,27 @@ public class LanguageClient implements AutoCloseable {
      */
     @Override
     public void close() {
-        if (!initialized.get()) return;
-        initialized.set(false);
-        try {
-            server.shutdown().get(timeoutSeconds, TimeUnit.SECONDS);
-        } catch (Exception ex) {
-            logger.warn("LSP shutdown request failed", ex);
-        }
-        server.exit();
-        if (serverProcess != null && serverProcess.isAlive()) {
-            serverProcess.destroy();
+        synchronized (lifecycleLock) {
+            if (!initialized.get()) return;
+            initialized.set(false);
             try {
-                if (!serverProcess.waitFor(5, TimeUnit.SECONDS)) {
-                    serverProcess.destroyForcibly();
-                }
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
+                server.shutdown().get(timeoutSeconds, TimeUnit.SECONDS);
+            } catch (Exception ex) {
+                logger.warn("LSP shutdown request failed", ex);
             }
+            server.exit();
+            if (serverProcess != null && serverProcess.isAlive()) {
+                serverProcess.destroy();
+                try {
+                    if (!serverProcess.waitFor(5, TimeUnit.SECONDS)) {
+                        serverProcess.destroyForcibly();
+                    }
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+            logger.info("Language server stopped.");
         }
-        logger.info("Language server stopped.");
     }
 
     // -----------------------------------------------------------------------
@@ -321,8 +331,9 @@ public class LanguageClient implements AutoCloseable {
             Thread.currentThread().interrupt();
             throw new LspException("LSP request interrupted", ex);
         } catch (ExecutionException ex) {
-            throw new LspException("LSP request failed: " + ex.getCause().getMessage(),
-                    ex.getCause());
+            Throwable cause = ex.getCause();
+            String msg = cause != null ? cause.getMessage() : ex.getMessage();
+            throw new LspException("LSP request failed: " + msg, cause != null ? cause : ex);
         } catch (TimeoutException ex) {
             throw new LspException(
                     "LSP request timed out after " + timeoutSeconds + " seconds", ex);
@@ -339,19 +350,6 @@ public class LanguageClient implements AutoCloseable {
         return new TextDocumentIdentifier(toUri(filePath));
     }
 
-    /**
-     * Builds a {@link TextDocumentPositionParams} from a file path and a
-     * 1-based position.
-     *
-     * @param filePath  the file path.
-     * @param line      the 1-based line.
-     * @param character the 1-based character.
-     * @return the params.
-     */
-    private static TextDocumentPositionParams positionParams(
-            String filePath, int line, int character) {
-        return new TextDocumentPositionParams(textDoc(filePath), toPosition(line, character));
-    }
 
     // -----------------------------------------------------------------------
     // Navigation operations
@@ -379,9 +377,14 @@ public class LanguageClient implements AutoCloseable {
         return result.isLeft()
                 ? result.getLeft().stream().map(LspLocation::fromProtocol).toList()
                 : result.getRight().stream()
-                        .map(ll -> LspLocation.fromProtocol(ll.getTargetUri() != null
-                                ? new Location(ll.getTargetUri(), ll.getTargetRange())
-                                : new Location(ll.getTargetUri(), ll.getTargetSelectionRange())))
+                        .filter(ll -> ll.getTargetUri() != null || ll.getTargetRange() != null)
+                        .map(ll -> {
+                            String uri = ll.getTargetUri() != null
+                                    ? ll.getTargetUri() : toUri(filePath);
+                            org.eclipse.lsp4j.Range range = ll.getTargetRange() != null
+                                    ? ll.getTargetRange() : ll.getTargetSelectionRange();
+                            return LspLocation.fromProtocol(new Location(uri, range));
+                        })
                         .toList();
     }
 
@@ -486,11 +489,45 @@ public class LanguageClient implements AutoCloseable {
         if (result == null) return List.of();
 
         String uri = toUri(filePath);
-        return result.stream()
-                .map(either -> either.isLeft()
-                        ? LspSymbol.fromSymbolInformation(either.getLeft())
-                        : LspSymbol.fromDocumentSymbol(either.getRight(), uri))
-                .toList();
+        List<LspSymbol> symbols = new ArrayList<>();
+        for (var either : result) {
+            if (either.isLeft()) {
+                symbols.add(LspSymbol.fromSymbolInformation(either.getLeft()));
+            } else {
+                flattenDocumentSymbol(either.getRight(), uri, null, symbols);
+            }
+        }
+        return Collections.unmodifiableList(symbols);
+    }
+
+    /**
+     * Recursively flattens a hierarchical {@link org.eclipse.lsp4j.DocumentSymbol} tree
+     * into a flat list of {@link LspSymbol} instances.
+     *
+     * @param ds          the document symbol node to process.
+     * @param uri         the document URI.
+     * @param container   the name of the containing symbol, or {@code null}.
+     * @param accumulator the list to collect results into.
+     */
+    private static void flattenDocumentSymbol(
+            org.eclipse.lsp4j.DocumentSymbol ds, String uri,
+            String container, List<LspSymbol> accumulator) {
+        var range = ds.getRange();
+        accumulator.add(new LspSymbol(
+                ds.getName(),
+                ds.getKind().getValue(),
+                container,
+                uri,
+                range.getStart().getLine() + 1,
+                range.getStart().getCharacter() + 1,
+                range.getEnd().getLine() + 1,
+                range.getEnd().getCharacter() + 1));
+        var children = ds.getChildren();
+        if (children != null) {
+            for (var child : children) {
+                flattenDocumentSymbol(child, uri, ds.getName(), accumulator);
+            }
+        }
     }
 
     /**
@@ -558,8 +595,14 @@ public class LanguageClient implements AutoCloseable {
         return result.isLeft()
                 ? result.getLeft().stream().map(LspLocation::fromProtocol).toList()
                 : result.getRight().stream()
-                        .map(ll -> LspLocation.fromProtocol(
-                                new Location(ll.getTargetUri(), ll.getTargetRange())))
+                        .filter(ll -> ll.getTargetUri() != null || ll.getTargetRange() != null)
+                        .map(ll -> {
+                            String uri = ll.getTargetUri() != null
+                                    ? ll.getTargetUri() : toUri(filePath);
+                            org.eclipse.lsp4j.Range range = ll.getTargetRange() != null
+                                    ? ll.getTargetRange() : ll.getTargetSelectionRange();
+                            return LspLocation.fromProtocol(new Location(uri, range));
+                        })
                         .toList();
     }
 
