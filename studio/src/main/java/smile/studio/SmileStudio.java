@@ -212,18 +212,8 @@ public class SmileStudio extends JFrame {
                         prefs.get("azureOpenAIBaseUrl", ""),
                         prefs.get("azureOpenAIModel", "gpt-5.1-codex"));
 
-                case "Anthropic" -> {
-                    var anthropic = new Anthropic(prefs.get("anthropicModel", "claude-sonnet-4-5"));
-                    var apiKey = prefs.get("anthropicApiKey", "");
-                    if (!apiKey.isBlank()) {
-                        anthropic.withApiKey(apiKey);
-                    }
-                    var baseUrl = prefs.get("anthropicBaseUrl", "");
-                    if (!baseUrl.isBlank()) {
-                        anthropic.withBaseUrl(baseUrl);
-                    }
-                    yield anthropic;
-                }
+                case "Anthropic" ->
+                    new Anthropic(prefs.get("anthropicModel", "claude-sonnet-4-5"));
 
                 case "Google Gemini" ->
                     new GoogleGemini(
