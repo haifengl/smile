@@ -80,22 +80,57 @@ jobs:
             fi
           done
 
-          if [ ${#modules[@]} -eq 0 ]; then
-            echo "No module-specific changes detected. Running full test suite."
-            echo "modules=test" >> $GITHUB_OUTPUT
-          else
+          # Default is to run module-specific tests if we found modules.
+          run_full=false
+          module_tasks=""
+
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.ref }}" ]; then
+            echo "workflow_dispatch ref exists; running full test suite."
+            run_full=true
+          elif [ ${#modules[@]} -gt 0 ]; then
             module_tasks=$(IFS=","; echo "${modules[*]}")
             echo "Detected modules: $module_tasks"
+          else
+            # no module dirs matched: if gradle files changed (root or module), run full test suite; else skip.
+            must_full=false
+            for f in $changed_files; do
+              base=$(basename "$f")
+              if [[ "$f" == gradle/* ]] || [[ "$base" =~ ^(build\.gradle|settings\.gradle|gradle\.properties|.*\.gradle\.kts)$ ]]; then
+                must_full=true
+                break
+              fi
+            done
+
+            if [ "$must_full" = true ]; then
+              echo "Detected gradle-related change; running full test suite."
+              run_full=true
+            else
+              echo "No module-specific or gradle-related changes found; skipping tests."
+            fi
+          fi
+
+          if [ "$run_full" = true ]; then
+            echo "modules=test" >> $GITHUB_OUTPUT
+          elif [ -n "$module_tasks" ]; then
             echo "modules=$module_tasks" >> $GITHUB_OUTPUT
+          else
+            echo "modules=none" >> $GITHUB_OUTPUT
           fi
 
       - name: Run tests
         run: |
           module_tasks="${{ steps.changed.outputs.modules }}"
-          if [ "$module_tasks" = "test" ]; then
-            ./gradlew test
-          else
-            echo "Running selected modules: $module_tasks"
-            ./gradlew $module_tasks
-          fi
+          case "$module_tasks" in
+            test)
+              echo "Running full test suite..."
+              ./gradlew test
+              ;;
+            none)
+              echo "Skipping tests for non-module-only changes."
+              ;;
+            *)
+              echo "Running selected modules: $module_tasks"
+              ./gradlew $module_tasks
+              ;;
+          esac
 
