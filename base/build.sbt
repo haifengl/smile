@@ -5,7 +5,8 @@ packageOptions += Package.ManifestAttributes("Automatic-Module-Name" -> "smile.b
 libraryDependencies ++= {
   val arrowV = "18.3.0"
   Seq(
-    "tools.jackson.dataformat" % "jackson-dataformat-yaml" % "3.1.0" % Provided,
+    "tools.jackson.dataformat" % "jackson-dataformat-yaml" % "3.1.1" % Provided,
+    "org.eclipse.lsp4j" % "org.eclipse.lsp4j" % "1.0.0" % Provided,
     "org.apache.arrow" % "arrow-dataset" % arrowV % Provided,
     "org.apache.arrow" % "arrow-memory-netty" % arrowV % Provided,
     "org.apache.avro" % "avro" % "1.12.1" % Provided exclude("org.slf4j", "slf4j-log4j12"),
