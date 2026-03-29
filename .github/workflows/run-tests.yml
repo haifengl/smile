@@ -41,17 +41,37 @@ jobs:
         id: changed
         run: |
           echo "Fetching base branch for diff..."
+
+          # Ensure we have a common history for diff.
+          git fetch --no-tags --prune origin "+refs/heads/*:refs/remotes/origin/*"
+          git fetch --no-tags --prune origin "+refs/pull/*/head:refs/remotes/origin/pr/*" || true
+          git fetch --no-tags --prune --unshallow origin || true
+
           if [ -n "${GITHUB_BASE_REF}" ]; then
-            git fetch --no-tags --depth=1 origin ${GITHUB_BASE_REF}
             base_ref=${GITHUB_BASE_REF}
           else
-            git fetch --no-tags --depth=1 origin master
-            base_ref=master
+            # For manual dispatch and non-PR triggers, use previous commit as base if available.
+            base_ref=HEAD~1
           fi
           echo "Base ref=$base_ref"
 
-          changed_files=$(git diff --name-only origin/$base_ref...HEAD)
-          echo "Changed files:\n$changed_files"
+          # If base_ref is branch name, map to origin ref for compare.
+          if [ "$base_ref" != "HEAD~1" ]; then
+            if git show-ref --verify --quiet refs/remotes/origin/$base_ref; then
+              compare_ref=origin/$base_ref
+            else
+              compare_ref=$base_ref
+            fi
+          else
+            compare_ref=$base_ref
+          fi
+
+          changed_files=$(git diff --name-only $compare_ref...HEAD || true)
+          if [ -z "$changed_files" ]; then
+            echo "No changed files detected from diff; fallback to full test run."
+          else
+            echo "Changed files:\n$changed_files"
+          fi
 
           modules=()
           for module in base core deep json kotlin nlp plot scala serve spark studio website; do
