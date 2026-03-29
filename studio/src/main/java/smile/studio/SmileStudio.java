@@ -228,7 +228,19 @@ public class SmileStudio extends JFrame {
                 case "Google Gemini" ->
                     new GoogleGemini(
                             prefs.get("googleGeminiApiKey", ""),
-                            prefs.get("googleGeminiModel", "gemini-3-pro-preview"));
+                            prefs.get("googleGeminiModel", "gemini-3-flash-preview"));
+                /*
+                {
+                    // Gemini models are accessible using the OpenAI libraries
+                    // https://ai.google.dev/gemini-api/docs/openai
+                    // However, the id, created, or usage fields might be absent
+                    // or null in the response, especially during tool use or streaming.
+                    yield OpenAI.compatible(
+                            "https://generativelanguage.googleapis.com/v1beta/openai/",
+                            prefs.get("googleGeminiApiKey", ""),
+                            prefs.get("googleGeminiModel", "gemini-3-flash-preview"));
+                }
+                */
 
                 case "Google VertexAI" ->
                     GoogleGemini.vertex(
