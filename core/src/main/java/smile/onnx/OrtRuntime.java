@@ -34,7 +34,7 @@ import smile.onnx.foreign.onnxruntime_c_api_h;
  */
 final class OrtRuntime {
     /** Current ORT API version requested. */
-    private static final int ORT_API_VERSION = 22;
+    private static final int ORT_API_VERSION = 17;
 
     /** Singleton OrtApi struct pointer (never released). */
     private static final MemorySegment ORT_API;
