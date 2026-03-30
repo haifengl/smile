@@ -20,12 +20,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import org.junit.jupiter.api.*;
+import smile.math.MathEx;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
@@ -366,7 +363,9 @@ public class InferenceSessionTest {
                         "Output shape mismatch for model " + stem);
 
                 float[] actual = output0.toFloatArray();
+                MathEx.softmax(actual); // The model outputs are raw logits.
                 float[] exp    = expected.floatData();
+                MathEx.softmax(exp); // Some expected output are raw logits too.
                 assertNotNull(exp, "Expected float data in .pb for model " + stem);
                 assertEquals(exp.length, actual.length,
                         "Element count mismatch for model " + stem);
