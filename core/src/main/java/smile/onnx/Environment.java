@@ -18,8 +18,10 @@ package smile.onnx;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
+import java.nio.charset.StandardCharsets;
 import smile.onnx.foreign.OrtApi;
 import smile.onnx.foreign.onnxruntime_c_api_h;
+import smile.util.OS;
 
 /**
  * A wrapper around the ONNX Runtime {@code OrtEnv} object. The environment
@@ -164,7 +166,8 @@ public class Environment implements AutoCloseable {
      */
     public InferenceSession createSession(String modelPath, SessionOptions sessionOptions) {
         try (Arena arena = Arena.ofConfined()) {
-            MemorySegment pathSeg = arena.allocateFrom(modelPath);
+            // Windows expects a 16-bit wide-character string encoded in UTF-16LE (Little Endian)
+            MemorySegment pathSeg = arena.allocateFrom(modelPath, OS.isWindows() ? StandardCharsets.UTF_16LE : StandardCharsets.UTF_8);
             MemorySegment pSession = arena.allocate(onnxruntime_c_api_h.C_POINTER);
             MemorySegment st = OrtApi.CreateSession.invoke(
                     OrtApi.CreateSession(api), handle, pathSeg,

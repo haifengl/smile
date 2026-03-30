@@ -20,12 +20,14 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import smile.onnx.foreign.OrtApi;
 import smile.onnx.foreign.onnxruntime_c_api_h;
+import smile.util.OS;
 
 /**
  * Represents an ONNX Runtime inference session for a single model.
@@ -123,7 +125,8 @@ public class InferenceSession implements AutoCloseable {
         MemorySegment api = OrtRuntime.api();
         try (Arena arena = Arena.ofConfined()) {
             MemorySegment env = createEnv(api, arena, LoggingLevel.WARNING, "smile-onnx");
-            MemorySegment pathSeg = arena.allocateFrom(modelPath);
+            // Windows expects a 16-bit wide-character string encoded in UTF-16LE (Little Endian)
+            MemorySegment pathSeg = arena.allocateFrom(modelPath, OS.isWindows() ? StandardCharsets.UTF_16LE : StandardCharsets.UTF_8);
             MemorySegment pSession = arena.allocate(onnxruntime_c_api_h.C_POINTER);
             MemorySegment st = OrtApi.CreateSession.invoke(
                     OrtApi.CreateSession(api),
