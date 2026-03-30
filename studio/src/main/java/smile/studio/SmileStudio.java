@@ -101,6 +101,7 @@ public class SmileStudio extends JFrame {
                     }
                 }
 
+                workspace.shutdown();
                 System.exit(0);
             }
 
