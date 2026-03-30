@@ -1,5 +1,3 @@
-// Computer Algebra System with Vectors
-
 // A wavelet is a wave-like oscillation with an amplitude that begins at zero,
 // increases, and then decreases back to zero. Generally, wavelets are
 // intentionally crafted to have specific properties that make them useful for
