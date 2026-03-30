@@ -18,9 +18,8 @@ package smile.onnx;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -61,7 +60,7 @@ import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 public class InferenceSessionTest {
 
     /** Base resource directory that contains the light model fixtures. */
-    private static final String LIGHT_DIR = "onnx/light/";
+    private static final String LIGHT_DIR = "core/src/test/resources/onnx/light/";
 
     /** Tolerance for floating-point comparisons (absolute). */
     private static final float ABS_TOLERANCE = 1e-5f;
@@ -88,13 +87,7 @@ public class InferenceSessionTest {
      * Returns {@code null} when the resource does not exist.
      */
     private static Path resourcePath(String name) {
-        URL url = InferenceSessionTest.class.getClassLoader().getResource(name);
-        if (url == null) return null;
-        try {
-            return Paths.get(url.toURI());
-        } catch (Exception e) {
-            return null;
-        }
+        return Path.of(name).toAbsolutePath().normalize();
     }
 
     /**
@@ -173,8 +166,7 @@ public class InferenceSessionTest {
     void testCreateSessionFromBytes() throws IOException {
         Assumptions.assumeTrue(modelExists("squeezenet"),
                 "light_squeezenet.onnx not found on classpath");
-        try (InputStream is = InferenceSessionTest.class.getClassLoader()
-                .getResourceAsStream(LIGHT_DIR + "light_squeezenet.onnx")) {
+        try (InputStream is = Files.newInputStream(Path.of(LIGHT_DIR + "light_squeezenet.onnx"))) {
             assertNotNull(is, "Resource stream must not be null");
             byte[] bytes = is.readAllBytes();
             try (InferenceSession session = InferenceSession.create(bytes)) {
