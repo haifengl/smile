@@ -211,9 +211,7 @@ public class TensorProtoReader {
                         case 5  -> floatData  = unpackFloats(buf, start, bLen);
                         case 6  -> int32Data  = unpackInt32s(buf, start, bLen);
                         case 8  -> int64Data  = unpackInt64s(buf, start, bLen);
-                        case 9  -> name = new String(buf, start, bLen,
-                                java.nio.charset.StandardCharsets.UTF_8);
-                        case 10 -> {
+                        default -> {
                             // raw_data: little-endian flat bytes; decode for all numeric types.
                             // The caller selects the right one after the loop based on dataType.
                             // NOTE: field 2 (data_type) always appears before field 10 in these
@@ -224,7 +222,6 @@ public class TensorProtoReader {
                             int32Data  = decodeRawAsInt32s(raw);
                             int64Data  = decodeRawAsInt64s(raw);
                         }
-                        default -> { /* skip unknown fields */ }
                     }
                 }
                 case 5 -> pos += 4; // 32-bit fixed — skip
