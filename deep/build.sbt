@@ -10,7 +10,6 @@ Test / javaOptions ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "tools.jackson.core" % "jackson-databind" % "3.1.0",
   "org.bytedeco" % "pytorch-platform" % "2.10.0-1.5.13",
   "org.bytedeco" % "cuda-platform"    % "13.1-9.19-1.5.13"
 )
