@@ -5,7 +5,7 @@ plugins {
 dependencies {
     api("org.apache.commons:commons-csv:1.14.1")
     api("org.duckdb:duckdb_jdbc:1.5.1.0")
-    implementation(libs.jackson)
+    api(libs.jackson)
     implementation(libs.bundles.arrow)
     implementation("org.eclipse.lsp4j:org.eclipse.lsp4j:1.0.0")
     implementation("com.epam:parso:2.0.14") // SAS7BDAT
@@ -15,6 +15,6 @@ dependencies {
 }
 
 tasks.withType<Javadoc> {
-    // Exclude specific packages from Javadoc generation
+    // Exclude generated packages from Javadoc generation
     exclude("smile/linalg/arpack/**", "smile/linalg/blas/**", "smile/linalg/lapack/**")
 }
