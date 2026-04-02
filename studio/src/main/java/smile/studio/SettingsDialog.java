@@ -23,7 +23,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.*;
 import java.util.prefs.Preferences;
-import smile.studio.SmileStudio;
 
 /**
  * The application preference and configuration dialog.
@@ -38,12 +37,15 @@ public class SettingsDialog extends JDialog implements ActionListener {
     private static final String MODEL = "Model";
     private static final String[] options = {"OpenAI", "Azure OpenAI", "Anthropic", "Google Gemini", "Google Vertex AI"};
     private static final String[] keys = {"openai", "azureOpenAI", "anthropic", "googleGemini", "googleVertexAI"};
+    private static final String[] openaiModels = {"gpt-5.3-codex", "gpt-5.4", "gpt-5.4-mini", "gpt-5.4-nano"};
+    private static final String[] anthropicModels = {"claude-sonnet-4-6", "claude-opus-4-6", "claude-haiku-4-5"};
+    private static final String[] geminiModels = {"gemini-3-flash-preview", "gemini-3.1-pro-preview", "gemini-3.1-flash-lite-preview"};
     private final JComboBox<String> comboBox = new JComboBox<>(options);;
     private final CardLayout cardLayout = new CardLayout();
     private final JPanel cardPane = new JPanel(cardLayout);
     private final Map<String, JTextField> apiKeyFields = new TreeMap<>();
     private final Map<String, JTextField> baseUrlFields = new TreeMap<>();
-    private final Map<String, JTextField> modelFields = new TreeMap<>();
+    private final Map<String, JComboBox<String>> modelFields = new TreeMap<>();
     private final Preferences prefs;
 
     /**
@@ -147,8 +149,14 @@ public class SettingsDialog extends JDialog implements ActionListener {
         gbc.gridx = 1; // Column 1
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
-        JTextField modelField = new JTextField(25);
-        modelField.setText(prefs.get(key + "Model", ""));
+        JComboBox<String> modelField = switch (key) {
+            case "openai", "azureOpenAI" -> new JComboBox<>(openaiModels);
+            case "anthropic" -> new JComboBox<>(anthropicModels);
+            case "googleGemini", "googleVertexAI" -> new JComboBox<>(geminiModels);
+            default -> new JComboBox<>();
+        };
+        modelField.setEditable(true);
+        modelField.setSelectedItem(prefs.get(key + "Model", ""));
         modelFields.put(key, modelField);
         card.add(modelField, gbc);
 
@@ -169,7 +177,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
             for (String service : keys) {
                 prefs.put(service + API_KEY, apiKeyFields.get(service).getText());
                 prefs.put(service + BASE_URL, baseUrlFields.get(service).getText());
-                prefs.put(service + MODEL, modelFields.get(service).getText());
+                prefs.put(service + MODEL, (String) modelFields.get(service).getSelectedItem());
             }
             SmileStudio.initLLM();
             dispose();
