@@ -57,7 +57,6 @@ public class Intent extends JPanel {
     private final JLabel effortLabel = new JLabel(bundle.getString("ReasoningEffort"));
     private final JComboBox<String> effortComboBox;
     private final JPanel controlPane = new JPanel(new FlowLayout(FlowLayout.LEFT));
-    private final HintWindow hintWindow;
     private OutputArea output = createOutputArea();
 
     /**
@@ -78,7 +77,7 @@ public class Intent extends JPanel {
 
         add(inputPane, BorderLayout.CENTER);
         add(outputPane, BorderLayout.SOUTH);
-        hintWindow = new HintWindow(SwingUtilities.getWindowAncestor(cli), editor, cli.hints());
+        cli.hintWindow().addEditor(editor);
     }
 
     /** Initializes the input pane. */

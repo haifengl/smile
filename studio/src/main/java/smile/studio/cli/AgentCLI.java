@@ -35,9 +35,7 @@ import ioa.agent.memory.Skill;
 import ioa.llm.client.StreamResponseHandler;
 import ioa.llm.tool.Question;
 import smile.plot.swing.Palette;
-import smile.studio.Monospaced;
-import smile.studio.Notepad;
-import smile.studio.OutputArea;
+import smile.studio.*;
 import smile.swing.ScrollablePanel;
 import smile.util.OS;
 import smile.util.Strings;
@@ -61,10 +59,10 @@ public class AgentCLI extends JPanel {
     private final JPanel intents = new ScrollablePanel();
     /** The agent. */
     private final Agent agent;
-    /** The map from slash command to argument hints. */
-    private final Map<String, String> hints;
     /** The reasoning effort level. */
     private String reasoningEffort = LLM.DEFAULT_REASONING_EFFORT;
+    /** The hint window for showing argument hints of slash commands. */
+    private final HintWindow hintWindow;
 
     /**
      * Constructor.
@@ -73,7 +71,11 @@ public class AgentCLI extends JPanel {
     public AgentCLI(Agent agent) {
         super(new BorderLayout());
         this.agent = agent;
-        this.hints = createHintMap();
+        var frame = Arrays.stream(Window.getWindows())
+              .filter(win -> win instanceof SmileStudio)
+              .findFirst();
+        var hints = createHintMap();
+        this.hintWindow = new HintWindow(frame.orElse(null), hints);
 
         setBorder(new EmptyBorder(0, 0, 0, 8));
         intents.setLayout(new BoxLayout(intents, BoxLayout.Y_AXIS));
@@ -106,6 +108,14 @@ public class AgentCLI extends JPanel {
      */
     public Agent agent() {
         return agent;
+    }
+
+    /**
+     * Returns the hint window for showing argument hints of slash commands.
+     * @return the hint window.
+     */
+    public HintWindow hintWindow() {
+        return hintWindow;
     }
 
     /**
@@ -189,13 +199,6 @@ public class AgentCLI extends JPanel {
             }
         }
 
-        return hints;
-    }
-
-    /**
-     * Returns a map from slash command to argument hint.
-     */
-    public Map<String, String> hints() {
         return hints;
     }
 
