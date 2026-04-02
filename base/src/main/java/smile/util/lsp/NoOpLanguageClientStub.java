@@ -21,6 +21,7 @@ import org.eclipse.lsp4j.MessageActionItem;
 import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.ShowMessageRequestParams;
+import org.eclipse.lsp4j.services.LanguageClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,8 +35,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Haifeng Li
  */
-public class NoOpLanguageClientStub
-        implements org.eclipse.lsp4j.services.LanguageClient {
+public class NoOpLanguageClientStub implements LanguageClient {
     private static final Logger logger = LoggerFactory.getLogger(NoOpLanguageClientStub.class);
 
     @Override

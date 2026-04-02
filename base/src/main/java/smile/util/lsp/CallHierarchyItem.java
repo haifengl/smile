@@ -19,8 +19,8 @@ package smile.util.lsp;
 /**
  * Represents a single item in a call hierarchy — a named function or method
  * that can serve as the focus of
- * {@link smile.util.lsp.LanguageClient#incomingCalls(smile.util.lsp.CallHierarchyItem)} or
- * {@link smile.util.lsp.LanguageClient#outgoingCalls(smile.util.lsp.CallHierarchyItem)} queries.
+ * {@link LanguageService#incomingCalls(smile.util.lsp.CallHierarchyItem)} or
+ * {@link LanguageService#outgoingCalls(smile.util.lsp.CallHierarchyItem)} queries.
  *
  * <p>All position values are 1-based (as shown in editors).
  *

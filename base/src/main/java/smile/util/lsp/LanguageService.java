@@ -24,18 +24,19 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.launch.LSPLauncher;
+import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * An LSP (Language Server Protocol) client that manages the full lifecycle
+ * An LSP (Language Server Protocol) service that manages the full lifecycle
  * of a language server process and exposes high-level navigation and search
  * operations.
  *
  * <h2>Lifecycle</h2>
  * <ol>
- *   <li>Construct a {@code LanguageClient} with the server launch command
+ *   <li>Construct a {@code LanguageService} with the server launch command
  *       and the workspace root directory.</li>
  *   <li>Call {@link #start()} to launch the server process, connect the
  *       LSP4J launcher over the process's stdin/stdout, and perform the
@@ -59,8 +60,8 @@ import org.slf4j.LoggerFactory;
  *
  * @author Haifeng Li
  */
-public class LanguageClient implements AutoCloseable {
-    private static final Logger logger = LoggerFactory.getLogger(LanguageClient.class);
+public class LanguageService implements AutoCloseable {
+    private static final Logger logger = LoggerFactory.getLogger(LanguageService.class);
 
     /** Default timeout for individual LSP request futures (seconds). */
     private static final int REQUEST_TIMEOUT_SECONDS = 30;
@@ -93,7 +94,7 @@ public class LanguageClient implements AutoCloseable {
     // -----------------------------------------------------------------------
 
     /**
-     * Creates a {@code LanguageClient} using a pre-parsed command list.
+     * Creates a {@code LanguageService} using a pre-parsed command list.
      *
      * @param command       the command and arguments used to start the
      *                      language server process (e.g.
@@ -101,19 +102,19 @@ public class LanguageClient implements AutoCloseable {
      * @param workspaceRoot the workspace root directory sent to the server
      *                      in the {@code initialize} request.
      */
-    public LanguageClient(List<String> command, Path workspaceRoot) {
+    public LanguageService(List<String> command, Path workspaceRoot) {
         this(command, workspaceRoot, REQUEST_TIMEOUT_SECONDS);
     }
 
     /**
-     * Creates a {@code LanguageClient} with a custom per-request timeout.
+     * Creates a {@code LanguageService} with a custom per-request timeout.
      *
      * @param command          the command used to start the language server.
      * @param workspaceRoot    the workspace root directory.
      * @param timeoutSeconds   how many seconds to wait for each LSP response
      *                         before throwing a {@link TimeoutException}.
      */
-    public LanguageClient(List<String> command, Path workspaceRoot, int timeoutSeconds) {
+    public LanguageService(List<String> command, Path workspaceRoot, int timeoutSeconds) {
         this.command        = List.copyOf(Objects.requireNonNull(command, "command"));
         this.workspaceRoot  = Objects.requireNonNull(workspaceRoot, "workspaceRoot");
         this.timeoutSeconds = timeoutSeconds;
@@ -162,11 +163,11 @@ public class LanguageClient implements AutoCloseable {
      * @throws TimeoutException     if the server does not respond within the
      *                              configured timeout.
      */
-    public void start(org.eclipse.lsp4j.services.LanguageClient client)
+    public void start(LanguageClient client)
             throws IOException, InterruptedException, ExecutionException, TimeoutException {
         synchronized (lifecycleLock) {
             if (initialized.get()) {
-                logger.warn("LanguageClient is already started; ignoring duplicate start().");
+                logger.warn("LanguageService is already started; ignoring duplicate start().");
                 return;
             }
             logger.info("Starting language server: {}", command);
@@ -302,7 +303,7 @@ public class LanguageClient implements AutoCloseable {
     private void checkStarted() {
         if (!initialized.get()) {
             throw new IllegalStateException(
-                    "LanguageClient has not been started. Call start() first.");
+                    "LanguageService has not been started. Call start() first.");
         }
     }
 
@@ -758,7 +759,7 @@ public class LanguageClient implements AutoCloseable {
     // -----------------------------------------------------------------------
 
     /**
-     * Creates a {@code LanguageClient} pre-configured to launch the Eclipse
+     * Creates a {@code LanguageService} pre-configured to launch the Eclipse
      * JDT Language Server (JDT-LS).
      *
      * <p>The {@code jdtLsJar} path must point to the JDT-LS launcher JAR
@@ -769,14 +770,14 @@ public class LanguageClient implements AutoCloseable {
      * It must be writable and is typically a subdirectory of the user's
      * home directory.
      *
-     * @param workspaceRoot the project root to analyse.
+     * @param workspaceRoot the project root to analyze.
      * @param jdtLsJar      path to the JDT-LS equinox launcher JAR.
      * @param jdtLsHome     the JDT-LS installation directory (contains
      *                      {@code plugins/} and {@code config_linux/} etc.).
      * @param dataDir       writable directory for JDT-LS workspace data.
-     * @return a configured (but not yet started) {@code LanguageClient}.
+     * @return a configured (but not yet started) {@code LanguageService}.
      */
-    public static LanguageClient forJdtLs(
+    public static LanguageService jdtLs(
             Path workspaceRoot, Path jdtLsJar, Path jdtLsHome, Path dataDir) {
 
         String osConfig = switch (System.getProperty("os.name", "").toLowerCase()) {
@@ -801,20 +802,20 @@ public class LanguageClient implements AutoCloseable {
                 "-data", dataDir.toString()
         );
 
-        return new LanguageClient(cmd, workspaceRoot);
+        return new LanguageService(cmd, workspaceRoot);
     }
 
     /**
-     * Creates a {@code LanguageClient} for any language server that accepts
+     * Creates a {@code LanguageService} for any language server that accepts
      * a simple {@code stdio} launch command (e.g. Pyright, TypeScript LS,
      * rust-analyzer, clangd).
      *
-     * @param workspaceRoot the project root to analyse.
+     * @param workspaceRoot the project root to analyze.
      * @param serverCommand the full launch command as a single string
      *                      (e.g. {@code "pyright-langserver --stdio"}).
-     * @return a configured (but not yet started) {@code LanguageClient}.
+     * @return a configured (but not yet started) {@code LanguageService}.
      */
-    public static LanguageClient forCommand(Path workspaceRoot, String serverCommand) {
+    public static LanguageService forCommand(Path workspaceRoot, String serverCommand) {
         List<String> cmd = new ArrayList<>();
         // Split on whitespace, preserving quoted tokens
         var matcher = java.util.regex.Pattern.compile("\"[^\"]+\"|\\S+")
@@ -822,6 +823,6 @@ public class LanguageClient implements AutoCloseable {
         while (matcher.find()) {
             cmd.add(matcher.group().replace("\"", ""));
         }
-        return new LanguageClient(cmd, workspaceRoot);
+        return new LanguageService(cmd, workspaceRoot);
     }
 }
