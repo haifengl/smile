@@ -855,6 +855,65 @@ public class MathEx {
      * @param posteriori the input/output vector.
      * @return the index of largest posteriori probability.
      */
+    public static int softmax(float[] posteriori) {
+        return softmax(posteriori, posteriori.length);
+    }
+
+    /**
+     * The softmax function without overflow. The function takes as
+     * an input vector of K real numbers, and normalizes it into a
+     * probability distribution consisting of K probabilities
+     * proportional to the exponentials of the input numbers.
+     * That is, prior to applying softmax, some vector components
+     * could be negative, or greater than one; and might not sum
+     * to 1; but after applying softmax, each component will be
+     * in the interval (0,1), and the components will add up to 1,
+     * so that they can be interpreted as probabilities. Furthermore,
+     * the larger input components will correspond to larger probabilities.
+     *
+     * @param x the input/output vector.
+     * @param k uses only first k components of input vector.
+     * @return the index of largest posteriori probability.
+     */
+    public static int softmax(float[] x, int k) {
+        int y = -1;
+        float max = Float.NEGATIVE_INFINITY;
+        for (int i = 0; i < k; i++) {
+            if (x[i] > max) {
+                max = x[i];
+                y = i;
+            }
+        }
+
+        float Z = 0.0f;
+        for (int i = 0; i < k; i++) {
+            float out = (float) exp(x[i] - max);
+            x[i] = out;
+            Z += out;
+        }
+
+        for (int i = 0; i < k; i++) {
+            x[i] /= Z;
+        }
+
+        return y;
+    }
+
+    /**
+     * The softmax function without overflow. The function takes as
+     * an input vector of K real numbers, and normalizes it into a
+     * probability distribution consisting of K probabilities
+     * proportional to the exponentials of the input numbers.
+     * That is, prior to applying softmax, some vector components
+     * could be negative, or greater than one; and might not sum
+     * to 1; but after applying softmax, each component will be
+     * in the interval (0,1), and the components will add up to 1,
+     * so that they can be interpreted as probabilities. Furthermore,
+     * the larger input components will correspond to larger probabilities.
+     *
+     * @param posteriori the input/output vector.
+     * @return the index of largest posteriori probability.
+     */
     public static int softmax(double[] posteriori) {
         return softmax(posteriori, posteriori.length);
     }
