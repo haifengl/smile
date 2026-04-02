@@ -16,18 +16,17 @@
  */
 package smile.util.lsp;
 
+import java.io.*;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
 import org.eclipse.lsp4j.launch.LSPLauncher;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.*;
-import java.nio.file.Path;
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * An LSP (Language Server Protocol) client that manages the full lifecycle
@@ -123,11 +122,13 @@ public class LanguageClient implements AutoCloseable {
     // -----------------------------------------------------------------------
     // Lifecycle
     // -----------------------------------------------------------------------
-
     /**
      * Launches the language server process, connects the LSP4J launcher over
      * the process's stdin/stdout, and performs the LSP
      * {@code initialize} / {@code initialized} handshake.
+     * The server may send notifications (e.g. publishDiagnostics) back
+     * to the client. This overload uses a no-op LSP4J client implementation
+     * that log all server notifications at DEBUG or INFO level.
      *
      * <p>This method blocks until the server has acknowledged the
      * {@code initialize} request.
@@ -141,6 +142,28 @@ public class LanguageClient implements AutoCloseable {
      */
     public void start()
             throws IOException, InterruptedException, ExecutionException, TimeoutException {
+        start(new NoOpLanguageClientStub());
+    }
+
+    /**
+     * Launches the language server process, connects the LSP4J launcher over
+     * the process's stdin/stdout, and performs the LSP
+     * {@code initialize} / {@code initialized} handshake.
+     *
+     * <p>This method blocks until the server has acknowledged the
+     * {@code initialize} request.
+     *
+     * @param client an implementation of LSP4J's {@code LanguageClient} interface
+     *               to receive server notifications.
+     * @throws IOException          if the server process cannot be started.
+     * @throws InterruptedException if the thread is interrupted while waiting
+     *                              for the initialize response.
+     * @throws ExecutionException   if the initialize request fails.
+     * @throws TimeoutException     if the server does not respond within the
+     *                              configured timeout.
+     */
+    public void start(org.eclipse.lsp4j.services.LanguageClient client)
+            throws IOException, InterruptedException, ExecutionException, TimeoutException {
         synchronized (lifecycleLock) {
             if (initialized.get()) {
                 logger.warn("LanguageClient is already started; ignoring duplicate start().");
@@ -148,8 +171,8 @@ public class LanguageClient implements AutoCloseable {
             }
             logger.info("Starting language server: {}", command);
 
-            // 1. Launch the server process.  stdin/stdout are inherited as
-            //    PIPE so the LSP4J launcher can wire them up directly.
+            // Launch the server process.  stdin/stdout are inherited as
+            // PIPE so the LSP4J launcher can wire them up directly.
             serverProcess = new ProcessBuilder(command)
                     .redirectErrorStream(false)   // keep stderr separate
                     .start();
@@ -167,22 +190,17 @@ public class LanguageClient implements AutoCloseable {
                 }
             });
 
-            // 2. Build a no-op client stub for the LSP4J launcher.
-            //    The server may send notifications (e.g. publishDiagnostics) back
-            //    to the client; they are logged at DEBUG level.
-            var clientStub = new NoOpLanguageClientImpl();
-
-            // 3. Wire the LSP4J launcher to the process streams.
-            //    The launcher starts two internal threads: one to read JSON-RPC
-            //    messages from stdout and one to dispatch them.
+            // Wire the LSP4J launcher to the process streams.
+            // The launcher starts two internal threads: one to read JSON-RPC
+            // messages from stdout and one to dispatch them.
             launcher = LSPLauncher.createClientLauncher(
-                    clientStub,
+                    client,
                     serverProcess.getInputStream(),
                     serverProcess.getOutputStream());
             launcher.startListening();
             server = launcher.getRemoteProxy();
 
-            // 4. Send the LSP initialize request.
+            // Send the LSP initialize request.
             sendInitialize();
 
             initialized.set(true);
@@ -806,64 +824,4 @@ public class LanguageClient implements AutoCloseable {
         }
         return new LanguageClient(cmd, workspaceRoot);
     }
-
-    // -----------------------------------------------------------------------
-    // Inner classes
-    // -----------------------------------------------------------------------
-
-    /**
-     * A no-op implementation of the LSP4J client interface.
-     *
-     * <p>Language servers send notifications back to the client (e.g.
-     * {@code window/logMessage}, {@code textDocument/publishDiagnostics}).
-     * We log them at DEBUG / INFO level and otherwise ignore them, since
-     * this client is used for read-only queries.
-     */
-    private static class NoOpLanguageClientImpl
-            implements org.eclipse.lsp4j.services.LanguageClient {
-
-        @Override
-        public void telemetryEvent(Object object) {
-            logger.debug("[LSP telemetry] {}", object);
-        }
-
-        @Override
-        public void publishDiagnostics(PublishDiagnosticsParams diagnostics) {
-            logger.debug("[LSP diagnostics] {} issue(s) in {}",
-                    diagnostics.getDiagnostics().size(), diagnostics.getUri());
-        }
-
-        @Override
-        public void showMessage(MessageParams messageParams) {
-            logger.info("[LSP message] [{}] {}",
-                    messageParams.getType(), messageParams.getMessage());
-        }
-
-        @Override
-        public CompletableFuture<MessageActionItem> showMessageRequest(
-                ShowMessageRequestParams requestParams) {
-            logger.debug("[LSP showMessageRequest] {}", requestParams.getMessage());
-            return CompletableFuture.completedFuture(null);
-        }
-
-        @Override
-        public void logMessage(MessageParams message) {
-            logger.debug("[LSP log] [{}] {}", message.getType(), message.getMessage());
-        }
-    }
-
-    /**
-     * Unchecked exception thrown when an LSP request fails or times out.
-     */
-    public static class LspException extends RuntimeException {
-        /**
-         * Constructor.
-         * @param message the detail message.
-         * @param cause   the underlying cause.
-         */
-        public LspException(String message, Throwable cause) {
-            super(message, cause);
-        }
-    }
 }
-
