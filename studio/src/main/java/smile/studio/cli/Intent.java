@@ -27,13 +27,12 @@ import javax.swing.text.BadLocationException;
 import com.formdev.flatlaf.ui.FlatLineBorder;
 import com.formdev.flatlaf.util.SystemInfo;
 import ioa.llm.client.LLM;
-import org.fife.ui.autocomplete.AutoCompletion;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import ioa.llm.tool.Question;
 import smile.plot.swing.Palette;
-import smile.studio.Editor;
 import smile.studio.Markdown;
 import smile.studio.Monospaced;
+import smile.studio.HintWindow;
 import smile.studio.OutputArea;
 import static smile.studio.cli.IntentType.*;
 
@@ -51,13 +50,14 @@ public class Intent extends JPanel {
     private final JPanel inputPane = new JPanel(new BorderLayout());
     private final JLabel indicator = new JLabel(">", SwingConstants.CENTER);
     private final JComboBox<IntentType> intentTypeComboBox = new JComboBox<>(IntentType.values());
-    private final Editor editor = new Editor(1, 80, SyntaxConstants.SYNTAX_STYLE_NONE);
+    private final IntentEditor editor = new IntentEditor(1, 80);
     private final JLabel status = new JLabel();
     private final JProgressBar progress = new JProgressBar();
     private final JPanel outputPane = new JPanel();
     private final JLabel effortLabel = new JLabel(bundle.getString("ReasoningEffort"));
     private final JComboBox<String> effortComboBox;
     private final JPanel controlPane = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    private final HintWindow hintWindow;
     private OutputArea output = createOutputArea();
 
     /**
@@ -73,16 +73,12 @@ public class Intent extends JPanel {
         initInputPane();
         initActionMap(cli);
 
-        var ac = new AutoCompletion(cli.hints());
-        ac.setAutoActivationEnabled(true);
-        ac.setAutoActivationDelay(500);
-        ac.install(editor);
-
         outputPane.setLayout(new BoxLayout(outputPane, BoxLayout.Y_AXIS));
         outputPane.add(output);
 
         add(inputPane, BorderLayout.CENTER);
         add(outputPane, BorderLayout.SOUTH);
+        hintWindow = new HintWindow(SwingUtilities.getWindowAncestor(cli), editor, cli.hints());
     }
 
     /** Initializes the input pane. */
@@ -187,7 +183,7 @@ public class Intent extends JPanel {
                 switch (intentType) {
                     case Shell -> {
                         if (SystemInfo.isWindows) {
-                            editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_WINDOWS_BATCH);
+                            editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_POWERSHELL);
                         } else {
                             editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_UNIX_SHELL);
                         }
@@ -380,7 +376,7 @@ public class Intent extends JPanel {
      * Returns the intent editor.
      * @return the intent editor.
      */
-    public Editor editor() {
+    public IntentEditor editor() {
         return editor;
     }
 
