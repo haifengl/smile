@@ -30,9 +30,6 @@ import java.util.concurrent.TimeUnit;
 import com.formdev.flatlaf.util.SystemInfo;
 import ioa.agent.Context;
 import ioa.llm.client.LLM;
-import org.fife.ui.autocomplete.BasicCompletion;
-import org.fife.ui.autocomplete.CompletionProvider;
-import org.fife.ui.autocomplete.DefaultCompletionProvider;
 import ioa.agent.Agent;
 import ioa.agent.memory.Skill;
 import ioa.llm.client.StreamResponseHandler;
@@ -64,8 +61,8 @@ public class AgentCLI extends JPanel {
     private final JPanel intents = new ScrollablePanel();
     /** The agent. */
     private final Agent agent;
-    /** The provider of slash command hints. */
-    private final CompletionProvider hints;
+    /** The map from slash command to argument hints. */
+    private final Map<String, String> hints;
     /** The reasoning effort level. */
     private String reasoningEffort = LLM.DEFAULT_REASONING_EFFORT;
 
@@ -76,7 +73,7 @@ public class AgentCLI extends JPanel {
     public AgentCLI(Agent agent) {
         super(new BorderLayout());
         this.agent = agent;
-        this.hints = createCompletionProvider();
+        this.hints = createHintMap();
 
         setBorder(new EmptyBorder(0, 0, 0, 8));
         intents.setLayout(new BoxLayout(intents, BoxLayout.Y_AXIS));
@@ -168,42 +165,37 @@ public class AgentCLI extends JPanel {
     }
 
     /**
-     * Creates a provider of slash command argument hint.
+     * Creates a map from slash command to argument hint.
      */
-    private CompletionProvider createCompletionProvider() {
-        DefaultCompletionProvider provider = new DefaultCompletionProvider();
-
-        provider.addCompletion(new BasicCompletion(provider,
-                "/memory [show|add|edit|refresh]"));
-        provider.addCompletion(new BasicCompletion(provider,
-                "/compact [instructions]"));
-        provider.addCompletion(new BasicCompletion(provider,
-                "/plan [off|short description of goals or tasks]"));
-        provider.addCompletion(new BasicCompletion(provider,
-                "/open [file path]"));
-        provider.addCompletion(new BasicCompletion(provider,
-                "/train [-h for helps]"));
-        provider.addCompletion(new BasicCompletion(provider,
-                "/predict [-h for helps]"));
-        provider.addCompletion(new BasicCompletion(provider,
-                "/serve [-h for helps]"));
+    private Map<String, String> createHintMap() {
+        Map<String, String> hints = new HashMap<>();
+        hints.put("/memory", "[show|add|edit|refresh]");
+        hints.put("/memory show", "[ENTER to display the long term memory]");
+        hints.put("/memory add", "[additional instructions]");
+        hints.put("/memory edit", "[ENTER to open a notepad to edit the long term memory]");
+        hints.put("/memory refresh", "[ENTER to reload the context from disk]");
+        hints.put("/compact", "[instructions]");
+        hints.put("/plan", "[off|short description of goals or tasks]");
+        hints.put("/open", "[file path]");
+        hints.put("/train", "[-h for helps]");
+        hints.put("/predict", "[-h for helps]");
+        hints.put("/serve", "[-h for helps]");
 
         if (agent != null) {
             for (var skill : agent.skills()) {
                 if (skill.isUserInvocable()) {
-                    skill.hint().ifPresent(hint -> provider.addCompletion(
-                            new BasicCompletion(provider, "/" + skill.name() + " " + hint)));
+                    skill.hint().ifPresent(hint -> hints.put("/" + skill.name(), hint));
                 }
             }
         }
 
-        return provider;
+        return hints;
     }
 
     /**
-     * Returns a provider of slash command argument hint.
+     * Returns a map from slash command to argument hint.
      */
-    public CompletionProvider hints() {
+    public Map<String, String> hints() {
         return hints;
     }
 
@@ -336,9 +328,9 @@ public class AgentCLI extends JPanel {
         StringBuilder sb = new StringBuilder("""
                 The following commands are available:
                 
-                /memory show\tDisplay the content of long-term memory
-                /memory add\tAdd facts or notes to long-term memory
-                /memory edit\tOpen a notepad to edit to long-term memory
+                /memory show\tDisplay the content of long term memory
+                /memory add\tAdd facts or notes to long term memory
+                /memory edit\tOpen a notepad to edit the long term memory
                 /memory refresh\tReload the context from disk
                 /plan\t\tEnter the plan mode.
                 /plan off\tExit  the plan mode.
@@ -416,13 +408,13 @@ public class AgentCLI extends JPanel {
         }
     }
 
-    /** Open a notepad to edit the project long-term memory. */
+    /** Open a notepad to edit the project's long term memory. */
     private void editMemory(OutputArea output) {
         Notepad.open(agent.context().path().resolve(Context.SMILE_MD));
-        output.setText("SMILE.md is opened in a notepad window. Edit and save the file to update the long-term memory.");
+        output.setText("SMILE.md is opened in a notepad window. Edit and save the file to update the long term memory.");
     }
 
-    /** Displays the project long-term memory. */
+    /** Displays the project's long term memory. */
     private void showMemory(OutputArea output) {
         output.setText(agent.instructions());
     }
@@ -435,7 +427,7 @@ public class AgentCLI extends JPanel {
     /** Reloads the context from disk. */
     private void refreshMemory(OutputArea output) {
         agent.refresh();
-        output.println("Long-term memory was reloaded.");
+        output.println("Long term memory was reloaded.");
     }
 
     /** Clears the current conversation session. */
@@ -549,6 +541,11 @@ Please provide your summary based on the conversation so far, following this str
         }
 
         intent.setProgress(true);
+        if (agent.llm() instanceof ioa.llm.client.GoogleGemini) {
+            SwingUtilities.invokeLater(() ->
+                    intent.output().append("Due to the limitations of Gemini API, Agent capability is restricted. For better experience, please try Anthropic or OpenAI.\n\n"));
+        }
+
         if (LLM.DEFAULT_REASONING_EFFORT.equals(reasoningEffort)) {
             agent.conversation().params().setProperty(LLM.REASONING_EFFORT, "");
         } else {
