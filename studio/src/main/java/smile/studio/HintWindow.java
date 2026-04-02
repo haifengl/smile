@@ -22,6 +22,7 @@ import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Map;
+import smile.plot.swing.Palette;
 import smile.util.Strings;
 
 /**
@@ -32,22 +33,28 @@ import smile.util.Strings;
 public class HintWindow extends JWindow {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HintWindow.class);
     private final JLabel hintLabel = new JLabel();
-    private final JTextComponent editor;
+    private final Map<String, String> hints;
 
     /**
      * Constructor.
      * @param owner the window from which the hint window is displayed.
-     * @param editor the text component.
      * @param hints a map from trigger words to hint messages.
      */
-    public HintWindow(Window owner, JTextComponent editor, Map<String, String> hints) {
+    public HintWindow(Window owner, Map<String, String> hints) {
         super(owner);
-        this.editor = editor;
+        this.hints = hints;
         hintLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        hintLabel.setBackground(Color.YELLOW);
+        // Pale cream background
+        hintLabel.setBackground(Palette.web("FFFEE4"));
         hintLabel.setOpaque(true);
         add(hintLabel);
+    }
 
+    /**
+     * Registers a text component to the hint window.
+     * @param editor the text component to register.
+     */
+    public void addEditor(JTextComponent editor) {
         // Add a key listener to show the hint when the space key is pressed.
         editor.addKeyListener(new KeyAdapter() {
             @Override
@@ -62,7 +69,7 @@ public class HintWindow extends JWindow {
                         if (Strings.isNullOrBlank(hint)) {
                             setVisible(false);
                         } else {
-                            show(hint, dot);
+                            show(editor, hint, dot);
                             hintLabel.setText(hint);
                             pack();
                             if (!isVisible()) setVisible(true);
@@ -122,11 +129,12 @@ public class HintWindow extends JWindow {
     }
 
     /**
-     * Shows the hint window at the caret position.
+     * Shows the hint window at the caret position of text component.
+     * @param editor the text component.
      * @param hint the hint message.
      * @param dot the caret position.
      */
-    private void show(String hint, int dot) {
+    private void show(JTextComponent editor, String hint, int dot) {
         try {
             // Get the pixel coordinates of the caret position
             var rect = editor.modelToView2D(dot);
