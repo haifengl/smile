@@ -86,22 +86,8 @@ public class SmileStudio extends JFrame {
         contentPane.add(statusBar, BorderLayout.SOUTH);
         setContentPane(contentPane);
 
-        // Starts the LSP server in background thread.
-        Thread.ofPlatform().name("jdt-ls-starter").start(() -> {
-            var stub = new LanguageServerStatus(statusBar);
-            var home = Path.of(System.getProperty("smile.home"));
-            try {
-                var command = (OS.isWindows() ? "cmd.exe /c " : "bash -c ")
-                        + System.getProperty("smile.home") + "/jdtls/bin/jdtls";
-                var jdtls = LanguageService.of(cwd, command);
-                jdtls.start(stub);
-                LanguageService.put("java", jdtls);
-            } catch (Exception ex) {
-                logger.error("Failed to start JDT LS server", ex);
-            }
-        });
-
-        Thread.ofPlatform().name("ty-server-starter").start(() -> {
+        // Starts the LSP server in a background thread.
+        Thread.ofPlatform().name("lsp-server-starter").start(() -> {
             var stub = new LanguageServerStatus(statusBar);
             var home = Path.of(System.getProperty("smile.home"));
             try {
@@ -110,6 +96,17 @@ public class SmileStudio extends JFrame {
                 LanguageService.put("python", ty);
             } catch (Exception ex) {
                 logger.error("Failed to start Ty server", ex);
+            }
+
+            try {
+                var command = (OS.isWindows() ? "cmd.exe /c " : "bash -c ")
+                        + System.getProperty("smile.home") + "/jdtls/bin/jdtls "
+                        + "--jvm-arg=\"-Xmx2G\"";
+                var jdtls = LanguageService.of(cwd, command);
+                jdtls.start(stub);
+                LanguageService.put("java", jdtls);
+            } catch (Exception ex) {
+                logger.error("Failed to start JDT LS server", ex);
             }
         });
 

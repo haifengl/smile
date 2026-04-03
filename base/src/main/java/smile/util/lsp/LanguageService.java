@@ -197,7 +197,7 @@ public class LanguageService implements AutoCloseable {
                 .start();
 
         // Drain stderr in the background so the server is never blocked on it.
-        Thread.ofPlatform().name("lsp-stderr-drain-" + serverProcess.pid()).start(() -> {
+        Thread.ofVirtual().name("lsp-stderr-drain-" + serverProcess.pid()).start(() -> {
             try (var reader = new BufferedReader(
                     new InputStreamReader(serverProcess.getErrorStream()))) {
                 String line;
