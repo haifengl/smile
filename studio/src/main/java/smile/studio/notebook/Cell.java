@@ -28,7 +28,6 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.text.BadLocationException;
 import com.formdev.flatlaf.util.SystemInfo;
-import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jdesktop.swingx.JXTextField;
 import ioa.agent.Coder;
@@ -38,6 +37,7 @@ import smile.studio.kernel.Kernel;
 import smile.studio.kernel.PostRunNavigation;
 import smile.studio.Monospaced;
 import smile.studio.OutputArea;
+import static org.fife.ui.rsyntaxtextarea.SyntaxConstants.*;
 
 /**
  * A cell is a multiline coding field, and its contents can be executed
@@ -303,8 +303,14 @@ public class Cell extends JPanel {
         String before = getCodeGenerationBeforeContext();
         String after = getCodeGenerationAfterContext();
         editor.insert("\n", editor.getCaretPosition());
+        var comment = switch (syntaxStyle) {
+            case SYNTAX_STYLE_PYTHON -> "#";
+            case SYNTAX_STYLE_JAVA -> "///";
+            case SYNTAX_STYLE_SQL -> "--";
+            default -> "//";
+        } + " ";
         for (String line : wrap(task, 80)) {
-            editor.insert("/// " + line + "\n", editor.getCaretPosition());
+            editor.insert(comment + line + "\n", editor.getCaretPosition());
         }
 
         // Run code completion in a worker thread as join() blocks.
@@ -578,9 +584,9 @@ public class Cell extends JPanel {
             case Code ->
                     editor.setSyntaxEditingStyle(syntaxStyle);
             case Markdown ->
-                    editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_MARKDOWN);
+                    editor.setSyntaxEditingStyle(SYNTAX_STYLE_MARKDOWN);
             case Raw ->
-                    editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);
+                    editor.setSyntaxEditingStyle(SYNTAX_STYLE_NONE);
         }
     }
 
