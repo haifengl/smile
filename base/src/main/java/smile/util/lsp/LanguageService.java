@@ -28,6 +28,7 @@ import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import smile.util.OS;
 
 /**
  * An LSP (Language Server Protocol) service that manages the full lifecycle
@@ -65,6 +66,8 @@ public class LanguageService implements AutoCloseable {
 
     /** Default timeout for individual LSP request futures (seconds). */
     private static final int REQUEST_TIMEOUT_SECONDS = 30;
+    /** Available language services, keyed by language ID. */
+    private static final Map<String, LanguageService> services = new HashMap<>();
 
     /** The command used to launch the language server. */
     private final List<String> command;
@@ -118,6 +121,24 @@ public class LanguageService implements AutoCloseable {
         this.command        = List.copyOf(Objects.requireNonNull(command, "command"));
         this.workspaceRoot  = Objects.requireNonNull(workspaceRoot, "workspaceRoot");
         this.timeoutSeconds = timeoutSeconds;
+    }
+
+    /**
+     * Returns the service for the given language.
+     * @param lang the language ID (e.g. "java", "python").
+     * @return the corresponding {@code LanguageService}, or {@code null} if not found.
+     */
+    public static LanguageService get(String lang) {
+        return services.get(lang);
+    }
+
+    /**
+     * Registers a {@code LanguageService} for the given language ID.
+     * @param lang the language ID (e.g. "java", "python").
+     * @param service the service to register.
+     */
+    public static void put(String lang, LanguageService service) {
+        services.put(lang, service);
     }
 
     // -----------------------------------------------------------------------
@@ -815,14 +836,7 @@ public class LanguageService implements AutoCloseable {
      *                      (e.g. {@code "pyright-langserver --stdio"}).
      * @return a configured (but not yet started) {@code LanguageService}.
      */
-    public static LanguageService forCommand(Path workspaceRoot, String serverCommand) {
-        List<String> cmd = new ArrayList<>();
-        // Split on whitespace, preserving quoted tokens
-        var matcher = java.util.regex.Pattern.compile("\"[^\"]+\"|\\S+")
-                                             .matcher(serverCommand);
-        while (matcher.find()) {
-            cmd.add(matcher.group().replace("\"", ""));
-        }
-        return new LanguageService(cmd, workspaceRoot);
+    public static LanguageService of(Path workspaceRoot, String serverCommand) {
+        return new LanguageService(OS.parse(serverCommand), workspaceRoot);
     }
 }
