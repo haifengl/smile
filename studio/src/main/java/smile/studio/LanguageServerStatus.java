@@ -16,6 +16,7 @@
  */
 package smile.studio;
 
+import javax.swing.SwingUtilities;
 import java.util.concurrent.CompletableFuture;
 import org.eclipse.lsp4j.MessageActionItem;
 import org.eclipse.lsp4j.MessageParams;
@@ -52,14 +53,14 @@ public class LanguageServerStatus implements LanguageClient {
 
     @Override
     public void publishDiagnostics(PublishDiagnosticsParams diagnostics) {
-        statusBar.setStatus(String.format("[LSP diagnostics] %d issue(s) in %s",
-                diagnostics.getDiagnostics().size(), diagnostics.getUri()));
+        SwingUtilities.invokeLater(() -> statusBar.setStatus(String.format("[LSP diagnostics] %d issue(s) in %s",
+                diagnostics.getDiagnostics().size(), diagnostics.getUri())));
     }
 
     @Override
     public void showMessage(MessageParams messageParams) {
-        statusBar.setStatus(String.format("[LSP %s] %s",
-                messageParams.getType(), messageParams.getMessage()));
+        SwingUtilities.invokeLater(() -> statusBar.setStatus(String.format("[LSP %s] %s",
+                messageParams.getType(), messageParams.getMessage())));
     }
 
     @Override
