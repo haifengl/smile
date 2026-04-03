@@ -237,7 +237,7 @@ public final class Notepad extends JFrame implements SearchListener, DocumentLis
         } else {
             text = "Text not found";
         }
-        statusBar.setStatus(text);
+        SwingUtilities.invokeLater(() -> statusBar.setStatus(text));
     }
 
     /**
