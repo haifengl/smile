@@ -89,8 +89,6 @@ public class LanguageService implements AutoCloseable {
     private Launcher<LanguageServer> launcher;
     /** True once {@link #start()} has completed the initialize handshake. */
     private final AtomicBoolean initialized = new AtomicBoolean(false);
-    /** Guards {@link #start()} and {@link #close()} against concurrent invocations. */
-    private final Object lifecycleLock = new Object();
 
     // -----------------------------------------------------------------------
     // Construction
@@ -184,48 +182,54 @@ public class LanguageService implements AutoCloseable {
      * @throws TimeoutException     if the server does not respond within the
      *                              configured timeout.
      */
-    public void start(LanguageClient client)
+    public synchronized void start(LanguageClient client)
             throws IOException, InterruptedException, ExecutionException, TimeoutException {
-        synchronized (lifecycleLock) {
-            if (initialized.get()) {
-                logger.warn("LanguageService is already started; ignoring duplicate start().");
-                return;
-            }
-            logger.info("Starting language server: {}", command);
+        if (initialized.get()) {
+            logger.warn("LanguageService is already started; ignoring duplicate start().");
+            return;
+        }
 
-            // Launch the server process.  stdin/stdout are inherited as
-            // PIPE so the LSP4J launcher can wire them up directly.
-            serverProcess = new ProcessBuilder(command)
-                    .redirectErrorStream(false)   // keep stderr separate
-                    .start();
+        logger.info("Starting language server process: {}", command);
+        // Launch the server process.  stdin/stdout are inherited as
+        // PIPE so the LSP4J launcher can wire them up directly.
+        serverProcess = new ProcessBuilder(command)
+                .redirectErrorStream(false)   // keep stderr separate
+                .start();
 
-            // Drain stderr in the background so the server is never blocked on it.
-            Thread.ofVirtual().name("lsp-stderr-drain").start(() -> {
-                try (var reader = new BufferedReader(
-                        new InputStreamReader(serverProcess.getErrorStream()))) {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        logger.info("[LSP-ERR] {}", line);
-                    }
-                } catch (IOException ex) {
-                    logger.warn("LSP stderr drain error", ex);
+        // Drain stderr in the background so the server is never blocked on it.
+        Thread.ofPlatform().name("lsp-stderr-drain-" + serverProcess.pid()).start(() -> {
+            try (var reader = new BufferedReader(
+                    new InputStreamReader(serverProcess.getErrorStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    logger.info("[LSP-ERR] {}", line);
                 }
-            });
+            } catch (IOException ex) {
+                logger.warn("LSP stderr drain error", ex);
+            }
+        });
 
-            // Wire the LSP4J launcher to the process streams.
-            // The launcher starts two internal threads: one to read JSON-RPC
-            // messages from stdout and one to dispatch them.
-            launcher = LSPLauncher.createClientLauncher(
-                    client,
-                    serverProcess.getInputStream(),
-                    serverProcess.getOutputStream());
-            launcher.startListening();
-            server = launcher.getRemoteProxy();
+        // Wire the LSP4J launcher to the process streams.
+        // The launcher starts two internal threads: one to read JSON-RPC
+        // messages from stdout and one to dispatch them.
+        launcher = LSPLauncher.createClientLauncher(
+                client,
+                serverProcess.getInputStream(),
+                serverProcess.getOutputStream());
 
-            // Send the LSP initialize request.
-            sendInitialize();
+        // Must be called immediately to start the thread that
+        // processes incoming JSON-RPC messages
+        launcher.startListening();
+        server = launcher.getRemoteProxy();
 
-            initialized.set(true);
+        // Send the LSP initialize request.
+        var serverInfo = sendInitialize();
+
+        initialized.set(true);
+        if (serverInfo != null) {
+            logger.info("{} initialized, version: {}, workspace: {}",
+                    serverInfo.getName(), serverInfo.getVersion(), workspaceRoot);
+        } else {
             logger.info("Language server ready. Workspace: {}", workspaceRoot);
         }
     }
@@ -233,7 +237,7 @@ public class LanguageService implements AutoCloseable {
     /**
      * Sends the LSP {@code initialize} + {@code initialized} handshake.
      */
-    private void sendInitialize()
+    private ServerInfo sendInitialize()
             throws InterruptedException, ExecutionException, TimeoutException {
         var params = new InitializeParams();
         params.setRootUri(workspaceRoot.toUri().toString());
@@ -276,12 +280,14 @@ public class LanguageService implements AutoCloseable {
         params.setCapabilities(caps);
 
         // initialize is the very first request — block until it completes.
-        InitializeResult result = server.initialize(params)
-                .get(timeoutSeconds, TimeUnit.SECONDS);
+        logger.info("Sending LSP initialize request...");
+        InitializeResult result = server.initialize(params).get(timeoutSeconds, TimeUnit.SECONDS);
+        var serverInfo = result.getServerInfo();
         logger.debug("Server capabilities: {}", result.getCapabilities());
 
         // Notify the server that the client is ready.
         server.initialized(new InitializedParams());
+        return serverInfo;
     }
 
     /**
@@ -290,28 +296,26 @@ public class LanguageService implements AutoCloseable {
      * still running.
      */
     @Override
-    public void close() {
-        synchronized (lifecycleLock) {
-            if (!initialized.get()) return;
-            initialized.set(false);
-            try {
-                server.shutdown().get(timeoutSeconds, TimeUnit.SECONDS);
-            } catch (Exception ex) {
-                logger.warn("LSP shutdown request failed", ex);
-            }
-            server.exit();
-            if (serverProcess != null && serverProcess.isAlive()) {
-                serverProcess.destroy();
-                try {
-                    if (!serverProcess.waitFor(5, TimeUnit.SECONDS)) {
-                        serverProcess.destroyForcibly();
-                    }
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-            logger.info("Language server stopped.");
+    public synchronized void close() {
+        if (!initialized.get()) return;
+        initialized.set(false);
+        try {
+            server.shutdown().get(timeoutSeconds, TimeUnit.SECONDS);
+        } catch (Exception ex) {
+            logger.warn("LSP shutdown request failed", ex);
         }
+        server.exit();
+        if (serverProcess != null && serverProcess.isAlive()) {
+            serverProcess.destroy();
+            try {
+                if (!serverProcess.waitFor(5, TimeUnit.SECONDS)) {
+                    serverProcess.destroyForcibly();
+                }
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        logger.info("Language server stopped.");
     }
 
     // -----------------------------------------------------------------------
