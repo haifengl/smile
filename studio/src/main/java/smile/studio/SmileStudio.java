@@ -87,23 +87,31 @@ public class SmileStudio extends JFrame {
         setContentPane(contentPane);
 
         // Starts the LSP server in background thread.
-        new Thread(() -> {
+        Thread.ofPlatform().name("jdt-ls-starter").start(() -> {
+            var stub = new LanguageServerStatus(statusBar);
+            var home = Path.of(System.getProperty("smile.home"));
             try {
-                var stub = new LanguageServerStatus(statusBar);
-                var home = Path.of(System.getProperty("smile.home"));
                 var command = (OS.isWindows() ? "cmd.exe /c " : "bash -c ")
                         + System.getProperty("smile.home") + "/jdtls/bin/jdtls";
                 var jdtls = LanguageService.of(cwd, command);
                 jdtls.start(stub);
                 LanguageService.put("java", jdtls);
+            } catch (Exception ex) {
+                logger.error("Failed to start JDT LS server", ex);
+            }
+        });
 
+        Thread.ofPlatform().name("ty-server-starter").start(() -> {
+            var stub = new LanguageServerStatus(statusBar);
+            var home = Path.of(System.getProperty("smile.home"));
+            try {
                 var ty = LanguageService.of(cwd, "ty server");
                 ty.start(stub);
                 LanguageService.put("python", ty);
             } catch (Exception ex) {
-                logger.error("Failed to start LSP server", ex);
+                logger.error("Failed to start Ty server", ex);
             }
-        }).start();
+        });
 
         addWindowListener(new WindowAdapter() {
             @Override
@@ -739,7 +747,7 @@ public class SmileStudio extends JFrame {
         }
 
         // Starts MCP services in background
-        new Thread(() -> {
+        Thread.ofPlatform().name("mcp-service-starter").start(() -> {
             try {
                 var path = Path.of(System.getProperty("smile.home"), "conf", "mcp.json");
                 if (Files.exists(path)) MCP.connect(path);
@@ -750,7 +758,7 @@ public class SmileStudio extends JFrame {
             } catch (Throwable ex) {
                 System.out.println("Failed to start MCP services: " + ex.getMessage());
             }
-        }).start();
+        });
 
         // Install font
         FlatJetBrainsMonoFont.install();

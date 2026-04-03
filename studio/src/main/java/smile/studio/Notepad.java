@@ -83,7 +83,7 @@ public final class Notepad extends JFrame implements SearchListener, DocumentLis
         if (dict != null) {
             editor.addParser(dict);
         } else {
-            new Thread(() -> {
+            Thread.ofVirtual().name("spelling-dict-loader").start(() -> {
                 try {
                     File zip = Path.of(System.getProperty("smile.home"))
                             .resolve("bin", "eng_dic.zip")
@@ -93,7 +93,7 @@ public final class Notepad extends JFrame implements SearchListener, DocumentLis
                 } catch (Exception ex) {
                     System.err.println("Failed to load dictionary: " + ex.getMessage());
                 }
-            }).start();
+            });
         }
 
         try {

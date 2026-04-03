@@ -200,7 +200,7 @@ public class LanguageService implements AutoCloseable {
                     .start();
 
             // Drain stderr in the background so the server is never blocked on it.
-            Thread.ofVirtual().name("lsp-stderr-drain").start(() -> {
+            Thread.ofPlatform().name("lsp-stderr-drain").start(() -> {
                 try (var reader = new BufferedReader(
                         new InputStreamReader(serverProcess.getErrorStream()))) {
                     String line;
@@ -276,7 +276,6 @@ public class LanguageService implements AutoCloseable {
         params.setCapabilities(caps);
 
         // initialize is the very first request — block until it completes.
-        logger.info("Initializing language server...");
         InitializeResult result = server.initialize(params)
                 .get(timeoutSeconds, TimeUnit.SECONDS);
         logger.debug("Server capabilities: {}", result.getCapabilities());
