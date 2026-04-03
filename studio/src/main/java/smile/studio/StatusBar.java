@@ -32,20 +32,27 @@ import com.sun.management.OperatingSystemMXBean;
  */
 public class StatusBar extends JPanel {
     private static final ResourceBundle bundle = ResourceBundle.getBundle(StatusBar.class.getName(), Locale.getDefault());
+    private static final String READY = bundle.getString("Ready");
     /** Status message. */
-    private final JLabel status = new JLabel(bundle.getString("Ready"));
+    private final JLabel status = new JLabel(READY);
     /** Status message. */
     private final JLabel system = new JLabel();
     /** OS's MXBean */
     private final OperatingSystemMXBean os = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
     /** Memory's MXBean */
     private final MemoryMXBean memory = ManagementFactory.getMemoryMXBean();
+    /** The timer to reset status message. */
+    private final Timer timer = new Timer(60000, e -> status.setText(READY));
 
     /**
      * Constructor.
      */
     public StatusBar() {
         super(new BorderLayout());
+
+        // One-time execution.
+        // Timer will be restarted every time a new status message is set.
+        timer.setRepeats(false);
 
         // Left-aligned status message
         status.setHorizontalAlignment(SwingConstants.LEFT);
@@ -60,7 +67,17 @@ public class StatusBar extends JPanel {
         add(system, BorderLayout.EAST);
 
         // Timer to refresh CPU/Memory usage
-        Timer timer = new Timer(1000, e -> {
+        var refresher = createRefresher();
+        refresher.setInitialDelay(5000);
+        refresher.start();
+    }
+
+    /**
+     * Creates a timer that updates the system information every second.
+     * @return the timer.
+     */
+    private Timer createRefresher() {
+        return new Timer(1000, e -> {
             double cpuLoad = os.getCpuLoad();
             double usedHeap = memory.getHeapMemoryUsage().getUsed() / (1024 * 1024.0);
             String unit = "MB";
@@ -71,8 +88,6 @@ public class StatusBar extends JPanel {
             String info = String.format(bundle.getString("SystemInfo"), usedHeap, unit, (int) (cpuLoad * 100));
             system.setText(info);
         });
-        timer.setInitialDelay(5000);
-        timer.start();
     }
 
     /**
@@ -81,5 +96,6 @@ public class StatusBar extends JPanel {
      */
     public void setStatus(String message) {
         status.setText(message);
+        timer.restart();
     }
 }
