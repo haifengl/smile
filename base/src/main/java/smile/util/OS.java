@@ -199,7 +199,7 @@ public interface OS {
 
         // Create a thread to read the process's output
         if (outputConsumer != null) {
-            new Thread(() -> {
+            Thread.ofVirtual().start(() -> {
                 try (var reader = new BufferedReader(
                         new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
                     String line;
@@ -209,7 +209,7 @@ public interface OS {
                 } catch (IOException ex) {
                     outputConsumer.accept("ERROR reading process output: " + ex.getMessage());
                 }
-            }).start();
+            });
         }
 
         return process;
