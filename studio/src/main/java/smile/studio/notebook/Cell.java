@@ -235,7 +235,7 @@ public class Cell extends JPanel {
                         if (ex != null) {
                             logger.warn("Code completion failed: {}", ex.getMessage());
                             SwingUtilities.invokeLater(() ->
-                                    JOptionPane.showMessageDialog(Cell.this,
+                                    JOptionPane.showMessageDialog(null,
                                             "Code completion failed: " + ex.getMessage(),
                                             bundle.getString("AIService"),
                                             JOptionPane.ERROR_MESSAGE));
@@ -334,7 +334,8 @@ public class Cell extends JPanel {
                     @Override
                     public void onException(Throwable ex) {
                         SwingUtilities.invokeLater(() ->
-                                JOptionPane.showMessageDialog(Cell.this,
+                                JOptionPane.showMessageDialog(
+                                        null,
                                         "Code generation failed: " + ex.getMessage(),
                                         bundle.getString("AIService"),
                                         JOptionPane.ERROR_MESSAGE));

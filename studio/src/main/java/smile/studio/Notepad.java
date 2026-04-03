@@ -104,7 +104,7 @@ public final class Notepad extends JFrame implements SearchListener, DocumentLis
         } catch (Exception ex) {
             SwingUtilities.invokeLater(() ->
                 JOptionPane.showMessageDialog(
-                    this,
+                    null,
                     ex.getMessage(),
                     "Error",
                     JOptionPane.ERROR_MESSAGE
@@ -222,7 +222,7 @@ public final class Notepad extends JFrame implements SearchListener, DocumentLis
             case REPLACE_ALL:
                 result = SearchEngine.replaceAll(editor, context);
                 JOptionPane.showMessageDialog(
-                        null,
+                        this,
                         result.getCount() + " occurrences replaced.");
                 break;
             default:

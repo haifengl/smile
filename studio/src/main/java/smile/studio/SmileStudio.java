@@ -283,7 +283,8 @@ public class SmileStudio extends JFrame {
             });
         } catch (Throwable t) {
             // It is often a rethrow exception
-            JOptionPane.showMessageDialog(null,
+            JOptionPane.showMessageDialog(
+                    null,
                     "Failed to initialize AI service: " + t.getCause(),
                     "Error", JOptionPane.ERROR_MESSAGE);
 
