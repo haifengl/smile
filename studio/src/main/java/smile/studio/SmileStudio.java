@@ -43,6 +43,8 @@ import smile.studio.workspace.Workspace;
 import smile.swing.Button;
 import smile.studio.notebook.Cell;
 import smile.studio.notebook.Notebook;
+import smile.util.OS;
+import smile.util.lsp.LanguageService;
 import static smile.swing.SmileUtilities.scaleImageIcon;
 
 /**
@@ -51,6 +53,7 @@ import static smile.swing.SmileUtilities.scaleImageIcon;
  * @author Haifeng Li
  */
 public class SmileStudio extends JFrame {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SmileStudio.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(SmileStudio.class.getName(), Locale.getDefault());
     /** Application preference and configuration. */
     private static final Preferences prefs = Preferences.userNodeForPackage(SmileStudio.class);
@@ -83,8 +86,26 @@ public class SmileStudio extends JFrame {
         contentPane.add(statusBar, BorderLayout.SOUTH);
         setContentPane(contentPane);
 
-        // Initialized as true so that we won't try to save sample code.
-        workspace.notebook().ifPresent(notebook -> notebook.setSaved(true));
+        // Starts the LSP server in background thread.
+        new Thread(() -> {
+            try {
+                var stub = new LanguageServerStatus(statusBar);
+                var home = Path.of(System.getProperty("smile.home"));
+                var command = (OS.isWindows() ? "cmd.exe /c " : "bash -c ")
+                        + System.getProperty("smile.home") + "/jdtls/bin/jdtls "
+                        + "-dorg.eclipse.lsp4j.jsonrpc.services.GenericEndpoint.level=SEVERE";
+                var jdtls = LanguageService.of(cwd, command);
+                jdtls.start(stub);
+                LanguageService.put("java", jdtls);
+
+                var ty = LanguageService.of(cwd, "ty server");
+                ty.start(stub);
+                LanguageService.put("python", ty);
+            } catch (Exception ex) {
+                logger.error("Failed to start LSP server", ex);
+            }
+        }).start();
+
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
