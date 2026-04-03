@@ -205,7 +205,7 @@ public class LanguageService implements AutoCloseable {
                         new InputStreamReader(serverProcess.getErrorStream()))) {
                     String line;
                     while ((line = reader.readLine()) != null) {
-                        logger.debug("[LSP-ERR] {}", line);
+                        logger.info("[LSP-ERR] {}", line);
                     }
                 } catch (IOException ex) {
                     logger.warn("LSP stderr drain error", ex);
@@ -276,6 +276,7 @@ public class LanguageService implements AutoCloseable {
         params.setCapabilities(caps);
 
         // initialize is the very first request — block until it completes.
+        logger.info("Initializing language server...");
         InitializeResult result = server.initialize(params)
                 .get(timeoutSeconds, TimeUnit.SECONDS);
         logger.debug("Server capabilities: {}", result.getCapabilities());
