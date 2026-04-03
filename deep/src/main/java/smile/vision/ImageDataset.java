@@ -113,22 +113,19 @@ public class ImageDataset implements Dataset {
             logger.error("Failed to load the first batch", ex);
         }
 
-        final Runnable worker = () -> {
-            for (int i = start; i < size; ) {
-                int n = Math.min(batch, size - i);
-                System.arraycopy(permutation, i, index,  0, n);
-                i += n;
+        var thread = Thread.ofPlatform().name("image-dataset-loader").start(() -> {
+                  for (int i = start; i < size; ) {
+                      int n = Math.min(batch, size - i);
+                      System.arraycopy(permutation, i, index,  0, n);
+                      i += n;
 
-                try {
-                    queue.put(readImages(n == index.length ? index : Arrays.copyOf(index, n)));
-                } catch (Exception ex) {
-                    logger.error("Failed to load images", ex);
-                }
-            }
-        };
-
-        Thread thread = new Thread(worker, "ImageDatasetLoader");
-        thread.start();
+                      try {
+                          queue.put(readImages(n == index.length ? index : Arrays.copyOf(index, n)));
+                      } catch (Exception ex) {
+                          logger.error("Failed to load images", ex);
+                      }
+                  }
+              });
 
         return new Iterator<>() {
             @Override
