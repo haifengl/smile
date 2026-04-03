@@ -72,8 +72,8 @@ public class PythonKernel extends Kernel<String> {
             writer = new PrintWriter(new OutputStreamWriter(process.getOutputStream(), StandardCharsets.UTF_8));
         } catch (IOException e) {
             logger.error("Failed to start iPython REPL: {}", e.getMessage());
-            logger.info("To install iPython, run `pip install ipython` in your terminal.");
-            JOptionPane.showMessageDialog(null,
+            JOptionPane.showMessageDialog(
+                    null,
                     "To install iPython, run `pip install ipython` in your terminal.",
                     "iPython",
                     JOptionPane.INFORMATION_MESSAGE);
