@@ -134,6 +134,7 @@ public interface OS {
         return pattern.matcher(command)
                 .results()
                 .map(MatchResult::group)
+                .map(s -> s.replace("\"", ""))
                 .toList();
     }
 
