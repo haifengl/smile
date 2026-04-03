@@ -92,8 +92,7 @@ public class SmileStudio extends JFrame {
                 var stub = new LanguageServerStatus(statusBar);
                 var home = Path.of(System.getProperty("smile.home"));
                 var command = (OS.isWindows() ? "cmd.exe /c " : "bash -c ")
-                        + System.getProperty("smile.home") + "/jdtls/bin/jdtls "
-                        + "-dorg.eclipse.lsp4j.jsonrpc.services.GenericEndpoint.level=SEVERE";
+                        + System.getProperty("smile.home") + "/jdtls/bin/jdtls";
                 var jdtls = LanguageService.of(cwd, command);
                 jdtls.start(stub);
                 LanguageService.put("java", jdtls);
