@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
-if command -v apt-get > /dev/null; then
+echo "Installing ripgrep..."
+if command -v brew > /dev/null; then
+    brew install -q ripgrep
+elif command -v apt-get > /dev/null; then
     sudo apt-get install -y ripgrep;
 elif command -v yum > /dev/null; then
     sudo yum install -y ripgrep;
@@ -21,6 +24,9 @@ if [ ! -f "$VENV_DIR/bin/activate" ]; then
     else
         echo "Virtual environment created successfully."
         source "$VENV_DIR/bin/activate"
-        pip install -r "$SMILE_HOME/conf/requirements.txt"
+        pip install -r "$APP_DIR/../conf/requirements.txt"
+        pip install uv
+        uv tool install ty@latest
     fi
 fi
+
