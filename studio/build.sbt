@@ -64,11 +64,7 @@ bashScriptExtraDefines ++= Seq(
   """addJava "-Dscala.repl.autoruncode=${app_home}/predef.sc"""",
   """export PYTHONPATH="${PYTHONPATH}:${app_home}/../lib/ioa-agent-0.1.0.jar"""",
   """export PYTHONUTF8=1""",
-  """
-    |# Activate the venv
-    |VENV_DIR="$SMILE_HOME/venv"
-    |source "$VENV_DIR/bin/activate"
-    |""".stripMargin
+  """source "$SMILE_HOME/venv/bin/activate""""
 )
 
 batScriptExtraDefines ++= Seq(
@@ -84,12 +80,7 @@ batScriptExtraDefines ++= Seq(
   """set "PATH=%~dp0;!PATH!"""",
   """set PYTHONPATH=%PYTHONPATH%;%APP_HOME%\lib\ioa-agent-0.1.0.jar""",
   """set PYTHONUTF8=1""",
-  """
-    |@echo off
-    |SET "VENV_DIR=%APP_HOME%\\venv"
-    |ECHO Activating the virtual environment...
-    |CALL "%VENV_DIR%\\Scripts\\activate.bat"
-    |""".stripMargin
+  """CALL "%APP_HOME%\\venv\\Scripts\\activate.bat""""
 )
 
 libraryDependencies ++= Seq(
