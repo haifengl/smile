@@ -86,7 +86,7 @@ public final class Notepad extends JFrame implements SearchListener, DocumentLis
             Thread.ofVirtual().name("spelling-dict-loader").start(() -> {
                 try {
                     File zip = Path.of(System.getProperty("smile.home"))
-                            .resolve("bin", "eng_dic.zip")
+                            .resolve("data", "eng_dic.zip")
                             .toFile();
                     dict = SpellingParser.createEnglishSpellingParser(zip, true, false);
                     SwingUtilities.invokeLater(() -> editor.addParser(dict));
