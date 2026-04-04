@@ -65,22 +65,9 @@ bashScriptExtraDefines ++= Seq(
   """export PYTHONPATH="${PYTHONPATH}:${app_home}/../lib/ioa-agent-0.1.0.jar"""",
   """export PYTHONUTF8=1""",
   """
-    |VENV_DIR="$SMILE_HOME/venv"
-    |
-    |# Check if venv directory exists
-    |if [ ! -f "$VENV_DIR/bin/activate" ]; then
-    |    echo "Creating Python virtual environment..."
-    |    python3 -m venv "$VENV_DIR"
-    |    if [ $? -ne 0 ]; then
-    |        echo "Failed to create the virtual environment. Ensure Python is installed and added to PATH."
-    |    else
-    |        echo "Virtual environment created successfully."
-    |    fi
-    |fi
-    |
     |# Activate the venv
+    |VENV_DIR="$SMILE_HOME/venv"
     |source "$VENV_DIR/bin/activate"
-    |pip install -r "$SMILE_HOME/conf/requirements.txt"
     |""".stripMargin
 )
 
@@ -100,21 +87,8 @@ batScriptExtraDefines ++= Seq(
   """
     |@echo off
     |SET "VENV_DIR=%APP_HOME%\\venv"
-    |
-    |REM Check if the venv directory exists by checking for a known file/folder inside it
-    |IF NOT EXIST "%VENV_DIR%\\Scripts\\activate.bat" (
-    |    ECHO Creating Python virtual environment...
-    |    python -m venv %VENV_DIR%
-    |    IF ERRORLEVEL 1 (
-    |        ECHO Failed to create the virtual environment. Ensure Python is installed and added to PATH.
-    |    ) ELSE (
-    |        ECHO Virtual environment created successfully.
-    |    )
-    |)
-    |
     |ECHO Activating the virtual environment...
     |CALL "%VENV_DIR%\\Scripts\\activate.bat"
-    |pip install -r %APP_HOME%\\conf\\requirements.txt
     |""".stripMargin
 )
 
