@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+if command -v apt-get > /dev/null; then
+    sudo apt-get install -y ripgrep;
+elif command -v yum > /dev/null; then
+    sudo yum install -y ripgrep;
+elif command -v pacman > /dev/null; then
+    sudo pacman -S --noconfirm ripgrep;
+else
+    echo 'Unsupported Linux distribution. Please install ripgrep manually.'
+fi
+
+APP_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
+VENV_DIR="$APP_DIR/../venv"
+# Check if venv directory exists
+if [ ! -f "$VENV_DIR/bin/activate" ]; then
+    echo "Creating Python virtual environment..."
+    python3 -m venv "$VENV_DIR"
+    if [ $? -ne 0 ]; then
+        echo "Failed to create the virtual environment. Ensure Python is installed and added to PATH."
+    else
+        echo "Virtual environment created successfully."
+        source "$VENV_DIR/bin/activate"
+        pip install -r "$SMILE_HOME/conf/requirements.txt"
+    fi
+fi

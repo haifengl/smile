@@ -100,8 +100,7 @@ public class SmileStudio extends JFrame {
 
             try {
                 var command = (OS.isWindows() ? "cmd.exe /c " : "bash -c ")
-                        + System.getProperty("smile.home") + "/jdtls/bin/jdtls "
-                        + "--jvm-arg=\"-Xmx2G\"";
+                        + System.getProperty("smile.home") + "/jdtls/bin/jdtls";
                 var jdtls = LanguageService.of(cwd, command);
                 jdtls.start(stub);
                 LanguageService.put("java", jdtls);
