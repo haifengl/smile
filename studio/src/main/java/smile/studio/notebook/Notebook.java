@@ -31,6 +31,7 @@ import java.util.function.Consumer;
 import ioa.agent.Coder;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import smile.io.Paths;
+import smile.studio.SmileStudio;
 import smile.studio.kernel.*;
 import smile.studio.Monospaced;
 import smile.swing.ScrollablePanel;
@@ -296,6 +297,23 @@ public class Notebook extends JPanel implements DocumentListener {
         SwingWorker<Kernel<?>, Kernel<?>> worker = new SwingWorker<>() {
             @Override
             protected Kernel<?> doInBackground() throws IOException, UnsupportedOperationException {
+                // TODO: remove when we switch to LazyConstant.
+                boolean isShowing = false;
+                for (var win : Window.getWindows()) {
+                    if (win instanceof SmileStudio && win.isShowing()) {
+                        isShowing = true;
+                        break;
+                    }
+                }
+                if (!isShowing) {
+                    try {
+                        // Delay 3 seconds if the app is not fully started yet.
+                        Thread.sleep(3000);
+                    } catch (InterruptedException e) {
+                        // ignore
+                    }
+                }
+
                 kernel = switch (lang) {
                     case "Java" -> new JavaKernel();
                     case "Scala" -> new ScriptKernel("scala");
