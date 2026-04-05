@@ -307,8 +307,8 @@ public class Notebook extends JPanel implements DocumentListener {
                 }
                 if (!isShowing) {
                     try {
-                        // Delay 3 seconds if the app is not fully started yet.
-                        Thread.sleep(3000);
+                        // Delay 5 seconds if the app is not fully started yet.
+                        Thread.sleep(5000);
                     } catch (InterruptedException e) {
                         // ignore
                     }
