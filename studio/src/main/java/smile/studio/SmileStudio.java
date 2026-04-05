@@ -86,26 +86,44 @@ public class SmileStudio extends JFrame {
         contentPane.add(statusBar, BorderLayout.SOUTH);
         setContentPane(contentPane);
 
-        // Starts the LSP server in a background thread.
-        Thread.ofPlatform().name("lsp-server-starter").start(() -> {
-            var stub = new LanguageServerStatus(statusBar);
-            var home = Path.of(System.getProperty("smile.home"));
+        // Starts the Ty server in a background thread.
+        Thread.ofPlatform().name("ty-server-starter").start(() -> {
             try {
+                var handler = new LspServerNotificationHandler("Ty", statusBar);
                 var ty = LanguageService.of(cwd, "ty server");
-                ty.start(stub);
+                ty.start(handler);
                 LanguageService.put("python", ty);
             } catch (Exception ex) {
                 logger.error("Failed to start Ty server", ex);
             }
+        });
 
+        // Starts the JDT LS server in a background thread.
+        Thread.ofPlatform().name("jdt-server-starter").start(() -> {
             try {
+                var handler = new LspServerNotificationHandler("JDT", statusBar);
                 var command = (OS.isWindows() ? "cmd.exe /c " : "bash -c ")
                         + System.getProperty("smile.home") + "/jdtls/bin/jdtls";
                 var jdtls = LanguageService.of(cwd, command);
-                jdtls.start(stub);
+                jdtls.start(handler);
                 LanguageService.put("java", jdtls);
             } catch (Exception ex) {
                 logger.error("Failed to start JDT LS server", ex);
+            }
+        });
+
+        // Starts MCP services in background
+        Thread.ofPlatform().name("mcp-service-starter").start(() -> {
+            try {
+                var handler = new McpServerNotificationHandler(statusBar);
+                var path = Path.of(System.getProperty("smile.home"), "conf", "mcp.json");
+                if (Files.exists(path)) MCP.connect(path, handler);
+                path = Path.of(System.getProperty("user.home"), ".smile", "mcp.json");
+                if (Files.exists(path)) MCP.connect(path, handler);
+                path = Path.of(System.getProperty("user.dir"), ".smile", "mcp.json");
+                if (Files.exists(path)) MCP.connect(path, handler);
+            } catch (Throwable ex) {
+                System.out.println("Failed to start MCP services: " + ex.getMessage());
             }
         });
 
@@ -742,20 +760,6 @@ public class SmileStudio extends JFrame {
                     Run 'smile scala' for smile shell with Scala.""");
             System.exit(1);
         }
-
-        // Starts MCP services in background
-        Thread.ofPlatform().name("mcp-service-starter").start(() -> {
-            try {
-                var path = Path.of(System.getProperty("smile.home"), "conf", "mcp.json");
-                if (Files.exists(path)) MCP.connect(path);
-                path = Path.of(System.getProperty("user.home"), ".smile", "mcp.json");
-                if (Files.exists(path)) MCP.connect(path);
-                path = Path.of(System.getProperty("user.dir"), ".smile", "mcp.json");
-                if (Files.exists(path)) MCP.connect(path);
-            } catch (Throwable ex) {
-                System.out.println("Failed to start MCP services: " + ex.getMessage());
-            }
-        });
 
         // Install font
         FlatJetBrainsMonoFont.install();

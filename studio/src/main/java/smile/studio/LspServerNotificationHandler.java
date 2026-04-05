@@ -25,53 +25,60 @@ import org.eclipse.lsp4j.ShowMessageRequestParams;
 import org.eclipse.lsp4j.services.LanguageClient;
 
 /**
- * A no-op implementation of the LSP4J client interface.
+ * An implementation of the LSP4J client interface for read-only
+ * queries.
  *
  * <p>Language servers send notifications back to the client (e.g.
  * {@code window/logMessage}, {@code textDocument/publishDiagnostics}).
- * We log them at DEBUG / INFO level and otherwise ignore them, since
- * this client is used for read-only queries.
+ * We display diagnostics and messages at the status bar and log other
+ * notifications at DEBUG level.
  *
  * @author Haifeng Li
  */
-public class LanguageServerStatus implements LanguageClient {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LanguageServerStatus.class);
+public class LspServerNotificationHandler implements LanguageClient {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LspServerNotificationHandler.class);
+    /** The name of the language server. */
+    private final String server;
+    /** The status bar to display LSP status messages. */
     private final StatusBar statusBar;
 
     /**
      * Constructor.
+     * @param server the name of the language server.
      * @param statusBar the status bar to display LSP status messages.
      */
-    public LanguageServerStatus(StatusBar statusBar) {
+    public LspServerNotificationHandler(String server, StatusBar statusBar) {
+        this.server = server;
         this.statusBar = statusBar;
     }
 
     @Override
     public void telemetryEvent(Object object) {
-        logger.debug("[LSP telemetry] {}", object);
+        logger.debug("[LSP telemetry] {}: {}", server, object);
     }
 
     @Override
     public void publishDiagnostics(PublishDiagnosticsParams diagnostics) {
-        SwingUtilities.invokeLater(() -> statusBar.setStatus(String.format("[LSP diagnostics] %d issue(s) in %s",
-                diagnostics.getDiagnostics().size(), diagnostics.getUri())));
+        SwingUtilities.invokeLater(() -> statusBar.setStatus(String.format("[LSP diagnostics] %s: %d issue(s) in %s",
+                server, diagnostics.getDiagnostics().size(), diagnostics.getUri())));
     }
 
     @Override
     public void showMessage(MessageParams messageParams) {
-        SwingUtilities.invokeLater(() -> statusBar.setStatus(String.format("[LSP %s] %s",
-                messageParams.getType(), messageParams.getMessage())));
+        SwingUtilities.invokeLater(() -> statusBar.setStatus(String.format("[LSP %s] %s: %s",
+                messageParams.getType(), server, messageParams.getMessage())));
     }
 
     @Override
     public CompletableFuture<MessageActionItem> showMessageRequest(
             ShowMessageRequestParams requestParams) {
-        logger.debug("[LSP showMessageRequest] {}", requestParams.getMessage());
+        logger.debug("[LSP request] {}: {}", server, requestParams.getMessage());
         return CompletableFuture.completedFuture(null);
     }
 
     @Override
     public void logMessage(MessageParams message) {
-        logger.debug("[LSP log] [{}] {}", message.getType(), message.getMessage());
+        SwingUtilities.invokeLater(() -> statusBar.setStatus(String.format("[LSP %s] %s: %s",
+                message.getType(), server, message.getMessage())));
     }
 }
