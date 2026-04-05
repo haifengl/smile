@@ -180,16 +180,16 @@ public class AgentCLI extends JPanel {
     private Map<String, String> createHintMap() {
         Map<String, String> hints = new HashMap<>();
         hints.put("/memory", "[show|add|edit|refresh]");
-        hints.put("/memory show", "[ENTER to display the long term memory]");
+        hints.put("/memory show", "[Ctrl + ENTER to display the long term memory]");
         hints.put("/memory add", "[additional instructions]");
-        hints.put("/memory edit", "[ENTER to open a notepad to edit the long term memory]");
-        hints.put("/memory refresh", "[ENTER to reload the context from disk]");
+        hints.put("/memory edit", "[Ctrl + ENTER to open a notepad to edit the long term memory]");
+        hints.put("/memory refresh", "[Ctrl + ENTER to reload the context from disk]");
         hints.put("/compact", "[instructions]");
         hints.put("/plan", "[off|short description of goals or tasks]");
         hints.put("/open", "[file path]");
-        hints.put("/train", "[-h for helps]");
-        hints.put("/predict", "[-h for helps]");
-        hints.put("/serve", "[-h for helps]");
+        hints.put("/train", "[Ctrl + ENTER for helps]");
+        hints.put("/predict", "[Ctrl + ENTER for helps]");
+        hints.put("/serve", "[Ctrl + ENTER for helps]");
 
         if (agent != null) {
             for (var skill : agent.skills()) {
