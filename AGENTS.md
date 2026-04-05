@@ -2,12 +2,12 @@
 
 This file provides context for AI coding agents working on this multi-module Gradle project.
 
-## 🏗 Build & Runtime Environment
+## 🚀 Build & Runtime Environment
 - **Language:** Java 25
 - **Build System:** Gradle 9.x (Kotlin DSL)
 - **Testing:** JUnit 5
 
-## 🚀 Build & Development Commands
+## ⌨️ Build & Development Commands
 Always use the Gradle Wrapper (`./gradlew`) to ensure version consistency.
 
 - **Build everything:** `./gradlew build`
@@ -39,7 +39,7 @@ The project follows a hierarchical structure. Always check `base` before adding 
 - **Null Safety:** Use `Optional<T>` for return types that may be empty; avoid returning `null`.
 - **Logging:** Use SLF4J API for logging; avoid implementation-specific imports in library modules.
 
-## 🧪 Testing Guidelines
+## 🛠 Testing Guidelines
 - Use the **Given/When/Then** structure for all test methods.
 - **Unit Tests:** Focus on single classes.
 - **Resources:** Place test-specific data in src/test/resources within the relevant module.
