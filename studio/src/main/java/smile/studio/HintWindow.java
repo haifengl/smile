@@ -23,6 +23,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.Map;
 import smile.plot.swing.Palette;
+import smile.swing.SmileUtilities;
 import smile.util.Strings;
 
 /**
@@ -62,8 +63,8 @@ public class HintWindow extends JWindow {
                 if (e.getKeyCode() == KeyEvent.VK_SPACE) {
                     try {
                         int dot = editor.getCaretPosition();
-                        int line = getLineOfOffset(editor, dot);
-                        int start = getOffsetOfLine(editor, line);
+                        int line = SmileUtilities.getLineOfOffset(editor, dot);
+                        int start = SmileUtilities.getOffsetOfLine(editor, line);
                         String lead = editor.getText(start, dot).trim();
                         String hint = hints.get(lead);
                         if (Strings.isNullOrBlank(hint)) {
@@ -89,43 +90,6 @@ public class HintWindow extends JWindow {
             }
         });
         pack();
-    }
-
-    /**
-     * Returns the line number given a text offset.
-     * @param editor the text component.
-     * @param offset the text offset.
-     * @return the line number.
-     */
-    private int getLineOfOffset(JTextComponent editor, int offset) {
-        return editor.getDocument().getDefaultRootElement().getElementIndex(offset);
-    }
-
-    /**
-     * Returns the start offset of a line.
-     * @param editor the text component.
-     * @param line the line number.
-     * @return the start offset.
-     */
-    private int getOffsetOfLine(JTextComponent editor, int line) {
-        return editor.getDocument().getDefaultRootElement().getElement(line).getStartOffset();
-    }
-
-    /**
-     * Returns the word ending at the text offset.
-     * @param editor the text component.
-     * @param offset the text offset.
-     * @return the word ending at the text offset.
-     */
-    private String getWord(JTextComponent editor, int offset) throws BadLocationException {
-        int line = getLineOfOffset(editor, offset);
-        int start = getOffsetOfLine(editor, line);
-        String text = editor.getText(start, offset);
-        String[] words = text.trim().split("\\s+");
-        if (words.length > 0) {
-            return words[words.length - 1];
-        }
-        return "";
     }
 
     /**
