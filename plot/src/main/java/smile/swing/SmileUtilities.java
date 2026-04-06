@@ -17,6 +17,8 @@
 package smile.swing;
 
 import javax.swing.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import smile.data.DataFrame;
@@ -33,6 +35,43 @@ import smile.tensor.SparseMatrix;
  * @author Haifeng Li
  */
 public interface SmileUtilities {
+    /**
+     * Returns the line number given a text offset.
+     * @param editor the text component.
+     * @param offset the text offset.
+     * @return the line number.
+     */
+    static int getLineOfOffset(JTextComponent editor, int offset) {
+        return editor.getDocument().getDefaultRootElement().getElementIndex(offset);
+    }
+
+    /**
+     * Returns the start offset of a line.
+     * @param editor the text component.
+     * @param line the line number.
+     * @return the start offset.
+     */
+    static int getOffsetOfLine(JTextComponent editor, int line) {
+        return editor.getDocument().getDefaultRootElement().getElement(line).getStartOffset();
+    }
+
+    /**
+     * Returns the word ending at the text offset.
+     * @param editor the text component.
+     * @param offset the text offset.
+     * @return the word ending at the text offset.
+     */
+    static String getWordAt(JTextComponent editor, int offset) throws BadLocationException {
+        int line = getLineOfOffset(editor, offset);
+        int start = getOffsetOfLine(editor, line);
+        String text = editor.getText(start, offset);
+        String[] words = text.trim().split("\\s+");
+        if (words.length > 0) {
+            return words[words.length - 1];
+        }
+        return "";
+    }
+
     /**
      * Scales an image icon to desired size.
      * @param icon the input image icon.
