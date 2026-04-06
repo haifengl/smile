@@ -166,7 +166,7 @@ public class GeneticAlgorithm <T extends Chromosome<T>> {
      *                because it prevents losing the best found solution.
      */
     public GeneticAlgorithm(T[] seeds, Selection selection, int elitism) {
-        if (seeds.length <= 1) {
+        if (seeds.length < 2) {
             throw new IllegalArgumentException("Invalid population size: " + seeds.length);
         }
 

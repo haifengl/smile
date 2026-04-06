@@ -122,7 +122,7 @@ MyChromosome best = ga.evolve(500);
 
 ## Constructor and Runtime Constraints
 
-- Population size must be **greater than 1**.
+- Population size must be **greater than 1**. In general, larger populations provide better diversity but increase runtime. We recommend starting with 50 to 200 individuals. A common rule is to set the population size to 1.5 to 2 times the number of genes (variables) in a chromosome.
 - `elitism` must satisfy: `0 <= elitism < population.length`.
 - `generation` in `evolve(...)` must be greater than 0.
 - `setLocalSearchSteps(t)` requires `t >= 0`.
