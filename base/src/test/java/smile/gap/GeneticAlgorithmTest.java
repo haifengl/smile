@@ -16,6 +16,7 @@
  */
 package smile.gap;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -90,5 +91,166 @@ public class GeneticAlgorithmTest {
         for (int i = 0; i < best.length; i++) {
             assertEquals(best[i], result.bits()[i]);
         }
+    }
+
+    @Test
+    public void invalidElitismThrows() {
+        // Given
+        BitString[] seeds = new BitString[2];
+        seeds[0] = new BitString(3, bs -> 0.0);
+        seeds[1] = new BitString(3, bs -> 1.0);
+        // When / Then
+        assertThrows(IllegalArgumentException.class, () -> new GeneticAlgorithm<>(seeds, Selection.Rank(), -1));
+        assertThrows(IllegalArgumentException.class, () -> new GeneticAlgorithm<>(seeds, Selection.Rank(), 2));
+    }
+
+    @Test
+    public void invalidGenerationCountThrows() {
+        // Given
+        BitString[] seeds = new BitString[2];
+        seeds[0] = new BitString(3, bs -> 0.0);
+        seeds[1] = new BitString(3, bs -> 1.0);
+        GeneticAlgorithm<BitString> ga = new GeneticAlgorithm<>(seeds, Selection.Rank(), 0);
+        // When / Then
+        assertThrows(IllegalArgumentException.class, () -> ga.evolve(0));
+        assertThrows(IllegalArgumentException.class, () -> ga.evolve(0, 1.0));
+    }
+
+    @Test
+    public void negativeLocalSearchStepsThrows() {
+        // Given
+        BitString[] seeds = new BitString[2];
+        seeds[0] = new BitString(3, bs -> 0.0);
+        seeds[1] = new BitString(3, bs -> 1.0);
+        GeneticAlgorithm<BitString> ga = new GeneticAlgorithm<>(seeds, Selection.Rank(), 0);
+        // When / Then
+        assertThrows(IllegalArgumentException.class, () -> ga.setLocalSearchSteps(-1));
+    }
+
+    @Test
+    public void setLocalSearchStepsIsFluentAndGetterMatches() {
+        // Given
+        BitString[] seeds = new BitString[2];
+        seeds[0] = new BitString(3, bs -> 0.0);
+        seeds[1] = new BitString(3, bs -> 1.0);
+        GeneticAlgorithm<BitString> ga = new GeneticAlgorithm<>(seeds, Selection.Rank(), 0);
+        // When
+        GeneticAlgorithm<BitString> same = ga.setLocalSearchSteps(0);
+        // Then
+        assertSame(ga, same);
+        assertEquals(0, ga.getLocalSearchSteps());
+        ga.setLocalSearchSteps(7);
+        assertEquals(7, ga.getLocalSearchSteps());
+    }
+
+    @Test
+    public void populationReturnsSeedsArray() {
+        // Given
+        BitString[] seeds = new BitString[2];
+        seeds[0] = new BitString(3, bs -> 0.0);
+        seeds[1] = new BitString(3, bs -> 1.0);
+        GeneticAlgorithm<BitString> ga = new GeneticAlgorithm<>(seeds, Selection.Rank(), 0);
+        // When / Then
+        assertSame(seeds, ga.population());
+    }
+
+    @Test
+    public void populationSizeOneThrows() {
+        // Given
+        BitString[] seeds = new BitString[1];
+        seeds[0] = new BitString(4, bs -> 1.0, Crossover.UNIFORM, 1.0, 0.0);
+        // When / Then
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new GeneticAlgorithm<>(seeds, Selection.Tournament(1, 0.5), 0));
+    }
+
+    @Test
+    public void evolveStopsWhenFitnessReachesThreshold() {
+        // Given
+        BitString[] seeds = new BitString[4];
+        for (int i = 0; i < seeds.length; i++) {
+            seeds[i] = new BitString(2, bs -> 1.0, Crossover.UNIFORM, 1.0, 0.0);
+        }
+        GeneticAlgorithm<BitString> ga = new GeneticAlgorithm<>(seeds, Selection.Rank(), 0);
+        // When
+        BitString best = ga.evolve(1000, 1.0);
+        // Then
+        assertEquals(1.0, best.fitness(), 1e-9);
+    }
+
+    static final class CountingLamarckian implements LamarckianChromosome<CountingLamarckian> {
+        private final AtomicInteger evolveCalls = new AtomicInteger();
+        private double fitness;
+
+        CountingLamarckian(double fitness) {
+            this.fitness = fitness;
+        }
+
+        int evolveCalls() {
+            return evolveCalls.get();
+        }
+
+        @Override
+        public void evolve() {
+            evolveCalls.incrementAndGet();
+            fitness += 0.01;
+        }
+
+        @Override
+        public double fitness() {
+            return fitness;
+        }
+
+        @Override
+        public int compareTo(Chromosome<CountingLamarckian> o) {
+            return Double.compare(fitness(), o.fitness());
+        }
+
+        @Override
+        public CountingLamarckian newInstance() {
+            return new CountingLamarckian(fitness);
+        }
+
+        @Override
+        public CountingLamarckian[] crossover(CountingLamarckian other) {
+            double m = (fitness + other.fitness) / 2.0;
+            return new CountingLamarckian[] {new CountingLamarckian(m), new CountingLamarckian(m)};
+        }
+
+        @Override
+        public void mutate() {
+            // no-op
+        }
+    }
+
+    @Test
+    public void lamarckianChromosomesReceiveLocalSearchDuringFitnessPasses() {
+        // Given
+        CountingLamarckian[] seeds = new CountingLamarckian[2];
+        seeds[0] = new CountingLamarckian(0.0);
+        seeds[1] = new CountingLamarckian(0.5);
+        GeneticAlgorithm<CountingLamarckian> ga =
+                new GeneticAlgorithm<>(seeds, Selection.Tournament(2, 0.9), 0).setLocalSearchSteps(3);
+        // When
+        ga.evolve(1, Double.POSITIVE_INFINITY);
+        // Then (initial fitness pass applies t local-search steps per individual)
+        assertTrue(seeds[0].evolveCalls() >= 3);
+        assertTrue(seeds[1].evolveCalls() >= 3);
+    }
+
+    @Test
+    public void zeroLocalSearchStepsSkipsLamarckianEvolve() {
+        // Given
+        CountingLamarckian[] seeds = new CountingLamarckian[2];
+        seeds[0] = new CountingLamarckian(0.0);
+        seeds[1] = new CountingLamarckian(0.5);
+        GeneticAlgorithm<CountingLamarckian> ga =
+                new GeneticAlgorithm<>(seeds, Selection.Tournament(2, 0.9), 0).setLocalSearchSteps(0);
+        // When
+        ga.evolve(1, Double.POSITIVE_INFINITY);
+        // Then
+        assertEquals(0, seeds[0].evolveCalls());
+        assertEquals(0, seeds[1].evolveCalls());
     }
 }
