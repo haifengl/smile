@@ -119,4 +119,28 @@ public class CrossoverTest {
             assertEquals(child2[i], result[1].bits()[i]);
         }
     }
+
+    @Test
+    public void singlePointLengthOne() {
+        // Given
+        MathEx.setSeed(19650218);
+        byte[] father = {1};
+        byte[] mother = {0};
+        BitString bs1 = new BitString(father, null);
+        BitString bs2 = new BitString(mother, null);
+        // When
+        assertThrows(IllegalArgumentException.class, () -> Crossover.SINGLE_POINT.apply(bs1, bs2));
+    }
+
+    @Test
+    public void twoPointLengthTwo() {
+        // Given
+        MathEx.setSeed(19650218);
+        byte[] father = {1, 0};
+        byte[] mother = {0, 1};
+        BitString bs1 = new BitString(father, null);
+        BitString bs2 = new BitString(mother, null);
+        // When
+        assertThrows(IllegalArgumentException.class, () -> Crossover.TWO_POINT.apply(bs1, bs2));
+    }
 }

@@ -166,8 +166,16 @@ public class GeneticAlgorithm <T extends Chromosome<T>> {
      *                because it prevents losing the best found solution.
      */
     public GeneticAlgorithm(T[] seeds, Selection selection, int elitism) {
+        if (seeds.length <= 1) {
+            throw new IllegalArgumentException("Invalid population size: " + seeds.length);
+        }
+
         if (elitism < 0 || elitism >= seeds.length) {
             throw new IllegalArgumentException("Invalid elitism: " + elitism);
+        }
+
+        if (seeds.length < 50) {
+            logger.warn("The population size {} may be too small", seeds.length);
         }
 
         this.population = seeds;
@@ -185,7 +193,7 @@ public class GeneticAlgorithm <T extends Chromosome<T>> {
 
     /**
      * Sets the number of iterations of local search for Lamarckian algorithm.
-     * Sets it be zero to disable local search.
+     * Sets to zero to disable local search.
      * @param t the number of iterations of local search.
      * @return this object.
      */
