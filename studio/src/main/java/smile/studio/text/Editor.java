@@ -18,12 +18,13 @@ package smile.studio.text;
 
 import javax.swing.*;
 import java.awt.event.*;
-import java.nio.file.Files;
 import java.nio.file.Path;
+import org.fife.ui.autocomplete.AutoCompletion;
 import org.fife.ui.rsyntaxtextarea.*;
 import smile.io.Paths;
 import smile.studio.Markdown;
 import smile.studio.Monospaced;
+import smile.util.lsp.LanguageService;
 
 /**
  * Text editor with syntax highlighting.
@@ -76,36 +77,57 @@ public class Editor extends RSyntaxTextArea {
         });
     }
 
-    /** Probes the syntax style based on the file content type. */
+    /**
+     * Sets up auto-completion based on the file type.
+     * @param file the file to set up auto-completion for.
+     */
+    public void setAutoComplete(Path file) {
+        var style = probeSyntaxStyle(file);
+        var lsp = switch (style) {
+            case SYNTAX_STYLE_JAVA -> LanguageService.get("java");
+            case SYNTAX_STYLE_PYTHON -> LanguageService.get("python");
+            default -> null;
+        };
+        if (lsp == null) return;
+
+        var fileUrl = file.toUri().toString();
+        var provider = new LspCompletionProvider(lsp.server().getTextDocumentService(), fileUrl);
+        getDocument().addDocumentListener(provider);
+        AutoCompletion ac = new AutoCompletion(provider);
+        ac.setAutoActivationEnabled(true);
+        ac.setAutoActivationDelay(300); // 300ms delay
+        ac.setTriggerKey(KeyStroke.getKeyStroke('.'));
+        ac.install(this);
+    }
+
+    /**
+     * Probes the syntax style based on the filename extension.
+     * @param file the file to probe.
+     * @return the syntax style for the file, or {@code SYNTAX_STYLE_NONE} if unknown.
+     */
     public static String probeSyntaxStyle(Path file) {
-        try {
-            return switch (Files.probeContentType(file)) {
-                case "text/markdown" -> SYNTAX_STYLE_MARKDOWN;
-                case "text/x-java-source" -> SYNTAX_STYLE_JAVA;
-                case "text/x-python" -> SYNTAX_STYLE_PYTHON;
-                case "application/sql" -> SYNTAX_STYLE_SQL;
-                case "text/x-scala" -> SYNTAX_STYLE_SCALA;
-                case "text/x-kotlin" -> SYNTAX_STYLE_KOTLIN; // less standardized
-                case "text/x-c++src" -> SYNTAX_STYLE_CPLUSPLUS;
-                case "text/x-csrc" -> SYNTAX_STYLE_C;
-                case "text/x-javascript" -> SYNTAX_STYLE_JAVASCRIPT;
-                case "text/x-rustsrc" -> SYNTAX_STYLE_RUST;
-                case "text/csv" -> SYNTAX_STYLE_CSV;
-                case "text/json", "text/x-json", "application/json" -> SYNTAX_STYLE_JSON;
-                case "application/x-sh" -> SYNTAX_STYLE_UNIX_SHELL;
-                case "application/bat", "application/x-bat" -> SYNTAX_STYLE_WINDOWS_BATCH;
-                case "text/html" -> SyntaxConstants.SYNTAX_STYLE_HTML;
-                case "text/xml", "application/xml" -> SYNTAX_STYLE_XML;
-                case "application/yaml" -> SYNTAX_STYLE_YAML;
-                default -> switch (Paths.getFileExtension(file)) {
-                    case "kt", "kts" -> SYNTAX_STYLE_KOTLIN;
-                    case "bat" -> SYNTAX_STYLE_WINDOWS_BATCH;
-                    case "properties" -> SYNTAX_STYLE_PROPERTIES_FILE;
-                    default -> SYNTAX_STYLE_NONE;
-                };
-            };
-        } catch (Exception ex) {
-            return SYNTAX_STYLE_NONE;
-        }
+        return switch (Paths.getFileExtension(file)) {
+            case "md" -> SYNTAX_STYLE_MARKDOWN;
+            case "java" -> SYNTAX_STYLE_JAVA;
+            case "py" -> SYNTAX_STYLE_PYTHON;
+            case "sql" -> SYNTAX_STYLE_SQL;
+            case "scala", "sc" -> SYNTAX_STYLE_SCALA;
+            case "kt", "kts" -> SYNTAX_STYLE_KOTLIN;
+            case "cpp", "cxx" -> SYNTAX_STYLE_CPLUSPLUS;
+            case "c" -> SYNTAX_STYLE_C;
+            case "js" -> SYNTAX_STYLE_JAVASCRIPT;
+            case "ts" -> SYNTAX_STYLE_TYPESCRIPT;
+            case "rs" -> SYNTAX_STYLE_RUST;
+            case "csv", "tsv" -> SYNTAX_STYLE_CSV;
+            case "json", "jsonl" -> SYNTAX_STYLE_JSON;
+            case "sh" -> SYNTAX_STYLE_UNIX_SHELL;
+            case "bat" -> SYNTAX_STYLE_WINDOWS_BATCH;
+            case "ps1" -> SYNTAX_STYLE_POWERSHELL;
+            case "html" -> SyntaxConstants.SYNTAX_STYLE_HTML;
+            case "xml" -> SYNTAX_STYLE_XML;
+            case "yaml", "yml" -> SYNTAX_STYLE_YAML;
+            case "properties" -> SYNTAX_STYLE_PROPERTIES_FILE;
+            default -> SYNTAX_STYLE_NONE;
+        };
     }
 }
