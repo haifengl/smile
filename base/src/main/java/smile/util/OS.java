@@ -113,18 +113,6 @@ public interface OS {
     }
 
     /**
-     * Returns the value of the system property as a boolean,
-     * or the default value if the property is not set.
-     * @param key the name of the system property.
-     * @param defaultValue the default value to return if the property is not set.
-     * @return the boolean value of the system property, or the default value if not set.
-     */
-    static boolean getProperty(String key, boolean defaultValue) {
-        String value = System.getProperty(key, Boolean.toString(defaultValue));
-        return Boolean.parseBoolean(value);
-    }
-
-    /**
      * Parses a command line into a list of arguments, respecting quoted substrings.
      * @param command the command line to parse.
      * @return the list of command arguments.
