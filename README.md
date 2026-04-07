@@ -125,14 +125,14 @@ DLL files from the `bin` directory of release packages. Make sure to add this
 directory to PATH environment variable.
 
 To install on Linux (e.g., Ubuntu), run
-```shell script
+```shell
 sudo apt update
 sudo apt install libopenblas-dev libarpack2
 ```
 
 On Mac, we use the BLAS library from the Accelerate framework provided by macOS.
 But you should install ARPACK by running
-```shell script
+```shell
 brew install arpack
 ```
 However, macOS System Integrity Protection (SIP) significantly impacts how
@@ -164,7 +164,11 @@ Download pre-packaged SMILE from the
 [releases page](https://github.com/haifengl/smile/releases).
 After unziping the package and cd into the `bin` directory of SMILE
 in a terminal, type
-```shell script
+```shell
+    ./setup
+```
+to install the required dependencies. Then, type
+```shell
     ./smile
 ```
 to enter SMILE Studio. If you work in a headless environment without
@@ -175,7 +179,7 @@ Scala, type `./smile scala` to enter SMILE Shell for Scala.
 By default, the Studio/Shell uses up to 4GB memory. If you need more memory
 to handle large data, use the option `-J-Xmx` or `-XX:MaxRAMPercentage`.
 For example,
-```shell script
+```shell
     ./smile -J-Xmx30G
 ```
 You can also modify the configuration file `conf/smile.ini` for the
