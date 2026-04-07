@@ -70,15 +70,24 @@ public interface Poisson {
             @Override
             public double deviance(double[] y, double[] mu, double[] residuals) {
                 return IntStream.range(0, y.length).mapToDouble(i -> {
-                    double d = 2.0 * y[i] * Math.log(y[i] / mu[i]);
-                    residuals[i] = Math.sqrt(d) * Math.signum(y[i] - mu[i]);
+                    // Poisson deviance contribution: 2 * (y * log(y/mu) - (y - mu))
+                    // Simplified to 2 * y * log(y/mu) since sum of (y-mu) = 0 at MLE.
+                    // When y = 0, the term y * log(y/mu) → 0 by convention (limit as y→0+).
+                    double d = y[i] == 0.0
+                            ? 2.0 * mu[i]  // 2*(0 - 0 + mu) = 2*mu
+                            : 2.0 * (y[i] * Math.log(y[i] / mu[i]) - (y[i] - mu[i]));
+                    residuals[i] = Math.sqrt(Math.max(d, 0.0)) * Math.signum(y[i] - mu[i]);
                     return d;
                 }).sum();
             }
 
             @Override
             public double nullDeviance(double[] y, double mu) {
-                return Arrays.stream(y).map(yi -> 2.0 * yi * Math.log(yi / mu)).sum();
+                return Arrays.stream(y).map(yi ->
+                        yi == 0.0
+                                ? 2.0 * mu  // 2*(0 - 0 + mu) = 2*mu
+                                : 2.0 * (yi * Math.log(yi / mu) - (yi - mu))
+                ).sum();
             }
 
             @Override
