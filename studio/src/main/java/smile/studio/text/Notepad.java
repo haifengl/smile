@@ -37,7 +37,6 @@ import org.fife.rsta.ui.search.SearchListener;
 import org.fife.rsta.ui.search.FindToolBar;
 import org.fife.ui.rsyntaxtextarea.spell.SpellingParser;
 import org.fife.ui.rsyntaxtextarea.ErrorStrip;
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.fife.ui.rtextarea.SearchContext;
 import org.fife.ui.rtextarea.SearchEngine;
@@ -57,7 +56,7 @@ public final class Notepad extends JFrame implements SearchListener, DocumentLis
     private static SpellingParser dict = null;
     private final Path file;
     private final CollapsibleSectionPanel csp = new CollapsibleSectionPanel();
-    private final RSyntaxTextArea editor = new Editor(40, 120);
+    private final Editor editor = new Editor(40, 120);
     private final StatusBar statusBar = new StatusBar();
     private final FindDialog findDialog = new FindDialog(this, this);
     private final ReplaceDialog replaceDialog = new ReplaceDialog(this, this);
@@ -81,6 +80,7 @@ public final class Notepad extends JFrame implements SearchListener, DocumentLis
         editor.setFont(Monospaced.getFont());
         editor.setCodeFoldingEnabled(true);
         editor.setMarkOccurrences(true);
+        editor.setAutoComplete(file);
 
         if (dict != null) {
             editor.addParser(dict);
