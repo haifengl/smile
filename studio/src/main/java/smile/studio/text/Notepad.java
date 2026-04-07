@@ -103,7 +103,7 @@ public final class Notepad extends JFrame implements SearchListener, DocumentLis
             editor.setCaretPosition(0);
             var style = Editor.probeSyntaxStyle(file);
             editor.setSyntaxEditingStyle(style);
-            editor.setAutoComplete(file, style);
+            editor.setAutoComplete(file.toUri().toString(), style);
         } catch (Exception ex) {
             SwingUtilities.invokeLater(() ->
                 JOptionPane.showMessageDialog(

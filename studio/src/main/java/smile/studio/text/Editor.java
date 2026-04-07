@@ -32,6 +32,9 @@ import smile.util.lsp.LanguageService;
  * @author Haifeng Li
  */
 public class Editor extends RSyntaxTextArea {
+    /** Auto-completion provider. */
+    private LspCompletionProvider provider;
+
     /**
      * Constructor.
      * @param rows the number of rows.
@@ -77,12 +80,20 @@ public class Editor extends RSyntaxTextArea {
         });
     }
 
+    @Override
+    public void setText(String t) {
+        super.setText(t);
+        if (provider != null) {
+            provider.change(this);
+        }
+    }
+
     /**
      * Sets up auto-completion based on the file type.
-     * @param file the file to set up auto-completion for.
+     * @param fileUrl the file URL to set up auto-completion for.
      * @param style the syntax style for the file.
      */
-    public void setAutoComplete(Path file, String style) {
+    public void setAutoComplete(String fileUrl, String style) {
         var lang = switch (style) {
             case SYNTAX_STYLE_JAVA -> "java";
             case SYNTAX_STYLE_PYTHON -> "python";
@@ -91,8 +102,7 @@ public class Editor extends RSyntaxTextArea {
         var lsp = LanguageService.get(lang);
         if (lsp == null) return;
 
-        var fileUrl = file.toUri().toString();
-        var provider = new LspCompletionProvider(lsp.server().getTextDocumentService(), fileUrl);
+        provider = new LspCompletionProvider(lsp.server().getTextDocumentService(), fileUrl);
         provider.open(this, lang);
         getDocument().addDocumentListener(provider);
         AutoCompletion ac = new AutoCompletion(provider);
