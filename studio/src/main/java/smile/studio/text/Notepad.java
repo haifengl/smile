@@ -132,10 +132,12 @@ public final class Notepad extends JFrame implements SearchListener, DocumentLis
                         if (save()) {
                             dispose();
                         }
+                        editor.close();
                         break;
 
                     case JOptionPane.NO_OPTION:
                         dispose();
+                        editor.close();
                         break;
 
                     case JOptionPane.CANCEL_OPTION:
