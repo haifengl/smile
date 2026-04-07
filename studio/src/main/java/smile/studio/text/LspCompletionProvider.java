@@ -178,7 +178,10 @@ public class LspCompletionProvider extends AbstractCompletionProvider implements
     @Override
     public String getAlreadyEnteredText(JTextComponent editor) {
         try {
-            return SmileUtilities.getWordAt(editor, editor.getCaretPosition());
+            int dot = editor.getCaretPosition();
+            int line = SmileUtilities.getLineOfOffset(editor, dot);
+            int start = SmileUtilities.getOffsetOfLine(editor, line);
+            return editor.getText(start, dot - start);
         } catch (Exception e) {
             logger.debug("Failed to get already entered text: {}", e.getMessage());
             return "";
@@ -209,11 +212,11 @@ public class LspCompletionProvider extends AbstractCompletionProvider implements
             List<CompletionItem> items = result.isLeft() ? result.getLeft() : result.getRight().getItems();
 
             for (CompletionItem item : items) {
-                // Map LSP CompletionItem to RSTA BasicCompletion
-                BasicCompletion c = new BasicCompletion(this,
+                // Map LSP CompletionItem to RSTA Completion
+                var completion = new DotCompletion(this,
                         item.getInsertText() != null ? item.getInsertText() : item.getLabel());
-                c.setSummary(item.getDetail());
-                completions.add(c);
+                completion.setSummary(item.getDetail());
+                completions.add(completion);
             }
 
         } catch (Exception e) {
@@ -221,5 +224,33 @@ public class LspCompletionProvider extends AbstractCompletionProvider implements
         }
 
         return completions;
+    }
+
+    /** A Completion implementation to proper handling of already entered text. */
+    private static class DotCompletion extends BasicCompletion {
+        public DotCompletion(CompletionProvider provider, String replacementText) {
+            super(provider, replacementText);
+        }
+
+        @Override
+        public String getInputText() {
+            return "";
+        }
+
+        @Override
+        public String getAlreadyEntered(JTextComponent editor) {
+            try {
+                var prefix = SmileUtilities.getWordAt(editor, editor.getCaretPosition());
+                return getReplacementText().startsWith(prefix) ? prefix : "";
+            } catch (BadLocationException e) {
+                return "";
+            }
+        }
+
+        /** Used to render objects */
+        @Override
+        public String toString() {
+            return getReplacementText();
+        }
     }
 }
