@@ -139,6 +139,11 @@ public class LanguageService implements AutoCloseable {
         services.put(lang, service);
     }
 
+    /** Returns the underlying LSP4J {@code LanguageServer} instance. */
+    public LanguageServer server() {
+        return server;
+    }
+
     // -----------------------------------------------------------------------
     // Lifecycle
     // -----------------------------------------------------------------------
