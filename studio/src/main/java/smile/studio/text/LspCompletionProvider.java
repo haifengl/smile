@@ -233,11 +233,6 @@ public class LspCompletionProvider extends AbstractCompletionProvider implements
         }
 
         @Override
-        public String getInputText() {
-            return "";
-        }
-
-        @Override
         public String getAlreadyEntered(JTextComponent editor) {
             try {
                 var prefix = SmileUtilities.getWordAt(editor, editor.getCaretPosition());
@@ -245,12 +240,6 @@ public class LspCompletionProvider extends AbstractCompletionProvider implements
             } catch (BadLocationException e) {
                 return "";
             }
-        }
-
-        /** Used to render objects */
-        @Override
-        public String toString() {
-            return getReplacementText();
         }
     }
 }
