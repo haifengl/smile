@@ -65,8 +65,8 @@ public interface SmileUtilities {
     static String getWordAt(JTextComponent editor, int offset) throws BadLocationException {
         int line = getLineOfOffset(editor, offset);
         int start = getOffsetOfLine(editor, line);
-        String text = editor.getText(start, offset);
-        String[] words = text.trim().split("\\s+");
+        String text = editor.getText(start, offset - start);
+        String[] words = text.trim().split("[.\\s]+");
         if (words.length > 0) {
             return words[words.length - 1];
         }
