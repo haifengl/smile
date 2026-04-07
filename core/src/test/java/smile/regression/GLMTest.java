@@ -14,9 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.glm;
+package smile.regression;
 
-import smile.glm.model.*;
+import smile.regression.glm.*;
 import smile.io.Read;
 import smile.io.Write;
 import smile.datasets.Default;

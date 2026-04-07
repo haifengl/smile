@@ -16,16 +16,16 @@
  */
 
 /**
- * The error distribution models (GLM families). Each family specifies
- * a link function, variance function, deviance, and log-likelihood.
- * Available families:
+ * The error distributions in Generalized Linear Models (GLMs).
+ * Each family specifies a link function, variance function,
+ * deviance, and log-likelihood. Available families:
  * <ul>
- *   <li>{@link smile.glm.model.Gaussian} – Normal distribution (identity, log, inverse links).</li>
- *   <li>{@link smile.glm.model.Bernoulli} – Bernoulli distribution (logit link).</li>
- *   <li>{@link smile.glm.model.Binomial} – Binomial distribution (logit link).</li>
- *   <li>{@link smile.glm.model.Poisson} – Poisson distribution (log link).</li>
+ *   <li>{@link smile.regression.glm.Gaussian} – Normal distribution (identity, log, inverse links).</li>
+ *   <li>{@link smile.regression.glm.Bernoulli} – Bernoulli distribution (logit link).</li>
+ *   <li>{@link smile.regression.glm.Binomial} – Binomial distribution (logit link).</li>
+ *   <li>{@link smile.regression.glm.Poisson} – Poisson distribution (log link).</li>
  * </ul>
  *
  * @author Haifeng Li
  */
-package smile.glm.model;
+package smile.regression.glm;

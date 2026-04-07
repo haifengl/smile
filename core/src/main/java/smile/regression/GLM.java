@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.glm;
+package smile.regression;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -25,7 +25,7 @@ import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.data.type.StructType;
-import smile.glm.model.Model;
+import smile.regression.glm.Model;
 import smile.math.MathEx;
 import smile.math.special.Erf;
 import smile.stat.Hypothesis;
