@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.gam;
+package smile.regression.gam;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -38,61 +38,26 @@ import java.io.Serializable;
  * {@code sum_i f(x_i) = 0}. This centering constant is stored and added
  * back on prediction.
  *
+ * @param name the name of the predictor variable.
+ * @param spline the B-spline basis specification for this predictor.
+ * @param lambda the smoothing parameter. Larger values produce smoother fits.
+ *        The penalty term added to the log-likelihood is {@code lambda * beta' P beta},
+ *        where P is the second-difference penalty matrix.
+ * @param coefficients the fitted B-spline coefficients (after centering).
+ * @param center the centering constant (mean of f(x_i) over training data), subtracted
+ *        to make the smooth identifiable in the additive model.
+ * @param edf the effective degrees of freedom consumed by this smooth.
+ *        Computed as {@code trace(S)}, where S is the smoother/hat matrix.
  * @author Haifeng Li
  */
-public class SmoothingSpline implements Serializable {
+public record SmoothingSpline(String name,
+                              BSpline spline,
+                              double lambda,
+                              double[] coefficients,
+                              double center,
+                              double edf) implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
-
-    /**
-     * The name of the predictor variable.
-     */
-    public final String name;
-
-    /**
-     * The B-spline basis specification for this predictor.
-     */
-    public final BSpline spline;
-
-    /**
-     * The smoothing parameter lambda. Larger values produce smoother fits.
-     * The penalty term added to the log-likelihood is {@code lambda * beta' P beta},
-     * where P is the second-difference penalty matrix.
-     */
-    public final double lambda;
-
-    /**
-     * The fitted B-spline coefficients (after centering).
-     */
-    double[] coefficients;
-
-    /**
-     * The centering constant (mean of f(x_i) over training data), subtracted
-     * to make the smooth identifiable in the additive model.
-     */
-    double center;
-
-    /**
-     * The effective degrees of freedom consumed by this smooth.
-     * Computed as {@code trace(S)}, where S is the smoother/hat matrix.
-     */
-    double edf;
-
-    /**
-     * Constructor.
-     *
-     * @param name    the name of the predictor variable.
-     * @param spline  the B-spline basis for this predictor.
-     * @param lambda  the smoothing parameter.
-     */
-    public SmoothingSpline(String name, BSpline spline, double lambda) {
-        this.name = name;
-        this.spline = spline;
-        this.lambda = lambda;
-        this.coefficients = new double[spline.numBasis];
-        this.center = 0.0;
-        this.edf = 0.0;
-    }
 
     /**
      * Evaluates the smooth function at a single point.

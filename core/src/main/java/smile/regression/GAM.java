@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.gam;
+package smile.regression;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -26,6 +26,7 @@ import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.linalg.UPLO;
 import smile.math.MathEx;
+import smile.regression.gam.*;
 import smile.regression.glm.Model;
 import smile.tensor.Cholesky;
 import smile.tensor.DenseMatrix;
@@ -267,7 +268,7 @@ public class GAM implements Serializable {
     public double predict(Tuple x) {
         double eta = intercept;
         for (SmoothingSpline smooth : smooths) {
-            double xj = x.getDouble(x.schema().indexOf(smooth.name));
+            double xj = x.getDouble(x.schema().indexOf(smooth.name()));
             eta += smooth.predict(xj);
         }
         return model.invlink(eta);
@@ -305,7 +306,7 @@ public class GAM implements Serializable {
         sb.append("-".repeat(42)).append("\n");
         for (SmoothingSpline smooth : smooths) {
             sb.append(String.format("s(%-18s %8.4g %10.2f%n",
-                    smooth.name + ")", smooth.lambda, smooth.edf));
+                    smooth.name() + ")", smooth.lambda(), smooth.edf()));
         }
 
         sb.append(String.format("%nIntercept: %.4f%n", intercept));
@@ -623,10 +624,7 @@ public class GAM implements Serializable {
         // Build SmoothingSpline objects for the return value
         SmoothingSpline[] smoothFunctions = new SmoothingSpline[p];
         for (int j = 0; j < p; j++) {
-            SmoothingSpline s = new SmoothingSpline(names[j], bases[j], lambdas[j]);
-            s.coefficients = coeffs[j];
-            s.center = centers[j];
-            s.edf = edf[j];
+            SmoothingSpline s = new SmoothingSpline(names[j], bases[j], lambdas[j], coeffs[j], centers[j], edf[j]);
             smoothFunctions[j] = s;
         }
 
