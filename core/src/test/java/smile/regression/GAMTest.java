@@ -14,12 +14,13 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.gam;
+package smile.regression;
 
 import smile.datasets.Default;
 import smile.datasets.ProstateCancer;
 import smile.io.Read;
 import smile.io.Write;
+import smile.regression.gam.*;
 import smile.regression.glm.*;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -184,7 +185,7 @@ public class GAMTest {
         double[] x = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0};
         BSpline spline = new BSpline(x, 8, 3);
         double[][] P = spline.penalty();
-        int df = spline.numBasis;
+        int df = spline.numBasis();
 
         assertEquals(df, P.length);
         assertEquals(df, P[0].length);
@@ -207,13 +208,11 @@ public class GAMTest {
         System.out.println("SmoothingSpline - predict consistency");
 
         double[] x = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0};
-        BSpline spline = new BSpline(x, 8, 3);
-        SmoothingSpline smooth = new SmoothingSpline("x", spline, 0.5);
-
         // Set arbitrary coefficients
         double[] beta = {0.1, 0.2, -0.1, 0.3, 0.0, -0.2, 0.15, 0.05};
-        smooth.coefficients = beta;
-        smooth.center = 0.0; // no centering for this test
+        BSpline spline = new BSpline(x, 8, 3);
+        // no centering for this test
+        SmoothingSpline smooth = new SmoothingSpline("x", spline, 0.5, beta, 0.0, 0.0);
 
         // Check prediction matches manual dot product
         for (double xi : x) {

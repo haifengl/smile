@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.gam;
+package smile.regression.gam;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -31,41 +31,21 @@ import java.util.Arrays;
  * coefficients, this achieves smoothing similar to a cubic smoothing spline
  * but with the computational advantage of a banded penalty.
  *
+ * @param degree the degree of the B-spline polynomial (default: 3 for cubic splines).
+ * @param knots the full (extended) knot vector, including repeated boundary knots.
+ * @param xmin the minimum value of the predictor (used for clamping at prediction time).
+ * @param xmax the maximum value of the predictor (used for clamping at prediction time).
+ * @param numBasis the number of basis functions (columns of the basis matrix).
  * @author Haifeng Li
  */
-public class BSpline implements Serializable {
+public record BSpline(int degree, double[] knots, double xmin, double xmax, int numBasis) implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
     /**
-     * The degree of the B-spline polynomial (default: 3 for cubic splines).
-     */
-    public final int degree;
-
-    /**
-     * The full (extended) knot vector, including repeated boundary knots.
-     */
-    public final double[] knots;
-
-    /**
-     * The minimum value of the predictor (used for clamping at prediction time).
-     */
-    public final double xmin;
-
-    /**
-     * The maximum value of the predictor (used for clamping at prediction time).
-     */
-    public final double xmax;
-
-    /**
-     * The number of basis functions (columns of the basis matrix).
-     */
-    public final int numBasis;
-
-    /**
      * Constructor.
      *
-     * @param x       the predictor values (used to determine knot placement).
+     * @param x       the predictor values (used to determine the knot placement).
      * @param df      the desired degrees of freedom (number of basis functions).
      *                Must be {@code >= degree + 1}.
      * @param degree  the polynomial degree (3 = cubic).
@@ -75,20 +55,20 @@ public class BSpline implements Serializable {
             throw new IllegalArgumentException(String.format(
                 "df (%d) must be >= degree + 1 (%d)", df, degree + 1));
         }
-        this.degree = degree;
-        this.numBasis = df;
-        this.xmin = Arrays.stream(x).min().orElseThrow(() -> new IllegalArgumentException("Empty predictor array"));
-        this.xmax = Arrays.stream(x).max().orElseThrow(() -> new IllegalArgumentException("Empty predictor array"));
+        this(degree,
+                new double[(df - degree - 1) + 2 * (degree + 1)],  // Will be overwritten below
+                Arrays.stream(x).min().orElseThrow(() -> new IllegalArgumentException("Empty predictor array")),
+                Arrays.stream(x).max().orElseThrow(() -> new IllegalArgumentException("Empty predictor array")),
+                df);
 
         // Number of interior knots
         int numInner = df - degree - 1;
         // Build extended knot vector: (degree+1) boundary knots on each side + inner knots
         int numKnots = numInner + 2 * (degree + 1);
-        double[] t = new double[numKnots];
 
         // Left boundary knots
         for (int i = 0; i <= degree; i++) {
-            t[i] = xmin;
+            knots[i] = xmin;
         }
         // Inner knots at quantiles of x
         if (numInner > 0) {
@@ -96,14 +76,13 @@ public class BSpline implements Serializable {
             Arrays.sort(sorted);
             for (int i = 1; i <= numInner; i++) {
                 double p = (double) i / (numInner + 1);
-                t[degree + i] = quantile(sorted, p);
+                knots[degree + i] = quantile(sorted, p);
             }
         }
         // Right boundary knots
         for (int i = 0; i <= degree; i++) {
-            t[numKnots - 1 - i] = xmax;
+            knots[numKnots - 1 - i] = xmax;
         }
-        this.knots = t;
     }
 
     /**

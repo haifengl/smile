@@ -16,13 +16,11 @@
  */
 
 /**
- * Generalized Additive Models (GAMs). GAMs are flexible statistical models
- * that extend Generalized Linear Models (GLMs) by allowing the linear
- * predictor to depend on smooth, non-linear functions of predictors
- * rather than just linear coefficients. They balance flexibility with
- * interpretability, using smooth functions (e.g., splines) to capture
- * complex, nonlinear relationships while maintaining an additive structure.
+ * The spline functions in Generalized Additive Models (GAMs).
+ * GAMs balance flexibility with interpretability, using smooth
+ * spline functions to capture complex, nonlinear relationships
+ * while maintaining an additive structure.
  *
  * @author Haifeng Li
  */
-package smile.gam;
+package smile.regression.gam;
