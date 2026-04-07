@@ -18,11 +18,9 @@ package smile.gam;
 
 import smile.datasets.Default;
 import smile.datasets.ProstateCancer;
-import smile.glm.model.Bernoulli;
-import smile.glm.model.Gaussian;
-import smile.glm.model.Poisson;
 import smile.io.Read;
 import smile.io.Write;
+import smile.regression.glm.*;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 

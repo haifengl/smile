@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.glm.model;
+package smile.regression.glm;
 
 import java.io.Serializable;
 

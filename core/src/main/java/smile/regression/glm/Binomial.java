@@ -14,85 +14,85 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.glm.model;
+package smile.regression.glm;
 
-import java.util.Arrays;
-import java.util.stream.IntStream;
 import smile.math.MathEx;
 
+import java.util.stream.IntStream;
+
 /**
- * The response variable is of Poisson distribution.
+ * The response variable is of Binomial distribution.
  *
  * @author Haifeng Li
  */
-public interface Poisson {
+public interface Binomial {
     /**
-     * log link function.
-     * @return log link function.
+     * logit link function. Suppose n * y has a bin(n, p) distribution.
+     * That is, y is the sample proportion (rather than number) of successes.
+     * So E(y) is independent of n.
+     *
+     * @param n each sample y[i] is of bin(n[i], p_i) distribution.
+     * @return logit link function.
      */
-    static Model log() {
+    static Model logit(int[] n) {
         return new Model() {
-
             @Override
             public String toString() {
-                return "Poisson(log)";
+                return "Binomial(logit)";
             }
 
             @Override
             public double link(double mu) {
-                return Math.log(mu);
+                return Math.log(mu / (1.0 - mu));
             }
 
             @Override
             public double invlink(double eta) {
-                return Math.exp(eta);
+                return 1.0 / (1.0 + Math.exp(-eta));
             }
 
             @Override
             public double dlink(double mu) {
-                return 1.0 / mu;
+                return 1.0 / (mu * (1.0 - mu));
             }
 
             @Override
             public double variance(double mu) {
-                return mu;
+                return mu * (1.0 - mu);
             }
 
             @Override
             public double mustart(double y) {
-                if (y < 0) {
-                    throw new IllegalArgumentException("Invalid argument (expected non-negative): " + y);
+                if (y < 0.0 || y > 1.0) {
+                    throw new IllegalArgumentException("Invalid argument (expected 0 <= y <= 1): " + y);
                 }
 
-                return y == 0 ? 0.5 : y;
+                if (y == 0) return 0.1;
+                if (y == 1.0) return 0.9;
+                else return y;
             }
 
             @Override
             public double deviance(double[] y, double[] mu, double[] residuals) {
                 return IntStream.range(0, y.length).mapToDouble(i -> {
-                    // Poisson deviance contribution: 2 * (y * log(y/mu) - (y - mu))
-                    // Simplified to 2 * y * log(y/mu) since sum of (y-mu) = 0 at MLE.
-                    // When y = 0, the term y * log(y/mu) → 0 by convention (limit as y→0+).
-                    double d = y[i] == 0.0
-                            ? 2.0 * mu[i]  // 2*(0 - 0 + mu) = 2*mu
-                            : 2.0 * (y[i] * Math.log(y[i] / mu[i]) - (y[i] - mu[i]));
-                    residuals[i] = Math.sqrt(Math.max(d, 0.0)) * Math.signum(y[i] - mu[i]);
+                    double d = 2.0 * n[i] * (y[i] * Math.log(y[i] / mu[i]) + (1.0 - y[i]) * Math.log((1.0 - y[i]) / (1.0 - mu[i])));
+                    residuals[i] = Math.sqrt(d) * Math.signum(y[i] - mu[i]);
                     return d;
                 }).sum();
             }
 
             @Override
             public double nullDeviance(double[] y, double mu) {
-                return Arrays.stream(y).map(yi ->
-                        yi == 0.0
-                                ? 2.0 * mu  // 2*(0 - 0 + mu) = 2*mu
-                                : 2.0 * (yi * Math.log(yi / mu) - (yi - mu))
-                ).sum();
+                double logmu = -Math.log(mu);
+                double logmu1 = -Math.log(1.0 - mu);
+                return 2.0 * IntStream.range(0, y.length).mapToDouble(i -> n[i] * (y[i] == 0.0 ? logmu1 : logmu)).sum();
             }
 
             @Override
             public double logLikelihood(double[] y, double[] mu) {
-                return IntStream.range(0, y.length).mapToDouble(i -> -mu[i] + y[i] * Math.log(mu[i]) - MathEx.lfactorial((int) y[i])).sum();
+                return IntStream.range(0, y.length).mapToDouble(i ->
+                        (y[i] * mu[i] - Math.log(1 + Math.exp(mu[i]))) / n[i] + MathEx.lchoose(n[i], (int) (n[i] * y[i]))
+                ).sum();
             }
         };
     }
