@@ -74,7 +74,7 @@ import smile.validation.ModelSelection;
  *
  * @author Haifeng Li
  */
-public class GLM implements Serializable {
+public class GLM implements DataFrameRegression, Serializable {
     @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GLM.class);
@@ -82,27 +82,31 @@ public class GLM implements Serializable {
     /**
      * The symbolic description of the model to be fitted.
      */
-    protected final Formula formula;
+    private final Formula formula;
+    /**
+     * The schema of design matrix.
+     */
+    private final StructType schema;
     /**
      * The predictors of design matrix.
      */
-    final String[] predictors;
+    private final String[] predictors;
     /**
      * The model specifications (link function, deviance, etc.).
      */
-    protected final Model model;
+    private final Model model;
     /**
      * The linear weights.
      */
-    protected final double[] beta;
+    private final double[] beta;
     /**
      * The coefficients, their standard errors, z-scores, and p-values.
      */
-    protected final double[][] ztest;
+    private final double[][] ztest;
     /**
      * The fitted mean values.
      */
-    protected final double[] mu;
+    private final double[] mu;
     /**
      * The null deviance = 2 * (LogLikelihood(Saturated Model) - LogLikelihood(Null Model)).
      * <p>
@@ -116,28 +120,28 @@ public class GLM implements Serializable {
      * depend on predictor variables. While the saturated most is the most
      * general model, the null model is the most restricted model.
      */
-    protected final double nullDeviance;
+    private final double nullDeviance;
     /**
      * The deviance = 2 * (LogLikelihood(Saturated Model) - LogLikelihood(Proposed Model)).
      */
-    protected final double deviance;
+    private final double deviance;
     /**
      * The deviance residuals.
      */
-    protected final double[] devianceResiduals;
+    private final double[] devianceResiduals;
     /**
      * The degrees of freedom of the residual deviance.
      */
-    protected final int df;
+    private final int df;
     /**
      * Log-likelihood.
      */
-    protected final double logLikelihood;
+    private final double logLikelihood;
 
     /**
      * Constructor.
      * @param formula the model formula.
-     * @param predictors the predictors of design matrix.
+     * @param schema the schema of design matrix.
      * @param model the generalized linear model specification.
      * @param beta the linear weights.
      * @param logLikelihood the log-likelihood.
@@ -147,10 +151,11 @@ public class GLM implements Serializable {
      * @param residuals the residuals of fitted values of training data.
      * @param ztest the z-test of the coefficients.
      */
-    public GLM(Formula formula, String[] predictors, Model model, double[] beta, double logLikelihood, double deviance, double nullDeviance, double[] mu, double[] residuals, double[][] ztest) {
+    public GLM(Formula formula, StructType schema, Model model, double[] beta, double logLikelihood, double deviance, double nullDeviance, double[] mu, double[] residuals, double[][] ztest) {
         this.formula = formula;
         this.model = model;
-        this.predictors = predictors;
+        this.schema = schema;
+        this.predictors = schema.names();
         this.beta = beta;
         this.logLikelihood = logLikelihood;
         this.deviance = deviance;
@@ -233,11 +238,17 @@ public class GLM implements Serializable {
         return ModelSelection.BIC(logLikelihood, beta.length, mu.length);
     }
 
-    /**
-     * Predicts the mean response.
-     * @param x the instance.
-     * @return the mean response.
-     */
+    @Override
+    public Formula formula() {
+        return formula;
+    }
+
+    @Override
+    public StructType schema() {
+        return schema;
+    }
+
+    @Override
     public double predict(Tuple x) {
         double[] a = formula.x(x).toArray(true, CategoricalEncoder.DUMMY);
         int p = beta.length;
@@ -249,11 +260,7 @@ public class GLM implements Serializable {
         return model.invlink(dot);
     }
 
-    /**
-     * Predicts the mean response.
-     * @param data the data frame.
-     * @return the mean response.
-     */
+    @Override
     public double[] predict(DataFrame data) {
         DenseMatrix X = formula.matrix(data, true);
         double[] y = X.mv(beta).toArray(new double[0]);
@@ -447,7 +454,7 @@ public class GLM implements Serializable {
             ztest[i][3] = 2.0 - Erf.erfc(-0.707106781186547524 * Math.abs(ztest[i][2]));
         }
 
-        return new GLM(formula, schema.names(), model, beta.toArray(new double[0]), model.logLikelihood(y, mu),
+        return new GLM(formula, schema, model, beta.toArray(new double[0]), model.logLikelihood(y, mu),
                 dev, model.nullDeviance(y, MathEx.mean(y)), mu, residuals, ztest);
     }
 }
