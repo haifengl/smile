@@ -98,8 +98,20 @@ public class Editor extends RSyntaxTextArea {
         AutoCompletion ac = new AutoCompletion(provider);
         ac.setAutoActivationEnabled(true);
         ac.setAutoActivationDelay(300); // 300ms delay
-        ac.setTriggerKey(KeyStroke.getKeyStroke('.'));
         ac.install(this);
+
+        InputMap inputMap = getInputMap(JComponent.WHEN_FOCUSED);
+        ActionMap actionMap = getActionMap();
+        inputMap.put(KeyStroke.getKeyStroke('.'), "autocomplete");
+        // Trigger auto-completion when '.' is typed,
+        // which is common for member access in many languages.
+        actionMap.put("autocomplete", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                    insert(".", getCaretPosition());
+                    ac.doCompletion();
+            }
+        });
     }
 
     /**
