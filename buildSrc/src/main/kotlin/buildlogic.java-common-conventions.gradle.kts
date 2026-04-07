@@ -44,4 +44,10 @@ tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
     workingDir = project.rootDir
+    // Forward any smile.test.* Gradle project properties (-P) to the test JVM
+    // as system properties (-D), so that gated tests can be enabled with e.g.:
+    //   ./gradlew :base:test -Psmile.test.network=true
+    project.properties
+        .filter { (k, v) -> k.startsWith("smile.test.") && v != null }
+        .forEach { (k, v) -> systemProperty(k, v.toString()) }
 }
