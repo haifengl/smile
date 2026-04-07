@@ -60,6 +60,7 @@ public interface SmileUtilities {
      * @param editor the text component.
      * @param offset the text offset.
      * @return the word ending at the text offset.
+     * @throws BadLocationException if the offset is invalid.
      */
     static String getWordAt(JTextComponent editor, int offset) throws BadLocationException {
         int line = getLineOfOffset(editor, offset);

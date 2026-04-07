@@ -69,7 +69,7 @@ import smile.validation.ModelSelection;
  * thus logistic regression is sometimes called "maximum entropy modeling",
  * and the resulting classifier the "maximum entropy classifier".
  *
- * @see smile.glm.GLM
+ * @see smile.regression.GLM
  * @see MLP
  * @see Maxent
  * @see LDA

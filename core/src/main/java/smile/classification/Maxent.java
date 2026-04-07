@@ -42,7 +42,7 @@ import smile.validation.ModelSelection;
  * which assumes that binary features are stored in a sparse array, of which
  * entries are the indices of nonzero features.
  *
- * @see smile.glm.GLM
+ * @see smile.regression.GLM
  * @see LogisticRegression
  * 
  * <h2>References</h2>
