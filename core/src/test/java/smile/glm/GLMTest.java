@@ -77,4 +77,46 @@ public class GLMTest {
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
     }
+
+    /**
+     * Tests that Poisson deviance and nullDeviance are finite when the
+     * response vector contains zero counts (the zero-count bug fix).
+     * When y_i = 0, the deviance contribution should be 2 * mu_i (not NaN).
+     */
+    @Test
+    public void testPoissonZeroCounts() {
+        System.out.println("Poisson zero-count deviance");
+
+        // y = [0, 1, 2, 3, 4, 5] with mu = [0.5, 1.0, 2.0, 3.0, 4.0, 5.0]
+        double[] y  = {0.0, 1.0, 2.0, 3.0, 4.0, 5.0};
+        double[] mu = {0.5, 1.0, 2.0, 3.0, 4.0, 5.0};
+        double[] residuals = new double[y.length];
+
+        var model = Poisson.log();
+
+        double dev = model.deviance(y, mu, residuals);
+        assertTrue(Double.isFinite(dev),
+                "Poisson deviance must be finite when y contains zeros, got " + dev);
+        assertTrue(dev >= 0.0,
+                "Poisson deviance must be non-negative, got " + dev);
+
+        // y[0]=0, mu[0]=0.5 → contribution = 2*(0 - 0 + 0.5) = 1.0
+        assertEquals(1.0, 2.0 * mu[0], 1E-10);
+
+        // residual for y=0 should be negative (y < mu)
+        assertTrue(residuals[0] <= 0.0,
+                "Deviance residual for y=0 should be <= 0, got " + residuals[0]);
+
+        // All residuals must be finite
+        for (int i = 0; i < residuals.length; i++) {
+            assertTrue(Double.isFinite(residuals[i]),
+                    "Deviance residual[" + i + "] must be finite, got " + residuals[i]);
+        }
+
+        double nullDev = model.nullDeviance(y, 2.5);  // mean of y
+        assertTrue(Double.isFinite(nullDev),
+                "Poisson null deviance must be finite when y contains zeros, got " + nullDev);
+        assertTrue(nullDev >= 0.0,
+                "Poisson null deviance must be non-negative, got " + nullDev);
+    }
 }
