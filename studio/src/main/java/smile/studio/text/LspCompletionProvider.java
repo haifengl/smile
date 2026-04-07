@@ -100,6 +100,20 @@ public class LspCompletionProvider extends AbstractCompletionProvider implements
         }
     }
 
+    /**
+     * Sends a {@code textDocument/didClose} notification to the language server.
+     *
+     * <p>Call this when the editor is closed or no longer needs LSP features so
+     * the language server can stop tracking the document and free resources.
+     */
+    public void close() {
+        try {
+            TextDocumentIdentifier id = new TextDocumentIdentifier(fileUri);
+            docService.didClose(new DidCloseTextDocumentParams(id));
+        } catch (Exception ex) {
+            logger.warn("Failed to send didClose notification: {}", ex.getMessage());
+        }
+    }
 
     /**
      * Builds a {@code textDocument/didChange} notification from a
@@ -207,6 +221,10 @@ public class LspCompletionProvider extends AbstractCompletionProvider implements
             CompletableFuture<Either<List<CompletionItem>, CompletionList>> future = docService.completion(params);
 
             Either<List<CompletionItem>, CompletionList> result = future.get(2, TimeUnit.SECONDS);
+            if (result == null) {
+                logger.warn("Completion request timed out");
+                return completions;
+            }
 
             // Process Results
             List<CompletionItem> items = result.isLeft() ? result.getLeft() : result.getRight().getItems();
@@ -220,7 +238,7 @@ public class LspCompletionProvider extends AbstractCompletionProvider implements
             }
 
         } catch (Exception e) {
-            logger.debug("Completion failed: {}", e.getMessage());
+            logger.warn("Completion failed: {}", e.getMessage());
         }
 
         return completions;
