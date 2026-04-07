@@ -38,6 +38,11 @@ import org.slf4j.LoggerFactory;
 public class NoOpLanguageClientStub implements LanguageClient {
     private static final Logger logger = LoggerFactory.getLogger(NoOpLanguageClientStub.class);
 
+    /** Constructor. */
+    public NoOpLanguageClientStub() {
+        
+    }
+
     @Override
     public void telemetryEvent(Object object) {
         logger.debug("[LSP telemetry] {}", object);
