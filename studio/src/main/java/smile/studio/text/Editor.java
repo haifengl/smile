@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.studio;
+package smile.studio.text;
 
 import javax.swing.*;
 import java.awt.event.*;
@@ -22,6 +22,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import org.fife.ui.rsyntaxtextarea.*;
 import smile.io.Paths;
+import smile.studio.Markdown;
+import smile.studio.Monospaced;
 
 /**
  * Text editor with syntax highlighting.

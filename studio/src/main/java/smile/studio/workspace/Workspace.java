@@ -31,12 +31,12 @@ import ioa.agent.Analyst;
 import ioa.agent.Coder;
 import smile.io.Paths;
 import smile.shell.JShell;
-import smile.studio.Notepad;
 import smile.studio.SmileStudio;
-import smile.swing.FileExplorer;
-import smile.swing.tree.DirectoryTreeNode;
 import smile.studio.cli.AgentCLI;
 import smile.studio.notebook.Notebook;
+import smile.studio.text.Notepad;
+import smile.swing.FileExplorer;
+import smile.swing.tree.DirectoryTreeNode;
 
 /**
  * A notebook workspace.

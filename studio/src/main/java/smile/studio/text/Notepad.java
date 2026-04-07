@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.studio;
+package smile.studio.text;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -42,6 +42,8 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 import org.fife.ui.rtextarea.SearchContext;
 import org.fife.ui.rtextarea.SearchEngine;
 import org.fife.ui.rtextarea.SearchResult;
+import smile.studio.Monospaced;
+import smile.studio.StatusBar;
 
 /**
  * A simple text editor.

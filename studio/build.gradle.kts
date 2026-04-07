@@ -17,6 +17,7 @@ dependencies {
     implementation("com.google.genai:google-genai:1.45.0")
     implementation("org.commonmark:commonmark:0.27.1")
     implementation("org.xhtmlrenderer:flying-saucer-core:10.2.0")
+    implementation("org.eclipse.lsp4j:org.eclipse.lsp4j:1.0.0")
     implementation("com.fifesoft:rsyntaxtextarea:3.6.2")
     implementation("com.fifesoft:rstaui:3.3.2")
     implementation("com.fifesoft:spellchecker:3.4.1")

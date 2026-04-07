@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.studio.notebook;
+package smile.studio.text;
 
 import javax.swing.text.JTextComponent;
 import java.awt.Point;
@@ -23,7 +23,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.eclipse.lsp4j.services.LanguageServer;
+import org.eclipse.lsp4j.services.TextDocumentService;
 import org.fife.ui.autocomplete.*;
 import smile.swing.SmileUtilities;
 
@@ -34,11 +34,16 @@ import smile.swing.SmileUtilities;
  */
 public class LspCompletionProvider extends AbstractCompletionProvider {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LspCompletionProvider.class);
-    private final LanguageServer server;
+    private final TextDocumentService docService;
     private final String fileUri;
 
-    public LspCompletionProvider(LanguageServer server, String fileUri) {
-        this.server = server;
+    /**
+     * Constructor.
+     * @param docService the LSP document service for completions.
+     * @param fileUri the URI of the file being edited (e.g., "file:///path/to/file.py").
+     */
+    public LspCompletionProvider(TextDocumentService docService, String fileUri) {
+        this.docService = docService;
         this.fileUri = fileUri;
     }
 
@@ -79,8 +84,7 @@ public class LspCompletionProvider extends AbstractCompletionProvider {
 
             // Call Language Server (Asynchronous to Synchronous bridge)
             // Note: In a production app, use a timeout to avoid UI freezes
-            CompletableFuture<Either<List<CompletionItem>, CompletionList>> future = server.getTextDocumentService()
-                    .completion(params);
+            CompletableFuture<Either<List<CompletionItem>, CompletionList>> future = docService.completion(params);
 
             Either<List<CompletionItem>, CompletionList> result = future.get(2, TimeUnit.SECONDS);
 
