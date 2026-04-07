@@ -92,14 +92,31 @@ public class LspCompletionProvider extends AbstractCompletionProvider implements
      */
     public void open(JTextComponent editor, String languageId) {
         try {
-            Document doc = editor.getDocument();
-            String text = doc.getText(0, doc.getLength());
+            String text = editor.getText();
             TextDocumentItem item = new TextDocumentItem(fileUri, languageId, version.incrementAndGet(), text);
             docService.didOpen(new DidOpenTextDocumentParams(item));
-        } catch (BadLocationException ex) {
-            logger.warn("Failed to read document content for didOpen: {}", ex.getMessage());
         } catch (Exception ex) {
             logger.warn("Failed to send didOpen notification: {}", ex.getMessage());
+        }
+    }
+
+
+    /**
+     * Builds a {@code textDocument/didChange} notification from a
+     * Swing {@link JTextComponent} and dispatches it to the language server.
+     *
+     * @param editor the Swing text component with new text.
+     */
+    public void change(JTextComponent editor) {
+        try {
+            // Retrieve the new text that was inserted (empty string for removals).
+            String text = editor.getText();
+            TextDocumentContentChangeEvent change = new TextDocumentContentChangeEvent(text);
+            VersionedTextDocumentIdentifier versionedId = new VersionedTextDocumentIdentifier(fileUri, version.incrementAndGet());
+            DidChangeTextDocumentParams params = new DidChangeTextDocumentParams(versionedId, List.of(change));
+            docService.didChange(params);
+        }catch (Exception ex) {
+            logger.warn("Failed to send didChange notification: {}", ex.getMessage());
         }
     }
 
