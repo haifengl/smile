@@ -93,7 +93,7 @@ import smile.validation.ModelSelection;
  *
  * @author Haifeng Li
  */
-public class GAM implements Serializable {
+public class GAM implements DataFrameRegression, Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GAM.class);
@@ -102,6 +102,10 @@ public class GAM implements Serializable {
      * The symbolic description of the model to be fitted.
      */
     private final Formula formula;
+    /**
+     * The schema of design matrix.
+     */
+    private final StructType schema;
 
     /**
      * The model specification (link function, deviance, variance function, etc.).
@@ -154,6 +158,7 @@ public class GAM implements Serializable {
      * Constructor.
      *
      * @param formula          the model formula.
+     * @param schema           the schema of design matrix.
      * @param model            the GLM family specification.
      * @param intercept        the fitted intercept.
      * @param smooths          the fitted smooth terms.
@@ -164,10 +169,11 @@ public class GAM implements Serializable {
      * @param logLikelihood    the log-likelihood.
      * @param totalEdf         the total effective degrees of freedom.
      */
-    public GAM(Formula formula, Model model, double intercept, SmoothingSpline[] smooths,
-               double[] mu, double[] devianceResiduals,
+    public GAM(Formula formula, StructType schema, Model model, double intercept,
+               SmoothingSpline[] smooths, double[] mu, double[] devianceResiduals,
                double nullDeviance, double deviance, double logLikelihood, double totalEdf) {
         this.formula = formula;
+        this.schema = schema;
         this.model = model;
         this.intercept = intercept;
         this.smooths = smooths;
@@ -259,12 +265,17 @@ public class GAM implements Serializable {
         return ModelSelection.BIC(logLikelihood, (int) Math.round(totalEdf), mu.length);
     }
 
-    /**
-     * Predicts the mean response for a new observation.
-     *
-     * @param x the new observation tuple (must match the formula schema).
-     * @return the predicted mean response.
-     */
+    @Override
+    public Formula formula() {
+        return formula;
+    }
+
+    @Override
+    public StructType schema() {
+        return schema;
+    }
+
+    @Override
     public double predict(Tuple x) {
         double eta = intercept;
         for (SmoothingSpline smooth : smooths) {
@@ -274,12 +285,7 @@ public class GAM implements Serializable {
         return model.invlink(eta);
     }
 
-    /**
-     * Predicts the mean response for multiple observations.
-     *
-     * @param data the data frame of new observations.
-     * @return the predicted mean responses.
-     */
+    @Override
     public double[] predict(DataFrame data) {
         int n = data.nrow();
         double[] predictions = new double[n];
@@ -628,7 +634,7 @@ public class GAM implements Serializable {
             smoothFunctions[j] = s;
         }
 
-        return new GAM(formula, model, intercept, smoothFunctions, mu, residuals,
+        return new GAM(formula, schema, model, intercept, smoothFunctions, mu, residuals,
                 nullDev, dev, logLik, totalEdf);
     }
 
