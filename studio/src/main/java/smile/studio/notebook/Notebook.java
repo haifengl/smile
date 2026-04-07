@@ -17,6 +17,7 @@
 package smile.studio.notebook;
 
 import javax.swing.*;
+import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
@@ -34,6 +35,7 @@ import smile.io.Paths;
 import smile.studio.SmileStudio;
 import smile.studio.kernel.*;
 import smile.studio.Monospaced;
+import smile.studio.text.Editor;
 import smile.swing.ScrollablePanel;
 import smile.util.ipynb.JupyterNotebook;
 
@@ -435,7 +437,24 @@ public class Notebook extends JPanel implements DocumentListener {
         cell.editor().setText(source);
         cell.setType(cellType(type));
         cell.editor().getDocument().addDocumentListener(this);
+        enableAutoComplete(cell.editor());
         return cell;
+    }
+
+    /** Enables the auto-completion for a cell based on the notebook file. */
+    private void enableAutoComplete(Editor editor) {
+        // Delay 10 seconds if notebook is not fully loaded,
+        // which usually happens at start up time. This heuristic
+        // is to ensure language servers ready.
+        int delay = isShowing() ? 100 : 10000;
+        Timer timer = new Timer(delay, e -> {
+           var fileUrl = "memfs://" + file.getFileName() + "/" + UUID.randomUUID();
+            System.out.println("setAutoComplete: " + fileUrl + " -> " + editor.getSyntaxEditingStyle());
+            editor.setAutoComplete(fileUrl, editor.getSyntaxEditingStyle());
+        });
+
+        timer.setRepeats(false); // Only fire once
+        timer.start();
     }
 
     /** Determines the cell separator based on file extension. */
@@ -600,6 +619,8 @@ public class Notebook extends JPanel implements DocumentListener {
     public Cell addCell(Cell insertAfter) {
         Cell cell = new Cell(this);
         cell.editor().getDocument().addDocumentListener(this);
+        enableAutoComplete(cell.editor());
+
         int idx = (insertAfter == null) ? cells.getComponentCount()
                                         : indexOf(insertAfter) + 1;
         cells.add(cell, idx);
