@@ -17,14 +17,19 @@
 package smile.util;
 
 import java.io.*;
-import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.HexFormat;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -93,8 +98,22 @@ public class HuggingFaceHub {
     /** Buffer size for streaming downloads (8 MiB). */
     private static final int DOWNLOAD_BUFFER = 8 * 1024 * 1024;
 
-    /** Connection / read timeout in milliseconds (10 s). */
-    private static final int TIMEOUT_MS = 10_000;
+    /** Connection timeout (10 s). */
+    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
+
+    /**
+     * Shared {@link HttpClient} instance.
+     * <ul>
+     *   <li>Follows redirects automatically (equivalent to
+     *       {@code setInstanceFollowRedirects(true)}).</li>
+     *   <li>Uses a 10-second connect timeout (read/body timeout is applied
+     *       per-request via {@link HttpRequest.Builder#timeout(Duration)}).</li>
+     * </ul>
+     */
+    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
+            .followRedirects(HttpClient.Redirect.NORMAL)
+            .connectTimeout(CONNECT_TIMEOUT)
+            .build();
 
     // -----------------------------------------------------------------------
     // Repo type → URL segment mapping
@@ -209,7 +228,7 @@ public class HuggingFaceHub {
         //   e.g. models--google--bert-base-uncased
         // ----------------------------------------------------------------
         String repoCacheName = repoType.cachePrefix() + "--" + repoId.replace("/", "--");
-        Path repoCache = cache.resolve(repoCacheName);
+        Path repoCache    = cache.resolve(repoCacheName);
         Path blobsDir     = repoCache.resolve("blobs");
         Path snapshotsDir = repoCache.resolve("snapshots");
         Path refsDir      = repoCache.resolve("refs");
@@ -223,7 +242,7 @@ public class HuggingFaceHub {
         // the API (HEAD request).
         // ----------------------------------------------------------------
         String endpoint = resolveEndpoint();
-        String token = resolveToken();
+        String token    = resolveToken();
 
         // If revision looks like a full 40-char hex commit hash, use it directly.
         String commitHash = null;
@@ -251,8 +270,8 @@ public class HuggingFaceHub {
                 + revision + "/" + encodedFilename;
 
         // ----------------------------------------------------------------
-        // Fast path: if we already have the commit hash and the snapshot
-        // symlink exists and we are not forced, return the cached path.
+        // Fast path: if we already have the commit hash, the snapshot
+        // symlink exists, and we are not forced, return the cached path.
         // ----------------------------------------------------------------
         if (!forceDownload && commitHash != null) {
             Path snapshotFile = snapshotsDir.resolve(commitHash).resolve(filename);
@@ -274,7 +293,7 @@ public class HuggingFaceHub {
             // Scan all known snapshots.
             if (Files.exists(snapshotsDir)) {
                 try (var stream = Files.list(snapshotsDir)) {
-                    var found = stream
+                    Optional<Path> found = stream
                             .map(s -> s.resolve(resolvedFilename))
                             .filter(Files::exists)
                             .findFirst();
@@ -287,11 +306,9 @@ public class HuggingFaceHub {
         // ================================================================
         // Network path: HEAD request to resolve ETag / commit hash
         // ================================================================
-        HttpURLConnection headConn = openConnection(fileUrl, token);
-        headConn.setRequestMethod("HEAD");
-        headConn.setConnectTimeout(TIMEOUT_MS);
-        headConn.setReadTimeout(TIMEOUT_MS);
-        headConn.setInstanceFollowRedirects(true);
+        HttpRequest.Builder headBuilder = buildRequest(fileUrl, token)
+                .method("HEAD", HttpRequest.BodyPublishers.noBody())
+                .timeout(CONNECT_TIMEOUT);
 
         // Send ETag of existing blob for conditional requests.
         if (!forceDownload && commitHash != null) {
@@ -299,14 +316,16 @@ public class HuggingFaceHub {
             if (Files.isSymbolicLink(snapshotFile)) {
                 Path blobPath = snapshotFile.toRealPath();
                 String existingEtag = blobPath.getFileName().toString();
-                headConn.setRequestProperty("If-None-Match", "\"" + existingEtag + "\"");
+                headBuilder.header("If-None-Match", "\"" + existingEtag + "\"");
             }
         }
 
-        int headStatus;
+        HttpResponse<Void> headResp;
         try {
-            headConn.connect();
-            headStatus = headConn.getResponseCode();
+            headResp = HTTP_CLIENT.send(headBuilder.build(), BodyHandlers.discarding());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("HEAD request interrupted for: " + fileUrl, e);
         } catch (IOException e) {
             // Network error — fall back to cache if available.
             logger.warn("HEAD request failed for {}: {}", fileUrl, e.getMessage());
@@ -318,32 +337,32 @@ public class HuggingFaceHub {
                 }
             }
             throw new IOException("Network error and no cached copy found for: " + fileUrl, e);
-        } finally {
-            headConn.disconnect();
         }
 
-        if (headStatus == HttpURLConnection.HTTP_UNAUTHORIZED) {
+        int headStatus = headResp.statusCode();
+
+        if (headStatus == 401) {
             throw new IOException("401 Unauthorized for '%s'. Provide a valid HF_TOKEN for private repos.".formatted(fileUrl));
         }
-        if (headStatus == HttpURLConnection.HTTP_FORBIDDEN) {
+        if (headStatus == 403) {
             throw new IOException("403 Forbidden for '%s'. You may not have access to this repository.".formatted(fileUrl));
         }
-        if (headStatus == HttpURLConnection.HTTP_NOT_FOUND) {
+        if (headStatus == 404) {
             throw new FileNotFoundException("404 Not Found: '%s' in repo '%s' at revision '%s'.".formatted(filename, repoId, revision));
         }
-        if (headStatus != HttpURLConnection.HTTP_OK && headStatus != HttpURLConnection.HTTP_NOT_MODIFIED) {
+        if (headStatus != 200 && headStatus != 304) {
             throw new IOException("Unexpected HTTP %d for HEAD request on: %s".formatted(headStatus, fileUrl));
         }
 
         // Extract metadata from response headers.
-        String etag = stripWeakEtag(headConn.getHeaderField(HEADER_ETAG));
+        String etag = stripWeakEtag(headResp.headers().firstValue(HEADER_ETAG).orElse(null));
         // For LFS files, X-Linked-Etag holds the Git SHA-1 of the LFS blob object.
         // Prefer it over the regular ETag as it is more stable across redirects.
         // IMPORTANT: both are Git SHA-1 identifiers (40 hex chars), NOT SHA-256
         // content hashes — never compare them against a computed SHA-256.
-        String lfsEtag = stripWeakEtag(headConn.getHeaderField(HEADER_LFS_SHA));
-        String serverCommitHash = headConn.getHeaderField(HEADER_COMMIT_HASH);
-        String lfsSizeStr = headConn.getHeaderField(HEADER_LFS_SIZE);
+        String lfsEtag = stripWeakEtag(headResp.headers().firstValue(HEADER_LFS_SHA).orElse(null));
+        String serverCommitHash = headResp.headers().firstValue(HEADER_COMMIT_HASH).orElse(null);
+        String lfsSizeStr = headResp.headers().firstValue(HEADER_LFS_SIZE).orElse(null);
 
         // Use the LFS ETag as the blob cache key, falling back to the regular ETag.
         String blobSha = lfsEtag != null ? lfsEtag : etag;
@@ -374,7 +393,7 @@ public class HuggingFaceHub {
         // ----------------------------------------------------------------
         // 304 Not Modified: cached blob is still valid
         // ----------------------------------------------------------------
-        if (headStatus == HttpURLConnection.HTTP_NOT_MODIFIED && Files.exists(snapshotFile)) {
+        if (headStatus == 304 && Files.exists(snapshotFile)) {
             logger.debug("304 Not Modified — using cached: {}", snapshotFile);
             return snapshotFile;
         }
@@ -398,22 +417,22 @@ public class HuggingFaceHub {
         // Download to a temp file first; atomic rename afterward.
         Path tempFile = blobsDir.resolve("." + UUID.randomUUID() + ".tmp");
         try {
-            HttpURLConnection getConn = openConnection(fileUrl, token);
-            getConn.setRequestMethod("GET");
-            getConn.setConnectTimeout(TIMEOUT_MS);
-            getConn.setReadTimeout(0); // unlimited for body transfer
-            getConn.setInstanceFollowRedirects(true);
+            HttpRequest getReq = buildRequest(fileUrl, token)
+                    .GET()
+                    // No read timeout for the body — large files may take a long time.
+                    .build();
 
-            int getStatus;
+            HttpResponse<InputStream> getResp;
             try {
-                getConn.connect();
-                getStatus = getConn.getResponseCode();
-            } catch (IOException e) {
-                throw new IOException("GET request failed for: " + fileUrl, e);
+                getResp = HTTP_CLIENT.send(getReq, BodyHandlers.ofInputStream());
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IOException("GET request interrupted for: " + fileUrl, e);
             }
 
-            if (getStatus != HttpURLConnection.HTTP_OK) {
-                getConn.disconnect();
+            int getStatus = getResp.statusCode();
+            if (getStatus != 200) {
+                getResp.body().close();
                 throw new IOException("Unexpected HTTP %d for GET: %s".formatted(getStatus, fileUrl));
             }
 
@@ -422,14 +441,13 @@ public class HuggingFaceHub {
             // NOTE: The ETag / X-Linked-Etag headers from the HF Hub are Git SHA-1
             // object identifiers (40 hex chars), NOT SHA-256 content hashes — so we
             // must never compare them against the computed SHA-256.
-            String downloadedSha256 = streamToFile(getConn.getInputStream(), tempFile, lfsSizeStr);
-            getConn.disconnect();
+            String downloadedSha256 = streamToFile(getResp.body(), tempFile, lfsSizeStr);
 
             // Determine the blob key:
             //   - If the server gave us an ETag (Git SHA-1), use it as-is as the key.
             //   - Otherwise fall back to the SHA-256 of the downloaded content.
             if (blobSha == null) {
-                blobSha = downloadedSha256;
+                blobSha  = downloadedSha256;
                 blobPath = blobsDir.resolve(blobSha);
             }
             // (blobPath was already set above when blobSha was non-null)
@@ -522,21 +540,21 @@ public class HuggingFaceHub {
     }
 
     /**
-     * Opens an {@link HttpURLConnection} to the given URL with the
-     * Authorization header set if a token is provided.
+     * Creates an {@link HttpRequest.Builder} pre-populated with the common
+     * headers (User-Agent, optional Authorization) for the given URL.
      *
-     * @param url   the URL string.
+     * @param url   the target URL string.
      * @param token the Bearer token, or {@code null}.
-     * @return an open (not yet connected) connection.
-     * @throws IOException if the URL is malformed or the connection cannot be opened.
+     * @return a builder ready for further configuration.
      */
-    private static HttpURLConnection openConnection(String url, String token) throws IOException {
-        var conn = (HttpURLConnection) URI.create(url).toURL().openConnection();
-        conn.setRequestProperty("User-Agent", "smile/HuggingFaceHub");
+    private static HttpRequest.Builder buildRequest(String url, String token) {
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("User-Agent", "smile/HuggingFaceHub");
         if (token != null && !token.isBlank()) {
-            conn.setRequestProperty("Authorization", "Bearer " + token);
+            builder.header("Authorization", "Bearer " + token);
         }
-        return conn;
+        return builder;
     }
 
     /**
@@ -608,9 +626,8 @@ public class HuggingFaceHub {
                 sha256.update(buffer, 0, read);
                 totalBytes += read;
                 if (expectedBytes > 0) {
-                    var progress = String.format("Downloaded %d / %d bytes (%.1f%%)",
+                    logger.debug("Downloaded {} / {} bytes ({:.1f}%)",
                             totalBytes, expectedBytes, 100.0 * totalBytes / expectedBytes);
-                    logger.debug(progress);
                 }
             }
         }
@@ -695,47 +712,47 @@ public class HuggingFaceHub {
 
     /**
      * Returns the expected local path for a cached file <em>without</em> making
-     * any network request. Returns an empty {@link java.util.Optional} if the
-     * file is not currently cached.
+     * any network request. Returns an empty {@link Optional} if the file is not
+     * currently cached.
      *
      * @param repoId   the repository identifier ({@code "owner/name"}).
      * @param filename the file path inside the repository.
      * @param repoType the repository type.
      * @param revision the git revision (branch, tag, or commit SHA).
      * @param cacheDir explicit cache root override; {@code null} to use the default.
-     * @return an {@link java.util.Optional} containing the cached path, or empty.
+     * @return an {@link Optional} containing the cached path, or empty.
      */
-    public static java.util.Optional<Path> tryLoadFromCache(String repoId,
-                                                             String filename,
-                                                             RepoType repoType,
-                                                             String revision,
-                                                             Path cacheDir) {
-        if (repoId == null || filename == null) return java.util.Optional.empty();
+    public static Optional<Path> tryLoadFromCache(String repoId,
+                                                   String filename,
+                                                   RepoType repoType,
+                                                   String revision,
+                                                   Path cacheDir) {
+        if (repoId == null || filename == null) return Optional.empty();
         if (repoType == null) repoType = RepoType.MODEL;
         if (revision == null) revision = "main";
 
         Path cache = resolveCacheDir(cacheDir);
         String repoCacheName = repoType.cachePrefix() + "--" + repoId.replace("/", "--");
-        Path repoCache = cache.resolve(repoCacheName);
+        Path repoCache    = cache.resolve(repoCacheName);
         Path snapshotsDir = repoCache.resolve("snapshots");
-        Path refsDir = repoCache.resolve("refs");
+        Path refsDir      = repoCache.resolve("refs");
 
         // If revision is a commit hash, look it up directly.
         if (isCommitHash(revision)) {
             Path p = snapshotsDir.resolve(revision).resolve(filename);
-            return Files.exists(p) ? java.util.Optional.of(p) : java.util.Optional.empty();
+            return Files.exists(p) ? Optional.of(p) : Optional.empty();
         }
 
         // Resolve branch/tag → commit via the refs/ cache.
         Path refFile = refsDir.resolve(revision.replace("/", "_"));
-        if (!Files.exists(refFile)) return java.util.Optional.empty();
+        if (!Files.exists(refFile)) return Optional.empty();
 
         try {
             String commitHash = Files.readString(refFile, StandardCharsets.UTF_8).strip();
             Path p = snapshotsDir.resolve(commitHash).resolve(filename);
-            return Files.exists(p) ? java.util.Optional.of(p) : java.util.Optional.empty();
+            return Files.exists(p) ? Optional.of(p) : Optional.empty();
         } catch (IOException e) {
-            return java.util.Optional.empty();
+            return Optional.empty();
         }
     }
 
@@ -765,7 +782,7 @@ public class HuggingFaceHub {
      * Recursively deletes a directory tree.
      */
     private static void deleteRecursively(Path root) throws IOException {
-        var visitor = new SimpleFileVisitor<Path>() {
+        Files.walkFileTree(root, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                 Files.delete(file);
@@ -778,8 +795,6 @@ public class HuggingFaceHub {
                 Files.delete(dir);
                 return FileVisitResult.CONTINUE;
             }
-        };
-        Files.walkFileTree(root, visitor);
+        });
     }
 }
-
