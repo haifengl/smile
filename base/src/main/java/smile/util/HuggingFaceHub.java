@@ -173,7 +173,9 @@ public class HuggingFaceHub {
 
     /**
      * Downloads a single file from a Hugging Face Hub repository and caches it
-     * locally.
+     * locally. The function checks for the HF_TOKEN environment variable or
+     * HUGGING_FACE_HUB_TOKEN system property. If neither is set, it checks
+     * the token file written by `huggingface-cli login`.
      *
      * @param repoId          the repository identifier ({@code "owner/name"}).
      * @param filename        the file path inside the repository.
