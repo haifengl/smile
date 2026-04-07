@@ -18,18 +18,25 @@ package smile.cs;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Arrays;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import smile.linalg.Transpose;
 import smile.math.MathEx;
 import smile.stat.distribution.GaussianDistribution;
 import smile.tensor.DenseMatrix;
 import smile.tensor.Matrix;
+import smile.tensor.ScalarType;
+import smile.tensor.Vector;
 import smile.wavelet.Wavelet;
-
+import static smile.linalg.Transpose.*;
 import static smile.tensor.ScalarType.Float64;
 
 /**
  * Measurement matrix for compressed sensing.
  *
- * <p>In compressed sensing the measurement process is modelled as
+ * <p>In compressed sensing the measurement process is modeled as
  * {@code y = Φ Ψ s}, where:
  * <ul>
  *   <li>{@code Φ} is the {@code m × n} <em>sensing matrix</em> (e.g. random
@@ -73,18 +80,14 @@ import static smile.tensor.ScalarType.Float64;
  *     24(4):118–121, 2007.</li>
  * </ol>
  *
+ * @param phi     The underlying sensing matrix Φ (m × n).
+ * @param wavelet Optional wavelet sparsifying basis. May be null.
  * @author Haifeng Li
  */
-public class MeasurementMatrix implements Serializable {
+public record MeasurementMatrix(DenseMatrix phi, Wavelet wavelet) implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MeasurementMatrix.class);
-
-    /** The underlying sensing matrix Φ (m × n). */
-    private final DenseMatrix phi;
-
-    /** Optional wavelet sparsifying basis. May be null. */
-    private final Wavelet wavelet;
+    private static final Logger logger = LoggerFactory.getLogger(MeasurementMatrix.class);
 
     /**
      * Constructs a measurement matrix without a sparsifying basis.
@@ -93,17 +96,6 @@ public class MeasurementMatrix implements Serializable {
      */
     public MeasurementMatrix(DenseMatrix phi) {
         this(phi, null);
-    }
-
-    /**
-     * Constructs a measurement matrix with an optional wavelet sparsifying basis.
-     *
-     * @param phi     the sensing matrix Φ (m × n).
-     * @param wavelet the wavelet defining the sparsifying basis Ψ; may be {@code null}.
-     */
-    public MeasurementMatrix(DenseMatrix phi, Wavelet wavelet) {
-        this.phi     = phi;
-        this.wavelet = wavelet;
     }
 
     // =========================================================================
@@ -115,28 +107,38 @@ public class MeasurementMatrix implements Serializable {
      *
      * @return {@code m}.
      */
-    public int nrow() { return phi.nrow(); }
+    public int nrow() {
+        return phi.nrow();
+    }
 
     /**
      * Returns the signal dimension (columns of Φ).
      *
      * @return {@code n}.
      */
-    public int ncol() { return phi.ncol(); }
+    public int ncol() {
+        return phi.ncol();
+    }
 
     /**
      * Returns the underlying sensing matrix Φ.
      *
      * @return the sensing matrix.
      */
-    public DenseMatrix phi() { return phi; }
+    @Override
+    public DenseMatrix phi() {
+        return phi;
+    }
 
     /**
      * Returns the wavelet sparsifying basis, or {@code null} if not set.
      *
      * @return the wavelet.
      */
-    public Wavelet wavelet() { return wavelet; }
+    @Override
+    public Wavelet wavelet() {
+        return wavelet;
+    }
 
     // =========================================================================
     //  Measurement operator
@@ -152,8 +154,8 @@ public class MeasurementMatrix implements Serializable {
         int n = phi.ncol();
         if (x.length != n) throw new IllegalArgumentException("x.length != n");
         double[] y = new double[phi.nrow()];
-        var xv = smile.tensor.Vector.column(x);
-        var yv = smile.tensor.Vector.column(y);
+        var xv = Vector.column(x);
+        var yv = Vector.column(y);
         phi.mv(xv, yv);
         return yv.toArray(y);
     }
@@ -188,8 +190,8 @@ public class MeasurementMatrix implements Serializable {
         if (y.length != m) throw new IllegalArgumentException("y.length != m");
         int n = phi.ncol();
         double[] v = new double[n];
-        var yv = smile.tensor.Vector.column(y);
-        var vv = smile.tensor.Vector.column(v);
+        var yv = Vector.column(y);
+        var vv = Vector.column(v);
         phi.tv(yv, vv);
         return vv.toArray(v);
     }
@@ -309,7 +311,7 @@ public class MeasurementMatrix implements Serializable {
         int[] perm = MathEx.permutate(n);
         int[] rows = new int[m];
         System.arraycopy(perm, 0, rows, 0, m);
-        java.util.Arrays.sort(rows);
+        Arrays.sort(rows);
         return partial(rows, n);
     }
 
@@ -344,43 +346,89 @@ public class MeasurementMatrix implements Serializable {
         private final Wavelet wavelet;
 
         WaveletMatrix(DenseMatrix phi, Wavelet wavelet) {
-            this.phi     = phi;
+            this.phi = phi;
             this.wavelet = wavelet;
         }
 
-        @Override public int nrow() { return phi.nrow(); }
-        @Override public int ncol() { return phi.ncol(); }
-        @Override public smile.tensor.ScalarType scalarType() { return phi.scalarType(); }
+        @Override
+        public int nrow() {
+            return phi.nrow();
+        }
+
+        @Override
+        public int ncol() {
+            return phi.ncol();
+        }
+
+        @Override
+        public ScalarType scalarType() {
+            return phi.scalarType();
+        }
 
         // ---- unsupported mutation ops ----
-        @Override public double get(int i, int j) { throw new UnsupportedOperationException(); }
-        @Override public void set(int i, int j, double x) { throw new UnsupportedOperationException(); }
-        @Override public void add(int i, int j, double x) { throw new UnsupportedOperationException(); }
-        @Override public void sub(int i, int j, double x) { throw new UnsupportedOperationException(); }
-        @Override public void mul(int i, int j, double x) { throw new UnsupportedOperationException(); }
-        @Override public void div(int i, int j, double x) { throw new UnsupportedOperationException(); }
-        @Override public Matrix scale(double alpha) { throw new UnsupportedOperationException(); }
-        @Override public Matrix copy() { throw new UnsupportedOperationException(); }
-        @Override public Matrix transpose() { throw new UnsupportedOperationException(); }
+        @Override
+        public double get(int i, int j) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void set(int i, int j, double x) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void add(int i, int j, double x) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void sub(int i, int j, double x) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void mul(int i, int j, double x) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void div(int i, int j, double x) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Matrix scale(double alpha) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Matrix copy() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Matrix transpose() {
+            throw new UnsupportedOperationException();
+        }
 
         /**
          * {@code y = alpha * Φ IDWT(x) + beta * y}  (forward)
          * {@code y = alpha * DWT(Φ^T x) + beta * y}  (transpose)
          */
         @Override
-        public void mv(smile.linalg.Transpose trans, double alpha,
-                       smile.tensor.Vector x, double beta, smile.tensor.Vector y) {
-            if (trans == smile.linalg.Transpose.NO_TRANSPOSE) {
+        public void mv(Transpose trans, double alpha,
+                       Vector x, double beta, Vector y) {
+            if (trans == NO_TRANSPOSE) {
                 // Forward: y = alpha * Φ IDWT(x) + beta * y
                 double[] xArr = x.toArray(new double[x.size()]);
                 wavelet.inverse(xArr);
-                var xv = smile.tensor.Vector.column(xArr);
-                phi.mv(smile.linalg.Transpose.NO_TRANSPOSE, alpha, xv, beta, y);
+                var xv = Vector.column(xArr);
+                phi.mv(NO_TRANSPOSE, alpha, xv, beta, y);
             } else {
                 // Adjoint: y = alpha * DWT(Φ^T x) + beta * y
                 double[] tmp = new double[phi.ncol()];
-                var tmpV = smile.tensor.Vector.column(tmp);
-                phi.mv(smile.linalg.Transpose.TRANSPOSE, 1.0, x, 0.0, tmpV);
+                var tmpV = Vector.column(tmp);
+                phi.mv(TRANSPOSE, 1.0, x, 0.0, tmpV);
                 tmpV.toArray(tmp);
                 wavelet.transform(tmp);
                 int sz = y.size();
@@ -391,27 +439,27 @@ public class MeasurementMatrix implements Serializable {
         }
 
         @Override
-        public void mv(smile.tensor.Vector work, int inputOffset, int outputOffset) {
+        public void mv(Vector work, int inputOffset, int outputOffset) {
             int n = phi.ncol();
             int m = phi.nrow();
             double[] xArr = new double[n];
             for (int i = 0; i < n; i++) xArr[i] = work.get(inputOffset + i);
             wavelet.inverse(xArr);
-            var xv = smile.tensor.Vector.column(xArr);
-            var yv = smile.tensor.Vector.column(new double[m]);
+            var xv = Vector.column(xArr);
+            var yv = Vector.column(new double[m]);
             phi.mv(xv, yv);
             for (int i = 0; i < m; i++) work.set(outputOffset + i, yv.get(i));
         }
 
         @Override
-        public void tv(smile.tensor.Vector work, int inputOffset, int outputOffset) {
+        public void tv(Vector work, int inputOffset, int outputOffset) {
             int n = phi.ncol();
             int m = phi.nrow();
             double[] xArr = new double[m];
             for (int i = 0; i < m; i++) xArr[i] = work.get(inputOffset + i);
-            var xv = smile.tensor.Vector.column(xArr);
+            var xv = Vector.column(xArr);
             double[] tmp = new double[n];
-            var tmpV = smile.tensor.Vector.column(tmp);
+            var tmpV = Vector.column(tmp);
             phi.tv(xv, tmpV);
             tmpV.toArray(tmp);
             wavelet.transform(tmp);
