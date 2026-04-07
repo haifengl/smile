@@ -80,18 +80,20 @@ public class Editor extends RSyntaxTextArea {
     /**
      * Sets up auto-completion based on the file type.
      * @param file the file to set up auto-completion for.
+     * @param style the syntax style for the file.
      */
-    public void setAutoComplete(Path file) {
-        var style = probeSyntaxStyle(file);
-        var lsp = switch (style) {
-            case SYNTAX_STYLE_JAVA -> LanguageService.get("java");
-            case SYNTAX_STYLE_PYTHON -> LanguageService.get("python");
-            default -> null;
+    public void setAutoComplete(Path file, String style) {
+        var lang = switch (style) {
+            case SYNTAX_STYLE_JAVA -> "java";
+            case SYNTAX_STYLE_PYTHON -> "python";
+            default -> "";
         };
+        var lsp = LanguageService.get(lang);
         if (lsp == null) return;
 
         var fileUrl = file.toUri().toString();
         var provider = new LspCompletionProvider(lsp.server().getTextDocumentService(), fileUrl);
+        provider.open(this, lang);
         getDocument().addDocumentListener(provider);
         AutoCompletion ac = new AutoCompletion(provider);
         ac.setAutoActivationEnabled(true);
