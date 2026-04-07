@@ -81,6 +81,29 @@ public class LspCompletionProvider extends AbstractCompletionProvider implements
     }
 
     /**
+     * Sends a {@code textDocument/didOpen} notification to the language server
+     * with the current full content of the given editor's document.
+     *
+     * <p>Call this once after the editor has been populated with the initial
+     * file content so the language server can start tracking the document.
+     *
+     * @param editor the text component whose document content should be sent.
+     * @param languageId the LSP language identifier (e.g. {@code "python"}, {@code "scala"}).
+     */
+    public void open(JTextComponent editor, String languageId) {
+        try {
+            Document doc = editor.getDocument();
+            String text = doc.getText(0, doc.getLength());
+            TextDocumentItem item = new TextDocumentItem(fileUri, languageId, version.incrementAndGet(), text);
+            docService.didOpen(new DidOpenTextDocumentParams(item));
+        } catch (BadLocationException ex) {
+            logger.warn("Failed to read document content for didOpen: {}", ex.getMessage());
+        } catch (Exception ex) {
+            logger.warn("Failed to send didOpen notification: {}", ex.getMessage());
+        }
+    }
+
+    /**
      * Builds an incremental {@code textDocument/didChange} notification from a
      * Swing {@link DocumentEvent} and dispatches it to the language server.
      *

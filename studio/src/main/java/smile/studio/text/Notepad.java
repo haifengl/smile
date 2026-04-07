@@ -80,7 +80,6 @@ public final class Notepad extends JFrame implements SearchListener, DocumentLis
         editor.setFont(Monospaced.getFont());
         editor.setCodeFoldingEnabled(true);
         editor.setMarkOccurrences(true);
-        editor.setAutoComplete(file);
 
         if (dict != null) {
             editor.addParser(dict);
@@ -102,7 +101,9 @@ public final class Notepad extends JFrame implements SearchListener, DocumentLis
             String content = Files.readString(file);
             editor.setText(content);
             editor.setCaretPosition(0);
-            editor.setSyntaxEditingStyle(Editor.probeSyntaxStyle(file));
+            var style = Editor.probeSyntaxStyle(file);
+            editor.setSyntaxEditingStyle(style);
+            editor.setAutoComplete(file, style);
         } catch (Exception ex) {
             SwingUtilities.invokeLater(() ->
                 JOptionPane.showMessageDialog(
