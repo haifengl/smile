@@ -36,6 +36,8 @@ import ioa.llm.client.StreamResponseHandler;
 import ioa.llm.tool.Question;
 import smile.plot.swing.Palette;
 import smile.studio.*;
+import smile.studio.text.HintWindow;
+import smile.studio.text.Notepad;
 import smile.swing.ScrollablePanel;
 import smile.util.OS;
 import smile.util.Strings;

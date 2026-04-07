@@ -32,8 +32,8 @@ import ioa.llm.tool.Question;
 import smile.plot.swing.Palette;
 import smile.studio.Markdown;
 import smile.studio.Monospaced;
-import smile.studio.HintWindow;
 import smile.studio.OutputArea;
+import smile.studio.text.HintWindow;
 import static smile.studio.cli.IntentType.*;
 
 /**

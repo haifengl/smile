@@ -16,8 +16,8 @@
  */
 package smile.studio.cli;
 
-import smile.studio.Editor;
 import smile.studio.Monospaced;
+import smile.studio.text.Editor;
 
 /**
  * Agent CLI intent editor.
