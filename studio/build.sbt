@@ -62,7 +62,7 @@ bashScriptExtraDefines ++= Seq(
   """addJava "-Dsmile.home=${SMILE_HOME}"""",
   """addJava "-Dscala.usejavacp=true"""", // for Scala REPL
   """addJava "-Dscala.repl.autoruncode=${app_home}/predef.sc"""",
-  """export PYTHONPATH="${PYTHONPATH}:${app_home}/../lib/ioa-agent-0.1.0.jar"""",
+  """export PYTHONPATH="${PYTHONPATH}:${app_home}/../lib/ioa-agent-1.0.0.jar"""",
   """export PYTHONUTF8=1""",
   """source "$SMILE_HOME/venv/bin/activate""""
 )
@@ -78,7 +78,7 @@ batScriptExtraDefines ++= Seq(
   """set OPENBLAS_NO_AVX512=1""",
   """set OPENBLAS_NUM_THREAD=1""",
   """set "PATH=%~dp0;!PATH!"""",
-  """set PYTHONPATH=%PYTHONPATH%;%APP_HOME%\lib\ioa-agent-0.1.0.jar""",
+  """set PYTHONPATH=%PYTHONPATH%;%APP_HOME%\lib\ioa-agent-1.0.0.jar""",
   """set PYTHONUTF8=1""",
   """CALL "%APP_HOME%\\venv\\Scripts\\activate.bat""""
 )
