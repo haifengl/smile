@@ -16,26 +16,40 @@
  */
 package smile.studio.text;
 
-import javax.swing.text.JTextComponent;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.*;
 import java.awt.Point;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.eclipse.lsp4j.*;
+import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.fife.ui.autocomplete.*;
 import smile.swing.SmileUtilities;
 
 /**
- * LSP based auto-completion provider.
+ * LSP based auto-completion provider that also listens for document changes
+ * and notifies the LSP server via {@code textDocument/didChange}.
+ *
+ * <p>Register an instance of this class as a {@link DocumentListener} on the
+ * editor's {@link javax.swing.text.Document} so that every insert or remove
+ * event is forwarded to the language server:
+ * <pre>{@code
+ *   editor.getDocument().addDocumentListener(provider);
+ * }</pre>
  *
  * @author Haifeng Li
  */
-public class LspCompletionProvider extends AbstractCompletionProvider {
+public class LspCompletionProvider extends AbstractCompletionProvider implements DocumentListener {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LspCompletionProvider.class);
     private final TextDocumentService docService;
     private final String fileUri;
+    /** Monotonically increasing document version sent with every didChange notification. */
+    private final AtomicInteger version = new AtomicInteger(0);
 
     /**
      * Constructor.
@@ -45,6 +59,69 @@ public class LspCompletionProvider extends AbstractCompletionProvider {
     public LspCompletionProvider(TextDocumentService docService, String fileUri) {
         this.docService = docService;
         this.fileUri = fileUri;
+    }
+
+    @Override
+    public void insertUpdate(DocumentEvent e) {
+        sendDidChange(e);
+    }
+
+    @Override
+    public void removeUpdate(DocumentEvent e) {
+        sendDidChange(e);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>Attribute-only changes do not alter text content, so we ignore them.
+     */
+    @Override
+    public void changedUpdate(DocumentEvent e) {
+        // Attribute changes (e.g. style) don't modify text; nothing to send.
+    }
+
+    /**
+     * Builds an incremental {@code textDocument/didChange} notification from a
+     * Swing {@link DocumentEvent} and dispatches it to the language server.
+     *
+     * @param e the Swing document event describing the change.
+     */
+    private void sendDidChange(DocumentEvent e) {
+        try {
+            Document doc = e.getDocument();
+            int offset = e.getOffset();
+            int length = e.getLength();
+
+            // Determine the LSP start position of the changed region.
+            Element root = doc.getDefaultRootElement();
+            int startLine = root.getElementIndex(offset);
+            int startCol  = offset - root.getElement(startLine).getStartOffset();
+
+            // For a removal the text is already gone; reconstruct end position
+            // from the original length stored in the event.
+            // For an insertion the "range" collapses to a point (start == end).
+            int endOffset = offset + (e.getType() == DocumentEvent.EventType.REMOVE ? length : 0);
+            int endLine = root.getElementIndex(endOffset);
+            int endCol  = endOffset - root.getElement(endLine).getStartOffset();
+
+            // Retrieve the new text that was inserted (empty string for removals).
+            String newText = e.getType() == DocumentEvent.EventType.INSERT
+                    ? doc.getText(offset, length)
+                    : "";
+
+            TextDocumentContentChangeEvent change = new TextDocumentContentChangeEvent();
+            change.setRange(new Range(new Position(startLine, startCol),
+                                      new Position(endLine, endCol)));
+            change.setText(newText);
+
+            VersionedTextDocumentIdentifier versionedId = new VersionedTextDocumentIdentifier(fileUri, version.incrementAndGet());
+            DidChangeTextDocumentParams params = new DidChangeTextDocumentParams(versionedId, List.of(change));
+            docService.didChange(params);
+        } catch (BadLocationException ex) {
+            logger.warn("Failed to compute document change range: {}", ex.getMessage());
+        } catch (Exception ex) {
+            logger.warn("Failed to send didChange notification: {}", ex.getMessage());
+        }
     }
 
     @Override
