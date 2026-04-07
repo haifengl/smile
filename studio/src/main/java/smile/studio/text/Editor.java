@@ -89,6 +89,15 @@ public class Editor extends RSyntaxTextArea {
     }
 
     /**
+     * Closes the autocomplete provider.
+     */
+    public void close() {
+        if (provider != null) {
+            provider.close();
+        }
+    }
+
+    /**
      * Sets up auto-completion based on the file type.
      * @param fileUrl the file URL to set up auto-completion for.
      * @param style the syntax style for the file.

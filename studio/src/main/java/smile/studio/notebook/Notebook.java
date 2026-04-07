@@ -351,6 +351,10 @@ public class Notebook extends JPanel implements DocumentListener {
      */
     public void close() {
         kernel.close();
+        // close autocomplete providers
+        for (int i = 0; i < cells.getComponentCount(); i++) {
+            getCell(i).editor().close();
+        }
     }
 
     /** Restarts the kernel and clears all output. */
@@ -448,8 +452,7 @@ public class Notebook extends JPanel implements DocumentListener {
         // is to ensure language servers ready.
         int delay = isShowing() ? 100 : 10000;
         Timer timer = new Timer(delay, e -> {
-           var fileUrl = "memfs://" + file.getFileName() + "/" + UUID.randomUUID();
-            System.out.println("setAutoComplete: " + fileUrl + " -> " + editor.getSyntaxEditingStyle());
+           var fileUrl = "untitled:/" + file.getFileName() + "/" + UUID.randomUUID();
             editor.setAutoComplete(fileUrl, editor.getSyntaxEditingStyle());
         });
 
