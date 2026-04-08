@@ -221,9 +221,12 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
 
     /**
      * Sets or adds an entry.
+     * If {@code x == 0.0} the entry at index {@code i} is removed (zero values
+     * are not stored in a sparse array).
      * @param i the index of entry.
-     * @param x the value of entry.
-     * @return true if a new entry added, false if an existing entry updated.
+     * @param x the value of entry. Setting to 0.0 removes the entry.
+     * @return true if a new entry was added, false if an existing entry was
+     *         updated or removed.
      */
     public boolean set(int i, double x) {
         if (x == 0.0) {

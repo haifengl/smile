@@ -79,7 +79,7 @@ public final class FloatArrayList implements Serializable {
     }
 
     /**
-     * Returns the stream of the array list.
+     * Returns the stream of the array list as a DoubleStream (float values widened to double).
      * @return the stream of the array list.
      */
     public DoubleStream stream() {
@@ -153,10 +153,14 @@ public final class FloatArrayList implements Serializable {
     /**
      * Returns the value at the specified position in this list.
      *
-     * @param index index of the value to return 
-     * @return the value at the specified position in this list 
+     * @param index index of the value to return
+     * @return the value at the specified position in this list
+     * @throws IndexOutOfBoundsException if the index is out of range ({@code index < 0 || index >= size()})
      */
     public float get(int index) {
+        if (index < 0 || index >= size) {
+            throw new IndexOutOfBoundsException(String.valueOf(index));
+        }
         return data[index];
     }
 
