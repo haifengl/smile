@@ -93,6 +93,12 @@ public interface TimeFunction extends Serializable {
         if (schedules.length != milestones.length + 1) {
             throw new IllegalArgumentException("values should have one more element than milestones");
         }
+        for (int i = 1; i < milestones.length; i++) {
+            if (milestones[i] <= milestones[i - 1]) {
+                throw new IllegalArgumentException("milestones must be strictly increasing, but milestones["
+                        + (i-1) + "]=" + milestones[i-1] + " >= milestones[" + i + "]=" + milestones[i]);
+            }
+        }
 
         return new TimeFunction() {
             @Override

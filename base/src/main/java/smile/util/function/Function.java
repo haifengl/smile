@@ -108,19 +108,19 @@ public interface Function extends Serializable {
                 fc = fa;
             }
 
-            tol = 2.0 * MathEx.EPSILON * Math.abs(b) + 0.5 * tol;
+            double tol1 = 2.0 * MathEx.EPSILON * Math.abs(b) + 0.5 * tol;
             xm = 0.5 * (c - b);
 
             if (iter % 10 == 0) {
                 logger.info("Brent: the root after {} iterations: {}, error = {}", iter, b, xm);
             }
 
-            if (Math.abs(xm) <= tol || fb == 0.0) {
+            if (Math.abs(xm) <= tol1 || fb == 0.0) {
                 logger.info("Brent finds the root after {} iterations: {}, error = {}", iter, b, xm);
                 return b;
             }
 
-            if (Math.abs(e) >= tol && Math.abs(fa) > Math.abs(fb)) {
+            if (Math.abs(e) >= tol1 && Math.abs(fa) > Math.abs(fb)) {
                 s = fb / fa;
                 if (a == c) {
                     p = 2.0 * xm * s;
@@ -137,7 +137,7 @@ public interface Function extends Serializable {
                 }
 
                 p = Math.abs(p);
-                double min1 = 3.0 * xm * q - Math.abs(tol * q);
+                double min1 = 3.0 * xm * q - Math.abs(tol1 * q);
                 double min2 = Math.abs(e * q);
                 if (2.0 * p < Math.min(min1, min2)) {
                     e = d;
@@ -153,10 +153,10 @@ public interface Function extends Serializable {
 
             a = b;
             fa = fb;
-            if (Math.abs(d) > tol) {
+            if (Math.abs(d) > tol1) {
                 b += d;
             } else {
-                b += Math.copySign(tol, xm);
+                b += Math.copySign(tol1, xm);
             }
             fb = f(b);
         }

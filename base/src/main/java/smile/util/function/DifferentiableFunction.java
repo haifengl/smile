@@ -23,6 +23,8 @@ package smile.util.function;
  * @author Haifeng Li
  */
 public interface DifferentiableFunction extends Function {
+    /** Logging facility. */
+    org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DifferentiableFunction.class);
     /**
      * Computes the gradient/derivative at x.
      *
