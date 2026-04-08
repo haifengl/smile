@@ -35,6 +35,24 @@ import smile.neighbor.RandomProjectionTree;
 public record NearestNeighborGraph(int k, int[][] neighbors, double[][] distances, int[] index) {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NearestNeighborGraph.class);
 
+    /** Compact canonical constructor with validation. */
+    public NearestNeighborGraph {
+        if (k < 1) {
+            throw new IllegalArgumentException("k must be positive: " + k);
+        }
+        Objects.requireNonNull(neighbors, "neighbors is null");
+        Objects.requireNonNull(distances, "distances is null");
+        Objects.requireNonNull(index, "index is null");
+        if (neighbors.length != distances.length) {
+            throw new IllegalArgumentException(String.format(
+                "neighbors.length (%d) != distances.length (%d)", neighbors.length, distances.length));
+        }
+        if (neighbors.length != index.length) {
+            throw new IllegalArgumentException(String.format(
+                "neighbors.length (%d) != index.length (%d)", neighbors.length, index.length));
+        }
+    }
+
     /**
      * Constructor.
      * @param k k-nearest neighbor.
@@ -101,13 +119,15 @@ public record NearestNeighborGraph(int k, int[][] neighbors, double[][] distance
 
             int n = neighbors.length;
             int[] reverseIndex = new int[n];
-            for (int i = 0; i < n; i++) {
+            // Map original-graph vertex id → position within the largest component
+            for (int i = 0; i < index.length; i++) {
                 reverseIndex[index[i]] = i;
             }
 
-            int[][] nearest = new int[n][k];
-            double[][] dist = new double[n][k];
-            for (int i = 0; i < n; i++) {
+            int m = index.length;
+            int[][] nearest = new int[m][k];
+            double[][] dist = new double[m][k];
+            for (int i = 0; i < m; i++) {
                 dist[i] = distances[index[i]];
                 int[] ni = neighbors[index[i]];
                 for (int j = 0; j < k; j++) {
@@ -159,6 +179,14 @@ public record NearestNeighborGraph(int k, int[][] neighbors, double[][] distance
         @Override
         public int hashCode() {
             return index;
+        }
+
+        /** Two Neighbors are equal if they refer to the same vertex index. */
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (!(obj instanceof Neighbor other)) return false;
+            return index == other.index;
         }
 
         @Override
@@ -295,7 +323,10 @@ public record NearestNeighborGraph(int k, int[][] neighbors, double[][] distance
      */
     public static NearestNeighborGraph descent(double[][] data, int k, int numTrees, int leafSize,
                                                int maxCandidates, int maxIter, double delta) {
-        int n = data.length;
+        if (k < 2) {
+            throw new IllegalArgumentException("k must be greater than 1: " + k);
+        }
+
         List<PriorityQueue<Neighbor>> heapList = new ArrayList<>(data.length);
         List<Set<Integer>> neighborSetList = new ArrayList<>(data.length);
         for (int i = 0; i < data.length; i++) {
@@ -400,6 +431,7 @@ public record NearestNeighborGraph(int k, int[][] neighbors, double[][] distance
             var candidates = generateCandidates(heapList, maxCandidates);
             for (int i = 0; i < n; i++) {
                 for (var j : candidates[i]) {
+                    if (j == i) continue; // never add self as neighbor
                     double dist = distance.d(data[i], data[j]);
                     if (updateHeap(heapList.get(i), neighborSetList.get(i), k, j, dist)) {
                         ++count;
@@ -453,33 +485,26 @@ public record NearestNeighborGraph(int k, int[][] neighbors, double[][] distance
     }
 
     /**
-     * Generate k integers from 0 to n such that no integer is selected twice.
-     * @param n The upper bound of samples.
+     * Generate k integers from 0 to n-1 such that no integer is selected twice
+     * and none equals i.
+     * @param n The upper bound of samples (exclusive).
      * @param k The number of random samples.
      * @param i samples should not equal i.
-     * @return random samples.
+     * @return random samples without replacement.
      */
     private static int[] rejectionSample(int n, int k, int i) {
-        if (k > n) {
-            throw new IllegalArgumentException();
+        if (k >= n) {
+            throw new IllegalArgumentException("k must be less than n: k=" + k + ", n=" + n);
         }
 
+        Set<Integer> seen = new HashSet<>(k * 2);
+        seen.add(i); // exclude self
         int[] samples = new int[k];
-        for (int j = 0; j < k; j++) {
-            boolean loop = true;
-            while (loop) {
-                loop = false;
-                samples[j] = MathEx.randomInt(n);
-                if (samples[j] == i) {
-                    loop = true;
-                } else {
-                    for (int l = 0; l < j; l++) {
-                        if (samples[j] == samples[l]) {
-                            loop = true;
-                            break;
-                        }
-                    }
-                }
+        int count = 0;
+        while (count < k) {
+            int s = MathEx.randomInt(n);
+            if (seen.add(s)) {
+                samples[count++] = s;
             }
         }
 
