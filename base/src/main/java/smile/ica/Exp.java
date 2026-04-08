@@ -16,18 +16,24 @@
  */
 package smile.ica;
 
+import java.io.Serial;
+import java.io.Serializable;
 import smile.util.function.DifferentiableFunction;
 
 /**
  * The contrast function when the independent components are highly
  * super-Gaussian, or when robustness is very important.
+ * <p>
+ * The function is {@code G(u) = -exp(-u²/2)}.
  *
  * @author Haifeng Li
  */
-public class Exp implements DifferentiableFunction {
+public class Exp implements DifferentiableFunction, Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
+
     /** Constructor. */
     public Exp() {
-
     }
 
     @Override
@@ -43,6 +49,11 @@ public class Exp implements DifferentiableFunction {
     @Override
     public double g2(double x) {
         double x2 = x * x;
-        return (1 - x2) * Math.exp(-0.5 * x2);
+        return (1.0 - x2) * Math.exp(-0.5 * x2);
+    }
+
+    @Override
+    public String toString() {
+        return "Gaussian";
     }
 }

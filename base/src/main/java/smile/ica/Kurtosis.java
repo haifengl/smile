@@ -16,18 +16,24 @@
  */
 package smile.ica;
 
+import java.io.Serial;
+import java.io.Serializable;
 import smile.util.function.DifferentiableFunction;
 
 /**
  * The kurtosis of the probability density function of a signal.
  * Note that kurtosis is very sensitive to outliers.
+ * <p>
+ * The function is {@code G(u) = u⁴/4}.
  *
  * @author Haifeng Li
  */
-public class Kurtosis implements DifferentiableFunction {
+public class Kurtosis implements DifferentiableFunction, Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
+
     /** Constructor. */
     public Kurtosis() {
-
     }
 
     @Override
@@ -42,6 +48,11 @@ public class Kurtosis implements DifferentiableFunction {
 
     @Override
     public double g2(double x) {
-        return 3 * x * x;
+        return 3.0 * x * x;
+    }
+
+    @Override
+    public String toString() {
+        return "Kurtosis";
     }
 }
