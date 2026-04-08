@@ -279,7 +279,6 @@ public record BasisPursuit(double[] x, int iter) implements Serializable {
 
             double[] bvec = matvec(A, rhs_x_over_w, m, n, false);
             double[] nu = cgSolve(A, w, bvec, m, n, cgtol, cgMax);
-            totalIter += cgMax;  // upper bound
 
             // Recover dx, du
             double[] Atnu = matvec(A, nu, m, n, true);

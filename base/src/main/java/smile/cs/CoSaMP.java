@@ -143,6 +143,9 @@ public record CoSaMP(double[] x, int[] support, int iter) implements Serializabl
             throw new IllegalArgumentException(
                     "y length %d does not match matrix rows %d".formatted(y.length, m));
         }
+        if (options.sparsity() > m / 2) {
+            logger.warn("CoSaMP: sparsity {} > m/2 {}; RIP may not hold.", options.sparsity(), m / 2);
+        }
 
         int    k       = Math.min(options.sparsity, Math.min(m - 1, n));
         int    maxIter = options.maxIter;
@@ -158,8 +161,7 @@ public record CoSaMP(double[] x, int[] support, int iter) implements Serializabl
         double[] r = Arrays.copyOf(y, m);    // residual = y − A x
 
         int[] curSupport = new int[0];
-        int iter = 0;
-
+        int iter;
         for (iter = 0; iter < maxIter; iter++) {
             // --- Step 1: Proxy  e = A^T r ---
             double[] e = BasisPursuit.matvec(A, r, m, n, true);

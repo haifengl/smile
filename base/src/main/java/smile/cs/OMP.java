@@ -139,6 +139,9 @@ public record OMP(double[] x, int[] support, int iter) implements Serializable {
             throw new IllegalArgumentException(
                     "y length %d does not match matrix rows %d".formatted(y.length, m));
         }
+        if (options.sparsity() > m) {
+            logger.warn("OMP: sparsity {} > m {}; clamping to m.", options.sparsity(), m);
+        }
 
         int    k   = Math.min(options.sparsity, Math.min(m, n));
         double tol = options.tol;
@@ -174,7 +177,7 @@ public record OMP(double[] x, int[] support, int iter) implements Serializable {
         // Incremental QR (Gram–Schmidt)
         double[][] Q = new double[k][m];  // orthonormal basis rows
 
-        int iter = 0;
+        int iter;
         for (iter = 0; iter < k; iter++) {
             // Correlation step: e = A^T r, find largest |e_j| (normalised by col norm)
             double[] Atr = BasisPursuit.matvec(A, residual, m, n, true);
@@ -204,7 +207,6 @@ public record OMP(double[] x, int[] support, int iter) implements Serializable {
             double qnorm = MathEx.norm(q);
             if (qnorm < 1e-12) {
                 logger.warn("OMP: column {} is linearly dependent on existing support; stopping.", pivot);
-                iter++;  // count this iteration
                 break;
             }
             for (int i = 0; i < m; i++) q[i] /= qnorm;
