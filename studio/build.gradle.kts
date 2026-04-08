@@ -41,6 +41,14 @@ application {
     mainClass = "smile.Main"
 }
 
+distributions {
+    main {
+        contents {
+            from("src/universal")
+        }
+    }
+}
+
 tasks.withType<Javadoc> {
     enabled = false
 }
