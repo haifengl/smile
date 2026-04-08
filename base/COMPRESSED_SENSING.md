@@ -1,4 +1,4 @@
-# Compressed Sensing User Guide
+# SMILE — Compressed Sensing User Guide
 
 ## Table of Contents
 
@@ -978,5 +978,5 @@ with CG.
 
 ---
 
-*Package:* `smile.cs` · *Module:* `smile-base` · *Since:* SMILE 6.0
+*SMILE — © 2010-2026 Haifeng Li. GNU GPL licensed.*
 

@@ -1,4 +1,4 @@
-# SMILE Core — ONNX User Guide & Tutorial
+# SMILE — ONNX User Guide & Tutorial
 
 The module `smile.onnx` provides an idiomatic **Java API for running ONNX models** with the
 [ONNX Runtime](https://onnxruntime.ai/) inference engine.

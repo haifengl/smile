@@ -1,4 +1,4 @@
-# Graph User Guide
+# SMILE — Graph User Guide
 
 ## Table of Contents
 
@@ -913,5 +913,5 @@ k-NN heaps, stopping when the fraction of updates falls below `delta × k × n`.
 
 ---
 
-*Package:* `smile.graph` · *Module:* `smile-base` · *Since:* SMILE 1.0
+*SMILE — © 2010-2026 Haifeng Li. GNU GPL licensed.*
 

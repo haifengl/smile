@@ -1,4 +1,4 @@
-# Independent Component Analysis (ICA) User Guide
+# SMILE — Independent Component Analysis (ICA) User Guide
 
 ## Table of Contents
 
@@ -595,5 +595,5 @@ FastICA** — the two methods are complementary rather than competing.
 
 ---
 
-*Package:* `smile.ica` · *Module:* `smile-base` · *Since:* SMILE 2.0
+*SMILE — © 2010-2026 Haifeng Li. GNU GPL licensed.*
 

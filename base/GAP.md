@@ -1,4 +1,4 @@
-# Genetic Algorithm User Guide
+# SMILE — Genetic Algorithm User Guide
 
 This guide explains how to use the `smile.gap` package for genetic algorithms in SMILE.
 
@@ -172,7 +172,7 @@ When adding a custom chromosome, test:
 - `fitness()` consistency/caching behavior.
 - End-to-end convergence on a small synthetic objective.
 
-## See Also
+---
 
-- Package docs: `base/src/main/java/smile/gap/package-info.java`
-- Built-in tests: `base/src/test/java/smile/gap`
+*SMILE — © 2010-2026 Haifeng Li. GNU GPL licensed.*
+
