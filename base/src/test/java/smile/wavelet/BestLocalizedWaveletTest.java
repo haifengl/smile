@@ -20,47 +20,53 @@ import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
+ * Tests for BestLocalizedWavelet.
  *
  * @author Haifeng Li
  */
 public class BestLocalizedWaveletTest {
 
-    public BestLocalizedWaveletTest() {
-    }
+    static final double[] SIGNAL32 = {
+            .2, -.4, -.6, -.5, -.8, -.4, -.9, 0, -.2, .1, -.1, .1, .7, .9, 0, .3,
+            .2, -.4, -.6, -.5, -.8, -.4, -.9, 0, -.2, .1, -.1, .1, .7, .9, 0, .3
+    };
 
-    @BeforeAll
-    public static void setUpClass() throws Exception {
-    }
-
-    @AfterAll
-    public static void tearDownClass() throws Exception {
-    }
-
-    @BeforeEach
-    public void setUp() {
-    }
-
-    @AfterEach
-    public void tearDown() {
-    }
-
+    /** Roundtrip for all supported orders. */
     @Test
-    public void testFilter() {
-        System.out.println("filter");
-        int[] order = {14, 18, 20};
-        for (int p : order) {
-            System.out.format("p = %d%n", p);
-            double[] a = {
-                    .2, -.4, -.6, -.5, -.8, -.4, -.9, 0, -.2, .1, -.1, .1, .7, .9, 0, .3,
-                    .2, -.4, -.6, -.5, -.8, -.4, -.9, 0, -.2, .1, -.1, .1, .7, .9, 0, .3
-            };
-            double[] b = a.clone();
-            Wavelet instance = new BestLocalizedWavelet(p);
-            instance.transform(a);
-            instance.inverse(a);
-            for (int i = 0; i < a.length; i++) {
-                assertEquals(b[i], a[i], 1E-7);
-            }
+    public void testRoundTrip() {
+        int[] orders = {14, 18, 20};
+        for (int p : orders) {
+            double[] a = SIGNAL32.clone();
+            double[] b = SIGNAL32.clone();
+            new BestLocalizedWavelet(p).transform(a);
+            new BestLocalizedWavelet(p).inverse(a);
+            assertArrayEquals(b, a, 1E-7, "BestLocalizedWavelet(" + p + ") roundtrip failed");
         }
+    }
+
+    /** Energy preservation (Parseval) for all supported orders. */
+    @Test
+    public void testEnergyPreservation() {
+        int[] orders = {14, 18, 20};
+        for (int p : orders) {
+            double[] a = SIGNAL32.clone();
+            double energy = energy(a);
+            new BestLocalizedWavelet(p).transform(a);
+            assertEquals(energy, energy(a), 1E-7, "BestLocalizedWavelet(" + p + ") energy not preserved");
+        }
+    }
+
+    /** Invalid order must throw before super() is called. */
+    @Test
+    public void testInvalidOrderThrows() {
+        assertThrows(IllegalArgumentException.class, () -> new BestLocalizedWavelet(8));
+        assertThrows(IllegalArgumentException.class, () -> new BestLocalizedWavelet(22));
+        assertThrows(IllegalArgumentException.class, () -> new BestLocalizedWavelet(0));
+    }
+
+    private static double energy(double[] a) {
+        double sum = 0;
+        for (double v : a) sum += v * v;
+        return sum;
     }
 }

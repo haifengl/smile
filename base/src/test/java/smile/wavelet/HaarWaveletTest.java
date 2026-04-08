@@ -20,44 +20,68 @@ import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
+ * Tests for HaarWavelet.
  *
  * @author Haifeng Li
  */
 public class HaarWaveletTest {
 
-    public HaarWaveletTest() {
-    }
+    static final double[] SIGNAL = {.2,-.4,-.6,-.5,-.8,-.4,-.9,0,-.2,.1,-.1,.1,.7,.9,0,.3};
+    static final double TOLERANCE = 1E-7;
 
-    @BeforeAll
-    public static void setUpClass() throws Exception {
-    }
-
-    @AfterAll
-    public static void tearDownClass() throws Exception {
-    }
-
-    @BeforeEach
-    public void setUp() {
-    }
-
-    @AfterEach
-    public void tearDown() {
-    }
-
-    /**
-     * Test of filter method, of class HaarWavelet.
-     */
+    /** Roundtrip: transform then inverse should recover original signal. */
     @Test
-    public void testFilter() {
-        System.out.println("filter");
-        double[] a = {.2,-.4,-.6,-.5,-.8,-.4,-.9,0,-.2,.1,-.1,.1,.7,.9,0,.3};
+    public void testRoundTrip() {
+        double[] a = SIGNAL.clone();
+        double[] b = SIGNAL.clone();
+        HaarWavelet w = new HaarWavelet();
+        w.transform(a);
+        w.inverse(a);
+        assertArrayEquals(b, a, TOLERANCE);
+    }
+
+    /** Parseval's theorem: energy is preserved by an orthogonal transform. */
+    @Test
+    public void testEnergyPreservation() {
+        double[] a = SIGNAL.clone();
+        double energy = energy(a);
+        new HaarWavelet().transform(a);
+        assertEquals(energy, energy(a), 1E-7);
+    }
+
+    /** transform and inverse on minimal-length signal (n == 2). */
+    @Test
+    public void testMinimalLength() {
+        double[] a = {1.0, -1.0};
         double[] b = a.clone();
-        HaarWavelet instance = new HaarWavelet();
-        instance.transform(a);
-        instance.inverse(a);
-        for (int i = 0; i < a.length; i++) {
-            assertEquals(b[i], a[i], 1E-7);
+        HaarWavelet w = new HaarWavelet();
+        w.transform(a);
+        w.inverse(a);
+        assertArrayEquals(b, a, TOLERANCE);
+    }
+
+    /** Non-power-of-2 length must throw. */
+    @Test
+    public void testNonPowerOf2Throws() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new HaarWavelet().transform(new double[]{1, 2, 3}));
+    }
+
+    /** Known Haar forward step on [1,1,1,1]: all detail coeffs should be 0. */
+    @Test
+    public void testKnownHaarCoefficients() {
+        // Constant signal: all detail wavelet coefficients must be 0
+        double[] a = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+        new HaarWavelet().transform(a);
+        // Only a[0] (global mean) should be non-zero
+        for (int i = 1; i < a.length; i++) {
+            assertEquals(0.0, a[i], TOLERANCE, "Detail coefficient at " + i + " should be 0 for constant signal");
         }
     }
 
+    private static double energy(double[] a) {
+        double sum = 0;
+        for (double v : a) sum += v * v;
+        return sum;
+    }
 }

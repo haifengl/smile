@@ -20,50 +20,59 @@ import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
+ * Tests for DaubechiesWavelet.
  *
- * @author Haifeng
+ * @author Haifeng Li
  */
 public class DaubechiesWaveletTest {
 
-    public DaubechiesWaveletTest() {
-    }
+    static final double[] SIGNAL32 = {
+            .2, -.4, -.6, -.5, -.8, -.4, -.9, 0, -.2, .1, -.1, .1, .7, .9, 0, .3,
+            .2, -.4, -.6, -.5, -.8, -.4, -.9, 0, -.2, .1, -.1, .1, .7, .9, 0, .3
+    };
 
-    @BeforeAll
-    public static void setUpClass() throws Exception {
-    }
-
-    @AfterAll
-    public static void tearDownClass() throws Exception {
-    }
-
-    @BeforeEach
-    public void setUp() {
-    }
-
-    @AfterEach
-    public void tearDown() {
-    }
-
-    /**
-     * Test of filter method, of class DaubechiesWavelet.
-     */
+    /** Roundtrip for all supported orders. */
     @Test
-    public void testFilter() {
-        System.out.println("filter");
+    public void testRoundTrip() {
         for (int p = 4; p <= 20; p += 2) {
-            System.out.format("p = %d%n", p);
-            double[] a = {
-                    .2, -.4, -.6, -.5, -.8, -.4, -.9, 0, -.2, .1, -.1, .1, .7, .9, 0, .3,
-                    .2, -.4, -.6, -.5, -.8, -.4, -.9, 0, -.2, .1, -.1, .1, .7, .9, 0, .3
-            };
-            double[] b = a.clone();
-            Wavelet instance = new DaubechiesWavelet(p);
-            instance.transform(a);
-            instance.inverse(a);
-            for (int i = 0; i < a.length; i++) {
-                assertEquals(b[i], a[i], 1E-7);
-            }
+            double[] a = SIGNAL32.clone();
+            double[] b = SIGNAL32.clone();
+            new DaubechiesWavelet(p).transform(a);
+            new DaubechiesWavelet(p).inverse(a);
+            assertArrayEquals(b, a, 1E-7, "DaubechiesWavelet(" + p + ") roundtrip failed");
         }
     }
 
+    /** Energy preservation (Parseval) for all supported orders. */
+    @Test
+    public void testEnergyPreservation() {
+        for (int p = 4; p <= 20; p += 2) {
+            double[] a = SIGNAL32.clone();
+            double energy = energy(a);
+            new DaubechiesWavelet(p).transform(a);
+            assertEquals(energy, energy(a), 1E-7, "DaubechiesWavelet(" + p + ") energy not preserved");
+        }
+    }
+
+    /** Invalid order must throw IllegalArgumentException before any transform. */
+    @Test
+    public void testInvalidOrderThrows() {
+        assertThrows(IllegalArgumentException.class, () -> new DaubechiesWavelet(3));
+        assertThrows(IllegalArgumentException.class, () -> new DaubechiesWavelet(22));
+        assertThrows(IllegalArgumentException.class, () -> new DaubechiesWavelet(0));
+        assertThrows(IllegalArgumentException.class, () -> new DaubechiesWavelet(5));
+    }
+
+    /** Non-power-of-2 signal length must throw. */
+    @Test
+    public void testNonPowerOf2Throws() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new DaubechiesWavelet(4).transform(new double[10]));
+    }
+
+    private static double energy(double[] a) {
+        double sum = 0;
+        for (double v : a) sum += v * v;
+        return sum;
+    }
 }

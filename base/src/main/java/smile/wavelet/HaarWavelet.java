@@ -35,10 +35,6 @@ public class HaarWavelet extends Wavelet {
      */
     private static final double C =  0.7071067811865475;
 
-    /**
-     * Workspace.
-     */
-    private double[] workspace = new double[1024];
 
     /**
      * Constructor.
@@ -53,14 +49,11 @@ public class HaarWavelet extends Wavelet {
             return;
         }
 
-        if (n > workspace.length) {
-            workspace = new double[n];
-        }
+        ensureWorkspace(n);
 
-        int n1 = n - 1;
         int nh = n >> 1;
-        
-        for (int i = 0, j = 0; j < n1; j+=2, i++) {
+        int n1 = n - 1;
+        for (int i = 0, j = 0; j < n1; j += 2, i++) {
             workspace[i]      = C * (a[j] + a[j + 1]);
             workspace[i + nh] = C * (a[j] - a[j + 1]);
         }
@@ -74,14 +67,11 @@ public class HaarWavelet extends Wavelet {
             return;
         }
 
-        if (n > workspace.length) {
-            workspace = new double[n];
-        }
+        ensureWorkspace(n);
 
-        int n1 = n - 1;
         int nh = n >> 1;
-
-        for (int i = 0, j = 0; j < n1; j+=2, i++) {
+        int n1 = n - 1;
+        for (int i = 0, j = 0; j < n1; j += 2, i++) {
             workspace[j]     = C * (a[i] + a[i + nh]);
             workspace[j + 1] = C * (a[i] - a[i + nh]);
         }

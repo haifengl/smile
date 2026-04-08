@@ -50,7 +50,19 @@ public class Wavelet {
     /**
      * Workspace.
      */
-    private double[] workspace = new double[1024];
+    double[] workspace = new double[1024];
+
+    /**
+     * Ensures the workspace is large enough for n elements and zeroes it out.
+     * @param n required length.
+     */
+    void ensureWorkspace(int n) {
+        if (n > workspace.length) {
+            workspace = new double[n];
+        } else {
+            Arrays.fill(workspace, 0, n, 0.0);
+        }
+    }
 
     /**
      * Constructor. Create a wavelet with given coefficients.
@@ -81,11 +93,7 @@ public class Wavelet {
             return;
         }
 
-        if (n > workspace.length) {
-            workspace = new double[n];
-        } else {
-            Arrays.fill(workspace, 0, n, 0.0);
-        }
+        ensureWorkspace(n);
 
         int nmod = ncof * n;
         int n1 = n - 1;
@@ -115,11 +123,7 @@ public class Wavelet {
             return;
         }
 
-        if (n > workspace.length) {
-            workspace = new double[n];
-        } else {
-            Arrays.fill(workspace, 0, n, 0.0);
-        }
+        ensureWorkspace(n);
 
         int nmod = ncof * n;
         int n1 = n - 1;

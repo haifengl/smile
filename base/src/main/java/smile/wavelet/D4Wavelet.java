@@ -34,11 +34,6 @@ public class D4Wavelet extends Wavelet {
     private static final double C3 = -0.1294095225512604;
 
     /**
-     * Workspace.
-     */
-    private double[] workspace = new double[1024];
-
-    /**
      * Constructor.
      */
     public D4Wavelet() {
@@ -51,21 +46,18 @@ public class D4Wavelet extends Wavelet {
             return;
         }
 
-        if (n > workspace.length) {
-            workspace = new double[n];
-        }
+        ensureWorkspace(n);
 
-        int i, j;
         int nh = n >> 1;
         int n3 = n - 3;
-        
-        for (i = 0, j = 0; j < n3; j+=2, i++) {
-            workspace[i] = C0 * a[j] + C1 * a[j + 1] + C2 * a[j + 2] + C3 * a[j + 3];
+
+        for (int i = 0, j = 0; j < n3; j += 2, i++) {
+            workspace[i]      = C0 * a[j] + C1 * a[j + 1] + C2 * a[j + 2] + C3 * a[j + 3];
             workspace[i + nh] = C3 * a[j] - C2 * a[j + 1] + C1 * a[j + 2] - C0 * a[j + 3];
         }
 
-        workspace[i] = C0 * a[n - 2] + C1 * a[n - 1] + C2 * a[0] + C3 * a[1];
-        workspace[i + nh] = C3 * a[n - 2] - C2 * a[n - 1] + C1 * a[0] - C0 * a[1];
+        workspace[nh - 1]      = C0 * a[n - 2] + C1 * a[n - 1] + C2 * a[0] + C3 * a[1];
+        workspace[n - 1]       = C3 * a[n - 2] - C2 * a[n - 1] + C1 * a[0] - C0 * a[1];
 
         System.arraycopy(workspace, 0, a, 0, n);
     }
@@ -76,9 +68,7 @@ public class D4Wavelet extends Wavelet {
             return;
         }
 
-        if (n > workspace.length) {
-            workspace = new double[n];
-        }
+        ensureWorkspace(n);
 
         int nh = n >> 1;
         int nh1 = nh - 1;
@@ -93,4 +83,3 @@ public class D4Wavelet extends Wavelet {
         System.arraycopy(workspace, 0, a, 0, n);
     }
 }
-

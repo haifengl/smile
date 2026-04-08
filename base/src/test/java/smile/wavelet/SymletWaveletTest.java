@@ -20,46 +20,51 @@ import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
+ * Tests for SymletWavelet.
  *
  * @author Haifeng Li
  */
 public class SymletWaveletTest {
 
-    public SymletWaveletTest() {
-    }
+    static final double[] SIGNAL32 = {
+            .2, -.4, -.6, -.5, -.8, -.4, -.9, 0, -.2, .1, -.1, .1, .7, .9, 0, .3,
+            .2, -.4, -.6, -.5, -.8, -.4, -.9, 0, -.2, .1, -.1, .1, .7, .9, 0, .3
+    };
 
-    @BeforeAll
-    public static void setUpClass() throws Exception {
-    }
-
-    @AfterAll
-    public static void tearDownClass() throws Exception {
-    }
-
-    @BeforeEach
-    public void setUp() {
-    }
-
-    @AfterEach
-    public void tearDown() {
-    }
-
+    /** Roundtrip for all supported orders. */
     @Test
-    public void testFilter() {
-        System.out.println("filter");
+    public void testRoundTrip() {
         for (int p = 8; p <= 20; p += 2) {
-            System.out.format("p = %d%n", p);
-            double[] a = {
-                    .2, -.4, -.6, -.5, -.8, -.4, -.9, 0, -.2, .1, -.1, .1, .7, .9, 0, .3,
-                    .2, -.4, -.6, -.5, -.8, -.4, -.9, 0, -.2, .1, -.1, .1, .7, .9, 0, .3
-            };
-            double[] b = a.clone();
-            Wavelet instance = new SymletWavelet(p);
-            instance.transform(a);
-            instance.inverse(a);
-            for (int i = 0; i < a.length; i++) {
-                assertEquals(b[i], a[i], 1E-7);
-            }
+            double[] a = SIGNAL32.clone();
+            double[] b = SIGNAL32.clone();
+            new SymletWavelet(p).transform(a);
+            new SymletWavelet(p).inverse(a);
+            assertArrayEquals(b, a, 1E-7, "SymletWavelet(" + p + ") roundtrip failed");
         }
+    }
+
+    /** Energy preservation (Parseval) for all supported orders. */
+    @Test
+    public void testEnergyPreservation() {
+        for (int p = 8; p <= 20; p += 2) {
+            double[] a = SIGNAL32.clone();
+            double energy = energy(a);
+            new SymletWavelet(p).transform(a);
+            assertEquals(energy, energy(a), 1E-7, "SymletWavelet(" + p + ") energy not preserved");
+        }
+    }
+
+    /** Invalid order must throw before super() is called. */
+    @Test
+    public void testInvalidOrderThrows() {
+        assertThrows(IllegalArgumentException.class, () -> new SymletWavelet(4));
+        assertThrows(IllegalArgumentException.class, () -> new SymletWavelet(22));
+        assertThrows(IllegalArgumentException.class, () -> new SymletWavelet(7));
+    }
+
+    private static double energy(double[] a) {
+        double sum = 0;
+        for (double v : a) sum += v * v;
+        return sum;
     }
 }

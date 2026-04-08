@@ -86,20 +86,28 @@ public class CoifletWavelet extends Wavelet {
     };
 
     /**
+     * Validates n and returns the corresponding coefficient array.
+     * @param n the number of wavelet coefficients (6, 12, 18, 24, or 30).
+     * @return the coefficient array.
+     */
+    private static double[] coefficients(int n) {
+        return switch (n) {
+            case  6 -> c6;
+            case 12 -> c12;
+            case 18 -> c18;
+            case 24 -> c24;
+            case 30 -> c30;
+            default -> throw new IllegalArgumentException(
+                    String.format("n = %d not supported. Must be 6, 12, 18, 24, or 30.", n));
+        };
+    }
+
+    /**
      * Constructor. Create a Coiflet wavelet with n coefficients.
      * n = 6, 12, 18, 24, or 30 are supported.
      * @param n the number of wavelet coefficients.
      */
     public CoifletWavelet(int n) {
-        super(n == 6 ? c6 :
-              n == 12 ? c12 :
-              n == 18 ? c18 :
-              n == 24 ? c24 :
-              n == 30 ? c30 : c6
-            );
-
-        if ( n < 6 || n > 30 || n % 6 != 0) {
-            throw new IllegalArgumentException(String.format("n = %d not yet implemented.", n));
-        }
+        super(coefficients(n));
     }
 }
