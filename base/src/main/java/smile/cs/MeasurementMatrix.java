@@ -290,6 +290,12 @@ public record MeasurementMatrix(DenseMatrix phi, Wavelet wavelet) implements Ser
      */
     public static MeasurementMatrix partial(int[] rows, int n) {
         int m = rows.length;
+        for (int i = 0; i < m; i++) {
+            if (rows[i] < 0 || rows[i] >= n) {
+                throw new IllegalArgumentException(
+                        "Row index %d out of range [0, %d)".formatted(rows[i], n));
+            }
+        }
         DenseMatrix phi = DenseMatrix.zeros(Float64, m, n);
         for (int i = 0; i < m; i++) {
             phi.set(i, rows[i], 1.0);

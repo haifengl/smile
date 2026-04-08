@@ -17,6 +17,7 @@
 package smile.cs;
 
 import smile.math.MathEx;
+import smile.tensor.Matrix;
 import smile.wavelet.HaarWavelet;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -338,6 +339,251 @@ public class CompressedSensingTest {
         double rhs = MathEx.dot(s, Aty);
         assertEquals(lhs, rhs, 1e-8,
                 "Wavelet matrix adjoint failed: <As,y>=%e, <s,A^Ty>=%e".formatted(lhs, rhs));
+    }
+
+    // =========================================================================
+    //  Invalid-argument / edge-case tests
+    // =========================================================================
+
+    @Test
+    public void testOMPYLengthMismatch() {
+        assertThrows(IllegalArgumentException.class, () ->
+                OMP.fit(mm.phi(), new double[M + 1], K));
+    }
+
+    @Test
+    public void testCoSaMPYLengthMismatch() {
+        assertThrows(IllegalArgumentException.class, () ->
+                CoSaMP.fit(mm.phi(), new double[M + 1], K));
+    }
+
+    @Test
+    public void testBasisPursuitYLengthMismatch() {
+        assertThrows(IllegalArgumentException.class, () ->
+                BasisPursuit.fit(mm.phi(), new double[M + 1]));
+    }
+
+    @Test
+    public void testOMPOptionsValidation() {
+        assertThrows(IllegalArgumentException.class, () -> new OMP.Options(0, 1e-6));
+        assertThrows(IllegalArgumentException.class, () -> new OMP.Options(-1, 1e-6));
+        assertThrows(IllegalArgumentException.class, () -> new OMP.Options(5, -1e-6));
+    }
+
+    @Test
+    public void testCoSaMPOptionsValidation() {
+        assertThrows(IllegalArgumentException.class, () -> new CoSaMP.Options(0, 50, 1e-6));
+        assertThrows(IllegalArgumentException.class, () -> new CoSaMP.Options(5, 0, 1e-6));
+        assertThrows(IllegalArgumentException.class, () -> new CoSaMP.Options(5, 50, -1.0));
+    }
+
+    @Test
+    public void testBasisPursuitOptionsValidation() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new BasisPursuit.Options(-1.0, 10.0, 1e-8, 200, 50, 1e-3));
+        assertThrows(IllegalArgumentException.class, () ->
+                new BasisPursuit.Options(0.0, 0.5, 1e-8, 200, 50, 1e-3));   // mu ≤ 1
+        assertThrows(IllegalArgumentException.class, () ->
+                new BasisPursuit.Options(0.0, 10.0, 0.0, 200, 50, 1e-3));   // cgtol ≤ 0
+        assertThrows(IllegalArgumentException.class, () ->
+                new BasisPursuit.Options(0.0, 10.0, 1e-8, 0, 50, 1e-3));    // cgMaxIter ≤ 0
+        assertThrows(IllegalArgumentException.class, () ->
+                new BasisPursuit.Options(0.0, 10.0, 1e-8, 200, 0, 1e-3));   // maxIter ≤ 0
+        assertThrows(IllegalArgumentException.class, () ->
+                new BasisPursuit.Options(0.0, 10.0, 1e-8, 200, 50, 0.0));   // tol ≤ 0
+    }
+
+    @Test
+    public void testPartialRowsValidation() {
+        assertThrows(IllegalArgumentException.class, () ->
+                MeasurementMatrix.partial(new int[]{0, 5, N}, N));   // N is out of range
+        assertThrows(IllegalArgumentException.class, () ->
+                MeasurementMatrix.partial(new int[]{-1, 3}, N));
+    }
+
+    // =========================================================================
+    //  Zero-signal / zero-measurement edge cases
+    // =========================================================================
+
+    @Test
+    public void testOMPZeroMeasurement() {
+        OMP result = OMP.fit(mm.phi(), new double[M], K);
+        // zero y → zero x
+        for (double v : result.x()) assertEquals(0.0, v, 1e-30);
+        assertEquals(0, result.support().length);
+        assertEquals(0, result.iter());
+    }
+
+    @Test
+    public void testCoSaMPZeroMeasurement() {
+        CoSaMP result = CoSaMP.fit(mm.phi(), new double[M], K);
+        for (double v : result.x()) assertEquals(0.0, v, 1e-30);
+        assertEquals(0, result.support().length);
+        assertEquals(0, result.iter());
+    }
+
+    // =========================================================================
+    //  Default-options overloads
+    // =========================================================================
+
+    @Test
+    public void testBasisPursuitDefaultOptions() {
+        // BasisPursuit.fit(A, y) uses new Options() — should not throw
+        int n = 16, m = 10, k = 2;
+        MathEx.setSeed(9999);
+        double[] xSmall = new double[n];
+        int[] locs = MathEx.permutate(n);
+        for (int i = 0; i < k; i++) xSmall[locs[i]] = (i + 1.0);
+        MeasurementMatrix mmSmall = MeasurementMatrix.gaussian(m, n);
+        double[] ySmall = mmSmall.measure(xSmall);
+        assertDoesNotThrow(() -> BasisPursuit.fit(mmSmall.phi(), ySmall));
+    }
+
+    // =========================================================================
+    //  CoSaMP noisy measurements
+    // =========================================================================
+
+    @Test
+    public void testCoSaMPNoisy() {
+        System.out.println("CoSaMP: noisy measurements");
+        MathEx.setSeed(1234);
+        double[] yn = y.clone();
+        double sigma = 1e-3 * MathEx.norm(y) / Math.sqrt(M);
+        for (int i = 0; i < M; i++) yn[i] += sigma * MathEx.random();
+        CoSaMP result = CoSaMP.fit(mm.phi(), yn, K);
+        double err = relError(result.x());
+        System.out.printf("  CoSaMP (noisy) rel error = %.2e%n", err);
+        assertTrue(err < 0.2, "CoSaMP (noisy) relative error %e too large".formatted(err));
+    }
+
+    // =========================================================================
+    //  OMP with explicit Options
+    // =========================================================================
+
+    @Test
+    public void testOMPExplicitOptions() {
+        var opts = new OMP.Options(K, 1e-8);
+        OMP result = OMP.fit(mm.phi(), y, opts);
+        double err = relError(result.x());
+        assertTrue(err < TOL);
+    }
+
+    // =========================================================================
+    //  MeasurementMatrix — additional coverage
+    // =========================================================================
+
+    @Test
+    public void testMeasurementMatrixPartialExplicitRows() {
+        MathEx.setSeed(55555);
+        int[] rows = {0, 3, 7, 12, 20};
+        MeasurementMatrix p = MeasurementMatrix.partial(rows, N);
+        assertEquals(rows.length, p.nrow());
+        assertEquals(N, p.ncol());
+        // Measurement of e_3 should appear only at the row mapping column 3
+        double[] x3 = new double[N];
+        x3[3] = 1.0;
+        double[] yTest = p.measure(x3);
+        // row index 1 maps column 3 → entry at position 1 should be 1
+        assertEquals(1.0, yTest[1], 1e-12);
+        for (int i = 0; i < rows.length; i++) {
+            if (i != 1) assertEquals(0.0, yTest[i], 1e-12);
+        }
+    }
+
+    @Test
+    public void testMeasurementMatrixBackProjectSparse() {
+        System.out.println("MeasurementMatrix: backProjectSparse");
+        MathEx.setSeed(66666);
+        int nw = 64, mw = 20;
+        MeasurementMatrix wm = MeasurementMatrix.gaussian(mw, nw)
+                                                .withWavelet(new HaarWavelet());
+        double[] yv = new double[mw];
+        for (int i = 0; i < mw; i++) yv[i] = MathEx.random() - 0.5;
+
+        double[] v = wm.backProjectSparse(yv);
+        assertEquals(nw, v.length);
+
+        // Adjoint check with measureSparse:  <measureSparse(s), y> = <s, backProjectSparse(y)>
+        double[] s = new double[nw];
+        for (int i = 0; i < nw; i++) s[i] = MathEx.random() - 0.5;
+        double[] As = wm.measureSparse(s);
+        double lhs = MathEx.dot(As, yv);
+        double rhs = MathEx.dot(s, v);
+        assertEquals(lhs, rhs, 1e-8,
+                "backProjectSparse adjoint failed: lhs=%e rhs=%e".formatted(lhs, rhs));
+    }
+
+    @Test
+    public void testMeasurementMatrixBernoulliRIP() {
+        // Bernoulli matrix: measure a 1-sparse signal and verify it's non-zero
+        MathEx.setSeed(7070);
+        MeasurementMatrix b = MeasurementMatrix.bernoulli(M, N);
+        double[] x1 = new double[N];
+        x1[42] = 3.7;
+        double[] yb = b.measure(x1);
+        double energy = 0;
+        for (double v : yb) energy += v * v;
+        assertTrue(energy > 0, "Bernoulli measurement of non-zero signal should be non-zero");
+    }
+
+    @Test
+    public void testMeasurementMatrixToMatrixNoWavelet() {
+        // withWavelet(null) → toMatrix() should return the plain phi
+        MeasurementMatrix g = MeasurementMatrix.gaussian(M, N);
+        Matrix mat = g.toMatrix();
+        assertEquals(g.phi(), mat);
+    }
+
+    // =========================================================================
+    //  CoSaMP helper edge cases
+    // =========================================================================
+
+    @Test
+    public void testLargestIndicesKLargerThanN() {
+        double[] v = {0.5, 1.0, 0.3};
+        // k > length → should clamp to length
+        int[] idx = CoSaMP.largestIndices(v, 10);
+        assertEquals(3, idx.length);
+        assertArrayEquals(new int[]{0, 1, 2}, idx);
+    }
+
+    @Test
+    public void testUnionEmptyArrays() {
+        int[] u1 = CoSaMP.union(new int[0], new int[]{1, 3});
+        assertArrayEquals(new int[]{1, 3}, u1);
+        int[] u2 = CoSaMP.union(new int[]{2, 4}, new int[0]);
+        assertArrayEquals(new int[]{2, 4}, u2);
+        int[] u3 = CoSaMP.union(new int[0], new int[0]);
+        assertEquals(0, u3.length);
+    }
+
+    @Test
+    public void testUnionNoDuplicates() {
+        int[] a = {0, 2, 4, 6};
+        int[] b = {1, 2, 5, 6};
+        int[] u = CoSaMP.union(a, b);
+        assertArrayEquals(new int[]{0, 1, 2, 4, 5, 6}, u);
+    }
+
+    // =========================================================================
+    //  BasisPursuit iter field reflects outer iterations
+    // =========================================================================
+
+    @Test
+    public void testBasisPursuitIterCount() {
+        int n = 16, m = 10, k = 2;
+        MathEx.setSeed(1111);
+        double[] xSmall = new double[n];
+        int[] locs = MathEx.permutate(n);
+        for (int i = 0; i < k; i++) xSmall[locs[i]] = (i + 1.0);
+        MeasurementMatrix mmSmall = MeasurementMatrix.gaussian(m, n);
+        double[] ySmall = mmSmall.measure(xSmall);
+
+        var opts = new BasisPursuit.Options(0.0, 10.0, 1e-8, 200, 30, 1e-3);
+        BasisPursuit result = BasisPursuit.fit(mmSmall.phi(), ySmall, opts);
+        // iter should be ≤ maxIter (30) and ≥ 0
+        assertTrue(result.iter() >= 0 && result.iter() <= 30,
+                "iter %d not in [0, 30]".formatted(result.iter()));
     }
 
     @Test
