@@ -101,22 +101,30 @@ public class SymletWavelet extends Wavelet {
     };
 
     /**
+     * Validates n and returns the corresponding coefficient array.
+     * @param n the number of wavelet coefficients (8, 10, 12, 14, 16, 18, or 20).
+     * @return the coefficient array.
+     */
+    private static double[] coefficients(int n) {
+        return switch (n) {
+            case  8 -> c8;
+            case 10 -> c10;
+            case 12 -> c12;
+            case 14 -> c14;
+            case 16 -> c16;
+            case 18 -> c18;
+            case 20 -> c20;
+            default -> throw new IllegalArgumentException(
+                    String.format("n = %d not supported. Must be 8, 10, 12, 14, 16, 18, or 20.", n));
+        };
+    }
+
+    /**
      * Constructor. Create a Symmlet wavelet with n coefficients.
      * n = 8, 10, 12, 14, 16, 18, or 20 are supported.
      * @param n the number of wavelet coefficients.
      */
     public SymletWavelet(int n) {
-        super(n == 8 ? c8 :
-              n == 10 ? c10 :
-              n == 12 ? c12 :
-              n == 14 ? c14 :
-              n == 16 ? c16 :
-              n == 18 ? c18 :
-              n == 20 ? c20 : c8
-            );
-
-        if ( n < 8 || n > 20 || n % 2 != 0) {
-            throw new IllegalArgumentException(String.format("n = %d not yet implemented.", n));
-        }
+        super(coefficients(n));
     }
 }

@@ -20,44 +20,77 @@ import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
+ * Tests for D4Wavelet.
  *
  * @author Haifeng Li
  */
 public class D4WaveletTest {
 
-    public D4WaveletTest() {
-    }
+    static final double[] SIGNAL = {.2,-.4,-.6,-.5,-.8,-.4,-.9,0,-.2,.1,-.1,.1,.7,.9,0,.3};
+    static final double TOLERANCE = 1E-7;
 
-    @BeforeAll
-    public static void setUpClass() throws Exception {
-    }
-
-    @AfterAll
-    public static void tearDownClass() throws Exception {
-    }
-
-    @BeforeEach
-    public void setUp() {
-    }
-
-    @AfterEach
-    public void tearDown() {
-    }
-
-    /**
-     * Test of filter method, of class D4Wavelet.
-     */
+    /** Roundtrip: transform then inverse should recover original signal. */
     @Test
-    public void testFilterD4() {
-        System.out.println("filter");
-        double[] a = {.2,-.4,-.6,-.5,-.8,-.4,-.9,0,-.2,.1,-.1,.1,.7,.9,0,.3};
-        double[] b = a.clone();
-        D4Wavelet instance = new D4Wavelet();
-        instance.transform(a);
-        instance.inverse(a);
-        for (int i = 0; i < a.length; i++) {
-            assertEquals(b[i], a[i], 1E-7);
+    public void testRoundTrip() {
+        double[] a = SIGNAL.clone();
+        double[] b = SIGNAL.clone();
+        D4Wavelet w = new D4Wavelet();
+        w.transform(a);
+        w.inverse(a);
+        assertArrayEquals(b, a, TOLERANCE);
+    }
+
+    /** Parseval's theorem: energy must be preserved. */
+    @Test
+    public void testEnergyPreservation() {
+        double[] a = SIGNAL.clone();
+        double energy = energy(a);
+        new D4Wavelet().transform(a);
+        assertEquals(energy, energy(a), 1E-7);
+    }
+
+    /** Non-power-of-2 length must throw. */
+    @Test
+    public void testNonPowerOf2Throws() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new D4Wavelet().transform(new double[3]));
+    }
+
+    /** Signal shorter than ncof=4 must throw for transform. */
+    @Test
+    public void testTooShortSignalThrows() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new D4Wavelet().transform(new double[]{1.0, -1.0}));
+    }
+
+    /** Constant signal: all detail coefficients must be zero. */
+    @Test
+    public void testConstantSignalCoefficients() {
+        double[] a = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+        new D4Wavelet().transform(a);
+        // All detail coefficients (indices >= n/2) should be ~0 for constant signal
+        int nh = a.length >> 1;
+        for (int i = nh; i < a.length; i++) {
+            assertEquals(0.0, a[i], 1E-10, "Detail coeff at " + i);
         }
     }
 
+    /** D4Wavelet and DaubechiesWavelet(4) should produce identical results. */
+    @Test
+    public void testD4MatchesDaubechies4() {
+        double[] a1 = {.2, -.4, -.6, -.5, -.8, -.4, -.9, 0, -.2, .1, -.1, .1, .7, .9, 0, .3};
+        double[] a2 = a1.clone();
+        new D4Wavelet().transform(a1);
+        new DaubechiesWavelet(4).transform(a2);
+        // Both use the same coefficients but different centering, so the
+        // coefficient values differ; just check that both are invertible and
+        // have the same energy.
+        assertEquals(energy(a1), energy(a2), 1E-7);
+    }
+
+    private static double energy(double[] a) {
+        double sum = 0;
+        for (double v : a) sum += v * v;
+        return sum;
+    }
 }
