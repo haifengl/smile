@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
 
-echo "Installing ripgrep..."
+echo "Installing native packages..."
 if command -v brew > /dev/null; then
+    brew install -q arpack
     brew install -q ripgrep
 elif command -v apt-get > /dev/null; then
-    sudo apt-get install -y ripgrep;
+    sudo apt-get install -y libopenblas-dev libarpack2
+    sudo apt-get install -y ripgrep
 elif command -v yum > /dev/null; then
-    sudo yum install -y ripgrep;
+    sudo yum install -y epel-release
+    sudo yum install -y openblas-devel arpack-devel
+    sudo yum install -y ripgrep
 elif command -v pacman > /dev/null; then
-    sudo pacman -S --noconfirm ripgrep;
+    sudo pacman -S --noconfirm openblas arpack
+    sudo pacman -S --noconfirm ripgrep
 else
     echo 'Unsupported Linux distribution. Please install ripgrep manually.'
 fi
