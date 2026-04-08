@@ -1,4 +1,4 @@
-# Wavelet User Guide
+# SMILE — Wavelet User Guide
 
 ## Table of Contents
 
@@ -559,5 +559,5 @@ public class CustomWaveletExample {
 
 ---
 
-*Package:* `smile.wavelet` · *Module:* `smile-base` · *Since:* SMILE 1.0
+*SMILE — © 2010-2026 Haifeng Li. GNU GPL licensed.*
 
