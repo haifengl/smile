@@ -818,4 +818,313 @@ public class AdjacencyMatrixTest {
         assertEquals(1, tour[5]);
         assertEquals(0, tour[6]);
     }
+
+    // -----------------------------------------------------------------------
+    // toString / isDigraph
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testToString() {
+        System.out.println("toString");
+        String s = g1.toString();
+        assertTrue(s.contains("AdjacencyMatrix"));
+        assertTrue(s.contains("5"));
+    }
+
+    @Test
+    public void testIsDigraph() {
+        assertTrue(g1.isDigraph());
+        assertFalse(g5.isDigraph());
+    }
+
+    // -----------------------------------------------------------------------
+    // getDistance
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testGetDistance() {
+        System.out.println("getDistance");
+        assertEquals(1.0, g2.getDistance(1, 2), 1E-15);
+        assertEquals(Double.POSITIVE_INFINITY, g1.getDistance(1, 2), 0);
+
+        AdjacencyMatrix g = new AdjacencyMatrix(4);
+        g.addEdge(0, 1, 3.7);
+        assertEquals(3.7, g.getDistance(0, 1), 1E-10);
+        assertEquals(Double.POSITIVE_INFINITY, g.getDistance(0, 2), 0);
+    }
+
+    // -----------------------------------------------------------------------
+    // addEdges / removeEdges
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testAddEdgesAndRemoveEdges() {
+        System.out.println("addEdges / removeEdges");
+        AdjacencyMatrix g = new AdjacencyMatrix(5);
+        List<Graph.Edge> edges = List.of(
+            new Graph.Edge(0, 1, 1.5),
+            new Graph.Edge(1, 2, 2.5),
+            new Graph.Edge(2, 3, 3.5)
+        );
+        g.addEdges(edges);
+        assertEquals(1.5, g.getWeight(0, 1), 1E-10);
+        assertEquals(2.5, g.getWeight(1, 2), 1E-10);
+        assertEquals(3.5, g.getWeight(2, 3), 1E-10);
+
+        g.removeEdges(List.of(new Graph.Edge(0, 1), new Graph.Edge(1, 2)));
+        assertFalse(g.hasEdge(0, 1));
+        assertFalse(g.hasEdge(1, 2));
+        assertTrue(g.hasEdge(2, 3));
+    }
+
+    // -----------------------------------------------------------------------
+    // DFS / BFS visitors
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testDfsVisitor() {
+        System.out.println("DFS visitor");
+        AdjacencyMatrix graph = new AdjacencyMatrix(8);
+        graph.addEdge(0, 2);
+        graph.addEdge(1, 7);
+        graph.addEdge(2, 6);
+        graph.addEdge(7, 4);
+        graph.addEdge(3, 4);
+        graph.addEdge(3, 5);
+        graph.addEdge(5, 4);
+
+        List<Integer> visited = new ArrayList<>();
+        graph.dfs(visited::add);
+        assertEquals(8, visited.size());
+        assertEquals(8, visited.stream().distinct().count());
+    }
+
+    @Test
+    public void testBfsVisitor() {
+        System.out.println("BFS visitor");
+        AdjacencyMatrix graph = new AdjacencyMatrix(8);
+        graph.addEdge(0, 2);
+        graph.addEdge(1, 7);
+        graph.addEdge(2, 6);
+        graph.addEdge(7, 4);
+        graph.addEdge(3, 4);
+        graph.addEdge(3, 5);
+        graph.addEdge(5, 4);
+
+        List<Integer> visited = new ArrayList<>();
+        graph.bfs(visited::add);
+        assertEquals(8, visited.size());
+        assertEquals(8, visited.stream().distinct().count());
+    }
+
+    // -----------------------------------------------------------------------
+    // UnsupportedOperationException guards
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testDfsortOnUndirectedThrows() {
+        assertThrows(UnsupportedOperationException.class, () -> g5.dfsort());
+    }
+
+    @Test
+    public void testBfsortOnUndirectedThrows() {
+        assertThrows(UnsupportedOperationException.class, () -> g5.bfsort());
+    }
+
+    @Test
+    public void testDfccOnDigraphThrows() {
+        assertThrows(UnsupportedOperationException.class, () -> g1.dfcc());
+    }
+
+    @Test
+    public void testBfccOnDigraphThrows() {
+        assertThrows(UnsupportedOperationException.class, () -> g1.bfcc());
+    }
+
+    @Test
+    public void testPrimOnDigraphThrows() {
+        assertThrows(UnsupportedOperationException.class, () -> g1.prim(null));
+    }
+
+    // -----------------------------------------------------------------------
+    // Single-vertex graph
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testSingleVertex() {
+        System.out.println("Single-vertex graph");
+        AdjacencyMatrix g = new AdjacencyMatrix(1);
+        assertEquals(1, g.getVertexCount());
+        assertEquals(0, g.getOutDegree(0));
+        assertEquals(0, g.getInDegree(0));
+        assertEquals(0, g.getDegree(0));
+        assertFalse(g.hasEdge(0, 0));
+
+        int[][] cc = g.dfcc();
+        assertEquals(1, cc.length);
+        assertArrayEquals(new int[]{0}, cc[0]);
+    }
+
+    // -----------------------------------------------------------------------
+    // Disconnected graph – connected components
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testDisconnectedDfcc() {
+        System.out.println("dfcc on fully disconnected graph");
+        AdjacencyMatrix g = new AdjacencyMatrix(4);
+        int[][] cc = g.dfcc();
+        assertEquals(4, cc.length);
+        for (int i = 0; i < 4; i++) {
+            assertArrayEquals(new int[]{i}, cc[i]);
+        }
+    }
+
+    @Test
+    public void testDisconnectedBfcc() {
+        System.out.println("bfcc on fully disconnected graph");
+        AdjacencyMatrix g = new AdjacencyMatrix(4);
+        int[][] cc = g.bfcc();
+        assertEquals(4, cc.length);
+    }
+
+    // -----------------------------------------------------------------------
+    // Weighted subgraph
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testSubgraphWeighted() {
+        System.out.println("subgraph with custom weights");
+        AdjacencyMatrix graph = new AdjacencyMatrix(5);
+        graph.addEdge(0, 1, 2.5);
+        graph.addEdge(1, 2, 3.7);
+        graph.addEdge(2, 3, 1.1);
+
+        AdjacencyMatrix sub = graph.subgraph(new int[]{0, 1, 2});
+        assertEquals(2.5, sub.getWeight(0, 1), 1E-10);
+        assertEquals(2.5, sub.getWeight(1, 0), 1E-10);
+        assertEquals(3.7, sub.getWeight(1, 2), 1E-10);
+        assertFalse(sub.hasEdge(0, 2));
+    }
+
+    // -----------------------------------------------------------------------
+    // mapEdges / updateEdges / forEachEdge
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testMapEdges() {
+        System.out.println("mapEdges");
+        AdjacencyMatrix g = new AdjacencyMatrix(3);
+        g.addEdge(0, 1, 2.0);
+        g.addEdge(0, 2, 4.0);
+
+        double[] mapped = g.mapEdges(0, (j, w) -> w * 2).toArray();
+        Arrays.sort(mapped);
+        assertArrayEquals(new double[]{4.0, 8.0}, mapped, 1E-10);
+    }
+
+    @Test
+    public void testUpdateEdges() {
+        System.out.println("updateEdges");
+        AdjacencyMatrix g = new AdjacencyMatrix(3);
+        g.addEdge(0, 1, 2.0);
+        g.addEdge(0, 2, 4.0);
+
+        g.updateEdges(0, (j, w) -> w + 10.0);
+        assertEquals(12.0, g.getWeight(0, 1), 1E-10);
+        assertEquals(14.0, g.getWeight(0, 2), 1E-10);
+    }
+
+    @Test
+    public void testForEachEdge() {
+        System.out.println("forEachEdge");
+        AdjacencyMatrix g = new AdjacencyMatrix(3);
+        g.addEdge(0, 1, 1.5);
+        g.addEdge(0, 2, 2.5);
+
+        double[] sum = {0.0};
+        g.forEachEdge(0, (j, w) -> sum[0] += w);
+        assertEquals(4.0, sum[0], 1E-10);
+    }
+
+    // -----------------------------------------------------------------------
+    // getEdges / toArray
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testGetEdges() {
+        System.out.println("getEdges");
+        AdjacencyMatrix g = new AdjacencyMatrix(3);
+        g.addEdge(0, 1, 1.5);
+        g.addEdge(0, 2, 2.5);
+
+        List<Graph.Edge> edges = g.getEdges(0);
+        assertEquals(2, edges.size());
+        for (Graph.Edge e : edges) {
+            assertEquals(0, e.u());
+        }
+    }
+
+    @Test
+    public void testToArray() {
+        System.out.println("toArray");
+        AdjacencyMatrix g = new AdjacencyMatrix(3);
+        g.addEdge(0, 1, 1.5);
+        double[][] arr = g.toArray();
+        assertEquals(1.5, arr[0][1], 1E-10);
+        assertEquals(1.5, arr[1][0], 1E-10); // undirected
+        // Modifying the returned array should not affect the graph
+        arr[0][1] = 999.0;
+        assertEquals(1.5, g.getWeight(0, 1), 1E-10);
+    }
+
+    // -----------------------------------------------------------------------
+    // Dijkstra on unweighted graph
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testDijkstraUnweighted() {
+        System.out.println("Dijkstra unweighted");
+        AdjacencyMatrix g = new AdjacencyMatrix(4, true);
+        g.addEdge(0, 1, 10.0);
+        g.addEdge(0, 2, 1.0);
+        g.addEdge(2, 3, 1.0);
+        g.addEdge(1, 3, 1.0);
+
+        double[] dist = g.dijkstra(0, false);
+        assertEquals(0.0, dist[0], 1E-10);
+        assertEquals(1.0, dist[1], 1E-10);
+        assertEquals(1.0, dist[2], 1E-10);
+        assertEquals(2.0, dist[3], 1E-10);
+    }
+
+    // -----------------------------------------------------------------------
+    // getPathDistance
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testGetPathDistance() {
+        System.out.println("getPathDistance");
+        AdjacencyMatrix g = new AdjacencyMatrix(4);
+        g.addEdge(0, 1, 1.0);
+        g.addEdge(1, 2, 2.0);
+        g.addEdge(2, 3, 3.0);
+
+        int[] path = {0, 1, 2, 3};
+        assertEquals(6.0, g.getPathDistance(path), 1E-10);
+    }
+
+    // -----------------------------------------------------------------------
+    // Prim on disconnected graph
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testPrimDisconnected() {
+        System.out.println("Prim on disconnected graph");
+        AdjacencyMatrix g = new AdjacencyMatrix(4);
+        g.addEdge(0, 1, 1.0);
+        List<Graph.Edge> mst = new ArrayList<>();
+        double cost = g.prim(mst);
+        assertEquals(1.0, cost, 1E-10);
+    }
 }
