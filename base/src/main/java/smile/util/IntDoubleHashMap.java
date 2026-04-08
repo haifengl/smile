@@ -142,7 +142,7 @@ public class IntDoubleHashMap {
     /**
      * Removes the mapping for the specified key from this map if present.
      * @param key the key.
-     * @return the value.
+     * @return the previous value, or {@code Double.NaN} if not present.
      */
     public double remove(int key) {
         if (key == FREE_KEY) {
@@ -155,15 +155,59 @@ public class IntDoubleHashMap {
             if (k == FREE_KEY) {
                 return NO_VALUE;
             }
-
             if (k == key) {
                 double ret = values[ptr];
-                keys[ptr] = FREE_KEY;
+                shiftKeys(ptr);
+                --size;
                 return ret;
             }
-
             ptr = (ptr + 1) & mask;
         } while (true);
+    }
+
+    /**
+     * Shifts entries after a deletion to preserve probe-chain integrity
+     * for open-addressing with linear probing (Robin Hood backward-shift).
+     */
+    private void shiftKeys(int pos) {
+        while (true) {
+            int next = (pos + 1) & mask;
+            while (true) {
+                int k = keys[next];
+                if (k == FREE_KEY) {
+                    keys[pos] = FREE_KEY;
+                    return;
+                }
+                int slot = hash(k);
+                // We can pull keys[next] back to pos iff slot is NOT in (pos, next]
+                // i.e. the key's home is at or before pos (the gap) in circular order.
+                if (!inRange(pos + 1, next, slot)) {
+                    keys[pos]   = k;
+                    values[pos] = values[next];
+                    pos = next;
+                    break;
+                }
+                next = (next + 1) & mask;
+            }
+        }
+    }
+
+    /**
+     * Returns true if {@code slot} is in the circular range [lo, hi] (both inclusive).
+     * lo and hi are indices into the table; lo may be > hi when the range wraps.
+     */
+    private boolean inRange(int lo, int hi, int slot) {
+        lo  &= mask;
+        if (lo <= hi) return lo <= slot && slot <= hi;
+        return slot >= lo || slot <= hi;  // wraps around
+    }
+
+    /**
+     * Returns true if this map contains no key-value mappings.
+     * @return true if this map is empty.
+     */
+    public boolean isEmpty() {
+        return size == 0;
     }
 
     /**
@@ -186,13 +230,23 @@ public class IntDoubleHashMap {
         keys = new int[newCapacity];
         Arrays.fill(keys, FREE_KEY);
         values = new double[newCapacity];
+        size = 0;   // reset: rawPut will re-count
 
         for (int i = 0; i < oldCapacity; i++) {
             int oldKey = oldKeys[i];
             if (oldKey != FREE_KEY) {
-                put(oldKey, oldValues[i]);
+                rawPut(oldKey, oldValues[i]);
             }
         }
+    }
+
+    /** Insert without rehash check — used only during rehash itself. */
+    private void rawPut(int key, double value) {
+        int ptr = hash(key);
+        while (keys[ptr] != FREE_KEY) ptr = (ptr + 1) & mask;
+        keys[ptr]   = key;
+        values[ptr] = value;
+        size++;
     }
 
     /**
