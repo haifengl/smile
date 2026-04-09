@@ -186,11 +186,30 @@ public class Concept {
             if (children.get(i) == concept) {
                 children.remove(i);
                 concept.parent = null;
+                // Remove all keywords of the detached sub-tree from the taxonomy index.
+                removeFromTaxonomy(concept);
                 return true;
             }
         }
 
         return false;
+    }
+
+    /**
+     * Recursively removes all keywords of a concept sub-tree from the taxonomy index.
+     */
+    private void removeFromTaxonomy(Concept concept) {
+        if (concept.synset != null) {
+            for (String keyword : concept.synset) {
+                taxonomy.concepts.remove(keyword);
+            }
+        }
+        if (concept.children != null) {
+            for (Concept child : concept.children) {
+                removeFromTaxonomy(child);
+            }
+        }
+        concept.taxonomy = null;
     }
 
     /**
@@ -249,7 +268,7 @@ public class Concept {
         String displayName = "anonymous";
         if (synset != null && !synset.isEmpty()) {
             StringBuilder builder = new StringBuilder();
-            builder.append('(');
+            builder.append('[');
             Iterator<String> iter = synset.iterator();
             builder.append(iter.next());
             while (iter.hasNext()) {
