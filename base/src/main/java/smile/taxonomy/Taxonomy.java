@@ -101,15 +101,40 @@ public class Taxonomy {
      * that has both v and w as descendants (where we allow a node to be a
      * descendant of itself).
      *
-     * @param v a concept.
-     * @param w the other concept.
+     * @param v a concept keyword.
+     * @param w the other concept keyword.
      * @return the lowest common ancestor.
+     * @throws IllegalArgumentException if either keyword is not in the taxonomy.
      */
     public Concept lowestCommonAncestor(String v, String w) {
         Concept vnode = getConcept(v);
+        if (vnode == null) {
+            throw new IllegalArgumentException("Concept not found: " + v);
+        }
         Concept wnode = getConcept(w);
-
+        if (wnode == null) {
+            throw new IllegalArgumentException("Concept not found: " + w);
+        }
         return lowestCommonAncestor(vnode, wnode);
+    }
+
+    /**
+     * Returns the depth of a concept in the taxonomy (root has depth 0).
+     * @param keyword the concept keyword.
+     * @return the depth, or -1 if the keyword is not in the taxonomy.
+     */
+    public int depth(String keyword) {
+        Concept c = getConcept(keyword);
+        if (c == null) return -1;
+        return c.getPathFromRoot().size() - 1;
+    }
+
+    /**
+     * Returns the total number of named concepts (keywords) in the taxonomy.
+     * @return the number of keywords.
+     */
+    public int size() {
+        return concepts.size();
     }
 
     /**
