@@ -152,6 +152,14 @@ public class KDTree <E> implements KNNSearch<double[], E>, RNNSearch<double[], E
     }
 
     /**
+     * Returns the number of data points in the KD-tree.
+     * @return the number of data points.
+     */
+    public int size() {
+        return keys.length;
+    }
+
+    /**
      * Builds a subtree.
      * @param begin the beginning index of samples for the subtree (inclusive).
      * @param end the ending index of samples for the subtree (exclusive).
