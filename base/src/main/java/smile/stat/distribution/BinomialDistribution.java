@@ -122,7 +122,7 @@ public class BinomialDistribution extends DiscreteDistribution {
         if (k < 0 || k > n) {
             return 0.0;
         } else {
-            return Math.floor(0.5 + exp(lfactorial(n) - lfactorial(k) - lfactorial(n - k))) * Math.pow(p, k) * Math.pow(1.0 - p, n - k);
+            return Math.exp(logp(k));
         }
     }
 
@@ -131,6 +131,9 @@ public class BinomialDistribution extends DiscreteDistribution {
         if (k < 0 || k > n) {
             return Double.NEGATIVE_INFINITY;
         } else {
+            // Handle edge cases p=0 and p=1 to avoid NaN from 0 * (-Infinity)
+            if (p == 0.0) return (k == 0) ? 0.0 : Double.NEGATIVE_INFINITY;
+            if (p == 1.0) return (k == n) ? 0.0 : Double.NEGATIVE_INFINITY;
             return lfactorial(n) - lfactorial(k)
                  - lfactorial(n - k) + k * log(p) + (n - k) * log(1.0 - p);
         }

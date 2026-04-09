@@ -117,8 +117,10 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
     public double p(int k) {
         if (k < 0) {
             return 0.0;
+        } else if (lambda == 0) {
+            return (k == 0) ? 1.0 : 0.0;
         } else {
-            return Math.pow(lambda, k) * Math.exp(-lambda) / MathEx.factorial(k);
+            return Math.exp(logp(k));
         }
     }
 
@@ -126,6 +128,9 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
     public double logp(int k) {
         if (k < 0) {
             return Double.NEGATIVE_INFINITY;
+        } else if (lambda == 0) {
+            // Degenerate distribution: P(X=0) = 1, P(X>0) = 0
+            return (k == 0) ? 0.0 : Double.NEGATIVE_INFINITY;
         } else {
             return k * Math.log(lambda) - lambda - MathEx.lfactorial(k);
         }

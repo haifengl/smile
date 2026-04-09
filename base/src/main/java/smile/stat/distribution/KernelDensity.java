@@ -171,7 +171,26 @@ public class KernelDensity implements Distribution {
 
     @Override
     public double logp(double x) {
-        return Math.log(p(x));
+        // Use log-sum-exp over the active window for numerical stability
+        int start = Arrays.binarySearch(this.x, x - 5 * h);
+        if (start < 0) start = -start - 1;
+        int end = Arrays.binarySearch(this.x, x + 5 * h);
+        if (end < 0) end = -end - 1;
+
+        if (start >= end) return Double.NEGATIVE_INFINITY;
+
+        double maxLog = Double.NEGATIVE_INFINITY;
+        for (int i = start; i < end; i++) {
+            double lp = gaussian.logp(this.x[i] - x);
+            if (lp > maxLog) maxLog = lp;
+        }
+
+        double sumExp = 0.0;
+        for (int i = start; i < end; i++) {
+            sumExp += Math.exp(gaussian.logp(this.x[i] - x) - maxLog);
+        }
+
+        return maxLog + Math.log(sumExp) - Math.log(this.x.length);
     }
 
     /**
@@ -214,8 +233,8 @@ public class KernelDensity implements Distribution {
     public double logLikelihood(double[] x) {
         double L = 0.0;
         for (double xi : x) {
-            double pi = p(xi);
-            if (pi > 0) L += Math.log(pi);
+            double lp = logp(xi);
+            if (Double.isFinite(lp)) L += lp;
         }
         return L;
     }

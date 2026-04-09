@@ -112,7 +112,10 @@ public class TDistribution implements Distribution {
 
     @Override
     public double rand() {
-        return inverseTransformSampling();
+        // t(ν) = Z / sqrt(χ²(ν)/ν), where Z ~ N(0,1) independent of χ²(ν)
+        double z = GaussianDistribution.getInstance().rand();
+        double chi2 = new GammaDistribution(nu / 2.0, 2.0).rand(); // χ²(ν) = Gamma(ν/2, 2)
+        return z / Math.sqrt(chi2 / nu);
     }
 
     @Override

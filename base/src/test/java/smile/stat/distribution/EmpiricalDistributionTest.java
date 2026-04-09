@@ -184,5 +184,39 @@ public class EmpiricalDistributionTest {
             new EmpiricalDistribution(new double[]{-0.1, 1.1}); // negative prob
         });
     }
+
+    /**
+     * Test that logp returns NEGATIVE_INFINITY for zero-probability events.
+     */
+    @Test
+    public void testLogpZeroProbability() {
+        System.out.println("EmpiricalDistribution logp zero probability");
+        // Create a distribution with a zero-probability slot
+        double[] probs = {0.5, 0.0, 0.5};
+        EmpiricalDistribution dist = new EmpiricalDistribution(probs);
+        // p[1] == 0: logp should return -Inf, not NaN
+        assertEquals(Double.NEGATIVE_INFINITY, dist.logp(1));
+        assertTrue(Double.isFinite(dist.logp(0)));
+        assertTrue(Double.isFinite(dist.logp(2)));
+    }
+
+    /**
+     * Test cdf with non-contiguous value set (e.g. {0, 2, 5}).
+     * For k=1 (between 0 and 2), cdf should return cdf[0] = p[0].
+     */
+    @Test
+    public void testCdfNonContiguous() {
+        System.out.println("EmpiricalDistribution cdf non-contiguous");
+        int[] data = {0, 0, 2, 2, 5};
+        IntSet xs = IntSet.of(data);
+        EmpiricalDistribution dist = EmpiricalDistribution.fit(data, xs);
+        // cdf(0) = 0.4, cdf(1) should also be 0.4 (no value 1 in set)
+        assertEquals(0.4, dist.cdf(0), 1E-10);
+        assertEquals(0.4, dist.cdf(1), 1E-10); // 1 not in set; falls back to 0
+        assertEquals(0.8, dist.cdf(2), 1E-10);
+        assertEquals(0.8, dist.cdf(3), 1E-10); // 3 not in set; falls back to 2
+        assertEquals(1.0, dist.cdf(5), 1E-10);
+        assertEquals(1.0, dist.cdf(6), 1E-10);
+    }
 }
 

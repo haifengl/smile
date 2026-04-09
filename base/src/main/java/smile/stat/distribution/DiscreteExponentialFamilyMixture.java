@@ -144,12 +144,16 @@ public class DiscreteExponentialFamilyMixture extends DiscreteMixture {
             }
 
             double loglikelihood = 0.0;
-            for (double xi : x) {
-                double p = 0.0;
-                for (Component c : components) {
-                    p += c.priori() * c.distribution().p(xi);
+            for (int xi : x) {
+                double maxLog = Double.NEGATIVE_INFINITY;
+                double[] logTerms = new double[k];
+                for (int i = 0; i < k; i++) {
+                    logTerms[i] = Math.log(components[i].priori()) + components[i].distribution().logp(xi);
+                    if (logTerms[i] > maxLog) maxLog = logTerms[i];
                 }
-                if (p > 0) loglikelihood += Math.log(p);
+                double sumExp = 0.0;
+                for (int i = 0; i < k; i++) sumExp += Math.exp(logTerms[i] - maxLog);
+                loglikelihood += maxLog + Math.log(sumExp);
             }
 
             diff = loglikelihood - L;

@@ -213,4 +213,21 @@ public class TDistributionTest {
         assertTrue(q > 0);
         assertEquals(0.05, instance.cdf2tailed(q), 1E-5);
     }
+
+    /**
+     * Test that rand() samples have mean ≈ 0 and variance ≈ nu/(nu-2) for nu > 2.
+     */
+    @Test
+    public void testRandMoments() {
+        System.out.println("t rand moments");
+        smile.math.MathEx.setSeed(19650218);
+        int nu = 10;
+        TDistribution d = new TDistribution(nu);
+        double[] samples = d.rand(10000);
+        double mean = smile.math.MathEx.mean(samples);
+        double var = smile.math.MathEx.var(samples);
+        assertEquals(0.0, mean, 0.05);
+        assertEquals((double) nu / (nu - 2), var, 0.15);
+    }
 }
+

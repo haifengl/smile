@@ -95,7 +95,10 @@ public class FDistribution implements Distribution {
 
     @Override
     public double rand() {
-        return inverseTransformSampling();
+        // F(d1,d2) = (χ²(d1)/d1) / (χ²(d2)/d2)
+        double chi1 = new GammaDistribution(nu1 / 2.0, 2.0).rand();
+        double chi2 = new GammaDistribution(nu2 / 2.0, 2.0).rand();
+        return (chi1 / nu1) / (chi2 / nu2);
     }
 
     @Override

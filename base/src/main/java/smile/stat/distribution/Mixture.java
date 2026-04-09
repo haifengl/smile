@@ -116,21 +116,22 @@ public class Mixture implements Distribution {
     @Override
     public double mean() {
         double mu = 0.0;
-
         for (Component c : components)
             mu += c.priori * c.distribution.mean();
-
         return mu;
     }
 
     @Override
     public double variance() {
+        // Law of total variance: Var(X) = E[Var(X|Z)] + Var(E[X|Z])
+        // = sum(w_i * sigma_i^2) + sum(w_i * mu_i^2) - mu^2
+        double mu = mean();
         double variance = 0.0;
-
-        for (Component c : components)
-            variance += c.priori * c.priori * c.distribution.variance();
-
-        return variance;
+        for (Component c : components) {
+            double mui = c.distribution.mean();
+            variance += c.priori * (c.distribution.variance() + mui * mui);
+        }
+        return variance - mu * mu;
     }
 
     /**
@@ -153,7 +154,19 @@ public class Mixture implements Distribution {
 
     @Override
     public double logp(double x) {
-        return Math.log(p(x));
+        // log-sum-exp for numerical stability
+        int k = components.length;
+        double maxLog = Double.NEGATIVE_INFINITY;
+        double[] logTerms = new double[k];
+        for (int i = 0; i < k; i++) {
+            Component c = components[i];
+            logTerms[i] = Math.log(c.priori) + c.distribution.logp(x);
+            if (logTerms[i] > maxLog) maxLog = logTerms[i];
+        }
+        if (Double.isInfinite(maxLog)) return Double.NEGATIVE_INFINITY;
+        double sumExp = 0.0;
+        for (double lt : logTerms) sumExp += Math.exp(lt - maxLog);
+        return maxLog + Math.log(sumExp);
     }
 
     @Override
@@ -234,11 +247,10 @@ public class Mixture implements Distribution {
      */
     public double bic(double[] data) {
         int n = data.length;
-
         double logLikelihood = 0.0;
         for (double x : data) {
-            double p = p(x);
-            if (p > 0) logLikelihood += Math.log(p);
+            double lp = logp(x);
+            if (Double.isFinite(lp)) logLikelihood += lp;
         }
 
         return logLikelihood - 0.5 * length() * Math.log(n);
