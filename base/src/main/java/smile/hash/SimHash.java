@@ -17,6 +17,7 @@
 package smile.hash;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 /**
  * SimHash is a technique for quickly estimating how similar two sets are.
@@ -90,7 +91,7 @@ public interface SimHash<T> {
 
                 int[] bits = new int[BITS];
                 for (String s : tokens) {
-                    byte[] bytes = s.getBytes();
+                    byte[] bytes = s.getBytes(StandardCharsets.UTF_8);
                     ByteBuffer buffer = ByteBuffer.wrap(bytes);
                     long hash = MurmurHash2.hash64(buffer, 0, bytes.length, 0);
                     for (int i = 0; i < BITS; i++) {
