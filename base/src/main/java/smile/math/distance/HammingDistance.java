@@ -60,16 +60,8 @@ public class HammingDistance implements Distance<int[]> {
      * @return the distance.
      */
     public static int d(int x, int y) {
-        int dist = 0;
-        int val = x ^ y;
-
-        // Count the number of set bits (Knuth's algorithm)
-        while (val != 0) {
-            ++dist;
-            val &= val - 1;
-        }
-
-        return dist;
+        // Integer.bitCount compiles to a single POPCNT CPU instruction on modern hardware.
+        return Integer.bitCount(x ^ y);
     }
     
     /**
@@ -79,16 +71,8 @@ public class HammingDistance implements Distance<int[]> {
      * @return the distance.
      */
     public static int d(long x, long y) {
-        int dist = 0;
-        long val = x ^ y;
-
-        // Count the number of set bits (Knuth's algorithm)
-        while (val != 0) {
-            ++dist;
-            val &= val - 1;
-        }
-
-        return dist;
+        // Long.bitCount compiles to a single POPCNT CPU instruction on modern hardware.
+        return Long.bitCount(x ^ y);
     }
 
     /**
