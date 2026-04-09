@@ -124,14 +124,20 @@ public class LinearSearchEdgeTest {
     }
 
     @Test
-    public void testKnnListDefaultMethod() {
+    public void testRangeSearchIntoList() {
         MathEx.setSeed(19650218);
         double[][] data = MathEx.randn(100, 4);
         LinearSearch<double[], double[]> search = LinearSearch.of(data, MathEx::distance);
 
+        // Use a fresh query point (not in dataset) with large radius to ensure hits
+        double[] q = MathEx.randn(1, 4)[0];
+        double radius = 2.0;
         List<Neighbor<double[], double[]>> list = new ArrayList<>();
-        search.search(data[5], 5, list);
-        assertEquals(5, list.size());
+        search.search(q, radius, list);
+        assertFalse(list.isEmpty(), "Expected results within radius " + radius);
+        for (var n : list) {
+            assertTrue(n.distance() <= radius + 1e-9, "Result exceeds radius");
+        }
     }
 
     @Test
