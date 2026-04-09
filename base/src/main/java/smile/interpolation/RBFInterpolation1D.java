@@ -115,31 +115,34 @@ public class RBFInterpolation1D implements Interpolation {
         int n = x.length;
         DenseMatrix G = DenseMatrix.zeros(Float64, n, n);
         double[] rhs = new double[n];
+
+        // Build the symmetric Gram matrix G[i][j] = φ(|x[i] - x[j]|)
+        // and simultaneously compute row sums needed for the normalized RBF RHS.
+        double[] rowSum = new double[n];
         for (int i = 0; i < n; i++) {
-            double sum = 0.0;
             for (int j = 0; j <= i; j++) {
                 double r = rbf.f(Math.abs(x[i] - x[j]));
                 G.set(i, j, r);
                 G.set(j, i, r);
-                sum += 2 * r;
+                rowSum[i] += r;
+                if (i != j) rowSum[j] += r;
             }
+        }
 
-            if (normalized) {
-                rhs[i] = sum * y[i];
-            } else {
-                rhs[i] = y[i];
-            }
+        // For normalized RBF the system is G w = diag(rowSum) y.
+        // For plain RBF the system is G w = y.
+        for (int i = 0; i < n; i++) {
+            rhs[i] = normalized ? rowSum[i] * y[i] : y[i];
         }
 
         if (rbf instanceof GaussianRadialBasis) {
             G.withUplo(LOWER);
             Cholesky cholesky = G.cholesky();
-            cholesky.solve(rhs);
+            w = cholesky.solve(rhs).toArray(new double[n]);
         } else {
             LU lu = G.lu();
-            lu.solve(rhs);
+            w = lu.solve(rhs).toArray(new double[n]);
         }
-        w = rhs;
     }
 
     @Override
