@@ -419,4 +419,329 @@ public class TaxonomyTest {
         assertNotNull(td.toString());
         assertFalse(td.toString().isEmpty());
     }
+
+    // -----------------------------------------------------------------------
+    // Concept.depth()
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testConceptDepth() {
+        System.out.println("Concept.depth");
+        assertEquals(0, taxonomy.getRoot().depth());
+        assertEquals(1, e.depth());     // root → E
+        assertEquals(1, anon.depth());  // root → anon
+        assertEquals(2, a.depth());     // root → anon → A
+        assertEquals(3, b.depth());     // root → anon → A → B
+        assertEquals(4, f.depth());     // root → anon → A → C → F
+    }
+
+    // -----------------------------------------------------------------------
+    // Concept.height()
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testConceptHeight() {
+        System.out.println("Concept.height");
+        assertEquals(0, b.height());   // leaf
+        assertEquals(0, d.height());   // leaf
+        assertEquals(0, e.height());   // leaf
+        assertEquals(0, f.height());   // leaf
+        assertEquals(1, c.height());   // C → F
+        assertEquals(2, a.height());   // A → C → F
+        assertEquals(3, anon.height()); // anon → A → C → F
+        assertEquals(4, taxonomy.getRoot().height());
+    }
+
+    // -----------------------------------------------------------------------
+    // Concept.subtreeSize()
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testConceptSubtreeSize() {
+        System.out.println("Concept.subtreeSize");
+        assertEquals(1, b.subtreeSize());     // just B
+        assertEquals(1, f.subtreeSize());     // just F
+        assertEquals(2, c.subtreeSize());     // C, F
+        assertEquals(4, a.subtreeSize());     // A, B, C, F
+        assertEquals(5, anon.subtreeSize());  // D, A, B, C, F
+        assertEquals(6, taxonomy.getRoot().subtreeSize()); // all 6
+    }
+
+    // -----------------------------------------------------------------------
+    // Concept.isDescendantOf()
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testIsDescendantOf() {
+        System.out.println("Concept.isDescendantOf");
+        assertTrue(b.isDescendantOf(a));
+        assertTrue(f.isDescendantOf(a));
+        assertTrue(f.isDescendantOf(taxonomy.getRoot()));
+        assertFalse(a.isDescendantOf(b));
+        assertFalse(a.isDescendantOf(a)); // not its own descendant
+        assertFalse(d.isDescendantOf(a)); // d is sibling branch
+    }
+
+    // -----------------------------------------------------------------------
+    // Concept.siblings()
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testSiblings() {
+        System.out.println("Concept.siblings");
+        // B and C are siblings under A
+        List<Concept> bSiblings = b.siblings();
+        assertEquals(1, bSiblings.size());
+        assertTrue(bSiblings.contains(c));
+
+        List<Concept> cSiblings = c.siblings();
+        assertEquals(1, cSiblings.size());
+        assertTrue(cSiblings.contains(b));
+
+        // D and A are siblings under anon
+        List<Concept> dSiblings = d.siblings();
+        assertEquals(1, dSiblings.size());
+        assertTrue(dSiblings.contains(a));
+
+        // Root has no parent → no siblings
+        List<Concept> rootSiblings = taxonomy.getRoot().siblings();
+        assertTrue(rootSiblings.isEmpty());
+
+        // F is the only child of C → no siblings
+        List<Concept> fSiblings = f.siblings();
+        assertTrue(fSiblings.isEmpty());
+    }
+
+    // -----------------------------------------------------------------------
+    // Taxonomy.height()
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testTaxonomyHeight() {
+        System.out.println("Taxonomy.height");
+        // root → anon → A → C → F  is the longest path (4 edges)
+        assertEquals(4, taxonomy.height());
+    }
+
+    @Test
+    public void testTaxonomyHeightSingleNode() {
+        System.out.println("Taxonomy.height single node");
+        Taxonomy t = new Taxonomy("only");
+        assertEquals(0, t.height());
+    }
+
+    // -----------------------------------------------------------------------
+    // Taxonomy.isAncestor() / isDescendant()
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testIsAncestorByKeyword() {
+        System.out.println("Taxonomy.isAncestor");
+        assertTrue(taxonomy.isAncestor("A", "B"));
+        assertTrue(taxonomy.isAncestor("A", "F"));
+        assertFalse(taxonomy.isAncestor("B", "A"));
+        assertFalse(taxonomy.isAncestor("B", "C"));
+        assertFalse(taxonomy.isAncestor("A", "A")); // not its own ancestor
+    }
+
+    @Test
+    public void testIsDescendantByKeyword() {
+        System.out.println("Taxonomy.isDescendant");
+        assertTrue(taxonomy.isDescendant("F", "A"));
+        assertTrue(taxonomy.isDescendant("B", "A"));
+        assertFalse(taxonomy.isDescendant("A", "B"));
+        assertFalse(taxonomy.isDescendant("D", "A"));
+    }
+
+    @Test
+    public void testIsAncestorUnknownThrows() {
+        System.out.println("Taxonomy.isAncestor unknown throws");
+        assertThrows(IllegalArgumentException.class,
+                () -> taxonomy.isAncestor("A", "UNKNOWN"));
+        assertThrows(IllegalArgumentException.class,
+                () -> taxonomy.isAncestor("UNKNOWN", "A"));
+    }
+
+    // -----------------------------------------------------------------------
+    // Taxonomy.shortestPath()
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testShortestPathSelf() {
+        System.out.println("Taxonomy.shortestPath self");
+        List<Concept> path = taxonomy.shortestPath("A", "A");
+        assertEquals(1, path.size());
+        assertSame(a, path.get(0));
+    }
+
+    @Test
+    public void testShortestPathParentChild() {
+        System.out.println("Taxonomy.shortestPath parent→child");
+        // A → B: direct edge
+        List<Concept> path = taxonomy.shortestPath("A", "B");
+        assertEquals(2, path.size());
+        assertSame(a, path.get(0));
+        assertSame(b, path.get(1));
+    }
+
+    @Test
+    public void testShortestPathChildToParent() {
+        System.out.println("Taxonomy.shortestPath child→parent");
+        // B → A: direct edge reversed
+        List<Concept> path = taxonomy.shortestPath("B", "A");
+        assertEquals(2, path.size());
+        assertSame(b, path.get(0));
+        assertSame(a, path.get(1));
+    }
+
+    @Test
+    public void testShortestPathSiblings() {
+        System.out.println("Taxonomy.shortestPath siblings");
+        // B → C via A: B→A→C
+        List<Concept> path = taxonomy.shortestPath("B", "C");
+        assertEquals(3, path.size());
+        assertSame(b, path.get(0));
+        assertSame(a, path.get(1));
+        assertSame(c, path.get(2));
+    }
+
+    @Test
+    public void testShortestPathAncestorToDeepDescendant() {
+        System.out.println("Taxonomy.shortestPath ancestor→deep descendant");
+        // A → F: A→C→F
+        List<Concept> path = taxonomy.shortestPath("A", "F");
+        assertEquals(3, path.size());
+        assertSame(a, path.get(0));
+        assertSame(c, path.get(1));
+        assertSame(f, path.get(2));
+    }
+
+    @Test
+    public void testShortestPathAcrossBranches() {
+        System.out.println("Taxonomy.shortestPath across branches");
+        // E → F: E→root→anon→A→C→F
+        List<Concept> path = taxonomy.shortestPath("E", "F");
+        assertEquals(6, path.size());
+        assertSame(e,    path.get(0));
+        assertSame(taxonomy.getRoot(), path.get(1));
+        assertSame(anon, path.get(2));
+        assertSame(a,    path.get(3));
+        assertSame(c,    path.get(4));
+        assertSame(f,    path.get(5));
+    }
+
+    @Test
+    public void testShortestPathLengthMatchesDistance() {
+        System.out.println("Taxonomy.shortestPath length == distance + 1");
+        TaxonomicDistance td = new TaxonomicDistance(taxonomy);
+        String[][] pairs = {{"A","F"},{"E","F"},{"B","D"},{"B","C"}};
+        for (String[] pair : pairs) {
+            List<Concept> path = taxonomy.shortestPath(pair[0], pair[1]);
+            double dist = td.d(pair[0], pair[1]);
+            assertEquals((int) dist + 1, path.size(),
+                    "Path length for " + pair[0] + "→" + pair[1]);
+        }
+    }
+
+    @Test
+    public void testShortestPathUnknownThrows() {
+        System.out.println("Taxonomy.shortestPath unknown throws");
+        assertThrows(IllegalArgumentException.class,
+                () -> taxonomy.shortestPath("A", "UNKNOWN"));
+    }
+
+    // -----------------------------------------------------------------------
+    // Taxonomy.subtree()
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testSubtree() {
+        System.out.println("Taxonomy.subtree");
+        List<String> sub = taxonomy.subtree("A");
+        assertTrue(sub.contains("A"));
+        assertTrue(sub.contains("B"));
+        assertTrue(sub.contains("C"));
+        assertTrue(sub.contains("F"));
+        assertFalse(sub.contains("D")); // different branch
+        assertFalse(sub.contains("E")); // different branch
+        assertEquals(4, sub.size());
+    }
+
+    @Test
+    public void testSubtreeLeaf() {
+        System.out.println("Taxonomy.subtree leaf");
+        List<String> sub = taxonomy.subtree("B");
+        assertEquals(1, sub.size());
+        assertTrue(sub.contains("B"));
+    }
+
+    @Test
+    public void testSubtreeUnknownThrows() {
+        System.out.println("Taxonomy.subtree unknown throws");
+        assertThrows(IllegalArgumentException.class,
+                () -> taxonomy.subtree("UNKNOWN"));
+    }
+
+    // -----------------------------------------------------------------------
+    // Taxonomy.bfs()
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testBfs() {
+        System.out.println("Taxonomy.bfs");
+        List<Concept> order = taxonomy.bfs();
+        // Root must be first
+        assertSame(taxonomy.getRoot(), order.get(0));
+        // All 8 nodes present (root, anon, E, D, A, B, C, F)
+        assertEquals(8, order.size());
+        // Each node must appear after its parent
+        for (Concept node : order) {
+            if (node.parent != null) {
+                assertTrue(order.indexOf(node.parent) < order.indexOf(node),
+                        "Parent of " + node + " must precede it in BFS");
+            }
+        }
+    }
+
+    @Test
+    public void testBfsDepthOrder() {
+        System.out.println("Taxonomy.bfs depth order");
+        List<Concept> order = taxonomy.bfs();
+        // Verify depths are non-decreasing
+        int prevDepth = 0;
+        for (Concept node : order) {
+            int d = node.depth();
+            assertTrue(d >= prevDepth,
+                    "BFS depth should be non-decreasing, got " + d + " after " + prevDepth);
+            prevDepth = d;
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Taxonomy.leaves()
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testLeaves() {
+        System.out.println("Taxonomy.leaves");
+        List<Concept> leavesFound = taxonomy.leaves();
+        assertEquals(4, leavesFound.size());
+        assertTrue(leavesFound.contains(b));
+        assertTrue(leavesFound.contains(d));
+        assertTrue(leavesFound.contains(e));
+        assertTrue(leavesFound.contains(f));
+        // No internal nodes in the list
+        assertFalse(leavesFound.contains(a));
+        assertFalse(leavesFound.contains(anon));
+        assertFalse(leavesFound.contains(taxonomy.getRoot()));
+    }
+
+    @Test
+    public void testLeavesSingleNode() {
+        System.out.println("Taxonomy.leaves single node");
+        Taxonomy t = new Taxonomy("only");
+        List<Concept> leavesFound = t.leaves();
+        assertEquals(1, leavesFound.size());
+        assertSame(t.getRoot(), leavesFound.get(0));
+    }
 }
