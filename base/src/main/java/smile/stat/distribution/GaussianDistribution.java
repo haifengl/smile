@@ -123,6 +123,19 @@ public class GaussianDistribution implements ExponentialFamily {
         return singleton;
     }
 
+    /**
+     * Resets the Box-Muller cache on the singleton standard normal distribution.
+     * The Box-Muller algorithm generates pairs of random numbers and caches the
+     * second value in {@code z1}. If a call to {@code rand()} consumed only the
+     * first value of a pair, {@code z1} holds a stale value generated before
+     * the last {@link smile.math.MathEx#setSeed} call. Resetting the cache
+     * ensures that the very next call to {@code rand()} draws a fresh value
+     * from the re-seeded RNG, making random-number sequences fully reproducible.
+     */
+    public static void resetCache() {
+        singleton.z1 = Double.NaN;
+    }
+
     @Override
     public int length() {
         return 2;

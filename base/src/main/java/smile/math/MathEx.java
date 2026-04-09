@@ -588,10 +588,13 @@ public class MathEx {
 
     /**
      * Initialize the random number generator with a seed.
+     * Also resets the Box-Muller cache in {@link smile.stat.distribution.GaussianDistribution}
+     * so that Gaussian random sequences are fully reproducible from this point.
      * @param seed the RNG seed.
      */
     public static void setSeed(long seed) {
         random.get().setSeed(seed);
+        smile.stat.distribution.GaussianDistribution.resetCache();
     }
 
     /**
