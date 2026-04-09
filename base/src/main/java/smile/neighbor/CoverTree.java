@@ -24,7 +24,7 @@ import java.util.List;
 import smile.math.MathEx;
 import smile.math.distance.Metric;
 import smile.sort.DoubleHeapSelect;
-import smile.util.DoubleArrayList;
+import smile.util.IntDoubleHashMap;
 
 /**
  * Cover tree is a data structure for generic nearest neighbor search, which
@@ -90,7 +90,13 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
      * used later on to do invLogBase*ln(d) instead of ln(d)/ln(2), to get log2(d),
      * in getScale method.
      */
-    private final double invLogBase ;
+    private final double invLogBase;
+    /**
+     * Cache of cover radii: scale -&gt; base^scale. Avoids repeated Math.pow
+     * calls during both build and search. Uses a primitive int-&gt;double map
+     * to avoid autoboxing overhead.
+     */
+    private final IntDoubleHashMap coverRadiusCache = new IntDoubleHashMap();
 
     /**
      * Node in the cover tree.
@@ -103,7 +109,9 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
         double maxDist;
         /** The distance to the parent node. */
         double parentDist;
-        /** The children of the node. */
+        /**
+         * The children of the node. {@code null} for leaf nodes.
+         */
         ArrayList<Node> children;
         /**
          * The min i that makes base<sup>i</sup> {@code <= maxDist}.
@@ -155,66 +163,63 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
     }
 
     /**
-     * A point's distance to the current reference point p.
+     * A point's distance stack to ancestor reference points accumulated
+     * during batch construction. Uses a plain {@code double[]} array as a
+     * stack to avoid the overhead of {@code DoubleArrayList} bounds-checks
+     * and potential resizing on every push/pop.
      */
     class DistanceSet {
 
         /** The index of the instance represented by this node. */
         final int idx;
         /**
-         * The last distance is to the current reference point
-         * (potential current parent). The previous ones are
-         * to reference points that were previously looked at
-         * (all potential ancestors).
+         * Stack of distances to ancestor reference points.
+         * {@code distStack[distTop-1]} is the distance to the current
+         * reference point (the potential current parent).
          */
-        final DoubleArrayList dist;
+        double[] distStack;
+        /** Number of valid entries in {@code distStack}. */
+        int distTop;
 
         /**
          * Constructor.
          */
         DistanceSet(int idx) {
             this.idx = idx;
-            dist = new DoubleArrayList();
+            distStack = new double[8];
+            distTop = 0;
         }
 
-        /** Returns the data key represented by the DistanceNode.
+        /** Push a distance onto the stack. */
+        void push(double d) {
+            if (distTop == distStack.length) {
+                distStack = Arrays.copyOf(distStack, distStack.length * 2);
+            }
+            distStack[distTop++] = d;
+        }
+
+        /** Pop the top distance off the stack and return it. */
+        double pop() {
+            return distStack[--distTop];
+        }
+
+        /** Peek at the top distance without removing it. */
+        double peek() {
+            return distStack[distTop - 1];
+        }
+
+        /** Returns the data key represented by the DistanceSet.
          * @return the data key represented by the node.
          */
         K getKey() {
             return keys.get(idx);
         }
 
-        /** Returns the data object represented by the DistanceNode.
+        /** Returns the data object represented by the DistanceSet.
          * @return the data object represented by the node.
          */
         V getValue() {
             return data.get(idx);
-        }
-    }
-
-    /**
-     * A Node and its distance to the current query node.
-     */
-    class DistanceNode implements Comparable<DistanceNode> {
-
-        /** The distance of the node's point to the query point. */
-        final double dist;
-        /** The node. */
-        final Node node;
-
-        /**
-         * Constructor.
-         * @param dist the distance of the node to the query.
-         * @param node the node.
-         */
-        DistanceNode(double dist, Node node) {
-            this.dist = dist;
-            this.node = node;
-        }
-
-        @Override
-        public int compareTo(DistanceNode o) {
-            return Double.compare(dist, o.dist);
         }
     }
 
@@ -337,21 +342,20 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
         ArrayList<DistanceSet> consumedSet = new ArrayList<>();
 
         K point = keys.getFirst();
-        int idx = 0;
         int n = keys.size();
         double maxDist = -1;
 
         for (int i = 1; i < n; i++) {
             DistanceSet set = new DistanceSet(i);
             double dist = distance.d(point, keys.get(i));
-            set.dist.add(dist);
+            set.push(dist);
             pointSet.add(set);
             if (dist > maxDist) {
                 maxDist = dist;
             }
         }
 
-        root = batchInsert(idx, getScale(maxDist), getScale(maxDist), pointSet, consumedSet);
+        root = batchInsert(0, getScale(maxDist), getScale(maxDist), pointSet, consumedSet);
     }
 
     /**
@@ -375,15 +379,14 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
         if (pointSet.isEmpty()) {
             return newLeaf(p);
         } else {
-            double maxDist = max(pointSet); // O(|pointSet|) the max dist in pointSet to point "p".
+            double maxDist = maxDist(pointSet); // O(|pointSet|) the max dist in pointSet to point "p".
             int nextScale = Math.min(maxScale - 1, getScale(maxDist));
             if (nextScale == Integer.MIN_VALUE) { // We have points with distance 0. if maxDist is 0.
                 ArrayList<Node> children = new ArrayList<>();
                 Node leaf = newLeaf(p);
                 children.add(leaf);
                 while (!pointSet.isEmpty()) {
-                    DistanceSet set = pointSet.getLast();
-                    pointSet.removeLast();
+                    DistanceSet set = pointSet.removeLast();
                     leaf = newLeaf(set.idx);
                     children.add(leaf);
                     consumedSet.add(set);
@@ -410,13 +413,12 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
                     ArrayList<DistanceSet> newConsumedSet = new ArrayList<>();
 
                     while (!pointSet.isEmpty()) { // O(|pointSet| * .size())
-                        DistanceSet set = pointSet.getLast();
-                        pointSet.removeLast();
-                        double newDist = set.dist.get(set.dist.size() - 1);
+                        DistanceSet set = pointSet.removeLast();
+                        double newDist = set.peek();
                         consumedSet.add(set);
 
                         // putting points closer to newPoint into newPointSet (and removing them from pointSet)
-                        distSplit(pointSet, newPointSet, set.getKey(), maxScale); // O(|point_saet|)
+                        distSplit(pointSet, newPointSet, set.getKey(), maxScale); // O(|pointSet|)
                         // putting points closer to newPoint into newPointSet (and removing them from far)
                         distSplit(far, newPointSet, set.getKey(), maxScale); // O(|far|)
 
@@ -429,8 +431,8 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
                         // pointSet and far
                         double fmax = getCoverRadius(maxScale);
                         for (DistanceSet ds : newPointSet) { // O(|newPointSet|)
-                            ds.dist.remove(ds.dist.size() - 1);
-                            if (ds.dist.get(ds.dist.size() - 1) <= fmax) {
+                            ds.pop();
+                            if (ds.peek() <= fmax) {
                                 pointSet.add(ds);
                             } else {
                                 far.add(ds);
@@ -438,8 +440,8 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
                         }
 
                         // putting the points consumed while recursing for newPoint into consumedSet
-                        for (DistanceSet ds : newConsumedSet) { // O(|newPointSet|)
-                            ds.dist.remove(ds.dist.size() - 1);
+                        for (DistanceSet ds : newConsumedSet) { // O(|newConsumedSet|)
+                            ds.pop();
                             consumedSet.add(ds);
                         }
 
@@ -451,7 +453,7 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
 
                     Node node = new Node(p);
                     node.scale = topScale - maxScale;
-                    node.maxDist = max(consumedSet);
+                    node.maxDist = maxDist(consumedSet);
                     node.children = children;
                     return node;
                 }
@@ -461,13 +463,19 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
 
     /**
      * Returns the distance/value of a given scale/level, i.e. the value of
-     * base^i (e.g. 2^i).
+     * base^i (e.g. 2^i). Results are cached in a primitive int-&gt;double map
+     * to avoid repeated {@code Math.pow} calls and autoboxing overhead.
      *
      * @param s the level/scale
      * @return base^s
      */
     private double getCoverRadius(int s) {
-        return Math.pow(base, s);
+        double v = coverRadiusCache.get(s);
+        if (Double.isNaN(v)) {
+            v = Math.pow(base, s);
+            coverRadiusCache.put(s, v);
+        }
+        return v;
     }
 
     /**
@@ -489,54 +497,50 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
     }
 
     /**
-     * Returns the max distance of the reference point p in current node to
-     * its children nodes.
-     * @param v the stack of DistanceNode objects.
+     * Returns the max distance (top of distance stack) among all entries.
+     * @param v the list of DistanceSet objects.
      * @return the distance of the furthest child.
      */
-    private double max(ArrayList<DistanceSet> v) {
+    private double maxDist(ArrayList<DistanceSet> v) {
         double max = 0.0;
         for (DistanceSet n : v) {
-            if (max < n.dist.get(n.dist.size() - 1)) {
-                max = n.dist.get(n.dist.size() - 1);
-            }
+            double d = n.peek();
+            if (d > max) max = d;
         }
         return max;
     }
 
     /**
      * Splits a given pointSet into near and far based on the given
-     * scale/level. All points with distance > base^maxScale would be moved
-     * to far set. In other words, all those points that are not covered by the
-     * next child ball of a point p (ball made of the same point p but of
-     * smaller radius at the next lower level) are removed from the supplied
-     * current pointSet and put into farSet.
+     * scale/level. All points with distance {@code > base^maxScale} are moved
+     * to the far set. The operation is done in-place to avoid creating a
+     * temporary list.
      *
      * @param pointSet the supplied set from which all far points
      * would be removed.
      * @param farSet the set in which all far points having distance
-     * > base^maxScale would be put into.
+     * {@code > base^maxScale} would be put into.
      * @param maxScale the given scale based on which the distances
      * of points are judged to be far or near.
      */
     private void split(ArrayList<DistanceSet> pointSet, ArrayList<DistanceSet> farSet, int maxScale) {
         double fmax = getCoverRadius(maxScale);
-        ArrayList<DistanceSet> newSet = new ArrayList<>();
-        for (DistanceSet ds : pointSet) {
-            if (ds.dist.get(ds.dist.size() - 1) <= fmax) {
-                newSet.add(ds);
+        int write = 0;
+        for (int i = 0; i < pointSet.size(); i++) {
+            DistanceSet ds = pointSet.get(i);
+            if (ds.peek() <= fmax) {
+                pointSet.set(write++, ds);
             } else {
                 farSet.add(ds);
             }
         }
-
-        pointSet.clear();
-        pointSet.addAll(newSet);
+        pointSet.subList(write, pointSet.size()).clear();
     }
 
     /**
      * Moves all the points in pointSet covered by (the ball of) newPoint
-     * into newPointSet, based on the given scale/level.
+     * into newPointSet, based on the given scale/level. The operation is
+     * done in-place to avoid creating a temporary list.
      *
      * @param pointSet the supplied set of instances from which
      * all points covered by newPoint will be removed.
@@ -548,19 +552,18 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
      */
     private void distSplit(ArrayList<DistanceSet> pointSet, ArrayList<DistanceSet> newPointSet, K newPoint, int maxScale) {
         double fmax = getCoverRadius(maxScale);
-        ArrayList<DistanceSet> newSet = new ArrayList<>();
-        for (DistanceSet ds : pointSet) {
+        int write = 0;
+        for (int i = 0; i < pointSet.size(); i++) {
+            DistanceSet ds = pointSet.get(i);
             double newDist = distance.d(newPoint, ds.getKey());
             if (newDist <= fmax) {
-                ds.dist.add(newDist);
+                ds.push(newDist);
                 newPointSet.add(ds);
             } else {
-                newSet.add(ds);
+                pointSet.set(write++, ds);
             }
         }
-
-        pointSet.clear();
-        pointSet.addAll(newSet);
+        pointSet.subList(write, pointSet.size()).clear();
     }
 
     @Override
@@ -587,10 +590,25 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
             return a1;
         }
 
-        ArrayList<DistanceNode> currentCoverSet = new ArrayList<>();
-        ArrayList<DistanceNode> zeroSet = new ArrayList<>();
+        // Use parallel arrays of (distance, node) pairs to avoid DistanceNode
+        // object allocation on every level expansion.
+        int initCap = 64;
+        double[] curDist = new double[initCap];
+        // Object[] instead of Node[] to avoid generic array creation restriction
+        Object[] curNodes = new Object[initCap];
+        int curSize = 0;
 
-        currentCoverSet.add(new DistanceNode(d, root));
+        double[] nextDist = new double[initCap];
+        Object[] nextNodes = new Object[initCap];
+        int nextSize = 0;
+
+        double[] zeroDist = new double[initCap];
+        Object[] zeroNodes = new Object[initCap];
+        int zeroSize = 0;
+
+        curDist[0] = d;
+        curNodes[0] = root;
+        curSize = 1;
 
         DoubleHeapSelect heap = new DoubleHeapSelect(k);
         heap.add(Double.MAX_VALUE);
@@ -601,45 +619,66 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
             emptyHeap = false;
         }
 
-        while (!currentCoverSet.isEmpty()) {
-            ArrayList<DistanceNode> nextCoverSet = new ArrayList<>();
-            for (DistanceNode par : currentCoverSet) {
-                Node parent = par.node;
-                for (int c = 0; c < parent.children.size(); c++) {
-                    Node child = parent.children.get(c);
+        while (curSize > 0) {
+            nextSize = 0;
+            for (int pi = 0; pi < curSize; pi++) {
+                @SuppressWarnings("unchecked")
+                Node parent = (Node) curNodes[pi];
+                double parDist = curDist[pi];
+                ArrayList<Node> ch = parent.children;
+                int nc = ch.size();
+                for (int c = 0; c < nc; c++) {
+                    Node child = ch.get(c);
+                    double cd;
                     if (c == 0) {
-                        d = par.dist;
+                        cd = parDist;
                     } else {
-                        d = distance.d(child.getKey(), q);
+                        cd = distance.d(child.getKey(), q);
                     }
 
                     double upperBound = emptyHeap ? Double.MAX_VALUE : heap.peek();
-                    if (d <= (upperBound + child.maxDist)) {
-                        if (c > 0 && d < upperBound) {
+                    if (cd <= (upperBound + child.maxDist)) {
+                        if (c > 0 && cd < upperBound) {
                             if (child.getKey() != q) {
-                                heap.add(d);
+                                heap.add(cd);
+                                emptyHeap = false;
                             }
                         }
 
                         if (child.children != null) {
-                            nextCoverSet.add(new DistanceNode(d, child));
-                        } else if (d <= upperBound) {
-                            zeroSet.add(new DistanceNode(d, child));
+                            if (nextSize == nextDist.length) {
+                                nextDist = Arrays.copyOf(nextDist, nextDist.length * 2);
+                                nextNodes = Arrays.copyOf(nextNodes, nextNodes.length * 2);
+                            }
+                            nextDist[nextSize] = cd;
+                            nextNodes[nextSize] = child;
+                            nextSize++;
+                        } else if (cd <= upperBound) {
+                            if (zeroSize == zeroDist.length) {
+                                zeroDist = Arrays.copyOf(zeroDist, zeroDist.length * 2);
+                                zeroNodes = Arrays.copyOf(zeroNodes, zeroNodes.length * 2);
+                            }
+                            zeroDist[zeroSize] = cd;
+                            zeroNodes[zeroSize] = child;
+                            zeroSize++;
                         }
                     }
                 }
             }
-            currentCoverSet = nextCoverSet;
+            // swap cur/next without allocation
+            double[] tmpD = curDist; curDist = nextDist; nextDist = tmpD;
+            Object[] tmpN = curNodes; curNodes = nextNodes; nextNodes = tmpN;
+            curSize = nextSize;
         }
 
         ArrayList<Neighbor<K, V>> list = new ArrayList<>();
         double upperBound = heap.peek();
-        for (DistanceNode ds : zeroSet) {
-            if (ds.dist <= upperBound) {
-                if (ds.node.getKey() != q) {
-                    e = ds.node.getKey();
-                    list.add(new Neighbor<>(e, ds.node.getValue(), ds.node.idx, ds.dist));
-                }
+        for (int i = 0; i < zeroSize; i++) {
+            @SuppressWarnings("unchecked")
+            Node zn = (Node) zeroNodes[i];
+            double zd = zeroDist[i];
+            if (zd <= upperBound && zn.getKey() != q) {
+                list.add(new Neighbor<>(zn.getKey(), zn.getValue(), zn.idx, zd));
             }
         }
 
@@ -665,40 +704,58 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
             throw new IllegalArgumentException("Invalid radius: " + radius);
         }
 
-        ArrayList<DistanceNode> currentCoverSet = new ArrayList<>();
-        ArrayList<DistanceNode> zeroSet = new ArrayList<>();
+        int initCap = 64;
+        double[] curDist = new double[initCap];
+        Object[] curNodes = new Object[initCap];
+        int curSize = 0;
+
+        double[] nextDist = new double[initCap];
+        Object[] nextNodes = new Object[initCap];
+        int nextSize = 0;
 
         double d = distance.d(root.getKey(), q);
-        currentCoverSet.add(new DistanceNode(d, root));
+        curDist[0] = d;
+        curNodes[0] = root;
+        curSize = 1;
 
-        while (!currentCoverSet.isEmpty()) {
-            ArrayList<DistanceNode> nextCoverSet = new ArrayList<>();
-            for (DistanceNode par : currentCoverSet) {
-                Node parent = par.node;
-                for (int c = 0; c < parent.children.size(); c++) {
-                    Node child = parent.children.get(c);
+        while (curSize > 0) {
+            nextSize = 0;
+            for (int pi = 0; pi < curSize; pi++) {
+                @SuppressWarnings("unchecked")
+                Node parent = (Node) curNodes[pi];
+                double parDist = curDist[pi];
+                ArrayList<Node> ch = parent.children;
+                int nc = ch.size();
+                for (int c = 0; c < nc; c++) {
+                    Node child = ch.get(c);
+                    double cd;
                     if (c == 0) {
-                        d = par.dist;
+                        cd = parDist;
                     } else {
-                        d = distance.d(child.getKey(), q);
+                        cd = distance.d(child.getKey(), q);
                     }
 
-                    if (d <= (radius + child.maxDist)) {
+                    if (cd <= (radius + child.maxDist)) {
                         if (child.children != null) {
-                            nextCoverSet.add(new DistanceNode(d, child));
-                        } else if (d <= radius) {
-                            zeroSet.add(new DistanceNode(d, child));
+                            if (nextSize == nextDist.length) {
+                                nextDist = Arrays.copyOf(nextDist, nextDist.length * 2);
+                                nextNodes = Arrays.copyOf(nextNodes, nextNodes.length * 2);
+                            }
+                            nextDist[nextSize] = cd;
+                            nextNodes[nextSize] = child;
+                            nextSize++;
+                        } else if (cd <= radius) {
+                            if (child.getKey() != q) {
+                                neighbors.add(new Neighbor<>(child.getKey(), child.getValue(), child.idx, cd));
+                            }
                         }
                     }
                 }
             }
-            currentCoverSet = nextCoverSet;
-        }
-
-        for (DistanceNode ds : zeroSet) {
-            if (ds.node.getKey() != q) {
-                neighbors.add(new Neighbor<>(ds.node.getKey(), ds.node.getValue(), ds.node.idx, ds.dist));
-            }
+            // swap cur/next without allocation
+            double[] tmpD = curDist; curDist = nextDist; nextDist = tmpD;
+            Object[] tmpN = curNodes; curNodes = nextNodes; nextNodes = tmpN;
+            curSize = nextSize;
         }
     }
 }
