@@ -94,15 +94,15 @@ public class Concept {
     /**
      * Returns the concept synonym set.
      *
-     * @return concept synomym set.
+     * @return concept synonym set.
      */
     public Set<String> keywords() {
         return synset;
     }
 
     /**
-     * Adds a list of synomym to the concept synset.
-     * @param keywords the synomyms.
+     * Adds a list of synonym to the concept synset.
+     * @param keywords the synonym.
      */
     public void addKeywords(String... keywords) {
         for (String keyword : keywords) {
