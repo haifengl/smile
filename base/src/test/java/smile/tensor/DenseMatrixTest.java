@@ -199,6 +199,167 @@ public class DenseMatrixTest {
         assertEquals(1.55, d.get(2), 1E-7);
     }
 
+    /**
+     * Test DenseMatrix.axpy(alpha, x): verify y += alpha * x (not alpha*y + alpha*x).
+     */
+    @Test
+    public void testMatrixAxpy() {
+        System.out.println("matrix axpy correctness");
+        // y = [[2,2],[2,2]], x = [[1,1],[1,1]], alpha = 3
+        // expected: y = [[2+3,2+3],[2+3,2+3]] = [[5,5],[5,5]]
+        DenseMatrix y = DenseMatrix.of(new double[][]{{2, 2}, {2, 2}});
+        DenseMatrix x = DenseMatrix.of(new double[][]{{1, 1}, {1, 1}});
+        y.axpy(3.0, x);
+        for (int i = 0; i < 2; i++)
+            for (int j = 0; j < 2; j++)
+                assertEquals(5.0, y.get(i, j), 1E-10);
+    }
+
+    /**
+     * Test DenseMatrix.add(B) and sub(B).
+     */
+    @Test
+    public void testMatrixAddSub() {
+        System.out.println("matrix add/sub");
+        DenseMatrix a = DenseMatrix.of(new double[][]{{1, 2}, {3, 4}});
+        DenseMatrix b = DenseMatrix.of(new double[][]{{5, 6}, {7, 8}});
+        DenseMatrix sum = a.copy();
+        sum.add(b);
+        assertEquals(6.0, sum.get(0, 0), 1E-10);
+        assertEquals(8.0, sum.get(0, 1), 1E-10);
+        assertEquals(10.0, sum.get(1, 0), 1E-10);
+        assertEquals(12.0, sum.get(1, 1), 1E-10);
+
+        DenseMatrix diff = b.copy();
+        diff.sub(a);
+        assertEquals(4.0, diff.get(0, 0), 1E-10);
+        assertEquals(4.0, diff.get(0, 1), 1E-10);
+    }
+
+    /**
+     * Test Vector.max() correctly handles negative values.
+     * Bug: was initialised to Double.MIN_VALUE (≈5e-324), so max of all-negative
+     * vector returned MIN_VALUE instead of the largest element.
+     */
+    @Test
+    public void testVectorMaxNegative() {
+        System.out.println("Vector.max() negative values");
+        Vector v = Vector.column(new double[]{-3.0, -1.0, -2.0});
+        assertEquals(-1.0, v.max(), 1E-10);
+
+        Vector v2 = Vector.column(new double[]{-0.5, -0.5, -0.5});
+        assertEquals(-0.5, v2.max(), 1E-10);
+    }
+
+    @Test
+    public void testVectorMinMax() {
+        System.out.println("Vector min/max");
+        Vector v = Vector.column(new double[]{3.0, 1.0, 4.0, 1.5, 9.0, 2.6});
+        assertEquals(1.0, v.min(), 1E-10);
+        assertEquals(9.0, v.max(), 1E-10);
+    }
+
+    @Test
+    public void testVectorVarianceSd() {
+        System.out.println("Vector variance/sd");
+        // [2, 4, 4, 4, 5, 5, 7, 9] → mean=5, sample var=4.571..., sd=2.138...
+        Vector v = Vector.column(new double[]{2, 4, 4, 4, 5, 5, 7, 9});
+        assertEquals(5.0, v.mean(), 1E-10);
+        assertEquals(4.571428571, v.variance(), 1E-8);
+        assertEquals(Math.sqrt(4.571428571), v.sd(), 1E-8);
+    }
+
+    @Test
+    public void testColSdsSampleVariance() {
+        System.out.println("colSds sample variance (n-1)");
+        // Each column: [1, 3] → mean=2, sample var=2, sd=sqrt(2)
+        double[][] data = {{1.0, 10.0}, {3.0, 12.0}};
+        DenseMatrix m = DenseMatrix.of(data);
+        Vector sds = m.colSds();
+        assertEquals(Math.sqrt(2.0), sds.get(0), 1E-10);
+        assertEquals(Math.sqrt(2.0), sds.get(1), 1E-10);
+    }
+
+    @Test
+    public void testRowSds() {
+        System.out.println("rowSds");
+        // Row 0: [1, 3] → mean=2, sample var=2; Row 1: [10, 12] → sample var=2
+        double[][] data = {{1.0, 3.0}, {10.0, 12.0}};
+        DenseMatrix m = DenseMatrix.of(data);
+        Vector sds = m.rowSds();
+        assertEquals(Math.sqrt(2.0), sds.get(0), 1E-10);
+        assertEquals(Math.sqrt(2.0), sds.get(1), 1E-10);
+    }
+
+    @Test
+    public void testNormFrobenius() {
+        System.out.println("norm (Frobenius)");
+        // ||[[3,4],[0,0]]|| = sqrt(9+16) = 5
+        DenseMatrix m = DenseMatrix.of(new double[][]{{3.0, 4.0}, {0.0, 0.0}});
+        assertEquals(5.0, m.norm(), 1E-10);
+    }
+
+    @Test
+    public void testNorm1MatrixNorm() {
+        System.out.println("norm1 (max column sum)");
+        // [[1,2],[3,4]]: col sums = [4,6] → max = 6
+        DenseMatrix m = DenseMatrix.of(new double[][]{{1.0, 2.0}, {3.0, 4.0}});
+        assertEquals(6.0, m.norm1(), 1E-10);
+    }
+
+    @Test
+    public void testNormInfMatrixNorm() {
+        System.out.println("normInf (max row sum)");
+        // [[1,2],[3,4]]: row sums = [3,7] → max = 7
+        DenseMatrix m = DenseMatrix.of(new double[][]{{1.0, 2.0}, {3.0, 4.0}});
+        assertEquals(7.0, m.normInf(), 1E-10);
+    }
+
+    @Test
+    public void testScalarTypeHelpers() {
+        System.out.println("ScalarType helpers");
+        assertTrue(ScalarType.Float64.isFloating());
+        assertTrue(ScalarType.Float32.isFloating());
+        assertTrue(ScalarType.Float16.isFloating());
+        assertFalse(ScalarType.Int32.isFloating());
+        assertTrue(ScalarType.Int32.isInteger());
+        assertFalse(ScalarType.Float64.isInteger());
+        assertTrue(ScalarType.Float64.isCompatible(ScalarType.Float64));
+        assertFalse(ScalarType.Float64.isCompatible(ScalarType.Float32));
+    }
+
+    @Test
+    public void testAbstractTensorBoundsCheck() {
+        System.out.println("AbstractTensor bounds check via JTensor");
+        // JTensor uses AbstractTensor.offset(int[]) which now bounds-checks
+        float[] data = {1f, 2f, 3f, 4f, 5f, 6f};
+        JTensor t = JTensor.of(data, 2, 3);
+        // valid access should work
+        assertEquals(1f, t.getFloat(0, 0), 1E-7f);
+        assertEquals(6f, t.getFloat(1, 2), 1E-7f);
+        // out-of-bounds should throw
+        assertThrows(IndexOutOfBoundsException.class, () -> t.getFloat(-1, 0));
+        assertThrows(IndexOutOfBoundsException.class, () -> t.getFloat(0, 3));
+        assertThrows(IndexOutOfBoundsException.class, () -> t.getFloat(2, 0));
+        // index length > dim should throw
+        assertThrows(IllegalArgumentException.class, () -> t.getFloat(0, 0, 0));
+    }
+
+    @Test
+    public void testStandardize() {
+        System.out.println("standardize");
+        double[][] data = {{1.0, 10.0}, {3.0, 12.0}, {2.0, 11.0}};
+        DenseMatrix m = DenseMatrix.of(data);
+        DenseMatrix std = m.standardize();
+        // After standardization, each column should have mean ≈ 0 and sd ≈ 1
+        Vector colMeans = std.colMeans();
+        assertEquals(0.0, colMeans.get(0), 1E-10);
+        assertEquals(0.0, colMeans.get(1), 1E-10);
+        Vector colSds = std.colSds();
+        assertEquals(1.0, colSds.get(0), 1E-10);
+        assertEquals(1.0, colSds.get(1), 1E-10);
+    }
+
     @Test
     public void testAxpy2() {
         System.out.println("axpy b = 2");

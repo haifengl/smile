@@ -70,4 +70,30 @@ public enum ScalarType {
      * @return the scalar type size in bytes.
      */
     public int byteSize() { return byteSize; }
+
+    /**
+     * Returns true if this is a floating-point type (Float16, BFloat16, Float32, Float64).
+     * @return true if floating-point.
+     */
+    public boolean isFloating() {
+        return this == Float16 || this == BFloat16 || this == Float32 || this == Float64;
+    }
+
+    /**
+     * Returns true if this is an integer type (Int8, Int16, Int32, Int64, QInt8, QUInt8).
+     * @return true if integer.
+     */
+    public boolean isInteger() {
+        return this == Int8 || this == Int16 || this == Int32 || this == Int64
+                || this == QInt8 || this == QUInt8;
+    }
+
+    /**
+     * Returns true if this scalar type is compatible with (i.e., identical to) another.
+     * @param other the other scalar type.
+     * @return true if compatible.
+     */
+    public boolean isCompatible(ScalarType other) {
+        return this == other;
+    }
 }
