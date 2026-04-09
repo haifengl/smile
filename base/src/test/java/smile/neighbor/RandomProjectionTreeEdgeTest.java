@@ -27,6 +27,11 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class RandomProjectionTreeEdgeTest {
 
+    @BeforeEach
+    public void setUp() {
+        MathEx.setSeed(19650218);
+    }
+
     @Test
     public void testNumNodesAndLeaves() {
         MathEx.setSeed(19650218);

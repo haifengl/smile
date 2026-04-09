@@ -48,6 +48,7 @@ public class LinearSearchTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218);
     }
 
     @AfterEach

@@ -45,6 +45,7 @@ public class KDTreeTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218);
     }
 
     @AfterEach

@@ -29,6 +29,11 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class LSHEdgeTest {
 
+    @BeforeEach
+    public void setUp() {
+        MathEx.setSeed(19650218);
+    }
+
     @Test
     public void testSize() {
         MathEx.setSeed(19650218);
