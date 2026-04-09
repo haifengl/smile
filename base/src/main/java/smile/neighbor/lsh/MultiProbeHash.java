@@ -16,8 +16,6 @@
  */
 package smile.neighbor.lsh;
 
-import smile.tensor.Vector;
-
 import java.io.Serial;
 import java.util.Arrays;
 
@@ -61,19 +59,24 @@ public class MultiProbeHash extends Hash {
     }
 
     /**
-     * This should only be used for adding data.
+     * Hashes x while tracking per-component min/max statistics needed for
+     * the posteriori probe model. Uses the plain double[][] projection matrix
+     * inherited from Hash — no heap allocation.
      * @param x the vector to be hashed.
      * @return the bucket of hash table for given vector x.
      */
     private int mphash(double[] x) {
-        Vector h = a.mv(x);
-
         long g = 0;
         for (int i = 0; i < k; i++) {
-            double hi = (h.get(i) + b[i]) / w;
+            double[] ai = a[i];
+            double dot = b[i];
+            for (int j = 0; j < d; j++) {
+                dot += ai[j] * x[j];
+            }
+            double hi = dot / w;
 
-            umin[i] = Math.min(umin[i], hi);
-            umax[i] = Math.max(umax[i], hi);
+            if (hi < umin[i]) umin[i] = hi;
+            if (hi > umax[i]) umax[i] = hi;
 
             g += c[i] * (long) Math.floor(hi);
         }

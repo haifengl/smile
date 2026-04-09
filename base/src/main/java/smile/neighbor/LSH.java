@@ -19,9 +19,8 @@ package smile.neighbor;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
+import java.util.BitSet;
 import java.util.List;
-import java.util.Set;
 import smile.neighbor.lsh.*;
 import smile.util.IntArrayList;
 import smile.math.MathEx;
@@ -224,7 +223,10 @@ public class LSH <E> implements KNNSearch<double[], E>, RNNSearch<double[], E>, 
         int index = -1;
         double nearest = Double.MAX_VALUE;
 
-        for (int i : getCandidates(q)) {
+        IntArrayList candidates = getCandidates(q);
+        int n = candidates.size();
+        for (int ci = 0; ci < n; ci++) {
+            int i = candidates.get(ci);
             double[] x = keys.get(i);
             if (q != x) {
                 double distance = MathEx.distance(q, x);
@@ -234,30 +236,31 @@ public class LSH <E> implements KNNSearch<double[], E>, RNNSearch<double[], E>, 
                 }
             }
         }
-        
+
         return index == -1 ? null : new Neighbor<>(keys.get(index), data.get(index), index, nearest);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Neighbor<double[], E>[] search(double[] q, int k) {
         if (k < 1) {
             throw new IllegalArgumentException("Invalid k: " + k);
         }
 
-        Set<Integer> candidates = getCandidates(q);
-        k = Math.min(k, candidates.size());
+        IntArrayList candidates = getCandidates(q);
+        int nc = Math.min(k, candidates.size());
 
-        HeapSelect<Neighbor<double[], E>> heap = new HeapSelect<>(Neighbor.class, k);
+        HeapSelect<Neighbor<double[], E>> heap = new HeapSelect<>(Neighbor.class, nc);
 
-        for (int index : candidates) {
+        int n = candidates.size();
+        for (int ci = 0; ci < n; ci++) {
+            int index = candidates.get(ci);
             double[] key = keys.get(index);
             if (q != key) {
                 double distance = MathEx.distance(q, key);
                 heap.add(new Neighbor<>(key, data.get(index), index, distance));
             }
         }
-        
+
         heap.sort();
         return heap.toArray();
     }
@@ -268,7 +271,10 @@ public class LSH <E> implements KNNSearch<double[], E>, RNNSearch<double[], E>, 
             throw new IllegalArgumentException("Invalid radius: " + radius);
         }
 
-        for (int index : getCandidates(q)) {
+        IntArrayList candidates = getCandidates(q);
+        int n = candidates.size();
+        for (int ci = 0; ci < n; ci++) {
+            int index = candidates.get(ci);
             double[] key = keys.get(index);
             if (q != key) {
                 double distance = MathEx.distance(q, key);
@@ -280,18 +286,26 @@ public class LSH <E> implements KNNSearch<double[], E>, RNNSearch<double[], E>, 
     }
 
     /**
-     * Returns the nearest neighbor candidates.
-     * @return Indices of Candidates
+     * Returns the unique nearest neighbor candidate indices.
+     * Uses a {@link BitSet} for O(1) duplicate detection with no boxing,
+     * and an {@link IntArrayList} to preserve insertion order.
+     * @param q the query point.
+     * @return deduplicated candidate indices.
      */
-    private Set<Integer> getCandidates(double[] q) {
-        Set<Integer> candidates = new LinkedHashSet<>();
+    protected IntArrayList getCandidates(double[] q) {
+        BitSet seen = new BitSet(keys.size());
+        IntArrayList candidates = new IntArrayList();
         for (Hash h : hash) {
             Bucket bucket = h.get(q);
             if (bucket != null) {
                 IntArrayList points = bucket.points();
                 int n = points.size();
                 for (int i = 0; i < n; i++) {
-                    candidates.add(points.get(i));
+                    int idx = points.get(i);
+                    if (!seen.get(idx)) {
+                        seen.set(idx);
+                        candidates.add(idx);
+                    }
                 }
             }
         }
