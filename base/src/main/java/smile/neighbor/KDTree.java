@@ -18,7 +18,6 @@ package smile.neighbor;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.List;
 
 import smile.math.MathEx;
@@ -110,6 +109,10 @@ public class KDTree <E> implements KNNSearch<double[], E>, RNNSearch<double[], E
      * The index of objects in each node.
      */
     private final int[] index;
+    /**
+     * The dimensionality of the data.
+     */
+    private final int d;
 
     /**
      * Constructor.
@@ -123,6 +126,7 @@ public class KDTree <E> implements KNNSearch<double[], E>, RNNSearch<double[], E
 
         this.keys = key;
         this.data = data;
+        this.d = key[0].length;
 
         int n = key.length;
         index = new int[n];
@@ -131,7 +135,6 @@ public class KDTree <E> implements KNNSearch<double[], E>, RNNSearch<double[], E
         }
 
         // Build the tree
-        int d = keys[0].length;
         double[] lowerBound = new double[d];
         double[] upperBound = new double[d];
         root = buildNode(0, n, lowerBound, upperBound);
@@ -163,12 +166,10 @@ public class KDTree <E> implements KNNSearch<double[], E>, RNNSearch<double[], E
      * Builds a subtree.
      * @param begin the beginning index of samples for the subtree (inclusive).
      * @param end the ending index of samples for the subtree (exclusive).
-     * @param lowerBound the work space of lower bound of each dimension of samples.
-     * @param upperBound the work space of upper bound of each dimension of samples.
+     * @param lowerBound workspace for the lower bound of each dimension (may be overwritten).
+     * @param upperBound workspace for the upper bound of each dimension (may be overwritten).
      */
     private Node buildNode(int begin, int end, double[] lowerBound, double[] upperBound) {
-        int d = keys[0].length;
-
         // Allocate the node
         Node node = new Node();
 
@@ -185,12 +186,8 @@ public class KDTree <E> implements KNNSearch<double[], E>, RNNSearch<double[], E
             key = keys[index[i]];
             for (int j = 0; j < d; j++) {
                 double c = key[j];
-                if (lowerBound[j] > c) {
-                    lowerBound[j] = c;
-                }
-                if (upperBound[j] < c) {
-                    upperBound[j] = c;
-                }
+                if (lowerBound[j] > c) lowerBound[j] = c;
+                if (upperBound[j] < c) upperBound[j] = c;
             }
         }
 
@@ -242,31 +239,55 @@ public class KDTree <E> implements KNNSearch<double[], E>, RNNSearch<double[], E
             return node;
         }
 
-        // Create the child nodes
+        // Create the child nodes. Each child gets its own workspace arrays so
+        // the sibling's bounding-box scan does not overwrite the parent's data.
+        double[] childLower = new double[d];
+        double[] childUpper = new double[d];
         node.lower = buildNode(begin, begin + size, lowerBound, upperBound);
-        node.upper = buildNode(begin + size, end, lowerBound, upperBound);
+        node.upper = buildNode(begin + size, end, childLower, childUpper);
 
         return node;
     }
 
     /**
-     * Returns the nearest neighbors of the given target starting from the give
-     * tree node.
+     * Computes the squared Euclidean distance between {@code q} and {@code p},
+     * abandoning the computation early if the accumulated sum already exceeds
+     * {@code limit} (a squared distance). Returns the full squared distance
+     * when no early exit occurs.
      *
-     * @param q    the query key.
-     * @param node the root of subtree.
-     * @param neighbor the current nearest neighbor.
+     * @param q     the query vector.
+     * @param p     a candidate point.
+     * @param limit the current best squared distance (upper bound).
+     * @return the squared distance, or a value &gt; {@code limit} on early exit.
+     */
+    private double squaredDistanceEarlyExit(double[] q, double[] p, double limit) {
+        double sum = 0.0;
+        for (int i = 0; i < d; i++) {
+            double diff = q[i] - p[i];
+            sum += diff * diff;
+            if (sum >= limit) return sum;   // early exit
+        }
+        return sum;
+    }
+
+    /**
+     * NN search – traverses using squared distances to avoid sqrt during search.
+     * {@code neighbor.distance} holds the squared distance while recursing;
+     * it is converted to true distance by the caller.
+     *
+     * @param q        the query key.
+     * @param node     the root of subtree.
+     * @param neighbor the current best neighbor (distance field = squared distance).
      */
     private void search(double[] q, Node node, NeighborBuilder<double[], E> neighbor) {
         if (node.isLeaf()) {
-            // look at all the instances in this leaf
             for (int idx = node.index; idx < node.index + node.count; idx++) {
                 int i = index[idx];
                 if (q != keys[i]) {
-                    double distance = MathEx.distance(q, keys[i]);
-                    if (distance < neighbor.distance) {
+                    double sd = squaredDistanceEarlyExit(q, keys[i], neighbor.distance);
+                    if (sd < neighbor.distance) {
                         neighbor.index = i;
-                        neighbor.distance = distance;
+                        neighbor.distance = sd;
                     }
                 }
             }
@@ -283,33 +304,32 @@ public class KDTree <E> implements KNNSearch<double[], E>, RNNSearch<double[], E
 
             search(q, nearer, neighbor);
 
-            // now look in further half
-            if (neighbor.distance >= Math.abs(diff)) {
+            // Prune: only visit further child if the splitting plane is closer
+            // than the current best. Compare squared distances to avoid sqrt.
+            if (neighbor.distance >= diff * diff) {
                 search(q, further, neighbor);
             }
         }
     }
 
     /**
-     * Returns (in the supplied heap object) the k nearest
-     * neighbors of the given target starting from the give
-     * tree node.
+     * kNN search – traverses using squared distances to avoid sqrt during search.
+     * {@code heap} entries store squared distances while recursing.
      *
      * @param q    the query key.
      * @param node the root of subtree.
-     * @param heap the heap object to store/update the kNNs found during the search.
+     * @param heap the max-heap of k current best neighbors (distance = squared).
      */
     private void search(double[] q, Node node, HeapSelect<NeighborBuilder<double[], E>> heap) {
         if (node.isLeaf()) {
-            // look at all the instances in this leaf
             for (int idx = node.index; idx < node.index + node.count; idx++) {
                 int i = index[idx];
                 if (q != keys[i]) {
-                    double distance = MathEx.distance(q, keys[i]);
-                    NeighborBuilder<double[], E> datum = heap.peek();
-                    if (distance < datum.distance) {
-                        datum.distance = distance;
-                        datum.index = i;
+                    NeighborBuilder<double[], E> worst = heap.peek();
+                    double sd = squaredDistanceEarlyExit(q, keys[i], worst.distance);
+                    if (sd < worst.distance) {
+                        worst.distance = sd;
+                        worst.index = i;
                         heap.siftDown();
                     }
                 }
@@ -327,31 +347,32 @@ public class KDTree <E> implements KNNSearch<double[], E>, RNNSearch<double[], E
 
             search(q, nearer, heap);
 
-            // now look in further half
-            if (heap.peek().distance >= Math.abs(diff)) {
+            // Prune using squared distance to avoid sqrt.
+            if (heap.peek().distance >= diff * diff) {
                 search(q, further, heap);
             }
         }
     }
 
     /**
-     * Returns the neighbors in the given range of search target from the give
-     * tree node.
+     * Range search – radius is the true Euclidean radius; internally we compare
+     * against {@code radius²} to avoid computing sqrt for every candidate.
      *
-     * @param q the query key.
-     * @param node the root of subtree.
-     * @param radius the radius of search range from target.
+     * @param q         the query key.
+     * @param node      the root of subtree.
+     * @param radius    the true (non-squared) search radius.
+     * @param radius2   the squared search radius (= radius * radius).
      * @param neighbors the list of found neighbors in the range.
      */
-    private void search(double[] q, Node node, double radius, List<Neighbor<double[], E>> neighbors) {
+    private void search(double[] q, Node node, double radius, double radius2,
+                        List<Neighbor<double[], E>> neighbors) {
         if (node.isLeaf()) {
-            // look at all the instances in this leaf
             for (int idx = node.index; idx < node.index + node.count; idx++) {
                 int i = index[idx];
                 if (q != keys[i]) {
-                    double distance = MathEx.distance(q, keys[i]);
-                    if (distance <= radius) {
-                        neighbors.add(new Neighbor<>(keys[i], data[i], i, distance));
+                    double sd = squaredDistanceEarlyExit(q, keys[i], radius2);
+                    if (sd <= radius2) {
+                        neighbors.add(new Neighbor<>(keys[i], data[i], i, Math.sqrt(sd)));
                     }
                 }
             }
@@ -366,11 +387,11 @@ public class KDTree <E> implements KNNSearch<double[], E>, RNNSearch<double[], E
                 further = node.lower;
             }
 
-            search(q, nearer, radius, neighbors);
+            search(q, nearer, radius, radius2, neighbors);
 
-            // now look in further half
-            if (radius >= Math.abs(diff)) {
-                search(q, further, radius, neighbors);
+            // Prune using squared distance to avoid sqrt/abs.
+            if (radius2 >= diff * diff) {
+                search(q, further, radius, radius2, neighbors);
             }
         }
     }
@@ -378,9 +399,12 @@ public class KDTree <E> implements KNNSearch<double[], E>, RNNSearch<double[], E
     @Override
     public Neighbor<double[], E> nearest(double[] q) {
         NeighborBuilder<double[], E> neighbor = new NeighborBuilder<>();
+        // neighbor.distance holds squared distance during search
         search(q, root, neighbor);
         neighbor.key = keys[neighbor.index];
         neighbor.value = data[neighbor.index];
+        // convert squared distance to true distance
+        neighbor.distance = Math.sqrt(neighbor.distance);
         return neighbor.toNeighbor();
     }
 
@@ -400,15 +424,22 @@ public class KDTree <E> implements KNNSearch<double[], E>, RNNSearch<double[], E
             heap.add(new NeighborBuilder<>());
         }
 
+        // heap entries hold squared distances during search
         search(q, root, heap);
         heap.sort();
 
-        return Arrays.stream(heap.toArray())
-                .map(neighbor -> {
-                    neighbor.key = keys[neighbor.index];
-                    neighbor.value = data[neighbor.index];
-                    return neighbor.toNeighbor();
-                }).toArray(Neighbor[]::new);
+        // Convert squared distances to true distances and assemble result array.
+        // Use a plain loop instead of Stream to avoid allocation overhead.
+        NeighborBuilder<double[], E>[] builders = heap.toArray();
+        Neighbor<double[], E>[] result = new Neighbor[builders.length];
+        for (int i = 0; i < builders.length; i++) {
+            NeighborBuilder<double[], E> nb = builders[i];
+            nb.key = keys[nb.index];
+            nb.value = data[nb.index];
+            nb.distance = Math.sqrt(nb.distance);
+            result[i] = nb.toNeighbor();
+        }
+        return result;
     }
 
     @Override
@@ -417,6 +448,6 @@ public class KDTree <E> implements KNNSearch<double[], E>, RNNSearch<double[], E
             throw new IllegalArgumentException("Invalid radius: " + radius);
         }
 
-        search(q, root, radius, neighbors);
+        search(q, root, radius, radius * radius, neighbors);
     }
 }
