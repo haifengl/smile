@@ -92,4 +92,27 @@ public class GaussianMixtureTest {
         GaussianMixture mixture = GaussianMixture.fit(data);
         System.out.println(mixture);
     }
+
+    /**
+     * Test that Mixture.variance() uses the law of total variance:
+     * Var(X) = E[Var(X|Z)] + Var(E[X|Z])
+     *        = sum(w_i * sigma_i^2) + sum(w_i * mu_i^2) - mu^2
+     *
+     * For a 50/50 mixture of N(0,1) and N(4,1):
+     *   mu  = 0.5*0 + 0.5*4 = 2
+     *   var = 0.5*(1 + 0^2) + 0.5*(1 + 4^2) - 2^2
+     *       = 0.5*(1+0) + 0.5*(1+16) - 4
+     *       = 0.5 + 8.5 - 4 = 5.0
+     */
+    @Test
+    public void testMixtureVariance() {
+        System.out.println("Mixture variance (law of total variance)");
+        Mixture.Component c1 = new Mixture.Component(0.5, new GaussianDistribution(0.0, 1.0));
+        Mixture.Component c2 = new Mixture.Component(0.5, new GaussianDistribution(4.0, 1.0));
+        Mixture mixture = new Mixture(c1, c2);
+
+        assertEquals(2.0, mixture.mean(), 1E-10);
+        assertEquals(5.0, mixture.variance(), 1E-10);
+    }
 }
+

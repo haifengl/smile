@@ -208,6 +208,11 @@ public class GammaDistribution implements ExponentialFamily {
     public double logp(double x) {
         if (x < 0) {
             return Double.NEGATIVE_INFINITY;
+        } else if (x == 0.0) {
+            // (k-1)*log(0): -Inf if k>1, 0 if k==1, +Inf if k<1
+            if (k > 1) return Double.NEGATIVE_INFINITY;
+            if (k == 1) return -logGammaK - k * logTheta; // = -log(theta)
+            return Double.POSITIVE_INFINITY;
         } else {
             return (k - 1) * Math.log(x) - x / theta - k * logTheta - logGammaK;
         }

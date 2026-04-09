@@ -154,9 +154,17 @@ public class BetaDistribution implements ExponentialFamily {
     public double logp(double x) {
         if (x < 0 || x > 1) {
             return Double.NEGATIVE_INFINITY;
-        } else {
-            return (alpha - 1) * Math.log(x) + (beta - 1) * Math.log(1 - x) - Math.log(Beta.beta(alpha, beta));
         }
+        // Use lgamma for numerical precision instead of log(Beta.beta(alpha, beta))
+        double logBeta = Gamma.lgamma(alpha) + Gamma.lgamma(beta) - Gamma.lgamma(alpha + beta);
+        // Handle x=0: (alpha-1)*log(0) = -Inf if alpha>1, +Inf if alpha<1
+        double term1 = (alpha == 1.0) ? 0.0 : (x == 0.0 ? (alpha > 1 ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY) : (alpha - 1) * Math.log(x));
+        double term2 = (beta == 1.0)  ? 0.0 : (x == 1.0 ? (beta  > 1 ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY) : (beta - 1)  * Math.log(1 - x));
+        if (Double.isInfinite(term1) || Double.isInfinite(term2)) {
+            return term1 == Double.POSITIVE_INFINITY || term2 == Double.POSITIVE_INFINITY
+                    ? Double.POSITIVE_INFINITY : Double.NEGATIVE_INFINITY;
+        }
+        return term1 + term2 - logBeta;
     }
 
     @Override

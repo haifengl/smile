@@ -149,9 +149,11 @@ public class BernoulliDistribution extends DiscreteDistribution {
     @Override
     public double logp(int k) {
         if (k == 0) {
-            return Math.log(q);
+            // q == 1 when p == 0: log(1) = 0
+            return (q == 0.0) ? Double.NEGATIVE_INFINITY : Math.log(q);
         } else if (k == 1) {
-            return Math.log(p);
+            // p == 1: log(1) = 0
+            return (p == 0.0) ? Double.NEGATIVE_INFINITY : Math.log(p);
         } else {
             return Double.NEGATIVE_INFINITY;
         }

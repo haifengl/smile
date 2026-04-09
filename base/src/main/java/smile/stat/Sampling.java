@@ -37,6 +37,10 @@ public interface Sampling {
      * @return the indices of selected samples.
      */
     static int[] random(int n, double subsample) {
+        if (n <= 0) throw new IllegalArgumentException("n must be positive: " + n);
+        if (subsample <= 0.0 || subsample > 1.0)
+            throw new IllegalArgumentException("subsample must be in (0, 1]: " + subsample);
+
         if (subsample == 1.0) {
             // draw with replacement.
             int[] samples = new int[n];
@@ -182,6 +186,8 @@ public interface Sampling {
      * @return Latin hypercube of n-by-d matrix.
      */
     static int[][] latin(int n, int d) {
+        if (n <= 0) throw new IllegalArgumentException("n must be positive: " + n);
+        if (d <= 0) throw new IllegalArgumentException("d must be positive: " + d);
         int[][] hypercube = new int[n][d];
         int[] intervals = MathEx.permutate(n);
         for (int j = 0; j < d; j++) {

@@ -98,12 +98,8 @@ public class ChiSquareDistribution implements ExponentialFamily {
 
     @Override
     public double rand() {
-        double x = 0.0;
-        for (int i = 0; i < nu; i++) {
-            double norm = GaussianDistribution.getInstance().rand();
-            x += norm * norm;
-        }
-        return x;
+        // χ²(ν) = Gamma(ν/2, scale=2); use Marsaglia-Tsang via GammaDistribution
+        return new GammaDistribution(nu / 2.0, 2.0).rand();
     }
 
     @Override

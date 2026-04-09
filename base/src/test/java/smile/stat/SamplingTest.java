@@ -213,5 +213,25 @@ public class SamplingTest {
         assertEquals(50, c0);
         assertEquals(50, c1);
     }
+
+    /**
+     * Test that random() rejects invalid inputs.
+     */
+    @Test
+    public void testRandomInvalidInput() {
+        assertThrows(IllegalArgumentException.class, () -> Sampling.random(0, 0.5));
+        assertThrows(IllegalArgumentException.class, () -> Sampling.random(-1, 0.5));
+        assertThrows(IllegalArgumentException.class, () -> Sampling.random(10, 0.0));
+        assertThrows(IllegalArgumentException.class, () -> Sampling.random(10, 1.5));
+    }
+
+    /**
+     * Test that latin() rejects invalid inputs.
+     */
+    @Test
+    public void testLatinInvalidInput() {
+        assertThrows(IllegalArgumentException.class, () -> Sampling.latin(0, 3));
+        assertThrows(IllegalArgumentException.class, () -> Sampling.latin(5, 0));
+    }
 }
 

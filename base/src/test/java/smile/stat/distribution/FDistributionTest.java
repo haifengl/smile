@@ -169,4 +169,20 @@ public class FDistributionTest {
         assertEquals(0.0, instance.cdf(-5.0));
     }
 
+    /**
+     * Test that rand() samples have mean ≈ nu2/(nu2-2) for nu2 > 2.
+     */
+    @Test
+    public void testRandMoments() {
+        System.out.println("F rand moments");
+        smile.math.MathEx.setSeed(19650218);
+        int nu1 = 5, nu2 = 20;
+        FDistribution d = new FDistribution(nu1, nu2);
+        double[] samples = d.rand(10000);
+        double mean = smile.math.MathEx.mean(samples);
+        // E[F(d1,d2)] = d2/(d2-2) for d2 > 2
+        double expectedMean = (double) nu2 / (nu2 - 2);
+        assertEquals(expectedMean, mean, 0.05);
+    }
 }
+

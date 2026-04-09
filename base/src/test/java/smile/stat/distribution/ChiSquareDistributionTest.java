@@ -164,4 +164,21 @@ public class ChiSquareDistributionTest {
         assertEquals(19.33743, instance.quantile(0.5), 1E-5);
         assertEquals(28.41198, instance.quantile(0.9), 1E-5);
     }
+
+    /**
+     * Test that rand() samples have mean ≈ nu and variance ≈ 2*nu.
+     */
+    @Test
+    public void testRandMoments() {
+        System.out.println("ChiSquare rand moments");
+        smile.math.MathEx.setSeed(19650218);
+        int nu = 10;
+        ChiSquareDistribution d = new ChiSquareDistribution(nu);
+        double[] samples = d.rand(10000);
+        double mean = smile.math.MathEx.mean(samples);
+        double var = smile.math.MathEx.var(samples);
+        assertEquals(nu, mean, 0.2);         // E[χ²(ν)] = ν
+        assertEquals(2.0 * nu, var, 0.5);    // Var[χ²(ν)] = 2ν
+    }
 }
+

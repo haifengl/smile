@@ -182,4 +182,45 @@ public class BinomialDistributionTest {
         BinomialDistribution instance = new BinomialDistribution(1000, 0.999000999000999);
         assertEquals(999, instance.rand(), 1E-7);
     }
+
+    /**
+     * Test edge case p=0: all outcomes are 0.
+     */
+    @Test
+    public void testPZeroEdge() {
+        System.out.println("Binomial p=0 edge");
+        BinomialDistribution d = new BinomialDistribution(10, 0.0);
+        assertEquals(1.0, d.p(0),  1E-10);
+        assertEquals(0.0, d.p(1),  1E-10);
+        assertEquals(0.0, d.logp(1) == Double.NEGATIVE_INFINITY ? 0.0 : 1.0, 1E-10);
+        assertEquals(0.0, d.logp(0), 1E-10); // log(1) = 0
+    }
+
+    /**
+     * Test edge case p=1: all outcomes are n.
+     */
+    @Test
+    public void testPOneEdge() {
+        System.out.println("Binomial p=1 edge");
+        BinomialDistribution d = new BinomialDistribution(10, 1.0);
+        assertEquals(0.0, d.p(0),  1E-10);
+        assertEquals(1.0, d.p(10), 1E-10);
+        assertTrue(Double.isInfinite(d.logp(0)));
+        assertEquals(0.0, d.logp(10), 1E-10); // log(1) = 0
+    }
+
+    /**
+     * Test large n to verify numerical stability of p() via exp(logp).
+     */
+    @Test
+    public void testLargeN() {
+        System.out.println("Binomial large n");
+        BinomialDistribution d = new BinomialDistribution(10000, 0.5);
+        // p(k) should be well-defined around mode (5000)
+        double pMode = d.p(5000);
+        assertTrue(pMode > 0 && pMode < 1);
+        // log p should be finite
+        assertTrue(Double.isFinite(d.logp(5000)));
+    }
 }
+

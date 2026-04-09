@@ -84,6 +84,15 @@ public class IntSet implements Serializable {
     }
 
     /**
+     * Returns true if the set contains the given value.
+     * @param value the value to check.
+     * @return true if the value is in the set.
+     */
+    public boolean contains(int value) {
+        return index.containsKey(value);
+    }
+
+    /**
      * Returns the IntSet of [0, k).
      *
      * @param k the number of unique values.

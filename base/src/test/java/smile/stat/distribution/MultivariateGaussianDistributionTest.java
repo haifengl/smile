@@ -204,4 +204,36 @@ public class MultivariateGaussianDistributionTest {
         // The expected value is based on R
         assertEquals(0.0904191282120575, instance.cdf(X), 1E-3);
     }
+
+    /**
+     * Test MultivariateMixture.cov() uses law of total variance.
+     *
+     * For a 50/50 mixture of N(mu1, I) and N(mu2, I) in 2D where mu1=[0,0], mu2=[4,0]:
+     *   mean = [2, 0]
+     *   Cov = 0.5*(I + (mu1-mean)(mu1-mean)^T) + 0.5*(I + (mu2-mean)(mu2-mean)^T)
+     *       = I + 0.5*[4,0;0,0] + 0.5*[4,0;0,0]  (both deviations are [±2,0])
+     *       = I + [4,0;0,0]
+     *       = [5,0; 0,1]
+     */
+    @Test
+    public void testMultivariateMixtureCov() {
+        System.out.println("MultivariateMixture cov (law of total variance)");
+        double[] mu1 = {0.0, 0.0};
+        double[] mu2 = {4.0, 0.0};
+        double[][] id = {{1.0, 0.0}, {0.0, 1.0}};
+
+        MultivariateMixture.Component c1 = new MultivariateMixture.Component(
+                0.5, new MultivariateGaussianDistribution(mu1, DenseMatrix.of(id)));
+        MultivariateMixture.Component c2 = new MultivariateMixture.Component(
+                0.5, new MultivariateGaussianDistribution(mu2, DenseMatrix.of(id)));
+        MultivariateMixture mixture = new MultivariateMixture(c1, c2);
+
+        assertArrayEquals(new double[]{2.0, 0.0}, mixture.mean(), 1E-10);
+        smile.tensor.DenseMatrix cov = mixture.cov();
+        assertEquals(5.0, cov.get(0, 0), 1E-10);
+        assertEquals(0.0, cov.get(0, 1), 1E-10);
+        assertEquals(0.0, cov.get(1, 0), 1E-10);
+        assertEquals(1.0, cov.get(1, 1), 1E-10);
+    }
 }
+

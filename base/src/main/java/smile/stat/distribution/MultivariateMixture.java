@@ -115,25 +115,21 @@ public class MultivariateMixture implements MultivariateDistribution {
 
     @Override
     public DenseMatrix cov() {
-        double w = components[0].priori;
-        DenseMatrix v = components[0].distribution.cov();
+        double[] mu = mean();
+        int d = mu.length;
+        DenseMatrix cov = DenseMatrix.zeros(Float64, d, d);
 
-        int m = v.nrow();
-        int n = v.ncol();
-        DenseMatrix cov = DenseMatrix.zeros(Float64, m, n);
-
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                cov.set(i, j, w * w * v.get(i, j));
-            }
-        }
-
-        for (int k = 1; k < components.length; k++) {
-            w = components[k].priori;
-            v = components[k].distribution.cov();
-            for (int i = 0; i < m; i++) {
-                for (int j = 0; j < n; j++) {
-                    cov.add(i, j, w * w * v.get(i, j));
+        // Law of total variance: Cov(X) = E[Cov(X|Z)] + Cov(E[X|Z])
+        // = sum_k w_k * Sigma_k  +  sum_k w_k * (mu_k - mu)(mu_k - mu)^T
+        for (Component comp : components) {
+            double w = comp.priori;
+            DenseMatrix v = comp.distribution.cov();
+            double[] mk = comp.distribution.mean();
+            for (int i = 0; i < d; i++) {
+                double di = mk[i] - mu[i];
+                for (int j = 0; j < d; j++) {
+                    double dj = mk[j] - mu[j];
+                    cov.add(i, j, w * (v.get(i, j) + di * dj));
                 }
             }
         }
@@ -162,7 +158,18 @@ public class MultivariateMixture implements MultivariateDistribution {
 
     @Override
     public double logp(double[] x) {
-        return Math.log(p(x));
+        int k = components.length;
+        double maxLog = Double.NEGATIVE_INFINITY;
+        double[] logTerms = new double[k];
+        for (int i = 0; i < k; i++) {
+            Component c = components[i];
+            logTerms[i] = Math.log(c.priori) + c.distribution.logp(x);
+            if (logTerms[i] > maxLog) maxLog = logTerms[i];
+        }
+        if (Double.isInfinite(maxLog)) return Double.NEGATIVE_INFINITY;
+        double sumExp = 0.0;
+        for (double lt : logTerms) sumExp += Math.exp(lt - maxLog);
+        return maxLog + Math.log(sumExp);
     }
 
     @Override

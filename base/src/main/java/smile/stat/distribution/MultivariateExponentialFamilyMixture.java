@@ -104,28 +104,23 @@ public class MultivariateExponentialFamilyMixture extends MultivariateMixture {
         // EM loop until convergence
         double diff = Double.MAX_VALUE;
         for (int iter = 1; iter <= maxIter && diff > tol; iter++) {
-            // Expectation step
-            for (int i = 0; i < k; i++) {
-                Component c = components[i];
-
-                for (int j = 0; j < n; j++) {
-                    posteriori[i][j] = c.priori() * c.distribution().p(x[j]);
-                }
-            }
-
-            // Normalize posteriori probability.
+            // Expectation step — log-sum-exp for numerical stability
             for (int j = 0; j < n; j++) {
-                double p = 0.0;
-
+                double maxLog = Double.NEGATIVE_INFINITY;
+                double[] logPost = new double[k];
                 for (int i = 0; i < k; i++) {
-                    p += posteriori[i][j];
+                    Component c = components[i];
+                    logPost[i] = Math.log(c.priori()) + c.distribution().logp(x[j]);
+                    if (logPost[i] > maxLog) maxLog = logPost[i];
+                }
+                double sumExp = 0.0;
+                for (int i = 0; i < k; i++) sumExp += Math.exp(logPost[i] - maxLog);
+                double logZ = maxLog + Math.log(sumExp);
+                for (int i = 0; i < k; i++) {
+                    posteriori[i][j] = Math.exp(logPost[i] - logZ);
                 }
 
-                for (int i = 0; i < k; i++) {
-                    posteriori[i][j] /= p;
-                }
-
-                // Adjust posterior probabilites based on Regularized EM algorithm.
+                // Adjust posterior probabilities based on Regularized EM algorithm.
                 if (gamma > 0) {
                     for (int i = 0; i < k; i++) {
                         posteriori[i][j] *= (1 + gamma * MathEx.log2(posteriori[i][j]));
@@ -149,11 +144,15 @@ public class MultivariateExponentialFamilyMixture extends MultivariateMixture {
 
             double loglikelihood = 0.0;
             for (double[] xi : x) {
-                double p = 0.0;
-                for (Component c : components) {
-                    p += c.priori() * c.distribution().p(xi);
+                double maxLog = Double.NEGATIVE_INFINITY;
+                double[] logTerms = new double[k];
+                for (int i = 0; i < k; i++) {
+                    logTerms[i] = Math.log(components[i].priori()) + components[i].distribution().logp(xi);
+                    if (logTerms[i] > maxLog) maxLog = logTerms[i];
                 }
-                if (p > 0) loglikelihood += Math.log(p);
+                double sumExp = 0.0;
+                for (int i = 0; i < k; i++) sumExp += Math.exp(logTerms[i] - maxLog);
+                loglikelihood += maxLog + Math.log(sumExp);
             }
 
 

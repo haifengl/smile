@@ -228,4 +228,32 @@ public class GammaDistributionTest {
         assertEquals(17.65249, instance.quantile(0.99), 1E-5);
         assertEquals(23.58063, instance.quantile(0.999), 1E-5);
     }
+
+    /**
+     * Test logp(0) edge cases: depends on k vs 1.
+     */
+    @Test
+    public void testLogpAtZero() {
+        System.out.println("GammaDistribution logp at x=0");
+        // k > 1: p(0) = 0, logp(0) = -Inf
+        assertEquals(Double.NEGATIVE_INFINITY, new GammaDistribution(3, 1).logp(0.0));
+        // k = 1: p(0) = 1/theta (Exponential), logp(0) = -log(theta)
+        double theta = 2.0;
+        assertEquals(-Math.log(theta), new GammaDistribution(1, theta).logp(0.0), 1E-10);
+        // k < 1: p(0) = +Inf
+        assertEquals(Double.POSITIVE_INFINITY, new GammaDistribution(0.5, 1).logp(0.0));
+    }
+
+    /**
+     * Test that p(x) == exp(logp(x)) for consistency.
+     */
+    @Test
+    public void testLogpConsistency() {
+        System.out.println("GammaDistribution logp consistency");
+        GammaDistribution d = new GammaDistribution(3, 2.1);
+        for (double x : new double[]{0.5, 1.0, 2.0, 5.0, 10.0}) {
+            assertEquals(d.p(x), Math.exp(d.logp(x)), d.p(x) * 1E-10);
+        }
+    }
 }
+

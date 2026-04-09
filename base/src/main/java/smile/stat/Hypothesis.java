@@ -129,6 +129,18 @@ public interface Hypothesis {
         static FTest test(double[] x, double[] y) {
             return FTest.test(x, y);
         }
+
+        /**
+         * One-way ANOVA. Tests whether the means of several groups are equal.
+         * Small values of p-value indicate that at least one group mean differs.
+         *
+         * @param x the categorical grouping variable.
+         * @param y the continuous response variable.
+         * @return the test results.
+         */
+        static FTest test(int[] x, double[] y) {
+            return FTest.test(x, y);
+        }
     }
 
     /** The Kolmogorov-Smirnov test (K-S test). */
