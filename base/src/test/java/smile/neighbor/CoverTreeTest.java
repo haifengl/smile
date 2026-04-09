@@ -49,6 +49,7 @@ public class CoverTreeTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218);
     }
 
     @AfterEach
