@@ -53,13 +53,13 @@ public interface SimHash<T> {
             }
 
             final int BITS = 64;
-            int[] count = new int[n];
+            int[] count = new int[BITS];
             for (int i = 0; i < n; i++) {
                 long h = hash[i];
                 int w = weight[i];
 
                 for (int j = 0; j < BITS; j++) {
-                    if (((h >>> i) & 1) == 1) {
+                    if (((h >>> j) & 1) == 1) {
                         count[j] += w;
                     } else {
                         count[j] -= w;

@@ -16,7 +16,6 @@
  */
 package smile.hash;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -72,14 +71,19 @@ public class PerfectMap<T> {
          * @return the perfect map.
          */
         public PerfectMap<T> build() {
-            String[] keys = new String[map.size()];
-            List<T> values = new ArrayList<>();
-            int i = 0;
-            for (Map.Entry<String, T> e : map.entrySet()) {
-                keys[i++] = e.getKey();
-                values.add(e.getValue());
+            String[] keys = map.keySet().toArray(new String[0]);
+            // Build PerfectHash over the key set.
+            PerfectHash hash = new PerfectHash(keys);
+            // PerfectHash.get(key) returns the index of key in the keywords[] array
+            // (i.e. its position in keys[]). We must store values in exactly that
+            // same order so that values.get(i) matches keys[i].
+            @SuppressWarnings("unchecked")
+            T[] values = (T[]) new Object[keys.length];
+            for (String key : keys) {
+                int idx = hash.get(key);
+                values[idx] = map.get(key);
             }
-            return new PerfectMap<>(new PerfectHash(keys), values);
+            return new PerfectMap<>(hash, List.of(values));
         }
     }
 
