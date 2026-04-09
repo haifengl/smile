@@ -29,29 +29,8 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @SuppressWarnings("rawtypes")
 public class MPLSHTest {
-    double[][] x;
-    double[][] testx;
-    MPLSH<double[]> lsh;
-    LinearSearch<double[], double[]> naive;
 
     public MPLSHTest() throws Exception {
-        MathEx.setSeed(19650218); // to get repeatable results.
-        var usps = new USPS();
-        x = usps.x();
-        testx = usps.testx();
-
-        naive = LinearSearch.of(x, MathEx::distance);
-        lsh = new MPLSH<>(256, 100, 3, 4.0);
-        for (double[] xi : x) {
-            lsh.put(xi, xi);
-        }
-        
-        double[][] train = new double[500][];
-        int[] index = MathEx.permutate(x.length);
-        for (int i = 0; i < train.length; i++) {
-            train[i] = x[index[i]];
-        }
-        lsh.fit(naive, train, 8.0);
     }
 
     @BeforeAll
@@ -72,10 +51,31 @@ public class MPLSHTest {
     }
 
     @Test
-    public void testNearest() {
-        System.out.println("nearest");
+    public void test() throws Exception {
+        System.out.println("MPLSH training...");
 
-        int recall = 0;
+        // Training takes a long time.
+        // So we combine all tests into one function to avoid run it multiple times.
+        MathEx.setSeed(19650218); // to get repeatable results.
+        var usps = new USPS();
+        double[][] x = usps.x();
+        double[][] testx = usps.testx();
+
+        LinearSearch<double[], double[]> naive = LinearSearch.of(x, MathEx::distance);
+        MPLSH<double[]> lsh = new MPLSH<>(256, 100, 3, 4.0);
+        for (double[] xi : x) {
+            lsh.put(xi, xi);
+        }
+
+        double[][] train = new double[500][];
+        int[] index = MathEx.permutate(x.length);
+        for (int i = 0; i < train.length; i++) {
+            train[i] = x[index[i]];
+        }
+        lsh.fit(naive, train, 8.0);
+
+        System.out.println("===== nearest =====");
+        int match = 0;
         double error = 0.0;
         int hit = 0;
         for (double[] xi : testx) {
@@ -85,27 +85,23 @@ public class MPLSHTest {
 
                 Neighbor truth = naive.nearest(xi);
                 if (neighbor.index() == truth.index()) {
-                    recall++;
+                    match++;
                 } else {
                     error += Math.abs(neighbor.distance() - truth.distance()) / truth.distance();
                 }
             }
         }
 
-        error /= (hit - recall);
+        error /= (hit - match);
 
-        assertEquals(1722, recall);
+        assertEquals(1722, match);
         assertEquals(2007, hit);
         assertEquals(0.0687, error, 1E-4);
-        System.out.format("recall is %.2f%%%n", 100.0 * recall / testx.length);
+        System.out.format("recall is %.2f%%%n", 100.0 * match / testx.length);
         System.out.format("error when miss is %.2f%%%n", 100.0 * error);
         System.out.format("null rate is %.2f%%%n", 100.0 - 100.0 * hit / testx.length);
-    }
 
-    @Test
-    public void testKnn() {
-        System.out.println("knn");
-
+        System.out.println("===== knn =====");
         int[] recall = new int[testx.length];
         for (int i = 0; i < testx.length; i++) {
             int k = 7;
@@ -124,13 +120,9 @@ public class MPLSHTest {
         System.out.format("q1     of recall is %d%n", MathEx.q1(recall));
         System.out.format("median of recall is %d%n", MathEx.median(recall));
         System.out.format("q3     of recall is %d%n", MathEx.q3(recall));
-    }
 
-    @Test
-    public void testRange() {
-        System.out.println("range");
-
-        int[] recall = new int[testx.length];
+        System.out.println("===== range =====");
+        recall = new int[testx.length];
         for (int i = 0; i < testx.length; i++) {
             ArrayList<Neighbor<double[], double[]>> n1 = new ArrayList<>();
             ArrayList<Neighbor<double[], double[]>> n2 = new ArrayList<>();
@@ -150,12 +142,8 @@ public class MPLSHTest {
         System.out.format("q1     of recall is %d%n", MathEx.q1(recall));
         System.out.format("median of recall is %d%n", MathEx.median(recall));
         System.out.format("q3     of recall is %d%n", MathEx.q3(recall));
-    }
 
-    @Test
-    public void testSpeed() {
-        System.out.println("Speed");
-
+        System.out.println("===== speed =====");
         long start = System.currentTimeMillis();
         for (double[] xi : testx) {
             lsh.nearest(xi);
