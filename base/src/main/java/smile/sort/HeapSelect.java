@@ -154,14 +154,6 @@ public class HeapSelect<T extends Comparable<? super T>> {
         }
     }
 
-    /**
-     * Place the array in max-heap order. Note that the array is not fully sorted.
-     */
-    private static <T extends Comparable<? super T>> void heapify(T[] arr, int n) {
-        for (int i = n / 2; i >= 1; i--) {
-            Sort.siftDown(arr, i, n);
-        }
-    }
 
     /**
      * Sorts the specified array into descending order. It is based on Shell
