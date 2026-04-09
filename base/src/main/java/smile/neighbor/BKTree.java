@@ -174,6 +174,22 @@ public class BKTree<K, V> implements RNNSearch<K, V>, Serializable {
     }
 
     /**
+     * Returns the number of nodes in the BK-tree.
+     * @return the number of nodes in the BK-tree.
+     */
+    public int size() {
+        return count;
+    }
+
+    /**
+     * Returns true if the BK-tree is empty.
+     * @return true if the BK-tree is empty.
+     */
+    public boolean isEmpty() {
+        return count == 0;
+    }
+
+    /**
      * Return a BK-tree of the data.
      * @param data the data objects, which are also used as key.
      * @param distance the metric used to build BK-tree. Note that the metric
@@ -240,7 +256,7 @@ public class BKTree<K, V> implements RNNSearch<K, V>, Serializable {
         if (radius <= 0 || radius != (int) radius) {
             throw new IllegalArgumentException("The parameter radius has to be an integer: " + radius);
         }
-        
+        if (root == null) return;
         root.search(q, (int) radius, neighbors);
     }
 
@@ -253,6 +269,7 @@ public class BKTree<K, V> implements RNNSearch<K, V>, Serializable {
      * @param neighbors the list to store found neighbors in the given range on output.
      */
     public void search(K q, int radius, List<Neighbor<K, V>> neighbors) {
+        if (root == null) return;
         root.search(q, radius, neighbors);
     }
 }

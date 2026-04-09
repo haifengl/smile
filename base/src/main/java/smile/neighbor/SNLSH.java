@@ -110,6 +110,14 @@ public class SNLSH<K, V> implements RNNSearch<K, V>, Serializable {
     }
 
     /**
+     * Returns the number of data objects stored in this SNLSH.
+     * @return the number of data objects.
+     */
+    public int size() {
+        return data.size();
+    }
+
+    /**
      * Adds a new item.
      * @param key the key.
      * @param value the value.

@@ -322,6 +322,14 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
     }
 
     /**
+     * Returns the number of data points in the cover tree.
+     * @return the number of data points.
+     */
+    public int size() {
+        return keys.size();
+    }
+
+    /**
      * Builds the cover tree.
      */
     private void buildCoverTree() {

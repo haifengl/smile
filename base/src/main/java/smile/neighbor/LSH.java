@@ -198,6 +198,14 @@ public class LSH <E> implements KNNSearch<double[], E>, RNNSearch<double[], E>, 
     }
 
     /**
+     * Returns the number of data points stored in the LSH tables.
+     * @return the number of data points.
+     */
+    public int size() {
+        return data.size();
+    }
+
+    /**
      * Insert an item into the hash table.
      * @param key the key.
      * @param value the value.
