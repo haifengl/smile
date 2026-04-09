@@ -55,8 +55,47 @@ public class GammaDistributionTest {
         GammaDistribution instance = new GammaDistribution(3, 2.1);
         double[] data = instance.rand(1000);
         GammaDistribution est = GammaDistribution.fit(data);
-        assertEquals(2.09, est.theta, 1E-2);
-        assertEquals(2.95, est.k, 1E-2);
+        // Marsaglia-Tsang algorithm produces different samples;
+        // verify estimates are close to the true parameters (k=3, theta=2.1)
+        assertEquals(3.0, est.k,     0.3);
+        assertEquals(2.1, est.theta, 0.3);
+    }
+
+    /**
+     * Test non-integer shape parameter using Marsaglia-Tsang algorithm.
+     */
+    @Test
+    public void testNonIntegerShape() {
+        System.out.println("GammaDistribution non-integer shape");
+        MathEx.setSeed(19650218);
+        // k=0.5 => chi-square(1) scaled by theta
+        GammaDistribution dist = new GammaDistribution(0.5, 2.0);
+        double[] data = dist.rand(10000);
+        // All values must be positive
+        for (double v : data) {
+            assertTrue(v > 0, "Negative sample: " + v);
+        }
+        double mean = 0;
+        for (double v : data) mean += v;
+        mean /= data.length;
+        // Expected mean = k * theta = 0.5 * 2 = 1.0
+        assertEquals(1.0, mean, 0.05);
+    }
+
+    /**
+     * Test shape parameter between 0 and 1.
+     */
+    @Test
+    public void testShapeLessThanOne() {
+        System.out.println("GammaDistribution shape < 1");
+        MathEx.setSeed(19650218);
+        GammaDistribution dist = new GammaDistribution(0.3, 1.0);
+        double[] data = dist.rand(10000);
+        double mean = 0;
+        for (double v : data) mean += v;
+        mean /= data.length;
+        // Expected mean = 0.3
+        assertEquals(0.3, mean, 0.05);
     }
 
     /**

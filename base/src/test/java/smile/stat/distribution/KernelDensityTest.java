@@ -143,4 +143,84 @@ public class KernelDensityTest {
         double result = instance.logp(3.5);
         assertEquals(expResult, result, 1E-8);
     }
+
+    /**
+     * Test that cdf is monotone and bounded in [0,1].
+     */
+    @Test
+    public void testCdf() {
+        System.out.println("cdf");
+        KernelDensity instance = new KernelDensity(x);
+        // CDF must be in [0,1]
+        double prev = 0.0;
+        for (double xi = -5; xi <= 12; xi += 0.5) {
+            double c = instance.cdf(xi);
+            assertTrue(c >= 0.0 && c <= 1.0, "CDF out of [0,1] at x=" + xi);
+            assertTrue(c >= prev - 1e-9, "CDF not monotone at x=" + xi);
+            prev = c;
+        }
+        // CDF near min of data should be close to 0
+        assertTrue(instance.cdf(-10) < 0.01);
+        // CDF near max of data should be close to 1
+        assertTrue(instance.cdf(20) > 0.99);
+    }
+
+    /**
+     * Test that quantile is the inverse of cdf.
+     */
+    @Test
+    public void testQuantile() {
+        System.out.println("quantile");
+        KernelDensity instance = new KernelDensity(x);
+        for (double p : new double[]{0.1, 0.25, 0.5, 0.75, 0.9}) {
+            double q = instance.quantile(p);
+            double actual = instance.cdf(q);
+            assertEquals(p, actual, 0.01, "quantile(p) should be inverse of cdf, p=" + p);
+        }
+    }
+
+    /**
+     * Test that rand() produces samples in a reasonable range.
+     */
+    @Test
+    public void testRand() {
+        System.out.println("rand");
+        smile.math.MathEx.setSeed(19650218);
+        KernelDensity instance = new KernelDensity(x);
+        double min = Double.MAX_VALUE, max = -Double.MAX_VALUE;
+        double sum = 0;
+        int n = 1000;
+        for (int i = 0; i < n; i++) {
+            double v = instance.rand();
+            if (v < min) min = v;
+            if (v > max) max = v;
+            sum += v;
+        }
+        // Mean should be close to the data mean (3.55)
+        assertEquals(3.55, sum / n, 0.5);
+    }
+
+    /**
+     * Test logLikelihood is finite for in-range data.
+     */
+    @Test
+    public void testLogLikelihood() {
+        System.out.println("logLikelihood");
+        KernelDensity instance = new KernelDensity(x);
+        double ll = instance.logLikelihood(new double[]{0.0, 3.5, 7.0});
+        assertTrue(Double.isFinite(ll));
+        assertTrue(ll < 0); // log-likelihood should be negative
+    }
+
+    /**
+     * Test custom bandwidth constructor.
+     */
+    @Test
+    public void testCustomBandwidth() {
+        System.out.println("custom bandwidth");
+        KernelDensity instance = new KernelDensity(x, 0.5);
+        assertEquals(0.5, instance.bandwidth(), 1E-10);
+        // p() should still work
+        assertTrue(instance.p(3.5) > 0);
+    }
 }

@@ -86,7 +86,22 @@ public class GoodTuring {
             throw new IllegalArgumentException("The sizes of r and Nr are not same.");
         }
 
+        if (r.length < 2) {
+            throw new IllegalArgumentException("At least 2 frequency buckets are required.");
+        }
+
         int len = r.length;
+        for (int j = 0; j < len; j++) {
+            if (r[j] <= 0) {
+                throw new IllegalArgumentException("Frequencies r must be positive: r[" + j + "]=" + r[j]);
+            }
+            if (Nr[j] <= 0) {
+                throw new IllegalArgumentException("Frequency counts Nr must be positive: Nr[" + j + "]=" + Nr[j]);
+            }
+            if (j > 0 && r[j] <= r[j - 1]) {
+                throw new IllegalArgumentException("Frequencies r must be in strictly ascending order.");
+            }
+        }
         double[] p = new double[len];
         double[] logR = new double[len];
         double[] logZ = new double[len];

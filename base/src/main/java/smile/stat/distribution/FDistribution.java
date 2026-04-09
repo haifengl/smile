@@ -101,7 +101,7 @@ public class FDistribution implements Distribution {
     @Override
     public double p(double x) {
         if (x <= 0.0) {
-            throw new IllegalArgumentException("Invalid x: " + x);
+            return 0.0;
         }
 
         return Math.exp((0.5 * nu1 - 1.0) * Math.log(x) - 0.5 * (nu1 + nu2) * Math.log(nu2 + nu1 * x) + fac);
@@ -110,7 +110,7 @@ public class FDistribution implements Distribution {
     @Override
     public double logp(double x) {
         if (x <= 0.0) {
-            throw new IllegalArgumentException("Invalid x: " + x);
+            return Double.NEGATIVE_INFINITY;
         }
 
         return (0.5 * nu1 - 1.0) * Math.log(x) - 0.5 * (nu1 + nu2) * Math.log(nu2 + nu1 * x) + fac;
@@ -118,8 +118,8 @@ public class FDistribution implements Distribution {
 
     @Override
     public double cdf(double x) {
-        if (x < 0.0) {
-            throw new IllegalArgumentException("Invalid x: " + x);
+        if (x <= 0.0) {
+            return 0.0;
         }
 
         return Beta.regularizedIncompleteBetaFunction(0.5 * nu1, 0.5 * nu2, nu1 * x / (nu2 + nu1 * x));

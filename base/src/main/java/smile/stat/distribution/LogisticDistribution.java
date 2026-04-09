@@ -106,7 +106,10 @@ public class LogisticDistribution implements Distribution {
 
     @Override
     public double logp(double x) {
-        return Math.log(p(x));
+        // log p(x) = -(x-mu)/s - log(s) - 2*log(1 + exp(-(x-mu)/s))
+        double z = (x - mu) / scale;
+        // use numerically stable form: log1p(exp(-z)) for large z
+        return -z - Math.log(scale) - 2.0 * Math.log1p(Math.exp(-z));
     }
 
     @Override

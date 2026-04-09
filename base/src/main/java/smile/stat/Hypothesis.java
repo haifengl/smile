@@ -22,7 +22,7 @@ import smile.stat.hypothesis.*;
 import java.util.Locale;
 
 /**
- * Hypothesis test functions.
+ * Hypothesis test facade interface.
  *
  * @author Haifeng Li
  */

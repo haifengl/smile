@@ -154,4 +154,19 @@ public class FDistributionTest {
         assertEquals(7.180539, instance.quantile(0.9999), 1E-6);
     }
 
+    /**
+     * Test boundary conditions: x <= 0 should return 0 / NEGATIVE_INFINITY, not throw.
+     */
+    @Test
+    public void testBoundaryX() {
+        System.out.println("F boundary x<=0");
+        FDistribution instance = new FDistribution(5, 10);
+        assertEquals(0.0, instance.p(0.0));
+        assertEquals(0.0, instance.p(-1.0));
+        assertTrue(Double.isInfinite(instance.logp(0.0)));
+        assertTrue(Double.isInfinite(instance.logp(-1.0)));
+        assertEquals(0.0, instance.cdf(0.0));
+        assertEquals(0.0, instance.cdf(-5.0));
+    }
+
 }

@@ -149,23 +149,50 @@ public class GammaDistribution implements ExponentialFamily {
     }
 
     /**
-     * Only support shape parameter k of integer.
+     * Generates a random sample using the Marsaglia-Tsang (2000) method,
+     * which works for any shape parameter k {@code > 0}.
+     * <p>
+     * Marsaglia, G., and Tsang, W. W. (2000). A Simple Method for
+     * Generating Gamma Variables. ACM Transactions on Mathematical
+     * Software, 26(3), 363–372.
      */
     @Override
     public double rand() {
-        if (k - Math.floor(k) > MathEx.EPSILON) {
-            throw new IllegalArgumentException("Gamma random number generator support only integer shape parameter.");
+        // For k >= 1 use Marsaglia-Tsang directly.
+        // For 0 < k < 1, generate Gamma(k+1,...) and multiply by U^(1/k).
+        if (k < 1.0) {
+            double u;
+            do {
+                u = MathEx.random();
+            } while (u == 0.0);
+            return marsagliaTsang(k + 1.0) * Math.pow(u, 1.0 / k) * theta;
         }
+        return marsagliaTsang(k) * theta;
+    }
 
-        double r = 0.0;
-
-        for (int i = 0; i < k; i++) {
-            r += Math.log(MathEx.random());
+    /**
+     * Marsaglia-Tsang algorithm for shape >= 1, scale = 1.
+     */
+    private static double marsagliaTsang(double shape) {
+        double d = shape - 1.0 / 3.0;
+        double c = 1.0 / Math.sqrt(9.0 * d);
+        GaussianDistribution gaussian = GaussianDistribution.getInstance();
+        for (;;) {
+            double x, v;
+            do {
+                x = gaussian.rand();
+                v = 1.0 + c * x;
+            } while (v <= 0.0);
+            v = v * v * v;
+            double u = MathEx.random();
+            double x2 = x * x;
+            if (u < 1.0 - 0.0331 * x2 * x2) {
+                return d * v;
+            }
+            if (Math.log(u) < 0.5 * x2 + d * (1.0 - v + Math.log(v))) {
+                return d * v;
+            }
         }
-
-        r *= -theta;
-
-        return r;
     }
 
     @Override

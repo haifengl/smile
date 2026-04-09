@@ -93,6 +93,25 @@ public class LogNormalDistributionTest {
     }
 
     /**
+     * Test variance with mu != sigma (verifies correct formula).
+     * For LogNormal(mu, sigma): variance = (exp(sigma^2)-1)*exp(2*mu+sigma^2).
+     * Old buggy formula used mu^2 instead of sigma^2 in the first exponent.
+     */
+    @Test
+    public void testVarianceMuNotEqualSigma() {
+        System.out.println("variance mu != sigma");
+        // LogNormal(2.0, 0.5)
+        // variance = (exp(0.25)-1)*exp(4+0.25) = (e^0.25-1)*e^4.25
+        double mu = 2.0, sigma = 0.5;
+        double expected = (Math.exp(sigma * sigma) - 1) * Math.exp(2 * mu + sigma * sigma);
+        LogNormalDistribution instance = new LogNormalDistribution(mu, sigma);
+        assertEquals(expected, instance.variance(), 1E-10);
+        // Also verify with R: dlnorm / plnorm formula
+        // R: (exp(0.5^2)-1)*exp(2*2+0.5^2) ≈ (1.2840-1)*e^4.25 ≈ 0.2840*70.105 ≈ 19.91
+        assertEquals(19.912, instance.variance(), 0.001);
+    }
+
+    /**
      * Test of sd method, of class LogNormalDistribution.
      */
     @Test

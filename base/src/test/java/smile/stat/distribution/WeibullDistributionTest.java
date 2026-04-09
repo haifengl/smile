@@ -167,4 +167,41 @@ public class WeibullDistributionTest {
         assertEquals(3.627087, instance.quantile(0.999), 1E-6);
     }
 
+    /**
+     * Test MLE fit of WeibullDistribution.
+     */
+    @Test
+    public void testFit() {
+        System.out.println("WeibullDistribution fit");
+        smile.math.MathEx.setSeed(19650218);
+        WeibullDistribution instance = new WeibullDistribution(1.5, 2.0);
+        double[] data = instance.rand(1000);
+        WeibullDistribution est = WeibullDistribution.fit(data);
+        assertEquals(1.5, est.k, 0.1);
+        assertEquals(2.0, est.lambda, 0.1);
+    }
+
+    /**
+     * Test that fit rejects non-positive data.
+     */
+    @Test
+    public void testFitInvalidData() {
+        assertThrows(IllegalArgumentException.class, () ->
+                WeibullDistribution.fit(new double[]{1.0, -1.0, 2.0}));
+        assertThrows(IllegalArgumentException.class, () ->
+                WeibullDistribution.fit(new double[]{1.0, 0.0, 2.0}));
+    }
+
+    /**
+     * Test single-default-scale constructor.
+     */
+    @Test
+    public void testDefaultScaleConstructor() {
+        System.out.println("WeibullDistribution default scale");
+        WeibullDistribution instance = new WeibullDistribution(2.0);
+        assertEquals(2.0, instance.k, 1E-10);
+        assertEquals(1.0, instance.lambda, 1E-10);
+    }
+
 }
+

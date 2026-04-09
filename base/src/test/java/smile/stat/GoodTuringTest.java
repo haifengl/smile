@@ -60,4 +60,102 @@ public class GoodTuringTest {
             assertEquals(p[i], result.p[i], 1E-7);
         }
     }
+
+    /**
+     * Test that p0 + sum(Nr[j]*p[j]) = 1 (probability conservation).
+     */
+    @Test
+    public void testProbabilityConservation() {
+        System.out.println("GoodTuring probability conservation");
+        int[] r = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12};
+        int[] Nr = {120, 40, 24, 13, 15, 5, 11, 2, 2, 1, 3};
+
+        GoodTuring result = GoodTuring.of(r, Nr);
+
+        // p0 + sum of (Nr[j] * p[j]) should ≈ 1
+        double total = result.p0;
+        for (int j = 0; j < r.length; j++) {
+            total += Nr[j] * result.p[j];
+        }
+        assertEquals(1.0, total, 1E-6);
+    }
+
+    /**
+     * Test that all estimated probabilities are positive.
+     */
+    @Test
+    public void testPositiveProbabilities() {
+        System.out.println("GoodTuring positive probabilities");
+        int[] r = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12};
+        int[] Nr = {120, 40, 24, 13, 15, 5, 11, 2, 2, 1, 3};
+
+        GoodTuring result = GoodTuring.of(r, Nr);
+        assertTrue(result.p0 > 0 && result.p0 < 1);
+        for (double p : result.p) {
+            assertTrue(p > 0, "Probability must be positive: " + p);
+        }
+    }
+
+    /**
+     * Test that p0 == 0 when r[0] != 1 (no singletons).
+     */
+    @Test
+    public void testNoSingletons() {
+        System.out.println("GoodTuring no singletons");
+        // r starts at 2, so n1=0, p0=0
+        int[] r = {2, 4, 6, 8, 10, 12};
+        int[] Nr = {30, 20, 15, 10, 5, 3};
+        GoodTuring result = GoodTuring.of(r, Nr);
+        assertEquals(0.0, result.p0, 1E-10);
+    }
+
+    /**
+     * Test input validation: different sizes.
+     */
+    @Test
+    public void testDifferentSizes() {
+        assertThrows(IllegalArgumentException.class, () ->
+                GoodTuring.of(new int[]{1, 2, 3}, new int[]{5, 3}));
+    }
+
+    /**
+     * Test input validation: too few buckets.
+     */
+    @Test
+    public void testTooFewBuckets() {
+        assertThrows(IllegalArgumentException.class, () ->
+                GoodTuring.of(new int[]{1}, new int[]{10}));
+    }
+
+    /**
+     * Test input validation: non-ascending frequencies.
+     */
+    @Test
+    public void testNonAscendingFrequencies() {
+        assertThrows(IllegalArgumentException.class, () ->
+                GoodTuring.of(new int[]{3, 2, 5}, new int[]{10, 5, 3}));
+    }
+
+    /**
+     * Test input validation: non-positive frequency count.
+     */
+    @Test
+    public void testNonPositiveNr() {
+        assertThrows(IllegalArgumentException.class, () ->
+                GoodTuring.of(new int[]{1, 2, 3}, new int[]{10, 0, 5}));
+    }
+
+    /**
+     * Test with minimal valid input (2 buckets).
+     */
+    @Test
+    public void testMinimalInput() {
+        System.out.println("GoodTuring minimal input");
+        int[] r = {1, 2};
+        int[] Nr = {10, 5};
+        GoodTuring result = GoodTuring.of(r, Nr);
+        assertNotNull(result);
+        assertEquals(2, result.p.length);
+        assertTrue(result.p0 >= 0 && result.p0 < 1);
+    }
 }
