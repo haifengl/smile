@@ -16,16 +16,29 @@
  */
 package smile.linalg;
 
-/** Matrix transpose operation. */
+/**
+ * Matrix transpose operation passed to BLAS/LAPACK routines.
+ *
+ * <ul>
+ *   <li>{@link #NO_TRANSPOSE}        — use the matrix as-is.</li>
+ *   <li>{@link #TRANSPOSE}           — use the (real) transpose A<sup>T</sup>.</li>
+ *   <li>{@link #CONJUGATE_TRANSPOSE} — use the conjugate transpose A<sup>H</sup>
+ *       (same as transpose for real matrices).</li>
+ * </ul>
+ *
+ * <p>Use {@link #flip(Transpose)} to toggle between {@code NO_TRANSPOSE} and
+ * {@code TRANSPOSE}, which is needed when converting between row-major and
+ * column-major representations.
+ */
 public enum Transpose {
-    /** Normal operation on the matrix. */
+    /** Normal (identity) operation on the matrix. */
     NO_TRANSPOSE(111, (byte) 'N'),
-    /** Transpose operation on the matrix. */
+    /** Transpose the matrix: A becomes A<sup>T</sup>. */
     TRANSPOSE(112, (byte) 'T'),
-    /** Conjugate transpose operation on the matrix. */
+    /** Conjugate-transpose the matrix: A becomes A<sup>H</sup>. */
     CONJUGATE_TRANSPOSE(113, (byte) 'C');
 
-    /** Byte value passed to BLAS. */
+    /** Integer value passed to CBLAS. */
     private final int blas;
     /** Byte value passed to LAPACK. */
     private final byte lapack;
@@ -37,21 +50,40 @@ public enum Transpose {
     }
 
     /**
-     * Returns the int value for BLAS.
-     * @return the int value for BLAS.
+     * Returns the integer value for CBLAS.
+     * @return the CBLAS integer value.
      */
     public int blas() { return blas; }
 
     /**
      * Returns the byte value for LAPACK.
-     * @return the byte value for LAPACK.
+     * @return the LAPACK byte value.
      */
     public byte lapack() { return lapack; }
 
     /**
-     * Flips the value, null safe.
-     * @param value a Transpose operation value.
-     * @return the flipped value.
+     * Returns a human-readable description of this transpose option.
+     * @return a human-readable description.
+     */
+    public String description() {
+        return switch (this) {
+            case NO_TRANSPOSE        -> "No transpose (use A as-is)";
+            case TRANSPOSE           -> "Transpose (use A^T)";
+            case CONJUGATE_TRANSPOSE -> "Conjugate transpose (use A^H = conj(A^T))";
+        };
+    }
+
+    /**
+     * Toggles between {@link #NO_TRANSPOSE} and {@link #TRANSPOSE}, null-safe.
+     * {@link #CONJUGATE_TRANSPOSE} is treated the same as {@link #TRANSPOSE} for
+     * the purpose of flipping (returns {@link #NO_TRANSPOSE}).
+     *
+     * <p>This is useful when switching between row-major and column-major matrix
+     * representations: a row-major {@code A} passed to a column-major BLAS call
+     * requires flipping the transpose flag.
+     *
+     * @param value a {@code Transpose} value, may be {@code null}.
+     * @return the flipped value, or {@code null} if the input is {@code null}.
      */
     public static Transpose flip(Transpose value) {
         return switch (value) {
@@ -59,5 +91,31 @@ public enum Transpose {
             case NO_TRANSPOSE -> TRANSPOSE;
             case TRANSPOSE, CONJUGATE_TRANSPOSE -> NO_TRANSPOSE;
         };
+    }
+
+    /**
+     * Returns the {@code Transpose} constant corresponding to the given CBLAS integer value.
+     * @param value the CBLAS integer value ({@code 111}, {@code 112}, or {@code 113}).
+     * @return the matching {@code Transpose} constant.
+     * @throws IllegalArgumentException if the value does not match any constant.
+     */
+    public static Transpose fromBlas(int value) {
+        for (Transpose t : values()) {
+            if (t.blas == value) return t;
+        }
+        throw new IllegalArgumentException("Unknown CBLAS Transpose value: " + value);
+    }
+
+    /**
+     * Returns the {@code Transpose} constant corresponding to the given LAPACK byte value.
+     * @param value the LAPACK byte value ({@code 'N'}, {@code 'T'}, or {@code 'C'}).
+     * @return the matching {@code Transpose} constant.
+     * @throws IllegalArgumentException if the value does not match any constant.
+     */
+    public static Transpose fromLapack(byte value) {
+        for (Transpose t : values()) {
+            if (t.lapack == value) return t;
+        }
+        throw new IllegalArgumentException("Unknown LAPACK Transpose value: " + (char) value);
     }
 }

@@ -16,15 +16,23 @@
  */
 package smile.linalg;
 
-/** THe option of eigenvalue range. */
+/**
+ * The option of eigenvalue range for LAPACK symmetric eigensolver routines
+ * (e.g., {@code dsyevr}, {@code ssyevr}).
+ *
+ * <ul>
+ *   <li>{@link #ALL}   — compute all eigenvalues.</li>
+ *   <li>{@link #VALUE} — compute eigenvalues in the half-open interval {@code (VL, VU]}.</li>
+ *   <li>{@link #INDEX} — compute the IL-th through IU-th eigenvalues.</li>
+ * </ul>
+ */
 public enum EigenRange {
     /**
      * All eigenvalues will be found.
      */
     ALL((byte) 'A'),
     /**
-     * All eigenvalues in the half-open interval (VL,VU]
-     * will be found.
+     * All eigenvalues in the half-open interval (VL, VU] will be found.
      */
     VALUE((byte) 'V'),
     /**
@@ -45,4 +53,29 @@ public enum EigenRange {
      * @return the byte value for LAPACK.
      */
     public byte lapack() { return lapack; }
+
+    /**
+     * Returns a human-readable description of this range type.
+     * @return a human-readable description.
+     */
+    public String description() {
+        return switch (this) {
+            case ALL   -> "All eigenvalues";
+            case VALUE -> "Eigenvalues in interval (VL, VU]";
+            case INDEX -> "Eigenvalues with index IL through IU";
+        };
+    }
+
+    /**
+     * Returns the {@code EigenRange} constant corresponding to the given LAPACK byte value.
+     * @param value the LAPACK byte value ({@code 'A'}, {@code 'V'}, or {@code 'I'}).
+     * @return the matching {@code EigenRange} constant.
+     * @throws IllegalArgumentException if the value does not match any constant.
+     */
+    public static EigenRange fromLapack(byte value) {
+        for (EigenRange r : values()) {
+            if (r.lapack == value) return r;
+        }
+        throw new IllegalArgumentException("Unknown LAPACK EigenRange value: " + (char) value);
+    }
 }
