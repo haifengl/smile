@@ -232,6 +232,77 @@ public class Concept {
     }
 
     /**
+     * Returns true if this concept is a descendant of the given concept,
+     * i.e. the given concept is an ancestor of this concept.
+     * @param concept the potential ancestor.
+     * @return true if this concept is a descendant of the given concept.
+     */
+    public boolean isDescendantOf(Concept concept) {
+        return concept.isAncestorOf(this);
+    }
+
+    /**
+     * Returns the depth of this concept in the taxonomy tree.
+     * The root has depth 0.
+     * @return the depth of this concept.
+     */
+    public int depth() {
+        int d = 0;
+        Concept node = this;
+        while (node.parent != null) {
+            d++;
+            node = node.parent;
+        }
+        return d;
+    }
+
+    /**
+     * Returns the height of the sub-tree rooted at this concept.
+     * A leaf node has height 0.
+     * @return the height of the sub-tree.
+     */
+    public int height() {
+        if (isLeaf()) return 0;
+        int max = 0;
+        for (Concept child : children) {
+            max = Math.max(max, child.height());
+        }
+        return 1 + max;
+    }
+
+    /**
+     * Returns the number of named keywords in the sub-tree rooted at
+     * this concept (inclusive).
+     * @return the keyword count in the sub-tree.
+     */
+    public int subtreeSize() {
+        int count = synset == null ? 0 : synset.size();
+        if (children != null) {
+            for (Concept child : children) {
+                count += child.subtreeSize();
+            }
+        }
+        return count;
+    }
+
+    /**
+     * Returns the sibling concepts, i.e. all other children of this
+     * concept's parent. Returns an empty list if this is the root or
+     * the parent has no other children.
+     * @return the sibling concepts.
+     */
+    public List<Concept> siblings() {
+        if (parent == null || parent.children == null) {
+            return Collections.emptyList();
+        }
+        List<Concept> result = new ArrayList<>(parent.children.size());
+        for (Concept sibling : parent.children) {
+            if (sibling != this) result.add(sibling);
+        }
+        return result;
+    }
+
+    /**
      * Returns the path from root to this node.
      * @return the path from root to this node.
      */

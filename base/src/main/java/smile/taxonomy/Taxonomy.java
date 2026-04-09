@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.ArrayDeque;
+import java.util.Collections;
 
 /**
  * A taxonomy is a tree of terms (aka concept) where leaves
@@ -171,5 +173,148 @@ public class Taxonomy {
         }
 
         return commonAncestor;
+    }
+
+    /**
+     * Returns the height of the taxonomy tree, i.e. the maximum depth of
+     * any concept node (root has depth 0, so a single-node tree has height 0).
+     * @return the tree height.
+     */
+    public int height() {
+        return root.height();
+    }
+
+    /**
+     * Returns true if concept {@code ancestor} is an ancestor of concept
+     * {@code descendant} in the taxonomy.
+     * @param ancestor the potential ancestor keyword.
+     * @param descendant the potential descendant keyword.
+     * @return true if {@code ancestor} is an ancestor of {@code descendant}.
+     * @throws IllegalArgumentException if either keyword is not in the taxonomy.
+     */
+    public boolean isAncestor(String ancestor, String descendant) {
+        Concept a = getConcept(ancestor);
+        if (a == null) throw new IllegalArgumentException("Concept not found: " + ancestor);
+        Concept d = getConcept(descendant);
+        if (d == null) throw new IllegalArgumentException("Concept not found: " + descendant);
+        return a.isAncestorOf(d);
+    }
+
+    /**
+     * Returns true if concept {@code descendant} is a descendant of concept
+     * {@code ancestor} in the taxonomy.
+     * @param descendant the potential descendant keyword.
+     * @param ancestor the potential ancestor keyword.
+     * @return true if {@code descendant} is a descendant of {@code ancestor}.
+     * @throws IllegalArgumentException if either keyword is not in the taxonomy.
+     */
+    public boolean isDescendant(String descendant, String ancestor) {
+        return isAncestor(ancestor, descendant);
+    }
+
+    /**
+     * Returns the shortest path between two concepts as an ordered list of
+     * concept nodes, from {@code v} to {@code w} (both endpoints inclusive).
+     * The path goes up from {@code v} to their lowest common ancestor, then
+     * down to {@code w}.
+     * @param v a concept keyword.
+     * @param w the other concept keyword.
+     * @return the ordered list of concept nodes on the shortest path.
+     * @throws IllegalArgumentException if either keyword is not in the taxonomy.
+     */
+    public List<Concept> shortestPath(String v, String w) {
+        Concept vnode = getConcept(v);
+        if (vnode == null) throw new IllegalArgumentException("Concept not found: " + v);
+        Concept wnode = getConcept(w);
+        if (wnode == null) throw new IllegalArgumentException("Concept not found: " + w);
+        return shortestPath(vnode, wnode);
+    }
+
+    /**
+     * Returns the shortest path between two concept nodes as an ordered list,
+     * from {@code v} to {@code w} (both endpoints inclusive).
+     * @param v a concept node.
+     * @param w the other concept node.
+     * @return the ordered list of concept nodes on the shortest path.
+     */
+    public List<Concept> shortestPath(Concept v, Concept w) {
+        if (v.taxonomy != w.taxonomy) {
+            throw new IllegalArgumentException("Concepts are not from the same taxonomy.");
+        }
+        if (v == w) return Collections.singletonList(v);
+
+        List<Concept> vPath = v.getPathFromRoot();
+        List<Concept> wPath = w.getPathFromRoot();
+
+        // Find length of common prefix (path to LCA).
+        int commonLen = 0;
+        int minLen = Math.min(vPath.size(), wPath.size());
+        while (commonLen < minLen && vPath.get(commonLen) == wPath.get(commonLen)) {
+            commonLen++;
+        }
+        // commonLen is now the index just past the LCA.
+
+        // v → LCA: nodes from v down to LCA (reversed path-from-root suffix)
+        List<Concept> path = new ArrayList<>();
+        for (int i = vPath.size() - 1; i >= commonLen - 1; i--) {
+            path.add(vPath.get(i));
+        }
+        // LCA → w: nodes from LCA+1 down to w
+        for (int i = commonLen; i < wPath.size(); i++) {
+            path.add(wPath.get(i));
+        }
+        return path;
+    }
+
+    /**
+     * Returns all keywords in the sub-tree rooted at the given concept
+     * (i.e. the concept itself and all its descendants).
+     * @param keyword the root of the sub-tree.
+     * @return list of all keywords in the sub-tree.
+     * @throws IllegalArgumentException if the keyword is not in the taxonomy.
+     */
+    public List<String> subtree(String keyword) {
+        Concept c = getConcept(keyword);
+        if (c == null) throw new IllegalArgumentException("Concept not found: " + keyword);
+        return getConcepts(c);
+    }
+
+    /**
+     * Returns all concept nodes in breadth-first order starting from the root.
+     * @return the BFS-ordered list of all concept nodes.
+     */
+    public List<Concept> bfs() {
+        List<Concept> result = new ArrayList<>();
+        ArrayDeque<Concept> queue = new ArrayDeque<>();
+        queue.add(root);
+        while (!queue.isEmpty()) {
+            Concept node = queue.poll();
+            result.add(node);
+            if (node.children != null) {
+                queue.addAll(node.children);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Returns all leaf concept nodes in the taxonomy (nodes with no children).
+     * @return the list of leaf concept nodes.
+     */
+    public List<Concept> leaves() {
+        List<Concept> result = new ArrayList<>();
+        collectLeaves(root, result);
+        return result;
+    }
+
+    /** Recursive helper for {@link #leaves()}. */
+    private void collectLeaves(Concept node, List<Concept> acc) {
+        if (node.isLeaf()) {
+            acc.add(node);
+        } else if (node.children != null) {
+            for (Concept child : node.children) {
+                collectLeaves(child, acc);
+            }
+        }
     }
 }
