@@ -21,7 +21,7 @@ import java.util.function.Function;
 /**
  * A Stemmer transforms a word into its root form. The stemming is a process
  * for removing the commoner morphological and inflexional endings from words
- * (in English). Its main use is as part of a term normalisation process.
+ * (in English). Its main use is as part of a term normalization process.
  *
  * @author Haifeng Li
  */

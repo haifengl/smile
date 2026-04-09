@@ -566,7 +566,7 @@ public class HuggingFaceHub {
      * <p>Example: {@code W/"abc123"} → {@code abc123}.
      *
      * @param etag the raw ETag header value; may be {@code null}.
-     * @return the normalised ETag string, or {@code null} if the input was null/blank.
+     * @return the normalized ETag string, or {@code null} if the input was null/blank.
      */
     static String stripWeakEtag(String etag) {
         if (etag == null || etag.isBlank()) return null;
