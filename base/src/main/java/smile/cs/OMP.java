@@ -179,7 +179,7 @@ public record OMP(double[] x, int[] support, int iter) implements Serializable {
 
         int iter;
         for (iter = 0; iter < k; iter++) {
-            // Correlation step: e = A^T r, find largest |e_j| (normalised by col norm)
+            // Correlation step: e = A^T r, find largest |e_j| (normalized by col norm)
             double[] Atr = BasisPursuit.matvec(A, residual, m, n, true);
             int pivot = -1;
             double maxCorr = -1;

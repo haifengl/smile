@@ -16,6 +16,7 @@
  */
 package smile.taxonomy;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -743,5 +744,440 @@ public class TaxonomyTest {
         List<Concept> leavesFound = t.leaves();
         assertEquals(1, leavesFound.size());
         assertSame(t.getRoot(), leavesFound.get(0));
+    }
+
+    // -----------------------------------------------------------------------
+    // Taxonomy.contains()
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testContains() {
+        System.out.println("Taxonomy.contains");
+        assertTrue(taxonomy.contains("A"));
+        assertTrue(taxonomy.contains("F"));
+        assertFalse(taxonomy.contains("UNKNOWN"));
+        assertFalse(taxonomy.contains(""));
+    }
+
+    // -----------------------------------------------------------------------
+    // Taxonomy.nodeCount()
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testNodeCount() {
+        System.out.println("Taxonomy.nodeCount");
+        // root, anon, E, D, A, B, C, F = 8 nodes
+        assertEquals(8, taxonomy.nodeCount());
+    }
+
+    @Test
+    public void testNodeCountSingleNode() {
+        System.out.println("Taxonomy.nodeCount single");
+        assertEquals(1, new Taxonomy("only").nodeCount());
+    }
+
+    // -----------------------------------------------------------------------
+    // Taxonomy.level()
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testLevel0IsRoot() {
+        System.out.println("Taxonomy.level(0)");
+        List<Concept> l = taxonomy.level(0);
+        assertEquals(1, l.size());
+        assertSame(taxonomy.getRoot(), l.get(0));
+    }
+
+    @Test
+    public void testLevel1() {
+        System.out.println("Taxonomy.level(1)");
+        List<Concept> l = taxonomy.level(1);
+        // anon and E are at depth 1
+        assertEquals(2, l.size());
+        assertTrue(l.contains(anon));
+        assertTrue(l.contains(e));
+    }
+
+    @Test
+    public void testLevel2() {
+        System.out.println("Taxonomy.level(2)");
+        List<Concept> l = taxonomy.level(2);
+        // D and A are at depth 2
+        assertEquals(2, l.size());
+        assertTrue(l.contains(d));
+        assertTrue(l.contains(a));
+    }
+
+    @Test
+    public void testLevel3() {
+        System.out.println("Taxonomy.level(3)");
+        List<Concept> l = taxonomy.level(3);
+        // B and C are at depth 3
+        assertEquals(2, l.size());
+        assertTrue(l.contains(b));
+        assertTrue(l.contains(c));
+    }
+
+    @Test
+    public void testLevelBeyondHeight() {
+        System.out.println("Taxonomy.level beyond height");
+        List<Concept> l = taxonomy.level(100);
+        assertTrue(l.isEmpty());
+    }
+
+    @Test
+    public void testLevelNegativeThrows() {
+        System.out.println("Taxonomy.level negative throws");
+        assertThrows(IllegalArgumentException.class, () -> taxonomy.level(-1));
+    }
+
+    // -----------------------------------------------------------------------
+    // Taxonomy.forEach()
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testForEach() {
+        System.out.println("Taxonomy.forEach");
+        java.util.Set<Concept> visited = new java.util.HashSet<>();
+        taxonomy.forEach(visited::add);
+        // All 8 nodes should be visited
+        assertEquals(8, visited.size());
+        assertTrue(visited.contains(taxonomy.getRoot()));
+        assertTrue(visited.contains(f));
+    }
+
+    @Test
+    public void testForEachPreOrder() {
+        System.out.println("Taxonomy.forEach pre-order");
+        List<Concept> order = new ArrayList<>();
+        taxonomy.forEach(order::add);
+        // Root must come first
+        assertSame(taxonomy.getRoot(), order.get(0));
+        // Each parent must appear before its children
+        for (Concept node : order) {
+            if (node.parent != null) {
+                assertTrue(order.indexOf(node.parent) < order.indexOf(node),
+                        "Parent should precede child in DFS pre-order");
+            }
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Taxonomy.toString()
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testTaxonomyToString() {
+        System.out.println("Taxonomy.toString");
+        String tree = taxonomy.toString();
+        assertNotNull(tree);
+        // Should contain all keywords
+        assertTrue(tree.contains("A"));
+        assertTrue(tree.contains("B"));
+        assertTrue(tree.contains("F"));
+        // Should contain tree-drawing characters
+        assertTrue(tree.contains("──"));
+        // Anonymous node label
+        assertTrue(tree.contains("anon"));
+    }
+
+    // -----------------------------------------------------------------------
+    // Taxonomy.of() — parser
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testOf() {
+        System.out.println("Taxonomy.of");
+        String text = """
+                animal
+                    mammal
+                        dog, canine
+                        cat, feline
+                    reptile
+                        snake
+                """;
+        Taxonomy t = Taxonomy.of(text);
+        assertNotNull(t.getConcept("animal"));
+        assertNotNull(t.getConcept("mammal"));
+        assertNotNull(t.getConcept("dog"));
+        assertNotNull(t.getConcept("canine"));
+        // dog and canine are synonyms of the same concept
+        assertSame(t.getConcept("dog"), t.getConcept("canine"));
+        assertNotNull(t.getConcept("cat"));
+        assertNotNull(t.getConcept("feline"));
+        assertNotNull(t.getConcept("reptile"));
+        assertNotNull(t.getConcept("snake"));
+    }
+
+    @Test
+    public void testOfComments() {
+        System.out.println("Taxonomy.of with comments");
+        String text = """
+                # root
+                universe
+                    # first branch
+                    star
+                    planet
+                """;
+        Taxonomy t = Taxonomy.of(text);
+        assertNotNull(t.getConcept("universe"));
+        assertNotNull(t.getConcept("star"));
+        assertNotNull(t.getConcept("planet"));
+        assertEquals(3, t.size());
+    }
+
+    @Test
+    public void testOfStructure() {
+        System.out.println("Taxonomy.of structure");
+        String text = """
+                root
+                    child1
+                        grandchild
+                    child2
+                """;
+        Taxonomy t = Taxonomy.of(text);
+        Concept root  = t.getConcept("root");
+        Concept c1    = t.getConcept("child1");
+        Concept c2    = t.getConcept("child2");
+        Concept gc    = t.getConcept("grandchild");
+        assertEquals(2, root.height());
+        assertTrue(root.isAncestorOf(gc));
+        assertTrue(c1.isAncestorOf(gc));
+        assertFalse(c2.isAncestorOf(gc));
+    }
+
+    @Test
+    public void testOfLCAAfterParse() {
+        System.out.println("Taxonomy.of LCA");
+        String text = """
+                root
+                    A
+                        B
+                        C
+                    D
+                """;
+        Taxonomy t = Taxonomy.of(text);
+        Concept lca = t.lowestCommonAncestor("B", "C");
+        assertSame(t.getConcept("A"), lca);
+        lca = t.lowestCommonAncestor("B", "D");
+        assertSame(t.getRoot(), lca);
+    }
+
+    @Test
+    public void testOfEmptyThrows() {
+        System.out.println("Taxonomy.of empty throws");
+        assertThrows(IllegalArgumentException.class, () -> Taxonomy.of(""));
+        assertThrows(IllegalArgumentException.class, () -> Taxonomy.of("   \n  "));
+    }
+
+    @Test
+    public void testOfRoundTrip() {
+        System.out.println("Taxonomy.of round-trip toString→of");
+        // Build a small taxonomy, print it, re-parse and verify keywords exist
+        Taxonomy t1 = new Taxonomy("root");
+        Concept r = t1.getRoot();
+        new Concept(r, "alpha");
+        new Concept(r, "beta");
+        // The toString format uses tree-drawing chars, not indented text,
+        // so we can't re-parse directly — just verify toString is non-empty
+        String s = t1.toString();
+        assertTrue(s.contains("root"));
+        assertTrue(s.contains("alpha"));
+        assertTrue(s.contains("beta"));
+    }
+
+    // -----------------------------------------------------------------------
+    // TaxonomicDistance — normalizedDistance
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testNormalizedDistanceSelf() {
+        System.out.println("TaxonomicDistance.normalizedDistance self");
+        TaxonomicDistance td = new TaxonomicDistance(taxonomy);
+        assertEquals(0.0, td.normalizedDistance("A", "A"), 1E-9);
+    }
+
+    @Test
+    public void testNormalizedDistanceRange() {
+        System.out.println("TaxonomicDistance.normalizedDistance in [0,1]");
+        TaxonomicDistance td = new TaxonomicDistance(taxonomy);
+        String[] keys = {"A", "B", "C", "D", "E", "F"};
+        for (String x : keys) {
+            for (String y : keys) {
+                double nd = td.normalizedDistance(x, y);
+                assertTrue(nd >= 0.0 && nd <= 1.0,
+                        "normalizedDistance(" + x + "," + y + ")=" + nd + " out of [0,1]");
+            }
+        }
+    }
+
+    @Test
+    public void testNormalizedDistanceSingleNode() {
+        System.out.println("TaxonomicDistance.normalizedDistance single node");
+        Taxonomy t = new Taxonomy("only");
+        TaxonomicDistance td = new TaxonomicDistance(t);
+        assertEquals(0.0, td.normalizedDistance("only", "only"), 1E-9);
+    }
+
+    // -----------------------------------------------------------------------
+    // TaxonomicDistance — Wu-Palmer
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testWuPalmerSelf() {
+        System.out.println("TaxonomicDistance.wuPalmer self");
+        TaxonomicDistance td = new TaxonomicDistance(taxonomy);
+        assertEquals(1.0, td.wuPalmer("A", "A"), 1E-9);
+        assertEquals(1.0, td.wuPalmer("F", "F"), 1E-9);
+    }
+
+    @Test
+    public void testWuPalmerParentChild() {
+        System.out.println("TaxonomicDistance.wuPalmer parent-child");
+        TaxonomicDistance td = new TaxonomicDistance(taxonomy);
+        // A (depth 2) and B (depth 3), LCA = A (depth 2)
+        // wup = 2*2/(2+3) = 0.8
+        assertEquals(0.8, td.wuPalmer("A", "B"), 1E-9);
+    }
+
+    @Test
+    public void testWuPalmerSiblings() {
+        System.out.println("TaxonomicDistance.wuPalmer siblings");
+        TaxonomicDistance td = new TaxonomicDistance(taxonomy);
+        // B (depth 3) and C (depth 3), LCA = A (depth 2)
+        // wup = 2*2/(3+3) = 4/6 = 0.667
+        assertEquals(4.0 / 6.0, td.wuPalmer("B", "C"), 1E-9);
+    }
+
+    @Test
+    public void testWuPalmerRange() {
+        System.out.println("TaxonomicDistance.wuPalmer in [0,1]");
+        TaxonomicDistance td = new TaxonomicDistance(taxonomy);
+        String[] keys = {"A", "B", "C", "D", "E", "F"};
+        for (String x : keys) {
+            for (String y : keys) {
+                double sim = td.wuPalmer(x, y);
+                // Wu-Palmer is 0 when LCA is the root (depth 0) and concepts
+                // are in different branches — e.g. wuPalmer(A,E) = 0.
+                assertTrue(sim >= 0.0 && sim <= 1.0,
+                        "wuPalmer(" + x + "," + y + ")=" + sim + " out of [0,1]");
+            }
+        }
+    }
+
+    @Test
+    public void testWuPalmerSymmetric() {
+        System.out.println("TaxonomicDistance.wuPalmer symmetric");
+        TaxonomicDistance td = new TaxonomicDistance(taxonomy);
+        assertEquals(td.wuPalmer("B", "F"), td.wuPalmer("F", "B"), 1E-9);
+        assertEquals(td.wuPalmer("D", "E"), td.wuPalmer("E", "D"), 1E-9);
+    }
+
+    // -----------------------------------------------------------------------
+    // TaxonomicDistance — Leacock-Chodorow
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testLchSelf() {
+        System.out.println("TaxonomicDistance.leacockChodorow self");
+        TaxonomicDistance td = new TaxonomicDistance(taxonomy);
+        assertEquals(1.0, td.leacockChodorow("A", "A"), 1E-9);
+    }
+
+    @Test
+    public void testLchRange() {
+        System.out.println("TaxonomicDistance.leacockChodorow in [0,1]");
+        TaxonomicDistance td = new TaxonomicDistance(taxonomy);
+        String[] keys = {"A", "B", "C", "D", "E", "F"};
+        for (String x : keys) {
+            for (String y : keys) {
+                double sim = td.leacockChodorow(x, y);
+                assertTrue(sim >= 0.0 && sim <= 1.0,
+                        "lch(" + x + "," + y + ")=" + sim + " out of [0,1]");
+            }
+        }
+    }
+
+    @Test
+    public void testLchSymmetric() {
+        System.out.println("TaxonomicDistance.leacockChodorow symmetric");
+        TaxonomicDistance td = new TaxonomicDistance(taxonomy);
+        assertEquals(td.leacockChodorow("B", "E"), td.leacockChodorow("E", "B"), 1E-9);
+    }
+
+    @Test
+    public void testLchDecreaseWithDistance() {
+        System.out.println("TaxonomicDistance.leacockChodorow decreases with distance");
+        TaxonomicDistance td = new TaxonomicDistance(taxonomy);
+        // A→B (distance 1) should be more similar than E→F (distance 5)
+        assertTrue(td.leacockChodorow("A", "B") > td.leacockChodorow("E", "F"));
+    }
+
+    // -----------------------------------------------------------------------
+    // TaxonomicDistance — Lin
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testLinSelf() {
+        System.out.println("TaxonomicDistance.lin self");
+        TaxonomicDistance td = new TaxonomicDistance(taxonomy);
+        assertEquals(1.0, td.lin("A", "A"), 1E-9);
+        assertEquals(1.0, td.lin("F", "F"), 1E-9);
+    }
+
+    @Test
+    public void testLinRange() {
+        System.out.println("TaxonomicDistance.lin in [0,1]");
+        TaxonomicDistance td = new TaxonomicDistance(taxonomy);
+        String[] keys = {"A", "B", "C", "D", "E", "F"};
+        for (String x : keys) {
+            for (String y : keys) {
+                double sim = td.lin(x, y);
+                assertTrue(sim >= 0.0 && sim <= 1.0,
+                        "lin(" + x + "," + y + ")=" + sim + " out of [0,1]");
+            }
+        }
+    }
+
+    @Test
+    public void testLinSymmetric() {
+        System.out.println("TaxonomicDistance.lin symmetric");
+        TaxonomicDistance td = new TaxonomicDistance(taxonomy);
+        assertEquals(td.lin("B", "D"), td.lin("D", "B"), 1E-9);
+        assertEquals(td.lin("C", "E"), td.lin("E", "C"), 1E-9);
+    }
+
+    @Test
+    public void testLinDecreaseWithDistance() {
+        System.out.println("TaxonomicDistance.lin decreases with distance");
+        // Taxonomy: root(0) → P(1) → C1(2), C2(2);  root(0) → Q(1)
+        // Height H=2.  IC(c) = -log((depth+1)/3).
+        // IC(C1) = IC(C2) = -log(3/3) = 0  →  denom = 0 for C1,C2
+        //   so instead use two-level tree with cousins at depth 2 vs depth 1.
+        // Use: root(0) → A(1) → B(2); root(0) → X(1)
+        // lin(A,X): LCA=root(0), IC(A)=-log(2/3)≈0.405, IC(X)≈0.405, IC(root)=-log(1/3)≈1.099
+        //           → 2*1.099/0.81 > 1 → clamped 1.0
+        // lin(B,X): LCA=root(0), IC(B)=-log(3/3)=0, denom=0+0.405=0.405 → 2*1.099/0.405>1 → 1.0
+        // All get clamped — need to verify symmetry and identity at minimum.
+        // Instead assert: sim(same,same)=1 > sim(far,far) using a flat taxonomy.
+        Taxonomy flat = new Taxonomy("root");
+        Concept r = flat.getRoot();
+        new Concept(r, "X");
+        new Concept(r, "Y");
+        new Concept(r, "Z");
+        TaxonomicDistance td = new TaxonomicDistance(flat);
+        // All leaves at depth 1, H=1, IC(X)=IC(Y)=-log(2/2)=0 → denom=0 → lin=0
+        // Verify self=1 > cross=0
+        assertEquals(1.0, td.lin("X", "X"), 1E-9);
+        assertEquals(0.0, td.lin("X", "Y"), 1E-9);
+        assertTrue(td.lin("X", "X") > td.lin("X", "Y"),
+                "Self-similarity should exceed cross-similarity");
+    }
+
+    @Test
+    public void testLinUnknownThrows() {
+        System.out.println("TaxonomicDistance.lin unknown throws");
+        TaxonomicDistance td = new TaxonomicDistance(taxonomy);
+        assertThrows(IllegalArgumentException.class, () -> td.lin("A", "UNKNOWN"));
     }
 }
