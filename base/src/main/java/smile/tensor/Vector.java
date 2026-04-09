@@ -345,7 +345,7 @@ public abstract class Vector extends DenseMatrix {
      */
     public double max() {
         int length = size();
-        double max = Double.MIN_VALUE;
+        double max = -Double.MAX_VALUE;
         for (int i = 0; i < length; i++) {
             max = Math.max(max, get(i));
         }
@@ -372,6 +372,30 @@ public abstract class Vector extends DenseMatrix {
     public double mean() {
         int length = size();
         return length > 0 ? sum() / length : 0;
+    }
+
+    /**
+     * Returns the sample variance of the elements (denominator n-1).
+     * @return the sample variance.
+     */
+    public double variance() {
+        int length = size();
+        if (length < 2) return 0.0;
+        double mu = mean();
+        double sumsq = 0.0;
+        for (int i = 0; i < length; i++) {
+            double d = get(i) - mu;
+            sumsq += d * d;
+        }
+        return sumsq / (length - 1);
+    }
+
+    /**
+     * Returns the sample standard deviation of the elements (denominator n-1).
+     * @return the sample standard deviation.
+     */
+    public double sd() {
+        return Math.sqrt(variance());
     }
 
     /**
