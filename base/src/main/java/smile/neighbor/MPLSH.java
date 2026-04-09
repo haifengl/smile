@@ -169,8 +169,10 @@ public class MPLSH <E> extends LSH<E> {
         int index = -1;
         double nearest = Double.MAX_VALUE;
 
-        Set<Integer> candidates = getCandidates(q, recall, T);
-        for (int i : candidates) {
+        IntArrayList candidates = getCandidates(q, recall, T);
+        int n = candidates.size();
+        for (int ci = 0; ci < n; ci++) {
+            int i = candidates.get(ci);
             double[] x = keys.get(i);
             if (q != x) {
                 double distance = MathEx.distance(q, x);
@@ -210,12 +212,14 @@ public class MPLSH <E> extends LSH<E> {
             throw new IllegalArgumentException("Invalid k: " + k);
         }
 
-        Set<Integer> candidates = getCandidates(q, recall, T);
-        k = Math.min(k, candidates.size());
+        IntArrayList candidates = getCandidates(q, recall, T);
+        int nc = Math.min(k, candidates.size());
 
-        HeapSelect<Neighbor<double[], E>> heap = new HeapSelect<>(Neighbor.class, k);
+        HeapSelect<Neighbor<double[], E>> heap = new HeapSelect<>(Neighbor.class, nc);
 
-        for (int index : candidates) {
+        int n = candidates.size();
+        for (int ci = 0; ci < n; ci++) {
+            int index = candidates.get(ci);
             double[] key = keys.get(index);
             if (q != key) {
                 double distance = MathEx.distance(q, key);
@@ -229,7 +233,7 @@ public class MPLSH <E> extends LSH<E> {
 
     @Override
     public void search(double[] q, double radius, List<Neighbor<double[], E>> neighbors) {
-        if (model == null) super.search(q,radius, neighbors);
+        if (model == null) super.search(q, radius, neighbors);
         else search(q, radius, neighbors, 0.95, 100);
     }
 
@@ -252,8 +256,10 @@ public class MPLSH <E> extends LSH<E> {
             throw new IllegalArgumentException("Invalid recall: " + recall);
         }
 
-        Set<Integer> candidates = getCandidates(q, recall, T);
-        for (int index : candidates) {
+        IntArrayList candidates = getCandidates(q, recall, T);
+        int n = candidates.size();
+        for (int ci = 0; ci < n; ci++) {
+            int index = candidates.get(ci);
             double[] key = keys.get(index);
             if (q != key) {
                 double distance = MathEx.distance(q, key);
@@ -265,21 +271,32 @@ public class MPLSH <E> extends LSH<E> {
     }
 
     /**
-     * Returns the nearest neighbor candidates.
-     * @return Indices of Candidates
+     * Returns the unique nearest neighbor candidate indices from multiple probe sequences.
+     * Uses a {@link BitSet} for O(1) no-boxing duplicate detection.
+     * @param q the query point.
+     * @param recall the expected recall rate.
+     * @param T the maximum number of probes.
+     * @return deduplicated candidate indices.
      */
-    private Set<Integer> getCandidates(double[] q, double recall, int T) {
+    private IntArrayList getCandidates(double[] q, double recall, int T) {
         double alpha = 1 - Math.pow(1 - recall, 1.0 / hash.size());
 
-        Set<Integer> candidates = new LinkedHashSet<>();
+        BitSet seen = new BitSet(keys.size());
+        IntArrayList candidates = new IntArrayList();
         for (int i = 0; i < hash.size(); i++) {
             IntArrayList buckets = model.get(i).getProbeSequence(q, alpha, T);
-            for (int j = 0; j < buckets.size(); j++) {
+            int nb = buckets.size();
+            for (int j = 0; j < nb; j++) {
                 Bucket bin = hash.get(i).get(buckets.get(j));
                 if (bin != null) {
                     IntArrayList points = bin.points();
-                    for (int l = 0; l < points.size(); l++) {
-                        candidates.add(points.get(l));
+                    int np = points.size();
+                    for (int l = 0; l < np; l++) {
+                        int idx = points.get(l);
+                        if (!seen.get(idx)) {
+                            seen.set(idx);
+                            candidates.add(idx);
+                        }
                     }
                 }
             }
