@@ -58,4 +58,41 @@ public enum Diag {
      * @return the value for LAPACK.
      */
     public byte lapack() { return lapack; }
+
+    /**
+     * Returns a human-readable description of this diagonal type.
+     * @return a human-readable description.
+     */
+    public String description() {
+        return switch (this) {
+            case NON_UNIT -> "Non-unit triangular";
+            case UNIT     -> "Unit triangular (diagonal = 1, not stored)";
+        };
+    }
+
+    /**
+     * Returns the {@code Diag} constant corresponding to the given BLAS integer value.
+     * @param value the BLAS integer value.
+     * @return the matching {@code Diag} constant.
+     * @throws IllegalArgumentException if the value does not match any constant.
+     */
+    public static Diag fromBlas(int value) {
+        for (Diag d : values()) {
+            if (d.blas == value) return d;
+        }
+        throw new IllegalArgumentException("Unknown BLAS Diag value: " + value);
+    }
+
+    /**
+     * Returns the {@code Diag} constant corresponding to the given LAPACK byte value.
+     * @param value the LAPACK byte value ({@code 'N'} or {@code 'U'}).
+     * @return the matching {@code Diag} constant.
+     * @throws IllegalArgumentException if the value does not match any constant.
+     */
+    public static Diag fromLapack(byte value) {
+        for (Diag d : values()) {
+            if (d.lapack == value) return d;
+        }
+        throw new IllegalArgumentException("Unknown LAPACK Diag value: " + (char) value);
+    }
 }

@@ -16,11 +16,19 @@
  */
 package smile.linalg;
 
-/** The option if computing eigen vectors. */
+/**
+ * The option controlling whether eigenvectors are computed by LAPACK
+ * eigenvalue routines (e.g., {@code dgeev}, {@code dsyevd}).
+ *
+ * <ul>
+ *   <li>{@link #NO_VECTORS} — only eigenvalues are computed (faster, less memory).</li>
+ *   <li>{@link #VECTORS}    — both eigenvalues and eigenvectors are computed.</li>
+ * </ul>
+ */
 public enum EVDJob {
     /** Eigenvalues only are computed. */
     NO_VECTORS((byte) 'N'),
-    /** Both eigen values and vectors are computed. */
+    /** Both eigenvalues and eigenvectors are computed. */
     VECTORS((byte) 'V');
 
     /** Byte value passed to LAPACK. */
@@ -36,4 +44,37 @@ public enum EVDJob {
      * @return the byte value for LAPACK.
      */
     public byte lapack() { return lapack; }
+
+    /**
+     * Returns a human-readable description of this job option.
+     * @return a human-readable description.
+     */
+    public String description() {
+        return switch (this) {
+            case NO_VECTORS -> "Eigenvalues only";
+            case VECTORS    -> "Eigenvalues and eigenvectors";
+        };
+    }
+
+    /**
+     * Returns the {@code EVDJob} constant corresponding to the given LAPACK byte value.
+     * @param value the LAPACK byte value ({@code 'N'} or {@code 'V'}).
+     * @return the matching {@code EVDJob} constant.
+     * @throws IllegalArgumentException if the value does not match any constant.
+     */
+    public static EVDJob fromLapack(byte value) {
+        for (EVDJob j : values()) {
+            if (j.lapack == value) return j;
+        }
+        throw new IllegalArgumentException("Unknown LAPACK EVDJob value: " + (char) value);
+    }
+
+    /**
+     * Returns the appropriate {@code EVDJob} for a boolean flag.
+     * @param vectors {@code true} to compute eigenvectors, {@code false} for eigenvalues only.
+     * @return {@link #VECTORS} or {@link #NO_VECTORS}.
+     */
+    public static EVDJob of(boolean vectors) {
+        return vectors ? VECTORS : NO_VECTORS;
+    }
 }

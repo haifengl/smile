@@ -17,16 +17,21 @@
 package smile.linalg;
 
 /**
- * The flag if the symmetric  matrix A appears on the left or right
- * in the matrix-matrix operation.
+ * The side on which a symmetric matrix appears in a matrix-matrix operation.
+ *
+ * <p>Used by BLAS routines such as {@code dsymm} / {@code ssymm}:
+ * <ul>
+ *   <li>{@link #LEFT}  — the symmetric matrix multiplies on the left:  {@code C := alpha*A*B + beta*C}</li>
+ *   <li>{@link #RIGHT} — the symmetric matrix multiplies on the right: {@code C := alpha*B*A + beta*C}</li>
+ * </ul>
  */
 public enum Side {
-    /** A * B */
+    /** Symmetric matrix A appears on the left: {@code C = A * B}. */
     LEFT (141, (byte) 'L'),
-    /** B * A */
+    /** Symmetric matrix A appears on the right: {@code C = B * A}. */
     RIGHT(142, (byte) 'R');
 
-    /** Byte value passed to BLAS. */
+    /** Integer value passed to CBLAS. */
     private final int blas;
     /** Byte value passed to LAPACK. */
     private final byte lapack;
@@ -38,14 +43,51 @@ public enum Side {
     }
 
     /**
-     * Returns the int value for BLAS.
-     * @return the int value for BLAS.
+     * Returns the integer value for CBLAS.
+     * @return the CBLAS integer value.
      */
     public int blas() { return blas; }
 
     /**
      * Returns the byte value for LAPACK.
-     * @return the byte value for LAPACK.
+     * @return the LAPACK byte value.
      */
     public byte lapack() { return lapack; }
+
+    /**
+     * Returns a human-readable description of this side option.
+     * @return a human-readable description.
+     */
+    public String description() {
+        return switch (this) {
+            case LEFT  -> "Symmetric matrix on the left: C = alpha*A*B + beta*C";
+            case RIGHT -> "Symmetric matrix on the right: C = alpha*B*A + beta*C";
+        };
+    }
+
+    /**
+     * Returns the {@code Side} constant corresponding to the given CBLAS integer value.
+     * @param value the CBLAS integer value ({@code 141} or {@code 142}).
+     * @return the matching {@code Side} constant.
+     * @throws IllegalArgumentException if the value does not match any constant.
+     */
+    public static Side fromBlas(int value) {
+        for (Side s : values()) {
+            if (s.blas == value) return s;
+        }
+        throw new IllegalArgumentException("Unknown CBLAS Side value: " + value);
+    }
+
+    /**
+     * Returns the {@code Side} constant corresponding to the given LAPACK byte value.
+     * @param value the LAPACK byte value ({@code 'L'} or {@code 'R'}).
+     * @return the matching {@code Side} constant.
+     * @throws IllegalArgumentException if the value does not match any constant.
+     */
+    public static Side fromLapack(byte value) {
+        for (Side s : values()) {
+            if (s.lapack == value) return s;
+        }
+        throw new IllegalArgumentException("Unknown LAPACK Side value: " + (char) value);
+    }
 }
