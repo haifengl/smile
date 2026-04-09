@@ -25,4 +25,4 @@
  *
  * @author Haifeng Li
  */
-package smile.taxonomy;
+package smile.nlp.taxonomy;
