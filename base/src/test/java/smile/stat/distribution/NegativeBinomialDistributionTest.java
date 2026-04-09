@@ -150,4 +150,19 @@ public class NegativeBinomialDistributionTest {
         assertEquals(22, instance.quantile(0.99), 1E-7);
         assertEquals(30, instance.quantile(0.999), 1E-7);
     }
+
+    /**
+     * Test MOM fit of NegativeBinomialDistribution.
+     */
+    @Test
+    public void testFit() {
+        System.out.println("NegativeBinomialDistribution fit");
+        smile.math.MathEx.setSeed(19650218);
+        NegativeBinomialDistribution instance = new NegativeBinomialDistribution(3.0, 0.3);
+        int[] data = instance.randi(2000);
+        NegativeBinomialDistribution est = NegativeBinomialDistribution.fit(data);
+        assertEquals(3.0, est.r, 0.5);
+        assertEquals(0.3, est.p, 0.05);
+    }
 }
+

@@ -80,11 +80,23 @@ public class TDistribution implements Distribution {
 
     @Override
     public double variance() {
+        if (nu == 1) {
+            throw new UnsupportedOperationException("Variance is undefined for t-distribution with nu = 1");
+        }
+        if (nu == 2) {
+            return Double.POSITIVE_INFINITY;
+        }
         return nu / (nu - 2.0);
     }
 
     @Override
     public double sd() {
+        if (nu == 1) {
+            throw new UnsupportedOperationException("SD is undefined for t-distribution with nu = 1");
+        }
+        if (nu == 2) {
+            return Double.POSITIVE_INFINITY;
+        }
         return Math.sqrt(nu / (nu - 2.0));
     }
 

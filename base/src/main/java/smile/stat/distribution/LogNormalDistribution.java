@@ -64,7 +64,7 @@ public class LogNormalDistribution implements Distribution {
         this.sigma = sigma;
 
         mean = Math.exp(mu + sigma * sigma / 2);
-        variance = (Math.exp(mu * mu) - 1) * Math.exp(2 * mu + sigma * sigma);
+        variance = (Math.exp(sigma * sigma) - 1) * Math.exp(2 * mu + sigma * sigma);
         entropy = 0.5 + 0.5 * Math.log(2 * Math.PI * sigma * sigma) + mu;
     }
 
@@ -138,7 +138,15 @@ public class LogNormalDistribution implements Distribution {
 
     @Override
     public double logp(double x) {
-        return Math.log(p(x));
+        if (x < 0.0) {
+            throw new IllegalArgumentException("Invalid x: " + x);
+        }
+        if (x == 0.0) {
+            return Double.NEGATIVE_INFINITY;
+        }
+        // log p(x) = -log(x) - log(sigma) - 0.5*log(2π) - 0.5*((log(x)-mu)/sigma)^2
+        double t = (Math.log(x) - mu) / sigma;
+        return -Math.log(x) - Math.log(sigma) - 0.9189385332046728 - 0.5 * t * t;
     }
 
     @Override

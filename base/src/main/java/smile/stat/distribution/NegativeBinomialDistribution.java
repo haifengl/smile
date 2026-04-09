@@ -17,7 +17,7 @@
 package smile.stat.distribution;
 
 import java.io.Serial;
-
+import smile.math.MathEx;
 import static smile.math.MathEx.factorial;
 import static smile.math.MathEx.lfactorial;
 import static smile.math.special.Beta.regularizedIncompleteBetaFunction;
@@ -82,6 +82,32 @@ public class NegativeBinomialDistribution extends DiscreteDistribution {
 
         this.p = p;
         this.r = r;
+    }
+
+    /**
+     * Estimates the distribution parameters by method of moments.
+     * @param data the training data (non-negative integer values).
+     * @return the distribution.
+     */
+    public static NegativeBinomialDistribution fit(int[] data) {
+        for (int d : data) {
+            if (d < 0) {
+                throw new IllegalArgumentException("Samples contain negative values.");
+            }
+        }
+
+        double mean = MathEx.mean(data);
+        double var = MathEx.var(data);
+
+        if (var <= mean) {
+            throw new IllegalArgumentException("Sample variance must exceed sample mean for Negative Binomial distribution.");
+        }
+
+        // Method of moments: mean = r(1-p)/p, var = r(1-p)/p^2
+        // => p = mean/var, r = mean^2 / (var - mean)
+        double pEst = mean / var;
+        double rEst = mean * mean / (var - mean);
+        return new NegativeBinomialDistribution(rEst, pEst);
     }
 
     @Override
