@@ -135,14 +135,24 @@ public class CoverTreeEdgeTest {
     }
 
     @Test
-    public void testKnnSearchListDefault() {
+    public void testRangeSearchIntoList() {
         MathEx.setSeed(19650218);
         double[][] data = MathEx.randn(100, 4);
         CoverTree<double[], double[]> tree = CoverTree.of(data, MathEx::distance);
+        LinearSearch<double[], double[]> linear = LinearSearch.of(data, MathEx::distance);
 
-        List<Neighbor<double[], double[]>> list = new ArrayList<>();
-        tree.search(data[5], 5, list);
-        assertEquals(5, list.size());
+        // Use a fresh query point (not in dataset) with large radius to ensure hits
+        double[] q = MathEx.randn(1, 4)[0];
+        double radius = 2.0;
+        List<Neighbor<double[], double[]>> treeList   = new ArrayList<>();
+        List<Neighbor<double[], double[]>> linearList = new ArrayList<>();
+        tree.search(q, radius, treeList);
+        linear.search(q, radius, linearList);
+        assertEquals(linearList.size(), treeList.size());
+        assertFalse(treeList.isEmpty(), "Expected results within radius " + radius);
+        for (var n : treeList) {
+            assertTrue(n.distance() <= radius + 1e-9, "Result exceeds radius");
+        }
     }
 }
 

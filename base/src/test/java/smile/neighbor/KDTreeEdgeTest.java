@@ -142,14 +142,25 @@ public class KDTreeEdgeTest {
     }
 
     @Test
-    public void testKnnSearchListDefault() {
+    public void testRangeSearchIntoList() {
         MathEx.setSeed(19650218);
         double[][] data = MathEx.randn(100, 4);
         KDTree<double[]> tree = KDTree.of(data);
+        LinearSearch<double[], double[]> linear = LinearSearch.of(data, MathEx::distance);
 
-        List<Neighbor<double[], double[]>> list = new ArrayList<>();
-        tree.search(data[5], 5, list);
-        assertEquals(5, list.size());
+        // Use a fresh query point (not in dataset) with large radius to ensure hits
+        double[] q = MathEx.randn(1, 4)[0];
+        double radius = 2.0;
+        List<Neighbor<double[], double[]>> treeList   = new ArrayList<>();
+        List<Neighbor<double[], double[]>> linearList = new ArrayList<>();
+        tree.search(q, radius, treeList);
+        linear.search(q, radius, linearList);
+        // Range search into list must return same count as linear search
+        assertEquals(linearList.size(), treeList.size());
+        assertFalse(treeList.isEmpty(), "Expected results within radius " + radius);
+        for (var n : treeList) {
+            assertTrue(n.distance() <= radius + 1e-9, "Result exceeds radius");
+        }
     }
 
     @Test
