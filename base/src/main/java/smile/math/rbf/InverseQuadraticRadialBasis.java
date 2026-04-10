@@ -19,21 +19,23 @@ package smile.math.rbf;
 import java.io.Serial;
 
 /**
- * Multiquadric RBF. <code>&phi;(r) = (r<sup>2</sup> + r<sup>2</sup><sub>0</sub>)<sup>1/2</sup></code>
- * where r<sub>0</sub> is a scale factor. Multiquadrics are said to be less
- * sensitive to the choice of r<sub>0</sub> than som other functional forms.
+ * Inverse quadratic RBF.
+ * <p>
+ *     &phi;(r) = 1 / (1 + (r / r<sub>0</sub>)<sup>2</sup>)
+ * <p>
+ * where r<sub>0</sub> is a scale factor. The inverse quadratic is a
+ * completely monotone function, making it a valid positive-definite kernel.
+ * Unlike the Gaussian, it has heavier tails, which can be advantageous
+ * for capturing long-range correlations. It also has the property that
+ * &phi;(0) = 1 and &phi;(r) → 0 as r → ∞.
  * <p>
  * In general, r<sub>0</sub> should be larger than the typical separation of
  * points but smaller than the "outer scale" or feature size of the function
- * to interplate. There can be several orders of magnitude difference between
- * the interpolation accuracy with a good choice for r<sub>0</sub>, versus a
- * poor choice, so it is definitely worth some experimentation. One way to
- * experiment is to construct an RBF interpolator omitting one data point
- * at a time and measuring the interpolation error at the omitted point.
+ * to interpolate.
  *
  * @author Haifeng Li
  */
-public class MultiquadricRadialBasis implements RadialBasisFunction {
+public class InverseQuadraticRadialBasis implements RadialBasisFunction {
     @Serial
     private static final long serialVersionUID = 1L;
 
@@ -43,14 +45,9 @@ public class MultiquadricRadialBasis implements RadialBasisFunction {
     private final double r0;
 
     /**
-     * The square of scale factor (cached for performance).
-     */
-    private final double r02;
-
-    /**
      * Constructor. The default scale is 1.0.
      */
-    public MultiquadricRadialBasis() {
+    public InverseQuadraticRadialBasis() {
         this(1.0);
     }
 
@@ -58,12 +55,11 @@ public class MultiquadricRadialBasis implements RadialBasisFunction {
      * Constructor.
      * @param scale the scale parameter. Must be positive.
      */
-    public MultiquadricRadialBasis(double scale) {
+    public InverseQuadraticRadialBasis(double scale) {
         if (scale <= 0) {
             throw new IllegalArgumentException("scale is not positive: " + scale);
         }
         r0 = scale;
-        r02 = scale * scale;
     }
 
     /**
@@ -76,11 +72,13 @@ public class MultiquadricRadialBasis implements RadialBasisFunction {
 
     @Override
     public double f(double r) {
-        return Math.sqrt(r * r + r02);
+        double x = r / r0;
+        return 1.0 / (1.0 + x * x);
     }
 
     @Override
     public String toString() {
-        return String.format("MultiquadricRadialBasis(r0 = %.4f)", r0);
+        return String.format("InverseQuadraticRadialBasis(r0 = %.4f)", r0);
     }
 }
+

@@ -61,10 +61,21 @@ public class GaussianRadialBasis implements RadialBasisFunction {
     /**
      * Constructor.
      *
-     * @param scale the scale parameter.
+     * @param scale the scale parameter. Must be positive.
      */
     public GaussianRadialBasis(double scale) {
+        if (scale <= 0) {
+            throw new IllegalArgumentException("scale is not positive: " + scale);
+        }
         r0 = scale;
+    }
+
+    /**
+     * Returns the scale factor r0.
+     * @return the scale factor.
+     */
+    public double scale() {
+        return r0;
     }
 
     @Override
@@ -75,6 +86,6 @@ public class GaussianRadialBasis implements RadialBasisFunction {
 
     @Override
     public String toString() {
-        return String.format("Gaussian Radial Basis (r0 = %.4f)", r0);
+        return String.format("GaussianRadialBasis(r0 = %.4f)", r0);
     }
 }
