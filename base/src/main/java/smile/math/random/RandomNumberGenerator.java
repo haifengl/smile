@@ -71,4 +71,20 @@ public interface RandomNumberGenerator {
      * @param d the output random numbers.
      */
     void nextDoubles(double[] d);
+
+    /**
+     * Returns the next pseudorandom, Gaussian ("normally") distributed double
+     * value with mean 0.0 and standard deviation 1.0. Uses the Box-Muller
+     * transform on two uniform samples.
+     * @return a Gaussian-distributed random number.
+     */
+    default double nextGaussian() {
+        double u, v, s;
+        do {
+            u = 2.0 * nextDouble() - 1.0;
+            v = 2.0 * nextDouble() - 1.0;
+            s = u * u + v * v;
+        } while (s >= 1.0 || s == 0.0);
+        return u * Math.sqrt(-2.0 * Math.log(s) / s);
+    }
 }
