@@ -27,26 +27,38 @@ import java.text.ParseException;
  * @author Haifeng Li
  */
 public abstract class NumericalMeasure implements Measure {
-    /** For formatting and parsing numbers. */
-    private final NumberFormat format;
+    /**
+     * Factory to recreate the NumberFormat for each thread.
+     * {@link NumberFormat} is not thread-safe, so each thread gets its own
+     * copy via a {@link ThreadLocal}.
+     */
+    private final transient ThreadLocal<NumberFormat> localFormat;
 
     /**
      * Constructor.
-     * @param format the number format.
+     * @param format the prototype number format (used as a template per thread).
      */
     public NumericalMeasure(NumberFormat format) {
-        this.format = format;
+        this.localFormat = ThreadLocal.withInitial(() -> (NumberFormat) format.clone());
+    }
+
+    /**
+     * Returns the thread-local NumberFormat instance.
+     * @return the thread-local format.
+     */
+    protected NumberFormat format() {
+        return localFormat.get();
     }
 
     @Override
     public String toString(Object o) {
-        return format.format(o);
+        return format().format(o);
     }
 
     @Override
     public Number valueOf(String s) throws NumberFormatException {
         try {
-            return format.parse(s);
+            return format().parse(s);
         } catch (ParseException ex) {
             throw new NumberFormatException(ex.getMessage());
         }

@@ -197,10 +197,41 @@ public abstract class CategoricalMeasure implements Measure {
     /**
      * Returns the level string representation.
      * @param value the level value.
-     * @return the level string representation.
+     * @return the level string representation, or null if not found.
      */
     public String level(int value) {
         return value2level.get(value);
+    }
+
+    /**
+     * Returns true if this measure contains the given integer value.
+     * @param value the integer value to check.
+     * @return true if value is a valid level code.
+     */
+    public boolean contains(int value) {
+        return value2level.containsKey(value);
+    }
+
+    /**
+     * Returns true if this measure contains the given level string.
+     * @param level the level string to check.
+     * @return true if the level string is a valid level.
+     */
+    public boolean contains(String level) {
+        return level2value.containsKey(level);
+    }
+
+    /**
+     * Returns the ordinal index (0-based position in the levels array)
+     * of the given level string, or -1 if not found.
+     * @param level the level string.
+     * @return the index in the levels array, or -1 if not found.
+     */
+    public int indexOf(String level) {
+        for (int i = 0; i < levels.length; i++) {
+            if (levels[i].equals(level)) return i;
+        }
+        return -1;
     }
 
     /**
@@ -251,6 +282,7 @@ public abstract class CategoricalMeasure implements Measure {
 
     @Override
     public String toString(Object o) {
+        if (o == null) return "null";
         return level(((Number) o).intValue());
     }
 
@@ -264,7 +296,11 @@ public abstract class CategoricalMeasure implements Measure {
         if (o instanceof CategoricalMeasure measure) {
             return Arrays.equals(levels, measure.levels) && Arrays.equals(values, measure.values);
         }
-
         return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return 31 * Arrays.hashCode(levels) + Arrays.hashCode(values);
     }
 }
