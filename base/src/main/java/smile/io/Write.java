@@ -52,11 +52,10 @@ public interface Write {
      * @throws IOException when fails to write the stream.
      */
     static void object(Serializable o, Path path) throws IOException {
-        OutputStream file = Files.newOutputStream(path);
-        ObjectOutputStream out = new ObjectOutputStream(file);
-        out.writeObject(o);
-        out.close();
-        file.close();
+        try (OutputStream file = Files.newOutputStream(path);
+             ObjectOutputStream out = new ObjectOutputStream(file)) {
+            out.writeObject(o);
+        }
     }
 
     /**

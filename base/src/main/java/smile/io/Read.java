@@ -50,12 +50,10 @@ public interface Read {
      * @throws ClassNotFoundException when fails to load the class.
      */
     static Object object(Path path) throws IOException, ClassNotFoundException {
-        InputStream file = Files.newInputStream(path);
-        ObjectInputStream in = new ObjectInputStream(file);
-        Object o = in.readObject();
-        in.close();
-        file.close();
-        return o;
+        try (InputStream file = Files.newInputStream(path);
+             ObjectInputStream in = new ObjectInputStream(file)) {
+            return in.readObject();
+        }
     }
 
     /**
@@ -80,8 +78,17 @@ public interface Read {
      * @return the data frame.
      */
     static DataFrame data(String path, String format) throws Exception {
-        int dotIndex = path.lastIndexOf(".");
-        String ext = dotIndex < 0 ? "csv" : path.substring(dotIndex + 1);
+        // Derive extension from the last segment of the path only,
+        // so that URIs like "s3://bucket/file" are handled correctly.
+        String basename = path;
+        int slash = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
+        if (slash >= 0) basename = path.substring(slash + 1);
+        // Strip query / fragment if present
+        int query = basename.indexOf('?');
+        if (query >= 0) basename = basename.substring(0, query);
+
+        int dotIndex = basename.lastIndexOf('.');
+        String ext = dotIndex < 0 ? "csv" : basename.substring(dotIndex + 1);
         switch (ext) {
             case "dat":
             case "txt":
@@ -128,6 +135,7 @@ public interface Read {
      * @return the data frame.
      */
     static DataFrame csv(String path, String format) throws IOException, URISyntaxException {
+        if (format == null) return csv(path);
         CSVFormat.Builder formatBuilder = CSVFormat.Builder.create();
         for (String token : format.split(",")) {
             String[] option = token.split("=");
@@ -576,6 +584,9 @@ public interface Read {
                     }
 
                     int j = Integer.parseInt(pair[0]) - 1;
+                    if (j < 0) {
+                        throw new NumberFormatException("libsvm index must be >= 1, got: " + pair[0]);
+                    }
                     double x = Double.parseDouble(pair[1]);
                     row.set(j, x);
                 }
