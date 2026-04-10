@@ -17,6 +17,7 @@
 package smile.data.vector;
 
 import java.util.BitSet;
+import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import smile.data.measure.NumericalMeasure;
 import smile.data.type.DataTypes;
@@ -100,11 +101,17 @@ public class NullableBooleanVector extends NullablePrimitiveVector {
     }
 
     @Override
+    public DoubleStream doubleStream() {
+        return index().mapToDouble(i -> nullMask.get(i) ? Double.NaN : (vector.get(i) ? 1.0 : 0.0));
+    }
+
+    @Override
     public void set(int i, Object value) {
         if (value == null) {
             nullMask.set(i);
         } else if (value instanceof Boolean bool) {
             vector.set(i, bool);
+            nullMask.clear(i);
         } else {
             throw new IllegalArgumentException("Invalid value type: " + value.getClass());
         }

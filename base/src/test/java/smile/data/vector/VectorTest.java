@@ -440,7 +440,7 @@ public class VectorTest {
         assertEquals(40.0, v.sum(),    1e-10);
         assertEquals(2.0,  v.min(),    1e-10);
         assertEquals(9.0,  v.max(),    1e-10);
-        assertEquals(4.0,  v.median(), 1e-10);
+        assertEquals(5.0,  v.median(), 1e-10);
         assertTrue(v.var() > 0);
         assertTrue(v.stdev() > 0);
         assertTrue(v.q1() <= v.median());
@@ -742,7 +742,7 @@ public class VectorTest {
         var v = new NumberVector<>(new StructField("v", DataTypes.DecimalType),
                 new java.math.BigDecimal[]{java.math.BigDecimal.ONE, java.math.BigDecimal.TEN});
         assertEquals(2, v.size());
-        assertEquals(1.0, v.mean(), 1e-10);
+        assertEquals(5.5, v.mean(), 1e-10);
         assertEquals(10.0, v.max(), 1e-10);
     }
 
@@ -992,6 +992,322 @@ public class VectorTest {
         assertEquals(1, v.getNullCount());
         assertEquals(1L, v.getLong(0));
         assertTrue(v.isNullAt(1));
+    }
+
+    // =========================================================================
+    // Nullable vector statistics – nulls must be excluded
+    // =========================================================================
+
+    @Test
+    public void testNullableByteStatistics() {
+        System.out.println("NullableByteVector statistics (ignores nulls)");
+        var v = ValueVector.ofNullable("v", (byte) 2, null, (byte) 8);
+        // valid: 2, 8 → sum=10, mean=5
+        assertEquals(10.0, v.sum(),  1e-10);
+        assertEquals(5.0,  v.mean(), 1e-10);
+    }
+
+    @Test
+    public void testNullableShortStatistics() {
+        System.out.println("NullableShortVector statistics (ignores nulls)");
+        var v = ValueVector.ofNullable("v", (short) 4, null, (short) 6);
+        assertEquals(10.0, v.sum(),  1e-10);
+        assertEquals(5.0,  v.mean(), 1e-10);
+    }
+
+    @Test
+    public void testNullableLongStatistics() {
+        System.out.println("NullableLongVector statistics (ignores nulls)");
+        var v = ValueVector.ofNullable("v", 3L, null, 7L);
+        assertEquals(10.0, v.sum(),  1e-10);
+        assertEquals(5.0,  v.mean(), 1e-10);
+    }
+
+    @Test
+    public void testNullableFloatStatistics() {
+        System.out.println("NullableFloatVector statistics (ignores nulls)");
+        var v = ValueVector.ofNullable("v", 2.0f, null, 8.0f);
+        assertEquals(10.0, v.sum(),  1e-10);
+        assertEquals(5.0,  v.mean(), 1e-10);
+    }
+
+    @Test
+    public void testNullableDoubleStatistics() {
+        System.out.println("NullableDoubleVector statistics (ignores nulls)");
+        var v = ValueVector.ofNullable("v", 1.0, null, 3.0, null, 5.0);
+        assertEquals(9.0, v.sum(),  1e-10);
+        assertEquals(3.0, v.mean(), 1e-10);
+        assertEquals(1.0, v.min(),  1e-10);
+        assertEquals(5.0, v.max(),  1e-10);
+    }
+
+    // =========================================================================
+    // Nullable vector set() – must clear null bit
+    // =========================================================================
+
+    @Test
+    public void testNullableByteSetClearsNullBit() {
+        System.out.println("NullableByteVector.set clears null bit");
+        BitSet mask = new BitSet(3);
+        mask.set(1);
+        var v = new NullableByteVector("v", new byte[]{1, 0, 3}, mask);
+        assertTrue(v.isNullAt(1));
+        v.set(1, (byte) 42);
+        assertFalse(v.isNullAt(1));
+        assertEquals((byte) 42, v.getByte(1));
+    }
+
+    @Test
+    public void testNullableShortSetClearsNullBit() {
+        System.out.println("NullableShortVector.set clears null bit");
+        BitSet mask = new BitSet(2);
+        mask.set(0);
+        var v = new NullableShortVector("v", new short[]{0, 200}, mask);
+        assertTrue(v.isNullAt(0));
+        v.set(0, (short) 100);
+        assertFalse(v.isNullAt(0));
+        assertEquals((short) 100, v.getShort(0));
+    }
+
+    @Test
+    public void testNullableIntSetClearsNullBit() {
+        System.out.println("NullableIntVector.set clears null bit");
+        BitSet mask = new BitSet(2);
+        mask.set(0);
+        var v = new NullableIntVector("v", new int[]{0, 99}, mask);
+        assertTrue(v.isNullAt(0));
+        v.set(0, 55);
+        assertFalse(v.isNullAt(0));
+        assertEquals(55, v.getInt(0));
+    }
+
+    @Test
+    public void testNullableLongSetClearsNullBit() {
+        System.out.println("NullableLongVector.set clears null bit");
+        BitSet mask = new BitSet(2);
+        mask.set(1);
+        var v = new NullableLongVector("v", new long[]{1L, 0L}, mask);
+        assertTrue(v.isNullAt(1));
+        v.set(1, 99L);
+        assertFalse(v.isNullAt(1));
+        assertEquals(99L, v.getLong(1));
+    }
+
+    @Test
+    public void testNullableFloatSetClearsNullBit() {
+        System.out.println("NullableFloatVector.set clears null bit");
+        BitSet mask = new BitSet(2);
+        mask.set(0);
+        var v = new NullableFloatVector("v", new float[]{Float.NaN, 2.0f}, mask);
+        assertTrue(v.isNullAt(0));
+        v.set(0, 1.5f);
+        assertFalse(v.isNullAt(0));
+        assertEquals(1.5f, v.getFloat(0), 1e-6f);
+    }
+
+    @Test
+    public void testNullableDoubleSetClearsNullBit() {
+        System.out.println("NullableDoubleVector.set clears null bit");
+        BitSet mask = new BitSet(2);
+        mask.set(0);
+        var v = new NullableDoubleVector("v", new double[]{Double.NaN, 2.0}, mask);
+        assertTrue(v.isNullAt(0));
+        v.set(0, 3.14);
+        assertFalse(v.isNullAt(0));
+        assertEquals(3.14, v.getDouble(0), 1e-10);
+    }
+
+    @Test
+    public void testNullableBooleanSetClearsNullBit() {
+        System.out.println("NullableBooleanVector.set clears null bit");
+        BitSet mask = new BitSet(2);
+        mask.set(0);
+        var v = new NullableBooleanVector("v", new boolean[]{false, true}, mask);
+        assertTrue(v.isNullAt(0));
+        v.set(0, Boolean.TRUE);
+        assertFalse(v.isNullAt(0));
+        assertTrue(v.getBoolean(0));
+    }
+
+    // =========================================================================
+    // fillna – null-bit must be cleared for nullable vectors
+    // =========================================================================
+
+    @Test
+    public void testNullableIntFillna() {
+        System.out.println("NullableIntVector fillna clears null bit");
+        var v = ValueVector.ofNullable("v", 1, null, 3);
+        assertTrue(v.isNullAt(1));
+        v.fillna(0.0);
+        assertFalse(v.isNullAt(1));
+        assertEquals(0, v.getInt(1));
+        assertEquals(0, v.getNullCount());
+    }
+
+    @Test
+    public void testNullableShortFillna() {
+        System.out.println("NullableShortVector fillna clears null bit");
+        var v = ValueVector.ofNullable("v", (short) 10, null, (short) 30);
+        v.fillna(0.0);
+        assertFalse(v.isNullAt(1));
+        assertEquals(0, v.getShort(1));
+    }
+
+    @Test
+    public void testNullableByteFillna() {
+        System.out.println("NullableByteVector fillna clears null bit");
+        var v = ValueVector.ofNullable("v", (byte) 5, null, (byte) 15);
+        v.fillna(0.0);
+        assertFalse(v.isNullAt(1));
+        assertEquals(0, v.getByte(1));
+    }
+
+    @Test
+    public void testNullableLongFillna() {
+        System.out.println("NullableLongVector fillna clears null bit");
+        var v = ValueVector.ofNullable("v", 10L, null, 30L);
+        v.fillna(0.0);
+        assertFalse(v.isNullAt(1));
+        assertEquals(0L, v.getLong(1));
+    }
+
+    @Test
+    public void testNullableFloatFillna() {
+        System.out.println("NullableFloatVector fillna clears null bit");
+        BitSet mask = new BitSet(3);
+        mask.set(1);
+        var v = new NullableFloatVector("v", new float[]{1.0f, Float.NaN, 3.0f}, mask);
+        v.fillna(0.0f);
+        assertFalse(v.isNullAt(1));
+        assertEquals(0.0f, v.getFloat(1), 1e-6f);
+    }
+
+    // =========================================================================
+    // NullableBooleanVector statistics (nulls excluded via doubleStream NaN)
+    // =========================================================================
+
+    @Test
+    public void testNullableBooleanStatistics() {
+        System.out.println("NullableBooleanVector statistics (ignores nulls)");
+        // true=1, null, false=0, true=1 → valid: {1, 0, 1}, mean=2/3
+        BitSet mask = new BitSet(4);
+        mask.set(1);
+        var v = new NullableBooleanVector("v", new boolean[]{true, false, false, true}, mask);
+        assertEquals(2.0, v.sum(),  1e-10);
+        assertEquals(2.0/3, v.mean(), 1e-10);
+    }
+
+    // =========================================================================
+    // Nullable double stream returns NaN for null (intStream sentinel MIN_VALUE
+    // must NOT appear in doubleStream)
+    // =========================================================================
+
+    @Test
+    public void testNullableIntDoubleStreamNaN() {
+        System.out.println("NullableIntVector doubleStream returns NaN for null");
+        BitSet mask = new BitSet(3);
+        mask.set(1);
+        var v = new NullableIntVector("v", new int[]{1, 0, 3}, mask);
+        double[] arr = v.doubleStream().toArray();
+        assertEquals(1.0, arr[0], 1e-10);
+        assertTrue(Double.isNaN(arr[1]));
+        assertEquals(3.0, arr[2], 1e-10);
+    }
+
+    @Test
+    public void testNullableLongDoubleStreamNaN() {
+        System.out.println("NullableLongVector doubleStream returns NaN for null");
+        BitSet mask = new BitSet(2);
+        mask.set(0);
+        var v = new NullableLongVector("v", new long[]{0L, 42L}, mask);
+        double[] arr = v.doubleStream().toArray();
+        assertTrue(Double.isNaN(arr[0]));
+        assertEquals(42.0, arr[1], 1e-10);
+    }
+
+    @Test
+    public void testNullableByteDoubleStreamNaN() {
+        System.out.println("NullableByteVector doubleStream returns NaN for null");
+        BitSet mask = new BitSet(2);
+        mask.set(1);
+        var v = new NullableByteVector("v", new byte[]{5, 0}, mask);
+        double[] arr = v.doubleStream().toArray();
+        assertEquals(5.0, arr[0], 1e-10);
+        assertTrue(Double.isNaN(arr[1]));
+    }
+
+    @Test
+    public void testNullableShortDoubleStreamNaN() {
+        System.out.println("NullableShortVector doubleStream returns NaN for null");
+        BitSet mask = new BitSet(2);
+        mask.set(0);
+        var v = new NullableShortVector("v", new short[]{0, 7}, mask);
+        double[] arr = v.doubleStream().toArray();
+        assertTrue(Double.isNaN(arr[0]));
+        assertEquals(7.0, arr[1], 1e-10);
+    }
+
+    // =========================================================================
+    // IntVector get(Index) – must not autobox
+    // =========================================================================
+
+    @Test
+    public void testIntVectorGetIndexCorrect() {
+        System.out.println("IntVector get(Index) returns correct values");
+        var v = new IntVector("v", new int[]{10, 20, 30, 40, 50});
+        var s = v.get(Index.of(4, 2, 0));
+        assertEquals(3, s.size());
+        assertEquals(50, s.getInt(0));
+        assertEquals(30, s.getInt(1));
+        assertEquals(10, s.getInt(2));
+    }
+
+    // =========================================================================
+    // LongVector statistics
+    // =========================================================================
+
+    @Test
+    public void testLongVectorStatistics() {
+        System.out.println("LongVector statistics");
+        var v = new LongVector("v", new long[]{1L, 2L, 3L, 4L, 5L});
+        assertEquals(3.0,  v.mean(),   1e-10);
+        assertEquals(15.0, v.sum(),    1e-10);
+        assertEquals(1.0,  v.min(),    1e-10);
+        assertEquals(5.0,  v.max(),    1e-10);
+        assertEquals(3.0,  v.median(), 1e-10);
+    }
+
+    // =========================================================================
+    // FloatVector statistics
+    // =========================================================================
+
+    @Test
+    public void testFloatVectorStatistics() {
+        System.out.println("FloatVector statistics");
+        var v = new FloatVector("v", new float[]{1.0f, 2.0f, 3.0f, 4.0f, 5.0f});
+        assertEquals(3.0,  v.mean(),   1e-5);
+        assertEquals(15.0, v.sum(),    1e-5);
+        assertEquals(5.0,  v.max(),    1e-5);
+    }
+
+    // =========================================================================
+    // ShortVector / ByteVector statistics
+    // =========================================================================
+
+    @Test
+    public void testShortVectorStatistics() {
+        System.out.println("ShortVector statistics");
+        var v = new ShortVector("v", new short[]{2, 4, 6, 8, 10});
+        assertEquals(6.0,  v.mean(), 1e-10);
+        assertEquals(30.0, v.sum(),  1e-10);
+    }
+
+    @Test
+    public void testByteVectorStatistics() {
+        System.out.println("ByteVector statistics");
+        var v = new ByteVector("v", new byte[]{10, 20, 30});
+        assertEquals(20.0, v.mean(), 1e-10);
+        assertEquals(60.0, v.sum(),  1e-10);
     }
 }
 

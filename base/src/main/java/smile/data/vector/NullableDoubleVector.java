@@ -66,8 +66,9 @@ public class NullableDoubleVector extends NullablePrimitiveVector {
      */
     public void fillna(double value) {
         for (int i = 0; i < vector.length; i++) {
-            if (Double.isNaN(vector[i]) || Double.isInfinite(vector[i])) {
+            if (nullMask.get(i) || Double.isNaN(vector[i]) || Double.isInfinite(vector[i])) {
                 vector[i] = value;
+                nullMask.clear(i);
             }
         }
     }
@@ -93,6 +94,7 @@ public class NullableDoubleVector extends NullablePrimitiveVector {
             nullMask.set(i);
         } else if (value instanceof Number n) {
             vector[i] = n.doubleValue();
+            nullMask.clear(i);
         } else {
             throw new IllegalArgumentException("Invalid value type: " + value.getClass());
         }

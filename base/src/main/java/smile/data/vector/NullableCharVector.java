@@ -80,6 +80,7 @@ public class NullableCharVector extends NullablePrimitiveVector {
             nullMask.set(i);
         } else if (value instanceof Character c) {
             vector[i] = c;
+            nullMask.clear(i);
         } else {
             throw new IllegalArgumentException("Invalid value type: " + value.getClass());
         }
