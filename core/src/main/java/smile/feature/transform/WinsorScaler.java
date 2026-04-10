@@ -101,7 +101,7 @@ public interface WinsorScaler {
             double lo = agent.quantile(lower);
             double hi = agent.quantile(upper);
             double span = hi - lo;
-            double scale = MathEx.isZero(span) ? 1.0 : hi - lo;
+            double scale = MathEx.isZero(span) ? 1.0 : span;
 
             Function transform = new Function() {
                 @Override

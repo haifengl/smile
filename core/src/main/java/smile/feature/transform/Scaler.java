@@ -70,7 +70,7 @@ public interface Scaler {
             double lo = MathEx.min(vector);
             double hi = MathEx.max(vector);
             double span = hi - lo;
-            double scale = MathEx.isZero(span) ? 1.0 : hi - lo;
+            double scale = MathEx.isZero(span) ? 1.0 : span;
 
             Function transform = new Function() {
                 @Override
