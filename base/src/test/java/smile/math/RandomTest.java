@@ -312,4 +312,135 @@ public class RandomTest {
         assertEquals(first, rng.nextDouble(), 1E-15,
             "After setSeed reset, first value should match");
     }
+
+    @Test
+    public void testNextGaussianDistribution() {
+        System.out.println("nextGaussian distribution");
+        Random rng = new Random(SEED);
+        int n = 100_000;
+        double sum = 0.0, sumSq = 0.0;
+        for (int i = 0; i < n; i++) {
+            double v = rng.nextGaussian();
+            sum   += v;
+            sumSq += v * v;
+        }
+        double mean = sum / n;
+        double var  = sumSq / n - mean * mean;
+        assertEquals(0.0,  mean, 0.01, "mean out of range: " + mean);
+        assertEquals(1.0,  var,  0.02, "variance out of range: " + var);
+    }
+
+    @Test
+    public void testNextGaussianWithMuSigma() {
+        System.out.println("nextGaussian(mu, sigma)");
+        Random rng = new Random(SEED);
+        double mu = 5.0, sigma = 2.0;
+        int n = 100_000;
+        double sum = 0.0, sumSq = 0.0;
+        for (int i = 0; i < n; i++) {
+            double v = rng.nextGaussian(mu, sigma);
+            sum   += v;
+            sumSq += v * v;
+        }
+        double mean = sum / n;
+        assertEquals(mu, mean, 0.05, "mean far from mu: " + mean);
+        double var = sumSq / n - mean * mean;
+        assertEquals(sigma * sigma, var, 0.1, "variance far from sigma^2: " + var);
+    }
+
+    @Test
+    public void testNextGaussianCaching() {
+        System.out.println("nextGaussian spare value caching");
+        // Box-Muller generates two values; calling nextGaussian twice should
+        // use the cached spare the second time (reproducible from same seed).
+        Random rng1 = new Random(SEED);
+        double v1a = rng1.nextGaussian();
+        double v1b = rng1.nextGaussian();
+
+        Random rng2 = new Random(SEED);
+        double v2a = rng2.nextGaussian();
+        double v2b = rng2.nextGaussian();
+
+        assertEquals(v1a, v2a, 1E-15, "First Gaussian mismatch");
+        assertEquals(v1b, v2b, 1E-15, "Second Gaussian mismatch (cache miss)");
+        // The two values within the same pair come from the same U,V draw
+        // so they are unlikely to be equal.
+        assertNotEquals(v1a, v1b, "Both Gaussians should differ");
+    }
+
+    @Test
+    public void testNextGaussianResetAfterSetSeed() {
+        System.out.println("nextGaussian reset by setSeed");
+        Random rng = new Random(SEED);
+        double a = rng.nextGaussian();
+        // consume spare
+        double b = rng.nextGaussian();
+        // reset: spare should be cleared
+        rng.setSeed(SEED);
+        double c = rng.nextGaussian();
+        assertEquals(a, c, 1E-15, "After setSeed, nextGaussian should restart");
+    }
+
+    @Test
+    public void testSampleSizeAndDistinctness() {
+        System.out.println("sample size and distinctness");
+        Random rng = new Random(SEED);
+        int n = 100, k = 10;
+        int[] s = rng.sample(n, k);
+        assertEquals(k, s.length);
+        // all indices distinct
+        java.util.Set<Integer> seen = new HashSet<>();
+        for (int v : s) {
+            assertTrue(v >= 0 && v < n, "index out of range: " + v);
+            assertTrue(seen.add(v), "duplicate index: " + v);
+        }
+    }
+
+    @Test
+    public void testSampleZero() {
+        System.out.println("sample k=0");
+        Random rng = new Random(SEED);
+        int[] s = rng.sample(10, 0);
+        assertEquals(0, s.length);
+    }
+
+    @Test
+    public void testSampleAll() {
+        System.out.println("sample k=n");
+        Random rng = new Random(SEED);
+        int n = 15;
+        int[] s = rng.sample(n, n);
+        assertEquals(n, s.length);
+        Arrays.sort(s);
+        for (int i = 0; i < n; i++) assertEquals(i, s[i]);
+    }
+
+    @Test
+    public void testSampleInvalidThrows() {
+        System.out.println("sample invalid args");
+        Random rng = new Random(SEED);
+        assertThrows(IllegalArgumentException.class, () -> rng.sample(5, -1));
+        assertThrows(IllegalArgumentException.class, () -> rng.sample(5,  6));
+    }
+
+    @Test
+    public void testSampleUniformity() {
+        System.out.println("sample uniformity");
+        // For n=5, k=2: each of C(5,2)=10 pairs should appear ~equally often.
+        Random rng = new Random(SEED);
+        int n = 5, k = 2, trials = 100_000;
+        int[] counts = new int[n * n]; // index = a * n + b
+        for (int t = 0; t < trials; t++) {
+            int[] s = rng.sample(n, k);
+            Arrays.sort(s);
+            counts[s[0] * n + s[1]]++;
+        }
+        // Each of 10 distinct pairs should appear ~10000 times; allow ±5%
+        int[][] pairs = {{0,1},{0,2},{0,3},{0,4},{1,2},{1,3},{1,4},{2,3},{2,4},{3,4}};
+        for (int[] p : pairs) {
+            int c = counts[p[0] * n + p[1]];
+            assertEquals(10_000, c, 600,
+                "Pair (" + p[0] + "," + p[1] + ") count out of range: " + c);
+        }
+    }
 }

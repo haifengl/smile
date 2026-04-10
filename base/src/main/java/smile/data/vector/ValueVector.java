@@ -239,6 +239,29 @@ public interface ValueVector extends Serializable {
     }
 
     /**
+     * Returns whether each element is contained in values.
+     * @param values the set of integer values.
+     * @return whether each element is contained in values.
+     */
+    default boolean[] isin(int... values) {
+        java.util.BitSet set = new java.util.BitSet();
+        for (int v : values) {
+            if (v >= 0) set.set(v);
+        }
+        // Also handle negative values in a HashSet
+        Set<Integer> negSet = new HashSet<>();
+        for (int v : values) {
+            if (v < 0) negSet.add(v);
+        }
+        boolean[] result = new boolean[size()];
+        for (int i = 0; i < result.length; i++) {
+            int v = getInt(i);
+            result[i] = (v >= 0 && set.get(v)) || negSet.contains(v);
+        }
+        return result;
+    }
+
+    /**
      * Returns a stream consisting of the elements of this vector.
      * @return a stream consisting of the elements of this vector.
      */

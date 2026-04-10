@@ -116,4 +116,25 @@ public class SparseDatasetTest {
         assertEquals(0.0, sm.get(1, 1063), 1E-7);
         assertEquals(1.0, sm.get(3429, 6821), 1E-7);
     }
+
+    @Test
+    public void testNcolAutoExpansion() {
+        System.out.println("ncol auto expansion");
+        // Pass ncol=2 but data has entries at column index 5 → ncol should grow
+        smile.util.SparseArray row0 = new smile.util.SparseArray();
+        row0.append(0, 1.0);
+        row0.append(5, 2.0);   // column index 5 exceeds initial ncol=2
+
+        smile.util.SparseArray row1 = new smile.util.SparseArray();
+        row1.append(3, 3.0);
+
+        SparseDataset<Void> dataset = SparseDataset.of(
+                new smile.util.SparseArray[]{row0, row1}, 2 /*too small*/);
+
+        // ncol must have expanded to at least 6
+        assertTrue(dataset.ncol() >= 6);
+        assertEquals(1.0, dataset.get(0, 0), 1e-10);
+        assertEquals(2.0, dataset.get(0, 5), 1e-10);
+        assertEquals(3.0, dataset.get(1, 3), 1e-10);
+    }
 }
