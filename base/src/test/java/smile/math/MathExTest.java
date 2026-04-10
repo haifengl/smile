@@ -855,4 +855,130 @@ public class MathExTest {
         assertFalse(MathEx.isProbablePrime(100, 10));
         assertFalse(MathEx.isProbablePrime(999, 10));
     }
+
+    @Test
+    public void testSoftmaxFloat() {
+        System.out.println("softmax(float[])");
+        float[] x = {1.0f, 2.0f, 3.0f};
+        int argmax = MathEx.softmax(x);
+        assertEquals(2, argmax); // x[2]=3 is largest
+        // probabilities sum to 1
+        float sum = 0;
+        for (float v : x) sum += v;
+        assertEquals(1.0f, sum, 1E-5f);
+        // all probabilities positive
+        for (float v : x) assertTrue(v > 0);
+    }
+
+    @Test
+    public void testSoftmaxDouble() {
+        System.out.println("softmax(double[])");
+        double[] x = {1.0, 2.0, 3.0};
+        int argmax = MathEx.softmax(x);
+        assertEquals(2, argmax);
+        double sum = 0;
+        for (double v : x) sum += v;
+        assertEquals(1.0, sum, 1E-10);
+        for (double v : x) assertTrue(v > 0);
+    }
+
+    @Test
+    public void testSoftmaxInvalidK() {
+        System.out.println("softmax invalid k");
+        assertThrows(IllegalArgumentException.class, () -> MathEx.softmax(new double[]{1.0, 2.0}, 0));
+        assertThrows(IllegalArgumentException.class, () -> MathEx.softmax(new float[]{1.0f, 2.0f}, 0));
+    }
+
+    @Test
+    public void testSoftmaxPartial() {
+        System.out.println("softmax(double[], int k) partial");
+        double[] x = {3.0, 1.0, 2.0};
+        int argmax = MathEx.softmax(x, 2); // only first 2 elements
+        assertEquals(0, argmax); // x[0]=3 > x[1]=1
+        assertEquals(1.0, x[0] + x[1], 1E-10);
+    }
+
+    @Test
+    public void testFactorialExact() {
+        System.out.println("factorial exact lookup");
+        assertEquals(1.0, MathEx.factorial(0), 0);
+        assertEquals(1.0, MathEx.factorial(1), 0);
+        assertEquals(2.0, MathEx.factorial(2), 0);
+        assertEquals(6.0, MathEx.factorial(3), 0);
+        assertEquals(24.0, MathEx.factorial(4), 0);
+        assertEquals(3628800.0, MathEx.factorial(10), 0);
+        assertEquals(2432902008176640000.0, MathEx.factorial(20), 1.0);
+    }
+
+    @Test
+    public void testFactorialLargeN() {
+        System.out.println("factorial large n");
+        // n > 170 should return POSITIVE_INFINITY, not 0
+        assertEquals(Double.POSITIVE_INFINITY, MathEx.factorial(171));
+        assertEquals(Double.POSITIVE_INFINITY, MathEx.factorial(200));
+        // n in (20,170] should be finite and positive
+        assertTrue(Double.isFinite(MathEx.factorial(50)));
+        assertTrue(MathEx.factorial(50) > 0);
+    }
+
+    @Test
+    public void testLFactorial() {
+        System.out.println("lfactorial");
+        assertEquals(0.0, MathEx.lfactorial(0), 1E-15);
+        assertEquals(0.0, MathEx.lfactorial(1), 1E-15);
+        assertEquals(Math.log(2.0), MathEx.lfactorial(2), 1E-15);
+        assertEquals(Math.log(6.0), MathEx.lfactorial(3), 1E-14);
+        assertEquals(Math.log(24.0), MathEx.lfactorial(4), 1E-14);
+        // Large n: consistent with log(factorial(50))
+        assertEquals(Math.log(MathEx.factorial(50)), MathEx.lfactorial(50), 1E-8);
+    }
+
+    @Test
+    public void testDistanceWithMissingValues() {
+        System.out.println("distanceWithMissingValues");
+        double[] x = {1.0, Double.NaN, 3.0};
+        double[] y = {1.0, 2.0, Double.NaN};
+        // Only index 0 matches: d = sqrt(3 * 0 / 1) = 0
+        assertEquals(0.0, MathEx.distanceWithMissingValues(x, y), 1E-10);
+
+        double[] a = {1.0, 2.0};
+        double[] b = {4.0, 2.0};
+        // Both non-missing, d = sqrt(9) = 3
+        assertEquals(3.0, MathEx.distanceWithMissingValues(a, b), 1E-10);
+
+        // All missing -> Double.MAX_VALUE (not sqrt of it)
+        double[] allNaN1 = {Double.NaN, Double.NaN};
+        double[] allNaN2 = {Double.NaN, Double.NaN};
+        assertEquals(Double.MAX_VALUE, MathEx.distanceWithMissingValues(allNaN1, allNaN2));
+    }
+
+    @Test
+    public void testCovMatrixValidation() {
+        System.out.println("cov(double[][], double[]) validation");
+        double[][] data = {{1.0, 2.0}, {3.0, 4.0}, {5.0, 6.0}};
+        // mismatched mu length
+        assertThrows(IllegalArgumentException.class, () -> MathEx.cov(data, new double[]{1.0}));
+        // single row
+        assertThrows(IllegalArgumentException.class, () -> MathEx.cov(new double[][]{{1.0, 2.0}}, new double[]{1.0, 2.0}));
+    }
+
+    @Test
+    public void testEntropyNegative() {
+        System.out.println("entropy negative probability");
+        assertThrows(IllegalArgumentException.class, () -> MathEx.entropy(new double[]{0.5, -0.1, 0.6}));
+    }
+
+    @Test
+    public void testNorm1Float() {
+        System.out.println("norm1(float[]) double accumulation");
+        float[] x = {1.0f, 2.0f, 3.0f, 4.0f};
+        assertEquals(10.0f, MathEx.norm1(x), 1E-5f);
+    }
+
+    @Test
+    public void testNorm2Float() {
+        System.out.println("norm2(float[]) double accumulation");
+        float[] x = {3.0f, 4.0f};
+        assertEquals(5.0f, MathEx.norm2(x), 1E-5f);
+    }
 }
