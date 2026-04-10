@@ -31,7 +31,7 @@ import java.io.Serial;
  * the basis of the popular Student's t-tests for the statistical significance
  * of the difference between two sample means, and for confidence intervals
  * for the difference between two population means. The Student's
- * t-distribution is a special case of the generalised hyperbolic distribution.
+ * t-distribution is a special case of the generalized hyperbolic distribution.
  *
  * @author Haifeng Li
  */

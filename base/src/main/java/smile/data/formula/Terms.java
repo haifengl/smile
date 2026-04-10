@@ -80,7 +80,7 @@ public interface Terms {
             }
         }
 
-        Pattern regex = Pattern.compile("\\)(^(\\d+))?$");
+        Pattern regex = Pattern.compile("\\)(\\^(\\d+))?$");
         Matcher matcher = regex.matcher(name);
         if (name.startsWith("(") && matcher.find()) {
             String y = name.substring(1, matcher.start());
@@ -857,7 +857,7 @@ public interface Terms {
      * @return the {@code atan(x)} term.
      */
     static DoubleFunction atan(Term x) {
-        return new DoubleFunction("atan", x, Math::acos);
+        return new DoubleFunction("atan", x, Math::atan);
     }
 
     /**

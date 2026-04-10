@@ -56,7 +56,7 @@ public class LinearSearchTest {
     }
 
     /**
-     * Test of knn method when the data has only one elements
+     * Test of knn method when the data has only one element.
      */
     @Test
     public void testKnn1() {

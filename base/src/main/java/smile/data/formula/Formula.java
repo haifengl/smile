@@ -143,11 +143,20 @@ public class Formula implements AutoCloseable, Serializable {
     public boolean equals(Object o) {
         if (!(o instanceof Formula f)) return false;
         if (predictors.length != f.predictors.length) return false;
-        if (!String.valueOf(response).equals(String.valueOf(f.response))) return false;
+        if (!Objects.toString(response, "null").equals(Objects.toString(f.response, "null"))) return false;
         for (int i = 0; i < predictors.length; i++) {
-            if (!String.valueOf(predictors[i]).equals(String.valueOf(f.predictors[i]))) return false;
+            if (!Objects.toString(predictors[i], "null").equals(Objects.toString(f.predictors[i], "null"))) return false;
         }
         return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.toString(response, "null").hashCode();
+        for (Term predictor : predictors) {
+            result = 31 * result + Objects.toString(predictor, "null").hashCode();
+        }
+        return result;
     }
 
     /**
@@ -196,7 +205,7 @@ public class Formula implements AutoCloseable, Serializable {
      */
     public static Formula of(String response, String... predictors) {
         return new Formula(
-                new Variable(response),
+                response == null ? null : new Variable(response),
                 Arrays.stream(predictors).map(predictor ->
                     switch (predictor) {
                         case "." -> new Dot();
@@ -250,7 +259,7 @@ public class Formula implements AutoCloseable, Serializable {
             return lhs(response);
         }
 
-        Pattern regex = Pattern.compile("\\)\\d*");
+        Pattern regex = Pattern.compile("\\)(\\^\\d+)?");
         ArrayList<Term> predictors = new ArrayList<>();
 
         if (!rhs.startsWith("+") && !rhs.startsWith("-")) {

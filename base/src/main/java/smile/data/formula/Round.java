@@ -64,8 +64,8 @@ public class Round extends AbstractFunction {
                     return switch (y) {
                         case null -> null;
                         case Double v -> Math.round(v);
-                        case Float v -> Math.abs(v);
-                        default -> throw new IllegalArgumentException("Invalid argument for abs(): " + y);
+                        case Float v -> Math.round(v);
+                        default -> throw new IllegalArgumentException("Invalid argument for round(): " + y);
                     };
                 }
 

@@ -238,7 +238,7 @@ public class DenseMatrixTest {
 
     /**
      * Test Vector.max() correctly handles negative values.
-     * Bug: was initialised to Double.MIN_VALUE (≈5e-324), so max of all-negative
+     * Bug: was initialized to Double.MIN_VALUE (≈5e-324), so max of all-negative
      * vector returned MIN_VALUE instead of the largest element.
      */
     @Test
