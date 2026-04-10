@@ -141,7 +141,7 @@ public class InferenceSession implements AutoCloseable {
      * Creates an {@code InferenceSession} from a model already loaded into a
      * byte array (e.g. from a JAR resource).
      *
-     * @param modelBytes     the serialised ONNX model bytes.
+     * @param modelBytes     the serialized ONNX model bytes.
      * @param sessionOptions session configuration.
      * @return the loaded session.
      */
@@ -166,7 +166,7 @@ public class InferenceSession implements AutoCloseable {
      * Creates an {@code InferenceSession} from a model byte array using
      * default session options.
      *
-     * @param modelBytes the serialised ONNX model bytes.
+     * @param modelBytes the serialized ONNX model bytes.
      * @return the loaded session.
      */
     public static InferenceSession create(byte[] modelBytes) {

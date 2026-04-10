@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Minimal hand-rolled parser for ONNX {@code TensorProto} serialised in
+ * Minimal hand-rolled parser for ONNX {@code TensorProto} serialized in
  * Protocol Buffers binary format (proto3). Only the fields required to read
  * the light-model expected-output {@code .pb} test fixtures are decoded:
  *

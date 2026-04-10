@@ -148,7 +148,7 @@ public class Environment implements AutoCloseable {
      * Creates an {@code InferenceSession} from an in-memory model that shares
      * this environment, using default session options.
      *
-     * @param modelBytes the serialised ONNX model bytes.
+     * @param modelBytes the serialized ONNX model bytes.
      * @return the loaded session.
      */
     public InferenceSession createSession(byte[] modelBytes) {
@@ -183,7 +183,7 @@ public class Environment implements AutoCloseable {
      * Creates an {@code InferenceSession} from an in-memory model that shares
      * this environment.
      *
-     * @param modelBytes     the serialised ONNX model bytes.
+     * @param modelBytes     the serialized ONNX model bytes.
      * @param sessionOptions session configuration.
      * @return the loaded session.
      */

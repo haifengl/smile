@@ -157,7 +157,7 @@ public class SimpleSentenceSplitter implements SentenceSplitter {
                 // Consider the word before the period.
                 // Is it an abbreviation? (then not full-stop)
                 // Abbreviation if:
-                //  1) all consonants and not all capitalised (and contain no lower case y e.g. shy, sly
+                //  1) all consonants and not all capitalized (and contain no lower case y e.g. shy, sly
                 //  2) a span of single letters followed by periods
                 //  3) a single letter (except I).
                 //  4) in the known abbreviations list.
