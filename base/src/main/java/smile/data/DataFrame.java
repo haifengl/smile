@@ -613,6 +613,25 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
     }
 
     /**
+     * Returns a new data frame containing rows in the range [from, to).
+     * @param from the initial index of the range, inclusive.
+     * @param to the final index of the range, exclusive.
+     * @return a new data frame of the selected rows.
+     */
+    public DataFrame slice(int from, int to) {
+        if (from < 0 || from > size()) {
+            throw new IllegalArgumentException("from: " + from + ", size: " + size());
+        }
+        if (to < from || to > size()) {
+            throw new IllegalArgumentException("to: " + to + ", size: " + size());
+        }
+        int len = to - from;
+        int[] indices = new int[len];
+        for (int i = 0; i < len; i++) indices[i] = from + i;
+        return get(Index.of(indices));
+    }
+
+    /**
      * Returns a random sample of rows without replacement.
      * @param n the number of rows to sample.
      * @return a new data frame of sampled rows.
@@ -1137,6 +1156,9 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
         }
 
         to = Math.min(to, size());
+        if (to <= from) {
+            return "Empty DataFrame\n";
+        }
         StringBuilder sb = new StringBuilder();
         boolean hasMoreData = from == 0 && size() > to;
         int numCols = ncol() + 1;
@@ -1418,7 +1440,23 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
      */
     public static DataFrame of(StructType schema, List<? extends Tuple> data) {
         if (data.isEmpty()) {
-            throw new IllegalArgumentException("Empty tuple collections");
+            // Return a zero-row DataFrame with the correct schema.
+            var fields = schema.fields();
+            ValueVector[] vectors = fields.stream().map(field ->
+                (ValueVector) switch (field.dtype().id()) {
+                    case Int     -> new IntVector(field, new int[0]);
+                    case Long    -> new LongVector(field, new long[0]);
+                    case Double  -> new DoubleVector(field, new double[0]);
+                    case Float   -> new FloatVector(field, new float[0]);
+                    case Boolean -> new BooleanVector(field, new boolean[0]);
+                    case Byte    -> new ByteVector(field, new byte[0]);
+                    case Short   -> new ShortVector(field, new short[0]);
+                    case Char    -> new CharVector(field, new char[0]);
+                    case String  -> new StringVector(field, new String[0]);
+                    default      -> new ObjectVector<>(field, new Object[0]);
+                }
+            ).toArray(ValueVector[]::new);
+            return new DataFrame(schema, new ArrayList<>(Arrays.asList(vectors)), null);
         }
 
         int n = data.size();
