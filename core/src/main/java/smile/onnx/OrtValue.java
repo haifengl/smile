@@ -288,7 +288,7 @@ public class OrtValue implements AutoCloseable {
     /**
      * Creates an OrtValue tensor from a {@link DenseMatrix}.
      *
-     * <p>The matrix is serialised in <em>row-major</em> order (the standard
+     * <p>The matrix is serialized in <em>row-major</em> order (the standard
      * ONNX layout) with shape {@code [nrow, ncol]}, regardless of the
      * internal column-major / padded storage used by {@code DenseMatrix}.
      * Padding columns introduced by the optimal leading dimension are
