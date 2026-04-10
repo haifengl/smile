@@ -62,8 +62,8 @@ public class HellingerKernel implements MercerKernel<double[]> {
     }
 
     @Override
-    public LinearKernel of(double[] params) {
-        return new LinearKernel();
+    public HellingerKernel of(double[] params) {
+        return new HellingerKernel();
     }
 
     @Override

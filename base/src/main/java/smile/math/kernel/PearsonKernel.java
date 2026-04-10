@@ -65,6 +65,12 @@ public class PearsonKernel implements MercerKernel<double[]> {
      * @param hi The upper bound of length scale for hyperparameter tuning.
      */
     public PearsonKernel(double sigma, double omega, double lo, double hi) {
+        if (sigma <= 0) {
+            throw new IllegalArgumentException("sigma is not positive: " + sigma);
+        }
+        if (omega <= 0) {
+            throw new IllegalArgumentException("omega is not positive: " + omega);
+        }
         this.omega = omega;
         this.sigma = sigma;
         this.C = 4.0 * (Math.pow(2.0, 1.0 / omega) - 1.0) / (sigma * sigma);

@@ -55,7 +55,7 @@ public class ProductKernel<T> implements MercerKernel<T> {
 
         double k1 = kg1[0];
         double k2 = kg2[0];
-        kg[0] = k1 + k2;
+        kg[0] = k1 * k2;
 
         int n1 = kg1.length;
         for (int i = 1; i < n1; i++) {
