@@ -21,9 +21,18 @@ import smile.math.random.MersenneTwister;
 import smile.math.random.UniversalGenerator;
 
 /**
- * This is a high quality random number generator as a replacement of
- * the standard Random class of Java system.
- * 
+ * A high-quality random number generator that combines two complementary
+ * generators:
+ * <ul>
+ * <li>A {@link UniversalGenerator} (Marsaglia–Zaman–Tsang) for uniform
+ *     floating-point values. It has a period of 2<sup>144</sup> and passes
+ *     all standard statistical tests.</li>
+ * <li>A {@link MersenneTwister} (MT19937) for integer values. It has a period
+ *     of 2<sup>19937</sup>−1 and excellent equidistribution properties.</li>
+ * </ul>
+ * Both generators are seeded together by {@link #setSeed(long)} so that the
+ * combined stream is reproducible from a single seed.
+ *
  * @author Haifeng Li
  */
 public class Random {
@@ -74,28 +83,36 @@ public class Random {
     }
 
     /**
-     * Generate a uniform random number in the range [lo, hi)
-     * @param lo lower limit of range
-     * @param hi upper limit of range
-     * @return a uniform random real in the range [lo, hi)
+     * Generate a uniform random number in the range [lo, hi).
+     * @param lo lower limit of range (inclusive).
+     * @param hi upper limit of range (exclusive).
+     * @return a uniform random real in the range [lo, hi).
+     * @throws IllegalArgumentException if {@code lo >= hi}.
      */
     public double nextDouble(double lo, double hi) {
-        return (lo + (hi - lo) * nextDouble());
+        if (lo >= hi) {
+            throw new IllegalArgumentException(
+                String.format("lo (%s) must be less than hi (%s)", lo, hi));
+        }
+        return lo + (hi - lo) * nextDouble();
     }
 
     /**
-     * Generate n uniform random numbers in the range [lo, hi)
-     * @param lo lower limit of range
-     * @param hi upper limit of range
-     * @param d array of random numbers to be generated
+     * Generate n uniform random numbers in the range [lo, hi).
+     * @param d     array to fill with random numbers.
+     * @param lo    lower limit of range (inclusive).
+     * @param hi    upper limit of range (exclusive).
+     * @throws IllegalArgumentException if {@code lo >= hi}.
      */
     public void nextDoubles(double[] d, double lo, double hi) {
+        if (lo >= hi) {
+            throw new IllegalArgumentException(
+                String.format("lo (%s) must be less than hi (%s)", lo, hi));
+        }
         real.nextDoubles(d);
-
-        double l = hi - lo;        
-        int n = d.length;
-        for (int i = 0; i < n; i++) {
-            d[i] = lo + l * d[i];
+        double range = hi - lo;
+        for (int i = 0; i < d.length; i++) {
+            d[i] = lo + range * d[i];
         }
     }
 
@@ -106,11 +123,11 @@ public class Random {
     public int nextInt() {
         return twister.nextInt();
     }
-    
+
     /**
      * Returns a random integer in [0, n).
-     * @param n the upper bound of random number.
-     * @return a random integer.
+     * @param n the upper bound of random number (exclusive); must be positive.
+     * @return a random integer in [0, n).
      */
     public int nextInt(int n) {
         return twister.nextInt(n);
@@ -122,6 +139,22 @@ public class Random {
      */
     public long nextLong() {
         return twister.nextLong();
+    }
+
+    /**
+     * Returns a random boolean value.
+     * @return {@code true} or {@code false} with equal probability.
+     */
+    public boolean nextBoolean() {
+        return twister.nextInt() < 0;  // sign bit of a uniform int is unbiased
+    }
+
+    /**
+     * Returns a random float uniformly distributed in [0, 1).
+     * @return a random float.
+     */
+    public float nextFloat() {
+        return (twister.nextInt() >>> 8) / ((float) (1 << 24));
     }
 
     /**
@@ -137,45 +170,46 @@ public class Random {
     }
 
     /**
-     * Permutates an array.
+     * Permutates an array in-place using the Fisher-Yates shuffle.
      * @param x the array.
      */
     public void permutate(int[] x) {
-        for (int i = 0; i < x.length; i++) {
-            int j = i + nextInt(x.length - i);
+        // Stop at length-1: the last element has nowhere else to go.
+        for (int i = x.length - 1; i > 0; i--) {
+            int j = nextInt(i + 1);
             MathEx.swap(x, i, j);
         }
     }
 
     /**
-     * Permutates an array.
+     * Permutates an array in-place using the Fisher-Yates shuffle.
      * @param x the array.
      */
     public void permutate(float[] x) {
-        for (int i = 0; i < x.length; i++) {
-            int j = i + nextInt(x.length - i);
+        for (int i = x.length - 1; i > 0; i--) {
+            int j = nextInt(i + 1);
             MathEx.swap(x, i, j);
         }
     }
 
     /**
-     * Permutates an array.
+     * Permutates an array in-place using the Fisher-Yates shuffle.
      * @param x the array.
      */
     public void permutate(double[] x) {
-        for (int i = 0; i < x.length; i++) {
-            int j = i + nextInt(x.length - i);
+        for (int i = x.length - 1; i > 0; i--) {
+            int j = nextInt(i + 1);
             MathEx.swap(x, i, j);
         }
     }
 
     /**
-     * Permutates an array.
+     * Permutates an array in-place using the Fisher-Yates shuffle.
      * @param x the array.
      */
     public void permutate(Object[] x) {
-        for (int i = 0; i < x.length; i++) {
-            int j = i + nextInt(x.length - i);
+        for (int i = x.length - 1; i > 0; i--) {
+            int j = nextInt(i + 1);
             MathEx.swap(x, i, j);
         }
     }
