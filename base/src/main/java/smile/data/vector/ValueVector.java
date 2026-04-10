@@ -888,10 +888,10 @@ public interface ValueVector extends Serializable {
      * @return the vector.
      */
     static ValueVector nominal(String name, Enum<?>... vector) {
-        var clazz = vector.getClass().getComponentType();
+        Class<? extends Enum<?>> clazz = enumClass(vector);
         var values = clazz.getEnumConstants();
         var dtype = DataTypes.category(values.length);
-        var measure = new NominalScale((Class<? extends Enum<?>>) clazz);
+        var measure = new NominalScale(clazz);
         var field = new StructField(name, dtype, measure);
         return category(field, vector);
     }
@@ -920,10 +920,10 @@ public interface ValueVector extends Serializable {
      * @return the vector.
      */
     static ValueVector ordinal(String name, Enum<?>... vector) {
-        var clazz = vector.getClass().getComponentType();
+        Class<? extends Enum<?>> clazz = enumClass(vector);
         var values = clazz.getEnumConstants();
         var dtype = DataTypes.category(values.length);
-        var measure = new OrdinalScale((Class<? extends Enum<?>>) clazz);
+        var measure = new OrdinalScale(clazz);
         var field = new StructField(name, dtype, measure);
         return category(field, vector);
     }
@@ -942,6 +942,29 @@ public interface ValueVector extends Serializable {
         var measure = new OrdinalScale(values.toArray(new String[0]));
         var field = new StructField(name, dtype, measure);
         return category(field, vector);
+    }
+
+    /**
+     * Returns the concrete enum class from a varargs array.
+     * When enum values are passed as Enum<?> varargs, the array component type
+     * may be Enum.class rather than the concrete enum class. This method
+     * finds the actual class from the first non-null element.
+     * @param vector the enum array.
+     * @return the concrete enum class.
+     */
+    @SuppressWarnings("unchecked")
+    private static Class<? extends Enum<?>> enumClass(Enum<?>[] vector) {
+        Class<?> clazz = vector.getClass().getComponentType();
+        if (clazz.isEnum()) {
+            return (Class<? extends Enum<?>>) clazz;
+        }
+        // varargs produced Enum[] instead of ConcreteEnum[]
+        for (Enum<?> e : vector) {
+            if (e != null) {
+                return (Class<? extends Enum<?>>) e.getClass();
+            }
+        }
+        throw new IllegalArgumentException("Cannot determine enum class from empty or all-null array");
     }
 
     /**

@@ -73,7 +73,7 @@ public class NullableLongVector extends NullablePrimitiveVector {
 
     @Override
     public DoubleStream doubleStream() {
-        return longStream().mapToDouble(i -> i);
+        return index().mapToDouble(i -> nullMask.get(i) ? Double.NaN : vector[i]);
     }
 
     @Override
@@ -82,6 +82,7 @@ public class NullableLongVector extends NullablePrimitiveVector {
             nullMask.set(i);
         } else if (value instanceof Number n) {
             vector[i] = n.longValue();
+            nullMask.clear(i);
         } else {
             throw new IllegalArgumentException("Invalid value type: " + value.getClass());
         }

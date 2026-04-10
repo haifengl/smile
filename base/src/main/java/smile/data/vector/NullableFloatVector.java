@@ -66,8 +66,9 @@ public class NullableFloatVector extends NullablePrimitiveVector {
      */
     public void fillna(float value) {
         for (int i = 0; i < vector.length; i++) {
-            if (Float.isNaN(vector[i]) || Float.isInfinite(vector[i])) {
+            if (nullMask.get(i) || Float.isNaN(vector[i]) || Float.isInfinite(vector[i])) {
                 vector[i] = value;
+                nullMask.clear(i);
             }
         }
     }
@@ -93,6 +94,7 @@ public class NullableFloatVector extends NullablePrimitiveVector {
             nullMask.set(i);
         } else if (value instanceof Number n) {
             vector[i] = n.floatValue();
+            nullMask.clear(i);
         } else {
             throw new IllegalArgumentException("Invalid value type: " + value.getClass());
         }
