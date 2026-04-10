@@ -154,7 +154,7 @@ public class Beta {
             }
             if (i > MAXITER) {
                 test = false;
-                logger.error("Beta.incompleteFractionSummation: Maximum number of iterations wes exceeded");
+                logger.error("Beta.incompleteFractionSummation: Maximum number of iterations was exceeded");
             }
         }
         return h;

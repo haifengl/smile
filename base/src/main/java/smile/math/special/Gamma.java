@@ -86,7 +86,12 @@ public class Gamma {
     }
 
     /**
-     * The log of the Gamma function. Lanczos approximation (6 terms)
+     * The log of the Gamma function. Lanczos approximation (6 terms).
+     * For negative non-integer x the log-gamma is computed via the
+     * reflection formula; if the resulting value would be negative
+     * (i.e. Γ(x) &lt; 0) an {@code IllegalArgumentException} is thrown.
+     * Returns {@code Double.POSITIVE_INFINITY} for x = 0, -1, -2, …
+     *
      * @param x a real number.
      * @return the function value.
      */
@@ -153,6 +158,8 @@ public class Gamma {
     /**
      * Regularized Upper/Complementary Incomplete Gamma Function
      * Q(s,x) = 1 - P(s,x) = 1 - <i>&#8747;<sub><small>0</small></sub><sup><small>x</small></sup> e<sup>-t</sup> t<sup>(s-1)</sup> dt</i>
+     * <p>
+     * Returns 0 when x = 0, and {@code Double.NaN} when x is NaN.
      *
      * @param s {@code s >= 0}
      * @param x {@code x >= 0}
@@ -167,22 +174,21 @@ public class Gamma {
             throw new IllegalArgumentException("Invalid x: " + x);
         }
 
-        double igf = 0.0;
-
-        if (x != 0.0) {
-            if (Double.isNaN(x)) {
-                igf = 1.0;
-            } else {
-                if (x < s + 1.0) {
-                    // Series representation
-                    igf = 1.0 - regularizedIncompleteGammaSeries(s, x);
-                } else {
-                    // Continued fraction representation
-                    igf = 1.0 - regularizedIncompleteGammaFraction(s, x);
-                }
-            }
+        if (Double.isNaN(x)) {
+            return Double.NaN;
         }
-        return igf;
+
+        if (x == 0.0) {
+            return 1.0;
+        }
+
+        if (x < s + 1.0) {
+            // Series representation
+            return 1.0 - regularizedIncompleteGammaSeries(s, x);
+        } else {
+            // Continued fraction representation
+            return 1.0 - regularizedIncompleteGammaFraction(s, x);
+        }
     }
 
     /**
@@ -215,7 +221,7 @@ public class Gamma {
             if (i >= INCOMPLETE_GAMMA_MAX_ITERATIONS) {
                 check = false;
                 igf = sum * exp(-x + acopy * log(x) - loggamma);
-                logger.error("Gamma.regularizedIncompleteGammaSeries: Maximum number of iterations wes exceeded");
+                logger.error("Gamma.regularizedIncompleteGammaSeries: Maximum number of iterations was exceeded");
             }
         }
         return igf;
@@ -265,7 +271,7 @@ public class Gamma {
             }
             if (i >= INCOMPLETE_GAMMA_MAX_ITERATIONS) {
                 check = false;
-                logger.error("Gamma.regularizedIncompleteGammaFraction: Maximum number of iterations wes exceeded");
+                logger.error("Gamma.regularizedIncompleteGammaFraction: Maximum number of iterations was exceeded");
             }
         }
         igf = 1.0 - exp(-x + a * log(x) - loggamma) * prod;
@@ -274,8 +280,9 @@ public class Gamma {
 
     /**
      * The digamma function is defined as the logarithmic derivative of the gamma function.
+     * The digamma function has poles at zero and the negative integers.
      *
-     * @param x a real number.
+     * @param x a real number, not a non-positive integer.
      * @return the function value.
      */
     public static double digamma(double x) {
