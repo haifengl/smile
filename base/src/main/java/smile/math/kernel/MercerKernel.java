@@ -186,6 +186,18 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
     double[] hi();
 
     /**
+     * Parses a double value that may be the literal "infinity" or "-infinity"
+     * (lower-cased form of Java's Double.toString output for infinite values).
+     * @param s the string to parse.
+     * @return the double value.
+     */
+    private static double parseDouble(String s) {
+        if ("infinity".equals(s))  return Double.POSITIVE_INFINITY;
+        if ("-infinity".equals(s)) return Double.NEGATIVE_INFINITY;
+        return Double.parseDouble(s);
+    }
+
+    /**
      * Returns a kernel function.
      * @param kernel the kernel function string representation.
      * @return the kernel function.
@@ -215,7 +227,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
         m = KernelPatterns.matern.matcher(kernel);
         if (m.matches()) {
             double sigma = Double.parseDouble(m.group(1));
-            double nu = Double.parseDouble(m.group(2));
+            double nu = parseDouble(m.group(2));
             return new MaternKernel(sigma, nu);
         }
 

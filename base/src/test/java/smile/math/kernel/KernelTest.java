@@ -728,31 +728,225 @@ public class KernelTest {
     // ===== MercerKernel.of() parsing =====
 
     @Test
-    public void testParse() {
-        System.out.println("parse");
-        MercerKernel.of("linear()");
-        MercerKernel.of("polynomial(2, 0.1, 0.0)");
-        MercerKernel.of("gaussian(0.1)");
-        MercerKernel.of("matern(0.1, 1.5)");
-        MercerKernel.of("laplacian(0.1)");
-        MercerKernel.of("tanh(0.1, 0.0)");
-        MercerKernel.of("tps(0.1)");
-        MercerKernel.of("pearson(0.1, 1.0)");
-        MercerKernel.of("hellinger");
+    public void testParseLinearKernel() {
+        System.out.println("parse LinearKernel");
+        var linear = MercerKernel.of("linear()");
+        assertInstanceOf(LinearKernel.class, linear);
+        assertEquals(0, linear.hyperparameters().length);
+        // Alias without parentheses
+        assertInstanceOf(LinearKernel.class, MercerKernel.of("linear"));
+        // Case-insensitive
+        assertInstanceOf(LinearKernel.class, MercerKernel.of("LINEAR()"));
+        assertInstanceOf(LinearKernel.class, MercerKernel.of("LinearKernel()"));
     }
 
     @Test
-    public void testParseToString() {
-        System.out.println("parse toString round-trip");
-        MercerKernel.of(new LinearKernel().toString());
-        MercerKernel.of(new PolynomialKernel(2, 0.1, 0.0).toString());
-        MercerKernel.of(new GaussianKernel(0.1).toString());
-        MercerKernel.of(new MaternKernel(0.1, 1.5).toString());
-        MercerKernel.of(new LaplacianKernel(0.1).toString());
-        MercerKernel.of(new HyperbolicTangentKernel(0.1, 0.0).toString());
-        MercerKernel.of(new ThinPlateSplineKernel(0.1).toString());
-        MercerKernel.of(new PearsonKernel(0.1, 1.0).toString());
-        MercerKernel.of(new HellingerKernel().toString());
+    public void testParsePolynomialKernel() {
+        System.out.println("parse PolynomialKernel");
+        var poly = (PolynomialKernel) MercerKernel.of("polynomial(2, 0.1, 0.0)");
+        assertInstanceOf(PolynomialKernel.class, poly);
+        assertEquals(2,   poly.degree());
+        assertEquals(0.1, poly.scale(),  1E-9);
+        assertEquals(0.0, poly.offset(), 1E-9);
+        // Degree and parameters should be faithfully recovered
+        var poly3 = (PolynomialKernel) MercerKernel.of("polynomial(3, 0.5, 1.0)");
+        assertEquals(3,   poly3.degree());
+        assertEquals(0.5, poly3.scale(),  1E-9);
+        assertEquals(1.0, poly3.offset(), 1E-9);
+    }
+
+    @Test
+    public void testParseGaussianKernel() {
+        System.out.println("parse GaussianKernel");
+        var gauss = (GaussianKernel) MercerKernel.of("gaussian(0.1)");
+        assertInstanceOf(GaussianKernel.class, gauss);
+        assertEquals(0.1, gauss.scale(), 1E-9);
+        var gauss2 = (GaussianKernel) MercerKernel.of("gaussian(2.5)");
+        assertEquals(2.5, gauss2.scale(), 1E-9);
+    }
+
+    @Test
+    public void testParseMaternKernel() {
+        System.out.println("parse MaternKernel");
+        var mat15 = (MaternKernel) MercerKernel.of("matern(0.1, 1.5)");
+        assertInstanceOf(MaternKernel.class, mat15);
+        assertEquals(0.1, mat15.scale(),      1E-9);
+        assertEquals(1.5, mat15.smoothness(), 1E-9);
+        var mat25 = (MaternKernel) MercerKernel.of("matern(2.0, 2.5)");
+        assertEquals(2.0, mat25.scale(),      1E-9);
+        assertEquals(2.5, mat25.smoothness(), 1E-9);
+        var mat05 = (MaternKernel) MercerKernel.of("matern(1.0, 0.5)");
+        assertEquals(0.5, mat05.smoothness(), 1E-9);
+    }
+
+    @Test
+    public void testParseLaplacianKernel() {
+        System.out.println("parse LaplacianKernel");
+        var laplace = (LaplacianKernel) MercerKernel.of("laplacian(0.1)");
+        assertInstanceOf(LaplacianKernel.class, laplace);
+        assertEquals(0.1, laplace.scale(), 1E-9);
+        var laplace2 = (LaplacianKernel) MercerKernel.of("laplacian(3.0)");
+        assertEquals(3.0, laplace2.scale(), 1E-9);
+    }
+
+    @Test
+    public void testParseHyperbolicTangentKernel() {
+        System.out.println("parse HyperbolicTangentKernel");
+        var tanh = (HyperbolicTangentKernel) MercerKernel.of("tanh(0.1, 0.0)");
+        assertInstanceOf(HyperbolicTangentKernel.class, tanh);
+        assertEquals(0.1, tanh.scale(),  1E-9);
+        assertEquals(0.0, tanh.offset(), 1E-9);
+        var tanh2 = (HyperbolicTangentKernel) MercerKernel.of("tanh(0.5, 1.0)");
+        assertEquals(0.5, tanh2.scale(),  1E-9);
+        assertEquals(1.0, tanh2.offset(), 1E-9);
+    }
+
+    @Test
+    public void testParseThinPlateSplineKernel() {
+        System.out.println("parse ThinPlateSplineKernel");
+        var tps = (ThinPlateSplineKernel) MercerKernel.of("tps(0.1)");
+        assertInstanceOf(ThinPlateSplineKernel.class, tps);
+        assertEquals(0.1, tps.scale(), 1E-9);
+        var tps2 = (ThinPlateSplineKernel) MercerKernel.of("tps(5.0)");
+        assertEquals(5.0, tps2.scale(), 1E-9);
+    }
+
+    @Test
+    public void testParsePearsonKernel() {
+        System.out.println("parse PearsonKernel");
+        var pearson = (PearsonKernel) MercerKernel.of("pearson(0.1, 1.0)");
+        assertInstanceOf(PearsonKernel.class, pearson);
+        assertEquals(0.1, pearson.sigma(), 1E-9);
+        assertEquals(1.0, pearson.omega(), 1E-9);
+        var pearson2 = (PearsonKernel) MercerKernel.of("pearson(2.0, 3.0)");
+        assertEquals(2.0, pearson2.sigma(), 1E-9);
+        assertEquals(3.0, pearson2.omega(), 1E-9);
+    }
+
+    @Test
+    public void testParseHellingerKernel() {
+        System.out.println("parse HellingerKernel");
+        var hellinger = MercerKernel.of("hellinger");
+        assertInstanceOf(HellingerKernel.class, hellinger);
+        assertEquals(0, hellinger.hyperparameters().length);
+        // Also accepts "hellinger()" and "hellingerkernel()"
+        assertInstanceOf(HellingerKernel.class, MercerKernel.of("hellinger()"));
+        assertInstanceOf(HellingerKernel.class, MercerKernel.of("hellingerkernel()"));
+    }
+
+    @Test
+    public void testParseToStringLinearKernel() {
+        System.out.println("parse toString round-trip LinearKernel");
+        LinearKernel orig = new LinearKernel();
+        var parsed = MercerKernel.of(orig.toString());
+        assertInstanceOf(LinearKernel.class, parsed);
+        assertEquals(orig.k(x1, x3), parsed.k(x1, x3), 1E-9);
+    }
+
+    @Test
+    public void testParseToStringPolynomialKernel() {
+        System.out.println("parse toString round-trip PolynomialKernel");
+        for (var orig : List.of(
+                new PolynomialKernel(2, 0.1, 0.0),
+                new PolynomialKernel(3, 0.5, 1.0),
+                new PolynomialKernel(4, 1.0, 2.0))) {
+            var parsed = (PolynomialKernel) MercerKernel.of(orig.toString());
+            assertInstanceOf(PolynomialKernel.class, parsed);
+            assertEquals(orig.degree(), parsed.degree());
+            assertEquals(orig.scale(),  parsed.scale(),  1E-6);
+            assertEquals(orig.offset(), parsed.offset(), 1E-6);
+            assertEquals(orig.k(x1, x3), parsed.k(x1, x3), 1E-9);
+        }
+    }
+
+    @Test
+    public void testParseToStringGaussianKernel() {
+        System.out.println("parse toString round-trip GaussianKernel");
+        for (double sigma : new double[]{0.1, 1.0, 2.5, 10.0}) {
+            GaussianKernel orig = new GaussianKernel(sigma);
+            var parsed = (GaussianKernel) MercerKernel.of(orig.toString());
+            assertInstanceOf(GaussianKernel.class, parsed);
+            assertEquals(orig.scale(), parsed.scale(), 1E-6);
+            assertEquals(orig.k(x1, x2), parsed.k(x1, x2), 1E-9);
+        }
+    }
+
+    @Test
+    public void testParseToStringMaternKernel() {
+        System.out.println("parse toString round-trip MaternKernel");
+        for (double nu : new double[]{0.5, 1.5, 2.5, Double.POSITIVE_INFINITY}) {
+            MaternKernel orig = new MaternKernel(1.0, nu);
+            var parsed = (MaternKernel) MercerKernel.of(orig.toString());
+            assertInstanceOf(MaternKernel.class, parsed);
+            assertEquals(orig.scale(),      parsed.scale(),      1E-6);
+            assertEquals(orig.smoothness(), parsed.smoothness(), 1E-9);
+            assertEquals(orig.k(x1, x2),   parsed.k(x1, x2),   1E-9);
+        }
+    }
+
+    @Test
+    public void testParseToStringLaplacianKernel() {
+        System.out.println("parse toString round-trip LaplacianKernel");
+        for (double sigma : new double[]{0.1, 1.0, 3.0}) {
+            LaplacianKernel orig = new LaplacianKernel(sigma);
+            var parsed = (LaplacianKernel) MercerKernel.of(orig.toString());
+            assertInstanceOf(LaplacianKernel.class, parsed);
+            assertEquals(orig.scale(), parsed.scale(), 1E-6);
+            assertEquals(orig.k(x1, x2), parsed.k(x1, x2), 1E-9);
+        }
+    }
+
+    @Test
+    public void testParseToStringHyperbolicTangentKernel() {
+        System.out.println("parse toString round-trip HyperbolicTangentKernel");
+        for (var orig : List.of(
+                new HyperbolicTangentKernel(0.1, 0.0),
+                new HyperbolicTangentKernel(0.5, 1.0),
+                new HyperbolicTangentKernel(1.0, 0.5))) {
+            var parsed = (HyperbolicTangentKernel) MercerKernel.of(orig.toString());
+            assertInstanceOf(HyperbolicTangentKernel.class, parsed);
+            assertEquals(orig.scale(),  parsed.scale(),  1E-6);
+            assertEquals(orig.offset(), parsed.offset(), 1E-6);
+            assertEquals(orig.k(x1, x3), parsed.k(x1, x3), 1E-9);
+        }
+    }
+
+    @Test
+    public void testParseToStringThinPlateSplineKernel() {
+        System.out.println("parse toString round-trip ThinPlateSplineKernel");
+        for (double sigma : new double[]{0.1, 1.0, 5.0}) {
+            ThinPlateSplineKernel orig = new ThinPlateSplineKernel(sigma);
+            var parsed = (ThinPlateSplineKernel) MercerKernel.of(orig.toString());
+            assertInstanceOf(ThinPlateSplineKernel.class, parsed);
+            assertEquals(orig.scale(), parsed.scale(), 1E-6);
+            assertEquals(orig.k(x1, x2), parsed.k(x1, x2), 1E-9);
+        }
+    }
+
+    @Test
+    public void testParseToStringPearsonKernel() {
+        System.out.println("parse toString round-trip PearsonKernel");
+        for (var orig : List.of(
+                new PearsonKernel(0.1, 1.0),
+                new PearsonKernel(1.0, 2.0),
+                new PearsonKernel(2.5, 3.0))) {
+            var parsed = (PearsonKernel) MercerKernel.of(orig.toString());
+            assertInstanceOf(PearsonKernel.class, parsed);
+            assertEquals(orig.sigma(), parsed.sigma(), 1E-6);
+            assertEquals(orig.omega(), parsed.omega(), 1E-6);
+            assertEquals(orig.k(x1, x2), parsed.k(x1, x2), 1E-9);
+        }
+    }
+
+    @Test
+    public void testParseToStringHellingerKernel() {
+        System.out.println("parse toString round-trip HellingerKernel");
+        HellingerKernel orig = new HellingerKernel();
+        var parsed = MercerKernel.of(orig.toString());
+        assertInstanceOf(HellingerKernel.class, parsed);
+        double[] p = {0.25, 0.25, 0.5};
+        double[] q = {0.5,  0.25, 0.25};
+        assertEquals(orig.k(p, q), parsed.k(p, q), 1E-9);
     }
 
     @Test
