@@ -205,7 +205,7 @@ public interface Histogram {
         for (int i = 0; i < k; i++) {
             freq[0][i] = breaks[i];
             freq[1][i] = breaks[i + 1];
-            freq[2][i] = 0.0f;
+            freq[2][i] = 0.0;
         }
 
         for (float d : data) {
@@ -273,7 +273,7 @@ public interface Histogram {
         for (int i = 0; i < k; i++) {
             freq[0][i] = breaks[i];
             freq[1][i] = breaks[i + 1];
-            freq[2][i] = 0.0f;
+            freq[2][i] = 0.0;
         }
 
         for (double d : data) {
@@ -414,6 +414,8 @@ public interface Histogram {
      */
     static int scott(double[] x) {
         double h = Math.ceil(3.5 * MathEx.stdev(x) / Math.pow(x.length, 1.0/3));
-        return bins(x, h);
+        int k = bins(x, h);
+        if (k < 5) k = 5;
+        return k;
     }
 }

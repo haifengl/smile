@@ -611,4 +611,248 @@ public class MathExTest {
         MathEx.sub(x, y);
         assertTrue(MathEx.equals(x, z));
     }
+
+    @Test
+    public void testClamp() {
+        System.out.println("clamp");
+        assertEquals(5, MathEx.clamp(5, 0, 10));
+        assertEquals(0, MathEx.clamp(-1, 0, 10));
+        assertEquals(10, MathEx.clamp(15, 0, 10));
+        assertEquals(0.5, MathEx.clamp(0.5, 0.0, 1.0), 1E-15);
+        assertEquals(0.0, MathEx.clamp(-0.5, 0.0, 1.0), 1E-15);
+        assertEquals(1.0, MathEx.clamp(1.5, 0.0, 1.0), 1E-15);
+    }
+
+    @Test
+    public void testRandnScalar() {
+        System.out.println("randn()");
+        MathEx.setSeed(19650218);
+        // Just verify it generates finite numbers
+        for (int i = 0; i < 100; i++) {
+            assertTrue(Double.isFinite(MathEx.randn()));
+        }
+    }
+
+    @Test
+    public void testRandnVector() {
+        System.out.println("randn(n)");
+        MathEx.setSeed(19650218);
+        double[] x = MathEx.randn(1000);
+        assertEquals(1000, x.length);
+        // Mean should be close to 0, variance close to 1
+        assertEquals(0.0, MathEx.mean(x), 0.1);
+        assertEquals(1.0, MathEx.var(x), 0.1);
+    }
+
+    @Test
+    public void testVarNumericallyStable() {
+        System.out.println("var numerically stable (Welford)");
+        // A dataset with large mean but small variance — classic catastrophic cancellation case
+        double[] x = new double[1000];
+        for (int i = 0; i < x.length; i++) {
+            x[i] = 1e8 + (i - 500);  // mean = 1e8, exact var = sum((i-500)^2/999)
+        }
+        double variance = MathEx.var(x);
+        // Exact variance = sum of (i - 500)^2 for i=0..999 divided by 999
+        // = sum of k^2 for k=-500..499 / 999  (approx 500^2/3 = ~83416)
+        assertEquals(83416.666, variance, 1.0);
+    }
+
+    @Test
+    public void testSumIntNoOverflow() {
+        System.out.println("sum(int[]) no integer overflow");
+        int[] x = new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE};
+        long result = MathEx.sum(x);
+        assertEquals((long) Integer.MAX_VALUE * 2, result);
+    }
+
+    @Test
+    public void testAxpy() {
+        System.out.println("axpy");
+        double[] x = {1.0, 2.0, 3.0};
+        double[] y = {4.0, 5.0, 6.0};
+        MathEx.axpy(2.0, x, y);
+        assertEquals(6.0, y[0], 1E-15);
+        assertEquals(9.0, y[1], 1E-15);
+        assertEquals(12.0, y[2], 1E-15);
+    }
+
+    @Test
+    public void testPow() {
+        System.out.println("pow");
+        double[] x = {1.0, 2.0, 3.0};
+        double[] y = MathEx.pow(x, 2.0);
+        assertEquals(1.0, y[0], 1E-15);
+        assertEquals(4.0, y[1], 1E-15);
+        assertEquals(9.0, y[2], 1E-15);
+    }
+
+    @Test
+    public void testContains() {
+        System.out.println("contains");
+        // Square polygon (0,0)-(1,0)-(1,1)-(0,1)
+        double[][] polygon = {{0,0},{1,0},{1,1},{0,1}};
+        assertTrue(MathEx.contains(polygon, new double[]{0.5, 0.5}));
+        assertFalse(MathEx.contains(polygon, new double[]{2.0, 0.5}));
+    }
+
+    @Test
+    public void testOmit() {
+        System.out.println("omit");
+        int[] a = {1, 2, 3, 2, 4};
+        int[] b = MathEx.omit(a, 2);
+        assertEquals(3, b.length);
+        assertEquals(1, b[0]);
+        assertEquals(3, b[1]);
+        assertEquals(4, b[2]);
+    }
+
+    @Test
+    public void testOmitNaN() {
+        System.out.println("omitNaN");
+        double[] a = {1.0, Double.NaN, 3.0, Double.NaN, 5.0};
+        double[] b = MathEx.omitNaN(a);
+        assertEquals(3, b.length);
+        assertEquals(1.0, b[0], 1E-15);
+        assertEquals(3.0, b[1], 1E-15);
+        assertEquals(5.0, b[2], 1E-15);
+    }
+
+    @Test
+    public void testMode() {
+        System.out.println("mode");
+        int[] a = {1, 2, 2, 3, 3, 3, 4};
+        assertEquals(3, MathEx.mode(a));
+    }
+
+    @Test
+    public void testEntropy() {
+        System.out.println("entropy");
+        // Uniform distribution: H = log(n)
+        double[] p = {0.25, 0.25, 0.25, 0.25};
+        assertEquals(Math.log(4), MathEx.entropy(p), 1E-10);
+        // Degenerate: H = 0
+        double[] q = {1.0, 0.0, 0.0, 0.0};
+        assertEquals(0.0, MathEx.entropy(q), 1E-10);
+    }
+
+    @Test
+    public void testJensenShannonDivergence() {
+        System.out.println("JensenShannonDivergence");
+        double[] p = {0.5, 0.5};
+        double[] q = {0.5, 0.5};
+        // Same distributions: JSD = 0
+        assertEquals(0.0, MathEx.JensenShannonDivergence(p, q), 1E-10);
+    }
+
+    @Test
+    public void testSolveTridiagonal() {
+        System.out.println("solve (tridiagonal)");
+        // Simple 3x3: b=[4,4,4], a=[0,1,1], c=[1,1,0], r=[1,2,3]
+        double[] a = {0, 1, 1};
+        double[] b = {4, 4, 4};
+        double[] c = {1, 1, 0};
+        double[] r = {1, 2, 3};
+        double[] x = MathEx.solve(a, b, c, r);
+        // Verify: b*x[0] + c*x[1] = r[0]
+        assertEquals(r[0], b[0]*x[0] + c[0]*x[1], 1E-10);
+        assertEquals(r[1], a[1]*x[0] + b[1]*x[1] + c[1]*x[2], 1E-10);
+        assertEquals(r[2], a[2]*x[1] + b[2]*x[2], 1E-10);
+    }
+
+    @Test
+    public void testUnique() {
+        System.out.println("unique");
+        int[] a = {3, 1, 4, 1, 5, 9, 2, 6, 5, 3};
+        int[] u = MathEx.unique(a);
+        assertEquals(7, u.length);
+    }
+
+    @Test
+    public void testWhichMinMax() {
+        System.out.println("whichMin/whichMax");
+        double[] x = {3.0, 1.0, 4.0, 1.5, 5.9};
+        assertEquals(1, MathEx.whichMin(x));
+        assertEquals(4, MathEx.whichMax(x));
+    }
+
+    @Test
+    public void testReverse() {
+        System.out.println("reverse");
+        double[] x = {1.0, 2.0, 3.0, 4.0, 5.0};
+        MathEx.reverse(x);
+        assertEquals(5.0, x[0], 1E-15);
+        assertEquals(4.0, x[1], 1E-15);
+        assertEquals(3.0, x[2], 1E-15);
+        assertEquals(2.0, x[3], 1E-15);
+        assertEquals(1.0, x[4], 1E-15);
+    }
+
+    @Test
+    public void testRound() {
+        System.out.println("round");
+        assertEquals(3.14, MathEx.round(Math.PI, 2), 1E-10);
+        assertEquals(3.142, MathEx.round(Math.PI, 3), 1E-10);
+        assertEquals(300.0, MathEx.round(314.15, -2), 1E-10);
+    }
+
+    @Test
+    public void testCosine() {
+        System.out.println("cosine");
+        double[] x = {1.0, 0.0, 0.0};
+        double[] y = {0.0, 1.0, 0.0};
+        assertEquals(0.0, MathEx.cosine(x, y), 1E-15);
+        assertEquals(1.0, MathEx.cosine(x, x), 1E-15);
+    }
+
+    @Test
+    public void testLog1pe() {
+        System.out.println("log1pe");
+        // log(1 + exp(0)) = log(2)
+        assertEquals(Math.log(2), MathEx.log1pe(0.0), 1E-10);
+        // Large positive: log1pe(x) ≈ x
+        assertEquals(100.0, MathEx.log1pe(100.0), 1E-6);
+        // Large negative: log1pe(x) ≈ exp(x)
+        assertEquals(Math.exp(-50.0), MathEx.log1pe(-50.0), 1E-20);
+        // Moderate values
+        assertEquals(Math.log1p(Math.exp(5.0)), MathEx.log1pe(5.0), 1E-10);
+    }
+
+    @Test
+    public void testLog() {
+        System.out.println("log (without underflow)");
+        // Normal case
+        assertEquals(Math.log(1.0), MathEx.log(1.0), 1E-15);
+        assertEquals(Math.log(Math.E), MathEx.log(Math.E), 1E-15);
+        // Underflow protection
+        assertEquals(-690.7755, MathEx.log(0.0), 1E-4);
+        assertEquals(-690.7755, MathEx.log(1E-301), 1E-4);
+    }
+
+    @Test
+    public void testSigmoid() {
+        System.out.println("sigmoid");
+        assertEquals(0.5, MathEx.sigmoid(0.0), 1E-15);
+        assertEquals(1.0, MathEx.sigmoid(100.0), 1E-6);
+        assertEquals(0.0, MathEx.sigmoid(-100.0), 1E-6);
+        // sigmoid(-x) = 1 - sigmoid(x)
+        for (double x : new double[]{-5.0, -1.0, 0.5, 2.0, 10.0}) {
+            assertEquals(1.0, MathEx.sigmoid(x) + MathEx.sigmoid(-x), 1E-15);
+        }
+    }
+
+    @Test
+    public void testIsProbablePrime() {
+        System.out.println("isProbablePrime");
+        // Known primes
+        assertTrue(MathEx.isProbablePrime(2, 10));
+        assertTrue(MathEx.isProbablePrime(3, 10));
+        assertTrue(MathEx.isProbablePrime(7, 10));
+        assertTrue(MathEx.isProbablePrime(97, 10));
+        assertTrue(MathEx.isProbablePrime(7919, 10));
+        // Known composites
+        assertFalse(MathEx.isProbablePrime(4, 10));
+        assertFalse(MathEx.isProbablePrime(100, 10));
+        assertFalse(MathEx.isProbablePrime(999, 10));
+    }
 }

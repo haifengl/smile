@@ -311,17 +311,19 @@ public class MathEx {
     }
 
     /**
-     * Returns natural log(1+exp(x)) without overflow.
+     * Returns natural log(1+exp(x)) without overflow or catastrophic cancellation.
+     * <ul>
+     * <li>For x &gt; 15: returns x (since log(1+exp(x)) ≈ x).
+     * <li>For x &lt; -36: returns exp(x) (since log(1+exp(x)) ≈ exp(x)).
+     * <li>Otherwise: uses {@link Math#log1p(double)} for accuracy.
+     * </ul>
      * @param x a real number.
      * @return the value <code>log(1+exp(x))</code>.
      */
     public static double log1pe(double x) {
-        double y = x;
-        if (x <= 15) {
-            y = Math.log1p(Math.exp(x));
-        }
-
-        return y;
+        if (x > 15) return x;
+        if (x < -36) return exp(x);
+        return Math.log1p(exp(x));
     }
 
     /**
@@ -425,7 +427,7 @@ public class MathEx {
         }
 
         for (int i = 0; i < k; i++) {
-            long a = 2 + rng.nextLong() % (n-4);
+            long a = 2 + (Math.abs(rng.nextLong()) % (n - 4));
             long x = power(a, d, n);
             if (x == 1 || x == n -1)
                 continue;
@@ -782,6 +784,28 @@ public class MathEx {
     }
 
     /**
+     * Returns a random number from the standard normal distribution.
+     * @return a random standard normal number.
+     */
+    public static double randn() {
+        return GaussianDistribution.getInstance().rand();
+    }
+
+    /**
+     * Returns a random vector of standard normal distribution.
+     * @param n the size of vector.
+     * @return the random vector.
+     */
+    public static double[] randn(int n) {
+        var norm = GaussianDistribution.getInstance();
+        double[] x = new double[n];
+        for (int i = 0; i < n; i++) {
+            x[i] = norm.rand();
+        }
+        return x;
+    }
+
+    /**
      * Returns a random matrix of standard normal distribution.
      *
      * @param m the number of rows.
@@ -799,6 +823,50 @@ public class MathEx {
         }
 
         return matrix;
+    }
+
+    /**
+     * Clamps x between lo and hi (inclusive).
+     * @param x the value.
+     * @param lo the lower bound.
+     * @param hi the upper bound.
+     * @return the clamped value.
+     */
+    public static int clamp(int x, int lo, int hi) {
+        return Math.max(lo, Math.min(x, hi));
+    }
+
+    /**
+     * Clamps x between lo and hi (inclusive).
+     * @param x the value.
+     * @param lo the lower bound.
+     * @param hi the upper bound.
+     * @return the clamped value.
+     */
+    public static long clamp(long x, long lo, long hi) {
+        return Math.max(lo, Math.min(x, hi));
+    }
+
+    /**
+     * Clamps x between lo and hi (inclusive).
+     * @param x the value.
+     * @param lo the lower bound.
+     * @param hi the upper bound.
+     * @return the clamped value.
+     */
+    public static float clamp(float x, float lo, float hi) {
+        return Math.max(lo, Math.min(x, hi));
+    }
+
+    /**
+     * Clamps x between lo and hi (inclusive).
+     * @param x the value.
+     * @param lo the lower bound.
+     * @param hi the upper bound.
+     * @return the clamped value.
+     */
+    public static double clamp(double x, double lo, double hi) {
+        return Math.max(lo, Math.min(x, hi));
     }
 
     /**
@@ -2222,7 +2290,8 @@ public class MathEx {
     }
 
     /**
-     * Returns the column standard deviations of a matrix.
+     * Returns the column standard deviations of a matrix using Welford's
+     * numerically stable online algorithm.
      * @param matrix the matrix.
      * @return the column standard deviations.
      */
@@ -2231,22 +2300,25 @@ public class MathEx {
             throw new IllegalArgumentException("matrix length is less than 2.");
         }
 
+        int n = matrix.length;
         int p = matrix[0].length;
-        double[] sum = new double[p];
-        double[] sumsq = new double[p];
-        for (double[] row : matrix) {
-            for (int i = 0; i < p; i++) {
-                sum[i] += row[i];
-                sumsq[i] += row[i] * row[i];
+        double[] mean = new double[p];
+        double[] m2 = new double[p];
+        for (int i = 0; i < n; i++) {
+            double[] row = matrix[i];
+            for (int j = 0; j < p; j++) {
+                double delta = row[j] - mean[j];
+                mean[j] += delta / (i + 1);
+                m2[j] += delta * (row[j] - mean[j]);
             }
         }
 
-        int n = matrix.length - 1;
-        for (int i = 0; i < p; i++) {
-            sumsq[i] = sqrt(sumsq[i] / n - (sum[i] / matrix.length) * (sum[i] / n));
+        double[] sd = new double[p];
+        for (int j = 0; j < p; j++) {
+            sd[j] = sqrt(m2[j] / (n - 1));
         }
 
-        return sumsq;
+        return sd;
     }
 
     /**
@@ -2276,7 +2348,7 @@ public class MathEx {
             sum += n;
         }
 
-        return (int) sum;
+        return sum;
     }
 
     /**
@@ -2491,7 +2563,8 @@ public class MathEx {
     }
 
     /**
-     * Returns the variance of an array.
+     * Returns the variance of an array using Welford's numerically stable
+     * online algorithm.
      * @param array the array.
      * @return the variance.
      */
@@ -2500,19 +2573,20 @@ public class MathEx {
             throw new IllegalArgumentException("Array length is less than 2.");
         }
 
-        double sum = 0.0;
-        double sumsq = 0.0;
-        for (int xi : array) {
-            sum += xi;
-            sumsq += xi * xi;
+        double mean = 0.0;
+        double m2 = 0.0;
+        for (int i = 0; i < array.length; i++) {
+            double delta = array[i] - mean;
+            mean += delta / (i + 1);
+            m2 += delta * (array[i] - mean);
         }
 
-        int n = array.length - 1;
-        return sumsq / n - (sum / array.length) * (sum / n);
+        return m2 / (array.length - 1);
     }
 
     /**
-     * Returns the variance of an array.
+     * Returns the variance of an array using Welford's numerically stable
+     * online algorithm.
      * @param array the array.
      * @return the variance.
      */
@@ -2521,19 +2595,20 @@ public class MathEx {
             throw new IllegalArgumentException("Array length is less than 2.");
         }
 
-        double sum = 0.0;
-        double sumsq = 0.0;
-        for (float xi : array) {
-            sum += xi;
-            sumsq += xi * xi;
+        double mean = 0.0;
+        double m2 = 0.0;
+        for (int i = 0; i < array.length; i++) {
+            double delta = array[i] - mean;
+            mean += delta / (i + 1);
+            m2 += delta * (array[i] - mean);
         }
 
-        int n = array.length - 1;
-        return sumsq / n - (sum / array.length) * (sum / n);
+        return m2 / (array.length - 1);
     }
 
     /**
-     * Returns the variance of an array.
+     * Returns the variance of an array using Welford's numerically stable
+     * online algorithm.
      * @param array the array.
      * @return the variance.
      */
@@ -2542,15 +2617,15 @@ public class MathEx {
             throw new IllegalArgumentException("Array length is less than 2.");
         }
 
-        double sum = 0.0;
-        double sumsq = 0.0;
-        for (double xi : array) {
-            sum += xi;
-            sumsq += xi * xi;
+        double mean = 0.0;
+        double m2 = 0.0;
+        for (int i = 0; i < array.length; i++) {
+            double delta = array[i] - mean;
+            mean += delta / (i + 1);
+            m2 += delta * (array[i] - mean);
         }
 
-        int n = array.length - 1;
-        return sumsq / n - (sum / array.length) * (sum / n);
+        return m2 / (array.length - 1);
     }
 
     /**

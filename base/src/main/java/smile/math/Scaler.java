@@ -35,12 +35,12 @@ public class Scaler implements Function {
     private static final long serialVersionUID = 2L;
 
     /**
-     * The offset.
+     * The scaling factor.
      */
     private final double scale;
 
     /**
-     * The scaling factor.
+     * The offset.
      */
     private final double offset;
 
@@ -82,7 +82,9 @@ public class Scaler implements Function {
      * @return the scaler.
      */
     public static Scaler minmax(double[] data) {
-        return new Scaler(MathEx.min(data), MathEx.max(data), true);
+        double min = MathEx.min(data);
+        double max = MathEx.max(data);
+        return new Scaler(max - min, min, true);
     }
 
     /**
@@ -117,7 +119,9 @@ public class Scaler implements Function {
             agent.add(x);
         }
 
-        return new Scaler(agent.quantile(lower), agent.quantile(upper), true);
+        double lo = agent.quantile(lower);
+        double hi = agent.quantile(upper);
+        return new Scaler(hi - lo, lo, true);
     }
 
     /**
@@ -144,9 +148,9 @@ public class Scaler implements Function {
 
             double median = agent.quantile(0.5);
             double iqr = agent.quantile(0.75) - agent.quantile(0.25);
-            return new Scaler(median, iqr, false);
+            return new Scaler(iqr, median, false);
         } else {
-            return new Scaler(MathEx.mean(data), MathEx.stdev(data), false);
+            return new Scaler(MathEx.stdev(data), MathEx.mean(data), false);
         }
     }
 

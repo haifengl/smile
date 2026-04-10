@@ -18,6 +18,8 @@ package smile.math;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * Complex number. The object is immutable so once you create and initialize
@@ -200,6 +202,51 @@ public record Complex(double re, double im) implements Serializable {
         return sin().div(cos());
     }
 
+    /**
+     * Returns -this (negation).
+     * @return the negated complex number.
+     */
+    public Complex negate() {
+        return new Complex(-re, -im);
+    }
+
+    /**
+     * Returns the principal value of ln(this).
+     * @return the complex natural logarithm.
+     */
+    public Complex log() {
+        return new Complex(Math.log(abs()), phase());
+    }
+
+    /**
+     * Returns the principal value of sqrt(this).
+     * @return the complex square root.
+     */
+    public Complex sqrt() {
+        double r = abs();
+        double re2 = Math.sqrt((r + this.re) / 2.0);
+        double im2 = (this.im >= 0 ? 1.0 : -1.0) * Math.sqrt((r - this.re) / 2.0);
+        return new Complex(re2, im2);
+    }
+
+    /**
+     * Returns this raised to the power of b.
+     * @param b the exponent.
+     * @return this<sup>b</sup>.
+     */
+    public Complex pow(Complex b) {
+        return log().mul(b).exp();
+    }
+
+    /**
+     * Returns this raised to the real power of b.
+     * @param b the real exponent.
+     * @return this<sup>b</sup>.
+     */
+    public Complex pow(double b) {
+        return log().scale(b).exp();
+    }
+
     /** Packed array of complex numbers for better memory efficiency. */
     public static class Array {
         /** The length of array. */
@@ -270,12 +317,33 @@ public record Complex(double re, double im) implements Serializable {
         }
 
         /**
-         * Sets the i-th element with a real value. For Scala convenience.
+         * Sets the i-th element. For Scala convenience.
          * @param i the index.
          * @param re the new value.
          */
         public void update(int i, double re) {
             set(i, re);
+        }
+
+        /**
+         * Returns an iterator over the elements.
+         * @return an iterator.
+         */
+        public Iterator<Complex> iterator() {
+            return new Iterator<>() {
+                int cursor = 0;
+
+                @Override
+                public boolean hasNext() {
+                    return cursor < length;
+                }
+
+                @Override
+                public Complex next() {
+                    if (!hasNext()) throw new NoSuchElementException();
+                    return get(cursor++);
+                }
+            };
         }
 
         /**
