@@ -77,9 +77,13 @@ public class NominalScale extends CategoricalMeasure {
     @Override
     public boolean equals(Object o) {
         if (o instanceof NominalScale scale) {
-            return Arrays.equals(levels, scale.levels);
+            return Arrays.equals(levels, scale.levels) && Arrays.equals(values, scale.values);
         }
-
         return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return 31 * Arrays.hashCode(levels) + Arrays.hashCode(values);
     }
 }
