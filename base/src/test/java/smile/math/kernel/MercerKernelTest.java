@@ -53,7 +53,7 @@ public class MercerKernelTest {
         MercerKernel.of("laplacian(0.1)");
         MercerKernel.of("tanh(0.1, 0.0)");
         MercerKernel.of("tps(0.1)");
-        MercerKernel.of("pearson(0.1, 0.0)");
+        MercerKernel.of("pearson(0.1, 1.0)");
         MercerKernel.of("hellinger");
     }
 
@@ -67,7 +67,7 @@ public class MercerKernelTest {
         MercerKernel.of(new LaplacianKernel(0.1).toString());
         MercerKernel.of(new HyperbolicTangentKernel(0.1, 0.0).toString());
         MercerKernel.of(new ThinPlateSplineKernel(0.1).toString());
-        MercerKernel.of(new PearsonKernel(0.1, 0.0).toString());
+        MercerKernel.of(new PearsonKernel(0.1, 1.0).toString());
         MercerKernel.of(new HellingerKernel().toString());
     }
 }

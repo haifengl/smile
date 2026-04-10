@@ -92,10 +92,6 @@ public class Matern implements IsotropicKernel {
         return String.format("MaternKernel(%.4f, %.1f)", sigma, nu);
     }
 
-    @Override
-    public double f(double dist) {
-        return k(dist);
-    }
 
     @Override
     public double k(double dist) {
