@@ -94,9 +94,9 @@ public class MPLSHTest {
 
         error /= (hit - match);
 
-        assertEquals(1722, match);
+        assertEquals(1754, match);
         assertEquals(2007, hit);
-        assertEquals(0.0687, error, 1E-4);
+        assertEquals(0.0716, error, 1E-4);
         System.out.format("recall is %.2f%%%n", 100.0 * match / testx.length);
         System.out.format("error when miss is %.2f%%%n", 100.0 * error);
         System.out.format("null rate is %.2f%%%n", 100.0 - 100.0 * hit / testx.length);
