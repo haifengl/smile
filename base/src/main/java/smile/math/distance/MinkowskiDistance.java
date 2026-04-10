@@ -157,6 +157,9 @@ public class MinkowskiDistance implements Metric<double[]> {
             }
         }
 
+        if (m == 0) {
+            return Double.NaN;
+        }
         dist = n * dist / m;
 
         return Math.pow(dist, 1.0/p);
@@ -201,6 +204,9 @@ public class MinkowskiDistance implements Metric<double[]> {
             }
         }
 
+        if (m == 0) {
+            return Double.NaN;
+        }
         dist = n * dist / m;
 
         return Math.pow(dist, 1.0/p);

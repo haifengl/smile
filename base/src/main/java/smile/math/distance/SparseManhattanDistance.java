@@ -134,6 +134,6 @@ public class SparseManhattanDistance implements Metric<SparseArray> {
             }
         }
 
-        return Math.sqrt(dist);
+        return dist;
     }
 }
