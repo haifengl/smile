@@ -75,14 +75,8 @@ public class UniversalGenerator implements RandomNumberGenerator {
         int ijkl = Math.abs((int) (seed % BIG_PRIME));
         int ij = ijkl / 30082;
         int kl = ijkl % 30082;
-
-        // Handle the seed range errors
-        // First random number seed must be between 0 and 31328
-        // Second seed must have a value between 0 and 30081
-        if (ij < 0 || ij > 31328 || kl < 0 || kl > 30081) {
-            ij = ij % 31329;
-            kl = kl % 30082;
-        }
+        // ijkl in [0, BIG_PRIME-1]; ij = ijkl/30082 ∈ [0, 29900] ⊆ [0, 31328]
+        // kl = ijkl%30082 ∈ [0, 30081]; both within valid ranges by construction.
 
         int i = ((ij / 177) % 177) + 2;
         int j = (ij % 177) + 2;
@@ -183,7 +177,9 @@ public class UniversalGenerator implements RandomNumberGenerator {
 
     @Override
     public int nextInt() {
-        return (int) Math.floor(Integer.MAX_VALUE * (2 * nextDouble() - 1.0));
+        // Scale [0,1) to the full int range by mapping to [0, 2^32)
+        // then reinterpreting as signed int, avoiding overflow.
+        return (int) (long) (nextDouble() * 0x1p32);
     }
 
     @Override
@@ -191,12 +187,16 @@ public class UniversalGenerator implements RandomNumberGenerator {
         if (n <= 0) {
             throw new IllegalArgumentException("n must be positive");
         }
-
-        return (int) (nextDouble() * n);
+        int result = (int) (nextDouble() * n);
+        // Guard against rare case where floating-point rounds up to n
+        return result < n ? result : n - 1;
     }
 
     @Override
     public long nextLong() {
-        return (long) Math.floor(Long.MAX_VALUE * (2 * nextDouble() - 1.0));
+        // Combine two 32-bit halves from separate nextDouble() draws
+        long hi = (long) (nextDouble() * 0x1p32);
+        long lo = (long) (nextDouble() * 0x1p32);
+        return (hi << 32) | (lo & 0xFFFFFFFFL);
     }
 }

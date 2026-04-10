@@ -88,9 +88,10 @@ public class MersenneTwister implements RandomNumberGenerator {
 
     @Override
     public void setSeed(long seed) {
-        // Integer.MAX_VALUE (2,147,483,647) is the 8th Mersenne prime.
-        // Therefore, it is good as a modulus for RNGs.
-        setSeed((int) (seed % Integer.MAX_VALUE));
+        // Fold 64 bits into 32 bits using XOR to preserve all seed information.
+        // Using modulo Integer.MAX_VALUE loses information and can never
+        // produce certain seed values in the lower range.
+        setSeed((int) (seed ^ (seed >>> 32)));
     }
 
     /**
@@ -211,7 +212,8 @@ public class MersenneTwister implements RandomNumberGenerator {
 
     @Override
     public long nextLong() {
-        long x = nextInt();
-        return (x << 32) | nextInt();
+        long hi = nextInt();
+        long lo = nextInt() & 0xFFFFFFFFL;
+        return (hi << 32) | lo;
     }
 }
