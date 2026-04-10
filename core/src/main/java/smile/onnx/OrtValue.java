@@ -26,6 +26,9 @@ import java.nio.IntBuffer;
 import java.nio.LongBuffer;
 import smile.onnx.foreign.OrtApi;
 import smile.onnx.foreign.onnxruntime_c_api_h;
+import smile.tensor.DenseMatrix;
+import smile.tensor.JTensor;
+import smile.tensor.ScalarType;
 
 /**
  * A wrapper around an OrtValue — the fundamental data container in ONNX
@@ -180,6 +183,191 @@ public class OrtValue implements AutoCloseable {
             mem.set(ValueLayout.JAVA_BYTE, i, data[i] ? (byte) 1 : (byte) 0);
         }
         return createWithData(arena, mem, data.length, shape, ElementType.BOOL);
+    }
+
+    /**
+     * Creates an OrtValue tensor from a {@link JTensor}.
+     *
+     * <p>The tensor data is copied into a contiguous off-heap native memory
+     * buffer in the platform's native byte order, as required by ORT.
+     * The ONNX shape is derived directly from {@code tensor.shape()}, and the
+     * ONNX element type is mapped from {@code tensor.scalarType()}.
+     *
+     * <p>Supported scalar types:
+     * <ul>
+     *   <li>{@code Float32}  → {@link ElementType#FLOAT}</li>
+     *   <li>{@code Float64}  → {@link ElementType#DOUBLE}</li>
+     *   <li>{@code Int8} / {@code QInt8} / {@code QUInt8} → {@link ElementType#INT8} / {@link ElementType#UINT8}</li>
+     *   <li>{@code Int16}    → {@link ElementType#INT16}</li>
+     *   <li>{@code Int32}    → {@link ElementType#INT32}</li>
+     *   <li>{@code Int64}    → {@link ElementType#INT64}</li>
+     *   <li>{@code Float16}  → {@link ElementType#FLOAT16}</li>
+     *   <li>{@code BFloat16} → {@link ElementType#BFLOAT16}</li>
+     * </ul>
+     *
+     * @param tensor the source tensor; must not be null.
+     * @return a new OrtValue owning a copy of the tensor data.
+     * @throws IllegalArgumentException if the scalar type has no ONNX mapping.
+     */
+    public static OrtValue fromTensor(JTensor tensor) {
+        ScalarType scalarType = tensor.scalarType();
+        ElementType elementType = scalarTypeToElementType(scalarType);
+
+        // Build long[] shape from int[] shape
+        int[] intShape = tensor.shape();
+        long[] shape = new long[intShape.length];
+        long totalElements = 1;
+        for (int i = 0; i < intShape.length; i++) {
+            shape[i] = intShape[i];
+            totalElements *= intShape[i];
+        }
+        int n = (int) totalElements;
+
+        Arena arena = Arena.ofConfined();
+
+        // Use typed NIO buffers so data is written in native byte order,
+        // exactly as the existing fromFloatArray / fromDoubleArray etc. do.
+        // We read elements via getAtIndex on the tensor's flat memory, which
+        // is correct because JTensor is row-major with no padding (stride[last]=1
+        // and all higher strides are computed from shape), so the flat linear
+        // layout matches element order 0..n-1.
+        MemorySegment src = tensor.memory();
+        switch (scalarType) {
+            case Float32 -> {
+                long byteSize = (long) n * Float.BYTES;
+                MemorySegment dst = arena.allocate(
+                        MemoryLayout.sequenceLayout(n, ValueLayout.JAVA_FLOAT));
+                FloatBuffer buf = dst.asByteBuffer().asFloatBuffer();
+                for (int i = 0; i < n; i++) buf.put(i, src.getAtIndex(ValueLayout.JAVA_FLOAT, i));
+                return createWithData(arena, dst, byteSize, shape, elementType);
+            }
+            case Float64 -> {
+                long byteSize = (long) n * Double.BYTES;
+                MemorySegment dst = arena.allocate(
+                        MemoryLayout.sequenceLayout(n, ValueLayout.JAVA_DOUBLE));
+                DoubleBuffer buf = dst.asByteBuffer().asDoubleBuffer();
+                for (int i = 0; i < n; i++) buf.put(i, src.getAtIndex(ValueLayout.JAVA_DOUBLE, i));
+                return createWithData(arena, dst, byteSize, shape, elementType);
+            }
+            case Int32 -> {
+                long byteSize = (long) n * Integer.BYTES;
+                MemorySegment dst = arena.allocate(
+                        MemoryLayout.sequenceLayout(n, ValueLayout.JAVA_INT));
+                IntBuffer buf = dst.asByteBuffer().asIntBuffer();
+                for (int i = 0; i < n; i++) buf.put(i, src.getAtIndex(ValueLayout.JAVA_INT, i));
+                return createWithData(arena, dst, byteSize, shape, elementType);
+            }
+            case Int64 -> {
+                long byteSize = (long) n * Long.BYTES;
+                MemorySegment dst = arena.allocate(
+                        MemoryLayout.sequenceLayout(n, ValueLayout.JAVA_LONG));
+                LongBuffer buf = dst.asByteBuffer().asLongBuffer();
+                for (int i = 0; i < n; i++) buf.put(i, src.getAtIndex(ValueLayout.JAVA_LONG, i));
+                return createWithData(arena, dst, byteSize, shape, elementType);
+            }
+            case Int8, QInt8, QUInt8 -> {
+                MemorySegment dst = arena.allocate(n);
+                for (int i = 0; i < n; i++) dst.set(ValueLayout.JAVA_BYTE, i, src.get(ValueLayout.JAVA_BYTE, i));
+                return createWithData(arena, dst, n, shape, elementType);
+            }
+            case Int16, Float16, BFloat16 -> {
+                long byteSize = (long) n * Short.BYTES;
+                MemorySegment dst = arena.allocate(
+                        MemoryLayout.sequenceLayout(n, ValueLayout.JAVA_SHORT));
+                for (int i = 0; i < n; i++) dst.setAtIndex(ValueLayout.JAVA_SHORT, i, src.getAtIndex(ValueLayout.JAVA_SHORT, i));
+                return createWithData(arena, dst, byteSize, shape, elementType);
+            }
+            default -> {
+                arena.close();
+                throw new IllegalArgumentException(
+                        "Unsupported JTensor scalar type for OrtValue: " + scalarType);
+            }
+        }
+    }
+
+    /**
+     * Creates an OrtValue tensor from a {@link DenseMatrix}.
+     *
+     * <p>The matrix is serialised in <em>row-major</em> order (the standard
+     * ONNX layout) with shape {@code [nrow, ncol]}, regardless of the
+     * internal column-major / padded storage used by {@code DenseMatrix}.
+     * Padding columns introduced by the optimal leading dimension are
+     * <em>not</em> included in the output tensor.
+     *
+     * <p>Supported scalar types:
+     * <ul>
+     *   <li>{@code Float32} → {@link ElementType#FLOAT}</li>
+     *   <li>{@code Float64} → {@link ElementType#DOUBLE}</li>
+     * </ul>
+     *
+     * @param matrix the source matrix; must not be null.
+     * @return a new OrtValue owning a copy of the matrix data in row-major
+     *         order with shape {@code [nrow, ncol]}.
+     * @throws IllegalArgumentException if the scalar type is not
+     *         {@code Float32} or {@code Float64}.
+     */
+    public static OrtValue fromMatrix(DenseMatrix matrix) {
+        int m = matrix.nrow();
+        int n = matrix.ncol();
+        long[] shape = { m, n };
+        long totalElements = (long) m * n;
+        ScalarType scalarType = matrix.scalarType();
+        ElementType elementType = scalarTypeToElementType(scalarType);
+
+        Arena arena = Arena.ofConfined();
+
+        switch (scalarType) {
+            case Float32 -> {
+                long byteSize = totalElements * Float.BYTES;
+                MemorySegment dst = arena.allocate(byteSize);
+                FloatBuffer buf = dst.asByteBuffer().asFloatBuffer();
+                // DenseMatrix is column-major; iterate in row-major order for ONNX
+                for (int i = 0; i < m; i++) {
+                    for (int j = 0; j < n; j++) {
+                        buf.put((float) matrix.get(i, j));
+                    }
+                }
+                return createWithData(arena, dst, byteSize, shape, elementType);
+            }
+            case Float64 -> {
+                long byteSize = totalElements * Double.BYTES;
+                MemorySegment dst = arena.allocate(byteSize);
+                DoubleBuffer buf = dst.asByteBuffer().asDoubleBuffer();
+                for (int i = 0; i < m; i++) {
+                    for (int j = 0; j < n; j++) {
+                        buf.put(matrix.get(i, j));
+                    }
+                }
+                return createWithData(arena, dst, byteSize, shape, elementType);
+            }
+            default -> {
+                arena.close();
+                throw new IllegalArgumentException(
+                        "DenseMatrix scalar type not supported for OrtValue: " + scalarType
+                        + ". Only Float32 and Float64 are supported.");
+            }
+        }
+    }
+
+    /**
+     * Maps a SMILE {@link ScalarType} to an ONNX {@link ElementType}.
+     *
+     * @param scalarType the SMILE scalar type.
+     * @return the corresponding ONNX element type.
+     * @throws IllegalArgumentException if there is no ONNX mapping.
+     */
+    private static ElementType scalarTypeToElementType(ScalarType scalarType) {
+        return switch (scalarType) {
+            case Float32        -> ElementType.FLOAT;
+            case Float64        -> ElementType.DOUBLE;
+            case Int8, QInt8    -> ElementType.INT8;
+            case QUInt8         -> ElementType.UINT8;
+            case Int16          -> ElementType.INT16;
+            case Int32          -> ElementType.INT32;
+            case Int64          -> ElementType.INT64;
+            case Float16        -> ElementType.FLOAT16;
+            case BFloat16       -> ElementType.BFLOAT16;
+        };
     }
 
     /** Internal factory that calls CreateTensorWithDataAsOrtValue. */

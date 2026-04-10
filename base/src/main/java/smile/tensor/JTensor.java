@@ -288,7 +288,7 @@ public class JTensor extends AbstractTensor {
      * @param shape the shape of tensor.
      * @return the tensor.
      */
-    static JTensor of(byte[] data, int... shape) {
+    public static JTensor of(byte[] data, int... shape) {
         long length = MathEx.product(shape);
         if (length != data.length) {
             throw new IllegalArgumentException(String.format("The length of shape %d != %d the length of array", length, data.length));
@@ -303,7 +303,7 @@ public class JTensor extends AbstractTensor {
      * @param shape the shape of tensor.
      * @return the tensor.
      */
-    static JTensor of(int[] data, int... shape) {
+    public static JTensor of(int[] data, int... shape) {
         long length = MathEx.product(shape);
         if (length != data.length) {
             throw new IllegalArgumentException(String.format("The length of shape %d != %d the length of array", length, data.length));
@@ -318,7 +318,7 @@ public class JTensor extends AbstractTensor {
      * @param shape the shape of tensor.
      * @return the tensor.
      */
-    static JTensor of(float[] data, int... shape) {
+    public static JTensor of(float[] data, int... shape) {
         long length = MathEx.product(shape);
         if (length != data.length) {
             throw new IllegalArgumentException(String.format("The length of shape %d != %d the length of array", length, data.length));
@@ -333,7 +333,22 @@ public class JTensor extends AbstractTensor {
      * @param shape the shape of tensor.
      * @return the tensor.
      */
-    static JTensor of(double[] data, int... shape) {
+    public static JTensor of(long[] data, int... shape) {
+        long length = MathEx.product(shape);
+        if (length != data.length) {
+            throw new IllegalArgumentException(String.format("The length of shape %d != %d the length of array", length, data.length));
+        }
+        var memory = MemorySegment.ofArray(data);
+        return new JTensor(memory, ValueLayout.JAVA_LONG, shape);
+    }
+
+    /**
+     * Wraps an array in a tensor.
+     * @param data the data array.
+     * @param shape the shape of tensor.
+     * @return the tensor.
+     */
+    public static JTensor of(double[] data, int... shape) {
         long length = MathEx.product(shape);
         if (length != data.length) {
             throw new IllegalArgumentException(String.format("The length of shape %d != %d the length of array", length, data.length));
