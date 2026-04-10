@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
 import smile.io.Paths;
 
 /**
@@ -55,15 +56,25 @@ public record ColonCancer(double[][] x, int[] y) {
      */
     public static ColonCancer load(Path path) throws IOException {
         try (BufferedReader reader = Files.newBufferedReader(path)) {
-            int[] y = Arrays.stream(reader.readLine()
-                    .split(" "))
+            // First line: space-separated integer labels (+1 / -1 or similar)
+            String[] labelTokens = reader.readLine().split(" ");
+            int nSamples = labelTokens.length;
+            int[] y = Arrays.stream(labelTokens)
                     .mapToInt(s -> Integer.parseInt(s) > 0 ? 1 : 0)
                     .toArray();
 
-            double[][] x = new double[62][2000];
-            for (int i = 0; i < 2000; i++) {
-                String[] tokens = reader.readLine().split(" ");
-                for (int j = 0; j < 62; j++) {
+            // Remaining lines: each line is one gene with nSamples expression values
+            List<String> geneLines = new java.util.ArrayList<>();
+            String line;
+            while ((line = reader.readLine()) != null && !line.isBlank()) {
+                geneLines.add(line);
+            }
+            int nGenes = geneLines.size();
+
+            double[][] x = new double[nSamples][nGenes];
+            for (int i = 0; i < nGenes; i++) {
+                String[] tokens = geneLines.get(i).split(" ");
+                for (int j = 0; j < nSamples; j++) {
                     x[j][i] = Double.parseDouble(tokens[j]);
                 }
             }
