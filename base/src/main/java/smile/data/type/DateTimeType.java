@@ -56,6 +56,7 @@ public class DateTimeType implements DataType {
 
     @Override
     public String toString(Object o) {
+        if (o == null) return "null";
         return switch (o) {
             case Instant d -> DateTimeFormatter.ISO_INSTANT.format(d);
             case LocalDateTime d -> DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(d);
@@ -68,11 +69,16 @@ public class DateTimeType implements DataType {
 
     @Override
     public LocalDateTime valueOf(String s) {
-        return LocalDateTime.parse(s, DateTimeFormatter.ISO_INSTANT);
+        return LocalDateTime.parse(s, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
     }
 
     @Override
     public boolean equals(Object o) {
         return o instanceof DateTimeType;
+    }
+
+    @Override
+    public int hashCode() {
+        return DateTimeType.class.hashCode();
     }
 }

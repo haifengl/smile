@@ -65,4 +65,9 @@ public abstract class PrimitiveType implements DataType {
         }
         return false;
     }
+
+    @Override
+    public int hashCode() {
+        return 31 * id.hashCode() + Boolean.hashCode(nullable);
+    }
 }

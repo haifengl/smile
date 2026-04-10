@@ -52,6 +52,7 @@ public class TimeType implements DataType {
 
     @Override
     public String toString(Object o) {
+        if (o == null) return "null";
         return switch (o) {
             case LocalTime d -> DateTimeFormatter.ISO_LOCAL_TIME.format(d);
             case OffsetTime d -> DateTimeFormatter.ISO_OFFSET_TIME.format(d);
@@ -67,5 +68,10 @@ public class TimeType implements DataType {
     @Override
     public boolean equals(Object o) {
         return o instanceof TimeType;
+    }
+
+    @Override
+    public int hashCode() {
+        return TimeType.class.hashCode();
     }
 }

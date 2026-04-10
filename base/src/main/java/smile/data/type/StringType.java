@@ -66,4 +66,9 @@ public class StringType implements DataType {
     public boolean equals(Object o) {
         return o instanceof StringType;
     }
+
+    @Override
+    public int hashCode() {
+        return StringType.class.hashCode();
+    }
 }
