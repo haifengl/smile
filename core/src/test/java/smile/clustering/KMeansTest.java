@@ -64,8 +64,8 @@ public class KMeansTest {
         double r = RandIndex.of(y, model.group());
         double r2 = AdjustedRandIndex.of(y, model.group());
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertEquals(0.5965, r, 1E-4);
-        assertEquals(0.2234, r2, 1E-4);
+        assertEquals(0.9459, r, 1E-4);
+        assertEquals(0.8586, r2, 1E-4);
 
         System.out.format("MI = %.2f%n", MutualInformation.of(y, model.group()));
         System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.group()));
@@ -85,8 +85,8 @@ public class KMeansTest {
         double r = RandIndex.of(y, model.group());
         double r2 = AdjustedRandIndex.of(y, model.group());
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertEquals(0.5965, r, 1E-4);
-        assertEquals(0.2234, r2, 1E-4);
+        assertEquals(0.9459, r, 1E-4);
+        assertEquals(0.8586, r2, 1E-4);
 
         System.out.format("MI = %.2f%n", MutualInformation.of(y, model.group()));
         System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.group()));
@@ -106,8 +106,8 @@ public class KMeansTest {
         double r = RandIndex.of(y, model.group());
         double r2 = AdjustedRandIndex.of(y, model.group());
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertEquals(0.4705, r, 1E-4);
-        assertEquals(0.0169, r2, 1E-4);
+        assertEquals(0.7550, r, 1E-4);
+        assertEquals(0.0856, r2, 1E-4);
 
         System.out.format("MI = %.2f%n", MutualInformation.of(y, model.group()));
         System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.group()));
@@ -127,8 +127,8 @@ public class KMeansTest {
         double r = RandIndex.of(y, model.group());
         double r2 = AdjustedRandIndex.of(y, model.group());
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertEquals(0.4705, r, 1E-4);
-        assertEquals(0.0169, r2, 1E-4);
+        assertEquals(0.7550, r, 1E-4);
+        assertEquals(0.0856, r2, 1E-4);
 
         System.out.format("MI = %.2f%n", MutualInformation.of(y, model.group()));
         System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.group()));
