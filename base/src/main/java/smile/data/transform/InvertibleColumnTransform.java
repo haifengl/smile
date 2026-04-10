@@ -16,14 +16,17 @@
  */
 package smile.data.transform;
 
+import java.util.BitSet;
 import java.util.Map;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import smile.data.DataFrame;
 import smile.data.Tuple;
+import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.DoubleVector;
+import smile.data.vector.NullableDoubleVector;
 import smile.data.vector.ValueVector;
 import smile.util.function.Function;
 
@@ -66,12 +69,21 @@ public class InvertibleColumnTransform extends ColumnTransform implements Invert
     public DataFrame invert(DataFrame data) {
         StructType schema = data.schema();
         ValueVector[] vectors = new ValueVector[schema.length()];
-        IntStream.range(0, schema.length()).forEach(i -> {
+        IntStream.range(0, schema.length()).parallel().forEach(i -> {
             StructField field = schema.field(i);
             Function inverse = inverses.get(field.name());
             if (inverse != null) {
-                DoubleStream stream = data.stream().parallel().mapToDouble(t -> inverse.apply(t.getDouble(i)));
-                vectors[i] = new DoubleVector(field, stream.toArray());
+                ValueVector column = data.column(i);
+                DoubleStream stream = column.doubleStream().map(inverse::apply);
+                if (column.isNullable()) {
+                    int n = column.size();
+                    BitSet mask = new BitSet(n);
+                    for (int j = 0; j < n; j++) mask.set(j, column.isNullAt(j));
+                    var prop = new StructField(field.name(), DataTypes.NullableDoubleType, field.measure());
+                    vectors[i] = new NullableDoubleVector(prop, stream.toArray(), mask);
+                } else {
+                    vectors[i] = new DoubleVector(field, stream.toArray());
+                }
             } else {
                 vectors[i] = data.column(i);
             }

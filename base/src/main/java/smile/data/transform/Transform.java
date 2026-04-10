@@ -38,6 +38,9 @@ public interface Transform extends Function<Tuple, Tuple>, Serializable {
      */
     @SafeVarargs
     static Transform fit(DataFrame data, Function<DataFrame, Transform>... trainers) {
+        if (trainers == null || trainers.length == 0) {
+            throw new IllegalArgumentException("At least one trainer is required");
+        }
         Transform pipeline = trainers[0].apply(data);
         for (int i = 1; i < trainers.length; i++) {
             data = pipeline.apply(data);
@@ -53,6 +56,9 @@ public interface Transform extends Function<Tuple, Tuple>, Serializable {
      * @return a composed transform.
      */
     static Transform pipeline(Transform... transforms) {
+        if (transforms == null || transforms.length == 0) {
+            throw new IllegalArgumentException("At least one transform is required");
+        }
         Transform pipeline = transforms[0];
         for (int i = 1; i < transforms.length; i++) {
             pipeline = pipeline.andThen(transforms[i]);
@@ -67,7 +73,7 @@ public interface Transform extends Function<Tuple, Tuple>, Serializable {
      */
     default DataFrame apply(DataFrame data) {
         var result = data.stream().map(this).toList();
-        return DataFrame.of(result.getFirst().schema(), result);
+        return DataFrame.of(data.schema(), result);
     }
 
     /**
