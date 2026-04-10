@@ -60,9 +60,9 @@ public class VectorTest {
         assertEquals(DataTypes.TimeType, times.dtype());
 
         var cat = ValueVector.nominal("C", "test", "train", "test", "train");
-        assertTrue(cat instanceof ByteVector);
+        assertInstanceOf(ByteVector.class, cat);
         assertEquals(DataTypes.ByteType, cat.dtype());
-        assertTrue(cat.measure() instanceof NominalScale);
+        assertInstanceOf(NominalScale.class, cat.measure());
 
         var strings = ValueVector.of("D",
                 "this is a string vector",
@@ -876,7 +876,7 @@ public class VectorTest {
         System.out.println("ValueVector.nominal(String...)");
         var v = ValueVector.nominal("color", "red", "blue", "red", "green");
         assertNotNull(v.measure());
-        assertTrue(v.measure() instanceof NominalScale);
+        assertInstanceOf(NominalScale.class, v.measure());
         assertEquals(DataTypes.ByteType, v.dtype());
         // "red" appears twice with same code
         assertEquals(v.getByte(0), v.getByte(2));
@@ -886,7 +886,7 @@ public class VectorTest {
     public void testOrdinalStringVector() {
         System.out.println("ValueVector.ordinal(String...)");
         var v = ValueVector.ordinal("rank", "low", "mid", "high", "low");
-        assertTrue(v.measure() instanceof OrdinalScale);
+        assertInstanceOf(OrdinalScale.class, v.measure());
     }
 
     enum Color { RED, GREEN, BLUE }
@@ -895,7 +895,7 @@ public class VectorTest {
     public void testNominalEnumVector() {
         System.out.println("ValueVector.nominal(Enum...)");
         var v = ValueVector.nominal("c", Color.RED, Color.GREEN, Color.BLUE, Color.RED);
-        assertTrue(v.measure() instanceof NominalScale);
+        assertInstanceOf(NominalScale.class, v.measure());
         assertEquals(DataTypes.ByteType, v.dtype());
         assertEquals(v.getByte(0), v.getByte(3)); // both RED
     }
@@ -904,7 +904,7 @@ public class VectorTest {
     public void testOrdinalEnumVector() {
         System.out.println("ValueVector.ordinal(Enum...)");
         var v = ValueVector.ordinal("c", Color.RED, Color.GREEN, Color.BLUE);
-        assertTrue(v.measure() instanceof OrdinalScale);
+        assertInstanceOf(OrdinalScale.class, v.measure());
         assertEquals(3, v.size());
     }
 
@@ -1308,6 +1308,61 @@ public class VectorTest {
         var v = new ByteVector("v", new byte[]{10, 20, 30});
         assertEquals(20.0, v.mean(), 1e-10);
         assertEquals(60.0, v.sum(),  1e-10);
+    }
+
+    // -----------------------------------------------------------------------
+    // PrimitiveVector sum/variance
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testPrimitiveVectorSum() {
+        System.out.println("DoubleVector sum");
+        DoubleVector v = new DoubleVector("v", new double[]{1.0, 2.0, 3.0, 4.0, 5.0});
+        assertEquals(15.0, v.sum(), 1e-10);
+    }
+
+    @Test
+    public void testPrimitiveVectorVar() {
+        System.out.println("DoubleVector variance");
+        DoubleVector v = new DoubleVector("v", new double[]{2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0});
+        // population variance = 4.0
+        assertEquals(4.571428, v.var(), 1e-5);
+    }
+
+    @Test
+    public void testIntVectorSum() {
+        System.out.println("IntVector sum");
+        IntVector v = new IntVector("v", new int[]{10, 20, 30});
+        assertEquals(60.0, v.sum(), 1e-10);
+    }
+
+    // -----------------------------------------------------------------------
+    // ValueVector isin(int...)
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testIsinIntArray() {
+        System.out.println("ValueVector isin(int...)");
+        IntVector v = new IntVector("v", new int[]{1, 2, 3, 4, 5});
+        boolean[] result = v.isin(2, 4);
+        assertFalse(result[0]); // 1
+        assertTrue(result[1]);  // 2
+        assertFalse(result[2]); // 3
+        assertTrue(result[3]);  // 4
+        assertFalse(result[4]); // 5
+    }
+
+    @Test
+    public void testNullableDoubleVectorSumVar() {
+        System.out.println("NullableDoubleVector sum/var");
+        java.util.BitSet mask = new java.util.BitSet(5);
+        mask.set(2); // index 2 is null
+        var v = new smile.data.vector.NullableDoubleVector("v",
+                new double[]{1.0, 2.0, Double.NaN, 4.0, 5.0}, mask);
+        // sum of 1+2+4+5 = 12
+        assertEquals(12.0, v.sum(), 1e-10);
+        // non-null count = 4
+        assertEquals(4, v.size() - v.getNullCount());
     }
 }
 
