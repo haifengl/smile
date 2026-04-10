@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *  5. Formula.of(String) and Terms.$() regexes did not parse ')^N'
  *     factor-crossing degree correctly.
  */
-public class FormulaImprovementsTest {
+public class FormulaRegressionTest {
 
     // -----------------------------------------------------------------------
     // Shared test data
@@ -96,7 +96,7 @@ public class FormulaImprovementsTest {
     DataFrame eventDf;  // Event data frame
     DataFrame timeDf;   // TimeOnly data frame
 
-    public FormulaImprovementsTest() {
+    public FormulaRegressionTest() {
         List<Person> persons = new ArrayList<>();
         persons.add(new Person("Alex", Gender.Male,   LocalDate.of(1980, 10,  1), 38,  10000.));
         persons.add(new Person("Bob",  Gender.Male,   LocalDate.of(1995,  3,  4), 23,  null));
