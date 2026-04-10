@@ -18,7 +18,6 @@ package smile.datasets;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.stream.IntStream;
 import org.apache.commons.csv.CSVFormat;
 import smile.data.CategoricalEncoder;
@@ -58,8 +57,8 @@ public record PenDigits(DataFrame data, Formula formula) {
     }
 
     private static DataFrame load(Path path) throws IOException {
-        ArrayList<StructField> fields = new ArrayList<>();
-        IntStream.range(1, 17).forEach(i -> fields.add(new StructField("V"+i, DataTypes.DoubleType)));
+        var fields = new java.util.ArrayList<StructField>();
+        IntStream.range(1, 17).forEach(i -> fields.add(new StructField("V" + i, DataTypes.DoubleType)));
         fields.add(new StructField("class", DataTypes.ByteType));
         StructType schema = new StructType(fields);
 

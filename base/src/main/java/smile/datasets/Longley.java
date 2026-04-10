@@ -70,11 +70,7 @@ public record Longley(DataFrame data, Formula formula) {
      * @return the train sample features.
      */
     public double[][] x() {
-        double[][] result = new double[x.length][];
-        for (int i = 0; i < x.length; i++) {
-            result[i] = Arrays.copyOf(x[i], x[i].length);
-        }
-        return result;
+        return Arrays.stream(x).map(double[]::clone).toArray(double[][]::new);
     }
 
     /**

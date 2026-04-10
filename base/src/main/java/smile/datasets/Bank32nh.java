@@ -26,7 +26,7 @@ import smile.io.Read;
 import smile.io.Paths;
 
 /**
- * Auto MPG dataset. A family of datasets synthetically generated from
+ * Bank32nh dataset. A family of datasets synthetically generated from
  * a simulation of how bank-customers choose their banks. Tasks are
  * based on predicting the fraction of bank customers who leave the bank
  * because of full queues. The bank family of datasets are generated from

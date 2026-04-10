@@ -18,7 +18,6 @@ package smile.datasets;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.stream.IntStream;
 import org.apache.commons.csv.CSVFormat;
 import smile.data.CategoricalEncoder;
@@ -44,7 +43,7 @@ import smile.io.Paths;
 public record USPS(DataFrame train, DataFrame test, Formula formula) {
     private static final StructType schema;
     static {
-        ArrayList<StructField> fields = new ArrayList<>();
+        var fields = new java.util.ArrayList<StructField>();
         fields.add(new StructField("class", DataTypes.ByteType));
         IntStream.range(1, 257).forEach(i -> fields.add(new StructField("V" + i, DataTypes.FloatType)));
         schema = new StructType(fields);

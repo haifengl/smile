@@ -56,19 +56,19 @@ public record GaussianMixture(double[][] x, int[] y) {
         MultivariateGaussianDistribution g2 = new MultivariateGaussianDistribution(mu2, DenseMatrix.of(sigma2));
         for (int i = 0; i < 3000; i++) {
             x[2000 + i] = g2.rand();
-            y[i] = 1;
+            y[2000 + i] = 1;
         }
 
         MultivariateGaussianDistribution g3 = new MultivariateGaussianDistribution(mu3, DenseMatrix.of(sigma3));
         for (int i = 0; i < 3000; i++) {
             x[5000 + i] = g3.rand();
-            y[i] = 2;
+            y[5000 + i] = 2;
         }
 
         MultivariateGaussianDistribution g4 = new MultivariateGaussianDistribution(mu4, DenseMatrix.of(sigma4));
         for (int i = 0; i < 2000; i++) {
             x[8000 + i] = g4.rand();
-            y[i] = 3;
+            y[8000 + i] = 3;
         }
         return new GaussianMixture(x, y);
     }
