@@ -137,4 +137,16 @@ public class SparseDatasetTest {
         assertEquals(2.0, dataset.get(0, 5), 1e-10);
         assertEquals(3.0, dataset.get(1, 3), 1e-10);
     }
+
+    @Test
+    public void testSparseDatasetNcolGrows() {
+        System.out.println("SparseDataset ncol grows with data");
+        smile.util.SparseArray row = new smile.util.SparseArray();
+        row.append(0, 1.0);
+        row.append(9, 2.0); // column 9 exceeds ncol=2
+        var dataset = smile.data.SparseDataset.of(
+                new smile.util.SparseArray[]{row}, 2);
+        assertTrue(dataset.ncol() >= 10);
+        assertEquals(2.0, dataset.get(0, 9), 1e-10);
+    }
 }

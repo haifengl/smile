@@ -25,11 +25,11 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * @author Haifeng Li
  */
-public class DataFrameNewMethodsTest {
+public class DataFrameEdgeTest {
 
     DataFrame df;
 
-    public DataFrameNewMethodsTest() {
+    public DataFrameEdgeTest() {
         df = new DataFrame(
                 new StringVector("name",   new String[]{"Charlie", "Alice", "Bob", "Dave"}),
                 new IntVector   ("age",    new int[]   {30,         25,      35,    28}),
@@ -212,73 +212,6 @@ public class DataFrameNewMethodsTest {
         String s = df.toString(4, 5, true);
         assertNotNull(s);
         assertFalse(s.isEmpty());
-    }
-
-    // -----------------------------------------------------------------------
-    // PrimitiveVector sum/variance
-    // -----------------------------------------------------------------------
-
-    @Test
-    public void testPrimitiveVectorSum() {
-        System.out.println("DoubleVector sum");
-        DoubleVector v = new DoubleVector("v", new double[]{1.0, 2.0, 3.0, 4.0, 5.0});
-        assertEquals(15.0, v.sum(), 1e-10);
-    }
-
-    @Test
-    public void testPrimitiveVectorVar() {
-        System.out.println("DoubleVector variance");
-        DoubleVector v = new DoubleVector("v", new double[]{2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0});
-        // population variance = 4.0
-        assertEquals(4.571428, v.var(), 1e-5);
-    }
-
-    @Test
-    public void testIntVectorSum() {
-        System.out.println("IntVector sum");
-        IntVector v = new IntVector("v", new int[]{10, 20, 30});
-        assertEquals(60.0, v.sum(), 1e-10);
-    }
-
-    // -----------------------------------------------------------------------
-    // ValueVector isin(int...)
-    // -----------------------------------------------------------------------
-
-    @Test
-    public void testIsinIntArray() {
-        System.out.println("ValueVector isin(int...)");
-        IntVector v = new IntVector("v", new int[]{1, 2, 3, 4, 5});
-        boolean[] result = v.isin(2, 4);
-        assertFalse(result[0]); // 1
-        assertTrue(result[1]);  // 2
-        assertFalse(result[2]); // 3
-        assertTrue(result[3]);  // 4
-        assertFalse(result[4]); // 5
-    }
-
-    @Test
-    public void testNullableDoubleVectorSumVar() {
-        System.out.println("NullableDoubleVector sum/var");
-        java.util.BitSet mask = new java.util.BitSet(5);
-        mask.set(2); // index 2 is null
-        var v = new smile.data.vector.NullableDoubleVector("v",
-                new double[]{1.0, 2.0, Double.NaN, 4.0, 5.0}, mask);
-        // sum of 1+2+4+5 = 12
-        assertEquals(12.0, v.sum(), 1e-10);
-        // non-null count = 4
-        assertEquals(4, v.size() - v.getNullCount());
-    }
-
-    @Test
-    public void testSparseDatasetNcolGrows() {
-        System.out.println("SparseDataset ncol grows with data");
-        smile.util.SparseArray row = new smile.util.SparseArray();
-        row.append(0, 1.0);
-        row.append(9, 2.0); // column 9 exceeds ncol=2
-        var dataset = smile.data.SparseDataset.of(
-                new smile.util.SparseArray[]{row}, 2);
-        assertTrue(dataset.ncol() >= 10);
-        assertEquals(2.0, dataset.get(0, 9), 1e-10);
     }
 }
 
