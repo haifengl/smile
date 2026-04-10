@@ -24,8 +24,12 @@ import java.text.DecimalFormat;
  * @author Haifeng Li
  */
 public class DoubleType extends PrimitiveType {
-    /** Format for toString. */
-    private static final DecimalFormat format = new DecimalFormat("#.######");
+    /**
+     * Thread-local formatter for double values.
+     * {@link DecimalFormat} is not thread-safe, so each thread gets its own instance.
+     */
+    private static final ThreadLocal<DecimalFormat> format =
+            ThreadLocal.withInitial(() -> new DecimalFormat("#.######"));
 
     /**
      * Constructor.
@@ -42,7 +46,7 @@ public class DoubleType extends PrimitiveType {
 
     @Override
     public String toString(Object o) {
-        return format.format(o);
+        return format.get().format(o);
     }
 
     @Override

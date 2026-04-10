@@ -52,6 +52,7 @@ public class DateType implements DataType {
 
     @Override
     public String toString(Object o) {
+        if (o == null) return "null";
         if (o instanceof LocalDate d) {
             return DateTimeFormatter.ISO_LOCAL_DATE.format(d);
         }
@@ -66,5 +67,10 @@ public class DateType implements DataType {
     @Override
     public boolean equals(Object o) {
         return o instanceof DateType;
+    }
+
+    @Override
+    public int hashCode() {
+        return DateType.class.hashCode();
     }
 }

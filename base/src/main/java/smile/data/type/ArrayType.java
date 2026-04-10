@@ -103,9 +103,15 @@ public class ArrayType implements DataType {
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof ArrayType) {
-            return type == ((ArrayType) o).getComponentType();
+        if (o instanceof ArrayType t) {
+            return type.equals(t.getComponentType());
         }
 
         return false;
-    }}
+    }
+
+    @Override
+    public int hashCode() {
+        return 31 + type.hashCode();
+    }
+}
