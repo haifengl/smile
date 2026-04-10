@@ -469,7 +469,7 @@ public class DataTypeFullTest {
     }
 
     // =========================================================================
-    // DataType.of(String) – round-trip serialisation
+    // DataType.of(String) – round-trip serialization
     // =========================================================================
 
     @Test

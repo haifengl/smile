@@ -185,7 +185,7 @@ public record BasisPursuit(double[] x, int iter) implements Serializable {
         int    maxIter  = opts.maxIter;
         double tol      = opts.tol;
 
-        // --- initialise primal variables ---
+        // --- initialize primal variables ---
         // x0 = A^T (A A^T)^{-1} y  (minimum-norm least-squares via CG)
         double[] x = leastNorm(A, y, m, n, cgtol, cgMax);
         double[] u = new double[n];
@@ -348,7 +348,7 @@ public record BasisPursuit(double[] x, int iter) implements Serializable {
         int    maxIter  = opts.maxIter;
         double tol      = opts.tol;
 
-        // Initialise x via minimum-norm LS, scale so residual ≤ epsilon
+        // Initialize x via minimum-norm LS, scale so residual ≤ epsilon
         double[] x = leastNorm(A, y, m, n, cgtol, cgMax);
         double[] res = matvec(A, x, m, n, false);
         for (int i = 0; i < m; i++) res[i] -= y[i];

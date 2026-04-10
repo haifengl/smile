@@ -56,8 +56,8 @@ public class Mul extends Operator {
             StructField yfield = b.field();
             DataType ytype = yfield.dtype();
 
-            if (!(xtype.isInt() ||  xtype.isLong() ||  xtype.isDouble() || xtype.isFloat() ||
-                  ytype.isInt() ||  ytype.isLong() ||  ytype.isDouble() || ytype.isFloat() )) {
+            if (!(xtype.isInt() || xtype.isLong() || xtype.isDouble() || xtype.isFloat()) ||
+                !(ytype.isInt() || ytype.isLong() || ytype.isDouble() || ytype.isFloat())) {
                 throw new IllegalStateException(String.format("Invalid expression: %s * %s", xtype, ytype));
             }
 

@@ -198,7 +198,7 @@ public record OMP(double[] x, int[] support, int iter) implements Serializable {
             // Store the selected column (already computed above)
             aS[iter] = cols[pivot];
 
-            // Gram-Schmidt orthogonalisation to get new Q row
+            // Gram-Schmidt orthogonalization to get new Q row
             double[] q = Arrays.copyOf(aS[iter], m);
             for (int s = 0; s < iter; s++) {
                 double proj = MathEx.dot(q, Q[s]);
