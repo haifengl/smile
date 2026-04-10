@@ -94,6 +94,6 @@ public class SparseChebyshevDistance implements Metric<SparseArray> {
             b = iterY.hasNext() ? iterY.next() : null;
         }
 
-        return Math.sqrt(dist);
+        return dist;
     }
 }

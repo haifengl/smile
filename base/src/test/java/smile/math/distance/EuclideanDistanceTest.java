@@ -95,4 +95,62 @@ public class EuclideanDistanceTest {
 
         assertEquals(2.236067, new SparseEuclideanDistance().d(s, t), 1E-6);
     }
+
+    @Test
+    public void testDistanceIntArray() {
+        System.out.println("distance int array");
+        int[] x = {1, 2, 3, 4};
+        int[] y = {4, 3, 2, 1};
+        assertEquals(4.472136, new EuclideanDistance().d(x, y), 1E-6);
+    }
+
+    @Test
+    public void testDistanceSameVector() {
+        System.out.println("distance same vector");
+        double[] x = {1.0, 2.0, 3.0};
+        assertEquals(0.0, new EuclideanDistance().d(x, x), 1E-9);
+    }
+
+    @Test
+    public void testDistanceWithNaN() {
+        System.out.println("distance with NaN");
+        // x[0] and y[0] are NaN -> excluded; only indices 1,2 contribute
+        double[] x = {Double.NaN, 3.0, 4.0};
+        double[] y = {1.0, Double.NaN, 1.0};
+        // Only index 2: d=3, n=3, m=1; dist = sqrt(3 * 9 / 1) = sqrt(27)
+        assertEquals(Math.sqrt(27.0), new EuclideanDistance().d(x, y), 1E-9);
+    }
+
+    @Test
+    public void testDistanceAllNaN() {
+        System.out.println("distance all NaN");
+        double[] x = {Double.NaN, Double.NaN};
+        double[] y = {Double.NaN, Double.NaN};
+        assertTrue(Double.isNaN(new EuclideanDistance().d(x, y)));
+    }
+
+    @Test
+    public void testWeightedDistance() {
+        System.out.println("weighted distance");
+        double[] x = {1.0, 2.0, 3.0};
+        double[] y = {4.0, 5.0, 6.0};
+        double[] weight = {1.0, 2.0, 3.0};
+        EuclideanDistance dist = new EuclideanDistance(weight);
+        // sqrt(1*(3^2) + 2*(3^2) + 3*(3^2)) = sqrt(9+18+27) = sqrt(54)
+        assertEquals(Math.sqrt(54.0), dist.d(x, y), 1E-9);
+    }
+
+    @Test
+    public void testDistancePdist() {
+        System.out.println("pdist");
+        EuclideanDistance dist = new EuclideanDistance();
+        double[][] data = {{0.0, 0.0}, {3.0, 0.0}, {0.0, 4.0}};
+        double[][] x = data;
+        var D = dist.pdist(x);
+        assertEquals(3.0, D.get(1, 0), 1E-9);
+        assertEquals(4.0, D.get(2, 0), 1E-9);
+        assertEquals(5.0, D.get(2, 1), 1E-9);
+        assertEquals(0.0, D.get(0, 0), 1E-9);
+    }
 }
+

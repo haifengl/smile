@@ -134,7 +134,11 @@ public class ManhattanDistance implements Metric<double[]> {
             }
         }
 
-        dist = n * dist / m;
+        if (m == 0) {
+            dist = Double.NaN;
+        } else {
+            dist = n * dist / m;
+        }
 
         return dist;
     }
@@ -174,7 +178,11 @@ public class ManhattanDistance implements Metric<double[]> {
             }
         }
 
-        dist = n * dist / m;
+        if (m == 0) {
+            dist = Double.NaN;
+        } else {
+            dist = n * dist / m;
+        }
 
         return dist;
     }

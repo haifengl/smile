@@ -63,4 +63,49 @@ public class MahalanobisDistanceTest {
         assertEquals(2.703861, instance.d(x, y), 1E-6);
     }
 
+    @Test
+    public void testSymmetry() {
+        System.out.println("symmetry");
+        double[] x = {1.2793, -0.1029, -1.5852};
+        double[] y = {-0.2676, -0.1717, -1.8695};
+
+        MahalanobisDistance instance = new MahalanobisDistance(sigma);
+        assertEquals(instance.d(x, y), instance.d(y, x), 1E-9);
+    }
+
+    @Test
+    public void testSamePoint() {
+        System.out.println("same point");
+        double[] x = {1.2793, -0.1029, -1.5852};
+        MahalanobisDistance instance = new MahalanobisDistance(sigma);
+        assertEquals(0.0, instance.d(x, x), 1E-9);
+    }
+
+    @Test
+    public void testNonNegativity() {
+        System.out.println("non-negativity");
+        double[] x = {0.5, -0.3, 1.2};
+        double[] y = {-0.1, 0.8, -0.5};
+        MahalanobisDistance instance = new MahalanobisDistance(sigma);
+        assertTrue(instance.d(x, y) >= 0.0);
+    }
+
+    @Test
+    public void testDimensionMismatch() {
+        System.out.println("dimension mismatch");
+        MahalanobisDistance instance = new MahalanobisDistance(sigma);
+        assertThrows(IllegalArgumentException.class,
+                () -> instance.d(new double[]{1.0, 2.0}, new double[]{1.0, 2.0, 3.0}));
+    }
+
+    @Test
+    public void testIdentityCovariance() {
+        System.out.println("identity covariance");
+        // When covariance is identity, Mahalanobis == Euclidean
+        double[][] identity = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+        MahalanobisDistance mah = new MahalanobisDistance(identity);
+        double[] x = {3.0, 0.0, 0.0};
+        double[] y = {0.0, 0.0, 0.0};
+        assertEquals(3.0, mah.d(x, y), 1E-9);
+    }
 }

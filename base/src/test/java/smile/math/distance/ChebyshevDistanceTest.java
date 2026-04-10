@@ -16,6 +16,7 @@
  */
 package smile.math.distance;
 
+import smile.util.SparseArray;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -54,4 +55,75 @@ public class ChebyshevDistanceTest {
         double[] y = {-1.7781325, -0.6659839,  0.9526148, -0.9460919, -0.3925300};
         assertEquals(2.00286, new ChebyshevDistance().d(x, y), 1E-5);
     }
+
+    @Test
+    public void testDistanceInt() {
+        System.out.println("distance int");
+        int[] x = {1, 2, 3, 4};
+        int[] y = {4, 3, 2, 1};
+        assertEquals(3.0, ChebyshevDistance.d(x, y), 1E-9);
+    }
+
+    @Test
+    public void testDistanceSameVector() {
+        System.out.println("distance same vector");
+        double[] x = {1.0, 2.0, 3.0};
+        assertEquals(0.0, new ChebyshevDistance().d(x, x), 1E-9);
+    }
+
+    @Test
+    public void testDistanceWithNaN() {
+        System.out.println("distance with NaN");
+        double[] x = {Double.NaN, 2.0, 5.0};
+        double[] y = {1.0, Double.NaN, 1.0};
+        // Only non-NaN pair (index 2): |5-1| = 4
+        assertEquals(4.0, new ChebyshevDistance().d(x, y), 1E-9);
+    }
+
+    @Test
+    public void testSparseChebyshevDistance() {
+        System.out.println("sparse Chebyshev distance");
+        SparseArray s = new SparseArray();
+        s.append(1, 1.0);
+        s.append(2, 2.0);
+        s.append(3, 3.0);
+        s.append(4, 4.0);
+
+        SparseArray t = new SparseArray();
+        t.append(1, 4.0);
+        t.append(2, 3.0);
+        t.append(3, 2.0);
+        t.append(4, 1.0);
+
+        // max of |1-4|, |2-3|, |3-2|, |4-1| = 3
+        assertEquals(3.0, new SparseChebyshevDistance().d(s, t), 1E-9);
+    }
+
+    @Test
+    public void testSparseChebyshevDistanceWithMissingIndices() {
+        System.out.println("sparse Chebyshev distance with missing indices");
+        SparseArray s = new SparseArray();
+        s.append(2, 2.0);
+        s.append(4, 4.0);
+
+        SparseArray t = new SparseArray();
+        t.append(1, 5.0);
+        t.append(3, 1.0);
+
+        // index 1: absent in s -> |0-5|=5, index 2: absent in t -> |2-0|=2
+        // index 3: absent in s -> |0-1|=1, index 4: absent in t -> |4-0|=4
+        // max = 5
+        assertEquals(5.0, new SparseChebyshevDistance().d(s, t), 1E-9);
+    }
+
+    @Test
+    public void testSparseChebyshevDistanceSameVector() {
+        System.out.println("sparse Chebyshev distance same vector");
+        SparseArray s = new SparseArray();
+        s.append(1, 3.0);
+        s.append(2, -5.0);
+
+        assertEquals(0.0, new SparseChebyshevDistance().d(s, s), 1E-9);
+    }
 }
+

@@ -206,11 +206,11 @@ public class EditDistance implements Metric<String> {
 
         d[0][0] = 0.0;
         for (int j = 1; j <= b.length; j++) {
-            d[0][j] = d[0][j - 1] + weight.get(0, b[j]);
+            d[0][j] = d[0][j - 1] + weight.get(0, b[j - 1]);
         }
 
         for (int i = 1; i <= a.length; i++) {
-            d[1][0] = d[0][0] + weight.get(a[i], 0);
+            d[1][0] = d[0][0] + weight.get(a[i - 1], 0);
 
             int start = 1;
             int end = b.length;
@@ -265,11 +265,11 @@ public class EditDistance implements Metric<String> {
 
         d[0][0] = 0.0;
         for (int j = 1; j <= b.length(); j++) {
-            d[0][j] = d[0][j - 1] + weight.get(0, b.charAt(j));
+            d[0][j] = d[0][j - 1] + weight.get(0, b.charAt(j - 1));
         }
 
         for (int i = 1; i <= a.length(); i++) {
-            d[1][0] = d[0][0] + weight.get(a.charAt(i), 0);
+            d[1][0] = d[0][0] + weight.get(a.charAt(i - 1), 0);
 
             int start = 1;
             int end = b.length();

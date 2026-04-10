@@ -44,7 +44,7 @@ public class DynamicTimeWarpingTest {
         -0.13402881, -0.06656910, -0.06113676, 0.08480863
     };
 
-     double[] y = {
+    double[] y = {
         1.00000000, 0.99798872, 0.99196296, 0.98194696, 0.96798102, 0.95012130,
         0.92843966, 0.90302332, 0.87397449, 0.84141005, 0.80546098, 0.76627189,
         0.72400042, 0.67881661, 0.63090222, 0.58044997, 0.52766283, 0.47275313,
@@ -94,5 +94,75 @@ public class DynamicTimeWarpingTest {
         assertEquals(38.06896, DynamicTimeWarping.d(x, y, 20), 1E-5);
         assertEquals(24.57525, DynamicTimeWarping.d(x, y, 30), 1E-5);
         assertEquals(24.57181, DynamicTimeWarping.d(x, y, 40), 1E-5);
+    }
+
+    @Test
+    public void testIdenticalSequences() {
+        System.out.println("identical sequences");
+        assertEquals(0.0, DynamicTimeWarping.d(x, x), 1E-9);
+        assertEquals(0.0, DynamicTimeWarping.d(x, x, 10), 1E-9);
+    }
+
+    @Test
+    public void testFloatArrays() {
+        System.out.println("float arrays");
+        float[] xf = {1.0f, 2.0f, 3.0f, 2.0f, 1.0f};
+        float[] yf = {1.0f, 2.0f, 3.0f, 2.0f, 1.0f};
+        assertEquals(0.0, DynamicTimeWarping.d(xf, yf), 1E-5);
+
+        float[] af = {0.0f, 1.0f, 2.0f};
+        float[] bf = {0.0f, 1.0f, 3.0f};
+        assertEquals(1.0, DynamicTimeWarping.d(af, bf), 1E-5);
+    }
+
+    @Test
+    public void testIntArrays() {
+        System.out.println("int arrays");
+        int[] xi = {1, 2, 3, 2, 1};
+        int[] yi = {1, 2, 3, 2, 1};
+        assertEquals(0.0, DynamicTimeWarping.d(xi, yi), 1E-9);
+
+        int[] ai = {0, 0, 1};
+        int[] bi = {1, 1, 0};
+        // Optimal warping: 0->1, 0->1, 1->0 => cost = 1+1+1 = 3
+        assertEquals(3.0, DynamicTimeWarping.d(ai, bi), 1E-9);
+    }
+
+    @Test
+    public void testGenericDTW() {
+        System.out.println("generic DTW");
+        // Use a simple Distance<Double> for scalar sequences
+        Distance<Double> absDiff = (a, b) -> Math.abs(a - b);
+        DynamicTimeWarping<Double> dtw = new DynamicTimeWarping<>(absDiff);
+
+        Double[] xa = {1.0, 2.0, 3.0};
+        Double[] ya = {1.0, 2.0, 3.0};
+        assertEquals(0.0, dtw.d(xa, ya), 1E-9);
+
+        Double[] za = {1.0, 2.0, 4.0};
+        assertEquals(1.0, dtw.d(xa, za), 1E-9);
+    }
+
+    @Test
+    public void testGenericDTWWithRadius() {
+        System.out.println("generic DTW with radius");
+        Distance<Double> absDiff = (a, b) -> Math.abs(a - b);
+        DynamicTimeWarping<Double> dtwFull = new DynamicTimeWarping<>(absDiff, 1.0);
+        DynamicTimeWarping<Double> dtwBand = new DynamicTimeWarping<>(absDiff, 0.2);
+
+        Double[] xa = {1.0, 2.0, 3.0, 4.0, 5.0};
+        Double[] ya = {2.0, 3.0, 4.0, 5.0, 6.0};
+        // With full window same or better than restricted
+        assertTrue(dtwBand.d(xa, ya) >= dtwFull.d(xa, ya) - 1E-9);
+    }
+
+    @Test
+    public void testInvalidRadius() {
+        System.out.println("invalid radius");
+        Distance<Double> absDiff = (a, b) -> Math.abs(a - b);
+        assertThrows(IllegalArgumentException.class,
+                () -> new DynamicTimeWarping<>(absDiff, -0.1));
+        assertThrows(IllegalArgumentException.class,
+                () -> new DynamicTimeWarping<>(absDiff, 1.1));
     }
 }

@@ -18,7 +18,6 @@ package smile.math.distance;
 
 import java.io.Serial;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -57,12 +56,11 @@ public class JaccardDistance<T> implements Distance<T[]> {
 
     @Override
     public double d(T[] a, T[] b) {
-        Set<T> union = new HashSet<>(Arrays.asList(b));
-        Collections.addAll(union, a);
+        Set<T> union = new HashSet<>(Arrays.asList(a));
+        union.addAll(Arrays.asList(b));
 
-        Set<T> intersection = new HashSet<>();
-        Collections.addAll(intersection, a);
-        intersection.retainAll(union);
+        Set<T> intersection = new HashSet<>(Arrays.asList(a));
+        intersection.retainAll(Arrays.asList(b));
 
         return 1.0 - (double) intersection.size() / union.size();
     }
