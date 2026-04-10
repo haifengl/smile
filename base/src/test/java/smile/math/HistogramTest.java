@@ -158,5 +158,29 @@ public class HistogramTest {
         assertEquals(2.0, hist[2][1], 1E-10); // 3,4
         assertEquals(1.0, hist[2][2], 1E-10); // 5
     }
+
+    @Test
+    public void testIntArrayAllSame() {
+        System.out.println("of(int[]) all-same degenerate case");
+        int[] data = {3, 3, 3, 3, 3};
+        // should not throw or loop forever
+        double[][] hist = Histogram.of(data, 5);
+        assertEquals(3, hist.length);
+        // all values in one bin
+        double total = 0;
+        for (double v : hist[2]) total += v;
+        assertEquals(5, (int) total);
+    }
+
+    @Test
+    public void testDoubleArrayAllSame() {
+        System.out.println("of(double[]) all-same degenerate case");
+        double[] data = {2.5, 2.5, 2.5};
+        double[][] hist = Histogram.of(data, 3);
+        assertEquals(3, hist.length);
+        double total = 0;
+        for (double v : hist[2]) total += v;
+        assertEquals(3, (int) total);
+    }
 }
 

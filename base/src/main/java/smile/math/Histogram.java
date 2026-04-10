@@ -88,7 +88,16 @@ public interface Histogram {
         int min = MathEx.min(data);
         int max = MathEx.max(data);
         int span = max - min + 1;
-        
+
+        // Degenerate case: all values are the same — put them all in one bin.
+        if (span == 1) {
+            double[][] freq = new double[3][1];
+            freq[0][0] = min - 0.5;
+            freq[1][0] = min + 0.5;
+            freq[2][0] = data.length;
+            return freq;
+        }
+
         int width = 1;
         int residual = 1;
         while (residual > 0) {

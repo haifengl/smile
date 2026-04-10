@@ -43,16 +43,20 @@ import static smile.tensor.ScalarType.*;
  * Extra basic numeric functions. The following functions are
  * included:
  * <ul>
- * <li> scalar functions: sqr, factorial, lfactorial, choose, lchoose, log2 are
- * provided.
- * <li> vector functions: min, max, mean, sum, var, sd, cov, L<sub>1</sub> norm,
- * L<sub>2</sub> norm, L<sub>&infin;</sub> norm, normalize, unitize, cor, Spearman
- * correlation, Kendall correlation, distance, dot product, histogram, vector
- * (element-wise) copy, equal, plus, minus, times, and divide.
- * <li> matrix functions: min, max, rowSums, colSums, rowMeans, colMeans, transpose,
- * cov, cor, matrix copy, equals.
- * <li> random functions: random, randomInt, and permutate.
+ * <li> scalar functions: sqr, factorial, lfactorial, choose, lchoose, log2,
+ * log (underflow-safe), log1pe (softplus), sigmoid, clamp are provided.
+ * <li> vector functions: min, max, mean, sum, var (Welford), sd, cov,
+ * L<sub>1</sub> norm, L<sub>2</sub> norm, L<sub>&infin;</sub> norm,
+ * normalize, unitize, cor, Spearman correlation, Kendall correlation,
+ * distance, dot product, softmax, entropy, KL divergence, Jensen-Shannon
+ * divergence, histogram, vector (element-wise) copy, equal, plus, minus,
+ * times, divide, axpy, clamp.
+ * <li> matrix functions: min, max, rowSums, colSums, rowMeans, colMeans,
+ * colStdevs (Welford), transpose, cov, cor, matrix copy, equals, pdist, pdot.
+ * <li> random functions: random, randomInt, randn (scalar/vector/matrix),
+ * and permutate.
  * <li> Find the root of a univariate function with or without derivative.
+ * <li> Solve a tridiagonal linear system.
  * </uL>
  *
  * @author Haifeng Li
@@ -483,20 +487,35 @@ public class MathEx {
         }
     }
 
+    /** Exact factorial values for n = 0..20. */
+    private static final double[] FACTORIALS = {
+        1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800,
+        39916800, 479001600, 6227020800.0, 87178291200.0, 1307674368000.0,
+        20922789888000.0, 355687428096000.0, 6402373705728000.0,
+        121645100408832000.0, 2432902008176640000.0
+    };
+
     /**
      * The factorial of n.
      *
-     * @param n a positive integer.
+     * @param n a non-negative integer.
      * @return the factorial returned as double but is, numerically, an integer.
-     * Numerical rounding may make this an approximation after n = 21.
+     * Exact for {@code n <= 20}. Returns {@link Double#POSITIVE_INFINITY}
+     * for {@code n > 170} (where the result exceeds {@code Double.MAX_VALUE}).
      */
     public static double factorial(int n) {
         if (n < 0) {
             throw new IllegalArgumentException("n has to be non-negative.");
         }
+        if (n < FACTORIALS.length) {
+            return FACTORIALS[n];
+        }
+        if (n > 170) {
+            return Double.POSITIVE_INFINITY;
+        }
 
-        double f = 1.0;
-        for (int i = 2; i <= n; i++) {
+        double f = FACTORIALS[FACTORIALS.length - 1];
+        for (int i = FACTORIALS.length; i <= n; i++) {
             f *= i;
         }
 
@@ -506,16 +525,19 @@ public class MathEx {
     /**
      * The log of factorial of n.
      *
-     * @param n a positive integer.
-     * @return the log of factorial .
+     * @param n a non-negative integer.
+     * @return the log of factorial.
      */
     public static double lfactorial(int n) {
         if (n < 0) {
             throw new IllegalArgumentException(String.format("n has to be non-negative: %d", n));
         }
+        if (n < FACTORIALS.length) {
+            return Math.log(FACTORIALS[n]);
+        }
 
-        double f = 0.0;
-        for (int i = 2; i <= n; i++) {
+        double f = Math.log(FACTORIALS[FACTORIALS.length - 1]);
+        for (int i = FACTORIALS.length; i <= n; i++) {
             f += Math.log(i);
         }
 
@@ -947,16 +969,21 @@ public class MathEx {
      * @return the index of largest posteriori probability.
      */
     public static int softmax(float[] x, int k) {
-        int y = -1;
-        float max = Float.NEGATIVE_INFINITY;
-        for (int i = 0; i < k; i++) {
+        if (k <= 0) {
+            throw new IllegalArgumentException("Invalid k: " + k);
+        }
+
+        int y = 0;
+        float max = x[0];
+        for (int i = 1; i < k; i++) {
             if (x[i] > max) {
                 max = x[i];
                 y = i;
             }
         }
 
-        float Z = 0.0f;
+        // Accumulate in double to reduce precision loss.
+        double Z = 0.0;
         for (int i = 0; i < k; i++) {
             float out = (float) exp(x[i] - max);
             x[i] = out;
@@ -1006,9 +1033,13 @@ public class MathEx {
      * @return the index of largest posteriori probability.
      */
     public static int softmax(double[] x, int k) {
-        int y = -1;
-        double max = Double.NEGATIVE_INFINITY;
-        for (int i = 0; i < k; i++) {
+        if (k <= 0) {
+            throw new IllegalArgumentException("Invalid k: " + k);
+        }
+
+        int y = 0;
+        double max = x[0];
+        for (int i = 1; i < k; i++) {
             if (x[i] > max) {
                 max = x[i];
                 y = i;
@@ -3029,12 +3060,10 @@ public class MathEx {
         }
 
         if (m == 0) {
-            dist = Double.MAX_VALUE;
-        } else {
-            dist = n * dist / m;
+            return Double.MAX_VALUE;
         }
 
-        return sqrt(dist);
+        return sqrt(n * dist / m);
     }
 
     /**
@@ -3161,13 +3190,22 @@ public class MathEx {
     }
 
     /**
-     * Shannon's entropy.
-     * @param p the probabilities.
-     * @return Shannon's entropy.
+     * Shannon's entropy H = -Σ p<sub>i</sub> log(p<sub>i</sub>),
+     * measured in nats (natural logarithm base). To convert to bits,
+     * divide by log(2). Probabilities that are zero (or negative) are
+     * skipped, consistent with the convention 0·log(0) = 0.
+     *
+     * @param p the probability distribution. Values must be non-negative
+     *          and should sum to 1 for a valid distribution.
+     * @return Shannon's entropy in nats.
+     * @throws IllegalArgumentException if any probability is negative.
      */
     public static double entropy(double[] p) {
         double h = 0.0;
         for (double pi : p) {
+            if (pi < 0) {
+                throw new IllegalArgumentException("Negative probability: " + pi);
+            }
             if (pi > 0) {
                 h -= pi * Math.log(pi);
             }
@@ -3731,6 +3769,13 @@ public class MathEx {
      * @return the covariance matrix.
      */
     public static double[][] cov(double[][] data, double[] mu) {
+        if (data.length < 2) {
+            throw new IllegalArgumentException("data must have at least 2 rows.");
+        }
+        if (data[0].length != mu.length) {
+            throw new IllegalArgumentException(String.format(
+                "data has %d columns but mu has %d elements.", data[0].length, mu.length));
+        }
         double[][] sigma = new double[data[0].length][data[0].length];
         for (double[] datum : data) {
             for (int j = 0; j < mu.length; j++) {
@@ -4120,13 +4165,14 @@ public class MathEx {
      * @return L<sub>1</sub> norm.
      */
     public static float norm1(float[] x) {
-        float norm = 0.0F;
+        // Accumulate in double to avoid overflow for large float vectors.
+        double norm = 0.0;
 
         for (float n : x) {
             norm += abs(n);
         }
 
-        return norm;
+        return (float) norm;
     }
 
     /**
@@ -4150,10 +4196,11 @@ public class MathEx {
      * @return L<sub>2</sub> norm.
      */
     public static float norm2(float[] x) {
-        float norm = 0.0F;
+        // Accumulate in double to avoid overflow for large float vectors.
+        double norm = 0.0;
 
         for (float n : x) {
-            norm += n * n;
+            norm += (double) n * n;
         }
 
         return (float) sqrt(norm);
