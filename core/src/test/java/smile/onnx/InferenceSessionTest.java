@@ -23,6 +23,9 @@ import java.nio.file.Path;
 import java.util.*;
 import org.junit.jupiter.api.*;
 import smile.math.MathEx;
+import smile.tensor.DenseMatrix;
+import smile.tensor.JTensor;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
@@ -31,7 +34,7 @@ import static org.junit.jupiter.api.DynamicTest.dynamicTest;
  *
  * <p>The "light" model fixtures under {@code core/src/test/resources/onnx/light/}
  * are stripped versions of well-known image classifiers (AlexNet, ResNet-50,
- * VGG-19, …) where all float initialisers have been replaced with constant
+ * VGG-19, …) where all float initializers have been replaced with constant
  * nodes. Each {@code .pb} companion file contains the expected output
  * {@code TensorProto} computed by the ONNX reference evaluator.
  *
@@ -613,11 +616,234 @@ public class InferenceSessionTest {
     }
 
     // -----------------------------------------------------------------------
-    // TensorInfo unit tests
+    // OrtValue.fromTensor tests
     // -----------------------------------------------------------------------
 
     @Test
+    @Order(68)
+    @DisplayName("fromTensor: Float32 1-D round-trip")
+    void testFromJTensorFloat32_1D() {
+        float[] data = {1.0f, 2.0f, 3.0f, 4.0f};
+        JTensor t = JTensor.of(data, 4);
+        try (OrtValue v = OrtValue.fromTensor(t)) {
+            TensorInfo ti = v.tensorInfo();
+            assertEquals(ElementType.FLOAT, ti.elementType());
+            assertArrayEquals(new long[]{4}, ti.shape());
+            assertArrayEquals(data, v.toFloatArray(), 1e-7f);
+        }
+    }
+
+    @Test
+    @Order(69)
+    @DisplayName("fromTensor: Float64 2-D round-trip")
+    void testFromJTensorFloat64_2D() {
+        double[] data = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
+        JTensor t = JTensor.of(data, 2, 3);
+        try (OrtValue v = OrtValue.fromTensor(t)) {
+            TensorInfo ti = v.tensorInfo();
+            assertEquals(ElementType.DOUBLE, ti.elementType());
+            assertArrayEquals(new long[]{2, 3}, ti.shape());
+            assertArrayEquals(data, v.toDoubleArray(), 1e-12);
+        }
+    }
+
+    @Test
     @Order(70)
+    @DisplayName("fromTensor: Int32 3-D round-trip")
+    void testFromJTensorInt32_3D() {
+        int[] data = new int[24];
+        for (int i = 0; i < 24; i++) data[i] = i;
+        JTensor t = JTensor.of(data, 2, 3, 4);
+        try (OrtValue v = OrtValue.fromTensor(t)) {
+            TensorInfo ti = v.tensorInfo();
+            assertEquals(ElementType.INT32, ti.elementType());
+            assertArrayEquals(new long[]{2, 3, 4}, ti.shape());
+            assertArrayEquals(data, v.toIntArray());
+        }
+    }
+
+    @Test
+    @Order(71)
+    @DisplayName("fromTensor: Int8 1-D round-trip")
+    void testFromJTensorInt8_1D() {
+        byte[] data = {-128, -1, 0, 1, 127};
+        JTensor t = JTensor.of(data, 5);
+        try (OrtValue v = OrtValue.fromTensor(t)) {
+            TensorInfo ti = v.tensorInfo();
+            assertEquals(ElementType.INT8, ti.elementType());
+            assertArrayEquals(new long[]{5}, ti.shape());
+            assertArrayEquals(data, v.toByteArray());
+        }
+    }
+
+    @Test
+    @Order(72)
+    @DisplayName("fromTensor: Int64 1-D round-trip")
+    void testFromJTensorInt64_1D() {
+        long[] data = {Long.MIN_VALUE, -1L, 0L, 1L, Long.MAX_VALUE};
+        JTensor t = JTensor.of(data, 5);
+        try (OrtValue v = OrtValue.fromTensor(t)) {
+            TensorInfo ti = v.tensorInfo();
+            assertEquals(ElementType.INT64, ti.elementType());
+            assertArrayEquals(new long[]{5}, ti.shape());
+            assertArrayEquals(data, v.toLongArray());
+        }
+    }
+
+    @Test
+    @Order(73)
+    @DisplayName("fromTensor: scalar tensor shape [] has 1 element")
+    void testFromJTensorScalar() {
+        float[] data = {42.0f};
+        JTensor t = JTensor.of(data, 1);
+        try (OrtValue v = OrtValue.fromTensor(t)) {
+            TensorInfo ti = v.tensorInfo();
+            assertEquals(1, ti.rank());
+            assertEquals(1L, ti.elementCount());
+            assertEquals(42.0f, v.toFloatArray()[0], 1e-7f);
+        }
+    }
+
+    @Test
+    @Order(74)
+    @DisplayName("fromTensor: Float32 4-D image tensor shape [1,3,32,32]")
+    void testFromJTensor4D() {
+        int n = 1 * 3 * 32 * 32;
+        float[] data = new float[n];
+        for (int i = 0; i < n; i++) data[i] = i * 0.01f;
+        JTensor t = JTensor.of(data, 1, 3, 32, 32);
+        try (OrtValue v = OrtValue.fromTensor(t)) {
+            TensorInfo ti = v.tensorInfo();
+            assertEquals(ElementType.FLOAT, ti.elementType());
+            assertArrayEquals(new long[]{1, 3, 32, 32}, ti.shape());
+            float[] result = v.toFloatArray();
+            assertEquals(n, result.length);
+            assertArrayEquals(data, result, 1e-6f);
+        }
+    }
+
+    @Test
+    @Order(75)
+    @DisplayName("fromTensor preserves element values: shape [2,4] row-major")
+    void testFromJTensorRowMajorLayout() {
+        // JTensor is row-major; verify element ordering is preserved
+        double[] data = {1, 2, 3, 4, 5, 6, 7, 8};
+        JTensor t = JTensor.of(data, 2, 4);
+        try (OrtValue v = OrtValue.fromTensor(t)) {
+            double[] out = v.toDoubleArray();
+            assertArrayEquals(data, out, 1e-12);
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // OrtValue.fromMatrix tests
+    // -----------------------------------------------------------------------
+
+    @Test
+    @Order(76)
+    @DisplayName("fromMatrix: Float64 round-trip with correct shape [m,n]")
+    void testFromDenseMatrixFloat64() {
+        double[][] A = {{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}};
+        DenseMatrix m = DenseMatrix.of(A);
+        try (OrtValue v = OrtValue.fromMatrix(m)) {
+            TensorInfo ti = v.tensorInfo();
+            assertEquals(ElementType.DOUBLE, ti.elementType());
+            assertArrayEquals(new long[]{2, 3}, ti.shape());
+            assertEquals(6L, ti.elementCount());
+            // Verify row-major serialization: [1,2,3,4,5,6]
+            double[] flat = v.toDoubleArray();
+            assertArrayEquals(new double[]{1,2,3,4,5,6}, flat, 1e-10);
+        }
+    }
+
+    @Test
+    @Order(77)
+    @DisplayName("fromMatrix: Float32 round-trip with correct shape [m,n]")
+    void testFromDenseMatrixFloat32() {
+        float[][] A = {{1f, 2f}, {3f, 4f}, {5f, 6f}};
+        DenseMatrix m = DenseMatrix.of(A);
+        try (OrtValue v = OrtValue.fromMatrix(m)) {
+            TensorInfo ti = v.tensorInfo();
+            assertEquals(ElementType.FLOAT, ti.elementType());
+            assertArrayEquals(new long[]{3, 2}, ti.shape());
+            float[] flat = v.toFloatArray();
+            assertArrayEquals(new float[]{1f,2f,3f,4f,5f,6f}, flat, 1e-6f);
+        }
+    }
+
+    @Test
+    @Order(78)
+    @DisplayName("fromMatrix: row-major serialization of column-major storage")
+    void testFromDenseMatrixColumnMajorConversion() {
+        // Explicitly verify element ordering: DenseMatrix is col-major internally
+        // but fromMatrix must output row-major for ONNX
+        double[][] A = {{10.0, 20.0, 30.0}, {40.0, 50.0, 60.0}};
+        DenseMatrix mat = DenseMatrix.of(A);
+        try (OrtValue v = OrtValue.fromMatrix(mat)) {
+            double[] flat = v.toDoubleArray();
+            // Row-major: row0=[10,20,30], row1=[40,50,60]
+            assertEquals(10.0, flat[0], 1e-10);
+            assertEquals(20.0, flat[1], 1e-10);
+            assertEquals(30.0, flat[2], 1e-10);
+            assertEquals(40.0, flat[3], 1e-10);
+            assertEquals(50.0, flat[4], 1e-10);
+            assertEquals(60.0, flat[5], 1e-10);
+        }
+    }
+
+    @Test
+    @Order(79)
+    @DisplayName("fromMatrix: 1x1 matrix")
+    void testFromDenseMatrix1x1() {
+        DenseMatrix m = DenseMatrix.of(new double[][]{{Math.PI}});
+        try (OrtValue v = OrtValue.fromMatrix(m)) {
+            TensorInfo ti = v.tensorInfo();
+            assertArrayEquals(new long[]{1, 1}, ti.shape());
+            assertEquals(Math.PI, v.toDoubleArray()[0], 1e-10);
+        }
+    }
+
+    @Test
+    @Order(80)
+    @DisplayName("fromMatrix: large matrix preserves all values correctly")
+    void testFromDenseMatrixLarge() {
+        int rows = 50, cols = 40;
+        double[][] A = new double[rows][cols];
+        for (int i = 0; i < rows; i++)
+            for (int j = 0; j < cols; j++)
+                A[i][j] = i * cols + j;
+        DenseMatrix mat = DenseMatrix.of(A);
+        try (OrtValue v = OrtValue.fromMatrix(mat)) {
+            TensorInfo ti = v.tensorInfo();
+            assertArrayEquals(new long[]{rows, cols}, ti.shape());
+            double[] flat = v.toDoubleArray();
+            assertEquals(rows * cols, flat.length);
+            // verify row-major ordering
+            for (int i = 0; i < rows; i++)
+                for (int j = 0; j < cols; j++)
+                    assertEquals(A[i][j], flat[i * cols + j], 1e-10,
+                            "Mismatch at [" + i + "," + j + "]");
+        }
+    }
+
+    @Test
+    @Order(81)
+    @DisplayName("fromMatrix: source matrix is not modified")
+    void testFromDenseMatrixSourceUnchanged() {
+        double[][] A = {{1.0, 2.0}, {3.0, 4.0}};
+        DenseMatrix mat = DenseMatrix.of(A);
+        double before00 = mat.get(0, 0);
+        try (OrtValue v = OrtValue.fromMatrix(mat)) {
+            // ensure original matrix is not mutated
+            assertEquals(before00, mat.get(0, 0), 1e-10);
+            assertEquals(A[1][1], mat.get(1, 1), 1e-10);
+        }
+    }
+
+
+
+    @Test
+    @Order(120)
     @DisplayName("TensorInfo.elementCount() returns -1 when any dimension is dynamic")
     void testTensorInfoDynamicShape() {
         TensorInfo ti = new TensorInfo(ElementType.FLOAT, new long[]{ -1, 3, 224, 224 });
@@ -626,7 +852,7 @@ public class InferenceSessionTest {
     }
 
     @Test
-    @Order(71)
+    @Order(121)
     @DisplayName("TensorInfo.elementCount() is the product of all dimensions")
     void testTensorInfoStaticShape() {
         TensorInfo ti = new TensorInfo(ElementType.FLOAT, new long[]{ 2, 3, 4 });
@@ -636,7 +862,7 @@ public class InferenceSessionTest {
     }
 
     @Test
-    @Order(72)
+    @Order(122)
     @DisplayName("TensorInfo.toString() includes element type and shape")
     void testTensorInfoToString() {
         TensorInfo ti = new TensorInfo(ElementType.FLOAT, new long[]{ 1, 1000 });
@@ -650,7 +876,7 @@ public class InferenceSessionTest {
     // -----------------------------------------------------------------------
 
     @Test
-    @Order(80)
+    @Order(130)
     @DisplayName("NodeInfo convenience constructor sets OnnxType.TENSOR")
     void testNodeInfoConvenienceConstructor() {
         TensorInfo ti = new TensorInfo(ElementType.FLOAT, new long[]{ 1, 3, 224, 224 });
@@ -662,7 +888,7 @@ public class InferenceSessionTest {
     }
 
     @Test
-    @Order(81)
+    @Order(131)
     @DisplayName("NodeInfo with non-tensor OnnxType has null tensorInfo")
     void testNodeInfoNonTensor() {
         NodeInfo ni = new NodeInfo("seq", OnnxType.SEQUENCE, null);
@@ -671,7 +897,7 @@ public class InferenceSessionTest {
     }
 
     @Test
-    @Order(82)
+    @Order(132)
     @DisplayName("NodeInfo.toString() includes node name and type for tensor nodes")
     void testNodeInfoToStringTensor() {
         TensorInfo ti = new TensorInfo(ElementType.FLOAT, new long[]{ 1, 1000 });
