@@ -243,6 +243,6 @@ public class ObjectVector<T> extends AbstractVector {
 
     @Override
     public int getNullCount() {
-        return (int) stream().filter(Objects::nonNull).count();
+        return (int) stream().filter(Objects::isNull).count();
     }
 }
