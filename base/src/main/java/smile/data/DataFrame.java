@@ -600,6 +600,79 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
     }
 
     /**
+     * Renames a column.
+     * @param name the current column name.
+     * @param newName the new column name.
+     * @return this dataframe.
+     */
+    public DataFrame rename(String name, String newName) {
+        int j = schema.indexOf(name);
+        schema.rename(name, newName);
+        columns.set(j, columns.get(j).withName(newName));
+        return this;
+    }
+
+    /**
+     * Returns a random sample of rows without replacement.
+     * @param n the number of rows to sample.
+     * @return a new data frame of sampled rows.
+     */
+    public DataFrame sample(int n) {
+        int[] indices = MathEx.permutate(size());
+        int[] selected = Arrays.copyOf(indices, Math.min(n, size()));
+        Arrays.sort(selected);
+        return get(Index.of(selected));
+    }
+
+    /**
+     * Returns a new DataFrame sorted by the given column in ascending order.
+     * @param column the column name to sort by.
+     * @return a new sorted data frame.
+     */
+    public DataFrame sort(String column) {
+        return sort(column, true);
+    }
+
+    /**
+     * Returns a new DataFrame sorted by the given column.
+     * @param column the column name to sort by.
+     * @param ascending if true, sort in ascending order; otherwise descending.
+     * @return a new sorted data frame.
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public DataFrame sort(String column, boolean ascending) {
+        int j = schema.indexOf(column);
+        ValueVector v = columns.get(j);
+        int n = size();
+        Integer[] idx = new Integer[n];
+        for (int i = 0; i < n; i++) idx[i] = i;
+
+        if (ascending) {
+            Arrays.sort(idx, (a, b) -> {
+                Object va = v.get(a), vb = v.get(b);
+                if (va == null && vb == null) return 0;
+                if (va == null) return 1;
+                if (vb == null) return -1;
+                if (va instanceof Comparable c) return c.compareTo(vb);
+                return Double.compare(v.getDouble(a), v.getDouble(b));
+            });
+        } else {
+            Arrays.sort(idx, (a, b) -> {
+                Object va = v.get(a), vb = v.get(b);
+                if (va == null && vb == null) return 0;
+                if (va == null) return 1;
+                if (vb == null) return -1;
+                if (va instanceof Comparable c) return -c.compareTo(vb);
+                return Double.compare(v.getDouble(b), v.getDouble(a));
+            });
+        }
+
+        int[] order = new int[n];
+        for (int i = 0; i < n; i++) order[i] = idx[i];
+        return get(Index.of(order));
+    }
+
+    /**
      * Joins two data frames on their index. If either dataframe has no index,
      * merges them horizontally by columns.
      * @param other the data frames to merge.
@@ -1055,12 +1128,12 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
      * @return the string representation of rows in specified range.
      */
     public String toString(int from, int to, boolean truncate) {
-        if (from < 0 || from >= size()) {
+        if (from < 0 || from > size()) {
             throw new IllegalArgumentException("from: " + from + ", size: " + size());
         }
 
         if (to <= from) {
-            throw new IllegalArgumentException("'to' must be greater than 'from'");
+            return "Empty DataFrame\n";
         }
 
         to = Math.min(to, size());

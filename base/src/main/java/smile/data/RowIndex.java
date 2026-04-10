@@ -62,7 +62,29 @@ public record RowIndex(Object[] values, Map<Object, Integer> loc) implements Ser
      * @return the row index.
      */
     public int apply(Object label) {
-        return loc.get(label);
+        Integer i = loc.get(label);
+        if (i == null) {
+            throw new IllegalArgumentException("Row label not found: " + label);
+        }
+        return i;
+    }
+
+    /**
+     * Returns true if the index contains the given label.
+     * @param label the row label.
+     * @return true if the label exists in the index.
+     */
+    public boolean containsKey(Object label) {
+        return loc.containsKey(label);
+    }
+
+    /**
+     * Returns the row index, or -1 if not found.
+     * @param label the row label.
+     * @return the row index, or -1 if not found.
+     */
+    public int getOrDefault(Object label) {
+        return loc.getOrDefault(label, -1);
     }
 
     /**

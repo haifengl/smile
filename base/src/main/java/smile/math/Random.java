@@ -39,6 +39,10 @@ public class Random {
 
     private final UniversalGenerator real;
     private final MersenneTwister twister;
+    /** Cached spare Gaussian value from Box-Muller transform. */
+    private double spareGaussian;
+    /** True if a cached Gaussian value is available. */
+    private boolean hasSpareGaussian = false;
 
     /**
      * Initialize with default random number generator engine.
@@ -64,6 +68,7 @@ public class Random {
     public void setSeed(long seed) {
         real.setSeed(seed);
         twister.setSeed(seed);
+        hasSpareGaussian = false;
     }
 
     /**
@@ -212,5 +217,74 @@ public class Random {
             int j = nextInt(i + 1);
             MathEx.swap(x, i, j);
         }
+    }
+
+    /**
+     * Returns a random number from the standard normal distribution N(0, 1).
+     * Uses the polar form of the Box-Muller transform; pairs of values are
+     * generated and the spare is cached for the next call.
+     *
+     * @return a standard normal random number.
+     */
+    public double nextGaussian() {
+        if (hasSpareGaussian) {
+            hasSpareGaussian = false;
+            return spareGaussian;
+        }
+
+        double u, v, s;
+        do {
+            u = nextDouble() * 2.0 - 1.0;
+            v = nextDouble() * 2.0 - 1.0;
+            s = u * u + v * v;
+        } while (s >= 1.0 || s == 0.0);
+
+        double mul = Math.sqrt(-2.0 * Math.log(s) / s);
+        spareGaussian = v * mul;
+        hasSpareGaussian = true;
+        return u * mul;
+    }
+
+    /**
+     * Returns a random number from the normal distribution N(mu, sigma).
+     *
+     * @param mu    the mean.
+     * @param sigma the standard deviation.
+     * @return a normal random number.
+     */
+    public double nextGaussian(double mu, double sigma) {
+        return mu + sigma * nextGaussian();
+    }
+
+    /**
+     * Randomly samples {@code k} distinct indices from the range
+     * {@code [0, n)} without replacement, using a partial Fisher-Yates
+     * shuffle. The result is returned in an unspecified order.
+     *
+     * @param n the population size; must be positive.
+     * @param k the sample size; must satisfy {@code 0 <= k <= n}.
+     * @return an array of {@code k} distinct indices.
+     * @throws IllegalArgumentException if {@code k < 0} or {@code k > n}.
+     */
+    public int[] sample(int n, int k) {
+        if (k < 0 || k > n) {
+            throw new IllegalArgumentException(
+                String.format("k (%d) must be in [0, n=%d]", k, n));
+        }
+        int[] result = new int[k];
+        if (k == 0) return result;
+
+        // Partial Fisher-Yates: build only the first k elements of a
+        // permutation of [0, n) using a HashMap for the "swapped" positions
+        // so we never allocate the full n-element array.
+        java.util.HashMap<Integer, Integer> swapped = new java.util.HashMap<>();
+        for (int i = 0; i < k; i++) {
+            int j = i + nextInt(n - i);
+            int xi = swapped.getOrDefault(i, i);
+            int xj = swapped.getOrDefault(j, j);
+            swapped.put(j, xi);
+            result[i] = xj;
+        }
+        return result;
     }
 }

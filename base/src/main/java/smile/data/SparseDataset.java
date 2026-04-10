@@ -50,7 +50,7 @@ public class SparseDataset<T> extends SimpleDataset<SparseArray, T> {
     /**
      * The number of columns.
      */
-    private final int ncol;
+    private int ncol;
     /**
      * The number of nonzero entries in each column.
      */
@@ -103,6 +103,8 @@ public class SparseDataset<T> extends SimpleDataset<SparseArray, T> {
                 }
             }
         }
+        // Update field to reflect any growth that happened in the loop
+        this.ncol = ncol;
     }
 
     /**

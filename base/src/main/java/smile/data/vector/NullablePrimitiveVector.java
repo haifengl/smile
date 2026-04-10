@@ -100,6 +100,23 @@ public abstract class NullablePrimitiveVector extends AbstractVector {
     }
 
     /**
+     * Returns the sum of values.
+     * @return the sum of values.
+     */
+    public double sum() {
+        return doubleStream().filter(Double::isFinite).sum();
+    }
+
+    /**
+     * Returns the variance of values.
+     * @return the variance of values.
+     */
+    public double var() {
+        double[] data = doubleStream().filter(Double::isFinite).toArray();
+        return MathEx.var(data);
+    }
+
+    /**
      * Fills NaN/Inf values with the specified value.
      * @param value the value to replace NAs.
      */

@@ -56,6 +56,11 @@ public abstract class CategoricalMeasure implements Measure {
      */
     final Map<String, Number> level2value;
     /**
+     * Map an integer value to its factor index in [0, size).
+     * Only populated when values are not standard factors [0, 1, 2, ..., k).
+     */
+    final int[] value2factor;
+    /**
      * The flag if the values are of standard factor [0, 1, 2, ..., k).
      */
     final boolean factor;
@@ -116,14 +121,31 @@ public abstract class CategoricalMeasure implements Measure {
             }
         }
 
-        boolean factor = true;
+        boolean isFactor = true;
         for (int i = 0; i < values.length; i++) {
             if (values[i] != i) {
-                factor = false;
+                isFactor = false;
                 break;
             }
         }
-        this.factor = factor;
+        this.factor = isFactor;
+
+        // Build reverse lookup from value -> factor index for non-factor scales
+        if (!isFactor) {
+            int maxValue = Arrays.stream(values).max().orElse(0);
+            // Use array if max value is within reasonable range; else leave as null and do linear scan
+            if (maxValue < values.length * 4 && maxValue >= 0) {
+                value2factor = new int[maxValue + 1];
+                Arrays.fill(value2factor, -1);
+                for (int i = 0; i < values.length; i++) {
+                    value2factor[values[i]] = i;
+                }
+            } else {
+                value2factor = null;
+            }
+        } else {
+            value2factor = null;
+        }
     }
 
     /**
@@ -188,6 +210,14 @@ public abstract class CategoricalMeasure implements Measure {
      */
     public int factor(int value) {
         if (factor) return value;
+
+        if (value2factor != null) {
+            if (value >= 0 && value < value2factor.length) {
+                int f = value2factor[value];
+                if (f >= 0) return f;
+            }
+            throw new IllegalArgumentException("Invalid level: " + value);
+        }
 
         for (int j = 0; j < values.length; j++) {
             if (values[j] == value) return j;
