@@ -47,7 +47,7 @@ public class LongVector extends PrimitiveVector {
      */
     public LongVector(StructField field, long[] vector) {
         if (field.dtype() != DataTypes.LongType) {
-            throw new IllegalArgumentException("Invalid data type: ");
+            throw new IllegalArgumentException("Invalid data type: " + field);
         }
         super(field);
         this.vector = vector;
@@ -61,6 +61,11 @@ public class LongVector extends PrimitiveVector {
     @Override
     public LongVector withName(String name) {
         return new LongVector(field.withName(name), vector);
+    }
+
+    @Override
+    public java.util.stream.IntStream intStream() {
+        return Arrays.stream(vector).mapToInt(v -> (int) v);
     }
 
     @Override

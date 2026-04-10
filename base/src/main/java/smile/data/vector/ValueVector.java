@@ -115,11 +115,11 @@ public interface ValueVector extends Serializable {
                 throw new IllegalArgumentException("Vector size mismatch");
             }
             for (int i = 0; i < result.length; i++) {
-                result[i] = vector.get(i).equals(get(i));
+                result[i] = Objects.equals(vector.get(i), get(i));
             }
         } else {
             for (int i = 0; i < result.length; i++) {
-                result[i] = other.equals(get(i));
+                result[i] = Objects.equals(other, get(i));
             }
         }
         return result;
@@ -137,11 +137,11 @@ public interface ValueVector extends Serializable {
                 throw new IllegalArgumentException("Vector size mismatch");
             }
             for (int i = 0; i < result.length; i++) {
-                result[i] = !vector.get(i).equals(get(i));
+                result[i] = !Objects.equals(vector.get(i), get(i));
             }
         } else {
             for (int i = 0; i < result.length; i++) {
-                result[i] = !other.equals(get(i));
+                result[i] = !Objects.equals(other, get(i));
             }
         }
         return result;
