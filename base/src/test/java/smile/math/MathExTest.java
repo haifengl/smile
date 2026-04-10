@@ -981,4 +981,80 @@ public class MathExTest {
         float[] x = {3.0f, 4.0f};
         assertEquals(5.0f, MathEx.norm2(x), 1E-5f);
     }
+
+    @Test
+    public void testSquaredDistanceSparseArrayTail() {
+        System.out.println("squaredDistance(SparseArray, SparseArray) tail elements");
+        // a = {(0, 3.0), (2, 4.0)}, b = {(0, 3.0)}
+        // Only index 0 matches. Index 2 of a is a trailing element after b runs out.
+        // Expected: (3-3)^2 + 4^2 = 16
+        smile.util.SparseArray a = new smile.util.SparseArray();
+        a.set(0, 3.0);
+        a.set(2, 4.0);
+
+        smile.util.SparseArray b = new smile.util.SparseArray();
+        b.set(0, 3.0);
+
+        assertEquals(16.0, MathEx.squaredDistance(a, b), 1E-10);
+        assertEquals(Math.sqrt(16.0), MathEx.distance(a, b), 1E-10);
+    }
+
+    @Test
+    public void testSquaredDistanceSparseArrayTailBoth() {
+        System.out.println("squaredDistance(SparseArray, SparseArray) tail on both sides");
+        // a = {(0, 1.0)}, b = {(1, 2.0)}
+        // No matching indices. Expected: 1^2 + 2^2 = 5
+        smile.util.SparseArray a = new smile.util.SparseArray();
+        a.set(0, 1.0);
+
+        smile.util.SparseArray b = new smile.util.SparseArray();
+        b.set(1, 2.0);
+
+        assertEquals(5.0, MathEx.squaredDistance(a, b), 1E-10);
+    }
+
+    @Test
+    public void testJensenShannonDivergenceSparseRemainder() {
+        System.out.println("JensenShannonDivergence(SparseArray, SparseArray) remaining elements");
+        // p = {(0, 0.5), (2, 0.5)}, q = {(0, 1.0)}
+        // For index 2: only p has it (q=0), mi = 0.5/2 = 0.25, js += 0.5*log(0.5/0.25) = 0.5*log(2)
+        smile.util.SparseArray p = new smile.util.SparseArray();
+        p.set(0, 0.5);
+        p.set(2, 0.5);
+
+        smile.util.SparseArray q = new smile.util.SparseArray();
+        q.set(0, 1.0);
+
+        double jsd = MathEx.JensenShannonDivergence(p, q);
+        // Should be > 0 and finite
+        assertTrue(jsd > 0, "JSD should be positive when distributions differ");
+        assertTrue(Double.isFinite(jsd), "JSD should be finite");
+
+        // Symmetric test with q having a tail element
+        smile.util.SparseArray p2 = new smile.util.SparseArray();
+        p2.set(0, 1.0);
+
+        smile.util.SparseArray q2 = new smile.util.SparseArray();
+        q2.set(0, 0.5);
+        q2.set(2, 0.5);
+
+        double jsd2 = MathEx.JensenShannonDivergence(p2, q2);
+        assertEquals(jsd, jsd2, 1E-10, "JSD should be symmetric");
+    }
+
+    @Test
+    public void testSquaredDistanceSparseArraySymmetric() {
+        System.out.println("squaredDistance(SparseArray) symmetry");
+        smile.util.SparseArray a = new smile.util.SparseArray();
+        a.set(0, 1.0);
+        a.set(1, 2.0);
+        a.set(3, 3.0);
+
+        smile.util.SparseArray b = new smile.util.SparseArray();
+        b.set(0, 1.0);
+        b.set(2, 2.0);
+        b.set(3, 1.0);
+
+        assertEquals(MathEx.squaredDistance(a, b), MathEx.squaredDistance(b, a), 1E-10);
+    }
 }
