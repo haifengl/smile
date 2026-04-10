@@ -2999,7 +2999,15 @@ public class MathEx {
                 e1 = it1.hasNext() ? it1.next() : null;
             }
         }
-        
+
+        // Include the last fetched element that was not yet consumed.
+        if (e1 != null) {
+            sum += pow2(e1.value());
+        }
+        if (e2 != null) {
+            sum += pow2(e2.value());
+        }
+
         while (it1.hasNext()) {
             double d = it1.next().value();
             sum += d * d;
@@ -3443,6 +3451,20 @@ public class MathEx {
                 a = pIter.hasNext() ? pIter.next() : null;
                 b = qIter.hasNext() ? qIter.next() : null;
             }
+        }
+
+        // Remaining elements in p (q has run out, so mi = a.value()/2).
+        while (a != null) {
+            double mi = a.value() / 2;
+            js += a.value() * Math.log(a.value() / mi);
+            a = pIter.hasNext() ? pIter.next() : null;
+        }
+
+        // Remaining elements in q (p has run out, so mi = b.value()/2).
+        while (b != null) {
+            double mi = b.value() / 2;
+            js += b.value() * Math.log(b.value() / mi);
+            b = qIter.hasNext() ? qIter.next() : null;
         }
 
         return js / 2;

@@ -153,7 +153,7 @@ public class BFGS {
 
         for (int iter = 1; iter <= maxIter; iter++) {
             // The new function evaluation occurs in line search.
-            f = linesearch(func, x, f, g, xi, xnew, stpmax);
+            f = lineSearch(func, x, f, g, xi, xnew, stpmax);
 
             if (iter % 100 == 0) {
                 logger.info("BFGS: the function value after {} iterations: {}", iter, f);
@@ -328,7 +328,7 @@ public class BFGS {
         double stpmax = STPMX * max(norm(x), n);
 
         for (int iter = 1, k = 0; iter <= maxIter; iter++) {
-            linesearch(func, x, f, g, xi, xnew, stpmax);
+            lineSearch(func, x, f, g, xi, xnew, stpmax);
 
             f = func.g(xnew, gnew);
             for (int i = 0; i < n; i++) {
@@ -466,7 +466,7 @@ public class BFGS {
      *
      * @return the new function value.
      */
-    private static double linesearch(MultivariateFunction func, double[] xold, double fold, double[] g, double[] p, double[] x, double stpmax) {
+    private static double lineSearch(MultivariateFunction func, double[] xold, double fold, double[] g, double[] p, double[] x, double stpmax) {
         if (stpmax <= 0) {
             throw new IllegalArgumentException("Invalid upper bound of linear search step: " + stpmax);
         }
@@ -501,7 +501,7 @@ public class BFGS {
         // Calculate minimum step.
         double test = 0.0;
         for (int i = 0; i < n; i++) {
-            double temp = abs(p[i]) / max(xold[i], 1.0);
+            double temp = abs(p[i]) / max(abs(xold[i]), 1.0);
             if (temp > test) {
                 test = temp;
             }
@@ -655,7 +655,7 @@ public class BFGS {
             for (int i = 0; i < n; i++) {
                 p[i] = subspaceMin[i] - x[i];
             }
-            linesearch(func, x_old, f_old, g, p, x, stpmax);
+            lineSearch(func, x_old, f_old, g, p, x, stpmax);
             clampToBound(x, l, u);
 
             for (double xi : x) {
@@ -699,8 +699,10 @@ public class BFGS {
                     sHistory.removeFirst();
                 }
 
-                yHistory.add(y);
-                sHistory.add(s);
+                // Clone before adding to history — otherwise all entries point
+                // to the same arrays that are overwritten every iteration.
+                yHistory.add(y.clone());
+                sHistory.add(s.clone());
 
                 int h = yHistory.size();
                 if (Y == null || Y.ncol() < h) {
@@ -851,28 +853,30 @@ public class BFGS {
      * Minimization of the subspace of free variables. See Section 5 on page 9.
      * @param x        the parameter vector
      * @param g        the gradient vector
-     * @param cauchy   the cauchy points
+     * @param cauchy   the Cauchy points
      * @param c        vector obtained from gcp() used to initialize the subspace
      *                 minimization process
      */
     private static double[] subspaceMinimization(double[] x, double[] g, double[] cauchy, double[] c, double[] l, double[] u, double theta, DenseMatrix W, DenseMatrix M) {
         int n = x.length;
         double thetaInverse = 1.0 / theta;
-        ArrayList<Integer> freeVarIdx = new ArrayList<>();
+
+        // Collect free variable indices without autoboxing overhead.
+        int[] freeVar = new int[n];
+        int freeVarCount = 0;
         for (int i = 0; i < n; i++) {
             if (cauchy[i] != u[i] && cauchy[i] != l[i]) {
-                freeVarIdx.add(i);
+                freeVar[freeVarCount++] = i;
             }
         }
 
-        if (freeVarIdx.isEmpty()) {
+        if (freeVarCount == 0) {
             return cauchy.clone();
         }
 
-        int freeVarCount = freeVarIdx.size();
-        int[] freeVar = new int[freeVarCount];
-        for (int i = 0; i < freeVarCount; i++) {
-            freeVar[i] = freeVarIdx.get(i);
+        // Trim to actual size.
+        if (freeVarCount < n) {
+            freeVar = Arrays.copyOf(freeVar, freeVarCount);
         }
 
         Vector wmc = W.mv(M.mv(c));
@@ -957,11 +961,8 @@ public class BFGS {
      * @param v  the vector to be adjusted
      */
     private static void clampToBound(double[] v, double[] l, double[] u) {
-        int n = v.length;
-
-        for (int i = 0; i < n; i++) {
-            if (v[i] > u[i]) v[i] = u[i];
-            else if (v[i] < l[i]) v[i] = l[i];
+        for (int i = 0; i < v.length; i++) {
+            v[i] = MathEx.clamp(v[i], l[i], u[i]);
         }
     }
 }
