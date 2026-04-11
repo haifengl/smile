@@ -87,6 +87,7 @@ public class DiscreteNaiveBayesTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach
@@ -97,7 +98,6 @@ public class DiscreteNaiveBayesTest {
     public void testBatchMultinomial() throws Exception {
         System.out.println("---Batch Multinomial---");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         Bag[] bags = CrossValidation.of(x.length, 10);
         int[] prediction = new int[x.length];
         for (Bag bag : bags) {
@@ -125,7 +125,6 @@ public class DiscreteNaiveBayesTest {
     public void testOnlineMultinomial() {
         System.out.println("---Online Multinomial---");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         Bag[] bags = CrossValidation.of(x.length, 10);
         int[] prediction = new int[x.length];
         for (Bag bag : bags) {
@@ -151,7 +150,6 @@ public class DiscreteNaiveBayesTest {
     public void testBatchPolyaUrn() {
         System.out.println("---Batch PolyaUrn---");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         Bag[] bags = CrossValidation.of(x.length, 10);
         int[] prediction = new int[x.length];
         for (Bag bag : bags) {
@@ -174,7 +172,6 @@ public class DiscreteNaiveBayesTest {
     public void testOnlinePolyaUrn() {
         System.out.println("---Online PolyaUrn---");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         Bag[] bags = CrossValidation.of(x.length, 10);
         int[] prediction = new int[x.length];
         for (Bag bag : bags) {
@@ -200,7 +197,6 @@ public class DiscreteNaiveBayesTest {
     public void testBatchBernoulli() {
         System.out.println("---Batch Bernoulli---");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         Bag[] bags = CrossValidation.of(x.length, 10);
         int[] prediction = new int[x.length];
         for (Bag bag : bags) {
@@ -216,14 +212,13 @@ public class DiscreteNaiveBayesTest {
         int nulls = (int) Arrays.stream(prediction).filter(y -> y == Integer.MIN_VALUE).count();
         int error = Error.of(y, prediction) - nulls;
         System.out.format("Error = %d out of %d%n", error, x.length - nulls);
-        assertEquals(309, error);
+        assertEquals(307, error);
     }
 
     @Test
     public void testOnlineBernoulli() {
         System.out.println("---Online Bernoulli---");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         Bag[] bags = CrossValidation.of(x.length, 10);
         int[] prediction = new int[x.length];
         for (Bag bag : bags) {
@@ -242,14 +237,13 @@ public class DiscreteNaiveBayesTest {
         int nulls = (int) Arrays.stream(prediction).filter(y -> y == Integer.MIN_VALUE).count();
         int error = Error.of(y, prediction) - nulls;
         System.out.format("Error = %d out of %d%n", error, x.length - nulls);
-        assertEquals(309, error);
+        assertEquals(307, error);
     }
 
     @Test
     public void testBatchCNB() {
         System.out.println("---Batch CNB---");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         Bag[] bags = CrossValidation.of(x.length, 10);
         int[] prediction = new int[x.length];
         for (Bag bag : bags) {
@@ -265,14 +259,13 @@ public class DiscreteNaiveBayesTest {
         int nulls = (int) Arrays.stream(prediction).filter(y -> y == Integer.MIN_VALUE).count();
         int error = Error.of(y, prediction) - nulls;
         System.out.format("Error = %d out of %d%n", error, x.length - nulls);
-        assertEquals(313, error);
+        assertEquals(315, error);
     }
 
     @Test
     public void testOnlineCNB() {
         System.out.println("---Online CNB---");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         Bag[] bags = CrossValidation.of(x.length, 10);
         int[] prediction = new int[x.length];
         for (Bag bag : bags) {
@@ -291,14 +284,13 @@ public class DiscreteNaiveBayesTest {
         int nulls = (int) Arrays.stream(prediction).filter(y -> y == Integer.MIN_VALUE).count();
         int error = Error.of(y, prediction) - nulls;
         System.out.format("Error = %d out of %d%n", error, x.length - nulls);
-        assertEquals(313, error);
+        assertEquals(315, error);
     }
 
     @Test
     public void testBatchWCNB() {
         System.out.println("---Batch WCNB---");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         Bag[] bags = CrossValidation.of(x.length, 10);
         int[] prediction = new int[x.length];
         for (Bag bag : bags) {
@@ -314,14 +306,13 @@ public class DiscreteNaiveBayesTest {
         int nulls = (int) Arrays.stream(prediction).filter(y -> y == Integer.MIN_VALUE).count();
         int error = Error.of(y, prediction) - nulls;
         System.out.format("Error = %d out of %d%n", error, x.length - nulls);
-        assertEquals(315, error);
+        assertEquals(314, error);
     }
 
     @Test
     public void testOnlineWCNB() {
         System.out.println("---Online WCNB---");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         Bag[] bags = CrossValidation.of(x.length, 10);
         int[] prediction = new int[x.length];
         for (Bag bag : bags) {
@@ -340,14 +331,13 @@ public class DiscreteNaiveBayesTest {
         int nulls = (int) Arrays.stream(prediction).filter(y -> y == Integer.MIN_VALUE).count();
         int error = Error.of(y, prediction) - nulls;
         System.out.format("Error = %d out of %d%n", error, x.length - nulls);
-        assertEquals(315, error);
+        assertEquals(314, error);
     }
 
     @Test
     public void testBatchTWCNB() {
         System.out.println("---Batch TWCNB---");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         Bag[] bags = CrossValidation.of(x.length, 10);
         int[] prediction = new int[x.length];
         for (Bag bag : bags) {
@@ -363,6 +353,6 @@ public class DiscreteNaiveBayesTest {
         int nulls = (int) Arrays.stream(prediction).filter(y -> y == Integer.MIN_VALUE).count();
         int error = Error.of(y, prediction) - nulls;
         System.out.format("Error = %d out of %d%n", error, x.length - nulls);
-        assertEquals(316, error);
+        assertEquals(310, error);
     }
 }

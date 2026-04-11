@@ -49,6 +49,7 @@ public class SpectralClusteringTest {
     
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
     
     @AfterEach
@@ -58,7 +59,6 @@ public class SpectralClusteringTest {
     @Test
     public void testUSPS() throws Exception {
         System.out.println("USPS");
-        MathEx.setSeed(19650218); // to get repeatable results.
 
         var model = SpectralClustering.fit(x, new SpectralClustering.Options(10, 8.0, 100));
         System.out.println(model);
@@ -80,7 +80,6 @@ public class SpectralClusteringTest {
     @Test
     public void testUSPSNystrom() throws Exception {
         System.out.println("USPS Nystrom approximation");
-        MathEx.setSeed(19650218); // to get repeatable results.
 
         var model = SpectralClustering.fit(x, new SpectralClustering.Options(10, 100, 8.0, 100));
         System.out.println(model);
@@ -88,8 +87,8 @@ public class SpectralClusteringTest {
         double r = RandIndex.of(y, model.group());
         double r2 = AdjustedRandIndex.of(y, model.group());
         System.out.format("Rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertEquals(0.8994, r, 1E-4);
-        assertEquals(0.4752, r2, 1E-4);
+        assertEquals(0.8875, r, 1E-4);
+        assertEquals(0.4101, r2, 1E-4);
 
         System.out.format("MI = %.2f%n", MutualInformation.of(y, model.group()));
         System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.group()));
@@ -105,7 +104,6 @@ public class SpectralClusteringTest {
     @Test
     public void testNews() throws Exception {
         System.out.println("News");
-        MathEx.setSeed(19650218); // to get repeatable results.
 
         SparseDataset<Integer> news = Read.libsvm(smile.io.Paths.getTestData("libsvm/news20.dat"));
         int n = 2000; // partial data to reduce test time

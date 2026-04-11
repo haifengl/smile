@@ -51,6 +51,7 @@ public class SVMTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach
@@ -60,7 +61,6 @@ public class SVMTest {
     @Test
     public void testSVMGuide1() throws IOException {
         System.out.println("svmguide1");
-        MathEx.setSeed(19650218); // to get repeatable results.
 
         SparseDataset<Integer> train = Read.libsvm(smile.io.Paths.getTestData("libsvm/svmguide1.dat"));
         SparseDataset<Integer> test  = Read.libsvm(smile.io.Paths.getTestData("libsvm/svmguide1.t.dat"));
@@ -99,7 +99,6 @@ public class SVMTest {
     @Test
     public void testSegment() throws Exception {
         System.out.println("Segment");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var segment = new ImageSegmentation();
         InvertibleColumnTransform scaler = Standardizer.fit(segment.train());
         System.out.println(scaler);
@@ -113,13 +112,12 @@ public class SVMTest {
         int[] prediction = model.predict(testx);
         int error = Error.of(segment.testy(), prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / segment.testx().length);
-        assertEquals(33, error, 3);
+        assertEquals(37, error, 3);
     }
 
     @Test
     public void testLinearSegment() throws Exception {
         System.out.println("Linear Segment");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var segment = new ImageSegmentation();
         InvertibleColumnTransform scaler = Standardizer.fit(segment.train());
         System.out.println(scaler);
@@ -137,7 +135,6 @@ public class SVMTest {
     @Test
     public void testUSPS() throws Exception {
         System.out.println("USPS");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var usps = new USPS();
         GaussianKernel kernel = new GaussianKernel(8.0);
         var options = new SVM.Options(5);

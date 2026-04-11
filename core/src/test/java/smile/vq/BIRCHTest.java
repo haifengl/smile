@@ -40,6 +40,7 @@ public class BIRCHTest {
     
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
     
     @AfterEach
@@ -49,7 +50,6 @@ public class BIRCHTest {
     @Test
     public void testUSPS() throws Exception {
         System.out.println("USPS");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var usps = new USPS();
         double[][] x = usps.x();
         double[][] testx = usps.testx();

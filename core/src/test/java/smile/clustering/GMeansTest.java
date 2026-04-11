@@ -43,6 +43,7 @@ public class GMeansTest {
     
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
     
     @AfterEach
@@ -53,7 +54,6 @@ public class GMeansTest {
     public void testUSPS() throws Exception {
         System.out.println("USPS");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         var usps = new USPS();
         double[][] x = usps.x();
         int[] y = usps.y();

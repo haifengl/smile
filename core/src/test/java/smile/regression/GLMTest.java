@@ -16,6 +16,7 @@
  */
 package smile.regression;
 
+import smile.math.MathEx;
 import smile.regression.glm.*;
 import smile.io.Read;
 import smile.io.Write;
@@ -42,6 +43,7 @@ public class GLMTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach

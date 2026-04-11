@@ -46,6 +46,7 @@ public class KMedoidsImputerTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach
@@ -55,7 +56,6 @@ public class KMedoidsImputerTest {
     @Test
     public void test() throws Exception {
         System.out.println("KMedoidsImputer");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var control = new SyntheticControl();
         double[][] data = control.x();
         DataFrame df = DataFrame.of(data);

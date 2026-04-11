@@ -48,6 +48,7 @@ public class KMeansTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach
@@ -57,7 +58,6 @@ public class KMeansTest {
     @Test
     public void testBBD4() {
         System.out.println("BBD 4");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var model = KMeans.fit(x, 4, 100);
         System.out.println(model);
 
@@ -78,7 +78,6 @@ public class KMeansTest {
     @Test
     public void testLloyd4() {
         System.out.println("Lloyd 4");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var model = KMeans.lloyd(x, 4, 100);
         System.out.println(model);
 
@@ -99,7 +98,6 @@ public class KMeansTest {
     @Test
     public void testBBD64() {
         System.out.println("BBD 64");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var model = KMeans.fit(x, 64, 100);
         System.out.println(model);
 
@@ -120,7 +118,6 @@ public class KMeansTest {
     @Test
     public void testLloyd64() {
         System.out.println("Lloyd 64");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var model = KMeans.lloyd(x, 64, 100);
         System.out.println(model);
 
@@ -141,7 +138,6 @@ public class KMeansTest {
     @Test
     public void testUSPS() throws Exception {
         System.out.println("USPS");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var usps = new USPS();
         double[][] x = usps.x();
         int[] y = usps.y();

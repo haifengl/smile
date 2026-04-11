@@ -46,6 +46,7 @@ public class GAFETest {
     
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
     
     @AfterEach
@@ -55,7 +56,6 @@ public class GAFETest {
     @Test
     public void testLDA() {
         System.out.println("LDA");
-        MathEx.setSeed(19650218); // to get repeatable results.
 
         GAFE selection = new GAFE();
         BitString[] result = selection.apply(50, 10, 256,
@@ -71,7 +71,6 @@ public class GAFETest {
     @Test
     public void testDecisionTree() throws Exception {
         System.out.println("DecisionTree");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var segment = new ImageSegmentation();
         GAFE selection = new GAFE();
         BitString[] result = selection.apply(50, 10, segment.train().ncol()-1,
@@ -87,7 +86,6 @@ public class GAFETest {
     @Test
     public void testRegressionTree() throws Exception {
         System.out.println("RegressionTree");
-        MathEx.setSeed(19650218); // to get repeatable results.
 
         GAFE selection = new GAFE();
         var abalone = new Abalone();

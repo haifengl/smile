@@ -112,6 +112,7 @@ public class RandomForestTest {
     
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
     
     @AfterEach
@@ -143,7 +144,7 @@ public class RandomForestTest {
                 (f, x) -> RandomForest.fit(f, x, options));
 
         System.out.println(metrics);
-        assertEquals(0.5714, metrics.accuracy(), 1E-4);
+        assertEquals(0.7143, metrics.accuracy(), 1E-4);
 
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
@@ -170,7 +171,7 @@ public class RandomForestTest {
         ClassificationMetrics metrics = LOOCV.classification(iris.formula(), iris.data(),
                 (f, x) -> RandomForest.fit(f, x, options));
         System.out.println(metrics);
-        assertEquals(0.9467, metrics.accuracy(), 1E-4);
+        assertEquals(0.9533, metrics.accuracy(), 1E-4);
     }
 
     @Test
@@ -183,7 +184,7 @@ public class RandomForestTest {
                 (f, x) -> RandomForest.fit(f, x, options));
 
         System.out.println(result);
-        assertEquals(0.9706, result.avg().accuracy(), 1E-4);
+        assertEquals(0.9716, result.avg().accuracy(), 1E-4);
     }
 
     @Test
@@ -197,7 +198,7 @@ public class RandomForestTest {
                 (f, x) -> RandomForest.fit(f, x, options));
 
         System.out.println(result);
-        assertEquals(0.9550, result.avg().accuracy(), 1E-4);
+        assertEquals(0.9541, result.avg().accuracy(), 1E-4);
     }
 
     @Test
@@ -246,7 +247,7 @@ public class RandomForestTest {
             int error = Error.of(testy, prediction);
 
             System.out.println("Error = " + error);
-            assertEquals(151, error);
+            assertEquals(156, error);
 
             System.out.println("----- Progressive Accuracy -----");
             int[][] test = model.test(usps.test());
@@ -328,7 +329,7 @@ public class RandomForestTest {
         int error = Error.of(testy, prediction);
 
         System.out.println("Error = " + error);
-        assertEquals(115, error);
+        assertEquals(116, error);
 
         RandomForest lean = model.prune(usps.test());
 
@@ -342,18 +343,17 @@ public class RandomForestTest {
         error = Error.of(testy, prediction);
 
         System.out.println("Error of old model after pruning = " + error);
-        assertEquals(115, error);
+        assertEquals(116, error);
 
         prediction = lean.predict(usps.test());
         error = Error.of(testy, prediction);
 
         System.out.println("Error of pruned model after pruning = " + error);
-        assertEquals(87, error);
+        assertEquals(90, error);
     }
 
     @Test
     public void testShap() throws Exception {
-        MathEx.setSeed(19650218); // to get repeatable results.
         var iris = new Iris();
         var options = new Options(10, 2, SplitRule.GINI, 20, 100, 5, 1.0, null, seeds, null);
         RandomForest model = RandomForest.fit(iris.formula(), iris.data(), options);

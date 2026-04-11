@@ -22,6 +22,7 @@ import smile.data.formula.Formula;
 import smile.datasets.*;
 import smile.io.Read;
 import smile.io.Write;
+import smile.math.MathEx;
 import smile.util.Index;
 import smile.validation.CrossValidation;
 import smile.validation.RegressionValidations;
@@ -49,6 +50,7 @@ public class RLSTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach

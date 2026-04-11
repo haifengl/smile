@@ -20,6 +20,7 @@ import smile.datasets.Default;
 import smile.datasets.ProstateCancer;
 import smile.io.Read;
 import smile.io.Write;
+import smile.math.MathEx;
 import smile.regression.gam.*;
 import smile.regression.glm.*;
 import org.junit.jupiter.api.*;
@@ -42,6 +43,7 @@ public class GAMTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach

@@ -44,6 +44,7 @@ public class KNNTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach
@@ -95,26 +96,24 @@ public class KNNTest {
     @Test
     public void testPenDigits() throws Exception {
         System.out.println("Pen Digits");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var pen = new PenDigits();
         var result = CrossValidation.classification(10, pen.x(), pen.y(),
                 (x, y) -> KNN.fit(x, y, 3));
 
         System.out.println(result);
-        assertEquals(0.9947, result.avg().accuracy(), 1E-4);
+        assertEquals(0.9944, result.avg().accuracy(), 1E-4);
     }
 
     @Test
     public void testBreastCancer() throws Exception {
         System.out.println("Breast Cancer");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         var cancer = new BreastCancer();
         var result = CrossValidation.classification(10, cancer.x(), cancer.y(),
                 (x, y) -> KNN.fit(x, y, 3));
 
         System.out.println(result);
-        assertEquals(0.9232, result.avg().accuracy(), 1E-4);
+        assertEquals(0.9229, result.avg().accuracy(), 1E-4);
     }
 
     @Test

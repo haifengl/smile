@@ -43,6 +43,7 @@ public class RegressionModelTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach
@@ -52,7 +53,6 @@ public class RegressionModelTest {
     @Test
     public void testRandomForest() throws Exception {
         System.out.println("Random Forest");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var prostate = new ProstateCancer();
         var params = new Properties();
         params.setProperty("smile.random_forest.trees", "100");
@@ -67,7 +67,6 @@ public class RegressionModelTest {
     @Test
     public void testSVM() throws Exception {
         System.out.println("SVM");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var prostate = new ProstateCancer();
         var params = new Properties();
         // This property is not supported now.
@@ -85,7 +84,6 @@ public class RegressionModelTest {
     @Test
     public void testEnsemble() throws Exception {
         System.out.println("SVM Ensemble");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var prostate = new ProstateCancer();
         var params = new Properties();
         // This property is not supported now.
@@ -103,7 +101,6 @@ public class RegressionModelTest {
     @Test
     public void testMLP() throws Exception {
         System.out.println("MLP");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var prostate = new ProstateCancer();
         var scaler = WinsorScaler.fit(prostate.train(), 0.01, 0.99);
         var train = scaler.apply(prostate.train());

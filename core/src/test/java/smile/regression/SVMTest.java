@@ -44,6 +44,7 @@ public class SVMTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach
@@ -73,12 +74,11 @@ public class SVMTest {
         double[] y = cpu.y();
         MathEx.standardize(x);
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         RegressionValidations<Regression<double[]>> result = CrossValidation.regression(10, x, y,
                 (xi, yi) -> SVM.fit(xi, yi, new SVM.Options(40.0, 10.0, 1E-3)));
 
         System.out.println(result);
-        assertEquals(47.1872, result.avg().rmse(), 1E-4);
+        assertEquals(49.8908, result.avg().rmse(), 1E-4);
     }
 
     @Test
@@ -110,13 +110,12 @@ public class SVMTest {
     public void tesDiabetes() throws Exception {
         System.out.println("Diabetes");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         var diabetes = new Diabetes();
         GaussianKernel kernel = new GaussianKernel(5.0);
         RegressionValidations<Regression<double[]>> result = CrossValidation.regression(10, diabetes.x(), diabetes.y(),
                 (x, y) -> SVM.fit(x, y, kernel, new SVM.Options(50, 1000, 1E-3)));
 
         System.out.println(result);
-        assertEquals(61.5148, result.avg().rmse(), 1E-4);
+        assertEquals(61.5184, result.avg().rmse(), 1E-4);
     }
 }
