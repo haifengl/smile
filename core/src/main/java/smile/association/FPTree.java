@@ -296,13 +296,19 @@ public class FPTree {
      */
     private int[] freq(Stream<int[]> itemsets) {
         int n = OS.getProperty("smile.arm.items", 65536);
-        int[] f = new int[n];
+        int[] count = new int[n];
         itemsets.forEach(itemset -> {
             numTransactions++;
-            for (int i : itemset) f[i]++;
+            for (int i : itemset) count[i]++;
         });
-        while (f[--n] == 0);
-        return Arrays.copyOf(f, n+1);
+
+        if (numTransactions == 0) {
+            throw new IllegalArgumentException("Empty stream of itemsets");
+        }
+
+        // Find the effective number of items.
+        while (count[--n] == 0);
+        return Arrays.copyOf(count, n+1);
     }
     
     /**
