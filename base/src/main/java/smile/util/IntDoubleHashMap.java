@@ -16,13 +16,17 @@
  */
 package smile.util;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.Arrays;
 
 /**
  * {@code HashMap<int, double>} for primitive types.
  * {@code Integer.MIN_VALUE (0x80000000)} is not allowed as key.
  */
-public class IntDoubleHashMap {
+public class IntDoubleHashMap implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
     private static final int FREE_KEY = Integer.MIN_VALUE;
 
     private static final double NO_VALUE = Double.NaN;
