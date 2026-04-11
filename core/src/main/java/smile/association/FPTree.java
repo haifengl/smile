@@ -301,8 +301,8 @@ public class FPTree {
             numTransactions++;
             for (int i : itemset) f[i]++;
         });
-        while (f[--n] == 0);
-        return Arrays.copyOf(f, n+1);
+        while (n > 0 && f[--n] == 0);
+        return f[n] == 0 ? new int[0] : Arrays.copyOf(f, n + 1);
     }
     
     /**
