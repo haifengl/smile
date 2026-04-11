@@ -43,6 +43,7 @@ public class DENCLUETest {
     
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
     
     @AfterEach
@@ -56,7 +57,6 @@ public class DENCLUETest {
         double[][] x = mixture.x();
         int[] y = mixture.y();
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         DENCLUE model = DENCLUE.fit(x, 0.85, 100);
         System.out.println(model);
 

@@ -45,6 +45,7 @@ public class SIBTest {
     
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
     
     @AfterEach
@@ -54,8 +55,6 @@ public class SIBTest {
     @Test
     public void testParseNG20() throws Exception {
         System.out.println("NG20");
-
-        MathEx.setSeed(19650218); // to get repeatable results.
 
         SparseDataset<Integer> train = Read.libsvm(smile.io.Paths.getTestData("libsvm/news20.dat"));
         SparseDataset<Integer> test = Read.libsvm(smile.io.Paths.getTestData("libsvm/news20.t.dat"));
@@ -70,8 +69,8 @@ public class SIBTest {
         double r = RandIndex.of(y, model.group());
         double r2 = AdjustedRandIndex.of(y, model.group());
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertEquals(0.8963, r, 1E-4);
-        assertEquals(0.2811, r2, 1E-4);
+        assertEquals(0.8978, r, 1E-4);
+        assertEquals(0.2615, r2, 1E-4);
 
         System.out.format("MI = %.2f%n", MutualInformation.of(y, model.group()));
         System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.group()));
@@ -88,7 +87,7 @@ public class SIBTest {
         r = RandIndex.of(testy, p);
         r2 = AdjustedRandIndex.of(testy, p);
         System.out.format("Testing rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertEquals(0.8916, r, 1E-4);
-        assertEquals(0.2768, r2, 1E-4);
+        assertEquals(0.8942, r, 1E-4);
+        assertEquals(0.2566, r2, 1E-4);
     }
 }

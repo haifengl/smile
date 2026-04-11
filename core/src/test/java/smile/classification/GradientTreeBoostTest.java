@@ -74,6 +74,7 @@ public class GradientTreeBoostTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach
@@ -83,7 +84,6 @@ public class GradientTreeBoostTest {
     @Test
     public void testWeather() throws Exception {
         System.out.println("Weather");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var weather = new WeatherNominal();
 
         try (var controller = new IterativeAlgorithmController<GradientTreeBoost.TrainingStatus>()) {
@@ -113,14 +113,13 @@ public class GradientTreeBoostTest {
                 (f, x) -> GradientTreeBoost.fit(f, x, options));
 
         System.out.println(result);
-        assertEquals(0.5714, result.accuracy(), 1E-4);
+        assertEquals(0.5000, result.accuracy(), 1E-4);
     }
 
     @Test
     public void testIris() throws Exception {
         System.out.println("Iris");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         var iris = new Iris();
         var options = new Options(100, 20, 6, 5, 0.05, 0.7, null, null);
         GradientTreeBoost model = GradientTreeBoost.fit(iris.formula(), iris.data(), options);
@@ -134,40 +133,37 @@ public class GradientTreeBoostTest {
                 (f, x) -> GradientTreeBoost.fit(f, x, options));
 
         System.out.println(result);
-        assertEquals(0.9467, result.avg().accuracy(), 1E-4);
+        assertEquals(0.9400, result.avg().accuracy(), 1E-4);
     }
 
     @Test
     public void testPenDigits() throws Exception {
         System.out.println("Pen Digits");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var pen = new PenDigits();
         var options = new Options(100, 20, 6, 5, 0.05, 0.7, null, null);
         var result = CrossValidation.classification(5, pen.formula(), pen.data(),
                 (f, x) -> GradientTreeBoost.fit(f, x, options));
 
         System.out.println(result);
-        assertEquals(0.9837, result.avg().accuracy(), 1E-4);
+        assertEquals(0.9821, result.avg().accuracy(), 1E-4);
     }
 
     @Test
     public void testBreastCancer() throws Exception {
         System.out.println("Breast Cancer");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         var cancer = new BreastCancer();
         var options = new Options(100, 20, 6, 5, 0.05, 0.7, null, null);
         var result = CrossValidation.classification(5, cancer.formula(), cancer.data(),
                 (f, x) -> GradientTreeBoost.fit(f, x, options));
 
         System.out.println(result);
-        assertEquals(0.9589, result.avg().accuracy(), 0.003);
+        assertEquals(0.9719, result.avg().accuracy(), 0.003);
     }
 
     @Test
     public void testSegment() throws Exception {
         System.out.println("Segment");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var segment = new ImageSegmentation();
         int[] testy = segment.testy();
 
@@ -198,7 +194,6 @@ public class GradientTreeBoostTest {
     @Test
     public void testUSPS() throws Exception {
         System.out.println("USPS");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var usps = new USPS();
         int[] testy = usps.testy();
         var options = new Options(50, 20, 100, 5, 0.05, 0.7, null, null);
@@ -213,7 +208,7 @@ public class GradientTreeBoostTest {
         int error = Error.of(testy, prediction);
 
         System.out.println("Error = " + error);
-        assertEquals(164, error, 3);
+        assertEquals(160, error, 3);
 
         System.out.println("----- Progressive Accuracy -----");
         int[][] test = model.test(usps.test());
@@ -224,7 +219,6 @@ public class GradientTreeBoostTest {
 
     @Test
     public void testShap() throws Exception {
-        MathEx.setSeed(19650218); // to get repeatable results.
         var iris = new Iris();
         var options = new Options(100, 20, 6, 5, 0.05, 0.7, null, null);
         GradientTreeBoost model = GradientTreeBoost.fit(iris.formula(), iris.data(), options);

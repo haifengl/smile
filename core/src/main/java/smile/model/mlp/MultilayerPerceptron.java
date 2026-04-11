@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Properties;
 import java.util.stream.Collectors;
 import smile.tensor.Vector;
+import smile.util.OS;
 import smile.util.function.TimeFunction;
 import static smile.tensor.ScalarType.*;
 
@@ -74,7 +75,7 @@ public abstract class MultilayerPerceptron implements AutoCloseable, Serializabl
     /**
      * A small constant for numerical stability in RMSProp.
      */
-    protected double epsilon = 1E-07;
+    protected double epsilon = 1E-7;
     /**
      * The L2 regularization factor, which is also the weight decay factor.
      */
@@ -459,7 +460,7 @@ public abstract class MultilayerPerceptron implements AutoCloseable, Serializabl
 
         String rho = params.getProperty("smile.mlp.RMSProp.rho");
         if (rho != null) {
-            double epsilon = Double.parseDouble(params.getProperty("smile.mlp.RMSProp.epsilon", "1E-7"));
+            double epsilon = OS.getProperty("smile.mlp.RMSProp.epsilon", 1E-7);
             setRMSProp(Double.parseDouble(rho), epsilon);
         }
     }

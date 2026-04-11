@@ -45,6 +45,7 @@ public class HMMTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach
@@ -232,10 +233,8 @@ public class HMMTest {
     @Test
     public void testUpdate() {
         System.out.println("update");
-        MathEx.setSeed(19650218); // to get repeatable results.
 
         EmpiricalDistribution initial = new EmpiricalDistribution(pi);
-
         EmpiricalDistribution[] transition = new EmpiricalDistribution[a.length];
         for (int i = 0; i < transition.length; i++) {
             transition[i] = new EmpiricalDistribution(a[i]);

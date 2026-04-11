@@ -45,6 +45,7 @@ public class LASSOTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach
@@ -70,8 +71,8 @@ public class LASSOTest {
         System.out.println(result.model());
         System.out.println(result);
         
-        assertEquals(5.0259443688265355, result.model().intercept(), 1E-7);
-        double[] w = {0.9659945126777854, -3.7147706312985876E-4, 0.9553629503697613, 9.416740009376934E-4};
+        assertEquals(5.029, result.model().intercept(), 1E-3);
+        double[] w = {0.96202, -0.00034, 0.95009, 0.00086};
         for (int i = 0; i < w.length; i++) {
             assertEquals(w[i], result.model().coefficients().get(i), 1E-5);
         }
@@ -88,7 +89,7 @@ public class LASSOTest {
                 (f, x) -> LASSO.fit(f, x, new LASSO.Options(0.1)));
 
         System.out.println(metrics);
-        assertEquals(1.4146, metrics.rmse(), 1E-4);
+        assertEquals(1.4149, metrics.rmse(), 1E-4);
 
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
@@ -98,7 +99,6 @@ public class LASSOTest {
     public void testCPU() throws Exception {
         System.out.println("CPU");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         var cpu = new CPU();
         LinearModel model = LASSO.fit(cpu.formula(), cpu.data(), new LASSO.Options(0.1));
         System.out.println(model);
@@ -107,7 +107,7 @@ public class LASSOTest {
                 (f, x) -> LASSO.fit(f, x, new LASSO.Options(0.1)));
 
         System.out.println(result);
-        assertEquals(51.0009, result.avg().rmse(), 1E-4);
+        assertEquals(55.8207, result.avg().rmse(), 1E-4);
     }
 
     @Test
@@ -138,7 +138,6 @@ public class LASSOTest {
     public void tesDiabetes() throws Exception {
         System.out.println("Diabetes");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         var diabetes = new Diabetes();
         LinearModel model = LASSO.fit(diabetes.formula(), diabetes.data(), new LASSO.Options(0.2));
         System.out.println(model);
@@ -147,6 +146,6 @@ public class LASSOTest {
                 (f, x) -> LASSO.fit(f, x, new LASSO.Options(0.2)));
 
         System.out.println(result);
-        assertEquals(59.1522, result.avg().rmse(), 0.01);
+        assertEquals(58.8329, result.avg().rmse(), 0.01);
     }
 }

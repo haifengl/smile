@@ -47,6 +47,7 @@ public class SOMTest {
     
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
     
     @AfterEach
@@ -57,7 +58,6 @@ public class SOMTest {
     @Test
     public void testKMeans() {
         System.out.println("K-Means as a benchmark");
-        MathEx.setSeed(19650218); // to get repeatable results.
 
         var model = KMeans.fit(x, 400, 100);
         double error = 0.0;
@@ -83,7 +83,6 @@ public class SOMTest {
     @Test
     public void testUSPS() {
         System.out.println("USPS");
-        MathEx.setSeed(19650218); // to get repeatable results.
 
         int epochs = 20;
         double[][][] lattice = SOM.lattice(20, 20, x);
@@ -113,6 +112,6 @@ public class SOMTest {
         error /= testx.length;
 
         System.out.format("Test Quantization Error = %.4f%n", error);
-        assertEquals(6.5876, error, 1E-4);
+        assertEquals(6.5819, error, 1E-4);
     }
 }

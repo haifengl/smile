@@ -41,6 +41,7 @@ public class KModesTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach
@@ -50,7 +51,6 @@ public class KModesTest {
     @Test
     public void testWeather() throws Exception {
         System.out.println("Weather");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var weather = new WeatherNominal();
         double[][] data = weather.level();
         int[] y = weather.y();

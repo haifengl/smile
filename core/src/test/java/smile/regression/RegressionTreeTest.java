@@ -49,6 +49,7 @@ public class RegressionTreeTest {
     
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
         System.setProperty("smile.regression_tree.bins", "100");
     }
     
@@ -83,8 +84,6 @@ public class RegressionTreeTest {
     public void test(String name, Formula formula, DataFrame data, double expected) {
         System.out.println(name);
 
-        MathEx.setSeed(19650218); // to get repeatable results.
-
         RegressionTree model = RegressionTree.fit(formula, data);
         System.out.println("----- dot -----");
         System.out.println(model);
@@ -104,19 +103,19 @@ public class RegressionTreeTest {
     @Test
     public void testCPU() throws Exception {
         var cpu = new CPU();
-        test("CPU", cpu.formula(), cpu.data(), 74.3149);
+        test("CPU", cpu.formula(), cpu.data(), 80.3197);
     }
 
     @Test
     public void test2DPlanes() throws Exception {
         var planes = new Planes2D();
-        test("2dplanes", planes.formula(), planes.data(), 1.0025);
+        test("2dplanes", planes.formula(), planes.data(), 1.0023);
     }
 
     @Test
     public void testAbalone() throws Exception {
         var abalone = new Abalone();
-        test("abalone", abalone.formula(), abalone.train(), 2.3670);
+        test("abalone", abalone.formula(), abalone.train(), 2.3359);
     }
 
     @Test
@@ -128,37 +127,36 @@ public class RegressionTreeTest {
     @Test
     public void testBank32nh() throws Exception {
         var bank32nh = new Bank32nh();
-        test("bank32nh", bank32nh.formula(), bank32nh.data(), 0.09187);
+        test("bank32nh", bank32nh.formula(), bank32nh.data(), 0.09117);
     }
 
     @Test
     public void testAutoMPG() throws Exception {
         var autoMPG = new AutoMPG();
-        test("autoMPG", autoMPG.formula(), autoMPG.data(), 3.84619);
+        test("autoMPG", autoMPG.formula(), autoMPG.data(), 3.82328);
     }
 
     @Test
     public void testCalHousing() throws Exception {
         System.setProperty("smile.regression_tree.bins", "300");
         var calHousing = new CalHousing();
-        test("cal_housing", calHousing.formula(), calHousing.data(), 60563.2112);
+        test("cal_housing", calHousing.formula(), calHousing.data(), 60984.2636);
     }
 
     @Test
     public void testPuma8nh() throws Exception {
         var puma = new Puma8NH();
-        test("puma8nh", puma.formula(), puma.data(), 3.2726);
+        test("puma8nh", puma.formula(), puma.data(), 3.2756);
     }
 
     @Test
     public void testKin8nm() throws Exception {
         var kin8nm = new Kin8nm();
-        test("kin8nm", kin8nm.formula(), kin8nm.data(), 0.1967);
+        test("kin8nm", kin8nm.formula(), kin8nm.data(), 0.1947);
     }
 
     @Test
     public void testShap() throws Exception {
-        MathEx.setSeed(19650218); // to get repeatable results.
         var bostonHousing = new BostonHousing();
         var options = new RegressionTree.Options(20, 100, 5);
         RegressionTree model = RegressionTree.fit(bostonHousing.formula(), bostonHousing.data(), options);

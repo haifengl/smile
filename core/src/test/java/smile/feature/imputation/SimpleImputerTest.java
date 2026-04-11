@@ -46,6 +46,7 @@ public class SimpleImputerTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach
@@ -53,8 +54,6 @@ public class SimpleImputerTest {
     }
 
     static double impute(Function<double[][], double[][]> imputer, double[][] data, double rate) {
-        MathEx.setSeed(19650218); // to get repeatable results.
-
         int n = 0;
         double[][] missing = new double[data.length][data[0].length];
         for (int i = 0; i < missing.length; i++) {

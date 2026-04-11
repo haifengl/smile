@@ -44,6 +44,7 @@ public class LogisticRegressionTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach
@@ -73,7 +74,6 @@ public class LogisticRegressionTest {
     @Test
     public void testPenDigits() throws Exception {
         System.out.println("Pen Digits");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var pen = new PenDigits();
         var result = CrossValidation.classification(10, pen.x(), pen.y(), LogisticRegression::fit);
 
@@ -84,20 +84,16 @@ public class LogisticRegressionTest {
     @Test
     public void testLibrasMovement() throws Exception {
         System.out.println("Libras Movement");
-
-        MathEx.setSeed(19650218); // to get repeatable results.
         var libras = new LibrasMovement();
         var result = CrossValidation.classification(10, libras.x(), libras.y(), LogisticRegression::fit);
 
         System.out.println(result);
-        assertEquals(0.7361, result.avg().accuracy(), 1E-4);
+        assertEquals(0.7389, result.avg().accuracy(), 1E-4);
     }
 
     @Test
     public void testBreastCancer() throws Exception {
         System.out.println("Breast Cancer");
-
-        MathEx.setSeed(19650218); // to get repeatable results.
         var cancer = new BreastCancer();
         var result = CrossValidation.classification(10, cancer.x(), cancer.y(),
                 LogisticRegression::fit);

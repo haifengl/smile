@@ -48,6 +48,7 @@ public class GaussianProcessRegressionTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach
@@ -103,7 +104,6 @@ public class GaussianProcessRegressionTest {
     @Test
     public void testLongley() throws Exception {
         System.out.println("longley");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var longley = new Longley();
         double[][] x = longley.x();
         double[] y = longley.y();
@@ -144,7 +144,6 @@ public class GaussianProcessRegressionTest {
     @Test
     public void testHPO() {
         System.out.println("HPO longley");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var longley = new Longley();
         double[][] x = longley.x();
         double[] y = longley.y();
@@ -154,8 +153,8 @@ public class GaussianProcessRegressionTest {
                 new GaussianKernel(8.0),
                 new Options(0.2, true, 1E-5, 500));
         System.out.println(model);
-        assertEquals(-0.8996, model.L, 1E-4);
-        assertEquals(0.0137, model.noise, 1E-4);
+        assertEquals(-0.9011, model.L, 1E-4);
+        assertEquals(0.0133, model.noise, 1E-4);
 
         MercerKernel<double[]> kernel = model.kernel;
         double noise = model.noise;
@@ -164,14 +163,13 @@ public class GaussianProcessRegressionTest {
                 (xi, yi) -> GaussianProcessRegression.fit(xi, yi, kernel, new Options(noise)));
 
         System.out.println(metrics);
-        assertEquals(1.7104, metrics.rmse(), 1E-4);
+        assertEquals(1.7156, metrics.rmse(), 1E-4);
     }
 
     @Test
     public void testCPU() throws Exception {
         System.out.println("CPU");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         var cpu = new CPU();
         double[][] x = cpu.x();
         double[] y = cpu.y();
@@ -213,15 +211,14 @@ public class GaussianProcessRegressionTest {
         System.out.println("GPR: " + result);
         System.out.println("Sparse: " + sparseResult);
         System.out.println("Nystrom: " + nystromResult);
-        assertEquals(62.7723, result.avg().rmse(), 1E-4);
-        assertEquals(50.4940, sparseResult.avg().rmse(), 1E-4);
-        assertEquals(49.5042, nystromResult.avg().rmse(), 1E-4);
+        assertEquals(61.2244, result.avg().rmse(), 1E-4);
+        assertEquals(54.0122, sparseResult.avg().rmse(), 1E-4);
+        assertEquals(51.6212, nystromResult.avg().rmse(), 1E-4);
     }
 
     @Test
     public void test2DPlanes() throws Exception {
         System.out.println("2dplanes");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var planes = new Planes2D();
         double[][] x = MathEx.clone(planes.x());
         double[] y = planes.y();
@@ -269,16 +266,15 @@ public class GaussianProcessRegressionTest {
         System.out.println("GPR: " + result);
         System.out.println("Sparse: " + sparseResult);
         System.out.println("Nystrom: " + nystromResult);
-        assertEquals(2.3968, result.avg().rmse(), 1E-4);
-        assertEquals(2.1740, sparseResult.avg().rmse(), 1E-4);
-        assertEquals(2.1024, nystromResult.avg().rmse(), 1E-4);
+        assertEquals(2.3542, result.avg().rmse(), 1E-4);
+        assertEquals(2.1350, sparseResult.avg().rmse(), 1E-4);
+        assertEquals(2.0739, nystromResult.avg().rmse(), 1E-4);
     }
 
     @Test
     public void testAilerons() throws Exception {
         System.out.println("ailerons");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         var ailerons = new Ailerons();
         double[][] x = ailerons.x();
         double[] y = ailerons.y();
@@ -329,16 +325,14 @@ public class GaussianProcessRegressionTest {
         System.out.println("GPR: " + result);
         System.out.println("Sparse: " + sparseResult);
         System.out.println("Nystrom: " + nystromResult);
-        assertEquals(2.1624, result.avg().rmse(), 1E-4);
-        assertEquals(2.2777, sparseResult.avg().rmse(), 1E-4);
-        assertEquals(2.2873, nystromResult.avg().rmse(), 1E-4);
+        assertEquals(2.2123, result.avg().rmse(), 1E-4);
+        assertEquals(2.3134, sparseResult.avg().rmse(), 1E-4);
+        assertEquals(2.3656, nystromResult.avg().rmse(), 1E-4);
     }
 
     @Test
     public void testBank32nh() throws Exception {
         System.out.println("bank32nh");
-
-        MathEx.setSeed(19650218); // to get repeatable results.
 
         var bank32nh = new Bank32nh();
         double[][] x = bank32nh.x();
@@ -387,16 +381,15 @@ public class GaussianProcessRegressionTest {
         System.out.println("GPR: " + result);
         System.out.println("Sparse: " + sparseResult);
         System.out.println("Nystrom: " + nystromResult);
-        assertEquals(0.0843, result.avg().rmse(), 1E-4);
-        assertEquals(0.0847, sparseResult.avg().rmse(), 1E-4);
-        assertEquals(0.3396, nystromResult.avg().rmse(), 1E-4);
+        assertEquals(0.0839, result.avg().rmse(), 1E-4);
+        assertEquals(0.0845, sparseResult.avg().rmse(), 1E-4);
+        assertEquals(0.3921, nystromResult.avg().rmse(), 1E-4);
     }
 
     @Test
     public void testPuma8nh() throws Exception {
         System.out.println("puma8nh");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         var puma = new Puma8NH();
         double[][] x = puma.x();
         double[] y = puma.y();
@@ -443,16 +436,15 @@ public class GaussianProcessRegressionTest {
         System.out.println("GPR: " + result);
         System.out.println("Sparse: " + sparseResult);
         System.out.println("Nystrom: " + nystromResult);
-        assertEquals(4.4398, result.avg().rmse(), 1E-4);
-        assertEquals(4.4186, sparseResult.avg().rmse(), 1E-4);
-        assertEquals(4.4084, nystromResult.avg().rmse(), 1E-4);
+        assertEquals(4.4555, result.avg().rmse(), 1E-4);
+        assertEquals(4.4337, sparseResult.avg().rmse(), 1E-4);
+        assertEquals(4.4230, nystromResult.avg().rmse(), 1E-4);
     }
 
     @Test
     public void testKin8nm() throws Exception {
         System.out.println("kin8nm");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         var kin8nm = new Kin8nm();
         double[][] x = kin8nm.x();
         double[] y = kin8nm.y();
@@ -498,8 +490,8 @@ public class GaussianProcessRegressionTest {
         System.out.println("GPR: " + result);
         System.out.println("Sparse: " + sparseResult);
         System.out.println("Nystrom: " + nystromResult);
-        assertEquals(0.2020, result.avg().rmse(), 1E-4);
-        assertEquals(0.1980, sparseResult.avg().rmse(), 1E-4);
-        assertEquals(0.1954, nystromResult.avg().rmse(), 1E-4);
+        assertEquals(0.1992, result.avg().rmse(), 1E-4);
+        assertEquals(0.1957, sparseResult.avg().rmse(), 1E-4);
+        assertEquals(0.1930, nystromResult.avg().rmse(), 1E-4);
     }
 }

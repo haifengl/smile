@@ -41,6 +41,7 @@ public class TSNETest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach
@@ -50,7 +51,6 @@ public class TSNETest {
     @Test
     public void test() throws Exception {
         System.out.println("tSNE");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var mnist = new MNIST();
         double[][] x = mnist.x();
         PCA pca = PCA.fit(x).getProjection(50);

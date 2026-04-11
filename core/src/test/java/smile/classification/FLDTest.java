@@ -44,6 +44,7 @@ public class FLDTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach
@@ -63,24 +64,22 @@ public class FLDTest {
     @Test
     public void testPenDigits() throws Exception {
         System.out.println("Pen Digits");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var pen = new PenDigits();
         var result = CrossValidation.classification(10, pen.x(), pen.y(), FLD::fit);
 
         System.out.println(result);
-        assertEquals(0.8771, result.avg().accuracy(), 1E-4);
+        assertEquals(0.8782, result.avg().accuracy(), 1E-4);
     }
 
     @Test
     public void testBreastCancer() throws Exception {
         System.out.println("Breast Cancer");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         var cancer = new BreastCancer();
         ClassificationValidations<FLD> result = CrossValidation.classification(10, cancer.x(), cancer.y(), FLD::fit);
 
         System.out.println(result);
-        assertEquals(0.9655, result.avg().accuracy(), 1E-4);
+        assertEquals(0.9594, result.avg().accuracy(), 1E-4);
     }
 
     @Test
@@ -107,11 +106,10 @@ public class FLDTest {
     public void testColon() throws Exception {
         System.out.println("Colon");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         var colon = ColonCancer.load();
         var result = CrossValidation.classification(5, colon.x(), colon.y(), FLD::fit);
 
         System.out.println(result);
-        assertEquals(0.8524, result.avg().accuracy(), 1E-4);
+        assertEquals(0.8714, result.avg().accuracy(), 1E-4);
     }
 }

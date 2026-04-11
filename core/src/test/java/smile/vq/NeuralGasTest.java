@@ -42,6 +42,7 @@ public class NeuralGasTest {
     
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
     
     @AfterEach
@@ -51,7 +52,6 @@ public class NeuralGasTest {
     @Test
     public void testUSPS() throws Exception {
         System.out.println("USPS");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var usps = new USPS();
         double[][] x = usps.x();
         double[][] testx = usps.testx();
@@ -76,7 +76,7 @@ public class NeuralGasTest {
         }
         error /= x.length;
         System.out.format("Training Quantization Error = %.4f%n", error);
-        assertEquals(5.7022, error, 1E-4);
+        assertEquals(5.6991, error, 1E-4);
 
         error = 0.0;
         for (double[] xi : testx) {
@@ -86,6 +86,6 @@ public class NeuralGasTest {
         error /= testx.length;
 
         System.out.format("Test Quantization Error = %.4f%n", error);
-        assertEquals(6.5451, error, 1E-4);
+        assertEquals(6.5314, error, 1E-4);
     }
 }

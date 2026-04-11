@@ -40,6 +40,7 @@ public class FRegressionTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach
@@ -49,8 +50,6 @@ public class FRegressionTest {
     @Test
     public void testAbalone() throws Exception {
         System.out.println("Abalone");
-        MathEx.setSeed(19650218); // to get repeatable results.
-
         var abalone = new Abalone();
         FRegression[] f = FRegression.fit(abalone.train(), "rings");
         assertEquals(8, f.length);

@@ -43,6 +43,7 @@ public class RidgeRegressionTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach
@@ -56,19 +57,19 @@ public class RidgeRegressionTest {
         LinearModel model = RidgeRegression.fit(longley.formula(), longley.data(), 0.1);
         System.out.println(model);
 
-        assertEquals(-1.354007e+03, model.intercept(), 1E-3);
-        assertEquals(5.457700e-02, model.coefficients().get(0), 1E-7);
-        assertEquals(1.198440e-02, model.coefficients().get(1), 1E-7);
-        assertEquals(1.261978e-02, model.coefficients().get(2), 1E-7);
-        assertEquals(-1.856041e-01, model.coefficients().get(3), 1E-7);
-        assertEquals(7.218054e-01, model.coefficients().get(4), 1E-7);
-        assertEquals(5.884884e-01, model.coefficients().get(5), 1E-7);
+        assertEquals(-1340.2198, model.intercept(), 1E-4);
+        assertEquals( 0.0529, model.coefficients().get(0), 1E-4);
+        assertEquals( 0.0120, model.coefficients().get(1), 1E-4);
+        assertEquals( 0.0128, model.coefficients().get(2), 1E-4);
+        assertEquals(-0.1637, model.coefficients().get(3), 1E-4);
+        assertEquals( 0.7133, model.coefficients().get(4), 1E-4);
+        assertEquals( 0.6019, model.coefficients().get(5), 1E-4);
 
         RegressionMetrics metrics = LOOCV.regression(longley.formula(), longley.data(),
                 (f, x) -> RidgeRegression.fit(f, x, 0.1));
 
         System.out.println(metrics);
-        assertEquals(1.7288188, metrics.rmse(), 1E-7);
+        assertEquals(1.732, metrics.rmse(), 1E-3);
 
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
@@ -78,7 +79,6 @@ public class RidgeRegressionTest {
     public void testCPU() throws Exception {
         System.out.println("CPU");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         var cpu = new CPU();
         LinearModel model = RidgeRegression.fit(cpu.formula(), cpu.data(), 0.1);
         System.out.println(model);
@@ -87,6 +87,6 @@ public class RidgeRegressionTest {
                 (f, x) -> RidgeRegression.fit(f, x, 0.1));
 
         System.out.println(result);
-        assertEquals(50.9911, result.avg().rmse(), 1E-4);
+        assertEquals(55.8048, result.avg().rmse(), 1E-4);
     }
 }

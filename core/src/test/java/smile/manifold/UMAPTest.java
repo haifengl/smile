@@ -42,6 +42,7 @@ public class UMAPTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach
@@ -51,7 +52,6 @@ public class UMAPTest {
     @Test
     public void testMnist() throws Exception {
         System.out.println("UMAP MNIST");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var mnist = new MNIST();
         var x = mnist.x();
         long start = System.currentTimeMillis();
@@ -64,7 +64,6 @@ public class UMAPTest {
     @Test
     public void testSwissRoll() throws Exception {
         System.out.println("UMAP SwissRoll");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var roll = new SwissRoll();
         double[][] data = Arrays.copyOf(roll.data(), 1000);
         long start = System.currentTimeMillis();

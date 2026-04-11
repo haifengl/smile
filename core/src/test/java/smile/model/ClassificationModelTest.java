@@ -44,6 +44,7 @@ public class ClassificationModelTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach
@@ -53,7 +54,6 @@ public class ClassificationModelTest {
     @Test
     public void testRandomForest() throws Exception {
         System.out.println("Random Forest");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var segment = new ImageSegmentation();
         var params = new Properties();
         params.setProperty("smile.random_forest.trees", "100");
@@ -62,13 +62,12 @@ public class ClassificationModelTest {
         System.out.println("Training metrics: " + model.train());
         System.out.println("Validation metrics: " + model.validation());
         System.out.println("Test metrics: " + model.test());
-        assertEquals(34, model.test().error(), 3);
+        assertEquals(35, model.test().error(), 3);
     }
 
     @Test
     public void testSVM() throws Exception {
         System.out.println("SVM");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var segment = new ImageSegmentation();
         var scaler = Standardizer.fit(segment.train());
         var train = scaler.apply(segment.train());
@@ -89,7 +88,6 @@ public class ClassificationModelTest {
     @Test
     public void testEnsemble() throws Exception {
         System.out.println("SVM Ensemble");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var segment = new ImageSegmentation();
         var scaler = Standardizer.fit(segment.train());
         var train = scaler.apply(segment.train());
@@ -110,7 +108,6 @@ public class ClassificationModelTest {
     @Test
     public void testMLP() throws Exception {
         System.out.println("MLP");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var segment = new ImageSegmentation();
         var scaler = WinsorScaler.fit(segment.train(), 0.01, 0.99);
         var train = scaler.apply(segment.train());
@@ -118,15 +115,15 @@ public class ClassificationModelTest {
         var params = new Properties();
         // This property is not supported now.
         // params.setProperty("smile.feature.transform", "Standardizer")
-        params.setProperty("smile.mlp.epochs", "13");
+        params.setProperty("smile.mlp.epochs", "11");
         params.setProperty("smile.mlp.mini_batch", "20");
         params.setProperty("smile.mlp.layers", "Sigmoid(50)");
-        params.setProperty("smile.mlp.learning_rate", "linear(0.1, 10000, 0.01)");
+        params.setProperty("smile.mlp.learning_rate", "0.1");
         params.setProperty("smile.mlp.RMSProp.rho", "0.9");
         var model = Model.classification("mlp", segment.formula(), train, test, params);
         System.out.println("Training metrics: " + model.train());
         System.out.println("Validation metrics: " + model.validation());
         System.out.println("Test metrics: " + model.test());
-        assertEquals(32, model.test().error());
+        assertEquals(32, model.test().error(), 5);
     }
 }

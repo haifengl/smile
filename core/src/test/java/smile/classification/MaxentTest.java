@@ -20,6 +20,7 @@ import smile.io.Read;
 import smile.io.Write;
 import smile.datasets.Hyphen;
 import smile.datasets.Protein;
+import smile.math.MathEx;
 import smile.validation.metric.Error;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -44,6 +45,7 @@ public class MaxentTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach

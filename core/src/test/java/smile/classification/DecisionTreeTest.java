@@ -47,6 +47,7 @@ public class DecisionTreeTest {
     
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
     
     @AfterEach
@@ -105,28 +106,26 @@ public class DecisionTreeTest {
     @Test
     public void testPenDigits() throws Exception {
         System.out.println("Pen Digits");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var pen = new PenDigits();
         var options = new Options(SplitRule.GINI, 20, 100, 5);
         var result = CrossValidation.classification(10, pen.formula(), pen.data(),
                 (f, x) -> DecisionTree.fit(f, x, options));
 
         System.out.println(result);
-        assertEquals(0.9532, result.avg().accuracy(), 1E-4);
+        assertEquals(0.9530, result.avg().accuracy(), 1E-4);
     }
 
     @Test
     public void testBreastCancer() throws Exception {
         System.out.println("Breast Cancer");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         var cancer = new BreastCancer();
         var options = new Options(SplitRule.GINI, 20, 100, 5);
         var result = CrossValidation.classification(10, cancer.formula(), cancer.data(),
                 (f, x) -> DecisionTree.fit(f, x, options));
 
         System.out.println(result);
-        assertEquals(0.9275, result.avg().accuracy(), 1E-4);
+        assertEquals(0.9191, result.avg().accuracy(), 1E-4);
     }
 
     @Test
@@ -217,7 +216,6 @@ public class DecisionTreeTest {
 
     @Test
     public void testShap() throws Exception {
-        MathEx.setSeed(19650218); // to get repeatable results.
         var iris = new Iris();
         var options = new Options(SplitRule.GINI, 20, 100, 5);
         DecisionTree model = DecisionTree.fit(iris.formula(), iris.data(), options);

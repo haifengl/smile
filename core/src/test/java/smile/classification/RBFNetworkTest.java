@@ -48,6 +48,7 @@ public class RBFNetworkTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach
@@ -58,7 +59,6 @@ public class RBFNetworkTest {
     public void testIris() throws Exception {
         System.out.println("Iris");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         var iris = new Iris();
         ClassificationMetrics metrics = LOOCV.classification(iris.x(), iris.y(),
                 (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 10)));
@@ -76,44 +76,41 @@ public class RBFNetworkTest {
     @Test
     public void testPenDigits() throws Exception {
         System.out.println("Pen Digits");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var pen = new PenDigits();
         var result = CrossValidation.classification(10, pen.x(), pen.y(),
                 (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 50)));
 
         System.out.println("RBF Network: " + result);
-        assertEquals(0.9, result.avg().accuracy(), 1E-4);
+        assertEquals(0.9090, result.avg().accuracy(), 1E-4);
 
         result = CrossValidation.classification(10, pen.x(), pen.y(),
                 (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 50), true));
 
         System.out.println("Normalized RBF Network: " + result);
-        assertEquals(0.9172, result.avg().accuracy(), 1E-4);
+        assertEquals(0.9105, result.avg().accuracy(), 1E-4);
     }
 
     @Test
     public void testBreastCancer() throws Exception {
         System.out.println("Breast Cancer");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         var cancer = new BreastCancer();
         var result = CrossValidation.classification(10, cancer.x(), cancer.y(),
                 (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 30)));
 
         System.out.println("RBF Network: " + result);
-        assertEquals(0.9477, result.avg().accuracy(), 1E-4);
+        assertEquals(0.9426, result.avg().accuracy(), 1E-4);
 
         result = CrossValidation.classification(10, cancer.x(), cancer.y(),
                 (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 30), true));
 
         System.out.println("Normalized RBF Network: " + result);
-        assertEquals(0.9421, result.avg().accuracy(), 1E-4);
+        assertEquals(0.9398, result.avg().accuracy(), 1E-4);
     }
 
     @Test
     public void testSegment() throws Exception {
         System.out.println("Segment");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var segment = new ImageSegmentation();
         double[][] x = segment.x();
         double[][] testx = segment.testx();
@@ -139,7 +136,6 @@ public class RBFNetworkTest {
     public void testUSPS() throws Exception {
         System.out.println("USPS");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         var usps = new USPS();
         double[][] x = usps.x();
         int[] y = usps.y();
