@@ -93,6 +93,10 @@ public class SmileStudio extends JFrame {
                 var ty = LanguageService.of(cwd, "ty server");
                 ty.start(handler);
                 LanguageService.put("python", ty);
+                Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                    System.out.println("Shutdown Ty...");
+                    ty.close();
+                }));
             } catch (Exception ex) {
                 logger.error("Failed to start Ty server", ex);
             }
@@ -107,6 +111,10 @@ public class SmileStudio extends JFrame {
                 var jdtls = LanguageService.of(cwd, command);
                 jdtls.start(handler);
                 LanguageService.put("java", jdtls);
+                Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                    System.out.println("Shutdown JDT LS...");
+                    jdtls.close();
+                }));
             } catch (Exception ex) {
                 logger.error("Failed to start JDT LS server", ex);
             }
@@ -122,6 +130,10 @@ public class SmileStudio extends JFrame {
                 if (Files.exists(path)) MCP.connect(path, handler);
                 path = Path.of(System.getProperty("user.dir"), ".smile", "mcp.json");
                 if (Files.exists(path)) MCP.connect(path, handler);
+                Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                    System.out.println("Shutdown MCP servers...");
+                    MCP.close();
+                }));
             } catch (Throwable ex) {
                 System.out.println("Failed to start MCP services: " + ex.getMessage());
             }
