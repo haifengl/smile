@@ -240,6 +240,8 @@ public class AgentCLI extends JPanel {
                             .redirectErrorStream(true)
                             .start();
 
+                    intent.setProgress(true);
+                    intent.setStopAction(process::destroyForcibly);
                     // Read output from the command
                     var reader = new BufferedReader(
                             new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
@@ -282,7 +284,8 @@ public class AgentCLI extends JPanel {
 
             @Override
             protected void done() {
-                // process and done are called in EDT, so we can safely update the UI here.
+                intent.setProgress(false);
+                // process() and done() are called in EDT, so we can safely update the UI here.
                 output.highlight();
             }
         };
@@ -545,7 +548,6 @@ Please provide your summary based on the conversation so far, following this str
             return;
         }
 
-        intent.setProgress(true);
         if (agent.llm() instanceof ioa.llm.client.GoogleGemini) {
             SwingUtilities.invokeLater(() ->
                     intent.output().append("Due to the limitations of Gemini API, Agent capability is restricted. For better experience, please try Anthropic or OpenAI.\n\n"));
@@ -556,6 +558,10 @@ Please provide your summary based on the conversation so far, following this str
         } else {
             agent.conversation().params().setProperty(LLM.REASONING_EFFORT, reasoningEffort);
         }
+
+        intent.setProgress(true);
+        agent.conversation().params().setProperty(LLM.INTERRUPTED, "false");
+        intent.setStopAction(() -> agent.conversation().params().setProperty(LLM.INTERRUPTED, "true"));
 
         // Stream processing runs in a background thread so that we don't
         // need to create a SwingWorker thread.

@@ -21,6 +21,7 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.concurrent.Callable;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.BadLocationException;
@@ -33,7 +34,6 @@ import smile.plot.swing.Palette;
 import smile.studio.Markdown;
 import smile.studio.Monospaced;
 import smile.studio.OutputArea;
-import smile.studio.text.HintWindow;
 import static smile.studio.cli.IntentType.*;
 
 /**
@@ -46,17 +46,24 @@ public class Intent extends JPanel {
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Intent.class.getName(), Locale.getDefault());
     private static final Color inputColor = new Color(220, 248, 198);
     private static final Color borderColor = Palette.web("#8dd4e8");
-    private final JPanel footer = new JPanel();
+    // Input pane
     private final JPanel inputPane = new JPanel(new BorderLayout());
     private final JLabel indicator = new JLabel(">", SwingConstants.CENTER);
-    private final JComboBox<IntentType> intentTypeComboBox = new JComboBox<>(IntentType.values());
     private final IntentEditor editor = new IntentEditor(1, 80);
-    private final JLabel status = new JLabel();
-    private final JProgressBar progress = new JProgressBar();
-    private final JPanel outputPane = new JPanel();
-    private final JLabel effortLabel = new JLabel(bundle.getString("ReasoningEffort"));
-    private final JComboBox<String> effortComboBox;
+    // Footer for controls and status
+    private final JPanel footer = new JPanel();
+    // Left side for intent type, reasoning effort and status bar
     private final JPanel controlPane = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    private final JComboBox<IntentType> intentTypeComboBox = new JComboBox<>(IntentType.values());
+    private final JLabel reasoningLabel = new JLabel(bundle.getString("ReasoningEffort"));
+    private final JComboBox<String> effortComboBox;
+    private final JLabel status = new JLabel();
+    // Right side for status and stop button.
+    private final JPanel progressPane = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+    private final JProgressBar progress = new JProgressBar();
+    private final JButton stopButton = new JButton("⛔");
+    // Output pane
+    private final JPanel outputPane = new JPanel();
     private OutputArea output = createOutputArea();
 
     /**
@@ -101,6 +108,13 @@ public class Intent extends JPanel {
 
         status.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
         progress.setMaximumSize(new Dimension(200, 12));
+        stopButton.setVisible(false);
+        stopButton.setOpaque(false);
+        stopButton.setContentAreaFilled(false); // make the button transparent
+        stopButton.setToolTipText(bundle.getString("Stop"));
+        progressPane.add(progress);
+        progressPane.add(Box.createHorizontalStrut(20));
+        progressPane.add(stopButton);
 
         initIntentTypeComboBox();
         footer.setLayout(new BoxLayout(footer, BoxLayout.X_AXIS));
@@ -110,7 +124,7 @@ public class Intent extends JPanel {
         controlPane.setBackground(inputColor);
         controlPane.add(intentTypeComboBox);
         controlPane.add(Box.createHorizontalStrut(20));
-        controlPane.add(effortLabel);
+        controlPane.add(reasoningLabel);
         controlPane.add(effortComboBox);
         footer.add(controlPane);
         footer.add(status);
@@ -171,10 +185,10 @@ public class Intent extends JPanel {
 
                 if (effortComboBox != null) {
                     if (intentType == Instructions || intentType == Command) {
-                        effortLabel.setVisible(true);
+                        reasoningLabel.setVisible(true);
                         effortComboBox.setVisible(true);
                     } else {
-                        effortLabel.setVisible(false);
+                        reasoningLabel.setVisible(false);
                         effortComboBox.setVisible(false);
                     }
                 }
@@ -234,6 +248,21 @@ public class Intent extends JPanel {
 
                 // Append a new intent box for the next instructions
                 cli.addIntent();
+            }
+        });
+    }
+
+    /**
+     * Sets the stop action for the intent.
+     * @param stop the lambda to stop execution.
+     */
+    public <T> void setStopAction(Callable<T> stop) {
+        stopButton.setVisible(true);
+        stopButton.addActionListener(e -> {
+            try {
+                stop.call();
+            } catch (Exception ex) {
+                output.append("\n\nError: " + ex.getMessage());
             }
         });
     }
@@ -352,11 +381,11 @@ public class Intent extends JPanel {
         if (on) {
             progress.setIndeterminate(true);
             progress.setEnabled(true);
-            footer.add(progress);
+            footer.add(progressPane);
         } else {
             progress.setIndeterminate(false);
             progress.setEnabled(false);
-            footer.remove(progress);
+            footer.remove(progressPane);
             // Repaint the footer to reflect the removal of the progress bar.
             // This is necessary as Swing is optimized for lazy evaluation.
             footer.repaint();
