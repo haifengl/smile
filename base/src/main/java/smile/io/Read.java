@@ -135,7 +135,8 @@ public interface Read {
      * @return the data frame.
      */
     static DataFrame csv(String path, String format) throws IOException, URISyntaxException {
-        if (format == null) return csv(path);
+        if (Strings.isNullOrBlank(format)) return csv(path);
+
         CSVFormat.Builder formatBuilder = CSVFormat.Builder.create();
         for (String token : format.split(",")) {
             String[] option = token.split("=");
