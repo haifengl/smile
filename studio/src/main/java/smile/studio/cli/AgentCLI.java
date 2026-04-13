@@ -188,7 +188,7 @@ public class AgentCLI extends JPanel {
         hints.put("/memory refresh", "[Ctrl + ENTER to reload the context from disk]");
         hints.put("/compact", "[instructions]");
         hints.put("/plan", "[off|short description of goals or tasks]");
-        hints.put("/open", "[file path]");
+        hints.put("/edit", "[file path]");
         hints.put("/train", "[Ctrl + ENTER for helps]");
         hints.put("/predict", "[Ctrl + ENTER for helps]");
         hints.put("/serve", "[Ctrl + ENTER for helps]");
@@ -298,7 +298,7 @@ public class AgentCLI extends JPanel {
             String[] args = instructions.split("\\s+");
             switch (args[0]) {
                 case "help" -> help(intent.output());
-                case "open" -> open(args, intent.output());
+                case "edit" -> edit(args, intent.output());
                 case "train", "predict", "serve" -> runShellCommand(intent, IntentType.Command, instructions);
                 case "memory" -> memory(args, instructions, intent);
                 case "system" -> showSystemPrompt(intent.output()); // for debugging
@@ -313,9 +313,9 @@ public class AgentCLI extends JPanel {
     }
 
     /** Opens a notepad to edit file. */
-    private void open(String[] args, OutputArea output) {
+    private void edit(String[] args, OutputArea output) {
         if (args.length < 2) {
-            output.println("Usage: /open [file path]");
+            output.println("Usage: /edit [file path]");
             return;
         }
 
@@ -344,7 +344,7 @@ public class AgentCLI extends JPanel {
                 /plan off\tExit  the plan mode.
                 /clear\t\tClear the current conversation session.
                 /compact\tSummarize the conversation and retain critical details.
-                /open\t\tOpen a text file to edit.
+                /edit\t\tEdit a file with notepad.
                 /train\t\tTrain a machine learning model
                 /predict\tRun batch inference
                 /serve\t\tStart an inference service""");
