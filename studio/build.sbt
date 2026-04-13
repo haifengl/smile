@@ -101,7 +101,6 @@ libraryDependencies ++= Seq(
   "com.formdev"       % "flatlaf-fonts-jetbrains-mono" % "2.304",
   "org.apache.maven"  % "maven-resolver-provider" % "3.9.14",
   "org.apache.maven.resolver"   % "maven-resolver-supplier-mvn4" % "2.0.16",
-  "org.jetbrains.kotlin"        % "kotlin-scripting-jsr223" % "2.3.20",
   "tools.jackson.dataformat"    % "jackson-dataformat-yaml" % "3.1.2",
   "io.modelcontextprotocol.sdk" % "mcp"          % "1.1.1",
   "io.github.furstenheim"       % "copy_down"    % "1.1",
