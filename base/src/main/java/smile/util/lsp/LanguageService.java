@@ -147,6 +147,14 @@ public class LanguageService implements AutoCloseable {
         return server;
     }
 
+    /**
+     * Returns true if the service has been started and initialized.
+     * @return true if the service is initialized, false otherwise.
+     */
+    public boolean isInitialized() {
+        return initialized.get();
+    }
+
     // -----------------------------------------------------------------------
     // Lifecycle
     // -----------------------------------------------------------------------
@@ -216,6 +224,20 @@ public class LanguageService implements AutoCloseable {
                 logger.warn("LSP stderr drain error", ex);
             }
         });
+
+        // Launching a shell process successfully does not mean the command itself starts correctly.
+        // Wait a short moment to catch immediate startup failures (e.g. "command not found").
+        try {
+            if (!serverProcess.waitFor(1, TimeUnit.SECONDS)) {
+                logger.debug("Language server process is still running after 1 second startup wait");
+            } else {
+                int exitCode = serverProcess.exitValue();
+                logger.error("Language server process exited prematurely with code {}", exitCode);
+                return;
+            }
+        } catch (InterruptedException ex) {
+            logger.warn("Interrupted while waiting for language server process to start");
+        }
 
         // Wire the LSP4J launcher to the process streams.
         // The launcher starts two internal threads: one to read JSON-RPC
