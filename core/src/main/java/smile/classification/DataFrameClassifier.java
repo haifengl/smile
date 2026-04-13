@@ -136,6 +136,16 @@ public interface DataFrameClassifier extends Classifier<Tuple> {
             }
 
             @Override
+            public boolean isSoft() {
+                return model.isSoft();
+            }
+
+            @Override
+            public boolean isOnline() {
+                return model.isOnline();
+            }
+
+            @Override
             public int numClasses() {
                 return model.numClasses();
             }
