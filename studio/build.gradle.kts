@@ -25,7 +25,6 @@ dependencies {
     implementation("com.formdev:flatlaf-fonts-jetbrains-mono:2.304")
     implementation("org.apache.maven:maven-resolver-provider:3.9.14")
     implementation("org.apache.maven.resolver:maven-resolver-supplier-mvn4:2.0.16")
-    implementation("org.jetbrains.kotlin:kotlin-scripting-jsr223:2.3.20")
     implementation("tools.jackson.dataformat:jackson-dataformat-yaml:3.1.2")
     implementation("io.modelcontextprotocol.sdk:mcp:1.1.1")
     implementation("io.github.furstenheim:copy_down:1.1")
