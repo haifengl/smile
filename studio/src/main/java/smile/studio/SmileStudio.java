@@ -92,11 +92,13 @@ public class SmileStudio extends JFrame {
                 var handler = new LspServerNotificationHandler("Ty", statusBar);
                 var ty = LanguageService.of(cwd, "ty server");
                 ty.start(handler);
-                LanguageService.put("python", ty);
-                Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                    System.out.println("Shutdown Ty...");
-                    ty.close();
-                }));
+                if (ty.isInitialized()) {
+                    LanguageService.put("python", ty);
+                    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                        System.out.println("Shutdown Ty...");
+                        ty.close();
+                    }));
+                }
             } catch (Exception ex) {
                 logger.error("Failed to start Ty server", ex);
             }
@@ -110,11 +112,13 @@ public class SmileStudio extends JFrame {
                         + System.getProperty("smile.home") + "/jdtls/bin/jdtls";
                 var jdtls = LanguageService.of(cwd, command);
                 jdtls.start(handler);
-                LanguageService.put("java", jdtls);
-                Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                    System.out.println("Shutdown JDT LS...");
-                    jdtls.close();
-                }));
+                if (jdtls.isInitialized()) {
+                    LanguageService.put("java", jdtls);
+                    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                        System.out.println("Shutdown JDT LS...");
+                        jdtls.close();
+                    }));
+                }
             } catch (Exception ex) {
                 logger.error("Failed to start JDT LS server", ex);
             }
