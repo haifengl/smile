@@ -4,7 +4,7 @@ arrow = "18.3.0"
 [libraries]
 arrow-dataset = { module = "org.apache.arrow:arrow-dataset", version.ref = "arrow" }
 arrow-memory-netty = { module = "org.apache.arrow:arrow-memory-netty", version.ref = "arrow" }
-jackson = { module = "tools.jackson.core:jackson-databind", version = "3.1.1" }
+jackson = { module = "tools.jackson.core:jackson-databind", version = "3.1.2" }
 sqlite = { module = "org.xerial:sqlite-jdbc", version = "3.51.3.0" }
 swingx = { module = "org.swinglabs:swingx", version = "1.6.1" }
 
