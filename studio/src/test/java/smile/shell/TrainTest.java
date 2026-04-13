@@ -261,8 +261,10 @@ public class TrainTest {
         int exit = (int) result[0];
         String stderr = (String) result[1];
         System.out.println("Fisher exit=" + exit + " stderr=" + stderr);
-        assertTrue(exit == 0,
-                "Fisher should succeed (exit=0). stderr=" + stderr);
+        assertEquals(0, exit, "Fisher should succeed. stderr=" + stderr);
+        assertTrue(Files.exists(modelFile), "Model file should be created");
+        var obj = Read.object(modelFile);
+        assertInstanceOf(smile.model.ClassificationModel.class, obj);
     }
 
     @Test
@@ -277,8 +279,10 @@ public class TrainTest {
         int exit = (int) result[0];
         String stderr = (String) result[1];
         System.out.println("RBF exit=" + exit + " stderr=" + stderr);
-        assertTrue(exit == 0,
-                "RBF should succeed (exit=0). stderr=" + stderr);
+        assertEquals(0, exit, "RBF should succeed. stderr=" + stderr);
+        assertTrue(Files.exists(modelFile), "Model file should be created");
+        var obj = Read.object(modelFile);
+        assertInstanceOf(smile.model.ClassificationModel.class, obj);
     }
 
     @Test
