@@ -365,12 +365,14 @@ public class Notebook extends JPanel implements DocumentListener {
 
     /** Restarts the kernel and clears all output. */
     public void restart() {
+        if (kernel == null) return;
         kernel.restart();
         clearAllOutputs();
     }
 
     /** Attempts to stop currently running code. */
     public void stop() {
+        if (kernel == null) return;
         kernel.stop();
     }
 
@@ -579,7 +581,6 @@ public class Notebook extends JPanel implements DocumentListener {
     private void saveAsSource() throws IOException {
         List<String> blocks = new ArrayList<>();
         for (int i = 0; i < cells.getComponentCount(); i++) {
-            Cell cell = getCell(i);
             blocks.add(getCell(i).editor().getText());
         }
         String sep = "\n" + separator(file) + "\n";
@@ -753,6 +754,12 @@ public class Notebook extends JPanel implements DocumentListener {
      * @param behavior post-run navigation behavior.
      */
     public synchronized void runCell(Cell cell, PostRunNavigation behavior) {
+        if (kernel == null) {
+            JOptionPane.showMessageDialog(this,
+                    bundle.getString("UnsupportedKernelMessage").formatted(lang),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
         if (kernel.isRunning()) {
             showRaceConditionDialog();
             return;
@@ -846,6 +853,12 @@ public class Notebook extends JPanel implements DocumentListener {
      * @param cell the selected cell.
      */
     public synchronized void runCellAndBelow(Cell cell) {
+        if (kernel == null) {
+            JOptionPane.showMessageDialog(this,
+                    bundle.getString("UnsupportedKernelMessage").formatted(lang),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
         if (kernel.isRunning()) {
             showRaceConditionDialog();
             return;
@@ -865,6 +878,12 @@ public class Notebook extends JPanel implements DocumentListener {
      * Runs all cells.
      */
     public synchronized void runAllCells() {
+        if (kernel == null) {
+            JOptionPane.showMessageDialog(this,
+                    bundle.getString("UnsupportedKernelMessage").formatted(lang),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
         if (kernel.isRunning()) {
             showRaceConditionDialog();
             return;

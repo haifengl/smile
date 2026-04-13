@@ -503,7 +503,7 @@ public class Cell extends JPanel {
             logger.error("Error during execution: ", t);
             return false;
         } finally {
-            kernel.removeOutputArea();;
+            kernel.removeOutputArea();
             SwingUtilities.invokeLater(() -> {
                 setRunning(false);
                 setExecutionCount(executionCount);

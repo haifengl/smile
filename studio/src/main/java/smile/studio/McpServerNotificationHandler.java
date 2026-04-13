@@ -51,8 +51,13 @@ public class McpServerNotificationHandler implements NotificationHandler {
 
     @Override
     public Consumer<McpSchema.ProgressNotification> progressConsumer(String server) {
-        return progress -> SwingUtilities.invokeLater(() ->
-                statusBar.setStatus(String.format("[MCP progress %f/%f] %s: %s",
-                        progress.progress(), progress.total(), server, progress.message())));
+        return progress -> {
+            // total is optional in MCP spec.
+            if (progress.total() != null) {
+                SwingUtilities.invokeLater(() ->
+                        statusBar.setStatus(String.format("[MCP progress %.0f/%.0f] %s: %s",
+                                progress.progress(), progress.total(), server, progress.message())));
+            }
+        };
     }
 }

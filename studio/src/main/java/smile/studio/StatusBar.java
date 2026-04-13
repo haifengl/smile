@@ -85,7 +85,10 @@ public class StatusBar extends JPanel {
                 usedHeap /= 1024;
                 unit = "GB";
             }
-            String info = String.format(bundle.getString("SystemInfo"), usedHeap, unit, (int) (cpuLoad * 100));
+            String heapStr = String.format("%.1f %s", usedHeap, unit);
+            // getCpuLoad() returns -1.0 when the value is not available.
+            String cpuStr = cpuLoad < 0 ? "N/A" : (int) (cpuLoad * 100) + "%";
+            String info = String.format(bundle.getString("SystemInfo"), heapStr, cpuStr);
             system.setText(info);
         });
     }
