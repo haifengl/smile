@@ -350,7 +350,10 @@ public class Notebook extends JPanel implements DocumentListener {
      * Shuts down the execution engine and frees resources.
      */
     public void close() {
-        kernel.close();
+        if (kernel != null) {
+            kernel.close();
+        }
+
         // close autocomplete providers
         for (int i = 0; i < cells.getComponentCount(); i++) {
             getCell(i).editor().close();
