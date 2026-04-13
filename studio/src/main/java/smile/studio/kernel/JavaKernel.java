@@ -89,10 +89,12 @@ public class JavaKernel extends Kernel<SnippetEvent> {
 
     @Override
     public void reset() {
-        // This command removes all previously entered snippets and resets
-        // the JShell session to its initial state, including reloading
-        // the default startup scripts.
-        jshell.eval("/reset");
+        // Drop all snippets, restoring the JShell session to its initial state.
+        // jshell.eval("/reset") does not work — "/reset" is a jshell tool command,
+        // not a Java expression. Drop every snippet individually instead.
+        jshell.snippets()
+              .filter(s -> jshell.status(s) != Snippet.Status.DROPPED)
+              .forEach(jshell::drop);
     }
 
     @Override

@@ -35,6 +35,7 @@ import smile.plot.swing.Palette;
  * @author Haifeng Li
  */
 public class OutputArea extends RSyntaxTextArea implements HyperlinkListener {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OutputArea.class);
     private final DefaultHighlightPainter painter = new DefaultHighlightPainter(Palette.LIGHT_PINK);
     private final Pattern pattern = Pattern.compile("ERROR|WARN|Recoverable issue|Rejected snippet|Unresolved dependencies|Exception:");
     /** The output buffer. StringBuffer is multi-thread safe while StringBuilder isn't. */
@@ -136,7 +137,7 @@ public class OutputArea extends RSyntaxTextArea implements HyperlinkListener {
                 }
             }
         } catch (BadLocationException ex) {
-            System.err.println(ex.getMessage());
+            logger.warn("Failed to add highlight: {}", ex.getMessage());
         }
     }
 

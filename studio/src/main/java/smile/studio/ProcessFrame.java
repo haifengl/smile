@@ -31,6 +31,8 @@ import smile.util.OS;
  */
 public class ProcessFrame extends JFrame {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProcessFrame.class);
+    /** Number of overflow lines that must accumulate before a truncation sweep. */
+    private static final int TRUNCATE_BATCH = 100;
     private final JTextArea output = new JTextArea();
     private final int scrollback;
     private Process process;
@@ -81,14 +83,14 @@ public class ProcessFrame extends JFrame {
                 // Append the line to the JTextArea on the Event Dispatch Thread (EDT)
                 SwingUtilities.invokeLater(() -> {
                     output.append(line + "\n");
-                    int numLinesToTrunk = output.getLineCount() - scrollback;
-                    // trunk every 100 overflow lines to minimize the overhead
-                    if (numLinesToTrunk > 100) {
+                    int numLinesToTruncate = output.getLineCount() - scrollback;
+                    // Truncate every TRUNCATE_BATCH overflow lines to minimise overhead.
+                    if (numLinesToTruncate > TRUNCATE_BATCH) {
                         try {
-                            int posOfLastLineToTrunk = output.getLineEndOffset(numLinesToTrunk - 1);
-                            output.replaceRange("",0, posOfLastLineToTrunk);
+                            int posOfLastLineToTruncate = output.getLineEndOffset(numLinesToTruncate - 1);
+                            output.replaceRange("", 0, posOfLastLineToTruncate);
                         } catch (BadLocationException ex) {
-                            logger.warn("Failed to trunk scrollback: {}", ex.getMessage());
+                            logger.warn("Failed to truncate scrollback: {}", ex.getMessage());
                         }
                     }
                 });
@@ -99,5 +101,21 @@ public class ProcessFrame extends JFrame {
         } catch (IOException ex) {
             output.append("Failed to start process: " + ex.getMessage() + "\n");
         }
+    }
+
+    /**
+     * Returns the underlying process, or {@code null} if not yet started.
+     * @return the process.
+     */
+    public Process getProcess() {
+        return process;
+    }
+
+    /**
+     * Returns the text currently displayed in the output area.
+     * @return the output text.
+     */
+    public String getOutput() {
+        return output.getText();
     }
 }

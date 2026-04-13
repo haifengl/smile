@@ -313,9 +313,10 @@ public class SmileStudio extends JFrame {
             });
         } catch (Throwable t) {
             // It is often a rethrow exception
+            var cause = t.getCause() != null ? t.getCause() : t;
             JOptionPane.showMessageDialog(
                     null,
-                    "Failed to initialize AI service: " + t.getCause(),
+                    "Failed to initialize AI service: " + cause.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
 
         }
@@ -793,7 +794,7 @@ public class SmileStudio extends JFrame {
             case "macLight" -> FlatMacLightLaf.setup();
             case "macDark" -> FlatMacDarkLaf.setup();
             default -> {
-                System.err.println("Unknown theme: " + theme);
+                logger.warn("Unknown theme '{}', falling back to Light", theme);
                 FlatLightLaf.setup();
             }
         }
