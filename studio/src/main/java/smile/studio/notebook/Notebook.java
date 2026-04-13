@@ -272,7 +272,6 @@ public class Notebook extends JPanel implements DocumentListener {
         return switch (lang) {
             case "Java" -> new JavaKernel();
             case "Scala" -> new ScriptKernel("scala");
-            case "Kotlin" -> new ScriptKernel("kotlin");
             case "Python" -> {
                 try {
                     yield new PythonKernel();
@@ -319,7 +318,6 @@ public class Notebook extends JPanel implements DocumentListener {
                 kernel = switch (lang) {
                     case "Java" -> new JavaKernel();
                     case "Scala" -> new ScriptKernel("scala");
-                    case "Kotlin" -> new ScriptKernel("kotlin");
                     case "Python" -> new PythonKernel();
                     default -> throw new UnsupportedOperationException();
                 };
