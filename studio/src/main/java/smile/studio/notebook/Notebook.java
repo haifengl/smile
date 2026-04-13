@@ -299,19 +299,24 @@ public class Notebook extends JPanel implements DocumentListener {
             @Override
             protected Kernel<?> doInBackground() throws IOException, UnsupportedOperationException {
                 // TODO: remove when we switch to LazyConstant.
-                boolean isShowing = false;
-                for (var win : Window.getWindows()) {
-                    if (win instanceof SmileStudio && win.isShowing()) {
-                        isShowing = true;
-                        break;
+                if (lang.equalsIgnoreCase("Scala")) {
+                    // ScriptKernel sets system out/err during initialization, which may cause
+                    // LSP/MCP process output to ScriptKernel's streams. Delay the initialization
+                    // until the app is fully started to avoid the confusion.
+                    boolean isShowing = false;
+                    for (var win : Window.getWindows()) {
+                        if (win instanceof SmileStudio && win.isShowing()) {
+                            isShowing = true;
+                            break;
+                        }
                     }
-                }
-                if (!isShowing) {
-                    try {
-                        // Delay 5 seconds if the app is not fully started yet.
-                        Thread.sleep(5000);
-                    } catch (InterruptedException e) {
-                        // ignore
+                    if (!isShowing) {
+                        try {
+                            // Delay 5 seconds if the app is not fully started yet.
+                            Thread.sleep(5000);
+                        } catch (InterruptedException e) {
+                            // ignore
+                        }
                     }
                 }
 
