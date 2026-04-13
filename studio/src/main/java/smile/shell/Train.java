@@ -17,6 +17,7 @@
 package smile.shell;
 
 import java.io.File;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Properties;
 import picocli.CommandLine.Command;
@@ -96,38 +97,47 @@ public class Train {
         }
 
         if (classification) {
-            var model = Model.classification(algorithm, modelFormula, data, testData, params, kfold, round, ensemble);
-            System.out.println("Training metrics: " + model.train());
-            if (model.validation() != null) {
-              System.out.println("Validation metrics: " + model.validation());
-            }
-            if (model.test() != null) {
-              System.out.println("Test metrics: " + model.test());
-            }
-            if (id != null) {
-                model.setProperty(Model.ID, id);
-            }
-            if (version != null) {
-                model.setProperty(Model.VERSION, version);
-            }
-            Write.object(model, path);
+            var m = Model.classification(algorithm, modelFormula, data, testData, params, kfold, round, ensemble);
+            printMetrics(m);
+            saveModel(m, path);
         } else {
-            var model = Model.regression(algorithm, modelFormula, data, testData, params, kfold, round, ensemble);
-            System.out.println("Training metrics: " + model.train());
-            if (model.validation() != null) {
-              System.out.println("Validation metrics: " + model.validation());
-            }
-            if (model.test() != null) {
-              System.out.println("Test metrics: " + model.test());
-            }
-            if (id != null) {
-                model.setProperty(Model.ID, id);
-            }
-            if (version != null) {
-                model.setProperty(Model.VERSION, version);
-            }
-            Write.object(model, path);
+            var m = Model.regression(algorithm, modelFormula, data, testData, params, kfold, round, ensemble);
+            printMetrics(m);
+            saveModel(m, path);
         }
+    }
+
+    /** Prints training, validation and test metrics for a classification model. */
+    private static void printMetrics(ClassificationModel m) {
+        System.out.println("Training metrics: " + m.train());
+        if (m.validation() != null) {
+            System.out.println("Validation metrics: " + m.validation());
+        }
+        if (m.test() != null) {
+            System.out.println("Test metrics: " + m.test());
+        }
+    }
+
+    /** Prints training, validation and test metrics for a regression model. */
+    private static void printMetrics(RegressionModel m) {
+        System.out.println("Training metrics: " + m.train());
+        if (m.validation() != null) {
+            System.out.println("Validation metrics: " + m.validation());
+        }
+        if (m.test() != null) {
+            System.out.println("Test metrics: " + m.test());
+        }
+    }
+
+    /** Stamps model metadata and serialises it to disk. */
+    private <T extends Model & Serializable> void saveModel(T m, java.nio.file.Path path) throws Exception {
+        if (id != null) {
+            m.setProperty(Model.ID, id);
+        }
+        if (version != null) {
+            m.setProperty(Model.VERSION, version);
+        }
+        Write.object(m, path);
     }
 
     @Command(name = "random-forest", description = "Random Forest",
@@ -173,7 +183,7 @@ public class Train {
             @Option(names = {"--trees"}, paramLabel = "<trees>", description = "The number of trees.")
             int trees,
             @Option(names = {"--shrinkage"}, paramLabel = "<scale>", description = "The shrinkage parameter in (0, 1] controls the learning rate.")
-            int shrinkage,
+            double shrinkage,
             @Option(names = {"--max-depth"}, paramLabel = "<depth>", description = "The maximum tree depth.")
             int maxDepth,
             @Option(names = {"--max-nodes"}, paramLabel = "<nodes>", description = "The maximum number of leaf nodes.")
@@ -432,6 +442,7 @@ public class Train {
             boolean recursive) throws Exception {
 
         algorithm = "ols";
+        classification = false;
         params.setProperty("smile.ols.standard_error", String.valueOf(stderr));
         params.setProperty("smile.ols.recursive", String.valueOf(recursive));
         if (method != null) params.setProperty("smile.ols.method", method);
@@ -449,6 +460,7 @@ public class Train {
             double tolerance) throws Exception {
 
         algorithm = "lasso";
+        classification = false;
         params.setProperty("smile.lasso.lambda", String.valueOf(lambda));
         if (iterations > 0) params.setProperty("smile.lasso.iterations", String.valueOf(iterations));
         if (tolerance > 0) params.setProperty("smile.lasso.tolerance", String.valueOf(tolerance));
@@ -462,6 +474,7 @@ public class Train {
             double lambda) throws Exception {
 
         algorithm = "ridge";
+        classification = false;
         params.setProperty("smile.ridge.lambda", String.valueOf(lambda));
         run();
     }
@@ -479,6 +492,7 @@ public class Train {
             double tolerance) throws Exception {
 
         algorithm = "elastic-net";
+        classification = false;
         params.setProperty("smile.elastic_net.lambda1", String.valueOf(lambda1));
         params.setProperty("smile.elastic_net.lambda2", String.valueOf(lambda2));
         if (iterations > 0) params.setProperty("smile.elastic_net.iterations", String.valueOf(iterations));
@@ -503,6 +517,7 @@ public class Train {
             double tolerance) throws Exception {
 
         algorithm = "gaussian-process";
+        classification = false;
         params.setProperty("smile.gaussian_process.kernel", kernel);
         params.setProperty("smile.gaussian_process.noise", String.valueOf(noise));
         params.setProperty("smile.gaussian_process.normalize", String.valueOf(normalize));

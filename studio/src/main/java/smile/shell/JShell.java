@@ -74,7 +74,7 @@ public interface JShell {
                     .persistence(Preferences.userNodeForPackage(JShell.class))
                     .start(list.toArray(String[]::new));
         } catch (Exception ex) {
-            System.err.println(ex.getMessage());
+            System.err.println(ex.getClass().getName() + ": " + ex.getMessage());
         }
         return 1;
     }

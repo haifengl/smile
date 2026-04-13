@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * The JShell launcher.
+ * The Scala REPL launcher.
  *
  * @author Haifeng Li
  */
