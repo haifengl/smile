@@ -99,7 +99,7 @@ public class OpenFileWatcher {
         watchThread = Thread.ofVirtual().name("workspace-file-watcher").start(() -> {
             try {
                 while (!Thread.currentThread().isInterrupted()) {
-                    WatchKey key = watchService.poll(500, TimeUnit.MILLISECONDS);
+                    WatchKey key = watchService.take();
                     if (key == null) continue;
 
                     Path dir = watchKeys.get(key);
