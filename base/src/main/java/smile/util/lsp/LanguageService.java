@@ -316,11 +316,12 @@ public class LanguageService implements AutoCloseable {
         if (serverProcess != null && serverProcess.isAlive()) {
             serverProcess.destroy();
             try {
-                if (!serverProcess.waitFor(5, TimeUnit.SECONDS)) {
+                if (!serverProcess.waitFor(10, TimeUnit.SECONDS)) {
                     serverProcess.destroyForcibly();
                 }
             } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
+                logger.warn("Interrupted while waiting for language server process to exit", ex);
+                serverProcess.destroyForcibly();
             }
         }
         logger.info("Language server stopped.");
