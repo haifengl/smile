@@ -83,6 +83,17 @@ public class Cache<K, V> {
     }
 
     /**
+     * Removes the cache value for a key.
+     * @param key the key whose cache value is to be removed from the map.
+     * @return the previous value associated with key, or null if there was
+     *         no cache value for key.
+     */
+    public V remove(K key) {
+        timestamps.remove(key);
+        return values.remove(key);
+    }
+
+    /**
      * Evicts expired entries and the least recently used entries
      * if the cache exceeds its capacity.
      */
