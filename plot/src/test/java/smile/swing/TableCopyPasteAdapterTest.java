@@ -87,18 +87,32 @@ public class TableCopyPasteAdapterTest {
     }
 
     @Test
-    public void testCopyNonContiguousSelectionDoesNotThrow() {
+    public void testCopyNonContiguousSelectionLeavesClipboardUnchanged() {
         JTable table = buildTable(4, 4);
         TableCopyPasteAdapter adapter = TableCopyPasteAdapter.apply(table);
 
+        // Put a known sentinel value on the clipboard first.
+        putOnClipboard("SENTINEL");
+
+        // Build a non-contiguous row selection: rows 0 and 2 are not adjacent.
         table.setCellSelectionEnabled(true);
         table.clearSelection();
         table.addRowSelectionInterval(0, 0);
         table.addRowSelectionInterval(2, 2);
         table.setColumnSelectionInterval(0, 0);
 
-        // Non-contiguous selection shows a dialog but must not throw.
-        assertDoesNotThrow(() -> fire(adapter, table, "Copy"));
+        // The adapter must silently reject the non-contiguous selection.
+        fire(adapter, table, "Copy");
+
+        // Clipboard must still contain the original sentinel — not overwritten.
+        try {
+            String content = (String) Toolkit.getDefaultToolkit()
+                    .getSystemClipboard().getData(DataFlavor.stringFlavor);
+            assertEquals("SENTINEL", content,
+                    "Non-contiguous copy must not overwrite the clipboard");
+        } catch (Exception ex) {
+            fail("Unexpected exception reading clipboard: " + ex.getMessage());
+        }
     }
 
     @Test
