@@ -68,7 +68,9 @@ public class View extends VegaLite {
      * @return this object.
      */
     public View width(String width) {
-        assert "container".equals(width) : "Invalid width: " + width;
+        if (!"container".equals(width)) {
+            throw new IllegalArgumentException("Invalid width: \"" + width + "\". Must be \"container\".");
+        }
         spec.put("width", width);
         return this;
     }
@@ -79,7 +81,9 @@ public class View extends VegaLite {
      * @return this object.
      */
     public View height(String height) {
-        assert "container".equals(height) : "Invalid height: " + height;
+        if (!"container".equals(height)) {
+            throw new IllegalArgumentException("Invalid height: \"" + height + "\". Must be \"container\".");
+        }
         spec.put("height", height);
         return this;
     }

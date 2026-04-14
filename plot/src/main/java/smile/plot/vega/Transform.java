@@ -424,11 +424,13 @@ public class Transform {
         ObjectNode node = spec.addObject();
         ArrayNode array = node.putArray("window");
         for (var field : fields) {
-            array.addObject()
-                 .put("op", field.op())
-                 .put("field", field.field())
-                 .put("param", field.param())
-                 .put("as", field.as());
+            ObjectNode entry = array.addObject().put("op", field.op()).put("as", field.as());
+            if (field.field() != null) {
+                entry.put("field", field.field());
+            }
+            if (field.param() != 0) {
+                entry.put("param", field.param());
+            }
         }
         return new WindowTransform(node);
     }
