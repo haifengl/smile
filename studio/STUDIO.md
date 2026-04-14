@@ -1,4 +1,4 @@
-# SMILE Studio — User Guide
+# SMILE Studio User Guide
 
 > **SMILE Studio** is an integrated development environment (IDE) for machine learning and data science using the [SMILE](https://haifengl.github.io/) library. It combines an interactive notebook, an AI-powered agent panel, a file explorer, and a kernel explorer in a single, modern desktop application.
 

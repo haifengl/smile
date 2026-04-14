@@ -64,7 +64,7 @@ public class Cell extends JPanel {
     private final JButton upButton = new JButton("↑");
     private final JButton downButton = new JButton("↓");
     // Windows doesn't show broom emoji properly
-    private final JButton clearButton = new JButton(SystemInfo.isMacOS ? "🧹" : "⌫");
+    private final JButton clearButton = new JButton("⌫");
     private final JButton deleteButton = new JButton("⌦");
     private final Coder coder;
     private final String syntaxStyle;
