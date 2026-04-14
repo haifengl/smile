@@ -330,7 +330,7 @@ public class VegaLite {
         String title = spec.has("title") ? spec.get("title").asString() : "Smile Plot";
         return String.format("""
                    <!DOCTYPE html>
-                   <html lang=%s>
+                   <html lang="%s">
                    <head>
                      <title>%s</title>
                      <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -372,19 +372,23 @@ public class VegaLite {
      */
     public String iframe(String id) {
         String src = Strings.htmlEscape(html());
-        String html = """
-            <iframe id="%s" sandbox="allow-scripts allow-same-origin" style="border: none; width: 100%" srcdoc="%s"></iframe>
-            <script>
-              (function() {
-                function resizeIFrame(el, k) {
-                  var height = el.contentWindow.document.body.scrollHeight || '600'; // Fallback in case of no scroll height
-                  el.style.height = height + 'px';
-                  if (k <= 10) { setTimeout(function() { resizeIFrame(el, k+1) }, 100 + (k * 250)) };
-                }
-                resizeIFrame(document.getElementById("%s"), 1);
-              })(); // IIFE
-            </script>""";
-        return String.format(html, id, src, id);
+        // Do NOT use String.format here: src may contain '%' characters
+        // (from JSON spec strings, CSS, etc.) that String.format would
+        // misinterpret as format specifiers.
+        return "<iframe id=\"" + id + "\" sandbox=\"allow-scripts allow-same-origin\""
+                + " style=\"border: none; width: 100%\" srcdoc=\"" + src + "\"></iframe>\n"
+                + "<script>\n"
+                + "  (function() {\n"
+                + "    function resizeIFrame(el, k) {\n"
+                + "      var height = el.contentWindow.document.body.scrollHeight || '600';"
+                + " // Fallback in case of no scroll height\n"
+                + "      el.style.height = height + 'px';\n"
+                + "      if (k <= 10) { setTimeout(function() { resizeIFrame(el, k+1) },"
+                + " 100 + (k * 250)) };\n"
+                + "    }\n"
+                + "    resizeIFrame(document.getElementById(\"" + id + "\"), 1);\n"
+                + "  })(); // IIFE\n"
+                + "</script>";
     }
 
     /**
