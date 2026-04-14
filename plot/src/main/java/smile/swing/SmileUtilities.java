@@ -119,7 +119,17 @@ public interface SmileUtilities {
      * @return a new JFrame that displays the data frame in a table.
      */
     static JFrame show(DataFrame df) {
-        JFrame frame = new JFrame("DataFrame [" + df.nrow() + " × " + df.ncol() + "]");
+        return show(df, "DataFrame [" + df.nrow() + " × " + df.ncol() + "]");
+    }
+
+    /**
+     * Shows the data frame in a window.
+     * @param df the data frame to display.
+     * @param title the title of the window.
+     * @return a new JFrame that displays the data frame in a table.
+     */
+    static JFrame show(DataFrame df, String title) {
+        JFrame frame = new JFrame(title);
         frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         javax.swing.SwingUtilities.invokeLater(() -> {
             DataFrameTableModel model = new DataFrameTableModel(df);
@@ -153,7 +163,17 @@ public interface SmileUtilities {
      * @return a new JFrame that displays the matrix in a table.
      */
     static JFrame show(Matrix matrix) {
-        JFrame frame = new JFrame("Matrix [" + matrix.nrow() + " × " + matrix.ncol() + "]");
+        return show(matrix, "Matrix [" + matrix.nrow() + " × " + matrix.ncol() + "]");
+    }
+
+    /**
+     * Shows the matrix in a window.
+     * @param matrix the matrix to display.
+     * @param title the title of the window.
+     * @return a new JFrame that displays the matrix in a table.
+     */
+    static JFrame show(Matrix matrix, String title) {
+        JFrame frame = new JFrame(title);
         frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         javax.swing.SwingUtilities.invokeLater(() -> {
             MatrixTableModel model = new MatrixTableModel(matrix);
