@@ -1,4 +1,4 @@
-# SMILE CLI — User Guide
+# SMILE CLI User Guide
 
 SMILE ships with a command-line launcher (`smile` / `smile.bat`) that exposes
 five entry points. Depending on the first argument you pass (or the absence of one),
