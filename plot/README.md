@@ -3,7 +3,8 @@
 `smile.plot.swing` is SMILE's Swing-based 2D/3D plotting library. It provides
 an interactive figure canvas with a rich set of built-in plot types, a flexible
 color palette system, and a clean API that follows a consistent
-**create → figure → display** pattern.
+**create → figure → display** pattern. For declarative data visualization,
+see `smile.plot.vega` [user guide](VEGA.md).
 
 ---
 
