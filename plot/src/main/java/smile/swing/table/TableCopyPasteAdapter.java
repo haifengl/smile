@@ -26,7 +26,6 @@ import java.awt.event.InputEvent;
 import java.lang.ref.WeakReference;
 import java.util.StringTokenizer;
 import javax.swing.JComponent;
-import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.KeyStroke;
 
@@ -92,8 +91,7 @@ public class TableCopyPasteAdapter implements ActionListener {
                     && numrows == rowsselected.length)
                     && (numcols - 1 == colsselected[colsselected.length - 1] - colsselected[0]
                     && numcols == colsselected.length))) {
-                JOptionPane.showMessageDialog(null, "Invalid Copy Selection",
-                        "Invalid Copy Selection", JOptionPane.ERROR_MESSAGE);
+                logger.warn("Copy cancelled: selection is not a contiguous rectangular block.");
                 return;
             }
             for (int i = 0; i < numrows; i++) {
