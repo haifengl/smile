@@ -18,8 +18,7 @@ package smile.util;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * An LRU (Least Recently Used) cache with TTL (Time To Live) combines
@@ -47,6 +46,26 @@ public class Cache<K, V> {
     public Cache(int capacity, Duration ttl) {
         this.capacity = capacity;
         this.ttl = ttl;
+    }
+
+    /**
+     * Returns the set of keys in the cache.
+     * Expired entries will be evicted first.
+     * @return the set of keys in the cache.
+     */
+    public Set<K> keySet() {
+        evict();
+        return values.keySet();
+    }
+
+    /**
+     * Returns the set of values in the cache.
+     * Expired entries will be evicted first.
+     * @return the set of values in the cache.
+     */
+    public Collection<V> valueSet() {
+        evict();
+        return values.values();
     }
 
     /**
