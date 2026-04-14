@@ -231,6 +231,10 @@ public interface Histogram {
 
     /** Calculates the width of bins. */
     private static double width(double[][] freq) {
+        if (freq.length == 1) {
+            // Single bin: use the midpoint value as an arbitrary non-zero width.
+            return freq[0][0] == 0.0 ? 1.0 : Math.abs(freq[0][0]);
+        }
         double width = Double.MAX_VALUE;
         for (int i = 1; i < freq.length; i++) {
             double w = Math.abs(freq[i][0] - freq[i - 1][0]);

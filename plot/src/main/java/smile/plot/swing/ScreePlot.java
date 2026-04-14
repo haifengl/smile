@@ -76,6 +76,14 @@ public class ScreePlot extends Plot {
         };
     }
 
+    /**
+     * Returns the lines of this plot.
+     * @return the lines of this plot.
+     */
+    public Line[] lines() {
+        return lines;
+    }
+
     @Override
     public void paint(Renderer g) {
         for (Line line : lines) {

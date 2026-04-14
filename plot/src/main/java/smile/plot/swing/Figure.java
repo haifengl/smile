@@ -221,15 +221,15 @@ public class Figure {
     }
 
     /**
-     * Sets the size of margin in [0.0, 0.3] on each side. Currently, all four
+     * Sets the size of margin in (0.0, 0.3) on each side. Currently, all four
      * sides have the same margin size.
      *
-     * @param margin the size of margin.
+     * @param margin the size of margin (exclusive bounds: must be &gt; 0 and &lt; 0.3).
      * @return this object.
      */
     public Figure setMargin(double margin) {
-        if (margin < 0.0 || margin >= 0.3) {
-            throw new IllegalArgumentException("Invalid margin: " + margin);
+        if (margin <= 0.0 || margin >= 0.3) {
+            throw new IllegalArgumentException("Invalid margin " + margin + ": must be in (0.0, 0.3)");
         }
 
         PropertyChangeEvent event = new PropertyChangeEvent(this, "margin", this.margin, margin);
