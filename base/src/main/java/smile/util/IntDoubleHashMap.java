@@ -32,9 +32,12 @@ public class IntDoubleHashMap implements Serializable {
     private static final double NO_VALUE = Double.NaN;
 
     /**
-     * Keys and values.
+     * The key array.
      */
     private int[] keys;
+    /**
+     * The value array.
+     */
     private double[] values;
 
     /**
