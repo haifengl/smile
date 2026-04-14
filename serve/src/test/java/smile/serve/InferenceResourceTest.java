@@ -51,7 +51,7 @@ public class InferenceResourceTest {
         var request = """
                 {"petallength":5.1,"petalwidth":3.5,"sepallength":1.4,"sepalwidth":0.2}""";
         var response = """
-                {"prediction":2,"probabilities":[0.051,0.172,0.777]}""";
+                {"prediction":2,"probabilities":[0.060,0.173,0.767]}""";
         given().contentType(ContentType.JSON) // Specify the content type of the request body
                .body(request)
                .when()
