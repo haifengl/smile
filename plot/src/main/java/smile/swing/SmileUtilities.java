@@ -116,10 +116,11 @@ public interface SmileUtilities {
     /**
      * Shows the data frame in a window.
      * @param df the data frame to display.
-     * @return a new JFrame that displays the matrix in a table.
+     * @return a new JFrame that displays the data frame in a table.
      */
     static JFrame show(DataFrame df) {
-        JFrame frame = new JFrame();
+        JFrame frame = new JFrame("DataFrame [" + df.nrow() + " × " + df.ncol() + "]");
+        frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         javax.swing.SwingUtilities.invokeLater(() -> {
             DataFrameTableModel model = new DataFrameTableModel(df);
             Table table = new Table(model);
@@ -130,7 +131,6 @@ public interface SmileUtilities {
             contentPane.add(scrollPane, BorderLayout.CENTER);
 
             frame.setContentPane(contentPane);
-            frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
             frame.setSize(new java.awt.Dimension(1280, 1000));
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
@@ -153,7 +153,8 @@ public interface SmileUtilities {
      * @return a new JFrame that displays the matrix in a table.
      */
     static JFrame show(Matrix matrix) {
-        JFrame frame = new JFrame();
+        JFrame frame = new JFrame("Matrix [" + matrix.nrow() + " × " + matrix.ncol() + "]");
+        frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         javax.swing.SwingUtilities.invokeLater(() -> {
             MatrixTableModel model = new MatrixTableModel(matrix);
             Table table = new Table(model);
@@ -164,7 +165,6 @@ public interface SmileUtilities {
             contentPane.add(scrollPane, BorderLayout.CENTER);
 
             frame.setContentPane(contentPane);
-            frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
             frame.setSize(new java.awt.Dimension(1280, 1000));
             frame.setLocationRelativeTo(null);
 

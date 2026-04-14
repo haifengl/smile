@@ -81,7 +81,7 @@ public class TableCopyPasteAdapter implements ActionListener {
         if (table == null) return;
         var clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 
-        if (e.getActionCommand().compareTo("Copy") == 0) {
+        if ("Copy".equals(e.getActionCommand())) {
             StringBuilder sb = new StringBuilder();
             // Check to ensure we have selected only a contiguous block of cells
             int numcols = table.getSelectedColumnCount();
@@ -109,9 +109,12 @@ public class TableCopyPasteAdapter implements ActionListener {
             clipboard.setContents(stsel, stsel);
         }
         
-        if (e.getActionCommand().compareTo("Paste") == 0) {
-            int startRow = table.getSelectedRows()[0];
-            int startCol = table.getSelectedColumns()[0];
+        if ("Paste".equals(e.getActionCommand())) {
+            int[] selectedRows = table.getSelectedRows();
+            int[] selectedCols = table.getSelectedColumns();
+            if (selectedRows.length == 0 || selectedCols.length == 0) return;
+            int startRow = selectedRows[0];
+            int startCol = selectedCols[0];
             try {
                 String trstring = (String) (clipboard.getContents(this).getTransferData(DataFlavor.stringFlavor));
                 StringTokenizer st1 = new StringTokenizer(trstring, "\n");

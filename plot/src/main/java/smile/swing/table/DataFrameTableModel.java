@@ -54,4 +54,23 @@ public class DataFrameTableModel extends PageTableModel {
     public Object getValueAtRealRow(int row, int col) {
         return df.get(row, col);
     }
+
+    /**
+     * Returns the column's Java type so that JTable can use the correct
+     * renderer/sorter (e.g. numeric sort for number columns).
+     */
+    @Override
+    public Class<?> getColumnClass(int col) {
+        var type = df.schema().field(col).dtype();
+        return switch (type.id()) {
+            case Byte    -> java.lang.Byte.class;
+            case Short   -> java.lang.Short.class;
+            case Int     -> java.lang.Integer.class;
+            case Long    -> java.lang.Long.class;
+            case Float   -> java.lang.Float.class;
+            case Double  -> java.lang.Double.class;
+            case Boolean -> java.lang.Boolean.class;
+            default      -> java.lang.String.class;
+        };
+    }
 }

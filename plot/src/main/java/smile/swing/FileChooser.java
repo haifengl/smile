@@ -131,10 +131,8 @@ public class FileChooser extends JFileChooser {
                     logger.error("Failed to read image {}", file, ex);
                 }
             } else {
-                try {
-                    FileReader reader = new FileReader(file);
+                try (FileReader reader = new FileReader(file, java.nio.charset.StandardCharsets.UTF_8)) {
                     int len = reader.read(buf, 0, buf.length);
-                    reader.close();
                     boolean binary = false;
                     for (int i = 0; i < len; i++) {
                         if (buf[i] < 0x1F) {
@@ -383,6 +381,9 @@ public class FileChooser extends JFileChooser {
          * @param extension the file extension.
          */
         public void addExtension(String extension) {
+            if (extension.startsWith(".")) {
+                extension = extension.substring(1);
+            }
             filters.add(extension.toLowerCase());
             fullDescription = null;
         }

@@ -36,6 +36,15 @@ import javax.swing.Icon;
  */
 public record AlphaIcon(Icon icon, float alpha) implements Icon {
     /**
+     * Compact constructor that validates the alpha range.
+     */
+    public AlphaIcon {
+        if (icon == null) throw new NullPointerException("icon must not be null");
+        if (alpha < 0.0f || alpha > 1.0f) {
+            throw new IllegalArgumentException("alpha must be in [0.0, 1.0], got: " + alpha);
+        }
+    }
+    /**
      * Paints the wrapped icon with this
      * <CODE>AlphaIcon</CODE>'s transparency.
      *

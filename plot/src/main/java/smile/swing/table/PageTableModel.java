@@ -194,7 +194,12 @@ public abstract class PageTableModel extends AbstractTableModel {
         
         int oldPageSize = pageSize;
         pageSize = s;
+        // Recalculate current page: keep roughly the same row visible.
         page = (oldPageSize * page) / pageSize;
+        // Clamp to valid range.
+        int maxPage = getPageCount() - 1;
+        if (page > maxPage) page = maxPage;
+        if (page < 0) page = 0;
         fireTableDataChanged();
     }
 

@@ -60,4 +60,13 @@ public class MatrixTableModel extends PageTableModel {
     public Object getValueAtRealRow(int row, int col) {
         return matrix.get(row, col);
     }
+
+    /**
+     * Returns {@code Double.class} so that JTable uses numeric sorting for
+     * all matrix columns.
+     */
+    @Override
+    public Class<?> getColumnClass(int col) {
+        return Double.class;
+    }
 }
