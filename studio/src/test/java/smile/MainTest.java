@@ -136,7 +136,7 @@ public class MainTest {
     public void testPathNormalizationContract() {
         System.out.println("Path.of normalization contract");
         Path p = Path.of("./foo/../bar/../baz").normalize();
-        // Normalised form must equal "baz" (relative) on all platforms.
+        // Normalized form must equal "baz" (relative) on all platforms.
         assertEquals("baz", p.toString());
     }
 }

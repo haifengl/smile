@@ -291,13 +291,13 @@ Duplicate insertions (distance 0 to an existing node) are silently ignored.
 ```java
 // All words within edit distance 2
 List<Neighbor<String, String>> results = new ArrayList<>();
-tree.search("colour", 2, results);
+tree.search("color", 2, results);
 
 // Integer overload (the natural form for edit distance)
-tree.search("colour", 2, results);
+tree.search("color", 2, results);
 
 // Double overload — radius is truncated to int
-tree.search("colour", 2.0, results);
+tree.search("color", 2.0, results);
 ```
 
 ### Complexity
@@ -640,9 +640,9 @@ import java.util.ArrayList;
 String[] dictionary = /* load dictionary words */;
 BKTree<String, String> tree = BKTree.of(dictionary, new EditDistance(50, true));
 
-// Find all words within edit distance 2 of "colour"
+// Find all words within edit distance 2 of "color"
 List<Neighbor<String, String>> suggestions = new ArrayList<>();
-tree.search("colour", 2, suggestions);
+tree.search("color", 2, suggestions);
 suggestions.stream()
     .sorted()
     .forEach(n -> System.out.printf("  %s (distance %d)%n",

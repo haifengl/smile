@@ -128,7 +128,7 @@ session pre-configured for SMILE development.
 3. `DEFAULT` and `PRINTING` JShell startup scripts are loaded (making
    `println()` available without a class qualifier).
 4. **`bin/predef.jsh`** is loaded, which:
-   - Defines the custom `smile` JShell feedback mode (compact, colour output).
+   - Defines the custom `smile` JShell feedback mode (compact, color output).
    - Imports every major SMILE package so you can start coding immediately
      without writing import statements.
    - Prints the SMILE ASCII logo and version banner.
