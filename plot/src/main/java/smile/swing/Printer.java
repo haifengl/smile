@@ -43,7 +43,7 @@ public class Printer {
      * Singleton instance. An application should have only one printer instance
      * so that printer settings can be shared by swing components.
      */
-    private static Printer singleton;
+    private static volatile Printer singleton;
     
     /**
      * Private constructor for singleton design pattern.
@@ -58,9 +58,12 @@ public class Printer {
      */
     public static Printer getPrinter() {
         if (singleton == null) {
-            singleton = new Printer();
+            synchronized (Printer.class) {
+                if (singleton == null) {
+                    singleton = new Printer();
+                }
+            }
         }
-        
         return singleton;
     }
     

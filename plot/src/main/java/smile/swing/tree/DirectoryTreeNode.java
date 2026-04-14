@@ -68,14 +68,16 @@ public class DirectoryTreeNode extends DefaultMutableTreeNode {
     }
 
     /**
-     * Adds the child nodes.
+     * Adds the child nodes, skipping hidden files (those whose name starts with '.').
      * @param model the tree model to insert child nodes into.
      */
     public void addChildren(DefaultTreeModel model) {
         var self = this;
         if (Files.isDirectory(path) && getChildCount() == 0) {
             try (Stream<Path> stream = Files.list(path)) {
-                stream.sorted(comparator).forEach(path ->
+                stream.filter(p -> !p.getFileName().toString().startsWith("."))
+                      .sorted(comparator)
+                      .forEach(path ->
                         model.insertNodeInto(new DirectoryTreeNode(path), self, getChildCount()));
             } catch (IOException ex) {
                 logger.warn("Error creating child node: ", ex);
