@@ -1,16 +1,16 @@
-# SMILE — User Guide
+# SMILE CLI — User Guide
 
 SMILE ships with a command-line launcher (`smile` / `smile.bat`) that exposes
 five entry points. Depending on the first argument you pass (or the absence of one),
 the launcher routes to one of:
 
-| Invocation | Description |
-|---|---|
-| `smile` *(no args)* | Open the SMILE Studio GUI |
-| `smile shell` | Start the **Java (JShell)** interactive REPL |
-| `smile scala` | Start the **Scala 3** interactive REPL |
-| `smile train …` | **Train** a supervised learning model from a file |
-| `smile predict …` | **Predict** on a file using a saved model |
+| Invocation | Description                                           |
+|---|-------------------------------------------------------|
+| `smile` *(no args)* | Open the [SMILE Studio](STUDIO.md) GUI                |
+| `smile shell` | Start the **Java (JShell)** interactive REPL          |
+| `smile scala` | Start the **Scala 3** interactive REPL                |
+| `smile train …` | **Train** a supervised learning model from a file     |
+| `smile predict …` | **Predict** on a file using a saved model             |
 | `smile serve …` | **Serve** a saved model as an HTTP prediction service |
 
 ---
@@ -102,6 +102,10 @@ args[0]   →  destination
 The system property `smile.home` points to the distribution root and
 is used by all launchers to locate resources such as `bin/predef.jsh`,
 `bin/predef.sc`, and `serve/quarkus-run.jar`.
+
+For the User Guide for SMILE Studio GUI, see [STUDIO.md](STUDIO.md).
+The rest of this document focuses on the CLI entry points (`shell`, `scala`,
+`train`, `predict`, `serve`).
 
 ---
 
