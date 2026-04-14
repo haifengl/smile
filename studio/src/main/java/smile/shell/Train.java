@@ -129,7 +129,7 @@ public class Train {
         }
     }
 
-    /** Stamps model metadata and serialises it to disk. */
+    /** Stamps model metadata and serializes it to disk. */
     private <T extends Model & Serializable> void saveModel(T m, java.nio.file.Path path) throws Exception {
         if (id != null) {
             m.setProperty(Model.ID, id);

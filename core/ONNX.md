@@ -539,7 +539,7 @@ Describes the kind of an `OrtValue`:
 
 ## Execution Providers (GPU Acceleration)
 
-Execution providers let ORT offload work to GPUs or specialised accelerators.
+Execution providers let ORT offload work to GPUs or specialized accelerators.
 They are configured on `SessionOptions` and tried in registration order; ORT
 falls back to the CPU provider if a requested provider is not available.
 
@@ -697,7 +697,7 @@ import java.util.*;
 
 public class ResNet50Example {
 
-    /** ImageNet mean and std for channel normalisation. */
+    /** ImageNet mean and std for channel normalization. */
     static final float[] MEAN = { 0.485f, 0.456f, 0.406f };
     static final float[] STD  = { 0.229f, 0.224f, 0.225f };
 

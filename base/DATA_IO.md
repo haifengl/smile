@@ -342,7 +342,7 @@ Write.csv(df, Path.of("output.tsv"), fmt);
 ```
 
 > **Note:** `Write.csv` always writes a header row (column names) as the first
-> line, followed by the data rows. Every cell is serialised via
+> line, followed by the data rows. Every cell is serialized via
 > `Tuple.getString(j)` so values are always human-readable strings.
 
 ### 4.2 Apache Arrow
@@ -984,7 +984,7 @@ SparseDataset<Integer> test  = Read.libsvm(Path.of("news20.t.dat"));
 System.out.printf("train: %d samples, %d features, %d nnz%n",
         train.size(), train.ncol(), train.nz());
 
-// L2 normalise each row for cosine similarity classifiers
+// L2 normalize each row for cosine similarity classifiers
 train.unitize();
 test.unitize();
 
@@ -1032,48 +1032,48 @@ System.out.println(df.head(5));
 
 ### Read (static methods)
 
-| Method | Returns | Description |
-|---|---|---|
-| `Read.data(String)` | `DataFrame` | Auto-dispatch by file extension |
-| `Read.data(String, String)` | `DataFrame` | Auto-dispatch with format hint |
-| `Read.csv(String)` | `DataFrame` | CSV with default format |
-| `Read.csv(String, String)` | `DataFrame` | CSV with key=value format string |
-| `Read.csv(String, CSVFormat)` | `DataFrame` | CSV with explicit format |
-| `Read.csv(String, CSVFormat, StructType)` | `DataFrame` | CSV with format + schema |
-| `Read.csv(Path)` | `DataFrame` | CSV from Path |
-| `Read.csv(Path, CSVFormat)` | `DataFrame` | CSV from Path + format |
-| `Read.csv(Path, CSVFormat, StructType)` | `DataFrame` | CSV from Path + format + schema |
-| `Read.json(String)` | `DataFrame` | JSON single-line |
-| `Read.json(String, Mode, StructType)` | `DataFrame` | JSON with mode + schema |
-| `Read.json(Path)` | `DataFrame` | JSON from Path |
-| `Read.json(Path, Mode, StructType)` | `DataFrame` | JSON from Path + mode + schema |
-| `Read.arff(String)` | `DataFrame` | ARFF from string path/URI |
-| `Read.arff(Path)` | `DataFrame` | ARFF from Path |
-| `Read.sas(String)` | `DataFrame` | SAS7BDAT from string path/URI |
-| `Read.sas(Path)` | `DataFrame` | SAS7BDAT from Path |
+| Method | Returns | Description                        |
+|---|---|------------------------------------|
+| `Read.data(String)` | `DataFrame` | Auto-dispatch by file extension    |
+| `Read.data(String, String)` | `DataFrame` | Auto-dispatch with format hint     |
+| `Read.csv(String)` | `DataFrame` | CSV with default format            |
+| `Read.csv(String, String)` | `DataFrame` | CSV with key=value format string   |
+| `Read.csv(String, CSVFormat)` | `DataFrame` | CSV with explicit format           |
+| `Read.csv(String, CSVFormat, StructType)` | `DataFrame` | CSV with format + schema           |
+| `Read.csv(Path)` | `DataFrame` | CSV from Path                      |
+| `Read.csv(Path, CSVFormat)` | `DataFrame` | CSV from Path + format             |
+| `Read.csv(Path, CSVFormat, StructType)` | `DataFrame` | CSV from Path + format + schema    |
+| `Read.json(String)` | `DataFrame` | JSON single-line                   |
+| `Read.json(String, Mode, StructType)` | `DataFrame` | JSON with mode + schema            |
+| `Read.json(Path)` | `DataFrame` | JSON from Path                     |
+| `Read.json(Path, Mode, StructType)` | `DataFrame` | JSON from Path + mode + schema     |
+| `Read.arff(String)` | `DataFrame` | ARFF from string path/URI          |
+| `Read.arff(Path)` | `DataFrame` | ARFF from Path                     |
+| `Read.sas(String)` | `DataFrame` | SAS7BDAT from string path/URI      |
+| `Read.sas(Path)` | `DataFrame` | SAS7BDAT from Path                 |
 | `Read.arrow(String)` | `DataFrame` | Arrow/Feather from string path/URI |
-| `Read.arrow(Path)` | `DataFrame` | Arrow/Feather from Path |
-| `Read.avro(String, String)` | `DataFrame` | Avro + schema path |
-| `Read.avro(String, InputStream)` | `DataFrame` | Avro + schema stream |
-| `Read.avro(Path, Path)` | `DataFrame` | Avro from Path + schema Path |
-| `Read.avro(Path, InputStream)` | `DataFrame` | Avro from Path + schema stream |
-| `Read.parquet(String)` | `DataFrame` | Parquet from `file://` URI |
-| `Read.parquet(Path)` | `DataFrame` | Parquet from Path |
-| `Read.libsvm(String)` | `SparseDataset<Integer>` | libsvm from string path/URI |
-| `Read.libsvm(Path)` | `SparseDataset<Integer>` | libsvm from Path |
-| `Read.libsvm(BufferedReader)` | `SparseDataset<Integer>` | libsvm from reader |
-| `Read.object(Path)` | `Object` | Deserialise a Java object |
+| `Read.arrow(Path)` | `DataFrame` | Arrow/Feather from Path            |
+| `Read.avro(String, String)` | `DataFrame` | Avro + schema path                 |
+| `Read.avro(String, InputStream)` | `DataFrame` | Avro + schema stream               |
+| `Read.avro(Path, Path)` | `DataFrame` | Avro from Path + schema Path       |
+| `Read.avro(Path, InputStream)` | `DataFrame` | Avro from Path + schema stream     |
+| `Read.parquet(String)` | `DataFrame` | Parquet from `file://` URI         |
+| `Read.parquet(Path)` | `DataFrame` | Parquet from Path                  |
+| `Read.libsvm(String)` | `SparseDataset<Integer>` | libsvm from string path/URI        |
+| `Read.libsvm(Path)` | `SparseDataset<Integer>` | libsvm from Path                   |
+| `Read.libsvm(BufferedReader)` | `SparseDataset<Integer>` | libsvm from reader                 |
+| `Read.object(Path)` | `Object` | Deserialize a Java object         |
 
 ### Write (static methods)
 
-| Method | Description |
-|---|---|
-| `Write.csv(DataFrame, Path)` | CSV with default format |
-| `Write.csv(DataFrame, Path, CSVFormat)` | CSV with explicit format |
-| `Write.arrow(DataFrame, Path)` | Arrow/Feather |
-| `Write.arff(DataFrame, Path, String)` | ARFF with relation name |
-| `Write.object(Serializable)` | Serialise to a temp file (auto-deleted) |
-| `Write.object(Serializable, Path)` | Serialise to a specific file |
+| Method | Description                             |
+|---|-----------------------------------------|
+| `Write.csv(DataFrame, Path)` | CSV with default format                 |
+| `Write.csv(DataFrame, Path, CSVFormat)` | CSV with explicit format                |
+| `Write.arrow(DataFrame, Path)` | Arrow/Feather                           |
+| `Write.arff(DataFrame, Path, String)` | ARFF with relation name                 |
+| `Write.object(Serializable)` | Serialize to a temp file (auto-deleted) |
+| `Write.object(Serializable, Path)` | Serialize to a specific file           |
 
 ### CSV (instance methods)
 

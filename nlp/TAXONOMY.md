@@ -6,11 +6,11 @@ The `smile.nlp.taxonomy` package provides a lightweight, in-memory **rooted tree
 for representing taxonomies (also called *concept hierarchies* or *IS-A hierarchies*).  The
 package contains three public classes:
 
-| Class | Role |
-|---|---|
-| `Taxonomy` | The tree itself — construction, navigation, and serialisation |
-| `Concept` | A single node, carrying a *synonym set* (synset) of keywords |
-| `TaxonomicDistance` | Edge-counting distance and three semantic-similarity measures |
+| Class | Role                                                           |
+|---|----------------------------------------------------------------|
+| `Taxonomy` | The tree itself — construction, navigation, and serialization |
+| `Concept` | A single node, carrying a *synonym set* (synset) of keywords   |
+| `TaxonomicDistance` | Edge-counting distance and three semantic-similarity measures  |
 
 Typical use cases include:
 
@@ -219,7 +219,7 @@ parent.removeChild(child); // also removes all descendant keywords from index
 
 ---
 
-## Visualising the Tree
+## Visualizing the Tree
 
 `Taxonomy.toString()` renders the tree using Unicode box-drawing characters:
 
@@ -316,7 +316,7 @@ concepts.
 double sim = td.leacockChodorow("dog", "cat"); // 0.0 → 1.0
 ```
 
-The raw score is normalised by dividing by `log(2H)` so that it always falls in `[0, 1]`.
+The raw score is normalized by dividing by `log(2H)` so that it always falls in `[0, 1]`.
 
 ### Lin similarity
 
@@ -338,11 +338,11 @@ double sim = td.lin("dog", "cat"); // 0.0 → 1.0
 
 ### Summary of similarity measures
 
-| Measure | Formula | Corpus needed? | Notes |
-|---|---|---|---|
-| Wu-Palmer | `2·d(LCA) / (d(a)+d(b))` | No | Simple, fast, widely used |
-| Leacock-Chodorow | `−log(dist/(2H))` normalised | No | Sensitive to path length |
-| Lin | `2·IC(LCA) / (IC(a)+IC(b))` | No (depth proxy) | Information-theoretic foundation |
+| Measure | Formula                       | Corpus needed? | Notes |
+|---|-------------------------------|---|---|
+| Wu-Palmer | `2·d(LCA) / (d(a)+d(b))`      | No | Simple, fast, widely used |
+| Leacock-Chodorow | `−log(dist/(2H))` normalized | No | Sensitive to path length |
+| Lin | `2·IC(LCA) / (IC(a)+IC(b))`   | No (depth proxy) | Information-theoretic foundation |
 
 ---
 
@@ -376,7 +376,7 @@ public class TaxonomyDemo {
 
         Taxonomy tax = Taxonomy.of(text);
 
-        // Visualise
+        // Visualize
         System.out.println(tax);
 
         // Navigate
@@ -396,7 +396,7 @@ public class TaxonomyDemo {
         // Distances and similarities
         TaxonomicDistance td = new TaxonomicDistance(tax);
         System.out.printf("d(dog, cat)            = %.1f%n", td.d("dog", "cat"));
-        System.out.printf("normalised(dog, cat)   = %.3f%n", td.normalizedDistance("dog", "cat"));
+        System.out.printf("normalized(dog, cat)   = %.3f%n", td.normalizedDistance("dog", "cat"));
         System.out.printf("Wu-Palmer(dog, cat)    = %.3f%n", td.wuPalmer("dog", "cat"));
         System.out.printf("Leacock-Chodorow(dog,cat) = %.3f%n", td.leacockChodorow("dog", "cat"));
         System.out.printf("Lin(dog, cat)          = %.3f%n", td.lin("dog", "cat"));

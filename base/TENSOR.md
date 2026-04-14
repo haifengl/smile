@@ -164,7 +164,7 @@ t2.set(newRow, 0);   // replaces row 0 in t2
 
 ## 4. Vector — 1-D Array
 
-`Vector` is a specialised `DenseMatrix` with either one row or one column.
+`Vector` is a specialized `DenseMatrix` with either one row or one column.
 Column vectors are the standard representation. All storage is
 **off-heap** via `MemorySegment` and BLAS-ready.
 

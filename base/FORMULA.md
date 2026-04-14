@@ -496,7 +496,7 @@ new class. There are overloads for unary and binary functions returning `int`, `
 Term t = Terms.of("clip", "age", (Integer x) -> Math.max(0, Math.min(x, 100)));
 
 // ToDoubleFunction<T>
-Term t = Terms.of("normalise", "score",
+Term t = Terms.of("normalize", "score",
                   (Double x) -> (x - mean) / stddev);
 
 // Function<T, R> with explicit return class

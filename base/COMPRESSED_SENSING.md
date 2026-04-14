@@ -266,7 +266,7 @@ The adjoint identity holds exactly (to floating-point precision):
 ### Implicit Matrix Interface
 
 `mm.toMatrix()` returns a `smile.tensor.Matrix` that supports both `mv`
-(forward) and `tv` (adjoint) products without materialising the full
+(forward) and `tv` (adjoint) products without materializing the full
 compound matrix. Pass this directly to the solvers:
 
 ```java
@@ -312,7 +312,7 @@ System.out.println("Iterations: " + result.iter());
 ```
 
 **Algorithm sketch:**
-1. Initialise residual `r = y`, support `S = ∅`.
+1. Initialize residual `r = y`, support `S = ∅`.
 2. Find `j* = argmax_j |⟨A_j, r⟩| / ‖A_j‖₂`.
 3. Add `j*` to `S`; solve `min ‖y − A_S c‖₂` via QR (Gram–Schmidt).
 4. Update residual `r = y − A_S c_S`.
@@ -896,7 +896,7 @@ Two equivalent conditions guarantee recovery:
    this with `m = O(k log(n/k))` rows.
 
 2. **Mutual incoherence:** The coherence `μ(A) = max_{i≠j} |⟨A_i, A_j⟩|`
-   between columns of the normalised `A` should be small. OMP and BP provably
+   between columns of the normalized `A` should be small. OMP and BP provably
    recover any `k`-sparse signal when `k < (1 + 1/μ) / 2`.
 
 ### Universal Threshold for `m`
@@ -918,8 +918,8 @@ In practice the constant `C ≈ 1–2` and `m ≥ 4k` often suffices empirically
 ### Gram–Schmidt Least-Squares in OMP
 
 OMP solves the active-support least-squares problem via incremental
-QR (Gram–Schmidt orthogonalisation). At step `t`, the QR factors of
-`A_{S_t}` are updated in O(mt) time by orthogonalising the new column
+QR (Gram–Schmidt orthogonalization). At step `t`, the QR factors of
+`A_{S_t}` are updated in O(mt) time by orthogonalizing the new column
 against the existing Q-vectors. The coefficient estimate is then
 `c = Qᵀ y` (projection) followed by back-substitution through R.
 

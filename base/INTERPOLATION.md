@@ -294,7 +294,7 @@ f(x) = Σ w_i φ(||x - x_i||)
 The weights `w_i` are found by solving the linear system `G w = y`, where
 `G[i][j] = φ(||x_i - x_j||)` is the Gram matrix.
 
-A **normalised** variant (NRBF) divides by the sum of basis function values,
+A **normalized** variant (NRBF) divides by the sum of basis function values,
 which gives a partition-of-unity property and a Bayesian interpretation:
 
 ```
@@ -336,7 +336,7 @@ System.out.println(interp.interpolate(0.0, 0.0)); // 0.0  (exact at knot)
 System.out.println(interp.interpolate(0.5, 0.5)); // ≈ 0.57
 ```
 
-**Normalised multi-dimensional:**
+**Normalized multi-dimensional:**
 
 ```java
 RBFInterpolation norm = new RBFInterpolation(x, y, new GaussianRadialBasis(), true);
