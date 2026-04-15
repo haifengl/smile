@@ -37,7 +37,7 @@ The project follows a hierarchical structure. Always check `base` before adding 
 - **Style:** Follow Google Java Style Guide.
 - **Records:** Prefer Java `record` for DTOs and immutable data carriers.
 - **Null Safety:** Use `Optional<T>` for return types that may be empty; avoid returning `null`.
-- **Logging:** Use SLF4J API for logging; avoid implementation-specific imports in library modules.
+- **Logging:** Use SLF4J API for logging; avoid implementation-specific imports in library modules. The `serve` module can use JBoss Logging as it is a Quarkus app.
 
 ## 🛠 Testing Guidelines
 - Use the **Given/When/Then** structure for all test methods.
