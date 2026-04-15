@@ -29,6 +29,7 @@ if [ ! -f "$VENV_DIR/bin/activate" ]; then
     else
         echo "Virtual environment created successfully."
         source "$VENV_DIR/bin/activate"
+        python -m pip install --upgrade pip setuptools wheel
         pip install -r "$APP_DIR/../conf/requirements.txt"
         pip install uv
         uv tool install ty@latest
