@@ -29,14 +29,30 @@ import io.quarkus.panache.common.Sort;
 import io.smallrye.common.annotation.RunOnVirtualThread;
 import io.vertx.ext.web.RoutingContext;
 
+/**
+ * REST resource exposing CRUD operations on persisted {@link Conversation}
+ * records at {@code /api/v1/conversations}.
+ *
+ * <p>All methods run on virtual threads to avoid blocking the event loop.
+ *
+ * @author Haifeng Li
+ */
 @Path("/conversations")
 @RunOnVirtualThread
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class ConversationResource {
+
     @Inject
     RoutingContext routingContext;
 
+    /**
+     * Lists conversations in reverse chronological order.
+     *
+     * @param pageIndex zero-based page index (default {@code 0}).
+     * @param pageSize  number of records per page (default {@code 25}).
+     * @return a page of conversations.
+     */
     @GET
     public List<Conversation> list(@QueryParam("pageIndex") @DefaultValue("0") int pageIndex,
                                    @QueryParam("pageSize") @DefaultValue("25") int pageSize) {
@@ -45,12 +61,27 @@ public class ConversationResource {
                 .list();
     }
 
+    /**
+     * Returns the conversation with the given ID.
+     *
+     * @param id the conversation ID.
+     * @return the conversation, or HTTP 404 if not found.
+     */
     @GET
     @Path("/{id}")
-    public Conversation get(@PathParam("id") Long id) {
-        return Conversation.findById(id);
+    public Response get(@PathParam("id") Long id) {
+        Conversation c = Conversation.findById(id);
+        if (c == null) return Response.status(Response.Status.NOT_FOUND).build();
+        return Response.ok(c).build();
     }
 
+    /**
+     * Creates a new conversation record.
+     *
+     * @param headers      HTTP request headers (for client metadata capture).
+     * @param conversation the conversation to persist.
+     * @return HTTP 201 with the created entity.
+     */
     @POST
     @Transactional
     public Response create(@Context HttpHeaders headers, Conversation conversation) {
@@ -59,18 +90,30 @@ public class ConversationResource {
         return Response.status(Response.Status.CREATED).entity(conversation).build();
     }
 
+    /**
+     * Deletes the conversation with the given ID.
+     *
+     * @param id the conversation ID.
+     * @return HTTP 204 on success, HTTP 404 if not found.
+     */
     @DELETE
     @Path("/{id}")
     @Transactional
     public Response delete(@PathParam("id") Long id) {
         boolean deleted = Conversation.deleteById(id);
-        if (deleted) {
-            return Response.noContent().build(); // 204 No Content
-        } else {
-            return Response.status(Response.Status.NOT_FOUND).build(); // 404 Not Found
-        }
+        return deleted
+                ? Response.noContent().build()
+                : Response.status(Response.Status.NOT_FOUND).build();
     }
 
+    /**
+     * Returns the message turns belonging to a conversation.
+     *
+     * @param id        the conversation ID.
+     * @param pageIndex zero-based page index (default {@code 0}).
+     * @param pageSize  number of items per page (default {@code 25}).
+     * @return a page of conversation items in chronological order.
+     */
     @GET
     @Path("/{id}/items")
     public List<ConversationItem> getItems(@PathParam("id") Long id,

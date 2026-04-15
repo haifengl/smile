@@ -17,43 +17,44 @@
 package smile.serve;
 
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /**
- * The generic inference request.
+ * The inference response containing a prediction and optional class
+ * probability estimates for soft classification models.
  *
+ * @param prediction   the predicted value (class label or regression output).
+ * @param probabilities posteriori class probabilities for soft classifiers;
+ *                      {@code null} for hard classifiers and regressors.
  * @author Haifeng Li
  */
-public class InferenceResponse {
-    /** The predicted value. */
-    public Number prediction;
-    /** Posteriori probabilities in case of soft classification. */
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    @JsonSerialize(using = ProbabilitySerializer.class)
-    public double[] probabilities;
+public record InferenceResponse(
+        Number prediction,
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @JsonSerialize(using = ProbabilitySerializer.class)
+        double[] probabilities) {
 
-    /** Constructor. */
-    public InferenceResponse() {
-    }
-
-    /** Constructor. */
+    /**
+     * Constructs a response without probability estimates (hard classifier
+     * or regressor output).
+     *
+     * @param prediction the predicted value.
+     */
     public InferenceResponse(Number prediction) {
-        this.prediction = prediction;
-    }
-
-    /** Constructor. */
-    public InferenceResponse(Number prediction, double[] probabilities) {
-        this.prediction = prediction;
-        this.probabilities = probabilities;
+        this(prediction, null);
     }
 
     @Override
     public String toString() {
+        if (prediction == null) return "null";
         String s = prediction.toString();
         if (probabilities != null) {
-            s += Arrays.stream(probabilities).mapToObj(p -> String.format("%.3f", p)).collect(Collectors.joining(" ", " ", ""));
+            s += Arrays.stream(probabilities)
+                    .mapToObj(p -> String.format(Locale.US, "%.3f", p))
+                    .collect(Collectors.joining(" ", " ", ""));
         }
         return s;
     }
