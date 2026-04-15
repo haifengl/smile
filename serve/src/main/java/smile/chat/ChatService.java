@@ -27,7 +27,13 @@ import smile.llm.*;
 import smile.llm.llama.*;
 
 /**
- * The chat completion service provider.
+ * Application-scoped service that loads a Llama LLM and handles chat
+ * completion requests.
+ *
+ * <p>The model is loaded once at application startup from the path
+ * configured by {@code smile.chat.model}. If the path does not exist,
+ * the service starts in an <em>unavailable</em> state and every request
+ * will receive an HTTP 503 response.
  *
  * @author Haifeng Li
  */
@@ -35,12 +41,14 @@ import smile.llm.llama.*;
 @ApplicationScoped
 public class ChatService {
     private static final Logger logger = Logger.getLogger(ChatService.class);
-    /** The LLM models. */
+    /** The loaded LLM; {@code null} when the model file is absent or failed to load. */
     private Llama model;
 
     /**
-     * Load LLM model upon application start.
-     * The @ApplicationScoped scope ensures the models are loaded once and reused
+     * Loads the LLM upon application start.
+     * The {@code @ApplicationScoped} scope ensures the model is loaded once and reused.
+     *
+     * @param config the chat service configuration.
      */
     @Inject
     public ChatService(ChatServiceConfig config) {
@@ -51,23 +59,26 @@ public class ChatService {
             } else {
                 logger.infof("LLM model '%s' doesn't exist. Chat service won't be available.", config.model());
             }
-        } catch (Throwable t) {
-            logger.errorf(t, "Failed to load model '%s'", config.model());
+        } catch (Exception ex) {
+            logger.errorf(ex, "Failed to load model '%s'", config.model());
         }
     }
 
     /**
-     * Returns true if the service/model is available.
-     * @return true if the service/model is available.
+     * Returns {@code true} if the LLM model is loaded and ready.
+     *
+     * @return {@code true} if available.
      */
     public boolean isAvailable() {
         return model != null;
     }
 
     /**
-     * Completes a chat request.
-     * @param request the chat request.
-     * @param publisher the flow publisher.
+     * Completes a chat dialog.
+     *
+     * @param request   the chat completion request.
+     * @param publisher the flow publisher that receives streamed token chunks.
+     * @return the array of completion results, one per dialog in the batch.
      */
     public ChatCompletion[] complete(CompletionRequest request, SubmissionPublisher<String> publisher) {
         Message[][] dialogs = { request.messages };

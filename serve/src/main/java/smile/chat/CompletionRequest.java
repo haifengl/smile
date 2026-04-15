@@ -21,18 +21,30 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import smile.llm.Message;
 
 /**
- * The chat completion request.
+ * JSON body for a {@code POST /chat/completions} request.
+ * Field names are mapped to/from snake_case by Jackson.
  *
  * @author Haifeng Li
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class CompletionRequest {
+    /** Optional ID of an existing conversation to append to. */
     public Long conversation;
+    /** The ordered list of dialog messages. Must not be {@code null}. */
     public Message[] messages;
+    /** Maximum number of new tokens to generate. Default: {@code 2048}. */
     public int maxTokens = 2048;
+    /** Sampling temperature; higher values → more random. Default: {@code 0.6}. */
     public double temperature = 0.6;
+    /** Nucleus-sampling top-p threshold. Default: {@code 0.9}. */
     public double topP = 0.9;
+    /** Whether to include log-probabilities in the response. Default: {@code false}. */
     public boolean logprobs = false;
+    /** Random seed for reproducible generation ({@code 0} = non-deterministic). */
     public long seed = 0;
+    /**
+     * Whether the client expects a streaming (SSE) response.
+     * Currently always streamed; this field is reserved for future non-streaming support.
+     */
     public boolean stream = true;
 }

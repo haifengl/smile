@@ -30,8 +30,9 @@ public class ProbabilitySerializer extends JsonSerializer<double[]> {
     public void serialize(double[] probabilities, JsonGenerator gen, SerializerProvider serializers) throws IOException {
         gen.writeStartArray();
         for (double prob : probabilities) {
-            String value = String.format("%.3f", prob);
-            gen.writeRawValue(value);
+            // Use Locale.US to guarantee '.' as the decimal separator regardless
+            // of the JVM's default locale, producing valid JSON numbers.
+            gen.writeRawValue(String.format(java.util.Locale.US, "%.3f", prob));
         }
         gen.writeEndArray();
     }

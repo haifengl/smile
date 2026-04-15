@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -35,7 +36,13 @@ import smile.io.Read;
 import smile.model.Model;
 
 /**
- * The inference service provider.
+ * Application-scoped service that loads and manages serialised SMILE
+ * models ({@code *.sml}) and delegates inference requests to them.
+ *
+ * <p>Models are discovered once at startup from the path configured by
+ * {@code smile.serve.model}. The path may point to a single {@code .sml}
+ * file or to a directory; in the latter case every {@code .sml} file in
+ * the directory is loaded.
  *
  * @author Haifeng Li
  */
@@ -43,12 +50,14 @@ import smile.model.Model;
 @ApplicationScoped
 public class InferenceService {
     private static final Logger logger = Logger.getLogger(InferenceService.class);
-    /** The ML models. */
-    private final Map<String, InferenceModel> models = new TreeMap<>();
+    /** Loaded models, keyed by {@code <id>-<version>}. Sorted for stable list order. */
+    private final Map<String, InferenceModel> models = Collections.synchronizedSortedMap(new TreeMap<>());
 
     /**
-     * Load ML models upon application start.
-     * The @ApplicationScoped scope ensures the models are loaded once and reused
+     * Loads ML models upon application start.
+     * The {@code @ApplicationScoped} scope ensures the models are loaded once and reused.
+     *
+     * @param config the service configuration.
      */
     @Inject
     public InferenceService(InferenceServiceConfig config) {
@@ -57,66 +66,71 @@ public class InferenceService {
             loadModel(path);
         } else if (Files.isDirectory(path)) {
             try (Stream<Path> files = Files.list(path)) {
-                files.forEach(file -> {
-                    if (Files.isRegularFile(file) && file.toString().endsWith(".sml")) {
-                        loadModel(file);
-                    }
-                });
+                files.filter(file -> Files.isRegularFile(file) && file.toString().endsWith(".sml"))
+                     .forEach(this::loadModel);
             } catch (IOException ex) {
-                logger.error(ex);
+                logger.errorf(ex, "Failed to list model directory '%s'", path);
             }
         } else {
-            logger.errorf("'%s' is not a regular file", path);
+            logger.errorf("'%s' is not a regular file or directory", path);
         }
     }
 
     /**
-     * Loads a model.
+     * Loads a single model file and registers it by its ID.
+     *
      * @param path the model file path.
      */
     private void loadModel(Path path) {
         try {
             logger.infof("Loading model from '%s'", path);
             var obj = Read.object(path);
-            if (obj instanceof Model dummy) {
-                var model = new InferenceModel(dummy, path);
+            if (obj instanceof Model m) {
+                var model = new InferenceModel(m, path);
                 models.put(model.id(), model);
+                logger.infof("Model '%s' loaded successfully", model.id());
             } else {
-                logger.errorf("'%s' is not a valid model", path);
+                logger.errorf("'%s' does not contain a valid SMILE model (got %s)",
+                        path, obj == null ? "null" : obj.getClass().getName());
             }
         } catch (Exception ex) {
-            logger.errorf(ex, "Failed to load model '%s'", path);
+            logger.errorf(ex, "Failed to load model from '%s'", path);
         }
     }
 
     /**
-     * Returns the list of models in id-version format.
-     * @return the list of models.
+     * Returns the list of loaded model IDs in alphabetical order.
+     *
+     * @return the list of model IDs.
      */
     public List<String> models() {
         return new ArrayList<>(models.keySet());
     }
 
     /**
-     * Returns the model instance.
-     * @param id the model id.
+     * Returns the model with the given ID.
+     *
+     * @param id the model ID.
      * @return the model instance.
-     * @throws NotFoundException if model doesn't exist.
+     * @throws NotFoundException if no model with that ID has been loaded.
      */
     public InferenceModel getModel(String id) throws NotFoundException {
         var model = models.get(id);
-        if (model == null) throw new NotFoundException(id);
+        if (model == null) throw new NotFoundException("Model not found: " + id);
         return model;
     }
 
     /**
-     * Performs inference using the generic JSON input.
-     * @param model the model id.
-     * @param request the generic input data as a Map.
+     * Performs inference using JSON-encoded input.
+     *
+     * @param modelId the model ID.
+     * @param request the feature values as a JSON object.
      * @return the inference result.
-     * @throws BadRequestException if invalid request body.
+     * @throws BadRequestException if the request body is malformed.
+     * @throws NotFoundException   if the model ID is unknown.
      */
-    public InferenceResponse predict(String model, JsonObject request) throws BadRequestException, NotFoundException {
-        return getModel(model).predict(request);
+    public InferenceResponse predict(String modelId, JsonObject request)
+            throws BadRequestException, NotFoundException {
+        return getModel(modelId).predict(request);
     }
 }
