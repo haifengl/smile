@@ -16,6 +16,8 @@
  */
 package smile.nlp.normalizer;
 
+import java.util.function.UnaryOperator;
+
 /**
  * Normalization transforms text into a canonical form by removing unwanted
  * variations. Normalization may range from light textual cleanup such as
@@ -27,7 +29,7 @@ package smile.nlp.normalizer;
  *
  * @author Mark Arehart
  */
-public interface Normalizer {
+public interface Normalizer extends UnaryOperator<String> {
 
     /**
      * Normalize the given string.
@@ -35,4 +37,9 @@ public interface Normalizer {
      * @return the normalized text.
      */
     String normalize(String text);
+
+    @Override
+    default String apply(String text) {
+        return normalize(text);
+    }
 }
