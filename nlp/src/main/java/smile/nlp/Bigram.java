@@ -21,19 +21,14 @@ package smile.nlp;
  * as the basis for simple statistical analysis of text. They are a special
  * case of N-gram.
  * 
+ * @param w1 the first word of bigram.
+ * @param w2 the second word of bigram.
+ * @param count the total number of occurrences of bigram in the corpus.
+ * @param score the chi-square statistical score of the collocation in the corpus.
  * @author Haifeng Li
  */
-public class Bigram {
-
-    /**
-     * Immutable first word of bigram.
-     */
-    public final String w1;
-
-    /**
-     * Immutable second word of bigram.
-     */
-    public final String w2;
+public record Bigram(String w1, String w2,
+                     int count, double score) implements Comparable<Bigram> {
 
     /**
      * Constructor.
@@ -41,15 +36,17 @@ public class Bigram {
      * @param w2 the second word of bigram.
      */
     public Bigram(String w1, String w2) {
-        this.w1 = w1;
-        this.w2 = w2;
+        this(w1, w2, -1, Double.NaN);
     }
 
     @Override
     public String toString() {
-        return String.format("(%s %s)", w1, w2);
+        return count > 0 ?
+                String.format("(%s %s, %d, %.2f)", w1, w2, count, score) :
+                String.format("(%s %s)", w1, w2);
     }
 
+    // Compares by word pair only.
     @Override
     public int hashCode() {
         int hash = 5;
@@ -58,6 +55,7 @@ public class Bigram {
         return hash;
     }
 
+    // Compares by word pair only.
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -69,5 +67,13 @@ public class Bigram {
         }
 
         return w1.equals(other.w1) && w2.equals(other.w2);
+    }
+
+    // NOTE: compareTo is intentionally inconsistent with equals/hashCode (inherited
+    // from smile.nlp.Bigram, which compares by word pair). This class is only used
+    // as a value holder for sorting collocations by score, not in sorted sets/maps.
+    @Override
+    public int compareTo(Bigram o) {
+        return Double.compare(score, o.score);
     }
 }

@@ -16,13 +16,7 @@
  */
 package smile.nlp;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import smile.nlp.dictionary.EnglishPunctuations;
 import smile.nlp.dictionary.EnglishStopWords;
@@ -34,6 +28,8 @@ import smile.nlp.tokenizer.SentenceSplitter;
 import smile.nlp.tokenizer.SimpleSentenceSplitter;
 import smile.nlp.tokenizer.SimpleTokenizer;
 import smile.nlp.tokenizer.Tokenizer;
+import smile.sort.HeapSelect;
+import smile.stat.distribution.ChiSquareDistribution;
 import smile.util.MutableInt;
 
 /**
@@ -275,5 +271,108 @@ public class SimpleCorpus implements Corpus {
 
         rank.sort(Collections.reverseOrder());
         return rank.iterator();
+    }
+
+    /**
+     * Chi-square distribution with 1 degree of freedom.
+     */
+    private static final ChiSquareDistribution chisq = new ChiSquareDistribution(1);
+
+    /**
+     * Finds top k bigram collocations in the corpus.
+     * @param k the top k bigram to compute.
+     * @param minFrequency The minimum frequency of bigram in the corpus.
+     * @return the significant bigram collocations in the descending order
+     * of likelihood ratio.
+     */
+    public List<Bigram> bigrams(int k, int minFrequency) {
+        if (k <= 0) throw new IllegalArgumentException("k must be positive: " + k);
+
+        HeapSelect<Bigram> heap = new HeapSelect<>(Bigram.class, k);
+        Iterator<Bigram> iterator = bigrams();
+        while (iterator.hasNext()) {
+            smile.nlp.Bigram bigram = iterator.next();
+            int c12 = count(bigram);
+
+            if (c12 > minFrequency) {
+                int c1 = count(bigram.w1());
+                int c2 = count(bigram.w2());
+
+                double score = likelihoodRatio(c1, c2, c12, size());
+                // Store negated score so HeapSelect (min-heap) keeps the top-k
+                heap.add(new Bigram(bigram.w1(), bigram.w2(), c12, -score));
+            }
+        }
+
+        heap.sort();
+        // un-negate scores for actual score
+        List<Bigram> collocations = new ArrayList<>();
+        for (var bigram : heap.toArray()) {
+            collocations.add(new Bigram(bigram.w1(), bigram.w2(), bigram.count(), -bigram.score()));
+        }
+
+        // Reverse so result is descending by actual score
+        return collocations.reversed();
+    }
+
+    /**
+     * Finds bigram collocations in the given corpus whose p-value is less than
+     * the given threshold.
+     * @param p the p-value threshold
+     * @param minFrequency The minimum frequency of bigram in the corpus.
+     * @return the significant bigram collocations in descending order of likelihood ratio.
+     */
+    public List<Bigram> bigrams(double p, int minFrequency) {
+        if (p <= 0.0 || p >= 1.0) {
+            throw new IllegalArgumentException("Invalid p = " + p);
+        }
+
+        double cutoff = chisq.quantile(p);
+        ArrayList<Bigram> collocations = new ArrayList<>();
+        Iterator<Bigram> iterator = bigrams();
+        while (iterator.hasNext()) {
+            smile.nlp.Bigram bigram = iterator.next();
+            int c12 = count(bigram);
+
+            if (c12 > minFrequency) {
+                int c1 = count(bigram.w1());
+                int c2 = count(bigram.w2());
+
+                double score = likelihoodRatio(c1, c2, c12, size());
+                if (score > cutoff) {
+                    collocations.add(new Bigram(bigram.w1(), bigram.w2(), c12, score));
+                }
+            }
+        }
+
+        collocations.sort(Comparator.reverseOrder());
+        return collocations;
+    }
+
+    /**
+     * Returns the likelihood ratio test statistic -2 log &lambda;
+     * @param c1 the number of occurrences of w1.
+     * @param c2 the number of occurrences of w2.
+     * @param c12 the number of occurrences of w1 w2.
+     * @param N the number of tokens in the corpus.
+     */
+    private static double likelihoodRatio(int c1, int c2, int c12, long N) {
+        double p = (double) c2 / N;
+        double p1 = (double) c12 / c1;
+        double p2 = (double) (c2 - c12) / (N - c1);
+
+        double logLambda = logL(c12, c1, p) + logL(c2-c12, N-c1, p) - logL(c12, c1, p1) - logL(c2-c12, N-c1, p2);
+        return -2 * logLambda;
+    }
+
+    /**
+     * Help function for calculating likelihood ratio statistic.
+     * Probabilities are clipped to (0.01, 0.99) to avoid log(0) or log(1-0)
+     * yielding -Infinity, which would corrupt the statistic.
+     */
+    private static double logL(int k, long n, double x) {
+        if (x == 0.0) x = 0.01;
+        if (x == 1.0) x = 0.99;
+        return k * Math.log(x) + (n-k) * Math.log(1-x);
     }
 }
