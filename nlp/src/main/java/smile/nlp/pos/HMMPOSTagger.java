@@ -115,10 +115,10 @@ public class HMMPOSTagger implements POSTagger, Serializable {
             synchronized (HMMPOSTagger.class) {
                 if (DEFAULT_TAGGER == null) {
                     try (ObjectInputStream ois = new ObjectInputStream(
-                            HMMPOSTagger.class.getResourceAsStream("/smile/nlp/pos/hmm-pos-tagger.model"))) {
+                            HMMPOSTagger.class.getResourceAsStream("/smile/nlp/pos/hmm-pos-tagger.sml"))) {
                         DEFAULT_TAGGER = (HMMPOSTagger) ois.readObject();
                     } catch (Exception ex) {
-                        logger.error("Failed to load /smile/nlp/pos/hmm-pos-tagger.model", ex);
+                        logger.error("Failed to load /smile/nlp/pos/hmm-pos-tagger.sml", ex);
                     }
                 }
             }
@@ -411,7 +411,7 @@ public class HMMPOSTagger implements POSTagger, Serializable {
         HMMPOSTagger tagger = HMMPOSTagger.fit(x, y);
 
         try {
-            FileOutputStream fos = new FileOutputStream("hmm-pos-tagger.model");
+            FileOutputStream fos = new FileOutputStream("hmm-pos-tagger.sml");
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(tagger);
             oos.flush();
