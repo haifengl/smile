@@ -36,7 +36,7 @@ import smile.io.Read;
 import smile.model.Model;
 
 /**
- * Application-scoped service that loads and manages serialised SMILE
+ * Application-scoped service that loads and manages serialized SMILE
  * models ({@code *.sml}) and delegates inference requests to them.
  *
  * <p>Models are discovered once at startup from the path configured by
