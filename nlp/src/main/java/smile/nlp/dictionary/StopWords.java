@@ -31,4 +31,13 @@ package smile.nlp.dictionary;
  */
 public interface StopWords extends Dictionary {
 
+    /**
+     * Returns true if the word is NOT a stop word.
+     * Convenience negation of {@link #contains(String)}.
+     * @param word the query word.
+     * @return true if this dictionary does not contain the specified word.
+     */
+    default boolean isNotStopWord(String word) {
+        return !contains(word);
+    }
 }

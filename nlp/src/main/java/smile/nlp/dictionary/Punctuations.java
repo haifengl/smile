@@ -32,4 +32,13 @@ package smile.nlp.dictionary;
  */
 public interface Punctuations extends Dictionary {
 
+    /**
+     * Returns true if the token is NOT a punctuation mark.
+     * Convenience negation of {@link #contains(String)}.
+     * @param token the query token.
+     * @return true if this dictionary does not contain the specified token.
+     */
+    default boolean isNotPunctuation(String token) {
+        return !contains(token);
+    }
 }

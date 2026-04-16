@@ -46,7 +46,7 @@ public enum EnglishStopWords implements StopWords {
      * The stop words list used by MySQL FullText feature.
      */
     MYSQL("/smile/nlp/dictionary/stop-words_en_mysql.txt");
-    
+
     /**
      * A set of stop words.
      */
@@ -67,8 +67,9 @@ public enum EnglishStopWords implements StopWords {
                 }
             }
         } catch (IOException ex) {
-            final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EnglishStopWords.class);
-            logger.error("Failed to load English stop words", ex);
+            // Logger cannot be a static field in an enum (initialized after constants).
+            org.slf4j.LoggerFactory.getLogger(EnglishStopWords.class)
+                    .error("Failed to load English stop words", ex);
         }
     }
 

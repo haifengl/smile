@@ -28,5 +28,4 @@ where
 who
 will
 with
-the
 www
