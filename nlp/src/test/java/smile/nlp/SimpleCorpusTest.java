@@ -41,7 +41,7 @@ public class SimpleCorpusTest {
             smile.io.Paths.getTestDataLines("text/plot.tok.gt9.5000")
                     .map(String::trim)
                     .filter(line -> !line.isEmpty())
-                    .forEach(line -> corpus.add(new Text(line)));
+                    .forEach(line -> corpus.add(corpus.doc(line)));
         } catch (IOException ex) {
             System.err.println("Failed to load test corpus: " + ex.getMessage());
         }
@@ -206,7 +206,8 @@ public class SimpleCorpusTest {
                 + "15 percent carbon-dioxide reduction by 2025 should be adopted.";
 
         SimpleCorpus corpus = new SimpleCorpus();
-        corpus.add(new Text(SimpleNormalizer.getInstance().normalize(content)));
+        var doc = corpus.doc(SimpleNormalizer.getInstance().normalize(content));
+        corpus.add(doc);
         var bigrams = corpus.bigrams(10, 3) ;
         System.out.println("Bigrams :"+ bigrams);
         assertEquals(1, bigrams.size());

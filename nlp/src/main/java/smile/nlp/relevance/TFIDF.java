@@ -17,7 +17,7 @@
 package smile.nlp.relevance;
 
 import smile.nlp.Corpus;
-import smile.nlp.TextTerms;
+import smile.nlp.Document;
 
 /**
  * The tf-idf weight (term frequency-inverse document frequency) is a weight
@@ -110,7 +110,7 @@ public class TFIDF implements RelevanceRanker {
     }
 
     @Override
-    public double rank(Corpus corpus, TextTerms doc, String term, int tf, int n) {
+    public double rank(Corpus corpus, Document doc, String term, int tf, int n) {
         if (tf == 0) return 0.0;
 
         int N = corpus.docCount();
@@ -120,7 +120,7 @@ public class TFIDF implements RelevanceRanker {
     }
 
     @Override
-    public double rank(Corpus corpus, TextTerms doc, String[] terms, int[] tf, int n) {
+    public double rank(Corpus corpus, Document doc, String[] terms, int[] tf, int n) {
         int N = corpus.docCount();
         int maxtf = doc.maxtf();
 

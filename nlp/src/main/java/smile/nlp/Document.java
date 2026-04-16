@@ -21,7 +21,12 @@ package smile.nlp;
  *
  * @author Haifeng Li
  */
-public interface TextTerms {
+public interface Document extends Text, AnchorText {
+    /**
+     * Returns the id of document, which must be unique in the corpus.
+     * @return the id of document.
+     */
+    String id();
     
     /**
      * Returns the number of words.
@@ -54,5 +59,4 @@ public interface TextTerms {
      * @return the maximum term frequency.
      */
     int maxtf();
-
 }
