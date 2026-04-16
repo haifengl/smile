@@ -64,6 +64,9 @@ public class Bigram extends smile.nlp.Bigram implements Comparable<Bigram> {
     public int compareTo(Bigram o) {
         return Double.compare(score, o.score);
     }
+    // NOTE: compareTo is intentionally inconsistent with equals/hashCode (inherited
+    // from smile.nlp.Bigram, which compares by word pair). This class is only used
+    // as a value holder for sorting collocations by score, not in sorted sets/maps.
 
     /**
      * Chi-square distribution with 1 degree of freedom.
@@ -79,6 +82,7 @@ public class Bigram extends smile.nlp.Bigram implements Comparable<Bigram> {
      * of likelihood ratio.
      */
     public static Bigram[] of(Corpus corpus, int k, int minFrequency) {
+        if (k <= 0) throw new IllegalArgumentException("k must be positive: " + k);
         HeapSelect<Bigram> heap = new HeapSelect<>(Bigram.class, k);
 
         Iterator<smile.nlp.Bigram> iterator = corpus.bigrams();
@@ -91,6 +95,7 @@ public class Bigram extends smile.nlp.Bigram implements Comparable<Bigram> {
                 int c2 = corpus.count(bigram.w2);
 
                 double score = likelihoodRatio(c1, c2, c12, corpus.size());
+                // Store negated score so HeapSelect (min-heap) keeps the top-k
                 heap.add(new Bigram(bigram.w1, bigram.w2, c12, -score));
             }
         }
@@ -99,6 +104,7 @@ public class Bigram extends smile.nlp.Bigram implements Comparable<Bigram> {
 
         Bigram[] bigrams = heap.toArray();
         int n = bigrams.length;
+        // Reverse and un-negate scores so result is descending by actual score
         Bigram[] collocations = new Bigram[n];
         for (int i = 0; i < n; i++) {
             Bigram bigram = bigrams[n-i-1];
@@ -165,6 +171,8 @@ public class Bigram extends smile.nlp.Bigram implements Comparable<Bigram> {
 
     /**
      * Help function for calculating likelihood ratio statistic.
+     * Probabilities are clipped to (0.01, 0.99) to avoid log(0) or log(1-0)
+     * yielding -Infinity, which would corrupt the statistic.
      */
     private static double logL(int k, long n, double x) {
         if (x == 0.0) x = 0.01;
