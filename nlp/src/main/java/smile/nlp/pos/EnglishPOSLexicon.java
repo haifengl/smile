@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * An English lexicon with part-of-speech tags.
@@ -137,12 +138,12 @@ public class EnglishPOSLexicon {
     }
 
     /**
-     * Returns the part-of-speech tags for given word, or null if the word does
-     * not exist in the dictionary.
-     * @param word the word.
-     * @return the part-of-speech tags.
+     * Returns the part-of-speech tags for the given word, or an empty
+     * {@link Optional} if the word does not exist in the dictionary.
+     * @param word the word to look up.
+     * @return an {@code Optional} containing the POS tags, or empty if unknown.
      */
-    public static PennTreebankPOS[] get(String word) {
-        return dict.get(word);
+    public static Optional<PennTreebankPOS[]> get(String word) {
+        return Optional.ofNullable(dict.get(word));
     }
 }

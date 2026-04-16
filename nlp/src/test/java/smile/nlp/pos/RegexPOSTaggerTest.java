@@ -16,53 +16,154 @@
  */
 package smile.nlp.pos;
 
-import org.junit.jupiter.api.*;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
+ * Tests for {@link RegexPOSTagger}.
  *
  * @author Haifeng Li
  */
 public class RegexPOSTaggerTest {
 
-    public RegexPOSTaggerTest() {
-    }
+    // -----------------------------------------------------------------------
+    // Cardinal numbers → CD
+    // -----------------------------------------------------------------------
 
-    @BeforeAll
-    public static void setUpClass() throws Exception {
-    }
-
-    @AfterAll
-    public static void tearDownClass() throws Exception {
-    }
-
-    @BeforeEach
-    public void setUp() {
-    }
-
-    @AfterEach
-    public void tearDown() {
-    }
-
-    /**
-     * Test of tag method, of class RegexPOSTagger.
-     */
     @Test
-    public void testTag() {
-        System.out.println("tag");
-        assertEquals(PennTreebankPOS.CD, RegexPOSTagger.tag("123"));
-        assertEquals(PennTreebankPOS.CD, RegexPOSTagger.tag("1234567890"));
-        assertEquals(PennTreebankPOS.CD, RegexPOSTagger.tag("123.45"));
-        assertEquals(PennTreebankPOS.CD, RegexPOSTagger.tag("1,234"));
-        assertEquals(PennTreebankPOS.CD, RegexPOSTagger.tag("1,234.5678"));
-        assertEquals(PennTreebankPOS.NN, RegexPOSTagger.tag("914-544-3333"));
-        assertEquals(PennTreebankPOS.NN, RegexPOSTagger.tag("544-3333"));
-        assertEquals(PennTreebankPOS.NN, RegexPOSTagger.tag("x123"));
-        assertEquals(PennTreebankPOS.NN, RegexPOSTagger.tag("x123"));
-        assertEquals(PennTreebankPOS.NN, RegexPOSTagger.tag("http://www.msnbc.msn.com/id/42231726/?GT1=43001"));
-        assertEquals(PennTreebankPOS.NN, RegexPOSTagger.tag("ftp://www.msnbc.msn.com/id/42231726/?GT1=43001"));
-        assertEquals(PennTreebankPOS.NN, RegexPOSTagger.tag("nobody@usc.edu"));
-        assertEquals(PennTreebankPOS.NN, RegexPOSTagger.tag("no.body@usc.edu.cn"));
-        assertEquals(PennTreebankPOS.NN, RegexPOSTagger.tag("no_body@usc.edu.cn"));
+    public void testIntegerIsCardinalNumber() {
+        // Given / When
+        Optional<PennTreebankPOS> result = RegexPOSTagger.tag("123");
+        // Then
+        assertEquals(Optional.of(PennTreebankPOS.CD), result);
+    }
+
+    @Test
+    public void testLargeIntegerIsCardinalNumber() {
+        // Given / When
+        Optional<PennTreebankPOS> result = RegexPOSTagger.tag("1234567890");
+        // Then
+        assertEquals(Optional.of(PennTreebankPOS.CD), result);
+    }
+
+    @Test
+    public void testDecimalIsCardinalNumber() {
+        // Given / When
+        Optional<PennTreebankPOS> result = RegexPOSTagger.tag("123.45");
+        // Then
+        assertEquals(Optional.of(PennTreebankPOS.CD), result);
+    }
+
+    @Test
+    public void testCommaFormattedIntegerIsCardinalNumber() {
+        // Given / When
+        Optional<PennTreebankPOS> result = RegexPOSTagger.tag("1,234");
+        // Then
+        assertEquals(Optional.of(PennTreebankPOS.CD), result);
+    }
+
+    @Test
+    public void testCommaFormattedDecimalIsCardinalNumber() {
+        // Given / When
+        Optional<PennTreebankPOS> result = RegexPOSTagger.tag("1,234.5678");
+        // Then
+        assertEquals(Optional.of(PennTreebankPOS.CD), result);
+    }
+
+    // -----------------------------------------------------------------------
+    // Phone numbers, extensions, URLs, emails → NN
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testFullPhoneNumberIsNoun() {
+        // Given / When
+        Optional<PennTreebankPOS> result = RegexPOSTagger.tag("914-544-3333");
+        // Then
+        assertEquals(Optional.of(PennTreebankPOS.NN), result);
+    }
+
+    @Test
+    public void testShortPhoneNumberIsNoun() {
+        // Given / When
+        Optional<PennTreebankPOS> result = RegexPOSTagger.tag("544-3333");
+        // Then
+        assertEquals(Optional.of(PennTreebankPOS.NN), result);
+    }
+
+    @Test
+    public void testPhoneExtensionIsNoun() {
+        // Given / When
+        Optional<PennTreebankPOS> result = RegexPOSTagger.tag("x123");
+        // Then
+        assertEquals(Optional.of(PennTreebankPOS.NN), result);
+    }
+
+    @Test
+    public void testHttpUrlIsNoun() {
+        // Given / When
+        Optional<PennTreebankPOS> result = RegexPOSTagger.tag("http://www.msnbc.msn.com/id/42231726/?GT1=43001");
+        // Then
+        assertEquals(Optional.of(PennTreebankPOS.NN), result);
+    }
+
+    @Test
+    public void testFtpUrlIsNoun() {
+        // Given / When
+        Optional<PennTreebankPOS> result = RegexPOSTagger.tag("ftp://www.msnbc.msn.com/id/42231726/?GT1=43001");
+        // Then
+        assertEquals(Optional.of(PennTreebankPOS.NN), result);
+    }
+
+    @Test
+    public void testSimpleEmailIsNoun() {
+        // Given / When
+        Optional<PennTreebankPOS> result = RegexPOSTagger.tag("nobody@usc.edu");
+        // Then
+        assertEquals(Optional.of(PennTreebankPOS.NN), result);
+    }
+
+    @Test
+    public void testDottedEmailIsNoun() {
+        // Given / When
+        Optional<PennTreebankPOS> result = RegexPOSTagger.tag("no.body@usc.edu.cn");
+        // Then
+        assertEquals(Optional.of(PennTreebankPOS.NN), result);
+    }
+
+    @Test
+    public void testUnderscoreEmailIsNoun() {
+        // Given / When
+        Optional<PennTreebankPOS> result = RegexPOSTagger.tag("no_body@usc.edu.cn");
+        // Then
+        assertEquals(Optional.of(PennTreebankPOS.NN), result);
+    }
+
+    // -----------------------------------------------------------------------
+    // Non-matching tokens → empty Optional
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testPlainWordReturnsEmpty() {
+        // Given / When
+        Optional<PennTreebankPOS> result = RegexPOSTagger.tag("computer");
+        // Then
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void testPunctuationReturnsEmpty() {
+        // Given / When
+        Optional<PennTreebankPOS> result = RegexPOSTagger.tag(".");
+        // Then
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void testEmptyStringReturnsEmpty() {
+        // Given / When
+        Optional<PennTreebankPOS> result = RegexPOSTagger.tag("");
+        // Then
+        assertTrue(result.isEmpty());
     }
 }

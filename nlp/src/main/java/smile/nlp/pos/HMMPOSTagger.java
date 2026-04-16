@@ -58,23 +58,23 @@ public class HMMPOSTagger implements POSTagger, Serializable {
     private double[][] c;
 
     /**
-     * Default English POS tagger.
+     * Default English POS tagger (lazily initialized, thread-safe).
+     * TODO: switch to LazyConstant when it is available.
      */
-    private static HMMPOSTagger DEFAULT_TAGGER;
-    
+    private static volatile HMMPOSTagger DEFAULT_TAGGER;
+
     /**
-     * Constructor. Creates an empty model. For Serialization only.
+     * Constructor. Creates an empty model. For serialization only.
      */
     public HMMPOSTagger() {
-        
     }
-    
+
     /**
      * Constructor.
      * @param symbol the emission symbols of HMM and corresponding indices
-     * (starting at 1). The index 0 is reserved for unknown words.
-     * @param suffix the emission suffix of HMM and corresponding indices
-     * (starting at 0).
+     *               (starting at 1). The index 0 is reserved for unknown words.
+     * @param suffix the emission symbol suffixes of HMM and corresponding indices
+     *               (starting at 0).
      * @param pi the initial state probabilities.
      * @param a the state transition probabilities.
      * @param b the symbol emission probabilities.
@@ -86,15 +86,15 @@ public class HMMPOSTagger implements POSTagger, Serializable {
         }
 
         if (a[0].length != PennTreebankPOS.values().length) {
-            throw new IllegalArgumentException("Invlid state transition probability size.");
+            throw new IllegalArgumentException("Invalid state transition probability size.");
         }
 
         if (b[0].length != symbol.size() + 1) {
-            throw new IllegalArgumentException("Invlid symbol emission probability size.");
+            throw new IllegalArgumentException("Invalid symbol emission probability size.");
         }
 
         if (c[0].length != suffix.size()) {
-            throw new IllegalArgumentException("Invlid symbol suffix emission probability size.");
+            throw new IllegalArgumentException("Invalid symbol suffix emission probability size.");
         }
 
         this.pi = pi;
@@ -106,17 +106,21 @@ public class HMMPOSTagger implements POSTagger, Serializable {
     }
 
     /**
-     * Returns the default English POS tagger.
-     * @return the default English POS tagger 
+     * Returns the default English POS tagger (thread-safe lazy initialization).
+     * @return the default English POS tagger, or {@code null} if the model
+     *         resource could not be loaded.
      */
     public static HMMPOSTagger getDefault() {
         if (DEFAULT_TAGGER == null) {
-            try {
-                ObjectInputStream ois = new ObjectInputStream(HMMPOSTagger.class.getResourceAsStream("/smile/nlp/pos/hmm-pos-tagger.model"));
-                DEFAULT_TAGGER = (HMMPOSTagger) ois.readObject();
-                ois.close();
-            } catch (Exception ex) {
-                logger.error("Failed to load /smile/nlp/pos/hmm-pos-tagger.model", ex);
+            synchronized (HMMPOSTagger.class) {
+                if (DEFAULT_TAGGER == null) {
+                    try (ObjectInputStream ois = new ObjectInputStream(
+                            HMMPOSTagger.class.getResourceAsStream("/smile/nlp/pos/hmm-pos-tagger.model"))) {
+                        DEFAULT_TAGGER = (HMMPOSTagger) ois.readObject();
+                    } catch (Exception ex) {
+                        logger.error("Failed to load /smile/nlp/pos/hmm-pos-tagger.model", ex);
+                    }
+                }
             }
         }
         return DEFAULT_TAGGER;
@@ -124,20 +128,20 @@ public class HMMPOSTagger implements POSTagger, Serializable {
     
     @Override
     public PennTreebankPOS[] tag(String[] sentence) {
-        int[] s = viterbi(sentence);   
-        
+        int[] s = viterbi(sentence);
+
         int n = sentence.length;
         PennTreebankPOS[] pos = new PennTreebankPOS[n];
         for (int i = 0; i < n; i++) {
             if (symbol.get(sentence[i]) == null) {
-                pos[i] = RegexPOSTagger.tag(sentence[i]);
+                pos[i] = RegexPOSTagger.tag(sentence[i]).orElse(null);
             }
-            
+
             if (pos[i] == null) {
                 pos[i] = PennTreebankPOS.values()[s[i]];
             }
         }
-        
+
         return pos;
     }
 
@@ -324,56 +328,54 @@ public class HMMPOSTagger implements POSTagger, Serializable {
             walkin(Path.of(dir), files);
 
             for (File file : files) {
-                FileInputStream stream = new FileInputStream(file);
-                BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-                String line;
-                List<String> sentence = new ArrayList<>();
-                List<PennTreebankPOS> tag = new ArrayList<>();
-                while ((line = reader.readLine()) != null) {
-                    line = line.trim();
-                    if (line.isEmpty()) {
-                        if (!sentence.isEmpty()) {
-                            sentences.add(sentence.toArray(new String[0]));
-                            tags.add(tag.toArray(new PennTreebankPOS[0]));
-                            sentence.clear();
-                            tag.clear();
-                        }
-                    } else if (!line.startsWith("===") && !line.startsWith("*x*")) {
-                        String[] words = line.split("\\s");
-                        for (String word : words) {
-                            String[] w = word.split("/");
-                            if (w.length == 2) {
-                                sentence.add(w[0]);
+                try (BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(new FileInputStream(file)))) {
+                    String line;
+                    List<String> sentence = new ArrayList<>();
+                    List<PennTreebankPOS> tag = new ArrayList<>();
+                    while ((line = reader.readLine()) != null) {
+                        line = line.trim();
+                        if (line.isEmpty()) {
+                            if (!sentence.isEmpty()) {
+                                sentences.add(sentence.toArray(new String[0]));
+                                tags.add(tag.toArray(new PennTreebankPOS[0]));
+                                sentence.clear();
+                                tag.clear();
+                            }
+                        } else if (!line.startsWith("===") && !line.startsWith("*x*")) {
+                            String[] words = line.split("\\s");
+                            for (String word : words) {
+                                String[] w = word.split("/");
+                                if (w.length == 2) {
+                                    sentence.add(w[0]);
 
-                                int index = w[1].indexOf('|');
-                                String pos = index == -1 ? w[1] : w[1].substring(0, index);
-                                if (pos.equals("PRP$R")) pos = "PRP$";
-                                if (pos.equals("JJSS")) pos = "JJS";
-                                tag.add(PennTreebankPOS.getValue(pos));
+                                    int index = w[1].indexOf('|');
+                                    String pos = index == -1 ? w[1] : w[1].substring(0, index);
+                                    if (pos.equals("PRP$R")) pos = "PRP$";
+                                    if (pos.equals("JJSS")) pos = "JJS";
+                                    tag.add(PennTreebankPOS.getValue(pos));
+                                }
                             }
                         }
                     }
-                }
 
-                if (!sentence.isEmpty()) {
-                    sentences.add(sentence.toArray(new String[0]));
-                    tags.add(tag.toArray(new PennTreebankPOS[0]));
-                    sentence.clear();
-                    tag.clear();
+                    if (!sentence.isEmpty()) {
+                        sentences.add(sentence.toArray(new String[0]));
+                        tags.add(tag.toArray(new PennTreebankPOS[0]));
+                    }
                 }
-
-                reader.close();
             }
         } catch (IOException ex) {
-            System.err.println(ex.getMessage());
+            logger.error("Failed to read corpus", ex);
         }
     }
 
     /**
-     * Recursive function to descend into the directory tree and find all the files
-     * that end with ".POS"
-     * @param dir a file object defining the top directory
-     **/
+     * Recursively descends the directory tree and collects all files ending
+     * with {@code ".POS"}.
+     * @param dir the top-level directory to walk.
+     * @param files the list to append found files to.
+     */
     static void walkin(Path dir, List<File> files) throws IOException {
         String pattern = ".POS";
         Files.newDirectoryStream(dir).forEach(path -> {
@@ -382,7 +384,7 @@ public class HMMPOSTagger implements POSTagger, Serializable {
                 try {
                     walkin(path, files);
                 } catch (IOException ex) {
-                    System.err.println(ex.getMessage());
+                    logger.error("Failed to walk directory: {}", path, ex);
                 }
             } else {
                 if (file.getName().endsWith(pattern)) {

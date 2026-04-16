@@ -16,133 +16,133 @@
  */
 package smile.nlp.pos;
 
-import java.io.InputStreamReader;
 import java.io.IOException;
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.ArrayList;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import smile.math.MathEx;
 import smile.validation.CrossValidation;
 import smile.validation.Bag;
 
 /**
+ * Tests for {@link HMMPOSTagger}.
  *
  * @author Haifeng Li
  */
 public class HMMPOSTaggerTest {
 
-    public HMMPOSTaggerTest() {
+    // -----------------------------------------------------------------------
+    // Default pre-trained tagger
+    // -----------------------------------------------------------------------
 
-    }
-    
-    @BeforeAll
-    public static void setUpClass() throws Exception {
-    }
-
-    @AfterAll
-    public static void tearDownClass() throws Exception {
-    }
-    
-    @BeforeEach
-    public void setUp() {
-    }
-    
-    @AfterEach
-    public void tearDown() {
+    @Test
+    public void testDefaultTaggerIsAvailable() {
+        // Given / When
+        HMMPOSTagger tagger = HMMPOSTagger.getDefault();
+        // Then: model resource is bundled and must load successfully
+        assertNotNull(tagger, "Default HMM POS tagger should load from bundled resource");
     }
 
     @Test
-    public void testWSJ() throws IOException {
-        System.out.println("WSJ");
+    public void testDefaultTaggerTagsSimpleSentence() {
+        // Given
+        HMMPOSTagger tagger = HMMPOSTagger.getDefault();
+        if (tagger == null) return; // model not bundled
+        String[] sentence = {"The", "quick", "brown", "fox", "jumps", "over", "the", "lazy", "dog"};
+        // When
+        PennTreebankPOS[] tags = tagger.tag(sentence);
+        // Then
+        assertNotNull(tags);
+        assertEquals(sentence.length, tags.length, "One tag per token");
+        for (PennTreebankPOS t : tags) {
+            assertNotNull(t, "No token should have a null tag");
+        }
+        // "The" and "the" should be determiners (DT)
+        assertEquals(PennTreebankPOS.DT, tags[0], "Expected DT for 'The'");
+        assertEquals(PennTreebankPOS.DT, tags[6], "Expected DT for 'the'");
+    }
 
-        MathEx.setSeed(19650218); // to get repeatable results.
+    @Test
+    public void testDefaultTaggerReturnsSameInstanceOnSecondCall() {
+        // Given / When
+        HMMPOSTagger t1 = HMMPOSTagger.getDefault();
+        HMMPOSTagger t2 = HMMPOSTagger.getDefault();
+        // Then: lazy singleton — same reference
+        assertSame(t1, t2);
+    }
+
+    // -----------------------------------------------------------------------
+    // Cross-validated accuracy on PennTreebank corpora (skipped if data absent)
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testWSJ() throws IOException {
+        // Given
+        MathEx.setSeed(19650218);
         List<String[]> sentences = new ArrayList<>();
         List<PennTreebankPOS[]> tags = new ArrayList<>();
         HMMPOSTagger.read("nlp/src/test/resources/data/PennTreebank/PennTreebank2/TAGGED/POS/WSJ", sentences, tags);
+        if (sentences.isEmpty()) return; // data not available — skip
 
-        // Data is not available
-        if (sentences.isEmpty()) return;
+        String[][] x = sentences.toArray(new String[0][]);
+        PennTreebankPOS[][] y = tags.toArray(new PennTreebankPOS[0][]);
 
-        String[][] x = sentences.toArray(new String[sentences.size()][]);
-        PennTreebankPOS[][] y = tags.toArray(new PennTreebankPOS[tags.size()][]);
-        
-        int n = x.length;
+        // When: 10-fold cross-validation
         int k = 10;
         int error = 0;
         int total = 0;
-
-        Bag[] bags = CrossValidation.of(n, k);
+        Bag[] bags = CrossValidation.of(x.length, k);
         for (int i = 0; i < k; i++) {
-            String[][] trainx = MathEx.slice(x, bags[i].samples());
-            PennTreebankPOS[][] trainy = MathEx.slice(y, bags[i].samples());
-            String[][] testx = MathEx.slice(x, bags[i].oob());
-            PennTreebankPOS[][] testy = MathEx.slice(y, bags[i].oob());
-
-            HMMPOSTagger tagger = HMMPOSTagger.fit(trainx, trainy);
-
-            for (int j = 0; j < testx.length; j++) {
-                PennTreebankPOS[] label = tagger.tag(testx[j]);
-                total += label.length;
-                for (int l = 0; l < label.length; l++) {
-                    if (label[l] != testy[j][l]) {
-                        error++;
-                    }
+            HMMPOSTagger tagger = HMMPOSTagger.fit(MathEx.slice(x, bags[i].samples()), MathEx.slice(y, bags[i].samples()));
+            for (int j = 0; j < bags[i].oob().length; j++) {
+                String[] sent = x[bags[i].oob()[j]];
+                PennTreebankPOS[] pred = tagger.tag(sent);
+                PennTreebankPOS[] gold = y[bags[i].oob()[j]];
+                total += pred.length;
+                for (int l = 0; l < pred.length; l++) {
+                    if (pred[l] != gold[l]) error++;
                 }
             }
         }
 
-        System.out.format("Error rate = %.2f%% as %d of %d\n", 100.0 * error / total, error, total);
+        // Then: error count within expected range
+        System.out.format("WSJ error rate = %.2f%% (%d / %d)%n", 100.0 * error / total, error, total);
         assertEquals(51325, error, 50);
     }
 
     @Test
     public void testBrown() throws IOException {
-        System.out.println("BROWN");
-
-        MathEx.setSeed(19650218); // to get repeatable results.
+        // Given
+        MathEx.setSeed(19650218);
         List<String[]> sentences = new ArrayList<>();
         List<PennTreebankPOS[]> tags = new ArrayList<>();
         HMMPOSTagger.read("nlp/src/test/resources/data/PennTreebank/PennTreebank2/TAGGED/POS/BROWN", sentences, tags);
+        if (sentences.isEmpty()) return; // data not available — skip
 
-        // Data is not available
-        if (sentences.isEmpty()) return;
+        String[][] x = sentences.toArray(new String[0][]);
+        PennTreebankPOS[][] y = tags.toArray(new PennTreebankPOS[0][]);
 
-        String[][] x = sentences.toArray(new String[sentences.size()][]);
-        PennTreebankPOS[][] y = tags.toArray(new PennTreebankPOS[tags.size()][]);
-        
-        int n = x.length;
+        // When: 10-fold cross-validation
         int k = 10;
         int error = 0;
         int total = 0;
-
-        Bag[] bags = CrossValidation.of(n, k);
+        Bag[] bags = CrossValidation.of(x.length, k);
         for (int i = 0; i < k; i++) {
-            String[][] trainx = MathEx.slice(x, bags[i].samples());
-            PennTreebankPOS[][] trainy = MathEx.slice(y, bags[i].samples());
-            String[][] testx = MathEx.slice(x, bags[i].oob());
-            PennTreebankPOS[][] testy = MathEx.slice(y, bags[i].oob());
-
-            HMMPOSTagger tagger = HMMPOSTagger.fit(trainx, trainy);
-
-            for (int j = 0; j < testx.length; j++) {
-                PennTreebankPOS[] label = tagger.tag(testx[j]);
-                total += label.length;
-                for (int l = 0; l < label.length; l++) {
-                    if (label[l] != testy[j][l]) {
-                        error++;
-                    }
+            HMMPOSTagger tagger = HMMPOSTagger.fit(MathEx.slice(x, bags[i].samples()), MathEx.slice(y, bags[i].samples()));
+            for (int j = 0; j < bags[i].oob().length; j++) {
+                String[] sent = x[bags[i].oob()[j]];
+                PennTreebankPOS[] pred = tagger.tag(sent);
+                PennTreebankPOS[] gold = y[bags[i].oob()[j]];
+                total += pred.length;
+                for (int l = 0; l < pred.length; l++) {
+                    if (pred[l] != gold[l]) error++;
                 }
             }
         }
 
-        System.out.format("Error rate = %.2f%% as %d of %d\n", 100.0 * error / total, error, total);
+        // Then: error count within expected range
+        System.out.format("Brown error rate = %.2f%% (%d / %d)%n", 100.0 * error / total, error, total);
         assertEquals(55589, error, 50);
     }
 }

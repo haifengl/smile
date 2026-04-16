@@ -87,14 +87,14 @@ public class BM25Test {
 
     @Test
     public void testBoundaryBZero() {
-        // Given: b = 0 (no length normalisation — BM15)
+        // Given: b = 0 (no length normalization — BM15)
         // When / Then: should not throw
         assertDoesNotThrow(() -> new BM25(1.2, 0.0, 0.0));
     }
 
     @Test
     public void testBoundaryBOne() {
-        // Given: b = 1 (full length normalisation — BM11)
+        // Given: b = 1 (full length normalization — BM11)
         // When / Then: should not throw
         assertDoesNotThrow(() -> new BM25(1.2, 1.0, 0.0));
     }
@@ -124,7 +124,7 @@ public class BM25Test {
     }
 
     @Test
-    public void testScoreNoLengthNormalisationBIsZero() {
+    public void testScoreNoLengthNormalizationBIsZero() {
         // Given: b = 0 means docSize has no effect
         BM25 bm25a = new BM25(2.0, 0.0, 0.0);
         // When: same freq, different doc sizes

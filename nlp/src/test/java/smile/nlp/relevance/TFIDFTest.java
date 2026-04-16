@@ -105,7 +105,7 @@ public class TFIDFTest {
         TFIDF instance = new TFIDF();
         // When
         double result = instance.rank(5, 5, 10_000_000, 1_000);
-        // Then: normalised tf = a + (1-a)*1 = 1.0
+        // Then: normalized tf = a + (1-a)*1 = 1.0
         double expected = Math.log(10_000_000.0 / 1_000);
         assertEquals(expected, result, 1e-6);
     }

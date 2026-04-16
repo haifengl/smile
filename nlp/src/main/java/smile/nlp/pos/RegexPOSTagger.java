@@ -16,6 +16,7 @@
  */
 package smile.nlp.pos;
 
+import java.util.Optional;
 import java.util.regex.Pattern;
 import smile.util.Regex;
 
@@ -55,16 +56,19 @@ class RegexPOSTagger {
     };
 
     /**
-     * Returns the POS tag of a given word based on the regular expression over
-     * word string. Returns null if no match.
+     * Returns the POS tag of a word based on regular-expression pattern
+     * matching, or an empty {@link Optional} if no pattern matches.
+     *
+     * @param word the word to tag.
+     * @return an {@code Optional} containing the matched {@link PennTreebankPOS},
+     *         or empty if the word does not match any pattern.
      */
-    public static PennTreebankPOS tag(String word) {
+    public static Optional<PennTreebankPOS> tag(String word) {
         for (int i = 0; i < REGEX.length; i++) {
             if (REGEX[i].matcher(word).matches()) {
-                return REGEX_POS[i];
+                return Optional.of(REGEX_POS[i]);
             }
         }
-
-        return null;
+        return Optional.empty();
     }
 }
