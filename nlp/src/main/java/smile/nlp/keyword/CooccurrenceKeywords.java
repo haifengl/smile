@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import smile.nlp.Trie;
@@ -84,7 +85,7 @@ public final class CooccurrenceKeywords {
      * @return the top 10 keywords, possibly fewer if the document is too short.
      * @throws IllegalArgumentException if {@code text} is {@code null} or blank.
      */
-    static NGram[] of(String text) {
+    static List<NGram> of(String text) {
         return of(text, 10);
     }
 
@@ -99,7 +100,7 @@ public final class CooccurrenceKeywords {
      * @throws IllegalArgumentException if {@code text} is {@code null} or
      *         blank, or if {@code maxNumKeywords} is not positive.
      */
-    static NGram[] of(String text, int maxNumKeywords) {
+    static List<NGram> of(String text, int maxNumKeywords) {
         if (text == null || text.isBlank()) {
             throw new IllegalArgumentException("text must not be null or blank");
         }
@@ -132,7 +133,7 @@ public final class CooccurrenceKeywords {
         }
 
         if (terms.isEmpty()) {
-            return new NGram[0];
+            return List.of();
         }
 
         Collections.sort(terms);
@@ -140,7 +141,7 @@ public final class CooccurrenceKeywords {
         // Step 2 – keep only the top FREQ_TERM_RATIO fraction.
         int n = (int) (FREQ_TERM_RATIO * terms.size());
         if (n == 0) {
-            return new NGram[0];
+            return List.of();
         }
         NGram[] freqTerms = new NGram[n];
         for (int i = 0, start = terms.size() - n; i < n; i++) {
@@ -257,6 +258,6 @@ public final class CooccurrenceKeywords {
             }
         }
 
-        return keywords.toArray(new NGram[0]);
+        return Collections.unmodifiableList(keywords);
     }
 }
