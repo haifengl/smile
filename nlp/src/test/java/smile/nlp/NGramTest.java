@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.nlp.collocation;
+package smile.nlp;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -70,7 +70,7 @@ public class  NGramTest {
             }
         }
 
-        NGram[][] result = NGram.of(sentences, 4, 4);
+        NGram[][] result = NGram.apiori(sentences, 4, 4);
 
         assertEquals(5, result.length);
         for (NGram[] ngrams : result) {
@@ -98,10 +98,10 @@ public class  NGramTest {
         NGram a = new NGram(new String[]{"machine", "learning"}, 10);
         NGram b = new NGram(new String[]{"deep", "learning"}, 5);
 
-        assertEquals(2, a.words.length);
-        assertEquals("machine", a.words[0]);
-        assertEquals("learning", a.words[1]);
-        assertEquals(10, a.count);
+        assertEquals(2, a.words().length);
+        assertEquals("machine", a.words()[0]);
+        assertEquals("learning", a.words()[1]);
+        assertEquals(10, a.count());
 
         assertTrue(a.compareTo(b) > 0, "higher count should be greater");
         assertTrue(b.compareTo(a) < 0, "lower count should be less");
@@ -126,7 +126,7 @@ public class  NGramTest {
                 new String[]{"learning", "machine", "learning"},
                 new String[]{"deep", "learning"}
         );
-        NGram[][] result = NGram.of(sentences, 1, 2);
+        NGram[][] result = NGram.apiori(sentences, 1, 2);
 
         // result[0] = empty placeholder, result[1] = unigrams
         assertEquals(2, result.length);
@@ -136,7 +136,7 @@ public class  NGramTest {
         assertTrue(unigrams.length >= 2);
         // Should be sorted in descending order by count
         for (int i = 0; i < unigrams.length - 1; i++) {
-            assertTrue(unigrams[i].count >= unigrams[i + 1].count);
+            assertTrue(unigrams[i].count() >= unigrams[i + 1].count());
         }
     }
 
@@ -152,7 +152,7 @@ public class  NGramTest {
                 new String[]{"the", "is", "the"},
                 new String[]{"is", "the", "is"}
         );
-        NGram[][] result = NGram.of(sentences, 1, 1);
+        NGram[][] result = NGram.apiori(sentences, 1, 1);
         assertEquals(2, result.length);
         // "the" and "is" are stop words - should be filtered
         assertEquals(0, result[1].length);
@@ -166,7 +166,7 @@ public class  NGramTest {
         // Given an empty sentence list
         // When extracting n-grams
         // Then all n-gram sets are empty
-        NGram[][] result = NGram.of(List.of(), 3, 1);
+        NGram[][] result = NGram.apiori(List.of(), 3, 1);
         for (NGram[] ngrams : result) {
             assertEquals(0, ngrams.length);
         }
@@ -185,14 +185,14 @@ public class  NGramTest {
                 new String[]{"machine", "learning", "works"},
                 new String[]{"machine", "learning", "helps"}
         );
-        NGram[][] result = NGram.of(sentences, 2, 1);
+        NGram[][] result = NGram.apiori(sentences, 2, 1);
         assertEquals(3, result.length);
 
         // result[2] should contain bigrams; "machine learning" should be present with count 3
         boolean found = false;
         for (NGram ng : result[2]) {
-            if (ng.words[0].equals("machine") && ng.words[1].equals("learning")) {
-                assertEquals(3, ng.count);
+            if (ng.words()[0].equals("machine") && ng.words()[1].equals("learning")) {
+                assertEquals(3, ng.count());
                 found = true;
             }
         }

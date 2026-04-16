@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.nlp.embedding;
+package smile.nlp;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -34,6 +34,13 @@ import smile.data.DataFrame;
 import smile.data.vector.FloatVector;
 
 /**
+ * Word embedding. Word embedding is the collective name for a set
+ * of language modeling and feature learning techniques in natural
+ * language processing where words or phrases from the vocabulary
+ * are mapped to vectors of real numbers. Conceptually it involves
+ * a mathematical embedding from a space with many dimensions per
+ * word to a continuous vector space with a much lower dimension.
+ * <p>
  * Word2vec is a group of related models that are used to produce word
  * embeddings. These models are shallow, two-layer neural networks that
  * are trained to reconstruct linguistic contexts of words. Word2vec

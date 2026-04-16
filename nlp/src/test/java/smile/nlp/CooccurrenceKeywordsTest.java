@@ -14,22 +14,19 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.nlp.keyword;
+package smile.nlp;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import smile.nlp.Text;
-import smile.nlp.collocation.NGram;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests for {@link CooccurrenceKeywords}.
+ * Tests for {@link SimpleDocument#keywords(int)}.
  *
  * @author Haifeng Li
  */
@@ -47,30 +44,23 @@ public class CooccurrenceKeywordsTest {
     // -------------------------------------------------------------------
 
     @Test
-    public void testExtractDefaultTopTen() throws IOException {
-        // When
-        List<NGram> result = CooccurrenceKeywords.of(text);
-
-        // Then: exactly 10 keywords returned
-        assertEquals(10, result.size(), "Default extraction should return 10 keywords");
-    }
-
-    @Test
     public void testExtractCustomCount() throws IOException {
         // When
-        List<NGram> result = CooccurrenceKeywords.of(text, 5);
+        Text doc = Text.of(text);
+        List<NGram> result = doc.keywords(5);
 
         // Then: at most 5 keywords returned
         assertTrue(result.size() <= 5, "Should return at most 5 keywords");
-        assertTrue(result.size() > 0, "Should return at least 1 keyword");
+        assertFalse(result.isEmpty(), "Should return at least 1 keyword");
     }
 
     @Test
     public void testExtractContainsCoreKeywords() throws IOException {
         // When
-        List<NGram> result = CooccurrenceKeywords.of(text);
+        Text doc = Text.of(text);
+        List<NGram> result = doc.keywords(10);
         Set<String> keywordPhrases = result.stream()
-                .map(ng -> String.join(" ", ng.words))
+                .map(ng -> String.join(" ", ng.words()))
                 .collect(Collectors.toSet());
 
         // Then: semantically important terms from the Turing paper must be present
@@ -82,9 +72,10 @@ public class CooccurrenceKeywordsTest {
     @Test
     public void testExtractNoDuplicatePhrases() throws IOException {
         // When
-        List<NGram> result = CooccurrenceKeywords.of(text);
+        Text doc = Text.of(text);
+        List<NGram> result = doc.keywords(10);
         Set<String> keywordPhrases = result.stream()
-                .map(ng -> String.join(" ", ng.words))
+                .map(ng -> String.join(" ", ng.words()))
                 .collect(Collectors.toSet());
 
         // Then: no duplicate phrase strings
@@ -99,25 +90,29 @@ public class CooccurrenceKeywordsTest {
     @Test
     public void testExtractNullTextThrows() {
         // Given / When / Then
-        assertThrows(IllegalArgumentException.class, () -> CooccurrenceKeywords.of(null));
+        Text doc = Text.of(null);
+        assertThrows(IllegalArgumentException.class, () -> doc.keywords(10));
     }
 
     @Test
     public void testExtractBlankTextThrows() {
         // Given / When / Then
-        assertThrows(IllegalArgumentException.class, () -> CooccurrenceKeywords.of("   "));
+        Text doc = Text.of("   ");
+        assertThrows(IllegalArgumentException.class, () -> doc.keywords(10));
     }
 
     @Test
     public void testExtractZeroKeywordsThrows() throws IOException {
         // When / Then
-        assertThrows(IllegalArgumentException.class, () -> CooccurrenceKeywords.of(text, 0));
+        Text doc = Text.of(text);
+        assertThrows(IllegalArgumentException.class, () -> doc.keywords(0));
     }
 
     @Test
     public void testExtractNegativeKeywordsThrows() throws IOException {
         // When / Then
-        assertThrows(IllegalArgumentException.class, () -> CooccurrenceKeywords.of(text, -1));
+        Text doc = Text.of(text);
+        assertThrows(IllegalArgumentException.class, () -> doc.keywords(-1));
     }
 
     // -------------------------------------------------------------------
@@ -130,7 +125,8 @@ public class CooccurrenceKeywordsTest {
         String text = "The cat sat on the mat. The dog ran in the park.";
 
         // When
-        List<NGram> result = CooccurrenceKeywords.of(text);
+        Text doc = Text.of(text);
+        List<NGram> result = doc.keywords(5);
 
         // Then: empty list, no exception
         assertNotNull(result);

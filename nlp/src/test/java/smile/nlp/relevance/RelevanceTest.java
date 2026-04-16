@@ -31,8 +31,8 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class RelevanceTest {
 
-    private static final Text DOC_A = new Text("doc-a", "Title A", "body a");
-    private static final Text DOC_B = new Text("doc-b", "Title B", "body b");
+    private static final Text DOC_A = Text.of("Title A", "body a");
+    private static final Text DOC_B = Text.of("Title B", "body b");
 
     // -----------------------------------------------------------------------
     // Record construction & accessors
@@ -94,7 +94,7 @@ public class RelevanceTest {
         // Given: three results with different scores
         Relevance r1 = new Relevance(DOC_A, 9.0);
         Relevance r2 = new Relevance(DOC_B, 1.0);
-        Relevance r3 = new Relevance(new Text("c", "C", "c"), 5.0);
+        Relevance r3 = new Relevance(Text.of("C", "c"), 5.0);
         List<Relevance> list = new ArrayList<>(List.of(r1, r2, r3));
         // When: sort naturally (ascending)
         Collections.sort(list);
@@ -109,7 +109,7 @@ public class RelevanceTest {
         // Given: three results with different scores
         Relevance r1 = new Relevance(DOC_A, 9.0);
         Relevance r2 = new Relevance(DOC_B, 1.0);
-        Relevance r3 = new Relevance(new Text("c", "C", "c"), 5.0);
+        Relevance r3 = new Relevance(Text.of("C", "c"), 5.0);
         List<Relevance> list = new ArrayList<>(List.of(r1, r2, r3));
         // When: sort in reverse (most-relevant first)
         list.sort(Comparator.reverseOrder());

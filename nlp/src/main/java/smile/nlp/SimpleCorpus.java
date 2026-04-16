@@ -17,23 +17,19 @@
 package smile.nlp;
 
 import java.util.*;
-
 import smile.nlp.dictionary.EnglishPunctuations;
 import smile.nlp.dictionary.EnglishStopWords;
 import smile.nlp.dictionary.Punctuations;
 import smile.nlp.dictionary.StopWords;
 import smile.nlp.relevance.Relevance;
 import smile.nlp.relevance.RelevanceRanker;
-import smile.nlp.tokenizer.SentenceSplitter;
-import smile.nlp.tokenizer.SimpleSentenceSplitter;
-import smile.nlp.tokenizer.SimpleTokenizer;
-import smile.nlp.tokenizer.Tokenizer;
+import smile.nlp.tokenizer.*;
 import smile.sort.HeapSelect;
 import smile.stat.distribution.ChiSquareDistribution;
 import smile.util.MutableInt;
 
 /**
- * An in-memory text corpus. Useful for text feature engineering.
+ * An in-memory document corpus. Useful for text feature engineering.
  *
  * @author Haifeng Li
  */
@@ -46,7 +42,7 @@ public class SimpleCorpus implements Corpus {
     /**
      * The set of documents.
      */
-    private final List<SimpleText> docs = new ArrayList<>();
+    private final List<Document> docs = new ArrayList<>();
     /**
      * Frequency of single tokens.
      */
@@ -58,7 +54,7 @@ public class SimpleCorpus implements Corpus {
     /**
      * Inverted file storing a mapping from terms to the documents containing it.
      */
-    private final HashMap<String, List<SimpleText>> invertedFile = new HashMap<>();
+    private final HashMap<String, List<Document>> invertedFile = new HashMap<>();
     /**
      * Sentence splitter.
      */
@@ -100,14 +96,23 @@ public class SimpleCorpus implements Corpus {
     }
 
     /**
-     * Adds a document to the corpus.
-     * @param text the document text.
-     * @return the document.
+     * Creates a document with corpus's tokenizer, stop word filter, etc.
+     * @param text the text content.
+     * @return the document with unique id.
      */
-    public Text add(Text text) {
+    public Document doc(String text) {
+        return doc(Text.of(text));
+    }
+
+    /**
+     * Creates a document with corpus's tokenizer, stop word filter, etc.
+     * @param text the text.
+     * @return the document with unique id.
+     */
+    public Document doc(Text text) {
         ArrayList<String> bag = new ArrayList<>();
-        
-        for (String sentence : splitter.split(text.body)) {
+
+        for (String sentence : splitter.split(text.content())) {
             String[] tokens = tokenizer.split(sentence);
             for (int i = 0; i < tokens.length; i++) {
                 tokens[i] = tokens[i].toLowerCase();
@@ -124,7 +129,7 @@ public class SimpleCorpus implements Corpus {
                 if (keep) {
                     size++;
                     bag.add(w);
-                    
+
                     MutableInt count = freq.get(w);
                     if (count == null) {
                         freq.put(w, new MutableInt(1));
@@ -137,7 +142,7 @@ public class SimpleCorpus implements Corpus {
             for (int i = 0; i < tokens.length - 1; i++) {
                 String w1 = tokens[i];
                 String w2 = tokens[i + 1];
-                
+
                 if (freq.containsKey(w1) && freq.containsKey(w2)) {
                     Bigram bigram = new Bigram(w1, w2);
                     MutableInt count = freq2.get(bigram);
@@ -155,15 +160,21 @@ public class SimpleCorpus implements Corpus {
             words[i] = bag.get(i);
         }
 
-        SimpleText doc = new SimpleText(text.id, text.title, text.body, words);
+        String id = UUID.randomUUID().toString();
+        return new SimpleDocument(id, text.title(), text.content(), words);
+    }
+
+    /**
+     * Adds a document to the corpus.
+     * @param doc the document.
+     */
+    public void add(Document doc) {
         docs.add(doc);
 
         for (String term : doc.unique()) {
-            List<SimpleText> hit = invertedFile.computeIfAbsent(term, k -> new ArrayList<>());
+            List<Document> hit = invertedFile.computeIfAbsent(term, k -> new ArrayList<>());
             hit.add(doc);
         }
-
-        return doc;
     }
 
     @Override
@@ -226,12 +237,12 @@ public class SimpleCorpus implements Corpus {
     @Override
     public Iterator<Relevance> search(RelevanceRanker ranker, String term) {
         if (invertedFile.containsKey(term)) {
-            List<SimpleText> hits = invertedFile.get(term);
+            List<Document> hits = invertedFile.get(term);
 
             int n = hits.size();
 
             ArrayList<Relevance> rank = new ArrayList<>(n);
-            for (SimpleText doc : hits) {
+            for (var doc : hits) {
                 int tf = doc.tf(term);
                 rank.add(new Relevance(doc, ranker.rank(this, doc, term, tf, n)));
             }
@@ -245,7 +256,7 @@ public class SimpleCorpus implements Corpus {
 
     @Override
     public Iterator<Relevance> search(RelevanceRanker ranker, String[] terms) {
-        Set<SimpleText> hits = new HashSet<>();
+        Set<Document> hits = new HashSet<>();
 
         for (String term : terms) {
             if (invertedFile.containsKey(term)) {
@@ -259,7 +270,7 @@ public class SimpleCorpus implements Corpus {
         }
         
         ArrayList<Relevance> rank = new ArrayList<>(n);
-        for (SimpleText doc : hits) {
+        for (var doc : hits) {
             double r = 0.0;
             for (String term : terms) {
                 int tf = doc.tf(term);

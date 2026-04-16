@@ -17,7 +17,7 @@
 package smile.nlp.relevance;
 
 import smile.nlp.Corpus;
-import smile.nlp.TextTerms;
+import smile.nlp.Document;
 
 /**
  * An interface to provide relevance ranking algorithm.
@@ -34,7 +34,7 @@ public interface RelevanceRanker {
      * @param n the number of documents containing the given term in the corpus;
      * @return the relevance score.
      */
-    double rank(Corpus corpus, TextTerms doc, String term, int tf, int n);
+    double rank(Corpus corpus, Document doc, String term, int tf, int n);
 
     /**
      * Returns the relevance score between a set of terms and a document based on a corpus.
@@ -45,5 +45,5 @@ public interface RelevanceRanker {
      * @param n the number of documents containing the given term in the corpus;
      * @return the relevance score.
      */
-    double rank(Corpus corpus, TextTerms doc, String[] terms, int[] tf, int n);
+    double rank(Corpus corpus, Document doc, String[] terms, int[] tf, int n);
 }
