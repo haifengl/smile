@@ -18,7 +18,7 @@ package smile.nlp.keyword;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
@@ -42,10 +42,10 @@ public class CooccurrenceKeywordsTest {
         String text = new String(Files.readAllBytes(smile.io.Paths.getTestData("text/turing.txt")));
 
         // When
-        NGram[] result = CooccurrenceKeywords.of(text);
+        List<NGram> result = CooccurrenceKeywords.of(text);
 
         // Then: exactly 10 keywords returned
-        assertEquals(10, result.length, "Default extraction should return 10 keywords");
+        assertEquals(10, result.size(), "Default extraction should return 10 keywords");
     }
 
     @Test
@@ -54,11 +54,11 @@ public class CooccurrenceKeywordsTest {
         String text = new String(Files.readAllBytes(smile.io.Paths.getTestData("text/turing.txt")));
 
         // When
-        NGram[] result = CooccurrenceKeywords.of(text, 5);
+        List<NGram> result = CooccurrenceKeywords.of(text, 5);
 
         // Then: at most 5 keywords returned
-        assertTrue(result.length <= 5, "Should return at most 5 keywords");
-        assertTrue(result.length > 0, "Should return at least 1 keyword");
+        assertTrue(result.size() <= 5, "Should return at most 5 keywords");
+        assertTrue(result.size() > 0, "Should return at least 1 keyword");
     }
 
     @Test
@@ -67,8 +67,8 @@ public class CooccurrenceKeywordsTest {
         String text = new String(Files.readAllBytes(smile.io.Paths.getTestData("text/turing.txt")));
 
         // When
-        NGram[] result = CooccurrenceKeywords.of(text);
-        Set<String> keywordPhrases = Arrays.stream(result)
+        List<NGram> result = CooccurrenceKeywords.of(text);
+        Set<String> keywordPhrases = result.stream()
                 .map(ng -> String.join(" ", ng.words))
                 .collect(Collectors.toSet());
 
@@ -84,13 +84,13 @@ public class CooccurrenceKeywordsTest {
         String text = new String(Files.readAllBytes(smile.io.Paths.getTestData("text/turing.txt")));
 
         // When
-        NGram[] result = CooccurrenceKeywords.of(text);
-        Set<String> keywordPhrases = Arrays.stream(result)
+        List<NGram> result = CooccurrenceKeywords.of(text);
+        Set<String> keywordPhrases = result.stream()
                 .map(ng -> String.join(" ", ng.words))
                 .collect(Collectors.toSet());
 
         // Then: no duplicate phrase strings
-        assertEquals(result.length, keywordPhrases.size(),
+        assertEquals(result.size(), keywordPhrases.size(),
                 "Returned keywords must not contain duplicate phrases");
     }
 
@@ -136,10 +136,10 @@ public class CooccurrenceKeywordsTest {
         String text = "The cat sat on the mat. The dog ran in the park.";
 
         // When
-        NGram[] result = CooccurrenceKeywords.of(text);
+        List<NGram> result = CooccurrenceKeywords.of(text);
 
-        // Then: empty array, no exception
+        // Then: empty list, no exception
         assertNotNull(result);
-        assertEquals(0, result.length);
+        assertTrue(result.isEmpty());
     }
 }
