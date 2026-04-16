@@ -21,10 +21,15 @@ import java.io.IOException;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.MappedByteBuffer;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.channels.FileChannel;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
 import smile.data.DataFrame;
 import smile.data.vector.FloatVector;
 
@@ -49,6 +54,26 @@ import smile.data.vector.FloatVector;
  * more heavily than more distant context words. According to the authors'
  * note, CBOW is faster while skip-gram is slower but does a better job
  * for infrequent words.
+ * <p>
+ * <a href="https://nlp.stanford.edu/projects/glove/">GloVe</a>
+ * (Global Vectors for Word Representation) is another popular
+ * unsupervised learning algorithm for obtaining vector representations
+ * for words.
+ * <p>
+ * GloVe is essentially a log-bilinear model with a weighted least-squares
+ * objective. The main intuition underlying the model is the simple
+ * observation that ratios of word-word co-occurrence probabilities
+ * have the potential for encoding some form of meaning.
+ * <p>
+ * Training is performed on aggregated global word-word co-occurrence
+ * statistics from a corpus. The training objective of GloVe is to learn
+ * word vectors such that their dot product equals the logarithm of the
+ * words' probability of co-occurrence. Owing to the fact that the logarithm
+ * of a ratio equals the difference of logarithms, this objective associates
+ * (the logarithm of) ratios of co-occurrence probabilities with vector
+ * differences in the word vector space. Because these ratios can encode
+ * some form of meaning, this information gets encoded as vector differences
+ * as well.
  *
  * @author Haifeng Li
  */
@@ -92,7 +117,7 @@ public class Word2Vec {
      * @param word the word.
      * @return the embedding vector.
      */
-    public float[] get(String word) {
+    public float[] apply(String word) {
         Integer index = map.get(word);
         if (index == null) return null;
 
@@ -107,12 +132,30 @@ public class Word2Vec {
     }
 
     /**
-     * Returns the embedding vector of a word. For Scala convenience.
+     * Returns the embedding vector of a word, or empty if the word is not
+     * in the vocabulary.
      * @param word the word.
-     * @return the embedding vector.
+     * @return the embedding vector, or empty if not found.
      */
-    public float[] apply(String word) {
-        return get(word);
+    public java.util.Optional<float[]> lookup(String word) {
+        return java.util.Optional.ofNullable(apply(word));
+    }
+
+    /**
+     * Returns true if the word is in the vocabulary.
+     * @param word the word.
+     * @return true if the vocabulary contains the word.
+     */
+    public boolean contains(String word) {
+        return map.containsKey(word);
+    }
+
+    /**
+     * Returns the size of the vocabulary.
+     * @return the number of words in the vocabulary.
+     */
+    public int size() {
+        return words.length;
     }
 
     /**
@@ -197,6 +240,64 @@ public class Word2Vec {
             }
 
             return new Word2Vec(words, vectors);
+        }
+    }
+
+    /**
+     * Loads a GloVe model from a text file.
+     * Each line must have the form: {@code word f1 f2 ... fd}.
+     * where {@code d} is the embedding dimension.
+     * All lines must have the same number of dimensions.
+     *
+     * @param file the path to model file.
+     * @throws IOException when fails to read the file.
+     * @throws IllegalArgumentException if the file is empty or lines have
+     *         inconsistent dimensions.
+     * @return the word embedding model.
+     */
+    public static Word2Vec glove(Path file) throws IOException {
+        try (Stream<String> stream = Files.lines(file)) {
+            List<String> words = new ArrayList<>(1000000);
+            List<float[]> vectors = new ArrayList<>(1000000);
+            stream.forEach(line -> {
+                String[] tokens = line.split("\\s+");
+                if (tokens.length < 2) {
+                    throw new IllegalArgumentException(
+                            "Invalid GloVe line (expected 'word f1 f2 ...'): " + line);
+                }
+                words.add(tokens[0]);
+                float[] vector = new float[tokens.length - 1];
+                for (int i = 0; i < vector.length; i++) {
+                    vector[i] = Float.parseFloat(tokens[i + 1]);
+                }
+                vectors.add(vector);
+            });
+
+            if (vectors.isEmpty()) {
+                throw new IllegalArgumentException("GloVe file is empty: " + file);
+            }
+
+            int n = vectors.size();
+            int d = vectors.getFirst().length;
+
+            // Validate that all vectors have the same dimension
+            for (int i = 1; i < n; i++) {
+                if (vectors.get(i).length != d) {
+                    throw new IllegalArgumentException(
+                            "Inconsistent vector dimension at line " + (i + 1)
+                                    + ": expected " + d + " but got " + vectors.get(i).length);
+                }
+            }
+
+            float[][] pivot = new float[d][n];
+            for (int i = 0; i < n; i++) {
+                float[] vector = vectors.get(i);
+                for (int j = 0; j < d; j++) {
+                    pivot[j][i] = vector[j];
+                }
+            }
+
+            return new Word2Vec(words.toArray(new String[0]), pivot);
         }
     }
 }

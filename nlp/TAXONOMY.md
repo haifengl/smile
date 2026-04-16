@@ -1,4 +1,4 @@
-# SMILE — Taxonomy User Guide
+# SMILE NLP — Taxonomy User Guide
 
 ## Overview
 
