@@ -16,45 +16,92 @@
  */
 package smile.nlp.pos;
 
-import org.junit.jupiter.api.*;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
+ * Tests for {@link EnglishPOSLexicon}.
  *
  * @author Haifeng Li
  */
 public class EnglishPOSLexiconTest {
 
-    public EnglishPOSLexiconTest() {
-    }
+    // -----------------------------------------------------------------------
+    // Known-word lookups
+    // -----------------------------------------------------------------------
 
-    @BeforeAll
-    public static void setUpClass() throws Exception {
-    }
-
-    @AfterAll
-    public static void tearDownClass() throws Exception {
-    }
-
-    @BeforeEach
-    public void setUp() {
-    }
-
-    @AfterEach
-    public void tearDown() {
-    }
-
-    /**
-     * Test of get method, of class EnglishPOSLexicon.
-     */
     @Test
-    public void testGet() {
-        System.out.println("get");
-        assertEquals(PennTreebankPOS.NN, EnglishPOSLexicon.get("1000000000000")[0]);
-        assertEquals(PennTreebankPOS.NN, EnglishPOSLexicon.get("absorbent cotton")[0]);
-        assertEquals(PennTreebankPOS.JJ, EnglishPOSLexicon.get("absorbing")[0]);
-        assertEquals(PennTreebankPOS.VB, EnglishPOSLexicon.get("displease")[0]);
-        assertEquals(PennTreebankPOS.RB, EnglishPOSLexicon.get("disposedly")[0]);
-        assertEquals(3, EnglishPOSLexicon.get("disperse").length);
+    public void testGetNoun() {
+        // Given / When
+        Optional<PennTreebankPOS[]> result = EnglishPOSLexicon.get("1000000000000");
+        // Then
+        assertTrue(result.isPresent());
+        assertEquals(PennTreebankPOS.NN, result.get()[0]);
+    }
+
+    @Test
+    public void testGetNounPhrase() {
+        // Given / When
+        Optional<PennTreebankPOS[]> result = EnglishPOSLexicon.get("absorbent cotton");
+        // Then
+        assertTrue(result.isPresent());
+        assertEquals(PennTreebankPOS.NN, result.get()[0]);
+    }
+
+    @Test
+    public void testGetAdjective() {
+        // Given / When
+        Optional<PennTreebankPOS[]> result = EnglishPOSLexicon.get("absorbing");
+        // Then
+        assertTrue(result.isPresent());
+        assertEquals(PennTreebankPOS.JJ, result.get()[0]);
+    }
+
+    @Test
+    public void testGetVerb() {
+        // Given / When
+        Optional<PennTreebankPOS[]> result = EnglishPOSLexicon.get("displease");
+        // Then
+        assertTrue(result.isPresent());
+        assertEquals(PennTreebankPOS.VB, result.get()[0]);
+    }
+
+    @Test
+    public void testGetAdverb() {
+        // Given / When
+        Optional<PennTreebankPOS[]> result = EnglishPOSLexicon.get("disposedly");
+        // Then
+        assertTrue(result.isPresent());
+        assertEquals(PennTreebankPOS.RB, result.get()[0]);
+    }
+
+    @Test
+    public void testGetMultiplePOS() {
+        // Given / When: "disperse" has noun, verb and adjective readings
+        Optional<PennTreebankPOS[]> result = EnglishPOSLexicon.get("disperse");
+        // Then
+        assertTrue(result.isPresent());
+        assertEquals(3, result.get().length);
+    }
+
+    // -----------------------------------------------------------------------
+    // Unknown-word lookup returns empty Optional (not null)
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testGetUnknownWordReturnsEmpty() {
+        // Given / When
+        Optional<PennTreebankPOS[]> result = EnglishPOSLexicon.get("xyzzy_nonexistent_word_42");
+        // Then
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void testGetEmptyStringReturnsEmpty() {
+        // Given / When
+        Optional<PennTreebankPOS[]> result = EnglishPOSLexicon.get("");
+        // Then
+        assertTrue(result.isEmpty());
     }
 }
