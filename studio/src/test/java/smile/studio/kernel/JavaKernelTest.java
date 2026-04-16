@@ -16,14 +16,10 @@
  */
 package smile.studio.kernel;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.*;
 import smile.studio.OutputArea;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -36,18 +32,26 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class JavaKernelTest {
 
-    private JavaKernel kernel;
+    private static JavaKernel kernel;
 
-    @BeforeEach
-    public void setUp() {
+    @BeforeAll
+    public static void setUpClass() throws Exception {
         kernel = new JavaKernel();
         var output = new OutputArea();
         kernel.setOutputArea(output);
     }
 
+    @AfterAll
+    public static void tearDownClass() throws Exception {
+        kernel.close();
+    }
+
+    @BeforeEach
+    public void setUp() {
+    }
+
     @AfterEach
     public void tearDown() {
-        kernel.close();
     }
 
     // ------------------------------------------------------------------
@@ -241,12 +245,14 @@ public class JavaKernelTest {
     // ------------------------------------------------------------------
 
     @Test
-    public void testDoubleCloseIsIdempotent() {
+    public void testDoubleCloseIsIdempotent() throws Exception {
         System.out.println("JavaKernel: calling close() twice is safe");
         assertDoesNotThrow(() -> {
             kernel.close();
             kernel.close(); // second close must not throw
         });
+        // recreate kernel for subsequent tests
+        setUpClass();
     }
 
     @Test

@@ -21,7 +21,10 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import smile.nlp.Text;
 import smile.nlp.collocation.NGram;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -31,6 +34,13 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng Li
  */
 public class CooccurrenceKeywordsTest {
+    static String text;
+
+    @BeforeAll
+    public static void setUpClass() throws Exception {
+        // Given
+        text = new String(Files.readAllBytes(smile.io.Paths.getTestData("text/turing.txt")));
+    }
 
     // -------------------------------------------------------------------
     // Happy-path tests using the Turing (1950) paper excerpt
@@ -38,9 +48,6 @@ public class CooccurrenceKeywordsTest {
 
     @Test
     public void testExtractDefaultTopTen() throws IOException {
-        // Given
-        String text = new String(Files.readAllBytes(smile.io.Paths.getTestData("text/turing.txt")));
-
         // When
         List<NGram> result = CooccurrenceKeywords.of(text);
 
@@ -50,9 +57,6 @@ public class CooccurrenceKeywordsTest {
 
     @Test
     public void testExtractCustomCount() throws IOException {
-        // Given
-        String text = new String(Files.readAllBytes(smile.io.Paths.getTestData("text/turing.txt")));
-
         // When
         List<NGram> result = CooccurrenceKeywords.of(text, 5);
 
@@ -63,9 +67,6 @@ public class CooccurrenceKeywordsTest {
 
     @Test
     public void testExtractContainsCoreKeywords() throws IOException {
-        // Given
-        String text = new String(Files.readAllBytes(smile.io.Paths.getTestData("text/turing.txt")));
-
         // When
         List<NGram> result = CooccurrenceKeywords.of(text);
         Set<String> keywordPhrases = result.stream()
@@ -80,9 +81,6 @@ public class CooccurrenceKeywordsTest {
 
     @Test
     public void testExtractNoDuplicatePhrases() throws IOException {
-        // Given
-        String text = new String(Files.readAllBytes(smile.io.Paths.getTestData("text/turing.txt")));
-
         // When
         List<NGram> result = CooccurrenceKeywords.of(text);
         Set<String> keywordPhrases = result.stream()
@@ -112,16 +110,12 @@ public class CooccurrenceKeywordsTest {
 
     @Test
     public void testExtractZeroKeywordsThrows() throws IOException {
-        // Given
-        String text = new String(Files.readAllBytes(smile.io.Paths.getTestData("text/turing.txt")));
         // When / Then
         assertThrows(IllegalArgumentException.class, () -> CooccurrenceKeywords.of(text, 0));
     }
 
     @Test
     public void testExtractNegativeKeywordsThrows() throws IOException {
-        // Given
-        String text = new String(Files.readAllBytes(smile.io.Paths.getTestData("text/turing.txt")));
         // When / Then
         assertThrows(IllegalArgumentException.class, () -> CooccurrenceKeywords.of(text, -1));
     }

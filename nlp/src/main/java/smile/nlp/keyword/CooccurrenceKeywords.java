@@ -85,7 +85,7 @@ public final class CooccurrenceKeywords {
      * @return the top 10 keywords, possibly fewer if the document is too short.
      * @throws IllegalArgumentException if {@code text} is {@code null} or blank.
      */
-    static List<NGram> of(String text) {
+    public static List<NGram> of(String text) {
         return of(text, 10);
     }
 
@@ -100,7 +100,7 @@ public final class CooccurrenceKeywords {
      * @throws IllegalArgumentException if {@code text} is {@code null} or
      *         blank, or if {@code maxNumKeywords} is not positive.
      */
-    static List<NGram> of(String text, int maxNumKeywords) {
+    public static List<NGram> of(String text, int maxNumKeywords) {
         if (text == null || text.isBlank()) {
             throw new IllegalArgumentException("text must not be null or blank");
         }
