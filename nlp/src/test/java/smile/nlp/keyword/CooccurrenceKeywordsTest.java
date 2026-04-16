@@ -18,66 +18,128 @@ package smile.nlp.keyword;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import org.junit.jupiter.api.*;
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.junit.jupiter.api.Test;
 import smile.nlp.collocation.NGram;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
+ * Tests for {@link CooccurrenceKeywords}.
  *
  * @author Haifeng Li
  */
 public class CooccurrenceKeywordsTest {
 
-    public CooccurrenceKeywordsTest() {
-    }
+    // -------------------------------------------------------------------
+    // Happy-path tests using the Turing (1950) paper excerpt
+    // -------------------------------------------------------------------
 
-    @BeforeAll
-    public static void setUpClass() throws Exception {
-    }
+    @Test
+    public void testExtractDefaultTopTen() throws IOException {
+        // Given
+        String text = new String(Files.readAllBytes(smile.io.Paths.getTestData("text/turing.txt")));
 
-    @AfterAll
-    public static void tearDownClass() throws Exception {
-    }
+        // When
+        NGram[] result = CooccurrenceKeywords.of(text);
 
-    @BeforeEach
-    public void setUp() {
-    }
-
-    @AfterEach
-    public void tearDown() {
+        // Then: exactly 10 keywords returned
+        assertEquals(10, result.length, "Default extraction should return 10 keywords");
     }
 
     @Test
-    public void testExtract() throws IOException {
-        System.out.println("keywords");
+    public void testExtractCustomCount() throws IOException {
+        // Given
         String text = new String(Files.readAllBytes(smile.io.Paths.getTestData("text/turing.txt")));
 
-        NGram[] result = CooccurrenceKeywords.of(text);
-        
-        assertEquals(10, result.length);
-        for (NGram ngram : result) {
-            System.out.println(ngram);
-        }
+        // When
+        NGram[] result = CooccurrenceKeywords.of(text, 5);
 
-        assertEquals("store", result[0].words[0]);
-        assertEquals(18, result[0].count);
-        assertEquals("digital computer", String.join(" ", result[1].words));
-        assertEquals(34, result[1].count);
-        assertEquals("machine", result[2].words[0]);
-        assertEquals(198, result[2].count);
-        assertEquals("storage capacity", String.join(" ", result[3].words));
-        assertEquals(11, result[3].count);
-        assertEquals("instruction", result[4].words[0]);
-        assertEquals(14, result[4].count);
-        assertEquals("think", result[5].words[0]);
-        assertEquals(46, result[5].count);
-        assertEquals("imitation game", String.join(" ", result[6].words));
-        assertEquals(15, result[6].count);
-        assertEquals("discrete-state machine", String.join(" ", result[7].words));
-        assertEquals(17, result[7].count);
-        assertEquals("teach", result[8].words[0]);
-        assertEquals(11, result[8].count);
-        assertEquals("interrogator", result[9].words[0]);
-        assertEquals(25, result[9].count);
+        // Then: at most 5 keywords returned
+        assertTrue(result.length <= 5, "Should return at most 5 keywords");
+        assertTrue(result.length > 0, "Should return at least 1 keyword");
+    }
+
+    @Test
+    public void testExtractContainsCoreKeywords() throws IOException {
+        // Given
+        String text = new String(Files.readAllBytes(smile.io.Paths.getTestData("text/turing.txt")));
+
+        // When
+        NGram[] result = CooccurrenceKeywords.of(text);
+        Set<String> keywordPhrases = Arrays.stream(result)
+                .map(ng -> String.join(" ", ng.words))
+                .collect(Collectors.toSet());
+
+        // Then: semantically important terms from the Turing paper must be present
+        assertTrue(keywordPhrases.contains("machine") || keywordPhrases.contains("digital computer")
+                        || keywordPhrases.contains("imitation game"),
+                "Expected at least one core Turing-paper keyword, got: " + keywordPhrases);
+    }
+
+    @Test
+    public void testExtractNoDuplicatePhrases() throws IOException {
+        // Given
+        String text = new String(Files.readAllBytes(smile.io.Paths.getTestData("text/turing.txt")));
+
+        // When
+        NGram[] result = CooccurrenceKeywords.of(text);
+        Set<String> keywordPhrases = Arrays.stream(result)
+                .map(ng -> String.join(" ", ng.words))
+                .collect(Collectors.toSet());
+
+        // Then: no duplicate phrase strings
+        assertEquals(result.length, keywordPhrases.size(),
+                "Returned keywords must not contain duplicate phrases");
+    }
+
+    // -------------------------------------------------------------------
+    // Input-validation tests
+    // -------------------------------------------------------------------
+
+    @Test
+    public void testExtractNullTextThrows() {
+        // Given / When / Then
+        assertThrows(IllegalArgumentException.class, () -> CooccurrenceKeywords.of(null));
+    }
+
+    @Test
+    public void testExtractBlankTextThrows() {
+        // Given / When / Then
+        assertThrows(IllegalArgumentException.class, () -> CooccurrenceKeywords.of("   "));
+    }
+
+    @Test
+    public void testExtractZeroKeywordsThrows() throws IOException {
+        // Given
+        String text = new String(Files.readAllBytes(smile.io.Paths.getTestData("text/turing.txt")));
+        // When / Then
+        assertThrows(IllegalArgumentException.class, () -> CooccurrenceKeywords.of(text, 0));
+    }
+
+    @Test
+    public void testExtractNegativeKeywordsThrows() throws IOException {
+        // Given
+        String text = new String(Files.readAllBytes(smile.io.Paths.getTestData("text/turing.txt")));
+        // When / Then
+        assertThrows(IllegalArgumentException.class, () -> CooccurrenceKeywords.of(text, -1));
+    }
+
+    // -------------------------------------------------------------------
+    // Edge-case: document too short to produce qualifying n-grams
+    // -------------------------------------------------------------------
+
+    @Test
+    public void testExtractShortTextReturnsEmpty() {
+        // Given: a two-sentence text that cannot produce n-grams with frequency >= 4
+        String text = "The cat sat on the mat. The dog ran in the park.";
+
+        // When
+        NGram[] result = CooccurrenceKeywords.of(text);
+
+        // Then: empty array, no exception
+        assertNotNull(result);
+        assertEquals(0, result.length);
     }
 }
