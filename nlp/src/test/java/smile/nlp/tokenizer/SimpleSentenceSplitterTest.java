@@ -151,4 +151,50 @@ public class SimpleSentenceSplitterTest {
         for (int i = 0; i < result3.length; i++)
             assertEquals(expResult3[i], result3[i]);
     }
+
+    /**
+     * Test that a single sentence with no terminal punctuation is returned whole.
+     */
+    @Test
+    public void testSplitSingleSentenceNoPunctuation() {
+        // Given text with no sentence-ending punctuation
+        // When splitting
+        // Then a single element should be returned
+        String text = "This sentence has no terminal punctuation";
+        SimpleSentenceSplitter instance = SimpleSentenceSplitter.getInstance();
+        String[] result = instance.split(text);
+        assertEquals(1, result.length);
+        assertEquals(text, result[0]);
+    }
+
+    /**
+     * Test that exclamation marks and question marks are sentence delimiters.
+     */
+    @Test
+    public void testSplitExclamationAndQuestion() {
+        // Given text containing ! and ? as sentence endings
+        // When splitting
+        // Then each exclamation/question should start a new sentence
+        String text = "Watch out! Are you sure? Yes I am.";
+        SimpleSentenceSplitter instance = SimpleSentenceSplitter.getInstance();
+        String[] result = instance.split(text);
+        assertTrue(result.length >= 2, "Expected at least 2 sentences");
+        assertEquals("Watch out!", result[0]);
+    }
+
+    /**
+     * Test the apply() method from the Function interface.
+     */
+    @Test
+    public void testApplyFunctionInterface() {
+        // Given a SentenceSplitter used as a Function
+        // When calling apply()
+        // Then it correctly delegates to split()
+        String text = "First sentence. Second sentence.";
+        SentenceSplitter splitter = SimpleSentenceSplitter.getInstance();
+        String[] result = splitter.apply(text);
+        assertEquals(2, result.length);
+        assertEquals("First sentence.", result[0]);
+        assertEquals("Second sentence.", result[1]);
+    }
 }

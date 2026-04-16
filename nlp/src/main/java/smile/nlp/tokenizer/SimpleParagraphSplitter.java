@@ -46,12 +46,14 @@ public class SimpleParagraphSplitter implements ParagraphSplitter {
      */
     private static final Pattern REGEX_BLANK_LINE = Pattern.compile("(?m)^\\s+$");
     /**
-     * Pattern to split paragraphs. Note that \u2029 is paragraph-separator character
+     * Pattern to split paragraphs. Splits on two or more consecutive line
+     * endings (LF, CRLF, or LF-CR), or on the Unicode paragraph-separator
+     * character (U+2029).
      */
-    private static final Pattern REGEX_PARAGRAPH = Pattern.compile("(\\n|(\\n\\r)|(\\r\\n)){2,}+|'\u2029+");
+    private static final Pattern REGEX_PARAGRAPH = Pattern.compile("(\\n|(\\n\\r)|(\\r\\n)){2,}+|\u2029+");
 
     /**
-     * The singleton instance for standard unweighted Euclidean distance.
+     * The singleton instance.
      */
     private static final SimpleParagraphSplitter singleton = new SimpleParagraphSplitter();
 

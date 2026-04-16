@@ -16,17 +16,24 @@
  */
 package smile.nlp.tokenizer;
 
+import java.util.function.Function;
+
 /**
  * A sentence splitter segments text into sentences (a string of words
  * satisfying the grammatical rules of a language).
  *
  * @author Haifeng Li
  */
-public interface SentenceSplitter {
+public interface SentenceSplitter extends Function<String, String[]> {
     /**
      * Splits the text into sentences.
      * @param text the text.
      * @return the sentences.
      */
     String[] split(String text);
+
+    @Override
+    default String[] apply(String text) {
+        return split(text);
+    }
 }
