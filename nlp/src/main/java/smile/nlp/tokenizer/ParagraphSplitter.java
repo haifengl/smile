@@ -16,18 +16,25 @@
  */
 package smile.nlp.tokenizer;
 
+import java.util.function.Function;
+
 /**
  * A paragraph splitter segments text into paragraphs. A paragraph is a
  * coherent block of text, such as a group of related sentences that develop
- * a single topic or a coherent part of a larger topic. 
+ * a single topic or a coherent part of a larger topic.
  *
  * @author Haifeng Li
  */
-public interface ParagraphSplitter {
+public interface ParagraphSplitter extends Function<String, String[]> {
     /**
      * Splits the text into paragraphs.
      * @param text the text.
      * @return the paragraphs.
      */
     String[] split(String text);
+
+    @Override
+    default String[] apply(String text) {
+        return split(text);
+    }
 }

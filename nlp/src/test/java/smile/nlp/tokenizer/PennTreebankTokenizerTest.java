@@ -239,7 +239,7 @@ public class PennTreebankTokenizerTest {
             ",", "Harley-Davidson", ",", "CH2M", ",", "A-Mark", ",", "Quad/Graphics", ",", "Bloomin",
             "'", "Brands", ",", "B/E", "Aerospace", ",", "J.Crew", ",", "E", "*", "Trade", "."};
 
-        SimpleTokenizer instance = new SimpleTokenizer();
+        PennTreebankTokenizer instance = PennTreebankTokenizer.getInstance();
         String[] result = instance.split(text);
 
         assertEquals(expResult.length, result.length);
@@ -257,7 +257,7 @@ public class PennTreebankTokenizerTest {
         String text = "The naïve résumé of Raúl Ibáñez; re\u0301sume\u0301.";
         String[] expResult = {"The", "naïve", "résumé", "of", "Raúl", "Ibáñez", ";", "re\u0301sume\u0301", "."};
 
-        SimpleTokenizer instance = new SimpleTokenizer();
+        PennTreebankTokenizer instance = PennTreebankTokenizer.getInstance();
         String[] result = instance.split(text);
 
         assertEquals(expResult.length, result.length);
@@ -276,7 +276,7 @@ public class PennTreebankTokenizerTest {
         String text = "می‌خواهم   עֲו‌ֹנֹת   Auf‌lage";
         String[] expResult = {"می‌خواهم", "עֲו‌ֹנֹת", "Auf‌lage"};
 
-        SimpleTokenizer instance = new SimpleTokenizer();
+        PennTreebankTokenizer instance = PennTreebankTokenizer.getInstance();
         String[] result = instance.split(text);
 
         assertEquals(expResult.length, result.length);
@@ -295,7 +295,7 @@ public class PennTreebankTokenizerTest {
         String text = "the\u00A0cat\u2003the_cat";
         String[] expResult = {"the", "cat", "the_cat"};
 
-        SimpleTokenizer instance = new SimpleTokenizer();
+        PennTreebankTokenizer instance = PennTreebankTokenizer.getInstance();
         String[] result = instance.split(text);
 
         assertEquals(expResult.length, result.length);

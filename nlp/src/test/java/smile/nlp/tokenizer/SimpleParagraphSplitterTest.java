@@ -74,4 +74,83 @@ public class SimpleParagraphSplitterTest {
         for (int i = 0; i < result.length; i++)
             assertEquals(expResult[i], result[i]);
     }
+
+    /**
+     * Test that a single paragraph with no blank lines is returned as-is.
+     */
+    @Test
+    public void testSplitSingleParagraph() {
+        // Given a string with no blank lines
+        // When splitting into paragraphs
+        // Then it should return a single paragraph
+        String text = "This is the only paragraph. It has multiple sentences.";
+        SimpleParagraphSplitter instance = SimpleParagraphSplitter.getInstance();
+        String[] result = instance.split(text);
+        assertEquals(1, result.length);
+        assertEquals(text, result[0]);
+    }
+
+    /**
+     * Test that a Windows-style CRLF blank line acts as a paragraph boundary.
+     */
+    @Test
+    public void testSplitWithCRLF() {
+        // Given a string using Windows-style CRLF line endings
+        // When splitting into paragraphs
+        // Then it should correctly detect paragraph boundaries
+        String text = "First paragraph.\r\n\r\nSecond paragraph.";
+        SimpleParagraphSplitter instance = SimpleParagraphSplitter.getInstance();
+        String[] result = instance.split(text);
+        assertEquals(2, result.length);
+        assertEquals("First paragraph.", result[0]);
+        assertEquals("Second paragraph.", result[1]);
+    }
+
+    /**
+     * Test that the Unicode paragraph-separator character (U+2029) splits paragraphs.
+     */
+    @Test
+    public void testSplitWithUnicodeParagraphSeparator() {
+        // Given a string containing the Unicode paragraph separator
+        // When splitting into paragraphs
+        // Then each part separated by U+2029 should be a paragraph
+        String text = "First paragraph.\u2029Second paragraph.";
+        SimpleParagraphSplitter instance = SimpleParagraphSplitter.getInstance();
+        String[] result = instance.split(text);
+        assertEquals(2, result.length);
+        assertEquals("First paragraph.", result[0]);
+        assertEquals("Second paragraph.", result[1]);
+    }
+
+    /**
+     * Test that multiple consecutive blank lines collapse to one paragraph boundary.
+     */
+    @Test
+    public void testSplitMultipleBlankLines() {
+        // Given a string with three blank lines between paragraphs
+        // When splitting
+        // Then the result should be the same as with one blank line (two paragraphs)
+        String text = "Para one.\n\n\n\nPara two.";
+        SimpleParagraphSplitter instance = SimpleParagraphSplitter.getInstance();
+        String[] result = instance.split(text);
+        assertEquals(2, result.length);
+        assertEquals("Para one.", result[0]);
+        assertEquals("Para two.", result[1]);
+    }
+
+    /**
+     * Test the apply() method from the Function interface.
+     */
+    @Test
+    public void testApplyFunctionInterface() {
+        // Given a ParagraphSplitter used as a Function
+        // When calling apply()
+        // Then it delegates to split() correctly
+        String text = "Para A.\n\nPara B.";
+        ParagraphSplitter splitter = SimpleParagraphSplitter.getInstance();
+        String[] result = splitter.apply(text);
+        assertEquals(2, result.length);
+        assertEquals("Para A.", result[0]);
+        assertEquals("Para B.", result[1]);
+    }
 }

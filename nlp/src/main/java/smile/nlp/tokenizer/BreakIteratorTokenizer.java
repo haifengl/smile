@@ -24,6 +24,9 @@ import java.util.Locale;
 /**
  * A word tokenizer based on the java.text.BreakIterator, which supports
  * multiple natural languages (selected by locale setting).
+ * <p>
+ * <b>Note:</b> {@code BreakIterator} is <em>not thread-safe</em>. Each thread
+ * should create its own {@code BreakIteratorTokenizer} instance.
  *
  * @author Haifeng Li
  */
