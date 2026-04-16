@@ -107,6 +107,30 @@ public class BM25 implements RelevanceRanker {
     }
 
     /**
+     * Returns the k1 parameter.
+     * @return k1.
+     */
+    public double k1() {
+        return k1;
+    }
+
+    /**
+     * Returns the b parameter.
+     * @return b.
+     */
+    public double b() {
+        return b;
+    }
+
+    /**
+     * Returns the delta parameter (BM25+ lower-bounding term).
+     * @return delta.
+     */
+    public double delta() {
+        return delta;
+    }
+
+    /**
      * Returns the relevance score between a term and a document based on a corpus.
      * @param termFreq the term frequency in the text body.
      * @param docSize the text length.
