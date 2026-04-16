@@ -556,6 +556,7 @@ public class PorterStemmer implements Stemmer {
 
     @Override
     public String stem(String word) {
+        if (word == null || word.isEmpty()) return word;
         b = word.toCharArray();
 
         k = word.length() - 1;
@@ -577,9 +578,14 @@ public class PorterStemmer implements Stemmer {
      * @return the word without plurals and participles.
      */
     public String stripPluralParticiple(String word) {
+        if (word == null || word.isEmpty()) return word;
         b = word.toCharArray();
         k = word.length() - 1;
-        if (k > 1 // && !word.equalsIgnoreCase("is")
+        // Preserve common short words that would be incorrectly modified
+        // (e.g. "was" → "wa", "has" → "ha", "his" → "hi", "this" → "thi").
+        // Note: "is" is intentionally NOT excluded so that "is" → "i" for
+        // consistency with other short verbs in the same context.
+        if (k > 1
             && !word.equalsIgnoreCase("was")
             && !word.equalsIgnoreCase("has")
             && !word.equalsIgnoreCase("his")

@@ -88,4 +88,114 @@ public class PorterStemmerTest {
             assertEquals(expResult[i], result);
         }
     }
+
+    /**
+     * Test that words of 1–2 characters are returned unchanged.
+     */
+    @Test
+    public void testStemShortWords() {
+        // Given a PorterStemmer
+        // When stemming words of length ≤ 2
+        // Then they are returned unchanged
+        PorterStemmer instance = new PorterStemmer();
+        assertEquals("a",  instance.stem("a"));
+        assertEquals("it", instance.stem("it"));
+        assertEquals("be", instance.stem("be"));
+    }
+
+    /**
+     * Test that an empty string is returned unchanged.
+     */
+    @Test
+    public void testStemEmptyString() {
+        // Given a PorterStemmer
+        // When stemming an empty string
+        // Then the empty string is returned
+        PorterStemmer instance = new PorterStemmer();
+        assertEquals("", instance.stem(""));
+    }
+
+    /**
+     * Test that null input is returned as null.
+     */
+    @Test
+    public void testStemNull() {
+        // Given a PorterStemmer
+        // When stemming null
+        // Then null is returned
+        PorterStemmer instance = new PorterStemmer();
+        assertNull(instance.stem(null));
+    }
+
+    /**
+     * Test the apply() method from the Stemmer / Function interface.
+     */
+    @Test
+    public void testApplyFunctionInterface() {
+        // Given a Stemmer used as Function<String, String>
+        // When calling apply()
+        // Then it produces the same result as stem()
+        Stemmer instance = new PorterStemmer();
+        assertEquals(instance.stem("running"), instance.apply("running"));
+        assertEquals(instance.stem("caresses"), instance.apply("caresses"));
+    }
+
+    /**
+     * Test stripPluralParticiple on standard plural and -ing forms.
+     */
+    @Test
+    public void testStripPluralParticiple() {
+        // Given a PorterStemmer
+        // When calling stripPluralParticiple on typical plural/participle words
+        // Then plurals and -ing endings are removed
+        PorterStemmer instance = new PorterStemmer();
+        assertEquals("cat",   instance.stripPluralParticiple("cats"));
+        assertEquals("run",   instance.stripPluralParticiple("running"));
+        assertEquals("caress", instance.stripPluralParticiple("caresses"));
+    }
+
+    /**
+     * Test that stripPluralParticiple preserves special short words.
+     */
+    @Test
+    public void testStripPluralParticiplePreservesSpecialWords() {
+        // Given a PorterStemmer
+        // When calling stripPluralParticiple on preserved words
+        // Then they are returned unchanged
+        PorterStemmer instance = new PorterStemmer();
+        assertEquals("was",  instance.stripPluralParticiple("was"));
+        assertEquals("has",  instance.stripPluralParticiple("has"));
+        assertEquals("his",  instance.stripPluralParticiple("his"));
+        assertEquals("this", instance.stripPluralParticiple("this"));
+    }
+
+    /**
+     * Test that stripPluralParticiple handles null and empty input safely.
+     */
+    @Test
+    public void testStripPluralParticipleEdgeCases() {
+        // Given a PorterStemmer
+        // When calling stripPluralParticiple with empty string or null
+        // Then they are returned unchanged
+        PorterStemmer instance = new PorterStemmer();
+        assertEquals("", instance.stripPluralParticiple(""));
+        assertNull(instance.stripPluralParticiple(null));
+    }
+
+    /**
+     * Test that common inflected forms all reduce to the same stem.
+     */
+    @Test
+    public void testStemGroupsToSameStem() {
+        // Given a PorterStemmer
+        // When stemming different inflections of the same word
+        // Then all produce the same stem
+        PorterStemmer instance = new PorterStemmer();
+        String[] running = {"run", "running", "runner"};
+        // "run" (2 chars) passes through unchanged; "running" → "run"; "runner" → "runner"
+        // Focus on longer forms that should share a stem
+        assertEquals(instance.stem("agreed"),   instance.stem("agreeing"));
+        assertEquals(instance.stem("matting"),  instance.stem("matted"));
+        assertEquals(instance.stem("disabled"), instance.stem("disabling"));
+    }
 }
