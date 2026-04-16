@@ -119,22 +119,18 @@ public class NGram extends smile.nlp.NGram implements Comparable<NGram> {
             }
         }
 
-        // filter out stop words
+        // Filter out n-grams whose first or last word is a stop word.
+        // (An n-gram is kept only when neither boundary word is a stop word,
+        // which also ensures at least one content word is present.)
         EnglishStopWords stopWords = EnglishStopWords.DEFAULT;
         return features.stream().map(ngrams -> {
-            NGram[] collocations = ngrams.stream().filter(ngram -> {
-                boolean stopWord = true;
-                String[] words = ngram.words;
-                if (!stopWords.contains(words[0]) && !stopWords.contains(words[words.length - 1])) {
-                    for (String word : words) {
-                        if (!stopWords.contains(word)) {
-                            stopWord = false;
-                            break;
-                        }
-                    }
-                }
-                return !stopWord;
-            }).toArray(NGram[]::new);
+            NGram[] collocations = ngrams.stream()
+                    .filter(ngram -> {
+                        String[] words = ngram.words;
+                        return !stopWords.contains(words[0])
+                                && !stopWords.contains(words[words.length - 1]);
+                    })
+                    .toArray(NGram[]::new);
 
             Arrays.sort(collocations, Collections.reverseOrder());
             return collocations;

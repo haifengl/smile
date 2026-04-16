@@ -38,7 +38,7 @@ public class BigramTest {
                     .filter(line -> !line.isEmpty())
                     .forEach(line -> corpus.add(new Text(line)));
         } catch (IOException ex) {
-            ex.printStackTrace();
+            System.err.println("Failed to load test data: " + ex.getMessage());
         }
     }
 
@@ -126,5 +126,87 @@ public class BigramTest {
         smile.nlp.Bigram[] bigrams = Bigram.of(corpus, 10, 3) ;
         System.out.println("Bigrams :"+ Arrays.toString(bigrams));
         assertEquals(1, bigrams.length);
+    }
+
+    /**
+     * Test Bigram model class: constructor, fields, toString, compareTo.
+     */
+    @Test
+    public void testBigramModel() {
+        // Given two Bigram objects with different scores
+        // When comparing and printing
+        // Then compareTo is by score ascending and toString is well-formed
+        Bigram a = new Bigram("new", "york", 10, 100.0);
+        Bigram b = new Bigram("los", "angeles", 8, 50.0);
+
+        assertEquals("new", a.w1);
+        assertEquals("york", a.w2);
+        assertEquals(10, a.count);
+        assertEquals(100.0, a.score, 1e-9);
+
+        assertTrue(a.compareTo(b) > 0, "higher score should be greater");
+        assertTrue(b.compareTo(a) < 0, "lower score should be less");
+        assertEquals(0, a.compareTo(new Bigram("x", "y", 1, 100.0)));
+
+        String str = a.toString();
+        assertTrue(str.contains("new"), "toString should contain w1");
+        assertTrue(str.contains("york"), "toString should contain w2");
+        assertTrue(str.contains("10"), "toString should contain count");
+        assertTrue(str.contains("100"), "toString should contain score");
+    }
+
+    /**
+     * Test that of(Corpus, double, int) throws for invalid p-values.
+     */
+    @Test
+    public void testInvalidPValue() {
+        // Given an invalid p-value (0 or 1)
+        // When calling of(corpus, p, minFrequency)
+        // Then an IllegalArgumentException is thrown
+        assertThrows(IllegalArgumentException.class, () -> Bigram.of(corpus, 0.0, 5));
+        assertThrows(IllegalArgumentException.class, () -> Bigram.of(corpus, 1.0, 5));
+        assertThrows(IllegalArgumentException.class, () -> Bigram.of(corpus, -0.1, 5));
+    }
+
+    /**
+     * Test that of(Corpus, int, int) throws for non-positive k.
+     */
+    @Test
+    public void testInvalidK() {
+        // Given k <= 0
+        // When calling of(corpus, k, minFrequency)
+        // Then an IllegalArgumentException is thrown
+        assertThrows(IllegalArgumentException.class, () -> Bigram.of(corpus, 0, 5));
+        assertThrows(IllegalArgumentException.class, () -> Bigram.of(corpus, -1, 5));
+    }
+
+    /**
+     * Test that result from of(Corpus, int, int) is sorted descending by score.
+     */
+    @Test
+    public void testTopKIsSortedDescending() {
+        // Given the corpus
+        // When extracting top-5 bigrams
+        // Then scores are in non-increasing order
+        Bigram[] result = Bigram.of(corpus, 5, 5);
+        for (int i = 0; i < result.length - 1; i++) {
+            assertTrue(result[i].score >= result[i + 1].score,
+                    "scores should be in non-increasing order");
+        }
+    }
+
+    /**
+     * Test that result from of(Corpus, double, int) is sorted descending by score.
+     */
+    @Test
+    public void testPValueResultIsSortedDescending() {
+        // Given the corpus
+        // When extracting bigrams with p = 0.001
+        // Then scores are in non-increasing order
+        Bigram[] result = Bigram.of(corpus, 0.001, 5);
+        for (int i = 0; i < result.length - 1; i++) {
+            assertTrue(result[i].score >= result[i + 1].score,
+                    "scores should be in non-increasing order");
+        }
     }
 }
