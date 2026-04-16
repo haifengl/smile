@@ -27,6 +27,12 @@ import smile.nlp.Text;
  * @author Haifeng Li
  */
 public record Relevance(Text text, double score) implements Comparable<Relevance> {
+    /**
+     * Compares relevance scores in <em>ascending</em> order (lower score
+     * sorts first). To rank results from most-to-least relevant, use
+     * {@code Collections.reverseOrder()} or sort with
+     * {@code Comparator.reverseOrder()}.
+     */
     @Override
     public int compareTo(Relevance o) {
         return Double.compare(score, o.score);

@@ -36,7 +36,7 @@ import smile.nlp.TextTerms;
  * d, let tfmax(d) be the maximum tf over all terms in d. Then, we compute a
  * normalized term frequency for each term t in document d by
  * <p>
- * tf = a + (1? a) tf<sub>t,d</sub> / tfmax(d)
+ * tf = a + (1 - a) * tf<sub>t,d</sub> / tfmax(d)
  * <p>
  * where a is a value between 0 and 1 and is generally set to 0.4, although some
  * early work used the value 0.5. The term a is a smoothing term whose role is
@@ -76,10 +76,23 @@ public class TFIDF implements RelevanceRanker {
 
     /**
      * Constructor.
-     * @param smoothing the smoothing parameter in maximum tf normalization.
+     * @param smoothing the smoothing parameter in maximum tf normalization,
+     *                  must be in [0, 1].
+     * @throws IllegalArgumentException if smoothing is outside [0, 1].
      */
     public TFIDF(double smoothing) {
+        if (smoothing < 0.0 || smoothing > 1.0) {
+            throw new IllegalArgumentException("Smoothing parameter must be in [0, 1]: " + smoothing);
+        }
         a = smoothing;
+    }
+
+    /**
+     * Returns the smoothing parameter.
+     * @return the smoothing parameter.
+     */
+    public double smoothing() {
+        return a;
     }
 
     /**
