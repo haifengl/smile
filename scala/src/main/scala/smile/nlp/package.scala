@@ -19,6 +19,7 @@ package smile
 import scala.language.implicitConversions
 import scala.jdk.CollectionConverters.*
 import smile.math.MathEx
+import smile.nlp.Bigram
 import smile.nlp.dictionary.StopWords
 import smile.nlp.pos.{HMMPOSTagger, PennTreebankPOS}
 import smile.nlp.stemmer.{LancasterStemmer, PorterStemmer}
@@ -81,8 +82,8 @@ package object nlp {
     * @return significant bigram collocations in descending order
     *         of likelihood ratio.
     */
-  def bigram(k: Int, minFreq: Int, text: String*): Array[smile.nlp.collocation.Bigram] = time("Bi-gram collocation") {
-    smile.nlp.collocation.Bigram.of(corpus(text), k, minFreq)
+  def bigram(k: Int, minFreq: Int, text: String*): Seq[Bigram] = time("Bi-gram collocation") {
+    corpus(text).bigrams(k, minFreq).asScala.toSeq
   }
 
   /** Identify bigram collocations whose p-value is less than
@@ -94,8 +95,8 @@ package object nlp {
     * @return significant bigram collocations in descending order
     *         of likelihood ratio.
     */
-  def bigram(p: Double, minFreq: Int, text: String*): Array[smile.nlp.collocation.Bigram] = time("Bi-gram collocation") {
-    smile.nlp.collocation.Bigram.of(corpus(text), p, minFreq)
+  def bigram(p: Double, minFreq: Int, text: String*): Seq[Bigram] = time("Bi-gram collocation") {
+    corpus(text).bigrams(p, minFreq).asScala.toSeq
   }
 
   /** An Apiori-like algorithm to extract n-gram phrases.
@@ -378,8 +379,8 @@ package nlp {
       * @param k the number of top keywords to return.
       * @return the top keywords.
       */
-    def keywords(k: Int = 10): Array[smile.nlp.collocation.NGram] = {
-      smile.nlp.keyword.CooccurrenceKeywords.of(text, k)
+    def keywords(k: Int = 10): Seq[smile.nlp.collocation.NGram] = {
+      smile.nlp.keyword.CooccurrenceKeywords.of(text, k).asScala.toSeq
     }
   }
 
