@@ -61,7 +61,7 @@ package object nlp {
     */
   def corpus(text: scala.collection.Seq[String]): SimpleCorpus = {
     val corpus = new SimpleCorpus
-    text.foreach(text => corpus.add(new Text(text)))
+    text.foreach(text => corpus.add(corpus.doc(text)))
     corpus
   }
 
@@ -106,7 +106,7 @@ package object nlp {
     * @param text input text.
     * @return An array of sets of n-grams. The i-th entry is the set of i-grams.
     */
-  def ngram(maxNGramSize: Int, minFreq: Int, text: String*): Array[Array[smile.nlp.collocation.NGram]] = time("N-gram collocation") {
+  def ngram(maxNGramSize: Int, minFreq: Int, text: String*): Array[Array[NGram]] = time("N-gram collocation") {
     val sentences = text.flatMap { text =>
       text.sentences.map { sentence =>
         sentence.words("none").map { word =>
@@ -115,7 +115,7 @@ package object nlp {
       }
     }
 
-    smile.nlp.collocation.NGram.of(sentences.asJava, maxNGramSize, minFreq)
+    NGram.apriori(sentences.asJava, maxNGramSize, minFreq)
   }
 
   /** Part-of-speech taggers.
@@ -379,8 +379,8 @@ package nlp {
       * @param k the number of top keywords to return.
       * @return the top keywords.
       */
-    def keywords(k: Int = 10): Seq[smile.nlp.collocation.NGram] = {
-      smile.nlp.keyword.CooccurrenceKeywords.of(text, k).asScala.toSeq
+    def keywords(k: Int = 10): Seq[NGram] = {
+      Text.of(text).keywords(k).asScala.toSeq
     }
   }
 
