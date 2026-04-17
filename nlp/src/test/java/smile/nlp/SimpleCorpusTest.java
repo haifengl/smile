@@ -26,7 +26,7 @@ import smile.nlp.relevance.BM25;
 import smile.nlp.relevance.Relevance;
 
 /**
- *
+ * Tests for {@link SimpleCorpus}.
  * @author Haifeng Li
  */
 public class SimpleCorpusTest {
