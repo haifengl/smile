@@ -139,7 +139,7 @@ public interface Text {
 
         // Step 1 (cont.) – extract frequent phrases via Apriori-like algorithm.
         ArrayList<NGram> terms = new ArrayList<>();
-        for (NGram[] ngrams : NGram.apiori(sentences, MAX_NGRAM_SIZE, MIN_NGRAM_FREQ)) {
+        for (NGram[] ngrams : NGram.apriori(sentences, MAX_NGRAM_SIZE, MIN_NGRAM_FREQ)) {
             Collections.addAll(terms, ngrams);
         }
 

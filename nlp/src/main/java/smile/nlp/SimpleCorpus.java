@@ -199,7 +199,7 @@ public class SimpleCorpus implements Corpus {
 
     @Override
     public int avgDocSize() {
-        return (int) (size / docs.size());
+        return docs.isEmpty() ? 0 : (int) (size / docs.size());
     }
 
     @Override

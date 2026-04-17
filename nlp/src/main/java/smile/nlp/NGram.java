@@ -70,12 +70,12 @@ public record NGram(String[] words, int count) implements Comparable<NGram> {
     }
 
     /**
-     * Extracts n-gram phrases by an Apiori-like algorithm. The algorithm was
+     * Extracts n-gram phrases by an Apriori-like algorithm. The algorithm was
      * proposed in "A Study Using n-gram Features for Text Categorization" by
      * Johannes Furnkranz.
      * <p>
      * The algorithm takes a collection of sentences and generates all n-grams of
-     * length at most MaxNGramSize that occur at least MinFrequency times in the
+     * length at most maxNGramSize that occur at least minFrequency times in the
      * sentences.
      *
      * @param sentences A collection of sentences (already split).
@@ -83,7 +83,7 @@ public record NGram(String[] words, int count) implements Comparable<NGram> {
      * @param minFrequency The minimum frequency of n-gram in the sentences.
      * @return An array of n-gram sets. The i-th entry is the set of i-grams.
      */
-    public static NGram[][] apiori(Collection<String[]> sentences, int maxNGramSize, int minFrequency) {
+    public static NGram[][] apriori(Collection<String[]> sentences, int maxNGramSize, int minFrequency) {
         ArrayList<Set<NGram>> features = new ArrayList<>(maxNGramSize + 1);
         Set<NGram> feature = new HashSet<>();
         features.add(feature);
