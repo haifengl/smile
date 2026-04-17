@@ -4,7 +4,7 @@ plugins {
 
 dependencies {
     api("org.apache.commons:commons-csv:1.14.1")
-    api("org.duckdb:duckdb_jdbc:1.5.1.0")
+    api("org.duckdb:duckdb_jdbc:1.5.2.0")
     api(libs.jackson)
     implementation(libs.bundles.arrow)
     implementation("org.eclipse.lsp4j:org.eclipse.lsp4j:1.0.0")

@@ -99,13 +99,13 @@ libraryDependencies ++= Seq(
   "com.fifesoft"      % "spellchecker"       % "3.4.1",
   "com.formdev"       % "flatlaf"            % "3.7.1",
   "com.formdev"       % "flatlaf-fonts-jetbrains-mono" % "2.304",
-  "org.apache.maven"  % "maven-resolver-provider" % "3.9.14",
+  "org.apache.maven"  % "maven-resolver-provider" % "3.9.15",
   "org.apache.maven.resolver"   % "maven-resolver-supplier-mvn4" % "2.0.16",
   "tools.jackson.dataformat"    % "jackson-dataformat-yaml" % "3.1.2",
   "io.modelcontextprotocol.sdk" % "mcp"          % "1.1.1",
   "io.github.furstenheim"       % "copy_down"    % "1.1",
   "org.jsoup"                   % "jsoup"        % "1.22.1",
-  "com.github.serpapi"          % "serpapi-java" % "1.0.0",
+  "com.github.serpapi"          % "serpapi-java" % "1.1.0",
   "com.google.code.gson"        % "gson"         % "2.13.2" // evict older version used by serpapi
 )
 
