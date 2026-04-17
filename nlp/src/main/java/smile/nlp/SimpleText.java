@@ -16,17 +16,8 @@
  */
 package smile.nlp;
 
-import smile.nlp.stemmer.PorterStemmer;
-import smile.nlp.tokenizer.SimpleParagraphSplitter;
-import smile.nlp.tokenizer.SimpleSentenceSplitter;
-import smile.nlp.tokenizer.SimpleTokenizer;
-import smile.sort.QuickSort;
-import smile.util.Trie;
-
-import java.util.*;
-
 /**
- * A text with a unique id in the corpus.
+ * A text with a title and content.
  *
  * @param title the optional title of text.
  * @param content the text content.

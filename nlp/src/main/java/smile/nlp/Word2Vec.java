@@ -120,9 +120,10 @@ public class Word2Vec {
     }
 
     /**
-     * Returns the embedding vector of a word.
+     * Returns the embedding vector of a word, or {@code null} if the word is
+     * not in the vocabulary. Prefer {@link #lookup(String)} for null-safe access.
      * @param word the word.
-     * @return the embedding vector.
+     * @return the embedding vector, or {@code null} if not found.
      */
     public float[] apply(String word) {
         Integer index = map.get(word);
@@ -163,6 +164,32 @@ public class Word2Vec {
      */
     public int size() {
         return words.length;
+    }
+
+    /**
+     * Returns the cosine similarity between the embedding vectors of two words.
+     * Cosine similarity is the dot product of the unit-normalized vectors,
+     * ranging from -1 (opposite) to +1 (identical direction).
+     *
+     * @param w1 the first word.
+     * @param w2 the second word.
+     * @return the cosine similarity, or {@link java.util.OptionalDouble#empty()}
+     *         if either word is not in the vocabulary.
+     */
+    public java.util.OptionalDouble similarity(String w1, String w2) {
+        float[] v1 = apply(w1);
+        float[] v2 = apply(w2);
+        if (v1 == null || v2 == null) return java.util.OptionalDouble.empty();
+
+        double dot = 0.0, norm1 = 0.0, norm2 = 0.0;
+        for (int i = 0; i < v1.length; i++) {
+            dot   += (double) v1[i] * v2[i];
+            norm1 += (double) v1[i] * v1[i];
+            norm2 += (double) v2[i] * v2[i];
+        }
+        double denom = Math.sqrt(norm1) * Math.sqrt(norm2);
+        if (denom == 0.0) return java.util.OptionalDouble.of(0.0);
+        return java.util.OptionalDouble.of(dot / denom);
     }
 
     /**
@@ -267,6 +294,7 @@ public class Word2Vec {
             List<String> words = new ArrayList<>(1000000);
             List<float[]> vectors = new ArrayList<>(1000000);
             stream.forEach(line -> {
+                if (line.isBlank()) return; // skip blank / trailing lines
                 String[] tokens = line.split("\\s+");
                 if (tokens.length < 2) {
                     throw new IllegalArgumentException(
