@@ -16,14 +16,14 @@
  */
 package smile.nlp;
 
+import java.util.*;
 import smile.nlp.stemmer.PorterStemmer;
 import smile.nlp.tokenizer.SimpleParagraphSplitter;
 import smile.nlp.tokenizer.SimpleSentenceSplitter;
 import smile.nlp.tokenizer.SimpleTokenizer;
 import smile.sort.QuickSort;
+import smile.util.Strings;
 import smile.util.Trie;
-
-import java.util.*;
 
 /**
  * A minimal interface of text.
@@ -126,12 +126,21 @@ public interface Text {
 
         // Step 1 – tokenize, stem and split into sentences.
         int ntotal = 0;
+        // add title as a sentence if it exists, since it often contains important keywords.
+        if (!Strings.isNullOrBlank(title())) {
+            var sentence = Arrays.stream(tokenizer.split(title()))
+                    .map(stemmer::stripPluralParticiple)
+                    .map(String::toLowerCase)
+                    .toArray(String[]::new);
+            sentences.add(sentence);
+            ntotal += sentence.length;
+        }
         for (String paragraph : SimpleParagraphSplitter.getInstance().split(text)) {
             for (String s : SimpleSentenceSplitter.getInstance().split(paragraph)) {
-                String[] sentence = tokenizer.split(s);
-                for (int i = 0; i < sentence.length; i++) {
-                    sentence[i] = stemmer.stripPluralParticiple(sentence[i]).toLowerCase();
-                }
+                var sentence = Arrays.stream(tokenizer.split(s))
+                        .map(stemmer::stripPluralParticiple)
+                        .map(String::toLowerCase)
+                        .toArray(String[]::new);
                 sentences.add(sentence);
                 ntotal += sentence.length;
             }
