@@ -41,6 +41,7 @@ find doc/api/kotlin -name '*.html' -exec bin/gtag.sh {} \;
 #find doc/api/clojure -name '*.html' -exec bin/gtag.sh {} \;
 
 cd website
+npm install
 npm run deploy
 check_error "!!"
 

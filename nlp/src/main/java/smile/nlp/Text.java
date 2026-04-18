@@ -45,17 +45,19 @@ public interface Text {
 
 
     /**
-     * Creates a text without title.
+     * Creates a text instance without title.
      * @param content the text content.
+     * @return a text instance with empty title.
      */
     static Text of(String content) {
         return of("", content);
     }
 
     /**
-     * Creates a text.
+     * Creates a text instance.
      * @param title the text title.
      * @param content the text content.
+     * @return a text instance.
      */
     static Text of(String title, String content) {
         return new SimpleText(title, content);
