@@ -4,7 +4,7 @@
 ## Goal ##
 SMILE (Statistical Machine Intelligence & Learning Engine) is
 a fast and comprehensive machine learning framework in Java.
-SMILE v5.x requires Java 25, v4.x requires Java 21, and all previous versions
+SMILE v5+ requires Java 25, v4.x requires Java 21, and all previous versions
 require Java 8. SMILE also provides APIs in Scala and Kotlin with
 corresponding language paradigms. With advanced data structures and
 algorithms, SMILE delivers state-of-art performance.
@@ -100,7 +100,7 @@ following to your project pom.xml file.
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-core</artifactId>
-      <version>5.2.3</version>
+      <version>6.0.0</version>
     </dependency>
 ```
 
@@ -108,13 +108,13 @@ For deep learning and NLP, use the artifactId `smile-deep` and `smile-nlp`, resp
 
 For Scala API, please add the below into your sbt script.
 ```
-    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "5.2.3"
+    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "6.0.0"
 ```
 
 For Kotlin API, add the below into the `dependencies` section
 of Gradle build script.
 ```
-    implementation("com.github.haifengl:smile-kotlin:5.2.3")
+    implementation("com.github.haifengl:smile-kotlin:6.0.0")
 ```
 
 Some algorithms rely on BLAS and LAPACK (e.g. manifold learning,
@@ -202,7 +202,7 @@ To use `smile-plot`, add the following to dependencies
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-plot</artifactId>
-      <version>5.2.3</version>
+      <version>6.0.0</version>
     </dependency>
 ```
 
