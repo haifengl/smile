@@ -340,5 +340,5 @@ double leverage()
 
 ---
 
-*SMILE — Copyright (c) 2010-2026 Haifeng Li. GNU GPL licensed.*
+*SMILE — Copyright © 2010-2026 Haifeng Li. GNU GPL licensed.*
 
