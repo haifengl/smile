@@ -175,6 +175,27 @@ public interface DataFrameClassifier extends Classifier<Tuple> {
      * @return the ensemble model.
      */
     static DataFrameClassifier ensemble(DataFrameClassifier... models) {
+        if (models.length == 0) {
+            throw new IllegalArgumentException("Empty ensemble models.");
+        }
+
+        if (models[0] == null) {
+            throw new IllegalArgumentException("Null base model at index 0");
+        }
+
+        int k = models[0].numClasses();
+        int[] labels = models[0].classes();
+        for (int i = 0; i < models.length; i++) {
+            DataFrameClassifier model = models[i];
+            if (model == null) {
+                throw new IllegalArgumentException("Null base model at index " + i);
+            }
+
+            if (model.numClasses() != k || !Arrays.equals(model.classes(), labels)) {
+                throw new IllegalArgumentException("Incompatible base model classes at index " + i);
+            }
+        }
+
         return new DataFrameClassifier() {
             /** The ensemble is a soft classifier only if all the base models are. */
             private final boolean soft = Arrays.stream(models).allMatch(DataFrameClassifier::isSoft);
@@ -223,6 +244,14 @@ public interface DataFrameClassifier extends Classifier<Tuple> {
 
             @Override
             public int predict(Tuple x, double[] posteriori) {
+                if (!soft) {
+                    throw new UnsupportedOperationException("soft classification with a hard classifier");
+                }
+
+                if (posteriori.length != numClasses()) {
+                    throw new IllegalArgumentException("Invalid posteriori vector size: " + posteriori.length);
+                }
+
                 Arrays.fill(posteriori, 0.0);
                 double[] prob = new double[posteriori.length];
 
