@@ -118,6 +118,16 @@ public class SVM<T> extends KernelMachine<T>  {
      * @return the model.
      */
     public static <T> SVM<T> fit(T[] x, MercerKernel<T> kernel, Options options) {
+        if (x == null || x.length == 0) {
+            throw new IllegalArgumentException("Training data is empty");
+        }
+        if (kernel == null) {
+            throw new IllegalArgumentException("kernel is null");
+        }
+        if (options == null) {
+            throw new IllegalArgumentException("options is null");
+        }
+
         OCSVM<T> svm = new OCSVM<>(kernel, options.nu, options.tol);
         KernelMachine<T> model = svm.fit(x);
         return new SVM<>(model.kernel(), model.vectors(), model.weights(), model.intercept());

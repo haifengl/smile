@@ -89,18 +89,34 @@ public class IsolationForest implements Serializable {
      * with the standard Isolation Forest.
      */
     private final int extensionLevel;
+    /**
+     * The dimensionality of input samples.
+     */
+    private final int p;
 
     /**
      * Constructor.
      *
      * @param n the number of samples to train the forest.
+     * @param p the dimensionality of input samples.
      * @param extensionLevel the extension level, i.e. how many dimension
      *                       are specified in the random slope.
      * @param trees forest of isolation trees.
      */
-    public IsolationForest(int n, int extensionLevel, IsolationTree... trees) {
+    public IsolationForest(int n, int p, int extensionLevel, IsolationTree... trees) {
+        if (n < 2) {
+            throw new IllegalArgumentException("Too few training samples: " + n);
+        }
+        if (p < 1) {
+            throw new IllegalArgumentException("Invalid dimensionality: " + p);
+        }
+        if (trees == null || trees.length == 0) {
+            throw new IllegalArgumentException("No isolation trees provided");
+        }
+
         this.trees = trees;
         this.extensionLevel = extensionLevel;
+        this.p = p;
         this.c = factor(n);
     }
 
@@ -120,6 +136,10 @@ public class IsolationForest implements Serializable {
 
             if (subsample <= 0 || subsample >= 1) {
                 throw new IllegalArgumentException("Invalid sampling rating: " + subsample);
+            }
+
+            if (extensionLevel < 0) {
+                throw new IllegalArgumentException("Invalid extension level: " + extensionLevel);
             }
         }
 
@@ -167,33 +187,55 @@ public class IsolationForest implements Serializable {
     }
 
     /**
-     * Fits a random forest for classification.
+     * Fits an isolation forest.
      *
      * @param data the training data.
      * @param options the hyperparameters.
      * @return the model.
      */
     public static IsolationForest fit(double[][] data, Options options) {
-        int extensionLevel = options.extensionLevel > 0 ? options.extensionLevel : data[0].length - 1;
-        if (options.extensionLevel >= data[0].length) {
+        if (data == null || data.length < 2) {
+            throw new IllegalArgumentException("IsolationForest requires at least 2 samples");
+        }
+        if (options == null) {
+            throw new IllegalArgumentException("options is null");
+        }
+
+        int p = data[0].length;
+        if (p == 0) {
+            throw new IllegalArgumentException("Input dimensionality is zero");
+        }
+        for (int i = 0; i < data.length; i++) {
+            if (data[i] == null) {
+                throw new IllegalArgumentException("Sample at index " + i + " is null");
+            }
+            if (data[i].length != p) {
+                throw new IllegalArgumentException("Invalid input dimension: expected " + p + ", actual " + data[i].length);
+            }
+        }
+
+        int extensionLevel = options.extensionLevel;
+        if (extensionLevel >= p) {
             throw new IllegalArgumentException("Invalid extension level: " + extensionLevel);
         }
 
-        int maxDepth = options.maxDepth > 0 ? options.maxDepth : (int) MathEx.log2(data.length);
-
         final int n = data.length;
-        final int m = (int) Math.round(n * options.subsample);
+        final int m = Math.max(2, (int) Math.round(n * options.subsample));
+        final int depth = options.maxDepth > 0 ? options.maxDepth : (int) MathEx.log2(m);
 
         IsolationTree[] trees = IntStream.range(0, options.ntrees).parallel().mapToObj(k -> {
             ArrayList<double[]> samples = new ArrayList<>(m);
-            for (int i : MathEx.permutate(n)) {
-                samples.add(data[i]);
+            int[] permutation = MathEx.permutate(n);
+            for (int i = 0; i < m; i++) {
+                int j = permutation[i];
+                samples.add(data[j]);
             }
 
-            return new IsolationTree(samples, maxDepth, extensionLevel);
+
+            return new IsolationTree(samples, depth, extensionLevel);
         }).toArray(IsolationTree[]::new);
 
-        return new IsolationForest(n, extensionLevel, trees);
+        return new IsolationForest(n, p, extensionLevel, trees);
     }
 
     /**
@@ -211,7 +253,7 @@ public class IsolationForest implements Serializable {
      * @return the isolation trees in the model.
      */
     public IsolationTree[] trees() {
-        return trees;
+        return trees.clone();
     }
 
     /**
@@ -229,6 +271,13 @@ public class IsolationForest implements Serializable {
      * @return the anomaly score.
      */
     public double score(double[] x) {
+        if (x == null) {
+            throw new IllegalArgumentException("Input sample is null");
+        }
+        if (x.length != p) {
+            throw new IllegalArgumentException("Invalid input dimension: expected " + p + ", actual " + x.length);
+        }
+
         double length = 0.0;
         for (IsolationTree tree : trees) {
             length += tree.path(x);
@@ -256,6 +305,9 @@ public class IsolationForest implements Serializable {
      * @return the normalizing factor.
      */
     static double factor(int n) {
+        if (n < 2) {
+            throw new IllegalArgumentException("n must be >= 2: " + n);
+        }
         return 2.0 * ((Math.log(n-1) + EULER) - (n - 1.0) / n);
     }
 }
