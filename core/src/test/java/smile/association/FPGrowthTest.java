@@ -167,13 +167,44 @@ public class FPGrowthTest {
         for (int x : a) {
             boolean found = false;
             for (int y : b) {
-                if (x == y) {
-                    found = true;
-                    break;
-                }
+                if (x == y) { found = true; break; }
             }
             if (!found) return false;
         }
         return true;
+    }
+
+    @Test
+    public void givenItemSet_whenEqualsHashCodeToString_thenCorrect() {
+        // Given
+        ItemSet a = new ItemSet(new int[]{1, 2, 3}, 5);
+        ItemSet b = new ItemSet(new int[]{1, 2, 3}, 5);
+        ItemSet c = new ItemSet(new int[]{1, 2, 3}, 4);
+        ItemSet d = new ItemSet(new int[]{1, 2},    5);
+
+        // equals / hashCode
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
+        assertNotEquals(a, c);
+        assertNotEquals(a, d);
+
+        // toString
+        String s = a.toString();
+        assertTrue(s.contains("support"), "toString should mention 'support'");
+        assertTrue(s.contains("5"),       "toString should include the support value");
+    }
+
+    @Test
+    public void givenPercentageMinSupport_whenFPGrowth_thenConsistentWithAbsoluteSupport() {
+        // Given — 10 transactions, 30% = 3
+        FPTree treeAbs = FPTree.of(3,   itemsets);
+        FPTree treePct = FPTree.of(0.3, itemsets);
+
+        // When
+        long countAbs = FPGrowth.apply(treeAbs).count();
+        long countPct = FPGrowth.apply(treePct).count();
+
+        // Then
+        assertEquals(countAbs, countPct);
     }
 }

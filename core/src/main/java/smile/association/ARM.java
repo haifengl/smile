@@ -120,6 +120,9 @@ public class ARM implements Iterable<AssociationRule> {
      * @return the stream of association rules.
      */
     public static Stream<AssociationRule> apply(double confidence, FPTree tree) {
+        if (confidence < 0.0 || confidence > 1.0) {
+            throw new IllegalArgumentException("confidence must be in [0, 1]: " + confidence);
+        }
         TotalSupportTree ttree = new TotalSupportTree(tree);
         ARM arm = new ARM(confidence, ttree);
         return StreamSupport.stream(arm.spliterator(), false);

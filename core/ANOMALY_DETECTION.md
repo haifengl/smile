@@ -442,4 +442,4 @@ boolean  model.predict(T x, double threshold)                    // true = anoma
 
 ---
 
-*SMILE — Copyright © 2010–2026 Haifeng Li. Licensed under the GNU GPL.*
+*SMILE — Copyright © 2010–2026 Haifeng Li. GNU GPL licensed.*
