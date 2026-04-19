@@ -97,6 +97,7 @@ public class ARMTest {
     }
 
     @Test
+    @Tag("integration")
     public void testPima() {
         System.out.println("pima");
 
@@ -106,6 +107,7 @@ public class ARMTest {
     }
 
     @Test
+    @Tag("integration")
     public void testKosarak() {
         System.out.println("kosarak");
 

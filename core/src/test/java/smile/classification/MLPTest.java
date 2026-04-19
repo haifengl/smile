@@ -212,6 +212,7 @@ public class MLPTest {
     }
 
     @Test
+    @Tag("integration")
     public void testUSPS() throws Exception {
         System.out.println("USPS SGD");
         var usps = new USPS();
@@ -252,6 +253,7 @@ public class MLPTest {
     }
 
     @Test
+    @Tag("integration")
     public void testUSPSMiniBatch() throws Exception {
         System.out.println("USPS Mini-Batch");
         var usps = new USPS();

@@ -57,6 +57,7 @@ public class SpectralClusteringTest {
     }
 
     @Test
+    @Tag("integration")
     public void testUSPS() throws Exception {
         System.out.println("USPS");
 
@@ -78,6 +79,7 @@ public class SpectralClusteringTest {
     }
 
     @Test
+    @Tag("integration")
     public void testUSPSNystrom() throws Exception {
         System.out.println("USPS Nystrom approximation");
 
