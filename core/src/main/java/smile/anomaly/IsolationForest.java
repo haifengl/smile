@@ -85,8 +85,8 @@ public class IsolationForest implements Serializable {
     private final double c;
     /**
      * The extension level, i.e. how many dimension are specified
-     * in the random slope. With 0 extension level, it is coincident
-     * with the standard Isolation Forest.
+     * in the random slope. {@code 0} is coincident with the standard
+     * Isolation Forest. Larger values increase extension.
      */
     private final int extensionLevel;
     /**
@@ -101,6 +101,7 @@ public class IsolationForest implements Serializable {
      * @param p the dimensionality of input samples.
      * @param extensionLevel the extension level, i.e. how many dimension
      *                       are specified in the random slope.
+     *                       {@code 0} means standard Isolation Forest.
      * @param trees forest of isolation trees.
      */
     public IsolationForest(int n, int p, int extensionLevel, IsolationTree... trees) {
@@ -125,7 +126,9 @@ public class IsolationForest implements Serializable {
      * @param ntrees the number of trees.
      * @param maxDepth the maximum depth of the tree.
      * @param subsample the sampling rate for training tree.
-     * @param extensionLevel the extension level.
+     * @param extensionLevel the extension level. {@code 0} means standard
+     *                       Isolation Forest. Valid range is {@code [0, p-1]},
+     *                       where {@code p} is input dimensionality.
      */
     public record Options(int ntrees, int maxDepth, double subsample, int extensionLevel) {
         /** Constructor. */
@@ -180,6 +183,8 @@ public class IsolationForest implements Serializable {
      * Fits an isolation forest.
      *
      * @param data the training data.
+     *             When using default options, this fits standard Isolation Forest
+     *             ({@code extensionLevel = 0}).
      * @return the model.
      */
     public static IsolationForest fit(double[][] data) {
@@ -190,7 +195,9 @@ public class IsolationForest implements Serializable {
      * Fits an isolation forest.
      *
      * @param data the training data.
-     * @param options the hyperparameters.
+     * @param options the hyperparameters. In particular,
+     *                {@code options.extensionLevel()} controls extension level.
+     *                {@code 0} means standard Isolation Forest.
      * @return the model.
      */
     public static IsolationForest fit(double[][] data, Options options) {
