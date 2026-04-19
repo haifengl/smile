@@ -16,94 +16,80 @@
  */
 package smile.anomaly;
 
-import org.apache.commons.csv.CSVFormat;
-import org.junit.jupiter.api.*;
+import java.nio.file.Path;
+import java.util.Properties;
+import org.junit.jupiter.api.Test;
 import smile.io.Read;
 import smile.io.Write;
 import smile.math.kernel.GaussianKernel;
-import smile.io.Paths;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
- * @author Haifeng
+ * @author Haifeng Li
  */
 public class SVMTest {
 
-    public SVMTest() {
-    }
-
-    @BeforeAll
-    public static void setUpClass() throws Exception {
-    }
-
-    @AfterAll
-    public static void tearDownClass() throws Exception {
-    }
-
-    @BeforeEach
-    public void setUp() {
-    }
-
-    @AfterEach
-    public void tearDown() {
-    }
-
     @Test
-    public void testSixClusters() throws Exception {
-        System.out.println("Six clusters");
+    public void givenSyntheticData_whenScoring_thenOutlierScoreLowerThanInlier() {
+        // Given
+        double[][] data = {
+                {0.00, 0.00}, {0.05, 0.02}, {-0.04, 0.03}, {0.03, -0.05},
+                {-0.02, -0.01}, {0.06, -0.02}, {-0.03, 0.00}, {0.01, 0.04}
+        };
 
-        CSVFormat format = CSVFormat.Builder.create().setDelimiter(' ').get();
-        double[][] data = Read.csv(Paths.getTestData("clustering/rem.txt"), format).toArray();
         SVM<double[]> model = SVM.fit(data, new GaussianKernel(1.0), new SVM.Options(0.2, 1E-3));
 
-        double[][] grid = new double[201][201];
-        for (int i = 0; i < grid.length; i++) {
-            for (int j = 0; j < grid[i].length; j++) {
-                double[] point = {-5 + i * 0.1, -5 + j * 0.1};
-                grid[j][i] = model.score(point);
-            }
-        }
+        // When
+        double inlier = model.score(new double[] {0.02, 0.01});
+        double outlier = model.score(new double[] {4.0, -4.0});
 
-        java.nio.file.Path temp = Write.object(model);
-        Read.object(temp);
-        /*
-        double[] x = new double[201];
-        double[] y = new double[201];
-        for (int i = 0; i < x.length; i++) {
-            x[i] = -5 + i * 0.1;
-            y[i] = -5 + i * 0.1;
-        }
-
-        ScatterPlot.of(data).canvas().window();
-        Heatmap.of(x, y, grid).canvas().window();
-         */
+        // Then
+        assertTrue(Double.isFinite(inlier));
+        assertTrue(Double.isFinite(outlier));
+        assertTrue(outlier < inlier);
     }
 
     @Test
-    public void testSinCos() throws Exception {
-        System.out.println("SinCos");
+    public void givenModel_whenSerializing_thenRoundTripIsReadable() throws Exception {
+        // Given
+        double[][] data = {
+                {0.0, 0.0}, {0.1, 0.0}, {0.0, 0.1}, {-0.1, 0.0}, {0.0, -0.1}
+        };
+        SVM<double[]> model = SVM.fit(data, new GaussianKernel(1.0));
 
-        CSVFormat format = CSVFormat.Builder.create().setDelimiter('\t').get();
-        double[][] data = Read.csv(Paths.getTestData("clustering/sincos.txt"), format).toArray();
-        SVM<double[]> model = SVM.fit(data, new GaussianKernel(0.5));
+        // When
+        Path temp = Write.object(model);
+        Object restored = Read.object(temp);
 
-        double[][] grid = new double[51][51];
-        for (int i = 0; i < grid.length; i++) {
-            for (int j = 0; j < grid[i].length; j++) {
-                double[] point = {-2 + i * 0.1, -2 + j * 0.1};
-                grid[j][i] = model.score(point);
-            }
-        }
-        /*
-        double[] x = new double[51];
-        double[] y = new double[51];
-        for (int i = 0; i < x.length; i++) {
-            x[i] = -2 + i * 0.1;
-            y[i] = -2 + i * 0.1;
-        }
+        // Then
+        assertNotNull(restored);
+        assertTrue(restored instanceof SVM<?>);
+    }
 
-        ScatterPlot.of(data).canvas().window();
-        Heatmap.of(x, y, grid).canvas().window();
-         */
+    @Test
+    public void givenOptions_whenRoundTripToProperties_thenValuesPreserved() {
+        // Given
+        SVM.Options options = new SVM.Options(0.3, 1E-4);
+
+        // When
+        Properties props = options.toProperties();
+        SVM.Options restored = SVM.Options.of(props);
+
+        // Then
+        assertEquals(options, restored);
+    }
+
+    @Test
+    public void givenInvalidInputs_whenFitting_thenThrowsIllegalArgumentException() {
+        // Given
+        GaussianKernel kernel = new GaussianKernel(1.0);
+        double[][] x = {{0.0, 0.0}, {1.0, 1.0}};
+
+        // When / Then
+        assertThrows(IllegalArgumentException.class, () -> SVM.fit(null, kernel));
+        assertThrows(IllegalArgumentException.class, () -> SVM.fit(new double[0][], kernel));
+        assertThrows(IllegalArgumentException.class, () -> SVM.fit(x, null));
+        assertThrows(IllegalArgumentException.class, () -> SVM.fit(x, kernel, null));
     }
 }
