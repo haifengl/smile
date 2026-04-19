@@ -475,6 +475,8 @@ public class BIRCH implements VectorQuantizer {
 
     @Override
     public void update(double[] x) {
+        checkInput(x);
+
         if (root == null) {
             root = new Leaf(x);
         } else {
@@ -485,6 +487,8 @@ public class BIRCH implements VectorQuantizer {
 
     @Override
     public double[] quantize(double[] x) {
+        checkInput(x);
+
         if (root == null) {
             throw new IllegalStateException("Model has no clustering features");
         }
@@ -518,6 +522,16 @@ public class BIRCH implements VectorQuantizer {
             for (int i = 0; i < parent.k; i++) {
                 centroids(parent.children[i], list);
             }
+        }
+    }
+
+    /** Validates input vector shape. */
+    private void checkInput(double[] x) {
+        if (x == null) {
+            throw new IllegalArgumentException("Input vector is null");
+        }
+        if (x.length != d) {
+            throw new IllegalArgumentException("Invalid input dimension: expected " + d + ", actual " + x.length);
         }
     }
 }

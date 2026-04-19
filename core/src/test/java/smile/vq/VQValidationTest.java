@@ -78,20 +78,20 @@ class VQValidationTest {
     void givenInvalidNeuralMapParameters_whenConstructingOrClearing_thenThrowsIllegalArgumentException() {
         // Given / When / Then
         assertThrows(IllegalArgumentException.class,
-                () -> new NeuralMap(0.0, 0.01, 0.002, 50, 0.995));
+                () -> new NeuralMap(0, 1.0, 0.01, 0.002, 50, 0.995));
         assertThrows(IllegalArgumentException.class,
-                () -> new NeuralMap(1.0, 0.01, 0.002, 0, 0.995));
+                () -> new NeuralMap(2, 1.0, 0.01, 0.002, 0, 0.995));
         assertThrows(IllegalArgumentException.class,
-                () -> new NeuralMap(1.0, 0.01, 0.002, 50, 0.0));
+                () -> new NeuralMap(2, 1.0, 0.01, 0.002, 50, 0.0));
 
-        NeuralMap map = new NeuralMap(1.0, 0.01, 0.002, 50, 0.995);
+        NeuralMap map = new NeuralMap(2, 1.0, 0.01, 0.002, 50, 0.995);
         assertThrows(IllegalArgumentException.class, () -> map.clear(-1E-7));
     }
 
     @Test
     void givenEmptyNeuralMapModel_whenQuantizing_thenThrowsIllegalStateException() {
         // Given
-        NeuralMap map = new NeuralMap(1.0, 0.01, 0.002, 50, 0.995);
+        NeuralMap map = new NeuralMap(2, 1.0, 0.01, 0.002, 50, 0.995);
 
         // When / Then
         assertThrows(IllegalStateException.class, () -> map.quantize(new double[] {0.0, 0.0}));
@@ -110,6 +110,113 @@ class VQValidationTest {
 
         // Then
         assertEquals(2, centroids.length);
+    }
+
+    @Test
+    void givenBirchModel_whenInputDimensionMismatch_thenThrowsIllegalArgumentException() {
+        // Given
+        BIRCH birch = new BIRCH(2, 3, 3, 0.5);
+
+        // When / Then
+        assertThrows(IllegalArgumentException.class, () -> birch.update(new double[] {1.0}));
+
+        birch.update(new double[] {0.0, 0.0});
+        assertThrows(IllegalArgumentException.class, () -> birch.quantize(new double[] {1.0}));
+    }
+
+    @Test
+    void givenSomModel_whenInputDimensionMismatch_thenThrowsIllegalArgumentException() {
+        // Given
+        SOM som = new SOM(
+                new double[][][] {{{0.0, 0.0}, {1.0, 1.0}}},
+                TimeFunction.constant(0.1),
+                Neighborhood.bubble(1)
+        );
+
+        // When / Then
+        assertThrows(IllegalArgumentException.class, () -> som.update(new double[] {1.0}));
+        assertThrows(IllegalArgumentException.class, () -> som.quantize(new double[] {1.0}));
+    }
+
+    @Test
+    void givenNeuralGasModel_whenInputDimensionMismatch_thenThrowsIllegalArgumentException() {
+        // Given
+        NeuralGas gas = new NeuralGas(
+                new double[][] {{0.0, 0.0}, {1.0, 1.0}},
+                TimeFunction.constant(0.1),
+                TimeFunction.constant(1.0),
+                TimeFunction.constant(10.0)
+        );
+
+        // When / Then
+        assertThrows(IllegalArgumentException.class, () -> gas.update(new double[] {1.0}));
+        assertThrows(IllegalArgumentException.class, () -> gas.quantize(new double[] {1.0}));
+    }
+
+    @Test
+    void givenGrowingNeuralGasModel_whenInputDimensionMismatch_thenThrowsIllegalArgumentException() {
+        // Given
+        GrowingNeuralGas gng = new GrowingNeuralGas(2);
+
+        // When / Then
+        assertThrows(IllegalArgumentException.class, () -> gng.update(new double[] {1.0}));
+
+        gng.update(new double[] {0.0, 0.0});
+        gng.update(new double[] {1.0, 1.0});
+        assertThrows(IllegalArgumentException.class, () -> gng.quantize(new double[] {1.0}));
+    }
+
+    @Test
+    void givenNeuralMapModel_whenInputDimensionMismatch_thenThrowsIllegalArgumentException() {
+        // Given
+        NeuralMap map = new NeuralMap(2, 1.0, 0.01, 0.002, 50, 0.995);
+
+        // When / Then
+        assertThrows(IllegalArgumentException.class, () -> map.update(new double[] {1.0}));
+
+        map.update(new double[] {1.0, 1.0});
+        assertThrows(IllegalArgumentException.class, () -> map.quantize(new double[] {1.0}));
+    }
+
+    @Test
+    void givenVQModels_whenDimensionMismatch_thenErrorMessageUsesExpectedActualFormat() {
+        // Given
+        String expected = "Invalid input dimension: expected 2, actual 1";
+
+        BIRCH birch = new BIRCH(2, 3, 3, 0.5);
+        SOM som = new SOM(
+                new double[][][] {{{0.0, 0.0}, {1.0, 1.0}}},
+                TimeFunction.constant(0.1),
+                Neighborhood.bubble(1)
+        );
+        NeuralGas gas = new NeuralGas(
+                new double[][] {{0.0, 0.0}, {1.0, 1.0}},
+                TimeFunction.constant(0.1),
+                TimeFunction.constant(1.0),
+                TimeFunction.constant(10.0)
+        );
+        GrowingNeuralGas gng = new GrowingNeuralGas(2);
+        NeuralMap map = new NeuralMap(2, 1.0, 0.01, 0.002, 50, 0.995);
+
+        // Train/initialize models that require state.
+        birch.update(new double[] {0.0, 0.0});
+        gng.update(new double[] {0.0, 0.0});
+        gng.update(new double[] {1.0, 1.0});
+        map.update(new double[] {0.0, 0.0});
+
+        // When
+        IllegalArgumentException e1 = assertThrows(IllegalArgumentException.class, () -> birch.quantize(new double[] {1.0}));
+        IllegalArgumentException e2 = assertThrows(IllegalArgumentException.class, () -> som.quantize(new double[] {1.0}));
+        IllegalArgumentException e3 = assertThrows(IllegalArgumentException.class, () -> gas.quantize(new double[] {1.0}));
+        IllegalArgumentException e4 = assertThrows(IllegalArgumentException.class, () -> gng.quantize(new double[] {1.0}));
+        IllegalArgumentException e5 = assertThrows(IllegalArgumentException.class, () -> map.quantize(new double[] {1.0}));
+
+        // Then
+        assertEquals(expected, e1.getMessage());
+        assertEquals(expected, e2.getMessage());
+        assertEquals(expected, e3.getMessage());
+        assertEquals(expected, e4.getMessage());
+        assertEquals(expected, e5.getMessage());
     }
 }
 

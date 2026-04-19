@@ -149,6 +149,8 @@ public class GrowingNeuralGas implements VectorQuantizer {
 
     @Override
     public void update(double[] x) {
+        checkInput(x);
+
         t++;
 
         if (neurons.size() < 2) {
@@ -267,6 +269,8 @@ public class GrowingNeuralGas implements VectorQuantizer {
 
     @Override
     public double[] quantize(double[] x) {
+        checkInput(x);
+
         if (neurons.isEmpty()) {
             throw new IllegalStateException("No neurons available");
         }
@@ -281,5 +285,15 @@ public class GrowingNeuralGas implements VectorQuantizer {
         }
 
         return bmu.w;
+    }
+
+    /** Validates input vector shape. */
+    private void checkInput(double[] x) {
+        if (x == null) {
+            throw new IllegalArgumentException("Input vector is null");
+        }
+        if (x.length != d) {
+            throw new IllegalArgumentException("Invalid input dimension: expected " + d + ", actual " + x.length);
+        }
     }
 }
