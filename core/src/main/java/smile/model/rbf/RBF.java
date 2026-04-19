@@ -116,6 +116,10 @@ public class RBF<T> implements Serializable {
      */
     public static <T> RBF<T>[] of(T[] centers, RadialBasisFunction[] basis, Metric<T> distance) {
         int k = centers.length;
+        if (basis.length != k) {
+            throw new IllegalArgumentException("The number of basis functions doesn't match the number of centers: " + basis.length + " != " + k);
+        }
+
         @SuppressWarnings("unchecked")
         RBF<T>[] rbf = new RBF[k];
         for (int i = 0; i < k; i++) {

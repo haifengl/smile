@@ -227,8 +227,8 @@ public interface ActivationFunction extends Serializable {
             public void g(Vector g, Vector y) {
                 int n = y.size();
                 for (int i = 0; i < n; i++) {
-                    double ym1 = 1.0 - y.get(i);
-                    g.mul(i, ym1 * ym1);
+                    double yi = y.get(i);
+                    g.mul(i, 1.0 - yi * yi);
                 }
             }
         };

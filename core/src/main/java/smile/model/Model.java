@@ -117,8 +117,9 @@ public interface Model {
         } else {
             var cv = CrossValidation.stratify(round, kfold, formula, data,
                     (f, d) -> classification(algorithm, f, d, params));
-            DataFrameClassifier[] models = new DataFrameClassifier[kfold];
-            for (int i = 0; i < kfold; i++) models[i] = cv.rounds().get(i).model();
+            DataFrameClassifier[] models = cv.rounds().stream()
+                    .map(validation -> validation.model())
+                    .toArray(DataFrameClassifier[]::new);
             model = ensemble ? DataFrameClassifier.ensemble(models) : classification(algorithm, formula, data, params);
             validationMetrics = cv.avg();
         }
@@ -248,8 +249,9 @@ public interface Model {
         } else {
             var cv = CrossValidation.regression(round, kfold, formula, data,
                     (f, d) -> regression(algorithm, f, d, params));
-            DataFrameRegression[] models = new DataFrameRegression[kfold];
-            for (int i = 0; i < kfold; i++) models[i] = cv.rounds().get(i).model();
+            DataFrameRegression[] models = cv.rounds().stream()
+                    .map(validation -> validation.model())
+                    .toArray(DataFrameRegression[]::new);
             model = ensemble ? DataFrameRegression.ensemble(models) : regression(algorithm, formula, data, params);
             validationMetrics = cv.avg();
         }

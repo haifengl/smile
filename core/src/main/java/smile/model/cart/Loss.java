@@ -585,12 +585,18 @@ public interface Loss {
         }
 
         if (s.startsWith("Quantile(") && s.endsWith(")")) {
-            double p = Double.parseDouble(s.substring(9, s.length()-1));
+            String pstr = s.substring(9, s.length()-1).trim();
+            double p = pstr.endsWith("%")
+                    ? Double.parseDouble(pstr.substring(0, pstr.length() - 1)) / 100.0
+                    : Double.parseDouble(pstr);
             return quantile(p);
         }
 
         if (s.startsWith("Huber(") && s.endsWith(")")) {
-            double p = Double.parseDouble(s.substring(6, s.length()-1));
+            String pstr = s.substring(6, s.length()-1).trim();
+            double p = pstr.endsWith("%")
+                    ? Double.parseDouble(pstr.substring(0, pstr.length() - 1)) / 100.0
+                    : Double.parseDouble(pstr);
             return huber(p);
         }
 

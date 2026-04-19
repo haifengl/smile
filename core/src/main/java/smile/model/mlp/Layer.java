@@ -540,7 +540,7 @@ public abstract class Layer implements AutoCloseable, Serializable {
      * @return the layer builder.
      */
     public static HiddenLayerBuilder leaky(int neurons) {
-        return rectifier(neurons, 0.0);
+        return leaky(neurons, 0.0);
     }
 
     /**
