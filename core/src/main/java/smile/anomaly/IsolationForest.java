@@ -264,18 +264,23 @@ public class IsolationForest implements Serializable {
     }
 
     /**
-     * Returns the extension level.
+     * Returns the extension level. {@code 0} means standard Isolation Forest.
+     * Valid range is {@code [0, p-1]}, where {@code p} is input dimensionality.
+     *
      * @return the extension level.
      */
-    public int getExtensionLevel() {
+    public int extensionLevel() {
         return extensionLevel;
     }
 
     /**
-     * Returns the anomaly score.
+     * Returns the anomaly score in the range {@code (0, 1]}.
+     * Scores closer to 1 indicate anomalies; scores around 0.5 are normal.
+     * Specifically, a score significantly above 0.5 (e.g., {@code > 0.6})
+     * suggests an anomaly, while a score well below 0.5 suggests a normal instance.
      *
      * @param x the sample.
-     * @return the anomaly score.
+     * @return the anomaly score in {@code (0, 1]}.
      */
     public double score(double[] x) {
         if (x == null) {
@@ -298,10 +303,23 @@ public class IsolationForest implements Serializable {
      * Returns the anomaly scores.
      *
      * @param x the samples.
-     * @return the anomaly scores.
+     * @return the anomaly scores in {@code (0, 1]}.
      */
     public double[] score(double[][] x) {
         return Arrays.stream(x).parallel().mapToDouble(this::score).toArray();
+    }
+
+    /**
+     * Predicts whether a sample is an anomaly using the given threshold.
+     *
+     * @param x the sample.
+     * @param threshold the anomaly score threshold. A sample is considered
+     *                  an anomaly if its score exceeds this value.
+     *                  Typical values are in the range {@code (0.5, 1.0)}.
+     * @return {@code true} if the sample is predicted as an anomaly.
+     */
+    public boolean predict(double[] x, double threshold) {
+        return score(x) > threshold;
     }
 
     /**

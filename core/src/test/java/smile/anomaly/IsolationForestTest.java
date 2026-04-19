@@ -68,7 +68,7 @@ public class IsolationForestTest {
 
         // Then
         assertNotNull(restored);
-        assertTrue(restored instanceof IsolationForest);
+        assertInstanceOf(IsolationForest.class, restored);
     }
 
     @Test
@@ -129,7 +129,40 @@ public class IsolationForestTest {
         IsolationForest extended = IsolationForest.fit(data, new IsolationForest.Options(32, 0, 0.75, 1));
 
         // Then
-        assertEquals(0, standard.getExtensionLevel());
-        assertEquals(1, extended.getExtensionLevel());
+        assertEquals(0, standard.extensionLevel());
+        assertEquals(1, extended.extensionLevel());
+    }
+
+    @Test
+    public void givenThreshold_whenPredict_thenClassifiesCorrectly() {
+        // Given
+        double[][] data = {
+                {0.00, 0.01}, {0.10, -0.10}, {-0.05, 0.05}, {0.02, -0.03},
+                {0.08, 0.02}, {-0.07, -0.01}, {0.01, 0.09}, {-0.09, 0.00}
+        };
+        IsolationForest model = IsolationForest.fit(data, new IsolationForest.Options(128, 0, 0.75, 0));
+
+        // When / Then – a far-away point should be predicted anomalous at a lenient threshold
+        assertFalse(model.predict(new double[]{0.02, 0.02}, 0.8));
+        assertTrue(model.predict(new double[]{6.0, -6.0}, 0.5));
+    }
+
+    @Test
+    public void givenBatchData_whenScoringBatch_thenResultsMatchSingleScores() {
+        // Given
+        double[][] data = {
+                {0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}, {-1.0, 0.0}, {0.0, -1.0},
+                {0.5, 0.5}, {-0.5, -0.5}, {0.5, -0.5}
+        };
+        IsolationForest model = IsolationForest.fit(data, new IsolationForest.Options(64, 0, 0.75, 0));
+        double[][] samples = {{0.1, 0.1}, {5.0, 5.0}};
+
+        // When
+        double[] batch = model.score(samples);
+
+        // Then
+        assertEquals(2, batch.length);
+        assertEquals(model.score(samples[0]), batch[0], 1e-12);
+        assertEquals(model.score(samples[1]), batch[1], 1e-12);
     }
 }
