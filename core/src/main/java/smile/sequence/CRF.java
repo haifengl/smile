@@ -104,6 +104,8 @@ public class CRF implements Serializable {
      * @return the sequence labels.
      */
     public int[] viterbi(Tuple[] x) {
+        validateSequence(x);
+
         int n = x.length;
         int k = potentials.length;
 
@@ -159,6 +161,8 @@ public class CRF implements Serializable {
      * @return the most likely label sequence.
      */
     public int[] predict(Tuple[] x) {
+        validateSequence(x);
+
         int n = x.length;
         int k = potentials.length;
 
@@ -237,10 +241,10 @@ public class CRF implements Serializable {
                 throw new IllegalArgumentException("Invalid maxDepth: " + maxDepth);
             }
             if (maxNodes < 2) {
-                throw new IllegalArgumentException("Invalid maxNodes: " + maxDepth);
+                throw new IllegalArgumentException("Invalid maxNodes: " + maxNodes);
             }
             if (nodeSize < 1) {
-                throw new IllegalArgumentException("Invalid nodeSize: " + maxDepth);
+                throw new IllegalArgumentException("Invalid nodeSize: " + nodeSize);
             }
             if (shrinkage <= 0 || shrinkage > 1) {
                 throw new IllegalArgumentException("Invalid shrinkage: " + shrinkage);
@@ -300,6 +304,24 @@ public class CRF implements Serializable {
      * @return the model.
      */
     public static CRF fit(Tuple[][] sequences, int[][] labels, Options options) {
+        if (sequences.length != labels.length) {
+            throw new IllegalArgumentException("The number of observation sequences and that of label sequences are different.");
+        }
+
+        if (sequences.length == 0) {
+            throw new IllegalArgumentException("No training sequences.");
+        }
+
+        for (int i = 0; i < sequences.length; i++) {
+            if (sequences[i].length != labels[i].length) {
+                throw new IllegalArgumentException(String.format("The length of sequence %d and that of corresponding label sequence are different.", i));
+            }
+
+            if (sequences[i].length == 0) {
+                throw new IllegalArgumentException(String.format("Training sequence %d is empty.", i));
+            }
+        }
+
         int k = MathEx.max(labels) + 1;
         int ntrees = options.ntrees;
         double[][] scaling = new double[sequences.length][];
@@ -394,6 +416,13 @@ public class CRF implements Serializable {
         }
 
         return new CRF(sequences[0][0].schema(), potentials, options.shrinkage);
+    }
+
+    /** Validates that a sequence is non-empty for decoding. */
+    private void validateSequence(Tuple[] x) {
+        if (x.length == 0) {
+            throw new IllegalArgumentException("Empty sequence.");
+        }
     }
 
     /**
