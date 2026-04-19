@@ -70,4 +70,16 @@ public class BoxTestTest {
         assertEquals(9.0415, box.q, 1E-4);
         assertEquals(0.1074, box.pvalue, 1E-4);
     }
+
+    @Test
+    public void givenInvalidLag_whenRunningPortmanteauTests_thenThrowIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> BoxTest.pierce(logPriceDiff, 0));
+        assertThrows(IllegalArgumentException.class, () -> BoxTest.ljung(logPriceDiff, logPriceDiff.length));
+    }
+
+    @Test
+    public void givenBoxResult_whenConvertedToString_thenIncludeTestName() {
+        BoxTest box = BoxTest.pierce(logPriceDiff, 5);
+        assertTrue(box.toString().contains("Box-Pierce"));
+    }
 }

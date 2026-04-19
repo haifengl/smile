@@ -97,4 +97,17 @@ public class ARTest {
         assertEquals( 3.505072140, model.RSS(), 1E-8);
         assertEquals( 0.002011217, model.variance(), 1E-8);
     }
+
+    @Test
+    public void givenInvalidOrder_whenFittingAR_thenThrowIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> AR.fit(logPriceDiff, 0));
+        assertThrows(IllegalArgumentException.class, () -> AR.ols(logPriceDiff, logPriceDiff.length));
+    }
+
+    @Test
+    public void givenNonPositiveForecastHorizon_whenForecastingAR_thenThrow() {
+        AR model = AR.ols(logPriceDiff, 6);
+        assertThrows(IllegalArgumentException.class, () -> model.forecast(0));
+        assertThrows(IllegalArgumentException.class, () -> model.forecast(-1));
+    }
 }
