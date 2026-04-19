@@ -113,4 +113,23 @@ public class IsolationForestTest {
         assertEquals(model.size(), trees1.length);
         assertEquals(model.size(), trees2.length);
     }
+
+    @Test
+    public void givenExtensionLevel_whenFitting_thenModelUsesRequestedSemantics() {
+        // Given
+        double[][] data = {
+                {0.0, 0.0, 0.0},
+                {1.0, 0.0, 0.0},
+                {0.0, 1.0, 0.0},
+                {0.0, 0.0, 1.0}
+        };
+
+        // When
+        IsolationForest standard = IsolationForest.fit(data, new IsolationForest.Options(32, 0, 0.75, 0));
+        IsolationForest extended = IsolationForest.fit(data, new IsolationForest.Options(32, 0, 0.75, 1));
+
+        // Then
+        assertEquals(0, standard.getExtensionLevel());
+        assertEquals(1, extended.getExtensionLevel());
+    }
 }
