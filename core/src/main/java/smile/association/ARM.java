@@ -105,6 +105,9 @@ public class ARM implements Iterable<AssociationRule> {
 
             @Override
             public AssociationRule next() {
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
                 return buffer.poll();
             }
         };

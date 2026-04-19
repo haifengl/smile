@@ -299,7 +299,15 @@ public class FPTree {
         int[] count = new int[n];
         itemsets.forEach(itemset -> {
             numTransactions++;
-            for (int i : itemset) count[i]++;
+            // Support is transaction-level presence, not multiplicity within a transaction.
+            Arrays.sort(itemset);
+            int prev = -1;
+            for (int item : itemset) {
+                if (item != prev) {
+                    count[item]++;
+                    prev = item;
+                }
+            }
         });
 
         if (numTransactions == 0) {
@@ -420,15 +428,14 @@ public class FPTree {
             
             // Note that itemset may contain duplicated items. We should keep
             // only one in case of getting incorrect support value.
+            int unique = 1;
             for (int i = 1; i < m; i++) {
-                if (itemset[i] == itemset[i-1]) {
-                    m--;
-                    for (int j = i; j < m; j++) {
-                        itemset[j] = itemset[j+1];
-                    }
+                if (itemset[i] != itemset[unique - 1]) {
+                    itemset[unique++] = itemset[i];
                 }
             }
-            
+            m = unique;
+
             root.add(0, m, itemset, 1);
         }
     }

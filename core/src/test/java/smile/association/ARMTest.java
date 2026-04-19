@@ -17,6 +17,7 @@
 package smile.association;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -111,5 +112,32 @@ public class ARMTest {
         FPTree tree = FPTree.of(0.003, ()-> ItemSetTestData.read("transaction/kosarak.dat"));
         Stream<AssociationRule> rules = ARM.apply(0.5, tree);
         assertEquals(17954, rules.count());
+    }
+
+    @Test
+    public void givenEqualRules_whenComparing_thenEqualsAndHashCodeMatch() {
+        // Given
+        AssociationRule r1 = new AssociationRule(new int[]{1}, new int[]{2}, 0.5, 0.8, 1.2, 0.1);
+        AssociationRule r2 = new AssociationRule(new int[]{1}, new int[]{2}, 0.5, 0.8, 2.0, 0.2);
+        AssociationRule r3 = new AssociationRule(new int[]{1}, new int[]{2}, 0.5, 0.7, 1.2, 0.1);
+
+        // When / Then
+        assertEquals(r1, r2);
+        assertEquals(r1.hashCode(), r2.hashCode());
+        assertNotEquals(r1, r3);
+    }
+
+    @Test
+    public void givenArmIterator_whenExhausted_thenNextThrowsNoSuchElementException() {
+        // Given
+        FPTree tree = FPTree.of(3, itemsets);
+        ARM arm = new ARM(0.5, new TotalSupportTree(tree));
+        var iterator = arm.iterator();
+        while (iterator.hasNext()) {
+            iterator.next();
+        }
+
+        // When / Then
+        assertThrows(NoSuchElementException.class, iterator::next);
     }
 }

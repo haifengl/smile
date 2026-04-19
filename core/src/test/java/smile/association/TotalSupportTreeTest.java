@@ -17,6 +17,7 @@
 package smile.association;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -124,5 +125,19 @@ public class TotalSupportTreeTest {
         FPTree tree = FPTree.of(1500, () -> ItemSetTestData.read("transaction/kosarak.dat"));
         TotalSupportTree ttree = new TotalSupportTree(tree);
         assertEquals(219725, ttree.stream().count());
+    }
+
+    @Test
+    public void givenTotalSupportTreeIterator_whenExhausted_thenNextThrowsNoSuchElementException() {
+        // Given
+        FPTree tree = FPTree.of(3, itemsets);
+        TotalSupportTree ttree = new TotalSupportTree(tree);
+        var iterator = ttree.iterator();
+        while (iterator.hasNext()) {
+            iterator.next();
+        }
+
+        // When / Then
+        assertThrows(NoSuchElementException.class, iterator::next);
     }
 }
