@@ -8,21 +8,21 @@ prototype-based modeling.
 
 ## Table of Contents
 
-1. Overview
-2. Common API (`VectorQuantizer`)
-3. Algorithms
-   - BIRCH
-   - SOM
-   - NeuralGas
-   - GrowingNeuralGas
-   - NeuralMap
-4. Neighborhood Functions (`Neighborhood`)
-5. Choosing an Algorithm
-6. End-to-End Examples
-7. Parameter Tuning Tips
-8. Validation and Error Handling
-9. Thread-Safety Notes
-10. API Quick Reference
+1. [Overview](#1-overview)
+2. [Common API (`VectorQuantizer`)](#2-common-api-vectorquantizer)
+3. [Algorithms](#3-algorithms)
+   - [BIRCH](#birch)
+   - [SOM](#som)
+   - [NeuralGas](#neuralgas)
+   - [GrowingNeuralGas](#growingneuralgas)
+   - [NeuralMap](#neuralmap)
+4. [Neighborhood Functions (`Neighborhood`)](#4-neighborhood-functions-neighborhood)
+5. [Choosing an Algorithm](#5-choosing-an-algorithm)
+6. [End-to-End Examples](#6-end-to-end-example-reusable-utility)
+7. [Parameter Tuning Tips](#7-parameter-tuning-tips)
+8. [Validation and Error Handling](#8-validation-and-error-handling)
+9. [Thread-Safety Notes](#9-thread-safety-notes)
+10. [API Quick Reference](#10-api-quick-reference)
 
 ---
 
