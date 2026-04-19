@@ -432,7 +432,7 @@ public class UMAP {
 
             for (int iter = 0; iter < maxIter; iter++) {
                 double psum  = 0.0;
-                for (int j = 1; j < distances[j].length; j++) {
+                for (int j = 1; j < distances[i].length; j++) {
                     double d = distances[i][j] - rho[i];
                     psum  += d > 0 ? Math.exp(-d/mid) : 1;
                 }
@@ -585,6 +585,10 @@ public class UMAP {
             }
         }
 
+        if (max <= 0.0) {
+            return;
+        }
+
         double expansion = scale / max;
         GaussianDistribution gaussian = new GaussianDistribution(0.0, noise);
         for (double[] coordinate : coordinates) {
@@ -606,7 +610,11 @@ public class UMAP {
 
         for (double[] coordinate : coordinates) {
             for (int j = 0; j < d; j++) {
-                coordinate[j] = scale * (coordinate[j] - colMin[j]) / length[j];
+                if (length[j] == 0.0) {
+                    coordinate[j] = 0.0;
+                } else {
+                    coordinate[j] = scale * (coordinate[j] - colMin[j]) / length[j];
+                }
             }
         }
     }

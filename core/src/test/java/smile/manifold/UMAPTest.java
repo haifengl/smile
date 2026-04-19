@@ -17,6 +17,7 @@
 package smile.manifold;
 
 import java.util.Arrays;
+import java.util.Properties;
 import smile.math.MathEx;
 import smile.datasets.MNIST;
 import smile.datasets.SwissRoll;
@@ -71,5 +72,34 @@ public class UMAPTest {
         long end = System.currentTimeMillis();
         System.out.format("UMAP takes %.2f seconds\n", (end - start) / 1000.0);
         assertEquals(data.length, coordinates.length);
+    }
+
+    @Test
+    public void givenOptions_whenRoundTripToProperties_thenValuesPreserved() {
+        // Given
+        UMAP.Options options = new UMAP.Options(15, 2, 200, 1.5, 0.2, 1.0, 7, 1.2, 1.0);
+
+        // When
+        Properties props = options.toProperties();
+        UMAP.Options restored = UMAP.Options.of(props);
+
+        // Then
+        assertEquals(options, restored);
+    }
+
+    @Test
+    public void givenSparseProperties_whenParsingOptions_thenDefaultsApplied() {
+        // Given
+        Properties props = new Properties();
+
+        // When
+        UMAP.Options options = UMAP.Options.of(props);
+
+        // Then
+        assertEquals(15, options.k());
+        assertEquals(2, options.d());
+        assertEquals(0, options.epochs());
+        assertEquals(1.0, options.learningRate(), 1E-12);
+        assertEquals(0.1, options.minDist(), 1E-12);
     }
 }
