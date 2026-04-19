@@ -216,8 +216,9 @@ public class FPTree {
     int numFreqItems = 0;
     /**
      * The size of largest item set (with only frequent items) in the database.
+     * Zero when no items have been inserted yet (e.g. no item meets minSupport).
      */
-    int maxItemSetSize = -1;
+    int maxItemSetSize = 0;
     /**
      * The order of items according to their supports.
      */
@@ -329,6 +330,9 @@ public class FPTree {
      * @return a full built FP-tree.
      */
     public static FPTree of(int minSupport, Supplier<Stream<int[]>> supplier) {
+        if (minSupport < 1) {
+            throw new IllegalArgumentException("minSupport must be >= 1: " + minSupport);
+        }
         FPTree tree = new FPTree(minSupport, supplier.get());
         tree.add(supplier.get());
         return tree;
@@ -360,6 +364,9 @@ public class FPTree {
      * @return a full built FP-tree.
      */
     public static FPTree of(int minSupport, int[][] itemsets) {
+        if (minSupport < 1) {
+            throw new IllegalArgumentException("minSupport must be >= 1: " + minSupport);
+        }
         FPTree tree = new FPTree(minSupport, Arrays.stream(itemsets));
         tree.add(Arrays.stream(itemsets));
         return tree;
@@ -376,6 +383,9 @@ public class FPTree {
      * @return a full built FP-tree.
      */
     public static FPTree of(double minSupport, int[][] itemsets) {
+        if (minSupport <= 0 || minSupport > 1) {
+            throw new IllegalArgumentException("minSupport (percentage) must be in (0, 1]: " + minSupport);
+        }
         FPTree tree = new FPTree(minSupport, Arrays.stream(itemsets));
         tree.add(Arrays.stream(itemsets));
         return tree;
