@@ -78,6 +78,22 @@ public class NeuralMap implements VectorQuantizer {
      * @param beta decrease the freshness of all neurons by multiply them with beta.
      */
     public NeuralMap(double r, double epsBest, double epsNeighbor, int edgeLifetime, double beta) {
+        if (!(r > 0 && Double.isFinite(r))) {
+            throw new IllegalArgumentException("Invalid radius: " + r);
+        }
+        if (!(epsBest >= 0 && Double.isFinite(epsBest))) {
+            throw new IllegalArgumentException("Invalid epsBest: " + epsBest);
+        }
+        if (!(epsNeighbor >= 0 && Double.isFinite(epsNeighbor))) {
+            throw new IllegalArgumentException("Invalid epsNeighbor: " + epsNeighbor);
+        }
+        if (edgeLifetime <= 0) {
+            throw new IllegalArgumentException("Invalid edgeLifetime: " + edgeLifetime);
+        }
+        if (!(beta > 0 && beta <= 1.0 && Double.isFinite(beta))) {
+            throw new IllegalArgumentException("Invalid beta: " + beta);
+        }
+
         this.r = r;
         this.epsBest = epsBest;
         this.epsNeighbor = epsNeighbor;
@@ -184,6 +200,10 @@ public class NeuralMap implements VectorQuantizer {
      *            be a small value (e.g. 1E-7).
      */
     public void clear(double eps) {
+        if (!(eps >= 0 && Double.isFinite(eps))) {
+            throw new IllegalArgumentException("Invalid freshness threshold: " + eps);
+        }
+
         ArrayList<Neuron> noise = new ArrayList<>();
         for (Neuron neuron : neurons) {
             if (neuron.counter < eps) {
@@ -211,6 +231,10 @@ public class NeuralMap implements VectorQuantizer {
 
     @Override
     public double[] quantize(double[] x) {
+        if (neurons.isEmpty()) {
+            throw new IllegalStateException("No neurons available");
+        }
+
         neurons.stream().parallel().forEach(node -> node.distance(x));
 
         Neuron bmu = neurons.getFirst();

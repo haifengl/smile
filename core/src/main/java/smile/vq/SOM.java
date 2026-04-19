@@ -141,10 +141,35 @@ public class SOM implements VectorQuantizer {
      * @param theta the neighborhood function.
      */
     public SOM(double[][][] neurons, TimeFunction alpha, Neighborhood theta) {
+        if (neurons == null || neurons.length == 0 || neurons[0].length == 0) {
+            throw new IllegalArgumentException("Invalid neuron lattice shape");
+        }
+        if (alpha == null) {
+            throw new IllegalArgumentException("alpha is null");
+        }
+        if (theta == null) {
+            throw new IllegalArgumentException("theta is null");
+        }
+
         this.alpha = alpha;
         this.theta = theta;
         this.nrow = neurons.length;
         this.ncol = neurons[0].length;
+
+        int d = neurons[0][0].length;
+        if (d == 0) {
+            throw new IllegalArgumentException("Neuron dimension is zero");
+        }
+        for (int i = 0; i < nrow; i++) {
+            if (neurons[i].length != ncol) {
+                throw new IllegalArgumentException("Inconsistent number of columns in neuron lattice");
+            }
+            for (int j = 0; j < ncol; j++) {
+                if (neurons[i][j].length != d) {
+                    throw new IllegalArgumentException("Inconsistent neuron dimensionality");
+                }
+            }
+        }
         
         this.map = new Neuron[nrow][ncol];
         this.neurons = new Neuron[nrow * ncol];
@@ -245,24 +270,24 @@ public class SOM implements VectorQuantizer {
         double[][] umatrix = new double[nrow][ncol];
         for (int i = 0; i < nrow - 1; i++) {
             for (int j = 0; j < ncol - 1; j++) {
-                double dist = Math.sqrt(MathEx.distance(map[i][j].w, map[i][j + 1].w));
+                double dist = MathEx.distance(map[i][j].w, map[i][j + 1].w);
                 umatrix[i][j] = Math.max(umatrix[i][j], dist);
                 umatrix[i][j + 1] = Math.max(umatrix[i][j + 1], dist);
 
-                dist = Math.sqrt(MathEx.distance(map[i][j].w, map[i + 1][j].w));
+                dist = MathEx.distance(map[i][j].w, map[i + 1][j].w);
                 umatrix[i][j] = Math.max(umatrix[i][j], dist);
                 umatrix[i + 1][j] = Math.max(umatrix[i + 1][j], dist);
             }
         }
 
         for (int i = 0; i < nrow - 1; i++) {
-            double dist = Math.sqrt(MathEx.distance(map[i][ncol - 1].w, map[i + 1][ncol - 1].w));
+            double dist = MathEx.distance(map[i][ncol - 1].w, map[i + 1][ncol - 1].w);
             umatrix[i][ncol - 1] = Math.max(umatrix[i][ncol - 1], dist);
             umatrix[i + 1][ncol - 1] = Math.max(umatrix[i + 1][ncol - 1], dist);
         }
 
         for (int j = 0; j < ncol - 1; j++) {
-            double dist = Math.sqrt(MathEx.distance(map[nrow - 1][j].w, map[nrow - 1][j + 1].w));
+            double dist = MathEx.distance(map[nrow - 1][j].w, map[nrow - 1][j + 1].w);
             umatrix[nrow - 1][j] = Math.max(umatrix[nrow - 1][j], dist);
             umatrix[nrow - 1][j + 1] = Math.max(umatrix[nrow - 1][j + 1], dist);
         }
