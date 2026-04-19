@@ -122,11 +122,10 @@ public class SQL implements AutoCloseable {
      * @throws SQLException if fail to query metadata.
      */
     public DataFrame tables() throws SQLException {
-        DatabaseMetaData meta = db.getMetaData();
-        try (var rs = meta.getTables(null, null, null, null)) {
-            DataFrame df = DataFrame.of(rs);
-            return df.select("TABLE_NAME", "REMARKS");
-        }
+        return query("""
+                SELECT table_name
+                FROM duckdb_tables()
+                WHERE NOT internal;""");
     }
 
     /**
