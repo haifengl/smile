@@ -106,6 +106,10 @@ public class SOM implements VectorQuantizer {
      */
     private final int ncol;
     /**
+     * The dimensionality of input vectors.
+     */
+    private final int d;
+    /**
      * The lattice of neurons.
      */
     private final Neuron[][] map;
@@ -160,6 +164,8 @@ public class SOM implements VectorQuantizer {
         if (d == 0) {
             throw new IllegalArgumentException("Neuron dimension is zero");
         }
+        this.d = d;
+
         for (int i = 0; i < nrow; i++) {
             if (neurons[i].length != ncol) {
                 throw new IllegalArgumentException("Inconsistent number of columns in neuron lattice");
@@ -304,6 +310,13 @@ public class SOM implements VectorQuantizer {
 
     /** Returns the best matching unit. */
     private Neuron bmu(double[] x) {
+        if (x == null) {
+            throw new IllegalArgumentException("Input vector is null");
+        }
+        if (x.length != d) {
+            throw new IllegalArgumentException("Invalid input dimension: expected " + d + ", actual " + x.length);
+        }
+
         IntStream.range(0, neurons.length).parallel().forEach(i -> dist[i] = MathEx.distance(neurons[i].w, x));
         QuickSort.sort(dist, neurons);
         return neurons[0];

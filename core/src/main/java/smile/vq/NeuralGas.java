@@ -82,6 +82,10 @@ public class NeuralGas implements VectorQuantizer {
      */
     private final Neuron[] neurons;
     /**
+     * The dimensionality of input vectors.
+     */
+    private final int d;
+    /**
      * The network of neurons.
      */
     private final AdjacencyMatrix graph;
@@ -136,6 +140,8 @@ public class NeuralGas implements VectorQuantizer {
         if (d == 0) {
             throw new IllegalArgumentException("Neuron dimension is zero");
         }
+        this.d = d;
+
         for (double[] neuron : neurons) {
             if (neuron.length != d) {
                 throw new IllegalArgumentException("Inconsistent neuron dimensionality");
@@ -178,8 +184,9 @@ public class NeuralGas implements VectorQuantizer {
 
     @Override
     public void update(double[] x) {
+        checkInput(x);
+
         int k = neurons.length;
-        int d = x.length;
 
         IntStream.range(0, neurons.length).parallel().forEach(i -> dist[i] = MathEx.distance(neurons[i].w, x));
         QuickSort.sort(dist, neurons);
@@ -203,11 +210,23 @@ public class NeuralGas implements VectorQuantizer {
 
     @Override
     public double[] quantize(double[] x) {
+        checkInput(x);
+
         if (neurons.length == 0) {
             throw new IllegalStateException("No neurons available");
         }
 
         IntStream.range(0, neurons.length).parallel().forEach(i -> dist[i] = MathEx.distance(neurons[i].w, x));
         return neurons[MathEx.whichMin(dist)].w;
+    }
+
+    /** Validates input vector shape. */
+    private void checkInput(double[] x) {
+        if (x == null) {
+            throw new IllegalArgumentException("Input vector is null");
+        }
+        if (x.length != d) {
+            throw new IllegalArgumentException("Invalid input dimension: expected " + d + ", actual " + x.length);
+        }
     }
 }

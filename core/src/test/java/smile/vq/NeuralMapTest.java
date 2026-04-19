@@ -54,7 +54,7 @@ public class NeuralMapTest {
         double[][] x = usps.x();
         double[][] testx = usps.testx();
 
-        NeuralMap model = new NeuralMap(8, 0.01, 0.002, 50, 0.995);
+        NeuralMap model = new NeuralMap(x[0].length, 8, 0.01, 0.002, 50, 0.995);
         for (int i = 1; i <= 5; i++) {
             for (int j : MathEx.permutate(x.length)) {
                 model.update(x[j]);
