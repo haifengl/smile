@@ -92,4 +92,26 @@ public class TimeSeriesTest {
         assertEquals( 0.02646461, TimeSeries.pacf(logPriceDiff, 4), 1E-8);
         assertEquals( 0.00713402, TimeSeries.pacf(logPriceDiff, 9), 1E-8);
     }
+
+    @Test
+    public void givenNegativeLag_whenAcfCalled_thenUseAbsoluteLag() {
+        double acfLag3 = TimeSeries.acf(logPriceDiff, 3);
+        double acfNegativeLag3 = TimeSeries.acf(logPriceDiff, -3);
+        assertEquals(acfLag3, acfNegativeLag3, 1E-12);
+    }
+
+    @Test
+    public void givenInvalidDiffArguments_whenDiffCalled_thenThrowIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> TimeSeries.diff(logPrice, 0));
+        assertThrows(IllegalArgumentException.class, () -> TimeSeries.diff(logPrice, 1, 0));
+        assertThrows(IllegalArgumentException.class, () -> TimeSeries.diff(logPrice, logPrice.length, 1));
+    }
+
+    @Test
+    public void givenLagOutOfRange_whenAcfPacfCovCalled_thenThrowIllegalArgumentException() {
+        int lag = logPriceDiff.length;
+        assertThrows(IllegalArgumentException.class, () -> TimeSeries.acf(logPriceDiff, lag));
+        assertThrows(IllegalArgumentException.class, () -> TimeSeries.pacf(logPriceDiff, lag));
+        assertThrows(IllegalArgumentException.class, () -> TimeSeries.cov(logPriceDiff, lag));
+    }
 }

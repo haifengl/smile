@@ -457,6 +457,10 @@ public class AR implements Serializable {
      * @return l-step ahead forecast.
      */
     public double[] forecast(int l) {
+        if (l <= 0) {
+            throw new IllegalArgumentException("Invalid forecast horizon l = " + l);
+        }
+
         double[] x = new double[p + l];
         System.arraycopy(this.x, this.x.length - p, x, 0, p);
         for (int i = 0; i < l; i++) {

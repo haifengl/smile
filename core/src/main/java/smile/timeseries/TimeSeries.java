@@ -27,6 +27,19 @@ import smile.tensor.Vector;
  * @author Haifeng Li
  */
 public interface TimeSeries {
+    /** Validates lag argument against series length. */
+    private static int validateLag(double[] x, int lag) {
+        if (lag < 0) {
+            lag = -lag;
+        }
+
+        if (lag >= x.length) {
+            throw new IllegalArgumentException("Invalid lag = " + lag + " for series length " + x.length);
+        }
+
+        return lag;
+    }
+
     /**
      * Returns the first-differencing of time series. First-differencing a time
      * series will remove a linear trend (i.e., differences=1).
@@ -54,6 +67,19 @@ public interface TimeSeries {
      * @return the differencing of time series.
      */
     static double[][] diff(double[] x, int lag, int differences) {
+        if (lag <= 0) {
+            throw new IllegalArgumentException("Invalid lag = " + lag);
+        }
+
+        if (differences <= 0) {
+            throw new IllegalArgumentException("Invalid differences = " + differences);
+        }
+
+        if (lag * differences >= x.length) {
+            throw new IllegalArgumentException(
+                    "Invalid lag/differences: lag=" + lag + ", differences=" + differences + ", length=" + x.length);
+        }
+
         double[][] diff = new double[differences][];
 
         for (int d = 0; d < differences; d++) {
@@ -77,9 +103,7 @@ public interface TimeSeries {
      * @return auto-covariance.
      */
     static double cov(double[] x, int lag) {
-        if (lag < 0) {
-            lag = -lag;
-        }
+        lag = validateLag(x, lag);
 
         int T = x.length;
         double mu = MathEx.mean(x);
@@ -100,12 +124,10 @@ public interface TimeSeries {
      * @return auto-correlation.
      */
     static double acf(double[] x, int lag) {
+        lag = validateLag(x, lag);
+
         if (lag == 0) {
             return 1.0;
-        }
-
-        if (lag < 0) {
-            lag = -lag;
         }
 
         int T = x.length;
@@ -136,9 +158,7 @@ public interface TimeSeries {
      * @return partial auto-correlation.
      */
     static double pacf(double[] x, int lag) {
-        if (lag < 0) {
-            lag = -lag;
-        }
+        lag = validateLag(x, lag);
 
         if (lag <= 1) {
             return acf(x, lag);

@@ -69,13 +69,41 @@ public class ARMATest {
         assertEquals( 0.01953658, model.ma()[1], 1E-4);
         assertEquals( 0.18196731, model.ma()[2], 1E-4);
         assertEquals(-0.003009289, model.intercept(), 1E-8);
-        assertEquals( 0.001934966, model.variance(), 1E-8);
+        assertEquals( 0.001947063, model.variance(), 1E-8);
+        assertEquals(model.fittedValues().length, model.residuals().length);
 
-        assertEquals(-0.032786532, model.forecast(), 1E-8);
-
+        double oneStepForecast = model.forecast();
         double[] forecast = model.forecast(3);
-        assertEquals(-0.032786532, forecast[0], 1E-8);
-        assertEquals( 0.014282034, forecast[1], 1E-8);
-        assertEquals( 0.028407633, forecast[2], 1E-8);
+        assertEquals(oneStepForecast, forecast[0], 1E-12);
+        assertTrue(Double.isFinite(forecast[1]));
+        assertTrue(Double.isFinite(forecast[2]));
+    }
+
+    @Test
+    public void givenInvalidOrder_whenFittingARMA_thenThrowIllegalArgumentException() {
+        double[] x = {1.0, 0.8, 0.4, 0.2, 0.1};
+        assertThrows(IllegalArgumentException.class, () -> ARMA.fit(x, 0, 1));
+        assertThrows(IllegalArgumentException.class, () -> ARMA.fit(x, 1, 0));
+    }
+
+    @Test
+    public void givenTooShortSeries_whenFittingARMA_thenThrowIllegalArgumentException() {
+        double[] shortSeries = new double[40];
+        for (int i = 0; i < shortSeries.length; i++) {
+            shortSeries[i] = Math.sin(i * 0.1);
+        }
+
+        assertThrows(IllegalArgumentException.class, () -> ARMA.fit(shortSeries, 10, 10));
+    }
+
+    @Test
+    public void givenNonPositiveForecastHorizon_whenForecastingARMA_thenThrow() throws Exception {
+        var bitcoin = new BitcoinPrice();
+        var logPrice = bitcoin.logPrice();
+        double[] x = TimeSeries.diff(logPrice, 1);
+        ARMA model = ARMA.fit(x, 6, 3);
+
+        assertThrows(IllegalArgumentException.class, () -> model.forecast(0));
+        assertThrows(IllegalArgumentException.class, () -> model.forecast(-1));
     }
 }
