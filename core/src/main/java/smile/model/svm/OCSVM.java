@@ -114,6 +114,10 @@ public class OCSVM<T> {
      * @return the model.
      */
     public KernelMachine<T> fit(T[] x) {
+        if (x.length == 0) {
+            throw new IllegalArgumentException("Empty training data.");
+        }
+
         this.x = x;
         int n = x.length;
         K = new double[n][n];
