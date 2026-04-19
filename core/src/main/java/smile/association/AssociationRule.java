@@ -74,7 +74,7 @@ public record AssociationRule(int[] antecedent, int[] consequent, double support
     @Override
     public boolean equals(Object o) {
         if (o instanceof AssociationRule a) {
-            return support == a.support && confidence != a.confidence
+            return support == a.support && confidence == a.confidence
                     && Arrays.equals(antecedent, a.antecedent)
                     && Arrays.equals(consequent, a.consequent);
         }

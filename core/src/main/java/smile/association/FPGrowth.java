@@ -122,6 +122,9 @@ public class FPGrowth implements Iterable<ItemSet> {
 
             @Override
             public ItemSet next() {
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
                 return buffer.poll();
             }
         };

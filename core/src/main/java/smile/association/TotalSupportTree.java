@@ -18,6 +18,7 @@ package smile.association;
 
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -137,6 +138,9 @@ class TotalSupportTree implements Iterable<ItemSet> {
 
             @Override
             public ItemSet next() {
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
                 return buffer.poll();
             }
         };
