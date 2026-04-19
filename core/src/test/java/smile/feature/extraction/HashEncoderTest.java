@@ -29,28 +29,8 @@ import static org.junit.jupiter.api.Assertions.*;
 public class HashEncoderTest {
     private static final Function<String, String[]> tokenizer = s -> s.split("\\s+");
 
-    public HashEncoderTest() {
-    }
-
-    @BeforeAll
-    public static void setUpClass() throws Exception {
-    }
-
-    @AfterAll
-    public static void tearDownClass() throws Exception {
-    }
-
-    @BeforeEach
-    public void setUp() {
-    }
-
-    @AfterEach
-    public void tearDown() {
-    }
-
     @Test
-    public void testFeature() throws IOException {
-        System.out.println("feature");
+    public void testGivenMovieReviewsWhenApplyingHashEncoderThenSparseSizesAreStable() throws IOException {
         String[][] text = smile.io.Paths.getTestDataLines("text/movie.txt")
                 .map(String::trim)
                 .filter(line -> !line.isEmpty())
@@ -64,9 +44,7 @@ public class HashEncoderTest {
             x[i] = hashing.apply(text[i][1]);
         }
 
-        System.out.println(x[0]);
         assertEquals(289, x[0].size());
-        System.out.println(x[1999]);
         assertEquals(345, x[1999].size());
     }
 }

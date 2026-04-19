@@ -31,37 +31,17 @@ import static org.junit.jupiter.api.Assertions.*;
 public class BagOfWordsTest {
     private static final Function<String, String[]> tokenizer = s -> s.split("\\s+");
 
-    public BagOfWordsTest() {
-    }
-
-    @BeforeAll
-    public static void setUpClass() throws Exception {
-    }
-
-    @AfterAll
-    public static void tearDownClass() throws Exception {
-    }
-    
-    @BeforeEach
-    public void setUp() {
-    }
-    
-    @AfterEach
-    public void tearDown() {
-    }
-
     @Test
-    public void testUniquenessOfFeatures() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            System.out.println("unique features");
+    public void testGivenDuplicateFeaturesWhenCreatingBagOfWordsThenInputIsRejected() {
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> {
             String[] features = {"crane", "sparrow", "hawk", "owl", "kiwi", "kiwi"};
-            BagOfWords bag = new BagOfWords(tokenizer, features);
+            new BagOfWords(tokenizer, features);
         });
+        assertEquals("Duplicated word:kiwi", error.getMessage());
     }
 
     @Test
-    public void testFeature() throws IOException {
-        System.out.println("feature");
+    public void testGivenMovieReviewsWhenApplyingBagOfWordsThenConfiguredFeatureVectorIsProduced() throws IOException {
         String[][] text = smile.io.Paths.getTestDataLines("text/movie.txt")
                 .map(String::trim)
                 .filter(line -> !line.isEmpty())
@@ -88,27 +68,15 @@ public class BagOfWordsTest {
     }
 
     @Test
-    public void testFit() throws IOException {
-        System.out.println("fit");
-        try {
-            DataFrame data = Read.arff(Paths.getTestData("weka/string.arff"));
-            System.out.println(data);
+    public void testGivenArffTextColumnWhenFittingBagOfWordsThenTopFeaturesAndFrameShapeAreStable() throws Exception {
+        DataFrame data = Read.arff(Paths.getTestData("weka/string.arff"));
+        BagOfWords bag = BagOfWords.fit(data, tokenizer, 10, "LCSH");
+        DataFrame df = bag.apply(data);
 
-            BagOfWords bag = BagOfWords.fit(data, tokenizer, 10,"LCSH");
-            DataFrame df = bag.apply(data);
-            System.out.println(df);
-
-            assertEquals(data.size(), df.size());
-            assertEquals(10, df.ncol());
-            assertEquals(10, bag.features().length);
-            assertEquals("--", bag.features()[0]);
-            assertEquals("Union", bag.features()[9]);
-            for (int i = 0; i < 10; i++) {
-                var feature = bag.features()[i];
-                System.out.println(feature);
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        assertEquals(data.size(), df.size());
+        assertEquals(10, df.ncol());
+        assertEquals(10, bag.features().length);
+        assertEquals("--", bag.features()[0]);
+        assertEquals("Union", bag.features()[9]);
     }
 }

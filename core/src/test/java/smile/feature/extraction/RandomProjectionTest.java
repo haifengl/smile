@@ -25,35 +25,13 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng Li
  */
 public class RandomProjectionTest {
-
-    public RandomProjectionTest() {
-    }
-
-    @BeforeAll
-    public static void setUpClass() throws Exception {
-    }
-
-    @AfterAll
-    public static void tearDownClass() throws Exception {
-    }
-
-    @BeforeEach
-    public void setUp() {
-    }
-
-    @AfterEach
-    public void tearDown() {
-    }
-
     @Test
-    public void testRandomProjection() {
-        System.out.println("regular random projection");
+    public void testGivenDenseRandomProjectionWhenCheckingOrthonormalityThenRowsAreUnitAndOrthogonal() {
         RandomProjection instance = RandomProjection.of(128, 40);
 
         DenseMatrix p = instance.projection;
         DenseMatrix t = p.aat();
 
-        System.out.println(p.toString(true));
         for (int i = 0; i < 40; i++) {
             assertEquals(1.0, t.get(i, i), 1E-10);
             for (int j = 0; j < 40; j++) {
@@ -65,11 +43,11 @@ public class RandomProjectionTest {
     }
 
     @Test
-    public void testSparseRandomProjection() {
-        System.out.println("sparse random projection");
+    public void testGivenSparseRandomProjectionWhenCreatingProjectionThenMatrixShapeIsStable() {
         RandomProjection instance = RandomProjection.sparse(128, 40);
 
         DenseMatrix p = instance.projection;
-        System.out.println(p.toString(true));
+        assertEquals(40, p.nrow());
+        assertEquals(128, p.ncol());
     }
 }
