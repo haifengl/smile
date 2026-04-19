@@ -98,7 +98,7 @@ class ClassificationTest {
         }
 
         val error = Error.of(iris.y(), model.predict(iris.data))
-        println("Training Error = " + error)
+        println("Training Error = $error")
         assertEquals(0, error)
     }
 
@@ -117,7 +117,7 @@ class ClassificationTest {
         }
 
         val error = Error.of(iris.y(), model.predict(iris.data))
-        println("Training Error = " + error)
+        println("Training Error = $error")
         assertEquals(5, error)
     }
 
@@ -136,7 +136,7 @@ class ClassificationTest {
         }
 
         val error = Error.of(iris.y(), model.predict(iris.data))
-        println("Training Error = " + error)
+        println("Training Error = $error")
         assertEquals(0, error)
     }
 }
