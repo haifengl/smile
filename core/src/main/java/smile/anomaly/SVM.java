@@ -16,6 +16,7 @@
  */
 package smile.anomaly;
 
+import java.util.Arrays;
 import java.util.Properties;
 import smile.math.kernel.MercerKernel;
 import smile.model.svm.KernelMachine;
@@ -27,6 +28,12 @@ import smile.model.svm.OCSVM;
  * consisting of all the data points. Therefore, it is sensitive to outliers.
  * If the training data is not contaminated by outliers, the model is best
  * suited for novelty detection.
+ * <p>
+ * The {@link #score(Object)} method (inherited from {@link KernelMachine})
+ * returns the raw decision function value: <em>positive</em> values indicate
+ * inliers (normal observations) and <em>negative</em> values indicate
+ * anomalies. This convention is the opposite of {@link IsolationForest},
+ * where higher scores signal anomalies.
  *
  * <h2>References</h2>
  * <ol>
@@ -131,5 +138,30 @@ public class SVM<T> extends KernelMachine<T>  {
         OCSVM<T> svm = new OCSVM<>(kernel, options.nu, options.tol);
         KernelMachine<T> model = svm.fit(x);
         return new SVM<>(model.kernel(), model.vectors(), model.weights(), model.intercept());
+    }
+
+    /**
+     * Returns the decision function values for an array of samples.
+     * Positive values indicate inliers; negative values indicate anomalies.
+     *
+     * @param x the samples.
+     * @return the decision function values.
+     */
+    public double[] score(T[] x) {
+        return Arrays.stream(x).parallel().mapToDouble(this::score).toArray();
+    }
+
+    /**
+     * Predicts whether a sample is an anomaly. A sample is considered an
+     * anomaly when its decision function value is below {@code threshold}.
+     * Use {@code threshold = 0.0} for the natural SVM decision boundary.
+     *
+     * @param x the sample.
+     * @param threshold the decision value threshold below which the sample
+     *                  is declared an anomaly.
+     * @return {@code true} if the sample is predicted as an anomaly.
+     */
+    public boolean predict(T x, double threshold) {
+        return score(x) < threshold;
     }
 }

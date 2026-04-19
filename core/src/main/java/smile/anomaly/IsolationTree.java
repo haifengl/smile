@@ -16,6 +16,7 @@
  */
 package smile.anomaly;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,15 +24,21 @@ import smile.math.MathEx;
 import smile.stat.distribution.GaussianDistribution;
 
 /**
- * Isolation tree.
+ * Isolation tree. This is an internal building block of {@link IsolationForest}.
+ * Instances are created exclusively by {@link IsolationForest} during training.
  *
  * @author Haifeng Li
  */
 public class IsolationTree implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
+
     /**
      * Isolation tree node.
      */
     static class Node implements Serializable {
+        @Serial
+        private static final long serialVersionUID = 1L;
         /** The adjusted depth of node in the tree. */
         final double depth;
         /** The normal vector of random hyperplane, uniformly over the unit N-Sphere. */
@@ -80,7 +87,7 @@ public class IsolationTree implements Serializable {
          * @return the path length.
          */
         public double path(double[] x) {
-            if (left == null && right == null) {
+            if (left == null || right == null) {
                 return depth;
             } else {
                 double dot = MathEx.dot(x, slope);
@@ -105,7 +112,7 @@ public class IsolationTree implements Serializable {
      * @param maxDepth the maximum depth of the tree.
      * @param extensionLevel the extension level.
      */
-    public IsolationTree(List<double[]> data, int maxDepth, int extensionLevel) {
+    IsolationTree(List<double[]> data, int maxDepth, int extensionLevel) {
         root = buildNode(data, maxDepth, extensionLevel, 0);
     }
 

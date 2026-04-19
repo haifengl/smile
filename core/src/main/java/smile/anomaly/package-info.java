@@ -42,6 +42,17 @@
  * such data, unless it has been aggregated appropriately. Instead, a cluster
  * analysis algorithm may be able to detect the micro clusters formed by
  * these patterns.
+ * <p>
+ * This package provides two anomaly detectors:
+ * <ul>
+ *   <li>{@link smile.anomaly.IsolationForest} – an efficient tree-ensemble
+ *       method that isolates anomalies using random splits. Scores are in
+ *       {@code (0, 1]}; higher values indicate anomalies.</li>
+ *   <li>{@link smile.anomaly.SVM} – One-Class SVM that identifies the
+ *       smallest hypersphere enclosing the training data. The raw decision
+ *       function returns positive values for inliers and negative values
+ *       for anomalies.</li>
+ * </ul>
  *
  * @author Haifeng Li
  */
