@@ -145,4 +145,16 @@ public class KNNTest {
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
     }
+
+    @Test
+    public void givenInvalidTrainingData_whenFittingKNN_thenThrowIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> KNN.fit(new double[0][0], new int[0], 1));
+        assertThrows(IllegalArgumentException.class, () -> KNN.fit(new double[][] {{1.0}, {2.0}}, new int[] {0, 1}, 3));
+    }
+
+    @Test
+    public void givenInvalidPosteriorSize_whenPredictingSoftKNN_thenThrowIllegalArgumentException() {
+        KNN<double[]> model = KNN.fit(new double[][] {{0.0}, {1.0}}, new int[] {0, 1}, 1);
+        assertThrows(IllegalArgumentException.class, () -> model.predict(new double[] {0.0}, new double[1]));
+    }
 }
