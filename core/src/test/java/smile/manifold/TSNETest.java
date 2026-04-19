@@ -50,6 +50,7 @@ public class TSNETest {
     }
 
     @Test
+    @Tag("integration")
     public void test() throws Exception {
         System.out.println("tSNE");
         var mnist = new MNIST();

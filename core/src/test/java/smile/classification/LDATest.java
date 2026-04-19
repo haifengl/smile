@@ -86,6 +86,7 @@ public class LDATest {
     }
 
     @Test
+    @Tag("integration")
     public void testUSPS() throws Exception {
         System.out.println("USPS");
         var usps = new USPS();

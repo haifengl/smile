@@ -56,6 +56,7 @@ public class SOMTest {
 
 
     @Test
+    @Tag("integration")
     public void testKMeans() {
         System.out.println("K-Means as a benchmark");
 
@@ -81,6 +82,7 @@ public class SOMTest {
     }
 
     @Test
+    @Tag("integration")
     public void testUSPS() {
         System.out.println("USPS");
 

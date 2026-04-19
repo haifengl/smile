@@ -149,6 +149,7 @@ public class DecisionTreeTest {
     }
 
     @Test
+    @Tag("integration")
     public void testUSPS() throws Exception {
         System.out.println("USPS");
         var usps = new USPS();
@@ -169,6 +170,7 @@ public class DecisionTreeTest {
     }
 
     @Test
+    @Tag("integration")
     public void testPrune() throws Exception {
         System.out.println("USPS");
         var usps = new USPS();

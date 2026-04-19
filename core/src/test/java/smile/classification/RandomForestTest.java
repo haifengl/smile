@@ -228,6 +228,7 @@ public class RandomForestTest {
     }
 
     @Test
+    @Tag("integration")
     public void testUSPS() throws Exception {
         System.out.println("USPS");
         var usps = new USPS();
@@ -311,6 +312,7 @@ public class RandomForestTest {
     }
 
     @Test
+    @Tag("integration")
     public void testPrune() throws Exception {
         System.out.println("prune");
 

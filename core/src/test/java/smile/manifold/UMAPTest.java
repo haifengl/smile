@@ -51,6 +51,7 @@ public class UMAPTest {
     }
 
     @Test
+    @Tag("integration")
     public void testMnist() throws Exception {
         System.out.println("UMAP MNIST");
         var mnist = new MNIST();

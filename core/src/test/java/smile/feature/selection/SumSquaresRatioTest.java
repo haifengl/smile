@@ -62,6 +62,7 @@ public class SumSquaresRatioTest {
     }
 
     @Test
+    @Tag("integration")
     public void tesUSPS() throws Exception {
         System.out.println("USPS");
         var usps = new USPS();
