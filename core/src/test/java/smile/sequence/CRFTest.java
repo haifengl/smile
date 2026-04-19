@@ -52,6 +52,7 @@ public class CRFTest {
     }
 
     @Test
+    @Tag("integration")
     public void testProtein() throws Exception {
         System.out.println("protein");
         var protein = new Protein();
@@ -91,6 +92,7 @@ public class CRFTest {
     }
 
     @Test
+    @Tag("integration")
     public void testHyphen() throws Exception {
         System.out.println("hyphen");
         var hyphen = new Hyphen();
