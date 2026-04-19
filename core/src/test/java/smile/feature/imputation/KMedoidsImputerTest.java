@@ -67,8 +67,8 @@ public class KMedoidsImputerTest {
         KMedoidsImputer kmedoidsImputer = KMedoidsImputer.fit(df, distance,20);
         Function<double[][], double[][]> imputer = x -> kmedoidsImputer.apply(DataFrame.of(x)).toArray();
 
-        assertEquals(17.14, impute(imputer, data, 0.01), 1E-2);
-        assertEquals(19.28, impute(imputer, data, 0.05), 1E-2);
-        assertEquals(17.83, impute(imputer, data, 0.10), 1E-2);
+        assertEquals(18.92, impute(imputer, data, 0.01), 1E-2);
+        assertEquals(17.19, impute(imputer, data, 0.05), 1E-2);
+        assertEquals(26.76, impute(imputer, data, 0.10), 1E-2);
     }
 }

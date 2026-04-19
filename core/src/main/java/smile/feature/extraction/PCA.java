@@ -385,7 +385,7 @@ public class PCA extends Projection {
             }
         }
 
-        return getProjection(k);
+        return getProjection(k + 1);
     }
 
     @Override

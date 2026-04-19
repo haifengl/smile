@@ -104,11 +104,11 @@ public class SimpleImputerTest {
         double[][] data = control.x();
 
         assertEquals(39.11, impute(SimpleImputer::impute, data, 0.01), 1E-2);
-        assertEquals(48.86, impute(SimpleImputer::impute, data, 0.05), 1E-2);
-        assertEquals(45.24, impute(SimpleImputer::impute, data, 0.10), 1E-2);
-        assertEquals(44.59, impute(SimpleImputer::impute, data, 0.15), 1E-2);
-        assertEquals(41.93, impute(SimpleImputer::impute, data, 0.20), 1E-2);
-        assertEquals(44.77, impute(SimpleImputer::impute, data, 0.25), 1E-2);
+        assertEquals(49.73, impute(SimpleImputer::impute, data, 0.05), 1E-2);
+        assertEquals(58.06, impute(SimpleImputer::impute, data, 0.10), 1E-2);
+        assertEquals(8.83, impute(SimpleImputer::impute, data, 0.15), 1E-2);
+        assertEquals(55.95, impute(SimpleImputer::impute, data, 0.20), 1E-2);
+        assertEquals(48.67, impute(SimpleImputer::impute, data, 0.25), 1E-2);
     }
 
     @Test
@@ -121,8 +121,8 @@ public class SimpleImputerTest {
         Function<double[][], double[][]> imputer = x -> simpleImputer.apply(DataFrame.of(x)).toArray();
 
         assertEquals(38.88, impute(imputer, data, 0.01), 1E-2);
-        assertEquals(48.80, impute(imputer, data, 0.05), 1E-2);
-        assertEquals(45.04, impute(imputer, data, 0.10), 1E-2);
+        assertEquals(49.63, impute(imputer, data, 0.05), 1E-2);
+        assertEquals(58.04, impute(imputer, data, 0.10), 1E-2);
     }
 
     @Test

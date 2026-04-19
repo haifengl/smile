@@ -22,6 +22,7 @@ import java.util.Set;
 import smile.data.Tuple;
 import smile.data.transform.Transform;
 import smile.data.type.StructType;
+import smile.math.MathEx;
 
 /**
  * Normalize samples individually to unit norm. Each sample (i.e. each row of
@@ -86,7 +87,7 @@ public class Normalizer implements Transform {
                 norm = Math.sqrt(norm);
         }
 
-        final double scale = norm;
+        final double scale = MathEx.isZero(norm) ? 1.0 : norm;
         return new smile.data.AbstractTuple(schema) {
             @Override
             public Object get(int i) {

@@ -27,29 +27,8 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng Li
  */
 public class SparseEncoderTest {
-
-    public SparseEncoderTest() {
-    }
-
-    @BeforeAll
-    public static void setUpClass() throws Exception {
-    }
-
-    @AfterAll
-    public static void tearDownClass() throws Exception {
-    }
-
-    @BeforeEach
-    public void setUp() {
-    }
-
-    @AfterEach
-    public void tearDown() {
-    }
-
     @Test
-    public void test() throws Exception {
-        System.out.println("Sparse Encoder");
+    public void testGivenWeatherDataWhenApplyingSparseEncoderThenEncodedSlotsAreStable() throws Exception {
         var weather = new Weather();
         DataFrame data = weather.data();
         SparseEncoder encoder = new SparseEncoder(data.schema(), "outlook", "temperature", "humidity", "windy");

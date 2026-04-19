@@ -143,6 +143,10 @@ public class ProbabilisticPCA extends Projection {
         int m = data.length;
         int n = data[0].length;
 
+        if (k < 1 || k >= n) {
+            throw new IllegalArgumentException("Invalid number of principal components: " + k);
+        }
+
         double[] mu = MathEx.colMeans(data);
         DenseMatrix cov = DenseMatrix.zeros(Float64, n, n);
         for (double[] datum : data) {
@@ -179,7 +183,7 @@ public class ProbabilisticPCA extends Projection {
         }
 
         DenseMatrix M = loading.ata();
-        for (int i = 0; i < n; i++) M.add(i, i, noise);
+        for (int i = 0; i < k; i++) M.add(i, i, noise);
 
         Cholesky chol = M.cholesky();
         DenseMatrix Mi = chol.inverse();
