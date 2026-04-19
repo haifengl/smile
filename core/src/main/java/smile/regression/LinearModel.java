@@ -443,7 +443,7 @@ public class LinearModel implements DataFrameRegression {
         }
 
         Vector x_ = Vector.column(x);
-        double v = 1 + V.xAx(x_);
+        double v = lambda + V.xAx(x_);
         // If 1/v is NaN, then the update to V will no longer be invertible.
         // See https://en.wikipedia.org/wiki/Sherman%E2%80%93Morrison_formula#Statement
         if (Double.isNaN(1/v)){
