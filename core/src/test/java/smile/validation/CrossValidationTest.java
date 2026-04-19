@@ -155,4 +155,24 @@ public class CrossValidationTest {
             assertTrue(hit[j]);
         }
     }
+
+    @Test
+    public void givenInvalidParameters_whenCreatingCrossValidation_thenThrowIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> CrossValidation.of(0, 5));
+        assertThrows(IllegalArgumentException.class, () -> CrossValidation.of(10, 0));
+        assertThrows(IllegalArgumentException.class, () -> CrossValidation.of(10, 11));
+    }
+
+    @Test
+    public void givenInvalidParameters_whenCreatingStratifiedSplits_thenThrowIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> CrossValidation.stratify(new int[0], 3));
+        assertThrows(IllegalArgumentException.class, () -> CrossValidation.stratify(new int[] {0, 1, 0}, 0));
+        assertThrows(IllegalArgumentException.class, () -> CrossValidation.stratify(new int[] {0, 1, 0}, 4));
+    }
+
+    @Test
+    public void givenInvalidParameters_whenCreatingGroupSplits_thenThrowIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> CrossValidation.nonoverlap(new int[0], 2));
+        assertThrows(IllegalArgumentException.class, () -> CrossValidation.nonoverlap(new int[] {0, 1, 1}, 0));
+    }
 }
