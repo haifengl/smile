@@ -193,4 +193,19 @@ public class BootstrapTest {
         System.out.println("100-fold bootstrap RMSE average = " + result.avg().rmse());
         System.out.println("100-fold bootstrap RMSE std.dev = " + result.std().rmse());
     }
+
+    @Test
+    public void givenInvalidParameters_whenCreatingBootstrapSplits_thenThrowIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> Bootstrap.of(0, 10));
+        assertThrows(IllegalArgumentException.class, () -> Bootstrap.of(-1, 10));
+        assertThrows(IllegalArgumentException.class, () -> Bootstrap.of(10, 0));
+        assertThrows(IllegalArgumentException.class, () -> Bootstrap.of(10, -1));
+    }
+
+    @Test
+    public void givenInvalidParameters_whenCreatingStratifiedBootstrapSplits_thenThrowIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> Bootstrap.of(new int[0], 5));
+        assertThrows(IllegalArgumentException.class, () -> Bootstrap.of(new int[] {0, 1, 0}, 0));
+        assertThrows(IllegalArgumentException.class, () -> Bootstrap.of(new int[] {0, 1, 0}, -1));
+    }
 }

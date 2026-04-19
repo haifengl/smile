@@ -49,7 +49,7 @@ public interface LOOCV {
      *         The left one of i-th round is i-th sample.
      */
     static int[][] of(int n) {
-        if (n < 0) {
+        if (n <= 0) {
             throw new IllegalArgumentException("Invalid sample size: " + n);
         }
 

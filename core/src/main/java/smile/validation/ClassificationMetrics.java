@@ -182,7 +182,29 @@ public record ClassificationMetrics(double fitTime, double scoreTime, int size, 
      * @return the classification metrics.
      */
     public static ClassificationMetrics of(double fitTime, double scoreTime, int[] truth, int[] prediction, double[][] posteriori) {
-        if (posteriori[0].length == 2) {
+        if (posteriori.length != truth.length) {
+            throw new IllegalArgumentException(String.format(
+                    "The number of posterior rows %d doesn't match the sample size %d.", posteriori.length, truth.length));
+        }
+
+        if (posteriori.length == 0) {
+            throw new IllegalArgumentException("Empty posterior probabilities.");
+        }
+
+        int classes = posteriori[0].length;
+        if (classes < 2) {
+            throw new IllegalArgumentException("Invalid posterior dimension: " + classes);
+        }
+
+        for (int i = 1; i < posteriori.length; i++) {
+            if (posteriori[i].length != classes) {
+                throw new IllegalArgumentException(String.format(
+                        "Inconsistent posterior dimension at row %d: %d (expected %d).",
+                        i, posteriori[i].length, classes));
+            }
+        }
+
+        if (classes == 2) {
             double[] probability = Arrays.stream(posteriori).mapToDouble(p -> p[1]).toArray();
             return new ClassificationMetrics(fitTime, scoreTime, truth.length,
                     Error.of(truth, prediction),
