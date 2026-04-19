@@ -91,4 +91,12 @@ public class HDBSCANTest {
         assertEquals(7, copy.minPoints());
         assertEquals(11, copy.minClusterSize());
     }
+
+    @Test
+    public void givenNonFiniteDistance_whenFitting_thenThrowIllegalArgumentException() {
+        Double[] x = {0.0, 1.0, 2.0};
+
+        assertThrows(IllegalArgumentException.class,
+                () -> HDBSCAN.fit(x, (a, b) -> Double.POSITIVE_INFINITY, 2, 2));
+    }
 }
