@@ -94,12 +94,6 @@ public class RidgeRegression {
                     throw new IllegalArgumentException("Invalid shrinkage/regularization parameter lambda = " + value);
                 }
             }
-
-            for (var value : beta0) {
-                if (value < 0.0) {
-                    throw new IllegalArgumentException("Invalid generalized ridge penalty target beta0 = " + value);
-                }
-            }
         }
 
         /**

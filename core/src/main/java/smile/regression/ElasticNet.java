@@ -202,6 +202,11 @@ public class ElasticNet {
         int p = X.ncol();
         Vector center = X.colMeans();
         Vector scale = X.colSds();
+        for (int j = 0; j < p; j++) {
+            if (MathEx.isZero(scale.get(j))) {
+                throw new IllegalArgumentException(String.format("The column '%s' is constant", schema.names()[j]));
+            }
+        }
 
         // Pads 0 at the tail
         double[] centeredY = new double[n + p];
