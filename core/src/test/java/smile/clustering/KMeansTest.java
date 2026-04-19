@@ -56,6 +56,7 @@ public class KMeansTest {
     }
 
     @Test
+    @Tag("integration")
     public void testBBD4() {
         System.out.println("BBD 4");
         var model = KMeans.fit(x, 4, 100);
@@ -76,6 +77,7 @@ public class KMeansTest {
     }
 
     @Test
+    @Tag("integration")
     public void testLloyd4() {
         System.out.println("Lloyd 4");
         var model = KMeans.lloyd(x, 4, 100);
@@ -96,6 +98,7 @@ public class KMeansTest {
     }
 
     @Test
+    @Tag("integration")
     public void testBBD64() {
         System.out.println("BBD 64");
         var model = KMeans.fit(x, 64, 100);
@@ -116,6 +119,7 @@ public class KMeansTest {
     }
 
     @Test
+    @Tag("integration")
     public void testLloyd64() {
         System.out.println("Lloyd 64");
         var model = KMeans.lloyd(x, 64, 100);
@@ -174,5 +178,42 @@ public class KMeansTest {
 
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
+    }
+
+    @Test
+    public void givenInvalidInput_whenFittingKMeans_thenThrowIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> KMeans.fit(new double[0][0], 2, 10));
+        assertThrows(IllegalArgumentException.class, () -> KMeans.fit(new double[][] {{0.0}, {1.0, 2.0}}, 2, 10));
+        assertThrows(IllegalArgumentException.class, () -> KMeans.fit(new double[][] {{0.0}, {Double.NaN}}, 2, 10));
+        assertThrows(IllegalArgumentException.class, () -> KMeans.fit(new double[][] {{0.0}, {Double.POSITIVE_INFINITY}}, 2, 10));
+    }
+
+    @Test
+    public void givenKGreaterThanSampleSize_whenFittingKMeans_thenThrowIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> KMeans.fit(new double[][] {{0.0}, {1.0}}, 3, 10));
+    }
+
+    @Test
+    public void givenDataWithMissingValues_whenRunningLloyd_thenAllowNaNButRejectInfinity() {
+        double[][] withNaN = {
+                {0.0, Double.NaN},
+                {0.1, 0.2},
+                {5.0, 5.0},
+                {5.1, 4.9}
+        };
+        assertDoesNotThrow(() -> KMeans.lloyd(withNaN, 2, 10));
+
+        double[][] withInfinity = {
+                {0.0, 1.0},
+                {1.0, Double.POSITIVE_INFINITY},
+                {2.0, 2.0}
+        };
+        assertThrows(IllegalArgumentException.class, () -> KMeans.lloyd(withInfinity, 2, 10));
+    }
+
+    @Test
+    public void givenKMeansFit_whenModelReturned_thenUseKMeansName() {
+        var model = KMeans.fit(new double[][] {{0.0}, {0.1}, {5.0}, {5.1}}, 2, 10);
+        assertEquals("K-Means", model.name());
     }
 }

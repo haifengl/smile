@@ -105,6 +105,7 @@ public class KMeans {
      * @return the model.
      */
     public static CentroidClustering<double[], double[]> fit(double[][] data, Clustering.Options options) {
+        validateOptions(options, data.length);
         return fit(new BBDTree(data), data, options);
     }
 
@@ -116,6 +117,9 @@ public class KMeans {
      * @return the model.
      */
     public static CentroidClustering<double[], double[]> fit(BBDTree bbd, double[][] data, Clustering.Options options) {
+        validateOptions(options, data.length);
+        validateData(data, false);
+
         int k = options.k();
         int maxIter = options.maxIter();
         double tol = options.tol();
@@ -158,7 +162,7 @@ public class KMeans {
             double dist = distance.applyAsDouble(data[i], centroids[group[i]]);
             proximity[i] = dist * dist;
         });
-        return new CentroidClustering<>("X-Means", centroids, distance, group, proximity);
+        return new CentroidClustering<>("K-Means", centroids, distance, group, proximity);
     }
 
     /**
@@ -179,6 +183,9 @@ public class KMeans {
      * @return the model.
      */
     public static CentroidClustering<double[], double[]> lloyd(double[][] data, Clustering.Options options) {
+        validateOptions(options, data.length);
+        validateData(data, true);
+
         int k = options.k();
         int maxIter = options.maxIter();
         double tol = options.tol();
@@ -260,6 +267,7 @@ public class KMeans {
         int k = centroids.length;
         int d = centroids[0].length;
 
+        Arrays.fill(size, 0);
         IntStream.range(0, k).parallel().forEach(cluster -> {
             double[] centroid = new double[d];
             Arrays.fill(notNaN[cluster], 0);
@@ -276,9 +284,58 @@ public class KMeans {
             }
 
             for (int j = 0; j < d; j++) {
-                centroid[j] /= notNaN[cluster][j];
+                if (notNaN[cluster][j] > 0) {
+                    centroid[j] /= notNaN[cluster][j];
+                } else {
+                    // Keep previous coordinate when a cluster has only missing values in this dimension.
+                    centroid[j] = centroids[cluster][j];
+                }
             }
             centroids[cluster] = centroid;
         });
+    }
+
+    /**
+     * Validates the hyperparameters for K-Means.
+     * @param options the clustering options.
+     * @param n the number of observations.
+     */
+    private static void validateOptions(Clustering.Options options, int n) {
+        if (options.k() > n) {
+            throw new IllegalArgumentException(
+                    String.format("Number of clusters %d cannot be greater than the number of observations %d.",
+                            options.k(), n));
+        }
+    }
+
+    /**
+     * Validates matrix-shaped finite input data for K-Means.
+     * @param data the input data.
+     * @param allowNaN true if allows the input data to contain NaN values.
+     */
+    private static void validateData(double[][] data, boolean allowNaN) {
+        if (data.length == 0) {
+            throw new IllegalArgumentException("Empty input data.");
+        }
+
+        int d = data[0].length;
+        if (d == 0) {
+            throw new IllegalArgumentException("Empty feature vectors.");
+        }
+
+        for (int i = 1; i < data.length; i++) {
+            if (data[i].length != d) {
+                throw new IllegalArgumentException("Ragged input data at row " + i);
+            }
+        }
+
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < d; j++) {
+                double x = data[i][j];
+                if (Double.isInfinite(x) || (!allowNaN && Double.isNaN(x))) {
+                    throw new IllegalArgumentException(String.format("Invalid value at row %d col %d: %s", i, j, x));
+                }
+            }
+        }
     }
 }

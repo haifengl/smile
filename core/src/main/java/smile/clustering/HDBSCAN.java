@@ -231,7 +231,7 @@ public class HDBSCAN<T> extends Partitioning {
         for (int i = 0; i < n; i++) {
             for (int j = i + 1; j < n; j++) {
                 double d = distance.d(data[i], data[j]);
-                if (Double.isNaN(d) || d < 0.0) {
+                if (!Double.isFinite(d) || d < 0.0) {
                     throw new IllegalArgumentException("Invalid distance at (" + i + ", " + j + "): " + d);
                 }
                 pairwise[i][j] = d;
