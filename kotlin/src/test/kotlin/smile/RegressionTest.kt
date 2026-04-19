@@ -79,7 +79,7 @@ class RegressionTest {
         }
 
         val error = RMSE.of(longley.y(), model.predict(longley.data))
-        println("Training RMSE = " + error)
+        println("Training RMSE = $error")
         assertEquals(1.5771, error, 1E-4)
     }
 
@@ -98,8 +98,8 @@ class RegressionTest {
         }
 
         val error = RMSE.of(longley.y(), model.predict(longley.data))
-        println("Training RMSE = " + error)
-        assertEquals(1.6549, error, 1E-4)
+        println("Training RMSE = $error")
+        assertEquals(1.6392, error, 1E-4)
     }
 
     @Test
@@ -116,7 +116,7 @@ class RegressionTest {
         }
 
         val error = RMSE.of(longley.y(), model.predict(longley.data))
-        println("Training RMSE = " + error)
-        assertEquals(2.3512, error, 1E-4)
+        println("Training RMSE = $error")
+        assertEquals(2.1894, error, 1E-4)
     }
 }

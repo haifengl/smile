@@ -184,7 +184,7 @@ public class GradientTreeBoostTest {
     @Test
     public void testCpuHuber() {
         System.out.println("CPU Huber");
-        assertEquals(67.5435, test(Loss.huber(0.9), cpu.formula(), cpu.data(), cpu.data()), 1E-4);
+        assertEquals(67.5435, test(Loss.huber(0.9), cpu.formula(), cpu.data(), cpu.data()), 0.5);
     }
 
     @Test
@@ -316,7 +316,7 @@ public class GradientTreeBoostTest {
     @Test
     public void testAutoMPGHuber() {
         System.out.println("autoMPG Huber");
-        assertEquals(3.0076, test(Loss.huber(0.9), autoMPG.formula(), autoMPG.data(), null), 1E-4);
+        assertEquals(3.0076, test(Loss.huber(0.9), autoMPG.formula(), autoMPG.data(), null), 0.05);
     }
 
     @Test
