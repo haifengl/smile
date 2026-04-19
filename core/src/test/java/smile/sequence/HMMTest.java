@@ -286,4 +286,38 @@ public class HMMTest {
             }
         }
     }
+
+    @Test
+    public void givenEmptyObservationSequence_whenPredict_thenThrowIllegalArgumentException() {
+        HMM hmm = new HMM(pi, DenseMatrix.of(a), DenseMatrix.of(b));
+        assertThrows(IllegalArgumentException.class, () -> hmm.predict(new int[0]));
+    }
+
+    @Test
+    public void givenInvalidObservationSymbol_whenScoring_thenThrowIllegalArgumentException() {
+        HMM hmm = new HMM(pi, DenseMatrix.of(a), DenseMatrix.of(b));
+        int[] o = {0, 2};
+        assertThrows(IllegalArgumentException.class, () -> hmm.logp(o));
+    }
+
+    @Test
+    public void givenInvalidStateSequence_whenJointScoring_thenThrowIllegalArgumentException() {
+        HMM hmm = new HMM(pi, DenseMatrix.of(a), DenseMatrix.of(b));
+        int[] o = {0, 1};
+        int[] s = {0, 2};
+        assertThrows(IllegalArgumentException.class, () -> hmm.logp(o, s));
+    }
+
+    @Test
+    public void givenEmptyTrainingData_whenFittingHmm_thenThrowIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> HMM.fit(new int[0][], new int[0][]));
+    }
+
+    @Test
+    public void givenInvalidUpdateArguments_whenUpdatingHmm_thenThrowIllegalArgumentException() {
+        HMM hmm = new HMM(pi, DenseMatrix.of(a), DenseMatrix.of(b));
+        assertThrows(IllegalArgumentException.class, () -> hmm.update(new int[0][], 1));
+        assertThrows(IllegalArgumentException.class, () -> hmm.update(new int[][] { {0, 1, 0} }, -1));
+        assertThrows(IllegalArgumentException.class, () -> hmm.update(new int[][] { {0, 2, 1} }, 1));
+    }
 }

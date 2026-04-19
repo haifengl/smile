@@ -132,6 +132,9 @@ public class HMM implements Serializable {
             throw new IllegalArgumentException("The observation sequence and state sequence are not the same length.");
         }
 
+        validateObservationSequence(o);
+        validateStateSequence(s);
+
         int n = s.length;
         double p = MathEx.log(pi[s[0]]) + MathEx.log(b.get(s[0], o[0]));
         for (int i = 1; i < n; i++) {
@@ -160,6 +163,8 @@ public class HMM implements Serializable {
      * @return the log probability of this sequence.
      */
     public double logp(int[] o) {
+        validateObservationSequence(o);
+
         double[][] alpha = new double[o.length][a.nrow()];
         double[] scaling = new double[o.length];
 
@@ -258,6 +263,8 @@ public class HMM implements Serializable {
      * @return the most likely state sequence.
      */
     public int[] predict(int[] o) {
+        validateObservationSequence(o);
+
         int N = a.nrow();
         // The probability of the most probable path.
         double[][] trellis = new double[o.length][N];
@@ -322,12 +329,30 @@ public class HMM implements Serializable {
             throw new IllegalArgumentException("The number of observation sequences and that of label sequences are different.");
         }
 
+        if (observations.length == 0) {
+            throw new IllegalArgumentException("No observation sequences.");
+        }
+
         int N = 0; // the number of states
         int M = 0; // the number of symbols
 
         for (int i = 0; i < observations.length; i++) {
             if (observations[i].length != labels[i].length) {
                 throw new IllegalArgumentException(String.format("The length of observation sequence %d and that of corresponding label sequence are different.", i));
+            }
+
+            if (observations[i].length == 0) {
+                throw new IllegalArgumentException(String.format("Observation sequence %d is empty.", i));
+            }
+
+            for (int t = 0; t < observations[i].length; t++) {
+                if (observations[i][t] < 0) {
+                    throw new IllegalArgumentException(String.format("Invalid symbol %d at sequence %d position %d.", observations[i][t], i, t));
+                }
+
+                if (labels[i][t] < 0) {
+                    throw new IllegalArgumentException(String.format("Invalid state %d at sequence %d position %d.", labels[i][t], i, t));
+                }
             }
 
             N = Math.max(N, MathEx.max(labels[i]) + 1);
@@ -401,8 +426,60 @@ public class HMM implements Serializable {
      * @param iterations the number of iterations to execute.
      */
     public void update(int[][] observations, int iterations) {
+        if (iterations < 0) {
+            throw new IllegalArgumentException("Invalid iterations: " + iterations);
+        }
+
+        if (observations.length == 0) {
+            throw new IllegalArgumentException("No training sequences.");
+        }
+
+        int symbols = b.ncol();
+        for (int i = 0; i < observations.length; i++) {
+            if (observations[i].length == 0) {
+                throw new IllegalArgumentException(String.format("Training sequence %d is empty.", i));
+            }
+
+            for (int t = 0; t < observations[i].length; t++) {
+                int symbol = observations[i][t];
+                if (symbol < 0 || symbol >= symbols) {
+                    throw new IllegalArgumentException(String.format("Invalid symbol %d at training sequence %d position %d.", symbol, i, t));
+                }
+            }
+        }
+
         for (int iter = 0; iter < iterations; iter++) {
             iterate(observations);
+        }
+    }
+
+    /** Validates an observation sequence for non-emptiness and symbol range. */
+    private void validateObservationSequence(int[] o) {
+        if (o.length == 0) {
+            throw new IllegalArgumentException("Empty observation sequence.");
+        }
+
+        int symbols = b.ncol();
+        for (int i = 0; i < o.length; i++) {
+            int symbol = o[i];
+            if (symbol < 0 || symbol >= symbols) {
+                throw new IllegalArgumentException(String.format("Invalid symbol %d at position %d.", symbol, i));
+            }
+        }
+    }
+
+    /** Validates a state sequence for non-emptiness and state range. */
+    private void validateStateSequence(int[] s) {
+        if (s.length == 0) {
+            throw new IllegalArgumentException("Empty state sequence.");
+        }
+
+        int states = a.nrow();
+        for (int i = 0; i < s.length; i++) {
+            int state = s[i];
+            if (state < 0 || state >= states) {
+                throw new IllegalArgumentException(String.format("Invalid state %d at position %d.", state, i));
+            }
         }
     }
 

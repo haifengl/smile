@@ -16,6 +16,11 @@
  */
 package smile.sequence;
 
+import java.util.Properties;
+import smile.data.Tuple;
+import smile.data.type.DataTypes;
+import smile.data.type.StructField;
+import smile.data.type.StructType;
 import smile.datasets.Hyphen;
 import smile.datasets.Protein;
 import org.junit.jupiter.api.*;
@@ -122,5 +127,50 @@ public class CRFTest {
         System.out.format("Hypen error (Viterbi) rate = %.2f%%%n", 100.0 * viterbiError / n);
         assertEquals(470, error);
         assertEquals(508, viterbiError);
+    }
+
+    @Test
+    public void givenInvalidCrfOptions_whenConstructed_thenThrowIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> new CRF.Options(0, 20, 100, 5, 0.3));
+        assertThrows(IllegalArgumentException.class, () -> new CRF.Options(10, 1, 100, 5, 0.3));
+        assertThrows(IllegalArgumentException.class, () -> new CRF.Options(10, 20, 1, 5, 0.3));
+        assertThrows(IllegalArgumentException.class, () -> new CRF.Options(10, 20, 100, 0, 0.3));
+        assertThrows(IllegalArgumentException.class, () -> new CRF.Options(10, 20, 100, 5, 1.5));
+    }
+
+    @Test
+    public void givenCrfOptionsProperties_whenRoundTripped_thenValuesArePreserved() {
+        CRF.Options expected = new CRF.Options(9, 7, 6, 2, 0.25);
+        Properties props = expected.toProperties();
+        CRF.Options actual = CRF.Options.of(props);
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void givenInvalidTrainingSequences_whenFittingCrf_thenThrowIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> CRF.fit(new Tuple[0][], new int[0][]));
+
+        Tuple t = tuple(1);
+        assertThrows(IllegalArgumentException.class, () -> CRF.fit(new Tuple[][] {{t, t}}, new int[][] {{0}}));
+        assertThrows(IllegalArgumentException.class, () -> CRF.fit(new Tuple[][] {{}}, new int[][] {{}}));
+    }
+
+    @Test
+    public void givenEmptySequence_whenPredictingCrf_thenThrowIllegalArgumentException() {
+        Tuple t0 = tuple(0);
+        Tuple t1 = tuple(1);
+        CRF model = CRF.fit(
+                new Tuple[][] {{t0, t1}, {t1, t0}},
+                new int[][] {{0, 0}, {0, 0}},
+                new CRF.Options(1, 2, 2, 1, 1.0)
+        );
+
+        assertThrows(IllegalArgumentException.class, () -> model.predict(new Tuple[0]));
+        assertThrows(IllegalArgumentException.class, () -> model.viterbi(new Tuple[0]));
+    }
+
+    private static Tuple tuple(int value) {
+        StructType schema = new StructType(new StructField("x", DataTypes.IntType));
+        return Tuple.of(schema, new int[] { value });
     }
 }
