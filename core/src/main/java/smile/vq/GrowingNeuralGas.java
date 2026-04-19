@@ -97,6 +97,9 @@ public class GrowingNeuralGas implements VectorQuantizer {
      * @param d the dimensionality of signals.
      */
     public GrowingNeuralGas(int d) {
+        if (d <= 0) {
+            throw new IllegalArgumentException("Invalid dimension: " + d);
+        }
         this.d = d;
     }
 
@@ -113,6 +116,28 @@ public class GrowingNeuralGas implements VectorQuantizer {
      * @param beta decrease all error variables by multiply them with beta.
      */
     public GrowingNeuralGas(int d, double epsBest, double epsNeighbor, int edgeLifetime, int lambda, double alpha, double beta) {
+        if (d <= 0) {
+            throw new IllegalArgumentException("Invalid dimension: " + d);
+        }
+        if (!(epsBest >= 0 && Double.isFinite(epsBest))) {
+            throw new IllegalArgumentException("Invalid epsBest: " + epsBest);
+        }
+        if (!(epsNeighbor >= 0 && Double.isFinite(epsNeighbor))) {
+            throw new IllegalArgumentException("Invalid epsNeighbor: " + epsNeighbor);
+        }
+        if (edgeLifetime <= 0) {
+            throw new IllegalArgumentException("Invalid edgeLifetime: " + edgeLifetime);
+        }
+        if (lambda <= 0) {
+            throw new IllegalArgumentException("Invalid lambda: " + lambda);
+        }
+        if (!(alpha > 0 && alpha <= 1.0 && Double.isFinite(alpha))) {
+            throw new IllegalArgumentException("Invalid alpha: " + alpha);
+        }
+        if (!(beta > 0 && beta <= 1.0 && Double.isFinite(beta))) {
+            throw new IllegalArgumentException("Invalid beta: " + beta);
+        }
+
         this.d = d;
         this.epsBest = epsBest;
         this.epsNeighbor = epsNeighbor;
@@ -242,6 +267,10 @@ public class GrowingNeuralGas implements VectorQuantizer {
 
     @Override
     public double[] quantize(double[] x) {
+        if (neurons.isEmpty()) {
+            throw new IllegalStateException("No neurons available");
+        }
+
         neurons.stream().parallel().forEach(neuron -> neuron.distance(x));
 
         Neuron bmu = neurons.getFirst();

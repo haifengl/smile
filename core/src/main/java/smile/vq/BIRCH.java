@@ -454,6 +454,19 @@ public class BIRCH implements VectorQuantizer {
      * @param T the maximum radius of a sub-cluster.
      */
     public BIRCH(int d, int B, int L, double T) {
+        if (d <= 0) {
+            throw new IllegalArgumentException("Invalid dimension: " + d);
+        }
+        if (B < 2) {
+            throw new IllegalArgumentException("Invalid branching factor: " + B);
+        }
+        if (L < 2) {
+            throw new IllegalArgumentException("Invalid leaf capacity: " + L);
+        }
+        if (!(T > 0 && Double.isFinite(T))) {
+            throw new IllegalArgumentException("Invalid radius threshold: " + T);
+        }
+
         this.d = d;
         this.B = B;
         this.L = L;
@@ -472,6 +485,10 @@ public class BIRCH implements VectorQuantizer {
 
     @Override
     public double[] quantize(double[] x) {
+        if (root == null) {
+            throw new IllegalStateException("Model has no clustering features");
+        }
+
         ClusteringFeature cluster = root.nearest(x);
         return cluster.centroid();
     }
@@ -481,6 +498,10 @@ public class BIRCH implements VectorQuantizer {
      * @return the cluster centroids of leaf nodes.
      */
     public double[][] centroids() {
+        if (root == null) {
+            throw new IllegalStateException("Model has no clustering features");
+        }
+
         ArrayList<double[]> list = new ArrayList<>();
         centroids(root, list);
         return list.toArray(new double[list.size()][]);

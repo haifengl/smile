@@ -36,8 +36,8 @@ public interface VectorQuantizer extends Serializable {
     void update(double[] x);
 
     /**
-     * Quantize a new observation. Returns Optional.empty
-     * if the observation is noise.
+     * Quantizes a new observation to a representative prototype/code vector.
+     *
      * @param x a new observation.
      * @return the quantized vector.
      */

@@ -119,6 +119,29 @@ public class NeuralGas implements VectorQuantizer {
      *                 iterations for one or two epochs.
      */
     public NeuralGas(double[][] neurons, TimeFunction alpha, TimeFunction theta, TimeFunction lifetime) {
+        if (neurons == null || neurons.length < 2) {
+            throw new IllegalArgumentException("NeuralGas requires at least 2 neurons");
+        }
+        if (alpha == null) {
+            throw new IllegalArgumentException("alpha is null");
+        }
+        if (theta == null) {
+            throw new IllegalArgumentException("theta is null");
+        }
+        if (lifetime == null) {
+            throw new IllegalArgumentException("lifetime is null");
+        }
+
+        int d = neurons[0].length;
+        if (d == 0) {
+            throw new IllegalArgumentException("Neuron dimension is zero");
+        }
+        for (double[] neuron : neurons) {
+            if (neuron.length != d) {
+                throw new IllegalArgumentException("Inconsistent neuron dimensionality");
+            }
+        }
+
         this.neurons = IntStream.range(0, neurons.length).mapToObj(i -> new Neuron(i, neurons[i].clone())).toArray(Neuron[]::new);
         this.alpha = alpha;
         this.theta = theta;
@@ -180,6 +203,10 @@ public class NeuralGas implements VectorQuantizer {
 
     @Override
     public double[] quantize(double[] x) {
+        if (neurons.length == 0) {
+            throw new IllegalStateException("No neurons available");
+        }
+
         IntStream.range(0, neurons.length).parallel().forEach(i -> dist[i] = MathEx.distance(neurons[i].w, x));
         return neurons[MathEx.whichMin(dist)].w;
     }
