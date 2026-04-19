@@ -202,14 +202,14 @@ public record TSNE(double cost, double[][] coordinates) implements Serializable 
             int d = Integer.parseInt(props.getProperty("smile.t_sne.d", "2"));
             double perplexity = Double.parseDouble(props.getProperty("smile.t_sne.perplexity", "20"));
             double eta = Double.parseDouble(props.getProperty("smile.t_sne.eta", "200"));
-            double earlyExaggeration = Double.parseDouble(props.getProperty("smile.t_sne.early_exaggeration"));
+            double earlyExaggeration = Double.parseDouble(props.getProperty("smile.t_sne.early_exaggeration", "12"));
             int maxIter = Integer.parseInt(props.getProperty("smile.t_sne.iterations", "1000"));
             int maxIterWithoutProgress = Integer.parseInt(props.getProperty("smile.t_sne.max_iterations_without_progress", "50"));
             double tol = Double.parseDouble(props.getProperty("smile.t_sne.tolerance", "1E-7"));
-            double momentum = Double.parseDouble(props.getProperty("smile.t_sne.momentum"));
-            double finalMomentum = Double.parseDouble(props.getProperty("smile.t_sne.final_momentum"));
-            int momentumSwitchIter = Integer.parseInt(props.getProperty("smile.t_sne.momentum_switch"));
-            double minGain = Double.parseDouble(props.getProperty("smile.t_sne.momentum_switch"));
+            double momentum = Double.parseDouble(props.getProperty("smile.t_sne.momentum", "0.5"));
+            double finalMomentum = Double.parseDouble(props.getProperty("smile.t_sne.final_momentum", "0.8"));
+            int momentumSwitchIter = Integer.parseInt(props.getProperty("smile.t_sne.momentum_switch", "250"));
+            double minGain = Double.parseDouble(props.getProperty("smile.t_sne.min_gain", "0.01"));
             return new Options(d, perplexity, eta, earlyExaggeration, maxIter, maxIterWithoutProgress, tol,
                     momentum, finalMomentum, momentumSwitchIter, minGain, null);
         }
