@@ -78,7 +78,7 @@ public record RegressionMetrics(double fitTime, double scoreTime, int size, doub
      * Validates a model on a test data.
      * @param model the model.
      * @param testx the validation data.
-     * @param testy the responsible variable of validation data.
+     * @param testy the response variable of validation data.
      * @param <T> the data type of samples.
      * @param <M> the model type.
      * @return the validation metrics.
@@ -92,7 +92,7 @@ public record RegressionMetrics(double fitTime, double scoreTime, int size, doub
      * @param fitTime the time in milliseconds of fitting the model.
      * @param model the model.
      * @param testx the validation data.
-     * @param testy the responsible variable of validation data.
+     * @param testy the response variable of validation data.
      * @param <T> the data type of samples.
      * @param <M> the model type.
      * @return the validation metrics.

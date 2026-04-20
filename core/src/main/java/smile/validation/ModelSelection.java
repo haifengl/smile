@@ -52,8 +52,7 @@ public interface ModelSelection {
     /**
      * Akaike information criterion.
      * <p>
-     * AIC = 2 * k - 2 * log(L), where L is the likelihood of estimated model
-     * and n is the number of samples.
+     * AIC = 2 * k - 2 * log(L), where L is the likelihood of estimated model.
      *
      * @param logL the log-likelihood of estimated model.
      * @param k the number of free parameters to be estimated in the model.

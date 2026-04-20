@@ -189,7 +189,7 @@ public interface CrossValidation {
         int m = unique.length;
 
         if (k > m) {
-            throw new IllegalArgumentException("k-fold must be not greater than the than number of groups");
+            throw new IllegalArgumentException("k-fold must be not greater than the number of groups");
         }
 
         Arrays.sort(unique);

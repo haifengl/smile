@@ -26,7 +26,7 @@ import smile.util.Index;
 import smile.util.Tuple2;
 
 /**
- * A bag of random selected samples.
+ * A bag of randomly selected samples.
  *
  * @param samples the random samples.
  * @param oob the out of bag samples.
