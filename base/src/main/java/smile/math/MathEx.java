@@ -2595,14 +2595,12 @@ public class MathEx {
 
     /**
      * Returns the variance of an array using Welford's numerically stable
-     * online algorithm.
+     * online algorithm. If array length is less than 2, return 0.
      * @param array the array.
      * @return the variance.
      */
     public static double var(int[] array) {
-        if (array.length < 2) {
-            throw new IllegalArgumentException("Array length is less than 2.");
-        }
+        if (array.length < 2) return 0.0;
 
         double mean = 0.0;
         double m2 = 0.0;
@@ -2617,14 +2615,12 @@ public class MathEx {
 
     /**
      * Returns the variance of an array using Welford's numerically stable
-     * online algorithm.
+     * online algorithm. If array length is less than 2, return 0.
      * @param array the array.
      * @return the variance.
      */
     public static double var(float[] array) {
-        if (array.length < 2) {
-            throw new IllegalArgumentException("Array length is less than 2.");
-        }
+        if (array.length < 2) return 0.0;
 
         double mean = 0.0;
         double m2 = 0.0;
@@ -2639,14 +2635,12 @@ public class MathEx {
 
     /**
      * Returns the variance of an array using Welford's numerically stable
-     * online algorithm.
+     * online algorithm. If array length is less than 2, return 0.
      * @param array the array.
      * @return the variance.
      */
     public static double var(double[] array) {
-        if (array.length < 2) {
-            throw new IllegalArgumentException("Array length is less than 2.");
-        }
+        if (array.length < 2) return 0.0;
 
         double mean = 0.0;
         double m2 = 0.0;

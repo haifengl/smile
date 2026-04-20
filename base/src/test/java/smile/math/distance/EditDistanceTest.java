@@ -154,6 +154,7 @@ public class EditDistanceTest {
     }
 
     @Test
+    @Tag("integration")
     public void testPlainLevenshteinSpeedTest() {
         System.out.println("Levenshtein speed test");
         for (int i = 0; i < 100; i++) {
@@ -162,6 +163,7 @@ public class EditDistanceTest {
     }
 
     @Test
+    @Tag("integration")
     public void testLevenshteinSpeedTest() {
         System.out.println("Advanced Levenshtein speed test");
         EditDistance edit = new EditDistance(Math.max(H1N1.length(), H1N5.length()));
@@ -171,6 +173,7 @@ public class EditDistanceTest {
     }
 
     @Test
+    @Tag("integration")
     public void testPlainDamerauSpeedTest() {
         System.out.println("Plain Damerau speed test");
         for (int i = 0; i < 100; i++) {
@@ -179,6 +182,7 @@ public class EditDistanceTest {
     }
 
     @Test
+    @Tag("integration")
     public void testDamerauSpeedTest() {
         System.out.println("Advanced Damerau speed test");
         EditDistance edit = new EditDistance(Math.max(H1N1.length(), H1N5.length()), true);
