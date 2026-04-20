@@ -17,7 +17,7 @@
 package smile.model.mlp;
 
 import smile.tensor.Vector;
-
+import static smile.tensor.ScalarType.*;
 import java.io.IOException;
 import java.io.Serial;
 
@@ -56,7 +56,7 @@ public class InputLayer extends Layer {
     @Serial
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
-        output = ThreadLocal.withInitial(() -> weight.vector(n));
+        output = ThreadLocal.withInitial(() -> Vector.zeros(Float32, n));
 
         if (dropout > 0.0) {
             mask = ThreadLocal.withInitial(() -> new byte[n]);
