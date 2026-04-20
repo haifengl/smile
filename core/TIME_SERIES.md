@@ -1,4 +1,4 @@
-# SMILE — Time Series
+# SMILE — Time Series Forecasting and Analysis
 
 The package `smile.timeseries` provides the following time-series utilities and models:
 
