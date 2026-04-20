@@ -127,7 +127,7 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
         /** Constructor. */
         public Options {
             if (C < 0) {
-                throw new IllegalArgumentException("Invalid maximum number of iterations: " + C);
+                throw new IllegalArgumentException("Invalid soft margin penalty parameter: " + C);
             }
             if (tol <= 0) {
                 throw new IllegalArgumentException("Invalid tolerance: " + tol);

@@ -373,4 +373,53 @@ public class RandomForestTest {
             System.out.format("%-15s %.4f    %.4f    %.4f%n", fields[i], shap[2*i], shap[2*i+1], shap[2*i+2]);
         }
     }
+
+    @Test
+    public void givenTwoCompatibleForests_whenMerging_thenCombinedForestIsLarger() throws Exception {
+        // Given
+        var iris = new Iris();
+        var options = new Options(10, 2, SplitRule.GINI, 20, 100, 5, 1.0, null, seeds, null);
+        RandomForest forest1 = RandomForest.fit(iris.formula(), iris.data(), options);
+        RandomForest forest2 = RandomForest.fit(iris.formula(), iris.data(), options);
+
+        // When
+        RandomForest merged = forest1.merge(forest2);
+
+        // Then
+        assertEquals(forest1.size() + forest2.size(), merged.size());
+        assertEquals(forest1.numClasses(), merged.numClasses());
+        assertArrayEquals(forest1.classes(), merged.classes());
+    }
+
+    @Test
+    public void givenIncompatibleForests_whenMergingDifferentFormulas_thenThrows() throws Exception {
+        // Given
+        var iris = new Iris();
+        var weather = new WeatherNominal();
+        var irisOptions    = new Options(10, 2, SplitRule.GINI, 20, 100, 5, 1.0, null, seeds, null);
+        var weatherOptions = new Options(10, 2, SplitRule.GINI, 8, 10, 1, 1.0, null, seeds, null);
+        RandomForest irisForest    = RandomForest.fit(iris.formula(), iris.data(), irisOptions);
+        RandomForest weatherForest = RandomForest.fit(weather.formula(), weather.data(), weatherOptions);
+
+        // When / Then — formula mismatch must throw
+        assertThrows(IllegalArgumentException.class, () -> irisForest.merge(weatherForest));
+    }
+
+    @Test
+    public void givenDefensiveCopy_whenModifyingClasses_thenModelUnchanged() throws Exception {
+        // Given
+        var iris = new Iris();
+        var options = new Options(10, 2, SplitRule.GINI, 20, 100, 5, 1.0, null, seeds, null);
+        RandomForest model = RandomForest.fit(iris.formula(), iris.data(), options);
+
+        // When — mutate the returned classes array
+        int[] classes = model.classes();
+        int original = classes[0];
+        classes[0] = 999;
+
+        // Then — model's internal state must be unchanged
+        assertEquals(original, model.classes()[0]);
+    }
 }
+
+

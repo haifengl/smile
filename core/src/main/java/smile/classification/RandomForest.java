@@ -546,6 +546,13 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
         if (!formula.equals(other.formula)) {
             throw new IllegalArgumentException("RandomForest have different model formula");
         }
+        if (k != other.k) {
+            throw new IllegalArgumentException(String.format(
+                    "RandomForest have different number of classes: %d vs %d", k, other.k));
+        }
+        if (!Arrays.equals(classes.values, other.classes.values)) {
+            throw new IllegalArgumentException("RandomForest have different class labels");
+        }
 
         Model[] forest = new Model[models.length + other.models.length];
         System.arraycopy(models, 0, forest, 0, models.length);

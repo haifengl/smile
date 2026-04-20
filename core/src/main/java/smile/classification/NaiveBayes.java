@@ -152,7 +152,10 @@ public class NaiveBayes extends AbstractClassifier<double[]> {
     @Override
     public int predict(double[] x, double[] posteriori) {
         if (x.length != p) {
-            throw new IllegalArgumentException(String.format("Invalid input vector size: %d", x.length));
+            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
+        }
+        if (posteriori.length != k) {
+            throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected: %d", posteriori.length, k));
         }
 
         for (int i = 0; i < k; i++) {
