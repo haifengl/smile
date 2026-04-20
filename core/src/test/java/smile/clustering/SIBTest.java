@@ -53,6 +53,7 @@ public class SIBTest {
     }
 
     @Test
+    @Tag("integration")
     public void testParseNG20() throws Exception {
         System.out.println("NG20");
 

@@ -183,7 +183,7 @@ public class DENCLUE extends Partitioning {
          * @return the options.
          */
         public static Options of(Properties props) {
-            double sigma = Double.parseDouble(props.getProperty("smile.denclue.radius", "1.0"));
+            double sigma = Double.parseDouble(props.getProperty("smile.denclue.sigma", "1.0"));
             int m = Integer.parseInt(props.getProperty("smile.denclue.m", "100"));
             int minPts = Integer.parseInt(props.getProperty("smile.denclue.min_points", "10"));
             double tol = Double.parseDouble(props.getProperty("smile.denclue.tolerance", "1E-2"));
@@ -305,8 +305,9 @@ public class DENCLUE extends Partitioning {
         x = x.clone();
         double[] w = new double[m];
 
+        final int maxClimbIter = 500;
         double diff = Double.MAX_VALUE;
-        for (int iter = 0; iter < k || diff > tol; iter++) {
+        for (int iter = 0; iter < maxClimbIter && (iter < k || diff > tol); iter++) {
             for (int i = 0; i < m; i++) {
                 w[i] = Math.exp(gamma * MathEx.squaredDistance(x, samples[i]));
             }
