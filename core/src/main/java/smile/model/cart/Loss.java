@@ -367,7 +367,7 @@ public interface Loss {
             public double value() {
                 double value = 0;
                 for (var r : residual) {
-                    if (r <= delta) {
+                    if (Math.abs(r) <= delta) {
                         value += r * r;
                     } else {
                         value += delta * (Math.abs(r) - delta/2);
