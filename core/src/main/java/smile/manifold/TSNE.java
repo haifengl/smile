@@ -140,7 +140,7 @@ public record TSNE(double cost, double[][] coordinates) implements Serializable 
                 throw new IllegalArgumentException("Invalid final momentum: " + finalMomentum);
             }
             if (momentumSwitchIter <= 0 || momentumSwitchIter >= maxIter) {
-                throw new IllegalArgumentException("Invalid learning rate: " + momentumSwitchIter);
+                throw new IllegalArgumentException("Invalid momentum switch iteration: " + momentumSwitchIter);
             }
             if (minGain <= 0) {
                 throw new IllegalArgumentException("Invalid minimum gain: " + minGain);
@@ -169,7 +169,7 @@ public record TSNE(double cost, double[][] coordinates) implements Serializable 
          * @param maxIter the maximum number of iterations. Should be at least 250.
          */
         public Options(int d, double perplexity, double eta, double earlyExaggeration, int maxIter) {
-            this(d, perplexity, eta, earlyExaggeration, maxIter, 50, 1E-7, 0.5, 0.8, 250, 0.01, null);
+            this(d, perplexity, eta, earlyExaggeration, maxIter, 50, 1E-7, 0.5, 0.8, Math.min(250, maxIter - 1), 0.01, null);
         }
 
         /**

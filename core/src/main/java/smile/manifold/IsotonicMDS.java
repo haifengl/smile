@@ -229,10 +229,12 @@ public record IsotonicMDS(double stress, double[][] coordinates) {
             }
         }
 
-        @Override
-        public double f(double[] x) {
-            dist(x);
-
+        /**
+         * Runs isotonic regression on the current {@code y} vector, populates
+         * {@code yf}, and returns {@code [sstar, tstar, ssq]} where
+         * {@code ssq = sqrt(sstar/tstar)}.
+         */
+        private double[] isotonicRegression() {
             yc[0] = 0.0;
             double tmp = 0.0;
             for (int i = 0; i < n; i++) {
@@ -263,49 +265,27 @@ public record IsotonicMDS(double stress, double[][] coordinates) {
                 sstar += tmp * tmp;
                 tstar += y[i] * y[i];
             }
-            return Math.sqrt(sstar / tstar);
+            return new double[]{sstar, tstar, Math.sqrt(sstar / tstar)};
+        }
+
+        @Override
+        public double f(double[] x) {
+            dist(x);
+            return isotonicRegression()[2];
         }
 
         @Override
         public double g(double[] x, double[] g) {
             dist(x);
-
-            yc[0] = 0.0;
-            double tmp = 0.0;
-            for (int i = 0; i < n; i++) {
-                tmp += y[i];
-                yc[i + 1] = tmp;
-            }
-
-            int ip = 0;
-            int known = 0;
-            do {
-                double slope = 1.0e+200;
-                for (int i = known + 1; i <= n; i++) {
-                    tmp = (yc[i] - yc[known]) / (i - known);
-                    if (tmp < slope) {
-                        slope = tmp;
-                        ip = i;
-                    }
-                }
-                for (int i = known; i < ip; i++) {
-                    yf[i] = (yc[ip] - yc[known]) / (ip - known);
-                }
-            } while ((known = ip) < n);
-
-            double sstar = 0.0;
-            double tstar = 0.0;
-            for (int i = 0; i < n; i++) {
-                tmp = y[i] - yf[i];
-                sstar += tmp * tmp;
-                tstar += y[i] * y[i];
-            }
-            double ssq = Math.sqrt(sstar / tstar);
+            double[] reg = isotonicRegression();
+            double sstar = reg[0];
+            double tstar = reg[1];
+            double ssq   = reg[2];
 
             int k;
             for (int u = 0; u < nr; u++) {
                 for (int i = 0; i < nc; i++) {
-                    tmp = 0.0;
+                    double tmp = 0.0;
                     for (int s = 0; s < nr; s++) {
                         if (s == u) {
                             continue;
