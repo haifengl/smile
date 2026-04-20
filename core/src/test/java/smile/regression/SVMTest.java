@@ -16,6 +16,7 @@
  */
 package smile.regression;
 
+import java.util.Properties;
 import smile.datasets.*;
 import smile.io.Read;
 import smile.io.Write;
@@ -117,5 +118,104 @@ public class SVMTest {
 
         System.out.println(result);
         assertEquals(61.5184, result.avg().rmse(), 1E-4);
+    }
+
+    // ── constructor validation ─────────────────────────────────────────────────
+
+    @Test
+    void givenValidParameters_whenConstruct_thenNoException() {
+        assertDoesNotThrow(() -> new SVM.Options(1.0, 5.0, 1E-3));
+        assertDoesNotThrow(() -> new SVM.Options(0.01, 1000.0));
+    }
+
+    @Test
+    void givenZeroEpsilon_whenConstruct_thenThrows() {
+        var ex = assertThrows(IllegalArgumentException.class,
+                () -> new SVM.Options(0.0, 1.0, 1E-3));
+        assertTrue(ex.getMessage().contains("epsilon") || ex.getMessage().contains("eps"),
+                "Error message should mention epsilon, got: " + ex.getMessage());
+    }
+
+    @Test
+    void givenNegativeEpsilon_whenConstruct_thenThrows() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new SVM.Options(-1.0, 1.0, 1E-3));
+    }
+
+    @Test
+    void givenNegativeC_whenConstruct_thenThrowsWithCorrectMessage() {
+        // Bug fix: the error message used to say "Invalid maximum number of iterations"
+        // for the C parameter. After the fix it should mention the penalty.
+        var ex = assertThrows(IllegalArgumentException.class,
+                () -> new SVM.Options(1.0, -1.0, 1E-3));
+
+        // Must NOT say "iterations" — that belongs to a different parameter.
+        assertFalse(ex.getMessage().toLowerCase().contains("iterations"),
+                "Error message for invalid C must not mention 'iterations': " + ex.getMessage());
+
+        // Must clearly describe the penalty parameter.
+        assertTrue(
+                ex.getMessage().toLowerCase().contains("penalty")
+                        || ex.getMessage().toLowerCase().contains("margin")
+                        || ex.getMessage().toLowerCase().contains("soft"),
+                "Error message should describe the C parameter: " + ex.getMessage());
+    }
+
+    @Test
+    void givenZeroTolerance_whenConstruct_thenThrows() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new SVM.Options(1.0, 5.0, 0.0));
+    }
+
+    @Test
+    void givenZeroC_whenConstruct_thenDoesNotThrow() {
+        // C = 0 is the boundary value; the check is C < 0.
+        assertDoesNotThrow(() -> new SVM.Options(1.0, 0.0, 1E-3));
+    }
+
+    // ── Properties round-trip ─────────────────────────────────────────────────
+
+    @Test
+    void givenOptions_whenRoundTripViaProperties_thenValuesPreserved() {
+        SVM.Options original = new SVM.Options(2.0, 50.0, 1E-4);
+        Properties props = original.toProperties();
+
+        SVM.Options restored = SVM.Options.of(props);
+
+        assertEquals(original.eps(), restored.eps(), 1E-15);
+        assertEquals(original.C(),   restored.C(),   1E-15);
+        assertEquals(original.tol(), restored.tol(), 1E-15);
+    }
+
+    @Test
+    void givenEmptyProperties_whenOf_thenReturnsDefaults() {
+        SVM.Options defaults = SVM.Options.of(new Properties());
+
+        // Default values from the Options.of() implementation
+        assertEquals(1.0,  defaults.eps(), 1E-15);
+        assertEquals(1.0,  defaults.C(),   1E-15);
+        assertEquals(1E-3, defaults.tol(), 1E-15);
+    }
+
+    @Test
+    void givenPartialProperties_whenOf_thenUsesProvidedValues() {
+        Properties props = new Properties();
+        props.setProperty("smile.svm.epsilon", "3.0");
+        // C and tol left at defaults
+
+        SVM.Options opts = SVM.Options.of(props);
+        assertEquals(3.0,  opts.eps(), 1E-15);
+        assertEquals(1.0,  opts.C(),   1E-15);  // default
+        assertEquals(1E-3, opts.tol(), 1E-15);  // default
+    }
+
+    @Test
+    void givenOptions_whenToProperties_thenAllKeysPresent() {
+        SVM.Options opts = new SVM.Options(1.5, 10.0, 5E-4);
+        Properties props = opts.toProperties();
+
+        assertNotNull(props.getProperty("smile.svm.epsilon"));
+        assertNotNull(props.getProperty("smile.svm.C"));
+        assertNotNull(props.getProperty("smile.svm.tolerance"));
     }
 }

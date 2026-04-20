@@ -66,7 +66,7 @@ public class SVM {
                 throw new IllegalArgumentException("Invalid tolerance: " + tol);
             }
             if (C < 0) {
-                throw new IllegalArgumentException("Invalid maximum number of iterations: " + C);
+                throw new IllegalArgumentException("Invalid soft margin penalty parameter: " + C);
             }
         }
 

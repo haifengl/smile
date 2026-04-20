@@ -90,9 +90,15 @@ public interface Binomial {
 
             @Override
             public double logLikelihood(double[] y, double[] mu) {
-                return IntStream.range(0, y.length).mapToDouble(i ->
-                        (y[i] * mu[i] - Math.log(1 + Math.exp(mu[i]))) / n[i] + MathEx.lchoose(n[i], (int) (n[i] * y[i]))
-                ).sum();
+                // mu[i] is the fitted probability p_i = invlink(eta_i).
+                // log P(K=k | n, p) = lchoose(n, k) + k*log(p) + (n-k)*log(1-p)
+                //                   = lchoose(n, n*y) + n*(y*log(p) + (1-y)*log(1-p))
+                return IntStream.range(0, y.length).mapToDouble(i -> {
+                    double logp  = y[i] > 0.0 ? Math.log(mu[i])         : 0.0;
+                    double log1p = y[i] < 1.0 ? Math.log(1.0 - mu[i])   : 0.0;
+                    return n[i] * (y[i] * logp + (1.0 - y[i]) * log1p)
+                            + MathEx.lchoose(n[i], (int) (n[i] * y[i]));
+                }).sum();
             }
         };
     }

@@ -54,7 +54,7 @@ import smile.validation.ModelSelection;
  * where <code>E(Y)</code> is the expected value of <code>Y</code>;
  * <code>X&beta;</code> is the linear combination of linear predictors
  * and unknown parameters &beta;; g is the link function that is a monotonic,
- * differentiable function. THe link function that transforms the mean to
+ * differentiable function. The link function that transforms the mean to
  * the natural parameter is called the canonical link.
  * <p>
  * In this framework, the variance is typically a function, <code>V</code>,
@@ -426,10 +426,11 @@ public class GLM implements DataFrameRegression, Serializable {
 
             double newDev = model.deviance(y, mu, residuals);
             if (iter > 0) {
-                logger.info("Deviance after {} iterations: {}", iter, dev);
+                logger.info("Deviance after {} iterations: {}", iter, newDev);
             }
 
             if (dev - newDev < options.tol) {
+                dev = newDev;
                 break;
             }
 
