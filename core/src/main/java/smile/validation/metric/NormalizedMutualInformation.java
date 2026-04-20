@@ -38,7 +38,7 @@ import static java.lang.Math.log;
 public class NormalizedMutualInformation implements ClusteringMetric {
     @Serial
     private static final long serialVersionUID = 2L;
-    /** Default instance with max normalization. */
+    /** Default instance with joint entropy normalization. */
     public static final NormalizedMutualInformation JOINT = new NormalizedMutualInformation(Method.JOINT);
     /** Default instance with max normalization. */
     public static final NormalizedMutualInformation MAX = new NormalizedMutualInformation(Method.MAX);
