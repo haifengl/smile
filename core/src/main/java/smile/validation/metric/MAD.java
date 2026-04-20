@@ -19,7 +19,8 @@ package smile.validation.metric;
 import java.io.Serial;
 
 /**
- * Mean absolute deviation error.
+ * Mean absolute error (MAE). Computes the average of the absolute
+ * differences between predicted and true values.
  * 
  * @author Haifeng Li
  */
