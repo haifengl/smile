@@ -91,20 +91,23 @@ public interface Model {
      * @param key the tag key.
      * @param value the tag value.
      */
-    default void setProperty(String key, String value) {
+    default void setTag(String key, String value) {
         tags().setProperty(key, value);
     }
 
     /**
-     * Trains a classification model by cross validation.
+     * Trains a classification model. When {@code kfold >= 2}, k-fold
+     * cross-validation is performed and the validation metrics are recorded.
      * @param algorithm the learning algorithm.
      * @param formula the model formula.
      * @param data the training data.
-     * @param test the optional test data.
+     * @param test the optional test data. May be {@code null}.
      * @param params the hyperparameters.
-     * @param kfold k-fold cross validation.
-     * @param round the number of repeated cross validation.
-     * @param ensemble create the ensemble of cross validation models if true.
+     * @param kfold number of folds for cross-validation; skipped when {@code kfold < 2}.
+     * @param round the number of repeated cross-validation rounds.
+     * @param ensemble if true, the cross-validation fold models are combined into
+     *                 an ensemble; otherwise the final model is retrained on the
+     *                 full training set.
      * @return the classification model.
      */
     static ClassificationModel classification(String algorithm, Formula formula, DataFrame data, DataFrame test,
@@ -118,7 +121,7 @@ public interface Model {
             var cv = CrossValidation.stratify(round, kfold, formula, data,
                     (f, d) -> classification(algorithm, f, d, params));
             DataFrameClassifier[] models = cv.rounds().stream()
-                    .map(validation -> validation.model())
+                    .map(fold -> fold.model())
                     .toArray(DataFrameClassifier[]::new);
             model = ensemble ? DataFrameClassifier.ensemble(models) : classification(algorithm, formula, data, params);
             validationMetrics = cv.avg();
@@ -228,15 +231,18 @@ public interface Model {
     }
 
     /**
-     * Trains a regression model.
+     * Trains a regression model. When {@code kfold >= 2}, k-fold
+     * cross-validation is performed and the validation metrics are recorded.
      * @param algorithm the learning algorithm.
      * @param formula the model formula.
      * @param data the training data.
-     * @param test the optional test data.
+     * @param test the optional test data. May be {@code null}.
      * @param params the hyperparameters.
-     * @param kfold k-fold cross validation if kfold > 1.
-     * @param round the number of repeated cross validation.
-     * @param ensemble create the ensemble of cross validation models if true.
+     * @param kfold number of folds for cross-validation; skipped when {@code kfold < 2}.
+     * @param round the number of repeated cross-validation rounds.
+     * @param ensemble if true, the cross-validation fold models are combined into
+     *                 an ensemble; otherwise the final model is retrained on the
+     *                 full training set.
      * @return the regression model.
      */
     static RegressionModel regression(String algorithm, Formula formula, DataFrame data, DataFrame test,
@@ -250,7 +256,7 @@ public interface Model {
             var cv = CrossValidation.regression(round, kfold, formula, data,
                     (f, d) -> regression(algorithm, f, d, params));
             DataFrameRegression[] models = cv.rounds().stream()
-                    .map(validation -> validation.model())
+                    .map(fold -> fold.model())
                     .toArray(DataFrameRegression[]::new);
             model = ensemble ? DataFrameRegression.ensemble(models) : regression(algorithm, formula, data, params);
             validationMetrics = cv.avg();
