@@ -333,7 +333,10 @@ public class DeterministicAnnealing {
                 double[] p = posteriori[i];
                 double sum = 0.0;
                 for (int j = 0; j < k; j++) {
-                    sum += -p[j] * Math.log(p[j]);
+                    // skip zero terms: lim_{x→0+} x*log(x) = 0, but 0*log(0) = NaN in IEEE 754
+                    if (p[j] > 0.0) {
+                        sum += -p[j] * Math.log(p[j]);
+                    }
                 }
                 return sum;
             }).sum();

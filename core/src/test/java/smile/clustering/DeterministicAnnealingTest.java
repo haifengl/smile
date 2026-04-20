@@ -22,6 +22,9 @@ import smile.datasets.USPS;
 import smile.math.MathEx;
 import smile.validation.metric.*;
 import org.junit.jupiter.api.*;
+
+import java.util.Properties;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -89,5 +92,111 @@ public class DeterministicAnnealingTest {
 
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
+    }
+
+    private static final double[][] DATA = {
+            {0.0, 0.0}, {0.1, 0.1},
+            {5.0, 5.0}, {5.1, 5.1}
+    };
+
+    // ── fit produces finite, valid result ─────────────────────────────────────
+
+    @Test
+    void givenSimpleData_whenFitting_thenDistortionIsFiniteAndGroupsAreValid() {
+        MathEx.setSeed(42);
+        CentroidClustering<double[], double[]> model =
+                DeterministicAnnealing.fit(DATA, 2, 0.9, 50);
+
+        assertTrue(Double.isFinite(model.distortion()),
+                "Distortion must be finite (would be NaN before the 0*log(0) fix)");
+        assertTrue(model.distortion() >= 0.0);
+        assertEquals(2, model.k());
+        assertEquals(DATA.length, model.group().length);
+
+        for (int g : model.group()) {
+            assertTrue(g >= 0 && g < model.k(), "Every label must be in [0, k)");
+        }
+    }
+
+    @Test
+    void givenWellSeparatedClusters_whenFitting_thenSeparateGroups() {
+        MathEx.setSeed(42);
+        CentroidClustering<double[], double[]> model =
+                DeterministicAnnealing.fit(DATA, 2, 0.9, 50);
+
+        // Points (0,0)+(0.1,0.1) should share a label; (5,5)+(5.1,5.1) the other.
+        assertEquals(model.group(0), model.group(1),
+                "Points in the near-origin cluster should share a label");
+        assertEquals(model.group(2), model.group(3),
+                "Points in the far cluster should share a label");
+        assertNotEquals(model.group(0), model.group(2),
+                "Points in different clusters should have different labels");
+    }
+
+    // ── Options validation ─────────────────────────────────────────────────────
+
+    @Test
+    void givenKmaxLessThanTwo_whenConstructingOptions_thenThrowsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new DeterministicAnnealing.Options(1, 0.9, 100));
+    }
+
+    @Test
+    void givenAlphaOutOfRange_whenConstructingOptions_thenThrowsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new DeterministicAnnealing.Options(5, 0.0, 100));
+        assertThrows(IllegalArgumentException.class,
+                () -> new DeterministicAnnealing.Options(5, 1.0, 100));
+        assertThrows(IllegalArgumentException.class,
+                () -> new DeterministicAnnealing.Options(5, -0.1, 100));
+    }
+
+    @Test
+    void givenNonPositiveMaxIter_whenConstructingOptions_thenThrowsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new DeterministicAnnealing.Options(5, 0.9, 0));
+        assertThrows(IllegalArgumentException.class,
+                () -> new DeterministicAnnealing.Options(5, 0.9, -1));
+    }
+
+    @Test
+    void givenNegativeTol_whenConstructingOptions_thenThrowsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new DeterministicAnnealing.Options(5, 0.9, 100, -1E-4, 1E-2, null));
+    }
+
+    @Test
+    void givenNegativeSplitTol_whenConstructingOptions_thenThrowsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new DeterministicAnnealing.Options(5, 0.9, 100, 1E-4, -1E-2, null));
+    }
+
+    // ── Options round-trip ────────────────────────────────────────────────────
+
+    @Test
+    void givenOptions_whenRoundTripped_thenAllValuesPreserved() {
+        DeterministicAnnealing.Options opts =
+                new DeterministicAnnealing.Options(5, 0.85, 200, 1E-5, 5E-3, null);
+        Properties props = opts.toProperties();
+        DeterministicAnnealing.Options restored = DeterministicAnnealing.Options.of(props);
+
+        assertEquals(5, restored.kmax());
+        assertEquals(0.85, restored.alpha(), 1E-15);
+        assertEquals(200, restored.maxIter());
+        assertEquals(1E-5, restored.tol(), 1E-20);
+        assertEquals(5E-3, restored.splitTol(), 1E-20);
+        assertNull(restored.controller());
+    }
+
+    @Test
+    void givenMissingProperties_whenRestoringOptions_thenDefaultsAreApplied() {
+        DeterministicAnnealing.Options restored =
+                DeterministicAnnealing.Options.of(new Properties());
+
+        assertEquals(2, restored.kmax());
+        assertEquals(0.9, restored.alpha(), 1E-15);
+        assertEquals(100, restored.maxIter());
+        assertEquals(1E-4, restored.tol(), 1E-15);
+        assertEquals(1E-2, restored.splitTol(), 1E-15);
     }
 }

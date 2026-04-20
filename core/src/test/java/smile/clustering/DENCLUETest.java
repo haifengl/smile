@@ -22,6 +22,9 @@ import smile.datasets.GaussianMixture;
 import smile.math.MathEx;
 import smile.validation.metric.*;
 import org.junit.jupiter.api.*;
+
+import java.util.Properties;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -51,6 +54,7 @@ public class DENCLUETest {
     }
     
     @Test
+    @Tag("integration")
     public void testGaussianMixture() throws Exception {
         System.out.println("Gaussian Mixture");
         GaussianMixture mixture = GaussianMixture.generate();
@@ -76,5 +80,79 @@ public class DENCLUETest {
 
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
+    }
+
+    // ── Options round-trip ────────────────────────────────────────────────────
+
+    @Test
+    void givenOptions_whenRoundTripped_thenSigmaIsPreserved() {
+        // This test directly exercises the bug fix: before the fix, Options.of()
+        // read the key "smile.denclue.radius" while toProperties() wrote
+        // "smile.denclue.sigma", so sigma always restored to the default 1.0.
+        DENCLUE.Options opts = new DENCLUE.Options(2.5, 100, 15, 1E-3);
+        Properties props = opts.toProperties();
+        DENCLUE.Options restored = DENCLUE.Options.of(props);
+
+        assertEquals(2.5, restored.sigma(), 1E-12,
+                "sigma must survive a toProperties/of round-trip");
+        assertEquals(100, restored.m());
+        assertEquals(15, restored.minPts());
+        assertEquals(1E-3, restored.tol(), 1E-15);
+    }
+
+    @Test
+    void givenMissingProperties_whenRestoringOptions_thenDefaultsAreApplied() {
+        DENCLUE.Options restored = DENCLUE.Options.of(new Properties());
+
+        assertEquals(1.0, restored.sigma(), 1E-12);
+        assertEquals(100, restored.m());
+        assertEquals(10, restored.minPts());
+        assertEquals(1E-2, restored.tol(), 1E-15);
+    }
+
+    @Test
+    void givenOptions_whenRoundTripped_thenAllFieldsPreserved() {
+        DENCLUE.Options opts = new DENCLUE.Options(3.14, 50, 7, 5E-4);
+        Properties props = opts.toProperties();
+        DENCLUE.Options restored = DENCLUE.Options.of(props);
+
+        assertEquals(3.14, restored.sigma(), 1E-12);
+        assertEquals(50, restored.m());
+        assertEquals(7, restored.minPts());
+        assertEquals(5E-4, restored.tol(), 1E-15);
+    }
+
+    // ── Options validation ─────────────────────────────────────────────────────
+
+    @Test
+    void givenZeroSigma_whenConstructingOptions_thenThrowsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> new DENCLUE.Options(0.0, 100));
+    }
+
+    @Test
+    void givenNegativeSigma_whenConstructingOptions_thenThrowsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> new DENCLUE.Options(-1.0, 100));
+    }
+
+    @Test
+    void givenZeroM_whenConstructingOptions_thenThrowsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> new DENCLUE.Options(1.0, 0));
+    }
+
+    @Test
+    void givenZeroMinPts_whenConstructingOptions_thenThrowsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new DENCLUE.Options(1.0, 100, 0, 1E-2));
+    }
+
+    @Test
+    void givenNegativeTol_whenConstructingOptions_thenThrowsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new DENCLUE.Options(1.0, 100, 5, -1.0));
+    }
+
+    @Test
+    void givenValidShortConstructor_whenConstructingOptions_thenSucceeds() {
+        assertDoesNotThrow(() -> new DENCLUE.Options(1.0, 100));
     }
 }

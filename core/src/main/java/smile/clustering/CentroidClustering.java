@@ -162,12 +162,14 @@ public record CentroidClustering<T, U>(String name, T[] centers, ToDoubleBiFunct
     }
 
     /**
-     * Returns the radius of i-th cluster.
+     * Returns the root mean square radius of the i-th cluster, i.e. the
+     * square root of the average squared distance of the data points within
+     * the cluster to its centroid.
      * @param i the index of cluster.
      * @return the cluster radius.
      */
     public double radius(int i) {
-        return size[i];
+        return Math.sqrt(distortions[i]);
     }
 
     /**

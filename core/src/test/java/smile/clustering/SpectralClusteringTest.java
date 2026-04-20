@@ -104,6 +104,7 @@ public class SpectralClusteringTest {
     }
 
     @Test
+    @Tag("integration")
     public void testNews() throws Exception {
         System.out.println("News");
 
