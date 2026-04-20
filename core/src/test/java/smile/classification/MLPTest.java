@@ -307,4 +307,46 @@ public class MLPTest {
 
         assertEquals(128, error, 5);
     }
+
+    @Test
+    public void givenNullData_whenFit_thenThrowsIllegalArgumentException() {
+        // Given
+        var props = new java.util.Properties();
+        props.setProperty("smile.mlp.epochs", "1");
+
+        // When / Then
+        assertThrows(IllegalArgumentException.class,
+                () -> MLP.fit(null, new int[]{0, 1}, props));
+    }
+
+    @Test
+    public void givenMismatchedXY_whenFit_thenThrowsIllegalArgumentException() {
+        // Given
+        double[][] x = {{1.0, 2.0}, {3.0, 4.0}};
+        int[] y = {0}; // too short
+        var props = new java.util.Properties();
+        props.setProperty("smile.mlp.epochs", "1");
+
+        // When / Then
+        assertThrows(IllegalArgumentException.class,
+                () -> MLP.fit(x, y, props));
+    }
+
+    @Test
+    public void givenDefensiveCopyOfClasses_whenModified_thenModelUnchanged() {
+        // Given
+        MLP model = new MLP(
+                Layer.input(4),
+                Layer.rectifier(8),
+                Layer.mle(3, OutputFunction.SOFTMAX)
+        );
+
+        // When — mutate the returned array
+        int[] classes = model.classes();
+        int original = classes[0];
+        classes[0] = 999;
+
+        // Then — model's internal state is unchanged
+        assertEquals(original, model.classes()[0]);
+    }
 }

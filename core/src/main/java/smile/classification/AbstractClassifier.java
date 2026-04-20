@@ -63,6 +63,6 @@ public abstract class AbstractClassifier<T> implements Classifier<T> {
 
     @Override
     public int[] classes() {
-        return classes.values;
+        return classes.values.clone();
     }
 }
