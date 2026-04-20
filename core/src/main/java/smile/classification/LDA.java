@@ -79,7 +79,7 @@ public class LDA extends AbstractClassifier<double[]> {
      */
     private final double[] priori;
     /**
-     * THe mean vectors of each class.
+     * The mean vectors of each class.
      */
     private final double[][] mu;
     /**

@@ -225,7 +225,7 @@ public class OneVersusOne<T> extends AbstractClassifier<T> {
 
     @Override
     public boolean isSoft() {
-        return true;
+        return platt != null;
     }
 
     /**

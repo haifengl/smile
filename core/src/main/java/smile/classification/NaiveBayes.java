@@ -41,7 +41,7 @@ import java.io.Serial;
  * <h2>References</h2>
  * <ol>
  * <li> Christopher D. Manning, Prabhakar Raghavan, and Hinrich Schutze. Introduction to Information Retrieval, Chapter 13, 2009.</li>
- * <li> Kevin P. Murphy. Machina Learning A Probability Perspective, Chapter 3, 2012.</li>
+ * <li> Kevin P. Murphy. Machine Learning A Probability Perspective, Chapter 3, 2012.</li>
  * </ol>
  *
  * @see Distribution
