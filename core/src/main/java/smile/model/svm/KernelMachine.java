@@ -73,7 +73,7 @@ public class KernelMachine<T> implements Serializable {
      * @param kernel Kernel function.
      * @param vectors The instances in the kernel machine, e.g. support vectors.
      * @param weight The weights of instances.
-     * @param b The intercept;
+     * @param b The intercept.
      */
     public KernelMachine(MercerKernel<T> kernel, T[] vectors, double[] weight, double b) {
         this.kernel = kernel;
