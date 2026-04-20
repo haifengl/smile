@@ -82,4 +82,10 @@ public class BoxTestTest {
         BoxTest box = BoxTest.pierce(logPriceDiff, 5);
         assertTrue(box.toString().contains("Box-Pierce"));
     }
+
+    @Test
+    public void givenLjungBoxResult_whenConvertedToString_thenIncludeLjungBoxName() {
+        BoxTest box = BoxTest.ljung(logPriceDiff, 5);
+        assertTrue(box.toString().contains("Ljung-Box"));
+    }
 }

@@ -39,7 +39,7 @@
  * invariant under time shift. This is a very strong condition that
  * is hard to verify empirically. A time series <code>{r_t}</code>
  * is weakly stationary if both the mean of r_t and the covariance
- * between r_t and r_t-l are tim invariant, where l is an arbitrary
+ * between r_t and r_t-l are time invariant, where l is an arbitrary
  * integer.
  * <p>
  * Intuitively, a stationary time series is one whose properties
