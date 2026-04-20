@@ -123,7 +123,7 @@ public abstract class InternalNode implements Node {
      * Returns the split score (reduction of impurity).
      * @return the split score.
      */
-    public double score () {
+    public double score() {
         return score;
     }
 

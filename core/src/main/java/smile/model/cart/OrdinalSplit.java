@@ -19,7 +19,7 @@ package smile.model.cart;
 import java.util.function.IntPredicate;
 
 /**
- * The data about of a potential split for a leaf node.
+ * The data for a potential split of a leaf node.
  *
  * @author Haifeng Li
  */
