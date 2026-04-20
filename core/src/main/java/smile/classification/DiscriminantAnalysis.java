@@ -40,7 +40,7 @@ class DiscriminantAnalysis {
     final double[] priori;
     /** The mean vector. */
     final double[] mean;
-    /** THe mean vector per class. */
+    /** The mean vector per class. */
     final double[][] mu;
 
     /**
