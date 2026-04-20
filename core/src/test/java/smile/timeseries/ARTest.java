@@ -25,16 +25,16 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng Li
  */
 public class ARTest {
-    double[] logPriceDiff;
+    private static double[] logPriceDiff;
     public ARTest() throws Exception {
-        var bitcoin = new BitcoinPrice();
-        var logPrice = bitcoin.logPrice();
-        // The log return series, log(p_t) - log(p_t-1), is stationary.
-        logPriceDiff = TimeSeries.diff(logPrice, 1);
     }
 
     @BeforeAll
     public static void setUpClass() throws Exception {
+        var bitcoin = new BitcoinPrice();
+        var logPrice = bitcoin.logPrice();
+        // The log return series, log(p_t) - log(p_t-1), is stationary.
+        logPriceDiff = TimeSeries.diff(logPrice, 1);
     }
 
     @AfterAll
@@ -47,6 +47,123 @@ public class ARTest {
 
     @AfterEach
     public void tearDown() {
+    }
+
+    @Test
+    public void givenAR6OLS_whenFitWithoutStderr_thenTtestIsNull() {
+        AR model = AR.ols(logPriceDiff, 6, false);
+        assertNull(model.ttest(), "ttest should be null when stderr=false");
+    }
+
+    @Test
+    public void givenAR6OLS_whenFitWithoutStderr_thenCoefficientsMatchStderrVersion() {
+        AR withSe    = AR.ols(logPriceDiff, 6, true);
+        AR withoutSe = AR.ols(logPriceDiff, 6, false);
+
+        assertArrayEquals(withSe.ar(), withoutSe.ar(), 1E-12);
+        assertEquals(withSe.intercept(), withoutSe.intercept(), 1E-12);
+    }
+
+    @Test
+    public void givenAR6OLS_whenFit_thenDfEqualsNMinusP() {
+        int p = 6;
+        AR model = AR.ols(logPriceDiff, p);
+        assertEquals(logPriceDiff.length - p, model.df());
+    }
+
+    @Test
+    public void givenAR6YW_whenFit_thenDfEqualsNMinusP() {
+        int p = 6;
+        AR model = AR.fit(logPriceDiff, p);
+        assertEquals(logPriceDiff.length - p, model.df());
+    }
+
+    @Test
+    public void givenAR6OLS_whenFit_thenFittedAndResidualLengthEqualsNMinusP() {
+        int p = 6;
+        AR model = AR.ols(logPriceDiff, p);
+        int expected = logPriceDiff.length - p;
+        assertEquals(expected, model.fittedValues().length);
+        assertEquals(expected, model.residuals().length);
+    }
+
+    @Test
+    public void givenAR6YW_whenFit_thenFittedAndResidualLengthEqualsNMinusP() {
+        int p = 6;
+        AR model = AR.fit(logPriceDiff, p);
+        int expected = logPriceDiff.length - p;
+        assertEquals(expected, model.fittedValues().length);
+        assertEquals(expected, model.residuals().length);
+    }
+
+    @Test
+    public void givenAR6OLS_whenFit_thenR2andAdjustedR2AreFinite() {
+        AR model = AR.ols(logPriceDiff, 6);
+        assertTrue(Double.isFinite(model.R2()),
+                "R2 should be finite for real-world data");
+        assertTrue(Double.isFinite(model.adjustedR2()),
+                "adjustedR2 should be finite for real-world data");
+    }
+
+    @Test
+    public void givenAR6YW_whenFit_thenR2andAdjustedR2AreFinite() {
+        AR model = AR.fit(logPriceDiff, 6);
+        assertTrue(Double.isFinite(model.R2()));
+        assertTrue(Double.isFinite(model.adjustedR2()));
+    }
+
+    @Test
+    public void givenAR6OLS_whenFit_thenVarianceIsPositive() {
+        AR model = AR.ols(logPriceDiff, 6);
+        assertTrue(model.variance() > 0, "variance must be positive");
+    }
+
+    @Test
+    public void givenAR6YW_whenFit_thenVarianceIsPositive() {
+        AR model = AR.fit(logPriceDiff, 6);
+        assertTrue(model.variance() > 0, "variance must be positive");
+    }
+
+    @Test
+    public void givenAR6OLS_whenFit_thenRSSEqualsVarianceTimesDf() {
+        AR model = AR.ols(logPriceDiff, 6);
+        assertEquals(model.variance() * model.df(), model.RSS(), 1E-10);
+    }
+
+    @Test
+    public void givenAR6OLS_whenFit_thenTtestHasPRowsAndFourColumns() {
+        int p = 6;
+        AR model = AR.ols(logPriceDiff, p);
+        double[][] tt = model.ttest();
+        assertNotNull(tt);
+        assertEquals(p, tt.length);
+        for (double[] row : tt) {
+            assertEquals(4, row.length);
+        }
+    }
+
+    @Test
+    public void givenAR6OLS_whenFit_thenTtestPValuesInUnitInterval() {
+        AR model = AR.ols(logPriceDiff, 6);
+        for (double[] row : model.ttest()) {
+            double pval = row[3];
+            assertTrue(pval >= 0.0 && pval <= 1.0,
+                    "p-value " + pval + " should be in [0,1]");
+        }
+    }
+
+    @Test
+    public void givenAR6OLS_whenForecast_thenToStringContainsOLS() {
+        AR model = AR.ols(logPriceDiff, 6);
+        assertTrue(model.toString().contains("OLS"),
+                "OLS model toString should mention OLS method");
+    }
+
+    @Test
+    public void givenAR6YW_whenForecast_thenToStringContainsYuleWalker() {
+        AR model = AR.fit(logPriceDiff, 6);
+        assertTrue(model.toString().contains("Yule-Walker"),
+                "YW model toString should mention Yule-Walker method");
     }
 
     @Test

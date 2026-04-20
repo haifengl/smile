@@ -153,7 +153,7 @@ public class ARMA implements Serializable {
 
         for (int i = 0; i < n; i++) {
             RSS += MathEx.pow2(residuals[i]);
-            TSS += MathEx.pow2(fittedValues[i] - ybar);
+            TSS += MathEx.pow2(x[x.length - n + i] - ybar);
         }
 
         df = n;
@@ -426,7 +426,7 @@ public class ARMA implements Serializable {
         System.arraycopy(this.x, this.x.length - k, x, 0, k);
         System.arraycopy(this.residuals, this.residuals.length - k, a, 0, k);
         for (int i = 0; i < l; i++) {
-            x[p + i] = forecast(x, a, k+i);
+            x[k + i] = forecast(x, a, k+i);
         }
         return Arrays.copyOfRange(x, k, x.length);
     }

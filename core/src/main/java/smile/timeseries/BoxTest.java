@@ -113,7 +113,7 @@ public class BoxTest {
     }
 
     /**
-     * Box-Pierce test.
+     * Ljung-Box test.
      *
      * @param x time series
      * @param lag the statistic will be based on lag autocorrelation coefficients.
