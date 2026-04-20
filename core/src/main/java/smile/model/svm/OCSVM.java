@@ -130,7 +130,8 @@ public class OCSVM<T> {
         });
 
         // Initialize support vectors.
-        int vl = (int) Math.round(nu * n);
+        // Math.max(1,...) guards against vl=0 (when nu*n < 0.5) which would set C=Infinity.
+        int vl = Math.max(1, (int) Math.round(nu * n));
         C = 1.0 / vl;
 
         int[] index = MathEx.permutate(n);
