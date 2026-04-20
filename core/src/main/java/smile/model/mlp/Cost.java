@@ -23,7 +23,7 @@ package smile.model.mlp;
  */
 public enum Cost {
     /**
-     * Mean squares error cost.
+     * Mean squared error cost.
      */
     MEAN_SQUARED_ERROR,
 
