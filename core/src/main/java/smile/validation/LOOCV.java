@@ -46,7 +46,7 @@ public interface LOOCV {
      * Returns the training sample index for each round.
      * @param n the number of samples.
      * @return The index of training instances for each round.
-     *         The left one of i-th round is i-th sample.
+     *         The left-out sample of i-th round is i-th sample.
      */
     static int[][] of(int n) {
         if (n <= 0) {
@@ -150,8 +150,7 @@ public interface LOOCV {
                         scoreTime / (n * 1E6),
                         n, error, accuracy,
                         Double.NaN, Double.NaN, Double.NaN, Double.NaN,
-                        Double.NaN, Double.NaN, Double.NaN,
-                        CrossEntropy.of(y, posteriori));
+                        Double.NaN, Double.NaN, Double.NaN, Double.NaN);
             }
         }
     }
@@ -234,8 +233,7 @@ public interface LOOCV {
                         scoreTime / (n * 1E6),
                         n, error, accuracy,
                         Double.NaN, Double.NaN, Double.NaN, Double.NaN,
-                        Double.NaN, Double.NaN, Double.NaN,
-                        CrossEntropy.of(y, posteriori));
+                        Double.NaN, Double.NaN, Double.NaN, Double.NaN);
             }
         }
     }
@@ -243,7 +241,7 @@ public interface LOOCV {
     /**
      * Runs leave-one-out cross validation tests.
      * @param x the training data.
-     * @param y the responsible variable of training data.
+     * @param y the response variable of training data.
      * @param trainer the lambda to train the model.
      * @param <T> the data type of samples.
      * @param <M> the model type.
