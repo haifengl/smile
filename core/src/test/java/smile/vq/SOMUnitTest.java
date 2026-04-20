@@ -55,6 +55,57 @@ class SOMUnitTest {
     }
 
     @Test
+    void givenSingleRowLattice_whenComputingUMatrix_thenHandlesWithoutException() {
+        // Given: 1×3 lattice — previously caused ArrayIndexOutOfBoundsException
+        double[][][] lattice = {
+                { {0.0}, {3.0}, {7.0} }
+        };
+        SOM som = new SOM(lattice, TimeFunction.constant(0.1), Neighborhood.bubble(1));
+
+        // When
+        double[][] umatrix = som.umatrix();
+
+        // Then: distances between adjacent neurons fill correctly
+        assertEquals(3.0, umatrix[0][0], 1E-12); // dist(0→3)
+        assertEquals(4.0, umatrix[0][1], 1E-12); // max(dist(0→3), dist(3→7)) = max(3,4)
+        assertEquals(4.0, umatrix[0][2], 1E-12); // dist(3→7)
+    }
+
+    @Test
+    void givenSingleColumnLattice_whenComputingUMatrix_thenHandlesWithoutException() {
+        // Given: 3×1 lattice — previously caused ArrayIndexOutOfBoundsException
+        double[][][] lattice = {
+                { {0.0} },
+                { {3.0} },
+                { {7.0} }
+        };
+        SOM som = new SOM(lattice, TimeFunction.constant(0.1), Neighborhood.bubble(1));
+
+        // When
+        double[][] umatrix = som.umatrix();
+
+        // Then: distances between adjacent neurons fill correctly
+        assertEquals(3.0, umatrix[0][0], 1E-12); // dist(0→3)
+        assertEquals(4.0, umatrix[1][0], 1E-12); // max(dist(0→3), dist(3→7)) = max(3,4)
+        assertEquals(4.0, umatrix[2][0], 1E-12); // dist(3→7)
+    }
+
+    @Test
+    void givenSingleNeuronLattice_whenComputingUMatrix_thenReturnsZero() {
+        // Given: 1×1 lattice — no neighbors, so no distances
+        double[][][] lattice = {
+                { {1.0, 2.0} }
+        };
+        SOM som = new SOM(lattice, TimeFunction.constant(0.1), Neighborhood.bubble(1));
+
+        // When
+        double[][] umatrix = som.umatrix();
+
+        // Then
+        assertEquals(0.0, umatrix[0][0], 1E-12);
+    }
+
+    @Test
     void givenOneStepUpdate_whenQuantizing_thenReturnsBestMatchingUnit() {
         // Given
         double[][][] lattice = {

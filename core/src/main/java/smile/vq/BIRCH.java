@@ -67,7 +67,7 @@ public class BIRCH implements VectorQuantizer {
      */
     public final int L;
     /**
-     * THe maximum radius of a sub-cluster.
+     * The maximum radius of a sub-cluster.
      */
     public final double T;
     /**

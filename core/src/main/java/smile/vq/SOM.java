@@ -80,7 +80,7 @@ import smile.sort.QuickSort;
  *
  * <h2>References</h2>
  * <ol>
- * <li> Teuvo KohonenDan. Self-organizing maps. Springer, 3rd edition, 2000. </li>
+ * <li> Teuvo Kohonen. Self-organizing maps. Springer, 3rd edition, 2000. </li>
  * </ol>
  * 
  * @author Haifeng Li
@@ -298,7 +298,9 @@ public class SOM implements VectorQuantizer {
             umatrix[nrow - 1][j + 1] = Math.max(umatrix[nrow - 1][j + 1], dist);
         }
 
-        umatrix[nrow - 1][ncol - 1] = Math.max(umatrix[nrow - 1][ncol - 2], umatrix[nrow - 2][ncol - 1]);
+        if (nrow > 1 && ncol > 1) {
+            umatrix[nrow - 1][ncol - 1] = Math.max(umatrix[nrow - 1][ncol - 2], umatrix[nrow - 2][ncol - 1]);
+        }
 
         return umatrix;
     }
