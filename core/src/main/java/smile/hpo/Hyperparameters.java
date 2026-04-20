@@ -17,15 +17,15 @@
 package smile.hpo;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Stream;
 import smile.math.MathEx;
 
 /**
- * Hyperparameter configuration. A hyperparameter is a parameter whose value is set
- * before the learning process begins. By contrast, the values of other
+ * Hyperparameter configuration. A hyperparameter is a parameter whose value
+ * is set before the learning process begins. By contrast, the values of other
  * parameters are derived via training.
  * <p>
  * Hyperparameters can be classified as model hyperparameters, that cannot
@@ -36,7 +36,8 @@ import smile.math.MathEx;
  * the topology and size of a neural network are model hyperparameters,
  * while learning rate and mini-batch size are algorithm hyperparameters.
  * <p>
- * The below example shows how to tune the hyperparameters of random forest.
+ * The below example shows how to tune the hyperparameters of random forest
+ * using grid search.
  * <pre>
  * {@code
  *    import smile.io.*;
@@ -46,82 +47,106 @@ import smile.math.MathEx;
  *
  *    var hp = new Hyperparameters()
  *        .add("smile.random.forest.trees", 100) // a fixed value
- *        .add("smile.random.forest.mtry", new int[] {2, 3, 4}) // an array of values to choose
- *        .add("smile.random.forest.max.nodes", 100, 500, 50); // range [100, 500] with step 50
+ *        .add("smile.random.forest.mtry", new int[] {2, 3, 4}) // discrete choices
+ *        .add("smile.random.forest.max.nodes", 100, 500, 50); // range [100, 500] step 50
  *
  *    var train = Read.arff("data/weka/segment-challenge.arff");
  *    var test = Read.arff("data/weka/segment-test.arff");
  *    var formula = Formula.lhs("class");
  *    var testy = formula.y(test).toIntArray();
  *
- *    hp.grid().forEach(prop -&gt; {
+ *    hp.grid().forEach(prop -> {
  *        var model = RandomForest.fit(formula, train, prop);
  *        var pred = model.predict(test);
  *        System.out.println(prop);
  *        System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, pred)));
  *        System.out.println(ConfusionMatrix.of(testy, pred));
  *    });
+ *
+ *    // Random search — remember to limit the infinite stream:
+ *    hp.random().limit(50).forEach(prop -> { ... });
  * }
  * </pre>
  * @author Haifeng Li
  */
 public class Hyperparameters {
-    /** The set of parameters. */
-    private final HashMap<String, Object> parameters = new HashMap<>();
+    /** The set of parameters, in insertion order. */
+    private final LinkedHashMap<String, Object> parameters = new LinkedHashMap<>();
 
-    record KeyValue(String key, String value) {
-    }
+    /**
+     * Intermediate key-value pair used while expanding the Cartesian product
+     * in {@link #grid()}.
+     */
+    private record KeyValue(String key, String value) {}
 
-    record IntRange(int start, int end, int step) {
+    /**
+     * An integer range {@code [start, end]} with a positive step size.
+     * {@link #toArray()} generates values {@code start, start+step, ...}
+     * up to and not exceeding {@code end}.
+     *
+     * @param start the start of the range (inclusive).
+     * @param end   the end of the range (the last generated value will be
+     *              {@code <= end}).
+     * @param step  a positive step size.
+     */
+    private record IntRange(int start, int end, int step) {
         public IntRange {
             if (start >= end) {
-                throw new IllegalArgumentException(String.format("start = %d, end = %d", start, end));
+                throw new IllegalArgumentException(
+                        String.format("start (%d) must be less than end (%d)", start, end));
             }
-
             if (step <= 0) {
-                throw new IllegalArgumentException("step = " + step);
+                throw new IllegalArgumentException(
+                        String.format("step must be positive, but got %d", step));
             }
         }
 
         public IntRange(int start, int end) {
-            this(start, end, Math.max(1, (end-start)/10));
+            this(start, end, Math.max(1, (end - start) / 10));
         }
 
         int[] toArray() {
             int n = (end - start) / step + 1;
             int[] a = new int[n];
-            a[0] = start;
-            for (int i = 1; i < n; i++) {
-                a[i] = a[i-1] + step;
+            for (int i = 0; i < n; i++) {
+                a[i] = start + i * step;
             }
             return a;
         }
     }
 
-    record DoubleRange(double start, double end, double step) {
+    /**
+     * A double range {@code [start, end]} with a positive step size.
+     * {@link #toArray()} generates values {@code start, start+step, ...}
+     * clamped so that no value exceeds {@code end}.
+     *
+     * @param start the start of the range (inclusive).
+     * @param end   the end of the range (the last generated value will be
+     *              {@code <= end}).
+     * @param step  a positive step size.
+     */
+    private record DoubleRange(double start, double end, double step) {
         public DoubleRange {
             if (start >= end) {
-                throw new IllegalArgumentException(String.format("start = %f, end = %f", start, end));
+                throw new IllegalArgumentException(
+                        String.format("start (%f) must be less than end (%f)", start, end));
             }
-
             if (step <= 0.0) {
-                throw new IllegalArgumentException("step = " + step);
+                throw new IllegalArgumentException(
+                        String.format("step must be positive, but got %f", step));
             }
         }
 
         public DoubleRange(double start, double end) {
-            this(start, end, (end-start)/10);
+            this(start, end, (end - start) / 10);
         }
 
         double[] toArray() {
-            double intervals = (end - start) / step;
-            int n = (int) Math.ceil(intervals);
-            if (intervals == n) n++;
-
+            int n = (int) Math.floor((end - start) / step) + 1;
             double[] a = new double[n];
-            a[0] = start;
-            for (int i = 1; i < n; i++) {
-                a[i] = a[i-1] + step;
+            for (int i = 0; i < n; i++) {
+                // Multiplication avoids floating-point accumulation errors.
+                a[i] = Math.min(start + i * step, end);
             }
             return a;
         }
@@ -129,146 +154,211 @@ public class Hyperparameters {
 
     /** Constructor. */
     public Hyperparameters() {
-
     }
 
     /**
-     * Adds a parameter.
+     * Validates that a parameter name is non-null and non-blank.
      *
-     * @param name the parameter name.
-     * @param value a fixed value of parameter.
+     * @param name the parameter name to validate.
+     * @throws IllegalArgumentException if the name is null or blank.
+     */
+    private static void requireName(String name) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Parameter name must not be null or blank");
+        }
+    }
+
+    /**
+     * Adds a parameter with a fixed integer value.
+     *
+     * @param name  the parameter name.
+     * @param value a fixed value of the parameter.
      * @return this object.
      */
     public Hyperparameters add(String name, int value) {
-        return add(name, new int[] {value});
+        return add(name, new int[]{value});
     }
 
     /**
-     * Adds a parameter.
+     * Adds a parameter with a fixed double value.
      *
-     * @param name the parameter name.
-     * @param value a fixed value of parameter.
+     * @param name  the parameter name.
+     * @param value a fixed value of the parameter.
      * @return this object.
      */
     public Hyperparameters add(String name, double value) {
-        return add(name, new double[] {value});
+        return add(name, new double[]{value});
     }
 
     /**
-     * Adds a parameter.
+     * Adds a parameter with a fixed string value.
      *
-     * @param name the parameter name.
-     * @param value a fixed value of parameter.
+     * @param name  the parameter name.
+     * @param value a fixed value of the parameter.
      * @return this object.
      */
     public Hyperparameters add(String name, String value) {
-        return add(name, new String[] {value});
+        return add(name, new String[]{value});
     }
 
     /**
-     * Adds a parameter.
+     * Adds a parameter with a discrete set of integer choices.
      *
-     * @param name the parameter name.
-     * @param values an array of parameter values.
+     * @param name   the parameter name.
+     * @param values a non-empty array of candidate values.
      * @return this object.
+     * @throws IllegalArgumentException if {@code values} is empty.
      */
     public Hyperparameters add(String name, int[] values) {
+        requireName(name);
         if (values.length == 0) {
-            throw new IllegalArgumentException("Empty array");
+            throw new IllegalArgumentException("values array must not be empty");
         }
         parameters.put(name, values);
         return this;
     }
 
     /**
-     * Adds a parameter.
+     * Adds a parameter with a discrete set of double choices.
      *
-     * @param name the parameter name.
-     * @param values an array of parameter values.
+     * @param name   the parameter name.
+     * @param values a non-empty array of candidate values.
      * @return this object.
+     * @throws IllegalArgumentException if {@code values} is empty.
      */
     public Hyperparameters add(String name, double[] values) {
+        requireName(name);
         if (values.length == 0) {
-            throw new IllegalArgumentException("Empty array");
+            throw new IllegalArgumentException("values array must not be empty");
         }
         parameters.put(name, values);
         return this;
     }
 
     /**
-     * Adds a parameter.
+     * Adds a parameter with a discrete set of string choices.
      *
-     * @param name the parameter name.
-     * @param values an array of parameter values.
+     * @param name   the parameter name.
+     * @param values a non-empty array of candidate values.
      * @return this object.
+     * @throws IllegalArgumentException if {@code values} is empty.
      */
     public Hyperparameters add(String name, String[] values) {
+        requireName(name);
         if (values.length == 0) {
-            throw new IllegalArgumentException("Empty array");
+            throw new IllegalArgumentException("values array must not be empty");
         }
         parameters.put(name, values);
         return this;
     }
 
     /**
-     * Adds a parameter.
+     * Adds an integer parameter with an auto-stepped range.
+     * The step defaults to {@code max(1, (end-start)/10)}.
      *
-     * @param name the parameter name.
+     * @param name  the parameter name.
      * @param start the start of value range (inclusive).
-     * @param end the end of value range (inclusive).
+     * @param end   the end of value range (inclusive upper bound for steps).
      * @return this object.
      */
     public Hyperparameters add(String name, int start, int end) {
+        requireName(name);
         parameters.put(name, new IntRange(start, end));
         return this;
     }
 
     /**
-     * Adds a parameter.
+     * Adds an integer parameter with an explicit step range.
      *
-     * @param name the parameter name.
+     * @param name  the parameter name.
      * @param start the start of value range (inclusive).
-     * @param end the end of value range (inclusive).
-     * @param step the step size.
+     * @param end   the end of value range (inclusive upper bound for steps).
+     * @param step  the step size (must be positive).
      * @return this object.
      */
     public Hyperparameters add(String name, int start, int end, int step) {
+        requireName(name);
         parameters.put(name, new IntRange(start, end, step));
         return this;
     }
 
     /**
-     * Adds a parameter.
+     * Adds a double parameter with an auto-stepped range.
+     * The step defaults to {@code (end-start)/10}.
      *
-     * @param name the parameter name.
+     * @param name  the parameter name.
      * @param start the start of value range (inclusive).
-     * @param end the end of value range (inclusive).
+     * @param end   the end of value range (inclusive upper bound for steps).
      * @return this object.
      */
     public Hyperparameters add(String name, double start, double end) {
+        requireName(name);
         parameters.put(name, new DoubleRange(start, end));
         return this;
     }
 
     /**
-     * Adds a parameter.
+     * Adds a double parameter with an explicit step range.
      *
-     * @param name the parameter name.
+     * @param name  the parameter name.
      * @param start the start of value range (inclusive).
-     * @param end the end of value range (inclusive).
-     * @param step the step size.
+     * @param end   the end of value range (inclusive upper bound for steps).
+     * @param step  the step size (must be positive).
      * @return this object.
      */
     public Hyperparameters add(String name, double start, double end, double step) {
+        requireName(name);
         parameters.put(name, new DoubleRange(start, end, step));
         return this;
     }
 
     /**
-     * Generates a stream of hyperparameters for random search.
-     * @return the stream of hyperparameters for random search.
+     * Removes a previously registered parameter. Has no effect if the
+     * parameter was not registered.
+     *
+     * @param name the parameter name.
+     * @return this object.
+     */
+    public Hyperparameters remove(String name) {
+        parameters.remove(name);
+        return this;
+    }
+
+    /**
+     * Removes all registered parameters.
+     *
+     * @return this object.
+     */
+    public Hyperparameters clear() {
+        parameters.clear();
+        return this;
+    }
+
+    /**
+     * Returns the number of registered parameters.
+     *
+     * @return the number of registered parameters.
+     */
+    public int size() {
+        return parameters.size();
+    }
+
+    /**
+     * Generates an <strong>infinite</strong> stream of randomly sampled
+     * hyperparameter configurations. The caller must apply {@link Stream#limit}
+     * before collecting, e.g.:
+     * <pre>{@code hp.random().limit(100).forEach(this::evaluate);}</pre>
+     * <p>
+     * For {@link IntRange} and {@link DoubleRange} parameters the step field
+     * is ignored; values are sampled uniformly from {@code [start, end)}.
+     *
+     * @return an infinite stream of hyperparameter configurations.
+     * @throws IllegalStateException if no parameters have been registered.
      */
     public Stream<Properties> random() {
+        if (parameters.isEmpty()) {
+            throw new IllegalStateException("No hyperparameters have been registered");
+        }
         return Stream.generate(() -> {
             Properties params = new Properties();
             parameters.forEach((name, values) -> {
@@ -286,10 +376,11 @@ public class Hyperparameters {
                         params.setProperty(name, v);
                     }
                     case IntRange range ->
-                        params.setProperty(name, String.valueOf(MathEx.randomInt(range.start, range.end)));
+                        params.setProperty(name, String.valueOf(MathEx.randomInt(range.start(), range.end())));
                     case DoubleRange range ->
-                        params.setProperty(name, String.valueOf(MathEx.random(range.start, range.end)));
-                    case null, default -> throw new IllegalStateException("Unknown parameter type: " + values);
+                        params.setProperty(name, String.valueOf(MathEx.random(range.start(), range.end())));
+                    case null, default ->
+                        throw new IllegalStateException("Unknown parameter type: " + values);
                 }
             });
             return params;
@@ -297,25 +388,55 @@ public class Hyperparameters {
     }
 
     /**
-     * Generates a stream of hyperparameters for grid search.
-     * @return the stream of hyperparameters for grid search.
+     * Generates a finite stream of {@code n} randomly sampled hyperparameter
+     * configurations. This is a convenience alternative to
+     * {@code random().limit(n)}.
+     *
+     * @param n the number of configurations to sample (must be positive).
+     * @return a stream of {@code n} randomly sampled configurations.
+     * @throws IllegalArgumentException if {@code n <= 0}.
+     * @throws IllegalStateException    if no parameters have been registered.
+     */
+    public Stream<Properties> random(int n) {
+        if (n <= 0) {
+            throw new IllegalArgumentException(
+                    String.format("n must be positive, but got %d", n));
+        }
+        return random().limit(n);
+    }
+
+    /**
+     * Generates a finite stream of all hyperparameter configurations for
+     * grid (exhaustive) search. The total number of configurations is the
+     * Cartesian product of all registered parameter value lists — be cautious
+     * of combinatorial explosion.
+     * <p>
+     * Parameters are enumerated in insertion order.
+     *
+     * @return a finite stream of all grid-search configurations.
+     * @throws IllegalStateException if no parameters have been registered.
      */
     public Stream<Properties> grid() {
+        if (parameters.isEmpty()) {
+            throw new IllegalStateException("No hyperparameters have been registered");
+        }
+
         ArrayList<Map.Entry<String, Object>> lists = new ArrayList<>(parameters.entrySet());
 
-        // Extract each value of first parameter and add each to a new Properties.
+        // Seed combinations with the first parameter's values.
         ArrayList<ArrayList<KeyValue>> combinations = new ArrayList<>();
-        for(var pair : values(lists.getFirst())) {
+        for (var pair : values(lists.getFirst())) {
             ArrayList<KeyValue> newList = new ArrayList<>();
             newList.add(pair);
             combinations.add(newList);
         }
 
-        for(int i = 1; i < lists.size(); i++) {
+        // Cross-product with each subsequent parameter.
+        for (int i = 1; i < lists.size(); i++) {
             ArrayList<KeyValue> nextList = values(lists.get(i));
             ArrayList<ArrayList<KeyValue>> newCombinations = new ArrayList<>();
-            for(var first : combinations) {
-                for(var second: nextList) {
+            for (var first : combinations) {
+                for (var second : nextList) {
                     ArrayList<KeyValue> newList = new ArrayList<>(first);
                     newList.add(second);
                     newCombinations.add(newList);
@@ -331,7 +452,7 @@ public class Hyperparameters {
         });
     }
 
-    /** Returns the list of parameter values. */
+    /** Returns the list of {@link KeyValue} pairs for a single parameter entry. */
     private ArrayList<KeyValue> values(Map.Entry<String, Object> parameter) {
         ArrayList<KeyValue> list = new ArrayList<>();
         String name = parameter.getKey();
@@ -362,9 +483,9 @@ public class Hyperparameters {
                     list.add(new KeyValue(name, String.valueOf(value)));
                 }
             }
-            case null, default -> throw new IllegalStateException("Unknown parameter type: " + values);
+            case null, default ->
+                throw new IllegalStateException("Unknown parameter type: " + values);
         }
-
         return list;
     }
 }
