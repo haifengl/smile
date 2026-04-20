@@ -74,7 +74,6 @@ public class CRFTest {
 
         int viterbiError = 0;
         for (int i = 0; i < seq.length; i++) {
-            n += seq[i].length;
             int[] label = model.viterbi(seq[i]);
             for (int j = 0; j < seq[i].length; j++) {
                 if (tag[i][j] != label[j]) {
@@ -114,7 +113,6 @@ public class CRFTest {
 
         int viterbiError = 0;
         for (int i = 0; i < seq.length; i++) {
-            n += seq[i].length;
             int[] label = model.viterbi(seq[i]);
             for (int j = 0; j < seq[i].length; j++) {
                 if (tag[i][j] != label[j]) {
@@ -123,10 +121,10 @@ public class CRFTest {
             }
         }
 
-        System.out.format("Hypen error (forward-backward) is %d of %d%n", error, n);
-        System.out.format("Hypen error (forward-backward) rate = %.2f%%%n", 100.0 * error / n);
-        System.out.format("Hypen error (Viterbi) is %d of %d%n", viterbiError, n);
-        System.out.format("Hypen error (Viterbi) rate = %.2f%%%n", 100.0 * viterbiError / n);
+        System.out.format("Hyphen error (forward-backward) is %d of %d%n", error, n);
+        System.out.format("Hyphen error (forward-backward) rate = %.2f%%%n", 100.0 * error / n);
+        System.out.format("Hyphen error (Viterbi) is %d of %d%n", viterbiError, n);
+        System.out.format("Hyphen error (Viterbi) rate = %.2f%%%n", 100.0 * viterbiError / n);
         assertEquals(470, error);
         assertEquals(508, viterbiError);
     }
