@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.function.ToDoubleBiFunction;
 import java.util.stream.IntStream;
-import smile.clustering.CentroidClustering;
 import smile.graph.AdjacencyMatrix;
 import smile.graph.Graph;
 import smile.graph.Graph.Edge;

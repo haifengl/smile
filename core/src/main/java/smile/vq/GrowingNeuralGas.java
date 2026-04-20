@@ -223,34 +223,37 @@ public class GrowingNeuralGas implements VectorQuantizer {
                 }
             }
 
-            // Find the neighbor of q with the largest error variable.
-            Neuron f = q.edges.getFirst().neighbor;
-            for (Edge edge : q.edges) {
-                if (edge.neighbor.counter > f.counter) {
-                    f = edge.neighbor;
+            // Insert a new neuron only if q has topological neighbors.
+            if (!q.edges.isEmpty()) {
+                // Find the neighbor of q with the largest error variable.
+                Neuron f = q.edges.getFirst().neighbor;
+                for (Edge edge : q.edges) {
+                    if (edge.neighbor.counter > f.counter) {
+                        f = edge.neighbor;
+                    }
                 }
+
+                // Decrease the error variables of q and f.
+                q.counter *= alpha;
+                f.counter *= alpha;
+
+                // Insert a new neuron halfway between q and f.
+                double[] w = new double[d];
+                for (int i = 0; i < d; i++) {
+                    w[i] = (q.w[i] + f.w[i]) / 2;
+                }
+
+                Neuron r = new Neuron(w, q.counter);
+                neurons.add(r);
+
+                // Remove the connection (q, f) and add connections (q, r) and (r, f)
+                q.removeEdge(f);
+                f.removeEdge(q);
+                q.addEdge(r);
+                f.addEdge(r);
+                r.addEdge(q);
+                r.addEdge(f);
             }
-
-            // Decrease the error variables of q and f.
-            q.counter *= alpha;
-            f.counter *= alpha;
-
-            // Insert a new neuron halfway between q and f.
-            double[] w = new double[d];
-            for (int i = 0; i < d; i++) {
-                w[i] += (q.w[i] + f.w[i]) / 2;
-            }
-
-            Neuron r = new Neuron(w, q.counter);
-            neurons.add(r);
-
-            // Remove the connection (q, f) and add connections (q, r) and (r, f)
-            q.removeEdge(f);
-            f.removeEdge(q);
-            q.addEdge(r);
-            f.addEdge(r);
-            r.addEdge(q);
-            r.addEdge(f);
         }
 
         // Decrease all error variables.
