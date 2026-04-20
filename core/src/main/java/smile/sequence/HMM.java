@@ -155,7 +155,7 @@ public class HMM implements Serializable {
     }
 
     /**
-     * Returns the logarithm probability of an observation sequence given this
+     * Returns the log probability of an observation sequence given this
      * HMM. A scaling procedure is used in order to avoid underflow when
      * computing the probability of long sequences.
      *
@@ -257,7 +257,7 @@ public class HMM implements Serializable {
      * Returns the most likely state sequence given the observation sequence by
      * the Viterbi algorithm, which maximizes the probability of
      * {@code P(I | O, HMM)}. In the calculation, we may get ties. In this
-     * case, one of them is chosen randomly.
+     * case, the smallest-index state is chosen.
      *
      * @param o an observation sequence.
      * @return the most likely state sequence.

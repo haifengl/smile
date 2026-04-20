@@ -154,11 +154,15 @@ public class CRF implements Serializable {
     }
 
     /**
-     * Returns the most likely label sequence given the feature sequence by the
-     * forward-backward algorithm.
+     * Labels each position in the feature sequence independently by the
+     * forward-backward algorithm. At each position the label with the highest
+     * marginal probability (alpha * beta) is selected. This per-position
+     * marginal argmax generally achieves lower token-level error than Viterbi,
+     * but the resulting label sequence may not correspond to a single globally
+     * most-likely path.
      *
      * @param x a sequence.
-     * @return the most likely label sequence.
+     * @return the per-position most likely label sequence.
      */
     public int[] predict(Tuple[] x) {
         validateSequence(x);
