@@ -145,6 +145,11 @@ public class Tensor implements AutoCloseable {
     }
 
     @Override
+    public int hashCode() {
+        return System.identityHashCode(value);
+    }
+
+    @Override
     public void close() {
         if (!value.isNull()) {
             value.close();
@@ -278,6 +283,20 @@ public class Tensor implements AutoCloseable {
             length *= size;
         }
         return length;
+    }
+
+    /**
+     * Returns the number of elements as an int, used by array extraction methods.
+     * @throws ArithmeticException if the number of elements exceeds Integer.MAX_VALUE.
+     */
+    private int lengthAsInt() {
+        long len = length();
+        if (len > Integer.MAX_VALUE) {
+            throw new ArithmeticException(
+                "Tensor has " + len + " elements, which exceeds Integer.MAX_VALUE. " +
+                "Use a smaller tensor or extract a slice first.");
+        }
+        return (int) len;
     }
 
     /**
@@ -880,7 +899,7 @@ public class Tensor implements AutoCloseable {
         if (value.is_view()) {
             throw new UnsupportedOperationException("copy tensor view to array");
         }
-        var array = new byte[(int) length()];
+        var array = new byte[lengthAsInt()];
         var data = value.data_ptr_byte();
         data.get(array);
         return array;
@@ -894,7 +913,7 @@ public class Tensor implements AutoCloseable {
         if (value.is_view()) {
             throw new UnsupportedOperationException("copy tensor view to array");
         }
-        var array = new short[(int) length()];
+        var array = new short[lengthAsInt()];
         var data = value.data_ptr_short();
         data.get(array);
         return array;
@@ -908,7 +927,7 @@ public class Tensor implements AutoCloseable {
         if (value.is_view()) {
             throw new UnsupportedOperationException("copy tensor view to array");
         }
-        var array = new int[(int) length()];
+        var array = new int[lengthAsInt()];
         var data = value.data_ptr_int();
         data.get(array);
         return array;
@@ -922,7 +941,7 @@ public class Tensor implements AutoCloseable {
         if (value.is_view()) {
             throw new UnsupportedOperationException("copy tensor view to array");
         }
-        var array = new long[(int) length()];
+        var array = new long[lengthAsInt()];
         var data = value.data_ptr_long();
         data.get(array);
         return array;
@@ -936,7 +955,7 @@ public class Tensor implements AutoCloseable {
         if (value.is_view()) {
             throw new UnsupportedOperationException("copy tensor view to array");
         }
-        var array = new float[(int) length()];
+        var array = new float[lengthAsInt()];
         var data = value.data_ptr_float();
         data.get(array);
         return array;
@@ -950,7 +969,7 @@ public class Tensor implements AutoCloseable {
         if (value.is_view()) {
             throw new UnsupportedOperationException("copy tensor view to array");
         }
-        var array = new double[(int) length()];
+        var array = new double[lengthAsInt()];
         var data = value.data_ptr_double();
         data.get(array);
         return array;
@@ -2045,8 +2064,8 @@ public class Tensor implements AutoCloseable {
      */
     public static Tensor full(double value, long... shape) {
         var tensor = defaultOptions == null ?
-                torch.full(shape, new Scalar((float) value)) :
-                torch.full(shape, new Scalar((float) value), defaultOptions.value);
+                torch.full(shape, new Scalar(value)) :
+                torch.full(shape, new Scalar(value), defaultOptions.value);
         return new Tensor(tensor);
     }
 
