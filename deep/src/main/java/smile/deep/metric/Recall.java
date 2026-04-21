@@ -118,10 +118,14 @@ public class Recall implements Metric {
     @Override
     public double compute() {
         Tensor recall;
+        // Guard against zero denominator: replace 0-count classes with 1
+        // so that TP/1 = 0 recall, avoiding NaN.
+        Tensor ones     = size.newOnes(size.shape());
+        Tensor safeSize = Tensor.where(size.gt(0), size, ones);
         if (tp.size(0) == 1) {
-            recall = strategy == null ? tp.div(size.getLong(1)) : tp.div(size.sum());
+            recall = strategy == null ? tp.div(size.getLong(1)) : tp.div(safeSize.sum());
         } else {
-            recall = tp.div(size);
+            recall = tp.div(safeSize);
         }
 
         if (strategy == Averaging.Macro) {

@@ -67,6 +67,48 @@ public interface Loss extends BiFunction<Tensor, Tensor, Tensor> {
     }
 
     /**
+     * Binary Cross-Entropy Loss Function. Measures the binary cross-entropy
+     * between the target and the input probabilities. Input should be in [0,1].
+     * @return the loss functor.
+     */
+    static Loss bce() {
+        return (input, target) -> new Tensor(torch.binary_cross_entropy(input.asTorch(), target.asTorch()));
+    }
+
+    /**
+     * Binary Cross-Entropy with Logits Loss Function. Combines a sigmoid
+     * activation and binary cross-entropy in a numerically stable way.
+     * @return the loss functor.
+     */
+    static Loss bceWithLogits() {
+        return (input, target) -> new Tensor(torch.binary_cross_entropy_with_logits(input.asTorch(), target.asTorch()));
+    }
+
+    /**
+     * Smooth L1 (Huber) Loss Function. Uses a squared term if the absolute
+     * element-wise error falls below beta (default 1) and an L1 term otherwise.
+     * This is less sensitive to outliers than MSE and avoids the gradient
+     * discontinuity of plain MAE.
+     * @return the loss functor.
+     */
+    static Loss smoothL1() {
+        return (input, target) -> new Tensor(torch.smooth_l1_loss(input.asTorch(), target.asTorch()));
+    }
+
+    /**
+     * Huber Loss Function. Equivalent to smooth L1 when delta = 1.
+     * @param delta the threshold at which to change between L1 and L2.
+     * @return the loss functor.
+     */
+    static Loss huber(double delta) {
+        return (input, target) -> {
+            var options = new org.bytedeco.pytorch.HuberLossOptions();
+            options.delta().put(delta);
+            return new Tensor(torch.huber_loss(input.asTorch(), target.asTorch(), options));
+        };
+    }
+
+    /**
      * Kullback-Leibler Divergence Loss Function.
      * @return the loss functor.
      */

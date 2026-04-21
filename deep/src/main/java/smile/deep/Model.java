@@ -234,6 +234,8 @@ public class Model implements Function<Tensor, Tensor> {
                 optimizer.step();
 
                 // Explicitly free native memory
+                error.close();
+                prediction.close();
                 data.close();
                 target.close();
                 batch.close();
@@ -306,6 +308,7 @@ public class Model implements Function<Tensor, Tensor> {
      */
     public Map<String, Double> eval(Dataset dataset, Metric... metrics) {
         eval(); // evaluation mode
+        try (var guard = Tensor.noGradGuard()) {
         for (SampleBatch batch : dataset) {
             Tensor data   = device == null ? batch.data()   : (dtype == null ? batch.data().to(device) : batch.data().to(device, dtype));
             Tensor target = device == null ? batch.target() : batch.target().to(device);
@@ -321,10 +324,12 @@ public class Model implements Function<Tensor, Tensor> {
                 metric.update(output, target);
             }
             // Explicitly free native memory
+            output.close();
             data.close();
             target.close();
             batch.close();
         }
+        } // end noGradGuard
 
         Map<String, Double> map = new TreeMap<>();
         for (var metric : metrics) {
