@@ -107,12 +107,9 @@ public class Transformer extends LayerBlock {
         if (seqlen > 1) {
             mask = Tensor.full(Float.NEGATIVE_INFINITY, seqlen, seqlen);
             mask.triu_(1);
-            // When performing key-value caching, we compute the attention scores
-            // only for the new sequence. Thus, the matrix of scores is of size
-            // (seqlen, cache_len + seqlen), and the only masked entries are (i, j) for
-            // j > cache_len + i, since row i corresponds to token cache_len + i.
-            var zeros = Tensor.zeros(seqlen, startPos);
-            mask = Tensor.hstack(zeros, mask);
+            try (var zeros = Tensor.zeros(seqlen, startPos)) {
+                mask = Tensor.hstack(zeros, mask);
+            }
             mask = mask.to(h.dtype());
         }
 
