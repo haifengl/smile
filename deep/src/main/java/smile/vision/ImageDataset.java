@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -138,8 +139,8 @@ public class ImageDataset implements Dataset {
                 try {
                     return queue.take();
                 } catch (InterruptedException ex) {
-                    logger.error("Failed to take next sample batch", ex);
-                    return null;
+                    Thread.currentThread().interrupt();
+                    throw new NoSuchElementException("Image loading interrupted: " + ex.getMessage());
                 }
             }
         };
