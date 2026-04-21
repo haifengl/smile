@@ -45,37 +45,32 @@ public class Conv2dLayer implements Layer {
      */
     public Conv2dLayer(int in, int out, int kernel, int stride, int padding, int dilation, int groups, boolean bias, String paddingMode) {
         if (!(paddingMode.equals("zeros") || paddingMode.equals("reflect") || paddingMode.equals("replicate") || paddingMode.equals("circular"))) {
-            throw new IllegalArgumentException("paddingMode has to be either 'zeros', 'reflect', 'replicate' or 'circular, but got " + paddingMode);
+            throw new IllegalArgumentException("paddingMode has to be either 'zeros', 'reflect', 'replicate' or 'circular', but got " + paddingMode);
         }
 
         // kernel_size, stride, padding, dilation are ExpandingArray in C++,
         // which would "expand" to {x, y}. However, JavaCpp maps it to
         // LongPointer. So we have to manually expand it.
-        LongPointer kernelPointer = new LongPointer(kernel, kernel);
-        LongPointer stridePointer = new LongPointer(stride, stride);
-        LongPointer paddingPointer = new LongPointer(padding, padding);
-        LongPointer dilationPointer = new LongPointer(dilation, dilation);
-
-        var options = new Conv2dOptions(in, out, kernelPointer);
-        options.stride().put(stridePointer);
-        options.padding().put(paddingPointer);
-        options.dilation().put(dilationPointer);
-        options.groups().put(groups);
-        options.bias().put(bias);
-        options.padding_mode().put(
-                switch (paddingMode) {
-                    case "reflect" -> new kReflect();
-                    case "replicate" -> new kReplicate();
-                    case "circular" -> new kCircular();
-                    default -> new kZeros();
-                }
-        );
-        module = new Conv2dImpl(options);
-
-        kernelPointer.close();
-        stridePointer.close();
-        paddingPointer.close();
-        dilationPointer.close();
+        try (var kernelPointer  = new LongPointer(kernel, kernel);
+             var stridePointer  = new LongPointer(stride, stride);
+             var paddingPointer = new LongPointer(padding, padding);
+             var dilationPointer = new LongPointer(dilation, dilation)) {
+            var options = new Conv2dOptions(in, out, kernelPointer);
+            options.stride().put(stridePointer);
+            options.padding().put(paddingPointer);
+            options.dilation().put(dilationPointer);
+            options.groups().put(groups);
+            options.bias().put(bias);
+            options.padding_mode().put(
+                    switch (paddingMode) {
+                        case "reflect" -> new kReflect();
+                        case "replicate" -> new kReplicate();
+                        case "circular" -> new kCircular();
+                        default -> new kZeros();
+                    }
+            );
+            module = new Conv2dImpl(options);
+        }
     }
 
     /**
@@ -103,34 +98,30 @@ public class Conv2dLayer implements Layer {
         }
 
         if (!(paddingMode.equals("zeros") || paddingMode.equals("reflect") || paddingMode.equals("replicate") || paddingMode.equals("circular"))) {
-            throw new IllegalArgumentException("paddingMode has to be either 'zeros', 'reflect', 'replicate' or 'circular, but got " + paddingMode);
+            throw new IllegalArgumentException("paddingMode has to be either 'zeros', 'reflect', 'replicate' or 'circular', but got " + paddingMode);
         }
 
         // kernel_size is an ExpandingArray in C++, which would "expand" to {x, y}.
         // However, JavaCpp maps it to LongPointer. So we have to manually expand it.
-        LongPointer kernelPointer = new LongPointer(kernel, kernel);
-        LongPointer stridePointer = new LongPointer(stride, stride);
-        LongPointer dilationPointer = new LongPointer(dilation, dilation);
-
-        var options = new Conv2dOptions(in, out, kernelPointer);
-        options.stride().put(stridePointer);
-        options.padding().put(padding.equals("valid") ? new kValid() : new kSame());
-        options.dilation().put(dilationPointer);
-        options.groups().put(groups);
-        options.bias().put(bias);
-        options.padding_mode().put(
-                switch (paddingMode) {
-                    case "reflect" -> new kReflect();
-                    case "replicate" -> new kReplicate();
-                    case "circular" -> new kCircular();
-                    default -> new kZeros();
-                }
-        );
-        module = new Conv2dImpl(options);
-
-        kernelPointer.close();
-        stridePointer.close();
-        dilationPointer.close();
+        try (var kernelPointer  = new LongPointer(kernel, kernel);
+             var stridePointer  = new LongPointer(stride, stride);
+             var dilationPointer = new LongPointer(dilation, dilation)) {
+            var options = new Conv2dOptions(in, out, kernelPointer);
+            options.stride().put(stridePointer);
+            options.padding().put(padding.equals("valid") ? new kValid() : new kSame());
+            options.dilation().put(dilationPointer);
+            options.groups().put(groups);
+            options.bias().put(bias);
+            options.padding_mode().put(
+                    switch (paddingMode) {
+                        case "reflect" -> new kReflect();
+                        case "replicate" -> new kReplicate();
+                        case "circular" -> new kCircular();
+                        default -> new kZeros();
+                    }
+            );
+            module = new Conv2dImpl(options);
+        }
     }
 
     @Override
