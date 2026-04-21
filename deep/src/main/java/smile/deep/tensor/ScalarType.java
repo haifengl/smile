@@ -30,7 +30,13 @@ public enum ScalarType {
      * floating point tensor.
      */
     QInt8(torch.ScalarType.QInt8),
-    /** 8-bit integer. */
+    /**
+     * 8-bit unsigned integer (maps to PyTorch {@code torch.uint8} / {@code torch.Byte}).
+     * Note: PyTorch uses {@code Byte} for the <em>unsigned</em> 8-bit type, so Java
+     * {@code byte} values are interpreted in the range [0, 255] when converting to/from
+     * this type. For signed 8-bit integers use {@code torch.kChar} directly via the
+     * native API.
+     */
     Int8(torch.ScalarType.Byte),
     /** 16-bit integer. */
     Int16(torch.ScalarType.Short),
