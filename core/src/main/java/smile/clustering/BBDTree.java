@@ -17,7 +17,8 @@
 package smile.clustering;
 
 import java.util.Arrays;
-import smile.math.MathEx;
+import smile.tensor.ScalarType;
+import smile.tensor.Vector;
 
 /**
  * Balanced Box-Decomposition Tree. BBD tree is a specialized k-d tree that
@@ -43,13 +44,29 @@ import smile.math.MathEx;
  * <li>Tapas Kanungo, David M. Mount, Nathan S. Netanyahu, Christine D. Piatko, Ruth Silverman, and Angela Y. Wu.
  * An Efficient k-Means Clustering Algorithm: Analysis and Implementation. IEEE TRANS. PAMI, 2002.</li>
  * </ol>
- * 
+ *
  * @see KMeans
  * @see smile.vq.SOM
- * 
+ *
  * @author Haifeng Li
  */
 public class BBDTree {
+
+    /**
+     * Functional interface for accessing individual data values, abstracting
+     * over {@code double[][]} and {@code float[][]} input types.
+     */
+    @FunctionalInterface
+    private interface DataAccessor {
+        /**
+         * Returns the value at the given row and column of the data set.
+         *
+         * @param row the row (data point) index.
+         * @param col the column (dimension) index.
+         * @return the value as a {@code double}.
+         */
+        double get(int row, int col);
+    }
 
     static class Node {
         /**
@@ -63,17 +80,17 @@ public class BBDTree {
         /**
          * The center/mean of bounding box.
          */
-        final double[] center;
+        final Vector center;
         /**
          * The half side-lengths of bounding box.
          */
-        final double[] radius;
+        final Vector radius;
         /**
          * The sum of the data stored in this node.
          */
-        final double[] sum;
+        final Vector sum;
         /**
-         * The min cost for putting all data in this node in 1 cluster
+         * The min cost for putting all data in this node in 1 cluster.
          */
         double cost;
         /**
@@ -87,15 +104,16 @@ public class BBDTree {
 
         /**
          * Constructor.
+         * @param scalarType the scalar type used for the vector fields.
          * @param d the dimension of vector space.
          */
-        Node(int d) {
-            center = new double[d];
-            radius = new double[d];
-            sum = new double[d];
+        Node(ScalarType scalarType, int d) {
+            center = Vector.zeros(scalarType, d);
+            radius = Vector.zeros(scalarType, d);
+            sum    = Vector.zeros(scalarType, d);
         }
     }
-    
+
     /**
      * Root node.
      */
@@ -107,50 +125,71 @@ public class BBDTree {
 
     /**
      * Constructs a tree out of the given n data points living in R^d.
+     * Uses {@link ScalarType#Float64} (double precision) for internal vectors.
+     *
      * @param data the data points.
      */
     public BBDTree(double[][] data) {
         int n = data.length;
-
         index = new int[n];
         for (int i = 0; i < n; i++) {
             index[i] = i;
         }
-
-        // Build the tree
-        root = buildNode(data, 0, n);
+        root = buildNode((r, c) -> data[r][c], ScalarType.Float64, data[0].length, 0, n);
     }
 
     /**
-     * Build a k-d tree from the given set of data.
+     * Constructs a tree out of the given n data points living in R^d.
+     * Uses {@link ScalarType#Float32} (single precision) for internal vectors.
+     *
+     * @param data the data points in single precision.
      */
-    private Node buildNode(double[][] data, int begin, int end) {
-        int d = data[0].length;
+    public BBDTree(float[][] data) {
+        int n = data.length;
+        index = new int[n];
+        for (int i = 0; i < n; i++) {
+            index[i] = i;
+        }
+        root = buildNode((r, c) -> data[r][c], ScalarType.Float32, data[0].length, 0, n);
+    }
 
+    /**
+     * Builds a k-d tree node from the given range of data points using the
+     * supplied accessor, supporting both {@code double[][]} and
+     * {@code float[][]} inputs.
+     *
+     * @param data       accessor for individual data values.
+     * @param scalarType the scalar type used for vector fields in each node.
+     * @param d          the number of dimensions.
+     * @param begin      the first index (inclusive) of the range to build from.
+     * @param end        the last index (exclusive) of the range to build from.
+     * @return the constructed node.
+     */
+    private Node buildNode(DataAccessor data, ScalarType scalarType, int d, int begin, int end) {
         // Allocate the node
-        Node node = new Node(d);
+        Node node = new Node(scalarType, d);
 
         // Fill in basic info
-        node.size = end - begin;
+        node.size  = end - begin;
         node.index = begin;
 
         // Calculate the bounding box
-        double[] lowerBound = new double[d];
-        double[] upperBound = new double[d];
+        Vector lowerBound = Vector.zeros(scalarType, d);
+        Vector upperBound = Vector.zeros(scalarType, d);
 
         for (int i = 0; i < d; i++) {
-            lowerBound[i] = data[index[begin]][i];
-            upperBound[i] = data[index[begin]][i];
+            lowerBound.set(i, data.get(index[begin], i));
+            upperBound.set(i, data.get(index[begin], i));
         }
 
         for (int i = begin + 1; i < end; i++) {
             for (int j = 0; j < d; j++) {
-                double c = data[index[i]][j];
-                if (lowerBound[j] > c) {
-                    lowerBound[j] = c;
+                double c = data.get(index[i], j);
+                if (lowerBound.get(j) > c) {
+                    lowerBound.set(j, c);
                 }
-                if (upperBound[j] < c) {
-                    upperBound[j] = c;
+                if (upperBound.get(j) < c) {
+                    upperBound.set(j, c);
                 }
             }
         }
@@ -159,10 +198,10 @@ public class BBDTree {
         double maxRadius = -1;
         int splitIndex = -1;
         for (int i = 0; i < d; i++) {
-            node.center[i] = (lowerBound[i] + upperBound[i]) / 2;
-            node.radius[i] = (upperBound[i] - lowerBound[i]) / 2;
-            if (node.radius[i] > maxRadius) {
-                maxRadius = node.radius[i];
+            node.center.set(i, (lowerBound.get(i) + upperBound.get(i)) / 2);
+            node.radius.set(i, (upperBound.get(i) - lowerBound.get(i)) / 2);
+            if (node.radius.get(i) > maxRadius) {
+                maxRadius = node.radius.get(i);
                 splitIndex = i;
             }
         }
@@ -170,12 +209,14 @@ public class BBDTree {
         // If the max spread is 0, make this a leaf node
         if (maxRadius < 1E-10) {
             node.lower = node.upper = null;
-            System.arraycopy(data[index[begin]], 0, node.sum, 0, d);
+            for (int j = 0; j < d; j++) {
+                node.sum.set(j, data.get(index[begin], j));
+            }
 
             if (end > begin + 1) {
                 int len = end - begin;
                 for (int i = 0; i < d; i++) {
-                    node.sum[i] *= len;
+                    node.sum.mul(i, len);
                 }
             }
 
@@ -186,11 +227,11 @@ public class BBDTree {
         // Partition the data around the midpoint in this dimension. The
         // partitioning is done in-place by iterating from left-to-right and
         // right-to-left in the same way that partitioning is done in quicksort.
-        double splitCutoff = node.center[splitIndex];
+        double splitCutoff = node.center.get(splitIndex);
         int i1 = begin, i2 = end - 1, size = 0;
         while (i1 <= i2) {
-            boolean i1Good = (data[index[i1]][splitIndex] < splitCutoff);
-            boolean i2Good = (data[index[i2]][splitIndex] >= splitCutoff);
+            boolean i1Good = (data.get(index[i1], splitIndex) < splitCutoff);
+            boolean i2Good = (data.get(index[i2], splitIndex) >= splitCutoff);
 
             if (!i1Good && !i2Good) {
                 int temp = index[i1];
@@ -210,17 +251,19 @@ public class BBDTree {
         }
 
         // Create the child nodes
-        node.lower = buildNode(data, begin, begin + size);
-        node.upper = buildNode(data, begin + size, end);
+        node.lower = buildNode(data, scalarType, d, begin, begin + size);
+        node.upper = buildNode(data, scalarType, d, begin + size, end);
 
         // Calculate the new sum and opt cost
         for (int i = 0; i < d; i++) {
-            node.sum[i] = node.lower.sum[i] + node.upper.sum[i];
+            node.sum.set(i, node.lower.sum.get(i) + node.upper.sum.get(i));
         }
 
-        double[] mean = new double[d];
+        Vector mean = node.lower.sum.scalarType() == ScalarType.Float32
+                ? Vector.zeros(ScalarType.Float32, d)
+                : Vector.zeros(ScalarType.Float64, d);
         for (int i = 0; i < d; i++) {
-            mean[i] = node.sum[i] / node.size;
+            mean.set(i, node.sum.get(i) / node.size);
         }
 
         node.cost = getNodeCost(node.lower, mean) + getNodeCost(node.upper, mean);
@@ -241,14 +284,32 @@ public class BBDTree {
      * The sum is precomputed for each node as cost. This formula follows
      * from expanding both sides as dot products.
      */
-    private double getNodeCost(Node node, double[] center) {
-        int d = center.length;
+    private double getNodeCost(Node node, Vector center) {
+        int d = center.size();
         double scatter = 0.0;
         for (int i = 0; i < d; i++) {
-            double x = (node.sum[i] / node.size) - center[i];
+            double x = (node.sum.get(i) / node.size) - center.get(i);
             scatter += x * x;
         }
         return node.cost + node.size * scatter;
+    }
+
+    /**
+     * Computes the squared Euclidean distance between two {@link Vector}s of
+     * the same length.
+     *
+     * @param v   the first vector (e.g. a node center).
+     * @param w   the second vector (e.g. a cluster centroid).
+     * @return the squared distance.
+     */
+    private static double squaredDistance(Vector v, Vector w) {
+        int d = w.size();
+        double dist = 0.0;
+        for (int i = 0; i < d; i++) {
+            double diff = v.get(i) - w.get(i);
+            dist += diff * diff;
+        }
+        return dist;
     }
 
     /**
@@ -259,28 +320,28 @@ public class BBDTree {
      * not null, it should be an array of size n that will be filled with the
      * index of the cluster [0, k) that each data point is assigned to.
      *
-     * @param k the number of clusters.
+     * @param k         the number of clusters.
      * @param centroids the current centroids of clusters.
-     * @param sum the workspace storing the sum of data in each cluster.
-     * @param size the number of samples in each cluster.
-     * @param group the class labels.
+     * @param sum       the workspace storing the sum of data in each cluster.
+     * @param size      the number of samples in each cluster.
+     * @param group     the class labels.
      * @return the distortion.
      */
-    public double clustering(int k, double[][] centroids, double[][] sum, int[] size, int[] group) {
+    public double clustering(int k, Vector[] centroids, Vector[] sum, int[] size, int[] group) {
         Arrays.fill(size, 0);
         int[] candidates = new int[k];
         for (int i = 0; i < k; i++) {
             candidates[i] = i;
-            Arrays.fill(sum[i], 0.0);
+            sum[i].fill(0.0);
         }
 
         double wcss = filter(root, centroids, candidates, k, sum, size, group);
 
-        int d = centroids[0].length;
+        int d = centroids[0].size();
         for (int i = 0; i < k; i++) {
             if (size[i] > 0) {
                 for (int j = 0; j < d; j++) {
-                    centroids[i][j] = sum[i][j] / size[i];
+                    centroids[i].set(j, sum[i].get(j) / size[i]);
                 }
             }
         }
@@ -294,14 +355,14 @@ public class BBDTree {
      * accordingly. Candidates maintains the set of cluster indices which
      * could possibly be the closest clusters for data in this subtree.
      */
-    private double filter(Node node, double[][] centroids, int[] candidates, int k, double[][] sum, int[] size, int[] group) {
-        int d = centroids[0].length;
+    private double filter(Node node, Vector[] centroids, int[] candidates, int k, Vector[] sum, int[] size, int[] group) {
+        int d = centroids[0].size();
 
         // Determine which mean the node mean is closest to
-        double minDist = MathEx.squaredDistance(node.center, centroids[candidates[0]]);
+        double minDist = squaredDistance(node.center, centroids[candidates[0]]);
         int closest = candidates[0];
         for (int i = 1; i < k; i++) {
-            double dist = MathEx.squaredDistance(node.center, centroids[candidates[i]]);
+            double dist = squaredDistance(node.center, centroids[candidates[i]]);
             if (dist < minDist) {
                 minDist = dist;
                 closest = candidates[i];
@@ -329,7 +390,7 @@ public class BBDTree {
 
         // Assigns all data within this node to a single mean
         for (int i = 0; i < d; i++) {
-            sum[closest][i] += node.sum[i];
+            sum[closest].set(i, sum[closest].get(i) + node.sum.get(i));
         }
 
         size[closest] += node.size;
@@ -354,23 +415,23 @@ public class BBDTree {
      * dimension, we choose the low or high value based on the sign of x-c_0 in
      * that dimension.
      */
-    private boolean prune(double[] center, double[] radius, double[][] centroids, int bestIndex, int testIndex) {
+    private boolean prune(Vector center, Vector radius, Vector[] centroids, int bestIndex, int testIndex) {
         if (bestIndex == testIndex) {
             return false;
         }
 
-        int d = centroids[0].length;
+        int d = centroids[0].size();
 
-        double[] best = centroids[bestIndex];
-        double[] test = centroids[testIndex];
+        Vector best = centroids[bestIndex];
+        Vector test = centroids[testIndex];
         double lhs = 0.0, rhs = 0.0;
         for (int i = 0; i < d; i++) {
-            double diff = test[i] - best[i];
+            double diff = test.get(i) - best.get(i);
             lhs += diff * diff;
             if (diff > 0) {
-                rhs += (center[i] + radius[i] - best[i]) * diff;
+                rhs += (center.get(i) + radius.get(i) - best.get(i)) * diff;
             } else {
-                rhs += (center[i] - radius[i] - best[i]) * diff;
+                rhs += (center.get(i) - radius.get(i) - best.get(i)) * diff;
             }
         }
 

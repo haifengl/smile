@@ -18,6 +18,7 @@ package smile.clustering;
 
 import smile.io.Read;
 import smile.io.Write;
+import smile.datasets.GaussianMixture;
 import smile.datasets.USPS;
 import smile.math.MathEx;
 import smile.validation.metric.*;
@@ -29,6 +30,9 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng
  */
 public class XMeansTest {
+    GaussianMixture mixture = GaussianMixture.generate();
+    double[][] x = mixture.x();
+    int[] y = mixture.y();
     
     public XMeansTest() {
     }
@@ -48,6 +52,60 @@ public class XMeansTest {
     
     @AfterEach
     public void tearDown() {
+    }
+
+    @Test
+    @Tag("integration")
+    public void givenFloatGaussianMixture_whenFittingXMeans_thenReturnFloatCentroidsWithAcceptableQuality() {
+        System.out.println("XMeans float GaussianMixture");
+        // Given – convert double[][] mixture to float[][]
+        float[][] fx = new float[x.length][x[0].length];
+        for (int i = 0; i < x.length; i++)
+            for (int j = 0; j < x[0].length; j++)
+                fx[i][j] = (float) x[i][j];
+
+        // When
+        var model = XMeans.fit(fx, 10, 100);
+        System.out.println(model);
+
+        // Then – return type must be CentroidClustering<float[], float[]>
+        assertInstanceOf(float[].class, model.center(0));
+        assertTrue(model.k() >= 2, "Should find at least 2 clusters");
+        assertTrue(model.distortion() > 0.0);
+
+        double r = RandIndex.of(y, model.group());
+        double r2 = AdjustedRandIndex.of(y, model.group());
+        System.out.format("Float training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
+        assertTrue(r > 0.75, "Rand index should exceed 0.75");
+    }
+
+    @Test
+    public void givenFloatData_whenFittingXMeans_thenReturnFloatCentroidsAndDetectClusters() {
+        // Given – four distinct float clusters
+        float[][] data = {
+            {0.0f, 0.0f}, {0.1f, 0.0f}, {0.0f, 0.1f}, {0.1f, 0.1f},
+            {5.0f, 0.0f}, {5.1f, 0.0f}, {5.0f, 0.1f}, {5.1f, 0.1f},
+            {0.0f, 5.0f}, {0.1f, 5.0f}, {0.0f, 5.1f}, {0.1f, 5.1f},
+            {5.0f, 5.0f}, {5.1f, 5.0f}, {5.0f, 5.1f}, {5.1f, 5.1f},
+            // duplicates to exceed the ni>=25 threshold per cluster
+            {0.05f, 0.05f}, {0.05f, 0.05f}, {0.05f, 0.05f}, {0.05f, 0.05f}, {0.05f, 0.05f},
+            {0.05f, 0.05f}, {0.05f, 0.05f}, {0.05f, 0.05f}, {0.05f, 0.05f},
+            {5.05f, 0.05f}, {5.05f, 0.05f}, {5.05f, 0.05f}, {5.05f, 0.05f}, {5.05f, 0.05f},
+            {5.05f, 0.05f}, {5.05f, 0.05f}, {5.05f, 0.05f}, {5.05f, 0.05f},
+            {0.05f, 5.05f}, {0.05f, 5.05f}, {0.05f, 5.05f}, {0.05f, 5.05f}, {0.05f, 5.05f},
+            {0.05f, 5.05f}, {0.05f, 5.05f}, {0.05f, 5.05f}, {0.05f, 5.05f},
+            {5.05f, 5.05f}, {5.05f, 5.05f}, {5.05f, 5.05f}, {5.05f, 5.05f}, {5.05f, 5.05f},
+            {5.05f, 5.05f}, {5.05f, 5.05f}, {5.05f, 5.05f}, {5.05f, 5.05f}
+        };
+
+        // When
+        var model = XMeans.fit(data, 8, 100);
+
+        // Then
+        assertEquals("X-Means", model.name());
+        assertInstanceOf(float[].class, model.center(0));
+        assertTrue(model.k() >= 1, "Should return at least 1 cluster");
+        assertTrue(model.distortion() >= 0.0);
     }
 
     @Test

@@ -181,6 +181,74 @@ public class KMeansTest {
     }
 
     @Test
+    @Tag("integration")
+    public void givenFloatGaussianMixture_whenFittingKMeans_thenReturnFloatCentroidsWithAcceptableQuality() {
+        System.out.println("BBD float 4");
+        // Given – convert double[][] mixture to float[][]
+        float[][] fx = new float[x.length][x[0].length];
+        for (int i = 0; i < x.length; i++)
+            for (int j = 0; j < x[0].length; j++)
+                fx[i][j] = (float) x[i][j];
+
+        // When
+        var model = KMeans.fit(fx, 4, 100);
+        System.out.println(model);
+
+        // Then – return type must be CentroidClustering<float[], float[]>
+        assertInstanceOf(float[].class, model.center(0));
+        assertEquals(4, model.k());
+        assertTrue(model.distortion() > 0.0);
+
+        double r = RandIndex.of(y, model.group());
+        double r2 = AdjustedRandIndex.of(y, model.group());
+        System.out.format("Float training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
+        // float precision should give roughly the same cluster quality as double
+        assertTrue(r > 0.90, "Rand index should exceed 0.90");
+        assertTrue(r2 > 0.80, "Adjusted rand index should exceed 0.80");
+    }
+
+    @Test
+    public void givenFloatData_whenFittingKMeans_thenTwoClustersCorrectlySeparated() {
+        // Given – two well-separated float clusters
+        float[][] data = {
+            {0.0f, 0.0f}, {0.1f, 0.1f}, {0.0f, 0.2f},
+            {5.0f, 5.0f}, {5.1f, 4.9f}, {4.9f, 5.1f}
+        };
+
+        // When
+        var model = KMeans.fit(data, 2, 100);
+
+        // Then
+        assertEquals("K-Means", model.name());
+        assertInstanceOf(float[].class, model.center(0));
+        assertEquals(2, model.k());
+        assertTrue(model.distortion() >= 0.0);
+        // points within same cluster should share the same label
+        assertEquals(model.group(0), model.group(1));
+        assertEquals(model.group(0), model.group(2));
+        assertEquals(model.group(3), model.group(4));
+        assertEquals(model.group(3), model.group(5));
+        // the two clusters must be distinct
+        assertNotEquals(model.group(0), model.group(3));
+    }
+
+    @Test
+    public void givenFloatData_whenFittingKMeans_thenCentroidDimensionMatchesInput() {
+        // Given
+        float[][] data = {
+            {1.0f, 2.0f, 3.0f}, {1.1f, 2.1f, 2.9f},
+            {9.0f, 8.0f, 7.0f}, {8.9f, 8.1f, 7.1f}
+        };
+
+        // When
+        var model = KMeans.fit(data, 2, 100);
+
+        // Then
+        assertEquals(3, model.center(0).length);
+        assertEquals(3, model.center(1).length);
+    }
+
+    @Test
     public void givenInvalidInput_whenFittingKMeans_thenThrowIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class, () -> KMeans.fit(new double[0][0], 2, 10));
         assertThrows(IllegalArgumentException.class, () -> KMeans.fit(new double[][] {{0.0}, {1.0, 2.0}}, 2, 10));
