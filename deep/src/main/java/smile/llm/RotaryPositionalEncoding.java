@@ -84,10 +84,14 @@ public interface RotaryPositionalEncoding {
         // Explicitly convert tensor to float32 as the default is bf16.
         // On the other hand, view_as_complex cannot apply on bf16.
         try (Tensor t = Tensor.arange(0, end, 1).to(ScalarType.Float32);
-             Tensor f = Tensor.arange(0, dim, 2).to(ScalarType.Float32).mul_(-Math.log(theta) / dim).exp_();
-             Tensor freqs = scaling ?  scale(f) : f;
-             Tensor tfreqs = t.outer(freqs)) {
-            return Tensor.polar(freqs.newOnes(), tfreqs); // complex64
+             Tensor f = Tensor.arange(0, dim, 2).to(ScalarType.Float32).mul_(-Math.log(theta) / dim).exp_()) {
+            // When scaling=true, scale() modifies f in-place and returns the same
+            // reference — so we must NOT assign freqs into the try-resources again
+            // to avoid a double-close on f.
+            Tensor freqs = scaling ? scale(f) : f;
+            try (Tensor tfreqs = t.outer(freqs)) {
+                return Tensor.polar(freqs.newOnes(), tfreqs); // complex64
+            }
         }
     }
 

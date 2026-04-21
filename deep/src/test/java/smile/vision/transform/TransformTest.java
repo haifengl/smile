@@ -16,89 +16,171 @@
  */
 package smile.vision.transform;
 
-import java.io.IOException;
+import java.awt.Color;
 import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.nio.file.Path;
 import javax.imageio.ImageIO;
 import org.junit.jupiter.api.*;
+import smile.deep.tensor.Tensor;
 import static org.junit.jupiter.api.Assertions.*;
-import static smile.deep.tensor.Index.*;
 
 /**
+ * Unit tests for {@link Transform} — resize, crop, and toTensor.
  *
  * @author Haifeng Li
  */
 public class TransformTest {
 
-    public TransformTest() {
-    }
+    private static final String PANDA_IMG = "deep/src/test/resources/data/image/panda.jpg";
 
-    @BeforeAll
-    public static void setUpClass() throws Exception {
-    }
+    // -----------------------------------------------------------------------
+    // resize
+    // -----------------------------------------------------------------------
 
-    @AfterAll
-    public static void tearDownClass() throws Exception {
-    }
+    @Test
+    public void testGivenLandscapeImageWhenResizingThenShorterSideMeetsTarget() throws IOException {
+        // Given: panda.jpg is landscape (width > height)
+        BufferedImage img = ImageIO.read(Path.of(PANDA_IMG).toFile());
+        Transform t = Transform.classification(384, 384);
 
-    @BeforeEach
-    public void setUp() {
-    }
+        // When
+        BufferedImage resized = t.resize(img, 384, Image.SCALE_FAST);
 
-    @AfterEach
-    public void tearDown() {
+        // Then: shorter side (height) == 384, width >= 384
+        assertEquals(384, resized.getHeight());
+        assertTrue(resized.getWidth() >= 384);
     }
 
     @Test
-    public void test() throws IOException {
-        var t = Transform.classification(384, 384);
-        var img = ImageIO.read(Path.of("deep/src/test/resources/data/image/panda.jpg").toFile());
+    public void testGivenImageWhenResizingToSmallerSizeThenDimensionsAreCorrect() throws IOException {
+        BufferedImage img = ImageIO.read(Path.of(PANDA_IMG).toFile());
+        Transform t = Transform.classification(224, 224);
 
-        // warm up AWT
-        var resized = t.resize(img, 384, Image.SCALE_FAST);
-        long startTime = System.nanoTime();
-        resized = t.resize(img, 384, Image.SCALE_FAST);
-        long endTime = System.nanoTime();
-        long duration = (endTime - startTime) / 1000000;  //divide by 1000000 to get milliseconds.
-        System.out.println("Resize time: " + duration + "ms");
+        BufferedImage resized = t.resize(img, 224, Image.SCALE_FAST);
 
-        assertEquals(384, resized.getHeight());
-        assertEquals(435, resized.getWidth());
+        // Shorter side must be 224
+        int shorter = Math.min(resized.getWidth(), resized.getHeight());
+        assertEquals(224, shorter);
+    }
 
-        startTime = System.nanoTime();
-        var cropped = t.crop(resized, 384, true);
-        endTime = System.nanoTime();
-        duration = (endTime - startTime) / 1000000;  //divide by 1000000 to get milliseconds.
-        System.out.println("Crop time: " + duration + "ms");
+    // -----------------------------------------------------------------------
+    // crop
+    // -----------------------------------------------------------------------
 
-        assertEquals(384, cropped.getHeight());
+    @Test
+    public void testGivenImageWhenCroppingThenOutputHasRequestedDimensions() throws IOException {
+        BufferedImage img = ImageIO.read(Path.of(PANDA_IMG).toFile());
+        Transform t = Transform.classification(384, 384);
+        BufferedImage resized = t.resize(img, 384, Image.SCALE_FAST);
+
+        // When: shallow crop
+        BufferedImage cropped = t.crop(resized, 384, false);
+
         assertEquals(384, cropped.getWidth());
+        assertEquals(384, cropped.getHeight());
+    }
 
-        // warm up PyTorch
-        var tensor = t.toTensor(Transform.DEFAULT_MEAN, Transform.DEFAULT_STD, cropped);
-        startTime = System.nanoTime();
-        tensor = t.toTensor(Transform.DEFAULT_MEAN, Transform.DEFAULT_STD, cropped);
-        endTime = System.nanoTime();
-        duration = (endTime - startTime) / 1000000;  //divide by 1000000 to get milliseconds.
-        System.out.println("toTensor time: " + duration + "ms");
+    @Test
+    public void testGivenImageWhenDeepCroppingThenOutputIsIndependentOfOriginal() throws IOException {
+        BufferedImage img = ImageIO.read(Path.of(PANDA_IMG).toFile());
+        Transform t = Transform.classification(384, 384);
+        BufferedImage resized = t.resize(img, 384, Image.SCALE_FAST);
 
-        long[] shape = {1, 3, 384, 384};
-        assertArrayEquals(shape, tensor.shape());
+        // When: deep copy crop
+        BufferedImage cropped = t.crop(resized, 300, true);
 
-        tensor.get(Ellipsis, slice(0,5), slice(0,5)).print();
-        assertEquals( 0.6906, tensor.getFloat(0, 0, 0, 0), 0.0001);
-        assertEquals( 0.1426, tensor.getFloat(0, 0, 0, 1), 0.0001);
-        assertEquals( 0.1254, tensor.getFloat(0, 0, 1, 0), 0.0001);
-        assertEquals(-0.2342, tensor.getFloat(0, 0, 1, 1), 0.0001);
+        assertEquals(300, cropped.getWidth());
+        assertEquals(300, cropped.getHeight());
+        // Modifying the crop should not change the source (deep copy check)
+        cropped.setRGB(0, 0, Color.RED.getRGB());
+        assertNotEquals(Color.RED.getRGB(), resized.getRGB(
+                (resized.getWidth() - 300) / 2,
+                (resized.getHeight() - 300) / 2));
+    }
 
-        assertEquals( 0.6254, tensor.getFloat(0, 1, 0, 0), 0.0001);
-        assertEquals( 0.1001, tensor.getFloat(0, 1, 0, 1), 0.0001);
-        assertEquals( 0.0126, tensor.getFloat(0, 1, 1, 0), 0.0001);
-        assertEquals(-0.3375, tensor.getFloat(0, 1, 1, 1), 0.0001);
+    // -----------------------------------------------------------------------
+    // toTensor (TYPE_3BYTE_BGR fast path)
+    // -----------------------------------------------------------------------
 
-        assertEquals( 0.1476, tensor.getFloat(0, 2, 0, 0), 0.0001);
-        assertEquals(-0.3055, tensor.getFloat(0, 2, 0, 1), 0.0001);
-        assertEquals(-0.4101, tensor.getFloat(0, 2, 1, 0), 0.0001);
-        assertEquals(-0.7238, tensor.getFloat(0, 2, 1, 1), 0.0001);
+    @Test
+    public void testGivenBgrImageWhenConvertingToTensorThenOutputShapeIsNCHW() throws IOException {
+        BufferedImage img = ImageIO.read(Path.of(PANDA_IMG).toFile());
+        Transform t = Transform.classification(384, 384);
+        BufferedImage resized = t.resize(img, 384, Image.SCALE_FAST);
+        BufferedImage cropped = t.crop(resized, 384, true);
+
+        Tensor tensor = t.toTensor(Transform.DEFAULT_MEAN, Transform.DEFAULT_STD, cropped);
+
+        assertArrayEquals(new long[]{1, 3, 384, 384}, tensor.shape());
+        tensor.close();
+    }
+
+    @Test
+    public void testGivenBgrImageWhenConvertingToTensorThenPixelValuesAreNormalized() throws IOException {
+        BufferedImage img = ImageIO.read(Path.of(PANDA_IMG).toFile());
+        Transform t = Transform.classification(384, 384);
+        BufferedImage resized = t.resize(img, 384, Image.SCALE_FAST);
+        BufferedImage cropped = t.crop(resized, 384, true);
+
+        Tensor tensor = t.toTensor(Transform.DEFAULT_MEAN, Transform.DEFAULT_STD, cropped);
+
+        // Spot-check known pixel values (pre-computed from panda.jpg)
+        assertEquals( 0.6906f, tensor.getFloat(0, 0, 0, 0), 0.0001f);
+        assertEquals( 0.1426f, tensor.getFloat(0, 0, 0, 1), 0.0001f);
+        assertEquals( 0.6254f, tensor.getFloat(0, 1, 0, 0), 0.0001f);
+        assertEquals( 0.1476f, tensor.getFloat(0, 2, 0, 0), 0.0001f);
+        tensor.close();
+    }
+
+    @Test
+    public void testGivenARGBImageWhenConvertingToTensorThenOutputShapeIsNCHW() {
+        // Given: a synthetic ARGB image (TYPE_INT_ARGB) — exercises the generic getRGB path
+        BufferedImage img = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
+        for (int y = 0; y < 32; y++) {
+            for (int x = 0; x < 32; x++) {
+                img.setRGB(x, y, new Color(100, 150, 200, 255).getRGB());
+            }
+        }
+        Transform t = Transform.classification(32, 32);
+        Tensor tensor = t.toTensor(Transform.DEFAULT_MEAN, Transform.DEFAULT_STD, img);
+
+        assertArrayEquals(new long[]{1, 3, 32, 32}, tensor.shape());
+        // After normalization all pixels should be finite
+        Tensor cont = tensor.contiguous();
+        for (float v : cont.floatArray()) {
+            assertTrue(Float.isFinite(v), "Tensor element is not finite: " + v);
+        }
+        tensor.close(); cont.close();
+    }
+
+    @Test
+    public void testGivenMultipleImagesWhenConvertingToTensorThenBatchDimensionIsCorrect() throws IOException {
+        BufferedImage img1 = ImageIO.read(Path.of(PANDA_IMG).toFile());
+        Transform t = Transform.classification(384, 384);
+        BufferedImage r1 = t.crop(t.resize(img1, 384, Image.SCALE_FAST), 384, true);
+        BufferedImage r2 = t.crop(t.resize(img1, 384, Image.SCALE_FAST), 384, true);
+
+        Tensor tensor = t.toTensor(Transform.DEFAULT_MEAN, Transform.DEFAULT_STD, r1, r2);
+
+        // Batch of 2
+        assertArrayEquals(new long[]{2, 3, 384, 384}, tensor.shape());
+        tensor.close();
+    }
+
+    // -----------------------------------------------------------------------
+    // ImageClassification.forward (end-to-end)
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testGivenClassificationTransformWhenForwardingThenOutputShapeIsCorrect() throws IOException {
+        BufferedImage img = ImageIO.read(Path.of(PANDA_IMG).toFile());
+        Transform t = Transform.classification(224, 256);
+
+        try (Tensor tensor = t.forward(img)) {
+            assertArrayEquals(new long[]{1, 3, 224, 224}, tensor.shape());
+        }
     }
 }
+

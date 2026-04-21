@@ -24,4 +24,40 @@ package smile.llm;
  * @author Haifeng Li
  */
 public record Message(Role role, String content) {
+    /**
+     * Compact canonical constructor that validates inputs.
+     * @param role the role of the message speaker — must not be null.
+     * @param content the message content — must not be null.
+     */
+    public Message {
+        if (role == null) throw new IllegalArgumentException("Message role must not be null");
+        if (content == null) throw new IllegalArgumentException("Message content must not be null");
+    }
+
+    /**
+     * Factory method for a system message.
+     * @param content the message content.
+     * @return a system message.
+     */
+    public static Message system(String content) {
+        return new Message(Role.system, content);
+    }
+
+    /**
+     * Factory method for a user message.
+     * @param content the message content.
+     * @return a user message.
+     */
+    public static Message user(String content) {
+        return new Message(Role.user, content);
+    }
+
+    /**
+     * Factory method for an assistant message.
+     * @param content the message content.
+     * @return an assistant message.
+     */
+    public static Message assistant(String content) {
+        return new Message(Role.assistant, content);
+    }
 }

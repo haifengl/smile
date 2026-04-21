@@ -156,7 +156,9 @@ public class Llama {
      */
     private static List<String> getCheckpoints(File dir) {
         List<String> checkpoints = new ArrayList<>();
-        for (var file : dir.listFiles()) {
+        var files = dir.listFiles();
+        if (files == null) return checkpoints;
+        for (var file : files) {
             var path = file.getPath();
             if (path.endsWith(".pt")) {
                 checkpoints.add(path);
@@ -336,7 +338,6 @@ public class Llama {
 
             if (publisher != null) publisher.close();
             Tensor.pop();
-            System.gc();
             return predictions;
         }
     }

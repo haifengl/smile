@@ -71,10 +71,12 @@ public class StochasticDepth implements Layer {
                 .dtype(input.dtype())
                 .device(input.device());
         Tensor noise = Tensor.empty(options, shape);
-        noise = noise.bernoulli_(survivalRate);
+        noise.bernoulli_(survivalRate);
         if (survivalRate > 0.0) {
             noise.div_(survivalRate);
         }
-        return input.mul(noise);
+        Tensor output = input.mul(noise);
+        noise.close();
+        return output;
     }
 }

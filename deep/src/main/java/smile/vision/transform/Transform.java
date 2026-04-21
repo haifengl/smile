@@ -68,7 +68,7 @@ public interface Transform {
 
     /**
      * Crops an image.
-     * @param image the image size.
+     * @param image the input image.
      * @param size the cropped image size.
      * @param deep If false, the returned BufferedImage shares the same data
      *            array as the original image. Otherwise, returns a deep copy.
@@ -81,7 +81,7 @@ public interface Transform {
     /**
      * Crops an image. The returned BufferedImage shares the same data array
      * as the original image.
-     * @param image the image size.
+     * @param image the input image.
      * @param width the cropped image width.
      * @param height the cropped image height.
      * @param deep If false, the returned BufferedImage shares the same data

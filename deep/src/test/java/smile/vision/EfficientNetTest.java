@@ -30,32 +30,18 @@ import smile.vision.transform.Transform;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
+ * Integration tests for {@link EfficientNet}. These tests require pre-trained
+ * model weights and a local copy of ImageNet-mini; they are tagged
+ * {@code @Tag("integration")} so they can be excluded from fast CI runs:
+ * <pre>{@code ./gradlew :deep:test -DexcludeTags=integration}</pre>
  *
  * @author Haifeng Li
  */
+@Tag("integration")
 public class EfficientNetTest {
 
-    public EfficientNetTest() {
-    }
-
-    @BeforeAll
-    public static void setUpClass() throws Exception {
-    }
-
-    @AfterAll
-    public static void tearDownClass() throws Exception {
-    }
-
-    @BeforeEach
-    public void setUp() {
-    }
-
-    @AfterEach
-    public void tearDown() {
-    }
-
     @Test
-    public void test() throws IOException {
+    public void testGivenEfficientNetV2SWhenForwardOnPandaAndLennaThenTop1MatchesExpected() throws IOException {
         Device device = Device.preferredDevice();
 
         var model = EfficientNet.V2S();
@@ -66,67 +52,23 @@ public class EfficientNetTest {
         var panda = ImageIO.read(Path.of("deep/src/test/resources/data/image/panda.jpg").toFile());
 
         try (var guard = Tensor.noGradGuard()) {
-            // https://discuss.pytorch.org/t/libtorchs-cpu-inference-is-much-slower-on-windows-than-on-linux/166194/2
-            // The first iteration(s) are slow due to multiple reasons:
-            //
-            // The very first CUDA call (it could be a tensor creation etc.)
-            // is creating the CUDA context, which loads the driver etc.
-            // In older CUDA versions (<11.7) all kernels for your GPU
-            // architecture were also directly loaded into the context,
-            // which takes time and uses memory. Since CUDA 11.7 PyTorch has
-            // enabled "lazy module loading", which will only load the called
-            // kernel into the context if needed. This will reduce the startup
-            // time as well as the memory usage significantly.
-            //
-            // The first iterations of your actual workload need to allocate
-            // new memory, which will then be reused through the CUDACachingAllocator.
-            // However, the initial cudaMalloc calls are also "expensive" (compared
-            // to just reusing the already allocated memory) and you would thus also
-            // see a slow iteration time until your workload reached the peak memory
-            // and is able to reuse the GPU memory. Note that new cudaMalloc calls
-            // could of course still happen during the training e.g. if your input
-            // size increases etc.
-            //
-            // If you are using conv layers and are allowing cuDNN to benchmark valid
-            // kernels and select the fastest one (via torch.backends.cudnn.benchmark = True)
-            // the profiling and kernel selection for each new workload (i.e. new input shape,
-            // new dtype etc. to the conv layer) will also see an overhead.
-            long startTime = System.nanoTime();
+            // warm-up pass
             var output = model.forward(panda);
-            long endTime = System.nanoTime();
-            long duration = (endTime - startTime) / 1000000;  //divide by 1000000 to get milliseconds.
-            System.out.println("1st run elapsed time: " + duration + "ms");
 
-            startTime = System.nanoTime();
+            // timed pass with batch of 2
             output = model.forward(lenna, panda);
-            endTime = System.nanoTime();
-            duration = (endTime - startTime) / 1000000;  //divide by 1000000 to get milliseconds.
-            System.out.println("2nd run elapsed time: " + duration + "ms");
 
             var topk = output.topk(5);
             topk._2().to(Device.CPU());
-            String[] images = {"Lenna", "Panda"};
-            for (int i = 0; i < 2; i++) {
-                System.out.println("======== " + images[i] + " ========");
-                for (int j = 0; j < 5; j++) {
-                    System.out.println(ImageNet.labels[topk._2().getInt(i, j)]);
-                }
-            }
-            assertEquals(515, topk._2().getInt(0, 0));
-            assertEquals(388, topk._2().getInt(1, 0));
+            // Verify top-1 predictions
+            assertEquals(515, topk._2().getInt(0, 0), "Lenna top-1 class should be 515");
+            assertEquals(388, topk._2().getInt(1, 0), "Panda top-1 class should be 388");
         }
     }
 
     @Test
-    public void train() throws IOException {
+    public void testGivenEfficientNetV2SWhenTrainingOneEpochThenNoException() throws IOException {
         var model = EfficientNet.V2S();
-
-        // half precision to lower memory usage.
-        // This is not supported on all platforms, e.g., macOS.
-        // var dtype = smile.deep.tensor.ScalarType.BFloat16;
-        // Device device = Device.CUDA();
-        // device.setDefaultDevice();
-        // model.to(device, dtype);
 
         var transform = Transform.classification(384, 384);
         var data = new ImageDataset(64, "deep/src/test/resources/data/imagenet-mini/train", transform, ImageNet.folder2Target);
@@ -136,9 +78,8 @@ public class EfficientNetTest {
                 TimeFunction.linear(0.0001, 50000, 0.01),
                 TimeFunction.cosine(0.0001, 50000, 0.01));
         model.setLearningRateSchedule(schedule);
-        // Use parameters from the paper, the rests are Keras default values.
-        // Note that Keras has different default values from PyTorch (e.g. alpha and eps).
         Optimizer optimizer = Optimizer.RMSprop(model, 0.0001, 0.9, 1E-07, 1E-05, 0.9, false);
-        model.train(1, optimizer, Loss.nll(), data, test, null, new Accuracy());
+        // Should complete without throwing
+        assertDoesNotThrow(() -> model.train(1, optimizer, Loss.nll(), data, test, null, new Accuracy()));
     }
 }
