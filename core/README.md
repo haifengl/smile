@@ -69,7 +69,7 @@ Add the Gradle dependency:
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation("com.github.haifengl:smile-core:4.x.x")
+    implementation("com.github.haifengl:smile-core:6.x.x")
 }
 ```
 
@@ -103,7 +103,7 @@ SVM<double[]> svm = SVM.fit(formula, scaledTrain);
 
 ## Classification
 
-`smile.classification` provides over 20 classifiers for binary and multi-class problems.
+`smile.classification` provides over 16 classifiers for binary and multi-class problems.
 
 | Class | Algorithm |
 |---|---|
@@ -144,7 +144,7 @@ feature importance. See [Feature Engineering](FEATURE_ENGINEERING.md#treeshap).
 
 ## Regression
 
-`smile.regression` provides over 15 regressors for continuous-valued prediction.
+`smile.regression` provides over 13 regressors for continuous-valued prediction.
 
 | Class | Algorithm |
 |---|---|
