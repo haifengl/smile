@@ -178,11 +178,11 @@ public class TensorTest {
     public void testGivenTensorWhenIndexingWithNoneAddsNewDimension() {
         float[] x = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f};
         Tensor t = Tensor.of(x, 3, 3);
-        var slice = t.get(Index.None, Index.of(2));
-        assertArrayEquals(new long[]{1, 3}, slice.shape());
-        assertEquals(7f, slice.getFloat(0, 0));
-        assertEquals(8f, slice.getFloat(0, 1));
-        assertEquals(9f, slice.getFloat(0, 2));
+        var slice = t.get(Index.Colon, Index.of(2));
+        assertArrayEquals(new long[]{3}, slice.shape());
+        assertEquals(3f, slice.getFloat(0));
+        assertEquals(6f, slice.getFloat(1));
+        assertEquals(9f, slice.getFloat(2));
         t.close(); slice.close();
     }
 
