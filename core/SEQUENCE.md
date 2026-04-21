@@ -415,7 +415,7 @@ every input. The simplest pattern uses a pre-built schema:
 ```java
 StructType schema = new StructType(
         new StructField("word_length",  DataTypes.IntType),
-        new StructField("is_capitalised", DataTypes.IntType)
+        new StructField("is_capitalized", DataTypes.IntType)
 );
 
 Function<String, Tuple> features = word -> Tuple.of(schema, new int[]{
@@ -596,15 +596,15 @@ System.out.printf("Viterbi error:          %.2f%%%n", 100.0 * viterbiErrors / n)
 
 Good features for text sequence labeling typically include:
 
-| Feature type | Example |
-|---|---|
+| Feature type | Example                                               |
+|---|-------------------------------------------------------|
 | Current token | `word.toLowerCase()` encoded as integer hash or index |
-| Token shape | all-caps, capitalised, all-digits, mixed |
-| Character n-grams | prefix/suffix of length 1–4 |
-| Token length | number of characters |
-| Context window | word at `t-1`, `t+1` encoded as separate fields |
-| Gazetteer membership | is the word in a list of known names / places |
-| Morphological flags | ends in "-ing", "-ed", "-ly", starts with upper case |
+| Token shape | all-caps, capitalized, all-digits, mixed             |
+| Character n-grams | prefix/suffix of length 1–4                           |
+| Token length | number of characters                                  |
+| Context window | word at `t-1`, `t+1` encoded as separate fields       |
+| Gazetteer membership | is the word in a list of known names / places         |
+| Morphological flags | ends in "-ing", "-ed", "-ly", starts with upper case  |
 
 Each of these becomes a `StructField` in the schema. Keep features as integers (index
 into a vocabulary) for compact representation; the CRF's internal regression trees

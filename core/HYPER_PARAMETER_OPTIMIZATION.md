@@ -190,7 +190,7 @@ of all registered parameter value lists.
 3 values for mtry  ×  5 values for max.nodes  =  15 configurations
 ```
 
-All configurations are materialised up-front. Be mindful of combinatorial explosion — adding
+All configurations are materialized up-front. Be mindful of combinatorial explosion — adding
 even a few parameters with many values can produce millions of configurations.
 
 ```java

@@ -92,8 +92,8 @@ encoding (`OneHotEncoder`, `KBinsDiscretizer`), imputation, and more.
 
 ```java
 var scaler = Standardizer.fit(trainDF);
-DataFrame normalised = scaler.apply(trainDF);
-DataFrame normalisedTest = scaler.apply(testDF);
+DataFrame normalized = scaler.apply(trainDF);
+DataFrame normalizedTest = scaler.apply(testDF);
 ```
 
 ---

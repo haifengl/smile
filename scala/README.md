@@ -950,7 +950,7 @@ val sparse   = vectorize(vocab, bag2)         // Array[Int] (indices of present 
 // Document frequency array
 val dfreq: Array[Int] = df(vocab, corpusOfBags)
 
-// Whole-corpus TF-IDF normalised to unit L2 norm
+// Whole-corpus TF-IDF normalized to unit L2 norm
 val matrix: Array[Array[Double]] = tfidf(corpusOfBags)
 
 // Single document

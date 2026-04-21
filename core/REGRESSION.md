@@ -426,7 +426,7 @@ GLM model = GLM.fit(Formula.lhs("price"), data, Gaussian.log());
 ### 4.3 GAM — Generalized Additive Model
 
 GAM models the response as the sum of smooth non-parametric functions of each predictor:
-`g(μ) = β₀ + f₁(x₁) + f₂(x₂) + …`. Each `fᵢ` is a P-spline fitted by penalised
+`g(μ) = β₀ + f₁(x₁) + f₂(x₂) + …`. Each `fᵢ` is a P-spline fitted by penalized
 iteratively reweighted least squares (PIRLS) with backfitting.
 
 ```java
@@ -796,13 +796,13 @@ MLP model = MLP.fit(x, y, props);
 
 **Layer builders** (from `smile.model.mlp`):
 
-| Type | Description |
-|------|-------------|
+| Type | Description                                                 |
+|------|-------------------------------------------------------------|
 | `Layer.ReLU(units)` | Rectified linear — most common for regression hidden layers |
-| `Layer.Sigmoid(units)` | Logistic sigmoid |
-| `Layer.Tanh(units)` | Hyperbolic tangent |
-| `Layer.Mish(units)` | Smooth ReLU variant |
-| `Layer.SELU(units)` | Self-normalising; works well without batch norm |
+| `Layer.Sigmoid(units)` | Logistic sigmoid                                            |
+| `Layer.Tanh(units)` | Hyperbolic tangent                                          |
+| `Layer.Mish(units)` | Smooth ReLU variant                                         |
+| `Layer.SELU(units)` | Self-normalizing; works well without batch norm            |
 
 **Options** (via `Properties`)
 
@@ -836,7 +836,7 @@ RBFNetwork<double[]> model = RBFNetwork.fit(x, y, centers, rbf, normalized);
 
 - `rbf`: array of `RadialBasisFunction` objects (one per centre). Common choice:
   `GaussianRadialBasis(sigma)`.
-- `normalized`: if `true`, activations are normalised to sum to 1 (partition-of-unity
+- `normalized`: if `true`, activations are normalized to sum to 1 (partition-of-unity
   property; often improves extrapolation).
 
 ```java
@@ -926,9 +926,9 @@ if (model.online()) {
 Scale-invariant models (trees, random forests, GBT) work well without normalization.
 Scale-sensitive models require it:
 
-| Scale-insensitive | Scale-sensitive (normalise first) |
-|-------------------|----------------------------------|
-| `RegressionTree`, `RandomForest`, `GradientTreeBoost` | `OLS`, `RidgeRegression`, `LASSO`, `ElasticNet` |
+| Scale-insensitive | Scale-sensitive (normalize first)                      |
+|-------------------|---------------------------------------------------------|
+| `RegressionTree`, `RandomForest`, `GradientTreeBoost` | `OLS`, `RidgeRegression`, `LASSO`, `ElasticNet`         |
 | — | `SVM`, `GaussianProcessRegression`, `RBFNetwork`, `MLP` |
 
 ```java
