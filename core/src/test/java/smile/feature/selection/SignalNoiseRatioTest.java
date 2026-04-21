@@ -16,7 +16,13 @@
  */
 package smile.feature.selection;
 
+import java.util.Arrays;
+import java.util.List;
 import smile.data.DataFrame;
+import smile.data.Tuple;
+import smile.data.type.DataTypes;
+import smile.data.type.StructField;
+import smile.data.type.StructType;
 import smile.data.vector.IntVector;
 import smile.datasets.BreastCancer;
 import smile.datasets.Default;
@@ -91,5 +97,74 @@ public class SignalNoiseRatioTest {
         assertEquals(1.0666, s2n[0].ratio(), 1E-4);
         assertEquals(0.4746, s2n[1].ratio(), 1E-4);
         assertEquals(1.1078, s2n[2].ratio(), 1E-4);
+    }
+
+    @Test
+    public void testGivenMoreThanTwoClassesWhenFittingThenUnsupportedOperationException() throws Exception {
+        // Iris has 3 classes — must throw
+        var iris = new Iris();
+        assertThrows(UnsupportedOperationException.class,
+                () -> SignalNoiseRatio.fit(iris.data(), "class"));
+    }
+
+    @Test
+    public void testGivenConstantFeatureInBothClassesWhenFittingThenRatioIsZeroNotNaN() {
+        // Both classes have the same constant value: mu1 == mu2, sd1 == sd2 == 0
+        // S2N = 0.0/0.0 would produce NaN; after fix it should return 0.0
+        StructType schema = new StructType(
+                new StructField("feat", DataTypes.DoubleType),
+                new StructField("label", DataTypes.IntType)
+        );
+        DataFrame df = DataFrame.of(schema, List.of(
+                Tuple.of(schema, new Object[]{5.0, 0}),
+                Tuple.of(schema, new Object[]{5.0, 0}),
+                Tuple.of(schema, new Object[]{5.0, 1}),
+                Tuple.of(schema, new Object[]{5.0, 1})
+        ));
+        SignalNoiseRatio[] s2n = SignalNoiseRatio.fit(df, "label");
+        assertEquals(1, s2n.length);
+        assertEquals(0.0, s2n[0].ratio(), 1E-12);
+        assertFalse(Double.isNaN(s2n[0].ratio()), "ratio must not be NaN for a constant feature");
+    }
+
+    @Test
+    public void testGivenPerfectlySeparatingConstantGroupsWhenFittingThenRatioIsInfinity() {
+        // Class 0: all 1.0, class 1: all 2.0 — sd=0 in both, but means differ
+        // S2N = (2.0-1.0) / 0.0 = +Infinity (by design — perfectly separating)
+        StructType schema = new StructType(
+                new StructField("feat", DataTypes.DoubleType),
+                new StructField("label", DataTypes.IntType)
+        );
+        DataFrame df = DataFrame.of(schema, List.of(
+                Tuple.of(schema, new Object[]{1.0, 0}),
+                Tuple.of(schema, new Object[]{1.0, 0}),
+                Tuple.of(schema, new Object[]{2.0, 1}),
+                Tuple.of(schema, new Object[]{2.0, 1})
+        ));
+        SignalNoiseRatio[] s2n = SignalNoiseRatio.fit(df, "label");
+        assertEquals(1, s2n.length);
+        assertTrue(Double.isInfinite(s2n[0].ratio()), "ratio should be +Infinity for a perfect separator");
+    }
+
+    @Test
+    public void testGivenMultipleFeaturesWhenSortingThenAscendingOrder() throws Exception {
+        var dataset = new Default();
+        SignalNoiseRatio[] s2n = SignalNoiseRatio.fit(dataset.data(), "default");
+        // balance has lower ratio than income; after sorting ascending order holds
+        Arrays.sort(s2n);
+        for (int i = 1; i < s2n.length; i++) {
+            assertTrue(s2n[i - 1].ratio() <= s2n[i].ratio(),
+                    "sorted ratios should be non-decreasing");
+        }
+        assertEquals("SignalNoiseRatio", s2n[0].toString().split("\\(")[0]);
+    }
+
+    @Test
+    public void testGivenTwoFeaturesWhenComparingThenLowerRatioIsLess() {
+        SignalNoiseRatio low  = new SignalNoiseRatio("low",  0.1);
+        SignalNoiseRatio high = new SignalNoiseRatio("high", 5.0);
+        assertTrue(low.compareTo(high) < 0);
+        assertTrue(high.compareTo(low) > 0);
+        assertEquals(0, low.compareTo(new SignalNoiseRatio("copy", 0.1)));
     }
 }

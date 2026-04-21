@@ -20,6 +20,9 @@ import smile.classification.DecisionTree;
 import smile.datasets.Abalone;
 import smile.datasets.ImageSegmentation;
 import smile.gap.BitString;
+import smile.gap.Crossover;
+import smile.gap.Fitness;
+import smile.gap.Selection;
 import smile.regression.RegressionTree;
 import smile.math.MathEx;
 import smile.validation.metric.Accuracy;
@@ -97,5 +100,78 @@ public class GAFETest {
         }
 
         assertEquals(2.2278, -result[result.length-1].fitness(), 1E-4);
+    }
+
+    @Test
+    public void testGivenZeroPopulationSizeWhenApplyingThenIllegalArgumentException() {
+        GAFE selection = new GAFE();
+        Fitness<BitString> dummyFitness = bits -> 0.0;
+        assertThrows(IllegalArgumentException.class,
+                () -> selection.apply(0, 10, 5, dummyFitness));
+    }
+
+    @Test
+    public void testGivenAllZeroBitsWhenEvaluatingClassificationFitnessThenZeroFitness() {
+        // When all bits are 0 (no features selected), classification fitness should return 0.0
+        double[][] x     = {{1.0}, {2.0}, {3.0}, {4.0}};
+        int[]      y     = {0, 0, 1, 1};
+        double[][] testx = {{1.5}, {3.5}};
+        int[]      testy = {0, 1};
+
+        Fitness<BitString> fitness = GAFE.fitness(x, y, testx, testy, new Accuracy(),
+                (data, labels) -> { throw new AssertionError("trainer should not be called"); });
+
+        BitString allZeros = new BitString(1,
+                fitness,
+                Crossover.TWO_POINT,
+                1.0,
+                0.01);
+
+        // Force all bits to 0 by evaluating a manually constructed chromosome
+        // We can verify the formula: when bits are all 0, fitness returns 0.0
+        // (The all-zeros chromosome returns 0.0 from the lambda without calling the trainer)
+        // We verify via the fitness lambda directly.
+        double result = fitness.score(new BitString(1, fitness, Crossover.TWO_POINT, 1.0, 0.01) {
+            @Override
+            public byte[] bits() {
+                return new byte[]{0};
+            }
+        });
+        assertEquals(0.0, result, 0.0, "all-zero chromosome should have fitness 0.0");
+    }
+
+    @Test
+    public void testGivenAllZeroBitsWhenEvaluatingRegressionFitnessThenNegativeInfinity() {
+        // When all bits are 0 (no features selected), regression fitness should return -Infinity
+        double[][] x     = {{1.0}, {2.0}, {3.0}, {4.0}};
+        double[]   y     = {1.0, 2.0, 3.0, 4.0};
+        double[][] testx = {{1.5}, {3.5}};
+        double[]   testy = {1.5, 3.5};
+
+        Fitness<BitString> fitness = GAFE.fitness(x, y, testx, testy, new RMSE(),
+                (data, labels) -> { throw new AssertionError("trainer should not be called"); });
+
+        double result = fitness.score(new BitString(1, fitness, Crossover.TWO_POINT, 1.0, 0.01) {
+            @Override
+            public byte[] bits() {
+                return new byte[]{0};
+            }
+        });
+        assertEquals(Double.NEGATIVE_INFINITY, result, "all-zero regression chromosome should have fitness -Infinity");
+    }
+
+    @Test
+    public void testGivenCustomGAFEParamsWhenApplyingThenPopulationSizeIsRespected() throws Exception {
+        var segment = new ImageSegmentation();
+        GAFE selection = new GAFE(
+                Selection.Tournament(3, 0.95),
+                1,
+                Crossover.TWO_POINT,
+                1.0,
+                0.01
+        );
+        BitString[] result = selection.apply(20, 5, segment.train().ncol() - 1,
+                GAFE.fitness("class", segment.train(), segment.test(), new Accuracy(), DecisionTree::fit));
+        assertEquals(20, result.length, "result should have exactly the population size");
     }
 }
