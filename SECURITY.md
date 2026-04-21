@@ -8,8 +8,8 @@ We currently support security fixes for the latest stable release and selected o
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
+| 6.x     | :white_check_mark: |
+| 5.x     | :x:                |
 | 4.4.x   | :white_check_mark: |
 | < 4.4   | :x:                |
 
