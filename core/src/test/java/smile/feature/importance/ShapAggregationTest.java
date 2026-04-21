@@ -30,7 +30,7 @@ import smile.model.cart.CART;
 import smile.model.cart.LeafNode;
 import smile.model.cart.RegressionNode;
 import smile.model.cart.Split;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Synthetic coverage for SHAP aggregation helpers.
@@ -81,6 +81,119 @@ public class ShapAggregationTest {
         // Then
         assertArrayEquals(new double[] {4.0, 8.0}, tupleShap, TOLERANCE);
         assertArrayEquals(new double[] {3.0, 7.0}, dataShap, TOLERANCE);
+    }
+
+    @Test
+    public void testGivenEmptyStreamWhenAggregatingShapValuesThenEmptyArrayIsReturned() {
+        // Given
+        SHAP<double[]> shap = x -> new double[]{x[0], x[1]};
+
+        // When — no instances at all
+        double[] importance = shap.shap(Stream.empty());
+
+        // Then — must return an empty array (not throw ArrayIndexOutOfBoundsException)
+        assertEquals(0, importance.length);
+    }
+
+    @Test
+    public void testGivenSingleInstanceStreamWhenAggregatingShapValuesThenAbsOfThatInstanceIsReturned() {
+        // Given
+        SHAP<double[]> shap = x -> new double[]{-5.0, 3.0};
+
+        // When
+        double[] importance = shap.shap(Stream.of(new double[]{0.0}));
+
+        // Then
+        assertArrayEquals(new double[]{5.0, 3.0}, importance, TOLERANCE);
+    }
+
+    @Test
+    public void testGivenAllPositiveShapValuesWhenAggregatingThenAbsoluteValueIsStillTaken() {
+        // Given — all SHAP values are already positive; abs should be a no-op
+        SHAP<double[]> shap = x -> new double[]{4.0, 2.0};
+
+        // When
+        double[] importance = shap.shap(Stream.of(new double[]{0.0}, new double[]{0.0}));
+
+        // Then — mean of [4,2] and [4,2] is [4,2]
+        assertArrayEquals(new double[]{4.0, 2.0}, importance, TOLERANCE);
+    }
+
+    @Test
+    public void testGivenShapStreamAggregationWhenSourceArrayIsReturnedDirectlyThenOriginalIsNotMutated() {
+        // Given — shap() returns the same array reference each call
+        double[] shared = new double[]{-7.0, 3.0};
+        SHAP<double[]> shap = x -> shared;
+
+        // When
+        double[] importance = shap.shap(Stream.of(new double[]{0.0}));
+
+        // Then — the original 'shared' array must not be modified to abs values
+        assertEquals(-7.0, shared[0], TOLERANCE);
+        assertEquals(3.0, shared[1], TOLERANCE);
+        // And importance should be abs values
+        assertArrayEquals(new double[]{7.0, 3.0}, importance, TOLERANCE);
+    }
+
+    @Test
+    public void testGivenSingleTreeForestWhenComputingTreeShapThenNoAveragingChangesResult() {
+        // Given
+        StructType inputSchema = new StructType(
+                new StructField("x1", DataTypes.DoubleType),
+                new StructField("x2", DataTypes.DoubleType),
+                new StructField("y",  DataTypes.DoubleType)
+        );
+        DataFrame data = DataFrame.of(inputSchema, List.of(
+                Tuple.of(inputSchema, new Object[]{2.0, -1.0, 10.0})
+        ));
+        Formula formula = Formula.of("y", "x1", "x2");
+        TreeSHAP shap = new StubTreeShap(formula, new CART[]{new StubCart(5.0)});
+
+        // When
+        double[] result = shap.shap(data.get(0));
+
+        // Then — single tree: phi = tree.shap() / 1 = tree.shap() unchanged
+        // StubCart(5.0).shap(xt) for xt with x1=2.0, x2=-1.0:
+        //   phi[0] = 5.0 * 2.0 = 10.0,  phi[1] = -5.0 * (-1.0) = 5.0
+        assertArrayEquals(new double[]{10.0, 5.0}, result, TOLERANCE);
+    }
+
+    @Test
+    public void testGivenEmptyForestWhenComputingTreeShapThenIllegalStateExceptionIsThrown() {
+        // Given
+        StructType inputSchema = new StructType(
+                new StructField("x1", DataTypes.DoubleType),
+                new StructField("y",  DataTypes.DoubleType)
+        );
+        Formula formula = Formula.of("y", "x1");
+        TreeSHAP shap = new StubTreeShap(formula, new CART[0]);
+
+        Tuple tuple = Tuple.of(
+                new StructType(new StructField("x1", DataTypes.DoubleType),
+                               new StructField("y",  DataTypes.DoubleType)),
+                new Object[]{1.0, 0.0});
+
+        // When / Then
+        assertThrows(IllegalStateException.class, () -> shap.shap(tuple));
+    }
+
+    @Test
+    public void testGivenNullForestWhenComputingTreeShapThenIllegalStateExceptionIsThrown() {
+        // Given
+        StructType inputSchema = new StructType(
+                new StructField("x1", DataTypes.DoubleType),
+                new StructField("y",  DataTypes.DoubleType)
+        );
+        Formula formula = Formula.of("y", "x1");
+        TreeSHAP shap = new StubTreeShap(formula, null);
+
+        Tuple tuple = Tuple.of(
+                new StructType(new StructField("x1", DataTypes.DoubleType),
+                               new StructField("y",  DataTypes.DoubleType)),
+                new Object[]{1.0, 0.0});
+
+        // When / Then
+        assertThrows(IllegalStateException.class, () -> shap.shap(tuple));
     }
 
     private record StubTreeShap(Formula formula, CART[] trees) implements TreeSHAP {
