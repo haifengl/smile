@@ -102,8 +102,8 @@ public class Precision implements Metric {
             Tensor eq = prediction.eq(target);
             Tensor ne = prediction.ne(target);
             if (strategy == Averaging.Micro) {
-                tp = prediction.eq(target).sum();
-                fp = prediction.ne(target).sum();
+                tp = eq.sum();
+                fp = ne.sum();
             } else {
                 tp = target.newZeros(numClasses).scatterReduce_(0, target.get(eq), one, "sum");
                 fp = target.newZeros(numClasses).scatterReduce_(0, prediction.get(ne), one, "sum");
@@ -117,6 +117,7 @@ public class Precision implements Metric {
 
     @Override
     public double compute() {
+        if (tp == null) return 0.0;
         // Guard against zero denominator (no predicted positives for a class):
         // replace 0 entries in (tp+fp) with 1 so that TP/1 = 0 precision for
         // classes that were never predicted positive.

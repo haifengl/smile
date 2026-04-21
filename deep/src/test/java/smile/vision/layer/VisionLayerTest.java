@@ -97,6 +97,106 @@ public class VisionLayerTest {
         assertEquals(0,   cfg.outputChannels() % 8);
     }
 
+    @Test
+    public void testGivenFusedMBConvWithWidthAndDepthMultiplierWhenCreatedThenBothScaled() {
+        MBConvConfig cfg = MBConvConfig.FusedMBConv(1, 3, 1, 16, 32, 2, 2.0, 1.5);
+        // 16*2=32, 32*2=64; ceil(2*1.5)=3
+        assertEquals(32, cfg.inputChannels());
+        assertEquals(64, cfg.outputChannels());
+        assertEquals(3,  cfg.numLayers());
+        assertEquals("FusedMBConv", cfg.block());
+    }
+
+    // -----------------------------------------------------------------------
+    // MBConvConfig — compact constructor validation
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testGivenMBConvConfigWithNonPositiveExpandRatioThenThrows() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new MBConvConfig(0.0, 3, 1, 16, 16, 1, "MBConv"));
+    }
+
+    @Test
+    public void testGivenMBConvConfigWithNonPositiveKernelThenThrows() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new MBConvConfig(1.0, 0, 1, 16, 16, 1, "MBConv"));
+    }
+
+    @Test
+    public void testGivenMBConvConfigWithNonPositiveStrideThenThrows() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new MBConvConfig(1.0, 3, 0, 16, 16, 1, "MBConv"));
+    }
+
+    @Test
+    public void testGivenMBConvConfigWithNonPositiveInputChannelsThenThrows() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new MBConvConfig(1.0, 3, 1, 0, 16, 1, "MBConv"));
+    }
+
+    @Test
+    public void testGivenMBConvConfigWithNonPositiveOutputChannelsThenThrows() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new MBConvConfig(1.0, 3, 1, 16, -1, 1, "MBConv"));
+    }
+
+    @Test
+    public void testGivenMBConvConfigWithZeroNumLayersThenThrows() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new MBConvConfig(1.0, 3, 1, 16, 16, 0, "MBConv"));
+    }
+
+    @Test
+    public void testGivenMBConvConfigWithUnknownBlockTypeThenThrows() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new MBConvConfig(1.0, 3, 1, 16, 16, 1, "UnknownBlock"));
+    }
+
+    // -----------------------------------------------------------------------
+    // Conv2dNormActivation — Options validation
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testGivenOptionsWithNonPositiveKernelThenThrows() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new Conv2dNormActivation.Options(16, 32, 0));
+    }
+
+    @Test
+    public void testGivenOptionsWithNonPositiveInChannelsThenThrows() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new Conv2dNormActivation.Options(0, 32, 3));
+    }
+
+    @Test
+    public void testGivenOptionsWithNonPositiveOutChannelsThenThrows() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new Conv2dNormActivation.Options(16, 0, 3));
+    }
+
+    // -----------------------------------------------------------------------
+    // StochasticDepth — mode case normalisation
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testGivenStochasticDepthWithMixedCaseModeThenConstructsAndForwardsCorrectly() {
+        // Before fix: "Row".equals("row") → false; forward() would skip row-specific logic.
+        // After fix: mode is normalised to lowercase in constructor.
+        StochasticDepth sd = new StochasticDepth(0.0, "Row");
+        sd.asTorch().train(true);
+        Tensor input = Tensor.rand(4, 8);
+        Tensor output = sd.forward(input);
+        // p=0 → identity regardless of mode
+        assertSame(input, output);
+        input.close();
+    }
+
+    @Test
+    public void testGivenStochasticDepthBatchModeUppercaseWhenConstructedThenNoThrow() {
+        assertDoesNotThrow(() -> new StochasticDepth(0.5, "BATCH"));
+    }
+
     // -----------------------------------------------------------------------
     // StochasticDepth
     // -----------------------------------------------------------------------

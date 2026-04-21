@@ -54,7 +54,7 @@ public record ModelArgs(int dim,
      * Constructor with default parameter values.
      */
     public ModelArgs() {
-        this(4096, 32, 32, null, -1, 356, null, 1E-5, 500000, false, 32, 2048);
+        this(4096, 32, 32, null, -1, 256, null, 1E-5, 500000, false, 32, 2048);
     }
 
     /**
@@ -66,18 +66,22 @@ public record ModelArgs(int dim,
      * @return the model hyperparameters.
      */
     public static ModelArgs from(String path, int maxBatchSize, int maxSeqLen) throws IOException {
+        File file = new File(path);
+        if (!file.exists()) {
+            throw new IOException("Model params file not found: " + path);
+        }
         ObjectMapper mapper = new ObjectMapper();
         var node = mapper.readTree(new File(path));
         return new ModelArgs(
                 node.get("dim").asInt(),
                 node.get("n_layers").asInt(),
                 node.get("n_heads").asInt(),
-                node.get("n_kv_heads").asInt(),
+                node.has("n_kv_heads") ? node.get("n_kv_heads").asInt() : null,
                 node.get("vocab_size").asInt(),
                 node.get("multiple_of").asInt(),
-                node.get("ffn_dim_multiplier").asDouble(),
+                node.has("ffn_dim_multiplier") ? node.get("ffn_dim_multiplier").asDouble() : null,
                 node.get("norm_eps").asDouble(),
-                node.get("rope_theta").asDouble(),
+                node.has("rope_theta") ? node.get("rope_theta").asDouble() : 10000.0,
                 node.has("use_scaled_rope") && node.get("use_scaled_rope").asBoolean(),
                 maxBatchSize,
                 maxSeqLen

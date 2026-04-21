@@ -419,7 +419,7 @@ public interface Layer extends Function<Tensor, Tensor> {
      * Returns an average pooling layer that reduces a tensor by combining cells,
      * and assigning the average value of the input cells to the output cell.
      * @param size the window/kernel size.
-     * @return a max pooling layer.
+     * @return an average pooling layer.
      */
     static AvgPool2dLayer avgPool2d(int size) {
         return new AvgPool2dLayer(size);
@@ -521,7 +521,7 @@ public interface Layer extends Function<Tensor, Tensor> {
      *
      * @param numTokens the size of the dictionary of embeddings.
      * @param dim the size of each embedding vector.
-     * @return a dropout layer.
+     * @return an embedding layer.
      */
     static EmbeddingLayer embedding(int numTokens, int dim) {
         return embedding(numTokens, dim, 1.0);
@@ -538,7 +538,7 @@ public interface Layer extends Function<Tensor, Tensor> {
      * @param numTokens the size of the dictionary of embeddings.
      * @param dim the size of each embedding vector.
      * @param alpha optional scaling factor.
-     * @return a dropout layer.
+     * @return an embedding layer.
      */
     static EmbeddingLayer embedding(int numTokens, int dim, double alpha) {
         return new EmbeddingLayer(numTokens, dim, alpha);

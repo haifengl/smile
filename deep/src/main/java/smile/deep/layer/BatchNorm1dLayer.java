@@ -51,6 +51,9 @@ public class BatchNorm1dLayer implements Layer {
      * @param affine when set to true, this layer has learnable affine parameters.
      */
     public BatchNorm1dLayer(int channels, double eps, double momentum, boolean affine) {
+        if (momentum < 0.0 || momentum > 1.0) {
+            throw new IllegalArgumentException("momentum must be in [0, 1], but got " + momentum);
+        }
         var options = new BatchNormOptions(channels);
         options.eps().put(eps);
         if (momentum > 0.0) options.momentum().put(momentum);

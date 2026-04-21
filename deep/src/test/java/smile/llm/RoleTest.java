@@ -14,31 +14,31 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.deep;
+package smile.llm;
 
-import smile.deep.tensor.*;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * A mini-batch dataset consists of data and an associated target (label).
- *
- * @param data The data samples.
- * @param target The sample labels.
+ * Unit tests for {@link Role} enum.
  *
  * @author Haifeng Li
  */
-public record SampleBatch(Tensor data, Tensor target) implements AutoCloseable {
-    /**
-     * Constructor.
-     * @param data the data samples.
-     * @param target the sample labels.
-     */
-    SampleBatch(org.bytedeco.pytorch.Tensor data, org.bytedeco.pytorch.Tensor target) {
-        this(new Tensor(data), new Tensor(target));
+public class RoleTest {
+    @Test
+    public void testGivenRoleWhenAllValuesEnumeratedThenFourExist() {
+        assertEquals(4, Role.values().length);
     }
 
-    @Override
-    public void close() {
-        data.close();
-        target.close();
+    @Test
+    public void testGivenRoleSystemWhenNameCalledThenIsSystem() {
+        assertEquals("system", Role.system.name());
+    }
+
+    @Test
+    public void testGivenRoleValueOfWhenCalledThenReturnsCorrectEnum() {
+        assertEquals(Role.user, Role.valueOf("user"));
+        assertEquals(Role.assistant, Role.valueOf("assistant"));
+        assertEquals(Role.ipython, Role.valueOf("ipython"));
     }
 }
