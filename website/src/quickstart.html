@@ -348,51 +348,115 @@ $ for i in {1..1000}; do
         </div>
     </div>
 
-    <h2 id="notebook">Notebooks</h2>
+    <h2 id="studio">SMILE Studio</h2>
 
-    <p>SMILE works in JupyterLab with Scala and Kotlin kernels.
-       Run <code>jupyterlab.sh</code> once to set up the conda environment automatically.
-       Update the environment later with <code>./jupyterlab.sh --update</code>.</p>
+    <p><strong>SMILE Studio</strong> is an integrated desktop IDE for machine learning and data science.
+       It combines an interactive multi-language notebook, an AI-powered agent panel, a file explorer,
+       and a kernel explorer in a single window.
+       Launch it from the release package:</p>
 
-    <p>For Scala notebooks, add the following bootstrap cell:</p>
+    <pre class="prettyprint lang-sh"><code>
+cd bin
+./setup    # first-time: installs native libraries
+./smile    # launches SMILE Studio
+    </code></pre>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#notebook_1" data-toggle="tab">Scala bootstrap</a></li>
-        <li><a href="#notebook_plot" data-toggle="tab">Swing plots</a></li>
-        <li><a href="#notebook_vega" data-toggle="tab">Vega-Lite</a></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane active" id="notebook_1">
-            <pre class="prettyprint lang-scala"><code>
-import $ivy.`com.github.haifengl::smile-scala:{{ version }}`
+    <p>SMILE Studio requires <strong>Java 25</strong> and a graphical (non-headless) environment.
+       At least 4 GB RAM; 8 GB recommended for large datasets.</p>
 
-import smile._
-import smile.math._
-import smile.data._
-import smile.data.formula._
-import smile.classification._
-import smile.regression._
-import smile.clustering._
-import smile.manifold._
-import smile.validation._
-import smile.nlp._
-            </code></pre>
-        </div>
-        <div class="tab-pane" id="notebook_plot">
-            <pre class="prettyprint lang-scala"><code>
-import smile.plot.swing._
-import smile.plot.show
-import smile.plot.Render._
-            </code></pre>
-        </div>
-        <div class="tab-pane" id="notebook_vega">
-            <pre class="prettyprint lang-scala"><code>
-import smile.plot.vega._
-import smile.plot.show
-import smile.plot.Render._
-            </code></pre>
-        </div>
+    <h3 id="studio-layout">Application Layout</h3>
+
+    <div class="table-responsive">
+    <table class="table table-striped table-bordered">
+      <thead><tr><th>Panel</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Notebook</strong> (center)</td>
+            <td>Multi-cell editor supporting Java (JShell), Scala, and Python kernels.
+                Supports <code>.java</code>, <code>.jsh</code>, <code>.scala</code>,
+                <code>.sc</code>, <code>.py</code>, and <code>.ipynb</code> files.</td></tr>
+        <tr><td><strong>AI Agent Panel</strong> (right)</td>
+            <td>Three built-in agents: <em>Clair the Analyst</em> (end-to-end ML),
+                <em>James the Java Guru</em> (Java/SMILE), and
+                <em>Guido the Pythonista</em> (Python). Supports slash commands,
+                shell execution, and long-term memory via <code>SMILE.md</code>.</td></tr>
+        <tr><td><strong>Project Explorer</strong> (left)</td>
+            <td>File tree of the current working directory.
+                Double-click any supported source file to open it in the notebook.</td></tr>
+        <tr><td><strong>Kernel Explorer</strong> (left)</td>
+            <td>Live view of runtime variables grouped by type (DataFrames, Matrices, Models, Services).
+                Double-click a Model node to save it as a <code>.sml</code> file and register
+                it as an inference service.</td></tr>
+      </tbody>
+    </table>
     </div>
+
+    <h3 id="studio-kernels">Execution Kernels</h3>
+
+    <div class="table-responsive">
+    <table class="table table-striped table-bordered">
+      <thead><tr><th>Kernel</th><th>How to use</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Java (JShell)</strong></td>
+            <td>Open or create a <code>.java</code> / <code>.jsh</code> notebook</td>
+            <td>Runs in a separate JVM; ZGC, 75% max RAM. New notebooks are
+                pre-populated with all SMILE imports.</td></tr>
+        <tr><td><strong>Scala</strong></td>
+            <td>Open a <code>.scala</code> / <code>.sc</code> notebook</td>
+            <td>JSR-223 script engine; all SMILE Scala operators available.</td></tr>
+        <tr><td><strong>Python (iPython)</strong></td>
+            <td>Open a <code>.py</code> / <code>.ipynb</code> notebook</td>
+            <td>Requires <code>pip install ipython</code>.</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3 id="studio-shortcuts">Key Shortcuts</h3>
+
+    <div class="table-responsive">
+    <table class="table table-condensed table-bordered">
+      <thead><tr><th>Shortcut</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td><code>Ctrl + Enter</code></td><td>Run cell, stay in current cell</td></tr>
+        <tr><td><code>Shift + Enter</code></td><td>Run cell, move to next cell (creates one if needed)</td></tr>
+        <tr><td><code>Alt + Enter</code></td><td>Run cell, insert new cell below</td></tr>
+        <tr><td><code>Tab</code></td><td>AI-powered line completion (requires AI service configured)</td></tr>
+        <tr><td><code>Ctrl + =</code> / <code>Ctrl + -</code></td><td>Increase / decrease font size globally</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3 id="studio-ai">AI Agents &amp; Magic Commands</h3>
+
+    <p>Each cell has a <strong>Prompt</strong> field: type a natural language description and press
+       <kbd>Enter</kbd> to have the AI generate code directly into the editor.
+       The Java kernel also supports Maven dependency magic commands:</p>
+
+    <pre class="prettyprint lang-java"><code>
+//!mvn org.apache.commons:commons-math3:3.6.1
+// ↑ resolves the artifact transitively and adds it to the JShell classpath
+    </code></pre>
+
+    <p>In the Agent Panel, use slash commands to drive the full ML workflow without writing code:</p>
+
+    <div class="table-responsive">
+    <table class="table table-condensed table-bordered">
+      <thead><tr><th>Command</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>/train</code></td><td>Train a model via <code>smile train</code></td></tr>
+        <tr><td><code>/predict</code></td><td>Run batch inference via <code>smile predict</code></td></tr>
+        <tr><td><code>/serve</code></td><td>Start an inference server via <code>smile serve</code></td></tr>
+        <tr><td><code>/plan &lt;goal&gt;</code></td><td>Enter planning mode for multi-step tasks</td></tr>
+        <tr><td><code>/memory add &lt;text&gt;</code></td><td>Persist project context to <code>SMILE.md</code></td></tr>
+        <tr><td><code>/compact</code></td><td>Summarize the conversation to free context window space</td></tr>
+        <tr><td><code>/clear</code></td><td>Clear the current agent conversation</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p>Configure the AI provider (OpenAI, Anthropic, Google Gemini, Azure OpenAI, or Vertex AI)
+       and API key under <strong>File &gt; Settings…</strong>.
+       MCP (Model Context Protocol) servers can be wired in via
+       <code>.smile/mcp.json</code> for extended tool access.</p>
 
     <h2 id="tutorial">A Gentle Tutorial</h2>
 
