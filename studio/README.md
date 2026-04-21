@@ -1,972 +1,736 @@
-# SMILE CLI User Guide
+# SMILE Studio User Guide
 
-SMILE ships with a command-line launcher (`smile` / `smile.bat`) that exposes
-five entry points. Depending on the first argument you pass (or the absence of one),
-the launcher routes to one of:
-
-| Invocation | Description                                           |
-|---|-------------------------------------------------------|
-| `smile` *(no args)* | Open the [SMILE Studio](STUDIO.md) GUI                |
-| `smile shell` | Start the **Java (JShell)** interactive REPL          |
-| `smile scala` | Start the **Scala 3** interactive REPL                |
-| `smile train …` | **Train** a supervised learning model from a file     |
-| `smile predict …` | **Predict** on a file using a saved model             |
-| `smile serve …` | **Serve** a saved model as an HTTP prediction service |
+> **SMILE Studio** is an integrated development environment (IDE) for machine learning and data science using the [SMILE](https://haifengl.github.io/) library. It combines an interactive notebook, an AI-powered agent panel, a file explorer, and a kernel explorer in a single, modern desktop application. The launcher (`smile` / `smile.bat`) also exposes several command-line entry points. For the User Guide for CLI, see [CLI.md](CLI.md).
 
 ---
 
 ## Table of Contents
 
-1. [Installation & Setup](#1-installation--setup)
-2. [Entry Point](#2-entry-point)
-3. [Java Shell (`smile shell`)](#3-java-shell-smile-shell)
-4. [Scala REPL (`smile scala`)](#4-scala-repl-smile-scala)
-5. [Training Models (`smile train`)](#5-training-models-smile-train)
-   - 5.1 [Global Options](#51-global-options)
-   - 5.2 [Formula Auto-detection](#52-formula-auto-detection)
-   - 5.3 [Classification Algorithms](#53-classification-algorithms)
-   - 5.4 [Regression Algorithms](#54-regression-algorithms)
-   - 5.5 [Cross-validation & Ensembles](#55-cross-validation--ensembles)
-   - 5.6 [Feature Transformation](#56-feature-transformation)
-   - 5.7 [Model Metadata](#57-model-metadata)
-6. [Batch Prediction (`smile predict`)](#6-batch-prediction-smile-predict)
-7. [Online Serving (`smile serve`)](#7-online-serving-smile-serve)
-8. [Supported File Formats](#8-supported-file-formats)
-9. [JVM Tuning (`conf/smile.ini`)](#9-jvm-tuning-confsmileini)
-10. [Tutorials](#10-tutorials)
-    - 10.1 [End-to-end: Iris Classification](#101-end-to-end-iris-classification)
-    - 10.2 [End-to-end: Housing Price Regression](#102-end-to-end-housing-price-regression)
-    - 10.3 [Cross-validation & Ensemble Workflow](#103-cross-validation--ensemble-workflow)
-    - 10.4 [Online Prediction Service](#104-online-prediction-service)
-    - 10.5 [Interactive Java Shell Session](#105-interactive-java-shell-session)
-    - 10.6 [Interactive Scala REPL Session](#106-interactive-scala-repl-session)
+1. [Overview](#1-overview)
+2. [Starting SMILE Studio](#2-starting-smile-studio)
+3. [Application Layout](#3-application-layout)
+4. [Menus and Toolbar](#4-menus-and-toolbar)
+5. [The Notebook](#5-the-notebook)
+   - 5.1 [Opening and Creating Notebooks](#51-opening-and-creating-notebooks)
+   - 5.2 [Supported File Formats](#52-supported-file-formats)
+   - 5.3 [Cells](#53-cells)
+   - 5.4 [Cell Types](#54-cell-types)
+   - 5.5 [Running Code](#55-running-code)
+   - 5.6 [AI Code Completion and Generation](#56-ai-code-completion-and-generation)
+   - 5.7 [Saving Notebooks](#57-saving-notebooks)
+   - 5.8 [Auto-Save](#58-auto-save)
+   - 5.9 [External File Changes](#59-external-file-changes)
+6. [Execution Kernels](#6-execution-kernels)
+   - 6.1 [Java Kernel (JShell)](#61-java-kernel-jshell)
+   - 6.2 [Scala Kernel](#62-scala-kernel)
+   - 6.3 [Python Kernel (iPython)](#63-python-kernel-ipython)
+   - 6.4 [Restarting and Stopping a Kernel](#64-restarting-and-stopping-a-kernel)
+   - 6.5 [Magic Commands (Java Kernel)](#65-magic-commands-java-kernel)
+7. [Project Explorer](#7-project-explorer)
+8. [Kernel Explorer](#8-kernel-explorer)
+   - 8.1 [Inspecting Variables](#81-inspecting-variables)
+   - 8.2 [Saving Models](#82-saving-models)
+   - 8.3 [Starting an Inference Service](#83-starting-an-inference-service)
+9. [AI Agent Panel](#9-ai-agent-panel)
+   - 9.1 [Clair the Analyst](#91-clair-the-analyst)
+   - 9.2 [James the Java Guru](#92-james-the-java-guru)
+   - 9.3 [Guido the Pythonista](#93-guido-the-pythonista)
+   - 9.4 [Intent Types](#94-intent-types)
+   - 9.5 [Slash Commands](#95-slash-commands)
+   - 9.6 [Shell Commands](#96-shell-commands)
+   - 9.7 [Long-Term Memory (SMILE.md)](#97-long-term-memory-smilemd)
+   - 9.8 [Reasoning Effort](#98-reasoning-effort)
+   - 9.9 [Auto-Compact](#99-auto-compact)
+10. [Notepad](#10-notepad)
+11. [Settings — AI Service Configuration](#11-settings--ai-service-configuration)
+12. [Status Bar](#12-status-bar)
+13. [Font Size](#13-font-size)
+14. [MCP (Model Context Protocol) Integration](#14-mcp-model-context-protocol-integration)
+15. [LSP (Language Server Protocol) Integration](#15-lsp-language-server-protocol-integration)
+16. [Themes / Look-and-Feel](#16-themes--look-and-feel)
+17. [Keyboard Shortcuts Reference](#17-keyboard-shortcuts-reference)
+18. [Configuration Files](#18-configuration-files)
+19. [Troubleshooting](#19-troubleshooting)
 
 ---
 
-## 1. Installation & Setup
+## 1. Overview
 
-### Prerequisites
+SMILE Studio brings together four major components in one window:
 
-- **Java 25** or later (the bundled JBR in the distribution is sufficient)
-- **Python 3** (optional — required only for the Studio notebook's Python kernel
-  and the `ty` language server)
-- **ARPACK / OpenBLAS** (optional — for faster numerical operations)
+| Component | Description |
+|-----------|-------------|
+| **Notebook** | Interactive multi-cell editor supporting Java, Scala, and Python |
+| **AI Agent Panel** | Conversation interface to AI-powered coding and data science agents |
+| **Project (File) Explorer** | File tree of the current working directory |
+| **Kernel Explorer** | Live view of runtime variables, models, and inference services |
 
-### First-time Setup
+All four panels are arranged in a resizable split-pane layout, and the application remembers which notebooks were open across sessions.
 
-Run the provided setup script once after unzipping the distribution:
+---
+
+## 2. Starting SMILE Studio
+
+Run SMILE Studio from the project's root directory so that relative paths in notebooks resolve correctly:
 
 ```bash
-# macOS / Linux
-bin/setup
+# Unix / macOS
+cd /your/project
+smile
 
 # Windows
-bin\setup.bat
+cd C:\your\project
+smile
 ```
 
-The script installs native libraries (`libarpack`, `libopenblas`) via the
-system package manager and creates a Python virtual environment with the
-packages listed in `conf/requirements.txt`.
+> **Note:** SMILE Studio must be started in a graphical (non-headless) environment. If the JVM is running in headless mode the application will print an error and exit.
 
-### Running the Launcher
+### System Requirements
 
-```bash
-# macOS / Linux
-bin/smile [command] [options]
-
-# Windows
-bin\smile.bat [command] [options]
-```
-
-The launcher reads JVM options from `conf/smile.ini` before forwarding the
-remaining arguments to `smile.Main`.
+- Java 25+ (with `--enable-native-access=ALL-UNNAMED` for the Java kernel's JShell remote VM)
+- Python 3.x with `ipython` installed for Python notebooks (`pip install ipython`)
+- Scala engine (included via the JSR-223 script engine)
+- At least 4 GB RAM; 8 GB recommended for large datasets
 
 ---
 
-## 2. Entry Point
-
-`smile.Main.main(String[] args)` is the single entry point for all CLI and GUI
-functionality.  The routing logic is:
+## 3. Application Layout
 
 ```
-args[0]   →  destination
-─────────────────────────────────────────
-"train"   →  smile.shell.Train   (picocli)
-"predict" →  smile.shell.Predict (picocli)
-"serve"   →  smile.shell.Serve   (picocli)
-"scala"   →  smile.shell.ScalaREPL.start()
-"shell"   →  smile.shell.JShell.start()
-(other)   →  smile.studio.SmileStudio.start()
+┌─────────────────────────────────────────────────────────────────────┐
+│  Menu Bar:  File  |  Cell  |  Help                                  │
+│  Toolbar:  [New] [Open] [Save] [SaveAs] | [AddCell] [Run] [Clear]   │
+│             [Restart] [Stop]                                        │
+├──────────────────────────────┬──────────────────────────────────────┤
+│  Explorer Tabs               │  Agent Tabs                          │
+│  ┌──────────┬──────────┐     │  📊 Clair | ☕ James | 🐍 Guido     │
+│  │ Project  │  Kernel  │     │                                      │
+│  └──────────┴──────────┘     │  [Intent input / conversation area]  │
+│                              │                                      │
+│  File tree / Variable tree   ├──────────────────────────────────────┤
+│                              │  Notebook Tabs                       │
+│                              │  ┌─────────────────────────────────┐ │
+│                              │  │  Cell 1: [▶][⏭][▾][↑][↓][🧹][⌦]│ │
+│                              │  │  [code editor]                  │ │
+│                              │  │  [output area]                  │ │
+│                              │  ├─────────────────────────────────┤ │
+│                              │  │  Cell 2 …                       │ │
+│                              │  └─────────────────────────────────┘ │
+├──────────────────────────────┴──────────────────────────────────────┤
+│  Status Bar:  [status message]         [Heap: 512 MB  CPU: 12%]     │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
-The system property `smile.home` points to the distribution root and
-is used by all launchers to locate resources such as `bin/predef.jsh`,
-`bin/predef.sc`, and `serve/quarkus-run.jar`.
+- **Left split** – Project explorer (top) / Kernel explorer (bottom), switchable by tab.
+- **Center split** – Notebook tabs.
+- **Right split** – AI Agent tabs.
+- **Bottom** – Status bar.
 
-For the User Guide for SMILE Studio GUI, see [STUDIO.md](STUDIO.md).
-The rest of this document focuses on the CLI entry points (`shell`, `scala`,
-`train`, `predict`, `serve`).
+The divider positions are persisted and restored between sessions.
 
 ---
 
-## 3. Java Shell (`smile shell`)
+## 4. Menus and Toolbar
 
-```bash
-smile shell [jshell-options…]
-```
+### File Menu
 
-Starts an interactive [JShell](https://docs.oracle.com/en/java/docs/jshell/)
-session pre-configured for SMILE development.
+| Action | Description |
+|--------|-------------|
+| **New** | Create a new `Untitled.java` notebook |
+| **Open…** | Open an existing notebook or script file |
+| **Save** | Save the currently active notebook |
+| **Save As…** | Save the active notebook to a new path |
+| **Auto Save** | Toggle periodic auto-save (every 60 seconds) |
+| **Settings…** | Open the AI service configuration dialog |
+| **Exit** | Close all open notebooks (with save prompts) and quit |
 
-### What Happens at Startup
+### Cell Menu
 
-1. The full SMILE class-path is added with `--class-path`.
-2. JVM flags are injected into the remote JVM started by JShell:
-   - `-XX:MaxMetaspaceSize=1024M`, `-Xss4M`, `-XX:MaxRAMPercentage=75`
-   - `-XX:+UseZGC` for low-latency garbage collection
-   - `--add-opens java.base/java.nio=ALL-UNNAMED` and `--enable-native-access`
-3. `DEFAULT` and `PRINTING` JShell startup scripts are loaded (making
-   `println()` available without a class qualifier).
-4. **`bin/predef.jsh`** is loaded, which:
-   - Defines the custom `smile` JShell feedback mode (compact, color output).
-   - Imports every major SMILE package so you can start coding immediately
-     without writing import statements.
-   - Prints the SMILE ASCII logo and version banner.
-5. Command history is persisted across sessions via `java.util.prefs.Preferences`.
+| Action | Description |
+|--------|-------------|
+| **Add Cell** | Insert a new code cell after the currently focused one |
+| **Run All** | Execute every cell in the active notebook sequentially |
+| **Clear All** | Clear all cell outputs |
+| **Restart Kernel** | Restart the execution engine (confirmation required) |
+| **Stop** | Interrupt the currently running cell |
 
-### Pre-imported Packages
+### Help Menu
 
-The following are imported automatically by `predef.jsh`:
-
-```
-smile.util.*          smile.graph.*          smile.math.*
-smile.stat.*          smile.data.*           smile.data.formula.*
-smile.data.measure.*  smile.data.type.*      smile.data.vector.*
-smile.io.*            smile.plot.swing.*     smile.interpolation.*
-smile.validation.*    smile.classification.* smile.regression.*
-smile.feature.*       smile.clustering.*     smile.hpo.*
-smile.vq.*            smile.manifold.*       smile.sequence.*
-smile.nlp.*           smile.wavelet.*        smile.tensor.*
-smile.anomaly.*       smile.association.*
-```
-
-All `java.lang.Math` and `smile.math.MathEx` static methods are also imported
-with `import static`.
-
-### Passing Extra JShell Arguments
-
-Any arguments after `shell` are forwarded directly to JShell.  For example,
-to execute a script file non-interactively:
-
-```bash
-smile shell examples/toy.jsh
-```
-
-### Saving and Loading Sessions
-
-JShell's `/save` and `/open` commands work as normal:
-
-```
-smile> /save session.jsh
-smile> /open session.jsh
-```
+| Action | Description |
+|--------|-------------|
+| **Tutorials** | Open the SMILE quickstart guide in the default browser |
+| **JavaDocs** | Open the SMILE Java API documentation in the browser |
+| **About** | Display version and licensing information |
 
 ---
 
-## 4. Scala REPL (`smile scala`)
+## 5. The Notebook
 
-```bash
-smile scala [scalac-options…]
+### 5.1 Opening and Creating Notebooks
+
+- **New** (toolbar or `File > New`) — opens a fresh `Untitled.java` notebook pre-populated with the standard SMILE import block.
+- **Open…** (toolbar or `File > Open…`) — file chooser filtered to supported extensions.
+- **Double-click** a supported file in the Project Explorer — opens it directly in the notebook.
+
+Previously opened notebooks are restored automatically at startup from `.smile/studio.properties` in the working directory.
+
+### 5.2 Supported File Formats
+
+| Extension | Language | Notes |
+|-----------|----------|-------|
+| `.java` | Java | Multi-cell via `//--- CELL ---` separator |
+| `.jsh` | Java (JShell snippet) | Same cell separator |
+| `.scala` | Scala | Multi-cell via `//--- CELL ---` separator |
+| `.sc` | Scala (Ammonite script) | Same as `.scala` |
+| `.py` | Python | Multi-cell via `#--- CELL ---` separator |
+| `.ipynb` | Jupyter Notebook | Cells read from / written back to the JSON format |
+
+> **Jupyter compatibility:** When saving a `.ipynb` file, Studio writes back code cells, markdown cells, and raw cells. Cell outputs are not yet persisted to the `.ipynb` file.
+
+### 5.3 Cells
+
+Each cell is an independent editing unit consisting of:
+
+- **Header toolbar** with action buttons (see below)
+- **Code editor** – syntax-highlighted, resizable, with code folding
+- **Output area** – appears below the editor after execution; supports Markdown rendering and clickable hyperlinks
+
+#### Cell Header Buttons
+
+| Button | Action |
+|--------|--------|
+| `▶` Run | Execute this cell; stay in the current cell |
+| `⏭` Run Below | Execute this cell and all cells below sequentially |
+| `▾` Collapse | Toggle hiding the output area |
+| `↑` Move Up | Swap this cell with the one above |
+| `↓` Move Down | Swap this cell with the one below |
+| `🧹` Clear | Erase this cell's output |
+| `⌦` Delete | Remove this cell (if only one cell remains, clears content instead) |
+| **Type** combobox | Switch between Code / Markdown / Raw cell type |
+| **Prompt** field | Describe what you want and press Enter to generate code via AI |
+
+### 5.4 Cell Types
+
+| Type | Behavior |
+|------|----------|
+| **Code** | Executed by the kernel; output displayed below |
+| **Markdown** | Rendered as styled HTML when cell is executed |
+| **Raw** | Plain text, not executed or rendered |
+
+### 5.5 Running Code
+
+| Shortcut | Behavior |
+|----------|----------|
+| `Ctrl + Enter` | Run cell, keep focus in current cell |
+| `Shift + Enter` | Run cell, move focus to next cell (or create a new one) |
+| `Alt + Enter` | Run cell, insert a new cell immediately below |
+| Toolbar **Run All** | Execute all cells top-to-bottom |
+
+Execution is asynchronous; the UI remains responsive while code runs. A second run request while code is executing shows a warning dialog rather than allowing concurrent execution.
+
+Variable values are printed automatically after each successful snippet evaluation:
+
+```
+⇒ DataFrame df = [200 rows × 5 columns]
 ```
 
-Starts a [Scala 3 / Dotty REPL](https://docs.scala-lang.org/scala3/guides/repl/)
-pre-configured for SMILE.
+Errors are highlighted in the output area with pink highlighting.
 
-### What Happens at Startup
+### 5.6 AI Code Completion and Generation
 
-1. `-usejavacp` ensures the SMILE class-path is inherited from the JVM.
-2. **`bin/predef.sc`** is loaded via `-repl-init-script`, which:
-   - Imports all major Scala SMILE packages including the convenience `smile._`
-     wildcard.
-   - Imports implicit conversion helpers and DSL shortcuts (e.g.
-     `"class" ~ "."` formula syntax, `read.arff(…)`, `randomForest(…)`).
-   - Prints the SMILE ASCII logo and version banner.
+Both features require an AI service to be configured in **Settings**.
 
-### Pre-imported Packages
+#### TAB — Line Completion
 
-```scala
-import smile._              // top-level Smile DSL
-import smile.io._           // Read/Write helpers
-import smile.data.formula._ // formula DSL
-import smile.classification._
-import smile.regression.{lm, ridge, lasso, gpr}
-import smile.feature.*
-import smile.clustering.*
-// … and many more (see predef.sc)
-```
+Press `Tab` at any non-first line to trigger single-line AI completion. The AI uses the surrounding code context (previous cell + current cell) to suggest a completion. If a completion is in progress, `Tab` inserts a literal tab character instead.
+
+#### Prompt Field — Code Generation
+
+1. Type a natural language description in the **Prompt** text field at the top of a cell (e.g., *"load iris.csv into a DataFrame"*).
+2. Press **Enter**.
+3. The AI streams generated code directly into the editor, with the task description included as a comment.
+
+The generation context includes the text of the previous cell and the existing content of the current cell.
+
+### 5.7 Saving Notebooks
+
+- `Ctrl + S` equivalent → **File > Save**
+- **File > Save As…** prompts for a new path. If no extension is given, `.java` is appended.
+- The tab title reflects the filename. Unsaved changes are tracked internally; a save-before-close prompt appears when closing a tab.
+
+### 5.8 Auto-Save
+
+Enable **File > Auto Save** to automatically save all open notebooks that have unsaved changes every **60 seconds**. Only notebooks that have been previously saved to a file (i.e., have an associated path) are auto-saved; new `Untitled` notebooks are not.
+
+### 5.9 External File Changes
+
+If a file that is open in the notebook is modified by an external process (e.g., git checkout, another editor), Studio detects the change via a background file-watcher and prompts:
+
+> *"'filename' has been changed externally. Reload?"*
+
+Choosing **Yes** reloads the file from disk, preserving the tab's position. Choosing **No** keeps the current in-memory version.
 
 ---
 
-## 5. Training Models (`smile train`)
+## 6. Execution Kernels
 
-```
-smile train -d <file> -m <model> [global-options] <algorithm> [algo-options]
-```
+### 6.1 Java Kernel (JShell)
 
-`smile train` trains a supervised learning model from a data file and
-serializes it to disk.  It is built with [picocli](https://picocli.info/) and
-uses a **two-level command structure**: global options come first, then the
-algorithm sub-command with its own options.
+The Java kernel uses the JDK's built-in `JShell` API running in a **separate JVM process**. This isolation means:
 
-### 5.1 Global Options
+- The remote VM inherits the full application classpath (`java.class.path`).
+- JVM flags set for the remote process: `-XX:MaxMetaspaceSize=1024M`, `-Xss4M`, `-XX:MaxRAMPercentage=75`, `-XX:+UseZGC`.
+- `FlatLightLaf` is automatically initialized in the remote JVM so that `smile.plot.swing` charts display correctly.
 
-| Option | Short | Required | Default | Description |
-|---|---|---|---|---|
-| `--data <file>` | `-d` | ✔ | — | Training data file path |
-| `--model <file>` | `-m` | ✔ | — | Output model file path (`.sml`) |
-| `--test <file>` | | | — | Optional hold-out test file |
-| `--format <fmt>` | | | auto-detect | Data format (see §8) |
-| `--formula <expr>` | | | auto-detect | Model formula, e.g. `class ~ .` |
-| `--model-id <id>` | | | — | Metadata tag: model identifier |
-| `--model-version <ver>` | | | — | Metadata tag: model version string |
-| `--kfold <k>` | `-k` | | `1` | Enable *k*-fold cross-validation |
-| `--round <n>` | `-r` | | `1` | Repeated cross-validation rounds |
-| `--ensemble` | `-e` | | `false` | Build ensemble from CV models |
-| `--seed <n>` | `-s` | | `0` (off) | RNG seed for reproducibility |
-| `--help` | `-h` | | | Print help and exit |
-| `--version` | `-V` | | | Print SMILE version and exit |
+#### Snippet Output Format
 
-### 5.2 Formula Auto-detection
+| Snippet type | Output |
+|--------------|--------|
+| Named variable | `⇒ TypeName varName = value` |
+| Rejected snippet | `✖ Rejected snippet: …` |
+| Recoverable issue | `⚠ Recoverable issue: …` |
+| Exception | `ExceptionClassName: message` followed by stack trace |
 
-If `--formula` is not specified, the response variable is chosen automatically
-by inspecting the column names in the following priority order:
+#### New Java Notebook Starter Imports
 
-1. A column named **`class`**
-2. A column named **`target`**
-3. A column named **`y`**
-4. The **first** column in the file
-
-For the most predictable behaviour, always supply `--formula` explicitly, e.g.:
-
-```bash
-smile train -d data.csv --formula "price ~ ." -m model.sml ols
-```
-
-### 5.3 Classification Algorithms
-
-All classification sub-commands default to classification mode.  Algorithms
-that also support regression expose `--regression` to switch modes.
-
-#### `random-forest` — Random Forest
-
-```
-smile train -d <file> -m <model> random-forest [options]
-```
-
-| Option | Description |
-|---|---|
-| `--regression` | Train regression instead of classification |
-| `--trees <n>` | Number of trees (default: 500) |
-| `--mtry <n>` | Features considered per split |
-| `--split <rule>` | Split rule: `GINI`, `ENTROPY`, `CLASSIFICATION_ERROR` |
-| `--max-depth <n>` | Maximum tree depth |
-| `--max-nodes <n>` | Maximum leaf nodes per tree |
-| `--node-size <n>` | Minimum samples per leaf |
-| `--sampling <rate>` | Subsample rate, e.g. `0.8` |
-| `--class-weight <w>` | Comma-separated class weights, e.g. `1,2` |
-
-#### `gradient-boost` — Gradient Boosted Trees
-
-```
-smile train -d <file> -m <model> gradient-boost [options]
-```
-
-| Option | Description |
-|---|---|
-| `--regression` | Train regression instead of classification |
-| `--trees <n>` | Number of boosting iterations |
-| `--shrinkage <rate>` | Learning rate in `(0, 1]`, e.g. `0.1` |
-| `--max-depth <n>` | Maximum tree depth |
-| `--max-nodes <n>` | Maximum leaf nodes |
-| `--node-size <n>` | Minimum samples per leaf |
-| `--sampling <rate>` | Subsample rate |
-
-#### `ada-boost` — Adaptive Boosting *(classification only)*
-
-```
-smile train -d <file> -m <model> ada-boost [options]
-```
-
-| Option | Description |
-|---|---|
-| `--trees <n>` | Number of weak classifiers |
-| `--max-depth <n>` | Maximum tree depth |
-| `--max-nodes <n>` | Maximum leaf nodes |
-| `--node-size <n>` | Minimum samples per leaf |
-
-#### `cart` — Classification and Regression Tree
-
-```
-smile train -d <file> -m <model> cart [options]
-```
-
-| Option | Description |
-|---|---|
-| `--regression` | Train regression instead of classification |
-| `--split <rule>` | Split rule: `GINI`, `ENTROPY`, `CLASSIFICATION_ERROR` |
-| `--max-depth <n>` | Maximum tree depth |
-| `--max-nodes <n>` | Maximum leaf nodes |
-| `--node-size <n>` | Minimum samples per leaf |
-
-#### `logistic` — Logistic Regression *(classification only)*
-
-```
-smile train -d <file> -m <model> logistic [options]
-```
-
-| Option | Description                        |
-|---|------------------------------------|
-| `--transform <rule>` | Feature transformation (see §5.6)  |
-| `--lambda <λ>` | L2 regularization strength        |
-| `--iterations <n>` | Maximum number of LBFGS iterations |
-| `--tolerance <ε>` | Convergence tolerance              |
-
-#### `fisher` — Fisher's Linear Discriminant *(classification only)*
-
-```
-smile train -d <file> -m <model> fisher [options]
-```
-
-| Option | Description |
-|---|---|
-| `--transform <rule>` | Feature transformation (see §5.6) |
-| `--dimension <d>` | Dimensionality of the projected space |
-| `--tolerance <ε>` | Singular covariance tolerance |
-
-#### `lda` — Linear Discriminant Analysis *(classification only)*
-
-```
-smile train -d <file> -m <model> lda [options]
-```
-
-| Option | Description |
-|---|---|
-| `--transform <rule>` | Feature transformation (see §5.6) |
-| `--priori <p0,p1,…>` | Comma-separated prior class probabilities |
-| `--tolerance <ε>` | Singular covariance tolerance |
-
-#### `qda` — Quadratic Discriminant Analysis *(classification only)*
-
-```
-smile train -d <file> -m <model> qda [options]
-```
-
-Same options as `lda`.
-
-#### `rda` — Regularized Discriminant Analysis *(classification only)*
-
-```
-smile train -d <file> -m <model> rda --alpha <α> [options]
-```
-
-| Option | Required | Description                                              |
-|---|---|----------------------------------------------------------|
-| `--alpha <α>` | ✔ | Regularization factor in `[0, 1]`; `0` = QDA, `1` = LDA |
-| `--transform <rule>` | | Feature transformation (see §5.6)                        |
-| `--priori <p0,p1,…>` | | Prior class probabilities                                |
-| `--tolerance <ε>` | | Singular covariance tolerance                            |
-
-#### `mlp` — Multilayer Perceptron
-
-```
-smile train -d <file> -m <model> mlp --layers <spec> [options]
-```
-
-| Option | Required | Description |
-|---|---|---|
-| `--layers <spec>` | ✔ | Network architecture, e.g. `ReLU(100)\|Sigmoid(30)` |
-| `--regression` | | Train regression instead of classification |
-| `--transform <rule>` | | Feature transformation (see §5.6) |
-| `--epochs <n>` | | Training epochs |
-| `--mini-batch <n>` | | Mini-batch size |
-| `--learning-rate <sched>` | | Learning rate schedule (see below) |
-| `--momentum <sched>` | | Momentum schedule |
-| `--weight-decay <λ>` | | L2 weight decay |
-| `--clip_norm <n>` | | Gradient clipping norm |
-| `--rho <ρ>` | | RMSProp rho |
-| `--epsilon <ε>` | | RMSProp epsilon |
-
-**Layer specification** — pipe-separated list of `<activation>(<units>)`:
-
-```
-ReLU(256)|ReLU(128)|Sigmoid(64)
-```
-
-Supported activations: `ReLU`, `Sigmoid`, `Tanh`, `SoftMax`, `Linear`.
-
-**Learning rate schedules** (also applies to `--momentum`):
-
-| Format | Description |
-|---|---|
-| `0.01` | Constant rate |
-| `linear(init, steps, final)` | Linear decay |
-| `inverse(init, decay)` | Inverse time decay |
-| `exp(init, decay)` | Exponential decay |
-| `polynomial(init, steps, power)` | Polynomial decay |
-| `piecewise(…)` | Piecewise constant |
-
-#### `svm` — Support Vector Machine
-
-```
-smile train -d <file> -m <model> svm --kernel <fn> [options]
-```
-
-| Option | Required | Description |
-|---|---|---|
-| `--kernel <fn>` | ✔ | Kernel function (see below) |
-| `--regression` | | Train SVR instead of SVC |
-| `--transform <rule>` | | Feature transformation (see §5.6) |
-| `-C <value>` | | Soft margin penalty |
-| `--epsilon <ε>` | | ε-insensitive hinge loss (SVR only) |
-| `--ovr` | | One-vs-Rest multi-class strategy |
-| `--ovo` | | One-vs-One multi-class strategy |
-| `--tolerance <ε>` | | SMO convergence tolerance |
-
-**Kernel functions**: `Gaussian(σ)`, `Linear`, `Polynomial(degree, scale, offset)`,
-`Laplacian(σ)`, `PearsonVII(ω, ν)`, `Hellinger`, `Tanh(scale, offset)`.
-
-#### `rbf` — Radial Basis Function Network
-
-```
-smile train -d <file> -m <model> rbf --neurons <n> [options]
-```
-
-| Option | Required | Description                       |
-|---|---|-----------------------------------|
-| `--neurons <n>` | ✔ | Number of RBF neurons (centres)   |
-| `--regression` | | Train regression RBF              |
-| `--transform <rule>` | | Feature transformation (see §5.6) |
-| `--normalize` | | Use normalized RBF network       |
-
-### 5.4 Regression Algorithms
-
-The following algorithms are **regression-only** and do not accept `--regression`.
-
-#### `ols` — Ordinary Least Squares
-
-```
-smile train -d <file> -m <model> --formula "y ~ ." ols [options]
-```
-
-| Option | Description |
-|---|---|
-| `--method <qr\|svd>` | Fitting method: `qr` (default) or `svd` |
-| `--stderr` | Compute standard errors of parameter estimates |
-| `--recursive` | Use recursive least squares |
-
-#### `lasso` — LASSO Regression
-
-```
-smile train -d <file> -m <model> --formula "y ~ ." lasso --lambda <λ> [options]
-```
-
-| Option | Required | Description                                    |
-|---|---|------------------------------------------------|
-| `--lambda <λ>` | ✔ | L1 regularization strength                    |
-| `--iterations <n>` | | Maximum coordinate-descent iterations          |
-| `--tolerance <ε>` | | Relative target duality-gap stopping criterion |
-
-#### `ridge` — Ridge Regression
-
-```
-smile train -d <file> -m <model> --formula "y ~ ." ridge --lambda <λ>
-```
-
-| Option | Required | Description                 |
-|---|---|-----------------------------|
-| `--lambda <λ>` | ✔ | L2 regularization strength |
-
-#### `elastic-net` — Elastic Net
-
-```
-smile train -d <file> -m <model> --formula "y ~ ." elastic-net --lambda1 <λ1> --lambda2 <λ2> [options]
-```
-
-| Option | Required | Description |
-|---|---|---|
-| `--lambda1 <λ1>` | ✔ | L1 penalty |
-| `--lambda2 <λ2>` | ✔ | L2 penalty |
-| `--iterations <n>` | | Maximum iterations |
-| `--tolerance <ε>` | | Stopping tolerance |
-
-#### `gaussian-process` — Gaussian Process Regression
-
-```
-smile train -d <file> -m <model> --formula "y ~ ." gaussian-process --kernel <fn> --noise <σ²> [options]
-```
-
-| Option | Required | Description                          |
-|---|---|--------------------------------------|
-| `--kernel <fn>` | ✔ | Kernel function (same syntax as SVM) |
-| `--noise <σ²>` | ✔ | Noise variance                       |
-| `--normalize` | | Normalize the response variable     |
-| `--transform <rule>` | | Feature transformation (see §5.6)    |
-| `--iterations <n>` | | Maximum HPO iterations               |
-| `--tolerance <ε>` | | HPO stopping tolerance               |
-
-### 5.5 Cross-validation & Ensembles
-
-```bash
-# 5-fold cross-validation, 3 repetitions
-smile train -d data.arff -m model.sml -k 5 -r 3 random-forest --trees 100
-
-# 5-fold CV, build ensemble of the fold models
-smile train -d data.arff -m model.sml -k 5 --ensemble random-forest --trees 100
-```
-
-When `-k` > 1, the trainer prints three metric blocks:
-
-```
-Training metrics:   …
-Validation metrics: …   ← stratified CV average
-Test metrics:       …   ← only when --test is supplied
-```
-
-The saved model is the **full model** retrained on the entire training set
-(unless `--ensemble` is used, in which case it is the ensemble of fold models).
-
-### 5.6 Feature Transformation
-
-Many algorithms accept a `--transform <rule>` option that applies a
-`smile.feature.transform` pipeline before fitting.  Supported values:
-
-| Value | Class | Description                                        |
-|---|---|----------------------------------------------------|
-| `standardizer` | `Standardizer` | Zero mean, unit variance                           |
-| `winsor(lo,hi)` | `WinsorScaler` | Winsorise at percentiles, e.g. `winsor(0.01,0.99)` |
-| `minmax` | `MinMaxScaler` | Scale to `[0, 1]`                                  |
-| `MaxAbs` | `MaxAbsScaler` | Scale by maximum absolute value                    |
-| `L1` | `Normalizer` | L1 normalize each sample                           |
-| `L2` | `Normalizer` | L2 normalize each sample                           |
-| `Linf` | `Normalizer` | L∞ normalize each sample                          |
-
-### 5.7 Model Metadata
-
-SMILE model files are standard Java serialized objects that also carry a
-`Properties` tag map.  Two well-known keys are `id` and `version`:
-
-```bash
-smile train -d data.arff -m model.sml \
-  --model-id    "iris-classifier-v1" \
-  --model-version "2.0.0"            \
-  random-forest --trees 200
-```
-
-You can store and retrieve arbitrary tags programmatically:
+When creating a new `.java` notebook, the first cell is pre-populated with:
 
 ```java
-var model = (ClassificationModel) Read.object(Path.of("model.sml"));
-String id  = model.getTag(Model.ID);       // "iris-classifier-v1"
-String ver = model.getTag(Model.VERSION);  // "2.0.0"
+import java.awt.Color;
+import java.time.*;
+import java.util.*;
+import static java.lang.Math.*;
+import smile.plot.swing.*;
+import static smile.swing.SmileUtilities.*;
+import org.apache.commons.csv.CSVFormat;
+import smile.io.*;
+import smile.data.*;
+import smile.data.formula.*;
+// … and many more SMILE packages
 ```
 
----
+### 6.2 Scala Kernel
 
-## 6. Batch Prediction (`smile predict`)
+The Scala kernel uses the JSR-223 `ScriptEngine` API (`"scala"` engine name). Output is captured by redirecting `System.out` and `System.err` around each evaluation. The Scala engine initialization is **deferred 5 seconds** at startup to avoid capturing LSP/MCP process output.
 
+Returned values are printed as:
 ```
-smile predict <data-file> --model <model-file> [options]
-```
-
-Loads a saved model, runs it over every row in `<data-file>`, and writes
-one prediction per line to `stdout`.
-
-### Options
-
-| Option | Short | Required | Description |
-|---|---|---|---|
-| `<data-file>` | | ✔ | Input data file (positional argument) |
-| `--model <file>` | `-m` | ✔ | Saved model file (`.sml`) |
-| `--format <fmt>` | | | Data file format (see §8) |
-| `--probability` | `-p` | | Append posterior probabilities for soft classifiers |
-
-### Output Format
-
-**Classification without `--probability`** — one predicted class label per line:
-
-```
-Iris-setosa
-Iris-versicolor
-Iris-setosa
-…
+$result0: fully.qualified.Type = value
 ```
 
-**Classification with `--probability`** — label followed by per-class
-probabilities (space-separated, 4 decimal places):
+### 6.3 Python Kernel (iPython)
 
-```
-Iris-setosa     0.9821 0.0179 0.0000
-Iris-versicolor 0.0200 0.8512 0.1288
-…
-```
+The Python kernel launches an **iPython REPL** subprocess (`ipython --simple-prompt --colors NoColor --no-banner --no-pdb`). Multi-line code is submitted via iPython's `%cpaste` magic. The kernel reads output lines and displays them in the output area.
 
-> **Note:** `--probability` only applies to *soft* classifiers (those that
-> implement posterior probability estimation, such as Random Forest, Logistic
-> Regression, MLP, and SVM).  For hard classifiers the flag is silently
-> ignored and only the class label is printed.
-
-**Regression** — one numeric value per line (formatted by `Strings.format`):
-
-```
-60323.00
-61122.00
-…
-```
-
-### Redirecting Output
-
+**Prerequisite:** iPython must be installed:
 ```bash
-# Save predictions to a file
-smile predict test.arff --model model.sml > predictions.txt
-
-# Pass probabilities through a downstream tool
-smile predict test.csv --model model.sml --probability | cut -d' ' -f2-
+pip install ipython
 ```
 
----
+If iPython is not found, Studio shows an informational dialog with the install command.
 
-## 7. Online Serving (`smile serve`)
+### 6.4 Restarting and Stopping a Kernel
 
-```
-smile serve --model <path> [options]
-```
+| Action | How |
+|--------|-----|
+| Restart | **Cell > Restart Kernel** or toolbar **↺** button. Requires confirmation. Clears all outputs. |
+| Stop | **Cell > Stop** or toolbar **⛔** button. Sends an interrupt to the kernel. |
 
-Launches a Quarkus-based HTTP prediction server.  The server reads the model
-from `<path>` at startup and exposes a REST endpoint for real-time inference.
+### 6.5 Magic Commands (Java Kernel)
 
-### Options
-
-| Option | Required | Default | Description |
-|---|---|---|---|
-| `--model <path>` | ✔ | — | Model file or folder |
-| `--host <addr>` | | `0.0.0.0` | Network interface to bind |
-| `--port <n>` | | `8080` | HTTP port |
-
-### How It Works
-
-`Serve` spawns a new JVM process running
-`serve/quarkus-run.jar` (found under `$smile.home/serve/`) and passes the
-model path and network settings as system properties:
-
-```
--Dsmile.serve.model=<path>
--Dquarkus.http.host=<host>
--Dquarkus.http.port=<port>
-```
-
-The spawned process inherits stdin/stdout/stderr (`inheritIO()`), so logs
-appear on the terminal.  The launcher waits for the child process to exit.
-
-### Example
-
-```bash
-# Train a model
-smile train -d iris.arff -m iris.sml random-forest --trees 200
-
-# Serve it
-smile serve --model iris.sml --port 9090
-```
-
-Once started, send a prediction request:
-
-```bash
-curl -X POST http://localhost:9090/predict \
-     -H "Content-Type: application/json" \
-     -d '{"sepallength":5.1,"sepalwidth":3.5,"petallength":1.4,"petalwidth":0.2}'
-```
-
----
-
-## 8. Supported File Formats
-
-`smile train` and `smile predict` use `smile.io.Read.data()` to load data.
-The format is auto-detected from the file extension; you can override it with
-`--format`.
-
-| Extension / Format | Description |
-|---|---|
-| `.arff` | Weka ARFF (with schema, nominal attributes) |
-| `.csv` | Comma-separated values (header row expected) |
-| `.tsv` / `.txt` | Tab-separated values |
-| `.json` | JSON array of objects |
-| `.parquet` | Apache Parquet (column-store) |
-| `.avro` | Apache Avro |
-| `.sas7bdat` | SAS data file |
-| SQLite URL | `jdbc:sqlite:<path>` — full SQL support via `smile shell` |
-
-**ARFF is recommended** for training data because it carries full schema
-information (column types, nominal levels) which eliminates the need to
-specify `--formula` manually.
-
----
-
-## 9. JVM Tuning (`conf/smile.ini`)
-
-The file `conf/smile.ini` contains JVM flags that are passed to every `smile`
-invocation.  The defaults are tuned for a modern multi-core machine:
-
-```ini
-# Heap size
--J-Xmx4G -J-Xms2G
-
-# ZGC for low-latency GC pauses
--J-XX:+UseZGC
-
-# Compact object headers (experimental, Java 24+)
--J-XX:+UnlockExperimentalVMOptions -J-XX:+UseCompactObjectHeaders
-
-# NUMA-aware allocation for multi-socket machines
--J-XX:+UseNUMA
-
-# String deduplication (useful when parsing large CSV files)
--J-XX:+UseStringDeduplication
-```
-
-Key settings to adjust:
-
-| Goal | Change |
-|---|---|
-| More heap for large datasets | `-J-Xmx8G` or `-J-XX:MaxRAMPercentage=75` |
-| Reproducible GC pauses | Keep `-J-XX:+UseZGC` |
-| Enable large TLB pages | Uncomment `-J-XX:+UseLargePages` |
-| Reduce GC pressure | Increase `-J-Xms` closer to `-J-Xmx` |
-
----
-
-## 10. Tutorials
-
-### 10.1 End-to-end: Iris Classification
-
-```bash
-# 1. Train a Random Forest on iris
-smile train \
-  --data   examples/iris.arff \
-  --model  iris_rf.sml         \
-  --model-id "iris-rf"         \
-  --model-version "1.0"        \
-  random-forest --trees 200 --max-depth 10
-
-# Output:
-# Training metrics: {accuracy=1.000, …}
-
-# 2. Evaluate on a test split
-smile train \
-  --data   train.arff \
-  --test   test.arff  \
-  --model  iris_rf.sml \
-  random-forest --trees 200
-
-# Output:
-# Training metrics:  {accuracy=1.000, …}
-# Test metrics:      {accuracy=0.973, …}
-
-# 3. Predict on new data
-smile predict new_flowers.arff --model iris_rf.sml
-
-# 4. Predict with class probabilities
-smile predict new_flowers.arff --model iris_rf.sml --probability
-```
-
-### 10.2 End-to-end: Housing Price Regression
-
-```bash
-# Train OLS on Boston Housing (response column: "price")
-smile train \
-  --data    housing.arff          \
-  --formula "price ~ ."           \
-  --model   housing_ols.sml       \
-  ols --stderr
-
-# Training metrics: {RMSE=4.679, MAE=3.389, R2=0.741}
-
-# Ridge regression with stronger regularization
-smile train \
-  --data    housing.arff          \
-  --formula "price ~ ."           \
-  --model   housing_ridge.sml     \
-  ridge --lambda 1.0
-
-# LASSO for sparse solutions
-smile train \
-  --data    housing.arff          \
-  --formula "price ~ ."           \
-  --model   housing_lasso.sml     \
-  lasso --lambda 5.0
-
-# Elastic Net
-smile train \
-  --data    housing.arff          \
-  --formula "price ~ ."           \
-  --model   housing_en.sml        \
-  elastic-net --lambda1 1.0 --lambda2 0.5
-
-# Predict
-smile predict housing_test.arff --model housing_ridge.sml
-```
-
-### 10.3 Cross-validation & Ensemble Workflow
-
-```bash
-# 10-fold stratified CV, averaged metrics
-smile train \
-  --data  iris.arff              \
-  --model iris_cv.sml            \
-  --kfold 10                     \
-  random-forest --trees 100
-
-# Training metrics:    {accuracy=1.000, …}
-# Validation metrics:  {accuracy=0.960, …}   ← 10-fold CV average
-
-# 5-fold CV with 3 repetitions for more stable estimate
-smile train \
-  --data  iris.arff              \
-  --model iris_cv3.sml           \
-  --kfold 5 --round 3            \
-  random-forest --trees 100
-
-# 5-fold CV, save the ENSEMBLE of fold models (not the final retrained model)
-smile train \
-  --data     iris.arff           \
-  --model    iris_ensemble.sml   \
-  --kfold    5                   \
-  --ensemble                     \
-  random-forest --trees 100
-
-# Reproducible run
-smile train \
-  --data  iris.arff --model iris_seed.sml --seed 42 \
-  random-forest --trees 100
-```
-
-### 10.4 Online Prediction Service
-
-```bash
-# Train
-smile train -d iris.arff -m iris.sml random-forest --trees 200
-
-# Serve on port 8080 (all interfaces)
-smile serve --model iris.sml
-
-# Serve on a specific interface and port
-smile serve --model iris.sml --host 127.0.0.1 --port 9090
-
-# Query (after server is up)
-curl http://localhost:9090/predict \
-  -H "Content-Type: application/json" \
-  -d '{"sepallength":6.3,"sepalwidth":2.5,"petallength":5.0,"petalwidth":1.9}'
-# → "Iris-virginica"
-```
-
-### 10.5 Interactive Java Shell Session
-
-Launch and explore the iris dataset:
-
-```bash
-smile shell
-```
+Lines starting with `//!` inside a Java cell are intercepted before being sent to JShell. The currently supported magic is:
 
 ```java
-smile> var iris = Read.arff(Paths.getTestData("weka/iris.arff"))
-iris ==>
-sepallength  sepalwidth  petallength  petalwidth  class
-───────────────────────────────────────────────────────
-5.1          3.5         1.4          0.2         Iris-setosa
-…
-
-smile> var formula = Formula.lhs("class")
-formula ==> class ~ .
-
-smile> var rf = RandomForest.fit(formula, iris)
-rf ==> Random Forest classifier with 500 trees
-
-smile> rf.metrics()
-$3 ==> Metrics{accuracy=1.000, …}
-
-smile> var probs = new double[3][]
-smile> rf.predict(iris.get(0), probs[0] = new double[3])
-$5 ==> 0   // class index 0 = Iris-setosa
-
-// Load, split, and cross-validate
-smile> var cv = CrossValidation.stratify(10, formula, iris,
-   ...>     (f, d) -> RandomForest.fit(f, d))
-smile> cv.avg()
-$7 ==> {accuracy=0.960, …}
+//!mvn groupId:artifactId:version
 ```
 
-Run a script file non-interactively:
+This resolves the Maven dependency (transitively) via Eclipse Aether and adds the JARs to the JShell classpath at runtime, allowing you to use any Maven artifact without restarting the kernel.
 
-```bash
-smile shell examples/regression.jsh
-```
+**Example:**
 
-### 10.6 Interactive Scala REPL Session
-
-```bash
-smile scala
-```
-
-```scala
-scala> val iris = read.arff(Paths.getTestData("weka/iris.arff"))
-val iris: DataFrame = …
-
-scala> val rf = randomForest("class" ~ ".", iris)
-val rf: RandomForest = …
-
-scala> rf.metrics()
-val res0: Metrics = {accuracy=1.000, …}
-
-// OLS on longley data
-scala> val longley = read.arff(Paths.getTestData("weka/regression/longley.arff"))
-scala> val model = lm("employed" ~ ".", longley)
-scala> println(model)
-
-// Gaussian process with RBF kernel
-scala> val gp = gpr("employed" ~ ".", longley, new GaussianKernel(1.0), 0.1)
+```java
+//!mvn org.apache.commons:commons-math3:3.6.1
 ```
 
 ---
 
-## Quick Reference Card
+## 7. Project Explorer
 
-```
-ROUTING
-  smile                           → SMILE Studio (GUI)
-  smile shell  [args]             → JShell REPL
-  smile scala  [args]             → Scala 3 REPL
-  smile train  -d FILE -m MODEL <algo> [algo-opts]
-  smile predict FILE -m MODEL [-p]
-  smile serve  --model MODEL [--host H] [--port P]
+The **Project** tab in the left panel shows the file tree rooted at the current working directory.
 
-CLASSIFICATION ALGORITHMS
-  random-forest  gradient-boost  ada-boost  cart
-  logistic  fisher  lda  qda  rda  mlp  svm  rbf
-
-REGRESSION ALGORITHMS
-  random-forest  gradient-boost  cart  mlp  svm  rbf
-  ols  lasso  ridge  elastic-net  gaussian-process
-
-CROSS-VALIDATION FLAGS (train)
-  -k <fold>    k-fold CV
-  -r <rounds>  repeated CV
-  -e           save ensemble of fold models
-  -s <seed>    fix RNG seed
-
-FEATURE TRANSFORMS (--transform)
-  standardizer  winsor(lo,hi)  minmax  MaxAbs  L1  L2  Linf
-```
-
+- **Navigate** the tree by expanding folders.
+- **Double-click** a supported source file (`.java`, `.jsh`, `.scala`, `.sc`, `.py`, `.ipynb`) to open it in the notebook.
+- **Double-click** any other non-binary text file to open it in the **Notepad** editor.
+- Binary files are silently ignored on double-click.
 
 ---
 
-*SMILE — © 2010-2026 Haifeng Li. GNU GPL licensed.*
+## 8. Kernel Explorer
+
+The **Kernel** tab in the left panel shows a live tree of runtime objects tracked by the active notebook's kernel. Switch between notebooks in the tab strip to refresh the explorer automatically.
+
+The tree has four top-level categories:
+
+| Category | Contents |
+|----------|----------|
+| **DataFrames** | Variables whose type is `DataFrame` |
+| **Matrix** | Variables whose type contains `[]` (arrays and matrices) |
+| **Models** | Variables of ML model types (classifiers, regressors, etc.) |
+| **Services** | Persisted model entries registered as inference services |
+
+### 8.1 Inspecting Variables
+
+Double-click any **DataFrames** or **Matrix** leaf node to open the variable in a SMILE viewer window:
+
+```java
+// Equivalent action generated by Studio:
+var dfWindow = smile.swing.SmileUtilities.show(df);
+dfWindow.setTitle("df");
+```
+
+### 8.2 Saving Models
+
+Double-click a **Models** leaf node to open a **Save dialog**. Studio serializes the selected model variable using `smile.io.Write.object(model, path)` and saves it to a `.sml` file. After saving, if the model is a `ClassificationModel` or `RegressionModel`, it is automatically registered under the **Services** node with its schema.
+
+### 8.3 Starting an Inference Service
+
+Double-click a **Services** leaf node to open the **Start Service** dialog, which configures and launches a REST inference server for the saved model.
+
+---
+
+## 9. AI Agent Panel
+
+The right panel hosts three AI agents, each in its own tab. All agents require an AI service to be configured (see [Section 11](#11-settings--ai-service-configuration)).
+
+### 9.1 Clair the Analyst
+
+> 📊 *Clair the Analyst* — end-to-end ML/AI assistant
+
+Clair handles the complete data science workflow:
+
+- Automatic ML/AI solutions from natural language requirements
+- Data loading from CSV, ARFF, JSON, Avro, Parquet, Iceberg, SQL
+- Advanced interactive data visualization
+- Model training, evaluation, and ensembling
+- Inference server management
+
+### 9.2 James the Java Guru
+
+> ☕ *James the Java Guru* — Java programming assistant
+
+James helps with Java and SMILE-specific code:
+
+- Code completion and generation in the notebook (via `Tab`)
+- Reviewing and explaining Java code
+- SMILE API guidance
+
+### 9.3 Guido the Pythonista
+
+> 🐍 *Guido the Pythonista* — Python programming assistant
+
+Guido assists with Python notebooks:
+
+- Code completion and generation
+- Python data science library guidance
+
+### 9.4 Intent Types
+
+Each intent (conversation turn) has a **type selector** in the footer:
+
+| Type | Legend | Description |
+|------|--------|-------------|
+| **Instructions** | `>` | Natural language prompt sent to the AI agent |
+| **Command** | `/` | Slash command (see below) |
+| **Shell** | `!` | Shell command executed in a subprocess |
+| **Raw** | — | Display-only entry (not editable) |
+
+Switch the intent type using the combo box, or use the shortcuts below.
+
+### 9.5 Slash Commands
+
+Type `/` followed by a command name and press `Ctrl + Enter`:
+
+| Command | Description |
+|---------|-------------|
+| `/help` | List all available slash commands |
+| `/memory show` | Display the long-term memory file (`SMILE.md`) |
+| `/memory add <text>` | Append notes to `SMILE.md` |
+| `/memory edit` | Open `SMILE.md` in a Notepad window |
+| `/memory refresh` | Reload `SMILE.md` from disk into the agent context |
+| `/plan <goal>` | Enter plan mode with a stated goal |
+| `/plan off` | Exit plan mode |
+| `/compact [instructions]` | Summarize the conversation and compact the context window |
+| `/clear` | Clear the current conversation session |
+| `/edit <file>` | Open a file in the Notepad editor |
+| `/train` | Train a machine learning model (runs `smile train`) |
+| `/predict` | Run batch inference (runs `smile predict`) |
+| `/serve` | Start an inference service (runs `smile serve`) |
+
+Additional custom slash commands can be defined as agent skills in `SMILE.md`.
+
+**Hint window:** As you type a slash command, a hint tooltip appears showing the expected arguments.
+
+### 9.6 Shell Commands
+
+Set the intent type to **Shell** (or prefix your input with `!`) and enter any shell command. On Windows, commands run through `powershell.exe -Command`; on Unix/macOS, through `bash -c`. The output is streamed in real time to the output area. A **Stop** button appears to forcibly terminate long-running processes.
+
+### 9.7 Long-Term Memory (SMILE.md)
+
+Agents can maintain long-term, project-specific context stored in `SMILE.md` within the current working directory. This file is automatically loaded into the agent's system prompt. Use `/memory add` or `/memory edit` to update it.
+
+**Initializing context:**
+```
+/init
+```
+Clair's `/init` skill creates a `SMILE.md` file by analysing the project and recording its structure, key decisions, and preferences.
+
+### 9.8 Reasoning Effort
+
+Each intent input shows a **Reasoning Effort** combo box. The available levels depend on the configured LLM:
+
+| Level | Effect |
+|-------|--------|
+| *(default)* | Provider's default thinking behavior |
+| `low` / `medium` / `high` | Explicit thinking budget (supported by Anthropic, OpenAI o-series, etc.) |
+
+Increasing reasoning effort produces more careful responses at the cost of higher latency and token usage.
+
+### 9.9 Auto-Compact
+
+If a conversation session exceeds **180,000 tokens** (configurable via the system property `smile.agent.auto.compact`), the agent automatically runs `/compact` to summarize the conversation and free context window space.
+
+---
+
+## 10. Notepad
+
+The **Notepad** is a standalone text editor window opened for non-notebook files. It is accessible via:
+
+- Double-clicking a non-binary, non-source file in the Project Explorer
+- The `/edit <file>` agent command
+- The `/memory edit` command
+
+### Features
+
+| Feature | Description |
+|---------|-------------|
+| Syntax highlighting | Detected from file extension (Java, Python, Markdown, SQL, Scala, JSON, YAML, Shell, etc.) |
+| Code folding | Enabled for all code languages |
+| LSP auto-completion | Triggers on `.` for Java and Python files |
+| Spell checking | English spell checker loaded from `data/eng_dic.zip` |
+| Find / Replace | `Ctrl+F` (dialog), `Ctrl+Shift+F` (toolbar), `Ctrl+H` (replace dialog), `Ctrl+Shift+H` (replace toolbar) |
+| Go To Line | Available in the Search menu |
+| Error strip | Right-side gutter with error/warning markers |
+| Unsaved change tracking | Prompts before close |
+
+---
+
+## 11. Settings — AI Service Configuration
+
+Open via **File > Settings…**. Choose an AI service provider from the drop-down:
+
+| Provider | Notes |
+|----------|-------|
+| **OpenAI** | GPT models; set API key, optional base URL override, model |
+| **Azure OpenAI** | Legacy Azure endpoint; requires API key, base URL, model |
+| **Anthropic** | Claude models; set API key, optional base URL, model |
+| **Google Gemini** | Gemini models via native API; set API key, model |
+| **Google Vertex AI** | Gemini via Vertex; set API key, base URL, model |
+
+All fields (API key, base URL, model) are stored in Java `Preferences` (OS keychain / registry). API keys set in Settings take precedence over environment variables.
+
+**Supported models** are listed as suggestions in each provider's combo box; you can also type any model name manually since the fields are editable.
+
+After clicking **OK** the new LLM instance is initialized immediately.
+
+> **Security note:** API keys are stored in the JVM `Preferences` store. On macOS this is the system Keychain; on Windows it is the Registry; on Linux it is `~/.java/.userPrefs`.
+
+---
+
+## 12. Status Bar
+
+The status bar at the bottom of the window displays:
+
+- **Left** – Status messages from current operations (kernel initialization, LSP startup, MCP connections, file saves, kernel restarts). Messages automatically reset to *"Ready"* after 60 seconds.
+- **Right** – Live system metrics refreshed every second: JVM heap usage and CPU load percentage.
+
+```
+Ty server initialized                            Heap: 1.2 GB  CPU: 8%
+```
+
+---
+
+## 13. Font Size
+
+The monospaced font used in all code editors, output areas, and agent intent panes can be resized globally:
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl + =` | Increase font size |
+| `Ctrl + -` | Decrease font size |
+
+The Markdown rendering font size scales proportionally (by ±0.1 em per step).
+
+---
+
+## 14. MCP (Model Context Protocol) Integration
+
+SMILE Studio automatically connects to MCP servers defined in any of the following configuration files at startup (in order):
+
+1. `$SMILE_HOME/conf/mcp.json`
+2. `~/.smile/mcp.json`
+3. `.smile/mcp.json` (project-level, in current working directory)
+
+All three files are loaded if they exist; tools from all connected servers become available to agents. Servers are gracefully shut down on application exit.
+
+**Example `mcp.json`:**
+
+```json
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/your/project"]
+    },
+    "web-search": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+      "env": { "BRAVE_API_KEY": "your_key_here" }
+    }
+  }
+}
+```
+
+---
+
+## 15. LSP (Language Server Protocol) Integration
+
+SMILE Studio starts two language servers in the background:
+
+| Server | Language | Provides |
+|--------|----------|---------|
+| **Ty** | Python | Type checking, diagnostics |
+| **JDT LS** | Java | Completions, hover, diagnostics |
+
+Both servers are started automatically. The `jdtls` binary is expected at `$SMILE_HOME/jdtls/bin/jdtls`.
+
+Auto-completion is powered by the LSP providers and activates:
+
+- **Automatically** after 300 ms of inactivity (configurable)
+- **On `.`** — immediately triggers member completion for Java and Python
+
+The completion popup is provided by RSyntaxTextArea's `AutoCompletion` infrastructure wired to a custom `LspCompletionProvider`.
+
+---
+
+## 16. Themes / Look-and-Feel
+
+SMILE Studio uses [FlatLaf](https://www.formdev.com/flatlaf/) for its look-and-feel. The theme is stored in application preferences under the key `Theme`:
+
+| Value | Description |
+|-------|-------------|
+| `Light` | FlatLaf Light (default on non-macOS) |
+| `Dark` | FlatLaf Dark |
+| `IntelliJ` | FlatLaf IntelliJ |
+| `Darcula` | FlatLaf Darcula |
+| `macLight` | FlatMac Light (default on macOS) |
+| `macDark` | FlatMac Dark |
+
+Change the theme by setting the `Theme` preference (e.g., programmatically or via a custom preference editor) and restarting the application.
+
+JetBrains Mono is installed as the default monospaced font via `FlatJetBrainsMonoFont.install()`.
+
+**macOS:** Full window content mode and transparent title bar are enabled automatically for a native look.
+
+**Windows:** Per-monitor DPI scaling is disabled (`sun.java2d.uiScale=1.0`) to prevent blurry icons.
+
+---
+
+## 17. Keyboard Shortcuts Reference
+
+### Notebook
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl + Enter` | Run cell, stay |
+| `Shift + Enter` | Run cell, go to next / create new |
+| `Alt + Enter` | Run cell, insert cell below |
+| `Tab` | AI line completion (requires AI service) |
+| `Ctrl + =` | Increase font size |
+| `Ctrl + -` | Decrease font size |
+
+### Notepad
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl + F` | Find dialog |
+| `Ctrl + H` | Replace dialog |
+| `Ctrl + Shift + F` | Find toolbar (inline) |
+| `Ctrl + Shift + H` | Replace toolbar (inline) |
+| `Ctrl + G` | Go to line |
+| `Ctrl + S` | Save file |
+| `.` | Trigger LSP auto-completion |
+
+### Agent Panel
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl + Enter` | Execute current intent |
+
+---
+
+## 18. Configuration Files
+
+| File / Location | Purpose |
+|-----------------|---------|
+| `.smile/studio.properties` (cwd) | List of previously opened file paths, restored at startup |
+| `.smile/SMILE.md` or `SMILE.md` (cwd) | Agent long-term memory / project context |
+| `$SMILE_HOME/conf/mcp.json` | Global MCP server definitions |
+| `~/.smile/mcp.json` | User-level MCP server definitions |
+| `.smile/mcp.json` (cwd) | Project-level MCP server definitions |
+| Java `Preferences` node | AI service keys, selected theme, auto-save flag, Markdown font size |
+
+---
+
+## 19. Troubleshooting
+
+### "Cannot start SMILE Studio as JVM is running in headless mode"
+
+The display environment is not set. On Linux, ensure `DISPLAY` is set or run through a desktop session. On CI servers, use a virtual display (`Xvfb`).
+
+### Python kernel fails to start
+
+Ensure `ipython` is installed in the Python environment on `PATH`:
+
+```bash
+pip install ipython
+python -c "import IPython; print(IPython.__version__)"
+```
+
+### Scala kernel produces no output
+
+The Scala script engine needs the `smile.home` system property and the classpath to include Scala libraries. Ensure you are launching Studio via the provided `smile studio` script which sets these properties.
+
+### JDT LS / Ty server doesn't start
+
+Check that `$SMILE_HOME/jdtls/bin/jdtls` exists and is executable. Errors are logged to the application log and shown briefly in the status bar.
+
+### AI features not working (Tab completion, code generation, agents)
+
+Open **File > Settings…** and verify your AI provider credentials. Check the status bar for initialization errors. Ensure network access to the provider's API endpoint is available.
+
+### Notebook not saving
+
+If **Save** shows an error dialog, check file system permissions for the target path. `Untitled.java` notebooks must be saved via **Save As…** before auto-save takes effect.
+
+### Variables not appearing in Kernel Explorer
+
+The Kernel Explorer refreshes when you **switch notebook tabs**. Switch away and back, or run a cell to trigger a refresh. Only named (non-scratch) variables appear; JShell scratch variables (e.g., `$1`, `$2`) are excluded.
+
+### Out-of-memory errors in JShell
+
+The remote JVM is allocated up to 75% of the system RAM (`-XX:MaxRAMPercentage=75`). On memory-constrained machines, reduce this by restarting the kernel after modifying the heap settings via a `//!` magic in the first cell, or add JVM options in the launch script.
+
+---
+
+*SMILE Studio is free software under the GNU General Public License v3. For commercial use enquiries contact smile.sales@outlook.com.*
 
