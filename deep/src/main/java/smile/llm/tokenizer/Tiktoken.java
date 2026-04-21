@@ -17,8 +17,9 @@
 package smile.llm.tokenizer;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharacterCodingException;
@@ -90,8 +91,10 @@ public class Tiktoken implements Tokenizer {
             this.decoder[id] = new Bytes(specialTokens[i]);
         }
 
-        this.bos = this.specialTokens.get(bos);
-        this.eos = this.specialTokens.get(eos);
+        this.bos = Optional.ofNullable(this.specialTokens.get(bos))
+                .orElseThrow(() -> new IllegalArgumentException("BOS token not found in specialTokens: " + bos));
+        this.eos = Optional.ofNullable(this.specialTokens.get(eos))
+                .orElseThrow(() -> new IllegalArgumentException("EOS token not found in specialTokens: " + eos));
         logger.info("#words: {} | BOS ID: {} | EOS ID: {}", decoder.length, this.bos, this.eos);
     }
 
@@ -140,7 +143,7 @@ public class Tiktoken implements Tokenizer {
     /**
      * Returns the special token id.
      * @param token a special token.
-     * @return the special token id.
+     * @return the special token id, or {@code null} if the token is not registered.
      */
     public Integer specialToken(String token) {
         return specialTokens.get(token);
@@ -265,7 +268,9 @@ public class Tiktoken implements Tokenizer {
 
     @Override
     public String decode(int[] tokens) {
-        byte[] buffer = new byte[10 * tokens.length];
+        int totalBytes = 0;
+        for (var token : tokens) totalBytes += decoder[token].length();
+        byte[] buffer = new byte[totalBytes];
         int offset = 0;
         for (var token : tokens) {
             var array = decoder[token].array();
@@ -277,7 +282,9 @@ public class Tiktoken implements Tokenizer {
 
     @Override
     public String tryDecode(int[] tokens) throws CharacterCodingException {
-        byte[] buffer = new byte[10 * tokens.length];
+        int totalBytes = 0;
+        for (var token : tokens) totalBytes += decoder[token].length();
+        byte[] buffer = new byte[totalBytes];
         int offset = 0;
         for (var token : tokens) {
             var array = decoder[token].array();
@@ -319,7 +326,7 @@ public class Tiktoken implements Tokenizer {
         logger.info("Loading tiktoken model from {}", path);
         var decoder = Base64.getDecoder();
         Map<Bytes, Integer> encoder = new HashMap<>();
-        try (var reader = new BufferedReader(new FileReader(path))) {
+        try (var reader = new BufferedReader(new InputStreamReader(new FileInputStream(path), StandardCharsets.UTF_8))) {
             String line = reader.readLine();
 
             while (line != null) {
