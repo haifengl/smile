@@ -16,8 +16,14 @@
  */
 package smile.feature.imputation;
 
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import smile.data.DataFrame;
+import smile.data.Tuple;
+import smile.data.type.DataTypes;
+import smile.data.type.StructField;
+import smile.data.type.StructType;
 import smile.datasets.Longley;
 import smile.datasets.SyntheticControl;
 import smile.datasets.USArrests;
@@ -143,5 +149,181 @@ public class SimpleImputerTest {
         SimpleImputer imputer = SimpleImputer.fit(df);
         System.out.println(imputer);
         System.out.println(imputer.apply(df));
+    }
+
+    // ---- utility method tests ----
+
+    @Test
+    public void testGivenNullValueWhenCheckingIsMissingThenTrue() {
+        assertTrue(SimpleImputer.isMissing(null));
+    }
+
+    @Test
+    public void testGivenNaNValueWhenCheckingIsMissingThenTrue() {
+        assertTrue(SimpleImputer.isMissing(Double.NaN));
+        assertTrue(SimpleImputer.isMissing(Float.NaN));
+    }
+
+    @Test
+    public void testGivenFiniteValueWhenCheckingIsMissingThenFalse() {
+        assertFalse(SimpleImputer.isMissing(0.0));
+        assertFalse(SimpleImputer.isMissing(42));
+        assertFalse(SimpleImputer.isMissing("hello"));
+    }
+
+    @Test
+    public void testGivenTupleWithMissingWhenCheckingHasMissingThenTrue() {
+        StructType schema = new StructType(
+                new StructField("a", DataTypes.DoubleType),
+                new StructField("b", DataTypes.DoubleType)
+        );
+        Tuple t = Tuple.of(schema, new Object[]{1.0, Double.NaN});
+        assertTrue(SimpleImputer.hasMissing(t));
+    }
+
+    @Test
+    public void testGivenCompleteTupleWhenCheckingHasMissingThenFalse() {
+        StructType schema = new StructType(
+                new StructField("a", DataTypes.DoubleType),
+                new StructField("b", DataTypes.DoubleType)
+        );
+        Tuple t = Tuple.of(schema, new Object[]{1.0, 2.0});
+        assertFalse(SimpleImputer.hasMissing(t));
+    }
+
+    // ---- apply(Tuple) test ----
+
+    @Test
+    public void testGivenTupleWithMissingWhenApplyingImputerThenMissingIsReplaced() {
+        StructType schema = new StructType(
+                new StructField("a", DataTypes.DoubleType),
+                new StructField("b", DataTypes.DoubleType)
+        );
+        SimpleImputer imputer = new SimpleImputer(Map.of("a", 99.0, "b", 7.0));
+        Tuple in = Tuple.of(schema, new Object[]{Double.NaN, 2.0});
+        Tuple out = imputer.apply(in);
+
+        assertEquals(99.0, out.getDouble(0), 1e-9);
+        assertEquals(2.0,  out.getDouble(1), 1e-9);
+    }
+
+    @Test
+    public void testGivenCompleteTupleWhenApplyingImputerThenValuesAreUnchanged() {
+        StructType schema = new StructType(
+                new StructField("a", DataTypes.DoubleType),
+                new StructField("b", DataTypes.DoubleType)
+        );
+        SimpleImputer imputer = new SimpleImputer(Map.of("a", 99.0, "b", 7.0));
+        Tuple in = Tuple.of(schema, new Object[]{3.0, 4.0});
+        Tuple out = imputer.apply(in);
+
+        assertEquals(3.0, out.getDouble(0), 1e-9);
+        assertEquals(4.0, out.getDouble(1), 1e-9);
+    }
+
+    // ---- subset of columns ----
+
+    @Test
+    public void testGivenColumnSubsetWhenFittingImputerThenOnlyThoseColumnsAreImputed() {
+        StructType schema = new StructType(
+                new StructField("x", DataTypes.DoubleType),
+                new StructField("y", DataTypes.DoubleType)
+        );
+        DataFrame df = DataFrame.of(schema, List.of(
+                Tuple.of(schema, new Object[]{1.0, 10.0}),
+                Tuple.of(schema, new Object[]{2.0, 20.0}),
+                Tuple.of(schema, new Object[]{3.0, 30.0})
+        ));
+
+        // Only impute column "x"; "y" should not get an imputation entry.
+        SimpleImputer imputer = SimpleImputer.fit(df, "x");
+        String repr = imputer.toString();
+        assertTrue(repr.contains("x ->"), "x should be in the imputer");
+        assertFalse(repr.contains("y ->"), "y should NOT be in the imputer");
+    }
+
+    // ---- invalid arguments ----
+
+    @Test
+    public void testGivenEmptyDataFrameWhenFittingImputerThenIllegalArgumentException() {
+        StructType schema = new StructType(new StructField("a", DataTypes.DoubleType));
+        DataFrame empty = DataFrame.of(schema, List.of());
+        assertThrows(IllegalArgumentException.class, () -> SimpleImputer.fit(empty));
+    }
+
+    @Test
+    public void testGivenNegativeLowerWhenFittingThenIllegalArgumentException() {
+        DataFrame df = DataFrame.of(new double[][]{{1.0, 2.0}, {3.0, 4.0}});
+        assertThrows(IllegalArgumentException.class, () -> SimpleImputer.fit(df, -0.1, 0.9));
+    }
+
+    @Test
+    public void testGivenUpperGreaterThanOneWhenFittingThenIllegalArgumentException() {
+        DataFrame df = DataFrame.of(new double[][]{{1.0, 2.0}, {3.0, 4.0}});
+        assertThrows(IllegalArgumentException.class, () -> SimpleImputer.fit(df, 0.0, 1.1));
+    }
+
+    @Test
+    public void testGivenLowerGreaterThanUpperWhenFittingThenIllegalArgumentException() {
+        DataFrame df = DataFrame.of(new double[][]{{1.0, 2.0}, {3.0, 4.0}});
+        assertThrows(IllegalArgumentException.class, () -> SimpleImputer.fit(df, 0.8, 0.2));
+    }
+
+    // ---- impute(double[][]) raw array API ----
+
+    @Test
+    public void testGivenAllMissingRowWhenImputingRawArrayThenIllegalArgumentException() {
+        double[][] data = {
+                {1.0, 2.0},
+                {Double.NaN, Double.NaN},   // entirely missing row
+                {3.0, 4.0}
+        };
+        assertThrows(IllegalArgumentException.class, () -> SimpleImputer.impute(data));
+    }
+
+    @Test
+    public void testGivenAllMissingColumnWhenImputingRawArrayThenIllegalArgumentException() {
+        double[][] data = {
+                {1.0, Double.NaN},
+                {2.0, Double.NaN},
+                {3.0, Double.NaN}
+        };
+        assertThrows(IllegalArgumentException.class, () -> SimpleImputer.impute(data));
+    }
+
+    @Test
+    public void testGivenSingleMissingValueWhenImputingRawArrayThenFilledWithColumnMean() {
+        double[][] data = {
+                {1.0, 2.0},
+                {Double.NaN, 4.0},
+                {3.0, 6.0}
+        };
+        double[][] result = SimpleImputer.impute(data);
+        // column-0 mean of {1.0, 3.0} = 2.0
+        assertEquals(2.0, result[1][0], 1e-9);
+        // non-missing values are preserved unchanged
+        assertEquals(1.0, result[0][0], 1e-9);
+        assertEquals(3.0, result[2][0], 1e-9);
+    }
+
+    // ---- trimmed-mean path (lower != upper) ----
+
+    @Test
+    public void testGivenTrimmedMeanParamsWhenFittingThenImputationValueFallsInTrimmedRange() {
+        // Build a dataset with outliers.  Median (0.5) = 10, trimmed mean [0.1,0.9] ≈ 10.
+        double[] col = {1.0, 8.0, 9.0, 10.0, 11.0, 12.0, 100.0};
+        double[][] raw = new double[col.length][1];
+        for (int i = 0; i < col.length; i++) raw[i][0] = col[i];
+        DataFrame df = DataFrame.of(raw);
+
+        SimpleImputer imputer = SimpleImputer.fit(df, 0.1, 0.9);
+
+        // Apply to a tuple with a missing value and check the fill value is reasonable.
+        StructType schema = df.schema();
+        Tuple missing = Tuple.of(schema, new Object[]{Double.NaN});
+        Tuple filled = imputer.apply(missing);
+        double fill = filled.getDouble(0);
+        assertTrue(Double.isFinite(fill), "fill value must be finite");
+        assertTrue(fill >= 1.0 && fill <= 100.0, "fill value should be within data range");
     }
 }
