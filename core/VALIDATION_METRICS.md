@@ -2,7 +2,7 @@
 
 The `smile.validation.metric` package provides scalar evaluation metrics for
 **classification**, **probabilistic classification**, **regression**, and
-**clustering** tasks. Every metric is a stateless, serialisable object that
+**clustering** tasks. Every metric is a stateless, serializable object that
 implements one of four functional interfaces. The `static of(...)` factory
 methods let you compute a score in one line without instantiating a class.
 
@@ -401,7 +401,7 @@ double mse = MSE.of(truth, prediction);
 
 **Formula:** `MSE = RSS / n = (1/n) Σ (yᵢ − ŷᵢ)²`
 
-MSE penalises large errors heavily (squaring effect) and is the optimisation
+MSE penalises large errors heavily (squaring effect) and is the optimization
 objective for ordinary least squares. Scale is in squared units of `y`.
 
 ---
@@ -578,16 +578,16 @@ MutualInformation.of(x, new int[]{0,1,0,1,0,1});  // = 0.0 (independent)
 
 ### 5.4 Normalized Mutual Information (NMI)
 
-NMI scales MI to the interval `[0, 1]` by dividing by a normalisation factor
-derived from the marginal entropies. Five normalisation methods are available:
+NMI scales MI to the interval `[0, 1]` by dividing by a normalization factor
+derived from the marginal entropies. Five normalization methods are available:
 
-| Constant | Formula | Notes |
-|---|---|---|
-| `NormalizedMutualInformation.JOINT` | `I / H(X,Y)` | H(X,Y) = joint entropy |
-| `NormalizedMutualInformation.MAX` | `I / max(H(X), H(Y))` | Bounded by the larger entropy |
+| Constant | Formula | Notes                                                                        |
+|---|---|------------------------------------------------------------------------------|
+| `NormalizedMutualInformation.JOINT` | `I / H(X,Y)` | H(X,Y) = joint entropy                                                       |
+| `NormalizedMutualInformation.MAX` | `I / max(H(X), H(Y))` | Bounded by the larger entropy                                                |
 | `NormalizedMutualInformation.MIN` | `I / min(H(X), H(Y))` | Can reach 1 even for imperfect clustering if one labelling has lower entropy |
-| `NormalizedMutualInformation.SUM` | `2I / (H(X) + H(Y))` | Symmetric F-measure-like |
-| `NormalizedMutualInformation.SQRT` | `I / √(H(X)·H(Y))` | Geometric mean normalisation |
+| `NormalizedMutualInformation.SUM` | `2I / (H(X) + H(Y))` | Symmetric F-measure-like                                                     |
+| `NormalizedMutualInformation.SQRT` | `I / √(H(X)·H(Y))` | Geometric mean normalization                                                |
 
 ```java
 double nmi = NormalizedMutualInformation.max(truth, cluster);
@@ -613,7 +613,7 @@ corrects RI):
 AMI = (I − E[MI]) / (norm − E[MI])
 ```
 
-Four normalisation methods are provided:
+Four normalization methods are provided:
 
 | Constant | Denominator |
 |---|---|

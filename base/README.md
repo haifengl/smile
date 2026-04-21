@@ -10,31 +10,31 @@ is built upon.
 
 ## Package Map
 
-| Package | Description |
-|---------|-------------|
-| `smile.data` | [DataFrame, Tuple, type system, measures, vectors](#data) |
-| `smile.data.formula` | [Formula language for model matrices](#formula) |
-| `smile.data.transform` | [Feature-transformation pipelines](#data-transformation) |
-| `smile.datasets` | [Built-in benchmark datasets](#datasets) |
-| `smile.io` | [Data I/O — CSV, JSON, Parquet, ARFF, …](#data-io) |
-| `smile.tensor` | [Tensors and dense/sparse linear algebra](#tensor--linear-algebra) |
-| `smile.math` | [Core math utilities, MathEx, special functions](#math) |
-| `smile.math.distance` | [Distance and metric functions](#distances) |
-| `smile.math.kernel` | [Mercer kernel functions (SVM, GP, …)](#kernels) |
-| `smile.math.rbf` | [Radial basis functions](#radial-basis-functions) |
-| `smile.math.random` | [Pseudorandom number generators](#random-number-generators) |
-| `smile.math.BFGS` | [Quasi-Newton BFGS / L-BFGS optimisation](#bfgs-optimisation) |
-| `smile.cs` | [Compressed sensing](#compressed-sensing) |
-| `smile.stat.distribution` | [Probability distributions](#probability-distributions) |
-| `smile.stat.hypothesis` | [Hypothesis testing](#hypothesis-testing) |
-| `smile.interpolation` | [1-D and 2-D interpolation](#interpolation) |
+| Package | Description                                                                      |
+|---------|----------------------------------------------------------------------------------|
+| `smile.data` | [DataFrame, Tuple, type system, measures, vectors](#data)                        |
+| `smile.data.formula` | [Formula language for model matrices](#formula)                                  |
+| `smile.data.transform` | [Feature-transformation pipelines](#data-transformation)                         |
+| `smile.datasets` | [Built-in benchmark datasets](#datasets)                                         |
+| `smile.io` | [Data I/O — CSV, JSON, Parquet, ARFF, …](#data-io)                               |
+| `smile.tensor` | [Tensors and dense/sparse linear algebra](#tensor--linear-algebra)               |
+| `smile.math` | [Core math utilities, MathEx, special functions](#math)                          |
+| `smile.math.distance` | [Distance and metric functions](#distances)                                      |
+| `smile.math.kernel` | [Mercer kernel functions (SVM, GP, …)](#kernels)                                 |
+| `smile.math.rbf` | [Radial basis functions](#radial-basis-functions)                                |
+| `smile.math.random` | [Pseudorandom number generators](#random-number-generators)                      |
+| `smile.math.BFGS` | [Quasi-Newton BFGS / L-BFGS optimization](#bfgs-optimisation)                   |
+| `smile.cs` | [Compressed sensing](#compressed-sensing)                                        |
+| `smile.stat.distribution` | [Probability distributions](#probability-distributions)                          |
+| `smile.stat.hypothesis` | [Hypothesis testing](#hypothesis-testing)                                        |
+| `smile.interpolation` | [1-D and 2-D interpolation](#interpolation)                                      |
 | `smile.neighbor` | [Nearest-neighbor search (KD-tree, ball tree, LSH, …)](#nearest-neighbor-search) |
-| `smile.graph` | [Graph data structures and algorithms](#graph) |
-| `smile.gap` | [Genetic algorithm (GAP framework)](#genetic-algorithm) |
-| `smile.ica` | [Independent component analysis](#independent-component-analysis) |
-| `smile.hash` | [Non-cryptographic hash functions](#hash-functions) |
-| `smile.sort` | [Sorting and selection algorithms](#sorting--selection) |
-| `smile.wavelet` | [Wavelet transforms](#wavelets) |
+| `smile.graph` | [Graph data structures and algorithms](#graph)                                   |
+| `smile.gap` | [Genetic algorithm (GAP framework)](#genetic-algorithm)                          |
+| `smile.ica` | [Independent component analysis](#independent-component-analysis)                |
+| `smile.hash` | [Non-cryptographic hash functions](#hash-functions)                              |
+| `smile.sort` | [Sorting and selection algorithms](#sorting--selection)                          |
+| `smile.wavelet` | [Wavelet transforms](#wavelets)                                                  |
 
 ---
 
@@ -262,7 +262,7 @@ int[] perm = rng.permutation(100);
 
 ---
 
-## BFGS Optimisation
+## BFGS Optimization
 
 **Package:** `smile.math`  
 **Guide:** [BFGS.md](BFGS.md)
@@ -425,7 +425,7 @@ double[] dist = g.dijkstra(0);
 **Guide:** [GAP.md](GAP.md)
 
 A flexible genetic algorithm framework (GAP — Genetic Algorithm Platform)
-for combinatorial and continuous optimisation.  Users implement a
+for combinatorial and continuous optimization.  Users implement a
 `Chromosome` with `fitness()`, `crossover()`, and `mutate()` to define
 the problem; the `GeneticAlgorithm` driver handles selection, recombination,
 and termination.

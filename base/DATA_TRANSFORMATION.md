@@ -17,7 +17,7 @@ statistical scalers on top of that foundation.
 5. [InvertibleColumnTransform](#5-invertiblecolumntransform)
 6. [Built-in scalers and standardisers](#6-built-in-scalers-and-standardisers)
    - [Scaler — min-max scaling](#61-scaler--min-max-scaling)
-   - [Standardizer — z-score standardisation](#62-standardizer--z-score-standardisation)
+   - [Standardizer — z-score standardization](#62-standardizer--z-score-standardisation)
    - [RobustStandardizer — median / IQR](#63-robustandardizer--median--iqr)
    - [WinsorScaler — percentile clamping](#64-winsorscaler--percentile-clamping)
    - [MaxAbsScaler — maximum absolute value](#65-maxabsscaler--maximum-absolute-value)
@@ -232,7 +232,7 @@ networks).
 **When to avoid:**  Data with large outliers — a single extreme value will
 compress all normal values into a tiny sub-range.  Use `WinsorScaler` instead.
 
-### 6.2 Standardizer — z-score standardisation
+### 6.2 Standardizer — z-score standardization
 
 Scales each numeric column to zero mean and unit variance:
 

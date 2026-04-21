@@ -170,7 +170,7 @@ Implements `DataFrameRegression` and provides comprehensive statistical diagnost
 
 **Recursive Least Squares** (online updates) is available when `OLS.Options.recursive =
 true` (the default). Each call to `update(x, y)` adjusts the model using the Sherman–
-Morrison–Woodbury formula; no matrix factorisation is required per update.
+Morrison–Woodbury formula; no matrix factorization is required per update.
 
 ---
 
@@ -189,11 +189,11 @@ LinearModel model = OLS.fit(formula, data, options);
 
 **Options**
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `method` | `QR` | Factorisation method: `QR` (default, fast, numerically stable) or `SVD` (handles rank-deficient X). |
-| `stderr` | `true` | Whether to compute standard errors, t-statistics, and p-values for all coefficients. |
-| `recursive` | `true` | Whether to enable recursive least squares via `model.update(x, y)`. |
+| Option | Default | Description                                                                                          |
+|--------|---------|------------------------------------------------------------------------------------------------------|
+| `method` | `QR` | Factorization method: `QR` (default, fast, numerically stable) or `SVD` (handles rank-deficient X). |
+| `stderr` | `true` | Whether to compute standard errors, t-statistics, and p-values for all coefficients.                 |
+| `recursive` | `true` | Whether to enable recursive least squares via `model.update(x, y)`.                                  |
 
 ```java
 // Properties API
@@ -247,9 +247,9 @@ LinearModel model = RidgeRegression.fit(formula, data, options);
 
 **Parameters.**
 
-| Parameter | Description |
-|-----------|-------------|
-| `lambda` | Regularisation strength (`λ > 0`). Larger = more shrinkage. Typical range: `0.001–1000`. Select via cross-validation. |
+| Parameter | Description                                                                                                            |
+|-----------|------------------------------------------------------------------------------------------------------------------------|
+| `lambda` | Regularization strength (`λ > 0`). Larger = more shrinkage. Typical range: `0.001–1000`. Select via cross-validation. |
 
 ```java
 // Convenience: fit with explicit lambda
@@ -559,14 +559,14 @@ GradientTreeBoost model = GradientTreeBoost.fit(formula, data, props);
 
 **Options** (via `Properties`)
 
-| Property | Default | Description |
-|----------|---------|-------------|
-| `smile.gbt.trees` | `500` | Number of boosting rounds. |
-| `smile.gbt.loss` | `LeastSquares` | Loss function: `LeastSquares`, `LeastAbsoluteDeviation`, `Huber`. |
-| `smile.gbt.shrinkage` | `0.05` | Learning rate. Smaller = more trees needed but better generalisation. |
-| `smile.gbt.max.depth` | `5` | Maximum tree depth. |
-| `smile.gbt.node.size` | `5` | Minimum node size. |
-| `smile.gbt.sampling.rate` | `0.7` | Subsample fraction per tree (stochastic GBT). |
+| Property | Default | Description                                                            |
+|----------|---------|------------------------------------------------------------------------|
+| `smile.gbt.trees` | `500` | Number of boosting rounds.                                             |
+| `smile.gbt.loss` | `LeastSquares` | Loss function: `LeastSquares`, `LeastAbsoluteDeviation`, `Huber`.      |
+| `smile.gbt.shrinkage` | `0.05` | Learning rate. Smaller = more trees needed but better generalization. |
+| `smile.gbt.max.depth` | `5` | Maximum tree depth.                                                    |
+| `smile.gbt.node.size` | `5` | Minimum node size.                                                     |
+| `smile.gbt.sampling.rate` | `0.7` | Subsample fraction per tree (stochastic GBT).                          |
 
 **API.**
 
@@ -622,11 +622,11 @@ Regression<double[]>  model = SVM.fit(x, y, props);
 
 **`SVM.Options` record.**
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `eps` | `1.0` | Epsilon tube half-width. Smaller = tighter fit. |
-| `C` | `1.0` | Soft margin penalty. Larger = lower training error, less regularisation. |
-| `tol` | `1E-3` | SMO convergence tolerance. |
+| Parameter | Default | Description                                                               |
+|-----------|---------|---------------------------------------------------------------------------|
+| `eps` | `1.0` | Epsilon tube half-width. Smaller = tighter fit.                           |
+| `C` | `1.0` | Soft margin penalty. Larger = lower training error, less regularization. |
+| `tol` | `1E-3` | SMO convergence tolerance.                                                |
 
 ```java
 SVM.Options opts = new SVM.Options(0.5, 10.0);         // eps=0.5, C=10
@@ -709,7 +709,7 @@ via Subset of Regressors (SR) / Nyström for large datasets.
 GaussianProcessRegression<double[]> model =
         GaussianProcessRegression.fit(x, y, kernel, lambda);
 
-// Exact with kernel hyperparameter optimisation (BFGS)
+// Exact with kernel hyperparameter optimization (BFGS)
 GaussianProcessRegression<double[]> model =
         GaussianProcessRegression.fit(x, y, kernel, lambda, true);
 
@@ -725,10 +725,10 @@ GaussianProcessRegression<double[]> model =
 
 **Parameters.**
 
-| Parameter | Description |
-|-----------|-------------|
-| `kernel` | A `MercerKernel<T>` (e.g., `GaussianKernel`, `MaternKernel`). |
-| `lambda` | Noise variance σ² (regularisation). Must be > 0. |
+| Parameter | Description                                                                    |
+|-----------|--------------------------------------------------------------------------------|
+| `kernel` | A `MercerKernel<T>` (e.g., `GaussianKernel`, `MaternKernel`).                  |
+| `lambda` | Noise variance σ² (regularization). Must be > 0.                              |
 | `optimize` | If `true`, optimise kernel hyperparameters via marginal log-likelihood (BFGS). |
 
 **Prediction with uncertainty:**
@@ -806,13 +806,13 @@ MLP model = MLP.fit(x, y, props);
 
 **Options** (via `Properties`)
 
-| Property | Default | Description |
-|----------|---------|-------------|
-| `smile.mlp.learning.rate` | `0.01` | SGD learning rate. |
-| `smile.mlp.momentum` | `0.0` | Momentum coefficient. |
-| `smile.mlp.weight.decay` | `0.0` | L2 weight regularisation. |
+| Property | Default | Description                |
+|----------|---------|----------------------------|
+| `smile.mlp.learning.rate` | `0.01` | SGD learning rate.         |
+| `smile.mlp.momentum` | `0.0` | Momentum coefficient.      |
+| `smile.mlp.weight.decay` | `0.0` | L2 weight regularization. |
 | `smile.mlp.epochs` | `10` | Number of training epochs. |
-| `smile.mlp.mini.batch` | `32` | Mini-batch size. |
+| `smile.mlp.mini.batch` | `32` | Mini-batch size.           |
 
 **Online learning:**
 
@@ -887,7 +887,7 @@ Regression<?> loaded = (Regression<?>) Read.object(Path.of("model.ser"));
 ### Configuration via Properties
 
 Every algorithm with tunable hyperparameters exposes a `fit(…, Properties)` overload
-and a nested `Options` record with `toProperties()` / `of(Properties)` for serialisation:
+and a nested `Options` record with `toProperties()` / `of(Properties)` for serialization:
 
 ```java
 // Save configuration
@@ -923,7 +923,7 @@ if (model.online()) {
 
 ### Feature Scaling
 
-Scale-invariant models (trees, random forests, GBT) work well without normalisation.
+Scale-invariant models (trees, random forests, GBT) work well without normalization.
 Scale-sensitive models require it:
 
 | Scale-insensitive | Scale-sensitive (normalise first) |
@@ -932,7 +932,7 @@ Scale-sensitive models require it:
 | — | `SVM`, `GaussianProcessRegression`, `RBFNetwork`, `MLP` |
 
 ```java
-// Standardise columns in-place before fitting SVM
+// Standardize columns in-place before fitting SVM
 MathEx.standardize(x);
 Regression<double[]> model = SVM.fit(x, y, new SVM.Options(1.0, 10.0));
 ```
@@ -968,12 +968,12 @@ Regression<double[]> model = SVM.fit(x, y, new SVM.Options(1.0, 10.0));
 
 ### Gaussian Process: when to use exact vs approximate
 
-| n | Recommendation |
-|---|----------------|
-| n ≤ 1,000 | Exact GP; optimise kernel hyperparameters |
-| 1,000 < n ≤ 10,000 | Exact GP without hyperparameter optimisation |
+| n | Recommendation                                           |
+|---|----------------------------------------------------------|
+| n ≤ 1,000 | Exact GP; optimise kernel hyperparameters                |
+| 1,000 < n ≤ 10,000 | Exact GP without hyperparameter optimization            |
 | n > 10,000 | Subset of Regressors (SR) approximation; choose `m ≈ √n` |
-| n > 100,000 | Consider switching to GBT or MLP |
+| n > 100,000 | Consider switching to GBT or MLP                         |
 
 ### Inspecting GLM and OLS models programmatically
 
