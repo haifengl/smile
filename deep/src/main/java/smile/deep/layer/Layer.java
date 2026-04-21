@@ -300,6 +300,59 @@ public interface Layer extends Function<Tensor, Tensor> {
     }
 
     /**
+     * Returns a fully connected layer with ELU activation function.
+     * @param in the number of input features.
+     * @param out the number of output features.
+     * @return a fully connected layer.
+     */
+    static SequentialBlock elu(int in, int out) {
+        return new SequentialBlock(
+                new LinearLayer(in, out),
+                new ELU(1.0, true)
+        );
+    }
+
+    /**
+     * Returns a fully connected layer with ELU activation function.
+     * @param in the number of input features.
+     * @param out the number of output features.
+     * @param alpha the alpha value for the ELU formulation.
+     * @return a fully connected layer.
+     */
+    static SequentialBlock elu(int in, int out, double alpha) {
+        return new SequentialBlock(
+                new LinearLayer(in, out),
+                new ELU(alpha, true)
+        );
+    }
+
+    /**
+     * Returns a fully connected layer with Hard Swish activation function.
+     * @param in the number of input features.
+     * @param out the number of output features.
+     * @return a fully connected layer.
+     */
+    static SequentialBlock hardswish(int in, int out) {
+        return new SequentialBlock(
+                new LinearLayer(in, out),
+                new Hardswish(true)
+        );
+    }
+
+    /**
+     * Returns a fully connected layer with Mish activation function.
+     * @param in the number of input features.
+     * @param out the number of output features.
+     * @return a fully connected layer.
+     */
+    static SequentialBlock mish(int in, int out) {
+        return new SequentialBlock(
+                new LinearLayer(in, out),
+                new Mish(true)
+        );
+    }
+
+    /**
      * Returns a convolutional layer.
      * @param in the number of input channels.
      * @param out the number of output features.

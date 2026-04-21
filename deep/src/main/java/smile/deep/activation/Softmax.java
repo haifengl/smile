@@ -25,15 +25,28 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class Softmax extends ActivationFunction {
+    /** The dimension along which softmax is computed. */
+    final int dim;
+
     /**
-     * Constructor.
+     * Constructor. Computes softmax along dimension 1 (class dimension for
+     * 2-D batch × classes tensors).
      */
     public Softmax() {
+        this(1);
+    }
+
+    /**
+     * Constructor.
+     * @param dim the dimension along which softmax is computed.
+     */
+    public Softmax(int dim) {
         super("Softmax", false);
+        this.dim = dim;
     }
 
     @Override
     public Tensor forward(Tensor x) {
-        return new Tensor(torch.softmax(x.asTorch(), 1));
+        return new Tensor(torch.softmax(x.asTorch(), dim));
     }
 }

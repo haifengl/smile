@@ -21,7 +21,7 @@ import org.bytedeco.pytorch.global.torch;
 import smile.deep.tensor.Tensor;
 
 /**
- * Sigmoid Linear Unit activation function.
+ * Leaky Rectified Linear Unit activation function.
  *
  * @author Haifeng Li
  */
@@ -50,7 +50,7 @@ public class LeakyReLU extends ActivationFunction {
     @Override
     public Tensor forward(Tensor input) {
         var x = input.asTorch();
-        if (!module.is_training() && inplace) {
+        if (inplace) {
             torch.leaky_relu_(x, negativeSlope);
             return input;
         } else {

@@ -36,7 +36,7 @@ public class Sigmoid extends ActivationFunction {
     @Override
     public Tensor forward(Tensor input) {
         var x = input.asTorch();
-        if (!module.is_training() && inplace) {
+        if (inplace) {
             torch.sigmoid_(x);
             return input;
         } else {
