@@ -23,6 +23,8 @@ import java.util.stream.IntStream;
 import smile.math.MathEx;
 import smile.math.distance.EuclideanDistance;
 import smile.sort.QuickSort;
+import smile.tensor.ScalarType;
+import smile.tensor.Vector;
 import smile.util.AlgoStatus;
 
 /**
@@ -61,6 +63,152 @@ public class XMeans {
      * @param maxIter the maximum number of iterations for k-means.
      * @return the model.
      */
+    public static CentroidClustering<float[], float[]> fit(float[][] data, int kmax, int maxIter) {
+        return fit(data, new Clustering.Options(kmax, maxIter));
+    }
+
+    /**
+     * Clustering single-precision data with the number of clusters determined
+     * by X-Means algorithm automatically. A {@link BBDTree} backed by
+     * {@link ScalarType#Float32} vectors is used internally.
+     *
+     * @param data the input data of which each row is an observation.
+     * @param options the hyperparameters.
+     * @return the model.
+     */
+    public static CentroidClustering<float[], float[]> fit(float[][] data, Clustering.Options options) {
+        int kmax = options.k();
+        int maxIter = options.maxIter();
+        double tol = options.tol();
+        var controller = options.controller();
+        int n = data.length;
+        int d = data[0].length;
+
+        int[] group = new int[n];
+        double[] proximity = new double[n];
+        var vSum = IntStream.range(0, kmax)
+                .mapToObj(i -> Vector.zeros(ScalarType.Float32, d))
+                .toArray(Vector[]::new);
+        float[] mean = colMeans(data);
+        float[][] centroids = new float[kmax][];
+        int[] size = new int[kmax];
+        centroids[0] = mean;
+        size[0] = n;
+
+        double[] distortions = new double[kmax];
+        for (float[] row : data) {
+            distortions[0] += squaredDistanceF(row, mean);
+        }
+        distortions[0] /= n;
+
+        BBDTree bbd = new BBDTree(data);
+        ToDoubleBiFunction<float[], float[]> distance = (a, b) -> {
+            double sum = 0.0;
+            for (int i = 0; i < a.length; i++) { double diff = a[i] - b[i]; sum += diff * diff; }
+            return Math.sqrt(sum);
+        };
+        var kmeans = new ArrayList<CentroidClustering<float[], float[]>>(kmax);
+        ArrayList<float[]> centers = new ArrayList<>();
+
+        int k = 1;
+        while (k < kmax) {
+            kmeans.clear();
+            centers.clear();
+            double[] score = new double[k];
+
+            for (int i = 0; i < k; i++) {
+                int ni = size[i];
+                if (ni < 25) {
+                    logger.info("Cluster {} too small to split: {} observations", i, ni);
+                    score[i] = 0.0;
+                    kmeans.add(null);
+                    continue;
+                }
+
+                float[][] subset = new float[ni][];
+                for (int j = 0, l = 0; j < n; j++) {
+                    if (group[j] == i) subset[l++] = data[j];
+                }
+
+                var clustering = KMeans.fit(subset, new Clustering.Options(2, maxIter, tol, null));
+                kmeans.add(clustering);
+                double newBIC = bic(2, ni, d, clustering.distortion(), clustering.size());
+                double oldBIC = bic(ni, d, distortions[i]);
+                score[i] = newBIC - oldBIC;
+                logger.info("Cluster {} BIC: {}, BIC after split: {}, improvement: {}", i, oldBIC, newBIC, score[i]);
+            }
+
+            int[] index = QuickSort.sort(score);
+            for (int i = 0; i < k; i++) {
+                if (score[i] <= 0.0) centers.add(centroids[index[i]]);
+            }
+
+            int m = centers.size();
+            for (int i = k; --i >= 0;) {
+                if (score[i] > 0) {
+                    if (centers.size() + i - m + 1 < kmax) {
+                        logger.info("Split cluster {}", index[i]);
+                        centers.add(kmeans.get(index[i]).center(0));
+                        centers.add(kmeans.get(index[i]).center(1));
+                    } else {
+                        centers.add(centroids[index[i]]);
+                    }
+                }
+            }
+
+            if (centers.size() == k) {
+                logger.info("No more split. Finish with {} clusters", k);
+                break;
+            }
+
+            k = centers.size();
+            centers.toArray(centroids);
+
+            var vCentroids = new Vector[k];
+            for (int i = 0; i < k; i++) vCentroids[i] = Vector.column(centroids[i]);
+
+            double diff = Double.MAX_VALUE;
+            double distortion = Double.MAX_VALUE;
+            for (int iter = 1; iter <= maxIter && diff > tol; iter++) {
+                double wcss = bbd.clustering(k, vCentroids, vSum, size, group);
+                diff = distortion - wcss;
+                distortion = wcss;
+                logger.info("Iteration {}: {}-cluster distortion = {}", iter, k, distortion);
+            }
+
+            Arrays.fill(distortions, 0.0);
+            IntStream.range(0, k).parallel().forEach(cluster -> {
+                float[] centroid = centroids[cluster];
+                for (int i = 0; i < n; i++) {
+                    if (group[i] == cluster) {
+                        double dist = squaredDistanceF(data[i], centroid);
+                        proximity[i] = dist;
+                        distortions[cluster] += dist;
+                    }
+                }
+            });
+
+            for (int i = 0; i < k; i++) {
+                distortions[i] /= size[i];
+            }
+
+            if (controller != null) {
+                controller.submit(new AlgoStatus(k, distortions[k - 1]));
+                if (controller.isInterrupted()) break;
+            }
+        }
+
+        return new CentroidClustering<>("X-Means", Arrays.copyOf(centroids, k), distance, group, proximity);
+    }
+
+    /**
+     * Clustering data with the number of clusters
+     * determined by X-Means algorithm automatically.
+     * @param data the input data of which each row is an observation.
+     * @param kmax the maximum number of clusters.
+     * @param maxIter the maximum number of iterations for k-means.
+     * @return the model.
+     */
     public static CentroidClustering<double[], double[]> fit(double[][] data, int kmax, int maxIter) {
         return fit(data, new Clustering.Options(kmax, maxIter));
     }
@@ -82,7 +230,9 @@ public class XMeans {
 
         int[] group = new int[n];
         double[] proximity = new double[n];
-        double[][] sum = new double[kmax][d];
+        var vSum = IntStream.range(0, kmax)
+                .mapToObj(i -> Vector.zeros(ScalarType.Float64, d))
+                .toArray(Vector[]::new);
         double[] mean = MathEx.colMeans(data);
         double[][] centroids = new double[kmax][];
         int[] size = new int[kmax];
@@ -159,10 +309,14 @@ public class XMeans {
             k = centers.size();
             centers.toArray(centroids);
 
+            // Re-wrap centroids as Vector views (underlying double[] may have changed).
+            var vCentroids = new Vector[k];
+            for (int i = 0; i < k; i++) vCentroids[i] = Vector.column(centroids[i]);
+
             double diff = Double.MAX_VALUE;
             double distortion = Double.MAX_VALUE;
             for (int iter = 1; iter <= maxIter && diff > tol; iter++) {
-                double wcss = bbd.clustering(k, centroids, sum, size, group);
+                double wcss = bbd.clustering(k, vCentroids, vSum, size, group);
                 diff = distortion - wcss;
                 distortion = wcss;
                 logger.info("Iteration {}: {}-cluster distortion = {}", iter, k, distortion);
@@ -251,5 +405,33 @@ public class XMeans {
         double p4 = ni * Math.log(ni);
         double p5 = -ni * Math.log(n);
         return (p1 + p2 + p3) / 2 + p4 + p5;
+    }
+
+    /**
+     * Computes the column means of a single-precision matrix.
+     * @param data the input matrix.
+     * @return the column means as a {@code float[]}.
+     */
+    private static float[] colMeans(float[][] data) {
+        int n = data.length;
+        int d = data[0].length;
+        float[] mean = new float[d];
+        for (float[] row : data) {
+            for (int j = 0; j < d; j++) mean[j] += row[j];
+        }
+        for (int j = 0; j < d; j++) mean[j] /= n;
+        return mean;
+    }
+
+    /**
+     * Computes the squared Euclidean distance between two {@code float[]} vectors.
+     */
+    private static double squaredDistanceF(float[] a, float[] b) {
+        double sum = 0.0;
+        for (int i = 0; i < a.length; i++) {
+            double diff = a[i] - b[i];
+            sum += diff * diff;
+        }
+        return sum;
     }
 }

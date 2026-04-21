@@ -18,6 +18,7 @@ package smile.clustering;
 
 import smile.io.Read;
 import smile.io.Write;
+import smile.datasets.GaussianMixture;
 import smile.datasets.USPS;
 import smile.math.MathEx;
 import smile.validation.metric.*;
@@ -29,7 +30,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng
  */
 public class GMeansTest {
-    
     public GMeansTest() {
     }
 
@@ -48,6 +48,56 @@ public class GMeansTest {
     
     @AfterEach
     public void tearDown() {
+    }
+
+    @Test
+    @Tag("integration")
+    public void givenFloatGaussianMixture_whenFittingGMeans_thenReturnFloatCentroidsWithAcceptableQuality() {
+        System.out.println("GMeans float GaussianMixture");
+        GaussianMixture mixture = GaussianMixture.generate();
+        double[][] x = mixture.x();
+        int[] y = mixture.y();
+
+        // Given – convert double[][] mixture to float[][]
+        float[][] fx = new float[x.length][x[0].length];
+        for (int i = 0; i < x.length; i++)
+            for (int j = 0; j < x[0].length; j++)
+                fx[i][j] = (float) x[i][j];
+
+        // When
+        var model = GMeans.fit(fx, 10, 100);
+        System.out.println(model);
+
+        // Then – return type must be CentroidClustering<float[], float[]>
+        assertInstanceOf(float[].class, model.center(0));
+        assertTrue(model.k() >= 2, "Should find at least 2 clusters");
+        assertTrue(model.distortion() > 0.0);
+
+        double r = RandIndex.of(y, model.group());
+        double r2 = AdjustedRandIndex.of(y, model.group());
+        System.out.format("Float training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
+        assertTrue(r > 0.75, "Rand index should exceed 0.75");
+    }
+
+    @Test
+    public void givenFloatData_whenFittingGMeans_thenReturnFloatCentroidsAndDetectClusters() {
+        // Given – four distinct float clusters with enough points for the Anderson-Darling test
+        float[][] data = new float[100][2];
+        for (int i = 0; i < 25; i++) {
+            data[i]       = new float[]{(float)(0.0 + 0.01 * i), (float)(0.0 + 0.01 * i)};
+            data[25 + i]  = new float[]{(float)(5.0 + 0.01 * i), (float)(0.0 + 0.01 * i)};
+            data[50 + i]  = new float[]{(float)(0.0 + 0.01 * i), (float)(5.0 + 0.01 * i)};
+            data[75 + i]  = new float[]{(float)(5.0 + 0.01 * i), (float)(5.0 + 0.01 * i)};
+        }
+
+        // When
+        var model = GMeans.fit(data, 8, 100);
+
+        // Then
+        assertEquals("G-Means", model.name());
+        assertInstanceOf(float[].class, model.center(0));
+        assertTrue(model.k() >= 2, "Should find at least 2 clusters");
+        assertTrue(model.distortion() >= 0.0);
     }
 
     @Test
