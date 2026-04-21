@@ -89,7 +89,8 @@ public class SparseEncoder implements Function<Tuple, SparseArray> {
         for (int i = 0; i < columns.length; i++) {
             StructField field = schema.field(columns[i]);
             if (field.isNumeric()) {
-                features.append(base[i], x.getDouble(columns[i]));
+                double value = x.getDouble(columns[i]);
+                if (value != 0.0) features.append(base[i], value);
             } else if (field.measure() instanceof CategoricalMeasure) {
                 features.append(x.getInt(columns[i]) + base[i], 1);
             } else {

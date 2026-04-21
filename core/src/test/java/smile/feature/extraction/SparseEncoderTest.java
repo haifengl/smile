@@ -16,7 +16,12 @@
  */
 package smile.feature.extraction;
 
+import java.util.List;
 import smile.data.DataFrame;
+import smile.data.Tuple;
+import smile.data.type.DataTypes;
+import smile.data.type.StructField;
+import smile.data.type.StructType;
 import smile.datasets.Weather;
 import smile.util.SparseArray;
 import org.junit.jupiter.api.*;
@@ -48,5 +53,74 @@ public class SparseEncoderTest {
         assertEquals(71, features[13].get(3), 1E-7);
         assertEquals(91, features[13].get(4), 1E-7);
         assertEquals( 1, features[13].get(5), 1E-7);
+    }
+
+    @Test
+    public void testGivenZeroNumericValueWhenEncodingThenZeroIsOmittedFromSparseArray() {
+        // Given — a row where one numeric value is exactly 0.0
+        StructType schema = new StructType(
+                new StructField("a", DataTypes.DoubleType),
+                new StructField("b", DataTypes.DoubleType)
+        );
+        SparseEncoder encoder = new SparseEncoder(schema, "a", "b");
+
+        Tuple row = Tuple.of(schema, new Object[]{0.0, 3.5});
+
+        // When
+        SparseArray sparse = encoder.apply(row);
+
+        // Then — zero value for 'a' (index 0) is omitted; 'b' (index 1) is present
+        assertEquals(1, sparse.size());
+        assertEquals(3.5, sparse.get(1), 1E-12);
+    }
+
+    @Test
+    public void testGivenAllZeroNumericRowWhenEncodingThenSparseArrayIsEmpty() {
+        // Given
+        StructType schema = new StructType(
+                new StructField("x", DataTypes.DoubleType),
+                new StructField("y", DataTypes.DoubleType)
+        );
+        SparseEncoder encoder = new SparseEncoder(schema, "x", "y");
+        Tuple row = Tuple.of(schema, new Object[]{0.0, 0.0});
+
+        // When
+        SparseArray sparse = encoder.apply(row);
+
+        // Then
+        assertEquals(0, sparse.size());
+    }
+
+    @Test
+    public void testGivenUnsupportedColumnTypeWhenCreatingSparseEncoderThenExceptionIsThrown() {
+        // Given — a schema with a non-numeric, non-categorical String column
+        StructType schema = new StructType(
+                new StructField("text", DataTypes.StringType)
+        );
+
+        // When / Then — constructor should reject
+        assertThrows(IllegalArgumentException.class,
+                () -> new SparseEncoder(schema, "text"));
+    }
+
+    @Test
+    public void testGivenAutoDetectionWhenCreatingSparseEncoderThenNumericColumnsAreUsed() {
+        // Given
+        StructType schema = new StructType(
+                new StructField("a", DataTypes.DoubleType),
+                new StructField("b", DataTypes.DoubleType)
+        );
+        SparseEncoder encoder = new SparseEncoder(schema); // no columns arg
+
+        DataFrame data = DataFrame.of(schema, List.of(
+                Tuple.of(schema, new Object[]{1.0, 2.0})
+        ));
+
+        // When
+        SparseArray[] results = encoder.apply(data);
+
+        // Then
+        assertEquals(1, results.length);
+        assertEquals(2, results[0].size()); // both non-zero values present
     }
 }

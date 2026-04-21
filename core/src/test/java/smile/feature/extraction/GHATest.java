@@ -16,6 +16,12 @@
  */
 package smile.feature.extraction;
 
+import java.util.List;
+import smile.data.DataFrame;
+import smile.data.Tuple;
+import smile.data.type.DataTypes;
+import smile.data.type.StructField;
+import smile.data.type.StructType;
 import smile.datasets.USArrests;
 import smile.math.MathEx;
 import smile.util.function.TimeFunction;
@@ -113,5 +119,66 @@ public class GHATest {
         for (int i = 0; i < k; i++) {
             assertTrue(Math.abs(1.0- Math.abs(evdot[i])) < 0.1);
         }
+    }
+
+    @Test
+    public void testGivenWrongInputSizeWhenUpdatingGhaThenExceptionIsThrown() {
+        // Given
+        GHA gha = new GHA(4, 2, TimeFunction.constant(0.001));
+
+        // When / Then
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> gha.update(new double[]{1.0, 2.0, 3.0}));
+        assertTrue(ex.getMessage().contains("expected: 4"));
+    }
+
+    @Test
+    public void testGivenMatrixConstructorWhenUpdatingGhaThenProjectionShapeIsStable() {
+        // Given — start from a given weight matrix
+        double[][] w = {
+                {1.0, 0.0, 0.0, 0.0},
+                {0.0, 1.0, 0.0, 0.0}
+        };
+        GHA gha = new GHA(w, TimeFunction.constant(0.0001));
+
+        // When
+        double error = gha.update(new double[]{0.1, 0.2, 0.05, -0.1});
+
+        // Then
+        assertEquals(2, gha.projection.nrow());
+        assertEquals(4, gha.projection.ncol());
+        assertTrue(Double.isFinite(error));
+        assertTrue(error >= 0.0);
+    }
+
+    @Test
+    public void testGivenDataFrameWhenUpdatingGhaThenProjectionIsUpdated() {
+        // Given
+        StructType schema = new StructType(
+                new StructField("a", DataTypes.DoubleType),
+                new StructField("b", DataTypes.DoubleType),
+                new StructField("c", DataTypes.DoubleType)
+        );
+        DataFrame data = DataFrame.of(schema, List.of(
+                Tuple.of(schema, new Object[]{0.1, -0.2, 0.3}),
+                Tuple.of(schema, new Object[]{-0.1, 0.2, -0.3})
+        ));
+
+        GHA gha = new GHA(3, 2, TimeFunction.constant(0.001), "a", "b", "c");
+        int tBefore = gha.t;
+
+        // When
+        gha.update(data);
+
+        // Then — iteration counter should have advanced by the number of rows
+        assertEquals(tBefore + data.size(), gha.t);
+    }
+
+    @Test
+    public void testGivenInvalidDimensionsWhenConstructingGhaThenExceptionIsThrown() {
+        // When / Then
+        assertThrows(IllegalArgumentException.class, () -> new GHA(1, 1, TimeFunction.constant(0.001)));
+        assertThrows(IllegalArgumentException.class, () -> new GHA(4, 0, TimeFunction.constant(0.001)));
+        assertThrows(IllegalArgumentException.class, () -> new GHA(4, 5, TimeFunction.constant(0.001)));
     }
 }
