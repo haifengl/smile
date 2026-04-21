@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
+ *
+ * SMILE is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * SMILE is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
+ */
 package smile.feature.imputation;
 
 import java.util.Arrays;
@@ -25,7 +41,8 @@ import smile.neighbor.Neighbor;
  * similarity between it and instance A.
  *
  * @author Haifeng Li
- */public class KNNImputer implements Transform {
+ */
+public class KNNImputer implements Transform {
     /** The number of nearest neighbors used for imputation. */
     private final int k;
     /** K-nearest neighbor search algorithm. */
@@ -33,7 +50,7 @@ import smile.neighbor.Neighbor;
 
     /**
      * Constructor.
-     * @param data the map of column name to the constant value.
+     * @param data the training data used to build the nearest-neighbor index.
      * @param k the number of nearest neighbors used for imputation.
      * @param distance the distance measure.
      */
@@ -44,7 +61,7 @@ import smile.neighbor.Neighbor;
 
     /**
      * Constructor with Euclidean distance on selected columns.
-     * @param data the map of column name to the constant value.
+     * @param data the training data used to build the nearest-neighbor index.
      * @param k the number of nearest neighbors used for imputation.
      * @param columns the columns used in Euclidean distance computation.
      *                If empty, all columns will be used.
@@ -87,10 +104,9 @@ import smile.neighbor.Neighbor;
                                 Integer.MIN_VALUE);
                         return vector.length == 0 ? null : MathEx.mode(vector);
                     } else if (field.dtype().isNumeric()) {
-                        double[] vector = MathEx.omit(
+                        double[] vector = MathEx.omitNaN(
                                 Arrays.stream(neighbors)
-                                        .mapToDouble(neighbor -> neighbor.key().getDouble(i)).toArray(),
-                                Integer.MIN_VALUE);
+                                        .mapToDouble(neighbor -> neighbor.key().getDouble(i)).toArray());
                         return vector.length == 0 ? null : MathEx.mean(vector);
                     } else {
                         return null;

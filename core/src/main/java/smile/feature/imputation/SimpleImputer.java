@@ -157,7 +157,6 @@ public class SimpleImputer implements Transform {
                         Integer cell = (Integer) data.get(i, j);
                         vector[i] = cell == null ? x : cell;
                     }
-                    System.out.println("int = " + x);
                     vectors[j] = new IntVector(new StructField(field.name(), DataTypes.IntType, field.measure()), vector);
                 } else if (field.dtype() == DataTypes.NullableLongType) {
                     long x = ((Number) value).longValue();
@@ -287,7 +286,8 @@ public class SimpleImputer implements Transform {
                         }
                     }
 
-                    values.put(field.name(), sum/n);
+                    // Fall back to the median when no values fall within [lo, hi].
+                    values.put(field.name(), n > 0 ? sum / n : agent.quantile(0.5));
                 }
             }
         }
