@@ -53,10 +53,19 @@ class ImageClassification implements Transform {
      * @param hints the scaling hints.
      */
     public ImageClassification(int cropSize, int resizeSize, float[] mean, float[] std, int hints) {
+        if (cropSize <= 0) throw new IllegalArgumentException("cropSize must be positive: " + cropSize);
+        if (resizeSize <= 0) throw new IllegalArgumentException("resizeSize must be positive: " + resizeSize);
+        if (cropSize > resizeSize) throw new IllegalArgumentException(
+                "cropSize (" + cropSize + ") must not exceed resizeSize (" + resizeSize + ")");
+        if (mean == null || mean.length != 3) throw new IllegalArgumentException("mean must have exactly 3 elements");
+        if (std == null || std.length != 3) throw new IllegalArgumentException("std must have exactly 3 elements");
+        for (int c = 0; c < 3; c++) {
+            if (std[c] == 0.0f) throw new IllegalArgumentException("std[" + c + "] must not be zero");
+        }
         this.cropSize = cropSize;
         this.resizeSize = resizeSize;
-        this.mean = mean;
-        this.std = std;
+        this.mean = mean.clone();
+        this.std = std.clone();
         this.hints = hints;
     }
 
