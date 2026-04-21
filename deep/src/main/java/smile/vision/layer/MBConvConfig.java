@@ -37,6 +37,19 @@ public record MBConvConfig(double expandRatio,
                            String block) {
 
     /**
+     * Compact canonical constructor that validates all fields.
+     */
+    public MBConvConfig {
+        if (expandRatio <= 0) throw new IllegalArgumentException("expandRatio must be positive: " + expandRatio);
+        if (kernel <= 0) throw new IllegalArgumentException("kernel must be positive: " + kernel);
+        if (stride <= 0) throw new IllegalArgumentException("stride must be positive: " + stride);
+        if (inputChannels <= 0) throw new IllegalArgumentException("inputChannels must be positive: " + inputChannels);
+        if (outputChannels <= 0) throw new IllegalArgumentException("outputChannels must be positive: " + outputChannels);
+        if (numLayers <= 0) throw new IllegalArgumentException("numLayers must be positive: " + numLayers);
+        if (!"MBConv".equals(block) && !"FusedMBConv".equals(block))
+            throw new IllegalArgumentException("block must be 'MBConv' or 'FusedMBConv': " + block);
+    }
+    /**
      * Returns the config for MBConv block.
      * @param expandRatio the number of output channels of the first layer
      *                   in each block is input channels times expansion ratio.
@@ -100,6 +113,33 @@ public record MBConvConfig(double expandRatio,
                                            int inputChannels,
                                            int outputChannels,
                                            int numLayers) {
+        return new MBConvConfig(expandRatio, kernel, stride, inputChannels, outputChannels, numLayers, "FusedMBConv");
+    }
+
+    /**
+     * Returns the config for Fused-MBConv block.
+     * @param expandRatio the number of output channels of the first layer
+     *                   in each block is input channels times expansion ratio.
+     * @param kernel the window size.
+     * @param stride controls the stride for the cross-correlation.
+     * @param inputChannels the number of input channels.
+     * @param outputChannels the number of output channels.
+     * @param numLayers the number of layers.
+     * @param widthMultiplier the multiplier to scale input/output channels.
+     * @param depthMultiplier the multiplier to scale number of layers.
+     * @return the config for Fused-MBConv block.
+     */
+    public static MBConvConfig FusedMBConv(double expandRatio,
+                                           int kernel,
+                                           int stride,
+                                           int inputChannels,
+                                           int outputChannels,
+                                           int numLayers,
+                                           double widthMultiplier,
+                                           double depthMultiplier) {
+        inputChannels = adjustChannels(inputChannels, widthMultiplier);
+        outputChannels = adjustChannels(outputChannels, widthMultiplier);
+        numLayers = adjustDepth(numLayers, depthMultiplier);
         return new MBConvConfig(expandRatio, kernel, stride, inputChannels, outputChannels, numLayers, "FusedMBConv");
     }
 

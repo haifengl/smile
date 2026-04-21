@@ -54,6 +54,10 @@ public class Conv2dNormActivation extends SequentialBlock {
 
         /** Constructor. */
         public Options {
+            if (kernel <= 0) throw new IllegalArgumentException("kernel must be positive: " + kernel);
+            if (stride <= 0) throw new IllegalArgumentException("stride must be positive: " + stride);
+            if (in <= 0) throw new IllegalArgumentException("in channels must be positive: " + in);
+            if (out <= 0) throw new IllegalArgumentException("out channels must be positive: " + out);
             if (padding < 0) {
                 padding = (kernel - 1) / 2 * dilation;
             }
