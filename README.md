@@ -1,11 +1,12 @@
 # Statistical Machine Intelligence & Learning Engine <img align="left" width="40" src="/website/src/images/smile.jpg" alt="SMILE">
 [![Maven Central](https://img.shields.io/maven-central/v/com.github.haifengl/smile-core)](https://central.sonatype.com/artifact/com.github.haifengl/smile-core)
 
-SMILE (Statistical Machine Intelligence & Learning Engine) is a high performance and comprehensive
-machine learning framework for the JVM. SMILE v5+ requires **Java 25**; v4.x requires
-Java 21; all previous versions require Java 8.  SMILE also provides idiomatic APIs for
-**Scala** and **Kotlin**.  With advanced data structures and algorithms, SMILE delivers
-state-of-the-art performance across every aspect of machine learning.
+SMILE (Statistical Machine Intelligence & Learning Engine) is a comprehensive,
+high-performance machine learning framework for the JVM. SMILE v5+ requires
+**Java 25**; v4.x requires Java 21; all previous versions require Java 8.
+SMILE also provides idiomatic APIs for **Scala** and **Kotlin**.
+With advanced data structures and algorithms, SMILE delivers state-of-the-art
+performance across every aspect of machine learning.
 
 ---
 
@@ -315,8 +316,8 @@ Other entry points:
 | `./smile`         | Desktop notebook IDE |
 | `./smile shell`   | Java REPL with all SMILE packages pre-imported |
 | `./smile scala`   | Scala REPL |
-| `./smile train`   | **Train** a supervised learning model     |
-| `./smile predict` | **Predict** on a file using a saved model             |
+| `./smile train`   | Train a supervised learning model     |
+| `./smile predict` | Predict on a file using a saved model             |
 | `./smile serve`   | Start the LLM inference server |
 
 To increase the JVM heap:
