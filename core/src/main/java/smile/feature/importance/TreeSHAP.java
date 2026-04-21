@@ -45,6 +45,9 @@ public interface TreeSHAP extends SHAP<Tuple> {
     @Override
     default double[] shap(Tuple x) {
         CART[] forest = trees();
+        if (forest == null || forest.length == 0) {
+            throw new IllegalStateException("TreeSHAP: the forest contains no trees.");
+        }
         Tuple xt = formula().x(x);
 
         double[] phi = forest[0].shap(xt);

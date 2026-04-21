@@ -66,17 +66,19 @@ public interface SHAP<T> {
 
     /**
      * Returns the average of absolute SHAP values over a data set.
+     * Returns an empty array when the stream contains no instances.
      * @param data the data set.
      * @return the average of absolute SHAP values over a data set.
      */
     default double[] shap(Stream<? extends T> data) {
-        return smile.math.MathEx.colMeans(
-                data.map(x -> {
-                    double[] values = shap(x);
-                    for (int i = 0; i < values.length; i++)
-                        values[i] = Math.abs(values[i]);
-                    return values;
-                }).toArray(double[][]::new)
-        );
+        double[][] matrix = data.map(x -> {
+            double[] values = shap(x).clone();
+            for (int i = 0; i < values.length; i++)
+                values[i] = Math.abs(values[i]);
+            return values;
+        }).toArray(double[][]::new);
+
+        if (matrix.length == 0) return new double[0];
+        return smile.math.MathEx.colMeans(matrix);
     }
 }
