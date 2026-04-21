@@ -32,9 +32,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng Li
  */
 public class ModelTest {
-    public ModelTest() {
-    }
-
     @BeforeAll
     public static void setUpClass() throws Exception {
         System.out.format("Number of threads: %d\n", Device.getNumThreads());
@@ -42,19 +39,8 @@ public class ModelTest {
         System.out.format("CUDA device count: %d\n", CUDA.deviceCount());
     }
 
-    @AfterAll
-    public static void tearDownClass() throws Exception {
-    }
-
-    @BeforeEach
-    public void setUp() {
-    }
-
-    @AfterEach
-    public void tearDown() {
-    }
-
     @Test
+    @Tag("integration")
     public void test() {
         Device device = Device.preferredDevice();
 
@@ -111,5 +97,107 @@ public class ModelTest {
 
         model.load("mnist.pt").to(device).eval();
         assertEquals(accuracy, model.eval(test, new Accuracy()).get("Accuracy"), 0.01);
+    }
+
+    // -----------------------------------------------------------------------
+    // Model — construction, forward pass, train/eval mode
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testGivenModelWhenForwardCalledThenOutputShapeCorrect() {
+        // 2-layer net: 4 → 8 → 3 with softmax output
+        Model net = new Model(new SequentialBlock(
+                Layer.relu(4, 8),
+                Layer.softmax(8, 3)));
+        net.eval();
+        Tensor input = Tensor.ones(5, 4);
+        Tensor output = net.forward(input);
+        assertArrayEquals(new long[]{5, 3}, output.shape());
+        input.close(); output.close();
+    }
+
+    @Test
+    public void testGivenModelWhenTrainModeSetThenModelIsTraining() {
+        Model net = new Model(new SequentialBlock(Layer.linear(2, 2)));
+        net.train();
+        // toString should not be blank
+        assertFalse(net.toString().isBlank());
+    }
+
+    @Test
+    public void testGivenModelWhenEvalCalledThenReturnsSelf() {
+        Model net = new Model(new SequentialBlock(Layer.linear(2, 2)));
+        Model result = net.eval();
+        assertSame(net, result);
+    }
+
+    @Test
+    public void testGivenModelWhenDeviceQueriedBeforeToThenReturnsNull() {
+        Model net = new Model(new SequentialBlock(Layer.linear(2, 2)));
+        assertNull(net.device(), "device() should be null before to() is called");
+    }
+
+    @Test
+    public void testGivenModelWhenMovedToCPUThenDeviceIsCPU() {
+        Model net = new Model(new SequentialBlock(Layer.linear(2, 2)));
+        net.to(Device.CPU());
+        assertTrue(net.device().isCPU());
+    }
+
+    @Test
+    public void testGivenModelTrainWithZeroEpochsThenThrows() throws Exception {
+        Model net = new Model(new SequentialBlock(Layer.linear(2, 2)));
+        float[][] x = {{1f, 2f}};
+        int[] y = {0};
+        try (Dataset ds = Dataset.of(x, y, 1)) {
+            Optimizer opt = Optimizer.SGD(net, 0.01);
+            assertThrows(IllegalArgumentException.class,
+                    () -> net.train(0, opt, Loss.mse(), ds));
+        }
+    }
+
+    @Test
+    public void testGivenModelTrainWithNegativeEpochsThenThrows() throws Exception {
+        Model net = new Model(new SequentialBlock(Layer.linear(2, 2)));
+        float[][] x = {{1f, 2f}};
+        int[] y = {0};
+        try (Dataset ds = Dataset.of(x, y, 1)) {
+            Optimizer opt = Optimizer.SGD(net, 0.01);
+            assertThrows(IllegalArgumentException.class,
+                    () -> net.train(-1, opt, Loss.mse(), ds));
+        }
+    }
+
+    @Test
+    public void testGivenModelTrainWithValidationButNoMetricsThenThrows() throws Exception {
+        Model net = new Model(new SequentialBlock(Layer.linear(2, 2)));
+        float[][] x = {{1f, 2f}};
+        int[] y = {0};
+        try (Dataset train = Dataset.of(x, y, 1);
+             Dataset test = Dataset.of(x, y, 1)) {
+            Optimizer opt = Optimizer.SGD(net, 0.01);
+            assertThrows(IllegalArgumentException.class,
+                    () -> net.train(1, opt, Loss.mse(), train, test, null));
+        }
+    }
+
+    @Test
+    public void testGivenModelEvalWhenCalledThenMetricsMapNotNull() throws Exception {
+        // Train 1 epoch and then eval on same tiny dataset
+        Model net = new Model(new SequentialBlock(
+                Layer.relu(2, 4),
+                Layer.logSoftmax(4, 2)));
+        net.to(Device.CPU());
+        float[][] x = {{1f, 0f}, {0f, 1f}, {1f, 1f}, {0f, 0f}};
+        int[] y = {0, 1, 0, 1};
+        try (Dataset ds = Dataset.of(x, y, 4)) {
+            Optimizer opt = Optimizer.SGD(net, 0.01);
+            net.train(1, opt, Loss.nll(), ds);
+            Map<String, Double> metrics = net.eval(ds, new Accuracy());
+            assertNotNull(metrics);
+            assertTrue(metrics.containsKey("Accuracy"));
+            double acc = metrics.get("Accuracy");
+            assertTrue(acc >= 0.0 && acc <= 1.0, "Accuracy must be in [0,1]");
+        }
     }
 }

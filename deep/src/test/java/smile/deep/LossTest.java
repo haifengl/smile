@@ -70,18 +70,14 @@ public class LossTest {
 
     @Test
     public void testGivenHuberLossWithDeltaWhenAppliedThenDifferentFromDefault() {
-        // With a very large delta, huber loss ≈ MSE.
-        // With delta=0.1, it switches to L1 earlier.
+        // Use error = 2.0 so the two deltas produce different formulas:
+        //   delta=1.0 → L1 branch: 1.0*(2.0 - 0.5*1.0) = 1.5
+        //   delta=10.0 → quadratic branch: 0.5*(2.0²)/10.0 = 0.2  (PyTorch normalises by delta)
         // The key check is that delta is actually passed through (not ignored).
-        float[] vals = {0.0f, 0.5f, 1.0f};
-        Tensor input   = floatTensor(vals);
-        Tensor target  = floatTensor(0.0f, 0.0f, 0.0f);
-        Tensor huber1  = Loss.huber(1.0).apply(input, target);  // default delta=1
-        Tensor huber10 = Loss.huber(10.0).apply(input, target); // large delta → more quadratic
-        // For elements < delta, huber is 0.5*x²; for elements >= delta, it's delta*(|x|-0.5*delta).
-        // With delta=10: all elements < 10, so result is purely quadratic (same as MSE/2).
-        // With delta=1: element 1.0 is exactly at the boundary.
-        // We just check both are finite and different.
+        Tensor input   = floatTensor(2.0f);
+        Tensor target  = floatTensor(0.0f);
+        Tensor huber1  = Loss.huber(1.0).apply(input, target);
+        Tensor huber10 = Loss.huber(10.0).apply(input, target);
         assertTrue(Double.isFinite(huber1.doubleValue()));
         assertTrue(Double.isFinite(huber10.doubleValue()));
         assertNotEquals(huber1.doubleValue(), huber10.doubleValue(), 1e-9,
@@ -116,6 +112,58 @@ public class LossTest {
         assertTrue(Double.isFinite(loss.doubleValue()), "kl loss must be finite");
         input.close(); target.close(); loss.close();
     }
-}
 
+    // -----------------------------------------------------------------------
+    // Loss — crossEntropy and marginRanking
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testGivenCrossEntropyLossWhenAppliedThenReturnsFinitePositiveScalar() {
+        Tensor input  = Tensor.of(new float[]{2f, 1f, 0.1f, 0.1f, 2f, 0.1f}, 2, 3);
+        Tensor target = Tensor.of(new long[]{0L, 1L}, 2L);
+        Tensor loss   = Loss.crossEntropy().apply(input, target);
+        assertEquals(0, loss.dim(), "cross-entropy loss must be a scalar");
+        assertTrue(loss.doubleValue() > 0, "cross-entropy loss must be positive");
+        input.close(); target.close(); loss.close();
+    }
+
+    @Test
+    public void testGivenNllLossWhenAppliedThenReturnsFiniteScalar() {
+        // nll_loss expects log-probabilities; use raw log-prob values directly
+        Tensor input  = Tensor.of(new float[]{-0.5f, -1.3f, -0.9f, -1.2f, -0.4f, -1.1f}, 2, 3);
+        Tensor target = Tensor.of(new long[]{0L, 2L}, 2L);
+        Tensor loss   = Loss.nll().apply(input, target);
+        assertTrue(Double.isFinite(loss.doubleValue()), "nll loss must be finite");
+        input.close(); target.close(); loss.close();
+    }
+
+    @Test
+    public void testGivenHingeEmbeddingLossWhenAppliedThenReturnsFiniteValue() {
+        Tensor input  = Tensor.of(new float[]{0.5f, -0.5f}, 2);
+        Tensor target = Tensor.of(new float[]{1f, -1f}, 2);
+        Tensor loss   = Loss.hingeEmbedding().apply(input, target);
+        assertTrue(Double.isFinite(loss.doubleValue()));
+        input.close(); target.close(); loss.close();
+    }
+
+    @Test
+    public void testGivenMarginRankingLossWhenAppliedThenReturnsFiniteValue() {
+        Tensor a      = Tensor.of(new float[]{1f}, 1);
+        Tensor b      = Tensor.of(new float[]{-1f}, 1);
+        Tensor target = Tensor.of(new float[]{1f}, 1);  // a should rank higher
+        Tensor loss   = Loss.marginRanking(a, b, target);
+        assertTrue(Double.isFinite(loss.doubleValue()));
+        a.close(); b.close(); target.close(); loss.close();
+    }
+
+    @Test
+    public void testGivenTripleMarginRankingLossWhenAppliedThenReturnsFiniteValue() {
+        Tensor anchor   = Tensor.of(new float[]{0f, 1f}, 2);
+        Tensor positive = Tensor.of(new float[]{0f, 1f}, 2);
+        Tensor negative = Tensor.of(new float[]{1f, 0f}, 2);
+        Tensor loss = Loss.tripleMarginRanking(anchor, positive, negative);
+        assertTrue(Double.isFinite(loss.doubleValue()));
+        anchor.close(); positive.close(); negative.close(); loss.close();
+    }
+}
 

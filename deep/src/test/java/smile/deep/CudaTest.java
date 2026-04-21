@@ -16,29 +16,32 @@
  */
 package smile.deep;
 
-import smile.deep.tensor.*;
+import smile.deep.tensor.Device;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * A mini-batch dataset consists of data and an associated target (label).
- *
- * @param data The data samples.
- * @param target The sample labels.
+ * Unit tests for {@link CUDA}.
  *
  * @author Haifeng Li
  */
-public record SampleBatch(Tensor data, Tensor target) implements AutoCloseable {
-    /**
-     * Constructor.
-     * @param data the data samples.
-     * @param target the sample labels.
-     */
-    SampleBatch(org.bytedeco.pytorch.Tensor data, org.bytedeco.pytorch.Tensor target) {
-        this(new Tensor(data), new Tensor(target));
+public class CudaTest {
+    @Test
+    public void testGivenCUDAWhenIsAvailableCalledThenDoesNotThrow() {
+        // isAvailable() may return true or false depending on the hardware,
+        // but it must not throw.
+        assertDoesNotThrow(CUDA::isAvailable);
     }
 
-    @Override
-    public void close() {
-        data.close();
-        target.close();
+    @Test
+    public void testGivenCUDAWhenDeviceCountCalledThenNonNegative() {
+        assertTrue(CUDA.deviceCount() >= 0);
+    }
+
+    @Test
+    public void testGivenCUDAWhenCPUDeviceRequestedThenReturnsCPUDevice() {
+        Device d = Device.CPU();
+        assertTrue(d.isCPU());
     }
 }
+
