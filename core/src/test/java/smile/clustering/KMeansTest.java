@@ -30,9 +30,9 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng Li
  */
 public class KMeansTest {
-    GaussianMixture mixture = GaussianMixture.generate();
-    double[][] x = mixture.x();
-    int[] y = mixture.y();
+    static GaussianMixture mixture = GaussianMixture.generate();
+    static double[][] x = mixture.x();
+    static int[] y = mixture.y();
 
     public KMeansTest() {
 

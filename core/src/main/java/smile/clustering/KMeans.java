@@ -17,9 +17,9 @@
 package smile.clustering;
 
 import java.util.Arrays;
-import java.util.function.ToDoubleBiFunction;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
+import smile.math.distance.Distance;
 import smile.math.distance.EuclideanDistance;
 import smile.tensor.ScalarType;
 import smile.tensor.Vector;
@@ -131,11 +131,7 @@ public class KMeans {
         int n = data.length;
         int d = data[0].length;
 
-        ToDoubleBiFunction<float[], float[]> distance = (a, b) -> {
-            double sum = 0.0;
-            for (int i = 0; i < a.length; i++) { double diff = a[i] - b[i]; sum += diff * diff; }
-            return Math.sqrt(sum);
-        };
+        Distance<float[]> distance = MathEx::distance;
         var clustering = CentroidClustering.init("K-Means", data, k, distance);
         double distortion = clustering.distortion();
         logger.info("Initial distortion = {}", distortion);
@@ -215,7 +211,7 @@ public class KMeans {
         int n = data.length;
         int d = data[0].length;
 
-        ToDoubleBiFunction<double[], double[]> distance = new EuclideanDistance();
+        Distance<double[]> distance = new EuclideanDistance();
         var clustering = CentroidClustering.init("K-Means", data, k, distance);
         double distortion = clustering.distortion();
         logger.info("Initial distortion = {}", distortion);
@@ -284,7 +280,7 @@ public class KMeans {
         int n = data.length;
         int d = data[0].length;
 
-        ToDoubleBiFunction<double[], double[]> distance = MathEx::distanceWithMissingValues;
+        Distance<double[]> distance = MathEx::distanceWithMissingValues;
         var clustering = CentroidClustering.init("K-Means", data, k, distance);
         double distortion = clustering.distortion();
         logger.info("Initial distortion = {}", distortion);

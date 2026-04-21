@@ -18,10 +18,9 @@ package smile.clustering;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.function.ToDoubleBiFunction;
 import java.util.stream.IntStream;
-
 import smile.math.MathEx;
+import smile.math.distance.Distance;
 import smile.math.distance.EuclideanDistance;
 import smile.sort.QuickSort;
 import smile.stat.distribution.GaussianDistribution;
@@ -96,11 +95,7 @@ public class GMeans {
         size[0] = n;
 
         BBDTree bbd = new BBDTree(data);
-        ToDoubleBiFunction<float[], float[]> distance = (a, b) -> {
-            double sum = 0.0;
-            for (int i = 0; i < a.length; i++) { double diff = a[i] - b[i]; sum += diff * diff; }
-            return Math.sqrt(sum);
-        };
+        Distance<float[]> distance = MathEx::distance;
         var kmeans = new ArrayList<CentroidClustering<float[], float[]>>(kmax);
         ArrayList<float[]> centers = new ArrayList<>();
 
@@ -336,7 +331,7 @@ public class GMeans {
             }
         });
 
-        ToDoubleBiFunction<double[], double[]> distance = new EuclideanDistance();
+        Distance<double[]> distance = new EuclideanDistance();
         return new CentroidClustering<>("G-Means", Arrays.copyOf(centroids, k), distance, group, proximity);
     }
     
