@@ -35,7 +35,7 @@ import static smile.deep.tensor.Index.*;
 public class PositionalEncoding implements Layer {
     private final Module module = new Module("PositionalEncoding");
     /** The positional encoding tensor. */
-    private final Tensor pe;
+    private Tensor pe;
 
     /**
      * Constructor.
@@ -53,12 +53,15 @@ public class PositionalEncoding implements Layer {
      * @param theta the scaling factor for frequency computation.
      */
     public PositionalEncoding(int dim, int end, double theta) {
-        try (Tensor position = Tensor.arange(0, end,1).to(ScalarType.Float32).unsqueeze(1);
-             Tensor divTerm = Tensor.arange(0, dim, 2).to(ScalarType.Float32).mul_(-Math.log(theta) / dim).exp_()) {
-            position.mul_(divTerm);
+        try (Tensor position = Tensor.arange(0, end, 1).to(ScalarType.Float32).unsqueeze(1);
+             Tensor divTerm = Tensor.arange(0, dim, 2).to(ScalarType.Float32).mul_(-Math.log(theta) / dim).exp_();
+             Tensor angles  = position.mul(divTerm)) {
             pe = Tensor.zeros(end, dim);
-            pe.put_(position.sin(), Colon, slice(0, null, 2));
-            pe.put_(position.cos(), Colon, slice(1, null, 2));
+            try (Tensor sinVal = angles.sin();
+                 Tensor cosVal = angles.cos()) {
+                pe.put_(sinVal, Colon, slice(0, null, 2));
+                pe.put_(cosVal, Colon, slice(1, null, 2));
+            }
             pe.setRequireGrad(false);
             module.register_buffer("pe", pe.asTorch());
         }
@@ -82,7 +85,10 @@ public class PositionalEncoding implements Layer {
      * @return this encoder.
      */
     public PositionalEncoding to(Device device) {
-        pe.to(device);
+        Tensor newPe = pe.to(device);
+        module.register_buffer("pe", newPe.asTorch());
+        pe.close();
+        pe = newPe;
         return this;
     }
 }

@@ -89,8 +89,9 @@ public interface RotaryPositionalEncoding {
             // reference — so we must NOT assign freqs into the try-resources again
             // to avoid a double-close on f.
             Tensor freqs = scaling ? scale(f) : f;
-            try (Tensor tfreqs = t.outer(freqs)) {
-                return Tensor.polar(freqs.newOnes(), tfreqs); // complex64
+            try (Tensor tfreqs = t.outer(freqs);
+                 Tensor ones = freqs.newOnes()) {
+                return Tensor.polar(ones, tfreqs); // complex64
             }
         }
     }

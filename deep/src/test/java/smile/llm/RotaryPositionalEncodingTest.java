@@ -144,4 +144,72 @@ public class RotaryPositionalEncodingTest {
         xq.close(); xk.close(); cis.close();
         out._1().close(); out._2().close();
     }
+
+    // -----------------------------------------------------------------------
+    // additional coverage
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testGivenComputeFreqCisDefaultThetaWhenCalledThenProducesCorrectShape() {
+        // The 2-arg overload uses theta=10000
+        var cis = RotaryPositionalEncoding.computeFreqCis(16, 32);
+        assertArrayEquals(new long[]{32, 8}, cis.shape(),
+                "computeFreqCis(dim, end) shape should be [end, dim/2]");
+        cis.close();
+    }
+
+    @Test
+    public void testGivenComputeFreqCisWhenPositionZeroThenMagnitudeIsOne() {
+        // At position 0 all angles are 0, so cos=1, sin=0 → magnitude=1
+        var cis = RotaryPositionalEncoding.computeFreqCis(8, 4, 10000.0, false);
+        var real = cis.viewAsReal();
+        for (int d = 0; d < 4; d++) {
+            assertEquals(1.0f, real.getFloat(0, d, 0), 1e-4f,
+                    "cos at pos=0 should be 1 for dim " + d);
+            assertEquals(0.0f, real.getFloat(0, d, 1), 1e-4f,
+                    "sin at pos=0 should be 0 for dim " + d);
+        }
+        cis.close();
+    }
+
+    @Test
+    public void testGivenApplyWhenInputIsFloat32ThenOutputIsFloat32() {
+        int batchSize = 2, seqLen = 4, numHeads = 2, headDim = 8;
+        Tensor xq  = Tensor.randn(batchSize, seqLen, numHeads, headDim);
+        Tensor xk  = Tensor.randn(batchSize, seqLen, numHeads, headDim);
+        Tensor cis = RotaryPositionalEncoding.computeFreqCis(headDim, seqLen, 10000.0, false);
+
+        var out = RotaryPositionalEncoding.apply(xq, xk, cis);
+        assertEquals(smile.deep.tensor.ScalarType.Float32, out._1().dtype());
+        assertEquals(smile.deep.tensor.ScalarType.Float32, out._2().dtype());
+        assertArrayEquals(xq.shape(), out._1().shape());
+        assertArrayEquals(xk.shape(), out._2().shape());
+        xq.close(); xk.close(); cis.close();
+        out._1().close(); out._2().close();
+    }
+
+    @Test
+    public void testGivenApplyWithScaledRopeWhenCalledThenOutputShapePreserved() {
+        int batchSize = 1, seqLen = 3, numHeads = 2, headDim = 8;
+        Tensor xq  = Tensor.randn(batchSize, seqLen, numHeads, headDim);
+        Tensor xk  = Tensor.randn(batchSize, seqLen, numHeads, headDim);
+        Tensor cis = RotaryPositionalEncoding.computeFreqCis(headDim, seqLen, 500000.0, true);
+
+        var out = RotaryPositionalEncoding.apply(xq, xk, cis);
+        assertArrayEquals(xq.shape(), out._1().shape());
+        assertArrayEquals(xk.shape(), out._2().shape());
+        xq.close(); xk.close(); cis.close();
+        out._1().close(); out._2().close();
+    }
+
+    @Test
+    public void testGivenReshapeForBroadcastWhen3DInputThenSeqAndLastDimPreserved() {
+        // 3-D case: cis [seqlen, headDim/2], x [batch, seqlen, headDim/2]
+        Tensor cis = Tensor.rand(6, 4);
+        Tensor x   = Tensor.rand(2, 6, 4);
+        Tensor out = RotaryPositionalEncoding.reshapeForBroadcast(cis, x);
+        // dim=3 → shape [1, seqlen=6, headDim/2=4]
+        assertArrayEquals(new long[]{1, 6, 4}, out.shape());
+        cis.close(); x.close();
+    }
 }
