@@ -302,7 +302,7 @@ try (var opts = new SessionOptions()) {
     opts.setIntraOpNumThreads(4);   // parallelism within one operator
     opts.setInterOpNumThreads(2);   // parallelism across independent operators
 
-    // Graph optimisation (higher = faster inference, slower first load)
+    // Graph optimization (higher = faster inference, slower first load)
     opts.setGraphOptimizationLevel(GraphOptimizationLevel.ENABLE_ALL);
 
     // Save the optimized graph to disk for faster future loads
@@ -335,20 +335,20 @@ try (var opts = new SessionOptions()) {
 
 #### GraphOptimizationLevel
 
-| Level | Description |
-|---|---|
-| `DISABLE_ALL` | No optimisations; useful for debugging |
-| `ENABLE_BASIC` | Constant folding, redundant node elimination |
-| `ENABLE_EXTENDED` | Complex operator fusions |
-| `ENABLE_LAYOUT` | Memory layout transformations |
-| `ENABLE_ALL` | All optimisations (recommended for production) |
+| Level | Description                                     |
+|---|-------------------------------------------------|
+| `DISABLE_ALL` | No optimizations; useful for debugging          |
+| `ENABLE_BASIC` | Constant folding, redundant node elimination    |
+| `ENABLE_EXTENDED` | Complex operator fusions                        |
+| `ENABLE_LAYOUT` | Memory layout transformations                   |
+| `ENABLE_ALL` | All optimizations (recommended for production) |
 
 #### ExecutionMode
 
-| Mode | When to use |
-|---|---|
-| `SEQUENTIAL` | Low-latency single-request serving (default) |
-| `PARALLEL` | High-throughput batch workloads with parallelisable subgraphs |
+| Mode | When to use                                                    |
+|---|----------------------------------------------------------------|
+| `SEQUENTIAL` | Low-latency single-request serving (default)                   |
+| `PARALLEL` | High-throughput batch workloads with parallelizable subgraphs |
 
 ---
 
@@ -1137,12 +1137,12 @@ public class CancellableInferenceExample {
 |---|-------------------------------------|
 | `setIntraOpNumThreads(int)` | Threads per operator (0 = auto)     |
 | `setInterOpNumThreads(int)` | Threads across operators (0 = auto) |
-| `setGraphOptimizationLevel(GraphOptimizationLevel)` | Optimisation depth                  |
+| `setGraphOptimizationLevel(GraphOptimizationLevel)` | Optimization depth                 |
 | `setExecutionMode(ExecutionMode)` | SEQUENTIAL or PARALLEL              |
 | `setLogId(String)` | Session log identifier              |
 | `setLogSeverityLevel(LoggingLevel)` | Minimum log severity                |
 | `setLogVerbosityLevel(int)` | Verbosity (0 = default)             |
-| `setOptimizedModelFilePath(String)` | Save optimized graph to file       |
+| `setOptimizedModelFilePath(String)` | Save optimized graph to file        |
 | `enableCpuMemArena()` / `disableCpuMemArena()` | CPU memory arena                    |
 | `enableMemPattern()` / `disableMemPattern()` | Memory pattern planner              |
 | `enableProfiling(String)` / `disableProfiling()` | Chrome-trace profiling              |

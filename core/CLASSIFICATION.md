@@ -691,11 +691,11 @@ Classifier<double[]> mc = SVM.fit(x, y, kernel, C, tol, props);
 
 **Parameters.**
 
-| Parameter | Description |
-|-----------|-------------|
+| Parameter | Description                                                                                           |
+|-----------|-------------------------------------------------------------------------------------------------------|
 | `kernel` | Kernel function from `smile.math.kernel` (e.g. `GaussianKernel`, `PolynomialKernel`, `LinearKernel`). |
-| `C` | Soft-margin regularisation. Larger = less regularisation, sharper margin. |
-| `tol` | Working set selection tolerance. |
+| `C` | Soft-margin regularisation. Larger = less regularization, sharper margin.                            |
+| `tol` | Working set selection tolerance.                                                                      |
 
 **Kernel choices.**
 
@@ -762,13 +762,13 @@ The output layer is automatically added based on the number of classes (softmax 
 
 **Options** (via `Properties` or `MLP.Options`)
 
-| Property | Default | Description |
-|----------|---------|-------------|
-| `smile.mlp.learning.rate` | `0.01` | SGD learning rate. |
-| `smile.mlp.momentum` | `0.0` | Momentum coefficient. |
-| `smile.mlp.weight.decay` | `0.0` | L2 weight regularisation. |
+| Property | Default | Description                |
+|----------|---------|----------------------------|
+| `smile.mlp.learning.rate` | `0.01` | SGD learning rate.         |
+| `smile.mlp.momentum` | `0.0` | Momentum coefficient.      |
+| `smile.mlp.weight.decay` | `0.0` | L2 weight regularization. |
 | `smile.mlp.epochs` | `10` | Number of training epochs. |
-| `smile.mlp.mini.batch` | `32` | Mini-batch size. |
+| `smile.mlp.mini.batch` | `32` | Mini-batch size.           |
 
 **Online learning** — `MLP` supports both single-sample and batch online updates:
 

@@ -741,7 +741,7 @@ the Java Foreign Function & Memory (FFM) API. This means:
 
 - **Zero-copy**: `DenseMatrix` stores data in `MemorySegment` that is
   allocated off-heap and passed directly to native routines without copying.
-- **SIMD / multi-threading**: OpenBLAS exploits AVX2/AVX-512 auto-vectorisation
+- **SIMD / multi-threading**: OpenBLAS exploits AVX2/AVX-512 auto-vectorization
   and spawns multiple threads for large GEMM calls automatically.
 - **Float32 vs Float64**: Single-precision (Float32) operations are roughly
   2× faster than double (Float64) on most CPUs and 4× faster on GPUs, at the

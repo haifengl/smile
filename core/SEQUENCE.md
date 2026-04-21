@@ -137,7 +137,7 @@ have different lengths or the training set is empty.
 ### 3.3 Training: Baum–Welch via `update`
 
 Iteratively re-estimates model parameters from **unlabeled** observation sequences
-using the expectation-maximisation Baum–Welch algorithm. The model must be
+using the expectation-maximization Baum–Welch algorithm. The model must be
 **pre-initialized** (e.g. from `fit` or a reasonable prior).
 
 ```java
@@ -268,7 +268,7 @@ trained by gradient tree boosting (Dietterich et al., 2008). This means:
 - **Scales linearly** with the Markov order and feature dimensionality (unlike
   iterative scaling).
 - **Discriminative** — models P(y | x) directly, so it can incorporate arbitrary
-  overlapping features without normalisation concerns during training.
+  overlapping features without normalization concerns during training.
 
 ### 5.1 Core API
 
@@ -358,13 +358,13 @@ satisfy structural constraints (e.g. "I-NP" can only follow "B-NP").
 public record Options(int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage)
 ```
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
+| Parameter | Default | Description                                                                                      |
+|-----------|---------|--------------------------------------------------------------------------------------------------|
 | `ntrees` | `100` | Number of boosting rounds (trees per class). More trees = lower training error, risk of overfit. |
-| `maxDepth` | `20` | Maximum depth of each regression tree. Deeper trees capture more complex feature interactions. |
-| `maxNodes` | `100` | Maximum number of leaf nodes per tree. Controls tree complexity independently of depth. |
-| `nodeSize` | `5` | Minimum samples per leaf. Higher values regularise the tree. |
-| `shrinkage` | `1.0` | Learning rate in (0, 1]. Smaller values give better generalisation but require more trees. |
+| `maxDepth` | `20` | Maximum depth of each regression tree. Deeper trees capture more complex feature interactions.   |
+| `maxNodes` | `100` | Maximum number of leaf nodes per tree. Controls tree complexity independently of depth.          |
+| `nodeSize` | `5` | Minimum samples per leaf. Higher values regularise the tree.                                     |
+| `shrinkage` | `1.0` | Learning rate in (0, 1]. Smaller values give better generalization but require more trees.      |
 
 **Validation:** `ntrees ≥ 1`, `maxDepth ≥ 2`, `maxNodes ≥ 2`, `nodeSize ≥ 1`,
 `shrinkage ∈ (0, 1]`.

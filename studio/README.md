@@ -324,12 +324,12 @@ smile train -d <file> -m <model> cart [options]
 smile train -d <file> -m <model> logistic [options]
 ```
 
-| Option | Description |
-|---|---|
-| `--transform <rule>` | Feature transformation (see §5.6) |
-| `--lambda <λ>` | L2 regularisation strength |
+| Option | Description                        |
+|---|------------------------------------|
+| `--transform <rule>` | Feature transformation (see §5.6)  |
+| `--lambda <λ>` | L2 regularization strength        |
 | `--iterations <n>` | Maximum number of LBFGS iterations |
-| `--tolerance <ε>` | Convergence tolerance |
+| `--tolerance <ε>` | Convergence tolerance              |
 
 #### `fisher` — Fisher's Linear Discriminant *(classification only)*
 
@@ -369,12 +369,12 @@ Same options as `lda`.
 smile train -d <file> -m <model> rda --alpha <α> [options]
 ```
 
-| Option | Required | Description |
-|---|---|---|
-| `--alpha <α>` | ✔ | Regularisation factor in `[0, 1]`; `0` = QDA, `1` = LDA |
-| `--transform <rule>` | | Feature transformation (see §5.6) |
-| `--priori <p0,p1,…>` | | Prior class probabilities |
-| `--tolerance <ε>` | | Singular covariance tolerance |
+| Option | Required | Description                                              |
+|---|---|----------------------------------------------------------|
+| `--alpha <α>` | ✔ | Regularization factor in `[0, 1]`; `0` = QDA, `1` = LDA |
+| `--transform <rule>` | | Feature transformation (see §5.6)                        |
+| `--priori <p0,p1,…>` | | Prior class probabilities                                |
+| `--tolerance <ε>` | | Singular covariance tolerance                            |
 
 #### `mlp` — Multilayer Perceptron
 
@@ -470,10 +470,10 @@ smile train -d <file> -m <model> --formula "y ~ ." ols [options]
 smile train -d <file> -m <model> --formula "y ~ ." lasso --lambda <λ> [options]
 ```
 
-| Option | Required | Description |
-|---|---|---|
-| `--lambda <λ>` | ✔ | L1 regularisation strength |
-| `--iterations <n>` | | Maximum coordinate-descent iterations |
+| Option | Required | Description                                    |
+|---|---|------------------------------------------------|
+| `--lambda <λ>` | ✔ | L1 regularization strength                    |
+| `--iterations <n>` | | Maximum coordinate-descent iterations          |
 | `--tolerance <ε>` | | Relative target duality-gap stopping criterion |
 
 #### `ridge` — Ridge Regression
@@ -482,9 +482,9 @@ smile train -d <file> -m <model> --formula "y ~ ." lasso --lambda <λ> [options]
 smile train -d <file> -m <model> --formula "y ~ ." ridge --lambda <λ>
 ```
 
-| Option | Required | Description |
-|---|---|---|
-| `--lambda <λ>` | ✔ | L2 regularisation strength |
+| Option | Required | Description                 |
+|---|---|-----------------------------|
+| `--lambda <λ>` | ✔ | L2 regularization strength |
 
 #### `elastic-net` — Elastic Net
 
@@ -789,7 +789,7 @@ smile train \
 
 # Training metrics: {RMSE=4.679, MAE=3.389, R2=0.741}
 
-# Ridge regression with stronger regularisation
+# Ridge regression with stronger regularization
 smile train \
   --data    housing.arff          \
   --formula "price ~ ."           \

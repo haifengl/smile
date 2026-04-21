@@ -686,7 +686,7 @@ Predicate.of("date", "equal", "2001")
 Obtained from `field.axis()` or `config.axis()`.
 
 ```java
-// Per-field axis customisation
+// Per-field axis customization
 view.encode("x", "a").type("ordinal")
     .axis()
         .title("Category")

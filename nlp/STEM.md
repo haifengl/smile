@@ -59,7 +59,7 @@ a baseline in information retrieval benchmarks.
 
 ### Characteristics
 
-* **Aggressiveness:** moderate — results are recognisable English roots.
+* **Aggressiveness:** moderate — results are recognizable English roots.
 * **Idempotent:** stemming a stem returns the same stem.
 * **Case:** input should be lower-case; the class does not lower-case
   automatically.
@@ -131,7 +131,7 @@ The algorithm proceeds through five passes:
 `LancasterStemmer` implements the Paice/Husk Lancaster algorithm (1990). It
 is an **iterative** conflation stemmer that applies a single flat table of
 rules repeatedly until no more rules fire. It is significantly more aggressive
-than Porter and may produce stems that are not recognisable English words.
+than Porter and may produce stems that are not recognizable English words.
 
 ### Characteristics
 
@@ -316,11 +316,11 @@ String r = lancaster.stem("presumably");                         // "presum"
   automatically.
 * **Minimum word length** — `LancasterStemmer` skips words of three
   characters or fewer.
-* **Stemming ≠ lemmatisation** — stems may not be dictionary words. Use a
+* **Stemming ≠ lemmatization** — stems may not be dictionary words. Use a
   POS-aware lemmatiser if you need real dictionary base forms.
 * **Thread safety** — `PorterStemmer` uses an internal working buffer (`b`,
   `j`, `k` fields) and is **not** thread-safe. Create one instance per thread
-  or protect shared instances with synchronisation. `LancasterStemmer` has no
+  or protect shared instances with synchronization. `LancasterStemmer` has no
   mutable state after construction and can be shared across threads safely.
 
 ---
