@@ -19,7 +19,7 @@ package smile.deep;
 import smile.deep.tensor.*;
 
 /**
- * A min-batch dataset consists of data and an associated target (label).
+ * A mini-batch dataset consists of data and an associated target (label).
  *
  * @param data The data samples.
  * @param target The sample labels.
