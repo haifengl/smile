@@ -55,14 +55,19 @@ public interface Transform {
      *             SCALE_SMOOTH, SCALE_REPLICATE, SCALE_AREA_AVERAGING
      *             of java.awt.Image class.
      * @return the output image.
+     * @throws IllegalArgumentException if {@code image} is null or {@code size} is not positive.
      */
     default BufferedImage resize(BufferedImage image, int size, int hints) {
+        if (image == null) throw new IllegalArgumentException("image must not be null");
+        if (size <= 0) throw new IllegalArgumentException("resize size must be positive: " + size);
         Image resizedImage = image.getHeight() > image.getWidth() ?
                 image.getScaledInstance(size, -1, hints) :
                 image.getScaledInstance(-1, size, hints);
         BufferedImage output = new BufferedImage(resizedImage.getWidth(null),
                 resizedImage.getHeight(null), BufferedImage.TYPE_3BYTE_BGR);
-        output.getGraphics().drawImage(resizedImage, 0, 0, null);
+        Graphics g = output.getGraphics();
+        g.drawImage(resizedImage, 0, 0, null);
+        g.dispose();
         return output;
     }
 
@@ -73,6 +78,8 @@ public interface Transform {
      * @param deep If false, the returned BufferedImage shares the same data
      *            array as the original image. Otherwise, returns a deep copy.
      * @return the cropped image.
+     * @throws IllegalArgumentException if {@code image} is null, dimensions are not positive,
+     *         or crop size exceeds the image size.
      */
     default BufferedImage crop(BufferedImage image, int size, boolean deep) {
         return crop(image, size, size, deep);
@@ -87,8 +94,18 @@ public interface Transform {
      * @param deep If false, the returned BufferedImage shares the same data
      *            array as the original image. Otherwise, returns a deep copy.
      * @return the cropped image.
+     * @throws IllegalArgumentException if {@code image} is null, dimensions are not positive,
+     *         or crop size exceeds the image size.
      */
     default BufferedImage crop(BufferedImage image, int width, int height, boolean deep) {
+        if (image == null) throw new IllegalArgumentException("image must not be null");
+        if (width <= 0 || height <= 0)
+            throw new IllegalArgumentException(String.format(
+                    "crop dimensions must be positive: width=%d, height=%d", width, height));
+        if (width > image.getWidth() || height > image.getHeight())
+            throw new IllegalArgumentException(String.format(
+                    "crop size (%dx%d) exceeds image size (%dx%d)",
+                    width, height, image.getWidth(), image.getHeight()));
         int x = (image.getWidth() - width) / 2;
         int y = (image.getHeight() - height) / 2;
         BufferedImage output = image.getSubimage(x, y, width, height);
@@ -97,7 +114,9 @@ public interface Transform {
             BufferedImage croppedImage = output;
             output = new BufferedImage(croppedImage.getWidth(null),
                     croppedImage.getHeight(null), BufferedImage.TYPE_3BYTE_BGR);
-            output.getGraphics().drawImage(croppedImage, 0, 0, null);
+            Graphics g = output.getGraphics();
+            g.drawImage(croppedImage, 0, 0, null);
+            g.dispose();
         }
 
         return output;
@@ -110,10 +129,28 @@ public interface Transform {
      * @param mean the normalization mean.
      * @param std the normalization standard deviation.
      * @return the output tensor.
+     * @throws IllegalArgumentException if {@code images} is null or empty, {@code mean}/{@code std}
+     *         do not have exactly 3 elements, any {@code std} element is zero, or the images do not
+     *         all have the same dimensions.
      */
     default Tensor toTensor(float[] mean, float[] std, BufferedImage... images) {
+        if (images == null || images.length == 0)
+            throw new IllegalArgumentException("images must not be null or empty");
+        if (mean == null || mean.length != 3)
+            throw new IllegalArgumentException("mean must have exactly 3 elements");
+        if (std == null || std.length != 3)
+            throw new IllegalArgumentException("std must have exactly 3 elements");
+        for (int c = 0; c < 3; c++) {
+            if (std[c] == 0.0f) throw new IllegalArgumentException("std[" + c + "] must not be zero");
+        }
         final int width = images[0].getWidth();
         final int height = images[0].getHeight();
+        for (int k = 1; k < images.length; k++) {
+            if (images[k].getWidth() != width || images[k].getHeight() != height)
+                throw new IllegalArgumentException(String.format(
+                        "All images must have the same size. images[0] is %dx%d but images[%d] is %dx%d",
+                        width, height, k, images[k].getWidth(), images[k].getHeight()));
+        }
         final int length = height * width;
         final int green = length;
         final int blue  = 2 * length;
