@@ -114,7 +114,10 @@ public record SumSquaresRatio(String feature, double ratio) implements Comparabl
                 wss += MathEx.pow2(xij - condmu[yi]);
             }
 
-            return new SumSquaresRatio(field.name(), bss / wss);
+            // When within-class variance is zero the feature perfectly
+            // separates at least one class; treat as the maximum finite ratio.
+            double ratio = wss == 0.0 ? (bss == 0.0 ? 0.0 : Double.MAX_VALUE) : bss / wss;
+            return new SumSquaresRatio(field.name(), ratio);
         }).toArray(SumSquaresRatio[]::new);
     }
 }

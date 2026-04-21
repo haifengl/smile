@@ -46,11 +46,12 @@ public record FRegression(String feature, double statistic, double pvalue, boole
     }
 
     /**
-     * Calculates the signal noise ratio of numeric variables.
+     * Calculates the univariate F-statistic of each feature against the
+     * response variable.
      *
      * @param data the data frame of the explanatory and response variables.
      * @param response the column name of response variable.
-     * @return the signal noise ratio.
+     * @return the F-regression results.
      */
     public static FRegression[] fit(DataFrame data, String response) {
         double[] y = data.column(response).toDoubleArray();
