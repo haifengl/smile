@@ -295,24 +295,6 @@ public class BBDTree {
     }
 
     /**
-     * Computes the squared Euclidean distance between two {@link Vector}s of
-     * the same length.
-     *
-     * @param v   the first vector (e.g. a node center).
-     * @param w   the second vector (e.g. a cluster centroid).
-     * @return the squared distance.
-     */
-    private static double squaredDistance(Vector v, Vector w) {
-        int d = w.size();
-        double dist = 0.0;
-        for (int i = 0; i < d; i++) {
-            double diff = v.get(i) - w.get(i);
-            dist += diff * diff;
-        }
-        return dist;
-    }
-
-    /**
      * Given k cluster centroids, this method assigns data to nearest centroids.
      * The return value is the distortion to the centroids. The parameter sums
      * will hold the sum of data for each cluster. The parameter counts hold
@@ -359,10 +341,10 @@ public class BBDTree {
         int d = centroids[0].size();
 
         // Determine which mean the node mean is closest to
-        double minDist = squaredDistance(node.center, centroids[candidates[0]]);
+        double minDist = Vector.squaredDistance(node.center, centroids[candidates[0]]);
         int closest = candidates[0];
         for (int i = 1; i < k; i++) {
-            double dist = squaredDistance(node.center, centroids[candidates[i]]);
+            double dist = Vector.squaredDistance(node.center, centroids[candidates[i]]);
             if (dist < minDist) {
                 minDist = dist;
                 closest = candidates[i];

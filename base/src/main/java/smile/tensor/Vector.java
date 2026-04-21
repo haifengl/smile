@@ -16,6 +16,8 @@
  */
 package smile.tensor;
 
+import smile.math.MathEx;
+
 import java.lang.foreign.MemorySegment;
 import java.util.Arrays;
 import static smile.linalg.blas.cblas_h.*;
@@ -547,5 +549,45 @@ public abstract class Vector extends DenseMatrix {
             case Float32 -> cblas_isamax(size(), memory, 1);
             default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
         };
+    }
+
+    /**
+     * Computes the squared Euclidean distance between two {@link Vector}s of
+     * the same length.
+     *
+     * @param v   the first vector (e.g. a node center).
+     * @param w   the second vector (e.g. a cluster centroid).
+     * @return the squared distance.
+     */
+    public static double squaredDistance(Vector v, Vector w) {
+        if (v.size() != w.size()) {
+            throw new IllegalArgumentException("Different vector size: " + v.size() + " !=  " + w.size());
+        }
+
+        if (v instanceof Vector32 v32 && w instanceof Vector32 w32 ) {
+            return MathEx.squaredDistance(v32.array, w32.array);
+        } else if (v instanceof Vector64 v64 && w instanceof Vector64 w64) {
+            return MathEx.squaredDistance(v64.array, w64.array);
+        } else {
+            int d = w.size();
+            double dist = 0.0;
+            for (int i = 0; i < d; i++) {
+                double diff = v.get(i) - w.get(i);
+                dist += diff * diff;
+            }
+            return dist;
+        }
+    }
+
+    /**
+     * Computes the Euclidean distance between two {@link Vector}s of
+     * the same length.
+     *
+     * @param v   the first vector (e.g. a node center).
+     * @param w   the second vector (e.g. a cluster centroid).
+     * @return the distance.
+     */
+    public static double distance(Vector v, Vector w) {
+        return Math.sqrt(squaredDistance(v, w));
     }
 }
