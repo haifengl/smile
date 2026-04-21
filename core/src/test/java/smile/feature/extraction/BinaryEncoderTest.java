@@ -17,6 +17,9 @@
 package smile.feature.extraction;
 
 import smile.data.DataFrame;
+import smile.data.type.DataTypes;
+import smile.data.type.StructField;
+import smile.data.type.StructType;
 import smile.datasets.WeatherNominal;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -76,5 +79,35 @@ public class BinaryEncoderTest {
                 assertEquals(result[i][j], onehot[i][j]);
             }
         }
+    }
+
+    @Test
+    public void testGivenAutoDetectionWhenCreatingBinaryEncoderThenAllCategoricalColumnsAreUsed() throws Exception {
+        // Given — WeatherNominal has 4 categorical feature columns + 1 class column
+        var weather = new WeatherNominal();
+        DataFrame data = weather.data();
+
+        // When — no columns specified: all categorical columns should be auto-detected
+        BinaryEncoder encoder = new BinaryEncoder(data.schema());
+        int[][] onehot = encoder.apply(data);
+
+        // Then — each row should have one index per categorical column
+        assertEquals(data.size(), onehot.length);
+        for (int[] row : onehot) {
+            assertEquals(5, row.length); // 4 features + 1 class column
+        }
+    }
+
+    @Test
+    public void testGivenNonCategoricalColumnWhenCreatingBinaryEncoderThenExceptionIsThrown() {
+        // Given — a schema with a plain numeric field
+        StructType schema = new StructType(
+                new StructField("value", DataTypes.DoubleType)
+        );
+
+        // When / Then
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> new BinaryEncoder(schema, "value"));
+        assertTrue(ex.getMessage().contains("Non-categorical attribute"));
     }
 }

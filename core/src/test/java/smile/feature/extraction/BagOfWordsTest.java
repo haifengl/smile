@@ -17,8 +17,13 @@
 package smile.feature.extraction;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.function.Function;
 import smile.data.DataFrame;
+import smile.data.Tuple;
+import smile.data.type.DataTypes;
+import smile.data.type.StructField;
+import smile.data.type.StructType;
 import smile.io.Read;
 import smile.io.Paths;
 import org.junit.jupiter.api.*;
@@ -78,5 +83,81 @@ public class BagOfWordsTest {
         assertEquals(10, bag.features().length);
         assertEquals("--", bag.features()[0]);
         assertEquals("Union", bag.features()[9]);
+    }
+
+    @Test
+    public void testGivenBinaryModeWhenApplyingBagOfWordsThenFrequenciesAreClampedToOne() {
+        // Given — "good" appears three times in text
+        String[] features = {"good", "bad", "ugly"};
+        BagOfWords countBag  = new BagOfWords(null, tokenizer, features, false);
+        BagOfWords binaryBag = new BagOfWords(null, tokenizer, features, true);
+        String text = "good good good bad";
+
+        // When
+        int[] countVec  = countBag.apply(text);
+        int[] binaryVec = binaryBag.apply(text);
+
+        // Then
+        assertEquals(3, countVec[0]);
+        assertEquals(1, countVec[1]);
+        assertEquals(0, countVec[2]);
+
+        assertEquals(1, binaryVec[0]);
+        assertEquals(1, binaryVec[1]);
+        assertEquals(0, binaryVec[2]);
+    }
+
+    @Test
+    public void testGivenDataFrameColumnWhenApplyingBagOfWordsTupleOverloadThenOutputMatchesStringOverload() {
+        // Given
+        String[] features = {"hello", "world", "foo"};
+        StructType schema = new StructType(new StructField("text", DataTypes.StringType));
+        BagOfWords bag = new BagOfWords(new String[]{"text"}, tokenizer, features, false);
+
+        Tuple tuple = Tuple.of(schema, new Object[]{"hello world hello"});
+
+        // When
+        Tuple result = bag.apply(tuple);
+
+        // Then
+        assertEquals(2, result.getInt(0));
+        assertEquals(1, result.getInt(1));
+        assertEquals(0, result.getInt(2));
+    }
+
+    @Test
+    public void testGivenDataFrameWhenApplyingBagOfWordsThenOutputShapeMatchesInput() {
+        // Given
+        String[] features = {"hello", "world"};
+        StructType schema = new StructType(new StructField("text", DataTypes.StringType));
+        BagOfWords bag = new BagOfWords(new String[]{"text"}, tokenizer, features, false);
+
+        DataFrame data = DataFrame.of(schema, List.of(
+                Tuple.of(schema, new Object[]{"hello hello"}),
+                Tuple.of(schema, new Object[]{"world foo"})
+        ));
+
+        // When
+        DataFrame result = bag.apply(data);
+
+        // Then
+        assertEquals(2, result.nrow());
+        assertEquals(2, result.ncol());
+        assertEquals(2, result.getInt(0, 0));
+        assertEquals(0, result.getInt(0, 1));
+        assertEquals(0, result.getInt(1, 0));
+        assertEquals(1, result.getInt(1, 1));
+    }
+
+    @Test
+    public void testGivenNoColumnsConstructorWhenApplyingToTupleThenUnsupportedOperationIsThrown() {
+        // Given — constructor without columns, intended for String-only usage
+        String[] features = {"hello", "world"};
+        BagOfWords bag = new BagOfWords(tokenizer, features);
+        StructType schema = new StructType(new StructField("text", DataTypes.StringType));
+        Tuple tuple = Tuple.of(schema, new Object[]{"hello"});
+
+        // When / Then
+        assertThrows(UnsupportedOperationException.class, () -> bag.apply(tuple));
     }
 }

@@ -330,6 +330,7 @@ public class PCA extends Projection {
                 break;
             }
         }
+        if (k >= proportion.length) k = proportion.length - 1;
 
         return getProjection(loadings, k+1);
     }
@@ -384,6 +385,7 @@ public class PCA extends Projection {
                 break;
             }
         }
+        if (k >= cumulativeProportion.size()) k = cumulativeProportion.size() - 1;
 
         return getProjection(k + 1);
     }
