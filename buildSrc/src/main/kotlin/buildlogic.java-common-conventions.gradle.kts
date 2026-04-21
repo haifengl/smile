@@ -42,7 +42,14 @@ tasks.withType<JavaCompile> {
 
 tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
-    useJUnitPlatform()
+    useJUnitPlatform {
+        // Allow callers to skip tagged groups, e.g.:
+        //   ./gradlew :deep:test -DexcludeTags=integration
+        val excludeTagsProp = System.getProperty("excludeTags")
+        if (!excludeTagsProp.isNullOrBlank()) {
+            excludeTags(*excludeTagsProp.split(",").map(String::trim).toTypedArray())
+        }
+    }
     workingDir = project.rootDir
     // Forward any smile.test.* Gradle project properties (-P) to the test JVM
     // as system properties (-D), so that gated tests can be enabled with e.g.:
