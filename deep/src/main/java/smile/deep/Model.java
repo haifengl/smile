@@ -202,6 +202,7 @@ public class Model implements Function<Tensor, Tensor> {
      * @param metrics the evaluation metrics.
      */
     public void train(int epochs, Optimizer optimizer, Loss loss, Dataset train, Dataset test, String checkpoint, Metric... metrics) {
+        if (epochs <= 0) throw new IllegalArgumentException("epochs must be positive: " + epochs);
         if (test != null && metrics.length == 0) {
             throw new IllegalArgumentException("Validation dataset is provided without metrics");
         }
@@ -240,12 +241,13 @@ public class Model implements Function<Tensor, Tensor> {
                 target.close();
                 batch.close();
 
+                ++batchIndex;
                 if (learningRateSchedule != null) {
                     double rate = learningRateSchedule.apply(batchIndex);
                     optimizer.setLearningRate(rate);
                 }
 
-                if (++batchIndex % 100 == 0) {
+                if (batchIndex % 100 == 0) {
                     String msg = String.format("Epoch: %d | Batch: %d | Loss: %.4f", epoch, batchIndex, lossValue / 100);
                     if (learningRateSchedule != null) {
                         double rate = learningRateSchedule.apply(batchIndex);

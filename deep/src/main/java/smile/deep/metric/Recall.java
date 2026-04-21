@@ -105,7 +105,7 @@ public class Recall implements Metric {
         } else {
             Tensor eq = prediction.eq(target);
             if (strategy == Averaging.Micro) {
-                tp = prediction.eq(target).sum();
+                tp = eq.sum();
             } else {
                 tp = target.newZeros(numClasses).scatterReduce_(0, target.get(eq), one, "sum");
             }
@@ -117,13 +117,15 @@ public class Recall implements Metric {
 
     @Override
     public double compute() {
+        if (tp == null) return 0.0;
         Tensor recall;
         // Guard against zero denominator: replace 0-count classes with 1
         // so that TP/1 = 0 recall, avoiding NaN.
         Tensor ones     = size.newOnes(size.shape());
         Tensor safeSize = Tensor.where(size.gt(0), size, ones);
         if (tp.size(0) == 1) {
-            recall = strategy == null ? tp.div(size.getLong(1)) : tp.div(safeSize.sum());
+            long positives = size.getLong(1);
+            recall = strategy == null ? tp.div(Math.max(1L, positives)) : tp.div(safeSize.sum());
         } else {
             recall = tp.div(safeSize);
         }

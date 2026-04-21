@@ -62,6 +62,14 @@ public class SqueezeExcitation extends LayerBlock {
         add("scale_activation", sigma);
     }
 
+    /**
+     * Forward pass. Note: this method takes ownership of {@code input}
+     * and closes it before returning, consistent with the pipeline pattern
+     * used by containing blocks (e.g. {@link MBConv}).
+     *
+     * @param input the input tensor (will be closed by this method).
+     * @return the output tensor.
+     */
     @Override
     public Tensor forward(Tensor input) {
         Tensor t1 = avgpool.forward(input);

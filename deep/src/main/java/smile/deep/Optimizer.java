@@ -47,6 +47,7 @@ public class Optimizer {
      * @param rate the learning rate.
      */
     public void setLearningRate(double rate) {
+        if (rate <= 0) throw new IllegalArgumentException("Learning rate must be positive: " + rate);
         var groups = optimizer.param_groups();
         for (int i = 0; i < groups.size(); i++) {
             groups.get(i).options().set_lr(rate);

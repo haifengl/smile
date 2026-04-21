@@ -40,6 +40,8 @@ class DatasetImpl implements Dataset {
      * @param batch the mini-batch size.
      */
     public DatasetImpl(float[][] data, int[] target, int batch) {
+        if (data.length == 0) throw new IllegalArgumentException("data must not be empty");
+        if (batch <= 0) throw new IllegalArgumentException("batch size must be positive: " + batch);
         int n = data.length;
         int p = data[0].length;
 
@@ -64,6 +66,8 @@ class DatasetImpl implements Dataset {
      * @param batch the mini-batch size.
      */
     public DatasetImpl(double[][] data, int[] target, int batch) {
+        if (data.length == 0) throw new IllegalArgumentException("data must not be empty");
+        if (batch <= 0) throw new IllegalArgumentException("batch size must be positive: " + batch);
         int n = data.length;
         int p = data[0].length;
 
@@ -90,6 +94,8 @@ class DatasetImpl implements Dataset {
      * @param batch the mini-batch size.
      */
     public DatasetImpl(float[][] data, float[] target, int batch) {
+        if (data.length == 0) throw new IllegalArgumentException("data must not be empty");
+        if (batch <= 0) throw new IllegalArgumentException("batch size must be positive: " + batch);
         int n = data.length;
         int p = data[0].length;
 
@@ -112,6 +118,8 @@ class DatasetImpl implements Dataset {
      * @param batch the mini-batch size.
      */
     public DatasetImpl(double[][] data, double[] target, int batch) {
+        if (data.length == 0) throw new IllegalArgumentException("data must not be empty");
+        if (batch <= 0) throw new IllegalArgumentException("batch size must be positive: " + batch);
         int n = data.length;
         int p = data[0].length;
 
@@ -137,8 +145,8 @@ class DatasetImpl implements Dataset {
 
     @Override
     public long size() {
-    return size;
-}
+        return size;
+    }
 
     @Override
     public Iterator<SampleBatch> iterator() {

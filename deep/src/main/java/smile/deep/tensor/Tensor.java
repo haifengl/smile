@@ -145,6 +145,11 @@ public class Tensor implements AutoCloseable {
     }
 
     @Override
+    public int hashCode() {
+        return System.identityHashCode(value);
+    }
+
+    @Override
     public void close() {
         if (!value.isNull()) {
             value.close();
@@ -223,16 +228,26 @@ public class Tensor implements AutoCloseable {
 
     /**
      * Returns the element data type.
-     * @return the element data type.
+     * @return the element data type, or empty if the type is not mapped.
      */
-    public ScalarType dtype() {
+    public java.util.Optional<ScalarType> dtypeOptional() {
         byte typeValue = value.dtype().toScalarType().value;
         for (ScalarType dtype : ScalarType.values()) {
             if (dtype.value.value == typeValue) {
-                return dtype;
+                return java.util.Optional.of(dtype);
             }
         }
-        return null;
+        return java.util.Optional.empty();
+    }
+
+    /**
+     * Returns the element data type.
+     * @return the element data type.
+     * @throws IllegalStateException if the native dtype has no Java mapping.
+     */
+    public ScalarType dtype() {
+        return dtypeOptional().orElseThrow(() ->
+                new IllegalStateException("Unknown native scalar type: " + value.dtype()));
     }
 
     /**
@@ -278,6 +293,20 @@ public class Tensor implements AutoCloseable {
             length *= size;
         }
         return length;
+    }
+
+    /**
+     * Returns the number of elements as an int, used by array extraction methods.
+     * @throws ArithmeticException if the number of elements exceeds Integer.MAX_VALUE.
+     */
+    private int lengthAsInt() {
+        long len = length();
+        if (len > Integer.MAX_VALUE) {
+            throw new ArithmeticException(
+                "Tensor has " + len + " elements, which exceeds Integer.MAX_VALUE. " +
+                "Use a smaller tensor or extract a slice first.");
+        }
+        return (int) len;
     }
 
     /**
@@ -878,9 +907,15 @@ public class Tensor implements AutoCloseable {
      */
     public byte[] byteArray() {
         if (value.is_view()) {
-            throw new UnsupportedOperationException("copy tensor view to array");
+            throw new UnsupportedOperationException("Cannot copy a non-contiguous tensor view to array; call contiguous() first.");
         }
-        var array = new byte[(int) length()];
+        // Bool tensors use the same storage layout as Byte but have a different dtype.
+        // Cast to Int8 so data_ptr_byte() succeeds.
+        var dtype = value.dtype().toScalarType();
+        if (dtype.value == org.bytedeco.pytorch.global.torch.ScalarType.Bool.value) {
+            return new Tensor(value.to(ScalarType.Int8.value)).byteArray();
+        }
+        var array = new byte[lengthAsInt()];
         var data = value.data_ptr_byte();
         data.get(array);
         return array;
@@ -892,9 +927,9 @@ public class Tensor implements AutoCloseable {
      */
     public short[] shortArray() {
         if (value.is_view()) {
-            throw new UnsupportedOperationException("copy tensor view to array");
+            throw new UnsupportedOperationException("Cannot copy a non-contiguous tensor view to array; call contiguous() first.");
         }
-        var array = new short[(int) length()];
+        var array = new short[lengthAsInt()];
         var data = value.data_ptr_short();
         data.get(array);
         return array;
@@ -906,9 +941,9 @@ public class Tensor implements AutoCloseable {
      */
     public int[] intArray() {
         if (value.is_view()) {
-            throw new UnsupportedOperationException("copy tensor view to array");
+            throw new UnsupportedOperationException("Cannot copy a non-contiguous tensor view to array; call contiguous() first.");
         }
-        var array = new int[(int) length()];
+        var array = new int[lengthAsInt()];
         var data = value.data_ptr_int();
         data.get(array);
         return array;
@@ -920,9 +955,9 @@ public class Tensor implements AutoCloseable {
      */
     public long[] longArray() {
         if (value.is_view()) {
-            throw new UnsupportedOperationException("copy tensor view to array");
+            throw new UnsupportedOperationException("Cannot copy a non-contiguous tensor view to array; call contiguous() first.");
         }
-        var array = new long[(int) length()];
+        var array = new long[lengthAsInt()];
         var data = value.data_ptr_long();
         data.get(array);
         return array;
@@ -934,9 +969,9 @@ public class Tensor implements AutoCloseable {
      */
     public float[] floatArray() {
         if (value.is_view()) {
-            throw new UnsupportedOperationException("copy tensor view to array");
+            throw new UnsupportedOperationException("Cannot copy a non-contiguous tensor view to array; call contiguous() first.");
         }
-        var array = new float[(int) length()];
+        var array = new float[lengthAsInt()];
         var data = value.data_ptr_float();
         data.get(array);
         return array;
@@ -948,9 +983,9 @@ public class Tensor implements AutoCloseable {
      */
     public double[] doubleArray() {
         if (value.is_view()) {
-            throw new UnsupportedOperationException("copy tensor view to array");
+            throw new UnsupportedOperationException("Cannot copy a non-contiguous tensor view to array; call contiguous() first.");
         }
-        var array = new double[(int) length()];
+        var array = new double[lengthAsInt()];
         var data = value.data_ptr_double();
         data.get(array);
         return array;
@@ -1416,6 +1451,16 @@ public class Tensor implements AutoCloseable {
     }
 
     /**
+     * Returns the sum along a dimension in the tensor.
+     * @param dim the dimension to reduce.
+     * @param keepDim whether the output tensor has dim retained or not.
+     * @return the output tensor.
+     */
+    public Tensor sum(int dim, boolean keepDim) {
+        return new Tensor(value.sum(new long[]{dim}, keepDim, new ScalarTypeOptional(value.dtype())));
+    }
+
+    /**
      * Returns the mean of all elements in the tensor.
      * @return the mean of all elements.
      */
@@ -1447,6 +1492,77 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor rsqrt_() {
         value.rsqrt_();
+        return this;
+    }
+
+    /**
+     * Returns the minimum value of all elements in the tensor.
+     * @return the minimum scalar tensor.
+     */
+    public Tensor min() {
+        return new Tensor(value.min());
+    }
+
+    /**
+     * Returns the maximum value of all elements in the tensor.
+     * @return the maximum scalar tensor.
+     */
+    public Tensor max() {
+        return new Tensor(value.max());
+    }
+
+    /**
+     * Returns a new tensor with the absolute value of the elements of input.
+     * @return the output tensor.
+     */
+    public Tensor abs() {
+        return new Tensor(value.abs());
+    }
+
+    /**
+     * Computes the absolute value of the elements of input in place.
+     * @return this tensor.
+     */
+    public Tensor abs_() {
+        value.abs_();
+        return this;
+    }
+
+    /**
+     * Returns a new tensor with the natural logarithm of the elements of input.
+     * @return the output tensor.
+     */
+    public Tensor log() {
+        return new Tensor(value.log());
+    }
+
+    /**
+     * Computes the natural logarithm of the elements of input in place.
+     * @return this tensor.
+     */
+    public Tensor log_() {
+        value.log_();
+        return this;
+    }
+
+    /**
+     * Clamps all elements in input into the range [{@code min}, {@code max}].
+     * @param min lower-bound of the range to be clamped to.
+     * @param max upper-bound of the range to be clamped to.
+     * @return the output tensor.
+     */
+    public Tensor clamp(double min, double max) {
+        return new Tensor(value.clamp(new ScalarOptional(new Scalar(min)), new ScalarOptional(new Scalar(max))));
+    }
+
+    /**
+     * Clamps all elements in input into the range [{@code min}, {@code max}] in place.
+     * @param min lower-bound of the range to be clamped to.
+     * @param max upper-bound of the range to be clamped to.
+     * @return this tensor.
+     */
+    public Tensor clamp_(double min, double max) {
+        value.clamp_(new ScalarOptional(new Scalar(min)), new ScalarOptional(new Scalar(max)));
         return this;
     }
 
@@ -1905,11 +2021,12 @@ public class Tensor implements AutoCloseable {
     }
 
     /**
-     * Returns logical NOT of this tensor.
-     * @return a new tensor of logical not results.
+     * Computes logical NOT of this tensor in place.
+     * @return this tensor.
      */
     public Tensor not_() {
-        return new Tensor(value.logical_not_());
+        value.logical_not_();
+        return this;
     }
 
     /**
@@ -2045,8 +2162,8 @@ public class Tensor implements AutoCloseable {
      */
     public static Tensor full(double value, long... shape) {
         var tensor = defaultOptions == null ?
-                torch.full(shape, new Scalar((float) value)) :
-                torch.full(shape, new Scalar((float) value), defaultOptions.value);
+                torch.full(shape, new Scalar(value)) :
+                torch.full(shape, new Scalar(value), defaultOptions.value);
         return new Tensor(tensor);
     }
 

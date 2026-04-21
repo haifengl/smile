@@ -30,7 +30,7 @@ import smile.deep.tensor.Tensor;
 public class TransformerBlock {
     /** The id of layer block. */
     final int layerId;
-    /** The  number of attention heads. */
+    /** The number of attention heads. */
     final int numHeads;
     /** The dimension of token embedding. */
     final int dim;

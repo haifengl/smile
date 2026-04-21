@@ -34,7 +34,7 @@ public class StochasticDepth implements Layer {
 
     /**
      * Constructor.
-     * @param p the number of channels in the input image.
+     * @param p the drop probability. Must be in [0, 1].
      * @param mode "batch" or "row". "batch" randomly zeroes the entire input,
      *            "row" zeroes randomly selected rows from the batch.
      */
@@ -46,7 +46,7 @@ public class StochasticDepth implements Layer {
             throw new IllegalArgumentException("mode has to be either 'batch' or 'row', but got " + mode);
         }
         this.p = p;
-        this.mode = mode;
+        this.mode = mode.toLowerCase();
     }
 
     @Override

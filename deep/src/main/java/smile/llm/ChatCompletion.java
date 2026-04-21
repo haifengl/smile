@@ -24,7 +24,16 @@ package smile.llm;
  * @param completionTokens the list of generated tokens.
  * @param reason the finish reason.
  * @param logprobs the optional list of log probabilities of generated tokens.
+ *
+ * @author Haifeng Li
  */
 public record ChatCompletion(String model, String content, int[] promptTokens, int[] completionTokens, FinishReason reason, float[] logprobs) {
-
+    /**
+     * Compact canonical constructor that validates required fields.
+     */
+    public ChatCompletion {
+        if (model == null) throw new IllegalArgumentException("model must not be null");
+        if (content == null) throw new IllegalArgumentException("content must not be null");
+        if (reason == null) throw new IllegalArgumentException("reason must not be null");
+    }
 }

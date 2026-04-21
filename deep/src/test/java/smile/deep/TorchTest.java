@@ -19,6 +19,8 @@ package smile.deep;
 import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.Module;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Tag;
+
 import static org.bytedeco.pytorch.global.torch.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -75,6 +77,7 @@ public class TorchTest {
     }
 
     @Test
+    @Tag("integration")
     public void test() {
         // Create a new Net.
         Net net = new Net();

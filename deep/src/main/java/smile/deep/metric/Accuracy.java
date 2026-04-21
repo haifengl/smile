@@ -68,6 +68,7 @@ public class Accuracy implements Metric {
 
     @Override
     public double compute() {
+        if (size == 0) return 0.0;
         return (double) correct / size;
     }
 

@@ -45,7 +45,7 @@ public class FeedForward {
     public FeedForward(int dim, int hiddenDim, int multipleOf, Double ffnDimMultiplier) {
         hiddenDim = (int) (2 * hiddenDim / 3.0);
         // custom dim factor multiplier
-        if (ffnDimMultiplier != null){
+        if (ffnDimMultiplier != null) {
             hiddenDim = (int) (ffnDimMultiplier * hiddenDim);
         }
         hiddenDim = multipleOf * ((hiddenDim + multipleOf - 1) / multipleOf);
