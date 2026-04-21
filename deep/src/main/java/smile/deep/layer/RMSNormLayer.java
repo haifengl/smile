@@ -32,7 +32,7 @@ public class RMSNormLayer implements Layer {
     private final Module module = new Module("RMSNorm");
     /** The term added to the denominator to improve numerical stability. */
     private final double eps;
-    /** The positional encoding tensor. */
+    /** The learnable per-element scale parameter. */
     private final Tensor weight;
 
     /**
