@@ -30,10 +30,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng
  */
 public class XMeansTest {
-    GaussianMixture mixture = GaussianMixture.generate();
-    double[][] x = mixture.x();
-    int[] y = mixture.y();
-    
     public XMeansTest() {
     }
 
@@ -58,6 +54,10 @@ public class XMeansTest {
     @Tag("integration")
     public void givenFloatGaussianMixture_whenFittingXMeans_thenReturnFloatCentroidsWithAcceptableQuality() {
         System.out.println("XMeans float GaussianMixture");
+        GaussianMixture mixture = GaussianMixture.generate();
+        double[][] x = mixture.x();
+        int[] y = mixture.y();
+
         // Given – convert double[][] mixture to float[][]
         float[][] fx = new float[x.length][x[0].length];
         for (int i = 0; i < x.length; i++)
