@@ -1,7 +1,7 @@
 ---
 layout: layout.njk
 permalink: "{{ page.filePathStem }}.html"
-title: SMILE - Home
+title: SMILE - Statistical Machine Intelligence &amp; Learning Engine
 ---
 <div class="col-md-3 col-md-push-9 hidden-xs hidden-sm">
   <div class="news" style="margin-bottom: 20px;">
@@ -314,7 +314,12 @@ title: SMILE - Home
 
 <div class="col-md-9 col-md-pull-3">
   <div class="jumbotron">
-    <p><b>Smile</b> is a fast and comprehensive machine learning engine.</p>
+    <p class="lead">
+      <strong>SMILE</strong> is a comprehensive, high-performance machine learning engine for the JVM.
+      From classic algorithms to GPU-accelerated deep learning and LLaMA-3 inference —
+      all in pure Java, Scala, or Kotlin.
+      <a href="quickstart.html">Get started in 5 minutes &rarr;</a>
+    </p>
     <div id="testimonial-slider" class="owl-carousel">
       <div class="testimonial">
         <div class="testimonial-content">
@@ -431,21 +436,21 @@ title: SMILE - Home
       <a class="github-button" href="https://github.com/haifengl" data-size="large" aria-label="Follow @haifengl on GitHub">Follow @haifengl</a>
       <a class="github-button" href="https://github.com/haifengl/smile/fork" data-icon="octicon-repo-forked" data-size="large" data-show-count="true" aria-label="Fork haifengl/smile on GitHub">Fork</a>
     </div>
-  </div>
+  </div><!-- /.jumbotron -->
 
-
+  <!-- ── Feature row: Speed ─────────────────────────────────────────── -->
   <div class="row row-padded">
     <div class="col-md-7 col-sm-7">
       <h2>Speed</h2>
-
       <p class="lead">
-        With advanced data structures and algorithms, SMILE delivers the state-of-art performance.
+        Advanced data structures and algorithms deliver state-of-the-art performance.
       </p>
-
-      <p>Compared to this third-party <a href="https://github.com/szilard/benchm-ml">benchmark</a>,
-        SMILE outperforms R, Python, Spark, H2O, xgboost significantly. SMILE is several times
-        faster than the closest competitor. The memory usage is also very efficient. If we can train
-        advanced machine learning models on a PC, why buy a cluster?
+      <p>
+        Compared to a third-party
+        <a href="https://github.com/szilard/benchm-ml">benchmark</a>,
+        SMILE outperforms R, Python, Spark, H2O, and XGBoost significantly —
+        often by several times while using far less memory.
+        If you can train advanced models on a laptop, why buy a cluster?
       </p>
     </div>
     <div class="col-md-5 col-sm-5 col-padded-top col-center">
@@ -456,18 +461,17 @@ title: SMILE - Home
     </div>
   </div>
 
+  <!-- ── Feature row: Ease of Use ───────────────────────────────────── -->
   <div class="row row-padded">
     <div class="col-md-7 col-sm-7">
       <h2>Ease of Use</h2>
-
       <p class="lead">
-        Write applications quickly in Java, Scala, or any JVM languages.
-        Data scientists and developers can speak the same language now!
+        Write applications quickly in Java, Scala, Kotlin, Clojure, or Groovy.
+        Data scientists and engineers can now speak the same language.
       </p>
-
-      <p>SMILE provides hundreds advanced algorithms with clean interface. Scala/Kotlin
-        API also offers high-level operators that make it easy to build machine learning apps.
-        And you can use it interactively from the shell, embedded in Scala.
+      <p>SMILE provides hundreds of algorithms behind a clean, consistent API.
+        The Scala and Kotlin bindings add high-level operators and DSL builders.
+        Use it interactively from the SMILE shell or embed it in any JVM application.
       </p>
     </div>
     <div class="col-md-5 col-sm-5 col-padded-top col-center">
@@ -499,7 +503,6 @@ val iris = read.arff("iris.arff")
 val model = randomForest("class" ~, iris)
 
 println(model.metrics)
-
           </code></pre>
           </div>
           <div class="caption">DataFrame, Model Fitting, and Metrics</div>
@@ -524,7 +527,6 @@ println(model.metrics())
       model (random-forest
              (Formula/lhs "class") iris)]
   (.metrics model))
-
           </code></pre>
           </div>
           <div class="caption">DataFrame, Model Fitting, and Metrics</div>
@@ -545,16 +547,139 @@ println model.metrics()
     </div>
   </div>
 
+  <!-- ── Feature row: LLM ───────────────────────────────────────────── -->
+  <div class="row row-padded">
+    <div class="col-md-7 col-sm-7">
+      <h2>Large Language Models</h2>
+      <p class="lead">
+        Run LLaMA-3 inference natively on the JVM — no Python bridge required.
+      </p>
+      <p>
+        SMILE ships a complete LLaMA-3 stack backed by LibTorch:
+        tiktoken BPE tokenizer, grouped-query attention (GQA),
+        rotary positional encoding (RoPE), SwiGLU feed-forward, and KV-cache.
+        An OpenAI-compatible REST server with Server-Sent Events (SSE) streaming
+        is included for production deployment.
+        See <a href="llm.html">Large Language Models</a>.
+      </p>
+    </div>
+    <div class="col-md-5 col-sm-5 col-padded-top col-center">
+      <ul class="nav nav-tabs">
+        <li class="active"><a href="#llm_gen" data-toggle="tab">Generate</a></li>
+        <li><a href="#llm_chat" data-toggle="tab">Chat</a></li>
+      </ul>
+      <div class="tab-content">
+        <div class="tab-pane active" id="llm_gen">
+          <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+var llama = Llama.build(
+    "model/Meta-Llama-3-8B-Instruct",
+    "model/.../tokenizer.model",
+    4, 2048, (byte) 0);
+
+int[][] prompts = llama.tokenizer.encode(
+        "Once upon a time", true, false);
+
+var result = llama.generate(prompts, 200,
+    0.6, 0.9, false, 42L, null);
+          </code></pre>
+          </div>
+          <div class="caption">Text Generation</div>
+        </div>
+        <div class="tab-pane" id="llm_chat">
+          <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+var reply = llama.chat(
+    new Message[]{
+        Message.system("Be concise."),
+        Message.user(
+            "What is RoPE?")
+    },
+    128, 0.7, 0.9, false, 0L, null);
+
+System.out.println(reply.content());
+          </code></pre>
+          </div>
+          <div class="caption">Chat Completion</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Feature row: Deep Learning ────────────────────────────────── -->
+  <div class="row row-padded">
+    <div class="col-md-7 col-sm-7">
+      <h2>Deep Learning &amp; Computer Vision</h2>
+      <p class="lead">
+        GPU-accelerated neural networks — build, train, and deploy on LibTorch.
+      </p>
+      <p>
+        The <code>smile-deep</code> module exposes LibTorch tensors, all standard
+        layer types (linear, Conv2d, pooling, BN/GN/RMS norm, dropout, embedding),
+        loss functions, and optimizers (SGD, Adam, AdamW, RMSprop) through a clean
+        Java API. Pretrained <strong>EfficientNet-V2</strong> (S/M/L) models for
+        ImageNet classification are available with a single method call.
+        See <a href="deep-learning.html">Deep Learning</a>.
+      </p>
+    </div>
+    <div class="col-md-5 col-sm-5 col-padded-top col-center">
+      <ul class="nav nav-tabs">
+        <li class="active"><a href="#dl_vision" data-toggle="tab">Vision</a></li>
+        <li><a href="#dl_train" data-toggle="tab">Training</a></li>
+      </ul>
+      <div class="tab-content">
+        <div class="tab-pane active" id="dl_vision">
+          <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+// Pretrained EfficientNet-V2-S
+var model = EfficientNet.V2S();
+var img = ImageIO.read(
+    new File("dog.jpg"));
+
+// Auto-preprocesses the image
+try (var logits = model.forward(img)) {
+    var probs = logits.softmax(1);
+    int cls = probs.argmax(1, false)
+        .intValue();
+}
+          </code></pre>
+          </div>
+          <div class="caption">ImageNet Classification</div>
+        </div>
+        <div class="tab-pane" id="dl_train">
+          <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+var mlp = new SequentialBlock(
+    Layer.relu(784, 256),
+    Layer.relu(256, 128),
+    Layer.logSoftmax(128, 10));
+
+var opt = Optimizer.adam(
+    mlp.asTorch().parameters(), 1e-3);
+
+mlp.train(10, dataset,
+    Loss.nll(), opt,
+    new Accuracy(), testDataset);
+          </code></pre>
+          </div>
+          <div class="caption">Training Loop</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Feature row: Comprehensive ───────────────────────────────── -->
   <div class="row row-padded">
     <div class="col-md-7 col-sm-7">
       <h2>Comprehensive</h2>
-
       <p class="lead">
-        The most complete machine learning engine. SMILE covers every aspect of machine learning.
+        The most complete machine learning engine on the JVM.
       </p>
-      <p>LLM, computer vision, deep learning, classification, regression, clustering, association rule mining, feature selection,
-        manifold learning, multidimensional scaling, genetic algorithm, missing value imputation,
-        efficient nearest neighbor search, etc. See the sidebar for a list of available algorithms.
+      <p>SMILE covers every aspect of machine learning — LLM, computer vision,
+        deep learning, classification, regression, clustering, association rule
+        mining, manifold learning, nearest-neighbor search, feature engineering,
+        missing-value imputation, time series, NLP, and more.
+        See the sidebar for a full list of algorithms.
       </p>
     </div>
     <div class="col-md-5 col-sm-5 col-padded-top col-center">
@@ -564,17 +689,18 @@ println model.metrics()
     </div>
   </div>
 
+  <!-- ── Feature row: NLP ───────────────────────────────────────────── -->
   <div class="row row-padded">
     <div class="col-md-7 col-sm-7">
       <h2>Natural Language Processing</h2>
-
       <p class="lead">
-        Understanding human language, and the intent behind our words.
+        From classic text processing to state-of-the-art LLM inference.
       </p>
-      <p>GenAI with Llama 3 on JVM (more coming). SMILE also includes many classic
-        NLP algorithms such as tokenizers, stemming, word2vec, phrase detection,
-        part-of-speech tagging, keyword extraction, named entity recognition,
-        sentiment analysis, relevance ranking, taxomony, etc.
+      <p>SMILE includes classic NLP building blocks — sentence splitter,
+        word tokenizer, Porter/Lancaster stemmers, HMM POS tagger,
+        bigram/phrase extraction, keyword detection, BM25 relevance ranking,
+        and Word2Vec embeddings — alongside the full LLaMA-3 inference stack.
+        See <a href="nlp.html">NLP</a> and <a href="llm.html">LLM</a>.
       </p>
     </div>
     <div class="col-md-5 col-sm-5 col-padded-top col-center">
@@ -584,18 +710,20 @@ println model.metrics()
     </div>
   </div>
 
+  <!-- ── Feature row: Mathematics ──────────────────────────────────── -->
   <div class="row row-padded">
     <div class="col-md-7 col-sm-7">
-      <h2>Mathematics and Statistics</h2>
-
+      <h2>Mathematics &amp; Statistics</h2>
       <p class="lead">
-        Hidden gems in Smile.
+        A complete numerical computing environment inside the JVM.
       </p>
-      <p>From special functions, linear algebra, to random number generators,
-          statistical distributions and hypothesis tests, SMILE provides an
-          advanced numerical computing environment. In additions, graph,
-          wavlets, and a variety of interpolation algorithms are implemented.
-          SMILE even includes a computer algerbra system.
+      <p>Dense, band, and sparse matrices; LU, Cholesky, QR, EVD, SVD decompositions;
+        BFGS / L-BFGS optimizers; wavelets; interpolation (linear, cubic spline,
+        bilinear, bicubic); probability distributions; hypothesis tests (t-test,
+        chi-squared, ANOVA, KS); and even a Scala-based computer algebra system
+        with symbolic differentiation.
+        See <a href="linear-algebra.html">Linear Algebra</a> and
+        <a href="statistics.html">Statistics</a>.
       </p>
     </div>
     <div class="col-md-5 col-sm-5 col-padded-top col-center">
@@ -645,59 +773,49 @@ println(dx)
     </div>
   </div>
 
+  <!-- ── Feature row: Visualization ───────────────────────────────── -->
   <div class="row row-padded">
     <div class="col-md-7 col-sm-7">
       <h2>Data Visualization</h2>
-
       <p class="lead">
-        Interactive 2D/3D math plot.
+        Interactive 2D/3D Swing plots and declarative Vega-Lite charts.
       </p>
-      <p>Scatter plot, line plot, staircase plot, bar plot, box plot, heatmap, hexmap, histogram, qq plot, surface,
-        grid, contour, dendrogram, sparse matrix visualization, wireframe, etc. SMILE also supports declarative
-        data visualization that compiles to <a href="https://vega.github.io/vega-lite/">Vega-Lite</a>.
+      <p>Scatter plot, line plot, bar plot, box plot, heatmap, hexmap,
+        histogram, QQ plot, surface, contour, dendrogram, wireframe, and more.
+        SMILE also supports declarative visualization that compiles to
+        <a href="https://vega.github.io/vega-lite/">Vega-Lite</a> for
+        browser and Jupyter rendering.
+        See <a href="visualization.html">Visualization</a> and
+        <a href="vegalite.html">Declarative Visualization</a>.
       </p>
-    <div id="vegalite"></div>
-    <script type="text/javascript">
-      var spec = {
-  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
-  "width": 400,
-  "height": 300,
-  "title": "Choropleth of Unemployment Rate per County",
-  "data": {
-    "url": "https://vega.github.io/vega-lite/examples/data/us-10m.json",
-    "format": {
-      "type": "topojson",
-      "feature": "counties"
-    }
-  },
-  "transform": [{
-    "lookup": "id",
-    "from": {
-      "data": {
-        "url": "https://vega.github.io/vega-lite/examples/data/unemployment.tsv"
-      },
-      "key": "id",
-      "fields": ["rate"]
-    }
-  }],
-  "projection": {
-    "type": "albersUsa"
-  },
-  "mark": "geoshape",
-  "encoding": {
-    "color": {
-      "field": "rate",
-      "type": "quantitative"
-    }
-  }
-};
-      vegaEmbed('#vegalite', spec);
-    </script>
+      <div id="vegalite"></div>
+      <script type="text/javascript">
+        var spec = {
+          "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+          "width": 400, "height": 300,
+          "title": "Choropleth of Unemployment Rate per County",
+          "data": {
+            "url": "https://vega.github.io/vega-lite/examples/data/us-10m.json",
+            "format": { "type": "topojson", "feature": "counties" }
+          },
+          "transform": [{
+            "lookup": "id",
+            "from": {
+              "data": { "url": "https://vega.github.io/vega-lite/examples/data/unemployment.tsv" },
+              "key": "id", "fields": ["rate"]
+            }
+          }],
+          "projection": { "type": "albersUsa" },
+          "mark": "geoshape",
+          "encoding": { "color": { "field": "rate", "type": "quantitative" } }
+        };
+        vegaEmbed('#vegalite', spec);
+      </script>
     </div>
     <div class="col-md-5 col-sm-5 col-padded-top col-center">
       <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/math.png" style="width: 100%;" />
-        <img src="gallery/smile-demo-ann.png" style="width: 100%;" />
+        <img src="gallery/smile-demo-ann.png" style="width: 100%; margin-top: 12px;" />
       </div>
     </div>
   </div>
