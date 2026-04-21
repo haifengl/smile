@@ -41,7 +41,7 @@ import smile.util.AutoScope;
 public class Llama {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Llama.class);
     /** The model family name. */
-    final String family = "meta/llama3";
+    static final String family = "meta/llama3";
     /** The model instance name. */
     final String name;
     /** The transformer model. */
@@ -214,8 +214,9 @@ public class Llama {
             int pad = tokenizer.pad();
             Tensor tokens = Tensor.full(pad, batchSize, totalLen);
             for (int i = 0; i < batchSize; i++) {
-                var prompt = Tensor.of(prompts[i]);
-                tokens.put_(prompt, Index.of(i), Index.slice(0, prompts[i].length));
+                try (var prompt = Tensor.of(prompts[i])) {
+                    tokens.put_(prompt, Index.of(i), Index.slice(0, prompts[i].length));
+                }
             }
 
             Tensor tokenLogprobs = null;
