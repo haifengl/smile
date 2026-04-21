@@ -24,7 +24,6 @@ import smile.data.transform.ColumnTransform;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
-import smile.data.vector.IntVector;
 import smile.datasets.BreastCancer;
 import smile.datasets.Default;
 import smile.datasets.Iris;

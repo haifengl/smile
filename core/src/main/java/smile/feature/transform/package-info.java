@@ -16,7 +16,53 @@
  */
 
 /**
- * Feature transformations.
+ * Feature transformations for preprocessing numeric data before model training.
+ *
+ * <p>The package provides the following transformers:
+ *
+ * <table border="1" summary="Feature transformers">
+ *   <tr><th>Class</th><th>Technique</th><th>Scope</th><th>Typical Use Case</th></tr>
+ *   <tr>
+ *     <td>{@link smile.feature.transform.Scaler}</td>
+ *     <td>Min–max scaling to [0, 1]</td>
+ *     <td>Column-wise</td>
+ *     <td>Bounded features; sensitive to outliers</td>
+ *   </tr>
+ *   <tr>
+ *     <td>{@link smile.feature.transform.WinsorScaler}</td>
+ *     <td>Percentile-clipped min–max scaling to [0, 1]</td>
+ *     <td>Column-wise</td>
+ *     <td>Outlier-robust bounded scaling (default 5th–95th percentile)</td>
+ *   </tr>
+ *   <tr>
+ *     <td>{@link smile.feature.transform.MaxAbsScaler}</td>
+ *     <td>Divide by maximum absolute value; range [−1, 1]</td>
+ *     <td>Column-wise</td>
+ *     <td>Preserves sparsity; suitable for sparse data</td>
+ *   </tr>
+ *   <tr>
+ *     <td>{@link smile.feature.transform.Standardizer}</td>
+ *     <td>Zero mean, unit variance (z-score)</td>
+ *     <td>Column-wise</td>
+ *     <td>Gaussian features; distance-based models (KNN, SVM)</td>
+ *   </tr>
+ *   <tr>
+ *     <td>{@link smile.feature.transform.RobustStandardizer}</td>
+ *     <td>Subtract median, divide by IQR</td>
+ *     <td>Column-wise</td>
+ *     <td>Outlier-robust standardization</td>
+ *   </tr>
+ *   <tr>
+ *     <td>{@link smile.feature.transform.Normalizer}</td>
+ *     <td>Scale each row to unit L1 / L2 / L∞ norm</td>
+ *     <td>Row-wise (stateless)</td>
+ *     <td>Text classification, cosine-similarity models</td>
+ *   </tr>
+ * </table>
+ *
+ * <p>All column-wise transformers implement
+ * {@link smile.data.transform.InvertibleColumnTransform} and can be composed
+ * into a pipeline via {@link smile.data.transform.Transform#pipeline}.
  *
  * @author Haifeng Li
  */

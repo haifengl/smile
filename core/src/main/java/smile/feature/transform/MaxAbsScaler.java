@@ -31,6 +31,10 @@ import smile.util.function.Function;
  * of each feature in the training set will be 1.0. It does not shift/center
  * the data, and thus does not destroy any sparsity.
  *
+ * <p>The maximum absolute value accumulator is initialized at 0.0, so even
+ * all-negative columns produce the correct result (e.g., {@code [-3,-2,-1]}
+ * yields scale = 3.0). When all values are zero the scale falls back to 1.0.
+ *
  * @author Haifeng Li
  */
 public interface MaxAbsScaler {
@@ -40,6 +44,8 @@ public interface MaxAbsScaler {
      * @param columns the columns to transform.
      *                If empty, transform all the numeric columns.
      * @return the transform.
+     * @throws IllegalArgumentException if the data frame is empty or a
+     *         specified column is non-numeric.
      */
     static InvertibleColumnTransform fit(DataFrame data, String... columns) {
         if (data.isEmpty()) {

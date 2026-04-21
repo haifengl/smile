@@ -87,5 +87,48 @@ public class NormalizerTest {
                 () -> new Normalizer(Normalizer.Norm.L2));
         assertEquals("Empty list of columns to transform", error.getMessage());
     }
-}
 
+    @Test
+    public void testGivenNullNormWhenCreatingNormalizerThenNullPointerExceptionIsThrown() {
+        // Given / When / Then
+        assertThrows(NullPointerException.class, () -> new Normalizer(null, "x"));
+    }
+
+    @Test
+    public void testGivenNegativeValuesWhenApplyingL1NormalizerThenCorrectFractionsAreReturned() {
+        // Given: [-3, 1] — L1 norm = 4
+        StructType schema = new StructType(
+                new StructField("a", DataTypes.DoubleType),
+                new StructField("b", DataTypes.DoubleType)
+        );
+        DataFrame data = DataFrame.of(schema, List.of(
+                Tuple.of(schema, new Object[]{-3.0, 1.0})
+        ));
+
+        // When
+        DataFrame result = new Normalizer(Normalizer.Norm.L1, "a", "b").apply(data);
+
+        // Then
+        assertEquals(-0.75, result.getDouble(0, 0), TOLERANCE);
+        assertEquals( 0.25, result.getDouble(0, 1), TOLERANCE);
+    }
+
+    @Test
+    public void testGivenMixedSchemaWhenApplyingNormalizerThenUntouchedColumnIsUnchanged() {
+        // Given: schema has a numeric "x" and a numeric "tag"; only "x" is normalized
+        StructType schema = new StructType(
+                new StructField("x", DataTypes.DoubleType),
+                new StructField("tag", DataTypes.DoubleType)
+        );
+        DataFrame data = DataFrame.of(schema, List.of(
+                Tuple.of(schema, new Object[]{3.0, 99.0})
+        ));
+
+        // When
+        DataFrame result = new Normalizer(Normalizer.Norm.L2, "x").apply(data);
+
+        // Then – "x" normalized to 1.0, "tag" unchanged
+        assertEquals(1.0, result.getDouble(0, 0), TOLERANCE);
+        assertEquals(99.0, result.getDouble(0, 1), TOLERANCE);
+    }
+}

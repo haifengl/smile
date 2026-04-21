@@ -18,6 +18,7 @@ package smile.feature.transform;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import smile.data.Tuple;
 import smile.data.transform.Transform;
@@ -52,10 +53,13 @@ public class Normalizer implements Transform {
 
     /**
      * Constructor.
-     * @param norm the vector norm.
-     * @param columns the columns to transform.
+     * @param norm the vector norm. Must not be {@code null}.
+     * @param columns the columns to transform. Must not be empty.
+     * @throws NullPointerException if {@code norm} is {@code null}.
+     * @throws IllegalArgumentException if no columns are specified.
      */
     public Normalizer(Norm norm, String... columns) {
+        Objects.requireNonNull(norm, "norm");
         if (columns.length == 0) {
             throw new IllegalArgumentException("Empty list of columns to transform");
         }

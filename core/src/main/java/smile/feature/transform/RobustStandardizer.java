@@ -16,7 +16,7 @@
  */
 package smile.feature.transform;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import smile.data.transform.InvertibleColumnTransform;
 import smile.data.type.StructField;
@@ -30,6 +30,12 @@ import smile.util.function.Function;
  * Robustly standardizes numeric feature by subtracting
  * the median and dividing by the IQR.
  *
+ * <p>Quantiles (median, 25th, 75th percentile) are computed via
+ * {@code IQAgent}, which produces <em>approximate</em> results. On very
+ * small datasets (&lt; 20 rows) results may differ slightly from exact
+ * sort-based quantiles. When the IQR is zero (e.g. constant column),
+ * the scale falls back to 1.0 so that only centering is applied.
+ *
  * @author Haifeng Li
  */
 public interface RobustStandardizer {
@@ -39,6 +45,8 @@ public interface RobustStandardizer {
      * @param columns the columns to transform.
      *                If empty, transform all the numeric columns.
      * @return the transform.
+     * @throws IllegalArgumentException if the data frame is empty or a
+     *         specified column is non-numeric.
      */
     static InvertibleColumnTransform fit(DataFrame data, String... columns) {
         if (data.isEmpty()) {
@@ -53,8 +61,8 @@ public interface RobustStandardizer {
                     .toArray(String[]::new);
         }
 
-        Map<String, Function> transforms = new HashMap<>();
-        Map<String, Function> inverses = new HashMap<>();
+        Map<String, Function> transforms = new LinkedHashMap<>();
+        Map<String, Function> inverses = new LinkedHashMap<>();
         for (String column : columns) {
             StructField field = schema.field(column);
             if (!field.isNumeric()) {
