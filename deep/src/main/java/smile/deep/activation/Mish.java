@@ -20,27 +20,45 @@ import org.bytedeco.pytorch.global.torch;
 import smile.deep.tensor.Tensor;
 
 /**
- * Rectified Linear Unit activation function.
+ * Mish activation function.
  *
+ * <p>Mish is a self-regularized non-monotonic activation function:
+ * <pre>
+ *   mish(x) = x * tanh(softplus(x))
+ *           = x * tanh(ln(1 + exp(x)))
+ * </pre>
+ *
+ * <p>Mish is used in many modern object detection models such as YOLOv4/v5.
+ *
+ * @see <a href="https://arxiv.org/abs/1908.08681">Mish: A Self Regularized
+ *      Non-Monotonic Activation Function</a>
  * @author Haifeng Li
  */
-public class ReLU extends ActivationFunction {
+public class Mish extends ActivationFunction {
+    /**
+     * Constructor.
+     */
+    public Mish() {
+        this(false);
+    }
+
     /**
      * Constructor.
      * @param inplace true if the operation executes in-place.
      */
-    public ReLU(boolean inplace) {
-        super("ReLU", inplace);
+    public Mish(boolean inplace) {
+        super("Mish", inplace);
     }
 
     @Override
     public Tensor forward(Tensor input) {
         var x = input.asTorch();
         if (inplace) {
-            torch.relu_(x);
+            torch.mish_(x);
             return input;
         } else {
-            return new Tensor(torch.relu(x));
+            return new Tensor(torch.mish(x));
         }
     }
 }
+

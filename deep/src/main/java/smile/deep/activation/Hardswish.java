@@ -20,27 +20,45 @@ import org.bytedeco.pytorch.global.torch;
 import smile.deep.tensor.Tensor;
 
 /**
- * Rectified Linear Unit activation function.
+ * Hard Swish activation function.
  *
+ * <p>Hard Swish is a computationally efficient approximation of Swish/SiLU:
+ * <pre>
+ *   hardswish(x) = x * hardsigmoid(x)
+ *                = x * ReLU6(x + 3) / 6
+ * </pre>
+ *
+ * <p>It is used in MobileNetV3 and EfficientNetV2 to reduce computational cost
+ * compared to sigmoid-based Swish.
+ *
+ * @see <a href="https://arxiv.org/abs/1905.02244">Searching for MobileNetV3</a>
  * @author Haifeng Li
  */
-public class ReLU extends ActivationFunction {
+public class Hardswish extends ActivationFunction {
+    /**
+     * Constructor.
+     */
+    public Hardswish() {
+        this(false);
+    }
+
     /**
      * Constructor.
      * @param inplace true if the operation executes in-place.
      */
-    public ReLU(boolean inplace) {
-        super("ReLU", inplace);
+    public Hardswish(boolean inplace) {
+        super("Hardswish", inplace);
     }
 
     @Override
     public Tensor forward(Tensor input) {
         var x = input.asTorch();
         if (inplace) {
-            torch.relu_(x);
+            torch.hardswish_(x);
             return input;
         } else {
-            return new Tensor(torch.relu(x));
+            return new Tensor(torch.hardswish(x));
         }
     }
 }
+

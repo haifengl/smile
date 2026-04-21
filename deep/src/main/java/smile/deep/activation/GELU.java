@@ -36,7 +36,7 @@ public class GELU extends ActivationFunction {
     @Override
     public Tensor forward(Tensor input) {
         var x = input.asTorch();
-        if (!module.is_training() && inplace) {
+        if (inplace) {
             torch.gelu_(x);
             return input;
         } else {
