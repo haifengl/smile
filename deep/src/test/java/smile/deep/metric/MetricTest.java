@@ -295,5 +295,255 @@ public class MetricTest {
         assertEquals("Micro-F1",          new F1Score(Averaging.Micro).name());
         assertEquals("Weighted-F1",       new F1Score(Averaging.Weighted).name());
     }
-}
 
+    // -----------------------------------------------------------------------
+    // compute() before any update() — should return 0.0, not NPE
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testGivenNoUpdatesWhenComputingAccuracyThenReturnsZero() {
+        assertEquals(0.0, new Accuracy().compute(), 1e-9);
+    }
+
+    @Test
+    public void testGivenNoUpdatesWhenComputingPrecisionThenReturnsZero() {
+        assertEquals(0.0, new Precision().compute(), 1e-9);
+        assertEquals(0.0, new Precision(Averaging.Macro).compute(), 1e-9);
+    }
+
+    @Test
+    public void testGivenNoUpdatesWhenComputingRecallThenReturnsZero() {
+        assertEquals(0.0, new Recall().compute(), 1e-9);
+        assertEquals(0.0, new Recall(Averaging.Macro).compute(), 1e-9);
+    }
+
+    @Test
+    public void testGivenNoUpdatesWhenComputingF1ThenReturnsZero() {
+        assertEquals(0.0, new F1Score().compute(), 1e-9);
+        assertEquals(0.0, new F1Score(Averaging.Macro).compute(), 1e-9);
+    }
+
+    // -----------------------------------------------------------------------
+    // Multi-batch accumulation
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testGivenMultipleBatchesWhenComputingAccuracyThenAccumulatesCorrectly() {
+        // Batch 1: 4 correct out of 4 (100%)
+        // Batch 2: 2 correct out of 4 (50%)
+        // Overall: 6/8 = 75%
+        int[] labels1 = {0, 1, 2, 0};
+        int[] labels2pred = {0, 1, 0, 1};
+        int[] labels2true = {0, 1, 1, 0};
+
+        Tensor out1 = logits(labels1, 3);   Tensor tgt1 = target(labels1);
+        Tensor out2 = logits(labels2pred, 2); Tensor tgt2 = target(labels2true);
+
+        Accuracy metric = new Accuracy();
+        metric.update(out1, tgt1);
+        metric.update(out2, tgt2);
+
+        assertEquals(6.0 / 8.0, metric.compute(), 1e-6);
+        out1.close(); tgt1.close(); out2.close(); tgt2.close();
+    }
+
+    @Test
+    public void testGivenResetAndReUpdateWhenComputingAccuracyThenUsesNewBatchOnly() {
+        // First batch: all correct
+        int[] labels1 = {0, 1, 2};
+        Tensor out1 = logits(labels1, 3); Tensor tgt1 = target(labels1);
+        Accuracy metric = new Accuracy();
+        metric.update(out1, tgt1);
+        assertEquals(1.0, metric.compute(), 1e-6);
+
+        // Reset and update with half-correct batch
+        metric.reset();
+        int[] pred2   = {0, 1, 0, 1};
+        int[] labels2 = {0, 1, 1, 0};
+        Tensor out2 = logits(pred2, 2); Tensor tgt2 = target(labels2);
+        metric.update(out2, tgt2);
+        assertEquals(0.5, metric.compute(), 1e-6);
+
+        out1.close(); tgt1.close(); out2.close(); tgt2.close();
+    }
+
+    // -----------------------------------------------------------------------
+    // Precision — weighted averaging
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testGivenImbalancedClassesWhenComputingWeightedPrecisionThenCorrectValue() {
+        // 3 samples of class 0, 1 sample of class 1, all predicted correctly.
+        // per-class precision = [1.0, 1.0]; weighted = 1.0
+        int[] labels = {0, 0, 0, 1};
+        Tensor output = logits(labels, 2); Tensor tgt = target(labels);
+        Precision metric = new Precision(Averaging.Weighted);
+        metric.update(output, tgt);
+        assertEquals(1.0, metric.compute(), 1e-5);
+        output.close(); tgt.close();
+    }
+
+    @Test
+    public void testGivenMultiBatchMacroPrecisionWhenComputingThenAccumulates() {
+        // Batch 1: all class 0 predicted as 0 (TP=2 for class 0, FP=0, FP=0 for class 1)
+        // Batch 2: all class 1 predicted as 1 (TP=2 for class 1)
+        // macro precision should be 1.0
+        int[] pred1 = {0, 0}; int[] true1 = {0, 0};
+        int[] pred2 = {1, 1}; int[] true2 = {1, 1};
+
+        Tensor out1 = logits(pred1, 2); Tensor tgt1 = target(true1);
+        Tensor out2 = logits(pred2, 2); Tensor tgt2 = target(true2);
+
+        Precision metric = new Precision(Averaging.Macro);
+        metric.update(out1, tgt1);
+        metric.update(out2, tgt2);
+        assertEquals(1.0, metric.compute(), 1e-5);
+
+        out1.close(); tgt1.close(); out2.close(); tgt2.close();
+    }
+
+    // -----------------------------------------------------------------------
+    // Recall — macro and weighted
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testGivenPerfectPredictionsWhenComputingMacroRecallThenReturnsOne() {
+        int[] labels = {0, 1, 2, 0, 1, 2};
+        Tensor output = logits(labels, 3); Tensor tgt = target(labels);
+        Recall metric = new Recall(Averaging.Macro);
+        metric.update(output, tgt);
+        assertEquals(1.0, metric.compute(), 1e-5);
+        output.close(); tgt.close();
+    }
+
+    @Test
+    public void testGivenPerfectPredictionsWhenComputingWeightedRecallThenReturnsOne() {
+        int[] labels = {0, 1, 2, 0, 1, 2};
+        Tensor output = logits(labels, 3); Tensor tgt = target(labels);
+        Recall metric = new Recall(Averaging.Weighted);
+        metric.update(output, tgt);
+        assertEquals(1.0, metric.compute(), 1e-5);
+        output.close(); tgt.close();
+    }
+
+    @Test
+    public void testGivenBinaryRecallWhenNoPositiveInstancesThenReturnsZeroNotNaN() {
+        // All labels are class 0; no class-1 instances → recall for class 1 = 0 (not NaN)
+        int[] pred   = {0, 0, 0};
+        int[] labels = {0, 0, 0};
+        Tensor output = logits(pred, 2); Tensor tgt = target(labels);
+        Recall metric = new Recall(); // binary, strategy == null
+        metric.update(output, tgt);
+        double val = metric.compute();
+        assertFalse(Double.isNaN(val), "recall should not be NaN when no positive instances");
+        assertFalse(Double.isInfinite(val), "recall should not be Inf when no positive instances");
+        output.close(); tgt.close();
+    }
+
+    // -----------------------------------------------------------------------
+    // F1 — weighted and multi-batch
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testGivenPerfectPredictionsWhenComputingWeightedF1ThenReturnsOne() {
+        int[] labels = {0, 1, 2, 0, 1, 2};
+        Tensor output = logits(labels, 3); Tensor tgt = target(labels);
+        F1Score metric = new F1Score(Averaging.Weighted);
+        metric.update(output, tgt);
+        assertEquals(1.0, metric.compute(), 1e-5);
+        output.close(); tgt.close();
+    }
+
+    @Test
+    public void testGivenAllWrongPredictionsWhenComputingF1ThenReturnsZero() {
+        // 2 classes: all predicted as 0, all true are 1 → TP=0 → P=0, R=0 → F1=0
+        int[] pred   = {0, 0, 0};
+        int[] labels = {1, 1, 1};
+        Tensor output = logits(pred, 2); Tensor tgt = target(labels);
+        F1Score metric = new F1Score();
+        metric.update(output, tgt);
+        assertEquals(0.0, metric.compute(), 1e-5);
+        output.close(); tgt.close();
+    }
+
+    @Test
+    public void testGivenMultipleBatchesWhenComputingMacroF1ThenAccumulatesCorrectly() {
+        // Same prediction in two batches → result same as single batch doubled
+        int[] pred   = {1, 1, 0, 0};
+        int[] labels = {1, 0, 1, 0};
+        Tensor out1 = logits(pred, 2); Tensor tgt1 = target(labels);
+        Tensor out2 = logits(pred, 2); Tensor tgt2 = target(labels);
+
+        F1Score metric = new F1Score(Averaging.Macro);
+        metric.update(out1, tgt1);
+        double afterOne = metric.compute();
+        metric.update(out2, tgt2);
+        double afterTwo = metric.compute();
+
+        // Doubling the counts should not change the ratio
+        assertEquals(afterOne, afterTwo, 1e-5);
+        out1.close(); tgt1.close(); out2.close(); tgt2.close();
+    }
+
+    // -----------------------------------------------------------------------
+    // toString format
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testGivenPerfectAccuracyWhenToStringThenContains100() {
+        int[] labels = {0, 1, 2};
+        Tensor output = logits(labels, 3); Tensor tgt = target(labels);
+        Accuracy metric = new Accuracy();
+        metric.update(output, tgt);
+        String s = metric.toString();
+        assertTrue(s.contains("100"), "toString should show 100% for perfect accuracy, got: " + s);
+        output.close(); tgt.close();
+    }
+
+    @Test
+    public void testGivenPerfectF1WhenToStringThenContains100() {
+        int[] labels = {0, 1};
+        Tensor output = logits(labels, 2); Tensor tgt = target(labels);
+        F1Score metric = new F1Score(Averaging.Macro);
+        metric.update(output, tgt);
+        String s = metric.toString();
+        assertTrue(s.contains("100"), "toString should show 100% for perfect F1, got: " + s);
+        output.close(); tgt.close();
+    }
+
+    // -----------------------------------------------------------------------
+    // Accuracy threshold (1-D output)
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testGivenOneDimOutputWhenComputingAccuracyWithThresholdThenCorrectValue() {
+        // 1-D output: values below threshold → class 0, values above → class 1
+        // outputs = [0.2, 0.8, 0.3, 0.9], threshold = 0.5
+        // predicted = [0, 1, 0, 1], true = [0, 1, 0, 1] → accuracy = 1.0
+        float[] outputs = {0.2f, 0.8f, 0.3f, 0.9f};
+        long[]  labels  = {0L,   1L,   0L,   1L  };
+        Tensor output = Tensor.of(outputs, 4);
+        Tensor tgt    = Tensor.of(labels,  4);
+        Accuracy metric = new Accuracy(0.5);
+        metric.update(output, tgt);
+        assertEquals(1.0, metric.compute(), 1e-6);
+        output.close(); tgt.close();
+    }
+
+    @Test
+    public void testGivenMultiClassPredictionWhenComputingMultiAveragingThenConsistent() {
+        // Weighted recall == accuracy for multiclass
+        int[] labels = {0, 1, 2, 0, 1, 2};
+        Tensor output = logits(labels, 3); Tensor tgt = target(labels);
+
+        Accuracy acc     = new Accuracy();
+        Recall weightedR = new Recall(Averaging.Weighted);
+
+        acc.update(output, tgt);
+        weightedR.update(output, tgt);
+
+        assertEquals(acc.compute(), weightedR.compute(), 1e-5,
+                "Weighted recall should equal accuracy for perfect predictions");
+        output.close(); tgt.close();
+    }
+}
