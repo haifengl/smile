@@ -16,7 +16,7 @@
  */
 package smile.feature.transform;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import smile.data.transform.InvertibleColumnTransform;
 import smile.data.type.StructField;
@@ -30,7 +30,12 @@ import smile.util.function.Function;
  * Standardization makes an assumption that the data follows
  * a Gaussian distribution and are also not robust when outliers present.
  * A robust alternative is to subtract the median and divide by the IQR
- * by <code>RobustStandardizer</code>.
+ * by {@code RobustStandardizer}.
+ *
+ * <p>The standard deviation is computed with the <em>sample</em> formula
+ * (N−1 denominator). For a constant column (stdev = 0), the scale falls
+ * back to 1.0 so that the output is simply {@code x - mean} (all zeros
+ * for training data). A single-row data frame is treated the same way.
  *
  * @author Haifeng Li
  */
@@ -41,6 +46,8 @@ public interface Standardizer {
      * @param columns the columns to transform.
      *                If empty, transform all the numeric columns.
      * @return the transform.
+     * @throws IllegalArgumentException if the data frame is empty or a
+     *         specified column is non-numeric.
      */
     static InvertibleColumnTransform fit(DataFrame data, String... columns) {
         if (data.isEmpty()) {
@@ -55,8 +62,8 @@ public interface Standardizer {
                     .toArray(String[]::new);
         }
 
-        Map<String, Function> transforms = new HashMap<>();
-        Map<String, Function> inverses = new HashMap<>();
+        Map<String, Function> transforms = new LinkedHashMap<>();
+        Map<String, Function> inverses = new LinkedHashMap<>();
         for (String column : columns) {
             StructField field = schema.field(column);
             if (!field.isNumeric()) {

@@ -16,7 +16,7 @@
  */
 package smile.feature.transform;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import smile.data.transform.InvertibleColumnTransform;
 import smile.data.type.StructField;
@@ -32,9 +32,14 @@ import smile.util.function.Function;
  * Winsorization procedure should be applied: values greater than the
  * specified upper limit are replaced with the upper limit, and those
  * below the lower limit are replaced with the lower limit. Often, the
- * specified range is indicate in terms of percentiles of the original
+ * specified range is indicated in terms of percentiles of the original
  * distribution (like the 5th and 95th percentile).
  *
+ * <p>Note: the inverse transform is <em>lossy</em> for test-time values
+ * that fall outside the training range [min, max], because they are
+ * clamped to [0, 1] during the forward pass.
+ *
+ * @see WinsorScaler
  * @author Haifeng Li
  */
 public interface Scaler {
@@ -44,6 +49,8 @@ public interface Scaler {
      * @param columns the columns to transform.
      *                If empty, transform all the numeric columns.
      * @return the transform.
+     * @throws IllegalArgumentException if the data frame is empty or a
+     *         specified column is non-numeric.
      */
     static InvertibleColumnTransform fit(DataFrame data, String... columns) {
         if (data.isEmpty()) {
@@ -58,8 +65,8 @@ public interface Scaler {
                     .toArray(String[]::new);
         }
 
-        Map<String, Function> transforms = new HashMap<>();
-        Map<String, Function> inverses = new HashMap<>();
+        Map<String, Function> transforms = new LinkedHashMap<>();
+        Map<String, Function> inverses = new LinkedHashMap<>();
         for (String column : columns) {
             StructField field = schema.field(column);
             if (!field.isNumeric()) {

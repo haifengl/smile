@@ -16,7 +16,7 @@
  */
 package smile.feature.transform;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import smile.data.transform.InvertibleColumnTransform;
 import smile.data.type.StructField;
@@ -42,22 +42,34 @@ public interface WinsorScaler {
     /**
      * Fits the data transformation with 5% lower limit and 95% upper limit.
      * @param data the training data.
+     * @param columns the columns to transform.
+     *                If empty, transform all the numeric columns.
      * @return the transform.
      */
-    static InvertibleColumnTransform fit(DataFrame data) {
-        return fit(data, 0.05, 0.95);
+    static InvertibleColumnTransform fit(DataFrame data, String... columns) {
+        return fit(data, 0.05, 0.95, columns);
     }
 
     /**
      * Fits the data transformation.
+     * <p>
+     * Note: Quantiles are computed via {@code IQAgent}, which produces
+     * <em>approximate</em> results; on very small datasets (&lt; 20 rows) the
+     * approximation may deviate from exact sort-based quantiles.
+     *
      * @param data the training data.
      * @param lower the lower limit in terms of percentiles of the original
-     *              distribution (e.g. 5th percentile).
+     *              distribution (e.g. 0.05 for the 5th percentile). Must be
+     *              in [0, 1) and strictly less than {@code upper}.
      * @param upper the upper limit in terms of percentiles of the original
-     *              distribution (e.g. 95th percentile).
+     *              distribution (e.g. 0.95 for the 95th percentile). Must be
+     *              in (0, 1] and strictly greater than {@code lower}.
      * @param columns the columns to transform.
      *                If empty, transform all the numeric columns.
      * @return the transform.
+     * @throws IllegalArgumentException if the data frame is empty, if
+     *         {@code lower &lt; 0}, {@code upper &gt; 1}, {@code lower >= upper},
+     *         or if a specified column is non-numeric.
      */
     static InvertibleColumnTransform fit(DataFrame data, double lower, double upper, String... columns) {
         if (data.isEmpty()) {
@@ -73,7 +85,7 @@ public interface WinsorScaler {
         }
 
         if (lower >= upper) {
-            throw new IllegalArgumentException(String.format("Invalid lower=%f > upper=%f", lower, upper));
+            throw new IllegalArgumentException(String.format("Invalid lower=%f >= upper=%f", lower, upper));
         }
 
         StructType schema = data.schema();
@@ -84,8 +96,8 @@ public interface WinsorScaler {
                     .toArray(String[]::new);
         }
 
-        Map<String, Function> transforms = new HashMap<>();
-        Map<String, Function> inverses = new HashMap<>();
+        Map<String, Function> transforms = new LinkedHashMap<>();
+        Map<String, Function> inverses = new LinkedHashMap<>();
         for (String column : columns) {
             StructField field = schema.field(column);
             if (!field.isNumeric()) {
