@@ -29,10 +29,20 @@ giving Java applications GPU-accelerated deep learning without leaving the JVM.
 9. [Metrics (`smile.deep.metric`)](#metrics-smiledeepmetric)
 10. [Data Loading (`smile.deep.Dataset`)](#data-loading-smiledeepsdataset)
 11. [CUDA Utilities (`smile.deep.CUDA`)](#cuda-utilities-smiledeecuda)
-12. [End-to-End Examples](#end-to-end-examples)
+12. [Large Language Models (`smile.llm`)](#large-language-models-smilellm)
+    - [Core Types](#core-types)
+    - [Tokenizer (`smile.llm.tokenizer`)](#tokenizer-smilellmtokenizer)
+    - [Positional Encodings](#positional-encodings)
+    - [LLaMA (`smile.llm.llama`)](#llama-smilellmllama)
+13. [Computer Vision (`smile.vision`)](#computer-vision-smilevision)
+    - [Image Transforms (`smile.vision.transform`)](#image-transforms-smilevisiontransform)
+    - [Image Dataset](#image-dataset)
+    - [EfficientNet](#efficientnet)
+    - [ImageNet Labels](#imagenet-labels)
+14. [End-to-End Examples](#end-to-end-examples)
     - [Training a LeNet on MNIST](#training-a-lenet-on-mnist)
     - [CPU-only MLP Training](#cpu-only-mlp-training)
-13. [Building and Testing](#building-and-testing)
+15. [Building and Testing](#building-and-testing)
 
 ---
 
@@ -65,6 +75,26 @@ smile.deep
 ├── Dataset.java   Dataset interface
 ├── DatasetImpl.java, DataSampler.java, SampleBatch.java
 └── CUDA.java      GPU info helpers
+
+smile.llm
+├── tokenizer/     Tokenizer interface + Tiktoken (BPE) implementation
+├── llama/         LLaMA-3 transformer: Llama, Transformer, TransformerBlock,
+│                  Attention, FeedForward, ModelArgs, Tokenizer (llama-specific)
+├── Message.java   Immutable dialog message (role + content)
+├── Role.java      system / user / assistant / ipython
+├── ChatCompletion.java  Inference result record
+├── FinishReason.java    stop / length / function_call / content_filter
+├── PositionalEncoding.java   Sinusoidal (original Transformer) PE
+└── RotaryPositionalEncoding.java  RoPE (used by LLaMA)
+
+smile.vision
+├── transform/     Transform interface, ImageClassification pipeline
+├── layer/         Vision-specific blocks: MBConv, FusedMBConv,
+│                  Conv2dNormActivation, SqueezeExcitation, StochasticDepth
+├── EfficientNet.java   EfficientNet-V2 architecture + pretrained factory methods
+├── VisionModel.java    Model subclass coupling a LayerBlock with a Transform
+├── ImageDataset.java   Folder-per-class dataset with background prefetch
+└── ImageNet.java       1000-class ImageNet label/folder arrays + utilities
 ```
 
 ---
@@ -491,6 +521,348 @@ boolean bf16 = Tensor.isBF16Supported();       // Ampere or newer
 
 ---
 
+## Large Language Models (`smile.llm`)
+
+The `smile.llm` package provides building blocks and a complete LLaMA-3
+inference stack on top of LibTorch.
+
+### Core Types
+
+| Type | Kind | Purpose |
+|---|---|---|
+| `Role` | `enum` | `system`, `user`, `assistant`, `ipython` |
+| `Message` | `record` | A single dialog turn — `(Role role, String content)` |
+| `FinishReason` | `enum` | `stop`, `length`, `function_call`, `content_filter` |
+| `ChatCompletion` | `record` | Inference result — generated text, token arrays, log-probs, finish reason |
+
+```java
+// Build a simple conversation
+Message[] dialog = {
+    Message.system("You are a helpful assistant."),
+    Message.user("What is the capital of France?")
+};
+
+// Inspect a completion
+ChatCompletion reply = llama.chat(dialog, 256, 0.6, 0.9, false, 0L, null);
+System.out.println(reply.content());   // "The capital of France is Paris."
+System.out.println(reply.reason());    // FinishReason.stop
+```
+
+### Tokenizer (`smile.llm.tokenizer`)
+
+`Tokenizer` is the encoding/decoding interface.  `Tiktoken` is the BPE
+implementation compatible with OpenAI's tiktoken library (used by LLaMA-3):
+
+```java
+import smile.llm.tokenizer.Tiktoken;
+
+Tiktoken tok = new Tiktoken(
+        pattern,           // regex splitting pattern
+        specialTokens,     // map of special-token string → rank
+        ranks,             // merged BPE vocabulary (bytes → rank)
+        bosId, eosId       // BOS / EOS token IDs
+);
+
+// Encode with BOS+EOS
+int[] ids = tok.encode("Hello, world!", true, true);
+
+// Decode back to text
+String text = tok.decode(ids);
+
+// Vocabulary size
+int vocab = tok.size();
+```
+
+`Tiktoken` handles:
+- BPE merge table look-ups for regular tokens
+- Special token injection with a separate regex guard
+- UTF-8-safe decoding (with a strict `tryDecode` variant that throws
+  `CharacterCodingException` on invalid byte sequences)
+
+### Positional Encodings
+
+Two implementations are provided:
+
+| Class | Algorithm | Used by |
+|---|---|---|
+| `PositionalEncoding` | Sinusoidal (sin/cos, fixed) | Original Transformer |
+| `RotaryPositionalEncoding` | RoPE (complex-number rotation) | LLaMA |
+
+```java
+// Sinusoidal — precomputes a [maxLen × dim] table once
+PositionalEncoding pe = new PositionalEncoding(512, 2048);
+Tensor out = pe.forward(embeddingTensor);   // adds positional signal
+
+// RoPE — called inside Attention.forward()
+RotaryPositionalEncoding rope = new RotaryPositionalEncoding(headDim, maxSeqLen);
+```
+
+### LLaMA (`smile.llm.llama`)
+
+A full LLaMA-3 inference implementation:
+
+| Class | Role |
+|---|---|
+| `ModelArgs` | Hyperparameter record; loaded from `params.json` |
+| `Transformer` | Top-level module — embedding + N × `TransformerBlock` + output projection |
+| `TransformerBlock` | Single decoder block: `Attention` + `FeedForward` + RMS norms |
+| `Attention` | Multi-head (grouped-query) attention with KV-cache and RoPE |
+| `FeedForward` | SwiGLU feed-forward network |
+| `Tokenizer` (llama) | Thin wrapper around `smile.llm.tokenizer.Tokenizer` |
+| `Llama` | High-level entry point — `build()`, `generate()`, `chat()` |
+
+**Loading a checkpoint:**
+
+```java
+import smile.llm.llama.Llama;
+
+// Loads params.json + *.pt checkpoint(s) from the directory
+Llama llama = Llama.build(
+        "model/Meta-Llama-3-8B-Instruct",  // checkpoint dir
+        "model/Meta-Llama-3-8B-Instruct/tokenizer.model",
+        /*maxBatchSize=*/ 4,
+        /*maxSeqLen=*/    2048,
+        /*deviceId=*/     (byte) 0           // CUDA:0; use -1 for CPU
+);
+```
+
+**Text generation (raw token IDs):**
+
+```java
+int[][] prompts = { llama.tokenizer.encode("Once upon a time", true, false) };
+ChatCompletion[] results = llama.generate(
+        prompts,
+        /*maxGenLen=*/   200,
+        /*temperature=*/ 0.6,
+        /*topp=*/        0.9,
+        /*logprobs=*/    false,
+        /*seed=*/        42L,
+        /*publisher=*/   null   // or a SubmissionPublisher<String> for streaming
+);
+System.out.println(results[0].content());
+```
+
+**Chat completion (dialog format):**
+
+```java
+import smile.llm.Message;
+
+ChatCompletion reply = llama.chat(
+        new Message[]{
+            Message.system("Be concise."),
+            Message.user("Explain RoPE in one sentence.")
+        },
+        /*maxGenLen=*/   128,
+        /*temperature=*/ 0.7,
+        /*topp=*/        0.9,
+        /*logprobs=*/    false,
+        /*seed=*/        0L,
+        /*publisher=*/   null
+);
+System.out.println(reply.content());
+```
+
+**Streaming output** (single prompt only):
+
+```java
+import java.util.concurrent.SubmissionPublisher;
+
+var publisher = new SubmissionPublisher<String>();
+publisher.subscribe(new Flow.Subscriber<>() {
+    public void onNext(String token) { System.out.print(token); }
+    // ... other methods
+});
+
+int[][] prompt = { llama.tokenizer.encode("Tell me a joke", true, false) };
+llama.generate(prompt, 200, 0.8, 0.95, false, 0L, publisher);
+publisher.close();
+```
+
+> **Note:** GPU inference requires CUDA libraries on `java.library.path`.
+> On Ampere or newer hardware, the model is loaded in BFloat16; on older GPUs,
+> Float16 is used.  CPU inference runs in Float32.
+
+---
+
+## Computer Vision (`smile.vision`)
+
+The `smile.vision` package provides image classification pipelines built on
+top of the `smile.deep` layer stack.
+
+### Image Transforms (`smile.vision.transform`)
+
+`Transform` is a functional interface that converts one or more
+`BufferedImage` objects into a 4-D `[N, C, H, W]` float tensor suitable
+for a vision model.
+
+```java
+import smile.vision.transform.Transform;
+import smile.vision.transform.ImageClassification;
+
+// Standard ImageNet preprocessing:
+//   resize shorter side → 384, centre-crop to 384×384,
+//   normalize with ImageNet mean/std
+Transform t = Transform.classification(384, 384);
+
+// Custom crop / resize / normalisation
+Transform custom = new ImageClassification(
+        /*cropSize=*/  224,
+        /*resizeSize=*/ 256,
+        /*mean=*/  new float[]{0.5f, 0.5f, 0.5f},
+        /*std=*/   new float[]{0.5f, 0.5f, 0.5f},
+        /*hints=*/ java.awt.Image.SCALE_SMOOTH
+);
+
+// Apply the transform
+BufferedImage img = ImageIO.read(new File("cat.jpg"));
+try (Tensor batch = t.forward(img)) {
+    // batch shape: [1, 3, 384, 384]
+}
+```
+
+Default ImageNet statistics are available as constants:
+
+```java
+float[] mean = Transform.DEFAULT_MEAN;  // {0.485f, 0.456f, 0.406f}
+float[] std  = Transform.DEFAULT_STD;   // {0.229f, 0.224f, 0.225f}
+```
+
+The `Transform` interface also exposes helper default methods:
+
+```java
+// Resize keeping aspect ratio (shorter side → size)
+BufferedImage resized = transform.resize(image, 256, Image.SCALE_SMOOTH);
+
+// Centre-crop to square
+BufferedImage cropped = transform.crop(resized, 224, false);  // shallow copy
+BufferedImage deep    = transform.crop(resized, 224, true);   // deep copy
+
+// Convert image array → float32 [N,C,H,W] tensor (values in [0,1])
+Tensor tensor = Transform.toTensor(images);
+```
+
+### Image Dataset
+
+`ImageDataset` implements `Dataset<SampleBatch>` and reads images from a
+**folder-per-class** directory structure:
+
+```
+root/
+  dog/
+    dog001.jpg
+    dog002.jpg
+  cat/
+    cat001.jpg
+```
+
+```java
+import smile.vision.ImageDataset;
+import smile.vision.transform.Transform;
+
+Transform t = Transform.classification(224, 224);
+
+// targetTransform maps a class-folder name to an integer label
+ImageDataset ds = new ImageDataset(
+        /*batch=*/           32,
+        /*root=*/            new File("data/train"),
+        /*transform=*/       t,
+        /*targetTransform=*/ ImageNet.INSTANCE::targetTransform
+);
+
+for (SampleBatch batch : ds) {
+    Tensor images = batch.data();    // [32, 3, 224, 224]
+    Tensor labels = batch.target();  // [32]
+}
+```
+
+Image loading runs on a background platform thread and is prefetched into a
+bounded queue (capacity 100), so the training loop is never blocked waiting
+for I/O.
+
+### EfficientNet
+
+`EfficientNet` extends `LayerBlock` and implements the EfficientNet-V2
+architecture.  Three pretrained `VisionModel` variants are available as
+static factory methods:
+
+| Factory | Variant | Input size | Parameters |
+|---|---|---|---|
+| `EfficientNet.V2S()` | EfficientNet-V2-S | 384 × 384 | ~21 M |
+| `EfficientNet.V2M()` | EfficientNet-V2-M | 480 × 480 | ~54 M |
+| `EfficientNet.V2L()` | EfficientNet-V2-L | 480 × 480 | ~119 M |
+
+```java
+import smile.vision.EfficientNet;
+
+// Load pretrained weights from the default path
+VisionModel model = EfficientNet.V2S();
+
+// Or specify a custom checkpoint path
+VisionModel model = EfficientNet.V2S("checkpoints/efficientnet_v2_s.pt");
+
+// Run inference on one or more images
+BufferedImage img = ImageIO.read(new File("dog.jpg"));
+try (Tensor logits = model.forward(img)) {          // shape [1, 1000]
+    Tensor probs   = logits.softmax(1);
+    int classIdx   = probs.argmax(1, false).intValue();
+    System.out.println(ImageNet.INSTANCE.labels()[classIdx]);
+}
+```
+
+`VisionModel.forward(BufferedImage...)` automatically applies the model's
+associated `Transform`, so you never need to preprocess images manually.
+
+The `EfficientNet` constructor accepts an `MBConvConfig[]` array to define a
+custom architecture, giving fine-grained control over each inverted-residual
+stage:
+
+```java
+MBConvConfig[] config = {
+    MBConvConfig.FusedMBConv(/*expandRatio=*/1, /*kernel=*/3, /*stride=*/1,
+                              /*inCh=*/24, /*outCh=*/24, /*numLayers=*/2),
+    MBConvConfig.MBConv(4, 3, 2, 24, 48, 4),
+    // ... more stages
+};
+
+EfficientNet net = new EfficientNet(
+        config,
+        /*dropout=*/          0.2,
+        /*stochasticDepth=*/  0.2,
+        /*numClasses=*/       1000,
+        /*lastChannel=*/      1280,
+        /*normLayer=*/        null   // defaults to BatchNorm2d
+);
+```
+
+### ImageNet Labels
+
+`ImageNet` is an interface with two 1000-element string arrays and a set of
+utility methods for mapping between class indices and human-readable labels:
+
+```java
+import smile.vision.ImageNet;
+
+// The single concrete implementation
+ImageNet inet = ImageNet.INSTANCE;
+
+// Human-readable label strings ("Egyptian cat", "labrador", …)
+String[] labels  = inet.labels();
+
+// Folder names used in the ILSVRC validation set ("n02124075", …)
+String[] folders = inet.folders();
+
+// Look up a label by index
+String label = inet.labelOf(282);     // e.g. "tiger cat"
+
+// Map a folder name to a label
+String name  = inet.classify("n02124075");
+
+// Map a folder name to a class index (useful as targetTransform)
+int index    = inet.targetTransform("n02124075");
+```
+
+---
+
 ## End-to-End Examples
 
 ### CPU-only MLP Training
@@ -584,6 +956,9 @@ lenet.train(
 ./gradlew :deep:test --tests "smile.deep.metric.MetricTest"
 ./gradlew :deep:test --tests "smile.deep.LossTest"
 ./gradlew :deep:test --tests "smile.deep.layer.LayerTest"
+./gradlew :deep:test --tests "smile.llm.tokenizer.TiktokenTest"
+./gradlew :deep:test --tests "smile.vision.transform.TransformTest"
+./gradlew :deep:test --tests "smile.vision.ImageNetTest"
 ```
 
 > **Note:** Tests require the PyTorch / LibTorch native libraries to be present.
