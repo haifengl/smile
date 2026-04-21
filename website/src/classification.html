@@ -1,33 +1,122 @@
 ---
 layout: layout.njk
 permalink: "{{ page.filePathStem }}.html"
-title: Smile - Classification
+title: SMILE - Classification
 ---
 {% include "toc.njk" %}
 
 <div class="col-md-9 col-md-pull-3">
     <h1 id="classification-top" class="title">Classification</h1>
 
-    <p>Smile's classification algorithms are in the package
+    <p>SMILE's classification algorithms are in the package
         <a href="api/java/smile/classification/package-summary.html"><code>smile.classification</code></a>
-        and all algorithms implement the interface
+        and expose a consistent Java API.
+        All classifiers implement the interface
         <a href="api/java/smile/classification/Classifier.html"><code>Classifier</code></a>
-        that has a method <code>predict</code> to predict the class label of an instance.
-        An overloaded version in <a href="api/java/smile/classification/SoftClassifier.html"><code>SoftClassifier</code></a>
-        can also calculate the <i>a posteriori</i>
-        probabilities besides the class label.</p>
+        with <code>predict</code> for hard labels, optional posterior probabilities,
+        optional raw scores, and optional online updates.</p>
 
-    <p>Some algorithms with online learning capability also implement the interface
-        <a href="api/java/smile/classification/OnlineClassifier.html"><code>OnlineClassifier</code></a>.
-        Online learning is a model of induction that learns one instance at a time.
-        The method <code>update</code> updates the model with a new instance.</p>
+    <p>Most algorithms are trained through static <code>fit(...)</code> methods and return
+        immutable, serializable models. Class labels may be arbitrary integer values
+        (e.g. <code>-1/+1</code> or <code>3/7/14</code>); SMILE handles internal encoding/decoding automatically.</p>
 
-    <p>The high-level operators are defined in Scala package object of
-        <a href="api/scala/index.html#smile.classification.package"><code>smile.classification</code></a>.
-        In what follows, we will discuss each algorithm, their high-level
-        Scala API, and examples.</p>
+    <p>This page focuses on practical Java usage patterns and algorithm-specific examples.</p>
 
-    <h2 id="introduction">Introduction</h2>
+    <h2 id="api-overview">API Overview</h2>
+
+    <p>Before using a classifier, it is useful to check whether the model supports
+        soft prediction or online updates.</p>
+
+    <pre class="prettyprint lang-java"><code>
+    // Works for any smile.classification.Classifier&lt;T&gt;
+    int label = model.predict(sample);
+
+    if (model.isSoft()) {
+        double[] posteriori = new double[model.numClasses()];
+        model.predict(sample, posteriori); // class probabilities
+    }
+
+    if (model.isOnline()) {
+        model.update(newSample, newLabel); // incremental learning
+    }
+    </code></pre>
+
+    <p>Many models support configuration via <code>Properties</code>, which is convenient
+        for reproducible, configuration-file-driven workflows.</p>
+
+    <pre class="prettyprint lang-java"><code>
+    Properties p = new Properties();
+    p.setProperty("smile.random.forest.trees", "200");
+    p.setProperty("smile.random.forest.max.depth", "10");
+
+    RandomForest model = RandomForest.fit(formula, data, p);
+    </code></pre>
+
+    <h2 id="algorithm-selection">Quick Algorithm Selection Guide</h2>
+
+    <p>There is no universally best classifier. Use the table below as a starting point.</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead>
+            <tr>
+                <th>Situation</th>
+                <th>Recommended Models</th>
+                <th>Notes</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Strong default baseline</td>
+                <td><code>RandomForest</code></td>
+                <td>Robust with mixed tabular features; supports OOB error estimates.</td>
+            </tr>
+            <tr>
+                <td>Highest tuned accuracy on tabular data</td>
+                <td><code>GradientTreeBoost</code></td>
+                <td>Usually strongest after tuning, but more sensitive to hyperparameters.</td>
+            </tr>
+            <tr>
+                <td>Fast, interpretable model</td>
+                <td><code>DecisionTree</code>, <code>LogisticRegression</code></td>
+                <td>Good for explainability and quick diagnostics.</td>
+            </tr>
+            <tr>
+                <td>Very high-dimensional sparse text/features</td>
+                <td><code>DiscreteNaiveBayes</code>, <code>SparseLogisticRegression</code>, <code>Maxent</code></td>
+                <td>Designed for sparse count-style inputs.</td>
+            </tr>
+            <tr>
+                <td>More features than samples (<code>p &gt; n</code>)</td>
+                <td><code>FLD</code>, <code>SparseLogisticRegression</code></td>
+                <td>Avoid plain LDA/QDA in this regime due to covariance instability.</td>
+            </tr>
+            <tr>
+                <td>Streaming / incremental updates</td>
+                <td><code>LogisticRegression</code>, <code>DiscreteNaiveBayes</code>, <code>MLP</code></td>
+                <td>Check <code>isOnline()</code> before calling <code>update</code>.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2 id="practical-tips">Practical Tips</h2>
+
+    <ul>
+        <li>Scale-sensitive models include KNN, SVM, logistic regression, MLP, and discriminant analysis.</li>
+        <li>Tree-based models are mostly scale-invariant and usually easiest to start with on mixed tabular data.</li>
+        <li>Set a random seed for reproducibility when training stochastic models.</li>
+        <li>Persist trained models with <code>smile.io.Write</code> / <code>smile.io.Read</code>.</li>
+    </ul>
+
+    <pre class="prettyprint lang-java"><code>
+    smile.math.MathEx.setSeed(12345);
+
+    Write.object(model, Path.of("classifier.ser"));
+    Classifier&lt;?&gt; loaded = (Classifier&lt;?&gt;) Read.object(Path.of("classifier.ser"));
+    </code></pre>
+
+    <h2 id="introduction">Background</h2>
 
     <p>In machine learning and pattern recognition,
         classification refers to an algorithmic procedure for assigning a given
@@ -186,7 +275,7 @@ title: Smile - Classification
 
     <p>The simplest k-NN method takes a data set of feature vectors and labels
         with Euclidean distance as the similarity measure. When applied to the
-        Iris datset, the accuracy of 10-fold cross validation is 96% for <code>k = 3</code>.</p>
+        Iris dataset, the accuracy of 10-fold cross validation is 96% for <code>k = 3</code>.</p>
 
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
@@ -276,7 +365,7 @@ title: Smile - Classification
         Large Margin Nearest Neighbor or Neighborhood Components Analysis.</p>
         
     <p>Alternatively, the user may provide a k-nearest neighbor search data
-        structure. Besides the simple linear search, Smile provides KD-Tree,
+        structure. Besides the simple linear search, SMILE provides KD-Tree,
         Cover Tree, and LSH (Locality-Sensitive Hashing) for efficient
         k-nearest neighbor search.</p>
 
@@ -1954,7 +2043,7 @@ title: Smile - Classification
     <p>The basic AdaBoost algorithm is only for binary classification problem.
         For multi-class classification, a common approach is reducing the
         multi-class classification problem to multiple two-class problems.
-        Smile implements a multi-class AdaBoost without such reductions.</p>
+        SMILE implements a multi-class AdaBoost without such reductions.</p>
 
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>
