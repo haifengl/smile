@@ -1,320 +1,415 @@
 ---
 layout: layout.njk
 permalink: "{{ page.filePathStem }}.html"
-title: Smile - ML Overview
+title: SMILE - What's Machine Learning
 ---
 {% include "toc.njk" %}
 
 <div class="col-md-9 col-md-pull-3">
     <h1 id="overview-top" class="title">What's Machine Learning</h1>
 
-    <p>Machine learning is a type of artificial intelligence that provides computers with the ability
-        to learn without being explicitly programmed. Machine learning algorithms can make
-        predictions on data by building a model from example inputs.</p>
+    <p>Machine learning is a type of artificial intelligence that gives computers the ability
+        to learn from data without being explicitly programmed. A machine learning algorithm
+        builds a model from example inputs so that it can make predictions or decisions on
+        new, unseen data.</p>
 
-    <p>A core objective of machine learning is to generalize from its experience.
-        Generalization is the ability of a learning machine to perform accurately
-        on new, unseen examples/tasks after having experienced a training data set.
-        The training examples come from some generally unknown probability distribution
-        and the learner has to build a general model about this space that enables it
-        to produce sufficiently accurate predictions in new cases.</p>
+    <p>A core objective of machine learning is <em>generalization</em> — the ability of a
+        learned model to perform accurately on new examples after training on a finite sample.
+        The training examples are drawn from some generally unknown probability distribution;
+        the learner must build a model that produces accurate predictions even for cases it
+        has never seen before.</p>
 
-    <p>Machine learning tasks are typically classified into three broad categories, depending
-        on the nature of the learning &quot;signal&quot; or &quot;feedback&quot; available to a learning system.</p>
+    <h2 id="learning-paradigms">Learning Paradigms</h2>
 
-      <dl>
-        <dt>Supervised learning</dt>
-        <dd><p>The computer is presented with example inputs and their desired outputs,
-            given by a &quot;teacher&quot;, and the goal is to learn a general rule that maps inputs to outputs.</p>
-        </dd>
-        <dt>Unsupervised learning</dt>
-        <dd><p>No labels are given to the learning algorithm, leaving it on its own to find structure in
-            its input. Unsupervised learning can be a goal in itself (discovering hidden patterns in data)
-            or a means towards an end (feature learning).</p>
-        </dd>
-        <dt>Reinforcement learning</dt>
-        <dd><p>A computer program interacts with a dynamic environment in which it must perform a certain goal,
-            without a teacher explicitly telling it whether it has come close to
-            its goal.</p>
-        </dd>
-      </dl>
+    <p>Machine learning tasks are classified into broad categories depending on the nature of
+        the feedback available to the learning system.</p>
 
-    <p>Between supervised and unsupervised learning is semi-supervised learning, where the teacher gives an
-        incomplete training signal: a training set with some (often many) of the target outputs missing.</p>
+    <div class="table-responsive">
+    <table class="table table-striped table-bordered">
+      <thead><tr><th>Paradigm</th><th>Feedback</th><th>Typical Problems</th><th>SMILE Pages</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Supervised</strong></td>
+          <td>Labelled input–output pairs</td>
+          <td>Classification, Regression, Sequence labelling</td>
+          <td><a href="classification.html">Classification</a>,
+              <a href="regression.html">Regression</a>,
+              <a href="deep-learning.html">Deep Learning</a></td>
+        </tr>
+        <tr>
+          <td><strong>Unsupervised</strong></td>
+          <td>No labels — find structure</td>
+          <td>Clustering, Dimensionality reduction, Density estimation, Association rules</td>
+          <td><a href="clustering.html">Clustering</a>,
+              <a href="manifold.html">Manifold Learning</a>,
+              <a href="association-rule.html">Association Rules</a></td>
+        </tr>
+        <tr>
+          <td><strong>Semi-supervised</strong></td>
+          <td>A few labels + many unlabelled samples</td>
+          <td>Label propagation, Self-training, Generative models</td>
+          <td><a href="classification.html">Classification</a></td>
+        </tr>
+        <tr>
+          <td><strong>Self-supervised</strong></td>
+          <td>Pseudo-labels derived from data itself</td>
+          <td>Language modelling, Contrastive learning, Masked autoencoders</td>
+          <td><a href="llm.html">LLM</a>,
+              <a href="deep-learning.html">Deep Learning</a></td>
+        </tr>
+        <tr>
+          <td><strong>Reinforcement</strong></td>
+          <td>Scalar reward from environment</td>
+          <td>Game playing, Robotics, Control</td>
+          <td>—</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
 
-    <h2 id="features">Features</h2>
+    <h2 id="features-section">Features &amp; Feature Engineering</h2>
 
-    <p>A feature is an individual measurable property of a phenomenon being observed.
-        Features are also called explanatory variables, independent variables, predictors, regressors, etc.
-        Any attribute could be a feature, but choosing informative, discriminating and
-        independent features is a crucial step for effective algorithms in machine learning.
-        Features are usually numeric and a set of numeric features can be conveniently
-        described by a feature vector. Structural features such as strings, sequences and
-        graphs are also used in areas such as natural language processing, computational biology, etc.</p>
+    <p>A <em>feature</em> (also called explanatory variable, predictor, or covariate) is an
+        individual measurable property of the phenomenon being observed. Choosing informative,
+        discriminating, and independent features is a crucial step for effective machine learning.
+        Features are usually numeric; a set of numeric features is conveniently described by a
+        <em>feature vector</em>. Structural features such as strings, sequences, and graphs are
+        also used in NLP and computational biology.</p>
 
-    <p>Feature engineering is the process of using domain knowledge of the data to create features that make
-        machine learning algorithms work. Feature engineering is fundamental to the application of machine
-        learning, and is both difficult and expensive. It requires the experimentation of multiple
-        possibilities and the combination of automated
-        techniques with the intuition and knowledge of the domain expert.</p>
-
-    <p>The initial set of raw features can be redundant and too large to be managed. Therefore,
-        a preliminary step in many applications consists of selecting a subset of features,
-        or constructing a new and reduced set of features to facilitate learning, and
-        to improve generalization and interpretability.</p>
+    <p><strong>Feature engineering</strong> is the process of using domain knowledge to transform
+        raw data into features that make algorithms work well. It encompasses:</p>
+    <ul>
+        <li><strong>Encoding</strong> — converting categorical variables to numbers (one-hot, ordinal, target encoding)</li>
+        <li><strong>Scaling</strong> — normalizing or standardizing numeric ranges</li>
+        <li><strong>Imputation</strong> — filling in missing values</li>
+        <li><strong>Selection</strong> — removing irrelevant or redundant features (SNR, genetic algorithm, TreeSHAP)</li>
+        <li><strong>Construction</strong> — deriving new features from existing ones (polynomial, interaction terms, embeddings)</li>
+        <li><strong>Dimensionality reduction</strong> — compressing high-dimensional inputs (PCA, ICA, random projection)</li>
+    </ul>
+    <p>See <a href="feature.html">Feature Engineering</a> for SMILE's full API.</p>
 
     <h2 id="supervised-learning">Supervised Learning</h2>
 
-    <p>In supervised learning, each example is a pair consisting of an input object (typically a feature vector)
-        and a desired output value (also called the response variable or dependent variable).
-        Supervised learning algorithms try to learn a function (often called hypothesis) from input object to the output value.
-        By analyzing the training data, it produces an inferred function
-        (referred as a model), which can be used for mapping new examples.</p>
+    <p>In supervised learning each example is a pair: an input object (typically a feature vector)
+        and a desired output (the <em>label</em> or <em>response variable</em>).
+        The algorithm learns a function from inputs to outputs by analysing a labelled training set,
+        then uses that function to predict outputs for new inputs.</p>
 
-    <p>Supervised learning problems are often solved by optimizating the loss functions that
-        represent the price paid for inaccuracy of predictions. The risk associated with hypothesis
-        is then defined as the expectation of the loss function. In general, the risk cannot be computed
-        because the underlying distribution is unknown. However, we can compute an approximation,
-        called empirical risk, by averaging the loss function on the training set.</p>
+    <p>Learning is typically framed as <em>empirical risk minimisation</em>: choose the hypothesis
+        that minimises the average loss on the training set.</p>
 
-    <p>Empirical risk minimization principle states that the learning algorithm should choose
-        a hypothesis which minimizes the empirical risk.</p>
+    <div class="table-responsive">
+    <table class="table table-striped table-bordered">
+      <thead><tr><th>Task</th><th>Output type</th><th>Common algorithms in SMILE</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Classification</strong></td>
+          <td>Discrete class label</td>
+          <td>Random Forest, Gradient Boosted Trees, SVM, KNN,
+              Logistic Regression, Naïve Bayes, LDA/QDA/RDA, AdaBoost,
+              Neural Networks, RBF Networks</td>
+        </tr>
+        <tr>
+          <td><strong>Regression</strong></td>
+          <td>Continuous real value</td>
+          <td>GBDT, Random Forest, SVR, Gaussian Process,
+              OLS, Ridge, LASSO, ElasticNet, RBF Networks</td>
+        </tr>
+        <tr>
+          <td><strong>Sequence Labelling</strong></td>
+          <td>Sequence of labels</td>
+          <td>Hidden Markov Model (Viterbi), Conditional Random Field</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
 
-    <p>Batch learning algorithms generate the model by learning on the entire training data set at once.
-        In contrast, online learning methods update the model with new data in a sequential order.
-        Online learning is a common technique on big data where
-        it is computationally infeasible to train over the entire dataset.
-        It is also used when the data itself is generated over the time.</p>
+    <p>See <a href="classification.html">Classification</a> and
+       <a href="regression.html">Regression</a> for detailed API guides.</p>
 
-    <p>If the response variable is of category values, supervised learning problems are called classification.
-        While the response variable is of real values, it is referred as regression.</p>
+    <h3 id="overfitting">Overfitting &amp; the Bias–Variance Trade-off</h3>
 
-    <h3 id="overfitting">Overfitting</h3>
-
-    <p>When a model describes random error or noise instead of the underlying relationship, it is called overfitting.
-        Overfitting generally occurs when a model is excessively complex, such as having too many parameters
-        relative to the number of observations. An overfit model will generally have poor generalization
-        performance, as it can exaggerate minor fluctuations in the data.</p>
+    <p>When a model captures random noise rather than the true underlying pattern it is called
+        <em>overfitting</em>. An overfit model has low training error but high test error.
+        Conversely, a model that is too simple <em>underfits</em>: it has high bias and cannot
+        capture the signal.</p>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="https://upload.wikimedia.org/wikipedia/commons/1/19/Overfitting.svg" width="480px">
-        <div class="caption" style="min-width: 480px;">The overfit model in green makes no
-            errors on the trainning data. But it is over complex and describes random noise.</div>
+        <div class="caption" style="min-width: 480px;">The green overfit model memorises training
+            noise; the black model generalises better.</div>
     </div>
+
+    <p>The <strong>bias–variance decomposition</strong> breaks generalisation error into:</p>
+    <ul>
+        <li><strong>Bias</strong> — error from wrong assumptions in the model family.</li>
+        <li><strong>Variance</strong> — sensitivity to fluctuations in the training set.</li>
+        <li><strong>Irreducible noise</strong> — inherent noise in the data that no model can remove.</li>
+    </ul>
+    <p>Ensemble methods such as Random Forest reduce variance via bagging; boosting methods
+       such as Gradient Boosted Trees reduce bias iteratively.</p>
 
     <h3 id="model-validation">Model Validation</h3>
 
-    <p>To assess if the model be not overfit and can generalize to an independent data set,
-        out-of-sample evaluation is generally employed. If the model has been estimated over some, but not all,
-        of the available data, then the model using the estimated parameters can be used to predict the
-        held-back data.</p>
-
-    <p>A popular model validation technique is cross-validation. One round of cross-validation involves
-        partitioning a sample of data into complementary subsets, performing the analysis on one subset
-        (called the training set), and validating the analysis on the other subset (called the testing set).
-        To reduce variability, multiple rounds of cross-validation are performed using different partitions,
-        and the validation results are averaged over the rounds.</p>
+    <p>To estimate how well a model generalises it must be evaluated on data it has not seen during
+        training. SMILE provides:</p>
+    <ul>
+        <li><strong>Hold-out</strong> — reserve a fixed percentage of data for testing.</li>
+        <li><strong>k-fold cross-validation</strong> — partition data into k equal folds; each
+            fold serves as the test set exactly once.</li>
+        <li><strong>Leave-one-out (LOO)</strong> — k-fold where k equals the dataset size.</li>
+        <li><strong>Bootstrap</strong> — resample with replacement; use out-of-bag samples for testing.</li>
+    </ul>
+    <p>See <a href="validation.html">Model Validation</a> for the full API, including confusion
+       matrices, AUC, F1 score, RMSE, and more.</p>
 
     <h3 id="regularization">Regularization</h3>
 
-    <p>Regularization refers to a process of introducing additional information in order to prevent overfitting
-        (or to solve an ill-posed problem). In general, a regularization term, typically a penalty on the complexity of
-        hypothesis, is introduced to a general loss function with a parameter controlling the importance of
-        the regularization term. For example, regularization term may be restrictions for smoothness
-        or bounds on the vector space norm.</p>
+    <p>Regularization introduces additional constraints or penalties to prevent overfitting.
+        Common forms:</p>
+    <ul>
+        <li><strong>L2 / Ridge</strong> — penalises the squared norm of weights; shrinks all
+            weights smoothly towards zero.</li>
+        <li><strong>L1 / LASSO</strong> — penalises the absolute norm; produces sparse solutions
+            by driving irrelevant weights to zero.</li>
+        <li><strong>Elastic Net</strong> — convex combination of L1 and L2; balances sparsity
+            and coefficient stability.</li>
+        <li><strong>Dropout</strong> — randomly deactivates neurons during neural network training,
+            acting as implicit ensemble averaging.</li>
+        <li><strong>Early stopping</strong> — halts training when validation error stops improving.</li>
+    </ul>
+    <p>From a Bayesian perspective, L2 regularization corresponds to a Gaussian prior on weights
+       and L1 to a Laplace prior.</p>
 
-    <p>Regularization can be used to learn simpler models, induce models to be sparse, introduce group structure
-        into the learning problem, and more.</p>
+    <h3 id="hyperparameter-optimization">Hyperparameter Optimisation</h3>
 
-    <p>A theoretical justification for regularization is that it attempts to impose Occam's razor on the solution.
-        From a Bayesian point of view, many regularization techniques correspond to imposing certain prior
-        distributions on model parameters.</p>
-
+    <p>Beyond model parameters learned from data, most algorithms have <em>hyperparameters</em>
+        set before training (e.g., number of trees, learning rate, regularization strength).
+        SMILE supports:</p>
+    <ul>
+        <li><strong>Grid search</strong> — exhaustive search over a discrete hyperparameter grid.</li>
+        <li><strong>Random search</strong> — sample configurations uniformly from a search space.</li>
+        <li><strong>Bayesian optimisation</strong> — use a Gaussian Process surrogate to select
+            the next most promising configuration.</li>
+    </ul>
+    <p>See <a href="validation.html">Validation &amp; HPO</a>.</p>
 
     <h2 id="unsupervised-learning">Unsupervised Learning</h2>
 
-    <p>Unsupervised learning tries to infer a function to describe hidden structure from unlabeled data.
-        Since the examples given to the learner are unlabeled, there is no error or reward signal
-        to evaluate a potential solution.</p>
-
-    <p>Unsupervised learning is closely related to the problem of density estimation in statistics.
-        However, unsupervised learning also encompasses many other techniques that seek to summarize
-        and explain key features of the data.</p>
+    <p>Unsupervised learning discovers hidden structure in unlabelled data.
+        Because there is no explicit error signal to optimise, evaluating unsupervised models
+        requires different criteria: intra-cluster cohesion, log-likelihood under a density model,
+        reconstruction error, etc.</p>
 
     <h3 id="clustering">Clustering</h3>
-    <p>Cluster analysis or clustering is the task of grouping a set of objects such that objects
-        in the same group (called a cluster) are more similar to each other than to those in other groups.</p>
 
-    <h3 id="latent-variable-models">Latent Variable Models </h3>
-    <p>In statistics, latent variables are variables that are not directly observed but are rather inferred
-        from other observed variables. Mathematical models that aim to explain observed variables in terms
-        of latent variables are called latent variable models.</p>
+    <p>Clustering groups objects so that items in the same cluster are more similar to each other
+        than to items in other clusters.  SMILE provides a wide range of algorithms:</p>
 
-    <h3 id="association-rules">Association Rules</h3>
-    <p>Association rule mining is to identify strong and interesting relations between variables in large databases.
-        Introduced by Rakesh Agrawal et al., a typical use case is to discover regularities between products
-        in large-scale transaction data recorded by point-of-sale systems in supermarkets. For example,
-        the rule <code>{onions, potatoes} => {burger meat}</code> found in the sales data of
-        a supermarket would indicate that if a customer buys onions and potatoes together, they are likely to also
-        buy hamburger meat. Such information can be used as the basis for decisions about marketing activities
-        (e.g., promotional pricing or product placements).</p>
+    <div class="table-responsive">
+    <table class="table table-striped table-bordered">
+      <thead><tr><th>Category</th><th>Algorithms</th></tr></thead>
+      <tbody>
+        <tr><td>Partitional</td><td>K-Means, X-Means, G-Means, Deterministic Annealing</td></tr>
+        <tr><td>Hierarchical</td><td>Agglomerative (single, complete, average, Ward linkage)</td></tr>
+        <tr><td>Density-based</td><td>DBSCAN, DENCLUE</td></tr>
+        <tr><td>Grid / scalable</td><td>BIRCH, CLARANS</td></tr>
+        <tr><td>Spectral / graph</td><td>Spectral Clustering, SIB</td></tr>
+        <tr><td>Neural / SOM</td><td>Self-Organizing Map (SOM), Neural Gas, Growing Neural Gas</td></tr>
+        <tr><td>Information-theoretic</td><td>Min-Entropy Clustering</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>See <a href="clustering.html">Clustering</a>.</p>
+
+    <h3 id="dimensionality-reduction">Dimensionality Reduction &amp; Manifold Learning</h3>
+
+    <p>High-dimensional data often lies near a low-dimensional manifold. Dimensionality reduction
+        makes data easier to visualise, speeds up downstream algorithms, and can remove noise.</p>
+    <ul>
+        <li><strong>Linear methods</strong>: PCA, Kernel PCA, Probabilistic PCA, GHA, Random Projection, ICA</li>
+        <li><strong>Non-linear / manifold</strong>: IsoMap, LLE, Laplacian Eigenmap, t-SNE, UMAP</li>
+        <li><strong>Multi-dimensional Scaling</strong>: Classical MDS, Sammon Mapping</li>
+    </ul>
+    <p>See <a href="manifold.html">Manifold Learning</a> and <a href="mds.html">Multi-Dimensional Scaling</a>.</p>
+
+    <h3 id="association-rules">Association Rule Mining</h3>
+
+    <p>Association rule mining discovers interesting co-occurrence patterns among variables in large
+        databases. The classic application is <em>market basket analysis</em>: given supermarket
+        transaction records, find rules of the form
+        <code>{onions, potatoes} ⇒ {burger meat}</code>.</p>
+    <p>Rules are evaluated with three metrics:</p>
+    <ul>
+        <li><strong>Support</strong> — fraction of transactions containing all items in the rule.</li>
+        <li><strong>Confidence</strong> — P(consequent | antecedent): how often the rule is correct.</li>
+        <li><strong>Lift</strong> — confidence divided by the baseline frequency of the consequent;
+            lift &gt; 1 means the antecedent is positively correlated with the consequent.</li>
+    </ul>
+    <p>SMILE implements the <strong>FP-growth</strong> algorithm, which mines frequent itemsets
+        without candidate generation, making it efficient on large datasets.
+        See <a href="association-rule.html">Association Rule Mining</a>.</p>
 
     <h2 id="semi-supervised-learning">Semi-supervised Learning</h2>
 
-    <p>The acquisition of labeled data for a learning problem is usually labor-intensive, time-consuming, and
-        of high cost. On the other hand, acquisition of unlabeled data is relatively inexpensive.
-        Researchers have found that unlabeled data, when used in conjunction with a small amount of labeled data,
-        can produce considerable improvement in model accuracy.
-        Semi-supervised learning is a class of supervised learning tasks and techniques that make use of
-        both a large amount of unlabeled data and a small amount of labeled data.</p>
+    <p>Labelled data is expensive to acquire; unlabelled data is cheap.
+        Semi-supervised learning combines a small labelled set with a large unlabelled set to
+        improve model accuracy beyond what either alone could achieve.</p>
 
-    <p>In order to make any use of unlabeled data, some relationship to the underlying distribution of
-        data must exist. Semi-supervised learning algorithms make use of at least one of the following
-        assumptions:</p>
-
+    <p>Assumptions that make semi-supervised learning effective:</p>
     <dl>
-        <dt>Continuity assumption</dt>
-        <dd><p>Points that are close to each other are more likely to share a label.
-            This is also generally assumed in supervised learning and yields a preference
-            for geometrically simple decision boundaries. In the case of semi-supervised
-            learning, the smoothness assumption additionally yields a preference for
-            decision boundaries in low-density regions, so few points are close to each
-            other but in different classes.</p>
-        </dd>
+        <dt>Continuity (smoothness) assumption</dt>
+        <dd>Points that are close together are likely to share a label, yielding a preference
+            for decision boundaries in low-density regions.</dd>
         <dt>Cluster assumption</dt>
-        <dd><p>The data tend to form discrete clusters, and points in the same cluster are more
-            likely to share a label (although data that shares a label may spread across multiple
-            clusters). This is a special case of the smoothness assumption and gives rise to
-            feature learning with clustering algorithms.</p>
-        </dd>
+        <dd>Data tend to form discrete clusters; points in the same cluster are likely to share a label.</dd>
         <dt>Manifold assumption</dt>
-        <dd><p>The data lie approximately on a manifold of much lower dimension than the input space.
-            In this case learning the manifold using both the labeled and unlabeled data can avoid
-            the curse of dimensionality. Then learning can proceed using distances and densities
-            defined on the manifold. The manifold assumption is practical when high-dimensional data
-            are generated by some process that may be hard to model directly, but which has only a
-            few degrees of freedom.</p>
-        </dd>
+        <dd>Data lies near a low-dimensional manifold; learning manifold structure from unlabelled
+            data helps avoid the curse of dimensionality.</dd>
     </dl>
 
     <h2 id="self-learning">Self-Supervised Learning</h2>
 
-    <p>A self-supervised learning model is trained on a task using the data itself to
-        generate supervisory signals, rather than relying on external labels
-        provided by humans. Like supervised learning methods, the goal of
-        self-supervised learning is to generate a classified output from the input.
-        Meanwhile, it does not require the explicit use of labeled input-output pairs.
-        Instead, correlations, metadata embedded in the data, or domain knowledge
-        present in the input are implicitly and autonomously extracted from the data
-        for training. For example, Transformer, a self-supervised language model,
-        essentially learns to "fill in the blanks."</p>
+    <p>A self-supervised model is trained on a <em>pretext task</em> whose labels are derived
+        automatically from the data — no human annotation required. The pretext task forces the
+        model to learn rich internal representations that transfer well to downstream tasks.</p>
+
+    <p>Examples include:</p>
+    <ul>
+        <li><strong>Masked language modelling</strong> (BERT, LLaMA) — predict randomly masked tokens.</li>
+        <li><strong>Next-token prediction</strong> (GPT) — predict the next token in a sequence.</li>
+        <li><strong>Contrastive learning</strong> (SimCLR, MoCo) — pull augmented views of the
+            same image together and push different images apart in embedding space.</li>
+        <li><strong>Masked autoencoders</strong> (MAE) — reconstruct randomly masked patches of an image.</li>
+    </ul>
 
     <h2 id="GenAI">Generative AI</h2>
 
-    <p>Generative AI (GenAI) can produce a wide variety of highly realistic and
-        complex content, such as images, videos, audio, text, and 3D models by
-        learning patterns from training data. Transformer is the state-of-the-art
-        GenAI model architecture in natural language generation. It is based on
-        the multi-head attention mechanism. Text is converted to numerical
-        representations called tokens, and each token is converted into a vector
-        via looking up from a word embedding table. At each layer, each token is
-        then contextualized within the scope of the context window with other
-        (unmasked) tokens via a parallel multi-head softmax-based attention mechanism
-        allowing the signal for key tokens to be amplified and less important tokens
-        to be diminished. GPTs (Generative pre-trained transformers) are based on
-        the decoder-only transformer architecture. Each generation of GPT models
-        is significantly more capable than the previous, due to increased model size
-        (number of trainable parameters) and larger training data.</p>
+    <p>Generative AI models learn to produce new data samples — text, images, audio, video, 3D —
+        that are statistically indistinguishable from real data. The three dominant approaches are
+        Transformers, diffusion models, and GANs.</p>
 
-    <p>Stable Diffusion is a text-to-image deep learning model based on latent
-        diffusion techniques. Diffusion models are trained with the objective
-        of removing successive applications of Gaussian noise on training images,
-        which can be thought of as a sequence of denoising autoencoders.
-        Stable Diffusion consists of 3 parts: the variational autoencoder (VAE),
-        U-Net, and an optional text encoder. The VAE encoder compresses the image
-        from pixel space to a smaller dimensional latent space, capturing a more
-        fundamental semantic meaning of the image. Gaussian noise is iteratively
-        applied to the compressed latent representation during forward diffusion.
-        The U-Net block, composed of a ResNet backbone, denoises the output from
-        forward diffusion backwards to obtain a latent representation. Finally,
-        the VAE decoder generates the final image by converting the representation
-        back into pixel space.</p>
+    <h3 id="transformers">Transformer &amp; Large Language Models</h3>
 
-    <p>Generative adversarial network (GAN) is another framework for approaching
-        generative AI. In GAN, two neural networks contest with each other in a game.
-        The generative network generates candidates while the discriminative network evaluates
-        them. The contest operates in terms of data distributions. Typically, the generative
-        network learns to map from a latent space to a data distribution of interest, while
-        the discriminative network distinguishes candidates produced by the generator from
-        the true data distribution. The generative network's training objective is to increase
-        the error rate of the discriminative network.</p>
+    <p>The <strong>Transformer</strong> is built on multi-head scaled dot-product attention.
+        Text is tokenized into sub-word units and converted to dense vectors via an embedding table.
+        At each layer, every token is contextualised against all other tokens in the context window
+        via parallel attention heads, allowing important signals to be amplified.
+        <strong>GPT-family</strong> models use a decoder-only stack trained with next-token prediction.
+        <strong>LLaMA-3</strong> extends this with grouped-query attention (GQA),
+        rotary positional encoding (RoPE), SwiGLU feed-forward networks, and RMS normalisation.</p>
+    <p>Each generation of GPT models is significantly more capable than the previous due to
+        increased model size (number of trainable parameters) and larger training data.</p>
+    <p>SMILE ships a complete LLaMA-3 inference stack — see <a href="llm.html">Large Language Models</a>.</p>
 
-    <p>A known dataset serves as the initial training data for the discriminator.
-        Typically, the generator is seeded with randomized input that is sampled
-        from a predefined latent space. Thereafter, candidates synthesized by the
-        generator are evaluated by the discriminator. Backpropagation is applied
-        in both networks so that the generator produces better images, while the
-        discriminator becomes more skilled at flagging synthetic images.</p>
+    <h3 id="diffusion-models">Diffusion Models</h3>
+
+    <p>Diffusion models (Stable Diffusion, DALL·E 3) learn to reverse a gradual Gaussian-noise
+        corruption process. <strong>Training</strong>: iteratively add noise to real images.
+        <strong>Inference</strong>: start from pure noise and denoise step-by-step, guided by a
+        text prompt via cross-attention. Key components:</p>
+    <ul>
+        <li><strong>VAE encoder/decoder</strong> — compresses images to/from a compact latent space.</li>
+        <li><strong>U-Net / DiT denoiser</strong> — predicts the noise component at each step.</li>
+        <li><strong>Text encoder</strong> — conditions the denoiser on the input prompt.</li>
+    </ul>
+
+    <h3 id="gans">Generative Adversarial Networks (GANs)</h3>
+
+    <p>A GAN pits two networks against each other in a minimax game:</p>
+    <ul>
+        <li><strong>Generator</strong> — maps random latent vectors to synthetic data samples,
+            trying to fool the discriminator.</li>
+        <li><strong>Discriminator</strong> — classifies samples as real or generated,
+            trying to detect fakes.</li>
+    </ul>
+    <p>At convergence the generator produces samples that the discriminator cannot distinguish
+        from real data. Known challenges include mode collapse and training instability.</p>
+
+    <h2 id="deep-learning">Deep Learning</h2>
+
+    <p>Deep learning uses multi-layer neural networks to learn hierarchical representations
+        directly from raw data (pixels, waveforms, tokens). Key architectural families:</p>
+
+    <div class="table-responsive">
+    <table class="table table-striped table-bordered">
+      <thead><tr><th>Architecture</th><th>Typical use</th></tr></thead>
+      <tbody>
+        <tr><td><strong>MLP</strong> (fully-connected)</td><td>Tabular data, embeddings</td></tr>
+        <tr><td><strong>CNN</strong> (convolutional)</td><td>Images, audio spectrograms</td></tr>
+        <tr><td><strong>RNN / LSTM / GRU</strong></td><td>Sequences, time series (largely superseded by Transformers)</td></tr>
+        <tr><td><strong>Transformer</strong></td><td>Text, images (ViT), multi-modal</td></tr>
+        <tr><td><strong>GNN</strong> (graph neural network)</td><td>Molecular property prediction, social networks</td></tr>
+        <tr><td><strong>Diffusion model</strong></td><td>Image and audio synthesis</td></tr>
+        <tr><td><strong>VAE</strong> (variational autoencoder)</td><td>Representation learning, generation</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p>SMILE's <code>smile-deep</code> module wraps LibTorch (PyTorch C++) with GPU acceleration,
+        pre-built layer primitives, and pretrained models (EfficientNet-V2 image classification,
+        LLaMA-3 language models). See <a href="deep-learning.html">Deep Learning</a>.</p>
 
     <h2 id="reinforcement-learning">Reinforcement Learning</h2>
 
-    <p>Reinforcement learning is about a learning agent interacting with its environment
-        to achieve a goal. The learning agent has to map situations to actions to maximize
-        a numerical reward signal. Different from supervised learning, the learner is not
-        told which actions to take but instead must discover which actions yield the most
-        reward by trying them. Moreover, actions may affect not only the immediate reward
-        but also all subsequent rewards. Trial-and-error search and delayed reward are the
-        most important features of reinforcement learning.</p>
+    <p>A reinforcement learning (RL) agent interacts with an environment to maximise cumulative
+        reward. Unlike supervised learning, no labelled examples are provided; the agent discovers
+        which actions yield reward through trial and error — trial-and-error search and delayed
+        reward are its most important distinguishing features.</p>
 
-    <p>Markov decision processes (MDPs) provide a mathematical framework for modeling decision-making
-        in situations where outcomes are partly random and partly under the control of a decision maker.
-        In contrast, deep reinforcement learning uses a deep neural network without explicitly
-        designing the state space.</p>
+    <p>There are four main components of an RL system:</p>
+    <ul>
+        <li><strong>Policy (π)</strong> — the agent's strategy: maps observed states to actions.</li>
+        <li><strong>Reward signal (R)</strong> — scalar feedback from the environment after each action;
+            the primary basis for changing the policy.</li>
+        <li><strong>Value function (V / Q)</strong> — expected cumulative reward from a state (or
+            state–action pair); guides action selection towards long-term payoff rather than
+            immediate reward.</li>
+        <li><strong>Model</strong> (optional) — the agent's internal model of environment dynamics,
+            used for planning.</li>
+    </ul>
 
-    <p>The major challenge in reinforcement learning is the tradeoff
-        between exploration and exploitation. Reinforcement learning focus on
-        finding a balance between exploration (of uncharted territory) and
-        exploitation (of current knowledge). To obtain a lot of reward, an agent
-        must prefer actions that it has tried in the past and found to be effective
-        in producing reward. But to discover such actions, it has totry actions
-        that it has not selected before. The agent has to exploit what it has
-        already experienced in order to obtain reward, but it also has to explore
-        in order to make better action selections in the future. Reinforcement learning
-        requires clever exploration mechanisms. Randomly selecting actions, without
-        reference to an estimated probability distribution, shows poor performance.
-        The case of (small) finite MDP is relatively well understood. However,
-        due to the lack of algorithms that scale well with the number of states
-        (or scale to problems with infinite state spaces), simple exploration
-        methods are the most practical.</p>
+    <p><strong>Markov Decision Processes (MDPs)</strong> provide the standard mathematical
+        framework. Algorithms range from tabular methods (Q-Learning, SARSA) to deep RL
+        (DQN, PPO, SAC) for large or continuous state/action spaces.</p>
 
-    <p>There are four main components in reinforcement learning system: a policy,
-        a reward signal, a value function, and optionally a model of the
-        environment. A policy defines the learning agent's way of behaving at
-        a given time. A reward signal defines the goal of a reinforcement
-        learning problem. The agent's objective is to maximize the total
-        reward it receives overthe long run. The reward signal is the primary
-        basis for altering the policy; if an action selected by the policy is
-        followed by low reward, then the policy may be changed to select some
-        other action in that situation in the future. While the reward
-        is an immediate signal, a value function specifies what is good in the
-        long run. The value of a state may be regarded as the total amount
-        of reward an agent can expect to accumulate over the future, starting
-        from that state. Action choices are made based on value judgments.
-        We seek actions that bring about states of highest value, not the highest
-        reward. Unfortunately, it is much harder to determine values than
-        it is to determine rewards. Rewards are basically given directly
-        by the environment, but values must be estimated and re-estimated from
-        the sequences of observations an agent makes over its entire lifetime.
-        Optionally, some reinforcement learning systems have a model of the
-        environment. It allows inferences to be made about how the environment
-        will behave. For example, given a state and action, the model might
-        predict the result, next state and next reward, which can be used for
-        planning.</p>
+    <p>The fundamental challenge is the <strong>exploration–exploitation trade-off</strong>:
+        the agent must exploit known good actions to accumulate reward, while also exploring
+        new actions that might yield higher long-term payoffs. Randomly selecting actions without
+        reference to any distribution shows poor performance; clever exploration mechanisms
+        (ε-greedy, UCB, Thompson sampling) are essential.</p>
+
+    <h2 id="ml-workflow">Typical ML Workflow</h2>
+
+    <p>Most machine learning projects follow a common lifecycle:</p>
+
+    <ol>
+        <li><strong>Problem definition</strong> — frame the task (classification, regression, …),
+            define success metrics, identify data sources.</li>
+        <li><strong>Data collection &amp; exploration</strong> — gather raw data, compute
+            summary statistics, visualise distributions and correlations.
+            See <a href="data.html">Data Processing</a> and
+            <a href="visualization.html">Data Visualization</a>.</li>
+        <li><strong>Data preparation</strong> — clean, encode, scale, impute, split into
+            train/validation/test sets.
+            See <a href="data.html">Data Processing</a> and
+            <a href="missing-value-imputation.html">Missing Value Imputation</a>.</li>
+        <li><strong>Feature engineering</strong> — construct informative features, select
+            relevant ones, reduce dimensionality.
+            See <a href="feature.html">Feature Engineering</a>.</li>
+        <li><strong>Model selection &amp; training</strong> — choose candidate algorithms,
+            train, and tune hyperparameters.</li>
+        <li><strong>Evaluation</strong> — measure performance on held-out data with appropriate
+            metrics (accuracy, AUC, RMSE, …).
+            See <a href="validation.html">Model Validation</a>.</li>
+        <li><strong>Deployment &amp; monitoring</strong> — serve predictions via SMILE's
+            Quarkus-based inference server, and track data/model drift over time.</li>
+    </ol>
 
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>
         <a class="btn-prev-text" href="quickstart.html" title="Previous Section: Quick Start"><span>Quick Start</span></a>
-        <a class="btn-next-text" href="data.html" title="Next Section: Data"><span>Data Processing</span></a>
+        <a class="btn-next-text" href="data.html" title="Next Section: Data Processing"><span>Data Processing</span></a>
         <span class="btn-arrow-right">&nbsp;&rarr;</span>
     </div>
 
