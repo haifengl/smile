@@ -854,7 +854,7 @@ int[] labels4 = model.partition(4);
 // Cut at height 5.0 (inspect model.height() to choose a meaningful cut point)
 int[] labelsH = model.partition(5.0);
 
-// Visualise merge heights
+// Visualize merge heights
 double[] heights = model.height();
 for (int i = heights.length - 1; i >= Math.max(0, heights.length - 10); i--) {
     System.out.printf("Merge %d: height = %.4f%n", i, heights[i]);

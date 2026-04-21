@@ -137,7 +137,7 @@ double macroRecall   = Recall.of(truth, pred, Averaging.Macro);
 double macroF1       = FScore.of(truth, pred, 1.0, Averaging.Macro);
 ```
 
-#### Generalised Fβ score
+#### Generalized Fβ score
 
 The `beta` parameter controls the trade-off between precision and recall:
 
@@ -360,7 +360,7 @@ CE = −(1/n) Σᵢ log(probability[i][truth[i]])
 ```
 
 `CrossEntropy` is an interface (not a class); call the `static of(...)` method
-directly. It generalises `LogLoss` to any number of classes; for `k = 2` the
+directly. It generalizes `LogLoss` to any number of classes; for `k = 2` the
 values are identical up to the column selection convention.
 
 ```java
@@ -389,7 +389,7 @@ double rss = RSS.of(truth, prediction);
 **Formula:** `RSS = Σ (yᵢ − ŷᵢ)²`
 
 RSS is scale-dependent and grows with `n`. Use it when you need the raw
-magnitude of the fit, not a normalised quantity.
+magnitude of the fit, not a normalized quantity.
 
 ---
 
@@ -401,7 +401,7 @@ double mse = MSE.of(truth, prediction);
 
 **Formula:** `MSE = RSS / n = (1/n) Σ (yᵢ − ŷᵢ)²`
 
-MSE penalises large errors heavily (squaring effect) and is the optimization
+MSE penalizes large errors heavily (squaring effect) and is the optimization
 objective for ordinary least squares. Scale is in squared units of `y`.
 
 ---
@@ -664,13 +664,13 @@ hypergeometric support and can be slow for large numbers of clusters.
 
 ### Clustering
 
-| Scenario | Recommended metric(s) |
-|---|---|
-| Ground truth available, absolute quality | `ARI` |
-| Information-theoretic comparison | `AMI (MAX)` |
-| Pairwise agreement, no correction | `Rand Index` |
-| Raw MI for downstream use | `MutualInformation` |
-| Normalised to `[0, 1]` without chance correction | `NMI (MAX)` |
+| Scenario                                          | Recommended metric(s) |
+|---------------------------------------------------|---|
+| Ground truth available, absolute quality          | `ARI` |
+| Information-theoretic comparison                  | `AMI (MAX)` |
+| Pairwise agreement, no correction                 | `Rand Index` |
+| Raw MI for downstream use                         | `MutualInformation` |
+| Normalized to `[0, 1]` without chance correction | `NMI (MAX)` |
 
 ---
 

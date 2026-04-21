@@ -646,7 +646,7 @@ int label = model.predict(sample, post);
 - Non-parametric and can model any decision boundary.
 - Prediction cost is `O(n)` without a spatial index, or `O(log n)` with `KDTree`.
 - No training cost, but requires storing all training data.
-- Sensitive to the scale of features — normalise features before using `KNN`.
+- Sensitive to the scale of features — normalize features before using `KNN`.
 - Good baseline; also effective as a binary classifier inside `OneVersusOne`.
 
 ### 7.2 `RBFNetwork` — Radial Basis Function Network
@@ -749,13 +749,13 @@ MLP model = MLP.fit(x, y, props);
 
 **Layer builders** (from `smile.model.mlp`):
 
-| Type | Description |
-|------|-------------|
-| `Layer.ReLU(units)` | Rectified linear activation |
-| `Layer.Sigmoid(units)` | Logistic sigmoid |
-| `Layer.Tanh(units)` | Hyperbolic tangent |
-| `Layer.Mish(units)` | Mish activation |
-| `Layer.SELU(units)` | SELU with self-normalising property |
+| Type | Description                          |
+|------|--------------------------------------|
+| `Layer.ReLU(units)` | Rectified linear activation          |
+| `Layer.Sigmoid(units)` | Logistic sigmoid                     |
+| `Layer.Tanh(units)` | Hyperbolic tangent                   |
+| `Layer.Mish(units)` | Mish activation                      |
+| `Layer.SELU(units)` | SELU with self-normalizing property |
 
 The output layer is automatically added based on the number of classes (softmax for
 `k > 2`, logistic sigmoid for `k = 2`).
@@ -910,28 +910,28 @@ it faster per model for large `k`.
 
 ## 12. Algorithm Comparison
 
-| Algorithm | Input | `isSoft` | `isOnline` | Multiclass | DataFrame | Notes |
-|-----------|-------|----------|------------|------------|-----------|-------|
+| Algorithm | Input | `isSoft` | `isOnline` | Multiclass | DataFrame | Notes                                     |
+|-----------|-------|----------|------------|------------|-----------|-------------------------------------------|
 | LDA | `double[]` | ✓ | ✗ | ✓ | ✗ | Linear boundary; Gaussian + homoscedastic |
-| QDA | `double[]` | ✓ | ✗ | ✓ | ✗ | Quadratic; each class has own covariance |
-| RDA | `double[]` | ✓ | ✗ | ✓ | ✗ | Blends LDA and QDA via `alpha` |
-| FLD | `double[]` | ✗ | ✗ | ✓ | ✗ | Best for `p > n`; produces projection |
-| NaiveBayes | `double[]` | ✓ | ✗ | ✓ | ✗ | User-supplied distributions |
-| DiscreteNaiveBayes | `int[]` / `SparseArray` | ✓ | ✓ | ✓ | ✗ | NLP; multinomial / Bernoulli / TWCNB |
-| LogisticRegression | `double[]` | ✓ | ✓ | ✓ | ✗ | Linear; L2 penalised; AIC/BIC |
-| SparseLogisticRegression | `SparseArray` | ✓ | ✓ | ✓ | ✗ | High-dimensional sparse |
-| Maxent | `int[]` / `SparseArray` | ✓ | ✓ | ✓ | ✗ | NLP feature templates |
-| DecisionTree | `Tuple` | ✓ | ✗ | ✓ | ✓ | Interpretable; overfits alone |
-| RandomForest | `Tuple` | ✓ | ✗ | ✓ | ✓ | Best general-purpose; OOB error |
-| AdaBoost | `Tuple` | ✓ | ✗ | ✓ | ✓ | Sensitive to noise; fast training |
-| GradientTreeBoost | `Tuple` | ✓ | ✗ | ✓ | ✓ | Usually highest accuracy; tunable |
-| KNN | `T` (generic) | ✓ | ✗ | ✓ | ✗ | Non-parametric; needs scaling |
-| RBFNetwork | `T` (generic) | ✗ | ✗ | ✓ | ✗ | Two-layer; k-means centers |
-| SVM | `T` (generic) | ✗ | ✗ | Binary | ✗ | Max-margin; kernel trick |
-| LinearSVM | `double[]` | ✗ | ✗ | Binary | ✗ | Exposes weight vector |
-| MLP | `double[]` | ✓ | ✓ | ✓ | ✗ | Deep learning; highly expressive |
-| OneVersusRest | `T` | depends | ✗ | ✓ | ✓ | `isSoft` ↔ Platt available |
-| OneVersusOne | `T` | depends | ✗ | ✓ | ✓ | Hard predict always works |
+| QDA | `double[]` | ✓ | ✗ | ✓ | ✗ | Quadratic; each class has own covariance  |
+| RDA | `double[]` | ✓ | ✗ | ✓ | ✗ | Blends LDA and QDA via `alpha`            |
+| FLD | `double[]` | ✗ | ✗ | ✓ | ✗ | Best for `p > n`; produces projection     |
+| NaiveBayes | `double[]` | ✓ | ✗ | ✓ | ✗ | User-supplied distributions               |
+| DiscreteNaiveBayes | `int[]` / `SparseArray` | ✓ | ✓ | ✓ | ✗ | NLP; multinomial / Bernoulli / TWCNB      |
+| LogisticRegression | `double[]` | ✓ | ✓ | ✓ | ✗ | Linear; L2 penalized; AIC/BIC            |
+| SparseLogisticRegression | `SparseArray` | ✓ | ✓ | ✓ | ✗ | High-dimensional sparse                   |
+| Maxent | `int[]` / `SparseArray` | ✓ | ✓ | ✓ | ✗ | NLP feature templates                     |
+| DecisionTree | `Tuple` | ✓ | ✗ | ✓ | ✓ | Interpretable; overfits alone             |
+| RandomForest | `Tuple` | ✓ | ✗ | ✓ | ✓ | Best general-purpose; OOB error           |
+| AdaBoost | `Tuple` | ✓ | ✗ | ✓ | ✓ | Sensitive to noise; fast training         |
+| GradientTreeBoost | `Tuple` | ✓ | ✗ | ✓ | ✓ | Usually highest accuracy; tunable         |
+| KNN | `T` (generic) | ✓ | ✗ | ✓ | ✗ | Non-parametric; needs scaling             |
+| RBFNetwork | `T` (generic) | ✗ | ✗ | ✓ | ✗ | Two-layer; k-means centers                |
+| SVM | `T` (generic) | ✗ | ✗ | Binary | ✗ | Max-margin; kernel trick                  |
+| LinearSVM | `double[]` | ✗ | ✗ | Binary | ✗ | Exposes weight vector                     |
+| MLP | `double[]` | ✓ | ✓ | ✓ | ✗ | Deep learning; highly expressive          |
+| OneVersusRest | `T` | depends | ✗ | ✓ | ✓ | `isSoft` ↔ Platt available                |
+| OneVersusOne | `T` | depends | ✗ | ✓ | ✓ | Hard predict always works                 |
 
 ---
 
@@ -1054,7 +1054,7 @@ OneVersusOne<double[]> ovo = OneVersusOne.fit(x, y,
 
 - **Scale-invariant:** `DecisionTree`, `RandomForest`, `AdaBoost`, `GradientTreeBoost`,
   `DiscreteNaiveBayes`, `NaiveBayes`.
-- **Scale-sensitive (normalise features before use):** `LDA`, `QDA`, `RDA`, `FLD`,
+- **Scale-sensitive (normalize features before use):** `LDA`, `QDA`, `RDA`, `FLD`,
   `LogisticRegression`, `KNN`, `SVM`, `MLP`, `RBFNetwork`.
 
 ### Memory and scale considerations

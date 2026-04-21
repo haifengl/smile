@@ -360,7 +360,7 @@ val result = pipelineModel.transform(testDf)
 Both `SmileClassificationModel` and `SmileRegressionModel` implement Spark's
 `MLWritable` and `MLReadable` interfaces, so they can be saved to and loaded
 from any Hadoop-compatible filesystem (local, HDFS, S3, GCS, etc.).  The
-underlying SMILE model is serialised using Java object serialization.
+underlying SMILE model is serialized using Java object serialization.
 
 ```scala
 // Save
