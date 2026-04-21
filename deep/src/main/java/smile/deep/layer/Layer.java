@@ -176,7 +176,7 @@ public interface Layer extends Function<Tensor, Tensor> {
     static SequentialBlock silu(int in, int out) {
         return new SequentialBlock(
                 new LinearLayer(in, out),
-                new GELU(true)
+                new SiLU(true)
         );
     }
 
@@ -489,5 +489,29 @@ public interface Layer extends Function<Tensor, Tensor> {
      */
     static EmbeddingLayer embedding(int numTokens, int dim, double alpha) {
         return new EmbeddingLayer(numTokens, dim, alpha);
+    }
+
+    /**
+     * Returns a group normalization layer. The input channels are separated
+     * into groups and the mean and standard-deviation are calculated separately
+     * over each group.
+     * @param groups the number of groups to separate the channels into.
+     *               The number of channels must be divisible by groups.
+     * @param channels the number of input channels.
+     * @return a group normalization layer.
+     */
+    static GroupNormLayer groupNorm(int groups, int channels) {
+        return new GroupNormLayer(groups, channels);
+    }
+
+    /**
+     * Returns an RMS normalization layer. RMSNorm regularizes the summed
+     * inputs according to root mean square (RMS), giving the model
+     * re-scaling invariance and implicit learning rate adaptation.
+     * @param dim the layer/feature dimension to normalize.
+     * @return an RMS normalization layer.
+     */
+    static RMSNormLayer rmsNorm(int dim) {
+        return new RMSNormLayer(dim);
     }
 }

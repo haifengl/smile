@@ -117,7 +117,13 @@ public class Precision implements Metric {
 
     @Override
     public double compute() {
-        Tensor precision = tp.div(tp.add(fp));
+        // Guard against zero denominator (no predicted positives for a class):
+        // replace 0 entries in (tp+fp) with 1 so that TP/1 = 0 precision for
+        // classes that were never predicted positive.
+        Tensor denom = tp.add(fp);
+        Tensor ones  = denom.newOnes(denom.shape());
+        Tensor safe  = Tensor.where(denom.gt(0), denom, ones);
+        Tensor precision = tp.div(safe);
         if (strategy == Averaging.Macro) {
             precision = precision.mean();
         } else if (strategy == Averaging.Weighted) {

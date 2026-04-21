@@ -16,8 +16,9 @@
  */
 package smile.deep.tensor;
 
+import java.util.ArrayDeque;
 import java.util.Arrays;
-import java.util.Stack;
+import java.util.Deque;
 import org.bytedeco.cuda.cudart.cudaDeviceProp;
 import org.bytedeco.cuda.global.cudart;
 import org.bytedeco.pytorch.*;
@@ -33,8 +34,9 @@ import smile.util.Tuple2;
  */
 public class Tensor implements AutoCloseable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Tensor.class);
-    /** A scope controls the lifecycle of tensors, providing timely deallocation. */
-    private static final Stack<AutoScope> scopes = new Stack<>();
+    /** A thread-local scope stack controls the lifecycle of tensors, providing timely deallocation. */
+    private static final ThreadLocal<Deque<AutoScope>> scopes =
+            ThreadLocal.withInitial(ArrayDeque::new);
     /** Default options such as device and dtype. */
     private static Options defaultOptions;
     /** PyTorch Tensor handle. */
@@ -103,7 +105,7 @@ public class Tensor implements AutoCloseable {
      * @param scope a scope to automatically release tensors.
      */
     public static void push(AutoScope scope) {
-        scopes.push(scope);
+        scopes.get().push(scope);
     }
 
     /**
@@ -112,7 +114,7 @@ public class Tensor implements AutoCloseable {
      * @return the top level scope.
      */
     public static AutoScope pop() {
-        var scope = scopes.pop();
+        var scope = scopes.get().pop();
         scope.close();
         return scope;
     }
@@ -123,8 +125,9 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor(org.bytedeco.pytorch.Tensor tensor) {
         this.value = tensor;
-        if (!scopes.isEmpty()) {
-            scopes.peek().add(this);
+        Deque<AutoScope> stack = scopes.get();
+        if (!stack.isEmpty()) {
+            stack.peek().add(this);
         }
     }
 
@@ -1171,7 +1174,8 @@ public class Tensor implements AutoCloseable {
      */
     public static Tensor crossEntropy(Tensor input, Tensor target, String reduction, long ignoreIndex) {
         var kind = switch (reduction) {
-            case "none", "mean" -> new kMean();
+            case "none" -> new kNone();
+            case "mean" -> new kMean();
             case "sum" -> new kSum();
             default -> throw new IllegalArgumentException("Invalid reduction: " + reduction);
         };
@@ -1459,7 +1463,8 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor exp_() {
-        return new Tensor(value.exp_());
+        value.exp_();
+        return this;
     }
 
     /**
@@ -1609,17 +1614,17 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor sub_(float other) {
-        return new Tensor(value.sub(new Scalar(other)));
+        value.sub_(new Scalar(other));
+        return this;
     }
 
     /**
-     * Returns A -= b.
+     * Returns A - b.
      * @param other a scalar value.
-     * @return this tensor.
+     * @return the output tensor.
      */
     public Tensor sub(double other) {
-        value.sub_(new Scalar(other));
-        return this;
+        return new Tensor(value.sub(new Scalar(other)));
     }
 
     /**
