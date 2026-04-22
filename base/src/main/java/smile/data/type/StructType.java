@@ -185,12 +185,12 @@ public record StructType(List<StructField> fields, Map<String, Integer> index) i
     }
 
     /**
-     * Returns the ordinal index of a field.
+     * Returns the ordinal index of a field. Returns -1 if the field doesn't exist.
      * @param field the field name.
      * @return the index of field.
      */
     public int indexOf(String field) {
-        return index.get(field);
+        return Optional.ofNullable(index.get(field)).orElse(-1);
     }
 
     /**
