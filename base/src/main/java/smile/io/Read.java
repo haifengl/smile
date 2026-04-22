@@ -94,12 +94,11 @@ public interface Read {
             case "txt":
             case "csv": return csv(path, format);
             case "arff": return arff(path);
-            case "json":
-                JSON.Mode mode = format == null ? JSON.Mode.SINGLE_LINE : JSON.Mode.valueOf(format);
-                return json(path, mode, null);
+            case "json": return json(path, JSON.Mode.parse(format), null);
             case "sas7bdat": return sas(path);
             case "avro": return avro(path, format);
-            case "parquet": return parquet(path);
+            // Parquet.read() will convert Path to a proper URI string
+            case "parquet": return parquet(Path.of(path));
             case "feather": return arrow(path);
             default:
                 if (format != null) {
