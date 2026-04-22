@@ -57,7 +57,22 @@ public class JSON {
          * The file contains a list of objects.
          * Files will be loaded as a whole entity and cannot be split.
          */
-        MULTI_LINE
+        MULTI_LINE;
+
+        /**
+         * Parses a string value of Mode. If string is null or blank,
+         * SINGLE_LINE will be returned by default.
+         * @param name the string value.
+         * @return the mode value.
+         */
+        public static Mode parse(String name) {
+            if (Strings.isNullOrBlank(name)) return SINGLE_LINE;
+            return switch (name.toUpperCase()) {
+                case "SINGLE", "SINGLE_LINE", "SINGLE-LINE" -> SINGLE_LINE;
+                case "MULTI", "MULTI_LINE", "MULTI-LINE" -> MULTI_LINE;
+                default -> throw new IllegalArgumentException("Unknown model: " + name);
+            };
+        }
     }
 
     /**
