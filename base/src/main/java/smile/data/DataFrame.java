@@ -204,7 +204,11 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
      * @return the column vector.
      */
     public ValueVector column(String name) {
-        return columns.get(schema.indexOf(name));
+        int colIdx = schema.indexOf(name);
+        if (colIdx < 0) {
+            throw new IllegalArgumentException("Column '" + name + "' not found.");
+        }
+        return columns.get(colIdx);
     }
 
     /**
@@ -606,9 +610,13 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
      * @return this dataframe.
      */
     public DataFrame rename(String name, String newName) {
-        int j = schema.indexOf(name);
+        int colIdx = schema.indexOf(name);
+        if (colIdx < 0) {
+            throw new IllegalArgumentException("Column '" + name + "' not found.");
+        }
+
         schema.rename(name, newName);
-        columns.set(j, columns.get(j).withName(newName));
+        columns.set(colIdx, columns.get(colIdx).withName(newName));
         return this;
     }
 
@@ -660,8 +668,12 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     public DataFrame sort(String column, boolean ascending) {
-        int j = schema.indexOf(column);
-        ValueVector v = columns.get(j);
+        int colIdx = schema.indexOf(column);
+        if (colIdx < 0) {
+            throw new IllegalArgumentException("Column '" + column + "' not found.");
+        }
+
+        ValueVector v = columns.get(colIdx);
         int n = size();
         Integer[] idx = new Integer[n];
         for (int i = 0; i < n; i++) idx[i] = i;
@@ -689,6 +701,73 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
         int[] order = new int[n];
         for (int i = 0; i < n; i++) order[i] = idx[i];
         return get(Index.of(order));
+    }
+
+    /**
+     * Applies a single filter predicate to the data frame.
+     * @param column the column name.
+     * @param operator Comparison operator. One of: =, !=, <, <=, >, >=, contains, startswith, endswith.
+     * @param value Comparison value as a string; numeric strings are auto-parsed for numeric columns.
+     * @return the filtered data frame.
+     */
+    public DataFrame filter(String column, String operator, String value) {
+        int colIdx = schema.indexOf(column);
+        if (colIdx < 0) {
+            throw new IllegalArgumentException("Column '" + column + "' not found.");
+        }
+
+        boolean numeric = schema().field(colIdx).dtype().isNumeric();
+        boolean[] mask = new boolean[nrow()];
+
+        for (int i = 0; i < nrow(); i++) {
+            Tuple row = get(i);
+            mask[i] = applyFilter(row, colIdx, numeric, operator.toLowerCase(), value);
+        }
+
+        return get(mask);
+    }
+
+    /**
+     * Applies a single filter predicate to one row value.
+     * @param row the row tuple.
+     * @param colIdx the column index.
+     * @param numeric true if the column is of numeric values.
+     * @param op Comparison operator. One of: =, !=, <, <=, >, >=, contains, startswith, endswith.
+     * @param filterValue Comparison value as a string; numeric strings are auto-parsed for numeric columns.
+     * @return true if the row value satisfies the filter condition.
+     */
+    private static boolean applyFilter(Tuple row, int colIdx, boolean numeric, String op, String filterValue) {
+        try {
+            if (numeric) {
+                double rowVal = row.getDouble(colIdx);
+                double cmpVal = Double.parseDouble(filterValue);
+                return switch (op) {
+                    case "=" , "==" -> rowVal == cmpVal;
+                    case "!="       -> rowVal != cmpVal;
+                    case "<"        -> rowVal <  cmpVal;
+                    case "<="       -> rowVal <= cmpVal;
+                    case ">"        -> rowVal >  cmpVal;
+                    case ">="       -> rowVal >= cmpVal;
+                    default         -> false;
+                };
+            } else {
+                String rowVal = String.valueOf(row.get(colIdx));
+                return switch (op) {
+                    case "=" , "==" -> rowVal.equals(filterValue);
+                    case "!="       -> !rowVal.equals(filterValue);
+                    case "<"        -> rowVal.compareTo(filterValue) < 0;
+                    case "<="       -> rowVal.compareTo(filterValue) <= 0;
+                    case ">"        -> rowVal.compareTo(filterValue) > 0;
+                    case ">="       -> rowVal.compareTo(filterValue) >= 0;
+                    case "contains"    -> rowVal.contains(filterValue);
+                    case "startswith"  -> rowVal.startsWith(filterValue);
+                    case "endswith"    -> rowVal.endsWith(filterValue);
+                    default            -> false;
+                };
+            }
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**
@@ -970,10 +1049,14 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
         DenseMatrix matrix = DenseMatrix.zeros(Float64, nrow, colNames.size());
         matrix.withColNames(colNames.toArray(new String[0]));
         if (rowNames != null) {
-            int j = schema.indexOf(rowNames);
+            int colIdx = schema.indexOf(rowNames);
+            if (colIdx < 0) {
+                throw new IllegalArgumentException("Column '" + rowNames + "' not found.");
+            }
+
             String[] rows = new String[nrow];
             for (int i = 0; i < nrow; i++) {
-                rows[i] = getString(i, j);
+                rows[i] = getString(i, colIdx);
             }
             matrix.withRowNames(rows);
         }
