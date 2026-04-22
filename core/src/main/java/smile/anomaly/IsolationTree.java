@@ -154,7 +154,9 @@ public class IsolationTree implements Serializable {
             // Pick a random point on splitting hyperplane
             double[] intercept = new double[p];
             for (int i = 0; i < p; i++) {
-                intercept[i] = min[i] < max[i] ? MathEx.random(min[i], max[i]) : min[i];
+                intercept[i] = MathEx.equals(min[i], max[i]) ?
+                        min[i] :
+                        MathEx.random(min[i], max[i]);
             }
 
             // Pick a random normal vector according to specified extension level
