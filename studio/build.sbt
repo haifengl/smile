@@ -113,7 +113,8 @@ libraryDependencies ++= {
   Seq(
     "tools.jackson.core"       % "jackson-databind"          % jacksonV,
     "tools.jackson.dataformat" % "jackson-dataformat-yaml"   % jacksonV,
-    "tools.jackson.module"     % "jackson-module-jsonSchema" % jacksonV
+    "com.github.victools"      % "jsonschema-generator"      % "5.0.0",
+    "com.github.victools"      % "jsonschema-module-jackson" % "5.0.0"
   )
 }
 
