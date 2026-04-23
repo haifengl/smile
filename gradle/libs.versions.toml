@@ -1,12 +1,16 @@
 [versions]
 arrow = "18.3.0"
+jackson = "3.1.2"
 
 [libraries]
 arrow-dataset = { module = "org.apache.arrow:arrow-dataset", version.ref = "arrow" }
 arrow-memory-netty = { module = "org.apache.arrow:arrow-memory-netty", version.ref = "arrow" }
-jackson = { module = "tools.jackson.core:jackson-databind", version = "3.1.2" }
+jackson-databind = { module = "tools.jackson.core:jackson-databind", version = "jackson" }
+jackson-yaml = { module = "tools.jackson.dataformat:jackson-dataformat-yaml", version = "jackson" }
+jackson-jsonSchema = { module = "tools.jackson.module:jackson-module-jsonSchema", version = "jackson" }
 sqlite = { module = "org.xerial:sqlite-jdbc", version = "3.53.0.0" }
 swingx = { module = "org.swinglabs:swingx", version = "1.6.1" }
 
 [bundles]
 arrow = ["arrow-dataset", "arrow-memory-netty"]
+jackson = ["jackson-databind", "jackson-yaml", "jackson-jsonSchema"]

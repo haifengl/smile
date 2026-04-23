@@ -101,21 +101,29 @@ libraryDependencies ++= Seq(
   "com.formdev"       % "flatlaf-fonts-jetbrains-mono" % "2.304",
   "org.apache.maven"  % "maven-resolver-provider" % "3.9.15",
   "org.apache.maven.resolver"   % "maven-resolver-supplier-mvn4" % "2.0.16",
-  "tools.jackson.dataformat"    % "jackson-dataformat-yaml" % "3.1.2",
   "io.modelcontextprotocol.sdk" % "mcp"          % "1.1.1",
   "io.github.furstenheim"       % "copy_down"    % "1.1",
-  "org.jsoup"                   % "jsoup"        % "1.22.1",
+  "org.jsoup"                   % "jsoup"        % "1.22.2",
   "com.github.serpapi"          % "serpapi-java" % "1.1.0",
   "com.google.code.gson"        % "gson"         % "2.13.2" // evict older version used by serpapi
 )
 
 libraryDependencies ++= {
+  val jacksonV = "3.1.2"
+  Seq(
+    "tools.jackson.core"       % "jackson-databind"          % jacksonV,
+    "tools.jackson.dataformat" % "jackson-dataformat-yaml"   % jacksonV,
+    "tools.jackson.module"     % "jackson-module-jsonSchema" % jacksonV
+  )
+}
+
+libraryDependencies ++= {
   val arrowV = "18.3.0"
   Seq(
-    "org.apache.arrow" % "arrow-dataset" % arrowV,
-    "org.apache.arrow" % "arrow-memory-netty" % arrowV,
-    "org.apache.avro" % "avro" % "1.12.1" exclude("org.slf4j", "slf4j-log4j12"),
-    "org.xerial.snappy" % "snappy-java" % "1.1.10.8", // for avro
-    "com.epam" % "parso" % "2.0.14", // SAS7BDAT
+    "org.apache.arrow"   % "arrow-dataset"      % arrowV,
+    "org.apache.arrow"   % "arrow-memory-netty" % arrowV,
+    "org.apache.avro"    % "avro"               % "1.12.1" exclude("org.slf4j", "slf4j-log4j12"),
+    "org.xerial.snappy"  % "snappy-java"        % "1.1.10.8", // for avro
+    "com.epam"           % "parso"              % "2.0.14"    // SAS7BDAT
   )
 }
