@@ -299,16 +299,18 @@ public class SmileStudio extends JFrame {
                 default -> {
                     // Many AI services are compatible with OpenAI ChatCompletions API,
                     // so we try to initialize OpenAI client.
-                    var openai = new OpenAI(prefs.get("aiModel", service));
-                    var apiKey = prefs.get("aiApiKey", "");
-                    if (!apiKey.isBlank()) {
-                        openai.withApiKey(apiKey);
-                    }
-                    var baseUrl = prefs.get("aiBaseUrl", "");
+                    var baseUrl = prefs.get("chatCompletionsBaseUrl", "");
                     if (!baseUrl.isBlank()) {
-                        openai.withBaseUrl(baseUrl);
+                        throw new RuntimeException("missing base URL");
                     }
-                    yield openai;
+                    var apiKey = prefs.get("chatCompletionsApiKey", "");
+                    if (!apiKey.isBlank()) {
+                        throw new RuntimeException("missing API Key");
+                    }
+                    yield new ChatCompletions(
+                            baseUrl,
+                            apiKey,
+                            prefs.get("chatCompletionsModel", service));
                 }
             });
         } catch (Throwable t) {
