@@ -548,11 +548,6 @@ Please provide your summary based on the conversation so far, following this str
             return;
         }
 
-        if (agent.llm() instanceof ioa.llm.client.GoogleGemini) {
-            SwingUtilities.invokeLater(() ->
-                    intent.output().append("Due to the limitations of Gemini API, Agent capability is restricted. For better experience, please try Anthropic or OpenAI.\n\n"));
-        }
-
         if (LLM.DEFAULT_REASONING_EFFORT.equals(reasoningEffort)) {
             agent.conversation().params().setProperty(LLM.REASONING_EFFORT, "");
         } else {

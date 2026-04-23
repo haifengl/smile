@@ -35,7 +35,8 @@ public class SettingsDialog extends JDialog implements ActionListener {
     private static final String API_KEY = "ApiKey";
     private static final String BASE_URL = "BaseUrl";
     private static final String MODEL = "Model";
-    private static final String[] options = {"OpenAI", "Azure OpenAI", "Anthropic", "Google Gemini", "Google Vertex AI"};
+    // Interactions API is not yet supported on Vertex
+    private static final String[] options = {"OpenAI", "Azure OpenAI", "Anthropic", "Google Gemini"/*, "Google Vertex AI"*/};
     private static final String[] keys = {"openai", "azureOpenAI", "anthropic", "googleGemini", "googleVertexAI"};
     private static final String[] openaiModels = {"gpt-5.3-codex", "gpt-5.4", "gpt-5.4-mini", "gpt-5.4-nano"};
     private static final String[] anthropicModels = {"claude-sonnet-4-6", "claude-opus-4-6", "claude-haiku-4-5"};
