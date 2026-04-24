@@ -271,7 +271,7 @@ public class SmileStudio extends JFrame {
                     yield openai;
                 }
 
-                case "Azure OpenAI" -> OpenAI.legacy(
+                case "Azure OpenAI" -> OpenAI.azure(
                         prefs.get("azureOpenAIApiKey", ""),
                         prefs.get("azureOpenAIBaseUrl", ""),
                         prefs.get("azureOpenAIModel", "gpt-5.1-codex"));
