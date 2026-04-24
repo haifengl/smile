@@ -8,10 +8,6 @@
         "command": "cmd.exe",
         "args": ["/c", "npx", "-y", "@upstash/context7-mcp"]
       }
-    },
-    "exa": {
-      "type": "http",
-      "url": "https://mcp.exa.ai"
     }
   }
 }
