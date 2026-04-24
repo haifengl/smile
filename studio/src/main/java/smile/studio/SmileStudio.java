@@ -223,6 +223,12 @@ public class SmileStudio extends JFrame {
             }
         }
         if (System.getProperty("openai.apiKey", "").isBlank()) {
+            String apiKey = SmileStudio.prefs.get("chatCompletionsApiKey", "").trim();
+            if (!apiKey.isEmpty()) {
+                System.setProperty("openai.apiKey", apiKey);
+            }
+        }
+        if (System.getProperty("openai.apiKey", "").isBlank()) {
             // We will overwrite the above api key by Azure.
             String apiKey = SmileStudio.prefs.get("openaiApiKey", "").trim();
             if (!apiKey.isEmpty()) {
@@ -300,11 +306,11 @@ public class SmileStudio extends JFrame {
                     // Many AI services are compatible with OpenAI ChatCompletions API,
                     // so we try to initialize OpenAI client.
                     var baseUrl = prefs.get("chatCompletionsBaseUrl", "");
-                    if (!baseUrl.isBlank()) {
+                    if (baseUrl.isBlank()) {
                         throw new RuntimeException("missing base URL");
                     }
                     var apiKey = prefs.get("chatCompletionsApiKey", "");
-                    if (!apiKey.isBlank()) {
+                    if (apiKey.isBlank()) {
                         throw new RuntimeException("missing API Key");
                     }
                     yield new ChatCompletions(
