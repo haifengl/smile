@@ -376,6 +376,37 @@ public class SQL implements AutoCloseable {
     }
 
     /**
+     * Exports the database to the target directory as CSV files.
+     * @param path the directory path.
+     * @throws SQLException if fail to execute the SQL statement.
+     */
+    public void export(String path) throws SQLException {
+        execute(String.format("EXPORT DATABASE '%s' (FORMAT csv);", path));
+    }
+
+    /**
+     * Writes a table to a CSV file. The file will have a header line
+     * and uses the default comma delimiter.
+     * @param table the table name.
+     * @param path the file path.
+     * @throws SQLException if fail to execute the SQL statement.
+     */
+    public void export(String table, String path) throws SQLException {
+        execute(String.format("COPY %s TO '%s' (FORMAT csv, DELIMITER ',', HEADER);", table, path));
+    }
+
+    /**
+     * Write the result of a query to a CSV file. The file will have a header line
+     * and uses the default comma delimiter.
+     * @param sql a SELECT statement.
+     * @param path the file path.
+     * @throws SQLException if fail to execute the SQL statement.
+     */
+    public void query(String sql, String path) throws SQLException {
+        execute(String.format("COPY (%s) TO '%s' (FORMAT csv, DELIMITER ',', HEADER);", sql, path));
+    }
+
+    /**
      * Executes a SELECT statement.
      * @param sql a SELECT statement.
      * @return the query result.
@@ -406,7 +437,7 @@ public class SQL implements AutoCloseable {
      * @param sql an SQL statement.
      * @return true if the first result is a ResultSet object;
      *         false if it is an update count or there are no results.
-     * @throws SQLException if fail to execute the SQL query.
+     * @throws SQLException if fail to execute the SQL statement.
      */
     public boolean execute(String sql) throws SQLException {
         logger.info(sql);
