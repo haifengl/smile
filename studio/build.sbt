@@ -89,7 +89,7 @@ libraryDependencies ++= Seq(
   "info.picocli"      % "picocli"            % "4.7.7",
   "org.slf4j"         % "slf4j-simple"       % "2.0.17",
   "com.openai"        % "openai-java"        % "4.32.0",
-  "com.anthropic"     % "anthropic-java"     % "2.26.0",
+  "com.anthropic"     % "anthropic-java"     % "2.27.0",
   "com.google.genai"  % "google-genai"       % "1.51.0",
   "org.commonmark"    % "commonmark"         % "0.28.0",
   "org.xhtmlrenderer" % "flying-saucer-core" % "10.2.0",
@@ -105,16 +105,17 @@ libraryDependencies ++= Seq(
   "io.github.furstenheim"       % "copy_down"    % "1.1",
   "org.jsoup"                   % "jsoup"        % "1.22.2",
   "com.github.serpapi"          % "serpapi-java" % "1.1.0",
-  "com.google.code.gson"        % "gson"         % "2.13.2" // evict older version used by serpapi
+  "com.google.code.gson"        % "gson"         % "2.14.0" // evict older version used by serpapi
 )
 
 libraryDependencies ++= {
   val jacksonV = "3.1.2"
   Seq(
-    "tools.jackson.core"       % "jackson-databind"          % jacksonV,
-    "tools.jackson.dataformat" % "jackson-dataformat-yaml"   % jacksonV,
-    "com.github.victools"      % "jsonschema-generator"      % "5.0.0",
-    "com.github.victools"      % "jsonschema-module-jackson" % "5.0.0"
+    "tools.jackson.core"       % "jackson-databind"            % jacksonV,
+    "tools.jackson.dataformat" % "jackson-dataformat-yaml"     % jacksonV,
+    "com.github.victools"      % "jsonschema-generator"        % "4.38.0",
+    "com.github.victools"      % "jsonschema-module-jackson"   % "4.38.0",
+    "com.github.victools"      % "jsonschema-module-swagger-2" % "4.38.0"
   )
 }
 
