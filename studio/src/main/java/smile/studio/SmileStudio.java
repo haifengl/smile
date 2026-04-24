@@ -705,7 +705,7 @@ public class SmileStudio extends JFrame {
      * Creates a new notebook.
      */
     private void newNotebook() {
-        Path file = Path.of("Untitled.java");
+        Path file = Path.of("Untitled.jsh");
         workspace.openNotebook(file);
     }
 
