@@ -132,10 +132,10 @@ public class Train {
     /** Stamps model metadata and serializes it to disk. */
     private <T extends Model & Serializable> void saveModel(T m, java.nio.file.Path path) throws Exception {
         if (id != null) {
-            m.setProperty(Model.ID, id);
+            m.setTag(Model.ID, id);
         }
         if (version != null) {
-            m.setProperty(Model.VERSION, version);
+            m.setTag(Model.VERSION, version);
         }
         Write.object(m, path);
     }
