@@ -42,7 +42,7 @@ public class VegaLite {
     /**
      * The schema of Vega-Lite.
      */
-    private static final String schema = "https://vega.github.io/schema/vega-lite/v5.json";
+    private static final String schema = "https://vega.github.io/schema/vega-lite/v6.json";
     /**
      * The MIME type of Vega-Lite.
      */
@@ -335,7 +335,7 @@ public class VegaLite {
                      <title>%s</title>
                      <meta name="viewport" content="width=device-width, initial-scale=1">
                      <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega@5"></script>
-                     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+                     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-lite@6"></script>
                      <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
                    </head>
                    <body>
