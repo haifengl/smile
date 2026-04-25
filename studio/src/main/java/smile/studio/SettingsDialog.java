@@ -90,8 +90,8 @@ public class SettingsDialog extends JDialog implements ActionListener {
         gbc.gridx = 0; // Column 0
         gbc.gridy = 0; // Row 0
         gbc.anchor = GridBagConstraints.WEST;
-        JLabel apiKeyLabel = new JLabel(bundle.getString("Service"));
-        pane.add(apiKeyLabel, gbc);
+        JLabel serviceLabel = new JLabel(bundle.getString("Service"));
+        pane.add(serviceLabel, gbc);
 
         gbc.gridx = 1; // Column 1
         gbc.fill = GridBagConstraints.HORIZONTAL;
