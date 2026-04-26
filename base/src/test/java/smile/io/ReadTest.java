@@ -89,9 +89,7 @@ public class ReadTest {
     public void testReadDataParquet() throws Exception {
         System.out.println("parquet");
         String path = Paths.getTestData("kylo/userdata1.parquet").toAbsolutePath().toString();
-        // prefix slash on Windows
-        if (!path.startsWith("/")) path = "/" + path;
-        DataFrame df = Read.data("file://" + path);
+        DataFrame df = Read.data(path);
         System.out.println(df);
         assertEquals(1000, df.nrow());
         assertEquals(13, df.ncol());
