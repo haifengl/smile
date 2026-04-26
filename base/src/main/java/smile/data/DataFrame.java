@@ -706,7 +706,7 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
     /**
      * Applies a single filter predicate to the data frame.
      * @param column the column name.
-     * @param operator Comparison operator. One of: =, !=, <, <=, >, >=, contains, startswith, endswith.
+     * @param operator Comparison operator. One of: {@literal =, !=, <, <=, >, >=, contains, startswith, endswith}.
      * @param value Comparison value as a string; numeric strings are auto-parsed for numeric columns.
      * @return the filtered data frame.
      */
@@ -732,7 +732,7 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
      * @param row the row tuple.
      * @param colIdx the column index.
      * @param numeric true if the column is of numeric values.
-     * @param op Comparison operator. One of: =, !=, <, <=, >, >=, contains, startswith, endswith.
+     * @param op Comparison operator. One of: {@literal =, !=, <, <=, >, >=, contains, startswith, endswith}.
      * @param filterValue Comparison value as a string; numeric strings are auto-parsed for numeric columns.
      * @return true if the row value satisfies the filter condition.
      */
