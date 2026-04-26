@@ -195,6 +195,44 @@ public class SMOTETest {
     }
 
     @Test
+    public void testHighDimensionalDataUsesApproximateNN() {
+        // Given — 50-dimensional minority samples (d > 20 triggers RandomProjectionForest)
+        MathEx.setSeed(42);
+        int d = 50;
+        int nMinority = 40;  // need enough points for RPForest leaf size
+        int nMajority = 200;
+        double[][] hd = new double[nMajority + nMinority][d];
+        int[] hl = new int[nMajority + nMinority];
+        for (int i = 0; i < nMajority; i++) {
+            for (int j = 0; j < d; j++) hd[i][j] = MathEx.random(-1.0, 1.0);
+            hl[i] = 0;
+        }
+        for (int i = nMajority; i < nMajority + nMinority; i++) {
+            for (int j = 0; j < d; j++) hd[i][j] = 10.0 + MathEx.random(-0.5, 0.5);
+            hl[i] = 1;
+        }
+
+        SMOTE smote = new SMOTE(5, 1.0);
+
+        // When
+        SMOTE.Result result = smote.resample(hd, hl);
+
+        // Then — nMinority synthetic samples appended; all should be near the minority cluster
+        assertEquals(nMajority + nMinority * 2, result.size());
+        long minorityCount = Arrays.stream(result.labels()).filter(l -> l == 1).count();
+        assertEquals(nMinority * 2, minorityCount);
+
+        // Synthetic samples (last nMinority rows) should lie within [9.0, 11.0] in every dim
+        for (int i = nMajority + nMinority; i < result.size(); i++) {
+            double[] s = result.data()[i];
+            for (int j = 0; j < d; j++) {
+                assertTrue(s[j] >= 9.0 && s[j] <= 11.0,
+                        "dim " + j + " out of expected range: " + s[j]);
+            }
+        }
+    }
+
+    @Test
     public void testFractionalRatio() {
         // Given — ratio=0.5 should add floor(10*0.5)=5 synthetic samples
         SMOTE smote = new SMOTE(5, 0.5);
