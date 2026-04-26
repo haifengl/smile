@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Install native dependencies
-        run: sudo apt-get update && sudo apt-get install -y libopenblas-dev libarpack2-dev
+        run: sudo apt-get update && sudo apt-get install -y libopenblas-dev libarpack2-dev xvfb
 
       - name: Install ONNX Runtime and set LD_LIBRARY_PATH
         run: |
@@ -36,11 +36,11 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run unit tests (skip integration tests)
-        run: ./gradlew test -DexcludeTags=integration --no-daemon
+        run: xvfb-run --auto-servernum ./gradlew test -DexcludeTags=integration --no-daemon
 
       - name: Upload test reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-reports
           path: '**/build/reports/tests/'
