@@ -1,0 +1,55 @@
+name: Auto Release on Commit
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write  # Required to create releases and tags
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    # Only run when the commit subject (first line) matches a semantic version tag,
+    # e.g. "v6.0.1". Using startsWith + contains avoids the invalid ==~ operator.
+    if: >-
+      startsWith(github.event.head_commit.message, 'v') &&
+      contains(github.event.head_commit.message, '.')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Extract and validate version tag
+        id: tag
+        run: |
+          # Take only the first line of the commit message so a multi-line body
+          # (which GitHub appends after a blank line) does not corrupt the tag name.
+          TAG=$(echo "${{ github.event.head_commit.message }}" | head -n 1 | tr -d '[:space:]')
+
+          # Validate that it matches the vMAJOR.MINOR.PATCH pattern strictly.
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Commit subject '$TAG' does not match vMAJOR.MINOR.PATCH — skipping release."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub Release
+        if: steps.tag.outputs.skip == 'false'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.tag.outputs.tag }}"
+
+          # Guard against re-releasing an already-existing tag.
+          if gh release view "$TAG" &>/dev/null; then
+            echo "Release $TAG already exists — skipping."
+            exit 0
+          fi
+
+          gh release create "$TAG" \
+            --title "Release $TAG" \
+            --target "${{ github.sha }}" \
+            --generate-notes
