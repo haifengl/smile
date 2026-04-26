@@ -182,7 +182,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
                 prefs.put(service + BASE_URL, baseUrlFields.get(service).getText());
                 prefs.put(service + MODEL, (String) modelFields.get(service).getSelectedItem());
             }
-            SmileStudio.initLLM();
+            SmileStudio.createLLM();
             dispose();
         });
 

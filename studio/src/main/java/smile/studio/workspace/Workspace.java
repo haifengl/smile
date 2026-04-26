@@ -193,7 +193,7 @@ public class Workspace extends JSplitPane {
      */
     private Analyst initAnalyst(Path cwd) {
         try {
-            return new Analyst("data-analyst", SmileStudio.llm(), cwd);
+            return new Analyst("data-analyst", SmileStudio::llm, cwd);
         } catch (Exception ex) {
             logger.error("Failed to initialize data analyst agent", ex);
         }
@@ -205,7 +205,7 @@ public class Workspace extends JSplitPane {
      */
     private Coder initJavaCoder(Path cwd) {
         try {
-            return new Coder("java-coder", SmileStudio.llm(), cwd);
+            return new Coder("java-coder", SmileStudio::llm, cwd);
         } catch (Exception ex) {
             logger.error("Failed to initialize Java coding agent", ex);
         }
@@ -217,7 +217,7 @@ public class Workspace extends JSplitPane {
      */
     private Coder initPythonCoder(Path cwd) {
         try {
-            return new Coder("pythonista", SmileStudio.llm(), cwd);
+            return new Coder("pythonista", SmileStudio::llm, cwd);
         } catch (Exception ex) {
             logger.error("Failed to initialize Python coding agent", ex);
         }
