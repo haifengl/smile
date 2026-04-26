@@ -1,4 +1,4 @@
-name: CI Build and Test
+name: CI Build and Unit Test
 
 on:
   push:
@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Install native dependencies
-        run: sudo apt-get update && sudo apt-get install -y libopenblas-dev libarpack2
+        run: sudo apt-get update && sudo apt-get install -y libopenblas-dev libarpack2-dev
 
       - name: Install ONNX Runtime and set LD_LIBRARY_PATH
         run: |
@@ -23,10 +23,10 @@ jobs:
           echo "LD_LIBRARY_PATH=${ONNX_CAPI_DIR}${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> "$GITHUB_ENV"
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Java 25
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '25'
