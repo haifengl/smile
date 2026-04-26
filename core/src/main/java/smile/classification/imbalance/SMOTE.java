@@ -18,6 +18,7 @@ package smile.classification.imbalance;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
 import smile.neighbor.KDTree;
@@ -120,6 +121,42 @@ public record SMOTE(double[][] data, int[] labels) {
             if (rpfLeafSize < 1) {
                 throw new IllegalArgumentException("rpfLeafSize must be at least 1: " + rpfLeafSize);
             }
+        }
+
+        /**
+         * Returns the persistent set of hyperparameters including
+         * <ul>
+         * <li><code>smile.smote.k</code>
+         * <li><code>smile.smote.ratio</code>
+         * <li><code>smile.smote.high_dim_threshold</code>
+         * <li><code>smile.smote.rpf_num_trees</code>
+         * <li><code>smile.smote.rpf_leaf_size</code>
+         * </ul>
+         * @return the persistent set.
+         */
+        public Properties toProperties() {
+            Properties props = new Properties();
+            props.setProperty("smile.smote.k",                  Integer.toString(k));
+            props.setProperty("smile.smote.ratio",              Double.toString(ratio));
+            props.setProperty("smile.smote.high_dim_threshold", Integer.toString(highDimThreshold));
+            props.setProperty("smile.smote.rpf_num_trees",      Integer.toString(rpfNumTrees));
+            props.setProperty("smile.smote.rpf_leaf_size",      Integer.toString(rpfLeafSize));
+            return props;
+        }
+
+        /**
+         * Returns the options from properties.
+         *
+         * @param props the hyperparameters.
+         * @return the options.
+         */
+        public static Options of(Properties props) {
+            int    k                 = Integer.parseInt(props.getProperty("smile.smote.k",                  "5"));
+            double ratio             = Double.parseDouble(props.getProperty("smile.smote.ratio",            "1.0"));
+            int    highDimThreshold  = Integer.parseInt(props.getProperty("smile.smote.high_dim_threshold", "20"));
+            int    rpfNumTrees       = Integer.parseInt(props.getProperty("smile.smote.rpf_num_trees",      "10"));
+            int    rpfLeafSize       = Integer.parseInt(props.getProperty("smile.smote.rpf_leaf_size",      "30"));
+            return new Options(k, ratio, highDimThreshold, rpfNumTrees, rpfLeafSize);
         }
     }
 
