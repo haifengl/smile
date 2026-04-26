@@ -27,9 +27,10 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * @author Haifeng Li
  */
+@Tag("integration")
 public class TokenizerTest {
 
-    private static final String MODEL = "deep/src/test/resources/model/llama_tokenizer_v3.model";
+    private static final String MODEL = "deep/src/test/resources/tokenizer/llama_tokenizer_v3.model";
     private static Tokenizer tokenizer;
 
     @BeforeAll
