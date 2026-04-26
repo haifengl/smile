@@ -25,8 +25,8 @@ jobs:
       - name: Install ONNX Runtime and set LD_LIBRARY_PATH
         run: |
           pip install onnxruntime
-          PYTHON_VERSION=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
-          ONNX_CAPI_DIR="/usr/local/lib/python${PYTHON_VERSION}/dist-packages/onnxruntime/capi"
+          PYTHON_SITE_PACKAGES=$(pip show onnxruntime | grep Location | cut -d ' ' -f 2)
+          ONNX_CAPI_DIR="${PYTHON_SITE_PACKAGES}/onnxruntime/capi"
           echo "LD_LIBRARY_PATH=${ONNX_CAPI_DIR}${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> "$GITHUB_ENV"
 
       - name: Checkout repository
