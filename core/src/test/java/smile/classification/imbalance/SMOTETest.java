@@ -37,15 +37,15 @@ public class SMOTETest {
     @BeforeAll
     static void setup() {
         MathEx.setSeed(19650218);
-        // 90 majority samples around (0, 0)
-        // 10 minority samples around (5, 5)
         data = new double[100][2];
         labels = new int[100];
+        // 90 majority samples around (0, 0)
         for (int i = 0; i < 90; i++) {
             data[i][0] = MathEx.random(-1.0, 1.0);
             data[i][1] = MathEx.random(-1.0, 1.0);
             labels[i] = 0;
         }
+        // 10 minority samples around (5, 5)
         for (int i = 90; i < 100; i++) {
             data[i][0] = 5.0 + MathEx.random(-0.5, 0.5);
             data[i][1] = 5.0 + MathEx.random(-0.5, 0.5);
@@ -54,24 +54,25 @@ public class SMOTETest {
     }
 
     @Test
-    public void testDefaultConstructor() {
-        // Given
-        SMOTE smote = new SMOTE();
-
-        // When / Then
-        assertEquals(5, smote.k());
-        assertEquals(1.0, smote.ratio(), 1e-9);
+    public void testDefaultOptions() {
+        // Given / When / Then
+        var opts = new SMOTE.Options();
+        assertEquals(5,    opts.k());
+        assertEquals(1.0,  opts.ratio(), 1e-9);
+        assertEquals(20,   opts.highDimThreshold());
+        assertEquals(10,   opts.rpfNumTrees());
+        assertEquals(30,   opts.rpfLeafSize());
     }
 
     @Test
-    public void testResampleDoublesMinorityClass() {
+    public void testFitDoublesMinorityClass() {
         // Given
-        SMOTE smote = new SMOTE(5, 1.0);
+        var opts = new SMOTE.Options(5, 1.0, 20, 10, 30);
 
-        // When
-        SMOTE.Result result = smote.resample(data, labels);
+        // When — 100 original + 10 synthetic (100% of 10)
+        SMOTE result = SMOTE.fit(data, labels, opts);
 
-        // Then — 100 original + 10 synthetic (100% of 10)
+        // Then
         assertEquals(110, result.size());
         assertEquals(110, result.data().length);
         assertEquals(110, result.labels().length);
@@ -84,12 +85,21 @@ public class SMOTETest {
     }
 
     @Test
-    public void testResampleWithRatioTwo() {
+    public void testFitDefaultOptions() {
+        // Given / When
+        SMOTE result = SMOTE.fit(data, labels);
+
+        // Then — same as ratio=1.0
+        assertEquals(110, result.size());
+    }
+
+    @Test
+    public void testFitWithRatioTwo() {
         // Given — ratio=2.0 should triple the minority class (10 + 20 synthetic)
-        SMOTE smote = new SMOTE(5, 2.0);
+        var opts = new SMOTE.Options(5, 2.0, 20, 10, 30);
 
         // When
-        SMOTE.Result result = smote.resample(data, labels);
+        SMOTE result = SMOTE.fit(data, labels, opts);
 
         // Then
         assertEquals(120, result.size());
@@ -99,10 +109,10 @@ public class SMOTETest {
 
     @Test
     public void testSyntheticSamplesAreBetweenNeighbors() {
-        // Given — use k=3, ratio=1.0 on the minority cluster at (5,5)
+        // Given — use k=3 on the minority cluster at (5,5)
         MathEx.setSeed(12345);
-        SMOTE smote = new SMOTE(3, 1.0);
-        SMOTE.Result result = smote.resample(data, labels);
+        var opts = new SMOTE.Options(3, 1.0, 20, 10, 30);
+        SMOTE result = SMOTE.fit(data, labels, opts);
 
         // When — extract the 10 synthetic minority samples
         double[][] synthetic = new double[10][];
@@ -112,7 +122,6 @@ public class SMOTETest {
         }
 
         // Then — every synthetic sample should be within the minority cluster hull
-        // (strictly between ~4.5 and ~5.5 in both dimensions)
         for (double[] s : synthetic) {
             assertTrue(s[0] >= 4.0 && s[0] <= 6.0,
                     "x coordinate out of expected range: " + s[0]);
@@ -123,11 +132,8 @@ public class SMOTETest {
 
     @Test
     public void testOriginalSamplesPreserved() {
-        // Given
-        SMOTE smote = new SMOTE(5, 1.0);
-
-        // When
-        SMOTE.Result result = smote.resample(data, labels);
+        // Given / When
+        SMOTE result = SMOTE.fit(data, labels);
 
         // Then — first 100 rows must be identical to the original data
         for (int i = 0; i < 100; i++) {
@@ -138,69 +144,29 @@ public class SMOTETest {
 
     @Test
     public void testMinorityLabelIsCorrectlyDetected() {
-        // Given — create dataset where label=2 is the minority
+        // Given — label=2 is the minority (2 samples)
         double[][] d = new double[15][2];
         int[] l = new int[15];
-        for (int i = 0; i < 10; i++) { d[i] = new double[]{i, i};     l[i] = 0; }
-        for (int i = 10; i < 13; i++) { d[i] = new double[]{i, i};    l[i] = 1; }
-        for (int i = 13; i < 15; i++) { d[i] = new double[]{i * 10, i * 10}; l[i] = 2; }
+        for (int i = 0; i < 10; i++) { d[i] = new double[]{i, i};          l[i] = 0; }
+        for (int i = 10; i < 13; i++) { d[i] = new double[]{i, i};         l[i] = 1; }
+        for (int i = 13; i < 15; i++) { d[i] = new double[]{i * 10.0, i * 10.0}; l[i] = 2; }
 
-        SMOTE smote = new SMOTE(1, 1.0);
+        var opts = new SMOTE.Options(1, 1.0, 20, 10, 30);
 
         // When
-        SMOTE.Result result = smote.resample(d, l);
+        SMOTE result = SMOTE.fit(d, l, opts);
 
-        // Then — the two label-2 samples should be doubled; total = 15 + 2 = 17
+        // Then — 15 original + 2 synthetic = 17
         assertEquals(17, result.size());
         long count2 = Arrays.stream(result.labels()).filter(v -> v == 2).count();
         assertEquals(4, count2);
     }
 
     @Test
-    public void testInvalidKThrows() {
-        // Given / When / Then
-        assertThrows(IllegalArgumentException.class, () -> new SMOTE(0, 1.0));
-    }
-
-    @Test
-    public void testInvalidRatioThrows() {
-        // Given / When / Then
-        assertThrows(IllegalArgumentException.class, () -> new SMOTE(5, 0.0));
-        assertThrows(IllegalArgumentException.class, () -> new SMOTE(5, -1.0));
-    }
-
-    @Test
-    public void testDataLabelsMismatchThrows() {
-        // Given
-        SMOTE smote = new SMOTE();
-
-        // When / Then
-        assertThrows(IllegalArgumentException.class,
-                () -> smote.resample(data, new int[50]));
-    }
-
-    @Test
-    public void testTooFewMinoritySamplesThrows() {
-        // Given — minority has 2 samples but k=5
-        double[][] d = new double[12][2];
-        int[] l = new int[12];
-        for (int i = 0; i < 10; i++) { d[i] = new double[]{i, i}; l[i] = 0; }
-        d[10] = new double[]{20, 20}; l[10] = 1;
-        d[11] = new double[]{21, 21}; l[11] = 1;
-
-        SMOTE smote = new SMOTE(5, 1.0);
-
-        // When / Then
-        assertThrows(IllegalArgumentException.class, () -> smote.resample(d, l));
-    }
-
-    @Test
     public void testHighDimensionalDataUsesApproximateNN() {
-        // Given — 50-dimensional minority samples (d > 20 triggers RandomProjectionForest)
+        // Given — 50-dimensional data (d > 20 triggers RandomProjectionForest)
         MathEx.setSeed(42);
-        int d = 50;
-        int nMinority = 40;  // need enough points for RPForest leaf size
-        int nMajority = 200;
+        int d = 50, nMinority = 40, nMajority = 200;
         double[][] hd = new double[nMajority + nMinority][d];
         int[] hl = new int[nMajority + nMinority];
         for (int i = 0; i < nMajority; i++) {
@@ -212,17 +178,15 @@ public class SMOTETest {
             hl[i] = 1;
         }
 
-        SMOTE smote = new SMOTE(5, 1.0);
-
         // When
-        SMOTE.Result result = smote.resample(hd, hl);
+        SMOTE result = SMOTE.fit(hd, hl);
 
-        // Then — nMinority synthetic samples appended; all should be near the minority cluster
+        // Then
         assertEquals(nMajority + nMinority * 2, result.size());
-        long minorityCount = Arrays.stream(result.labels()).filter(l -> l == 1).count();
+        long minorityCount = Arrays.stream(result.labels()).filter(lv -> lv == 1).count();
         assertEquals(nMinority * 2, minorityCount);
 
-        // Synthetic samples (last nMinority rows) should lie within [9.0, 11.0] in every dim
+        // Synthetic samples should lie within [9.0, 11.0] in every dimension
         for (int i = nMajority + nMinority; i < result.size(); i++) {
             double[] s = result.data()[i];
             for (int j = 0; j < d; j++) {
@@ -233,17 +197,60 @@ public class SMOTETest {
     }
 
     @Test
-    public void testFractionalRatio() {
-        // Given — ratio=0.5 should add floor(10*0.5)=5 synthetic samples
-        SMOTE smote = new SMOTE(5, 0.5);
+    public void testCustomHighDimThreshold() {
+        // Given — lower the threshold to 1 so RPForest is used even for 2-D data
+        MathEx.setSeed(99);
+        var opts = new SMOTE.Options(5, 1.0, 1, 5, 20);
 
         // When
-        SMOTE.Result result = smote.resample(data, labels);
+        SMOTE result = SMOTE.fit(data, labels, opts);
+
+        // Then — behaviour should still be correct regardless of index type
+        assertEquals(110, result.size());
+        long minorityCount = Arrays.stream(result.labels()).filter(l -> l == 1).count();
+        assertEquals(20, minorityCount);
+    }
+
+    @Test
+    public void testFractionalRatio() {
+        // Given — ratio=0.5 adds round(10*0.5)=5 synthetic samples
+        var opts = new SMOTE.Options(5, 0.5, 20, 10, 30);
+
+        // When
+        SMOTE result = SMOTE.fit(data, labels, opts);
 
         // Then
         assertEquals(105, result.size());
         long minorityCount = Arrays.stream(result.labels()).filter(l -> l == 1).count();
         assertEquals(15, minorityCount);
     }
-}
 
+    @Test
+    public void testInvalidOptionsThrows() {
+        assertThrows(IllegalArgumentException.class, () -> new SMOTE.Options(0, 1.0, 20, 10, 30));
+        assertThrows(IllegalArgumentException.class, () -> new SMOTE.Options(5, 0.0, 20, 10, 30));
+        assertThrows(IllegalArgumentException.class, () -> new SMOTE.Options(5, -1.0, 20, 10, 30));
+        assertThrows(IllegalArgumentException.class, () -> new SMOTE.Options(5, 1.0, 0, 10, 30));
+        assertThrows(IllegalArgumentException.class, () -> new SMOTE.Options(5, 1.0, 20, 0, 30));
+        assertThrows(IllegalArgumentException.class, () -> new SMOTE.Options(5, 1.0, 20, 10, 0));
+    }
+
+    @Test
+    public void testDataLabelsMismatchThrows() {
+        assertThrows(IllegalArgumentException.class,
+                () -> SMOTE.fit(data, new int[50]));
+    }
+
+    @Test
+    public void testTooFewMinoritySamplesThrows() {
+        // Given — minority has 2 samples but k=5
+        double[][] d = new double[12][2];
+        int[] l = new int[12];
+        for (int i = 0; i < 10; i++) { d[i] = new double[]{i, i}; l[i] = 0; }
+        d[10] = new double[]{20, 20}; l[10] = 1;
+        d[11] = new double[]{21, 21}; l[11] = 1;
+
+        assertThrows(IllegalArgumentException.class,
+                () -> SMOTE.fit(d, l)); // default k=5 > 2 minority samples
+    }
+}
