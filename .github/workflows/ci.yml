@@ -1,0 +1,48 @@
+name: CI Build and Test
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  test:
+    name: Test (Java 25)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install native dependencies
+        run: sudo apt-get update && sudo apt-get install -y libopenblas-dev libarpack2
+
+      - name: Install ONNX Runtime and set LD_LIBRARY_PATH
+        run: |
+          pip install onnxruntime
+          PYTHON_VERSION=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+          ONNX_CAPI_DIR="/usr/local/lib/python${PYTHON_VERSION}/dist-packages/onnxruntime/capi"
+          echo "LD_LIBRARY_PATH=${ONNX_CAPI_DIR}${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> "$GITHUB_ENV"
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+
+      - name: Grant execute permission to Gradle wrapper
+        run: chmod +x gradlew
+
+      - name: Run unit tests (skip integration tests)
+        run: ./gradlew test -DexcludeTags=integration --no-daemon
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: '**/build/reports/tests/'
+          retention-days: 14
+
