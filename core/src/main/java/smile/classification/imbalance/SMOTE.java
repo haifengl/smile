@@ -19,7 +19,9 @@ package smile.classification.imbalance;
 import java.util.Arrays;
 import smile.math.MathEx;
 import smile.neighbor.KDTree;
+import smile.neighbor.KNNSearch;
 import smile.neighbor.Neighbor;
+import smile.neighbor.RandomProjectionForest;
 
 /**
  * Synthetic Minority Over-sampling Technique (SMOTE).
@@ -35,12 +37,16 @@ import smile.neighbor.Neighbor;
  * A value of 1.0 doubles the minority class (100% over-sampling), 2.0
  * triples it, and so on.
  * <p>
+ * <b>Index selection</b><br>
+ * When the input dimensionality {@code d <= 20} a {@link KDTree} is used for
+ * exact k-nearest-neighbor search. For {@code d > 20} a
+ * {@link RandomProjectionForest} (approximate NN) is used instead, because
+ * k-d trees suffer from the curse of dimensionality and become no faster than
+ * a linear scan in high dimensions.
+ * <p>
  * <b>Limitations</b>
  * <ul>
  *   <li>Feature spaces must be entirely continuous (no categorical features).</li>
- *   <li>High-dimensional data may yield poor synthetic samples because
- *       k-NN distances become unreliable in high dimensions (the "curse of
- *       dimensionality").</li>
  *   <li>SMOTE can introduce noise when minority samples already overlap
  *       heavily with the majority class.</li>
  * </ul>
@@ -56,6 +62,24 @@ import smile.neighbor.Neighbor;
  */
 public class SMOTE {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SMOTE.class);
+
+    /**
+     * The dimensionality threshold above which {@link RandomProjectionForest}
+     * is used instead of {@link KDTree} for k-nearest-neighbor search.
+     */
+    private static final int HIGH_DIM_THRESHOLD = 20;
+
+    /**
+     * Number of trees used in {@link RandomProjectionForest} for high-dimensional data.
+     * A value of 10 offers a good balance between recall and build time.
+     */
+    private static final int RPF_NUM_TREES = 10;
+
+    /**
+     * Maximum leaf size for {@link RandomProjectionForest}.
+     * Larger leaves improve recall at the cost of search speed.
+     */
+    private static final int RPF_LEAF_SIZE = 30;
 
     /** The number of nearest neighbors to consider when generating synthetic samples. */
     private final int k;
@@ -213,6 +237,9 @@ public class SMOTE {
     /**
      * Generates {@code numSynthetic} synthetic samples from the given minority
      * class samples using the SMOTE interpolation strategy.
+     * <p>
+     * A {@link KDTree} is used when {@code d <= 20}; otherwise a
+     * {@link RandomProjectionForest} (approximate NN) is used.
      *
      * @param samples      the minority class feature vectors.
      * @param numSynthetic the number of synthetic samples to generate.
@@ -223,8 +250,15 @@ public class SMOTE {
         int d = samples[0].length;
         int kActual = Math.min(k, n - 1);  // guard: can't have more neighbors than n-1
 
-        // Build a k-d tree over minority samples for efficient NN search.
-        KDTree<double[]> tree = KDTree.of(samples);
+        // Choose index structure based on dimensionality.
+        KNNSearch<double[], double[]> index;
+        if (d <= HIGH_DIM_THRESHOLD) {
+            logger.debug("SMOTE: using KDTree for d={}", d);
+            index = KDTree.of(samples);
+        } else {
+            logger.debug("SMOTE: using RandomProjectionForest for d={}", d);
+            index = RandomProjectionForest.of(samples, RPF_NUM_TREES, RPF_LEAF_SIZE, false);
+        }
 
         double[][] synthetic = new double[numSynthetic][d];
 
@@ -234,11 +268,8 @@ public class SMOTE {
             double[] seed = samples[seedIdx];
 
             // Find k nearest neighbors of the seed within the minority class.
-            // KDTree excludes the query point itself (reference equality),
-            // but since we indexed with the exact array references, the seed
-            // is excluded automatically when seedIdx matches a stored reference.
             @SuppressWarnings("unchecked")
-            Neighbor<double[], double[]>[] neighbors = tree.search(seed, kActual);
+            Neighbor<double[], double[]>[] neighbors = index.search(seed, kActual);
 
             // Pick a random neighbor.
             Neighbor<double[], double[]> neighbor = neighbors[MathEx.randomInt(neighbors.length)];
