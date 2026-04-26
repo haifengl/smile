@@ -39,4 +39,4 @@
  *
  * @author Haifeng Li
  */
-package smile.classification.imbalance;
+package smile.classification.resampling;
