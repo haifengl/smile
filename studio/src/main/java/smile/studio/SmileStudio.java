@@ -60,7 +60,7 @@ public class SmileStudio extends JFrame {
     /** The key for auto save preference. */
     private static final String AUTO_SAVE_KEY = "autoSave";
     /** The LLM model. */
-    private static final LLM llm = initLLM().orElse(null);
+    private static LLM llm = createLLM();
     /** Application icons in different sizes. */
     private final List<Image> icons = new ArrayList<>();
     private final JMenuBar menuBar = new JMenuBar();
@@ -202,14 +202,13 @@ public class SmileStudio extends JFrame {
     }
 
     /**
-     * Returns an LLM instance specified by app settings.
+     * Creates an LLM instance specified by app settings.
      * @return an LLM instance specified by app settings.
      */
-    public static Optional<LLM> initLLM() {
-        Optional<LLM> llm = Optional.empty();
+    public static LLM createLLM() {
         var service = prefs.get("aiService", "");
         if (service.isBlank()) {
-            return llm;
+            return null;
         }
 
         // If user doesn't set system property for api key,
@@ -257,7 +256,7 @@ public class SmileStudio extends JFrame {
         }
 
         try {
-            llm = Optional.of(switch (service) {
+            llm = switch (service) {
                 case "OpenAI" -> {
                     var openai = new OpenAI(prefs.get("openaiModel", "gpt-5.1-codex"));
                     var apiKey = prefs.get("openaiApiKey", "");
@@ -283,18 +282,6 @@ public class SmileStudio extends JFrame {
                     new GoogleGemini(
                             prefs.get("googleGeminiApiKey", ""),
                             prefs.get("googleGeminiModel", "gemini-3-flash-preview"));
-                /*
-                {
-                    // Gemini models are accessible using the OpenAI libraries
-                    // https://ai.google.dev/gemini-api/docs/openai
-                    // However, the id, created, or usage fields might be absent
-                    // or null in the response, especially during tool use or streaming.
-                    yield OpenAI.compatible(
-                            "https://generativelanguage.googleapis.com/v1beta/openai/",
-                            prefs.get("googleGeminiApiKey", ""),
-                            prefs.get("googleGeminiModel", "gemini-3-flash-preview"));
-                }
-                */
 
                 case "Google VertexAI" ->
                     GoogleGemini.vertex(
@@ -318,7 +305,7 @@ public class SmileStudio extends JFrame {
                             apiKey,
                             prefs.get("chatCompletionsModel", service));
                 }
-            });
+            };
         } catch (Throwable t) {
             // It is often a rethrow exception
             var cause = t.getCause() != null ? t.getCause() : t;
