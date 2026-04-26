@@ -14,15 +14,13 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.classification.imbalance;
+package smile.classification.resampling;
 
 import java.util.Arrays;
 import java.util.Properties;
 import org.junit.jupiter.api.*;
 import smile.math.MathEx;
-import smile.math.kernel.GaussianKernel;
 import smile.math.kernel.LinearKernel;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
