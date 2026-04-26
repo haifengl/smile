@@ -950,7 +950,7 @@ public class DataTypeFullTest {
         st.rename("old", "new");
         assertEquals("new", st.field(0).name());
         assertEquals(0, st.indexOf("new"));
-        assertThrows(NullPointerException.class, () -> st.indexOf("old"));
+        assertEquals(-1, st.indexOf("old"));
     }
 
     @Test
