@@ -252,7 +252,7 @@ require BLAS and LAPACK.
 **Linux (Ubuntu / Debian)**
 ```shell
 sudo apt update
-sudo apt install libopenblas-dev libarpack2
+sudo apt install libopenblas-dev libarpack2-dev
 ```
 
 **macOS (Homebrew)**
