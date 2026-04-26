@@ -35,6 +35,7 @@
  * Resampling techniques address imbalanced datasets by balancing class
  * distributions. Both oversampling and undersampling involve introducing
  * a bias to select more samples from one class than from another.
+ * Oversampling is generally employed more frequently than undersampling.
  *
  * @author Haifeng Li
  */
