@@ -17,9 +17,9 @@
 package smile.classification.imbalance;
 
 import java.util.Arrays;
+import java.util.Properties;
 import org.junit.jupiter.api.*;
 import smile.math.MathEx;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -51,6 +51,55 @@ public class SMOTETest {
             data[i][1] = 5.0 + MathEx.random(-0.5, 0.5);
             labels[i] = 1;
         }
+    }
+
+    @Test
+    public void testOptionsToPropertiesRoundTrip() {
+        // Given
+        var opts = new SMOTE.Options(7, 1.5, 15, 8, 25);
+
+        // When
+        Properties props = opts.toProperties();
+        SMOTE.Options restored = SMOTE.Options.of(props);
+
+        // Then
+        assertEquals(opts.k(),                restored.k());
+        assertEquals(opts.ratio(),            restored.ratio(),            1e-9);
+        assertEquals(opts.highDimThreshold(), restored.highDimThreshold());
+        assertEquals(opts.rpfNumTrees(),      restored.rpfNumTrees());
+        assertEquals(opts.rpfLeafSize(),      restored.rpfLeafSize());
+    }
+
+    @Test
+    public void testOptionsOfUsesDefaultsForMissingKeys() {
+        // Given — empty properties should yield the same as new Options()
+        var defaults = new SMOTE.Options();
+
+        // When
+        SMOTE.Options restored = SMOTE.Options.of(new Properties());
+
+        // Then
+        assertEquals(defaults.k(),                restored.k());
+        assertEquals(defaults.ratio(),            restored.ratio(),            1e-9);
+        assertEquals(defaults.highDimThreshold(), restored.highDimThreshold());
+        assertEquals(defaults.rpfNumTrees(),      restored.rpfNumTrees());
+        assertEquals(defaults.rpfLeafSize(),      restored.rpfLeafSize());
+    }
+
+    @Test
+    public void testOptionsPropertyKeys() {
+        // Given
+        var opts = new SMOTE.Options(3, 2.0, 10, 5, 15);
+
+        // When
+        Properties props = opts.toProperties();
+
+        // Then — verify exact property key names
+        assertEquals("3",   props.getProperty("smile.smote.k"));
+        assertEquals("2.0", props.getProperty("smile.smote.ratio"));
+        assertEquals("10",  props.getProperty("smile.smote.high_dim_threshold"));
+        assertEquals("5",   props.getProperty("smile.smote.rpf_num_trees"));
+        assertEquals("15",  props.getProperty("smile.smote.rpf_leaf_size"));
     }
 
     @Test
