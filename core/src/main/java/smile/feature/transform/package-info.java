@@ -20,7 +20,8 @@
  *
  * <p>The package provides the following transformers:
  *
- * <table border="1" summary="Feature transformers">
+ * <table border="1">
+ *   <caption>Feature transformers</caption>
  *   <tr><th>Class</th><th>Technique</th><th>Scope</th><th>Typical Use Case</th></tr>
  *   <tr>
  *     <td>{@link smile.feature.transform.Scaler}</td>
