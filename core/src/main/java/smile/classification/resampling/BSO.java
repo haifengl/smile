@@ -58,12 +58,17 @@ import smile.neighbor.RandomProjectionForest;
  *   x_syn = xᵢ + α · (cᵢ − xᵢ) + jitter
  * </pre>
  * where {@code α ∈ (0, 1)} is the shift factor and {@code jitter} is a small
- * per-dimension Gaussian noise scaled to a fraction of the shift magnitude to
- * prevent all samples from collapsing to the same point. SAFE seeds in
+ * per-dimension noise scaled to a fraction of the shift magnitude to prevent
+ * all samples from collapsing to the same point. SAFE seeds in
  * {@code DANGER_AND_SAFE} use {@code α/2} to shift more conservatively.
  * <p>
+ * When {@code kMaj = 0}, the shifting mechanism is disabled and the algorithm
+ * falls back to standard <em>Borderline-SMOTE</em> interpolation: a synthetic
+ * sample is placed at a random position on the line segment between the seed
+ * and one of its randomly selected minority nearest neighbors.
+ * <p>
  * If no DANGER samples exist, all minority samples are used as seeds (fallback
- * identical to plain SMOTE but with shifting).
+ * identical to plain SMOTE but with the selected synthesis strategy).
  * <p>
  * <b>Index selection</b><br>
  * When the dimensionality {@code d ≤ highDimThreshold} (default 20) a
@@ -126,6 +131,9 @@ public record BSO(double[][] data, int[] labels) {
      *                         sample as NOISE / DANGER / SAFE. Typical value: 5.
      * @param kMaj             number of nearest <em>majority</em> neighbors used
      *                         to compute the shift centroid. Typical value: 3.
+     *                         When {@code 0}, the shifting mechanism is disabled
+     *                         and the algorithm falls back to standard
+     *                         Borderline-SMOTE interpolation.
      * @param alpha            shift factor {@code α ∈ (0, 1)} — proportion of the
      *                         vector from seed to majority centroid to traverse when
      *                         placing a synthetic sample. Smaller values keep
@@ -167,8 +175,8 @@ public record BSO(double[][] data, int[] labels) {
             if (m < 1) {
                 throw new IllegalArgumentException("m must be at least 1: " + m);
             }
-            if (kMaj < 1) {
-                throw new IllegalArgumentException("kMaj must be at least 1: " + kMaj);
+            if (kMaj < 0) {
+                throw new IllegalArgumentException("kMaj must be non-negative: " + kMaj);
             }
             if (alpha <= 0.0 || alpha >= 1.0) {
                 throw new IllegalArgumentException("alpha must be in (0, 1): " + alpha);
@@ -348,13 +356,24 @@ public record BSO(double[][] data, int[] labels) {
 
         int nSeeds = seedIndices.size();
 
-        // ── Step 3: build majority-only index for shift centroid computation ─
-        int[] majorityIdx = IntStream.range(0, labels.length)
-                .filter(i -> labels[i] != minorityLabel).toArray();
-        double[][] majoritySamples = IntStream.of(majorityIdx)
-                .mapToObj(i -> data[i]).toArray(double[][]::new);
-        int kMajActual = Math.min(options.kMaj(), majoritySamples.length);
-        KNNSearch<double[], double[]> majorityIndex = buildIndex(majoritySamples, options);
+        // ── Step 3: build indexes needed for synthesis ───────────────────────
+        // Minority-only index: always needed (Borderline-SMOTE interpolation
+        // is used either as the sole synthesis path when kMaj==0, or as a
+        // fallback for individual seeds with no majority neighbors).
+        KNNSearch<double[], double[]> minorityIndex = buildIndex(minoritySamples, options);
+        int kMinActual = Math.min(options.m(), nMinority - 1);
+
+        // Majority-only index: only needed for the shifting path (kMaj > 0).
+        KNNSearch<double[], double[]> majorityIndex = null;
+        int kMajActual = 0;
+        if (options.kMaj() > 0) {
+            int[] majorityIdx = IntStream.range(0, labels.length)
+                    .filter(i -> labels[i] != minorityLabel).toArray();
+            double[][] majoritySamples = IntStream.of(majorityIdx)
+                    .mapToObj(i -> data[i]).toArray(double[][]::new);
+            kMajActual   = Math.min(options.kMaj(), majoritySamples.length);
+            majorityIndex = buildIndex(majoritySamples, options);
+        }
 
         // ── Step 4: generate synthetic samples ──────────────────────────────
         int d = data[0].length;
@@ -370,33 +389,49 @@ public record BSO(double[][] data, int[] labels) {
             double effAlpha = seedAlphas.get(pick);
             double[] xi     = minoritySamples[minIdx];
 
-            // Compute shift vector toward majority centroid.
-            @SuppressWarnings("unchecked")
-            Neighbor<double[], double[]>[] majNeighbors = majorityIndex.search(xi, kMajActual);
+            double[] syn;
+            if (options.kMaj() == 0) {
+                // ── Borderline-SMOTE interpolation (kMaj == 0) ──────────────
+                // Pick a random minority neighbor and interpolate.
+                @SuppressWarnings("unchecked")
+                Neighbor<double[], double[]>[] minNeighbors =
+                        minorityIndex.search(xi, kMinActual);
+                double[] xn  = minNeighbors[MathEx.randomInt(minNeighbors.length)].value();
+                double   gap = MathEx.random(); // uniform in [0, 1)
+                syn = new double[d];
+                for (int j = 0; j < d; j++) {
+                    syn[j] = xi[j] + gap * (xn[j] - xi[j]);
+                }
+            } else {
+                // ── BSO shifting toward majority centroid (kMaj > 0) ────────
+                @SuppressWarnings("unchecked")
+                Neighbor<double[], double[]>[] majNeighbors =
+                        majorityIndex.search(xi, kMajActual);
 
-            double[] centroid = new double[d];
-            for (Neighbor<double[], double[]> nb : majNeighbors) {
-                for (int j = 0; j < d; j++) centroid[j] += nb.value()[j];
-            }
-            for (int j = 0; j < d; j++) centroid[j] /= majNeighbors.length;
+                double[] centroid = new double[d];
+                for (Neighbor<double[], double[]> nb : majNeighbors) {
+                    for (int j = 0; j < d; j++) centroid[j] += nb.value()[j];
+                }
+                for (int j = 0; j < d; j++) centroid[j] /= majNeighbors.length;
 
-            // shift_vec = centroid - xi
-            double shiftNorm = 0.0;
-            double[] shiftVec = new double[d];
-            for (int j = 0; j < d; j++) {
-                shiftVec[j] = centroid[j] - xi[j];
-                shiftNorm  += shiftVec[j] * shiftVec[j];
-            }
-            shiftNorm = Math.sqrt(shiftNorm);
+                // shift_vec = centroid - xi
+                double shiftNorm = 0.0;
+                double[] shiftVec = new double[d];
+                for (int j = 0; j < d; j++) {
+                    shiftVec[j] = centroid[j] - xi[j];
+                    shiftNorm  += shiftVec[j] * shiftVec[j];
+                }
+                shiftNorm = Math.sqrt(shiftNorm);
 
-            // Jitter scale: 5% of shift magnitude per dimension (avoids degenerate stacking).
-            double jitterScale = (shiftNorm > 0) ? 0.05 * shiftNorm : 1e-6;
+                // Jitter: 5% of shift magnitude, uniform in [-scale, scale] per dim.
+                double jitterScale = (shiftNorm > 0) ? 0.05 * shiftNorm : 1e-6;
 
-            // x_syn = xi + alpha * shift_vec + jitter
-            double[] syn = new double[d];
-            for (int j = 0; j < d; j++) {
-                double jitter = jitterScale * (MathEx.random() * 2.0 - 1.0); // uniform in [-scale, scale]
-                syn[j] = xi[j] + effAlpha * shiftVec[j] + jitter;
+                // x_syn = xi + alpha * shift_vec + jitter
+                syn = new double[d];
+                for (int j = 0; j < d; j++) {
+                    double jitter = jitterScale * (MathEx.random() * 2.0 - 1.0);
+                    syn[j] = xi[j] + effAlpha * shiftVec[j] + jitter;
+                }
             }
 
             augmentedData[data.length + s]   = syn;

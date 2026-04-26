@@ -124,7 +124,7 @@ public class BSOTest {
     @Test
     public void testInvalidOptionsThrows() {
         assertThrows(IllegalArgumentException.class, () -> new BSO.Options(0, 3, 0.2, 1.0, BSO.Strategy.DANGER, 20, 10, 30));
-        assertThrows(IllegalArgumentException.class, () -> new BSO.Options(5, 0, 0.2, 1.0, BSO.Strategy.DANGER, 20, 10, 30));
+        assertThrows(IllegalArgumentException.class, () -> new BSO.Options(5, -1, 0.2, 1.0, BSO.Strategy.DANGER, 20, 10, 30)); // kMaj=-1
         assertThrows(IllegalArgumentException.class, () -> new BSO.Options(5, 3, 0.0, 1.0, BSO.Strategy.DANGER, 20, 10, 30));
         assertThrows(IllegalArgumentException.class, () -> new BSO.Options(5, 3, 1.0, 1.0, BSO.Strategy.DANGER, 20, 10, 30));
         assertThrows(IllegalArgumentException.class, () -> new BSO.Options(5, 3, 0.2, 0.0, BSO.Strategy.DANGER, 20, 10, 30));
@@ -132,6 +132,44 @@ public class BSOTest {
         assertThrows(IllegalArgumentException.class, () -> new BSO.Options(5, 3, 0.2, 1.0, BSO.Strategy.DANGER, 20, 0, 30));
         assertThrows(IllegalArgumentException.class, () -> new BSO.Options(5, 3, 0.2, 1.0, BSO.Strategy.DANGER, 20, 10, 0));
         assertThrows(IllegalArgumentException.class, () -> new BSO.Options(5, 3, 0.2, 1.0, null, 20, 10, 30));
+    }
+
+    @Test
+    public void testKMajZeroIsValid() {
+        // Given — kMaj=0 is explicitly allowed (Borderline-SMOTE interpolation mode)
+        assertDoesNotThrow(() -> new BSO.Options(5, 0, 0.2, 1.0, BSO.Strategy.DANGER, 20, 10, 30));
+    }
+
+    @Test
+    public void testKMajZeroFallsBackToBorderlineSmote() {
+        // Given — kMaj=0 disables shifting; synthetics are SMOTE-style interpolations
+        // between borderline minority samples and their minority neighbors.
+        MathEx.setSeed(77);
+        var opts = new BSO.Options(5, 0, 0.5 /* alpha irrelevant */, 1.0, BSO.Strategy.DANGER, 20, 10, 30);
+
+        // When
+        BSO result = BSO.fit(data, labels, opts);
+
+        // Then — correct synthetic count and all synthetic labels are minority
+        assertEquals(110, result.size());
+        long minCount = Arrays.stream(result.labels()).filter(l -> l == 1).count();
+        assertEquals(20, minCount);
+
+        // Synthetic samples (rows 100–109) must lie within the minority cluster range
+        // since interpolation stays between minority points around (−0.5, 0.5).
+        for (int i = 100; i < result.size(); i++) {
+            double[] s = result.data()[i];
+            assertTrue(s[0] >= -2.0 && s[0] <= 2.0, "x out of range: " + s[0]);
+            assertTrue(s[1] >= -2.0 && s[1] <= 2.0, "y out of range: " + s[1]);
+        }
+    }
+
+    @Test
+    public void testKMajZeroPropertiesRoundTrip() {
+        // Given — kMaj=0 must survive toProperties / of round-trip
+        var opts = new BSO.Options(5, 0, 0.3, 1.0, BSO.Strategy.DANGER, 20, 10, 30);
+        BSO.Options restored = BSO.Options.of(opts.toProperties());
+        assertEquals(0, restored.kMaj());
     }
 
     // ─── fit() tests ─────────────────────────────────────────────────────────
