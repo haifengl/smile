@@ -12,14 +12,9 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
-    # Only run when the commit subject (first line) matches a semantic version tag,
-    # e.g. "v6.0.1". Using startsWith + contains avoids the invalid ==~ operator.
-    if: >-
-      startsWith(github.event.head_commit.message, 'v') &&
-      contains(github.event.head_commit.message, '.')
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Extract and validate version tag
         id: tag
