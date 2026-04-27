@@ -17,15 +17,13 @@ jobs:
 
       - name: Install ONNX Runtime and set LD_LIBRARY_PATH
         run: |
-          # On Ubuntu 22.04+ runners pip may refuse a global install due to PEP 668.
-          # --break-system-packages forces installation into the system site-packages.
-          sudo pip install onnxruntime --break-system-packages
+          pip install onnxruntime
 
           # Locate the onnxruntime/capi directory robustly with 'find' rather than
           # parsing 'pip show', which can return a user-local path (~/.local/lib) that
           # differs from the actual installed location, or produce no output at all
           # when pip and python are mismatched on the runner.
-          ONNX_CAPI_DIR=$(find /usr /home -type d -name "capi" \
+          ONNX_CAPI_DIR=$(find /home -type d -name "capi" \
             -path "*/onnxruntime/capi" 2>/dev/null | head -n 1)
 
           if [ -z "$ONNX_CAPI_DIR" ]; then
