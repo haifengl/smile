@@ -365,20 +365,20 @@ public class MathEx {
     }
 
     /**
-     * Returns true if a <= b in the system precision.
+     * Returns true if {@code a <= b} in the system precision.
      * @param a a double value.
      * @param b a double value.
-     * @return true if a <= b in the system precision
+     * @return true if {@code a <= b} in the system precision
      */
     public static boolean le(double a, double b) {
         return a < b || equals(a, b);
     }
 
     /**
-     * Returns true if a >= b in the system precision.
+     * Returns true if {@code a >= b} in the system precision.
      * @param a a double value.
      * @param b a double value.
-     * @return true if a >= b in the system precision
+     * @return true if {@code a >= b} in the system precision
      */
     public static boolean ge(double a, double b) {
         return a < b || equals(a, b);
