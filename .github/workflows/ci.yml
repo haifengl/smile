@@ -1,4 +1,4 @@
-name: CI Build and Unit Test
+name: CI
 
 on:
   push:
@@ -17,10 +17,27 @@ jobs:
 
       - name: Install ONNX Runtime and set LD_LIBRARY_PATH
         run: |
-          pip install onnxruntime
-          PYTHON_SITE_PACKAGES=$(pip show onnxruntime | grep Location | cut -d ' ' -f 2)
-          ONNX_CAPI_DIR="${PYTHON_SITE_PACKAGES}/onnxruntime/capi"
-          echo "LD_LIBRARY_PATH=${ONNX_CAPI_DIR}:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
+          # On Ubuntu 22.04+ runners pip may refuse a global install due to PEP 668.
+          # --break-system-packages forces installation into the system site-packages.
+          sudo pip install onnxruntime --break-system-packages
+
+          # Locate the onnxruntime/capi directory robustly with 'find' rather than
+          # parsing 'pip show', which can return a user-local path (~/.local/lib) that
+          # differs from the actual installed location, or produce no output at all
+          # when pip and python are mismatched on the runner.
+          ONNX_CAPI_DIR=$(find /usr /home -type d -name "capi" \
+            -path "*/onnxruntime/capi" 2>/dev/null | head -n 1)
+
+          if [ -z "$ONNX_CAPI_DIR" ]; then
+            echo "ERROR: could not locate onnxruntime/capi directory" >&2
+            exit 1
+          fi
+          echo "Found ONNX capi at: ${ONNX_CAPI_DIR}"
+
+          # Use the safe ${VAR:+:$VAR} idiom so no trailing colon is introduced when
+          # LD_LIBRARY_PATH is unset or empty (an empty segment is interpreted as CWD
+          # by glibc and may be silently rejected by the JVM launcher).
+          echo "LD_LIBRARY_PATH=${ONNX_CAPI_DIR}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}" >> "$GITHUB_ENV"
 
       - name: Checkout repository
         uses: actions/checkout@v5
