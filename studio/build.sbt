@@ -101,7 +101,7 @@ libraryDependencies ++= Seq(
   "com.formdev"       % "flatlaf-fonts-jetbrains-mono" % "2.304",
   "org.apache.maven"  % "maven-resolver-provider" % "3.9.15",
   "org.apache.maven.resolver"   % "maven-resolver-supplier-mvn4" % "2.0.16",
-  "io.modelcontextprotocol.sdk" % "mcp"          % "1.1.1",
+  "io.modelcontextprotocol.sdk" % "mcp"          % "1.1.2",
   "io.github.furstenheim"       % "copy_down"    % "1.1",
   "org.jsoup"                   % "jsoup"        % "1.22.2",
   "com.github.serpapi"          % "serpapi-java" % "1.1.0",
