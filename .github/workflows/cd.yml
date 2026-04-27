@@ -21,6 +21,7 @@ jobs:
         run: |
           # Take only the first line of the commit message so a multi-line body
           # (which GitHub appends after a blank line) does not corrupt the tag name.
+          echo "${{ github.event.head_commit.message }}"
           TAG=$(echo "${{ github.event.head_commit.message }}" | head -n 1 | tr -d '[:space:]')
 
           # Validate that it matches the vMAJOR.MINOR.PATCH pattern strictly.
