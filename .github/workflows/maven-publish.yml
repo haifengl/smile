@@ -27,7 +27,7 @@ jobs:
           pip install onnxruntime
           PYTHON_SITE_PACKAGES=$(pip show onnxruntime | grep Location | cut -d ' ' -f 2)
           ONNX_CAPI_DIR="${PYTHON_SITE_PACKAGES}/onnxruntime/capi"
-          echo "LD_LIBRARY_PATH=${ONNX_CAPI_DIR}${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=${ONNX_CAPI_DIR}:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
 
       - name: Checkout repository
         uses: actions/checkout@v5
