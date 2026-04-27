@@ -263,7 +263,7 @@ public class MPLSH <E> extends LSH<E> {
             double[] key = keys.get(index);
             if (q != key) {
                 double distance = MathEx.distance(q, key);
-                if (distance <= radius) {
+                if (MathEx.le(distance, radius)) {
                     neighbors.add(new Neighbor<>(key, data.get(index), index, distance));
                 }
             }

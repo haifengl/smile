@@ -744,7 +744,7 @@ public class CoverTree<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Serial
                             nextDist[nextSize] = cd;
                             nextNodes[nextSize] = child;
                             nextSize++;
-                        } else if (cd <= radius) {
+                        } else if (MathEx.le(cd, radius)) {
                             if (child.getKey() != q) {
                                 neighbors.add(new Neighbor<>(child.getKey(), child.getValue(), child.idx, cd));
                             }
