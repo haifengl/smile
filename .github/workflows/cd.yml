@@ -1,9 +1,10 @@
-name: Auto Release on Commit
+name: Release
 
 on:
-  push:
-    branches:
-      - master
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
 
 permissions:
   contents: write  # Required to create releases and tags
