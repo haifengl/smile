@@ -26,6 +26,7 @@ import smile.data.SparseDataset;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
+import untrusted.GadgetPayload;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -59,6 +60,7 @@ public class IOTest {
     // Read / Write – object serialization round-trip
     // -----------------------------------------------------------------------
 
+
     @Test
     public void testObjectRoundTrip() throws Exception {
         System.out.println("Read/Write object round-trip");
@@ -79,6 +81,97 @@ public class IOTest {
         @SuppressWarnings("unchecked")
         List<Integer> restored = (List<Integer>) Read.object(tmp);
         assertEquals(data, restored);
+    }
+
+    // -----------------------------------------------------------------------
+    // Security – untrusted class deserialization must be blocked
+    // -----------------------------------------------------------------------
+
+    /**
+     * Serialises a {@link GadgetPayload} instance and verifies that
+     * {@link Read#object(Path)} rejects it with {@link InvalidClassException}
+     * <em>before</em> the {@code readObject} callback fires.
+     *
+     * <p>This is the core security contract: the filter runs at class-resolution
+     * time, so the gadget's callback is never invoked even though the bytes are
+     * present in the stream.</p>
+     */
+    @Test
+    public void testUntrustedClassIsBlockedBeforeCallbackFires() throws Exception {
+        System.out.println("Security: untrusted class blocked before readObject callback");
+
+        // Given – a serialised GadgetPayload written by a (trusted) writer
+        GadgetPayload.CALLBACK_FIRED.set(false);
+        Path tmp = Files.createTempFile("smile-gadget-", ".ser");
+        tmp.toFile().deleteOnExit();
+        try (OutputStream fos = Files.newOutputStream(tmp);
+             ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+            oos.writeObject(new GadgetPayload());
+        }
+
+        // When – Read.object() tries to deserialise the stream
+        // Then – InvalidClassException is thrown (filter rejects the class)
+        assertThrows(InvalidClassException.class, () -> Read.object(tmp),
+                "Read.object() must reject classes outside the allow-list");
+
+        // And – the gadget callback must NOT have been invoked
+        assertFalse(GadgetPayload.CALLBACK_FIRED.get(),
+                "readObject callback must not fire when the class is filtered out");
+    }
+
+    /**
+     * Verifies that a class rejected by the default filter is accepted when the
+     * caller supplies an {@link java.io.ObjectInputFilter} that explicitly
+     * permits it.
+     */
+    @Test
+    public void testExtraFilterAllowsAdditionalClass() throws Exception {
+        System.out.println("Security: extra filter allows additional class");
+
+        // Given – serialised GadgetPayload
+        Path tmp = Files.createTempFile("smile-gadget-extra-", ".ser");
+        tmp.toFile().deleteOnExit();
+        try (OutputStream fos = Files.newOutputStream(tmp);
+             ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+            oos.writeObject(new GadgetPayload());
+        }
+
+        // When – an extra filter that explicitly permits IOTest$GadgetPayload
+        java.io.ObjectInputFilter allow = filterInfo ->
+                filterInfo.serialClass() != null
+                        && filterInfo.serialClass().getName().contains("GadgetPayload")
+                        ? java.io.ObjectInputFilter.Status.ALLOWED
+                        : java.io.ObjectInputFilter.Status.UNDECIDED;
+
+        // Then – deserialization succeeds
+        Object obj = Read.object(tmp, allow);
+        assertInstanceOf(GadgetPayload.class, obj,
+                "Extra filter should allow the GadgetPayload class through");
+    }
+
+    /**
+     * Verifies that standard JDK classes included in the default allow-list
+     * (e.g. {@code java.util.ArrayList}) continue to deserialise correctly.
+     */
+    @Test
+    public void testJdkAllowListedClassesDeserialiseCorrectly() throws Exception {
+        System.out.println("Security: JDK allow-listed classes deserialise correctly");
+
+        // Given – a java.util.ArrayList<String> (covered by java.util.**)
+        java.util.ArrayList<String> original =
+                new java.util.ArrayList<>(List.of("alpha", "beta", "gamma"));
+        Path tmp = Files.createTempFile("smile-jdk-", ".ser");
+        tmp.toFile().deleteOnExit();
+        Write.object(original, tmp);
+
+        // When
+        @SuppressWarnings("unchecked")
+        java.util.ArrayList<String> restored =
+                (java.util.ArrayList<String>) Read.object(tmp);
+
+        // Then
+        assertEquals(original, restored,
+                "java.util.ArrayList must survive the allow-list filter");
     }
 
     // -----------------------------------------------------------------------
