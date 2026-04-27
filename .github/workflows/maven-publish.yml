@@ -61,6 +61,8 @@ jobs:
         run: |
           echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
           echo "${{ secrets.GPG_KEY_ID }}:6:" | gpg --import-ownertrust
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Publish libraries to Maven Central
         run: |
