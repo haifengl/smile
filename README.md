@@ -1,5 +1,6 @@
 # Statistical Machine Intelligence & Learning Engine <img align="left" width="40" src="/website/src/images/smile.jpg" alt="SMILE">
 [![Maven Central](https://img.shields.io/maven-central/v/com.github.haifengl/smile-core)](https://central.sonatype.com/artifact/com.github.haifengl/smile-core)
+[![CI](https://github.com/haifengl/smile/actions/workflows/ci.yml/badge.svg)](https://github.com/haifengl/smile/actions/workflows/ci.yml)
 
 SMILE (Statistical Machine Intelligence & Learning Engine) is a comprehensive,
 high-performance machine learning framework for the JVM. SMILE v5+ requires
@@ -205,42 +206,42 @@ The `deep/README.md` covers:
 <dependency>
   <groupId>com.github.haifengl</groupId>
   <artifactId>smile-core</artifactId>
-  <version>6.0.0</version>
+  <version>6.0.1</version>
 </dependency>
 
 <!-- Deep learning + LLMs (requires LibTorch) -->
 <dependency>
   <groupId>com.github.haifengl</groupId>
   <artifactId>smile-deep</artifactId>
-  <version>6.0.0</version>
+  <version>6.0.1</version>
 </dependency>
 
 <!-- Natural language processing -->
 <dependency>
   <groupId>com.github.haifengl</groupId>
   <artifactId>smile-nlp</artifactId>
-  <version>6.0.0</version>
+  <version>6.0.1</version>
 </dependency>
 
 <!-- Data visualization -->
 <dependency>
   <groupId>com.github.haifengl</groupId>
   <artifactId>smile-plot</artifactId>
-  <version>6.0.0</version>
+  <version>6.0.1</version>
 </dependency>
 ```
 
 ### SBT (Scala)
 
 ```scala
-libraryDependencies += "com.github.haifengl" %% "smile-scala" % "6.0.0"
+libraryDependencies += "com.github.haifengl" %% "smile-scala" % "6.0.1"
 ```
 
 ### Gradle (Kotlin)
 
 ```kotlin
 dependencies {
-    implementation("com.github.haifengl:smile-kotlin:6.0.0")
+    implementation("com.github.haifengl:smile-kotlin:6.0.1")
 }
 ```
 
@@ -358,7 +359,7 @@ SMILE provides two visualization layers:
 <dependency>
   <groupId>com.github.haifengl</groupId>
   <artifactId>smile-plot</artifactId>
-  <version>6.0.0</version>
+  <version>6.0.1</version>
 </dependency>
 ```
 

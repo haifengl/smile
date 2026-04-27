@@ -63,9 +63,12 @@ jobs:
           echo "${{ secrets.GPG_KEY_ID }}:6:" | gpg --import-ownertrust
 
       - name: Publish libraries to Maven Central
-        run: ./gradlew publish --no-daemon
+        run: |
+          sbt publishSigned
+          sbt ++2.13.18 scala/publishSigned
+          sbt ++2.13.18 json/publishSigned
+          sbt sonaRelease
         env:
           NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-
