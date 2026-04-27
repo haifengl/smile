@@ -190,9 +190,9 @@ SMILE `smile.model.Model` framework. They carry:
 - Training / validation metrics
 - Optional metadata tags (`id`, `version`, user-defined properties)
 
-At startup, `InferenceService` scans `smile.serve.model`. If the path is a
-regular `.sml` file only that model is loaded; if it is a directory every
-`.sml` file in the directory is loaded.
+At startup, `InferenceService` scans the path specified by the property
+`smile.serve.model`. If the path is a regular `.sml` file only that model
+is loaded; if it is a directory every `.sml` file in the directory is loaded.
 
 ### 4.2 List Models
 
@@ -370,8 +370,9 @@ scikit-learn (via `sklearn-onnx`), and many other frameworks.
 
 ### 5.1 Model Format
 
-At startup, `OnnxService` scans `smile.onnx.model`. Every `.onnx` file found
-is loaded into an `InferenceSession`. The model ID is the file name without
+At startup, `OnnxService` scans the folder specified by the property
+`smile.onnx.model`. Every `.onnx` file found is loaded into an
+`InferenceSession`. The model ID is the file name without
 the `.onnx` extension (e.g., `resnet50.onnx` → ID `resnet50`).
 
 ### 5.2 List ONNX Models
@@ -544,9 +545,9 @@ SMILE Serve includes a Java implementation of
 for on-premise LLM inference. The chat API is designed to be compatible with
 the OpenAI Chat Completions interface.
 
-The LLM is optional: if `smile.chat.model` does not exist on the file system,
-`ChatService` starts in an *unavailable* state and every request to the chat
-endpoints returns **HTTP 503 Service Unavailable**.
+The LLM is optional: if the path specified by the property `smile.chat.model`
+does not exist on the file system, `ChatService` starts in an *unavailable*
+state and every request to the chat endpoints returns **HTTP 503 Service Unavailable**.
 
 ### 6.1 Chat Completions
 
