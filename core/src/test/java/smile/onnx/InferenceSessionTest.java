@@ -56,6 +56,7 @@ import static org.junit.jupiter.api.DynamicTest.dynamicTest;
  *
  * @author Haifeng Li
  */
+@Tag("integration")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class InferenceSessionTest {
 
