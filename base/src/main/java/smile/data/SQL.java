@@ -18,7 +18,9 @@ package smile.data;
 
 import java.sql.*;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import smile.util.Strings;
 
 /**
  * An in-process SQL database management interface.
@@ -27,6 +29,26 @@ import java.util.stream.Collectors;
  */
 public class SQL implements AutoCloseable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SQL.class);
+
+    /**
+     * Allowed SQL identifier pattern: letters, digits, and underscores,
+     * must start with a letter or underscore.  Rejects any character that
+     * could break out of an identifier context (quotes, semicolons, spaces,
+     * dashes, slashes, comment markers, etc.).
+     */
+    private static final Pattern SAFE_IDENTIFIER =
+            Pattern.compile("[A-Za-z_][A-Za-z0-9_]*");
+
+    /**
+     * Characters that must never appear inside a single-quoted SQL string
+     * literal even after {@code '} is doubled.  Semicolons can stack
+     * statements; comment sequences can suppress trailing syntax; NUL bytes
+     * are used in truncation attacks; line-terminators can escape some
+     * single-line comment defences.
+     */
+    private static final Pattern DANGEROUS_IN_LITERAL =
+            Pattern.compile("[;\\x00\\n\\r]|--|/\\*");
+
     /** JDBC connection. */
     private final Connection db;
 
@@ -100,7 +122,7 @@ public class SQL implements AutoCloseable {
      * @throws SQLException if fail to install the extension.
      */
     public SQL installExtension(String name) throws SQLException {
-        execute("INSTALL " + name + ';');
+        execute("INSTALL " + requireSafeIdentifier(name) + ';');
         return this;
     }
 
@@ -112,7 +134,7 @@ public class SQL implements AutoCloseable {
      * @throws SQLException if fail to load the extension.
      */
     public SQL loadExtension(String name) throws SQLException {
-        execute("LOAD " + name + ';');
+        execute("LOAD " + requireSafeIdentifier(name) + ';');
         return this;
     }
 
@@ -174,11 +196,17 @@ public class SQL implements AutoCloseable {
      * @throws SQLException if fail to read the files or create the in-memory table.
      */
     public SQL csv(String name, char delimiter, Map<String, String> columns, String... path) throws SQLException {
+        // Reject delimiter characters that could break the SQL literal.
+        String delimStr = String.valueOf(delimiter);
+        if (DANGEROUS_IN_LITERAL.matcher(delimStr).find() || delimiter == '\'') {
+            throw new IllegalArgumentException(
+                    "Delimiter character is not allowed inside a SQL literal: " + delimiter);
+        }
         StringBuilder sb = new StringBuilder();
         sb.append(String.format("""
                 CREATE TABLE %s AS
                 SELECT * FROM read_csv(%s,delim='%c',""",
-                name, fileList(path), delimiter));
+                requireSafeIdentifier(name), fileList(path), delimiter));
         if (columns == null) {
             sb.append("header=true");
         } else {
@@ -220,7 +248,9 @@ public class SQL implements AutoCloseable {
         String query = String.format("""
                 CREATE TABLE %s AS
                 SELECT * FROM iceberg_scan('%s', allow_moved_paths = %s);""",
-                name, path, allowMovedPaths);
+                requireSafeIdentifier(name),
+                requireSafeLiteral(escape(path)),
+                allowMovedPaths);
         logger.info(query);
         try (var stmt = db.createStatement()) {
             stmt.execute(query);
@@ -273,7 +303,7 @@ public class SQL implements AutoCloseable {
         sb.append(String.format("""
                 CREATE TABLE %s AS
                 SELECT * FROM read_parquet(%s""",
-                name, fileList(path)));
+                requireSafeIdentifier(name), fileList(path)));
         if (options != null) {
             sb.append(", ");
             sb.append(optionList(options));
@@ -289,13 +319,13 @@ public class SQL implements AutoCloseable {
     }
 
     /**
-     * Creates an in-memory table from json files. You can read a series of
+     * Creates an in-memory table from JSON files. You can read a series of
      * files and treat them as if they were a single table. Note that this
      * only works if the files have the same schema. The files can be
      * specified by a list parameter, glob pattern matching syntax, or
      * a combination of both.
      * @param name the table name.
-     * @param path a list of json files.
+     * @param path a list of JSON files.
      * @return this object.
      * @throws SQLException if fail to read the files or create the in-memory table.
      */
@@ -304,13 +334,13 @@ public class SQL implements AutoCloseable {
     }
 
     /**
-     * Creates an in-memory table from json files. You can read a series of
+     * Creates an in-memory table from JSON files. You can read a series of
      * files and treat them as if they were a single table. Note that this
      * only works if the files have the same schema. The files can be
      * specified by a list parameter, glob pattern matching syntax, or
      * a combination of both.
      * @param name the table name.
-     * @param path a list of json files.
+     * @param path a list of JSON files.
      * @param format "auto", "unstructured", "newline_delimited", or "array".
      *               "auto" - Attempt to determine the format automatically.
      *               "newline_delimited" - Each line is a JSON.
@@ -326,7 +356,8 @@ public class SQL implements AutoCloseable {
         sb.append(String.format("""
                 CREATE TABLE %s AS
                 SELECT * FROM read_json(%s, format = '%s'""",
-                name, fileList(path), format));
+                requireSafeIdentifier(name), fileList(path),
+                requireSafeLiteral(escape(format))));
         if (columns != null) {
             sb.append(", columns = ");
             sb.append(columnList(columns));
@@ -343,36 +374,106 @@ public class SQL implements AutoCloseable {
 
     /**
      * Returns the string representation of a list of file paths.
+     * Each path is escaped (single-quote doubled) and then validated to
+     * contain no statement-separator or comment meta-characters.
+     *
      * @param path a list of file paths.
-     * @return the string representation.
+     * @return the string representation safe for embedding in SQL text.
+     * @throws IllegalArgumentException if any path contains a dangerous
+     *         character that cannot be safely represented in a SQL literal.
      */
     private String fileList(String... path) {
         return Arrays.stream(path)
-                .map(s -> "'" + s + "'")
+                .map(s -> "'" + requireSafeLiteral(escape(s)) + "'")
                 .collect(Collectors.joining(", ", "[", "]"));
     }
 
     /**
      * Returns the string representation of column specification.
+     * Both the column name key and type value are escaped and validated.
+     *
      * @param columns a map that specifies the column names and column types.
-     * @return the string representation.
+     * @return the string representation safe for embedding in SQL text.
+     * @throws IllegalArgumentException if any key or value contains dangerous
+     *         characters.
      */
     private String columnList(Map<String, String> columns) {
         return columns.keySet().stream()
-                .map(key -> String.format("'%s': '%s'", key, columns.get(key)))
+                .map(key -> String.format("'%s': '%s'",
+                        requireSafeLiteral(escape(key)),
+                        requireSafeLiteral(escape(columns.get(key)))))
                 .collect(Collectors.joining(", ", "{", "}"));
     }
 
     /**
      * Returns the string representation of an option map.
+     * Option keys must be safe SQL identifiers; values are escaped and
+     * validated as safe SQL literals.
+     *
      * @param options a map of options.
-     * @return the string representation.
+     * @return the string representation safe for embedding in SQL text.
+     * @throws IllegalArgumentException if any key is not a safe identifier or
+     *         any value contains dangerous characters.
      */
     private String optionList(Map<String, String> options) {
         return options.keySet().stream()
-                .map(key -> String.format("%s = %s", key, options.get(key)))
+                .map(key -> String.format("%s = '%s'",
+                        requireSafeIdentifier(key),
+                        requireSafeLiteral(escape(options.get(key)))))
                 .collect(Collectors.joining(", "));
+    }
 
+    /**
+     * Validates that {@code name} is a safe SQL identifier (letters, digits,
+     * and underscores only, must start with a letter or underscore).
+     *
+     * @param name the identifier to validate.
+     * @return {@code name} unchanged if it is safe.
+     * @throws IllegalArgumentException if {@code name} contains any character
+     *         not allowed in a plain SQL identifier.
+     */
+    static String requireSafeIdentifier(String name) {
+        if (name == null || !SAFE_IDENTIFIER.matcher(name).matches()) {
+            throw new IllegalArgumentException(
+                    "Unsafe SQL identifier – only letters, digits and underscores " +
+                    "are allowed and the name must start with a letter or underscore: " +
+                    name);
+        }
+        return name;
+    }
+
+    /**
+     * Escapes a string value for safe embedding inside a SQL single-quoted
+     * literal by doubling every single-quote character ({@code '} → {@code ''}).
+     *
+     * @param value the raw string value.
+     * @return the escaped string (without the surrounding quotes).
+     */
+    static String escape(String value) {
+        if (value == null) return "";
+        return value.replace("'", "''");
+    }
+
+    /**
+     * Validates that an already-escaped string value does not contain
+     * characters that remain dangerous inside a SQL single-quoted literal
+     * even after escaping: semicolons ({@code ;}), NUL bytes, line
+     * terminators ({@code \n}, {@code \r}), or comment sequences
+     * ({@code --}, {@code /*}).
+     *
+     * @param escaped the value after {@link #escape(String)} has been applied.
+     * @return {@code escaped} unchanged if it is safe.
+     * @throws IllegalArgumentException if the value contains a dangerous
+     *         character sequence.
+     */
+    static String requireSafeLiteral(String escaped) {
+        if (DANGEROUS_IN_LITERAL.matcher(escaped).find()) {
+            throw new IllegalArgumentException(
+                    "SQL literal value contains a dangerous character sequence " +
+                    "(semicolon, NUL byte, line terminator, or comment marker). " +
+                    "Value rejected to prevent SQL injection.");
+        }
+        return escaped;
     }
 
     /**
@@ -381,7 +482,7 @@ public class SQL implements AutoCloseable {
      * @throws SQLException if fail to execute the SQL statement.
      */
     public void export(String path) throws SQLException {
-        execute(String.format("EXPORT DATABASE '%s' (FORMAT csv);", path));
+        execute(String.format("EXPORT DATABASE '%s' (FORMAT csv);", requireSafeLiteral(escape(path))));
     }
 
     /**
@@ -392,7 +493,8 @@ public class SQL implements AutoCloseable {
      * @throws SQLException if fail to execute the SQL statement.
      */
     public void export(String table, String path) throws SQLException {
-        execute(String.format("COPY %s TO '%s' (FORMAT csv, DELIMITER ',', HEADER);", table, path));
+        execute(String.format("COPY %s TO '%s' (FORMAT csv, DELIMITER ',', HEADER);",
+                requireSafeIdentifier(table), requireSafeLiteral(escape(path))));
     }
 
     /**
@@ -403,46 +505,90 @@ public class SQL implements AutoCloseable {
      * @throws SQLException if fail to execute the SQL statement.
      */
     public void query(String sql, String path) throws SQLException {
-        execute(String.format("COPY (%s) TO '%s' (FORMAT csv, DELIMITER ',', HEADER);", sql, path));
+        execute(String.format("COPY (%s) TO '%s' (FORMAT csv, DELIMITER ',', HEADER);",
+                requireNonBlank(sql), requireSafeLiteral(escape(path))));
     }
 
     /**
-     * Executes a SELECT statement.
+     * Executes an ad-hoc SELECT statement.
+     *
+     * <p>The statement is compiled via {@link Connection#prepareStatement(String)}
+     * before execution so that a syntactically invalid statement is rejected with
+     * {@link SQLException} before any data is touched.</p>
+     *
+     * <p>This method is intended for interactive or trusted-caller use. The
+     * caller is responsible for ensuring the string is a single, non-malicious
+     * {@code SELECT} statement.</p>
+     *
      * @param sql a SELECT statement.
      * @return the query result.
-     * @throws SQLException if fail to execute the SQL query.
+     * @throws SQLException if the statement is syntactically invalid or fails
+     *         to execute.
+     * @throws IllegalArgumentException if {@code sql} is null or blank.
      */
     public DataFrame query(String sql) throws SQLException {
         logger.info(sql);
-        try (var stmt = db.createStatement()) {
-            return DataFrame.of(stmt.executeQuery(sql));
+        try (var stmt = db.prepareStatement(requireNonBlank(sql))) {
+            return DataFrame.of(stmt.executeQuery());
         }
     }
 
     /**
-     * Executes an INSERT, UPDATE, or DELETE statement.
+     * Executes an ad-hoc INSERT, UPDATE, or DELETE statement.
+     *
+     * <p>The statement is compiled via {@link Connection#prepareStatement(String)}
+     * before execution so that a syntactically invalid statement is rejected with
+     * {@link SQLException} before any rows are modified.</p>
+     *
+     * <p>This method is intended for interactive or trusted-caller use. The
+     * caller is responsible for ensuring the string is a single, non-malicious
+     * DML statement.</p>
+     *
      * @param sql an INSERT, UPDATE, or DELETE statement.
      * @return the number of rows affected by the SQL statement.
-     * @throws SQLException if fail to execute the SQL update.
+     * @throws SQLException if the statement is syntactically invalid or fails
+     *         to execute.
+     * @throws IllegalArgumentException if {@code sql} is null or blank.
      */
     public int update(String sql) throws SQLException {
         logger.info(sql);
-        try (var stmt = db.createStatement()) {
-            return stmt.executeUpdate(sql);
+        try (var stmt = db.prepareStatement(requireNonBlank(sql))) {
+            return stmt.executeUpdate();
         }
     }
 
     /**
-     * Executes an SQL statement, which may return multiple results.
+     * Executes an ad-hoc SQL statement, which may return multiple results.
+     *
+     * <p>This method accepts any SQL, including DDL ({@code CREATE}, {@code DROP},
+     * etc.). This method is intended for interactive or trusted-caller use. The
+     * caller is responsible for ensuring the string is a single, non-malicious
+     * DML statement.</p>
+     *
      * @param sql an SQL statement.
      * @return true if the first result is a ResultSet object;
      *         false if it is an update count or there are no results.
-     * @throws SQLException if fail to execute the SQL statement.
+     * @throws SQLException if the statement fails to execute.
+     * @throws IllegalArgumentException if {@code sql} is null or blank.
      */
     public boolean execute(String sql) throws SQLException {
         logger.info(sql);
         try (var stmt = db.createStatement()) {
-            return stmt.execute(sql);
+            return stmt.execute(requireNonBlank(sql));
         }
+    }
+
+    /**
+     * Validates that {@code sql} is not {@code null} and not blank.
+     *
+     * @param sql the SQL string to check.
+     * @return {@code sql} unchanged.
+     * @throws IllegalArgumentException if {@code sql} is {@code null} or blank.
+     */
+    private static String requireNonBlank(String sql) {
+        if (Strings.isNullOrBlank(sql)) {
+            throw new IllegalArgumentException("SQL statement must not be null or blank.");
+        }
+        return sql;
     }
 }
