@@ -111,11 +111,17 @@
             parent = parent.find('> li:last > ul:first');
         }
 
+        var $li = $('<li></li>');
         if (id === '') {
-            parent.append('<li>' + text + '</li>');
+            $li.text(text);
         } else {
-            parent.append('<li><a href="#' + id + '" class="scroll">' + text + '</a></li>');
+            var $a = $('<a></a>');
+            $a.attr('href', '#' + id);
+            $a.attr('class', 'scroll');
+            $a.text(text);
+            $li.append($a);
         }
+        parent.append($li);
     }
 
     $.fn.toc.defaults = {
