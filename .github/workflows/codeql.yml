@@ -120,7 +120,7 @@ jobs:
       if: matrix.build-mode == 'manual'
       shell: bash
       run: |
-        ./gradlew assemble --no-daemon
+        ./gradlew clean assemble --no-daemon --no-build-cache --max-workers=2
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
