@@ -22,6 +22,8 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
+
+import smile.math.MathEx;
 import smile.math.distance.HammingDistance;
 import smile.hash.SimHash;
 import smile.util.IntArrayList;
@@ -165,7 +167,7 @@ public class SNLSH<K, V> implements RNNSearch<K, V>, Serializable {
         for (int ci = 0; ci < n; ci++) {
             int index = candidates.get(ci);
             int distance = HammingDistance.d(fpq, signatures.get(index));
-            if (distance <= radius) {
+            if (MathEx.le(distance, radius)) {
                 neighbors.add(new Neighbor<>(keys.get(index), data.get(index), index, distance));
             }
         }

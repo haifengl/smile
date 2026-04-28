@@ -336,7 +336,7 @@ public class VegaLite {
                      <meta name="viewport" content="width=device-width, initial-scale=1">
                      <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega@5"></script>
                      <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-lite@6"></script>
-                     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+                     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-embed@7"></script>
                    </head>
                    <body>
                 

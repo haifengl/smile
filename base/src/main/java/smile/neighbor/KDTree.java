@@ -371,7 +371,7 @@ public class KDTree <E> implements KNNSearch<double[], E>, RNNSearch<double[], E
                 int i = index[idx];
                 if (q != keys[i]) {
                     double sd = squaredDistanceEarlyExit(q, keys[i], radius2);
-                    if (sd <= radius2) {
+                    if (MathEx.le(sd, radius2)) {
                         neighbors.add(new Neighbor<>(keys[i], data[i], i, Math.sqrt(sd)));
                     }
                 }

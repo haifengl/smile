@@ -73,7 +73,7 @@ public class SimpleSentenceSplitter implements SentenceSplitter {
     /**
      * Regular expression of last word (maybe only one word in the sentence).
      */
-    private static final Pattern REGEX_LAST_WORD = Pattern.compile("\\b([\\w0-9\\.']+)$");
+    private static final Pattern REGEX_LAST_WORD = Pattern.compile("\\b([\\w\\.']+)$");
     /**
      * The singleton instance.
      */
