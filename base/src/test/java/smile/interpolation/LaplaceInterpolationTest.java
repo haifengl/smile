@@ -49,7 +49,7 @@ public class LaplaceInterpolationTest {
         };
         LaplaceInterpolation.interpolate(m);
         assertTrue(Double.isFinite(m[1][1]));
-        // The Laplace solution is the average of the four direct neighbours: (1+3+1+3)/4 = 2
+        // The Laplace solution is the average of the four direct neighbors: (1+3+1+3)/4 = 2
         assertEquals(2.0, m[1][1], 0.05);
     }
 

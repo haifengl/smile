@@ -85,7 +85,7 @@ public record TSNE(double cost, double[][] coordinates) implements Serializable 
      * @param eta the learning rate. Usually in the range [10.0, 1000.0].
      *            If the learning rate is too high, the data may look like
      *            a "ball" with any point approximately equidistant from its
-     *            nearest neighbours. If the learning rate is too low, most
+     *            nearest neighbors. If the learning rate is too low, most
      *            points may look compressed in a dense cloud with few outliers.
      * @param earlyExaggeration Controls how tight natural clusters in the original
      *                          space are in the embedded space and how much space
@@ -156,7 +156,7 @@ public record TSNE(double cost, double[][] coordinates) implements Serializable 
          * @param eta the learning rate. Usually in the range [10.0, 1000.0].
          *            If the learning rate is too high, the data may look like
          *            a "ball" with any point approximately equidistant from its
-         *            nearest neighbours. If the learning rate is too low, most
+         *            nearest neighbors. If the learning rate is too low, most
          *            points may look compressed in a dense cloud with few outliers.
          * @param earlyExaggeration Controls how tight natural clusters in the original
          *                          space are in the embedded space and how much space
