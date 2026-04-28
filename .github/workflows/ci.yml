@@ -35,6 +35,7 @@ jobs:
           # Use the safe ${VAR:+:$VAR} idiom so no trailing colon is introduced when
           # LD_LIBRARY_PATH is unset or empty (an empty segment is interpreted as CWD
           # by glibc and may be silently rejected by the JVM launcher).
+          echo "LD_LIBRARY_PATH=${ONNX_CAPI_DIR}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
           echo "LD_LIBRARY_PATH=${ONNX_CAPI_DIR}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}" >> "$GITHUB_ENV"
 
       - name: Checkout repository
@@ -51,7 +52,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run unit tests (skip integration tests)
-        run: xvfb-run --auto-servernum ./gradlew test -DexcludeTags=integration --no-daemon
+        run: xvfb-run --auto-servernum ./gradlew test -DexcludeTags=integration --no-daemon --max-workers=2
 
       - name: Upload test reports
         if: always()

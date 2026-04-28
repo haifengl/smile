@@ -121,7 +121,7 @@ jobs:
       shell: bash
       run: |
         echo 'Building SMILE...'
-        ./gradlew clean assemble -Pkotlin.incremental=false --no-daemon --no-build-cache
+        ./gradlew clean assemble -Pkotlin.incremental=false --no-daemon --no-build-cache --max-workers=2
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
