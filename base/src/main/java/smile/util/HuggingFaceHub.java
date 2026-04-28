@@ -18,6 +18,7 @@ package smile.util;
 
 import java.io.*;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -57,8 +58,10 @@ import java.util.UUID;
  * <ul>
  *   <li>{@code HF_HOME} – base directory for all Hugging Face data
  *       (default: {@code ~/.cache/huggingface}).</li>
- *   <li>{@code HUGGINGFACE_HUB_CACHE} – override cache root
- *       (default: {@code $HF_HOME/hub}).</li>
+ *   <li>{@code HF_HUB_CACHE} – override cache root
+ *       (default: {@code $HF_HOME/hub}).  Takes priority over the legacy
+ *       {@code HUGGINGFACE_HUB_CACHE} variable.</li>
+ *   <li>{@code HUGGINGFACE_HUB_CACHE} – legacy alias for {@code HF_HUB_CACHE}.</li>
  *   <li>{@code HF_ENDPOINT} – Hugging Face endpoint
  *       (default: {@code https://huggingface.co}).</li>
  *   <li>{@code HF_TOKEN} – API token for private repositories
@@ -246,10 +249,11 @@ public class HuggingFaceHub {
         String endpoint = resolveEndpoint();
         String token    = resolveToken();
 
-        // If revision looks like a full 40-char hex commit hash, use it directly.
+        // If revision looks like a full 40-char hex commit hash, use it directly
+        // (normalize to lowercase to match what the HF Hub always returns).
         String commitHash = null;
         if (isCommitHash(revision)) {
-            commitHash = revision;
+            commitHash = revision.toLowerCase(java.util.Locale.ROOT);
         } else {
             // Check refs/ cache for a previously resolved commit hash.
             Path refFile = refsDir.resolve(revision.replace("/", "_"));
@@ -266,7 +270,10 @@ public class HuggingFaceHub {
         //   model   → ""            → {endpoint}/{repoId}/resolve/{revision}/{filename}
         //   dataset → "datasets/"   → {endpoint}/datasets/{repoId}/resolve/{revision}/{filename}
         //   space   → "spaces/"     → {endpoint}/spaces/{repoId}/resolve/{revision}/{filename}
-        String encodedFilename = filename.replace(" ", "%20");
+        // Encode each path segment separately so that slashes used as
+        // directory separators in multi-level filenames are preserved while
+        // all other URL-unsafe characters (spaces, #, ?, +, etc.) are encoded.
+        String encodedFilename = encodeFilePath(filename);
         String repoPrefix = repoType == RepoType.MODEL ? "" : repoType.urlSegment + "/";
         String fileUrl = endpoint + "/" + repoPrefix + repoId + "/resolve/"
                 + revision + "/" + encodedFilename;
@@ -475,10 +482,12 @@ public class HuggingFaceHub {
     // =========================================================================
 
     /**
-     * Resolves the local cache root directory, respecting environment variables:
+     * Resolves the local cache root directory, respecting environment variables
+     * in the same priority order as the Python {@code huggingface_hub} library:
      * <ol>
      *   <li>{@code cacheDir} argument (if non-null)</li>
-     *   <li>{@code HUGGINGFACE_HUB_CACHE} environment variable</li>
+     *   <li>{@code HF_HUB_CACHE} environment variable</li>
+     *   <li>{@code HUGGINGFACE_HUB_CACHE} environment variable (legacy alias)</li>
      *   <li>{@code HF_HOME} environment variable + {@code "/hub"}</li>
      *   <li>{@code ~/.cache/huggingface/hub}</li>
      * </ol>
@@ -489,7 +498,12 @@ public class HuggingFaceHub {
     public static Path resolveCacheDir(Path cacheDir) {
         if (cacheDir != null) return cacheDir;
 
-        String env = System.getenv("HUGGINGFACE_HUB_CACHE");
+        // HF_HUB_CACHE takes priority (current standard, huggingface_hub >= 0.14).
+        String env = System.getenv("HF_HUB_CACHE");
+        if (env != null && !env.isBlank()) return Path.of(env);
+
+        // Legacy alias kept for backward compatibility.
+        env = System.getenv("HUGGINGFACE_HUB_CACHE");
         if (env != null && !env.isBlank()) return Path.of(env);
 
         String hfHome = System.getenv("HF_HOME");
@@ -578,13 +592,13 @@ public class HuggingFaceHub {
 
     /**
      * Returns {@code true} if {@code revision} looks like a full 40-character
-     * hexadecimal git commit SHA.
+     * hexadecimal git commit SHA (case-insensitive).
      *
      * @param revision the revision string to test.
      * @return {@code true} if it is a commit hash.
      */
     static boolean isCommitHash(String revision) {
-        return revision != null && revision.matches("[0-9a-f]{40}");
+        return revision != null && revision.matches("[0-9a-fA-F]{40}");
     }
 
     /**
@@ -628,8 +642,9 @@ public class HuggingFaceHub {
                 sha256.update(buffer, 0, read);
                 totalBytes += read;
                 if (expectedBytes > 0) {
-                    logger.debug("Downloaded {} / {} bytes ({:.1f}%)",
-                            totalBytes, expectedBytes, 100.0 * totalBytes / expectedBytes);
+                    logger.debug("Downloaded {}/{} bytes ({}%)",
+                            totalBytes, expectedBytes,
+                            String.format("%.1f", 100.0 * totalBytes / expectedBytes));
                 }
             }
         }
@@ -709,7 +724,196 @@ public class HuggingFaceHub {
      * @throws IOException if a network or filesystem error occurs.
      */
     public static Path download(String repoId, String filename, String token) throws IOException {
-        return download(repoId, filename, RepoType.MODEL, "main", null, null, false, false);
+        // Build a one-time HttpRequest with the supplied token; delegate to full overload
+        // by passing a cacheDir of null (uses defaults) and the token via a helper.
+        // We cannot pass the token through the full overload signature directly, so we
+        // temporarily resolve and override the resolved token inside a factory method.
+        return downloadWithToken(repoId, filename, RepoType.MODEL, "main",
+                null, null, false, false, token);
+    }
+
+    /**
+     * Internal variant of {@link #download} that accepts an explicit token,
+     * bypassing environment-variable resolution for the token only.
+     */
+    private static Path downloadWithToken(String repoId,
+                                          String filename,
+                                          RepoType repoType,
+                                          String revision,
+                                          String subfolder,
+                                          Path cacheDir,
+                                          boolean forceDownload,
+                                          boolean localFilesOnly,
+                                          String explicitToken) throws IOException {
+        if (repoId == null || repoId.isBlank()) throw new IllegalArgumentException("repoId must not be blank");
+        if (filename == null || filename.isBlank()) throw new IllegalArgumentException("filename must not be blank");
+        if (repoType == null) repoType = RepoType.MODEL;
+        if (revision == null || revision.isBlank()) revision = "main";
+
+        if (subfolder != null && !subfolder.isBlank()) {
+            filename = subfolder.replace('\\', '/') + "/" + filename.replace('\\', '/');
+        }
+        final String resolvedFilename = filename;
+
+        Path cache = resolveCacheDir(cacheDir);
+        String repoCacheName = repoType.cachePrefix() + "--" + repoId.replace("/", "--");
+        Path repoCache    = cache.resolve(repoCacheName);
+        Path blobsDir     = repoCache.resolve("blobs");
+        Path snapshotsDir = repoCache.resolve("snapshots");
+        Path refsDir      = repoCache.resolve("refs");
+
+        Files.createDirectories(blobsDir);
+        Files.createDirectories(snapshotsDir);
+        Files.createDirectories(refsDir);
+
+        String endpoint = resolveEndpoint();
+        // Use the explicitly supplied token; fall back to environment resolution.
+        String token = (explicitToken != null && !explicitToken.isBlank())
+                ? explicitToken.strip()
+                : resolveToken();
+
+        String commitHash = null;
+        if (isCommitHash(revision)) {
+            commitHash = revision.toLowerCase(java.util.Locale.ROOT);
+        } else {
+            Path refFile = refsDir.resolve(revision.replace("/", "_"));
+            if (!forceDownload && Files.exists(refFile)) {
+                commitHash = Files.readString(refFile, StandardCharsets.UTF_8).strip();
+                logger.debug("Resolved revision '{}' to commit '{}' from cache.", revision, commitHash);
+            }
+        }
+
+        String encodedFilename = encodeFilePath(filename);
+        String repoPrefix = repoType == RepoType.MODEL ? "" : repoType.urlSegment + "/";
+        String fileUrl = endpoint + "/" + repoPrefix + repoId + "/resolve/"
+                + revision + "/" + encodedFilename;
+
+        if (!forceDownload && commitHash != null) {
+            Path snapshotFile = snapshotsDir.resolve(commitHash).resolve(filename);
+            if (Files.exists(snapshotFile)) {
+                logger.debug("Cache hit: {}", snapshotFile);
+                return snapshotFile;
+            }
+        }
+
+        if (localFilesOnly) {
+            if (commitHash != null) {
+                Path snapshotFile = snapshotsDir.resolve(commitHash).resolve(filename);
+                if (Files.exists(snapshotFile)) return snapshotFile;
+            }
+            if (Files.exists(snapshotsDir)) {
+                try (var stream = Files.list(snapshotsDir)) {
+                    Optional<Path> found = stream
+                            .map(s -> s.resolve(resolvedFilename))
+                            .filter(Files::exists)
+                            .findFirst();
+                    if (found.isPresent()) return found.get();
+                }
+            }
+            throw new IOException("File '%s' is not in the local cache and localFilesOnly=true.".formatted(resolvedFilename));
+        }
+
+        HttpRequest.Builder headBuilder = buildRequest(fileUrl, token)
+                .method("HEAD", HttpRequest.BodyPublishers.noBody())
+                .timeout(CONNECT_TIMEOUT);
+
+        if (!forceDownload && commitHash != null) {
+            Path snapshotFile = snapshotsDir.resolve(commitHash).resolve(filename);
+            if (Files.isSymbolicLink(snapshotFile)) {
+                Path blobPath = snapshotFile.toRealPath();
+                String existingEtag = blobPath.getFileName().toString();
+                headBuilder.header("If-None-Match", "\"" + existingEtag + "\"");
+            }
+        }
+
+        HttpResponse<Void> headResp;
+        try {
+            headResp = HTTP_CLIENT.send(headBuilder.build(), BodyHandlers.discarding());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("HEAD request interrupted for: " + fileUrl, e);
+        } catch (IOException e) {
+            logger.warn("HEAD request failed for {}: {}", fileUrl, e.getMessage());
+            if (commitHash != null) {
+                Path snapshotFile = snapshotsDir.resolve(commitHash).resolve(filename);
+                if (Files.exists(snapshotFile)) {
+                    logger.info("Falling back to cached file: {}", snapshotFile);
+                    return snapshotFile;
+                }
+            }
+            throw new IOException("Network error and no cached copy found for: " + fileUrl, e);
+        }
+
+        int headStatus = headResp.statusCode();
+
+        if (headStatus == 401) throw new IOException("401 Unauthorized for '%s'. Provide a valid HF_TOKEN for private repos.".formatted(fileUrl));
+        if (headStatus == 403) throw new IOException("403 Forbidden for '%s'. You may not have access to this repository.".formatted(fileUrl));
+        if (headStatus == 404) throw new FileNotFoundException("404 Not Found: '%s' in repo '%s' at revision '%s'.".formatted(filename, repoId, revision));
+        if (headStatus != 200 && headStatus != 304) throw new IOException("Unexpected HTTP %d for HEAD request on: %s".formatted(headStatus, fileUrl));
+
+        String etag = stripWeakEtag(headResp.headers().firstValue(HEADER_ETAG).orElse(null));
+        String lfsEtag = stripWeakEtag(headResp.headers().firstValue(HEADER_LFS_SHA).orElse(null));
+        String serverCommitHash = headResp.headers().firstValue(HEADER_COMMIT_HASH).orElse(null);
+        String lfsSizeStr = headResp.headers().firstValue(HEADER_LFS_SIZE).orElse(null);
+        String blobSha = lfsEtag != null ? lfsEtag : etag;
+
+        if (serverCommitHash != null && !serverCommitHash.isBlank()) {
+            commitHash = serverCommitHash.strip();
+            if (!isCommitHash(revision)) {
+                Path refFile = refsDir.resolve(revision.replace("/", "_"));
+                writeFileAtomically(refFile, commitHash);
+            }
+        }
+
+        if (commitHash == null) commitHash = revision;
+
+        Path snapshotDir  = snapshotsDir.resolve(commitHash);
+        Path snapshotFile = snapshotDir.resolve(filename);
+        Files.createDirectories(snapshotDir);
+        if (snapshotFile.getParent() != null) Files.createDirectories(snapshotFile.getParent());
+
+        if (headStatus == 304 && Files.exists(snapshotFile)) {
+            logger.debug("304 Not Modified — using cached: {}", snapshotFile);
+            return snapshotFile;
+        }
+
+        Path blobPath = blobSha != null ? blobsDir.resolve(blobSha) : null;
+        if (!forceDownload && blobPath != null && Files.exists(blobPath)) {
+            createOrUpdateSymlink(snapshotFile, blobPath, blobsDir, snapshotDir);
+            logger.debug("Blob cache hit: {}", blobPath);
+            return snapshotFile;
+        }
+
+        logger.info("Downloading {} from {}", filename, fileUrl);
+        Path tempFile = blobsDir.resolve("." + UUID.randomUUID() + ".tmp");
+        try {
+            HttpRequest getReq = buildRequest(fileUrl, token).GET().build();
+            HttpResponse<InputStream> getResp;
+            try {
+                getResp = HTTP_CLIENT.send(getReq, BodyHandlers.ofInputStream());
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IOException("GET request interrupted for: " + fileUrl, e);
+            }
+            int getStatus = getResp.statusCode();
+            if (getStatus != 200) {
+                getResp.body().close();
+                throw new IOException("Unexpected HTTP %d for GET: %s".formatted(getStatus, fileUrl));
+            }
+            String downloadedSha256 = streamToFile(getResp.body(), tempFile, lfsSizeStr);
+            if (blobSha == null) {
+                blobSha  = downloadedSha256;
+                blobPath = blobsDir.resolve(blobSha);
+            }
+            Files.move(tempFile, blobPath, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            logger.info("Saved blob: {}", blobPath);
+        } catch (IOException e) {
+            try { Files.deleteIfExists(tempFile); } catch (IOException ignored) { }
+            throw e;
+        }
+
+        createOrUpdateSymlink(snapshotFile, blobPath, blobsDir, snapshotDir);
+        return snapshotFile;
     }
 
     /**
@@ -781,10 +985,32 @@ public class HuggingFaceHub {
     }
 
     /**
+     * Percent-encodes a file path for use in a URL, preserving forward slashes
+     * as path separators.  Each path segment is encoded individually using
+     * {@link URLEncoder#encode} (which encodes spaces as {@code +}), then
+     * {@code +} signs are replaced with {@code %20} per the URI path encoding
+     * rules (RFC 3986 §3.3), and existing {@code %2F} sequences from
+     * {@code URLEncoder} are replaced back with {@code /}.
+     *
+     * @param filePath the raw file path (may contain spaces and other special chars).
+     * @return the percent-encoded path string suitable for embedding in a URI.
+     */
+    static String encodeFilePath(String filePath) {
+        String[] segments = filePath.split("/", -1);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < segments.length; i++) {
+            if (i > 0) sb.append('/');
+            // URLEncoder encodes spaces as '+'; convert to %20 for URI path context.
+            sb.append(URLEncoder.encode(segments[i], StandardCharsets.UTF_8)
+                    .replace("+", "%20"));
+        }
+        return sb.toString();
+    }
+
+    /**
      * Recursively deletes a directory tree.
      */
-    private static void deleteRecursively(Path root) throws IOException {
-        Files.walkFileTree(root, new SimpleFileVisitor<>() {
+    private static void deleteRecursively(Path root) throws IOException {        Files.walkFileTree(root, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                 Files.delete(file);
