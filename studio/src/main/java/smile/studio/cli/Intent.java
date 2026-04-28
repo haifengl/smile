@@ -25,6 +25,7 @@ import java.util.concurrent.Callable;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultEditorKit;
 import com.formdev.flatlaf.ui.FlatLineBorder;
 import com.formdev.flatlaf.util.SystemInfo;
 import ioa.llm.client.LLM;
@@ -213,7 +214,10 @@ public class Intent extends JPanel {
     private void initActionMap(AgentCLI cli) {
         InputMap inputMap = editor.getInputMap(JComponent.WHEN_FOCUSED);
         ActionMap actionMap = editor.getActionMap();
-        inputMap.put(KeyStroke.getKeyStroke("ctrl ENTER"), "run");
+        // Map Shift+Enter to the default newline action (insert-break)
+        inputMap.put(KeyStroke.getKeyStroke("shift ENTER"), DefaultEditorKit.insertBreakAction);
+
+        inputMap.put(KeyStroke.getKeyStroke("ENTER"), "run");
         actionMap.put("run", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
                 if (!editor.isEditable()) return;
