@@ -363,7 +363,27 @@ public class MathEx {
         double absb = abs(b);
         return abs(a - b) <= Math.min(absa, absb) * 2.2204460492503131e-16;
     }
-        
+
+    /**
+     * Returns true if {@code a <= b} in the system precision.
+     * @param a a double value.
+     * @param b a double value.
+     * @return true if {@code a <= b} in the system precision
+     */
+    public static boolean le(double a, double b) {
+        return a < b || equals(a, b);
+    }
+
+    /**
+     * Returns true if {@code a >= b} in the system precision.
+     * @param a a double value.
+     * @param b a double value.
+     * @return true if {@code a >= b} in the system precision
+     */
+    public static boolean ge(double a, double b) {
+        return a < b || equals(a, b);
+    }
+
     /**
      * Logistic sigmoid function <code>1 / (1 + exp(-x))</code>.
      * @param x a real number.

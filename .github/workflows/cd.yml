@@ -12,6 +12,7 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -19,9 +20,11 @@ jobs:
       - name: Extract and validate version tag
         id: tag
         run: |
+          # head_commit.message is only available for push events.
+          # Use git command to reliably get the commit message.
           # Take only the first line of the commit message so a multi-line body
           # (which GitHub appends after a blank line) does not corrupt the tag name.
-          TAG=$(echo "${{ github.event.head_commit.message }}" | head -n 1 | tr -d '[:space:]')
+          TAG=$(git log -1 --pretty=%B | head -n 1 | tr -d '[:space:]')
 
           # Validate that it matches the vMAJOR.MINOR.PATCH pattern strictly.
           if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then

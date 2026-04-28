@@ -19,7 +19,8 @@ package smile.io;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
+import java.io.InvalidClassException;
+import java.io.ObjectInputFilter;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -44,14 +45,49 @@ import smile.util.Strings;
 public interface Read {
     /**
      * Reads a serialized object from a file.
+     *
+     * <p>Deserialization is guarded by a built-in {@link ObjectInputFilter}
+     * allow-list that permits only {@code smile.*}, common {@code java.lang},
+     * {@code java.util}, {@code java.math}, and {@code java.time} classes.
+     * All other classes are rejected with {@link InvalidClassException}
+     * before any deserialization callback executes, preventing gadget-chain
+     * exploits.</p>
+     *
      * @param path the file path.
-     * @return the serialized object.
-     * @throws IOException when fails to read the stream.
+     * @return the deserialized object.
+     * @throws IOException when fails to read the stream or a disallowed class
+     *         is encountered.
      * @throws ClassNotFoundException when fails to load the class.
      */
     static Object object(Path path) throws IOException, ClassNotFoundException {
         try (InputStream file = Files.newInputStream(path);
-             ObjectInputStream in = new ObjectInputStream(file)) {
+             SmileObjectInputStream in = new SmileObjectInputStream(file)) {
+            return in.readObject();
+        }
+    }
+
+    /**
+     * Reads a serialized object from a file using a caller-supplied
+     * {@link ObjectInputFilter} merged with the built-in SMILE allow-list.
+     *
+     * <p>Use this overload when the serialized artifact contains classes outside
+     * the default allow-list (e.g. third-party model integrations).  The
+     * {@code extraFilter} is consulted first; any class it does not explicitly
+     * permit falls through to the built-in allow-list.  The built-in deny-all
+     * fallback still applies for anything neither filter permits.</p>
+     *
+     * @param path        the file path.
+     * @param extraFilter an additional {@link ObjectInputFilter} to merge with
+     *                    the built-in allow-list; must not be {@code null}.
+     * @return the deserialized object.
+     * @throws IOException when fails to read the stream or a disallowed class
+     *         is encountered.
+     * @throws ClassNotFoundException when fails to load the class.
+     */
+    static Object object(Path path, ObjectInputFilter extraFilter)
+            throws IOException, ClassNotFoundException {
+        try (InputStream file = Files.newInputStream(path);
+             SmileObjectInputStream in = new SmileObjectInputStream(file, extraFilter)) {
             return in.readObject();
         }
     }
@@ -71,8 +107,8 @@ public interface Read {
      * @param path the input file path.
      * @param format the optional file format specification. For csv files,
      *               it is such as <code>delimiter=\t,header=true,comment=#,escape=\,quote="</code>.
-     *               For json files, it is the file mode (single-line or
-     *               multi-line). For avro files, it is the path to the schema
+     *               For JSON files, it is the file mode (single-line or
+     *               multi-line). For Avro files, it is the path to the schema
      *               file.
      * @throws Exception when fails to read the file.
      * @return the data frame.
