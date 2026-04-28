@@ -250,7 +250,7 @@ public class Workspace extends JSplitPane {
                         🌐 Built-in inference server.
                         
                         💡 Tips for getting started:
-                        1. Ctrl + ENTER to execute your intents.
+                        1. Shift + ENTER to add a line break.
                         2. Ctrl + Click on output links to open browser.
                         3. Run /init to create a SMILE.md file with instructions for agents.
                         4. Be as specific as you would with another data scientist for the best result.
@@ -276,7 +276,7 @@ public class Workspace extends JSplitPane {
 
                 """
                         💡 Tips for getting started:
-                        1. Ctrl + ENTER to execute your intents.
+                        1. Shift + ENTER to add a line break.
                         2. Ctrl + Click on output links to open browser.
                         3. TAB to complete code in the notebook.
                         4. Be as specific as you would with another programmer for the best result.
@@ -301,7 +301,7 @@ public class Workspace extends JSplitPane {
 
                 """
                         💡 Tips for getting started:
-                        1. Ctrl + ENTER to execute your intents.
+                        1. Shift + ENTER to add a line break.
                         2. Ctrl + Click on output links to open browser.
                         3. TAB to complete code in the notebook.
                         4. Be as specific as you would with another programmer for the best result.
