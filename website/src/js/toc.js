@@ -34,7 +34,7 @@
         }
 
         return this.each(function() {
-            $(opts.context + ' :header').not(opts.exclude).each(function() {
+            $($.find(opts.context + ' :header')).not(opts.exclude).each(function() {
                 var $this = $(this);
                 for (var i = 6; i >= 1; i--) {
                     if ($this.is('h' + i)) {
