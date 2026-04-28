@@ -56,7 +56,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run unit tests (skip integration tests)
-        run: xvfb-run --auto-servernum ./gradlew test -DexcludeTags=integration --no-daemon --max-workers=2
+        run: xvfb-run --auto-servernum ./gradlew test -DexcludeTags=integration --no-daemon
 
       - name: Upload test reports
         if: always()

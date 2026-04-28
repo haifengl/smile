@@ -120,8 +120,7 @@ jobs:
       if: matrix.build-mode == 'manual'
       shell: bash
       run: |
-        echo 'Building SMILE...'
-        ./gradlew clean assemble -Pkotlin.incremental=false --no-daemon --no-build-cache --max-workers=2
+        ./gradlew assemble --no-daemon
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
