@@ -84,7 +84,7 @@ ENV LANGUAGE='en_US:en'
 
 USER root
 # Install OpenBLAS for native BLAS support
-RUN microdnf install -y openblas gzip tar && microdnf clean all
+RUN microdnf install -y openblas && microdnf clean all
 # Install gzip and tar to extract ONNX library from the tarball
 RUN microdnf install -y gzip tar && microdnf clean all
 
@@ -95,18 +95,13 @@ RUN rpm -ivh /tmp/epel.rpm
 RUN rm /tmp/epel.rpm
 
 # Install flexiblas, which is needed by arpack
-RUN microdnf --enablerepo=ubi-9-codeready-builder-rpms install -y flexiblas && microdnf clean all
+RUN microdnf --enablerepo=ubi-9-codeready-builder-rpms install -y flexiblas-netlib && microdnf clean all
+RUN flexiblas default OPENBLAS-OPENMP
 # Somehow, arpack cannot find installed flexiblas, so we have to install arpack manually
 # without dependencies and then clean up the rpm file.
 RUN microdnf download arpack
 RUN rpm -i --nodeps arpack-*.rpm
 RUN rm -f arpack-*.rpm
-
-# We make four distinct layers so if there are application changes the library layers can be re-used
-COPY --chown=185 build/quarkus-app/lib/ /deployments/lib/
-COPY --chown=185 build/quarkus-app/*.jar /deployments/
-COPY --chown=185 build/quarkus-app/app/ /deployments/app/
-COPY --chown=185 build/quarkus-app/quarkus/ /deployments/quarkus/
 
 # Install ONNX Runtime
 ARG ORT_VERSION=1.25.1
@@ -117,6 +112,12 @@ RUN curl -L https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VE
 # Add CAPI to LD_LIBRARY_PATH
 ENV ORT_ROOT=/usr/local/onnxruntime
 ENV LD_LIBRARY_PATH="${ORT_ROOT}/lib:${LD_LIBRARY_PATH}"
+
+# We make four distinct layers so if there are application changes the library layers can be re-used
+COPY --chown=185 build/quarkus-app/lib/ /deployments/lib/
+COPY --chown=185 build/quarkus-app/*.jar /deployments/
+COPY --chown=185 build/quarkus-app/app/ /deployments/app/
+COPY --chown=185 build/quarkus-app/quarkus/ /deployments/quarkus/
 
 EXPOSE 8080
 USER 185
