@@ -16,6 +16,8 @@
  */
 package smile.deep;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import smile.deep.layer.SequentialBlock;
 import smile.deep.metric.Accuracy;
@@ -42,6 +44,11 @@ public class ModelTest {
     @Test
     @Tag("integration")
     public void test() {
+        if (!Files.exists(Path.of("deep/src/test/resources/data/mnist"))) {
+            System.out.println("MNIST dataset not found, skipping Model training test.");
+            return;
+        }
+
         Device device = Device.preferredDevice();
 
         Model net = new Model(new SequentialBlock(
