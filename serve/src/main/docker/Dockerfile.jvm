@@ -94,27 +94,18 @@ COPY --chown=185 build/quarkus-app/*.jar /deployments/
 COPY --chown=185 build/quarkus-app/app/ /deployments/app/
 COPY --chown=185 build/quarkus-app/quarkus/ /deployments/quarkus/
 
+# Install ONNX Runtime
+ARG ORT_VERSION=1.25.1
+RUN wget -qO- https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/onnxruntime-linux-x64-${ORT_VERSION}.tgz \
+    | tar -zxv -C /usr/local/ \
+    && mv /usr/local/onnxruntime-linux-x64-${ORT_VERSION} /usr/local/onnxruntime
+
+# Add CAPI to LD_LIBRARY_PATH
+ENV ONNXRUNTIME_ROOT=/usr/local/onnxruntime
+ENV LD_LIBRARY_PATH="${ONNXRUNTIME_ROOT}/lib:${LD_LIBRARY_PATH}"
+
 EXPOSE 8080
 USER 185
-
-# Install ONNX Runtime and set LD_LIBRARY_PATH
-RUN pip install onnxruntime
-
-# Locate the onnxruntime/capi directory robustly with 'find' rather than
-# parsing 'pip show', which can return a user-local path (~/.local/lib) that
-# differs from the actual installed location, or produce no output at all
-# when pip and python are mismatched on the runner.
-ENV ONNX_CAPI_DIR=`find /home -type d -name "capi" -path "*/onnxruntime/capi" 2>/dev/null | head -n 1`
-RUN echo "Found ONNX capi at: ${ONNX_CAPI_DIR}"
-
-# Create a symlink to the latest libonnxruntime.so in the capi directory
-RUN ln -sf `ls -t ${ONNX_CAPI_DIR}/libonnxruntime.so.* | head -n 1` ${ONNX_CAPI_DIR}/libonnxruntime.so
-
-# Use the safe ${VAR:+:$VAR} idiom so no trailing colon is introduced when
-# LD_LIBRARY_PATH is unset or empty (an empty segment is interpreted as CWD
-# by glibc and may be silently rejected by the JVM launcher).
-ENV LD_LIBRARY_PATH="${ONNX_CAPI_DIR}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
-
 ENV JAVA_OPTS_APPEND="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --enable-native-access ALL-UNNAMED"
 ENV JAVA_APP_JAR="/deployments/quarkus-run.jar"
 
