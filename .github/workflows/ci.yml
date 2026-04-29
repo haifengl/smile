@@ -23,14 +23,14 @@ jobs:
           # Install ONNX Runtime
           ORT_VERSION=1.25.1
           curl -L https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/onnxruntime-linux-x64-${ORT_VERSION}.tgz \
-            | tar -zxv -C /usr/local/ \
-            && mv /usr/local/onnxruntime-linux-x64-${ORT_VERSION} /usr/local/onnxruntime
+            | tar -zxv \
+            && mv onnxruntime-linux-x64-${ORT_VERSION} onnxruntime
 
           # Add CAPI to LD_LIBRARY_PATH
           # Use the safe ${VAR:+:$VAR} idiom so no trailing colon is introduced when
           # LD_LIBRARY_PATH is unset or empty (an empty segment is interpreted as CWD
           # by glibc and may be silently rejected by the JVM launcher).
-          echo "LD_LIBRARY_PATH=/usr/local/onnxruntime/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$PWD/onnxruntime/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}" >> "$GITHUB_ENV"
 
       - name: Checkout repository
         uses: actions/checkout@v6
