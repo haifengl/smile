@@ -30,6 +30,10 @@ jobs:
           # Use the safe ${VAR:+:$VAR} idiom so no trailing colon is introduced when
           # LD_LIBRARY_PATH is unset or empty (an empty segment is interpreted as CWD
           # by glibc and may be silently rejected by the JVM launcher).
+          echo $PWD
+          ls -l
+          ls -l $PWD/onnxruntime/lib
+          echo "LD_LIBRARY_PATH=$PWD/onnxruntime/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
           echo "LD_LIBRARY_PATH=$PWD/onnxruntime/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}" >> "$GITHUB_ENV"
 
       - name: Checkout repository
