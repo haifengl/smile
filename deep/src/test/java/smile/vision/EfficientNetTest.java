@@ -17,6 +17,7 @@
 package smile.vision;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import javax.imageio.ImageIO;
 import smile.deep.Loss;
@@ -68,8 +69,12 @@ public class EfficientNetTest {
 
     @Test
     public void testGivenEfficientNetV2SWhenTrainingOneEpochThenNoException() throws IOException {
-        var model = EfficientNet.V2S();
+        if (!Files.exists(Path.of("deep/src/test/resources/data/imagenet-mini"))) {
+            System.out.println("ImageNet-mini dataset not found, skipping EfficientNet training test.");
+            return;
+        }
 
+        var model = EfficientNet.V2S();
         var transform = Transform.classification(384, 384);
         var data = new ImageDataset(64, "deep/src/test/resources/data/imagenet-mini/train", transform, ImageNet.folder2Target);
         var test = new ImageDataset(16, "deep/src/test/resources/data/imagenet-mini/val",   transform, ImageNet.folder2Target);

@@ -36,7 +36,8 @@ jobs:
           echo "Found ONNX capi at: ${ONNX_CAPI_DIR}"
 
           # Create a symlink to the latest libonnxruntime.so in the capi directory
-          ln -sf "$(ls -t ${ONNX_CAPI_DIR}/libonnxruntime.so.* | head -n 1)" ${ONNX_CAPI_DIR}/libonnxruntime.so
+          ln -sfr "$(ls -t ${ONNX_CAPI_DIR}/libonnxruntime.so.* | head -n 1)" ${ONNX_CAPI_DIR}/libonnxruntime.so
+          ls ${ONNX_CAPI_DIR}
 
           # Use the safe ${VAR:+:$VAR} idiom so no trailing colon is introduced when
           # LD_LIBRARY_PATH is unset or empty (an empty segment is interpreted as CWD
