@@ -20,21 +20,30 @@ jobs:
 
       - name: Install ONNX Runtime and set LD_LIBRARY_PATH
         run: |
-          # Install ONNX Runtime
-          ORT_VERSION=1.25.1
-          curl -L https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/onnxruntime-linux-x64-${ORT_VERSION}.tgz \
-            | tar -zxv \
-            && mv onnxruntime-linux-x64-${ORT_VERSION} onnxruntime
+          pip install onnxruntime
 
-          # Add CAPI to LD_LIBRARY_PATH
+          # Locate the onnxruntime/capi directory robustly with 'find' rather than
+          # parsing 'pip show', which can return a user-local path (~/.local/lib) that
+          # differs from the actual installed location, or produce no output at all
+          # when pip and python are mismatched on the runner.
+          ONNX_CAPI_DIR=$(find /home -type d -name "capi" \
+            -path "*/onnxruntime/capi" 2>/dev/null | head -n 1)
+
+          if [ -z "$ONNX_CAPI_DIR" ]; then
+            echo "ERROR: could not locate onnxruntime/capi directory" >&2
+            exit 1
+          fi
+          echo "Found ONNX capi at: ${ONNX_CAPI_DIR}"
+
+          # Create a symlink to the latest libonnxruntime.so in the capi directory
+          ln -sfr "$(ls -t ${ONNX_CAPI_DIR}/libonnxruntime.so.* | head -n 1)" ${ONNX_CAPI_DIR}/libonnxruntime.so
+          ls -l ${ONNX_CAPI_DIR}
+
           # Use the safe ${VAR:+:$VAR} idiom so no trailing colon is introduced when
           # LD_LIBRARY_PATH is unset or empty (an empty segment is interpreted as CWD
           # by glibc and may be silently rejected by the JVM launcher).
-          echo $PWD
-          ls -l
-          ls -l $PWD/onnxruntime/lib
-          echo "LD_LIBRARY_PATH=$PWD/onnxruntime/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
-          echo "LD_LIBRARY_PATH=$PWD/onnxruntime/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=${ONNX_CAPI_DIR}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+          echo "LD_LIBRARY_PATH=${ONNX_CAPI_DIR}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}" >> "$GITHUB_ENV"
 
       - name: Checkout repository
         uses: actions/checkout@v6
