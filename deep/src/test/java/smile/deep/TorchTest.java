@@ -16,11 +16,12 @@
  */
 package smile.deep;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.bytedeco.pytorch.*;
 import org.bytedeco.pytorch.Module;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.Tag;
-
 import static org.bytedeco.pytorch.global.torch.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -79,6 +80,11 @@ public class TorchTest {
     @Test
     @Tag("integration")
     public void test() {
+        if (!Files.exists(Path.of("deep/src/test/resources/data/mnist"))) {
+            System.out.println("MNIST dataset not found, skipping Torch training test.");
+            return;
+        }
+
         // Create a new Net.
         Net net = new Net();
 

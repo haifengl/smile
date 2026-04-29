@@ -17,6 +17,8 @@
 package smile.vision;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import smile.vision.transform.Transform;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -30,6 +32,11 @@ public class ImageDatasetTest {
     @Test
     @Tag("integration")
     public void test() throws IOException {
+        if (!Files.exists(Path.of("deep/src/test/resources/data/imagenet-mini"))) {
+            System.out.println("ImageNet-mini dataset not found, skipping ImageDataset test.");
+            return;
+        }
+
         var transform = Transform.classification(384, 384);
         try (var data = new ImageDataset(4, "deep/src/test/resources/data/imagenet-mini/train", transform, ImageNet.folder2Target)) {
             assertEquals(34745, data.size());
