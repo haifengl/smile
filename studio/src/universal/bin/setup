@@ -39,7 +39,6 @@ if [ ! -f "$VENV_DIR/bin/activate" ]; then
         ONNX_CAPI_DIR=`find $VENV_DIR -type d -name "capi" -path "*/onnxruntime/capi" 2>/dev/null | head -n 1`
         ONNX_LIB=`ls -t ${ONNX_CAPI_DIR}/libonnxruntime.* | head -n 1`
         if [ -n "$ONNX_LIB" ]; then
-          echo "Found ONNX capi at: ${ONNX_LIB}"
           if [[ "$OSTYPE" == "darwin"* ]]; then
             ln -sf `basename ${ONNX_LIB}` ${ONNX_CAPI_DIR}/libonnxruntime.dylib
           else

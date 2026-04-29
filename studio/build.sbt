@@ -66,12 +66,11 @@ bashScriptExtraDefines ++= Seq(
   """export PYTHONUTF8=1""",
   """
     |if [[ "$OSTYPE" == "darwin"* ]]; then
-    |  echo "Creating library symlinks in working directory to work around SIP
+    |  echo "Creating library symlinks in working directory to work around SIP"
     |  ONNX_CAPI_DIR=`find $SMILE_HOME -type d -name "capi" -path "*/onnxruntime/capi" 2>/dev/null | head -n 1`
     |  ONNX_LIB="${ONNX_CAPI_DIR}/libonnxruntime.dylib"
     |  if [ -e "$ONNX_LIB" ]; then
-    |    echo "Found ONNX capi at: ${ONNX_LIB}"
-    |    ln -sfr ${ONNX_LIB} libonnxruntime.dylib
+    |    ln -sf ${ONNX_LIB} libonnxruntime.dylib
     |  fi
     |  if [[ $(uname -m) == 'arm64' ]]; then
     |    ln -sf /opt/homebrew/lib/libarpack.dylib libarpack.dylib
