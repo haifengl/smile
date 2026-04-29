@@ -33,6 +33,20 @@ if [ ! -f "$VENV_DIR/bin/activate" ]; then
         pip install -r "$APP_DIR/../conf/requirements.txt"
         pip install uv
         uv tool install ty@latest
+
+        pip install onnxruntime
+        ONNX_CAPI_DIR=`find $VENV_DIR -type d -name "capi" -path "*/onnxruntime/capi" 2>/dev/null | head -n 1`
+        if [ -z "$ONNX_CAPI_DIR" ]; then
+          echo "ERROR: could not locate onnxruntime/capi directory" >&2
+          exit 1
+        fi
+        echo "Found ONNX capi at: ${ONNX_CAPI_DIR}"
+
+        # Create a symlink to the latest libonnxruntime.so in the capi directory
+        ONNX_LIB=`ls -t ${ONNX_CAPI_DIR}/libonnxruntime.so.* | head -n 1`
+        if [ -n "$ONNX_LIB" ]; then
+          ln -sf ${ONNX_LIB} ${ONNX_CAPI_DIR}/libonnxruntime.so
+        fi
     fi
 fi
 
