@@ -176,13 +176,13 @@ public class VisionLayerTest {
     }
 
     // -----------------------------------------------------------------------
-    // StochasticDepth — mode case normalisation
+    // StochasticDepth — mode case normalization
     // -----------------------------------------------------------------------
 
     @Test
     public void testGivenStochasticDepthWithMixedCaseModeThenConstructsAndForwardsCorrectly() {
         // Before fix: "Row".equals("row") → false; forward() would skip row-specific logic.
-        // After fix: mode is normalised to lowercase in constructor.
+        // After fix: mode is normalized to lowercase in constructor.
         StochasticDepth sd = new StochasticDepth(0.0, "Row");
         sd.asTorch().train(true);
         Tensor input = Tensor.rand(4, 8);

@@ -429,6 +429,7 @@ public class Workspace extends JSplitPane {
             notebookTabs.setSelectedComponent(notebook);
             notebooks.add(notebook);
             files.add(path.toString());
+            fileWatcher.addFile(path);
             fileWatcher.recordModTime(path);
             fileWatcher.watchDirectory(path.getParent());
         }
@@ -464,7 +465,9 @@ public class Workspace extends JSplitPane {
             // Shuts down the execution engines and frees resources.
             notebook.close();
             notebooks.remove(notebook);
-            files.remove(notebook.getFile().toString());
+            String pathStr = notebook.getFile().toString();
+            files.remove(pathStr);
+            fileWatcher.removeFile(notebook.getFile().toAbsolutePath().normalize());
         }
         return confirmed;
     }
@@ -608,6 +611,7 @@ public class Workspace extends JSplitPane {
         notebookTabs.setSelectedIndex(tabIndex);
         notebooks.add(fresh);
         files.add(path.toString());
+        fileWatcher.addFile(path);
         fileWatcher.recordModTime(path);
 
         logger.info("Reloaded notebook from disk: {}", path);

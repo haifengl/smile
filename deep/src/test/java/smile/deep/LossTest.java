@@ -72,7 +72,7 @@ public class LossTest {
     public void testGivenHuberLossWithDeltaWhenAppliedThenDifferentFromDefault() {
         // Use error = 2.0 so the two deltas produce different formulas:
         //   delta=1.0 → L1 branch: 1.0*(2.0 - 0.5*1.0) = 1.5
-        //   delta=10.0 → quadratic branch: 0.5*(2.0²)/10.0 = 0.2  (PyTorch normalises by delta)
+        //   delta=10.0 → quadratic branch: 0.5*(2.0²)/10.0 = 0.2  (PyTorch normalizes by delta)
         // The key check is that delta is actually passed through (not ignored).
         Tensor input   = floatTensor(2.0f);
         Tensor target  = floatTensor(0.0f);
