@@ -97,13 +97,9 @@ public class Workspace extends JSplitPane {
      */
     private final Path cwd;
     /**
-     * The absolute paths of opened files.
+     * File-change watcher — single source of truth for the set of open files.
      */
-    private final List<String> files = new ArrayList<>();
-    /**
-     * File-change watching (WatchService)
-     */
-    private final OpenFileWatcher fileWatcher = new OpenFileWatcher(files, this::handleFileChanged);
+    private final OpenFileWatcher fileWatcher = new OpenFileWatcher(List.of(), this::handleFileChanged);
 
     /**
      * Constructor.
@@ -129,7 +125,7 @@ public class Workspace extends JSplitPane {
         }
 
         // Open a default notebook if there is no previously opened file.
-        if (files.isEmpty()) {
+        if (fileWatcher.files().isEmpty()) {
             openNotebook(Path.of("Untitled.jsh"));
             // Initialized as true so that we won't try to save sample code.
             // Delay 200ms so that it be called after DocumentUpdate events.
@@ -347,9 +343,10 @@ public class Workspace extends JSplitPane {
         Properties properties = new Properties();
 
         // Store each file path with a unique key (e.g., file.1, file.2, ...)
-        for (int i = 0; i < files.size(); i++) {
-            // Using a simple numeric key allows for a list-like structure
-            properties.setProperty("file." + (i + 1), files.get(i));
+        // fileWatcher.files() preserves insertion order via the LinkedHashSet.
+        List<String> openFiles = fileWatcher.files();
+        for (int i = 0; i < openFiles.size(); i++) {
+            properties.setProperty("file." + (i + 1), openFiles.get(i));
         }
 
         try (OutputStream output = new FileOutputStream(path.toFile())) {
@@ -416,7 +413,7 @@ public class Workspace extends JSplitPane {
         path = path.toAbsolutePath().normalize();
         var filename = path.getFileName().toString();
         // already opened
-        if (files.contains(path.toString())) {
+        if (fileWatcher.files().contains(path.toString())) {
             int index = notebookTabs.indexOfTab(filename);
             if (index != -1) {
                 notebookTabs.setSelectedIndex(index);
@@ -428,7 +425,6 @@ public class Workspace extends JSplitPane {
             notebookTabs.addTab(filename, notebook);
             notebookTabs.setSelectedComponent(notebook);
             notebooks.add(notebook);
-            files.add(path.toString());
             fileWatcher.addFile(path);
             fileWatcher.recordModTime(path);
             fileWatcher.watchDirectory(path.getParent());
@@ -465,8 +461,6 @@ public class Workspace extends JSplitPane {
             // Shuts down the execution engines and frees resources.
             notebook.close();
             notebooks.remove(notebook);
-            String pathStr = notebook.getFile().toString();
-            files.remove(pathStr);
             fileWatcher.removeFile(notebook.getFile().toAbsolutePath().normalize());
         }
         return confirmed;
@@ -519,13 +513,11 @@ public class Workspace extends JSplitPane {
             notebook.save();
             Path newPath = notebook.getFile().toAbsolutePath().normalize();
 
-            // If the path changed (Save As), update files list and watcher.
+            // If the path changed (Save As), update watcher.
             if (!newPath.equals(oldPath)) {
                 if (oldPath != null) {
-                    files.remove(oldPath.toString());
                     fileWatcher.removeFile(oldPath);
                 }
-                files.add(newPath.toString());
                 fileWatcher.addFile(newPath);
                 fileWatcher.watchDirectory(newPath.getParent());
             }

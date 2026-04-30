@@ -21,8 +21,7 @@ import javax.swing.Timer;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
-import java.util.concurrent.*;
-import java.util.function.Consumer;
+import java.util.concurrent.*;import java.util.function.Consumer;
 
 /**
  * A file-change watcher for the opened files in the workspace.
@@ -51,11 +50,15 @@ public class OpenFileWatcher {
      */
     private final Set<Path> watchedDirs = ConcurrentHashMap.newKeySet();
     /**
-     * The set of absolute, normalized path strings currently being watched.
-     * Using a {@link ConcurrentHashMap}-backed set makes {@code contains}
-     * O(1) and safe to call from the watcher thread without synchronization.
+     * The ordered set of absolute, normalised path strings currently being
+     * watched.  A {@link LinkedHashSet} wrapped with
+     * {@link Collections#synchronizedSet} preserves insertion order (so that
+     * {@link #files()} returns paths in the order they were opened) while
+     * remaining safe for concurrent read from the watcher thread
+     * and write from the EDT.
      */
-    private final Set<String> fileSet = ConcurrentHashMap.newKeySet();
+    private final Set<String> fileSet =
+            Collections.synchronizedSet(new LinkedHashSet<>());
     /**
      * Records the last modification time (ms) of every open file as of the
      * most recent save/open performed by <em>this</em> process. Used to
@@ -75,12 +78,13 @@ public class OpenFileWatcher {
     /**
      * Constructor.
      *
-     * @param files         the initial list of absolute file-path strings to watch.
+     * @param files         the initial list of absolute file-path strings to watch,
+     *                      in the order they should be preserved.
      * @param onFileChanged the callback to invoke (on the EDT) when a change is detected.
      */
     public OpenFileWatcher(List<String> files, Consumer<Path> onFileChanged) {
         this.onFileChanged = onFileChanged;
-        fileSet.addAll(files);
+        fileSet.addAll(files);  // preserves list order into the LinkedHashSet
 
         // Initialize using local temporaries so the fields can be final.
         WatchService ws = null;
@@ -93,6 +97,18 @@ public class OpenFileWatcher {
         }
         watchService = ws;
         watchThread  = wt;
+    }
+
+    /**
+     * Returns an unmodifiable snapshot of the currently open file paths in
+     * the order they were added.  Safe to call from any thread.
+     *
+     * @return an ordered, unmodifiable list of absolute, normalised path strings.
+     */
+    public List<String> files() {
+        synchronized (fileSet) {
+            return List.copyOf(fileSet);
+        }
     }
 
     /**
