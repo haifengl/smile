@@ -99,7 +99,7 @@ public class Workspace extends JSplitPane {
     /**
      * The absolute paths of opened files.
      */
-    final List<String> files = new ArrayList<>();
+    private final List<String> files = new ArrayList<>();
     /**
      * File-change watching (WatchService)
      */
@@ -322,7 +322,7 @@ public class Workspace extends JSplitPane {
                     Notebook notebook = (Notebook) notebookTabs.getComponentAt(tabIndex);
                     if (closeNotebook(notebook)) {
                         notebookTabs.removeTabAt(tabIndex);
-                        files.remove(notebook.getFile().toString());
+                        // files and fileWatcher are already updated inside closeNotebook().
                     }
                 });
     }
@@ -494,6 +494,9 @@ public class Workspace extends JSplitPane {
      * or the save operation is canceled.
      */
     public boolean saveNotebook(Notebook notebook, boolean saveAs) {
+        Path oldPath = notebook.getFile() != null
+                ? notebook.getFile().toAbsolutePath().normalize() : null;
+
         if (notebook.getFile() == null || saveAs) {
             fileChooser.setDialogTitle(bundle.getString("SaveNotebook"));
             fileChooser.setFileFilter(new SystemFileChooser.FileNameExtensionFilter(
@@ -514,10 +517,23 @@ public class Workspace extends JSplitPane {
 
         try {
             notebook.save();
+            Path newPath = notebook.getFile().toAbsolutePath().normalize();
+
+            // If the path changed (Save As), update files list and watcher.
+            if (!newPath.equals(oldPath)) {
+                if (oldPath != null) {
+                    files.remove(oldPath.toString());
+                    fileWatcher.removeFile(oldPath);
+                }
+                files.add(newPath.toString());
+                fileWatcher.addFile(newPath);
+                fileWatcher.watchDirectory(newPath.getParent());
+            }
+
             // Update the known mod time so our own write is not mistaken
             // for an external change when the WatchService event arrives.
-            fileWatcher.recordModTime(notebook.getFile().toAbsolutePath().normalize());
-            fileWatcher.watchDirectory(notebook.getFile().toAbsolutePath().normalize().getParent());
+            fileWatcher.recordModTime(newPath);
+            fileWatcher.watchDirectory(newPath.getParent());
             return true;
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(this,
@@ -603,15 +619,14 @@ public class Workspace extends JSplitPane {
         // as the user just confirmed they want the disk version).
         notebook.close();
         notebooks.remove(notebook);
-        files.remove(path.toString());
+        // files and fileSet stay unchanged — same path, still open.
 
-        // Open fresh copy
+        // Open fresh copy at the same tab position.
         Notebook fresh = new Notebook(path, coders, kernelExplorer::refresh);
         notebookTabs.setComponentAt(tabIndex, fresh);
         notebookTabs.setSelectedIndex(tabIndex);
         notebooks.add(fresh);
-        files.add(path.toString());
-        fileWatcher.addFile(path);
+        // Record updated mod time so the next save isn't mistaken for external change.
         fileWatcher.recordModTime(path);
 
         logger.info("Reloaded notebook from disk: {}", path);
