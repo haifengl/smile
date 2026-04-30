@@ -22,14 +22,9 @@ import java.io.IOException;
 import java.io.Serial;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.nio.file.attribute.DosFileAttributes;
+import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -42,9 +37,21 @@ public class DirectoryTreeNode extends DefaultMutableTreeNode {
     private static final long serialVersionUID = 1L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DirectoryTreeNode.class);
 
-    /** Reusable filter that skips hidden files (names starting with '.'). */
-    private static final java.util.function.Predicate<Path> VISIBLE =
-            p -> !p.getFileName().toString().startsWith(".");
+    /** Reusable filter that skips hidden files (names starting with '.' on
+     *  Unix/macOS, or flagged as hidden/system via DOS file attributes on Windows). */
+    private static final Predicate<Path> VISIBLE = p -> {
+        String fname = p.getFileName().toString();
+        if (fname.startsWith(".")) return false;
+        try {
+            DosFileAttributes dos = Files.readAttributes(p, DosFileAttributes.class);
+            return !dos.isHidden() && !dos.isSystem();
+        } catch (UnsupportedOperationException ignored) {
+            // Not a DOS filesystem (Linux/macOS) — name check is sufficient.
+        } catch (IOException ignored) {
+            // Cannot read attributes (e.g. broken symlink) — include the entry.
+        }
+        return true;
+    };
 
     /** Comparator for sorting paths with directories first, then alphabetically by file name. */
     private static final PathComparator comparator = new PathComparator();
