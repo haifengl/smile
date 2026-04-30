@@ -44,7 +44,7 @@ public class SQL implements AutoCloseable {
      * literal even after {@code '} is doubled.  Semicolons can stack
      * statements; comment sequences can suppress trailing syntax; NUL bytes
      * are used in truncation attacks; line-terminators can escape some
-     * single-line comment defences.
+     * single-line comment defenses.
      */
     private static final Pattern DANGEROUS_IN_LITERAL =
             Pattern.compile("[;\\x00\\n\\r]|--|/\\*");
@@ -506,7 +506,7 @@ public class SQL implements AutoCloseable {
      */
     public void query(String sql, String path) throws SQLException {
         execute(String.format("COPY (%s) TO '%s' (FORMAT csv, DELIMITER ',', HEADER);",
-                requireNonBlank(sql), requireSafeLiteral(escape(path))));
+                requireNonBlank(sql).replaceAll(";$", ""), requireSafeLiteral(escape(path))));
     }
 
     /**
