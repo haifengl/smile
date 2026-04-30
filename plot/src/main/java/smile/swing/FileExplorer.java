@@ -20,15 +20,17 @@ import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
+import java.awt.datatransfer.*;
+import java.awt.dnd.*;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.Serial;
 import java.nio.file.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.text.MessageFormat;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.Map;
 import smile.swing.tree.DirectoryTreeNode;
+import smile.util.Utf8ResourceBundleControl;
 import static java.nio.file.StandardWatchEventKinds.*;
 
 /**
@@ -39,6 +41,10 @@ import static java.nio.file.StandardWatchEventKinds.*;
  * that is currently visible in the tree, the corresponding
  * {@link DirectoryTreeNode} is refreshed on the Event Dispatch Thread so
  * that the tree stays in sync without requiring a manual reload.
+ *
+ * <p>A right-click context menu provides <em>Rename</em> and <em>Delete</em>
+ * operations.  Files and directories can also be moved by dragging a node and
+ * dropping it onto a directory node.
  *
  * <p>{@code FileExplorer} implements {@link Closeable}; call {@link #close()}
  * when the component is no longer needed to stop the background watcher thread
@@ -55,6 +61,22 @@ public class FileExplorer extends JTree
     private static final long serialVersionUID = 1L;
     private static final org.slf4j.Logger logger =
             org.slf4j.LoggerFactory.getLogger(FileExplorer.class);
+    private static final ResourceBundle bundle =
+            ResourceBundle.getBundle(FileExplorer.class.getName(), Locale.getDefault(),
+                    new Utf8ResourceBundleControl());
+
+    /** DataFlavor used to transfer a {@link DirectoryTreeNode} during drag-and-drop. */
+    private static final DataFlavor NODE_FLAVOR;
+    static {
+        DataFlavor f;
+        try {
+            f = new DataFlavor(DataFlavor.javaJVMLocalObjectMimeType
+                    + ";class=" + DirectoryTreeNode.class.getName());
+        } catch (ClassNotFoundException e) {
+            f = DataFlavor.stringFlavor; // fallback — should never happen
+        }
+        NODE_FLAVOR = f;
+    }
 
     /** The {@link WatchService} used to monitor filesystem events, or {@code null} if unavailable. */
     private final WatchService watchService;
@@ -86,8 +108,36 @@ public class FileExplorer extends JTree
         rootNode.addChildren(model);
         expandPath(new TreePath(rootNode));
 
+        // Context menu
+        addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mousePressed(java.awt.event.MouseEvent e) {
+                maybeShowPopup(e);
+            }
+            @Override
+            public void mouseReleased(java.awt.event.MouseEvent e) {
+                maybeShowPopup(e);
+            }
+            private void maybeShowPopup(java.awt.event.MouseEvent e) {
+                if (!e.isPopupTrigger()) return;
+                // Select the node under the cursor before showing the menu.
+                TreePath path = getPathForLocation(e.getX(), e.getY());
+                if (path == null) return;
+                setSelectionPath(path);
+                if (path.getLastPathComponent() instanceof DirectoryTreeNode node
+                        // Do not offer rename/delete for the root node.
+                        && node != model.getRoot()) {
+                    buildContextMenu(node).show(FileExplorer.this, e.getX(), e.getY());
+                }
+            }
+        });
+
+        // Drag-and-drop
+        setDragEnabled(true);
+        setDropMode(DropMode.ON);
+        setTransferHandler(new FileTransferHandler());
+
         // Create the watch service and register the root directory.
-        // Use local temporaries so watchService and watchThread can be final.
         WatchService ws = null;
         Thread wt = null;
         try {
@@ -137,10 +187,6 @@ public class FileExplorer extends JTree
     /**
      * Stops the background watcher thread and closes the underlying
      * {@link WatchService}, releasing all OS watch handles.
-     *
-     * <p>After this method returns the tree is no longer refreshed
-     * automatically, but it remains fully functional as a read-only widget.
-     * Safe to call even if the {@link WatchService} failed to initialize.
      */
     @Override
     public void close() {
@@ -155,17 +201,215 @@ public class FileExplorer extends JTree
     }
 
     // -------------------------------------------------------------------------
+    // Context menu
+    // -------------------------------------------------------------------------
+
+    /** Builds a right-click context menu for the given node. */
+    private JPopupMenu buildContextMenu(DirectoryTreeNode node) {
+        JPopupMenu menu = new JPopupMenu();
+
+        JMenuItem renameItem = new JMenuItem(bundle.getString("Rename"));
+        renameItem.addActionListener(e -> renameNode(node));
+        menu.add(renameItem);
+
+        JMenuItem deleteItem = new JMenuItem(bundle.getString("Delete"));
+        deleteItem.addActionListener(e -> deleteNode(node));
+        menu.add(deleteItem);
+
+        return menu;
+    }
+
+    /** Prompts the user for a new name and renames the file/directory. */
+    private void renameNode(DirectoryTreeNode node) {
+        Path oldPath = node.path();
+        String current = oldPath.getFileName().toString();
+        String newName = (String) JOptionPane.showInputDialog(
+                this,
+                bundle.getString("RenamePrompt"),
+                bundle.getString("RenameTitle"),
+                JOptionPane.PLAIN_MESSAGE,
+                null, null, current);
+
+        if (newName == null || newName.isBlank() || newName.equals(current)) return;
+
+        Path newPath = oldPath.resolveSibling(newName.strip());
+        try {
+            Files.move(oldPath, newPath, StandardCopyOption.ATOMIC_MOVE);
+            // The WatchService ENTRY_DELETE + ENTRY_CREATE events will update the
+            // tree automatically; no explicit model mutation needed here.
+        } catch (IOException ex) {
+            logger.error("Rename failed: {} -> {}", oldPath, newPath, ex);
+            JOptionPane.showMessageDialog(this,
+                    MessageFormat.format(bundle.getString("RenameError"), ex.getMessage()),
+                    bundle.getString("RenameTitle"),
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /** Confirms with the user and recursively deletes the file/directory. */
+    private void deleteNode(DirectoryTreeNode node) {
+        Path target = node.path();
+        boolean isDir = Files.isDirectory(target);
+        String confirmKey = isDir ? "DeleteConfirmDir" : "DeleteConfirmFile";
+        String message = MessageFormat.format(
+                bundle.getString(confirmKey), target.getFileName());
+
+        int choice = JOptionPane.showConfirmDialog(this, message,
+                bundle.getString("DeleteTitle"),
+                JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        if (choice != JOptionPane.YES_OPTION) return;
+
+        try {
+            deleteRecursively(target);
+            // WatchService events will remove the node from the tree.
+        } catch (IOException ex) {
+            logger.error("Delete failed: {}", target, ex);
+            JOptionPane.showMessageDialog(this,
+                    MessageFormat.format(bundle.getString("DeleteError"), ex.getMessage()),
+                    bundle.getString("DeleteTitle"),
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /** Recursively deletes {@code path} (works for both files and directories). */
+    private static void deleteRecursively(Path path) throws IOException {
+        if (Files.isDirectory(path)) {
+            try (var entries = Files.list(path)) {
+                for (Path entry : (Iterable<Path>) entries::iterator) {
+                    deleteRecursively(entry);
+                }
+            }
+        }
+        Files.delete(path);
+    }
+
+    // -------------------------------------------------------------------------
+    // Drag-and-drop (move)
+    // -------------------------------------------------------------------------
+
+    /**
+     * {@link TransferHandler} that exports the dragged {@link DirectoryTreeNode}
+     * and accepts a drop onto a directory node by moving the source path into
+     * the target directory.
+     */
+    private class FileTransferHandler extends TransferHandler {
+
+        @Override
+        public int getSourceActions(JComponent c) {
+            return MOVE;
+        }
+
+        @Override
+        protected Transferable createTransferable(JComponent c) {
+            if (!(c instanceof JTree tree)) return null;
+            TreePath sel = tree.getSelectionPath();
+            if (sel == null) return null;
+            if (!(sel.getLastPathComponent() instanceof DirectoryTreeNode node)) return null;
+            // Disallow dragging the root node.
+            DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+            if (node == model.getRoot()) return null;
+            return new NodeTransferable(node);
+        }
+
+        @Override
+        public boolean canImport(TransferSupport support) {
+            if (!support.isDrop()) return false;
+            if (!support.isDataFlavorSupported(NODE_FLAVOR)) return false;
+            // Target must be a directory node.
+            JTree.DropLocation dl = (JTree.DropLocation) support.getDropLocation();
+            TreePath targetPath = dl.getPath();
+            if (targetPath == null) return false;
+            if (!(targetPath.getLastPathComponent() instanceof DirectoryTreeNode target)) return false;
+            return Files.isDirectory(target.path());
+        }
+
+        @Override
+        public boolean importData(TransferSupport support) {
+            if (!canImport(support)) return false;
+            DirectoryTreeNode sourceNode;
+            try {
+                sourceNode = (DirectoryTreeNode) support.getTransferable().getTransferData(NODE_FLAVOR);
+            } catch (Exception ex) {
+                logger.error("DnD transfer failed", ex);
+                return false;
+            }
+
+            JTree.DropLocation dl = (JTree.DropLocation) support.getDropLocation();
+            DirectoryTreeNode targetNode = (DirectoryTreeNode) dl.getPath().getLastPathComponent();
+
+            Path src = sourceNode.path();
+            Path dest = targetNode.path().resolve(src.getFileName());
+
+            // Don't move into itself.
+            if (dest.equals(src) || dest.startsWith(src)) return false;
+
+            String confirmMsg = MessageFormat.format(
+                    bundle.getString("MoveConfirm"),
+                    src.getFileName(), targetNode.path().getFileName());
+            int choice = JOptionPane.showConfirmDialog(FileExplorer.this, confirmMsg,
+                    bundle.getString("MoveTitle"),
+                    JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (choice != JOptionPane.YES_OPTION) return false;
+
+            try {
+                Files.move(src, dest, StandardCopyOption.ATOMIC_MOVE);
+                // WatchService will handle the tree update.
+                return true;
+            } catch (AtomicMoveNotSupportedException ex) {
+                // Retry without ATOMIC_MOVE (cross-filesystem move).
+                try {
+                    Files.move(src, dest);
+                    return true;
+                } catch (IOException ex2) {
+                    logger.error("Move failed: {} -> {}", src, dest, ex2);
+                    JOptionPane.showMessageDialog(FileExplorer.this,
+                            MessageFormat.format(bundle.getString("MoveError"), ex2.getMessage()),
+                            bundle.getString("MoveTitle"),
+                            JOptionPane.ERROR_MESSAGE);
+                    return false;
+                }
+            } catch (IOException ex) {
+                logger.error("Move failed: {} -> {}", src, dest, ex);
+                JOptionPane.showMessageDialog(FileExplorer.this,
+                        MessageFormat.format(bundle.getString("MoveError"), ex.getMessage()),
+                        bundle.getString("MoveTitle"),
+                        JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+        }
+
+        @Override
+        protected void exportDone(JComponent source, Transferable data, int action) {
+            // Tree update is handled by the WatchService on successful move.
+        }
+    }
+
+    /** Wraps a {@link DirectoryTreeNode} as a {@link Transferable} for DnD. */
+    private record NodeTransferable(DirectoryTreeNode node) implements Transferable {
+        private static final DataFlavor[] FLAVORS = {NODE_FLAVOR};
+
+        @Override
+        public DataFlavor[] getTransferDataFlavors() { return FLAVORS; }
+
+        @Override
+        public boolean isDataFlavorSupported(DataFlavor flavor) {
+            return NODE_FLAVOR.equals(flavor);
+        }
+
+        @Override
+        public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException {
+            if (!isDataFlavorSupported(flavor)) throw new UnsupportedFlavorException(flavor);
+            return node;
+        }
+    }
+
+    // -------------------------------------------------------------------------
     // Private helpers
     // -------------------------------------------------------------------------
 
     /**
      * Populates children of {@code node} (if not already done) and ensures
      * the node's directory is registered with the watcher.
-     *
-     * <p>Registering is unconditional: re-registering an already-watched
-     * directory is idempotent ({@link WatchService} returns the existing key),
-     * so this is safe to call every time a node is selected or expanded,
-     * including nodes whose children were loaded in a previous session.
      */
     private void expandNode(DirectoryTreeNode node) {
         DefaultTreeModel model = (DefaultTreeModel) getModel();
@@ -180,9 +424,6 @@ public class FileExplorer extends JTree
      * {@code ENTRY_CREATE} and {@code ENTRY_DELETE} events, and recursively
      * registers every subdirectory already represented as a child node.
      * Does nothing if {@code ws} is {@code null}.
-     *
-     * @param node the node whose directory should be watched.
-     * @param ws   the {@link WatchService} to register with; may be {@code null}.
      */
     private void register(DirectoryTreeNode node, WatchService ws) {
         if (ws == null) return;
