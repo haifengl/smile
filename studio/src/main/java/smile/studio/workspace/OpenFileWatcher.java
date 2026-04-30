@@ -21,7 +21,8 @@ import javax.swing.Timer;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
-import java.util.concurrent.*;import java.util.function.Consumer;
+import java.util.concurrent.*;
+import java.util.function.Consumer;
 
 /**
  * A file-change watcher for the opened files in the workspace.
@@ -52,8 +53,8 @@ public class OpenFileWatcher {
     /**
      * The ordered set of absolute, normalised path strings currently being
      * watched.  A {@link LinkedHashSet} wrapped with
-     * {@link Collections#synchronizedSet} preserves insertion order (so that
-     * {@link #files()} returns paths in the order they were opened) while
+     * {@link Collections#synchronizedSet(Set)} preserves insertion order (so
+     * that {@link #files()} returns paths in the order they were opened) while
      * remaining safe for concurrent read from the watcher thread
      * and write from the EDT.
      */
@@ -112,7 +113,22 @@ public class OpenFileWatcher {
     }
 
     /**
-     * Adds a file to the watch set.  Safe to call from any thread.
+     * Returns {@code true} if {@code path} is currently in the open-file set.
+     * O(1) lookup backed directly by the {@link LinkedHashSet}; does not
+     * allocate a snapshot list.  Safe to call from any thread.
+     *
+     * @param path the absolute, normalised file path.
+     * @return {@code true} if the file is being watched.
+     */
+    public boolean isOpen(Path path) {
+        return fileSet.contains(path.toString());
+    }
+
+    /**
+     * Adds a file to the watch set.
+     *
+     * <p>Must be called on the EDT so that writes to {@code fileSet} are
+     * sequenced with writes from {@link #removeFile}.
      *
      * @param path the absolute, normalized file path.
      */
@@ -253,8 +269,8 @@ public class OpenFileWatcher {
                 }
             }
         } catch (Exception e) {
-            // Catch-all guard: log unexpected exceptions so the virtual thread
-            // does not exit silently.
+            // Catch-all guard: log unexpected runtime exceptions so the virtual
+            // thread does not exit silently.
             logger.error("Unexpected error in file-watcher loop", e);
         }
     }
