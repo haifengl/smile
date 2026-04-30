@@ -22,6 +22,7 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.Serial;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.concurrent.ConcurrentHashMap;
@@ -49,6 +50,8 @@ import static java.nio.file.StandardWatchEventKinds.*;
 public class FileExplorer extends JTree
         implements TreeSelectionListener, TreeWillExpandListener, Closeable {
 
+    @Serial
+    private static final long serialVersionUID = 1L;
     private static final org.slf4j.Logger logger =
             org.slf4j.LoggerFactory.getLogger(FileExplorer.class);
 
@@ -69,8 +72,6 @@ public class FileExplorer extends JTree
      * Constructor.
      *
      * @param root the root directory of the file explorer.
-     * @throws IOException if the {@link WatchService} cannot be created or the
-     *         root directory cannot be registered.
      */
     public FileExplorer(Path root) {
         super(new DefaultTreeModel(new DirectoryTreeNode(root)));
@@ -135,14 +136,17 @@ public class FileExplorer extends JTree
      *
      * <p>After this method returns the tree is no longer refreshed
      * automatically, but it remains fully functional as a read-only widget.
+     * Safe to call even if the {@link WatchService} failed to initialise.
      */
     @Override
     public void close() {
-        watchThread.interrupt();
-        try {
-            watchService.close();
-        } catch (IOException e) {
-            logger.warn("Error closing WatchService: ", e);
+        if (watchThread != null) watchThread.interrupt();
+        if (watchService != null) {
+            try {
+                watchService.close();
+            } catch (IOException e) {
+                logger.warn("Error closing WatchService: ", e);
+            }
         }
     }
 
@@ -191,27 +195,40 @@ public class FileExplorer extends JTree
     }
 
     /**
-     * Registers a newly created directory (and all of its subdirectories) with
-     * the watcher by walking the tree under {@code dir}.  The corresponding
-     * {@link DirectoryTreeNode} is looked up from the parent node's children.
+     * Registers a newly created directory — and every subdirectory already
+     * present inside it (e.g. when an entire directory tree is moved in) —
+     * with the {@link WatchService}.  The corresponding {@link DirectoryTreeNode}
+     * is looked up from {@code parent}'s children.
+     *
+     * <p>Must be called on the EDT so that child-node lookups are consistent
+     * with the tree model state after the preceding {@code refresh()} call.
      *
      * @param parent the tree node that is the direct parent of the new entry.
      * @param dir    the newly created directory path.
      */
     private void registerNewDirectory(DirectoryTreeNode parent, Path dir) {
-        // Find the child node that was just inserted for this path.
         for (int i = 0; i < parent.getChildCount(); i++) {
             if (parent.getChildAt(i) instanceof DirectoryTreeNode child
                     && child.path().equals(dir)) {
+                // Walk the entire new subtree so that directories moved/copied
+                // in bulk are all watched immediately.
                 try {
-                    // Walk the whole new subtree in case it was copied/moved in.
                     Files.walkFileTree(dir, new SimpleFileVisitor<>() {
                         @Override
                         public FileVisitResult preVisitDirectory(Path d,
                                 BasicFileAttributes attrs) {
-                            // Only register dirs that have a tree node for them.
-                            if (d.equals(dir)) {
-                                register(child);
+                            // register() tolerates keys being re-registered (the
+                            // WatchService simply returns the existing key).
+                            try {
+                                WatchKey key = d.register(watchService, ENTRY_CREATE, ENTRY_DELETE);
+                                // Map the key to the closest tree node we have.
+                                // For the root of the new subtree we have a real
+                                // node; for deeper levels use the same child node
+                                // (they will be lazily refined when expanded).
+                                watchKeys.put(key, child);
+                                logger.debug("Watching new subtree dir: {}", d);
+                            } catch (IOException e) {
+                                logger.warn("Cannot watch '{}': {}", d, e.getMessage());
                             }
                             return FileVisitResult.CONTINUE;
                         }
@@ -222,6 +239,16 @@ public class FileExplorer extends JTree
                 break;
             }
         }
+    }
+
+    /**
+     * Removes from {@link #watchKeys} all entries whose {@link WatchKey} is
+     * no longer valid (i.e. the watched directory has been deleted).
+     * Called after {@code key.reset()} returns {@code false} to eagerly purge
+     * any sibling keys that were also invalidated by the same deletion event.
+     */
+    private void purgeInvalidKeys() {
+        watchKeys.keySet().removeIf(k -> !k.isValid());
     }
 
     /**
@@ -285,11 +312,14 @@ public class FileExplorer extends JTree
             }
 
             // Re-queue the key to receive further events; cancel it if invalid
-            // (directory was deleted).
+            // (directory was deleted).  Also purge any other keys that were
+            // transitively invalidated by the same deletion (e.g. sub-directories
+            // of the removed tree).
             if (!key.reset()) {
                 logger.debug("Watch key invalidated (directory deleted?): {}",
                         node != null ? node.path() : "unknown");
                 watchKeys.remove(key);
+                purgeInvalidKeys();
             }
         }
         logger.debug("FileExplorer watcher thread exiting.");
