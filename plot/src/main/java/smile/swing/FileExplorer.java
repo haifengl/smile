@@ -140,7 +140,7 @@ public class FileExplorer extends JTree
      *
      * <p>After this method returns the tree is no longer refreshed
      * automatically, but it remains fully functional as a read-only widget.
-     * Safe to call even if the {@link WatchService} failed to initialise.
+     * Safe to call even if the {@link WatchService} failed to initialize.
      */
     @Override
     public void close() {
