@@ -155,6 +155,12 @@ public class SmileStudio extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
+                // Persist the open-file list *before* closing notebooks so that
+                // fileWatcher.files() still contains all paths at save time.
+                // closeNotebook() calls fileWatcher.removeFile() for each notebook,
+                // so saving after the loop would always write an empty list.
+                workspace.saveOpenFilePaths();
+
                 // Iterate over a snapshot — closeNotebook() removes from the list.
                 List<Notebook> notebooks = new ArrayList<>(workspace.notebooks());
                 for (Notebook notebook : notebooks) {
@@ -164,9 +170,6 @@ public class SmileStudio extends JFrame {
                     }
                 }
 
-                // All notebooks confirmed closed: persist the (now-empty) open-file
-                // list, stop the auto-save timer, and shut down the workspace.
-                workspace.saveOpenFilePaths();
                 if (autoSaveAction != null) autoSaveAction.timer.stop();
                 workspace.shutdown();
                 System.exit(0);
