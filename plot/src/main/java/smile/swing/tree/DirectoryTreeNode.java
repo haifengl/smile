@@ -19,6 +19,7 @@ package smile.swing.tree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import java.io.IOException;
+import java.io.Serial;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -37,7 +38,14 @@ import java.util.stream.Stream;
  * @author Haifeng Li
  */
 public class DirectoryTreeNode extends DefaultMutableTreeNode {
+    @Serial
+    private static final long serialVersionUID = 1L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DirectoryTreeNode.class);
+
+    /** Reusable filter that skips hidden files (names starting with '.'). */
+    private static final java.util.function.Predicate<Path> VISIBLE =
+            p -> !p.getFileName().toString().startsWith(".");
+
     /** Comparator for sorting paths with directories first, then alphabetically by file name. */
     private static final PathComparator comparator = new PathComparator();
     /** The directory path. */
@@ -71,9 +79,16 @@ public class DirectoryTreeNode extends DefaultMutableTreeNode {
         return name;
     }
 
+    /**
+     * Returns {@code true} if this node is a leaf (i.e. not a directory).
+     *
+     * <p>Delegates to {@link #getAllowsChildren()} which was set once from
+     * {@link Files#isDirectory} in the constructor, avoiding a filesystem
+     * call on every repaint.
+     */
     @Override
     public boolean isLeaf() {
-        return !Files.isDirectory(path);
+        return !getAllowsChildren();
     }
 
     /**
@@ -81,10 +96,9 @@ public class DirectoryTreeNode extends DefaultMutableTreeNode {
      * @param model the tree model to insert child nodes into.
      */
     public void addChildren(DefaultTreeModel model) {
-        if (Files.isDirectory(path) && getChildCount() == 0) {
+        if (getAllowsChildren() && getChildCount() == 0) {
             try (Stream<Path> stream = Files.list(path)) {
-                comparator.decorated(
-                        stream.filter(p -> !p.getFileName().toString().startsWith(".")))
+                comparator.decorated(stream.filter(VISIBLE))
                     .forEach(e ->
                         model.insertNodeInto(new DirectoryTreeNode(e.path()), this, getChildCount()));
             } catch (IOException ex) {
@@ -111,7 +125,7 @@ public class DirectoryTreeNode extends DefaultMutableTreeNode {
      * @param model the tree model (used to fire the appropriate structural events).
      */
     public void refresh(DefaultTreeModel model) {
-        if (!Files.isDirectory(path)) return;
+        if (!getAllowsChildren()) return;
 
         // Snapshot existing children keyed by path for O(1) lookup.
         Map<Path, DirectoryTreeNode> existing = new HashMap<>();
@@ -124,8 +138,7 @@ public class DirectoryTreeNode extends DefaultMutableTreeNode {
         // Snapshot the current filesystem entries (excluding hidden files).
         Set<Path> current = new HashSet<>();
         try (Stream<Path> stream = Files.list(path)) {
-            stream.filter(p -> !p.getFileName().toString().startsWith("."))
-                  .forEach(current::add);
+            stream.filter(VISIBLE).forEach(current::add);
         } catch (IOException ex) {
             logger.warn("Error listing directory '{}' during refresh: ", path, ex);
             return;
@@ -146,8 +159,9 @@ public class DirectoryTreeNode extends DefaultMutableTreeNode {
         // Pass 1: remove stale nodes.
         toRemove.forEach(model::removeNodeFromParent);
 
-        // Pass 2: insert new nodes in sorted order, using pre-fetched isDirectory
-        // flags to avoid repeated filesystem calls inside the comparator loop.
+        // Pass 2: insert new nodes in sorted order.
+        // decorated() pre-fetches isDirectory once per path so the binary-search
+        // below does not cause repeated filesystem calls for the same entry.
         comparator.decorated(toAdd.stream()).forEach(e -> {
             Path p = e.path();
             DirectoryTreeNode newNode = new DirectoryTreeNode(p);
@@ -166,9 +180,9 @@ public class DirectoryTreeNode extends DefaultMutableTreeNode {
      * A custom {@link Comparator} that sorts paths with directories first,
      * then alphabetically (case-insensitive) by file name.
      *
-     * <p>The directory/file distinction is determined once per path object
-     * before the sort begins (via {@link PathWithType}), avoiding repeated
-     * {@link Files#isDirectory} filesystem calls during the comparison loop.
+     * <p>The {@link #decorated(Stream)} method pre-fetches each path's
+     * {@code isDirectory} flag once before sorting begins, avoiding repeated
+     * {@link Files#isDirectory} filesystem calls inside the comparison loop.
      */
     static class PathComparator implements Comparator<Path> {
         @Override
@@ -181,19 +195,20 @@ public class DirectoryTreeNode extends DefaultMutableTreeNode {
         }
 
         /**
-         * Wraps a path together with its pre-computed {@code isDirectory} flag
-         * so that sorting a list of paths does not require repeated filesystem
-         * calls inside the comparator.
+         * Maps each path in {@code paths} to a {@link PathWithType} (pre-fetching
+         * the {@code isDirectory} flag exactly once), sorts the resulting list
+         * using a stable ordering of directories first then
+         * {@link String#CASE_INSENSITIVE_ORDER case-insensitive} file-name order,
+         * and returns the sorted list.
          *
          * @param paths the raw paths to decorate.
-         * @return a list of decorated entries sorted by this comparator's order.
+         * @return a sorted, unmodifiable list of decorated path entries.
          */
         List<PathWithType> decorated(Stream<Path> paths) {
             return paths.map(PathWithType::of)
-                        .sorted(Comparator.comparingInt((PathWithType e) -> e.isDir ? 0 : 1)
-                                          .thenComparing(e -> e.path.getFileName()
-                                                                     .toString()
-                                                                     .toLowerCase()))
+                        .sorted(Comparator.comparingInt((PathWithType e) -> e.isDir() ? 0 : 1)
+                                          .thenComparing(e -> e.path().getFileName().toString(),
+                                                         String.CASE_INSENSITIVE_ORDER))
                         .toList();
         }
     }

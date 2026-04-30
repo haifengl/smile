@@ -24,7 +24,8 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.Serial;
 import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 import smile.swing.tree.DirectoryTreeNode;
@@ -55,8 +56,8 @@ public class FileExplorer extends JTree
     private static final org.slf4j.Logger logger =
             org.slf4j.LoggerFactory.getLogger(FileExplorer.class);
 
-    /** The {@link WatchService} used to monitor filesystem events. */
-    private WatchService watchService;
+    /** The {@link WatchService} used to monitor filesystem events, or {@code null} if unavailable. */
+    private final WatchService watchService;
 
     /**
      * Maps each active {@link WatchKey} back to the {@link DirectoryTreeNode}
@@ -65,8 +66,8 @@ public class FileExplorer extends JTree
      */
     private final Map<WatchKey, DirectoryTreeNode> watchKeys = new ConcurrentHashMap<>();
 
-    /** Background thread that processes {@link WatchKey} events. */
-    private Thread watchThread;
+    /** Background thread that processes {@link WatchKey} events, or {@code null} if unavailable. */
+    private final Thread watchThread;
 
     /**
      * Constructor.
@@ -86,17 +87,20 @@ public class FileExplorer extends JTree
         expandPath(new TreePath(rootNode));
 
         // Create the watch service and register the root directory.
+        // Use local temporaries so watchService and watchThread can be final.
+        WatchService ws = null;
+        Thread wt = null;
         try {
-            watchService = root.getFileSystem().newWatchService();
-            register(rootNode);
-
-            // Start a daemon watcher thread so it does not prevent JVM exit.
-            watchThread = Thread.ofVirtual()
+            ws = root.getFileSystem().newWatchService();
+            register(rootNode, ws);
+            wt = Thread.ofVirtual()
                     .name("FileExplorer-WatchService")
                     .start(this::watchLoop);
         } catch (IOException e) {
             logger.error("Failed to create WatchService: ", e);
         }
+        watchService = ws;
+        watchThread  = wt;
     }
 
     // -------------------------------------------------------------------------
@@ -155,32 +159,37 @@ public class FileExplorer extends JTree
     // -------------------------------------------------------------------------
 
     /**
-     * Populates children of {@code node} (if not already done) and registers
-     * its directory — and every newly added subdirectory — with the watcher.
+     * Populates children of {@code node} (if not already done) and ensures
+     * the node's directory is registered with the watcher.
+     *
+     * <p>Registering is unconditional: re-registering an already-watched
+     * directory is idempotent ({@link WatchService} returns the existing key),
+     * so this is safe to call every time a node is selected or expanded,
+     * including nodes whose children were loaded in a previous session.
      */
     private void expandNode(DirectoryTreeNode node) {
         DefaultTreeModel model = (DefaultTreeModel) getModel();
-        int before = node.getChildCount();
         node.addChildren(model);
-        // Register any subdirectories that were just added.
-        if (node.getChildCount() > before) {
-            register(node);
-        }
+        // Always register (or re-register) the node's directory so that new
+        // subdirectories created after the first expansion are also watched.
+        register(node, watchService);
     }
 
     /**
-     * Registers the directory owned by {@code node} with the {@link WatchService}
-     * for {@code ENTRY_CREATE} and {@code ENTRY_DELETE} events, and recursively
-     * registers every subdirectory that is already represented as a child node
-     * (i.e. already expanded).
+     * Registers the directory owned by {@code node} with {@code ws} for
+     * {@code ENTRY_CREATE} and {@code ENTRY_DELETE} events, and recursively
+     * registers every subdirectory already represented as a child node.
+     * Does nothing if {@code ws} is {@code null}.
      *
      * @param node the node whose directory should be watched.
+     * @param ws   the {@link WatchService} to register with; may be {@code null}.
      */
-    private void register(DirectoryTreeNode node) {
+    private void register(DirectoryTreeNode node, WatchService ws) {
+        if (ws == null) return;
         Path dir = node.path();
         if (!Files.isDirectory(dir)) return;
         try {
-            WatchKey key = dir.register(watchService, ENTRY_CREATE, ENTRY_DELETE);
+            WatchKey key = dir.register(ws, ENTRY_CREATE, ENTRY_DELETE);
             watchKeys.put(key, node);
             logger.debug("Watching: {}", dir);
         } catch (IOException e) {
@@ -189,53 +198,34 @@ public class FileExplorer extends JTree
         // Recursively register already-expanded children.
         for (int i = 0; i < node.getChildCount(); i++) {
             if (node.getChildAt(i) instanceof DirectoryTreeNode child) {
-                register(child);
+                register(child, ws);
             }
         }
     }
 
     /**
-     * Registers a newly created directory — and every subdirectory already
-     * present inside it (e.g. when an entire directory tree is moved in) —
-     * with the {@link WatchService}.  The corresponding {@link DirectoryTreeNode}
-     * is looked up from {@code parent}'s children.
+     * Registers a newly created directory with the {@link WatchService} so that
+     * future events inside it are captured.  The corresponding
+     * {@link DirectoryTreeNode} is looked up from {@code parent}'s children.
      *
-     * <p>Must be called on the EDT so that child-node lookups are consistent
-     * with the tree model state after the preceding {@code refresh()} call.
+     * <p>Only the immediate new directory is registered here.  Any subdirectories
+     * it contains are lazily registered when the user expands the node (via
+     * {@link #expandNode}).  This avoids mapping deeply nested OS watch keys to
+     * incorrect tree nodes — a node for a deep subdirectory does not yet exist
+     * in the tree at this point.
+     *
+     * <p>Must be called on the EDT, after the preceding {@code refresh()} call
+     * has already inserted the new child node into the model.
      *
      * @param parent the tree node that is the direct parent of the new entry.
      * @param dir    the newly created directory path.
      */
     private void registerNewDirectory(DirectoryTreeNode parent, Path dir) {
+        if (watchService == null) return;
         for (int i = 0; i < parent.getChildCount(); i++) {
             if (parent.getChildAt(i) instanceof DirectoryTreeNode child
                     && child.path().equals(dir)) {
-                // Walk the entire new subtree so that directories moved/copied
-                // in bulk are all watched immediately.
-                try {
-                    Files.walkFileTree(dir, new SimpleFileVisitor<>() {
-                        @Override
-                        public FileVisitResult preVisitDirectory(Path d,
-                                BasicFileAttributes attrs) {
-                            // register() tolerates keys being re-registered (the
-                            // WatchService simply returns the existing key).
-                            try {
-                                WatchKey key = d.register(watchService, ENTRY_CREATE, ENTRY_DELETE);
-                                // Map the key to the closest tree node we have.
-                                // For the root of the new subtree we have a real
-                                // node; for deeper levels use the same child node
-                                // (they will be lazily refined when expanded).
-                                watchKeys.put(key, child);
-                                logger.debug("Watching new subtree dir: {}", d);
-                            } catch (IOException e) {
-                                logger.warn("Cannot watch '{}': {}", d, e.getMessage());
-                            }
-                            return FileVisitResult.CONTINUE;
-                        }
-                    });
-                } catch (IOException e) {
-                    logger.warn("Error walking new directory '{}': {}", dir, e.getMessage());
-                }
+                register(child, watchService);
                 break;
             }
         }
@@ -272,6 +262,10 @@ public class FileExplorer extends JTree
             DirectoryTreeNode node = watchKeys.get(key);
             if (node != null) {
                 boolean hasChanges = false;
+                // Collect newly created directories so we can register them
+                // for watching after the refresh has inserted their nodes.
+                List<Path> newDirs = new ArrayList<>();
+
                 for (WatchEvent<?> event : key.pollEvents()) {
                     WatchEvent.Kind<?> kind = event.kind();
                     if (kind == OVERFLOW) {
@@ -292,21 +286,23 @@ public class FileExplorer extends JTree
                     hasChanges = true;
                     logger.debug("{} event: {}", kind.name(), changed);
 
-                    // For a newly created directory, register it for watching
-                    // after the EDT has had a chance to insert its node.
+                    // Collect newly created directories; they are registered
+                    // *after* refresh() has inserted their nodes into the model.
                     if (kind == ENTRY_CREATE && Files.isDirectory(changed)) {
-                        final DirectoryTreeNode parentNode = node;
-                        final Path newDir = changed;
-                        SwingUtilities.invokeLater(() ->
-                                registerNewDirectory(parentNode, newDir));
+                        newDirs.add(changed);
                     }
                 }
 
                 if (hasChanges) {
                     final DirectoryTreeNode affectedNode = node;
+                    final List<Path> dirsToRegister = List.copyOf(newDirs);
                     SwingUtilities.invokeLater(() -> {
                         DefaultTreeModel model = (DefaultTreeModel) getModel();
+                        // refresh() inserts the new child nodes first …
                         affectedNode.refresh(model);
+                        // … then register the new directories so the node
+                        // lookup in registerNewDirectory finds what refresh just inserted.
+                        dirsToRegister.forEach(d -> registerNewDirectory(affectedNode, d));
                     });
                 }
             }
