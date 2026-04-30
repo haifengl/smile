@@ -51,7 +51,7 @@ public class OpenFileWatcher {
      */
     private final Set<Path> watchedDirs = ConcurrentHashMap.newKeySet();
     /**
-     * The ordered set of absolute, normalised path strings currently being
+     * The ordered set of absolute, normalized path strings currently being
      * watched.  A {@link LinkedHashSet} wrapped with
      * {@link Collections#synchronizedSet(Set)} preserves insertion order (so
      * that {@link #files()} returns paths in the order they were opened) while
@@ -104,7 +104,7 @@ public class OpenFileWatcher {
      * Returns an unmodifiable snapshot of the currently open file paths in
      * the order they were added.  Safe to call from any thread.
      *
-     * @return an ordered, unmodifiable list of absolute, normalised path strings.
+     * @return an ordered, unmodifiable list of absolute, normalized path strings.
      */
     public List<String> files() {
         synchronized (fileSet) {
@@ -117,7 +117,7 @@ public class OpenFileWatcher {
      * O(1) lookup backed directly by the {@link LinkedHashSet}; does not
      * allocate a snapshot list.  Safe to call from any thread.
      *
-     * @param path the absolute, normalised file path.
+     * @param path the absolute, normalized file path.
      * @return {@code true} if the file is being watched.
      */
     public boolean isOpen(Path path) {
