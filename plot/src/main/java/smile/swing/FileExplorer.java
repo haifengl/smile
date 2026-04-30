@@ -30,7 +30,6 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import smile.swing.tree.DirectoryTreeNode;
-import smile.util.Utf8ResourceBundleControl;
 import static java.nio.file.StandardWatchEventKinds.*;
 
 /**
@@ -62,8 +61,7 @@ public class FileExplorer extends JTree
     private static final org.slf4j.Logger logger =
             org.slf4j.LoggerFactory.getLogger(FileExplorer.class);
     private static final ResourceBundle bundle =
-            ResourceBundle.getBundle(FileExplorer.class.getName(), Locale.getDefault(),
-                    new Utf8ResourceBundleControl());
+            ResourceBundle.getBundle(FileExplorer.class.getName(), Locale.getDefault());
 
     /** DataFlavor used to transfer a {@link DirectoryTreeNode} during drag-and-drop. */
     private static final DataFlavor NODE_FLAVOR;
