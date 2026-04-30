@@ -81,7 +81,7 @@ public class Workspace extends JSplitPane {
      */
     private final List<Notebook> notebooks = new ArrayList<>();
     /**
-     * Index from absolute, normalised path string to the open {@link Notebook},
+     * Index from absolute, normalized path string to the open {@link Notebook},
      * enabling O(1) lookup in {@link #handleFileChanged} and {@link #openNotebook}.
      */
     private final Map<String, Notebook> notebookIndex = new HashMap<>();
@@ -131,7 +131,7 @@ public class Workspace extends JSplitPane {
 
         // Open a default notebook if there is no previously opened file.
         if (fileWatcher.files().isEmpty()) {
-            openNotebook(Path.of("Untitled.jsh"));
+            openNotebook(cwd.resolve("Untitled.jsh"));
             // Initialized as true so that we won't try to save sample code.
             // Delay 200ms so that it be called after DocumentUpdate events.
             Timer timer = new Timer(200, e -> notebooks.getFirst().setSaved(true));

@@ -67,6 +67,8 @@ public class SmileStudio extends JFrame {
     private final JToolBar toolBar = new JToolBar();
     private final StatusBar statusBar = new StatusBar();
     private final Workspace workspace;
+    /** Kept as a field so {@code windowClosing} can stop it before shutdown. */
+    private AutoSaveAction autoSaveAction;
 
     /**
      * Constructor.
@@ -146,19 +148,22 @@ public class SmileStudio extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                // Save open files first. Otherwise, notebooks/files lists become empty
-                // after saving notebooks.
+                // Persist the open-file list before closing notebooks so that
+                // fileWatcher.files() still contains all paths at save time.
                 workspace.saveOpenFilePaths();
 
-                // Make a copy first as closeNotebook() may modify the notebooks list.
+                // Iterate over a snapshot — closeNotebook() removes from the list.
                 List<Notebook> notebooks = new ArrayList<>(workspace.notebooks());
                 for (Notebook notebook : notebooks) {
                     if (!workspace.closeNotebook(notebook)) {
-                        // cancel the closing operation if saving failed or canceled.
+                        // User cancelled saving — abort the close operation.
                         return;
                     }
                 }
 
+                // Stop the auto-save timer before shutting down the watcher so
+                // it cannot fire against an already-closed workspace.
+                autoSaveAction.timer.stop();
                 workspace.shutdown();
                 System.exit(0);
             }
@@ -351,7 +356,7 @@ public class SmileStudio extends JFrame {
         var openNotebook = new OpenNotebookAction();
         var saveNotebook = new SaveNotebookAction();
         var saveAsNotebook = new SaveAsNotebookAction();
-        var autoSave = new AutoSaveAction();
+        autoSaveAction = new AutoSaveAction();
         var addCell = new AddCellAction();
         var runAll = new RunAllAction();
         var clearAll = new ClearAllAction();
@@ -360,7 +365,7 @@ public class SmileStudio extends JFrame {
         var settings = new SettingsAction();
         var exit = new ExitAction();
 
-        var autoSaveMenuItem = new JCheckBoxMenuItem(autoSave);
+        var autoSaveMenuItem = new JCheckBoxMenuItem(autoSaveAction);
         if (prefs.getBoolean(AUTO_SAVE_KEY, false)) {
             SwingUtilities.invokeLater(autoSaveMenuItem::doClick);
         }
@@ -617,7 +622,6 @@ public class SmileStudio extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            int count = 0;
             for (Window window : Window.getWindows()) {
                 if (window.isVisible() && window instanceof SmileStudio studio) {
                     // Simulates a user clicking the close button to trigger WindowListener.
@@ -698,8 +702,8 @@ public class SmileStudio extends JFrame {
      * Creates a new notebook.
      */
     private void newNotebook() {
-        Path file = Path.of("Untitled.jsh");
-        workspace.openNotebook(file);
+        Path cwd = Path.of(System.getProperty("user.dir"));
+        workspace.openNotebook(cwd.resolve("Untitled.jsh"));
     }
 
     /**
