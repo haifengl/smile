@@ -21,10 +21,14 @@ import javax.swing.tree.DefaultTreeModel;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -48,7 +52,10 @@ public class DirectoryTreeNode extends DefaultMutableTreeNode {
     public DirectoryTreeNode(Path path) {
         super(path, Files.isDirectory(path));
         this.path = Objects.requireNonNull(path);
-        this.name = path.getFileName().toString();
+        // getFileName() returns null for filesystem root paths (e.g. "/" or "C:\").
+        // Fall back to the full path string so the root node always has a label.
+        var filename = path.getFileName();
+        this.name = filename != null ? filename.toString() : path.toString();
     }
 
     /**
@@ -74,13 +81,12 @@ public class DirectoryTreeNode extends DefaultMutableTreeNode {
      * @param model the tree model to insert child nodes into.
      */
     public void addChildren(DefaultTreeModel model) {
-        var self = this;
         if (Files.isDirectory(path) && getChildCount() == 0) {
             try (Stream<Path> stream = Files.list(path)) {
-                stream.filter(p -> !p.getFileName().toString().startsWith("."))
-                      .sorted(comparator)
-                      .forEach(path ->
-                        model.insertNodeInto(new DirectoryTreeNode(path), self, getChildCount()));
+                comparator.decorated(
+                        stream.filter(p -> !p.getFileName().toString().startsWith(".")))
+                    .forEach(e ->
+                        model.insertNodeInto(new DirectoryTreeNode(e.path()), this, getChildCount()));
             } catch (IOException ex) {
                 logger.warn("Error creating child node: ", ex);
             }
@@ -107,7 +113,7 @@ public class DirectoryTreeNode extends DefaultMutableTreeNode {
     public void refresh(DefaultTreeModel model) {
         if (!Files.isDirectory(path)) return;
 
-        // Index existing children by their path for O(1) lookup.
+        // Snapshot existing children keyed by path for O(1) lookup.
         Map<Path, DirectoryTreeNode> existing = new HashMap<>();
         for (int i = 0; i < getChildCount(); i++) {
             if (getChildAt(i) instanceof DirectoryTreeNode child) {
@@ -115,67 +121,90 @@ public class DirectoryTreeNode extends DefaultMutableTreeNode {
             }
         }
 
-        // Determine the current filesystem entries (excluding hidden files).
-        Map<Path, Boolean> current = new HashMap<>();
+        // Snapshot the current filesystem entries (excluding hidden files).
+        Set<Path> current = new HashSet<>();
         try (Stream<Path> stream = Files.list(path)) {
             stream.filter(p -> !p.getFileName().toString().startsWith("."))
-                  .forEach(p -> current.put(p, Boolean.TRUE));
+                  .forEach(current::add);
         } catch (IOException ex) {
             logger.warn("Error listing directory '{}' during refresh: ", path, ex);
             return;
         }
 
-        // Remove nodes whose backing paths no longer exist.
+        // Pre-compute the two sets of mutations before touching the tree model.
+        // This avoids re-indexing children between the remove and insert passes.
+        List<DirectoryTreeNode> toRemove = new ArrayList<>();
         existing.forEach((p, node) -> {
-            if (!current.containsKey(p)) {
-                model.removeNodeFromParent(node);
-            }
+            if (!current.contains(p)) toRemove.add(node);
         });
 
-        // Insert nodes for newly appeared paths (re-index after removals).
-        Map<Path, DirectoryTreeNode> remaining = new HashMap<>();
-        for (int i = 0; i < getChildCount(); i++) {
-            if (getChildAt(i) instanceof DirectoryTreeNode child) {
-                remaining.put(child.path(), child);
-            }
-        }
+        Set<Path> toAdd = new HashSet<>();
+        current.forEach(p -> {
+            if (!existing.containsKey(p)) toAdd.add(p);
+        });
 
-        current.keySet().stream()
-               .filter(p -> !remaining.containsKey(p))
-               .sorted(comparator)
-               .forEach(p -> {
-                   // Determine insertion index to keep the sorted order.
-                   DirectoryTreeNode newNode = new DirectoryTreeNode(p);
-                   int insertAt = 0;
-                   while (insertAt < getChildCount()) {
-                       if (getChildAt(insertAt) instanceof DirectoryTreeNode sibling) {
-                           if (comparator.compare(p, sibling.path()) <= 0) break;
-                       }
-                       insertAt++;
-                   }
-                   model.insertNodeInto(newNode, this, insertAt);
-               });
+        // Pass 1: remove stale nodes.
+        toRemove.forEach(model::removeNodeFromParent);
+
+        // Pass 2: insert new nodes in sorted order, using pre-fetched isDirectory
+        // flags to avoid repeated filesystem calls inside the comparator loop.
+        comparator.decorated(toAdd.stream()).forEach(e -> {
+            Path p = e.path();
+            DirectoryTreeNode newNode = new DirectoryTreeNode(p);
+            int insertAt = 0;
+            while (insertAt < getChildCount()) {
+                if (getChildAt(insertAt) instanceof DirectoryTreeNode sibling) {
+                    if (comparator.compare(p, sibling.path()) <= 0) break;
+                }
+                insertAt++;
+            }
+            model.insertNodeInto(newNode, this, insertAt);
+        });
     }
 
     /**
-     * A custom Comparator that sorts paths with directories first, then alphabetically by file name.
+     * A custom {@link Comparator} that sorts paths with directories first,
+     * then alphabetically (case-insensitive) by file name.
+     *
+     * <p>The directory/file distinction is determined once per path object
+     * before the sort begins (via {@link PathWithType}), avoiding repeated
+     * {@link Files#isDirectory} filesystem calls during the comparison loop.
      */
     static class PathComparator implements Comparator<Path> {
         @Override
         public int compare(Path path1, Path path2) {
-            // First, check if one is a directory and the other is not
             boolean isDir1 = Files.isDirectory(path1);
             boolean isDir2 = Files.isDirectory(path2);
+            if (isDir1 != isDir2) return isDir1 ? -1 : 1;
+            return path1.getFileName().toString()
+                        .compareToIgnoreCase(path2.getFileName().toString());
+        }
 
-            // Primary sorting: directories first (false before true)
-            if (isDir1 && !isDir2) {
-                return -1;
-            } else if (!isDir1 && isDir2) {
-                return 1;
-            } else {
-                // Secondary sorting: then by file name (lexicographically)
-                return path1.getFileName().toString().compareToIgnoreCase(path2.getFileName().toString());
-            }
+        /**
+         * Wraps a path together with its pre-computed {@code isDirectory} flag
+         * so that sorting a list of paths does not require repeated filesystem
+         * calls inside the comparator.
+         *
+         * @param paths the raw paths to decorate.
+         * @return a list of decorated entries sorted by this comparator's order.
+         */
+        List<PathWithType> decorated(Stream<Path> paths) {
+            return paths.map(PathWithType::of)
+                        .sorted(Comparator.comparingInt((PathWithType e) -> e.isDir ? 0 : 1)
+                                          .thenComparing(e -> e.path.getFileName()
+                                                                     .toString()
+                                                                     .toLowerCase()))
+                        .toList();
+        }
+    }
+
+    /**
+     * A path together with its pre-fetched {@code isDirectory} flag, used to
+     * avoid repeated {@link Files#isDirectory} calls during sorting.
+     */
+    record PathWithType(Path path, boolean isDir) {
+        static PathWithType of(Path p) {
+            return new PathWithType(p, Files.isDirectory(p));
         }
     }
 }
