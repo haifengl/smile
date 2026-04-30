@@ -23,6 +23,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.*;
 import java.nio.file.*;
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.IntConsumer;
@@ -485,7 +486,7 @@ public class Workspace extends JSplitPane {
     private int confirmSaveNotebook(Notebook notebook) {
         if (notebook.isSaved()) return JOptionPane.NO_OPTION;
         return JOptionPane.showConfirmDialog(this,
-                String.format(bundle.getString("SaveMessage"), notebook.getFile().getFileName()),
+                MessageFormat.format(bundle.getString("SaveMessage"), notebook.getFile().getFileName()),
                 bundle.getString("SaveTitle"),
                 JOptionPane.YES_NO_CANCEL_OPTION);
     }
@@ -599,7 +600,7 @@ public class Workspace extends JSplitPane {
 
         int choice = JOptionPane.showConfirmDialog(
                 this,
-                String.format(bundle.getString("ExternalChangeMessage"), filename),
+                MessageFormat.format(bundle.getString("ExternalChangeMessage"), filename),
                 bundle.getString("ExternalChangeTitle"),
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.QUESTION_MESSAGE);

@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
@@ -285,7 +286,7 @@ public class Notebook extends JPanel implements DocumentListener {
             }
             default -> {
                 JOptionPane.showMessageDialog(this,
-                        String.format(bundle.getString("UnsupportedNotebookMessage"), file.getFileName()),
+                        MessageFormat.format(bundle.getString("UnsupportedNotebookMessage"), file.getFileName()),
                         bundle.getString("UnsupportedNotebookTitle"),
                         JOptionPane.ERROR_MESSAGE);
                 yield null;
@@ -339,7 +340,7 @@ public class Notebook extends JPanel implements DocumentListener {
                                 JOptionPane.ERROR_MESSAGE);
                     } else {
                         JOptionPane.showMessageDialog(Notebook.this,
-                                String.format(bundle.getString("UnsupportedKernelMessage"), lang),
+                                MessageFormat.format(bundle.getString("UnsupportedKernelMessage"), lang),
                                 "Error",
                                 JOptionPane.ERROR_MESSAGE);
                     }
@@ -756,7 +757,7 @@ public class Notebook extends JPanel implements DocumentListener {
     public synchronized void runCell(Cell cell, PostRunNavigation behavior) {
         if (kernel == null) {
             JOptionPane.showMessageDialog(this,
-                    bundle.getString("UnsupportedKernelMessage").formatted(lang),
+                    MessageFormat.format(bundle.getString("UnsupportedKernelMessage"), lang),
                     "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
@@ -855,7 +856,7 @@ public class Notebook extends JPanel implements DocumentListener {
     public synchronized void runCellAndBelow(Cell cell) {
         if (kernel == null) {
             JOptionPane.showMessageDialog(this,
-                    bundle.getString("UnsupportedKernelMessage").formatted(lang),
+                    MessageFormat.format(bundle.getString("UnsupportedKernelMessage"), lang),
                     "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
@@ -880,7 +881,7 @@ public class Notebook extends JPanel implements DocumentListener {
     public synchronized void runAllCells() {
         if (kernel == null) {
             JOptionPane.showMessageDialog(this,
-                    bundle.getString("UnsupportedKernelMessage").formatted(lang),
+                    MessageFormat.format(bundle.getString("UnsupportedKernelMessage"), lang),
                     "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
