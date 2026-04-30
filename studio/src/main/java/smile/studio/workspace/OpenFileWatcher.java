@@ -105,12 +105,22 @@ public class OpenFileWatcher {
     }
 
     /**
-     * Removes a file from the watch set.  Safe to call from any thread.
+     * Removes a file from the watch set and clears its recorded modification
+     * time.  Also cancels any pending debounce timer for that file so that a
+     * stale reload dialog cannot fire after the file has been closed.
+     *
+     * <p>Must be called on the EDT (because it cancels a Swing {@link Timer}).
      *
      * @param path the absolute, normalized file path.
      */
     public void removeFile(Path path) {
-        fileSet.remove(path.toString());
+        String key = path.toString();
+        fileSet.remove(key);
+        knownModTimes.remove(key);
+        // Cancel any pending debounce timer so a closed file's timer cannot
+        // fire and deliver a stale reload dialog.
+        Timer pending = pendingReloads.remove(key);
+        if (pending != null) pending.stop();
     }
 
     /**
