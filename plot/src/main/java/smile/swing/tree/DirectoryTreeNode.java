@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -83,6 +85,76 @@ public class DirectoryTreeNode extends DefaultMutableTreeNode {
                 logger.warn("Error creating child node: ", ex);
             }
         }
+    }
+
+    /**
+     * Refreshes the immediate children of this node to match the current state
+     * of the filesystem directory.
+     *
+     * <p>This method:
+     * <ul>
+     *   <li>Removes child nodes whose paths no longer exist on disk.</li>
+     *   <li>Inserts new child nodes for paths that appeared on disk since the
+     *       last refresh, maintaining the directories-first alphabetical order.</li>
+     *   <li>Does <em>not</em> touch already-expanded grandchildren, so open
+     *       subtrees are preserved across a refresh cycle.</li>
+     * </ul>
+     *
+     * <p>Must be called on the Swing Event Dispatch Thread.
+     *
+     * @param model the tree model (used to fire the appropriate structural events).
+     */
+    public void refresh(DefaultTreeModel model) {
+        if (!Files.isDirectory(path)) return;
+
+        // Index existing children by their path for O(1) lookup.
+        Map<Path, DirectoryTreeNode> existing = new HashMap<>();
+        for (int i = 0; i < getChildCount(); i++) {
+            if (getChildAt(i) instanceof DirectoryTreeNode child) {
+                existing.put(child.path(), child);
+            }
+        }
+
+        // Determine the current filesystem entries (excluding hidden files).
+        Map<Path, Boolean> current = new HashMap<>();
+        try (Stream<Path> stream = Files.list(path)) {
+            stream.filter(p -> !p.getFileName().toString().startsWith("."))
+                  .forEach(p -> current.put(p, Boolean.TRUE));
+        } catch (IOException ex) {
+            logger.warn("Error listing directory '{}' during refresh: ", path, ex);
+            return;
+        }
+
+        // Remove nodes whose backing paths no longer exist.
+        existing.forEach((p, node) -> {
+            if (!current.containsKey(p)) {
+                model.removeNodeFromParent(node);
+            }
+        });
+
+        // Insert nodes for newly appeared paths (re-index after removals).
+        Map<Path, DirectoryTreeNode> remaining = new HashMap<>();
+        for (int i = 0; i < getChildCount(); i++) {
+            if (getChildAt(i) instanceof DirectoryTreeNode child) {
+                remaining.put(child.path(), child);
+            }
+        }
+
+        current.keySet().stream()
+               .filter(p -> !remaining.containsKey(p))
+               .sorted(comparator)
+               .forEach(p -> {
+                   // Determine insertion index to keep the sorted order.
+                   DirectoryTreeNode newNode = new DirectoryTreeNode(p);
+                   int insertAt = 0;
+                   while (insertAt < getChildCount()) {
+                       if (getChildAt(insertAt) instanceof DirectoryTreeNode sibling) {
+                           if (comparator.compare(p, sibling.path()) <= 0) break;
+                       }
+                       insertAt++;
+                   }
+                   model.insertNodeInto(newNode, this, insertAt);
+               });
     }
 
     /**
