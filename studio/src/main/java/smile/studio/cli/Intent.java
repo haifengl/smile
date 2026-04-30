@@ -62,7 +62,7 @@ public class Intent extends JPanel {
     // Right side for status and stop button.
     private final JPanel progressPane = new JPanel(new FlowLayout(FlowLayout.RIGHT));
     private final JProgressBar progress = new JProgressBar();
-    private final JButton stopButton = new JButton("⛔");
+    private final JButton stopButton = new JButton("❌");
     // Output pane
     private final JPanel outputPane = new JPanel();
     private OutputArea output = createOutputArea();
@@ -108,13 +108,11 @@ public class Intent extends JPanel {
         editor.setBackground(inputColor);
 
         status.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
-        progress.setMaximumSize(new Dimension(200, 12));
         stopButton.setVisible(false);
-        stopButton.setOpaque(false);
-        stopButton.setContentAreaFilled(false); // make the button transparent
         stopButton.setToolTipText(bundle.getString("Stop"));
+        progress.putClientProperty("JProgressBar.largeHeight", true);
         progressPane.add(progress);
-        progressPane.add(Box.createHorizontalStrut(20));
+        progressPane.add(Box.createHorizontalStrut(10));
         progressPane.add(stopButton);
 
         initIntentTypeComboBox();
@@ -265,8 +263,14 @@ public class Intent extends JPanel {
         stopButton.addActionListener(e -> {
             try {
                 stop.call();
+                stopButton.setEnabled(false);
             } catch (Exception ex) {
-                output.append("\n\nError: " + ex.getMessage());
+                JOptionPane.showMessageDialog(
+                        Intent.this,
+                        ex.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
             }
         });
     }
