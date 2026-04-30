@@ -24,7 +24,6 @@ import java.awt.image.*;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.Timer;
-import javax.swing.KeyStroke;
 import java.io.*;
 import java.net.URI;
 import java.nio.file.Files;
@@ -156,10 +155,6 @@ public class SmileStudio extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                // Persist the open-file list before closing notebooks so that
-                // fileWatcher.files() still contains all paths at save time.
-                workspace.saveOpenFilePaths();
-
                 // Iterate over a snapshot — closeNotebook() removes from the list.
                 List<Notebook> notebooks = new ArrayList<>(workspace.notebooks());
                 for (Notebook notebook : notebooks) {
@@ -169,8 +164,9 @@ public class SmileStudio extends JFrame {
                     }
                 }
 
-                // Stop the auto-save timer before shutting down the watcher so
-                // it cannot fire against an already-closed workspace.
+                // All notebooks confirmed closed: persist the (now-empty) open-file
+                // list, stop the auto-save timer, and shut down the workspace.
+                workspace.saveOpenFilePaths();
                 if (autoSaveAction != null) autoSaveAction.timer.stop();
                 workspace.shutdown();
                 System.exit(0);
@@ -181,7 +177,7 @@ public class SmileStudio extends JFrame {
                 // JSplitPane.setDividerLocation() set the location based on
                 // current pane size. We should set it after window is opened.
                 workspace.setDividerLocation(0.55);
-                // Invoker later so that splitPane.invalidate() be done
+                // Invoke later so that splitPane.invalidate() be done
                 SwingUtilities.invokeLater(() -> workspace.project().setDividerLocation(0.2));
             }
         });
@@ -331,6 +327,10 @@ public class SmileStudio extends JFrame {
             }
 
             BufferedImage icon = ImageIO.read(input);
+            if (icon == null) {
+                logger.error("Could not decode image: images/robot.png");
+                return;
+            }
             int[] sizes = {16, 24, 32, 48, 64, 128, 256};
             for (int size : sizes) {
                 BufferedImage image = new BufferedImage(size, size, Transparency.TRANSLUCENT);
@@ -664,6 +664,8 @@ public class SmileStudio extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            String version = SmileStudio.class.getPackage().getImplementationVersion();
+            if (version == null) version = "DEV";
             String message = String.format("""
                     Smile Studio %s
                     Copyright (c) 2010-2026 Haifeng Li.
@@ -671,7 +673,7 @@ public class SmileStudio extends JFrame {
                     
                     Smile Studio is free for research and educational use.
                     For commercial use, please contact smile.sales@outlook.com
-                    """, SmileStudio.class.getPackage().getImplementationVersion());
+                    """, version);
             JOptionPane.showMessageDialog(SmileStudio.this,
                     message,
                     bundle.getString("About"),
@@ -704,11 +706,14 @@ public class SmileStudio extends JFrame {
      * @param url     the URL to browse.
      * @param title   the dialog title used in the fallback message.
      */
-    private void browse(Component parent, String url, String title) {
+    private static void browse(Component parent, String url, String title) {
         try {
             if (Desktop.isDesktopSupported()) {
-                Desktop.getDesktop().browse(new URI(url));
-                return;
+                Desktop desktop = Desktop.getDesktop();
+                if (desktop.isSupported(Desktop.Action.BROWSE)) {
+                    desktop.browse(new URI(url));
+                    return;
+                }
             }
         } catch (Exception ex) {
             logger.warn("Could not open browser for URL: {}", url, ex);
@@ -751,7 +756,7 @@ public class SmileStudio extends JFrame {
     public static void createAndShowGUI() {
         // Create and set up the window.
         SmileStudio studio = new SmileStudio();
-        studio.setSize(new Dimension(1200, 800));
+        studio.setMinimumSize(new Dimension(800, 600));
         studio.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
         // macOS window settings
@@ -784,6 +789,14 @@ public class SmileStudio extends JFrame {
      * @param args command-line arguments.
      */
     public static void start(String[] args) {
+        if (GraphicsEnvironment.isHeadless()) {
+            System.err.println("""
+                    Cannot start Smile Studio as JVM is running in headless mode.
+                    Run 'smile shell' for smile shell with Java.
+                    Run 'smile scala' for smile shell with Scala.""");
+            System.exit(1);
+        }
+
         // macOS global settings
         // Must be set on main thread and before AWT/Swing is initialized
         if (SystemInfo.isMacOS) {
@@ -807,13 +820,6 @@ public class SmileStudio extends JFrame {
             JDialog.setDefaultLookAndFeelDecorated(true);
         }
 
-        if (GraphicsEnvironment.isHeadless()) {
-            System.err.println("""
-                    Cannot start Smile Studio as JVM is running in headless mode.
-                    Run 'smile shell' for smile shell with Java.
-                    Run 'smile scala' for smile shell with Scala.""");
-            System.exit(1);
-        }
 
         // Install font
         FlatJetBrainsMonoFont.install();
