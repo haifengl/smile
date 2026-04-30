@@ -18,6 +18,7 @@ package smile.swing.table;
 
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
+import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.ResourceBundle;
@@ -62,9 +63,9 @@ public abstract class PageTableModel extends AbstractTableModel {
     /** Page count label on toolbar. */
     private final JLabel pageCountLabel = new JLabel();
     /** Row count label format. */
-    private final String totalRowCountLabelFormat =  bundle.getString("RowCountFormat");
+    private final String totalRowCountLabelFormat = bundle.getString("RowCountFormat");
     /** Page count label format. */
-    private final String pageCountLabelFormat = bundle.getString("PageCountFormat");;
+    private final String pageCountLabelFormat = bundle.getString("PageCountFormat");
 
     /** Page down event action. */
     private final Action pageDownAction = new PageDownAction();
@@ -264,7 +265,7 @@ public abstract class PageTableModel extends AbstractTableModel {
         pageSizeField.setMaximumSize(pageSizeField.getPreferredSize());
         
         toolbar.addSeparator();
-        totalRowCountLabel.setText(String.format(totalRowCountLabelFormat, getRealRowCount()));
+        totalRowCountLabel.setText(MessageFormat.format(totalRowCountLabelFormat, getRealRowCount()));
         toolbar.add(totalRowCountLabel);
         toolbar.add(Box.createHorizontalStrut(40));
 
@@ -277,7 +278,7 @@ public abstract class PageTableModel extends AbstractTableModel {
         pageField.setAction(gotoPageAction);
         pageField.setMaximumSize(pageField.getPreferredSize());
 
-        pageCountLabel.setText(String.format(pageCountLabelFormat, getPageCount()));
+        pageCountLabel.setText(MessageFormat.format(pageCountLabelFormat, getPageCount()));
         toolbar.add(Box.createHorizontalStrut(4));
         toolbar.add(pageCountLabel);
         
@@ -289,9 +290,9 @@ public abstract class PageTableModel extends AbstractTableModel {
                     setPage(getPageCount() - 1);
                 }
 
-                totalRowCountLabel.setText(String.format(totalRowCountLabelFormat, getRealRowCount()));
+                totalRowCountLabel.setText(MessageFormat.format(totalRowCountLabelFormat, getRealRowCount()));
                 pageField.setText(Integer.toString(getPage() + 1));
-                pageCountLabel.setText(String.format(pageCountLabelFormat, getPageCount()));
+                pageCountLabel.setText(MessageFormat.format(pageCountLabelFormat, getPageCount()));
             }
         };
         
@@ -315,9 +316,9 @@ public abstract class PageTableModel extends AbstractTableModel {
             pageDownAction.setEnabled(true);            
         }
         
-        totalRowCountLabel.setText(String.format(totalRowCountLabelFormat, getRealRowCount()));
+        totalRowCountLabel.setText(MessageFormat.format(totalRowCountLabelFormat, getRealRowCount()));
         pageField.setText(Integer.toString(getPage() + 1));
-        pageCountLabel.setText(String.format(pageCountLabelFormat, getPageCount()));
+        pageCountLabel.setText(MessageFormat.format(pageCountLabelFormat, getPageCount()));
     }
     
     class PageDownAction extends AbstractAction {
