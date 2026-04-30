@@ -59,8 +59,8 @@ public class SmileStudio extends JFrame {
     private static final Preferences prefs = Preferences.userNodeForPackage(SmileStudio.class);
     /** The key for auto save preference. */
     private static final String AUTO_SAVE_KEY = "autoSave";
-    /** The LLM model. */
-    private static LLM llm = createLLM();
+    /** The LLM model. Declared volatile so that updates made on the EDT are immediately visible to other threads. */
+    private static volatile LLM llm;
     /** Application icons in different sizes. */
     private final List<Image> icons = new ArrayList<>();
     private final JMenuBar menuBar = new JMenuBar();
@@ -77,10 +77,17 @@ public class SmileStudio extends JFrame {
         super(bundle.getString("AppName"));
         setFrameIcon();
         setJMenuBar(menuBar);
-        initMenuAndToolBar();
+
+        // Initialize the LLM on the EDT (after Swing is set up) so that any
+        // error dialog shown by createLLM() runs on the correct thread.
+        llm = createLLM();
 
         Path cwd = Path.of(System.getProperty("user.dir"));
+
+        // Assign workspace before initMenuAndToolBar() so that AutoSaveAction's
+        // timer callback (which captures workspace) is never handed a null reference.
         workspace = new Workspace(cwd);
+        initMenuAndToolBar();
 
         JPanel contentPane = new JPanel(new BorderLayout());
         contentPane.add(toolBar, BorderLayout.NORTH);
@@ -89,7 +96,7 @@ public class SmileStudio extends JFrame {
         setContentPane(contentPane);
 
         // Starts the Ty server in a background thread.
-        Thread.ofPlatform().name("ty-server-starter").start(() -> {
+        Thread.ofPlatform().name("ty-server-starter").daemon(true).start(() -> {
             try {
                 var handler = new LspServerNotificationHandler("Ty", statusBar);
                 var ty = LanguageService.of(cwd, "ty server");
@@ -107,7 +114,7 @@ public class SmileStudio extends JFrame {
         });
 
         // Starts the JDT LS server in a background thread.
-        Thread.ofPlatform().name("jdt-server-starter").start(() -> {
+        Thread.ofPlatform().name("jdt-server-starter").daemon(true).start(() -> {
             try {
                 var handler = new LspServerNotificationHandler("JDT", statusBar);
                 var command = (OS.isWindows() ? "cmd.exe /c " : "bash -c ")
@@ -127,7 +134,7 @@ public class SmileStudio extends JFrame {
         });
 
         // Starts MCP services in background
-        Thread.ofPlatform().name("mcp-service-starter").start(() -> {
+        Thread.ofPlatform().name("mcp-service-starter").daemon(true).start(() -> {
             try {
                 var handler = new McpServerNotificationHandler(statusBar);
                 var path = Path.of(System.getProperty("smile.home"), "conf", "mcp.json");
@@ -163,7 +170,7 @@ public class SmileStudio extends JFrame {
 
                 // Stop the auto-save timer before shutting down the watcher so
                 // it cannot fire against an already-closed workspace.
-                autoSaveAction.timer.stop();
+                if (autoSaveAction != null) autoSaveAction.timer.stop();
                 workspace.shutdown();
                 System.exit(0);
             }
@@ -207,8 +214,25 @@ public class SmileStudio extends JFrame {
     }
 
     /**
+     * Re-creates the LLM from the current preferences and stores it in the
+     * shared {@code llm} field.  Must be called on the Event Dispatch Thread.
+     *
+     * @return the newly created {@link LLM}, or {@code null} if none is
+     *         configured or initialization fails.
+     */
+    public static LLM updateLLM() {
+        llm = createLLM();
+        return llm;
+    }
+
+    /**
      * Creates an LLM instance specified by app settings.
-     * @return an LLM instance specified by app settings.
+     *
+     * <p>Must be called on the Event Dispatch Thread so that any error dialog
+     * is shown on the correct thread.
+     *
+     * @return a new {@link LLM} instance, or {@code null} if none is configured
+     *         or initialization fails.
      */
     public static LLM createLLM() {
         var service = prefs.get("aiService", "");
@@ -261,7 +285,7 @@ public class SmileStudio extends JFrame {
         }
 
         try {
-            llm = switch (service) {
+            return switch (service) {
                 case "OpenAI" -> {
                     var openai = new OpenAI(prefs.get("openaiModel", "gpt-5.1-codex"));
                     var apiKey = prefs.get("openaiApiKey", "");
@@ -318,10 +342,8 @@ public class SmileStudio extends JFrame {
                     null,
                     "Failed to initialize AI service: " + cause.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
-
         }
-
-        return llm;
+        return null;
     }
 
     /**
@@ -694,7 +716,7 @@ public class SmileStudio extends JFrame {
                     message,
                     bundle.getString("About"),
                     JOptionPane.INFORMATION_MESSAGE,
-                    new ImageIcon(icons.get(4)));
+                    icons.size() > 4 ? new ImageIcon(icons.get(4)) : null);
         }
     }
 
@@ -702,8 +724,7 @@ public class SmileStudio extends JFrame {
      * Creates a new notebook.
      */
     private void newNotebook() {
-        Path cwd = Path.of(System.getProperty("user.dir"));
-        workspace.openNotebook(cwd.resolve("Untitled.jsh"));
+        workspace.openNotebook(workspace.cwd().resolve("Untitled.jsh"));
     }
 
     /**

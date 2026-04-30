@@ -548,6 +548,15 @@ public class Workspace extends JSplitPane {
     }
 
     /**
+     * Returns the current working directory for the workspace.
+     *
+     * @return the current working directory.
+     */
+    public Path cwd() {
+        return cwd;
+    }
+
+    /**
      * Returns the explorer component.
      *
      * @return the explorer component.
