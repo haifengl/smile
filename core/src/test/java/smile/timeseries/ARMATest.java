@@ -74,7 +74,7 @@ public class ARMATest {
     /**
      * Continuation of the forecast index test: subsequent steps must be finite
      * and non-zero (for Bitcoin data the intercept is non-zero, so a pure-zero
-     * result is a sign of the uninitialised-slot bug).
+     * result is a sign of the uninitialized-slot bug).
      */
     @Test
     public void givenARMA23_whenForecastMultiStep_thenAllStepsAreFinite() throws Exception {

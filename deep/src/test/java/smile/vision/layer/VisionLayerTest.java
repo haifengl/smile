@@ -176,7 +176,7 @@ public class VisionLayerTest {
     }
 
     // -----------------------------------------------------------------------
-    // StochasticDepth — mode case normalisation
+    // StochasticDepth — mode case normalization
     // -----------------------------------------------------------------------
 
     @Test

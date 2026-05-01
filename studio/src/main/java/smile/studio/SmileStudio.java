@@ -59,14 +59,16 @@ public class SmileStudio extends JFrame {
     private static final Preferences prefs = Preferences.userNodeForPackage(SmileStudio.class);
     /** The key for auto save preference. */
     private static final String AUTO_SAVE_KEY = "autoSave";
-    /** The LLM model. */
-    private static LLM llm = createLLM();
+    /** The LLM model. Declared volatile so that updates made on the EDT are immediately visible to other threads. */
+    private static volatile LLM llm;
     /** Application icons in different sizes. */
     private final List<Image> icons = new ArrayList<>();
     private final JMenuBar menuBar = new JMenuBar();
     private final JToolBar toolBar = new JToolBar();
     private final StatusBar statusBar = new StatusBar();
     private final Workspace workspace;
+    /** Kept as a field so {@code windowClosing} can stop it before shutdown. */
+    private AutoSaveAction autoSaveAction;
 
     /**
      * Constructor.
@@ -75,10 +77,17 @@ public class SmileStudio extends JFrame {
         super(bundle.getString("AppName"));
         setFrameIcon();
         setJMenuBar(menuBar);
-        initMenuAndToolBar();
+
+        // Initialize the LLM on the EDT (after Swing is set up) so that any
+        // error dialog shown by createLLM() runs on the correct thread.
+        llm = createLLM();
 
         Path cwd = Path.of(System.getProperty("user.dir"));
+
+        // Assign workspace before initMenuAndToolBar() so that AutoSaveAction's
+        // timer callback (which captures workspace) is never handed a null reference.
         workspace = new Workspace(cwd);
+        initMenuAndToolBar();
 
         JPanel contentPane = new JPanel(new BorderLayout());
         contentPane.add(toolBar, BorderLayout.NORTH);
@@ -87,7 +96,7 @@ public class SmileStudio extends JFrame {
         setContentPane(contentPane);
 
         // Starts the Ty server in a background thread.
-        Thread.ofPlatform().name("ty-server-starter").start(() -> {
+        Thread.ofPlatform().name("ty-server-starter").daemon(true).start(() -> {
             try {
                 var handler = new LspServerNotificationHandler("Ty", statusBar);
                 var ty = LanguageService.of(cwd, "ty server");
@@ -95,7 +104,7 @@ public class SmileStudio extends JFrame {
                 if (ty.isInitialized()) {
                     LanguageService.put("python", ty);
                     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                        System.out.println("Shutdown Ty...");
+                        logger.info("Shutting down Ty server...");
                         ty.close();
                     }));
                 }
@@ -105,7 +114,7 @@ public class SmileStudio extends JFrame {
         });
 
         // Starts the JDT LS server in a background thread.
-        Thread.ofPlatform().name("jdt-server-starter").start(() -> {
+        Thread.ofPlatform().name("jdt-server-starter").daemon(true).start(() -> {
             try {
                 var handler = new LspServerNotificationHandler("JDT", statusBar);
                 var command = (OS.isWindows() ? "cmd.exe /c " : "bash -c ")
@@ -115,7 +124,7 @@ public class SmileStudio extends JFrame {
                 if (jdtls.isInitialized()) {
                     LanguageService.put("java", jdtls);
                     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                        System.out.println("Shutdown JDT LS...");
+                        logger.info("Shutting down JDT LS server...");
                         jdtls.close();
                     }));
                 }
@@ -125,7 +134,7 @@ public class SmileStudio extends JFrame {
         });
 
         // Starts MCP services in background
-        Thread.ofPlatform().name("mcp-service-starter").start(() -> {
+        Thread.ofPlatform().name("mcp-service-starter").daemon(true).start(() -> {
             try {
                 var handler = new McpServerNotificationHandler(statusBar);
                 var path = Path.of(System.getProperty("smile.home"), "conf", "mcp.json");
@@ -135,30 +144,33 @@ public class SmileStudio extends JFrame {
                 path = Path.of(System.getProperty("user.dir"), ".smile", "mcp.json");
                 if (Files.exists(path)) MCP.connect(path, handler);
                 Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                    System.out.println("Shutdown MCP servers...");
+                    logger.info("Shutting down MCP servers...");
                     MCP.close();
                 }));
             } catch (Throwable ex) {
-                System.out.println("Failed to start MCP services: " + ex.getMessage());
+                logger.error("Failed to start MCP services", ex);
             }
         });
 
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                // Save open files first. Otherwise, notebooks/files lists become empty
-                // after saving notebooks.
+                // Persist the open-file list *before* closing notebooks so that
+                // fileWatcher.files() still contains all paths at save time.
+                // closeNotebook() calls fileWatcher.removeFile() for each notebook,
+                // so saving after the loop would always write an empty list.
                 workspace.saveOpenFilePaths();
 
-                // Make a copy first as closeNotebook() may modify the notebooks list.
+                // Iterate over a snapshot — closeNotebook() removes from the list.
                 List<Notebook> notebooks = new ArrayList<>(workspace.notebooks());
                 for (Notebook notebook : notebooks) {
                     if (!workspace.closeNotebook(notebook)) {
-                        // cancel the closing operation if saving failed or canceled.
+                        // User canceled saving — abort the close operation.
                         return;
                     }
                 }
 
+                if (autoSaveAction != null) autoSaveAction.timer.stop();
                 workspace.shutdown();
                 System.exit(0);
             }
@@ -168,7 +180,7 @@ public class SmileStudio extends JFrame {
                 // JSplitPane.setDividerLocation() set the location based on
                 // current pane size. We should set it after window is opened.
                 workspace.setDividerLocation(0.55);
-                // Invoker later so that splitPane.invalidate() be done
+                // Invoke later so that splitPane.invalidate() be done
                 SwingUtilities.invokeLater(() -> workspace.project().setDividerLocation(0.2));
             }
         });
@@ -202,8 +214,25 @@ public class SmileStudio extends JFrame {
     }
 
     /**
+     * Re-creates the LLM from the current preferences and stores it in the
+     * shared {@code llm} field.  Must be called on the Event Dispatch Thread.
+     *
+     * @return the newly created {@link LLM}, or {@code null} if none is
+     *         configured or initialization fails.
+     */
+    public static LLM updateLLM() {
+        llm = createLLM();
+        return llm;
+    }
+
+    /**
      * Creates an LLM instance specified by app settings.
-     * @return an LLM instance specified by app settings.
+     *
+     * <p>Must be called on the Event Dispatch Thread so that any error dialog
+     * is shown on the correct thread.
+     *
+     * @return a new {@link LLM} instance, or {@code null} if none is configured
+     *         or initialization fails.
      */
     public static LLM createLLM() {
         var service = prefs.get("aiService", "");
@@ -211,54 +240,17 @@ public class SmileStudio extends JFrame {
             return null;
         }
 
-        // If user doesn't set system property for api key,
-        // we will try to set it from preferences if it exists.
-        // Otherwise, the LLM client will fail to initialize with fromEnv().
-        if (System.getProperty("openai.apiKey", "").isBlank()) {
-            // Without openai.apiKey, OpenAI.client will fail to initialize.
-            String apiKey = SmileStudio.prefs.get("azureOpenAIApiKey", "").trim();
-            if (!apiKey.isEmpty()) {
-                System.setProperty("openai.apiKey", apiKey);
-            }
-        }
-        if (System.getProperty("openai.apiKey", "").isBlank()) {
-            String apiKey = SmileStudio.prefs.get("chatCompletionsApiKey", "").trim();
-            if (!apiKey.isEmpty()) {
-                System.setProperty("openai.apiKey", apiKey);
-            }
-        }
-        if (System.getProperty("openai.apiKey", "").isBlank()) {
-            // We will overwrite the above api key by Azure.
-            String apiKey = SmileStudio.prefs.get("openaiApiKey", "").trim();
-            if (!apiKey.isEmpty()) {
-                System.setProperty("openai.apiKey", apiKey);
-            }
-        }
-        if (System.getProperty("openai.baseUrl", "").isBlank()) {
-            String baseUrl = SmileStudio.prefs.get("openaiBaseUrl", "").trim();
-            if (!baseUrl.isEmpty()) {
-                System.setProperty("openai.baseUrl", baseUrl);
-            }
-        }
-
-        // Anthropic system properties
-        if (System.getProperty("anthropic.apiKey", "").isBlank()) {
-            String apiKey = SmileStudio.prefs.get("anthropicApiKey", "").trim();
-            if (!apiKey.isEmpty()) {
-                System.setProperty("anthropic.apiKey", apiKey);
-            }
-        }
-        if (System.getProperty("anthropic.baseUrl", "").isBlank()) {
-            String baseUrl = SmileStudio.prefs.get("anthropicBaseUrl", "").trim();
-            if (!baseUrl.isEmpty()) {
-                System.setProperty("anthropic.baseUrl", baseUrl);
-            }
-        }
+        // Propagate stored API keys / base URLs to system properties so that
+        // LLM clients that call fromEnv() can pick them up automatically.
+        setSystemPropertyFromPrefs("openai.apiKey", "openaiApiKey");
+        setSystemPropertyFromPrefs("openai.baseUrl", "openaiBaseUrl");
+        setSystemPropertyFromPrefs("anthropic.apiKey", "anthropicApiKey");
+        setSystemPropertyFromPrefs("anthropic.baseUrl", "anthropicBaseUrl");
 
         try {
-            llm = switch (service) {
+            return switch (service) {
                 case "OpenAI" -> {
-                    var openai = new OpenAI(prefs.get("openaiModel", "gpt-5.1-codex"));
+                    var openai = new OpenAI(prefs.get("openaiModel", "gpt-5.3-codex"));
                     var apiKey = prefs.get("openaiApiKey", "");
                     if (!apiKey.isBlank()) {
                         openai.withApiKey(apiKey);
@@ -266,17 +258,27 @@ public class SmileStudio extends JFrame {
                     var baseUrl = prefs.get("openaiBaseUrl", "");
                     if (!baseUrl.isBlank()) {
                         openai.withBaseUrl(baseUrl);
-                    }                     
+                    }
                     yield openai;
                 }
 
                 case "Azure OpenAI" -> OpenAI.azure(
                         prefs.get("azureOpenAIApiKey", ""),
                         prefs.get("azureOpenAIBaseUrl", ""),
-                        prefs.get("azureOpenAIModel", "gpt-5.1-codex"));
+                        prefs.get("azureOpenAIModel", "gpt-5.3-codex"));
 
-                case "Anthropic" ->
-                    new Anthropic(prefs.get("anthropicModel", "claude-sonnet-4-5"));
+                case "Anthropic" -> {
+                    var anthropic = new Anthropic(prefs.get("anthropicModel", "claude-sonnet-4-6"));
+                    var apiKey = prefs.get("anthropicApiKey", "");
+                    if (!apiKey.isBlank()) {
+                        anthropic.withApiKey(apiKey);
+                    }
+                    var baseUrl = prefs.get("anthropicBaseUrl", "");
+                    if (!baseUrl.isBlank()) {
+                        anthropic.withBaseUrl(baseUrl);
+                    }
+                    yield anthropic;
+                }
 
                 case "Google Gemini" ->
                     new GoogleGemini(
@@ -287,7 +289,7 @@ public class SmileStudio extends JFrame {
                     GoogleGemini.vertex(
                             prefs.get("googleVertexAIApiKey", ""),
                             prefs.get("googleVertexAIBaseUrl", ""),
-                            prefs.get("googleVertexAIModel", "gemini-3-pro-preview"));
+                            prefs.get("googleVertexAIModel", "gemini-3.1-pro-preview"));
 
                 default -> {
                     // Many AI services are compatible with OpenAI ChatCompletions API,
@@ -313,10 +315,8 @@ public class SmileStudio extends JFrame {
                     null,
                     "Failed to initialize AI service: " + cause.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
-
         }
-
-        return llm;
+        return null;
     }
 
     /**
@@ -325,11 +325,15 @@ public class SmileStudio extends JFrame {
     private void setFrameIcon() {
         try (InputStream input = SmileStudio.class.getResourceAsStream("images/robot.png")) {
             if (input == null) {
-                System.err.println("Resource not found: images/robot.png");
+                logger.error("Resource not found: images/robot.png");
                 return;
             }
 
             BufferedImage icon = ImageIO.read(input);
+            if (icon == null) {
+                logger.error("Could not decode image: images/robot.png");
+                return;
+            }
             int[] sizes = {16, 24, 32, 48, 64, 128, 256};
             for (int size : sizes) {
                 BufferedImage image = new BufferedImage(size, size, Transparency.TRANSLUCENT);
@@ -341,7 +345,7 @@ public class SmileStudio extends JFrame {
             }
             setIconImages(icons);
         } catch (IOException e) {
-            System.err.println("Error loading image from resource: images/robot.png");
+            logger.error("Error loading image from resource: images/robot.png", e);
         }
     }
 
@@ -351,7 +355,7 @@ public class SmileStudio extends JFrame {
         var openNotebook = new OpenNotebookAction();
         var saveNotebook = new SaveNotebookAction();
         var saveAsNotebook = new SaveAsNotebookAction();
-        var autoSave = new AutoSaveAction();
+        autoSaveAction = new AutoSaveAction();
         var addCell = new AddCellAction();
         var runAll = new RunAllAction();
         var clearAll = new ClearAllAction();
@@ -360,7 +364,7 @@ public class SmileStudio extends JFrame {
         var settings = new SettingsAction();
         var exit = new ExitAction();
 
-        var autoSaveMenuItem = new JCheckBoxMenuItem(autoSave);
+        var autoSaveMenuItem = new JCheckBoxMenuItem(autoSaveAction);
         if (prefs.getBoolean(AUTO_SAVE_KEY, false)) {
             SwingUtilities.invokeLater(autoSaveMenuItem::doClick);
         }
@@ -412,6 +416,8 @@ public class SmileStudio extends JFrame {
         public NewNotebookAction() {
             super(bundle.getString("New"), icon16);
             putValue(LARGE_ICON_KEY, icon24);
+            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_N,
+                    Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         }
 
         @Override
@@ -427,6 +433,8 @@ public class SmileStudio extends JFrame {
         public OpenNotebookAction() {
             super(bundle.getString("Open"), icon16);
             putValue(LARGE_ICON_KEY, icon24);
+            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O,
+                    Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         }
 
         @Override
@@ -442,6 +450,8 @@ public class SmileStudio extends JFrame {
         public SaveNotebookAction() {
             super(bundle.getString("Save"), icon16);
             putValue(LARGE_ICON_KEY, icon24);
+            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S,
+                    Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         }
 
         @Override
@@ -617,7 +627,6 @@ public class SmileStudio extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            int count = 0;
             for (Window window : Window.getWindows()) {
                 if (window.isVisible() && window instanceof SmileStudio studio) {
                     // Simulates a user clicking the close button to trigger WindowListener.
@@ -634,18 +643,8 @@ public class SmileStudio extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            String url = "https://haifengl.github.io/quickstart.html";
-            try {
-                // Use the Java Desktop API to open the URI in the default browser
-                if (Desktop.isDesktopSupported()) {
-                    Desktop.getDesktop().browse(new URI(url));
-                }
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(SmileStudio.this,
-                        String.format("See tutorials at %s", url),
-                        bundle.getString("Tutorials"),
-                        JOptionPane.INFORMATION_MESSAGE);
-            }
+            browse(SmileStudio.this, "https://haifengl.github.io/quickstart.html",
+                    bundle.getString("Tutorials"));
         }
     }
 
@@ -656,18 +655,8 @@ public class SmileStudio extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            String url = "https://haifengl.github.io/api/java/index.html";
-            try {
-                // Use the Java Desktop API to open the URI in the default browser
-                if (Desktop.isDesktopSupported()) {
-                    Desktop.getDesktop().browse(new URI(url));
-                }
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(SmileStudio.this,
-                        String.format("See javadocs at %s", url),
-                        bundle.getString("JavaDocs"),
-                        JOptionPane.INFORMATION_MESSAGE);
-            }
+            browse(SmileStudio.this, "https://haifengl.github.io/api/java/index.html",
+                    bundle.getString("JavaDocs"));
         }
     }
 
@@ -678,6 +667,8 @@ public class SmileStudio extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            String version = SmileStudio.class.getPackage().getImplementationVersion();
+            if (version == null) version = "DEV";
             String message = String.format("""
                     Smile Studio %s
                     Copyright (c) 2010-2026 Haifeng Li.
@@ -685,21 +676,80 @@ public class SmileStudio extends JFrame {
                     
                     Smile Studio is free for research and educational use.
                     For commercial use, please contact smile.sales@outlook.com
-                    """, SmileStudio.class.getPackage().getImplementationVersion());
+                    """, version);
             JOptionPane.showMessageDialog(SmileStudio.this,
                     message,
                     bundle.getString("About"),
                     JOptionPane.INFORMATION_MESSAGE,
-                    new ImageIcon(icons.get(4)));
+                    icons.size() > 4 ? new ImageIcon(icons.get(4)) : null);
         }
+    }
+
+    /**
+     * Sets a system property from a stored preference value if the system
+     * property is not already set.
+     *
+     * @param sysProp  the system-property name to set.
+     * @param prefKey  the preference key to read the value from.
+     */
+    private static void setSystemPropertyFromPrefs(String sysProp, String prefKey) {
+        if (System.getProperty(sysProp, "").isBlank()) {
+            String value = prefs.get(prefKey, "").trim();
+            if (!value.isEmpty()) {
+                System.setProperty(sysProp, value);
+            }
+        }
+    }
+
+    /**
+     * Opens the given URL in the default system browser.  Falls back to a
+     * plain {@link JOptionPane} message when the Desktop API is unavailable.
+     *
+     * @param parent  the parent component for any error dialog.
+     * @param url     the URL to browse.
+     * @param title   the dialog title used in the fallback message.
+     */
+    private static void browse(Component parent, String url, String title) {
+        try {
+            if (Desktop.isDesktopSupported()) {
+                Desktop desktop = Desktop.getDesktop();
+                if (desktop.isSupported(Desktop.Action.BROWSE)) {
+                    desktop.browse(new URI(url));
+                    return;
+                }
+            }
+        } catch (Exception ex) {
+            logger.warn("Could not open browser for URL: {}", url, ex);
+        }
+        JOptionPane.showMessageDialog(parent,
+                String.format("See %s at %s", title, url),
+                title,
+                JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    /**
+     * Returns a path for a new notebook that does not collide with any
+     * existing file.  If {@code Untitled.jsh} already exists the method
+     * appends a numeric suffix: {@code Untitled1.jsh}, {@code Untitled2.jsh}, …
+     *
+     * @return a non-existing path under the current workspace directory.
+     */
+    private Path uniqueUntitledPath() {
+        Path base = workspace.cwd().resolve("Untitled.jsh");
+        if (!Files.exists(base)) return base;
+        for (int i = 1; i < Integer.MAX_VALUE; i++) {
+            Path candidate = workspace.cwd().resolve("Untitled" + i + ".jsh");
+            if (!Files.exists(candidate)) return candidate;
+        }
+        // Practically unreachable
+        return base;
     }
 
     /**
      * Creates a new notebook.
      */
     private void newNotebook() {
-        Path file = Path.of("Untitled.jsh");
-        workspace.openNotebook(file);
+        workspace.openNotebook(uniqueUntitledPath());
     }
 
     /**
@@ -709,7 +759,7 @@ public class SmileStudio extends JFrame {
     public static void createAndShowGUI() {
         // Create and set up the window.
         SmileStudio studio = new SmileStudio();
-        studio.setSize(new Dimension(1200, 800));
+        studio.setMinimumSize(new Dimension(800, 600));
         studio.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
         // macOS window settings
@@ -742,6 +792,14 @@ public class SmileStudio extends JFrame {
      * @param args command-line arguments.
      */
     public static void start(String[] args) {
+        if (GraphicsEnvironment.isHeadless()) {
+            System.err.println("""
+                    Cannot start Smile Studio as JVM is running in headless mode.
+                    Run 'smile shell' for smile shell with Java.
+                    Run 'smile scala' for smile shell with Scala.""");
+            System.exit(1);
+        }
+
         // macOS global settings
         // Must be set on main thread and before AWT/Swing is initialized
         if (SystemInfo.isMacOS) {
@@ -765,13 +823,6 @@ public class SmileStudio extends JFrame {
             JDialog.setDefaultLookAndFeelDecorated(true);
         }
 
-        if (GraphicsEnvironment.isHeadless()) {
-            System.err.println("""
-                    Cannot start Smile Studio as JVM is running in headless mode.
-                    Run 'smile shell' for smile shell with Java.
-                    Run 'smile scala' for smile shell with Scala.""");
-            System.exit(1);
-        }
 
         // Install font
         FlatJetBrainsMonoFont.install();
@@ -797,7 +848,7 @@ public class SmileStudio extends JFrame {
         // Creating and showing GUI in EDT.
         SwingUtilities.invokeLater(() -> {
             if (args != null && args.length > 0) {
-                System.err.println("Smile Studio doesn't take arguments. Please start Smile Studio in your project directory.");
+                logger.warn("Smile Studio doesn't take arguments. Please start Smile Studio in your project directory.");
             }
             createAndShowGUI();
         });

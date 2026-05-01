@@ -23,6 +23,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.*;
 import java.nio.file.*;
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.IntConsumer;
@@ -81,6 +82,11 @@ public class Workspace extends JSplitPane {
      */
     private final List<Notebook> notebooks = new ArrayList<>();
     /**
+     * Index from absolute, normalized path string to the open {@link Notebook},
+     * enabling O(1) lookup in {@link #handleFileChanged} and {@link #openNotebook}.
+     */
+    private final Map<String, Notebook> notebookIndex = new HashMap<>();
+    /**
      * The file explorer of current working directory.
      */
     private final FileExplorer fileExplorer;
@@ -97,13 +103,9 @@ public class Workspace extends JSplitPane {
      */
     private final Path cwd;
     /**
-     * The absolute paths of opened files.
+     * File-change watcher — single source of truth for the set of open files.
      */
-    final List<String> files = new ArrayList<>();
-    /**
-     * File-change watching (WatchService)
-     */
-    private final OpenFileWatcher fileWatcher = new OpenFileWatcher(files, this::handleFileChanged);
+    private final OpenFileWatcher fileWatcher = new OpenFileWatcher(List.of(), this::handleFileChanged);
 
     /**
      * Constructor.
@@ -129,8 +131,8 @@ public class Workspace extends JSplitPane {
         }
 
         // Open a default notebook if there is no previously opened file.
-        if (files.isEmpty()) {
-            openNotebook(Path.of("Untitled.jsh"));
+        if (fileWatcher.files().isEmpty()) {
+            openNotebook(cwd.resolve("Untitled.jsh"));
             // Initialized as true so that we won't try to save sample code.
             // Delay 200ms so that it be called after DocumentUpdate events.
             Timer timer = new Timer(200, e -> notebooks.getFirst().setSaved(true));
@@ -322,7 +324,7 @@ public class Workspace extends JSplitPane {
                     Notebook notebook = (Notebook) notebookTabs.getComponentAt(tabIndex);
                     if (closeNotebook(notebook)) {
                         notebookTabs.removeTabAt(tabIndex);
-                        files.remove(notebook.getFile().toString());
+                        // files and fileWatcher are already updated inside closeNotebook().
                     }
                 });
     }
@@ -347,13 +349,17 @@ public class Workspace extends JSplitPane {
         Properties properties = new Properties();
 
         // Store each file path with a unique key (e.g., file.1, file.2, ...)
-        for (int i = 0; i < files.size(); i++) {
-            // Using a simple numeric key allows for a list-like structure
-            properties.setProperty("file." + (i + 1), files.get(i));
+        // fileWatcher.files() preserves insertion order via the LinkedHashSet.
+        List<String> openFiles = fileWatcher.files();
+        for (int i = 0; i < openFiles.size(); i++) {
+            properties.setProperty("file." + (i + 1), openFiles.get(i));
         }
 
-        try (OutputStream output = new FileOutputStream(path.toFile())) {
-            properties.store(output, "Smile Studio Properties");
+        try {
+            Files.createDirectories(path.getParent());
+            try (OutputStream output = Files.newOutputStream(path)) {
+                properties.store(output, "Smile Studio Properties");
+            }
         } catch (IOException e) {
             logger.error("Error saving studio properties file: ", e);
         }
@@ -367,14 +373,14 @@ public class Workspace extends JSplitPane {
         List<Path> files = new ArrayList<>();
         if (Files.exists(path)) {
             Properties properties = new Properties();
-            try (FileInputStream input = new FileInputStream(path.toFile())) {
+            try (InputStream input = Files.newInputStream(path)) {
                 properties.load(input);
                 for (int i = 1; i <= 100; i++) {
                     String file = properties.getProperty("file." + i);
                     if (file != null) {
                         files.add(Path.of(file));
                     } else {
-                        break; // stop if no more file entries
+                        break;
                     }
                 }
             } catch (IOException ex) {
@@ -415,8 +421,8 @@ public class Workspace extends JSplitPane {
     public void openNotebook(Path path) {
         path = path.toAbsolutePath().normalize();
         var filename = path.getFileName().toString();
-        // already opened
-        if (files.contains(path.toString())) {
+        // already opened — just switch to its tab
+        if (fileWatcher.isOpen(path)) {
             int index = notebookTabs.indexOfTab(filename);
             if (index != -1) {
                 notebookTabs.setSelectedIndex(index);
@@ -428,7 +434,8 @@ public class Workspace extends JSplitPane {
             notebookTabs.addTab(filename, notebook);
             notebookTabs.setSelectedComponent(notebook);
             notebooks.add(notebook);
-            files.add(path.toString());
+            notebookIndex.put(path.toString(), notebook);
+            fileWatcher.addFile(path);
             fileWatcher.recordModTime(path);
             fileWatcher.watchDirectory(path.getParent());
         }
@@ -464,7 +471,9 @@ public class Workspace extends JSplitPane {
             // Shuts down the execution engines and frees resources.
             notebook.close();
             notebooks.remove(notebook);
-            files.remove(notebook.getFile().toString());
+            Path absPath = notebook.getFile().toAbsolutePath().normalize();
+            notebookIndex.remove(absPath.toString());
+            fileWatcher.removeFile(absPath);
         }
         return confirmed;
     }
@@ -477,7 +486,7 @@ public class Workspace extends JSplitPane {
     private int confirmSaveNotebook(Notebook notebook) {
         if (notebook.isSaved()) return JOptionPane.NO_OPTION;
         return JOptionPane.showConfirmDialog(this,
-                String.format(bundle.getString("SaveMessage"), notebook.getFile().getFileName()),
+                MessageFormat.format(bundle.getString("SaveMessage"), notebook.getFile().getFileName()),
                 bundle.getString("SaveTitle"),
                 JOptionPane.YES_NO_CANCEL_OPTION);
     }
@@ -491,6 +500,9 @@ public class Workspace extends JSplitPane {
      * or the save operation is canceled.
      */
     public boolean saveNotebook(Notebook notebook, boolean saveAs) {
+        Path oldPath = notebook.getFile() != null
+                ? notebook.getFile().toAbsolutePath().normalize() : null;
+
         if (notebook.getFile() == null || saveAs) {
             fileChooser.setDialogTitle(bundle.getString("SaveNotebook"));
             fileChooser.setFileFilter(new SystemFileChooser.FileNameExtensionFilter(
@@ -511,10 +523,22 @@ public class Workspace extends JSplitPane {
 
         try {
             notebook.save();
+            Path newPath = notebook.getFile().toAbsolutePath().normalize();
+
+            // If the path changed (Save As), update index and watcher.
+            if (!newPath.equals(oldPath)) {
+                if (oldPath != null) {
+                    notebookIndex.remove(oldPath.toString());
+                    fileWatcher.removeFile(oldPath);
+                }
+                notebookIndex.put(newPath.toString(), notebook);
+                fileWatcher.addFile(newPath);
+                fileWatcher.watchDirectory(newPath.getParent());
+            }
+
             // Update the known mod time so our own write is not mistaken
             // for an external change when the WatchService event arrives.
-            fileWatcher.recordModTime(notebook.getFile().toAbsolutePath().normalize());
-            fileWatcher.watchDirectory(notebook.getFile().toAbsolutePath().normalize().getParent());
+            fileWatcher.recordModTime(newPath);
             return true;
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(this,
@@ -522,6 +546,15 @@ public class Workspace extends JSplitPane {
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
         return false;
+    }
+
+    /**
+     * Returns the current working directory for the workspace.
+     *
+     * @return the current working directory.
+     */
+    public Path cwd() {
+        return cwd;
     }
 
     /**
@@ -560,22 +593,14 @@ public class Workspace extends JSplitPane {
      * @param path the changed file path (absolute, normalized).
      */
     private void handleFileChanged(Path path) {
-        // Find the open notebook for this path
-        Notebook target = null;
-        for (Notebook nb : notebooks) {
-            if (nb.getFile().toAbsolutePath().normalize().equals(path)) {
-                target = nb;
-                break;
-            }
-        }
-        if (target == null) return;
+        Notebook notebook = notebookIndex.get(path.toString());
+        if (notebook == null) return;
 
-        final Notebook notebook = target;
         String filename = path.getFileName().toString();
 
         int choice = JOptionPane.showConfirmDialog(
                 this,
-                String.format(bundle.getString("ExternalChangeMessage"), filename),
+                MessageFormat.format(bundle.getString("ExternalChangeMessage"), filename),
                 bundle.getString("ExternalChangeTitle"),
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.QUESTION_MESSAGE);
@@ -600,14 +625,16 @@ public class Workspace extends JSplitPane {
         // as the user just confirmed they want the disk version).
         notebook.close();
         notebooks.remove(notebook);
-        files.remove(path.toString());
+        notebookIndex.remove(path.toString());
+        // fileSet stays unchanged — same path, still open.
 
-        // Open fresh copy
+        // Open fresh copy at the same tab position.
         Notebook fresh = new Notebook(path, coders, kernelExplorer::refresh);
         notebookTabs.setComponentAt(tabIndex, fresh);
         notebookTabs.setSelectedIndex(tabIndex);
         notebooks.add(fresh);
-        files.add(path.toString());
+        notebookIndex.put(path.toString(), fresh);
+        // Record updated mod time so the next save isn't mistaken for external change.
         fileWatcher.recordModTime(path);
 
         logger.info("Reloaded notebook from disk: {}", path);

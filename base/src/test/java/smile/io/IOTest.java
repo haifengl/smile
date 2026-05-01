@@ -88,7 +88,7 @@ public class IOTest {
     // -----------------------------------------------------------------------
 
     /**
-     * Serialises a {@link GadgetPayload} instance and verifies that
+     * Serializes a {@link GadgetPayload} instance and verifies that
      * {@link Read#object(Path)} rejects it with {@link InvalidClassException}
      * <em>before</em> the {@code readObject} callback fires.
      *
@@ -100,7 +100,7 @@ public class IOTest {
     public void testUntrustedClassIsBlockedBeforeCallbackFires() throws Exception {
         System.out.println("Security: untrusted class blocked before readObject callback");
 
-        // Given – a serialised GadgetPayload written by a (trusted) writer
+        // Given – a serialized GadgetPayload written by a (trusted) writer
         GadgetPayload.CALLBACK_FIRED.set(false);
         Path tmp = Files.createTempFile("smile-gadget-", ".ser");
         tmp.toFile().deleteOnExit();
@@ -109,7 +109,7 @@ public class IOTest {
             oos.writeObject(new GadgetPayload());
         }
 
-        // When – Read.object() tries to deserialise the stream
+        // When – Read.object() tries to deserialize the stream
         // Then – InvalidClassException is thrown (filter rejects the class)
         assertThrows(InvalidClassException.class, () -> Read.object(tmp),
                 "Read.object() must reject classes outside the allow-list");
@@ -128,7 +128,7 @@ public class IOTest {
     public void testExtraFilterAllowsAdditionalClass() throws Exception {
         System.out.println("Security: extra filter allows additional class");
 
-        // Given – serialised GadgetPayload
+        // Given – serialized GadgetPayload
         Path tmp = Files.createTempFile("smile-gadget-extra-", ".ser");
         tmp.toFile().deleteOnExit();
         try (OutputStream fos = Files.newOutputStream(tmp);
@@ -151,11 +151,11 @@ public class IOTest {
 
     /**
      * Verifies that standard JDK classes included in the default allow-list
-     * (e.g. {@code java.util.ArrayList}) continue to deserialise correctly.
+     * (e.g. {@code java.util.ArrayList}) continue to deserialize correctly.
      */
     @Test
-    public void testJdkAllowListedClassesDeserialiseCorrectly() throws Exception {
-        System.out.println("Security: JDK allow-listed classes deserialise correctly");
+    public void testJdkAllowListedClassesDeserializeCorrectly() throws Exception {
+        System.out.println("Security: JDK allow-listed classes deserialize correctly");
 
         // Given – a java.util.ArrayList<String> (covered by java.util.**)
         java.util.ArrayList<String> original =

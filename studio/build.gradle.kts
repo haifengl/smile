@@ -11,7 +11,7 @@ dependencies {
     implementation(libs.bundles.jackson)
     implementation("org.scala-lang:scala3-compiler_3:3.3.7")
     implementation("info.picocli:picocli:4.7.7")
-    implementation("org.slf4j:slf4j-simple:2.0.17")
+    implementation("ch.qos.logback:logback-classic:1.5.32")
     implementation("com.openai:openai-java:4.33.0")
     implementation("com.anthropic:anthropic-java:2.27.0")
     implementation("com.google.genai:google-genai:1.51.0")
