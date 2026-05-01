@@ -6,8 +6,6 @@ lazy val supportedScalaVersions = List(scala213, scala3)
 lazy val os = sys.props.get("os.name").get.toLowerCase.split(" ")(0)
 
 lazy val commonSettings = Seq(
-  resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
-
   // skip packageDoc task on stage
   Compile / packageDoc / mappings := Seq(),
   // always set scala version including Java only modules

@@ -33,6 +33,18 @@ if [ ! -f "$VENV_DIR/bin/activate" ]; then
         pip install -r "$APP_DIR/../conf/requirements.txt"
         pip install uv
         uv tool install ty@latest
+
+        pip install onnxruntime
+        # Create a symlink to the latest libonnxruntime in the capi directory
+        ONNX_CAPI_DIR=`find $VENV_DIR -type d -name "capi" -path "*/onnxruntime/capi" 2>/dev/null | head -n 1`
+        ONNX_LIB=`ls -t ${ONNX_CAPI_DIR}/libonnxruntime.* | head -n 1`
+        if [ -n "$ONNX_LIB" ]; then
+          if [[ "$OSTYPE" == "darwin"* ]]; then
+            ln -sf `basename ${ONNX_LIB}` ${ONNX_CAPI_DIR}/libonnxruntime.dylib
+          else
+            ln -sf `basename ${ONNX_LIB}` ${ONNX_CAPI_DIR}/libonnxruntime.so
+          fi
+        fi
     fi
 fi
 

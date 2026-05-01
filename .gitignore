@@ -11,14 +11,13 @@ hs_err_pid*
 
 # Test data
 base/src/test/resources/data/iceberg
-deep/src/test/resources
-nlp/src/test/resources
+deep/src/test/resources/data/mnist
 /model
 **/smile_serve.db
 
 # Native library
 deep/lib
-/libarpack.dylib
+/*.dylib
 
 # Clojure
 .nrepl-port

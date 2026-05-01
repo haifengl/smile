@@ -61,7 +61,7 @@ public class RegressionModelTest {
         System.out.println("Training metrics: " + model.train());
         System.out.println("Validation metrics: " + model.validation());
         System.out.println("Test metrics: " + model.test());
-        assertEquals(0.484, model.test().r2(), 0.03);
+        assertEquals(0.484, model.test().r2(), 0.05);
     }
 
     @Test

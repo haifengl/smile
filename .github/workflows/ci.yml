@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ "master" ]
 
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Test (Java 25)
@@ -32,9 +35,14 @@ jobs:
           fi
           echo "Found ONNX capi at: ${ONNX_CAPI_DIR}"
 
+          # Create a symlink to the latest libonnxruntime.so in the capi directory
+          ln -sfr "$(ls -t ${ONNX_CAPI_DIR}/libonnxruntime.so.* | head -n 1)" ${ONNX_CAPI_DIR}/libonnxruntime.so
+          ls -l ${ONNX_CAPI_DIR}
+
           # Use the safe ${VAR:+:$VAR} idiom so no trailing colon is introduced when
           # LD_LIBRARY_PATH is unset or empty (an empty segment is interpreted as CWD
           # by glibc and may be silently rejected by the JVM launcher).
+          echo "LD_LIBRARY_PATH=${ONNX_CAPI_DIR}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
           echo "LD_LIBRARY_PATH=${ONNX_CAPI_DIR}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}" >> "$GITHUB_ENV"
 
       - name: Checkout repository

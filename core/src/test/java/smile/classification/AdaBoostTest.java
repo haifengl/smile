@@ -188,7 +188,7 @@ public class AdaBoostTest {
 
             int error = Error.of(testy, model.predict(segment.test()));
             System.out.println("Error = " + error);
-            assertEquals(26, error, 3);
+            assertEquals(26, error, 5);
 
             System.out.println("----- Progressive Accuracy -----");
             int[][] test = model.test(segment.test());

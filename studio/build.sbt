@@ -64,6 +64,20 @@ bashScriptExtraDefines ++= Seq(
   """addJava "-Dscala.repl.autoruncode=${app_home}/predef.sc"""",
   """export PYTHONPATH="${PYTHONPATH}:${app_home}/../lib/ioa-agent-1.0.0.jar"""",
   """export PYTHONUTF8=1""",
+  """
+    |if [[ "$OSTYPE" == "darwin"* ]]; then
+    |  echo "Creating library symlinks in working directory to work around SIP"
+    |  ONNX_CAPI_DIR=`find $SMILE_HOME -type d -name "capi" -path "*/onnxruntime/capi" 2>/dev/null | head -n 1`
+    |  ONNX_LIB="${ONNX_CAPI_DIR}/libonnxruntime.dylib"
+    |  if [ -e "$ONNX_LIB" ]; then
+    |    ln -sf ${ONNX_LIB} libonnxruntime.dylib
+    |  fi
+    |  if [[ $(uname -m) == 'arm64' ]]; then
+    |    ln -sf /opt/homebrew/lib/libarpack.dylib libarpack.dylib
+    |  else
+    |    ln -sf /usr/local/lib/libarpack.dylib libarpack.dylib
+    |  fi
+    |fi""".stripMargin,
   """source "$SMILE_HOME/venv/bin/activate""""
 )
 
@@ -88,7 +102,7 @@ libraryDependencies ++= Seq(
   "org.scala-lang"   %% "scala3-compiler"    % scalaVersion.value,
   "info.picocli"      % "picocli"            % "4.7.7",
   "org.slf4j"         % "slf4j-simple"       % "2.0.17",
-  "com.openai"        % "openai-java"        % "4.32.0",
+  "com.openai"        % "openai-java"        % "4.33.0",
   "com.anthropic"     % "anthropic-java"     % "2.27.0",
   "com.google.genai"  % "google-genai"       % "1.51.0",
   "org.commonmark"    % "commonmark"         % "0.28.0",
@@ -101,7 +115,7 @@ libraryDependencies ++= Seq(
   "com.formdev"       % "flatlaf-fonts-jetbrains-mono" % "2.304",
   "org.apache.maven"  % "maven-resolver-provider" % "3.9.15",
   "org.apache.maven.resolver"   % "maven-resolver-supplier-mvn4" % "2.0.16",
-  "io.modelcontextprotocol.sdk" % "mcp"          % "1.1.1",
+  "io.modelcontextprotocol.sdk" % "mcp"          % "1.1.2",
   "io.github.furstenheim"       % "copy_down"    % "1.1",
   "org.jsoup"                   % "jsoup"        % "1.22.2",
   "com.github.serpapi"          % "serpapi-java" % "1.1.0",
