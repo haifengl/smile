@@ -25,7 +25,7 @@ cmake_minimum_required(VERSION 3.22)
 project(smile_torch
     VERSION 3.1.0
     DESCRIPTION "Hourglass C API over libtorch for the SMILE deep-learning module"
-    LANGUAGES CXX)
+    LANGUAGES CXX C)
 
 # --------------------------------------------------------------------------
 # C++ standard — libtorch 2.x requires C++17; keep parity with libtorch
@@ -141,15 +141,8 @@ endif()
 # --------------------------------------------------------------------------
 include(CTest)
 if(BUILD_TESTING)
-    # Test sources live in deep/src/test/cpp — two levels up from this file,
-    # then back down into src/test/cpp.
-    set(SMILE_TORCH_TEST_DIR
-        "${CMAKE_CURRENT_SOURCE_DIR}/../../test/cpp"
-        CACHE PATH "Directory containing smile_torch C API tests")
-    get_filename_component(SMILE_TORCH_TEST_DIR "${SMILE_TORCH_TEST_DIR}" ABSOLUTE)
-
     add_executable(smile_torch_test
-        "${SMILE_TORCH_TEST_DIR}/smile_torch_test.c"
+        test/smile_torch_test.c
     )
     target_include_directories(smile_torch_test PRIVATE
         # The test includes <smile_torch.h> which lives in this directory.
