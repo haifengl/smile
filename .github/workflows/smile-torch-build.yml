@@ -1,0 +1,230 @@
+# =============================================================================
+# smile-torch-build.yml
+#
+# Builds the smile_torch Hourglass C API shared library on Windows, Linux,
+# and macOS against the official CPU libtorch 2.11.0 release.
+#
+# Steps per platform:
+#   1. Download the official libtorch CPU archive from pytorch.org
+#   2. Unzip it into deep/libtorch/
+#   3. Configure & build with CMake (Release)
+#   4. Run the smoke test
+#   5. Upload the produced binary as a workflow artifact
+# =============================================================================
+
+name: smile-torch build
+
+on:
+  push:
+    branches: [ "master" ]
+    paths:
+      - "deep/src/main/cpp/**"
+  pull_request:
+    branches: [ "master" ]
+    paths:
+      - "deep/src/main/cpp/**"
+  workflow_dispatch:   # allow manual runs from the Actions tab
+
+# Cancel in-progress runs for the same ref so pushes don't pile up.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TORCH_VERSION: "2.11.0"
+  BUILD_DIR: build/cpp
+
+jobs:
+  build:
+    name: ${{ matrix.os-label }}
+    runs-on: ${{ matrix.runner }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # ----------------------------------------------------------------
+          # Windows — MSVC, libtorch Windows CPU release with deps
+          # ----------------------------------------------------------------
+          - runner: windows-latest
+            os-label: Windows (MSVC)
+            libtorch-url: >-
+              https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-${{ env.TORCH_VERSION }}%2Bcpu.zip
+            archive-name: libtorch-win.zip
+            # The zip contains a top-level "libtorch/" folder; unzip target:
+            unzip-dest: deep
+            artifact-glob: build/cpp/Release/smile_torch.dll
+            artifact-name: smile_torch-windows
+
+          # ----------------------------------------------------------------
+          # Linux — GCC, libtorch Linux CPU release (cxx11 ABI)
+          # ----------------------------------------------------------------
+          - runner: ubuntu-22.04
+            os-label: Linux (GCC)
+            libtorch-url: >-
+              https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-${{ env.TORCH_VERSION }}%2Bcpu.zip
+            archive-name: libtorch-linux.zip
+            unzip-dest: deep
+            artifact-glob: build/cpp/libsmile_torch.so
+            artifact-name: smile_torch-linux
+
+          # ----------------------------------------------------------------
+          # macOS arm64 — Apple Clang, libtorch macOS arm64 CPU release
+          # ----------------------------------------------------------------
+          - runner: macos-14          # arm64 runner
+            os-label: macOS (Apple Clang, arm64)
+            libtorch-url: >-
+              https://download.pytorch.org/libtorch/cpu/libtorch-macos-arm64-${{ env.TORCH_VERSION }}.zip
+            archive-name: libtorch-macos.zip
+            unzip-dest: deep
+            artifact-glob: build/cpp/libsmile_torch.dylib
+            artifact-name: smile_torch-macos-arm64
+
+    steps:
+      # ----------------------------------------------------------------
+      # 1. Checkout
+      # ----------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      # ----------------------------------------------------------------
+      # 2. Cache libtorch archive (keyed on URL so version bumps bust it)
+      # ----------------------------------------------------------------
+      - name: Cache libtorch archive
+        id: cache-libtorch
+        uses: actions/cache@v5
+        with:
+          path: ${{ matrix.archive-name }}
+          key: libtorch-${{ matrix.os-label }}-${{ env.TORCH_VERSION }}
+
+      - name: Download libtorch
+        if: steps.cache-libtorch.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          curl -fsSL --retry 5 --retry-delay 10 \
+               -o "${{ matrix.archive-name }}" \
+               "${{ matrix.libtorch-url }}"
+
+      # ----------------------------------------------------------------
+      # 3. Unzip libtorch into deep/libtorch/
+      #    The archives contain a top-level "libtorch/" directory, so
+      #    unzipping into "deep/" produces "deep/libtorch/".
+      # ----------------------------------------------------------------
+      - name: Unzip libtorch (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Expand-Archive -Path "${{ matrix.archive-name }}" `
+                         -DestinationPath "${{ matrix.unzip-dest }}" `
+                         -Force
+
+      - name: Unzip libtorch (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          unzip -q -o "${{ matrix.archive-name }}" \
+                -d "${{ matrix.unzip-dest }}"
+
+      - name: Verify libtorch layout
+        shell: bash
+        run: |
+          echo "--- deep/libtorch contents (top level) ---"
+          ls -1 deep/libtorch/ 2>/dev/null || dir deep\\libtorch /b 2>/dev/null || true
+
+      # ----------------------------------------------------------------
+      # 4. Configure CMake
+      # ----------------------------------------------------------------
+      - name: Configure (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cmake -S deep/src/main/cpp `
+                -B ${{ env.BUILD_DIR }} `
+                -DCMAKE_BUILD_TYPE=Release `
+                -DLIBTORCH_ROOT="${{ github.workspace }}/deep/libtorch" `
+                -DBUILD_TESTING=ON
+
+      - name: Configure (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          cmake -S deep/src/main/cpp \
+                -B ${{ env.BUILD_DIR }} \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DLIBTORCH_ROOT="${{ github.workspace }}/deep/libtorch" \
+                -DBUILD_TESTING=ON
+
+      # ----------------------------------------------------------------
+      # 5. Build
+      # ----------------------------------------------------------------
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cmake --build ${{ env.BUILD_DIR }} `
+                --config Release `
+                --parallel
+
+      - name: Build (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          cmake --build ${{ env.BUILD_DIR }} \
+                --config Release \
+                --parallel $(nproc 2>/dev/null || sysctl -n hw.logicalcpu)
+
+      # ----------------------------------------------------------------
+      # 6. Run smoke test via CTest
+      # ----------------------------------------------------------------
+      - name: Test (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        working-directory: ${{ env.BUILD_DIR }}
+        run: |
+          # Add libtorch DLLs to PATH so the test executable can find them.
+          $env:PATH = "${{ github.workspace }}\deep\libtorch\lib;" + $env:PATH
+          ctest --build-config Release --output-on-failure --timeout 60
+
+      - name: Test (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        working-directory: ${{ env.BUILD_DIR }}
+        run: |
+          # Prepend the libtorch shared-library directory to the search path.
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            export DYLD_LIBRARY_PATH="${{ github.workspace }}/deep/libtorch/lib:${DYLD_LIBRARY_PATH:-}"
+          else
+            export LD_LIBRARY_PATH="${{ github.workspace }}/deep/libtorch/lib:${LD_LIBRARY_PATH:-}"
+          fi
+          ctest --build-config Release --output-on-failure --timeout 60
+
+      # ----------------------------------------------------------------
+      # 7. Upload the produced binary
+      # ----------------------------------------------------------------
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact-name }}
+          # The glob is relative to the workspace root.
+          path: ${{ matrix.artifact-glob }}
+          if-no-files-found: error
+          retention-days: 30
+
+  # ----------------------------------------------------------------
+  # Summary job — passes only when all matrix legs pass.
+  # Gate branch-protection rules on this single job name.
+  # ----------------------------------------------------------------
+  build-ok:
+    name: All platforms passed
+    needs: build
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check matrix result
+        run: |
+          if [ "${{ needs.build.result }}" != "success" ]; then
+            echo "One or more platform builds failed."
+            exit 1
+          fi
+          echo "All platform builds succeeded."
+
