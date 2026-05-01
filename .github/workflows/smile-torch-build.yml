@@ -12,7 +12,7 @@
 #   5. Upload the produced binary as a workflow artifact
 # =============================================================================
 
-name: smile-torch build
+name: Build smile-torch C API library
 
 on:
   push:
@@ -56,8 +56,7 @@ jobs:
           # ----------------------------------------------------------------
           - runner: windows-latest
             os-label: Windows (MSVC)
-            libtorch-url: >-
-              https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-${{ env.TORCH_VERSION }}%2Bcpu.zip
+            libtorch-url-template: "https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-TORCH_VERSION%2Bcpu.zip"
             archive-name: libtorch-win.zip
             # The zip contains a top-level "libtorch/" folder; unzip target:
             unzip-dest: deep
@@ -69,8 +68,7 @@ jobs:
           # ----------------------------------------------------------------
           - runner: ubuntu-22.04
             os-label: Linux (GCC)
-            libtorch-url: >-
-              https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-${{ env.TORCH_VERSION }}%2Bcpu.zip
+            libtorch-url-template: "https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-TORCH_VERSION%2Bcpu.zip"
             archive-name: libtorch-linux.zip
             unzip-dest: deep
             artifact-glob: build/cpp/libsmile_torch.so
@@ -81,8 +79,7 @@ jobs:
           # ----------------------------------------------------------------
           - runner: macos-14          # arm64 runner
             os-label: macOS (Apple Clang, arm64)
-            libtorch-url: >-
-              https://download.pytorch.org/libtorch/cpu/libtorch-macos-arm64-${{ env.TORCH_VERSION }}.zip
+            libtorch-url-template: "https://download.pytorch.org/libtorch/cpu/libtorch-macos-arm64-TORCH_VERSION.zip"
             archive-name: libtorch-macos.zip
             unzip-dest: deep
             artifact-glob: build/cpp/libsmile_torch.dylib
@@ -109,9 +106,13 @@ jobs:
         if: steps.cache-libtorch.outputs.cache-hit != 'true'
         shell: bash
         run: |
+          # Substitute the TORCH_VERSION placeholder in the URL template.
+          LIBTORCH_URL="${{ matrix.libtorch-url-template }}"
+          LIBTORCH_URL="${LIBTORCH_URL/TORCH_VERSION/${{ env.TORCH_VERSION }}}"
+          echo "Downloading: ${LIBTORCH_URL}"
           curl -fsSL --retry 5 --retry-delay 10 \
                -o "${{ matrix.archive-name }}" \
-               "${{ matrix.libtorch-url }}"
+               "${LIBTORCH_URL}"
 
       # ----------------------------------------------------------------
       # 3. Unzip libtorch into deep/libtorch/
