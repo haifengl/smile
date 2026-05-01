@@ -563,7 +563,7 @@ public class SQL implements AutoCloseable {
      * <p>This method accepts any SQL, including DDL ({@code CREATE}, {@code DROP},
      * etc.). This method is intended for interactive or trusted-caller use. The
      * caller is responsible for ensuring the string is a single, non-malicious
-     * DML statement.</p>
+     * SQL statement.</p>
      *
      * @param sql an SQL statement.
      * @return true if the first result is a ResultSet object;
