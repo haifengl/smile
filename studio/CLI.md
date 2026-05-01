@@ -58,10 +58,10 @@ Run the provided setup script once after unzipping the distribution:
 
 ```bash
 # macOS / Linux
-bin/setup
+path/to/smile/bin/setup
 
 # Windows
-bin\setup.bat
+path\to\smile\bin\setup.bat
 ```
 
 The script installs native libraries (`libarpack`, `libopenblas`) via the
@@ -72,10 +72,10 @@ packages listed in `conf/requirements.txt`.
 
 ```bash
 # macOS / Linux
-bin/smile [command] [options]
+path/to/smile/bin/smile [command] [options]
 
 # Windows
-bin\smile.bat [command] [options]
+path\to\smile\bin\smile.bat [command] [options]
 ```
 
 The launcher reads JVM options from `conf/smile.ini` before forwarding the
