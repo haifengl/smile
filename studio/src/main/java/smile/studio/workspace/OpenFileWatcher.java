@@ -16,7 +16,8 @@
  */
 package smile.studio.workspace;
 
-import javax.swing.*;
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
@@ -26,22 +27,39 @@ import java.util.function.Consumer;
 /**
  * A file-change watcher for the opened files in the workspace.
  *
+ * <p>A single background virtual thread blocks on {@link WatchService#take()}
+ * and coalesces rapid {@code ENTRY_MODIFY} events into a single debounced
+ * callback via a {@link javax.swing.Timer} that fires on the EDT.
+ *
  * @author Haifeng Li
  */
 public class OpenFileWatcher {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OpenFileWatcher.class);
-    /**
-     * OS-level file-change watcher.
-     */
-    private WatchService watchService;
-    /**
-     * Background thread that polls the WatchService.
-     */
-    private Thread watchThread;
-    /**
-     * Maps each WatchKey to the directory it was registered for.
-     */
+
+    /** Debounce window in milliseconds. */
+    private static final int DEBOUNCE_MS = 500;
+
+    /** OS-level file-change watcher; {@code null} if initialization failed. */
+    private final WatchService watchService;
+    /** Background virtual thread that polls the WatchService. */
+    private final Thread watchThread;
+    /** Maps each WatchKey to the directory it was registered for. */
     private final Map<WatchKey, Path> watchKeys = new ConcurrentHashMap<>();
+    /**
+     * Tracks the set of directories already registered, enabling O(1)
+     * duplicate-registration checks without a linear scan of watchKeys values.
+     */
+    private final Set<Path> watchedDirs = ConcurrentHashMap.newKeySet();
+    /**
+     * The ordered set of absolute, normalized path strings currently being
+     * watched.  A {@link LinkedHashSet} wrapped with
+     * {@link Collections#synchronizedSet(Set)} preserves insertion order (so
+     * that {@link #files()} returns paths in the order they were opened) while
+     * remaining safe for concurrent read from the watcher thread
+     * and write from the EDT.
+     */
+    private final Set<String> fileSet =
+            Collections.synchronizedSet(new LinkedHashSet<>());
     /**
      * Records the last modification time (ms) of every open file as of the
      * most recent save/open performed by <em>this</em> process. Used to
@@ -50,86 +68,91 @@ public class OpenFileWatcher {
     private final Map<String, Long> knownModTimes = new ConcurrentHashMap<>();
     /**
      * Pending reload-prompt timers keyed by absolute file path string.
-     * A timer is started when the first MODIFY event arrives; it fires after a
-     * short debounce period so that rapid sequences of events produce only one
-     * dialog.
+     * A timer is started when the first MODIFY event arrives; it fires after
+     * {@link #DEBOUNCE_MS} so that rapid event sequences produce only one
+     * dialog.  Accessed exclusively on the EDT.
      */
-    private final Map<String, javax.swing.Timer> pendingReloads = new ConcurrentHashMap<>();
-    /**
-     * Callback to invoke when a file change is detected.
-     */
+    private final Map<String, Timer> pendingReloads = new HashMap<>();
+    /** Callback invoked on the EDT when an external file change is detected. */
     private final Consumer<Path> onFileChanged;
-    /**
-     * The absolute paths of files to watch.
-     */
-    private final List<String> files;
 
     /**
      * Constructor.
      *
-     * @param onFileChanged the callback to invoke when a file change is detected.
+     * @param files         the initial list of absolute file-path strings to watch,
+     *                      in the order they should be preserved.
+     * @param onFileChanged the callback to invoke (on the EDT) when a change is detected.
      */
     public OpenFileWatcher(List<String> files, Consumer<Path> onFileChanged) {
-        this.files = files;
         this.onFileChanged = onFileChanged;
-        start();
-    }
+        fileSet.addAll(files);  // preserves list order into the LinkedHashSet
 
-    /**
-     * Returns the list of currently opened files being watched.
-     *
-     * @return the list of currently opened files being watched.
-     */
-    public List<String> files() {
-        return files;
-    }
-
-    /**
-     * Starts the background {@link WatchService} thread.
-     * Must be called once during construction after all notebooks are opened.
-     */
-    private void start() {
+        // Initialize using local temporaries so the fields can be final.
+        WatchService ws = null;
+        Thread wt = null;
         try {
-            watchService = FileSystems.getDefault().newWatchService();
+            ws = FileSystems.getDefault().newWatchService();
+            wt = Thread.ofVirtual().name("workspace-file-watcher").start(this::watchLoop);
         } catch (IOException ex) {
             logger.error("Failed to create WatchService; external change detection disabled.", ex);
-            return;
         }
+        watchService = ws;
+        watchThread  = wt;
+    }
 
-        watchThread = Thread.ofVirtual().name("workspace-file-watcher").start(() -> {
-            try {
-                while (!Thread.currentThread().isInterrupted()) {
-                    WatchKey key = watchService.take();
-                    if (key == null) continue;
+    /**
+     * Returns an unmodifiable snapshot of the currently open file paths in
+     * the order they were added.  Safe to call from any thread.
+     *
+     * @return an ordered, unmodifiable list of absolute, normalized path strings.
+     */
+    public List<String> files() {
+        synchronized (fileSet) {
+            return List.copyOf(fileSet);
+        }
+    }
 
-                    Path dir = watchKeys.get(key);
-                    if (dir == null) {
-                        key.cancel();
-                        continue;
-                    }
+    /**
+     * Returns {@code true} if {@code path} is currently in the open-file set.
+     * O(1) lookup backed directly by the {@link LinkedHashSet}; does not
+     * allocate a snapshot list.  Safe to call from any thread.
+     *
+     * @param path the absolute, normalized file path.
+     * @return {@code true} if the file is being watched.
+     */
+    public boolean isOpen(Path path) {
+        return fileSet.contains(path.toString());
+    }
 
-                    for (WatchEvent<?> event : key.pollEvents()) {
-                        WatchEvent.Kind<?> kind = event.kind();
-                        if (kind == StandardWatchEventKinds.OVERFLOW) continue;
+    /**
+     * Adds a file to the watch set.
+     *
+     * <p>Must be called on the EDT so that writes to {@code fileSet} are
+     * sequenced with writes from {@link #removeFile}.
+     *
+     * @param path the absolute, normalized file path.
+     */
+    public void addFile(Path path) {
+        fileSet.add(path.toString());
+    }
 
-                        @SuppressWarnings("unchecked")
-                        Path changed = dir.resolve(((WatchEvent<Path>) event).context())
-                                .toAbsolutePath().normalize();
-
-                        if (kind == StandardWatchEventKinds.ENTRY_MODIFY
-                                && files.contains(changed.toString())) {
-                            scheduleReloadPrompt(changed);
-                        }
-                    }
-
-                    if (!key.reset()) {
-                        watchKeys.remove(key);
-                    }
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        });
+    /**
+     * Removes a file from the watch set and clears its recorded modification
+     * time.  Also cancels any pending debounce timer for that file so that a
+     * stale reload dialog cannot fire after the file has been closed.
+     *
+     * <p>Must be called on the EDT (because it cancels a Swing {@link Timer}).
+     *
+     * @param path the absolute, normalized file path.
+     */
+    public void removeFile(Path path) {
+        String key = path.toString();
+        fileSet.remove(key);
+        knownModTimes.remove(key);
+        // Cancel any pending debounce timer so a closed file's timer cannot
+        // fire and deliver a stale reload dialog.
+        Timer pending = pendingReloads.remove(key);
+        if (pending != null) pending.stop();
     }
 
     /**
@@ -140,22 +163,23 @@ public class OpenFileWatcher {
      */
     public void watchDirectory(Path dir) {
         if (watchService == null || dir == null) return;
-        // Skip if already watching this directory
-        if (watchKeys.containsValue(dir)) return;
+        // watchedDirs gives O(1) duplicate check and avoids the O(n)
+        // containsValue scan on the watchKeys map.
+        if (!watchedDirs.add(dir)) return;   // already watching
         try {
-            WatchKey key = dir.register(watchService,
-                    StandardWatchEventKinds.ENTRY_MODIFY);
+            WatchKey key = dir.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
             watchKeys.put(key, dir);
             logger.debug("Watching directory: {}", dir);
         } catch (IOException ex) {
+            watchedDirs.remove(dir);  // roll back so the caller can retry
             logger.warn("Cannot watch directory {}: {}", dir, ex.getMessage());
         }
     }
 
     /**
      * Records the current on-disk modification time of {@code path} in
-     * {@link #knownModTimes}. Call this after opening or saving a file so
-     * that the watcher can tell apart our own writes from external ones.
+     * {@link #knownModTimes}. Call this immediately after opening or saving a
+     * file so that the watcher can distinguish our own writes from external ones.
      *
      * @param path the absolute, normalized file path.
      */
@@ -171,53 +195,14 @@ public class OpenFileWatcher {
     }
 
     /**
-     * Schedules (or re-schedules) a debounced reload prompt for the given
-     * file.  Multiple MODIFY events arriving within {@code DEBOUNCE_MS}
-     * milliseconds are coalesced into a single dialog.
-     *
-     * @param path the changed file path (absolute, normalized).
-     */
-    private void scheduleReloadPrompt(Path path) {
-        final int DEBOUNCE_MS = 500;
-        String key = path.toString();
-
-        // Cancel any existing timer for this file
-        javax.swing.Timer existing = pendingReloads.remove(key);
-        if (existing != null) existing.stop();
-
-        javax.swing.Timer timer = new javax.swing.Timer(DEBOUNCE_MS, e -> {
-            pendingReloads.remove(key);
-            // Double-check: is the mod time actually different from what we know?
-            try {
-                long diskMod = Files.getLastModifiedTime(path).toMillis();
-                Long known = knownModTimes.get(key);
-                if (known != null && diskMod <= known) {
-                    // Ignore our own save.
-                    return;
-                }
-                // Update the recorded time so we don't prompt again for the
-                // same modification if the user chooses not to reload.
-                knownModTimes.put(key, diskMod);
-            } catch (IOException ex) {
-                logger.warn("Cannot read mod time for {}: {}", path, ex.getMessage());
-            }
-            SwingUtilities.invokeLater(() -> onFileChanged.accept(path));
-        });
-        timer.setRepeats(false);
-        pendingReloads.put(key, timer);
-        timer.start();
-    }
-
-    /**
-     * Shuts down the file-change watcher.  Should be called when the
+     * Shuts down the file-change watcher. Should be called when the
      * workspace is being disposed (e.g. application shutdown).
      */
     public void shutdown() {
-        if (watchThread != null) {
-            watchThread.interrupt();
-        }
-        // Cancel all pending debounce timers
-        pendingReloads.values().forEach(javax.swing.Timer::stop);
+        if (watchThread != null) watchThread.interrupt();
+        // Cancel all pending debounce timers (must be on EDT; shutdown() is
+        // called from the EDT by Workspace.shutdown()).
+        pendingReloads.values().forEach(Timer::stop);
         pendingReloads.clear();
         if (watchService != null) {
             try {
@@ -226,5 +211,105 @@ public class OpenFileWatcher {
                 logger.warn("Error closing WatchService", ex);
             }
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // Private helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Main loop executed by the background virtual thread.
+     * Blocks on {@link WatchService#take()} and dispatches debounced
+     * {@link #scheduleReloadPrompt} calls to the EDT.
+     */
+    private void watchLoop() {
+        try {
+            while (!Thread.currentThread().isInterrupted()) {
+                WatchKey key;
+                try {
+                    key = watchService.take();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                } catch (ClosedWatchServiceException e) {
+                    // shutdown() closed the service — exit cleanly.
+                    break;
+                }
+
+                Path dir = watchKeys.get(key);
+                if (dir == null) {
+                    key.cancel();
+                    continue;
+                }
+
+                List<Path> changed = new ArrayList<>();
+                for (WatchEvent<?> event : key.pollEvents()) {
+                    if (event.kind() == StandardWatchEventKinds.OVERFLOW) continue;
+
+                    @SuppressWarnings("unchecked")
+                    Path candidate = dir.resolve(((WatchEvent<Path>) event).context())
+                            .toAbsolutePath().normalize();
+
+                    if (event.kind() == StandardWatchEventKinds.ENTRY_MODIFY
+                            && fileSet.contains(candidate.toString())) {
+                        changed.add(candidate);
+                    }
+                }
+
+                // Schedule debounce timers on the EDT — Swing timers must only
+                // be created/started/stopped from the Event Dispatch Thread.
+                if (!changed.isEmpty()) {
+                    SwingUtilities.invokeLater(() ->
+                            changed.forEach(this::scheduleReloadPrompt));
+                }
+
+                if (!key.reset()) {
+                    watchKeys.remove(key);
+                    watchedDirs.remove(dir);
+                }
+            }
+        } catch (Exception e) {
+            // Catch-all guard: log unexpected runtime exceptions so the virtual
+            // thread does not exit silently.
+            logger.error("Unexpected error in file-watcher loop", e);
+        }
+    }
+
+    /**
+     * Schedules (or re-schedules) a debounced reload prompt for the given
+     * file.  Multiple MODIFY events arriving within {@link #DEBOUNCE_MS}
+     * milliseconds are coalesced into a single dialog.
+     *
+     * <p>Must be called on the EDT.
+     *
+     * @param path the changed file path (absolute, normalized).
+     */
+    private void scheduleReloadPrompt(Path path) {
+        String key = path.toString();
+
+        // Cancel any existing timer for this file (safe: EDT-only access).
+        Timer existing = pendingReloads.remove(key);
+        if (existing != null) existing.stop();
+
+        Timer timer = new Timer(DEBOUNCE_MS, e -> {
+            pendingReloads.remove(key);
+            // Guard against our own save: compare disk mod time with recorded.
+            try {
+                long diskMod = Files.getLastModifiedTime(path).toMillis();
+                Long known = knownModTimes.get(key);
+                if (known != null && diskMod <= known) {
+                    return;  // our own write — ignore
+                }
+                // Update the recorded time so we don't re-prompt for the same
+                // modification if the user declines to reload.
+                knownModTimes.put(key, diskMod);
+            } catch (IOException ex) {
+                logger.warn("Cannot read mod time for {}: {}", path, ex.getMessage());
+            }
+            onFileChanged.accept(path);
+        });
+        timer.setRepeats(false);
+        pendingReloads.put(key, timer);
+        timer.start();
     }
 }

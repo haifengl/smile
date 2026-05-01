@@ -21,6 +21,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
+import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import com.sun.management.OperatingSystemMXBean;
@@ -88,7 +89,7 @@ public class StatusBar extends JPanel {
             String heapStr = String.format("%.1f %s", usedHeap, unit);
             // getCpuLoad() returns -1.0 when the value is not available.
             String cpuStr = cpuLoad < 0 ? "N/A" : (int) (cpuLoad * 100) + "%";
-            String info = String.format(bundle.getString("SystemInfo"), heapStr, cpuStr);
+            String info = MessageFormat.format(bundle.getString("SystemInfo"), heapStr, cpuStr);
             system.setText(info);
         });
     }
