@@ -19,11 +19,6 @@ on:
   schedule:
     - cron: '17 3 * * 0'
 
-# Cancel in-progress runs for the same ref so pushes don't pile up.
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
