@@ -25,6 +25,11 @@ on:
       - "deep/src/main/cpp/**"
   workflow_dispatch:   # allow manual runs from the Actions tab
 
+# Minimal top-level permissions — deny everything by default; individual jobs
+# add back only what they actually need.
+permissions:
+  contents: read        # needed by actions/checkout
+
 # Cancel in-progress runs for the same ref so pushes don't pile up.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -38,6 +43,9 @@ jobs:
   build:
     name: ${{ matrix.os-label }}
     runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read    # checkout
+      actions: write    # upload-artifact
 
     strategy:
       fail-fast: false
@@ -219,6 +227,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: always()
+    permissions:
+      contents: none    # summary job needs no repository access
     steps:
       - name: Check matrix result
         run: |
