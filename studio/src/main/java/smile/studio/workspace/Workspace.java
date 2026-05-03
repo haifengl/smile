@@ -195,7 +195,7 @@ public class Workspace extends JSplitPane {
      */
     private Analyst initAnalyst(Path cwd) {
         try {
-            return new Analyst("data-analyst", SmileStudio::llm, cwd);
+            return new Analyst("analyst", SmileStudio::llm, cwd);
         } catch (Exception ex) {
             logger.error("Failed to initialize data analyst agent", ex);
         }
