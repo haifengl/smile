@@ -250,7 +250,7 @@ public class SmileStudio extends JFrame {
         try {
             return switch (service) {
                 case "OpenAI" -> {
-                    var openai = new OpenAI(prefs.get("openaiModel", "gpt-5.3-codex"));
+                    var openai = new OpenAI(prefs.get("openaiModel", "gpt-5.5"));
                     var apiKey = prefs.get("openaiApiKey", "");
                     if (!apiKey.isBlank()) {
                         openai.withApiKey(apiKey);
@@ -267,18 +267,11 @@ public class SmileStudio extends JFrame {
                         prefs.get("azureOpenAIBaseUrl", ""),
                         prefs.get("azureOpenAIModel", "gpt-5.3-codex"));
 
-                case "Anthropic" -> {
-                    var anthropic = new Anthropic(prefs.get("anthropicModel", "claude-sonnet-4-6"));
-                    var apiKey = prefs.get("anthropicApiKey", "");
-                    if (!apiKey.isBlank()) {
-                        anthropic.withApiKey(apiKey);
-                    }
-                    var baseUrl = prefs.get("anthropicBaseUrl", "");
-                    if (!baseUrl.isBlank()) {
-                        anthropic.withBaseUrl(baseUrl);
-                    }
-                    yield anthropic;
-                }
+                // Don't call withApiKey or withBaseUrl for Anthropic and Gemini client.
+                // As they read from system properties directly, calling withApiKey will
+                // cause errors.
+                case "Anthropic" ->
+                    new Anthropic(prefs.get("anthropicModel", "claude-sonnet-4-6"));
 
                 case "Google Gemini" ->
                     new GoogleGemini(
