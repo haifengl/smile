@@ -252,14 +252,13 @@ public class Workspace extends JSplitPane {
                         🌐 Built-in inference server.
                         
                         💡 Tips for getting started:
-                        1. Shift + ENTER to add a line break.
-                        2. Ctrl + Click on output links to open browser.
-                        3. Run /init to create a SMILE.md file with instructions for agents.
-                        4. Be as specific as you would with another data scientist for the best result.
-                        5. Data visualization can be feed to AI agents for interpretation and advices.
-                        6. Create custom slash commands for reusable prompts or workflows.
-                        7. Run Shell commands starting with an exclamation mark (!).
-                        8. AI can make mistakes. Always review agent's responses.""");
+                        1. Shift + ENTER to add a line break in your prompt.
+                        2. Run /init to create a SMILE.md file with instructions for agents.
+                        3. Be as specific as you would with another data scientist for the best result.
+                        4. Data visualization can be feed to AI agents for interpretation and advices.
+                        5. Create custom slash commands for reusable prompts or workflows.
+                        6. Run Shell commands starting with an exclamation mark (!).
+                        7. AI can make mistakes. Always review agent's responses.""");
 
         return cli;
     }
@@ -278,13 +277,12 @@ public class Workspace extends JSplitPane {
 
                 """
                         💡 Tips for getting started:
-                        1. Shift + ENTER to add a line break.
-                        2. Ctrl + Click on output links to open browser.
-                        3. TAB to complete code in the notebook.
-                        4. Be as specific as you would with another programmer for the best result.
-                        5. Create custom slash commands for reusable prompts or workflows.
-                        6. Run Shell commands starting with an exclamation mark (!).
-                        7. AI can make mistakes. Always review agent's responses.""");
+                        1. Shift + ENTER to add a line break in your prompt.
+                        2. TAB to complete code in the notebook.
+                        3. Be as specific as you would with another programmer for the best result.
+                        4. Create custom slash commands for reusable prompts or workflows.
+                        5. Run Shell commands starting with an exclamation mark (!).
+                        6. AI can make mistakes. Always review agent's responses.""");
 
         return cli;
     }
@@ -303,13 +301,12 @@ public class Workspace extends JSplitPane {
 
                 """
                         💡 Tips for getting started:
-                        1. Shift + ENTER to add a line break.
-                        2. Ctrl + Click on output links to open browser.
-                        3. TAB to complete code in the notebook.
-                        4. Be as specific as you would with another programmer for the best result.
-                        5. Create custom slash commands for reusable prompts or workflows.
-                        6. Run Shell commands starting with an exclamation mark (!).
-                        7. AI can make mistakes. Always review agent's responses.""");
+                        1. Shift + ENTER to add a line break in your prompt.
+                        2. TAB to complete code in the notebook.
+                        3. Be as specific as you would with another programmer for the best result.
+                        4. Create custom slash commands for reusable prompts or workflows.
+                        5. Run Shell commands starting with an exclamation mark (!).
+                        6. AI can make mistakes. Always review agent's responses.""");
 
         return cli;
     }
