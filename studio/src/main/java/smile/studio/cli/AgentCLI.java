@@ -355,7 +355,7 @@ public class AgentCLI extends JPanel {
                     sb.append("\n/")
                             .append(skill.name())
                             .append(skill.name().length() > 6 ? "\t" : "\t\t")
-                            .append(skill.description());
+                            .append(skill.description().split("\\.", 2)[0]);
                 }
             }
         }
