@@ -329,26 +329,24 @@ public class AgentCLI extends JPanel {
         StringBuilder sb = new StringBuilder("""
                 The following commands are available:
                 
-                /memory show\tDisplay the content of long term memory
-                /memory add\tAdd facts or notes to long term memory
-                /memory edit\tOpen a notepad to edit the long term memory
-                /memory refresh\tReload the context from disk
-                /plan\t\tEnter the plan mode.
-                /plan off\tExit  the plan mode.
-                /clear\t\tClear the current conversation session.
-                /compact\tSummarize the conversation and retain critical details.
-                /edit\t\tEdit a file with notepad.
-                /train\t\tTrain a machine learning model
-                /predict\tRun batch inference
-                /serve\t\tStart an inference service""");
+                /memory show        Display the content of long term memory
+                /memory add         Add facts or notes to long term memory
+                /memory edit        Open a notepad to edit the long term memory
+                /memory refresh     Reload the context from disk
+                /plan               Enter the plan mode.
+                /plan off           Exit  the plan mode.
+                /clear              Clear the current conversation session.
+                /compact            Summarize the conversation and retain critical details.
+                /edit               Edit a file with notepad.
+                /train              Train a machine learning model
+                /predict            Run batch inference
+                /serve              Start an inference service""");
 
         if (agent != null && agent.llm() != null) {
             for (var skill : agent.skills()) {
                 if (skill.isUserInvocable()) {
-                    sb.append("\n/")
-                            .append(skill.name())
-                            .append(skill.name().length() > 6 ? "\t" : "\t\t")
-                            .append(skill.description().split("\\.", 2)[0]);
+                    sb.append(String.format("\n/%-18s ", skill.name()))
+                      .append(skill.description().split("\\.", 2)[0]);
                 }
             }
         }
