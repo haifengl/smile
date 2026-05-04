@@ -8,6 +8,21 @@ repositories {
     maven { url = uri("https://jitpack.io") }
 }
 
+plugins {
+    id("jacoco")
+}
+
+jacoco {
+    toolVersion = "0.8.14"
+}
+
+tasks.withType<JacocoReport> {
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+}
+
 tasks.withType<Test>().all {
     systemProperty("org.slf4j.simpleLogger.defaultLogLevel", "debug")
     jvmArgs("-Xmx6G", "-XX:+UseG1GC", "-XX:MaxMetaspaceSize=1024M", "-Xss4M")
