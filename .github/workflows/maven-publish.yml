@@ -2,11 +2,6 @@ name: Publish Libraries to Maven Central
 
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version to publish (e.g. 6.0.1)'
-        required: true
-        type: string
   release:
     types: [ published ]
 
