@@ -50,13 +50,6 @@ import smile.util.Strings;
 public class AgentCLI extends JPanel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AgentCLI.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(AgentCLI.class.getName(), Locale.getDefault());
-    /**
-     * The threshold for compacting conversation session by summarization.
-     * If the total tokens of conversation session exceeds this threshold,
-     * a compact command will be automatically executed to free up space
-     * in the context window.
-     */
-    private static final int COMPACT_THRESHOLD = OS.getProperty("smile.agent.auto.compact", 180000);
     /** The container of conversation. */
     private final JPanel intents = new ScrollablePanel();
     /** The agent. */
@@ -578,7 +571,7 @@ Please provide your summary based on the conversation so far, following this str
                 });
 
                 // Auto compact if total tokens exceed the threshold, otherwise render Markdown if applicable.
-                if (totalTokens > COMPACT_THRESHOLD) {
+                if (totalTokens > agent.llm().compactThreshold()) {
                     SwingUtilities.invokeLater(() ->
                             intent.output().append("\n\n[The conversation session is too long, a compact command will be executed to summarize conversation.]\n"));
                     compact("", intent);
