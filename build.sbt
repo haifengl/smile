@@ -91,7 +91,8 @@ lazy val javaSettings = commonSettings ++ Seq(
     "-Xlint:unchecked",
     "-parameters", // for Gemini AFC
     "-source", "25",
-    "-target", "25"
+    "-target", "25",
+    "--enable-preview"
   ),
   Compile / doc / javacOptions ++= Seq(
     //"-Xdoclint:none",
