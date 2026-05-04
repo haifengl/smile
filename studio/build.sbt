@@ -86,6 +86,7 @@ batScriptExtraDefines ++= Seq(
   """call :add_java -Xss4M""",
   """call :add_java --add-opens=java.base/java.nio=ALL-UNNAMED""",
   """call :add_java --enable-native-access=ALL-UNNAMED""",
+  """call :add_java --enable-preview""",
   """call :add_java -Dsmile.home=%APP_HOME%""",
   """call :add_java -Dscala.usejavacp=true""",
   """call :add_java -Dscala.repl.autoruncode=%APP_HOME%\bin\predef.sc""",
