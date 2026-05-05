@@ -19,12 +19,14 @@ package smile.studio.workspace;
 import javax.swing.*;
 import javax.swing.Timer;
 import javax.swing.tree.TreePath;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.*;
 import java.nio.file.*;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.*;
 import java.util.function.IntConsumer;
 import com.formdev.flatlaf.util.SystemFileChooser;
@@ -181,6 +183,17 @@ public class Workspace extends JSplitPane {
                                     openNotebook(path);
                                 } else if (!Paths.isBinary(path)) {
                                     Notepad.open(path);
+                                } else {
+                                    var desktop = Desktop.getDesktop();
+                                    if (desktop.isSupported(Desktop.Action.OPEN)) {
+                                        try {
+                                            desktop.open(path.toFile());
+                                        } catch (IOException ex) {
+                                            JOptionPane.showMessageDialog(Workspace.this,
+                                                    "Failed to open: " + ex.getMessage(),
+                                                    "Error", JOptionPane.ERROR_MESSAGE);
+                                        }
+                                    }
                                 }
                             }
                         }
