@@ -206,6 +206,16 @@ public class FileExplorer extends JTree
     private JPopupMenu buildContextMenu(DirectoryTreeNode node) {
         JPopupMenu menu = new JPopupMenu();
 
+        JMenuItem newFileItem = new JMenuItem(bundle.getString("NewFile"));
+        newFileItem.addActionListener(e -> newFileNode(node));
+        menu.add(newFileItem);
+
+        JMenuItem newDirItem = new JMenuItem(bundle.getString("NewDirectory"));
+        newDirItem.addActionListener(e -> newDirectoryNode(node));
+        menu.add(newDirItem);
+
+        menu.addSeparator();
+
         JMenuItem renameItem = new JMenuItem(bundle.getString("Rename"));
         renameItem.addActionListener(e -> renameNode(node));
         menu.add(renameItem);
@@ -215,6 +225,60 @@ public class FileExplorer extends JTree
         menu.add(deleteItem);
 
         return menu;
+    }
+
+    /**
+     * Returns the directory in which a new entry should be created.
+     * If {@code node} is a directory, returns its path; otherwise returns
+     * the parent directory of the file node.
+     */
+    private static Path parentDirOf(DirectoryTreeNode node) {
+        Path p = node.path();
+        return Files.isDirectory(p) ? p : p.getParent();
+    }
+
+    /** Prompts the user for a name and creates a new empty file. */
+    private void newFileNode(DirectoryTreeNode node) {
+        String name = (String) JOptionPane.showInputDialog(
+                this,
+                bundle.getString("NewFilePrompt"),
+                bundle.getString("NewFileTitle"),
+                JOptionPane.PLAIN_MESSAGE,
+                null, null, "");
+        if (name == null || name.isBlank()) return;
+        Path target = parentDirOf(node).resolve(name.strip());
+        try {
+            Files.createFile(target);
+            // WatchService ENTRY_CREATE event will update the tree automatically.
+        } catch (IOException ex) {
+            logger.error("Failed to create file: {}", target, ex);
+            JOptionPane.showMessageDialog(this,
+                    MessageFormat.format(bundle.getString("NewFileError"), ex.getMessage()),
+                    bundle.getString("NewFileTitle"),
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /** Prompts the user for a name and creates a new directory. */
+    private void newDirectoryNode(DirectoryTreeNode node) {
+        String name = (String) JOptionPane.showInputDialog(
+                this,
+                bundle.getString("NewDirectoryPrompt"),
+                bundle.getString("NewDirectoryTitle"),
+                JOptionPane.PLAIN_MESSAGE,
+                null, null, "");
+        if (name == null || name.isBlank()) return;
+        Path target = parentDirOf(node).resolve(name.strip());
+        try {
+            Files.createDirectory(target);
+            // WatchService ENTRY_CREATE event will update the tree automatically.
+        } catch (IOException ex) {
+            logger.error("Failed to create directory: {}", target, ex);
+            JOptionPane.showMessageDialog(this,
+                    MessageFormat.format(bundle.getString("NewDirectoryError"), ex.getMessage()),
+                    bundle.getString("NewDirectoryTitle"),
+                    JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     /** Prompts the user for a new name and renames the file/directory. */
