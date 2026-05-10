@@ -147,12 +147,6 @@ public final class Notepad extends JFrame implements SearchListener, DocumentLis
         });
     }
 
-    private void addMenuItem(Action action, ButtonGroup group, JMenu menu) {
-        JRadioButtonMenuItem item = new JRadioButtonMenuItem(action);
-        group.add(item);
-        menu.add(item);
-    }
-
     private JMenuBar createMenuBar() {
         JMenuBar menubar = new JMenuBar();
         JMenu fileMenu = new JMenu(bundle.getString("File"));
