@@ -21,6 +21,7 @@ import java.awt.event.*;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import javax.swing.*;
@@ -40,7 +41,6 @@ import org.fife.ui.rsyntaxtextarea.ErrorStrip;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.fife.ui.rtextarea.SearchContext;
 import org.fife.ui.rtextarea.SearchEngine;
-import org.fife.ui.rtextarea.SearchResult;
 import smile.studio.Monospaced;
 import smile.studio.StatusBar;
 
@@ -50,6 +50,7 @@ import smile.studio.StatusBar;
  * @author Haifeng Li
  */
 public final class Notepad extends JFrame implements SearchListener, DocumentListener {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Notepad.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Notepad.class.getName(), Locale.getDefault());
 
     // TODO: update to lazy constant with Java 25+ (still preview)
@@ -92,7 +93,7 @@ public final class Notepad extends JFrame implements SearchListener, DocumentLis
                     dict = SpellingParser.createEnglishSpellingParser(zip, true, false);
                     SwingUtilities.invokeLater(() -> editor.addParser(dict));
                 } catch (Exception ex) {
-                    System.err.println("Failed to load dictionary: " + ex.getMessage());
+                    logger.error("Failed to load dictionary: {}", ex.getMessage());
                 }
             });
         }
@@ -200,43 +201,35 @@ public final class Notepad extends JFrame implements SearchListener, DocumentLis
     public void searchEvent(SearchEvent e) {
         SearchEvent.Type type = e.getType();
         SearchContext context = e.getSearchContext();
-        SearchResult result;
 
         switch (type) {
-            case MARK_ALL:
-                result = SearchEngine.markAll(editor, context);
-                break;
-            case FIND:
-                result = SearchEngine.find(editor, context);
+            case MARK_ALL -> {
+                var result = SearchEngine.markAll(editor, context);
+                var text = MessageFormat.format(bundle.getString("MarkCount"), result.getMarkedCount());
+                SwingUtilities.invokeLater(() -> statusBar.setStatus(text));
+            }
+            case FIND -> {
+                var result = SearchEngine.find(editor, context);
+                if (!result.wasFound() || result.isWrapped()) {
+                    UIManager.getLookAndFeel().provideErrorFeedback(editor);
+                } else if (context.getMarkAll()) {
+                    var text = MessageFormat.format(bundle.getString("MarkCount"), result.getMarkedCount());
+                    SwingUtilities.invokeLater(() -> statusBar.setStatus(text));
+                }
+            }
+            case REPLACE -> {
+                var result = SearchEngine.replace(editor, context);
                 if (!result.wasFound() || result.isWrapped()) {
                     UIManager.getLookAndFeel().provideErrorFeedback(editor);
                 }
-                break;
-            case REPLACE:
-                result = SearchEngine.replace(editor, context);
-                if (!result.wasFound() || result.isWrapped()) {
-                    UIManager.getLookAndFeel().provideErrorFeedback(editor);
-                }
-                break;
-            case REPLACE_ALL:
-                result = SearchEngine.replaceAll(editor, context);
+            }
+            case REPLACE_ALL -> {
+                var result = SearchEngine.replaceAll(editor, context);
                 JOptionPane.showMessageDialog(
                         this,
-                        result.getCount() + " occurrences replaced.");
-                break;
-            default:
-                return;
+                        MessageFormat.format(bundle.getString("ReplaceCount"), result.getCount()));
+            }
         }
-
-        String text;
-        if (result.wasFound()) {
-            text = "Text found; occurrences marked: " + result.getMarkedCount();
-        } else if (type == SearchEvent.Type.MARK_ALL) {
-            text = result.getMarkedCount() <= 0 ? "" : "Occurrences marked: " + result.getMarkedCount();
-        } else {
-            text = "Text not found";
-        }
-        SwingUtilities.invokeLater(() -> statusBar.setStatus(text));
     }
 
     /**
@@ -279,7 +272,7 @@ public final class Notepad extends JFrame implements SearchListener, DocumentLis
                     editor.setCaretPosition(editor.getLineStartOffset(line-1));
                 } catch (BadLocationException ex) { // Never happens
                     UIManager.getLookAndFeel().provideErrorFeedback(editor);
-                    System.err.println("Error: " + ex.getMessage());
+                    logger.error("Failed to set caret position: {}", ex.getMessage());
                 }
             }
         }

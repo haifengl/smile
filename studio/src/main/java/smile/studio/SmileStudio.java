@@ -18,6 +18,7 @@ package smile.studio;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.*;
@@ -28,6 +29,7 @@ import java.io.*;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.List;
 import java.util.prefs.Preferences;
@@ -39,6 +41,12 @@ import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import com.formdev.flatlaf.util.SystemInfo;
 import ioa.llm.client.*;
 import ioa.llm.mcp.MCP;
+import org.fife.rsta.ui.search.FindDialog;
+import org.fife.rsta.ui.search.ReplaceDialog;
+import org.fife.rsta.ui.search.SearchEvent;
+import org.fife.rsta.ui.search.SearchListener;
+import org.fife.ui.rtextarea.SearchContext;
+import org.fife.ui.rtextarea.SearchEngine;
 import smile.studio.workspace.Workspace;
 import smile.swing.Button;
 import smile.studio.notebook.Cell;
@@ -52,7 +60,7 @@ import static smile.swing.SmileUtilities.scaleImageIcon;
  *
  * @author Haifeng Li
  */
-public class SmileStudio extends JFrame {
+public class SmileStudio extends JFrame implements SearchListener {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SmileStudio.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(SmileStudio.class.getName(), Locale.getDefault());
     /** Application preference and configuration. */
@@ -66,6 +74,8 @@ public class SmileStudio extends JFrame {
     private final JMenuBar menuBar = new JMenuBar();
     private final JToolBar toolBar = new JToolBar();
     private final StatusBar statusBar = new StatusBar();
+    private final FindDialog findDialog = new FindDialog(this, this);
+    private final ReplaceDialog replaceDialog = new ReplaceDialog(this, this);
     private final Workspace workspace;
     /** Kept as a field so {@code windowClosing} can stop it before shutdown. */
     private AutoSaveAction autoSaveAction;
@@ -77,15 +87,17 @@ public class SmileStudio extends JFrame {
         super(bundle.getString("AppName"));
         setFrameIcon();
         setJMenuBar(menuBar);
+        // Tie the properties of the two dialogs together (match case, regex, etc.).
+        SearchContext context = findDialog.getSearchContext();
+        replaceDialog.setSearchContext(context);
 
         // Initialize the LLM on the EDT (after Swing is set up) so that any
         // error dialog shown by createLLM() runs on the correct thread.
         llm = createLLM();
 
-        Path cwd = Path.of(System.getProperty("user.dir"));
-
         // Assign workspace before initMenuAndToolBar() so that AutoSaveAction's
         // timer callback (which captures workspace) is never handed a null reference.
+        Path cwd = Path.of(System.getProperty("user.dir"));
         workspace = new Workspace(cwd);
         initMenuAndToolBar();
 
@@ -378,6 +390,9 @@ public class SmileStudio extends JFrame {
         cellMenu.add(new JMenuItem(clearAll));
         cellMenu.add(new JMenuItem(restart));
         cellMenu.add(new JMenuItem(stop));
+        cellMenu.addSeparator();
+        cellMenu.add(new JMenuItem(new ShowFindDialogAction()));
+        cellMenu.add(new JMenuItem(new ShowReplaceDialogAction()));
         menuBar.add(cellMenu);
 
         JMenu helpMenu = new JMenu(bundle.getString("Help"));
@@ -400,6 +415,69 @@ public class SmileStudio extends JFrame {
         toolBar.add(new Button(clearAll));
         toolBar.add(new Button(restart));
         toolBar.add(new Button(stop));
+    }
+
+    @Override
+    public String getSelectedText() {
+        var opt = workspace.notebook();
+        if (opt.isEmpty()) return null;
+        var notebook = opt.get();
+        int count = notebook.getCellCount();
+        for (int i = 0; i < count; i++) {
+            var selectedText = notebook.getCell(i).editor().getSelectedText();
+            if (selectedText != null) return selectedText;
+        }
+        return null;
+    }
+
+    @Override
+    public void searchEvent(SearchEvent e) {
+        var opt = workspace.notebook();
+        if (opt.isEmpty() || opt.get().getCellCount() <= 0) {
+            SwingUtilities.invokeLater(() ->
+                    JOptionPane.showMessageDialog(
+                            this,
+                            bundle.getString("NoActiveNotebook"),
+                            bundle.getString("Search"),
+                            JOptionPane.INFORMATION_MESSAGE
+                    ));
+            return;
+        }
+
+        SearchEvent.Type type = e.getType();
+        SearchContext context = e.getSearchContext();
+        System.out.println(type + " -> " + context);
+
+        var notebook = opt.get();
+        int count = notebook.getCellCount();
+        switch (type) {
+            case MARK_ALL, FIND -> {
+                int marked = 0;
+                for (int i = 0; i < count; i++) {
+                    var result = SearchEngine.markAll(notebook.getCell(i).editor(), context);
+                    marked += result.getMarkedCount();
+                }
+                var text = MessageFormat.format(bundle.getString("MarkCount"), marked);
+                SwingUtilities.invokeLater(() -> statusBar.setStatus(text));
+            }
+            case REPLACE -> {
+                var editor = notebook.getCell(0).editor();
+                var result = SearchEngine.replace(editor, context);
+                if (!result.wasFound() || result.isWrapped()) {
+                    UIManager.getLookAndFeel().provideErrorFeedback(editor);
+                }
+            }
+            case REPLACE_ALL -> {
+                int replaced = 0;
+                for (int i = 0; i < count; i++) {
+                    var result = SearchEngine.replaceAll(notebook.getCell(i).editor(), context);
+                    replaced += result.getCount();
+                }
+                JOptionPane.showMessageDialog(
+                        this,
+                        MessageFormat.format(bundle.getString("ReplaceCount"), replaced));
+            }
+        }
     }
 
     private class NewNotebookAction extends AbstractAction {
@@ -626,6 +704,38 @@ public class SmileStudio extends JFrame {
                     studio.dispatchEvent(new WindowEvent(studio, WindowEvent.WINDOW_CLOSING));
                 }
             }
+        }
+    }
+
+    private class ShowFindDialogAction extends AbstractAction {
+        ShowFindDialogAction() {
+            super(bundle.getString("Find"));
+            int c = getToolkit().getMenuShortcutKeyMaskEx();
+            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_F, c));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (replaceDialog.isVisible()) {
+                replaceDialog.setVisible(false);
+            }
+            findDialog.setVisible(true);
+        }
+    }
+
+    private class ShowReplaceDialogAction extends AbstractAction {
+        ShowReplaceDialogAction() {
+            super(bundle.getString("Replace"));
+            int c = getToolkit().getMenuShortcutKeyMaskEx();
+            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_H, c));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (findDialog.isVisible()) {
+                findDialog.setVisible(false);
+            }
+            replaceDialog.setVisible(true);
         }
     }
 
