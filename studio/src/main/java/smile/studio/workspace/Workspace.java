@@ -210,7 +210,7 @@ public class Workspace extends JSplitPane {
         try {
             return new Analyst("analyst", SmileStudio::llm, cwd);
         } catch (Exception ex) {
-            logger.error("Failed to initialize data analyst agent", ex);
+            logger.error("Failed to initialize data analyst agent: {}", ex.getMessage());
         }
         return null;
     }
@@ -222,7 +222,7 @@ public class Workspace extends JSplitPane {
         try {
             return new Coder("java-coder", SmileStudio::llm, cwd);
         } catch (Exception ex) {
-            logger.error("Failed to initialize Java coding agent", ex);
+            logger.error("Failed to initialize Java coding agent: {}", ex.getMessage());
         }
         return null;
     }
@@ -234,7 +234,7 @@ public class Workspace extends JSplitPane {
         try {
             return new Coder("pythonista", SmileStudio::llm, cwd);
         } catch (Exception ex) {
-            logger.error("Failed to initialize Python coding agent", ex);
+            logger.error("Failed to initialize Python coding agent: {}", ex.getMessage());
         }
         return null;
     }
@@ -320,7 +320,7 @@ public class Workspace extends JSplitPane {
                 properties.store(output, "Smile Studio Properties");
             }
         } catch (IOException e) {
-            logger.error("Error saving studio properties file: ", e);
+            logger.error("Error saving studio properties file: {}", e.getMessage());
         }
     }
 
@@ -343,7 +343,7 @@ public class Workspace extends JSplitPane {
                     }
                 }
             } catch (IOException ex) {
-                logger.error("Error reading studio properties file: ", ex);
+                logger.error("Error reading studio properties file: {}", ex.getMessage());
             }
         }
 

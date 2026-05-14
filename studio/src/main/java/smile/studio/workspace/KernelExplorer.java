@@ -322,7 +322,7 @@ public class KernelExplorer extends JPanel {
                         Desktop.getDesktop().browse(new URI("http://" + host + ":" + port));
                     }
                 } catch (Exception ex) {
-                    logger.error("Failed to open browser: ", ex);
+                    logger.error("Failed to open browser: {}", ex.getMessage());
                 }
             });
 

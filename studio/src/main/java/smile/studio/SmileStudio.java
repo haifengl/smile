@@ -121,7 +121,7 @@ public class SmileStudio extends JFrame implements SearchListener {
                     }));
                 }
             } catch (Exception ex) {
-                logger.error("Failed to start Ty server", ex);
+                logger.error("Failed to start Ty server: {}", ex.getMessage());
             }
         });
 
@@ -141,7 +141,7 @@ public class SmileStudio extends JFrame implements SearchListener {
                     }));
                 }
             } catch (Exception ex) {
-                logger.error("Failed to start JDT LS server", ex);
+                logger.error("Failed to start JDT LS server: {}", ex.getMessage());
             }
         });
 
@@ -160,7 +160,7 @@ public class SmileStudio extends JFrame implements SearchListener {
                     MCP.close();
                 }));
             } catch (Throwable ex) {
-                logger.error("Failed to start MCP services", ex);
+                logger.error("Failed to start MCP services: {}", ex.getMessage());
             }
         });
 
@@ -351,7 +351,7 @@ public class SmileStudio extends JFrame implements SearchListener {
             }
             setIconImages(icons);
         } catch (IOException e) {
-            logger.error("Error loading image from resource: images/robot.png", e);
+            logger.error("Error loading image robot.png from resource: {}", e.getMessage());
         }
     }
 
