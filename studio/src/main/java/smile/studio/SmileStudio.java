@@ -318,8 +318,9 @@ public class SmileStudio extends JFrame implements SearchListener {
             var cause = t.getCause() != null ? t.getCause() : t;
             JOptionPane.showMessageDialog(
                     null,
-                    "Failed to initialize AI service: " + cause.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
+                    MessageFormat.format(bundle.getString("InitError"), cause.getMessage()),
+                    bundle.getString("Error"),
+                    JOptionPane.ERROR_MESSAGE);
         }
         return null;
     }

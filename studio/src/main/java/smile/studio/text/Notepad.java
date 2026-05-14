@@ -110,9 +110,8 @@ public final class Notepad extends JFrame implements SearchListener, DocumentLis
                 JOptionPane.showMessageDialog(
                     null,
                     ex.getMessage(),
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE
-                )
+                    bundle.getString("Error"),
+                    JOptionPane.ERROR_MESSAGE)
             );
         }
 
@@ -357,8 +356,7 @@ public final class Notepad extends JFrame implements SearchListener, DocumentLis
                     Notepad.this,
                     ex.getMessage(),
                     bundle.getString("Error"),
-                    JOptionPane.ERROR_MESSAGE
-            );
+                    JOptionPane.ERROR_MESSAGE);
         }
         return false;
     }
