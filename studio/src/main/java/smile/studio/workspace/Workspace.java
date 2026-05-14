@@ -245,34 +245,9 @@ public class Workspace extends JSplitPane {
     private AgentCLI analystCLI(Analyst analyst) {
         var cli = new AgentCLI(analyst);
 
-        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") + """
-                        =====================================================================
-                        Welcome! I am Clair, your AI assistant for machine learning modeling.
-                        
-                        /help for available commands, /init for initializing your project
-                        cwd:\s""" + System.getProperty("user.dir"),
-
-                """
-                        As a state-of-the-art machine learning engineering agent,
-                        I can help you with:
-                        
-                        🤖 Automatic end-to-end ML/AI solutions based on your requirements.
-                        🔍 Best practices and state-of-the-art methods with web search.
-                        🏅 Targeted code block refinement by ablation study.
-                        🤝 Improved solution using iterative ensemble strategy.
-                        📊 Advanced interactive data visualization.
-                        📂 Process data from CSV, ARFF, JSON, Avro, Parquet, Iceberg, to SQL.
-                        🌐 Built-in inference server.
-                        
-                        💡 Tips for getting started:
-                        1. Shift + ENTER to add a line break in your prompt.
-                        2. Run /init to create a SMILE.md file with instructions for agents.
-                        3. Be as specific as you would with another data scientist for the best result.
-                        4. Data visualization can be feed to AI agents for interpretation and advices.
-                        5. Create custom slash commands for reusable prompts or workflows.
-                        6. Run Shell commands starting with an exclamation mark (!).
-                        7. AI can make mistakes. Always review agent's responses.""");
-
+        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
+                        MessageFormat.format(bundle.getString("AnalystWelcome"), System.getProperty("user.dir")),
+                bundle.getString("AnalystTips"));
         return cli;
     }
 
@@ -281,22 +256,9 @@ public class Workspace extends JSplitPane {
      */
     private AgentCLI javaCoderCLI(Coder coder) {
         var cli = new AgentCLI(coder);
-        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") + """
-                        =====================================================================
-                        Welcome! I am James, your AI assistant for Java programming.
-                        
-                        I can help with code completion and generation in the notebook too.
-                        cwd:\s""" + System.getProperty("user.dir"),
-
-                """
-                        💡 Tips for getting started:
-                        1. Shift + ENTER to add a line break in your prompt.
-                        2. TAB to complete code in the notebook.
-                        3. Be as specific as you would with another programmer for the best result.
-                        4. Create custom slash commands for reusable prompts or workflows.
-                        5. Run Shell commands starting with an exclamation mark (!).
-                        6. AI can make mistakes. Always review agent's responses.""");
-
+        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
+                        MessageFormat.format(bundle.getString("PythonCoderWelcome"), System.getProperty("user.dir")),
+                bundle.getString("CoderTips"));
         return cli;
     }
 
@@ -305,22 +267,9 @@ public class Workspace extends JSplitPane {
      */
     private AgentCLI pythonCoderCLI(Coder coder) {
         var cli = new AgentCLI(coder);
-        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") + """
-                        =====================================================================
-                        Welcome! I am Guido, your AI assistant for Python programming.
-                        
-                        I can help with code completion and generation in the notebook too.
-                        cwd:\s""" + System.getProperty("user.dir"),
-
-                """
-                        💡 Tips for getting started:
-                        1. Shift + ENTER to add a line break in your prompt.
-                        2. TAB to complete code in the notebook.
-                        3. Be as specific as you would with another programmer for the best result.
-                        4. Create custom slash commands for reusable prompts or workflows.
-                        5. Run Shell commands starting with an exclamation mark (!).
-                        6. AI can make mistakes. Always review agent's responses.""");
-
+        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
+                        MessageFormat.format(bundle.getString("JavaCoderWelcome"), System.getProperty("user.dir")),
+                bundle.getString("CoderTips"));
         return cli;
     }
 
