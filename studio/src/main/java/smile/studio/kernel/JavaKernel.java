@@ -119,7 +119,7 @@ public class JavaKernel extends Kernel<SnippetEvent> {
             process(events);
             for (var event : events) {
                 if (event.exception() != null) {
-                    logger.error("Evaluation error: ", event.exception());
+                    logger.error("Evaluation error: {}", event.exception().getMessage());
                     return false;
                 }
 
