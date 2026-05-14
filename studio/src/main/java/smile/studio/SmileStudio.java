@@ -446,12 +446,12 @@ public class SmileStudio extends JFrame implements SearchListener {
 
         SearchEvent.Type type = e.getType();
         SearchContext context = e.getSearchContext();
-        System.out.println(type + " -> " + context);
 
         var notebook = opt.get();
         int count = notebook.getCellCount();
         switch (type) {
             case MARK_ALL, FIND -> {
+                context.setMarkAll(true);
                 int marked = 0;
                 for (int i = 0; i < count; i++) {
                     var result = SearchEngine.markAll(notebook.getCell(i).editor(), context);
