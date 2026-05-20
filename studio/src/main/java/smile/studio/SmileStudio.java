@@ -488,8 +488,8 @@ public class SmileStudio extends JFrame implements SearchListener {
         public NewNotebookAction() {
             super(bundle.getString("New"), icon16);
             putValue(LARGE_ICON_KEY, icon24);
-            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_N,
-                    Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+            int c = getToolkit().getMenuShortcutKeyMaskEx();
+            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_N, c));
         }
 
         @Override
@@ -505,8 +505,8 @@ public class SmileStudio extends JFrame implements SearchListener {
         public OpenNotebookAction() {
             super(bundle.getString("Open"), icon16);
             putValue(LARGE_ICON_KEY, icon24);
-            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O,
-                    Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+            int c = getToolkit().getMenuShortcutKeyMaskEx();
+            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_O, c));
         }
 
         @Override
@@ -522,8 +522,8 @@ public class SmileStudio extends JFrame implements SearchListener {
         public SaveNotebookAction() {
             super(bundle.getString("Save"), icon16);
             putValue(LARGE_ICON_KEY, icon24);
-            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S,
-                    Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+            int c = getToolkit().getMenuShortcutKeyMaskEx();
+            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_S, c));
         }
 
         @Override
@@ -709,10 +709,14 @@ public class SmileStudio extends JFrame implements SearchListener {
     }
 
     private class ShowFindDialogAction extends AbstractAction {
+        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(SmileStudio.class.getResource("images/find.png")));
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
         ShowFindDialogAction() {
-            super(bundle.getString("Find"));
+            super(bundle.getString("Find"), icon16);
             int c = getToolkit().getMenuShortcutKeyMaskEx();
             putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_F, c));
+            putValue(LARGE_ICON_KEY, icon24);
         }
 
         @Override
@@ -725,10 +729,14 @@ public class SmileStudio extends JFrame implements SearchListener {
     }
 
     private class ShowReplaceDialogAction extends AbstractAction {
+        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(SmileStudio.class.getResource("images/replace.png")));
+        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
+        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
         ShowReplaceDialogAction() {
-            super(bundle.getString("Replace"));
+            super(bundle.getString("Replace"), icon16);
             int c = getToolkit().getMenuShortcutKeyMaskEx();
             putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_H, c));
+            putValue(LARGE_ICON_KEY, icon24);
         }
 
         @Override
