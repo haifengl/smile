@@ -36,9 +36,9 @@ lazy val commonSettings = Seq(
     "-XX:ObjectAlignmentInBytes=16",
     "-XX:+UseNUMA",
     "-XX:+UseStringDeduplication",
-    "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug",
+    "--enable-native-access=ALL-UNNAMED",
     "--add-opens=java.base/java.nio=ALL-UNNAMED",
-    "--enable-native-access=ALL-UNNAMED"
+    "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
   ),
   Test / envVars ++= {
     val binDir = s"${(Test / baseDirectory).value}/studio/src/universal/bin"
