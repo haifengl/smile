@@ -107,15 +107,15 @@ libraryDependencies ++= Seq(
   "com.anthropic"     % "anthropic-java"     % "2.27.0",
   "com.google.genai"  % "google-genai"       % "1.52.0",
   "org.commonmark"    % "commonmark"         % "0.28.0",
-  "org.xhtmlrenderer" % "flying-saucer-core" % "10.2.0",
+  "org.xhtmlrenderer" % "flying-saucer-core" % "10.2.1",
   "org.eclipse.lsp4j" % "org.eclipse.lsp4j"  % "1.0.0",
   "com.fifesoft"      % "rsyntaxtextarea"    % "3.6.2",
   "com.fifesoft"      % "rstaui"             % "3.3.2",
   "com.fifesoft"      % "spellchecker"       % "3.4.1",
   "com.formdev"       % "flatlaf"            % "3.7.1",
   "com.formdev"       % "flatlaf-fonts-jetbrains-mono" % "2.304",
-  "org.apache.maven"  % "maven-resolver-provider" % "3.9.15",
-  "org.apache.maven.resolver"   % "maven-resolver-supplier-mvn4" % "2.0.17",
+  "org.apache.maven"  % "maven-resolver-provider" % "3.9.16",
+  "org.apache.maven.resolver"   % "maven-resolver-supplier-mvn4" % "2.0.18",
   "io.modelcontextprotocol.sdk" % "mcp"          % "1.1.2",
   "io.github.furstenheim"       % "copy_down"    % "1.1",
   "org.jsoup"                   % "jsoup"        % "1.22.2",
@@ -124,7 +124,7 @@ libraryDependencies ++= Seq(
 )
 
 libraryDependencies ++= {
-  val jacksonV = "3.1.2"
+  val jacksonV = "3.1.3"
   Seq(
     "tools.jackson.core"       % "jackson-databind"            % jacksonV,
     "tools.jackson.dataformat" % "jackson-dataformat-yaml"     % jacksonV,
