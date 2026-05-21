@@ -103,9 +103,9 @@ libraryDependencies ++= Seq(
   "org.scala-lang"   %% "scala3-compiler"    % scalaVersion.value,
   "info.picocli"      % "picocli"            % "4.7.7",
   "ch.qos.logback"    % "logback-classic"    % "1.5.32",
-  "com.openai"        % "openai-java"        % "4.33.0",
-  "com.anthropic"     % "anthropic-java"     % "2.27.0",
-  "com.google.genai"  % "google-genai"       % "1.52.0",
+  "com.openai"        % "openai-java"        % "4.37.0",
+  "com.anthropic"     % "anthropic-java"     % "2.34.0",
+  "com.google.genai"  % "google-genai"       % "1.54.0",
   "org.commonmark"    % "commonmark"         % "0.28.0",
   "org.xhtmlrenderer" % "flying-saucer-core" % "10.2.2",
   "org.eclipse.lsp4j" % "org.eclipse.lsp4j"  % "1.0.0",
@@ -116,7 +116,7 @@ libraryDependencies ++= Seq(
   "com.formdev"       % "flatlaf-fonts-jetbrains-mono" % "2.304",
   "org.apache.maven"  % "maven-resolver-provider" % "3.9.16",
   "org.apache.maven.resolver"   % "maven-resolver-supplier-mvn4" % "2.0.18",
-  "io.modelcontextprotocol.sdk" % "mcp"          % "1.1.2",
+  "io.modelcontextprotocol.sdk" % "mcp"          % "1.1.3",
   "io.github.furstenheim"       % "copy_down"    % "1.1",
   "org.jsoup"                   % "jsoup"        % "1.22.2",
   "com.github.serpapi"          % "serpapi-java" % "1.1.0",
@@ -135,12 +135,13 @@ libraryDependencies ++= {
 }
 
 libraryDependencies ++= {
-  val arrowV = "18.3.0"
+  val arrowV = "19.0.0"
   Seq(
-    "org.apache.arrow"   % "arrow-dataset"      % arrowV,
-    "org.apache.arrow"   % "arrow-memory-netty" % arrowV,
-    "org.apache.avro"    % "avro"               % "1.12.1" exclude("org.slf4j", "slf4j-log4j12"),
-    "org.xerial.snappy"  % "snappy-java"        % "1.1.10.8", // for avro
-    "com.epam"           % "parso"              % "2.0.14"    // SAS7BDAT
+    "org.apache.arrow"   % "arrow-dataset"       % arrowV,
+    "org.apache.arrow"   % "arrow-memory-unsafe" % arrowV,
+    "org.apache.avro"    % "avro"                % "1.12.1" exclude("org.slf4j", "slf4j-log4j12"),
+    "org.xerial.snappy"  % "snappy-java"         % "1.1.10.8", // for avro
+    "com.epam"           % "parso"               % "2.0.14"    // SAS7BDAT
   )
 }
+
