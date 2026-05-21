@@ -499,7 +499,7 @@ public class Cell extends JPanel {
             return success;
         } catch (Throwable t) {
             output().println("✖ ERROR during execution: " + t);
-            logger.error("Error during execution: ", t);
+            logger.error("Error during execution: {}", t.getMessage());
             return false;
         } finally {
             kernel.removeOutputArea();

@@ -720,6 +720,14 @@ public class Notebook extends JPanel implements DocumentListener {
     }
 
     /**
+     * Returns the number of cells.
+     * @return the number of cells.
+     */
+    public int getCellCount() {
+        return cells.getComponentCount();
+    }
+
+    /**
      * Returns the cell at specific index.
      *
      * @param index the cell index.
