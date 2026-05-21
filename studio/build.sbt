@@ -107,7 +107,7 @@ libraryDependencies ++= Seq(
   "com.anthropic"     % "anthropic-java"     % "2.27.0",
   "com.google.genai"  % "google-genai"       % "1.52.0",
   "org.commonmark"    % "commonmark"         % "0.28.0",
-  "org.xhtmlrenderer" % "flying-saucer-core" % "10.2.1",
+  "org.xhtmlrenderer" % "flying-saucer-core" % "10.2.2",
   "org.eclipse.lsp4j" % "org.eclipse.lsp4j"  % "1.0.0",
   "com.fifesoft"      % "rsyntaxtextarea"    % "3.6.2",
   "com.fifesoft"      % "rstaui"             % "3.3.2",
