@@ -19,12 +19,14 @@ package smile.studio.workspace;
 import javax.swing.*;
 import javax.swing.Timer;
 import javax.swing.tree.TreePath;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.*;
 import java.nio.file.*;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.*;
 import java.util.function.IntConsumer;
 import com.formdev.flatlaf.util.SystemFileChooser;
@@ -181,6 +183,17 @@ public class Workspace extends JSplitPane {
                                     openNotebook(path);
                                 } else if (!Paths.isBinary(path)) {
                                     Notepad.open(path);
+                                } else {
+                                    var desktop = Desktop.getDesktop();
+                                    if (desktop.isSupported(Desktop.Action.OPEN)) {
+                                        try {
+                                            desktop.open(path.toFile());
+                                        } catch (IOException ex) {
+                                            JOptionPane.showMessageDialog(Workspace.this,
+                                                    "Failed to open: " + ex.getMessage(),
+                                                    "Error", JOptionPane.ERROR_MESSAGE);
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -197,7 +210,7 @@ public class Workspace extends JSplitPane {
         try {
             return new Analyst("analyst", SmileStudio::llm, cwd);
         } catch (Exception ex) {
-            logger.error("Failed to initialize data analyst agent", ex);
+            logger.error("Failed to initialize data analyst agent: {}", ex.getMessage());
         }
         return null;
     }
@@ -209,7 +222,7 @@ public class Workspace extends JSplitPane {
         try {
             return new Coder("java-coder", SmileStudio::llm, cwd);
         } catch (Exception ex) {
-            logger.error("Failed to initialize Java coding agent", ex);
+            logger.error("Failed to initialize Java coding agent: {}", ex.getMessage());
         }
         return null;
     }
@@ -221,7 +234,7 @@ public class Workspace extends JSplitPane {
         try {
             return new Coder("pythonista", SmileStudio::llm, cwd);
         } catch (Exception ex) {
-            logger.error("Failed to initialize Python coding agent", ex);
+            logger.error("Failed to initialize Python coding agent: {}", ex.getMessage());
         }
         return null;
     }
@@ -232,34 +245,9 @@ public class Workspace extends JSplitPane {
     private AgentCLI analystCLI(Analyst analyst) {
         var cli = new AgentCLI(analyst);
 
-        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") + """
-                        =====================================================================
-                        Welcome! I am Clair, your AI assistant for machine learning modeling.
-                        
-                        /help for available commands, /init for initializing your project
-                        cwd:\s""" + System.getProperty("user.dir"),
-
-                """
-                        As a state-of-the-art machine learning engineering agent,
-                        I can help you with:
-                        
-                        🤖 Automatic end-to-end ML/AI solutions based on your requirements.
-                        🔍 Best practices and state-of-the-art methods with web search.
-                        🏅 Targeted code block refinement by ablation study.
-                        🤝 Improved solution using iterative ensemble strategy.
-                        📊 Advanced interactive data visualization.
-                        📂 Process data from CSV, ARFF, JSON, Avro, Parquet, Iceberg, to SQL.
-                        🌐 Built-in inference server.
-                        
-                        💡 Tips for getting started:
-                        1. Shift + ENTER to add a line break in your prompt.
-                        2. Run /init to create a SMILE.md file with instructions for agents.
-                        3. Be as specific as you would with another data scientist for the best result.
-                        4. Data visualization can be feed to AI agents for interpretation and advices.
-                        5. Create custom slash commands for reusable prompts or workflows.
-                        6. Run Shell commands starting with an exclamation mark (!).
-                        7. AI can make mistakes. Always review agent's responses.""");
-
+        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
+                        MessageFormat.format(bundle.getString("AnalystWelcome"), System.getProperty("user.dir")),
+                bundle.getString("AnalystTips"));
         return cli;
     }
 
@@ -268,22 +256,9 @@ public class Workspace extends JSplitPane {
      */
     private AgentCLI javaCoderCLI(Coder coder) {
         var cli = new AgentCLI(coder);
-        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") + """
-                        =====================================================================
-                        Welcome! I am James, your AI assistant for Java programming.
-                        
-                        I can help with code completion and generation in the notebook too.
-                        cwd:\s""" + System.getProperty("user.dir"),
-
-                """
-                        💡 Tips for getting started:
-                        1. Shift + ENTER to add a line break in your prompt.
-                        2. TAB to complete code in the notebook.
-                        3. Be as specific as you would with another programmer for the best result.
-                        4. Create custom slash commands for reusable prompts or workflows.
-                        5. Run Shell commands starting with an exclamation mark (!).
-                        6. AI can make mistakes. Always review agent's responses.""");
-
+        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
+                        MessageFormat.format(bundle.getString("PythonCoderWelcome"), System.getProperty("user.dir")),
+                bundle.getString("CoderTips"));
         return cli;
     }
 
@@ -292,22 +267,9 @@ public class Workspace extends JSplitPane {
      */
     private AgentCLI pythonCoderCLI(Coder coder) {
         var cli = new AgentCLI(coder);
-        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") + """
-                        =====================================================================
-                        Welcome! I am Guido, your AI assistant for Python programming.
-                        
-                        I can help with code completion and generation in the notebook too.
-                        cwd:\s""" + System.getProperty("user.dir"),
-
-                """
-                        💡 Tips for getting started:
-                        1. Shift + ENTER to add a line break in your prompt.
-                        2. TAB to complete code in the notebook.
-                        3. Be as specific as you would with another programmer for the best result.
-                        4. Create custom slash commands for reusable prompts or workflows.
-                        5. Run Shell commands starting with an exclamation mark (!).
-                        6. AI can make mistakes. Always review agent's responses.""");
-
+        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
+                        MessageFormat.format(bundle.getString("JavaCoderWelcome"), System.getProperty("user.dir")),
+                bundle.getString("CoderTips"));
         return cli;
     }
 
@@ -358,7 +320,7 @@ public class Workspace extends JSplitPane {
                 properties.store(output, "Smile Studio Properties");
             }
         } catch (IOException e) {
-            logger.error("Error saving studio properties file: ", e);
+            logger.error("Error saving studio properties file: {}", e.getMessage());
         }
     }
 
@@ -381,7 +343,7 @@ public class Workspace extends JSplitPane {
                     }
                 }
             } catch (IOException ex) {
-                logger.error("Error reading studio properties file: ", ex);
+                logger.error("Error reading studio properties file: {}", ex.getMessage());
             }
         }
 

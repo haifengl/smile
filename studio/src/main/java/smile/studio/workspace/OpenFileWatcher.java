@@ -94,7 +94,7 @@ public class OpenFileWatcher {
             ws = FileSystems.getDefault().newWatchService();
             wt = Thread.ofVirtual().name("workspace-file-watcher").start(this::watchLoop);
         } catch (IOException ex) {
-            logger.error("Failed to create WatchService; external change detection disabled.", ex);
+            logger.error("Failed to create WatchService; external change detection disabled: {}", ex.getMessage());
         }
         watchService = ws;
         watchThread  = wt;
@@ -271,7 +271,7 @@ public class OpenFileWatcher {
         } catch (Exception e) {
             // Catch-all guard: log unexpected runtime exceptions so the virtual
             // thread does not exit silently.
-            logger.error("Unexpected error in file-watcher loop", e);
+            logger.error("Unexpected error in file-watcher loop: {}", e.getMessage());
         }
     }
 

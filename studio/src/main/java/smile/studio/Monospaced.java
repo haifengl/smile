@@ -44,8 +44,8 @@ public class Monospaced {
     /** The shared font; persisted via {@link SmileStudio#preferences()}. */
     private static Font font = UIManager.getFont("monospaced.font")
             .deriveFont(attributes)
-            .deriveFont(Math.min(MAX_FONT_SIZE, Math.max(MIN_FONT_SIZE,
-                    SmileStudio.preferences().getFloat("monospaced", 14f))));
+            .deriveFont(Math.clamp(SmileStudio.preferences().getFloat("monospaced", 14f),
+                    MIN_FONT_SIZE, MAX_FONT_SIZE));
 
     /** A singleton instance used as the source object for font-change events. */
     private static final Monospaced bean = new Monospaced();
@@ -98,7 +98,7 @@ public class Monospaced {
      * @param delta the number of points to add (negative = smaller).
      */
     public static void adjustFontSize(float delta) {
-        setFont(font.deriveFont(
-                Math.min(MAX_FONT_SIZE, Math.max(MIN_FONT_SIZE, font.getSize2D() + delta))));
+        setFont(font.deriveFont(Math.clamp(font.getSize2D() + delta,
+                MIN_FONT_SIZE, MAX_FONT_SIZE)));
     }
 }
