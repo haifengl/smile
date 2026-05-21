@@ -28,9 +28,14 @@ lazy val commonSettings = Seq(
   Test / parallelExecution := false,
   Test / publishArtifact := false,
   Test / javaOptions ++= Seq(
-    "-XX:+UseG1GC",
-    "-XX:MaxMetaspaceSize=1024M",
+    "-XX:+UseZGC",
     "-Xss4M",
+    "-XX:MaxMetaspaceSize=1024M",
+    "-XX:+UseCompactObjectHeaders",
+    "-XX:+UseCompressedOops",
+    "-XX:ObjectAlignmentInBytes=16",
+    "-XX:+UseNUMA",
+    "-XX:+UseStringDeduplication",
     "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug",
     "--add-opens=java.base/java.nio=ALL-UNNAMED",
     "--enable-native-access=ALL-UNNAMED"
@@ -104,9 +109,9 @@ lazy val javaSettings = commonSettings ++ Seq(
                  |<script async src="https://www.googletagmanager.com/gtag/js?id=G-57GD08QCML"></script>""".stripMargin
   ),
   libraryDependencies ++= Seq(
-    "org.slf4j" % "slf4j-api" % "2.0.17",
-    "org.slf4j" % "slf4j-simple" % "2.0.17" % Test,
-    "org.junit.jupiter" % "junit-jupiter-engine" % "6.0.3" % Test,
+    "org.slf4j" % "slf4j-api" % "2.0.18",
+    "org.slf4j" % "slf4j-simple" % "2.0.18" % Test,
+    "org.junit.jupiter" % "junit-jupiter-engine" % "6.1.0" % Test,
     "com.github.sbt.junit" % "jupiter-interface" % JupiterKeys.jupiterVersion.value % Test
   )
 )
@@ -140,7 +145,7 @@ lazy val scalaSettings = commonSettings ++ Seq(
   ),
   libraryDependencies ++= Seq(
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.6",
-    "org.slf4j" % "slf4j-simple" % "2.0.17" % Test,
+    "org.slf4j" % "slf4j-simple" % "2.0.18" % Test,
     "org.specs2" %% "specs2-core" % "4.23.0" % Test
   ),
 )
