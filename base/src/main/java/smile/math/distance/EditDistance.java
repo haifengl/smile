@@ -16,10 +16,9 @@
  */
 package smile.math.distance;
 
+import java.io.Serial;
 import smile.math.MathEx;
 import smile.util.IntArray2D;
-
-import java.io.Serial;
 
 /**
  * The Edit distance between two strings is a metric for measuring the amount
@@ -46,78 +45,85 @@ public class EditDistance implements Metric<String> {
     private static final long serialVersionUID = 1L;
 
     /**
-     * Weight matrix for weighted Levenshtein distance.
+     * Calculate Damerau or basic Levenshitein distance.
      */
-    private IntArray2D weight;
+    private final boolean damerau;
 
     /**
      * Radius of Sakoe-Chiba band
      */
-    private double r = -1;
+    private final double r;
 
     /**
-     * Calculate Damerau or basic Levenshitein distance.
+     * Weight matrix for weighted Levenshtein distance.
      */
-    private boolean damerau = false;
+    private final IntArray2D weight;
 
     /**
      * Cost matrix. Because Java automatically initialize arrays, it
      * takes O(mn) to declare this cost matrix every time before
      * calculate edit distance. But the whole point of Berghel and Roach
      * algorithm is to calculate fewer cells than O(mn). Therefore,
-     * we create this cost matrix here. Therefore, the methods using
-     * this cost matrix is not multi-thread safe.
+     * we create this cost matrix at object level.
      */
-    private IntArray2D FKP;
+    private final ThreadLocal<IntArray2D> FKP;
 
     /**
      * The lambda to calculate FKP array.
      */
     private BRF brf;
 
-
     /**
-     * Constructor. Multi-thread safe Levenshtein distance.
+     * Constructor of Levenshtein distance.
      */
     public EditDistance() {
         this(false);
     }
 
     /**
-     * Constructor. Multi-thread safe Damerau-Levenshtein distance.
-     * @param damerau if true, calculate Damerau-Levenshtein distance
-     *                instead of plain Levenshtein distance.
+     * Constructor of Damerau-Levenshtein distance.
+     * @param damerau if true, calculate Damerau-Levenshtein distance instead of
+     *                plain Levenshtein distance.
      */
     public EditDistance(boolean damerau) {
         this.damerau = damerau;
+        this.r = -1;
+        this.weight = null;
+        this.FKP = null;
     }
 
     /**
-     * Constructor. Highly efficient Levenshtein distance but not multi-thread safe.
-     * @param maxStringLength the maximum length of strings that will be
-     * feed to this algorithm.
+     * Constructor of Levenshtein distance. The algorithm is highly efficient
+     * for small edit distance.
+     * @param initMatrixSize the initial DP matrix size, which should be the estimated
+     *                       maximum length of strings that will be feed to this algorithm.
+     *                       If longer strings are encountered, the cost matrix will be resized.
      */
-    public EditDistance(int maxStringLength) {
-        this(maxStringLength, false);
+    public EditDistance(int initMatrixSize) {
+        this(initMatrixSize, false);
     }
 
     /**
-     * Constructor. Highly efficient Damerau-Levenshtein distance but not multi-thread safe.
-     * @param maxStringLength the maximum length of strings that will be
-     *                        feed to this algorithm.
-     * @param damerau if true, calculate Damerau-Levenshtein distance
-     *                instead of plain Levenshtein distance.
+     * Constructor of Damerau-Levenshtein distance. The algorithm is highly efficient
+     * for small edit distance.
+     * @param initMatrixSize the initial DP matrix size, which should be the estimated
+     *                       maximum length of strings that will be feed to this algorithm.
+     *                       If longer strings are encountered, the cost matrix will be resized.
+     * @param damerau if true, calculate Damerau-Levenshtein distance instead of
+     *                plain Levenshtein distance.
      */
-    public EditDistance(int maxStringLength, boolean damerau) {
+    public EditDistance(int initMatrixSize, boolean damerau) {
         this.damerau = damerau;
-        FKP = new IntArray2D(2*maxStringLength+1, maxStringLength+2);
+        this.r = -1;
+        this.weight = null;
+        FKP = ThreadLocal.withInitial(() ->
+                new IntArray2D(2*initMatrixSize+1, initMatrixSize+2));
         brf = damerau ? new DamerauBRF() : new LevenshteinBRF();
     }
 
     /**
-     * Constructor. Weighted Levenshtein distance without path
-     * constraints. Only insertion, deletion, and substitution operations are
-     * supported.
+     * Constructor. Weighted Levenshtein distance without path constraints.
+     * Only insertion, deletion, and substitution operations are supported.
      * @param weight the weight matrix.
      */
     public EditDistance(int[][] weight) {
@@ -125,15 +131,17 @@ public class EditDistance implements Metric<String> {
     }
 
     /**
-     * Constructor. Weighted Levenshtein distance with
-     * Sakoe-Chiba band, which improve computational cost. Only
-     * insertion, deletion, and substitution operations are supported.
+     * Constructor. Weighted Levenshtein distance with Sakoe-Chiba band,
+     * which improve computational cost. Only insertion, deletion, and
+     * substitution operations are supported.
      * @param weight the weight matrix.
      * @param radius the window width of Sakoe-Chiba band in terms of percentage of sequence length.
      */
     public EditDistance(int[][] weight, double radius) {
         this.weight = new IntArray2D(weight);
         this.r = radius;
+        this.damerau = false;
+        this.FKP = null;
     }
 
     @Override
@@ -154,8 +162,6 @@ public class EditDistance implements Metric<String> {
     /**
      * Edit distance between two strings. O(mn) time and O(n) space for weighted
      * edit distance. O(ne) time and O(mn) space for unit cost edit distance.
-     * For weighted edit distance, this method is multi-thread safe. However,
-     * it is NOT multi-thread safe for unit cost edit distance.
      */
     @Override
     public double d(String a, String b) {
@@ -170,8 +176,6 @@ public class EditDistance implements Metric<String> {
     /**
      * Edit distance between two strings. O(mn) time and O(n) space for weighted
      * edit distance. O(ne) time and O(mn) space for unit cost edit distance.
-     * For weighted edit distance, this method is multi-thread safe. However,
-     * it is NOT multi-thread safe for unit cost edit distance.
      * @param a a string.
      * @param b a string.
      * @return the distance.
@@ -321,22 +325,25 @@ public class EditDistance implements Metric<String> {
         final int n = b.length;
 
         int ZERO_K = n;
+        var fkp = FKP.get();
 
-        if (n+2 > FKP.ncol())
-            FKP = new IntArray2D(2*n+1, n+2);
+        if (n+2 > fkp.ncol()) {
+            fkp = new IntArray2D(2 * n + 1, n + 2);
+            FKP.set(fkp);
+        }
 
         for (int k = -ZERO_K; k < 0; k++) {
             int p = -k - 1;
-            FKP.set(k + ZERO_K, p + 1, Math.abs(k) - 1);
-            FKP.set(k + ZERO_K, p, Integer.MIN_VALUE);
+            fkp.set(k + ZERO_K, p + 1, Math.abs(k) - 1);
+            fkp.set(k + ZERO_K, p, Integer.MIN_VALUE);
         }
 
-        FKP.set(ZERO_K, 0, -1);
+        fkp.set(ZERO_K, 0, -1);
 
         for (int k = 1; k <= ZERO_K; k++) {
             int p = k - 1;
-            FKP.set(k + ZERO_K, p + 1, -1);
-            FKP.set(k + ZERO_K, p, Integer.MIN_VALUE);
+            fkp.set(k + ZERO_K, p + 1, -1);
+            fkp.set(k + ZERO_K, p, Integer.MIN_VALUE);
         }
 
         int p = n - m - 1;
@@ -345,15 +352,15 @@ public class EditDistance implements Metric<String> {
             p++;
 
             for (int i = (p - (n-m))/2; i >= 1; i--) {
-                brf.f(a, b, FKP, ZERO_K, n-m+i, p-i);
+                brf.f(a, b, fkp, ZERO_K, n-m+i, p-i);
             }
 
             for (int i = (n-m+p)/2; i >= 1; i--) {
-                brf.f(a, b, FKP, ZERO_K, n-m-i, p-i);
+                brf.f(a, b, fkp, ZERO_K, n-m-i, p-i);
             }
 
-            brf.f(a, b, FKP, ZERO_K, n - m, p);
-        } while (FKP.get((n - m) + ZERO_K, p) != m);
+            brf.f(a, b, fkp, ZERO_K, n - m, p);
+        } while (fkp.get((n - m) + ZERO_K, p) != m);
 
         return p - 1;
     }
@@ -375,22 +382,25 @@ public class EditDistance implements Metric<String> {
         final int n = b.length();
 
         int ZERO_K = n;
+        var fkp = FKP.get();
 
-        if (n+3 > FKP.ncol())
-            FKP = new IntArray2D(2*n+1, n+3);
+        if (n+3 > fkp.ncol()) {
+            fkp = new IntArray2D(2 * n + 1, n + 3);
+            FKP.set(fkp);
+        }
 
         for (int k = -ZERO_K; k < 0; k++) {
             int p = -k - 1;
-            FKP.set(k + ZERO_K, p + 1, Math.abs(k) - 1);
-            FKP.set(k + ZERO_K, p, Integer.MIN_VALUE);
+            fkp.set(k + ZERO_K, p + 1, Math.abs(k) - 1);
+            fkp.set(k + ZERO_K, p, Integer.MIN_VALUE);
         }
 
-        FKP.set(ZERO_K, 0, -1);
+        fkp.set(ZERO_K, 0, -1);
 
         for (int k = 1; k <= ZERO_K; k++) {
             int p = k - 1;
-            FKP.set(k + ZERO_K, p + 1, -1);
-            FKP.set(k + ZERO_K, p, Integer.MIN_VALUE);
+            fkp.set(k + ZERO_K, p + 1, -1);
+            fkp.set(k + ZERO_K, p, Integer.MIN_VALUE);
         }
 
         int p = n - m - 1;
@@ -399,15 +409,15 @@ public class EditDistance implements Metric<String> {
             p++;
 
             for (int i = (p - (n-m))/2; i >= 1; i--) {
-                brf.f(a, b, FKP, ZERO_K, n-m+i, p-i);
+                brf.f(a, b, fkp, ZERO_K, n-m+i, p-i);
             }
 
             for (int i = (n-m+p)/2; i >= 1; i--) {
-                brf.f(a, b, FKP, ZERO_K, n-m-i, p-i);
+                brf.f(a, b, fkp, ZERO_K, n-m-i, p-i);
             }
 
-            brf.f(a, b, FKP, ZERO_K, n - m, p);
-        } while (FKP.get((n - m) + ZERO_K, p) != m);
+            brf.f(a, b, fkp, ZERO_K, n - m, p);
+        } while (fkp.get((n - m) + ZERO_K, p) != m);
 
         return p - 1;
     }
@@ -497,7 +507,6 @@ public class EditDistance implements Metric<String> {
     /**
      * Levenshtein distance between two strings allows insertion, deletion,
      * or substitution of characters. O(mn) time and O(n) space.
-     * Multi-thread safe.
      * @param a a string.
      * @param b a string.
      * @return the distance.
@@ -537,7 +546,6 @@ public class EditDistance implements Metric<String> {
     /**
      * Levenshtein distance between two strings allows insertion, deletion,
      * or substitution of characters. O(mn) time and O(n) space.
-     * Multi-thread safe.
      * @param a a string.
      * @param b a string.
      * @return the distance.
@@ -577,7 +585,7 @@ public class EditDistance implements Metric<String> {
     /**
      * Damerau-Levenshtein distance between two strings allows insertion,
      * deletion, substitution, or transposition of characters.
-     * O(mn) time and O(n) space. Multi-thread safe.
+     * O(mn) time and O(n) space.
      * @param a a string.
      * @param b a string.
      * @return the distance.
@@ -624,7 +632,7 @@ public class EditDistance implements Metric<String> {
     /**
      * Damerau-Levenshtein distance between two strings allows insertion,
      * deletion, substitution, or transposition of characters.
-     * O(mn) time and O(n) space. Multi-thread safe.
+     * O(mn) time and O(n) space.
      * @param a a string.
      * @param b a string.
      * @return the distance.

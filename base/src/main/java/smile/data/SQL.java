@@ -506,7 +506,7 @@ public class SQL implements AutoCloseable {
      */
     public void query(String sql, String path) throws SQLException {
         execute(String.format("COPY (%s) TO '%s' (FORMAT csv, DELIMITER ',', HEADER);",
-                requireNonBlank(sql).replaceAll(";$", ""), requireSafeLiteral(escape(path))));
+                requireSingleStatement(sql).replaceAll(";$", ""), requireSafeLiteral(escape(path))));
     }
 
     /**
@@ -528,7 +528,7 @@ public class SQL implements AutoCloseable {
      */
     public DataFrame query(String sql) throws SQLException {
         logger.info(sql);
-        try (var stmt = db.prepareStatement(requireNonBlank(sql))) {
+        try (var stmt = db.prepareStatement(requireSingleStatement(sql))) {
             return DataFrame.of(stmt.executeQuery());
         }
     }
@@ -552,7 +552,7 @@ public class SQL implements AutoCloseable {
      */
     public int update(String sql) throws SQLException {
         logger.info(sql);
-        try (var stmt = db.prepareStatement(requireNonBlank(sql))) {
+        try (var stmt = db.prepareStatement(requireSingleStatement(sql))) {
             return stmt.executeUpdate();
         }
     }
@@ -574,20 +574,76 @@ public class SQL implements AutoCloseable {
     public boolean execute(String sql) throws SQLException {
         logger.info(sql);
         try (var stmt = db.createStatement()) {
-            return stmt.execute(requireNonBlank(sql));
+            return stmt.execute(requireSingleStatement(sql));
         }
     }
 
     /**
-     * Validates that {@code sql} is not {@code null} and not blank.
+     * Validates that {@code sql} is not {@code null}, not blank, and contains
+     * exactly one SQL statement.
+     *
+     * <p>A semicolon that appears inside a single-quoted string literal
+     * ({@code 'like ; this'}) is ignored — only semicolons outside of string
+     * literals are treated as statement separators.  A single trailing
+     * semicolon (with optional whitespace after it) is permitted and does not
+     * count as a second statement.
+     *
+     * <p>Examples:
+     * <pre>{@code
+     *   requireSingleStatement("SELECT 1")              // ok
+     *   requireSingleStatement("SELECT 1;")             // ok — trailing semicolon allowed
+     *   requireSingleStatement("SELECT ';'")            // ok — semicolon inside literal
+     *   requireSingleStatement("SELECT 1; SELECT 2")    // throws
+     *   requireSingleStatement("DROP TABLE t; DROP TABLE u;")  // throws
+     * }</pre>
      *
      * @param sql the SQL string to check.
      * @return {@code sql} unchanged.
-     * @throws IllegalArgumentException if {@code sql} is {@code null} or blank.
+     * @throws IllegalArgumentException if {@code sql} is {@code null}, blank,
+     *         or contains more than one statement.
      */
-    private static String requireNonBlank(String sql) {
+    private static String requireSingleStatement(String sql) {
         if (Strings.isNullOrBlank(sql)) {
             throw new IllegalArgumentException("SQL statement must not be null or blank.");
+        }
+
+        // Walk the string character-by-character, tracking whether we are
+        // inside a single-quoted literal.  '' (two consecutive single-quotes)
+        // is the standard SQL escape for a literal single-quote and does NOT
+        // end the string, so we handle that explicitly.
+        boolean inLiteral = false;
+        int statementCount = 1; // we already have at least one statement
+
+        for (int i = 0; i < sql.length(); i++) {
+            char c = sql.charAt(i);
+
+            if (inLiteral) {
+                if (c == '\'') {
+                    // Peek ahead: '' is an escaped quote, not the end of the literal.
+                    if (i + 1 < sql.length() && sql.charAt(i + 1) == '\'') {
+                        i++; // skip the second quote
+                    } else {
+                        inLiteral = false;
+                    }
+                }
+            } else {
+                if (c == '\'') {
+                    inLiteral = true;
+                } else if (c == ';') {
+                    // A semicolon outside a literal ends the current statement.
+                    // Check whether anything non-whitespace follows it.
+                    String remainder = sql.substring(i + 1);
+                    if (!remainder.isBlank()) {
+                        statementCount++;
+                    }
+                }
+            }
+        }
+
+        if (statementCount > 1) {
+            throw new IllegalArgumentException(
+                    "SQL string must contain exactly one statement, but multiple " +
+                    "semicolon-separated statements were detected.");
         }
         return sql;
     }

@@ -1,6 +1,7 @@
 plugins {
     id("buildlogic.java-common-conventions")
     id("io.quarkus")
+    id("jacoco-report-aggregation")
 }
 
 val quarkusPlatformGroupId: String by project
@@ -31,21 +32,30 @@ dependencies {
     testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.quarkus:quarkus-test-h2")
     testImplementation("io.rest-assured:rest-assured:6.0.0")
+
+    // JaCoCo aggregated report
+    jacocoAggregation(project(":base"))
+    jacocoAggregation(project(":core"))
+    jacocoAggregation(project(":deep"))
 }
 
 tasks.withType<Test> {
     systemProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager")
 }
+
 tasks.quarkusDev {
     jvmArgs = listOf(
         "--add-opens", "java.base/java.lang=ALL-UNNAMED",
         "--add-opens", "java.base/java.nio=ALL-UNNAMED",
         "--enable-native-access", "ALL-UNNAMED")
 }
+
 tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
     options.compilerArgs.add("-parameters")
 }
+
 tasks.withType<Javadoc> {
     enabled = false
 }
+

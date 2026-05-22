@@ -86,6 +86,7 @@ batScriptExtraDefines ++= Seq(
   """call :add_java -Xss4M""",
   """call :add_java --add-opens=java.base/java.nio=ALL-UNNAMED""",
   """call :add_java --enable-native-access=ALL-UNNAMED""",
+  """call :add_java --enable-preview""",
   """call :add_java -Dsmile.home=%APP_HOME%""",
   """call :add_java -Dscala.usejavacp=true""",
   """call :add_java -Dscala.repl.autoruncode=%APP_HOME%\bin\predef.sc""",
@@ -102,20 +103,20 @@ libraryDependencies ++= Seq(
   "org.scala-lang"   %% "scala3-compiler"    % scalaVersion.value,
   "info.picocli"      % "picocli"            % "4.7.7",
   "ch.qos.logback"    % "logback-classic"    % "1.5.32",
-  "com.openai"        % "openai-java"        % "4.33.0",
-  "com.anthropic"     % "anthropic-java"     % "2.27.0",
-  "com.google.genai"  % "google-genai"       % "1.51.0",
+  "com.openai"        % "openai-java"        % "4.37.0",
+  "com.anthropic"     % "anthropic-java"     % "2.34.0",
+  "com.google.genai"  % "google-genai"       % "1.54.0",
   "org.commonmark"    % "commonmark"         % "0.28.0",
-  "org.xhtmlrenderer" % "flying-saucer-core" % "10.2.0",
+  "org.xhtmlrenderer" % "flying-saucer-core" % "10.2.2",
   "org.eclipse.lsp4j" % "org.eclipse.lsp4j"  % "1.0.0",
   "com.fifesoft"      % "rsyntaxtextarea"    % "3.6.2",
   "com.fifesoft"      % "rstaui"             % "3.3.2",
   "com.fifesoft"      % "spellchecker"       % "3.4.1",
   "com.formdev"       % "flatlaf"            % "3.7.1",
   "com.formdev"       % "flatlaf-fonts-jetbrains-mono" % "2.304",
-  "org.apache.maven"  % "maven-resolver-provider" % "3.9.15",
-  "org.apache.maven.resolver"   % "maven-resolver-supplier-mvn4" % "2.0.16",
-  "io.modelcontextprotocol.sdk" % "mcp"          % "1.1.2",
+  "org.apache.maven"  % "maven-resolver-provider" % "3.9.16",
+  "org.apache.maven.resolver"   % "maven-resolver-supplier-mvn4" % "2.0.18",
+  "io.modelcontextprotocol.sdk" % "mcp"          % "1.1.3",
   "io.github.furstenheim"       % "copy_down"    % "1.1",
   "org.jsoup"                   % "jsoup"        % "1.22.2",
   "com.github.serpapi"          % "serpapi-java" % "1.1.0",
@@ -123,7 +124,7 @@ libraryDependencies ++= Seq(
 )
 
 libraryDependencies ++= {
-  val jacksonV = "3.1.2"
+  val jacksonV = "3.1.3"
   Seq(
     "tools.jackson.core"       % "jackson-databind"            % jacksonV,
     "tools.jackson.dataformat" % "jackson-dataformat-yaml"     % jacksonV,
@@ -134,12 +135,13 @@ libraryDependencies ++= {
 }
 
 libraryDependencies ++= {
-  val arrowV = "18.3.0"
+  val arrowV = "19.0.0"
   Seq(
-    "org.apache.arrow"   % "arrow-dataset"      % arrowV,
-    "org.apache.arrow"   % "arrow-memory-netty" % arrowV,
-    "org.apache.avro"    % "avro"               % "1.12.1" exclude("org.slf4j", "slf4j-log4j12"),
-    "org.xerial.snappy"  % "snappy-java"        % "1.1.10.8", // for avro
-    "com.epam"           % "parso"              % "2.0.14"    // SAS7BDAT
+    "org.apache.arrow"   % "arrow-dataset"       % arrowV,
+    "org.apache.arrow"   % "arrow-memory-unsafe" % arrowV,
+    "org.apache.avro"    % "avro"                % "1.12.1" exclude("org.slf4j", "slf4j-log4j12"),
+    "org.xerial.snappy"  % "snappy-java"         % "1.1.10.8", // for avro
+    "com.epam"           % "parso"               % "2.0.14"    // SAS7BDAT
   )
 }
+

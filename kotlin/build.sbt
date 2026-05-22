@@ -5,6 +5,6 @@ packageOptions += Package.ManifestAttributes("Automatic-Module-Name" -> "smile.k
 import kotlin.Keys._
 kotlinLib("stdlib")
 
-kotlinVersion := "2.3.20"
+kotlinVersion := "2.3.21"
 kotlincJvmTarget := "25"
 
