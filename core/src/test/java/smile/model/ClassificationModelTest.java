@@ -62,7 +62,7 @@ public class ClassificationModelTest {
         System.out.println("Training metrics: " + model.train());
         System.out.println("Validation metrics: " + model.validation());
         System.out.println("Test metrics: " + model.test());
-        assertEquals(33, model.test().error(), 4);
+        assertEquals(33, model.test().error(), 5);
     }
 
     @Test

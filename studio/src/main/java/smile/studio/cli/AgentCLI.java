@@ -50,13 +50,6 @@ import smile.util.Strings;
 public class AgentCLI extends JPanel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AgentCLI.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(AgentCLI.class.getName(), Locale.getDefault());
-    /**
-     * The threshold for compacting conversation session by summarization.
-     * If the total tokens of conversation session exceeds this threshold,
-     * a compact command will be automatically executed to free up space
-     * in the context window.
-     */
-    private static final int COMPACT_THRESHOLD = OS.getProperty("smile.agent.auto.compact", 180000);
     /** The container of conversation. */
     private final JPanel intents = new ScrollablePanel();
     /** The agent. */
@@ -336,26 +329,24 @@ public class AgentCLI extends JPanel {
         StringBuilder sb = new StringBuilder("""
                 The following commands are available:
                 
-                /memory show\tDisplay the content of long term memory
-                /memory add\tAdd facts or notes to long term memory
-                /memory edit\tOpen a notepad to edit the long term memory
-                /memory refresh\tReload the context from disk
-                /plan\t\tEnter the plan mode.
-                /plan off\tExit  the plan mode.
-                /clear\t\tClear the current conversation session.
-                /compact\tSummarize the conversation and retain critical details.
-                /edit\t\tEdit a file with notepad.
-                /train\t\tTrain a machine learning model
-                /predict\tRun batch inference
-                /serve\t\tStart an inference service""");
+                /memory show        Display the content of long term memory
+                /memory add         Add facts or notes to long term memory
+                /memory edit        Open a notepad to edit the long term memory
+                /memory refresh     Reload the context from disk
+                /plan               Enter the plan mode.
+                /plan off           Exit  the plan mode.
+                /clear              Clear the current conversation session.
+                /compact            Summarize the conversation and retain critical details.
+                /edit               Edit a file with notepad.
+                /train              Train a machine learning model
+                /predict            Run batch inference
+                /serve              Start an inference service""");
 
         if (agent != null && agent.llm() != null) {
             for (var skill : agent.skills()) {
                 if (skill.isUserInvocable()) {
-                    sb.append("\n/")
-                            .append(skill.name())
-                            .append(skill.name().length() > 6 ? "\t" : "\t\t")
-                            .append(skill.description());
+                    sb.append(String.format("\n/%-18s ", skill.name()))
+                      .append(skill.description().split("\\.", 2)[0]);
                 }
             }
         }
@@ -578,7 +569,7 @@ Please provide your summary based on the conversation so far, following this str
                 });
 
                 // Auto compact if total tokens exceed the threshold, otherwise render Markdown if applicable.
-                if (totalTokens > COMPACT_THRESHOLD) {
+                if (totalTokens > agent.llm().compactThreshold()) {
                     SwingUtilities.invokeLater(() ->
                             intent.output().append("\n\n[The conversation session is too long, a compact command will be executed to summarize conversation.]\n"));
                     compact("", intent);

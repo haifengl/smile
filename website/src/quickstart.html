@@ -2,7 +2,7 @@
 layout: layout.njk
 permalink: "{{ page.filePathStem }}.html"
 title: SMILE - Quick Start
-version: "6.0.1"
+version: "6.1.0"
 ---
 {% include "toc.njk" %}
 
@@ -747,13 +747,13 @@ import java.io.*;
 
 // Save
 try (var out = new ObjectOutputStream(
-        new FileOutputStream("forest.ser"))) {
+        new FileOutputStream("forest.sml"))) {
     out.writeObject(forest);
 }
 
 // Load
 try (var in = new ObjectInputStream(
-        new FileInputStream("forest.ser"))) {
+        new FileInputStream("forest.sml"))) {
     var loaded = (RandomForest) in.readObject();
     System.out.println(loaded.predict(zipTest.get(0)));
 }
@@ -764,11 +764,11 @@ try (var in = new ObjectInputStream(
 import java.io._
 
 // Save
-val out = new ObjectOutputStream(new FileOutputStream("forest.ser"))
+val out = new ObjectOutputStream(new FileOutputStream("forest.sml"))
 out.writeObject(forest); out.close()
 
 // Load
-val in = new ObjectInputStream(new FileInputStream("forest.ser"))
+val in = new ObjectInputStream(new FileInputStream("forest.sml"))
 val loaded = in.readObject().asInstanceOf[RandomForest]
 in.close()
             </code></pre>

@@ -206,42 +206,42 @@ The `deep/README.md` covers:
 <dependency>
   <groupId>com.github.haifengl</groupId>
   <artifactId>smile-core</artifactId>
-  <version>6.0.1</version>
+  <version>6.1.0</version>
 </dependency>
 
 <!-- Deep learning + LLMs (requires LibTorch) -->
 <dependency>
   <groupId>com.github.haifengl</groupId>
   <artifactId>smile-deep</artifactId>
-  <version>6.0.1</version>
+  <version>6.1.0</version>
 </dependency>
 
 <!-- Natural language processing -->
 <dependency>
   <groupId>com.github.haifengl</groupId>
   <artifactId>smile-nlp</artifactId>
-  <version>6.0.1</version>
+  <version>6.1.0</version>
 </dependency>
 
 <!-- Data visualization -->
 <dependency>
   <groupId>com.github.haifengl</groupId>
   <artifactId>smile-plot</artifactId>
-  <version>6.0.1</version>
+  <version>6.1.0</version>
 </dependency>
 ```
 
 ### SBT (Scala)
 
 ```scala
-libraryDependencies += "com.github.haifengl" %% "smile-scala" % "6.0.1"
+libraryDependencies += "com.github.haifengl" %% "smile-scala" % "6.1.0"
 ```
 
 ### Gradle (Kotlin)
 
 ```kotlin
 dependencies {
-    implementation("com.github.haifengl:smile-kotlin:6.0.1")
+    implementation("com.github.haifengl:smile-kotlin:6.1.0")
 }
 ```
 
@@ -306,24 +306,24 @@ Download a pre-packaged release from the
 
 ```shell
 cd bin
-./setup      # install required native dependencies
-./smile      # launch SMILE Studio (desktop GUI)
+path/to/smile/bin/setup      # install required native dependencies
+path/to/smile/bin/smile      # launch SMILE Studio from your project directory
 ```
 
 Other entry points:
 
-| Command           | Description |
-|-------------------|---|
-| `./smile`         | Desktop notebook IDE |
-| `./smile shell`   | Java REPL with all SMILE packages pre-imported |
-| `./smile scala`   | Scala REPL |
-| `./smile train`   | Train a supervised learning model     |
-| `./smile predict` | Predict on a file using a saved model             |
-| `./smile serve`   | Start the LLM inference server |
+| Command         | Description |
+|-----------------|---|
+| `smile`         | Desktop notebook IDE |
+| `smile shell`   | Java REPL with all SMILE packages pre-imported |
+| `smile scala`   | Scala REPL |
+| `smile train`   | Train a supervised learning model     |
+| `smile predict` | Predict on a file using a saved model             |
+| `smile serve`   | Start the LLM inference server |
 
 To increase the JVM heap:
 ```shell
-./smile -J-Xmx30G
+path/to/smile/bin/smile -J-Xmx30G
 ```
 
 ---
@@ -359,7 +359,7 @@ SMILE provides two visualization layers:
 <dependency>
   <groupId>com.github.haifengl</groupId>
   <artifactId>smile-plot</artifactId>
-  <version>6.0.1</version>
+  <version>6.1.0</version>
 </dependency>
 ```
 

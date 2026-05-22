@@ -71,16 +71,16 @@ All four panels are arranged in a resizable split-pane layout, and the applicati
 
 ## 2. Starting SMILE Studio
 
-Run SMILE Studio from the project's root directory so that relative paths in notebooks resolve correctly:
+Run SMILE Studio from your project's root directory so that relative paths in notebooks resolve correctly:
 
 ```bash
 # Unix / macOS
 cd /your/project
-smile
+path/to/smile/bin/smile
 
 # Windows
 cd C:\your\project
-smile
+path\to\smile\bin\smile
 ```
 
 > **Note:** SMILE Studio must be started in a graphical (non-headless) environment. If the JVM is running in headless mode the application will print an error and exit.

@@ -100,7 +100,7 @@ public class Markdown extends JPanel {
                             Desktop.getDesktop().browse(new URI(uri));
                         }
                     } catch (Exception ex) {
-                        logger.error("Failed to open browser: ", ex);
+                        logger.error("Failed to open browser: {}", ex.getMessage());
                     }
                 }
             });
@@ -112,7 +112,7 @@ public class Markdown extends JPanel {
             add(browser, BorderLayout.CENTER);
             return browser;
         } catch (ParserConfigurationException | SAXException | IOException ex) {
-            logger.error("Failed to process Markdown: ", ex);
+            logger.error("Failed to process Markdown: {}", ex.getMessage());
             JTextArea area = new JTextArea(text);
             Monospaced.addListener((e) ->
                     SwingUtilities.invokeLater(() -> setFont((Font) e.getNewValue())));
