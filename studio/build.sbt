@@ -105,7 +105,7 @@ libraryDependencies ++= Seq(
   "ch.qos.logback"    % "logback-classic"    % "1.5.33",
   "com.openai"        % "openai-java"        % "4.37.0",
   "com.anthropic"     % "anthropic-java"     % "2.35.0",
-  "com.google.genai"  % "google-genai"       % "1.56.0",
+  "com.google.genai"  % "google-genai"       % "1.53.0",
   "org.commonmark"    % "commonmark"         % "0.28.0",
   "org.xhtmlrenderer" % "flying-saucer-core" % "10.2.2",
   "org.eclipse.lsp4j" % "org.eclipse.lsp4j"  % "1.0.0",

@@ -14,7 +14,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.5.32")
     implementation("com.openai:openai-java:4.33.0")
     implementation("com.anthropic:anthropic-java:2.27.0")
-    implementation("com.google.genai:google-genai:1.52.0")
+    implementation("com.google.genai:google-genai:1.53.0")
     implementation("org.commonmark:commonmark:0.28.0")
     implementation("org.xhtmlrenderer:flying-saucer-core:10.2.0")
     implementation("org.eclipse.lsp4j:org.eclipse.lsp4j:1.0.0")
