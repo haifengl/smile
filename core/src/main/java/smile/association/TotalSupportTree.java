@@ -34,7 +34,7 @@ import java.util.stream.StreamSupport;
  * 
  * @author Haifeng Li
  */
-class TotalSupportTree implements Iterable<ItemSet> {
+public class TotalSupportTree implements Iterable<ItemSet> {
 
     static class Node {
         /**
