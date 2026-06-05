@@ -451,6 +451,11 @@ void smile_tensor_set_requires_grad(ST_Tensor t, int rg) {
 }
 int smile_tensor_is_training(ST_Tensor t) { return 0; /* tensors have no training flag */ }
 
+ST_Device smile_tensor_device(ST_Tensor t) {
+    if (!t) return nullptr;
+    ST_TRY_BEGIN return new ST_Device_{ t->t.device() }; ST_TRY_END return nullptr;
+}
+
 int smile_tensor_shape(ST_Tensor t, int64_t *shape, int max_dims) {
     if (!t || !shape) return 0;
     int ndim = static_cast<int>(t->t.dim());
@@ -680,6 +685,18 @@ void      smile_tensor_logical_or_ (ST_Tensor a, ST_Tensor b) { if (a&&b) a->t.l
 ST_Tensor smile_tensor_matmul (ST_Tensor a, ST_Tensor b) { MAKE_TENSOR(a->t.matmul(b->t)); }
 ST_Tensor smile_tensor_outer  (ST_Tensor a, ST_Tensor b) { MAKE_TENSOR(at::outer(a->t, b->t)); }
 
+ST_Tensor smile_tensor_scatter_reduce(ST_Tensor t, int64_t dim, ST_Tensor index,
+                                      ST_Tensor src, const char *reduce) {
+    if (!t || !index || !src || !reduce) return nullptr;
+    MAKE_TENSOR(t->t.scatter_reduce(dim, index->t, src->t, reduce));
+}
+void smile_tensor_scatter_reduce_(ST_Tensor t, int64_t dim, ST_Tensor index,
+                                  ST_Tensor src, const char *reduce) {
+    if (t && index && src && reduce) {
+        ST_TRY_BEGIN t->t.scatter_reduce_(dim, index->t, src->t, reduce); ST_TRY_END
+    }
+}
+
 // =============================================================================
 // Tensor — New-tensor creators
 // =============================================================================
@@ -721,6 +738,9 @@ ST_TensorIndex smile_tensor_index_slice(int64_t start, int64_t stop, int64_t ste
         return new ST_TensorIndex_{ Idx(torch::indexing::Slice(s, e, st)) };
     ST_TRY_END
     return nullptr;
+}
+ST_TensorIndex smile_tensor_index_none(void) {
+    ST_TRY_BEGIN return new ST_TensorIndex_{ Idx(torch::indexing::None) }; ST_TRY_END return nullptr;
 }
 void smile_tensor_index_free(ST_TensorIndex idx) { delete idx; }
 

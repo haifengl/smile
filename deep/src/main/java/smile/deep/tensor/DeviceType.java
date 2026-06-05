@@ -16,35 +16,34 @@
  */
 package smile.deep.tensor;
 
-import org.bytedeco.pytorch.global.torch;
-
 /**
- * The compute device type.
+ * The compute device type. The codes map to the {@code ST_DeviceType} values
+ * exposed by the {@code smile_torch} native API, which mirror
+ * {@code torch::DeviceType}.
  *
  * @author Haifeng Li
  */
 public enum DeviceType {
     /** CPU */
-    CPU(torch.DeviceType.CPU),
+    CPU(0),
     /** NVIDIA GPU */
-    CUDA(torch.DeviceType.CUDA),
+    CUDA(1),
     /** GPU for macOS devices with Metal programming framework. */
-    MPS(torch.DeviceType.MPS);
+    MPS(9);
 
-    /** PyTorch device type. */
-    final torch.DeviceType value;
+    /** The native {@code ST_DeviceType} code. */
+    final int code;
 
     /** Constructor. */
-    DeviceType(torch.DeviceType device) {
-        this.value = device;
+    DeviceType(int code) {
+        this.code = code;
     }
 
     /**
-     * Returns the byte value of device type,
-     * which is compatible with PyTorch.
+     * Returns the byte value of device type, which is compatible with PyTorch.
      * @return the byte value of device type.
      */
     public byte value() {
-        return value.value;
+        return (byte) code;
     }
 }
