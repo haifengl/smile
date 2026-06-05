@@ -16,8 +16,10 @@
  */
 package smile.deep.activation;
 
-import org.bytedeco.pytorch.global.torch;
 import smile.deep.tensor.Tensor;
+
+import static smile.torch.smile_torch_h.smile_torch_sigmoid;
+import static smile.torch.smile_torch_h.smile_torch_sigmoid_;
 
 /**
  * Sigmoid activation function.
@@ -35,12 +37,10 @@ public class Sigmoid extends ActivationFunction {
 
     @Override
     public Tensor forward(Tensor input) {
-        var x = input.asTorch();
         if (inplace) {
-            torch.sigmoid_(x);
+            smile_torch_sigmoid_(input.handle());
             return input;
-        } else {
-            return new Tensor(torch.sigmoid(x));
         }
+        return new Tensor(smile_torch_sigmoid(input.handle()));
     }
 }

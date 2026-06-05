@@ -16,12 +16,13 @@
  */
 package smile.deep.layer;
 
+import java.lang.foreign.MemorySegment;
 import java.util.function.Function;
-import org.bytedeco.pytorch.Module;
 import smile.deep.activation.*;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
+import smile.torch.smile_torch_h;
 
 /**
  * A layer in the neural network.
@@ -43,10 +44,10 @@ public interface Layer extends Function<Tensor, Tensor> {
     }
 
     /**
-     * Returns the PyTorch Module object.
-     * @return the PyTorch Module object.
+     * Returns the native {@code ST_Module} handle for this layer.
+     * @return the native {@code ST_Module} handle.
      */
-    Module asTorch();
+    MemorySegment asModule();
 
     /**
      * Moves the layer block to a device.
@@ -54,7 +55,12 @@ public interface Layer extends Function<Tensor, Tensor> {
      * @return this layer.
      */
     default Layer to(Device device) {
-        asTorch().to(device.asTorch(), true);
+        MemorySegment d = device.toNative();
+        try {
+            smile_torch_h.smile_module_to_device(asModule(), d, 1);
+        } finally {
+            smile_torch_h.smile_device_free(d);
+        }
         return this;
     }
 
@@ -65,7 +71,12 @@ public interface Layer extends Function<Tensor, Tensor> {
      * @return this layer.
      */
     default Layer to(Device device, ScalarType dtype) {
-        asTorch().to(device.asTorch(), dtype.asTorch(), true);
+        MemorySegment d = device.toNative();
+        try {
+            smile_torch_h.smile_module_to_dtype(asModule(), d, dtype.code(), 1);
+        } finally {
+            smile_torch_h.smile_device_free(d);
+        }
         return this;
     }
 

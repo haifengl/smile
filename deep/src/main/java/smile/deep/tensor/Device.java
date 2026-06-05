@@ -60,7 +60,7 @@ public class Device {
      * must free it with {@code smile_device_free}.
      * @return a new {@code ST_Device} handle.
      */
-    MemorySegment toNative() {
+    public MemorySegment toNative() {
         return Native.check(smile_torch_h.smile_device_create(type.code, index));
     }
 

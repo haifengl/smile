@@ -16,8 +16,10 @@
  */
 package smile.deep.activation;
 
-import org.bytedeco.pytorch.global.torch;
 import smile.deep.tensor.Tensor;
+
+import static smile.torch.smile_torch_h.smile_torch_gelu;
+import static smile.torch.smile_torch_h.smile_torch_gelu_;
 
 /**
  * Gaussian Error Linear Unit activation function.
@@ -35,12 +37,10 @@ public class GELU extends ActivationFunction {
 
     @Override
     public Tensor forward(Tensor input) {
-        var x = input.asTorch();
         if (inplace) {
-            torch.gelu_(x);
+            smile_torch_gelu_(input.handle());
             return input;
-        } else {
-            return new Tensor(torch.gelu(x));
         }
+        return new Tensor(smile_torch_gelu(input.handle()));
     }
 }

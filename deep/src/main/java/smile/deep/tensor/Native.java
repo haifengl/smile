@@ -38,24 +38,25 @@ import smile.torch.smile_torch_h;
  *
  * @author Haifeng Li
  */
-final class Native {
+public final class Native {
     private Native() {
     }
 
     /**
      * Shared cleaner that releases native handles owned by Java wrappers
-     * (tensors, indices, …) once those wrappers are no longer reachable. It is a
-     * safety net; callers should still close resources deterministically via
-     * try-with-resources or an {@link smile.util.AutoScope} where possible.
+     * (tensors, indices, modules, …) once those wrappers are no longer
+     * reachable. It is a safety net; callers should still close resources
+     * deterministically via try-with-resources or an
+     * {@link smile.util.AutoScope} where possible.
      */
-    static final Cleaner CLEANER = Cleaner.create();
+    public static final Cleaner CLEANER = Cleaner.create();
 
     /**
      * Returns the message describing the most recent native failure, or an empty
      * string if none.
      * @return the last native error message.
      */
-    static String lastError() {
+    public static String lastError() {
         MemorySegment s = smile_torch_h.smile_last_error();
         if (s == null || s.address() == 0) return "";
         return s.reinterpret(Long.MAX_VALUE).getString(0);
@@ -67,7 +68,7 @@ final class Native {
      * @param handle the handle returned by a native call.
      * @return the validated handle.
      */
-    static MemorySegment check(MemorySegment handle) {
+    public static MemorySegment check(MemorySegment handle) {
         if (handle == null || handle.address() == 0) {
             String msg = lastError();
             throw new RuntimeException(msg.isEmpty() ? "smile_torch native call failed" : msg);

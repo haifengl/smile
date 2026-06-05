@@ -16,10 +16,11 @@
  */
 package smile.deep.layer;
 
-import org.bytedeco.pytorch.GroupNormImpl;
-import org.bytedeco.pytorch.GroupNormOptions;
-import org.bytedeco.pytorch.Module;
+import java.lang.foreign.MemorySegment;
 import smile.deep.tensor.Tensor;
+
+import static smile.deep.tensor.Native.check;
+import static smile.torch.smile_torch_h.*;
 
 /**
  * Group normalization. The input channels are separated into groups.
@@ -28,10 +29,7 @@ import smile.deep.tensor.Tensor;
  *
  * @author Haifeng Li
  */
-public class GroupNormLayer implements Layer {
-    /** Implementation. */
-    private final GroupNormImpl module;
-
+public class GroupNormLayer extends TypedLayer {
     /**
      * Constructor.
      * @param groups the number of groups to separate the channels into.
@@ -53,19 +51,20 @@ public class GroupNormLayer implements Layer {
      * @param affine when set to true, this layer has learnable affine parameters.
      */
     public GroupNormLayer(int groups, int channels, double eps, boolean affine) {
-        var options = new GroupNormOptions(groups, channels);
-        options.eps().put(eps);
-        options.affine().put(affine);
-        this.module = new GroupNormImpl(options);
+        super(create(groups, channels, eps, affine));
     }
 
-    @Override
-    public Module asTorch() {
-        return module;
+    private static Handles create(int groups, int channels, double eps, boolean affine) {
+        MemorySegment h = check(smile_groupnorm_create(groups, channels, eps, affine ? 1 : 0));
+        MemorySegment m = check(smile_groupnorm_as_module(h));
+        return new Handles(h, m, () -> {
+            smile_module_free(m);
+            smile_groupnorm_free(h);
+        });
     }
 
     @Override
     public Tensor forward(Tensor input) {
-        return new Tensor(module.forward(input.asTorch()));
+        return new Tensor(smile_groupnorm_forward(handle, input.handle()));
     }
 }
