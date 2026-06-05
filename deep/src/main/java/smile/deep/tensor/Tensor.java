@@ -23,6 +23,8 @@ import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Deque;
 import java.util.Optional;
+
+import smile.torch.Native;
 import smile.util.AutoScope;
 import smile.util.Tuple2;
 
@@ -32,7 +34,7 @@ import static java.lang.foreign.ValueLayout.JAVA_FLOAT;
 import static java.lang.foreign.ValueLayout.JAVA_INT;
 import static java.lang.foreign.ValueLayout.JAVA_LONG;
 import static java.lang.foreign.ValueLayout.JAVA_SHORT;
-import static smile.deep.tensor.Native.check;
+import static smile.torch.Native.check;
 import static smile.torch.smile_torch_h.*;
 
 /**

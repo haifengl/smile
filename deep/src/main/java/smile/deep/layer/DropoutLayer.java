@@ -19,7 +19,7 @@ package smile.deep.layer;
 import java.lang.foreign.MemorySegment;
 import smile.deep.tensor.Tensor;
 
-import static smile.deep.tensor.Native.check;
+import static smile.torch.Native.check;
 import static smile.torch.smile_torch_h.*;
 
 /**

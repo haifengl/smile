@@ -17,6 +17,8 @@
 package smile.deep.tensor;
 
 import java.lang.foreign.MemorySegment;
+
+import smile.torch.Native;
 import smile.torch.smile_torch_h;
 
 /**

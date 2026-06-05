@@ -17,9 +17,9 @@
 package smile.deep;
 
 import java.lang.foreign.MemorySegment;
-import smile.deep.tensor.Native;
+import smile.torch.Native;
 
-import static smile.deep.tensor.Native.check;
+import static smile.torch.Native.check;
 import static smile.torch.smile_torch_h.*;
 
 /**

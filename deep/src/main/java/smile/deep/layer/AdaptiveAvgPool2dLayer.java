@@ -21,7 +21,7 @@ import java.lang.foreign.MemorySegment;
 import smile.deep.tensor.Tensor;
 
 import static java.lang.foreign.ValueLayout.JAVA_LONG;
-import static smile.deep.tensor.Native.check;
+import static smile.torch.Native.check;
 import static smile.torch.smile_torch_h.*;
 
 /**
