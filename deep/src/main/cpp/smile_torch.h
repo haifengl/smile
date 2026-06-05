@@ -290,6 +290,9 @@ SMILE_API int      smile_tensor_requires_grad(ST_Tensor t);
 SMILE_API void     smile_tensor_set_requires_grad(ST_Tensor t, int requires_grad);
 SMILE_API int      smile_tensor_is_training(ST_Tensor t);
 
+/** Returns the compute device of the tensor as a new ST_Device (caller frees). */
+SMILE_API ST_Device smile_tensor_device(ST_Tensor t);
+
 /* =========================================================================
  * Tensor — Data Pointers
  * ========================================================================= */
@@ -466,6 +469,12 @@ SMILE_API void      smile_tensor_logical_or_  (ST_Tensor a, ST_Tensor b);
 SMILE_API ST_Tensor smile_tensor_matmul(ST_Tensor a, ST_Tensor b);
 SMILE_API ST_Tensor smile_tensor_outer (ST_Tensor a, ST_Tensor b);
 
+/* scatter_reduce; reduce is one of "sum", "prod", "mean", "amax", "amin". */
+SMILE_API ST_Tensor smile_tensor_scatter_reduce (ST_Tensor t, int64_t dim, ST_Tensor index,
+                                                  ST_Tensor src, const char *reduce);
+SMILE_API void      smile_tensor_scatter_reduce_(ST_Tensor t, int64_t dim, ST_Tensor index,
+                                                  ST_Tensor src, const char *reduce);
+
 /* =========================================================================
  * Tensor — New-tensor creators from existing tensor
  * ========================================================================= */
@@ -487,6 +496,8 @@ SMILE_API ST_TensorIndex smile_tensor_index_from_tensor(ST_Tensor t);
 SMILE_API ST_TensorIndex smile_tensor_index_ellipsis(void);
 /** Creates a Slice TensorIndex.  Pass INT64_MIN for "not set". */
 SMILE_API ST_TensorIndex smile_tensor_index_slice(int64_t start, int64_t stop, int64_t step);
+/** Creates a None (newaxis) TensorIndex that inserts a singleton dimension. */
+SMILE_API ST_TensorIndex smile_tensor_index_none(void);
 SMILE_API void smile_tensor_index_free(ST_TensorIndex idx);
 
 /** Creates an empty TensorIndexVector. */

@@ -16,28 +16,40 @@
  */
 package smile.deep.tensor;
 
-import org.bytedeco.pytorch.global.torch;
-
-/** The memory layout of a Tensor. */
+/**
+ * The memory layout of a Tensor. The codes map to the {@code ST_Layout} values
+ * exposed by the {@code smile_torch} native API. Note that the native API
+ * currently distinguishes only strided, sparse COO, and sparse CSR layouts; the
+ * compressed-block sparse variants (BSC, BSR, CSC) are mapped to the sparse CSR
+ * code.
+ */
 public enum Layout {
     /** Dense tensor. */
-    Strided (torch.Layout.Strided),
+    Strided(0),
     /** Sparse tensor in COO format. */
-    SparseCOO(torch.Layout.Sparse),
+    SparseCOO(1),
     /** Sparse tensor in BSC format. */
-    SparseBSC(torch.Layout.SparseBsc),
+    SparseBSC(2),
     /** Sparse tensor in BSR format. */
-    SparseBSR(torch.Layout.SparseBsr),
+    SparseBSR(2),
     /** Sparse tensor in CSC format. */
-    SparseCSC(torch.Layout.SparseCsc),
+    SparseCSC(2),
     /** Sparse tensor in CSR format. */
-    SparseCSR(torch.Layout.SparseCsr);
+    SparseCSR(2);
 
-    /** PyTorch tensor layout type. */
-    final torch.Layout value;
+    /** The native {@code ST_Layout} code. */
+    final int code;
 
     /** Constructor. */
-    Layout(torch.Layout layout) {
-        this.value = layout;
+    Layout(int code) {
+        this.code = code;
+    }
+
+    /**
+     * Returns the native {@code ST_Layout} code.
+     * @return the native {@code ST_Layout} code.
+     */
+    public int code() {
+        return code;
     }
 }
