@@ -18,125 +18,70 @@ package smile.deep;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import org.bytedeco.pytorch.*;
-import org.bytedeco.pytorch.Module;
-import org.junit.jupiter.api.*;
+import java.util.Map;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
-import static org.bytedeco.pytorch.global.torch.*;
+import org.junit.jupiter.api.Test;
+import smile.deep.layer.Layer;
+import smile.deep.layer.SequentialBlock;
+import smile.deep.metric.Accuracy;
+import smile.deep.tensor.Device;
+import smile.deep.tensor.Tensor;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
+ * Integration tests for the deep tensor backend.
  *
  * @author Haifeng Li
  */
 public class TorchTest {
-    public TorchTest() {
-    }
-
-    // Reference implementation with plain PyTorch binding.
-    static class Net extends Module {
-        Net() {
-            // Construct and register two Linear submodules.
-            fc1 = register_module("Layer-1", new LinearImpl(784, 64));
-            fc2 = register_module("Layer-2", new LinearImpl(64, 32));
-            fc3 = register_module("Layer-3", new LinearImpl(32, 10));
-        }
-
-        // Implement the Net's algorithm.
-        org.bytedeco.pytorch.Tensor forward(org.bytedeco.pytorch.Tensor x) {
-            // Use one of many tensor manipulation functions.
-            x = relu(fc1.forward(x.reshape(x.size(0), 784)));
-            x = dropout(x, /*p=*/0.5, /*train=*/is_training());
-            x = relu(fc2.forward(x));
-            x = log_softmax(fc3.forward(x), /*dim=*/1);
-            return x;
-        }
-
-        // Use one of many "standard library" modules.
-        final LinearImpl fc1, fc2, fc3;
-    }
-
     @BeforeAll
-    public static void setUpClass() throws Exception {
+    public static void setUpClass() {
         System.out.format("CUDA available: %s\n", CUDA.isAvailable());
         System.out.format("CUDA device count: %d\n", CUDA.deviceCount());
-
-        // try to use MKL when available
-        System.setProperty("org.bytedeco.openblas.load", "mkl");
-    }
-
-    @AfterAll
-    public static void tearDownClass() throws Exception {
-    }
-
-    @BeforeEach
-    public void setUp() {
-    }
-
-    @AfterEach
-    public void tearDown() {
     }
 
     @Test
     @Tag("integration")
-    public void test() {
+    public void testGivenMnistDatasetWhenModelTrainedThenAccuracyExceedsNinetyPercent() throws Exception {
         if (!Files.exists(Path.of("deep/src/test/resources/data/mnist"))) {
             System.out.println("MNIST dataset not found, skipping Torch training test.");
             return;
         }
 
-        // Create a new Net.
-        Net net = new Net();
+        Device device = Device.preferredDevice();
 
-        // Create a multithreaded data loader for the MNIST dataset.
-        MNISTMapDataset dataset = new MNIST("deep/src/test/resources/data/mnist").map(new ExampleStack());
-        MNISTRandomDataLoader dataLoader = new MNISTRandomDataLoader(
-                dataset, new RandomSampler(dataset.size().get()),
-                new DataLoaderOptions(64));
+        Model net = new Model(new SequentialBlock(
+                Layer.relu(784, 64, 0.5),
+                Layer.relu(64, 32),
+                Layer.logSoftmax(32, 10)),
+                input -> input.reshape(input.size(0), 784)
+        ).to(device);
 
-        // Instantiate an SGD optimization algorithm to update our Net's parameters.
-        SGD optimizer = new SGD(net.parameters(), new SGDOptions(0.01));
+        try (Dataset dataset = Dataset.mnist("deep/src/test/resources/data/mnist", true, 64);
+             Dataset test = Dataset.mnist("deep/src/test/resources/data/mnist", false, 64)) {
+            Optimizer optimizer = Optimizer.SGD(net, 0.01);
+            Loss loss = Loss.nll();
+            net.train(10, optimizer, loss, dataset);
 
-        for (int epoch = 1; epoch <= 10; ++epoch) {
-            int batch_index = 0;
-            // Iterate the data loader to yield batches from the dataset.
-            for (ExampleIterator it = dataLoader.begin(); !it.equals(dataLoader.end()); it = it.increment()) {
-                Example batch = it.access();
-                // Reset gradients.
-                optimizer.zero_grad();
-                // Execute the model on the input data.
-                org.bytedeco.pytorch.Tensor prediction = net.forward(batch.data());
-                // Compute a loss value to judge the prediction of our model.
-                org.bytedeco.pytorch.Tensor loss = nll_loss(prediction, batch.target());
-                // Compute gradients of the loss w.r.t. the parameters of our model.
-                loss.backward();
-                // Update the parameters based on the calculated gradients.
-                optimizer.step();
-                // Output the loss and checkpoint every 100 batches.
-                if (++batch_index % 100 == 0) {
-                    System.out.println("Epoch: " + epoch + " | Batch: " + batch_index + " | Loss: " + loss.item_float());
-                    // Serialize your model periodically as a checkpoint.
-                    OutputArchive archive = new OutputArchive();
-                    net.save(archive);
-                    archive.save_to("net.pt");
-                }
+            double accuracy;
+            try (var __ = Tensor.noGradGuard()) {
+                Map<String, Double> metrics = net.eval(test, new Accuracy());
+                accuracy = metrics.get("Accuracy");
+                System.out.format("Training accuracy = %.2f%%\n", 100.0 * accuracy);
             }
-        }
 
-        net.eval();
-        int correct = 0;
-        int size = 0;
-        for (ExampleIterator it = dataLoader.begin(); !it.equals(dataLoader.end()); it = it.increment()) {
-            Example batch = it.access();
-            var output = net.forward(batch.data());
-            var prediction = output.argmax(new LongOptional(1), false);
-            correct += prediction.eq(batch.target()).sum().item_int();
-            size += batch.target().size(0);
-            // Explicitly free native memory
-            batch.close();
+            net.save("net.pt");
+            Model restored = new Model(new SequentialBlock(
+                    Layer.relu(784, 64, 0.5),
+                    Layer.relu(64, 32),
+                    Layer.logSoftmax(32, 10)),
+                    input -> input.reshape(input.size(0), 784)
+            );
+
+            restored.load("net.pt").to(device).eval();
+            assertEquals(accuracy, restored.eval(test, new Accuracy()).get("Accuracy"), 0.01);
+            assertTrue(accuracy > 0.9, "Expected training accuracy to exceed 90% on MNIST");
         }
-        double accuracy = (double) correct / size;
-        System.out.format("Training accuracy = %.2f%%\n", 100.0 * accuracy);
-        assertEquals(true, accuracy > 0.9);
     }
 }
