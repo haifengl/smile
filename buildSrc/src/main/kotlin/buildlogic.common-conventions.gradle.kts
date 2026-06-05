@@ -41,18 +41,19 @@ tasks.withType<Test>().all {
 
     val osName = System.getProperty("os.name").lowercase()
     val libPath = file("${rootDir.path}/studio/src/universal/bin").absolutePath
+    val torchPath = file("${rootDir.path}/studio/src/universal/libtorch").absolutePath
     if (osName.contains("windows")) {
         // On Windows, DLLs are found via the PATH
         val currentPath = System.getenv("PATH") ?: ""
-        environment("PATH", "$libPath;$currentPath")
+        environment("PATH", "$libPath;$torchPath;$currentPath")
     } else if (osName.contains("mac")) {
         // On macOS, shared libraries (.dylib) use DYLD_LIBRARY_PATH
         val currentDyldPath = System.getenv("DYLD_LIBRARY_PATH") ?: ""
-        environment("DYLD_LIBRARY_PATH", "$libPath:$currentDyldPath")
+        environment("DYLD_LIBRARY_PATH", "$libPath:$torchPath:$currentDyldPath")
     } else {
         // On Linux, shared libraries (.so) use LD_LIBRARY_PATH
         val currentLdPath = System.getenv("LD_LIBRARY_PATH") ?: ""
-        environment("LD_LIBRARY_PATH", "$libPath:$currentLdPath")
+        environment("LD_LIBRARY_PATH", "$libPath:$torchPath:$currentLdPath")
     }
 }
 

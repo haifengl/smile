@@ -16,10 +16,11 @@
  */
 package smile.deep.layer;
 
-import org.bytedeco.pytorch.BatchNorm2dImpl;
-import org.bytedeco.pytorch.BatchNormOptions;
-import org.bytedeco.pytorch.Module;
+import java.lang.foreign.MemorySegment;
 import smile.deep.tensor.Tensor;
+
+import static smile.torch.Native.check;
+import static smile.torch.smile_torch_h.*;
 
 /**
  * A batch normalization layer that re-centers and normalizes the output
@@ -29,13 +30,10 @@ import smile.deep.tensor.Tensor;
  *
  * @author Haifeng Li
  */
-public class BatchNorm2dLayer implements Layer {
-    /** Implementation. */
-    private final BatchNorm2dImpl module;
-
+public class BatchNorm2dLayer extends TypedLayer {
     /**
      * Constructor.
-     * @param channels the number of input channels in (N,C,H,W).
+     * @param channels the number of input channels.
      */
     public BatchNorm2dLayer(int channels) {
         this(channels, 1E-05, 0.1, true);
@@ -43,7 +41,7 @@ public class BatchNorm2dLayer implements Layer {
 
     /**
      * Constructor.
-     * @param channels the number of input channels in (N,C,H,W).
+     * @param channels the number of input channels.
      * @param eps a value added to the denominator for numerical stability.
      * @param momentum the value used for the running_mean and running_var
      *                computation. Can be set to 0.0 for cumulative moving average
@@ -51,23 +49,23 @@ public class BatchNorm2dLayer implements Layer {
      * @param affine when set to true, this layer has learnable affine parameters.
      */
     public BatchNorm2dLayer(int channels, double eps, double momentum, boolean affine) {
+        super(create(channels, eps, momentum, affine));
         if (momentum < 0.0 || momentum > 1.0) {
             throw new IllegalArgumentException("momentum must be in [0, 1], but got " + momentum);
         }
-        var options = new BatchNormOptions(channels);
-        options.eps().put(eps);
-        if (momentum > 0.0) options.momentum().put(momentum);
-        options.affine().put(affine);
-        this.module = new BatchNorm2dImpl(options);
     }
 
-    @Override
-    public Module asTorch() {
-        return module;
+    private static Handles create(int channels, double eps, double momentum, boolean affine) {
+        MemorySegment h = check(smile_batchnorm2d_create(channels, eps, momentum, affine ? 1 : 0));
+        MemorySegment m = check(smile_batchnorm2d_as_module(h));
+        return new Handles(h, m, () -> {
+            smile_module_free(m);
+            smile_batchnorm2d_free(h);
+        });
     }
 
     @Override
     public Tensor forward(Tensor input) {
-        return new Tensor(module.forward(input.asTorch()));
+        return new Tensor(smile_batchnorm2d_forward(handle, input.handle()));
     }
 }

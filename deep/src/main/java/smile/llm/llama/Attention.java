@@ -16,12 +16,19 @@
  */
 package smile.llm.llama;
 
-import org.bytedeco.pytorch.Module;
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
 import smile.deep.layer.LinearLayer;
 import smile.deep.tensor.Index;
+import smile.torch.Native;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.RotaryPositionalEncoding;
+
+import static smile.torch.Native.check;
+import static smile.torch.smile_torch_h.smile_module_create;
+import static smile.torch.smile_torch_h.smile_module_free;
+import static smile.torch.smile_torch_h.smile_module_register_module;
 
 /**
  * Multi-head attention. It caches key and value information, applying rotary
@@ -31,7 +38,7 @@ import smile.llm.RotaryPositionalEncoding;
  */
 public class Attention {
     /** PyTorch module. */
-    final Module module;
+    final MemorySegment module;
     /** The number of key and value heads. */
     final int numKvHeads;
     /** The number of local query heads. */
@@ -53,8 +60,8 @@ public class Attention {
      */
     public Attention(ModelArgs args) {
         this.numKvHeads = args.numKvHeads() == null ? args.numHeads() : args.numKvHeads();
-        // JavaCPP doesn't support torch.distributed yet
-        int modelParallelSize = 1; //fs_init.get_model_parallel_world_size();
+        // Don't support torch.distributed yet
+        int modelParallelSize = 1; // torch.distributed.get_world_size(group=get_model_parallel_group());
         this.numLocalHeads = args.numHeads() / modelParallelSize;
         this.numLocalKvHeads = this.numKvHeads / modelParallelSize;
         this.numRep = this.numLocalHeads / this.numLocalKvHeads;
@@ -68,11 +75,15 @@ public class Attention {
         this.cacheK = Tensor.zeros(args.maxBatchSize(), args.maxSeqLen(), numLocalKvHeads, headDim);
         this.cacheV = Tensor.zeros(args.maxBatchSize(), args.maxSeqLen(), numLocalKvHeads, headDim);
 
-        this.module = new Module();
-        this.module.register_module("wq", wq.asTorch());
-        this.module.register_module("wk", wk.asTorch());
-        this.module.register_module("wv", wv.asTorch());
-        this.module.register_module("wo", wo.asTorch());
+        try (Arena arena = Arena.ofConfined()) {
+            this.module = check(smile_module_create(MemorySegment.NULL));
+            smile_module_register_module(module, arena.allocateFrom("wq"), wq.asModule());
+            smile_module_register_module(module, arena.allocateFrom("wk"), wk.asModule());
+            smile_module_register_module(module, arena.allocateFrom("wv"), wv.asModule());
+            smile_module_register_module(module, arena.allocateFrom("wo"), wo.asModule());
+        }
+        MemorySegment m = this.module;
+        Native.CLEANER.register(this, () -> smile_module_free(m));
     }
 
     /**

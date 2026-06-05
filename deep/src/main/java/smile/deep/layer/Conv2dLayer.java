@@ -16,20 +16,20 @@
  */
 package smile.deep.layer;
 
-import org.bytedeco.javacpp.LongPointer;
-import org.bytedeco.pytorch.*;
-import org.bytedeco.pytorch.Module;
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
 import smile.deep.tensor.Tensor;
+
+import static java.lang.foreign.ValueLayout.JAVA_LONG;
+import static smile.torch.Native.check;
+import static smile.torch.smile_torch_h.*;
 
 /**
  * A convolutional layer.
  *
  * @author Haifeng Li
  */
-public class Conv2dLayer implements Layer {
-    /** Implementation. */
-    private final Conv2dImpl module;
-
+public class Conv2dLayer extends TypedLayer {
     /**
      * Constructor.
      * @param in the number of input channels.
@@ -44,33 +44,7 @@ public class Conv2dLayer implements Layer {
      * @param paddingMode "zeros", "reflect", "replicate" or "circular".
      */
     public Conv2dLayer(int in, int out, int kernel, int stride, int padding, int dilation, int groups, boolean bias, String paddingMode) {
-        if (!(paddingMode.equals("zeros") || paddingMode.equals("reflect") || paddingMode.equals("replicate") || paddingMode.equals("circular"))) {
-            throw new IllegalArgumentException("paddingMode has to be either 'zeros', 'reflect', 'replicate' or 'circular', but got " + paddingMode);
-        }
-
-        // kernel_size, stride, padding, dilation are ExpandingArray in C++,
-        // which would "expand" to {x, y}. However, JavaCpp maps it to
-        // LongPointer. So we have to manually expand it.
-        try (var kernelPointer  = new LongPointer(kernel, kernel);
-             var stridePointer  = new LongPointer(stride, stride);
-             var paddingPointer = new LongPointer(padding, padding);
-             var dilationPointer = new LongPointer(dilation, dilation)) {
-            var options = new Conv2dOptions(in, out, kernelPointer);
-            options.stride().put(stridePointer);
-            options.padding().put(paddingPointer);
-            options.dilation().put(dilationPointer);
-            options.groups().put(groups);
-            options.bias().put(bias);
-            options.padding_mode().put(
-                    switch (paddingMode) {
-                        case "reflect" -> new kReflect();
-                        case "replicate" -> new kReplicate();
-                        case "circular" -> new kCircular();
-                        default -> new kZeros();
-                    }
-            );
-            module = new Conv2dImpl(options);
-        }
+        super(create(in, out, kernel, stride, padding, dilation, groups, bias, paddingMode));
     }
 
     /**
@@ -93,44 +67,52 @@ public class Conv2dLayer implements Layer {
      * @param paddingMode "zeros", "reflect", "replicate" or "circular".
      */
     public Conv2dLayer(int in, int out, int kernel, int stride, String padding, int dilation, int groups, boolean bias, String paddingMode) {
-        if (!(padding.equals("valid") || padding.equals("same"))) {
-            throw new IllegalArgumentException("padding has to be either 'valid' or 'same', but got " + padding);
-        }
-
-        if (!(paddingMode.equals("zeros") || paddingMode.equals("reflect") || paddingMode.equals("replicate") || paddingMode.equals("circular"))) {
-            throw new IllegalArgumentException("paddingMode has to be either 'zeros', 'reflect', 'replicate' or 'circular', but got " + paddingMode);
-        }
-
-        // kernel_size is an ExpandingArray in C++, which would "expand" to {x, y}.
-        // However, JavaCpp maps it to LongPointer. So we have to manually expand it.
-        try (var kernelPointer  = new LongPointer(kernel, kernel);
-             var stridePointer  = new LongPointer(stride, stride);
-             var dilationPointer = new LongPointer(dilation, dilation)) {
-            var options = new Conv2dOptions(in, out, kernelPointer);
-            options.stride().put(stridePointer);
-            options.padding().put(padding.equals("valid") ? new kValid() : new kSame());
-            options.dilation().put(dilationPointer);
-            options.groups().put(groups);
-            options.bias().put(bias);
-            options.padding_mode().put(
-                    switch (paddingMode) {
-                        case "reflect" -> new kReflect();
-                        case "replicate" -> new kReplicate();
-                        case "circular" -> new kCircular();
-                        default -> new kZeros();
-                    }
-            );
-            module = new Conv2dImpl(options);
-        }
+        super(create(in, out, kernel, stride, symbolicPadding(padding, kernel, dilation), dilation, groups, bias, paddingMode));
     }
 
-    @Override
-    public Module asTorch() {
-        return module;
+    /**
+     * Converts a "valid"/"same" symbolic padding into a numeric padding.
+     * The native API does not support symbolic padding, so "same" is realized
+     * as symmetric padding {@code dilation*(kernel-1)/2}; this matches PyTorch
+     * for odd kernel sizes with stride 1.
+     */
+    private static int symbolicPadding(String padding, int kernel, int dilation) {
+        return switch (padding) {
+            case "valid" -> 0;
+            case "same" -> dilation * (kernel - 1) / 2;
+            default -> throw new IllegalArgumentException("padding has to be either 'valid' or 'same', but got " + padding);
+        };
+    }
+
+    private static int paddingMode(String paddingMode) {
+        return switch (paddingMode) {
+            case "zeros" -> ST_PAD_ZEROS();
+            case "reflect" -> ST_PAD_REFLECT();
+            case "replicate" -> ST_PAD_REPLICATE();
+            case "circular" -> ST_PAD_CIRCULAR();
+            default -> throw new IllegalArgumentException("paddingMode has to be either 'zeros', 'reflect', 'replicate' or 'circular', but got " + paddingMode);
+        };
+    }
+
+    private static Handles create(int in, int out, int kernel, int stride, int padding, int dilation, int groups, boolean bias, String paddingMode) {
+        int padMode = paddingMode(paddingMode);
+        MemorySegment h;
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment k = arena.allocateFrom(JAVA_LONG, kernel, kernel);
+            MemorySegment s = arena.allocateFrom(JAVA_LONG, stride, stride);
+            MemorySegment p = arena.allocateFrom(JAVA_LONG, padding, padding);
+            MemorySegment d = arena.allocateFrom(JAVA_LONG, dilation, dilation);
+            h = check(smile_conv2d_create(in, out, k, s, p, d, groups, bias ? 1 : 0, padMode));
+        }
+        MemorySegment m = check(smile_conv2d_as_module(h));
+        return new Handles(h, m, () -> {
+            smile_module_free(m);
+            smile_conv2d_free(h);
+        });
     }
 
     @Override
     public Tensor forward(Tensor input) {
-        return new Tensor(module.forward(input.asTorch()));
+        return new Tensor(smile_conv2d_forward(handle, input.handle()));
     }
 }

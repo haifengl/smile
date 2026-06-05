@@ -17,8 +17,14 @@
 package smile.deep.activation;
 
 import java.io.Serializable;
-import org.bytedeco.pytorch.Module;
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
 import smile.deep.layer.Layer;
+import smile.torch.Native;
+
+import static smile.torch.Native.check;
+import static smile.torch.smile_torch_h.smile_module_create;
+import static smile.torch.smile_torch_h.smile_module_free;
 
 /**
  * The activation function. It also implements the layer interface
@@ -27,8 +33,8 @@ import smile.deep.layer.Layer;
  * @author Haifeng Li
  */
 public abstract class ActivationFunction implements Layer, Serializable {
-    /** The module of activation function. */
-    final Module module;
+    /** The module of activation function ({@code ST_Module}). */
+    final transient MemorySegment module;
     /** The function name. */
     final String name;
     /** True if the operation executes in-place. */
@@ -40,9 +46,13 @@ public abstract class ActivationFunction implements Layer, Serializable {
      * @param inplace true if the operation executes in-place.
      */
     public ActivationFunction(String name, boolean inplace) {
-        this.module = new Module(name);
         this.name = name;
         this.inplace = inplace;
+        try (Arena arena = Arena.ofConfined()) {
+            this.module = check(smile_module_create(arena.allocateFrom(name)));
+        }
+        MemorySegment m = this.module;
+        Native.CLEANER.register(this, () -> smile_module_free(m));
     }
 
     /**
@@ -62,7 +72,7 @@ public abstract class ActivationFunction implements Layer, Serializable {
     }
 
     @Override
-    public Module asTorch() {
+    public MemorySegment asModule() {
         return module;
     }
 }

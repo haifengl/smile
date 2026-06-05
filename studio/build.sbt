@@ -93,7 +93,7 @@ batScriptExtraDefines ++= Seq(
   """set "JAVA_HOME=%APP_HOME%\jbr"""",
   """set OPENBLAS_NO_AVX512=1""",
   """set OPENBLAS_NUM_THREAD=1""",
-  """set "PATH=%~dp0;!PATH!"""",
+  """set "PATH=%~dp0;%APP_HOME%\libtorch;!PATH!"""",
   """set PYTHONPATH=%PYTHONPATH%;%APP_HOME%\lib\ioa-agent-1.0.0.jar""",
   """set PYTHONUTF8=1""",
   """CALL "%APP_HOME%\\venv\\Scripts\\activate.bat""""

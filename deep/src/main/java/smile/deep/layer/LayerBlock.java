@@ -16,12 +16,14 @@
  */
 package smile.deep.layer;
 
-import org.bytedeco.pytorch.DeviceOptional;
-import org.bytedeco.pytorch.InputArchive;
-import org.bytedeco.pytorch.Module;
-import org.bytedeco.pytorch.OutputArchive;
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
 import smile.deep.tensor.Device;
+import smile.torch.Native;
 import smile.deep.tensor.ScalarType;
+
+import static smile.torch.Native.check;
+import static smile.torch.smile_torch_h.*;
 
 /**
  * A block is combinations of one or more layers. Blocks form the basis of
@@ -33,8 +35,8 @@ import smile.deep.tensor.ScalarType;
  * @author Haifeng Li
  */
 public abstract class LayerBlock implements Layer {
-    /** The neural network module.  */
-    protected final Module module;
+    /** The neural network module ({@code ST_Module}). */
+    protected final MemorySegment module;
     /** The compute device. */
     protected Device device;
     /** The data type. */
@@ -44,7 +46,7 @@ public abstract class LayerBlock implements Layer {
      * Constructor.
      */
     public LayerBlock() {
-        this(new Module());
+        this(null);
     }
 
     /**
@@ -52,56 +54,28 @@ public abstract class LayerBlock implements Layer {
      * @param name the module name.
      */
     public LayerBlock(String name) {
-        this(new Module(name));
+        this.module = createModule(name);
+        MemorySegment m = this.module;
+        Native.CLEANER.register(this, () -> smile_module_free(m));
     }
 
-    /**
-     * Constructor.
-     * @param module a module.
-     */
-    public LayerBlock(Module module) {
-        this.module = module;
+    private static MemorySegment createModule(String name) {
+        if (name == null) {
+            return check(smile_module_create(MemorySegment.NULL));
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            return check(smile_module_create(arena.allocateFrom(name)));
+        }
     }
 
     @Override
-    public Module asTorch() {
+    public MemorySegment asModule() {
         return module;
     }
 
     @Override
     public String toString() {
-        return toString(asTorch(), new StringBuilder(), 0);
-    }
-
-    /**
-     * Returns the string representation of a module.
-     * @param module the module.
-     * @param sb string builder.
-     * @param indent indent space.
-     * @return the string representation.
-     */
-    private String toString(Module module, StringBuilder sb, int indent) {
-        sb.append(module.name().getString());
-        var children = module.named_children();
-        if (children.size() > 0) {
-            sb.append('(');
-            sb.append(System.lineSeparator());
-
-            var keys = children.keys();
-            for (int i = 0; i < keys.size(); i++) {
-                var key = keys.get(i);
-                var child = children.get(key);
-
-                sb.append(" ".repeat(indent + 2));
-                sb.append(String.format("(%s): ", key.getString()));
-                toString(child, sb, indent + 2);
-                sb.append(System.lineSeparator());
-            }
-
-            sb.append(" ".repeat(indent));
-            sb.append(')');
-        }
-        return sb.toString();
+        return getClass().getSimpleName();
     }
 
     /**
@@ -111,17 +85,19 @@ public abstract class LayerBlock implements Layer {
      * @return this object.
      */
     public LayerBlock add(String name, Layer layer) {
-        return add(name, layer.asTorch());
+        return add(name, layer.asModule());
     }
 
     /**
-     * Adds a sub-layer.
+     * Adds a sub-module.
      * @param name the name of sub-layer.
-     * @param layer the sub-layer.
+     * @param layer the native {@code ST_Module} handle of the sub-layer.
      * @return this object.
      */
-    public LayerBlock add(String name, Module layer) {
-        module.register_module(name, layer);
+    public LayerBlock add(String name, MemorySegment layer) {
+        try (Arena arena = Arena.ofConfined()) {
+            smile_module_register_module(module, arena.allocateFrom(name), layer);
+        }
         return this;
     }
 
@@ -130,21 +106,21 @@ public abstract class LayerBlock implements Layer {
      * @return true if the layer block is in training mode.
      */
     public boolean isTraining() {
-        return module.is_training();
+        return smile_module_is_training(module) != 0;
     }
 
     /**
      * Sets the layer block in the training mode.
      */
     public void train() {
-        module.train(true);
+        smile_module_train(module, 1);
     }
 
     /**
      * Sets the layer block in the evaluation/inference mode.
      */
     public void eval() {
-        module.eval();
+        smile_module_eval(module);
     }
 
     /**
@@ -165,14 +141,24 @@ public abstract class LayerBlock implements Layer {
 
     @Override
     public LayerBlock to(Device device) {
-        module.to(device.asTorch(), true);
+        MemorySegment d = device.toNative();
+        try {
+            smile_module_to_device(module, d, 1);
+        } finally {
+            smile_device_free(d);
+        }
         this.device = device;
         return this;
     }
 
     @Override
     public LayerBlock to(Device device, ScalarType dtype) {
-        module.to(device.asTorch(), dtype.asTorch(), true);
+        MemorySegment d = device.toNative();
+        try {
+            smile_module_to_dtype(module, d, dtype.code(), 1);
+        } finally {
+            smile_device_free(d);
+        }
         this.device = device;
         this.dtype = dtype;
         return this;
@@ -183,13 +169,15 @@ public abstract class LayerBlock implements Layer {
      * @param path the checkpoint file path.
      */
     public void load(String path) {
-        InputArchive archive = new InputArchive();
-        var deviceOptional = new DeviceOptional();
-        if (device != null) deviceOptional.put(device.asTorch());
-        archive.load_from(path, deviceOptional);
-        module.load(archive);
-        archive.close();
-        deviceOptional.close();
+        MemorySegment archive = check(smile_input_archive_create());
+        MemorySegment d = device != null ? device.toNative() : MemorySegment.NULL;
+        try (Arena arena = Arena.ofConfined()) {
+            smile_input_archive_load_from(archive, arena.allocateFrom(path), d);
+            smile_module_load(module, archive);
+        } finally {
+            smile_input_archive_free(archive);
+            if (d.address() != 0) smile_device_free(d);
+        }
         if (device != null) device.emptyCache();
     }
 
@@ -198,10 +186,13 @@ public abstract class LayerBlock implements Layer {
      * @param path the checkpoint file path.
      */
     public void save(String path) {
-        OutputArchive archive = new OutputArchive();
-        module.save(archive);
-        archive.save_to(path);
-        archive.close();
+        MemorySegment archive = check(smile_output_archive_create());
+        try (Arena arena = Arena.ofConfined()) {
+            smile_module_save(module, archive);
+            smile_output_archive_save_to(archive, arena.allocateFrom(path));
+        } finally {
+            smile_output_archive_free(archive);
+        }
     }
 
     /**

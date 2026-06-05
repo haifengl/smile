@@ -458,6 +458,11 @@ void smile_tensor_set_requires_grad(ST_Tensor t, int rg) {
 }
 int smile_tensor_is_training(ST_Tensor t) { return 0; /* tensors have no training flag */ }
 
+ST_Device smile_tensor_device(ST_Tensor t) {
+    if (!t) return nullptr;
+    ST_TRY_BEGIN return new ST_Device_{ t->t.device() }; ST_TRY_END return nullptr;
+}
+
 int smile_tensor_shape(ST_Tensor t, int64_t *shape, int max_dims) {
     if (!t || !shape) return 0;
     int ndim = static_cast<int>(t->t.dim());
@@ -691,6 +696,18 @@ void      smile_tensor_logical_or_ (ST_Tensor a, ST_Tensor b) { if (a&&b) a->t.l
 ST_Tensor smile_tensor_matmul (ST_Tensor a, ST_Tensor b) { MAKE_TENSOR(a->t.matmul(b->t)); }
 ST_Tensor smile_tensor_outer  (ST_Tensor a, ST_Tensor b) { MAKE_TENSOR(at::outer(a->t, b->t)); }
 
+ST_Tensor smile_tensor_scatter_reduce(ST_Tensor t, int64_t dim, ST_Tensor index,
+                                      ST_Tensor src, const char *reduce) {
+    if (!t || !index || !src || !reduce) return nullptr;
+    MAKE_TENSOR(t->t.scatter_reduce(dim, index->t, src->t, reduce));
+}
+void smile_tensor_scatter_reduce_(ST_Tensor t, int64_t dim, ST_Tensor index,
+                                  ST_Tensor src, const char *reduce) {
+    if (t && index && src && reduce) {
+        ST_TRY_BEGIN t->t.scatter_reduce_(dim, index->t, src->t, reduce); ST_TRY_END
+    }
+}
+
 // =============================================================================
 // Tensor — New-tensor creators
 // =============================================================================
@@ -732,6 +749,9 @@ ST_TensorIndex smile_tensor_index_slice(int64_t start, int64_t stop, int64_t ste
         return new ST_TensorIndex_{ Idx(torch::indexing::Slice(s, e, st)) };
     ST_TRY_END
     return nullptr;
+}
+ST_TensorIndex smile_tensor_index_none(void) {
+    ST_TRY_BEGIN return new ST_TensorIndex_{ Idx(torch::indexing::None) }; ST_TRY_END return nullptr;
 }
 void smile_tensor_index_free(ST_TensorIndex idx) { delete idx; }
 
@@ -920,6 +940,11 @@ void smile_module_register_module(ST_Module m, const char *name, ST_Module child
         ST_TRY_BEGIN m->m->register_module(name, child->m); ST_TRY_END
     }
 }
+void smile_module_register_buffer(ST_Module m, const char *name, ST_Tensor t) {
+    if (m && t && name) {
+        ST_TRY_BEGIN m->m->register_buffer(name, t->t); ST_TRY_END
+    }
+}
 void smile_module_register_parameter(ST_Module m, const char *name, ST_Tensor t) {
     if (m && t && name) {
         ST_TRY_BEGIN m->m->register_parameter(name, t->t); ST_TRY_END
@@ -987,6 +1012,13 @@ ST_Module smile_module_list_get(ST_ModuleList ml, int64_t i) {
     if (!ml) return nullptr;
     ST_TRY_BEGIN
         return new ST_Module_{ ml->ml->ptr(i) };
+    ST_TRY_END
+    return nullptr;
+}
+ST_Module smile_module_list_as_module(ST_ModuleList ml) {
+    if (!ml) return nullptr;
+    ST_TRY_BEGIN
+        return new ST_Module_{ std::static_pointer_cast<torch::nn::Module>(ml->ml) };
     ST_TRY_END
     return nullptr;
 }
@@ -1357,6 +1389,16 @@ int smile_torch_version(char *buf, int buf_len) {
     if (!buf || buf_len <= 0) return -1;
     std::snprintf(buf, buf_len, "%s", TORCH_VERSION);
     return 0;
+}
+
+void smile_set_default_dtype(ST_DType dtype) {
+    ST_TRY_BEGIN
+        torch::set_default_dtype(c10::scalarTypeToTypeMeta(to_scalar_type(dtype)));
+    ST_TRY_END
+}
+
+void smile_manual_seed(int64_t seed) {
+    ST_TRY_BEGIN torch::manual_seed(static_cast<uint64_t>(seed)); ST_TRY_END
 }
 
 } // extern "C"

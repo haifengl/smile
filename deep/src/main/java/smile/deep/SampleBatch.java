@@ -16,7 +16,7 @@
  */
 package smile.deep;
 
-import smile.deep.tensor.*;
+import smile.deep.tensor.Tensor;
 
 /**
  * A mini-batch dataset consists of data and an associated target (label).
@@ -27,15 +27,6 @@ import smile.deep.tensor.*;
  * @author Haifeng Li
  */
 public record SampleBatch(Tensor data, Tensor target) implements AutoCloseable {
-    /**
-     * Constructor.
-     * @param data the data samples.
-     * @param target the sample labels.
-     */
-    SampleBatch(org.bytedeco.pytorch.Tensor data, org.bytedeco.pytorch.Tensor target) {
-        this(new Tensor(data), new Tensor(target));
-    }
-
     @Override
     public void close() {
         data.close();

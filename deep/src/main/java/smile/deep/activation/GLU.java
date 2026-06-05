@@ -16,8 +16,9 @@
  */
 package smile.deep.activation;
 
-import org.bytedeco.pytorch.global.torch;
 import smile.deep.tensor.Tensor;
+
+import static smile.torch.smile_torch_h.smile_torch_glu;
 
 /**
  * Gated Linear Unit activation function.
@@ -34,6 +35,6 @@ public class GLU extends ActivationFunction {
 
     @Override
     public Tensor forward(Tensor x) {
-        return new Tensor(torch.glu(x.asTorch()));
+        return new Tensor(smile_torch_glu(x.handle()));
     }
 }

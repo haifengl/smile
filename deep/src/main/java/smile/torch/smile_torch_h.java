@@ -4387,6 +4387,66 @@ public class smile_torch_h extends smile_torch_h$shared {
         }
     }
 
+    private static class smile_tensor_device {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            smile_torch_h.C_POINTER,
+            smile_torch_h.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("smile_tensor_device");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * ST_Device smile_tensor_device(ST_Tensor t)
+     * }
+     */
+    public static FunctionDescriptor smile_tensor_device$descriptor() {
+        return smile_tensor_device.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * ST_Device smile_tensor_device(ST_Tensor t)
+     * }
+     */
+    public static MethodHandle smile_tensor_device$handle() {
+        return smile_tensor_device.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * ST_Device smile_tensor_device(ST_Tensor t)
+     * }
+     */
+    public static MemorySegment smile_tensor_device$address() {
+        return smile_tensor_device.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * ST_Device smile_tensor_device(ST_Tensor t)
+     * }
+     */
+    public static MemorySegment smile_tensor_device(MemorySegment t) {
+        var mh$ = smile_tensor_device.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("smile_tensor_device", t);
+            }
+            return (MemorySegment)mh$.invokeExact(t);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
     private static class smile_tensor_data_ptr_bool {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             smile_torch_h.C_POINTER,
@@ -10568,6 +10628,133 @@ public class smile_torch_h extends smile_torch_h$shared {
         }
     }
 
+    private static class smile_tensor_scatter_reduce {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            smile_torch_h.C_POINTER,
+            smile_torch_h.C_POINTER,
+            smile_torch_h.C_LONG_LONG,
+            smile_torch_h.C_POINTER,
+            smile_torch_h.C_POINTER,
+            smile_torch_h.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("smile_tensor_scatter_reduce");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * ST_Tensor smile_tensor_scatter_reduce(ST_Tensor t, int64_t dim, ST_Tensor index, ST_Tensor src, const char *reduce)
+     * }
+     */
+    public static FunctionDescriptor smile_tensor_scatter_reduce$descriptor() {
+        return smile_tensor_scatter_reduce.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * ST_Tensor smile_tensor_scatter_reduce(ST_Tensor t, int64_t dim, ST_Tensor index, ST_Tensor src, const char *reduce)
+     * }
+     */
+    public static MethodHandle smile_tensor_scatter_reduce$handle() {
+        return smile_tensor_scatter_reduce.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * ST_Tensor smile_tensor_scatter_reduce(ST_Tensor t, int64_t dim, ST_Tensor index, ST_Tensor src, const char *reduce)
+     * }
+     */
+    public static MemorySegment smile_tensor_scatter_reduce$address() {
+        return smile_tensor_scatter_reduce.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * ST_Tensor smile_tensor_scatter_reduce(ST_Tensor t, int64_t dim, ST_Tensor index, ST_Tensor src, const char *reduce)
+     * }
+     */
+    public static MemorySegment smile_tensor_scatter_reduce(MemorySegment t, long dim, MemorySegment index, MemorySegment src, MemorySegment reduce) {
+        var mh$ = smile_tensor_scatter_reduce.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("smile_tensor_scatter_reduce", t, dim, index, src, reduce);
+            }
+            return (MemorySegment)mh$.invokeExact(t, dim, index, src, reduce);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class smile_tensor_scatter_reduce_ {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            smile_torch_h.C_POINTER,
+            smile_torch_h.C_LONG_LONG,
+            smile_torch_h.C_POINTER,
+            smile_torch_h.C_POINTER,
+            smile_torch_h.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("smile_tensor_scatter_reduce_");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void smile_tensor_scatter_reduce_(ST_Tensor t, int64_t dim, ST_Tensor index, ST_Tensor src, const char *reduce)
+     * }
+     */
+    public static FunctionDescriptor smile_tensor_scatter_reduce_$descriptor() {
+        return smile_tensor_scatter_reduce_.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void smile_tensor_scatter_reduce_(ST_Tensor t, int64_t dim, ST_Tensor index, ST_Tensor src, const char *reduce)
+     * }
+     */
+    public static MethodHandle smile_tensor_scatter_reduce_$handle() {
+        return smile_tensor_scatter_reduce_.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void smile_tensor_scatter_reduce_(ST_Tensor t, int64_t dim, ST_Tensor index, ST_Tensor src, const char *reduce)
+     * }
+     */
+    public static MemorySegment smile_tensor_scatter_reduce_$address() {
+        return smile_tensor_scatter_reduce_.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void smile_tensor_scatter_reduce_(ST_Tensor t, int64_t dim, ST_Tensor index, ST_Tensor src, const char *reduce)
+     * }
+     */
+    public static void smile_tensor_scatter_reduce_(MemorySegment t, long dim, MemorySegment index, MemorySegment src, MemorySegment reduce) {
+        var mh$ = smile_tensor_scatter_reduce_.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("smile_tensor_scatter_reduce_", t, dim, index, src, reduce);
+            }
+            mh$.invokeExact(t, dim, index, src, reduce);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
     private static class smile_tensor_new_zeros {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             smile_torch_h.C_POINTER,
@@ -10985,6 +11172,64 @@ public class smile_torch_h extends smile_torch_h$shared {
                 traceDowncall("smile_tensor_index_slice", start, stop, step);
             }
             return (MemorySegment)mh$.invokeExact(start, stop, step);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class smile_tensor_index_none {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            smile_torch_h.C_POINTER    );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("smile_tensor_index_none");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * ST_TensorIndex smile_tensor_index_none()
+     * }
+     */
+    public static FunctionDescriptor smile_tensor_index_none$descriptor() {
+        return smile_tensor_index_none.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * ST_TensorIndex smile_tensor_index_none()
+     * }
+     */
+    public static MethodHandle smile_tensor_index_none$handle() {
+        return smile_tensor_index_none.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * ST_TensorIndex smile_tensor_index_none()
+     * }
+     */
+    public static MemorySegment smile_tensor_index_none$address() {
+        return smile_tensor_index_none.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * ST_TensorIndex smile_tensor_index_none()
+     * }
+     */
+    public static MemorySegment smile_tensor_index_none() {
+        var mh$ = smile_tensor_index_none.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("smile_tensor_index_none");
+            }
+            return (MemorySegment)mh$.invokeExact();
         } catch (Error | RuntimeException ex) {
            throw ex;
         } catch (Throwable ex$) {
@@ -15099,6 +15344,67 @@ public class smile_torch_h extends smile_torch_h$shared {
         }
     }
 
+    private static class smile_module_register_buffer {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            smile_torch_h.C_POINTER,
+            smile_torch_h.C_POINTER,
+            smile_torch_h.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("smile_module_register_buffer");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void smile_module_register_buffer(ST_Module m, const char *name, ST_Tensor t)
+     * }
+     */
+    public static FunctionDescriptor smile_module_register_buffer$descriptor() {
+        return smile_module_register_buffer.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void smile_module_register_buffer(ST_Module m, const char *name, ST_Tensor t)
+     * }
+     */
+    public static MethodHandle smile_module_register_buffer$handle() {
+        return smile_module_register_buffer.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void smile_module_register_buffer(ST_Module m, const char *name, ST_Tensor t)
+     * }
+     */
+    public static MemorySegment smile_module_register_buffer$address() {
+        return smile_module_register_buffer.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void smile_module_register_buffer(ST_Module m, const char *name, ST_Tensor t)
+     * }
+     */
+    public static void smile_module_register_buffer(MemorySegment m, MemorySegment name, MemorySegment t) {
+        var mh$ = smile_module_register_buffer.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("smile_module_register_buffer", m, name, t);
+            }
+            mh$.invokeExact(m, name, t);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
     private static class smile_module_parameters {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             smile_torch_h.C_POINTER,
@@ -15872,6 +16178,66 @@ public class smile_torch_h extends smile_torch_h$shared {
                 traceDowncall("smile_module_list_get", ml, index);
             }
             return (MemorySegment)mh$.invokeExact(ml, index);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class smile_module_list_as_module {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            smile_torch_h.C_POINTER,
+            smile_torch_h.C_POINTER
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("smile_module_list_as_module");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * ST_Module smile_module_list_as_module(ST_ModuleList ml)
+     * }
+     */
+    public static FunctionDescriptor smile_module_list_as_module$descriptor() {
+        return smile_module_list_as_module.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * ST_Module smile_module_list_as_module(ST_ModuleList ml)
+     * }
+     */
+    public static MethodHandle smile_module_list_as_module$handle() {
+        return smile_module_list_as_module.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * ST_Module smile_module_list_as_module(ST_ModuleList ml)
+     * }
+     */
+    public static MemorySegment smile_module_list_as_module$address() {
+        return smile_module_list_as_module.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * ST_Module smile_module_list_as_module(ST_ModuleList ml)
+     * }
+     */
+    public static MemorySegment smile_module_list_as_module(MemorySegment ml) {
+        var mh$ = smile_module_list_as_module.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("smile_module_list_as_module", ml);
+            }
+            return (MemorySegment)mh$.invokeExact(ml);
         } catch (Error | RuntimeException ex) {
            throw ex;
         } catch (Throwable ex$) {
@@ -19275,6 +19641,124 @@ public class smile_torch_h extends smile_torch_h$shared {
                 traceDowncall("smile_torch_version", buf, buf_len);
             }
             return (int)mh$.invokeExact(buf, buf_len);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class smile_set_default_dtype {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            smile_torch_h.C_INT
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("smile_set_default_dtype");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void smile_set_default_dtype(ST_DType dtype)
+     * }
+     */
+    public static FunctionDescriptor smile_set_default_dtype$descriptor() {
+        return smile_set_default_dtype.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void smile_set_default_dtype(ST_DType dtype)
+     * }
+     */
+    public static MethodHandle smile_set_default_dtype$handle() {
+        return smile_set_default_dtype.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void smile_set_default_dtype(ST_DType dtype)
+     * }
+     */
+    public static MemorySegment smile_set_default_dtype$address() {
+        return smile_set_default_dtype.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void smile_set_default_dtype(ST_DType dtype)
+     * }
+     */
+    public static void smile_set_default_dtype(int dtype) {
+        var mh$ = smile_set_default_dtype.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("smile_set_default_dtype", dtype);
+            }
+            mh$.invokeExact(dtype);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class smile_manual_seed {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
+            smile_torch_h.C_LONG_LONG
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("smile_manual_seed");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * void smile_manual_seed(int64_t seed)
+     * }
+     */
+    public static FunctionDescriptor smile_manual_seed$descriptor() {
+        return smile_manual_seed.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * void smile_manual_seed(int64_t seed)
+     * }
+     */
+    public static MethodHandle smile_manual_seed$handle() {
+        return smile_manual_seed.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * void smile_manual_seed(int64_t seed)
+     * }
+     */
+    public static MemorySegment smile_manual_seed$address() {
+        return smile_manual_seed.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * void smile_manual_seed(int64_t seed)
+     * }
+     */
+    public static void smile_manual_seed(long seed) {
+        var mh$ = smile_manual_seed.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("smile_manual_seed", seed);
+            }
+            mh$.invokeExact(seed);
         } catch (Error | RuntimeException ex) {
            throw ex;
         } catch (Throwable ex$) {

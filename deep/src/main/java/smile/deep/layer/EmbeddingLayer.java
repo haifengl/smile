@@ -16,10 +16,11 @@
  */
 package smile.deep.layer;
 
-import org.bytedeco.pytorch.EmbeddingImpl;
-import org.bytedeco.pytorch.Module;
-import org.bytedeco.pytorch.Scalar;
+import java.lang.foreign.MemorySegment;
 import smile.deep.tensor.Tensor;
+
+import static smile.torch.Native.check;
+import static smile.torch.smile_torch_h.*;
 
 /**
  * An embedding layer that is a simple lookup table that stores embeddings
@@ -31,13 +32,9 @@ import smile.deep.tensor.Tensor;
  *
  * @author Haifeng Li
  */
-public class EmbeddingLayer implements Layer {
+public class EmbeddingLayer extends TypedLayer {
     /** The optional scaling factor. */
     private final double alpha;
-    /** The wrapper of alpha. */
-    private final Scalar scale;
-    /** Implementation. */
-    private final EmbeddingImpl module;
 
     /**
      * Constructor.
@@ -55,23 +52,22 @@ public class EmbeddingLayer implements Layer {
      * @param alpha optional scaling factor.
      */
     public EmbeddingLayer(int numTokens, int dim, double alpha) {
+        super(create(numTokens, dim));
         this.alpha = alpha;
-        this.scale = new Scalar(alpha);
-        this.module = new EmbeddingImpl(numTokens, dim);
     }
 
-    @Override
-    public Module asTorch() {
-        return module;
+    private static Handles create(int numTokens, int dim) {
+        MemorySegment h = check(smile_embedding_create(numTokens, dim));
+        MemorySegment m = check(smile_embedding_as_module(h));
+        return new Handles(h, m, () -> {
+            smile_module_free(m);
+            smile_embedding_free(h);
+        });
     }
 
     @Override
     public Tensor forward(Tensor input) {
-        org.bytedeco.pytorch.Tensor x = input.asTorch();
-        x = module.forward(x);
-        if (alpha != 1.0) {
-            x.mul_(scale);
-        }
-        return new Tensor(x);
+        Tensor x = new Tensor(smile_embedding_forward(handle, input.handle()));
+        return alpha != 1.0 ? x.mul_(alpha) : x;
     }
 }

@@ -16,9 +16,10 @@
  */
 package smile.deep.activation;
 
-import org.bytedeco.pytorch.Scalar;
-import org.bytedeco.pytorch.global.torch;
 import smile.deep.tensor.Tensor;
+
+import static smile.torch.smile_torch_h.smile_torch_leaky_relu;
+import static smile.torch.smile_torch_h.smile_torch_leaky_relu_;
 
 /**
  * Leaky Rectified Linear Unit activation function.
@@ -26,8 +27,8 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class LeakyReLU extends ActivationFunction {
-    /** Controls the angle of the negative slope. */
-    final Scalar negativeSlope;
+    /** Controls the angle of the negative slope for negative input values. */
+    final double negativeSlope;
 
     /**
      * Constructor.
@@ -38,23 +39,21 @@ public class LeakyReLU extends ActivationFunction {
 
     /**
      * Constructor.
-     * @param negativeSlope Controls the angle of the negative slope, which is
+     * @param negativeSlope controls the angle of the negative slope, which is
      *                     used for negative input values.
      * @param inplace true if the operation executes in-place.
      */
     public LeakyReLU(double negativeSlope, boolean inplace) {
         super(String.format("LeakyReLU(%.4f)", negativeSlope), inplace);
-        this.negativeSlope = new Scalar(negativeSlope);
+        this.negativeSlope = negativeSlope;
     }
 
     @Override
     public Tensor forward(Tensor input) {
-        var x = input.asTorch();
         if (inplace) {
-            torch.leaky_relu_(x, negativeSlope);
+            smile_torch_leaky_relu_(input.handle(), negativeSlope);
             return input;
-        } else {
-            return new Tensor(torch.leaky_relu(x, negativeSlope));
         }
+        return new Tensor(smile_torch_leaky_relu(input.handle(), negativeSlope));
     }
 }

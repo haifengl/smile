@@ -16,9 +16,9 @@
  */
 package smile.llm.llama;
 
+import java.lang.foreign.MemorySegment;
 import java.util.ArrayList;
 import java.util.List;
-import org.bytedeco.pytorch.ModuleListImpl;
 import smile.deep.layer.EmbeddingLayer;
 import smile.deep.layer.LinearLayer;
 import smile.deep.layer.LayerBlock;
@@ -28,6 +28,12 @@ import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.RotaryPositionalEncoding;
+
+import static smile.torch.smile_torch_h.smile_module_free;
+import static smile.torch.smile_torch_h.smile_module_list_create;
+import static smile.torch.smile_torch_h.smile_module_list_free;
+import static smile.torch.smile_torch_h.smile_module_list_push_back;
+import static smile.torch.smile_torch_h.smile_module_list_as_module;
 
 /**
  * The Transformer model. It consists of token embeddings, stacked
@@ -67,11 +73,11 @@ public class Transformer extends LayerBlock {
         this.tokEmbeddings = new EmbeddingLayer(params.vocabSize(), params.dim());
 
         this.layers = new ArrayList<>();
-        var moduleList = new ModuleListImpl();
+        MemorySegment moduleList = smile_module_list_create();
         for (int layerId = 0; layerId < params.numLayers(); layerId++) {
             var block = new TransformerBlock(layerId, params);
             this.layers.add(block);
-            moduleList.push_back(block.module);
+            smile_module_list_push_back(moduleList, block.module);
         }
 
         this.norm = new RMSNormLayer(params.dim(), params.normEps());
@@ -84,7 +90,10 @@ public class Transformer extends LayerBlock {
                 params.ropeTheta(),
                 params.scaledRope()).to(device);
 
-        module.register_module("layers", moduleList);
+        MemorySegment listAsModule = smile_module_list_as_module(moduleList);
+        add("layers", listAsModule);
+        smile_module_free(listAsModule);
+        smile_module_list_free(moduleList);
         add("tok_embeddings", tokEmbeddings);
         add("norm", norm);
         add("output", output);

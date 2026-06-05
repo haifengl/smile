@@ -19,6 +19,8 @@ package smile.deep.layer;
 import org.junit.jupiter.api.*;
 import smile.deep.tensor.Tensor;
 import static org.junit.jupiter.api.Assertions.*;
+import static smile.torch.smile_torch_h.smile_module_eval;
+import static smile.torch.smile_torch_h.smile_module_train;
 
 /**
  * Lightweight unit tests for layer factory methods and SequentialBlock.
@@ -205,7 +207,7 @@ public class LayerTest {
     public void testGivenBatchNorm1dWhenForwardThenOutputShapeIsPreserved() {
         BatchNorm1dLayer bn = Layer.batchNorm1d(IN);
         Tensor input = randn(BATCH, IN);
-        bn.asTorch().train(true);
+        smile_module_train(bn.asModule(), 1);
         Tensor output = bn.forward(input);
         assertEquals(BATCH, output.size(0));
         assertEquals(IN,    output.size(1));
@@ -216,7 +218,7 @@ public class LayerTest {
     public void testGivenDropoutLayerInEvalModeWhenForwardThenOutputEqualsInput() {
         // In eval mode, dropout is a no-op
         DropoutLayer drop = Layer.dropout(0.5);
-        drop.asTorch().eval();
+        smile_module_eval(drop.asModule());
         Tensor input = randn(BATCH, IN);
         Tensor output = drop.forward(input);
         Tensor inC  = input.contiguous();
@@ -254,7 +256,7 @@ public class LayerTest {
         // GroupNorm expects input [N, C, *] where C divisible by groups
         // Use shape [BATCH, 4, 4] — 4 channels, 2 groups
         GroupNormLayer gn = Layer.groupNorm(2, 4);
-        gn.asTorch().train(true);
+        smile_module_train(gn.asModule(), 1);
         Tensor input = Tensor.rand(BATCH, 4, 4);
         Tensor output = gn.forward(input);
         assertEquals(BATCH, output.size(0));
@@ -278,7 +280,7 @@ public class LayerTest {
     public void testGivenBatchNorm2dWhenForwardThenOutputShapeIsPreserved() {
         // BatchNorm2d: input [N, C, H, W]
         BatchNorm2dLayer bn = Layer.batchNorm2d(IN);
-        bn.asTorch().train(true);
+        smile_module_train(bn.asModule(), 1);
         Tensor input = Tensor.rand(BATCH, IN, 4, 4);
         Tensor output = bn.forward(input);
         assertEquals(BATCH, output.size(0));
@@ -421,7 +423,7 @@ public class LayerTest {
     @Test
     public void testGivenBatchNorm1dWithCustomEpsWhenForwardThenShapePreserved() {
         BatchNorm1dLayer bn = Layer.batchNorm1d(IN, 1E-3, 0.2, true);
-        bn.asTorch().train(true);
+        smile_module_train(bn.asModule(), 1);
         Tensor input = Tensor.rand(BATCH, IN);
         Tensor output = bn.forward(input);
         assertEquals(BATCH, output.size(0));
@@ -433,7 +435,7 @@ public class LayerTest {
     public void testGivenBatchNorm1dWithCumulativeMovingAverageWhenForwardThenShapePreserved() {
         // momentum=0.0 means cumulative moving average
         BatchNorm1dLayer bn = Layer.batchNorm1d(IN, 1E-5, 0.0, true);
-        bn.asTorch().train(true);
+        smile_module_train(bn.asModule(), 1);
         Tensor input = Tensor.rand(BATCH, IN);
         Tensor output = bn.forward(input);
         assertEquals(BATCH, output.size(0));
@@ -463,7 +465,7 @@ public class LayerTest {
     public void testGivenDropoutInTrainingModeWhenForwardThenSomeElementsMayBeZero() {
         // With p=0.9, almost all elements should be zeroed
         DropoutLayer drop = new DropoutLayer(0.9);
-        drop.asTorch().train(true);
+        smile_module_train(drop.asModule(), 1);
         Tensor input = Tensor.ones(100);
         Tensor output = drop.forward(input);
         Tensor outC = output.contiguous();
