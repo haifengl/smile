@@ -36,7 +36,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  TORCH_VERSION: "2.11.0"
+  TORCH_VERSION: "2.12.0"
   BUILD_DIR: build/cpp
 
 jobs:
@@ -68,7 +68,7 @@ jobs:
           # ----------------------------------------------------------------
           - runner: ubuntu-22.04
             os-label: Linux (GCC)
-            libtorch-url-template: "https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-TORCH_VERSION%2Bcpu.zip"
+            libtorch-url-template: "https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-TORCH_VERSION%2Bcpu.zip"
             archive-name: libtorch-linux.zip
             unzip-dest: deep
             artifact-glob: build/cpp/libsmile_torch.so
@@ -77,8 +77,8 @@ jobs:
           # ----------------------------------------------------------------
           # macOS arm64 — Apple Clang, libtorch macOS arm64 CPU release
           # ----------------------------------------------------------------
-          - runner: macos-14          # arm64 runner
-            os-label: macOS (Apple Clang, arm64)
+          - runner: macos-15          # arm64 runner
+            os-label: macOS (Apple Silicon)
             libtorch-url-template: "https://download.pytorch.org/libtorch/cpu/libtorch-macos-arm64-TORCH_VERSION.zip"
             archive-name: libtorch-macos.zip
             unzip-dest: deep
