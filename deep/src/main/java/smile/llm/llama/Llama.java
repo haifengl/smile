@@ -102,15 +102,12 @@ public class Llama {
 
         Device device = Device.CPU();
         if (deviceId >= 0) {
-            var startTime = System.currentTimeMillis();/*
-            cudart.cuInit(0);
-            torch_cuda.set_device(deviceId);
+            var startTime = System.currentTimeMillis();
             device = Device.CUDA(deviceId);
 
             // half precision to lower memory usage.
-            var meta = new TypeMeta();
-            meta.put(Tensor.isBF16Supported() ? ScalarType.BFloat16 : ScalarType.Float16);
-            torch.set_default_dtype(meta);*/
+            smile_torch_h.smile_set_default_dtype(
+                    (Tensor.isBF16Supported() ? ScalarType.BFloat16 : ScalarType.Float16).code());
             var time = System.currentTimeMillis() - startTime;
             logger.info("Initialized CUDA[{}]: {}.{} seconds", deviceId, time / 1000, time % 1000);
         }

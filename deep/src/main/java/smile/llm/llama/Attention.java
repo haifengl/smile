@@ -60,8 +60,8 @@ public class Attention {
      */
     public Attention(ModelArgs args) {
         this.numKvHeads = args.numKvHeads() == null ? args.numHeads() : args.numKvHeads();
-        // JavaCPP doesn't support torch.distributed yet
-        int modelParallelSize = 1; //fs_init.get_model_parallel_world_size();
+        // Don't support torch.distributed yet
+        int modelParallelSize = 1; // torch.distributed.get_world_size(group=get_model_parallel_group());
         this.numLocalHeads = args.numHeads() / modelParallelSize;
         this.numLocalKvHeads = this.numKvHeads / modelParallelSize;
         this.numRep = this.numLocalHeads / this.numLocalKvHeads;
