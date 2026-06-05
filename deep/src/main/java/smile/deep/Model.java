@@ -16,10 +16,10 @@
  */
 package smile.deep;
 
+import java.lang.foreign.MemorySegment;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Function;
-import org.bytedeco.pytorch.Module;
 import smile.deep.layer.LayerBlock;
 import smile.deep.metric.Metric;
 import smile.deep.tensor.Device;
@@ -69,11 +69,11 @@ public class Model implements Function<Tensor, Tensor> {
     }
 
     /**
-     * Returns the PyTorch Module object.
-     * @return the PyTorch Module object.
+     * Returns the native {@code ST_Module} handle of the network.
+     * @return the native {@code ST_Module} handle.
      */
-    public Module asTorch() {
-        return net.asTorch();
+    public MemorySegment asModule() {
+        return net.asModule();
     }
 
     /**

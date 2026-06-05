@@ -16,19 +16,18 @@
  */
 package smile.deep.layer;
 
-import org.bytedeco.pytorch.LinearImpl;
-import org.bytedeco.pytorch.LinearOptions;
-import org.bytedeco.pytorch.Module;
+import java.lang.foreign.MemorySegment;
 import smile.deep.tensor.Tensor;
+
+import static smile.torch.Native.check;
+import static smile.torch.smile_torch_h.*;
 
 /**
  * A fully connected linear layer.
  *
  * @author Haifeng Li
  */
-public class LinearLayer implements Layer {
-    private final LinearImpl module;
-
+public class LinearLayer extends TypedLayer {
     /**
      * Constructor.
      * @param in the number of input features.
@@ -45,18 +44,20 @@ public class LinearLayer implements Layer {
      * @param bias If false, the layer will not learn an additive bias.
      */
     public LinearLayer(int in, int out, boolean bias) {
-        var options = new LinearOptions(in, out);
-        options.bias().put(bias);
-        this.module = new LinearImpl(options);
+        super(create(in, out, bias));
     }
 
-    @Override
-    public Module asTorch() {
-        return module;
+    private static Handles create(int in, int out, boolean bias) {
+        MemorySegment h = check(smile_linear_create(in, out, bias ? 1 : 0));
+        MemorySegment m = check(smile_linear_as_module(h));
+        return new Handles(h, m, () -> {
+            smile_module_free(m);
+            smile_linear_free(h);
+        });
     }
 
     @Override
     public Tensor forward(Tensor input) {
-        return new Tensor(module.forward(input.asTorch()));
+        return new Tensor(smile_linear_forward(handle, input.handle()));
     }
 }

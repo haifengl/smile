@@ -290,6 +290,9 @@ SMILE_API int      smile_tensor_requires_grad(ST_Tensor t);
 SMILE_API void     smile_tensor_set_requires_grad(ST_Tensor t, int requires_grad);
 SMILE_API int      smile_tensor_is_training(ST_Tensor t);
 
+/** Returns the compute device of the tensor as a new ST_Device (caller frees). */
+SMILE_API ST_Device smile_tensor_device(ST_Tensor t);
+
 /* =========================================================================
  * Tensor — Data Pointers
  * ========================================================================= */
@@ -466,6 +469,12 @@ SMILE_API void      smile_tensor_logical_or_  (ST_Tensor a, ST_Tensor b);
 SMILE_API ST_Tensor smile_tensor_matmul(ST_Tensor a, ST_Tensor b);
 SMILE_API ST_Tensor smile_tensor_outer (ST_Tensor a, ST_Tensor b);
 
+/* scatter_reduce; reduce is one of "sum", "prod", "mean", "amax", "amin". */
+SMILE_API ST_Tensor smile_tensor_scatter_reduce (ST_Tensor t, int64_t dim, ST_Tensor index,
+                                                  ST_Tensor src, const char *reduce);
+SMILE_API void      smile_tensor_scatter_reduce_(ST_Tensor t, int64_t dim, ST_Tensor index,
+                                                  ST_Tensor src, const char *reduce);
+
 /* =========================================================================
  * Tensor — New-tensor creators from existing tensor
  * ========================================================================= */
@@ -487,6 +496,8 @@ SMILE_API ST_TensorIndex smile_tensor_index_from_tensor(ST_Tensor t);
 SMILE_API ST_TensorIndex smile_tensor_index_ellipsis(void);
 /** Creates a Slice TensorIndex.  Pass INT64_MIN for "not set". */
 SMILE_API ST_TensorIndex smile_tensor_index_slice(int64_t start, int64_t stop, int64_t step);
+/** Creates a None (newaxis) TensorIndex that inserts a singleton dimension. */
+SMILE_API ST_TensorIndex smile_tensor_index_none(void);
 SMILE_API void smile_tensor_index_free(ST_TensorIndex idx);
 
 /** Creates an empty TensorIndexVector. */
@@ -601,6 +612,7 @@ SMILE_API const char *smile_module_name(ST_Module m);
 /** Registers a child module under name (non-owning view of child is returned). */
 SMILE_API void smile_module_register_module   (ST_Module m, const char *name, ST_Module child);
 SMILE_API void smile_module_register_parameter(ST_Module m, const char *name, ST_Tensor t);
+SMILE_API void smile_module_register_buffer   (ST_Module m, const char *name, ST_Tensor t);
 
 /** Returns a TensorVec of all learnable parameters (caller owns the vector). */
 SMILE_API ST_TensorVec smile_module_parameters(ST_Module m);
@@ -625,6 +637,8 @@ SMILE_API void          smile_module_list_free  (ST_ModuleList ml);
 SMILE_API void          smile_module_list_push_back(ST_ModuleList ml, ST_Module m);
 SMILE_API int64_t       smile_module_list_size  (ST_ModuleList ml);
 SMILE_API ST_Module     smile_module_list_get   (ST_ModuleList ml, int64_t index);
+/** Returns a borrowed ST_Module view of the list (for registration). */
+SMILE_API ST_Module     smile_module_list_as_module(ST_ModuleList ml);
 
 /* =========================================================================
  * Archive (checkpointing)
@@ -798,6 +812,12 @@ SMILE_API void smile_optimizer_set_lr(ST_Optimizer opt, double lr);
 
 /** Writes the libtorch version string into buf. */
 SMILE_API int smile_torch_version(char *buf, int buf_len);
+
+/** Sets the default dtype used by tensor factories that don't specify one. */
+SMILE_API void smile_set_default_dtype(ST_DType dtype);
+
+/** Seeds the global RNG for reproducible sampling. */
+SMILE_API void smile_manual_seed(int64_t seed);
 
 #ifdef __cplusplus
 } /* extern "C" */

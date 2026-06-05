@@ -16,10 +16,17 @@
  */
 package smile.llm.llama;
 
-import org.bytedeco.pytorch.Module;
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
 import smile.deep.activation.SiLU;
 import smile.deep.layer.LinearLayer;
+import smile.torch.Native;
 import smile.deep.tensor.Tensor;
+
+import static smile.torch.Native.check;
+import static smile.torch.smile_torch_h.smile_module_create;
+import static smile.torch.smile_torch_h.smile_module_free;
+import static smile.torch.smile_torch_h.smile_module_register_module;
 
 /**
  * Feedforward layer in Transformer. It has two linear transformations and
@@ -30,7 +37,7 @@ import smile.deep.tensor.Tensor;
 public class FeedForward {
     final LinearLayer w1, w2, w3;
     final SiLU silu;
-    final Module module;
+    final MemorySegment module;
 
     /**
      * Constructor.
@@ -54,10 +61,14 @@ public class FeedForward {
         this.w3 = new LinearLayer(dim, hiddenDim, false);
         this.silu = new SiLU(true);
 
-        this.module = new Module();
-        this.module.register_module("w1", w1.asTorch());
-        this.module.register_module("w2", w2.asTorch());
-        this.module.register_module("w3", w3.asTorch());
+        try (Arena arena = Arena.ofConfined()) {
+            this.module = check(smile_module_create(MemorySegment.NULL));
+            smile_module_register_module(module, arena.allocateFrom("w1"), w1.asModule());
+            smile_module_register_module(module, arena.allocateFrom("w2"), w2.asModule());
+            smile_module_register_module(module, arena.allocateFrom("w3"), w3.asModule());
+        }
+        MemorySegment m = this.module;
+        Native.CLEANER.register(this, () -> smile_module_free(m));
     }
 
     /**

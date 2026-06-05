@@ -16,11 +16,13 @@
  */
 package smile.deep.layer;
 
-import org.bytedeco.pytorch.AdaptiveAvgPool2dImpl;
-import org.bytedeco.pytorch.LongOptional;
-import org.bytedeco.pytorch.LongOptionalVector;
-import org.bytedeco.pytorch.Module;
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
 import smile.deep.tensor.Tensor;
+
+import static java.lang.foreign.ValueLayout.JAVA_LONG;
+import static smile.torch.Native.check;
+import static smile.torch.smile_torch_h.*;
 
 /**
  * An adaptive average pooling that reduces a tensor by combining cells.
@@ -29,9 +31,7 @@ import smile.deep.tensor.Tensor;
  *
  * @author Haifeng Li
  */
-public class AdaptiveAvgPool2dLayer implements Layer {
-    private final AdaptiveAvgPool2dImpl module;
-
+public class AdaptiveAvgPool2dLayer extends TypedLayer {
     /**
      * Constructor.
      * @param size the output size.
@@ -46,24 +46,24 @@ public class AdaptiveAvgPool2dLayer implements Layer {
      * @param width the output width.
      */
     public AdaptiveAvgPool2dLayer(int height, int width) {
-        // JavaCPP doesn't generate correct constructor.
-        // https://github.com/bytedeco/javacpp-presets/issues/1492
-        var p1 = new LongOptional(height);
-        var p2 = new LongOptional(width);
-        var outputSize = new LongOptionalVector(p1, p2);
-        this.module = new AdaptiveAvgPool2dImpl(outputSize.front());
-        p1.close();
-        p2.close();
-        outputSize.close();
+        super(create(height, width));
     }
 
-    @Override
-    public Module asTorch() {
-        return module;
+    private static Handles create(int height, int width) {
+        MemorySegment h;
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment outputSize = arena.allocateFrom(JAVA_LONG, height, width);
+            h = check(smile_adaptive_avgpool2d_create(outputSize));
+        }
+        MemorySegment m = check(smile_adaptive_avgpool2d_as_module(h));
+        return new Handles(h, m, () -> {
+            smile_module_free(m);
+            smile_adaptive_avgpool2d_free(h);
+        });
     }
 
     @Override
     public Tensor forward(Tensor input) {
-        return new Tensor(module.forward(input.asTorch()));
+        return new Tensor(smile_adaptive_avgpool2d_forward(handle, input.handle()));
     }
 }

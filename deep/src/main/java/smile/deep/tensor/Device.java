@@ -16,31 +16,28 @@
  */
 package smile.deep.tensor;
 
-import org.bytedeco.cuda.global.cudart;
-import org.bytedeco.pytorch.global.torch;
-import org.bytedeco.pytorch.global.torch_cuda;
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
+import java.util.Objects;
+
+import smile.torch.Native;
+import smile.torch.smile_torch_h;
 
 /**
  * The compute device on which a tensor is stored.
  *
+ * <p>A device is an immutable value object identified by its {@link DeviceType}
+ * and index. Native {@code ST_Device} handles are created on demand and freed
+ * immediately, so {@code Device} instances are cheap to create and hold no
+ * native resources.
+ *
  * @author Haifeng Li
  */
 public class Device {
-    static {
-        try {
-            // Initializes the driver API and must be called before any other
-            // function from the driver API in the current process.
-            // Currently, the Flags parameter must be 0.
-            cudart.cuInit(0);
-        } catch (Throwable ex) {
-            // cudart may not be available, e.g. on macOS
-        }
-    }
-
     /** Device type. */
     final DeviceType type;
-    /** PyTorch device. */
-    final org.bytedeco.pytorch.Device value;
+    /** The device index (or ordinal). */
+    final byte index;
 
     /**
      * Constructor.
@@ -57,42 +54,64 @@ public class Device {
      */
     public Device(DeviceType type, byte index) {
         this.type = type;
-        this.value = new org.bytedeco.pytorch.Device(type.value, index);
+        this.index = index;
     }
 
     /**
-     * Constructor.
-     * @param device PyTorch device object.
+     * Creates a new native {@code ST_Device} handle for this device. The caller
+     * must free it with {@code smile_device_free}.
+     * @return a new {@code ST_Device} handle.
      */
-    Device(org.bytedeco.pytorch.Device device) {
-        this.value = device;
-        if (device.is_cpu()) {
-            type = DeviceType.CPU;
-        } else if (device.is_cuda()) {
+    public MemorySegment toNative() {
+        return Native.check(smile_torch_h.smile_device_create(type.code, index));
+    }
+
+    /**
+     * Returns the Java device for a native {@code ST_Device} handle. Does not
+     * take ownership of the handle.
+     * @param device the {@code ST_Device} handle.
+     * @return the device.
+     */
+    static Device fromNative(MemorySegment device) {
+        byte index = smile_torch_h.smile_device_index(device);
+        DeviceType type;
+        if (smile_torch_h.smile_device_is_cuda(device) != 0) {
             type = DeviceType.CUDA;
-        } else if (device.is_mps()) {
+        } else if (smile_torch_h.smile_device_is_mps(device) != 0) {
             type = DeviceType.MPS;
+        } else if (smile_torch_h.smile_device_is_cpu(device) != 0) {
+            type = DeviceType.CPU;
         } else {
-            throw new IllegalArgumentException("Unsupported device: " + device);
+            throw new IllegalArgumentException("Unsupported device");
         }
+        return new Device(type, index);
     }
 
     @Override
     public boolean equals(Object other) {
         if (other instanceof Device x) {
-            return value.equals(x.value);
+            return type == x.type && index == x.index;
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return toString().hashCode();
+        return Objects.hash(type, index);
     }
 
     @Override
     public String toString() {
-        return value.str().getString();
+        MemorySegment device = toNative();
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment buf = arena.allocate(64);
+            if (smile_torch_h.smile_device_str(device, buf, 64) != 0) {
+                return type.name().toLowerCase();
+            }
+            return buf.getString(0);
+        } finally {
+            smile_torch_h.smile_device_free(device);
+        }
     }
 
     /**
@@ -100,7 +119,7 @@ public class Device {
      * @return the number of threads used for intraop parallelism on CPU.
      */
     public static int getNumThreads() {
-        return torch.get_num_threads();
+        return smile_torch_h.smile_get_num_threads();
     }
 
     /**
@@ -108,7 +127,7 @@ public class Device {
      * @param n the number of threads used for intraop parallelism on CPU.
      */
     public static void setNumThreads(int n) {
-        torch.set_num_threads(n);
+        smile_torch_h.smile_set_num_threads(n);
     }
 
     /**
@@ -116,7 +135,7 @@ public class Device {
      * @return true if the device is CUDA.
      */
     public boolean isCUDA() {
-        return value.is_cuda();
+        return type == DeviceType.CUDA;
     }
 
     /**
@@ -124,7 +143,7 @@ public class Device {
      * @return true if the device is CPU.
      */
     public boolean isCPU() {
-        return value.is_cpu();
+        return type == DeviceType.CPU;
     }
 
     /**
@@ -132,24 +151,16 @@ public class Device {
      * @return true if the device is MPS.
      */
     public boolean isMPS() {
-        return value.is_mps();
+        return type == DeviceType.MPS;
     }
 
     /** Releases all unoccupied cached memory. */
     public void emptyCache() {
         if (isCUDA()) {
-            torch_cuda.getAllocator().emptyCache();
+            smile_torch_h.smile_cuda_empty_cache();
         } else if (isMPS()) {
-            torch.getMPSHooks().emptyCache();
+            smile_torch_h.smile_mps_empty_cache();
         }
-    }
-
-    /**
-     * Returns the PyTorch device object.
-     * @return the PyTorch device object.
-     */
-    public org.bytedeco.pytorch.Device asTorch() {
-        return this.value;
     }
 
     /**
@@ -157,10 +168,10 @@ public class Device {
      * @return the preferred (most powerful) device.
      */
     public static Device preferredDevice() {
-        if (torch.cuda_is_available()) {
+        if (smile_torch_h.smile_cuda_is_available() != 0) {
             return Device.CUDA();
         // MPS is slower than CPU
-        // } else if (torch.hasMPS()) {
+        // } else if (smile_torch_h.smile_mps_is_available() != 0) {
         //    return Device.MPS();
         } else {
             return Device.CPU();
@@ -205,21 +216,6 @@ public class Device {
     }
 
     /**
-     * Sets Tensor to be allocated on this device. This does not affect factory
-     * function calls which are called with an explicit device argument.
-     * Factory calls will be performed as if they were passed device as
-     * an argument.
-     * <p>
-     * The default device is initially CPU. If you set the default tensor
-     * device to another device (e.g., CUDA) without a device index,
-     * tensors will be allocated on whatever the current device for
-     * the device type.
-     */
-    public void setDefaultDevice() {
-        torch.device(value);
-    }
-
-    /**
      * Returns the device type.
      * @return the device type.
      */
@@ -240,6 +236,6 @@ public class Device {
      * @return the device index.
      */
     public byte index() {
-        return value.index();
+        return index;
     }
 }

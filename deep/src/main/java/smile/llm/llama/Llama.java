@@ -20,10 +20,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.SubmissionPublisher;
-import org.bytedeco.cuda.global.cudart;
-import org.bytedeco.pytorch.TypeMeta;
-import org.bytedeco.pytorch.global.torch;
-import org.bytedeco.pytorch.global.torch_cuda;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
@@ -31,6 +27,7 @@ import smile.deep.tensor.Tensor;
 import smile.llm.ChatCompletion;
 import smile.llm.FinishReason;
 import smile.llm.Message;
+import smile.torch.smile_torch_h;
 import smile.util.AutoScope;
 
 /**
@@ -106,14 +103,11 @@ public class Llama {
         Device device = Device.CPU();
         if (deviceId >= 0) {
             var startTime = System.currentTimeMillis();
-            cudart.cuInit(0);
-            torch_cuda.set_device(deviceId);
             device = Device.CUDA(deviceId);
 
             // half precision to lower memory usage.
-            var meta = new TypeMeta();
-            meta.put(Tensor.isBF16Supported() ? torch.ScalarType.BFloat16 : torch.ScalarType.Half);
-            torch.set_default_dtype(meta);
+            smile_torch_h.smile_set_default_dtype(
+                    (Tensor.isBF16Supported() ? ScalarType.BFloat16 : ScalarType.Float16).code());
             var time = System.currentTimeMillis() - startTime;
             logger.info("Initialized CUDA[{}]: {}.{} seconds", deviceId, time / 1000, time % 1000);
         }
@@ -203,7 +197,7 @@ public class Llama {
 
         // seed must be the same in all processes
         if (seed != 0) {
-            torch.manual_seed(seed);
+            smile_torch_h.smile_manual_seed(seed);
         }
 
         try (var guard = Tensor.noGradGuard();

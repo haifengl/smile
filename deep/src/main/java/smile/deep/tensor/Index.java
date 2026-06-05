@@ -16,25 +16,38 @@
  */
 package smile.deep.tensor;
 
-import org.bytedeco.pytorch.*;
-import org.bytedeco.pytorch.Tensor;
-import org.bytedeco.pytorch.global.torch;
+import java.lang.foreign.MemorySegment;
+import java.lang.ref.Cleaner;
+
+import smile.torch.Native;
+import smile.torch.smile_torch_h;
 
 /**
  * Indexing a tensor.
  *
  * @author Haifeng Li
  */
-public class Index {
-    /** PyTorch tensor index. */
-    final TensorIndex value;
+public class Index implements AutoCloseable {
+    /** Sentinel used by the native slice constructor for an unset bound. */
+    private static final long NONE = Long.MIN_VALUE;
+
+    /** Native {@code ST_TensorIndex} handle. */
+    final MemorySegment handle;
+    /** Releases the native handle once this index becomes unreachable. */
+    private final Cleaner.Cleanable cleanable;
 
     /**
      * Constructor.
-     * @param index PyTorch tensor index.
+     * @param handle the native {@code ST_TensorIndex} handle.
      */
-    Index(TensorIndex index) {
-        this.value = index;
+    Index(MemorySegment handle) {
+        this.handle = Native.check(handle);
+        this.cleanable = Native.CLEANER.register(this, new Native.FreeIndex(this.handle));
+    }
+
+    @Override
+    public void close() {
+        cleanable.clean();
     }
 
     /**
@@ -42,18 +55,22 @@ public class Index {
      * It's designed to mean at this point, insert as many full slices (:) to extend
      * the multidimensional slice to all dimensions.
      */
-    public static final Index Ellipsis = new Index(new TensorIndex(torch.Ellipsis()));
+    public static final Index Ellipsis = new Index(smile_torch_h.smile_tensor_index_ellipsis());
 
     /**
      * The colon (:) is used to slice all elements of a dimension.
      */
-    public static final Index Colon = new Index(new TensorIndex(new Slice()));
+    public static final Index Colon = new Index(smile_torch_h.smile_tensor_index_slice(NONE, NONE, NONE));
 
     /**
      * The None is used to insert a singleton dimension ("unsqueeze"
      * a dimension).
+     *
+     * <p>This relies on the {@code smile_tensor_index_none} native function. If
+     * the loaded {@code smile_torch} library predates that function, this
+     * constant is {@code null} until the binary is rebuilt.
      */
-    public static final Index None = new Index(new TensorIndex());
+    public static final Index None = new Index(smile_torch_h.smile_tensor_index_none());
 
     /**
      * Returns the index of a single element in a dimension.
@@ -62,7 +79,7 @@ public class Index {
      * @return the index.
      */
     public static Index of(int i) {
-        return new Index(new TensorIndex(i));
+        return new Index(smile_torch_h.smile_tensor_index_from_int(i));
     }
 
     /**
@@ -72,7 +89,7 @@ public class Index {
      * @return the index.
      */
     public static Index of(long i) {
-        return new Index(new TensorIndex(i));
+        return new Index(smile_torch_h.smile_tensor_index_from_int(i));
     }
 
     /**
@@ -82,7 +99,9 @@ public class Index {
      * @return the index.
      */
     public static Index of(int... indices) {
-        return new Index(new TensorIndex(Tensor.create(indices)));
+        try (Tensor t = Tensor.of(indices)) {
+            return new Index(smile_torch_h.smile_tensor_index_from_tensor(t.handle));
+        }
     }
 
     /**
@@ -92,7 +111,9 @@ public class Index {
      * @return the index.
      */
     public static Index of(long... indices) {
-        return new Index(new TensorIndex(Tensor.create(indices)));
+        try (Tensor t = Tensor.of(indices)) {
+            return new Index(smile_torch_h.smile_tensor_index_from_tensor(t.handle));
+        }
     }
 
     /**
@@ -104,7 +125,9 @@ public class Index {
      * @return the index.
      */
     public static Index of(boolean... indices) {
-        return new Index(new TensorIndex(Tensor.create(indices)));
+        try (Tensor t = Tensor.of(indices)) {
+            return new Index(smile_torch_h.smile_tensor_index_from_tensor(t.handle));
+        }
     }
 
     /**
@@ -113,8 +136,8 @@ public class Index {
      * @param index the tensor index.
      * @return the index.
      */
-    public static Index of(smile.deep.tensor.Tensor index) {
-        return new Index(new TensorIndex(index.value));
+    public static Index of(Tensor index) {
+        return new Index(smile_torch_h.smile_tensor_index_from_tensor(index.handle));
     }
 
     /**
@@ -137,11 +160,11 @@ public class Index {
      * @return the slice index.
      */
     public static Index slice(Integer start, Integer end, Integer step) {
-        return new Index(new TensorIndex(new org.bytedeco.pytorch.Slice(
-                start == null ? new SymIntOptional() : new SymIntOptional(new SymInt(start)),
-                end == null ? new SymIntOptional() : new SymIntOptional(new SymInt(end)),
-                step == null ? new SymIntOptional() : new SymIntOptional(new SymInt(step))
-        )));
+        return new Index(smile_torch_h.smile_tensor_index_slice(
+                start == null ? NONE : start.longValue(),
+                end == null ? NONE : end.longValue(),
+                step == null ? NONE : step.longValue()
+        ));
     }
 
     /**
@@ -164,10 +187,10 @@ public class Index {
      * @return the slice index.
      */
     public static Index slice(Long start, Long end, Long step) {
-        return new Index(new TensorIndex(new org.bytedeco.pytorch.Slice(
-                start == null ? new SymIntOptional() : new SymIntOptional(new SymInt(start)),
-                end == null ? new SymIntOptional() : new SymIntOptional(new SymInt(end)),
-                step == null ? new SymIntOptional() : new SymIntOptional(new SymInt(step))
-        )));
+        return new Index(smile_torch_h.smile_tensor_index_slice(
+                start == null ? NONE : start,
+                end == null ? NONE : end,
+                step == null ? NONE : step
+        ));
     }
 }

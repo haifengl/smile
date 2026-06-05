@@ -16,9 +16,15 @@
  */
 package smile.deep;
 
-import org.bytedeco.pytorch.*;
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
+import smile.deep.tensor.Tensor;
 
 /**
  * A dataset consists of data and an associated target (label)
@@ -99,33 +105,57 @@ public interface Dataset extends Iterable<SampleBatch>, AutoCloseable {
      * training and 10,000 for testing. The images are grayscale,
      * 28x28 pixels, and centered.
      *
+     * <p>The images and labels are read directly from the standard
+     * uncompressed IDX files (e.g. {@code train-images-idx3-ubyte}) found in
+     * {@code path}. Pixel values are scaled to {@code [0, 1]} and the data
+     * tensor has shape {@code [N, 1, 28, 28]}.
+     *
      * @param path the data folder path.
      * @param trainMode load training or test data.
      * @param batch the mini-batch size.
      * @return the MNIST dataset.
      */
     static Dataset mnist(String path, boolean trainMode, int batch) {
-        return new Dataset() {
-            final int mode = trainMode ? MNIST.Mode.kTrain.value : MNIST.Mode.kTest.value;
-            final MNISTMapDataset dataset = new MNIST(path, mode).map(new ExampleStack());
-            final MNISTRandomDataLoader loader = new MNISTRandomDataLoader(
-                    dataset, new RandomSampler(dataset.size().get()),
-                    new DataLoaderOptions(batch));
+        String prefix = trainMode ? "train" : "t10k";
+        try {
+            float[] images = readImages(Path.of(path, prefix + "-images-idx3-ubyte"));
+            long[] labels = readLabels(Path.of(path, prefix + "-labels-idx1-ubyte"));
+            int n = labels.length;
+            Tensor data = Tensor.of(images, n, 1, 28, 28);
+            Tensor target = Tensor.of(labels, n);
+            return new DatasetImpl(data, target, batch);
+        } catch (IOException ex) {
+            throw new UncheckedIOException("Failed to load MNIST data from " + path, ex);
+        }
+    }
 
-            @Override
-            public long size() {
-                return dataset.size().get();
+    /** Reads an IDX3 image file into a flat float array scaled to [0, 1]. */
+    private static float[] readImages(Path file) throws IOException {
+        try (var in = new DataInputStream(new BufferedInputStream(Files.newInputStream(file)))) {
+            in.readInt();                 // magic number (0x00000803)
+            int count = in.readInt();
+            int rows = in.readInt();
+            int cols = in.readInt();
+            byte[] bytes = in.readNBytes(count * rows * cols);
+            float[] images = new float[bytes.length];
+            for (int i = 0; i < bytes.length; i++) {
+                images[i] = (bytes[i] & 0xFF) / 255.0f;
             }
+            return images;
+        }
+    }
 
-            @Override
-            public DataSampler iterator() {
-                return new DataSampler(loader.begin(), loader.end());
+    /** Reads an IDX1 label file into a long array. */
+    private static long[] readLabels(Path file) throws IOException {
+        try (var in = new DataInputStream(new BufferedInputStream(Files.newInputStream(file)))) {
+            in.readInt();                 // magic number (0x00000801)
+            int count = in.readInt();
+            byte[] bytes = in.readNBytes(count);
+            long[] labels = new long[count];
+            for (int i = 0; i < count; i++) {
+                labels[i] = bytes[i] & 0xFF;
             }
-
-            @Override
-            public void close() {
-                dataset.close();
-            }
-        };
+            return labels;
+        }
     }
 }

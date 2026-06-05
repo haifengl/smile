@@ -16,9 +16,14 @@
  */
 package smile.deep.layer;
 
-import org.bytedeco.pytorch.Module;
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
+import smile.torch.Native;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
+
+import static smile.torch.Native.check;
+import static smile.torch.smile_torch_h.*;
 
 /**
  * Root Mean Square Layer Normalization. RMSNorm regularizes the summed inputs
@@ -29,7 +34,8 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class RMSNormLayer implements Layer {
-    private final Module module = new Module("RMSNorm");
+    /** The neural network module ({@code ST_Module}). */
+    private final MemorySegment module;
     /** The term added to the denominator to improve numerical stability. */
     private final double eps;
     /** The learnable per-element scale parameter. */
@@ -50,8 +56,13 @@ public class RMSNormLayer implements Layer {
      */
     public RMSNormLayer(int dim, double eps) {
         this.eps = eps;
-        weight = Tensor.ones(dim);
-        module.register_parameter("weight", weight.asTorch());
+        this.weight = Tensor.ones(dim);
+        try (Arena arena = Arena.ofConfined()) {
+            this.module = check(smile_module_create(arena.allocateFrom("RMSNorm")));
+            smile_module_register_parameter(module, arena.allocateFrom("weight"), weight.handle());
+        }
+        MemorySegment m = this.module;
+        Native.CLEANER.register(this, () -> smile_module_free(m));
     }
 
     @Override
@@ -62,7 +73,7 @@ public class RMSNormLayer implements Layer {
     }
 
     @Override
-    public Module asTorch() {
+    public MemorySegment asModule() {
         return module;
     }
 }

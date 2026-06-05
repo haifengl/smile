@@ -16,22 +16,14 @@
  */
 package smile.deep.activation;
 
-import org.bytedeco.pytorch.global.torch;
 import smile.deep.tensor.Tensor;
+
+import static smile.torch.smile_torch_h.smile_torch_mish;
+import static smile.torch.smile_torch_h.smile_torch_mish_;
 
 /**
  * Mish activation function.
  *
- * <p>Mish is a self-regularized non-monotonic activation function:
- * <pre>
- *   mish(x) = x * tanh(softplus(x))
- *           = x * tanh(ln(1 + exp(x)))
- * </pre>
- *
- * <p>Mish is used in many modern object detection models such as YOLOv4/v5.
- *
- * @see <a href="https://arxiv.org/abs/1908.08681">Mish: A Self Regularized
- *      Non-Monotonic Activation Function</a>
  * @author Haifeng Li
  */
 public class Mish extends ActivationFunction {
@@ -52,13 +44,10 @@ public class Mish extends ActivationFunction {
 
     @Override
     public Tensor forward(Tensor input) {
-        var x = input.asTorch();
         if (inplace) {
-            torch.mish_(x);
+            smile_torch_mish_(input.handle());
             return input;
-        } else {
-            return new Tensor(torch.mish(x));
         }
+        return new Tensor(smile_torch_mish(input.handle()));
     }
 }
-

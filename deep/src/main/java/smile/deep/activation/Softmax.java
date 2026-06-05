@@ -16,8 +16,9 @@
  */
 package smile.deep.activation;
 
-import org.bytedeco.pytorch.global.torch;
 import smile.deep.tensor.Tensor;
+
+import static smile.torch.smile_torch_h.smile_torch_softmax;
 
 /**
  * Softmax activation function.
@@ -25,12 +26,11 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class Softmax extends ActivationFunction {
-    /** The dimension along which softmax is computed. */
+    /** The dimension along which softmax will be computed. */
     final int dim;
 
     /**
-     * Constructor. Computes softmax along dimension 1 (class dimension for
-     * 2-D batch × classes tensors).
+     * Constructor.
      */
     public Softmax() {
         this(1);
@@ -38,7 +38,7 @@ public class Softmax extends ActivationFunction {
 
     /**
      * Constructor.
-     * @param dim the dimension along which softmax is computed.
+     * @param dim the dimension along which softmax will be computed.
      */
     public Softmax(int dim) {
         super("Softmax", false);
@@ -47,6 +47,6 @@ public class Softmax extends ActivationFunction {
 
     @Override
     public Tensor forward(Tensor x) {
-        return new Tensor(torch.softmax(x.asTorch(), dim));
+        return new Tensor(smile_torch_softmax(x.handle(), dim));
     }
 }

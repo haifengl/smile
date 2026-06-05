@@ -16,22 +16,14 @@
  */
 package smile.deep.activation;
 
-import org.bytedeco.pytorch.global.torch;
 import smile.deep.tensor.Tensor;
+
+import static smile.torch.smile_torch_h.smile_torch_hardswish;
+import static smile.torch.smile_torch_h.smile_torch_hardswish_;
 
 /**
  * Hard Swish activation function.
  *
- * <p>Hard Swish is a computationally efficient approximation of Swish/SiLU:
- * <pre>
- *   hardswish(x) = x * hardsigmoid(x)
- *                = x * ReLU6(x + 3) / 6
- * </pre>
- *
- * <p>It is used in MobileNetV3 and EfficientNetV2 to reduce computational cost
- * compared to sigmoid-based Swish.
- *
- * @see <a href="https://arxiv.org/abs/1905.02244">Searching for MobileNetV3</a>
  * @author Haifeng Li
  */
 public class Hardswish extends ActivationFunction {
@@ -52,13 +44,10 @@ public class Hardswish extends ActivationFunction {
 
     @Override
     public Tensor forward(Tensor input) {
-        var x = input.asTorch();
         if (inplace) {
-            torch.hardswish_(x);
+            smile_torch_hardswish_(input.handle());
             return input;
-        } else {
-            return new Tensor(torch.hardswish(x));
         }
+        return new Tensor(smile_torch_hardswish(input.handle()));
     }
 }
-

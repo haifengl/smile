@@ -16,8 +16,10 @@
  */
 package smile.deep.activation;
 
-import org.bytedeco.pytorch.global.torch;
 import smile.deep.tensor.Tensor;
+
+import static smile.torch.smile_torch_h.smile_torch_silu;
+import static smile.torch.smile_torch_h.smile_torch_silu_;
 
 /**
  * Sigmoid Linear Unit activation function.
@@ -35,12 +37,10 @@ public class SiLU extends ActivationFunction {
 
     @Override
     public Tensor forward(Tensor input) {
-        var x = input.asTorch();
         if (inplace) {
-            torch.silu_(x);
+            smile_torch_silu_(input.handle());
             return input;
-        } else {
-            return new Tensor(torch.silu(x));
         }
+        return new Tensor(smile_torch_silu(input.handle()));
     }
 }

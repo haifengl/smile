@@ -16,11 +16,12 @@
  */
 package smile.deep.activation;
 
-import org.bytedeco.pytorch.global.torch;
 import smile.deep.tensor.Tensor;
 
+import static smile.torch.smile_torch_h.smile_torch_tanhshrink;
+
 /**
- * Hyperbolic Tangent Shrink activation function.
+ * Tanh shrink activation function.
  *
  * @author Haifeng Li
  */
@@ -34,6 +35,6 @@ public class TanhShrink extends ActivationFunction {
 
     @Override
     public Tensor forward(Tensor x) {
-        return new Tensor(torch.tanhshrink(x.asTorch()));
+        return new Tensor(smile_torch_tanhshrink(x.handle()));
     }
 }
