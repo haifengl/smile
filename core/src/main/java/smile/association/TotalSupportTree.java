@@ -36,31 +36,28 @@ import java.util.stream.StreamSupport;
  */
 public class TotalSupportTree implements Iterable<ItemSet> {
 
-    static class Node {
+    /**
+     * Total support tree node.
+     */
+    public static class Node {
         /**
          * The id of item.
          */
-        int id = -1;
+        public int id;
         /**
          * The support associate with the item set represented by the node.
          */
-        int support = 0;
+        public int support = 0;
         /**
          * The set of children nodes.
          */
-        Node[] children = null;
-
-        /**
-         * Constructor.
-         */
-        Node() {
-        }
+        public Node[] children = null;
 
         /**
          * Constructor.
          * @param id the id of item.
          */
-        Node(int id) {
+        public Node(int id) {
             this.id = id;
         }
     }
@@ -68,7 +65,7 @@ public class TotalSupportTree implements Iterable<ItemSet> {
     /**
      * The root of t-tree.
      */
-    private final Node root = new Node();
+    private final Node root = new Node(-1);
     /**
      * The number transactions in the database.
      */
@@ -88,6 +85,7 @@ public class TotalSupportTree implements Iterable<ItemSet> {
 
     /**
      * Constructor.
+     * @param tree FP-tree of transactions.
      */
     public TotalSupportTree(FPTree tree) {
         this.numTransactions = tree.numTransactions;
@@ -99,6 +97,7 @@ public class TotalSupportTree implements Iterable<ItemSet> {
 
     /**
      * Returns the number transactions in the database.
+     * @return the number transactions in the database.
      */
     public int size() {
         return numTransactions;
@@ -106,6 +105,7 @@ public class TotalSupportTree implements Iterable<ItemSet> {
 
     /**
      * Returns the root node.
+     * @return the root node.
      */
     public Node root() {
         return root;
