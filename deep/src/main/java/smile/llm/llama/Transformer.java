@@ -25,7 +25,6 @@ import smile.deep.layer.LayerBlock;
 import smile.deep.layer.RMSNormLayer;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Index;
-import smile.deep.tensor.Native;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.RotaryPositionalEncoding;
@@ -34,6 +33,7 @@ import static smile.torch.smile_torch_h.smile_module_free;
 import static smile.torch.smile_torch_h.smile_module_list_create;
 import static smile.torch.smile_torch_h.smile_module_list_free;
 import static smile.torch.smile_torch_h.smile_module_list_push_back;
+import static smile.torch.smile_torch_h.smile_module_list_as_module;
 
 /**
  * The Transformer model. It consists of token embeddings, stacked
@@ -90,7 +90,7 @@ public class Transformer extends LayerBlock {
                 params.ropeTheta(),
                 params.scaledRope()).to(device);
 
-        MemorySegment listAsModule = Native.moduleListAsModule(moduleList);
+        MemorySegment listAsModule = smile_module_list_as_module(moduleList);
         add("layers", listAsModule);
         smile_module_free(listAsModule);
         smile_module_list_free(moduleList);

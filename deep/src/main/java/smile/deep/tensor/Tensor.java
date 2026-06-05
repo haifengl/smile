@@ -250,7 +250,7 @@ public class Tensor implements AutoCloseable {
      * @return the device.
      */
     public Device device() {
-        MemorySegment device = Native.tensorDevice(handle);
+        MemorySegment device = smile_tensor_device(handle);
         try {
             return Device.fromNative(device);
         } finally {
@@ -1699,7 +1699,7 @@ public class Tensor implements AutoCloseable {
     public Tensor scatterReduce(int dim, Tensor index, Tensor source, String reduce) {
         try (Arena arena = Arena.ofConfined()) {
             MemorySegment r = arena.allocateFrom(reduce);
-            return new Tensor(Native.scatterReduce(handle, dim, index.handle, source.handle, r));
+            return new Tensor(smile_tensor_scatter_reduce(handle, dim, index.handle, source.handle, r));
         }
     }
 
@@ -1723,7 +1723,7 @@ public class Tensor implements AutoCloseable {
     public Tensor scatterReduce_(int dim, Tensor index, Tensor source, String reduce) {
         try (Arena arena = Arena.ofConfined()) {
             MemorySegment r = arena.allocateFrom(reduce);
-            Native.scatterReduceInplace(handle, dim, index.handle, source.handle, r);
+            smile_tensor_scatter_reduce_(handle, dim, index.handle, source.handle, r);
             return this;
         }
     }
