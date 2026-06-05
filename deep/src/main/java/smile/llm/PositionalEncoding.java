@@ -27,6 +27,7 @@ import static smile.deep.tensor.Index.*;
 import static smile.deep.tensor.Native.check;
 import static smile.torch.smile_torch_h.smile_module_create;
 import static smile.torch.smile_torch_h.smile_module_free;
+import static smile.torch.smile_torch_h.smile_module_register_buffer;
 
 /**
  * Positional encoding in original Transformer. Positional encoding injects
@@ -81,7 +82,7 @@ public class PositionalEncoding implements Layer {
     /** Registers the positional-encoding tensor as the module's "pe" buffer. */
     private void registerBuffer(Tensor tensor) {
         try (Arena arena = Arena.ofConfined()) {
-            Native.registerBuffer(module, arena.allocateFrom("pe"), tensor.handle());
+            smile_module_register_buffer(module, arena.allocateFrom("pe"), tensor.handle());
         }
     }
 
