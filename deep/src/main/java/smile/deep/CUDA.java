@@ -17,7 +17,9 @@
 package smile.deep;
 
 import smile.deep.tensor.Device;
-import org.bytedeco.pytorch.global.torch;
+
+import static smile.torch.smile_torch_h.smile_cuda_device_count;
+import static smile.torch.smile_torch_h.smile_cuda_is_available;
 
 /**
  * NVIDIA CUDA helper functions.
@@ -30,7 +32,7 @@ public interface CUDA {
      * @return true if CUDA is available.
      */
     static boolean isAvailable() {
-        return torch.cuda_is_available();
+        return smile_cuda_is_available() != 0;
     }
 
     /**
@@ -38,7 +40,7 @@ public interface CUDA {
      * @return the number of CUDA devices.
      */
     static long deviceCount() {
-        return torch.cuda_device_count();
+        return smile_cuda_device_count();
     }
 
     /**

@@ -63,8 +63,21 @@ public class Index implements AutoCloseable {
     /**
      * The None is used to insert a singleton dimension ("unsqueeze"
      * a dimension).
+     *
+     * <p>This relies on the {@code smile_tensor_index_none} native function. If
+     * the loaded {@code smile_torch} library predates that function, this
+     * constant is {@code null} until the binary is rebuilt.
      */
-    public static final Index None = new Index(Native.indexNone());
+    public static final Index None = tryIndexNone();
+
+    /** Creates the None index, or returns null if the native lib lacks it. */
+    private static Index tryIndexNone() {
+        try {
+            return new Index(Native.indexNone());
+        } catch (Throwable e) {
+            return null;
+        }
+    }
 
     /**
      * Returns the index of a single element in a dimension.
