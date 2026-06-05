@@ -135,6 +135,30 @@ public final class Native {
                         smile_torch_h.C_POINTER, smile_torch_h.C_POINTER, smile_torch_h.C_POINTER));
     }
 
+    /** {@code void smile_module_register_buffer(ST_Module, const char*, ST_Tensor)} */
+    private static final class RegisterBuffer {
+        static final MethodHandle HANDLE = downcall("smile_module_register_buffer",
+                FunctionDescriptor.ofVoid(smile_torch_h.C_POINTER, smile_torch_h.C_POINTER, smile_torch_h.C_POINTER));
+    }
+
+    /** {@code ST_Module smile_module_list_as_module(ST_ModuleList)} */
+    private static final class ModuleListAsModule {
+        static final MethodHandle HANDLE = downcall("smile_module_list_as_module",
+                FunctionDescriptor.of(smile_torch_h.C_POINTER, smile_torch_h.C_POINTER));
+    }
+
+    /** {@code void smile_set_default_dtype(ST_DType)} */
+    private static final class SetDefaultDtype {
+        static final MethodHandle HANDLE = downcall("smile_set_default_dtype",
+                FunctionDescriptor.ofVoid(smile_torch_h.C_INT));
+    }
+
+    /** {@code void smile_manual_seed(int64_t)} */
+    private static final class ManualSeed {
+        static final MethodHandle HANDLE = downcall("smile_manual_seed",
+                FunctionDescriptor.ofVoid(smile_torch_h.C_LONG));
+    }
+
     /**
      * Returns the compute device of a tensor as a new {@code ST_Device} handle
      * that the caller must free.
@@ -191,6 +215,57 @@ public final class Native {
                                      MemorySegment source, MemorySegment reduce) {
         try {
             ScatterReduceInplace.HANDLE.invokeExact(tensor, dim, index, source, reduce);
+        } catch (Throwable ex) {
+            throw new AssertionError("should not reach here", ex);
+        }
+    }
+
+    /**
+     * Registers a non-trainable buffer tensor on a module.
+     * @param module the {@code ST_Module} handle.
+     * @param name the {@code const char*} buffer name.
+     * @param tensor the {@code ST_Tensor} handle.
+     */
+    public static void registerBuffer(MemorySegment module, MemorySegment name, MemorySegment tensor) {
+        try {
+            RegisterBuffer.HANDLE.invokeExact(module, name, tensor);
+        } catch (Throwable ex) {
+            throw new AssertionError("should not reach here", ex);
+        }
+    }
+
+    /**
+     * Returns a borrowed {@code ST_Module} view of a module list (for registration).
+     * @param moduleList the {@code ST_ModuleList} handle.
+     * @return a new {@code ST_Module} handle the caller must free.
+     */
+    public static MemorySegment moduleListAsModule(MemorySegment moduleList) {
+        try {
+            return (MemorySegment) ModuleListAsModule.HANDLE.invokeExact(moduleList);
+        } catch (Throwable ex) {
+            throw new AssertionError("should not reach here", ex);
+        }
+    }
+
+    /**
+     * Sets the default dtype used by tensor factories that don't specify one.
+     * @param dtype the {@code ST_DType} code.
+     */
+    public static void setDefaultDtype(int dtype) {
+        try {
+            SetDefaultDtype.HANDLE.invokeExact(dtype);
+        } catch (Throwable ex) {
+            throw new AssertionError("should not reach here", ex);
+        }
+    }
+
+    /**
+     * Seeds the global RNG for reproducible sampling.
+     * @param seed the seed value.
+     */
+    public static void manualSeed(long seed) {
+        try {
+            ManualSeed.HANDLE.invokeExact(seed);
         } catch (Throwable ex) {
             throw new AssertionError("should not reach here", ex);
         }

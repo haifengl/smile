@@ -612,6 +612,7 @@ SMILE_API const char *smile_module_name(ST_Module m);
 /** Registers a child module under name (non-owning view of child is returned). */
 SMILE_API void smile_module_register_module   (ST_Module m, const char *name, ST_Module child);
 SMILE_API void smile_module_register_parameter(ST_Module m, const char *name, ST_Tensor t);
+SMILE_API void smile_module_register_buffer   (ST_Module m, const char *name, ST_Tensor t);
 
 /** Returns a TensorVec of all learnable parameters (caller owns the vector). */
 SMILE_API ST_TensorVec smile_module_parameters(ST_Module m);
@@ -636,6 +637,8 @@ SMILE_API void          smile_module_list_free  (ST_ModuleList ml);
 SMILE_API void          smile_module_list_push_back(ST_ModuleList ml, ST_Module m);
 SMILE_API int64_t       smile_module_list_size  (ST_ModuleList ml);
 SMILE_API ST_Module     smile_module_list_get   (ST_ModuleList ml, int64_t index);
+/** Returns a borrowed ST_Module view of the list (for registration). */
+SMILE_API ST_Module     smile_module_list_as_module(ST_ModuleList ml);
 
 /* =========================================================================
  * Archive (checkpointing)
@@ -809,6 +812,12 @@ SMILE_API void smile_optimizer_set_lr(ST_Optimizer opt, double lr);
 
 /** Writes the libtorch version string into buf. */
 SMILE_API int smile_torch_version(char *buf, int buf_len);
+
+/** Sets the default dtype used by tensor factories that don't specify one. */
+SMILE_API void smile_set_default_dtype(ST_DType dtype);
+
+/** Seeds the global RNG for reproducible sampling. */
+SMILE_API void smile_manual_seed(int64_t seed);
 
 #ifdef __cplusplus
 } /* extern "C" */

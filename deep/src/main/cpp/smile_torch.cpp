@@ -929,6 +929,11 @@ void smile_module_register_module(ST_Module m, const char *name, ST_Module child
         ST_TRY_BEGIN m->m->register_module(name, child->m); ST_TRY_END
     }
 }
+void smile_module_register_buffer(ST_Module m, const char *name, ST_Tensor t) {
+    if (m && t && name) {
+        ST_TRY_BEGIN m->m->register_buffer(name, t->t); ST_TRY_END
+    }
+}
 void smile_module_register_parameter(ST_Module m, const char *name, ST_Tensor t) {
     if (m && t && name) {
         ST_TRY_BEGIN m->m->register_parameter(name, t->t); ST_TRY_END
@@ -996,6 +1001,13 @@ ST_Module smile_module_list_get(ST_ModuleList ml, int64_t i) {
     if (!ml) return nullptr;
     ST_TRY_BEGIN
         return new ST_Module_{ ml->ml->ptr(i) };
+    ST_TRY_END
+    return nullptr;
+}
+ST_Module smile_module_list_as_module(ST_ModuleList ml) {
+    if (!ml) return nullptr;
+    ST_TRY_BEGIN
+        return new ST_Module_{ std::static_pointer_cast<torch::nn::Module>(ml->ml) };
     ST_TRY_END
     return nullptr;
 }
@@ -1366,6 +1378,16 @@ int smile_torch_version(char *buf, int buf_len) {
     if (!buf || buf_len <= 0) return -1;
     std::snprintf(buf, buf_len, "%s", TORCH_VERSION);
     return 0;
+}
+
+void smile_set_default_dtype(ST_DType dtype) {
+    ST_TRY_BEGIN
+        torch::set_default_dtype(c10::scalarTypeToTypeMeta(to_scalar_type(dtype)));
+    ST_TRY_END
+}
+
+void smile_manual_seed(int64_t seed) {
+    ST_TRY_BEGIN torch::manual_seed(static_cast<uint64_t>(seed)); ST_TRY_END
 }
 
 } // extern "C"

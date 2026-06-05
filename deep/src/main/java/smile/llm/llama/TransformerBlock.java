@@ -16,9 +16,16 @@
  */
 package smile.llm.llama;
 
-import org.bytedeco.pytorch.Module;
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
 import smile.deep.layer.RMSNormLayer;
+import smile.deep.tensor.Native;
 import smile.deep.tensor.Tensor;
+
+import static smile.deep.tensor.Native.check;
+import static smile.torch.smile_torch_h.smile_module_create;
+import static smile.torch.smile_torch_h.smile_module_free;
+import static smile.torch.smile_torch_h.smile_module_register_module;
 
 /**
  * A block in Transformer model. It consists of an attention mechanism
@@ -45,7 +52,7 @@ public class TransformerBlock {
     /** The layer normalization for feed forward output. */
     final RMSNormLayer ffnNorm;
     /** PyTorch module. */
-    final Module module;
+    final MemorySegment module;
 
     /**
      * Constructor.
@@ -67,11 +74,15 @@ public class TransformerBlock {
         this.attentionNorm = new RMSNormLayer(args.dim(), args.normEps());
         this.ffnNorm = new RMSNormLayer(args.dim(), args.normEps());
 
-        this.module = new Module();
-        this.module.register_module("attention", attention.module);
-        this.module.register_module("feed_forward", feedForward.module);
-        this.module.register_module("attention_norm", attentionNorm.asTorch());
-        this.module.register_module("ffn_norm", ffnNorm.asTorch());
+        try (Arena arena = Arena.ofConfined()) {
+            this.module = check(smile_module_create(MemorySegment.NULL));
+            smile_module_register_module(module, arena.allocateFrom("attention"), attention.module);
+            smile_module_register_module(module, arena.allocateFrom("feed_forward"), feedForward.module);
+            smile_module_register_module(module, arena.allocateFrom("attention_norm"), attentionNorm.asModule());
+            smile_module_register_module(module, arena.allocateFrom("ffn_norm"), ffnNorm.asModule());
+        }
+        MemorySegment m = this.module;
+        Native.CLEANER.register(this, () -> smile_module_free(m));
     }
 
     /**
