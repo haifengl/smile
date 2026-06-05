@@ -17,7 +17,6 @@
 package smile.deep;
 
 import smile.deep.tensor.Device;
-
 import static smile.torch.smile_torch_h.smile_cuda_device_count;
 import static smile.torch.smile_torch_h.smile_cuda_is_available;
 
