@@ -102,8 +102,8 @@ batScriptExtraDefines ++= Seq(
 libraryDependencies ++= Seq(
   "org.scala-lang"   %% "scala3-compiler"    % scalaVersion.value,
   "info.picocli"      % "picocli"            % "4.7.7",
-  "ch.qos.logback"    % "logback-classic"    % "1.5.33",
-  "com.openai"        % "openai-java"        % "4.37.0",
+  "ch.qos.logback"    % "logback-classic"    % "1.5.34",
+  "com.openai"        % "openai-java"        % "4.39.1",
   "com.anthropic"     % "anthropic-java"     % "2.35.0",
   "com.google.genai"  % "google-genai"       % "1.53.0",
   "org.commonmark"    % "commonmark"         % "0.28.0",
@@ -124,7 +124,7 @@ libraryDependencies ++= Seq(
 )
 
 libraryDependencies ++= {
-  val jacksonV = "3.1.3"
+  val jacksonV = "3.1.4"
   Seq(
     "tools.jackson.core"       % "jackson-databind"            % jacksonV,
     "tools.jackson.dataformat" % "jackson-dataformat-yaml"     % jacksonV,
