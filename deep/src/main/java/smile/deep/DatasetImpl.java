@@ -137,6 +137,20 @@ class DatasetImpl implements Dataset {
         this.batch = batch;
     }
 
+    /**
+     * Constructor.
+     * @param data the data tensor whose first dimension indexes the samples.
+     * @param target the target tensor whose first dimension indexes the samples.
+     * @param batch the mini-batch size.
+     */
+    DatasetImpl(Tensor data, Tensor target, int batch) {
+        if (batch <= 0) throw new IllegalArgumentException("batch size must be positive: " + batch);
+        this.data = data;
+        this.target = target;
+        this.size = (int) data.shape()[0];
+        this.batch = batch;
+    }
+
     @Override
     public void close() {
         data.close();

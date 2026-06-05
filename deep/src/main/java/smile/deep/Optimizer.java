@@ -16,8 +16,11 @@
  */
 package smile.deep;
 
-import org.bytedeco.javacpp.DoublePointer;
-import org.bytedeco.pytorch.*;
+import java.lang.foreign.MemorySegment;
+import smile.deep.tensor.Native;
+
+import static smile.deep.tensor.Native.check;
+import static smile.torch.smile_torch_h.*;
 
 /**
  * Optimizer functions.
@@ -25,21 +28,24 @@ import org.bytedeco.pytorch.*;
  * @author Haifeng Li
  */
 public class Optimizer {
-    final org.bytedeco.pytorch.Optimizer optimizer;
+    /** The native {@code ST_Optimizer} handle. */
+    final MemorySegment optimizer;
 
     /** Constructor. */
-    Optimizer(org.bytedeco.pytorch.Optimizer optimizer) {
-        this.optimizer = optimizer;
+    Optimizer(MemorySegment optimizer) {
+        this.optimizer = check(optimizer);
+        MemorySegment opt = this.optimizer;
+        Native.CLEANER.register(this, () -> smile_optimizer_free(opt));
     }
 
     /** Resets gradients. */
     public void reset() {
-        optimizer.zero_grad();
+        smile_optimizer_zero_grad(optimizer);
     }
 
     /** Updates the parameters based on the calculated gradients. */
     public void step() {
-        optimizer.step();
+        smile_optimizer_step(optimizer);
     }
 
     /**
@@ -48,10 +54,7 @@ public class Optimizer {
      */
     public void setLearningRate(double rate) {
         if (rate <= 0) throw new IllegalArgumentException("Learning rate must be positive: " + rate);
-        var groups = optimizer.param_groups();
-        for (int i = 0; i < groups.size(); i++) {
-            groups.get(i).options().set_lr(rate);
-        }
+        smile_optimizer_set_lr(optimizer, rate);
     }
 
     /**
@@ -75,12 +78,12 @@ public class Optimizer {
      * @return the optimizer.
      */
     public static Optimizer SGD(Model model, double rate, double momentum, double decay, double dampening, boolean nesterov) {
-        SGDOptions options = new SGDOptions(rate);
-        options.momentum().put(momentum);
-        options.weight_decay().put(decay);
-        options.dampening().put(dampening);
-        options.nesterov().put(nesterov);
-        return new Optimizer(new SGD(model.asTorch().parameters(), options));
+        MemorySegment params = check(smile_module_parameters(model.asModule()));
+        try {
+            return new Optimizer(smile_sgd_create(params, rate, momentum, decay, dampening, nesterov ? 1 : 0));
+        } finally {
+            smile_tensor_vec_free(params);
+        }
     }
 
     /**
@@ -105,14 +108,12 @@ public class Optimizer {
      * @return the optimizer.
      */
     public static Optimizer Adam(Model model, double rate, double beta1, double beta2, double eps, double decay, boolean amsgrad) {
-        DoublePointer betas = new DoublePointer(beta1, beta2);
-        AdamOptions options = new AdamOptions(rate);
-        options.betas().put(betas);
-        options.eps().put(eps);
-        options.weight_decay().put(decay);
-        options.amsgrad().put(amsgrad);
-        betas.close();
-        return new Optimizer(new Adam(model.asTorch().parameters(), options));
+        MemorySegment params = check(smile_module_parameters(model.asModule()));
+        try {
+            return new Optimizer(smile_adam_create(params, rate, beta1, beta2, eps, decay, amsgrad ? 1 : 0));
+        } finally {
+            smile_tensor_vec_free(params);
+        }
     }
 
     /**
@@ -137,12 +138,12 @@ public class Optimizer {
      * @return the optimizer.
      */
     public static Optimizer AdamW(Model model, double rate, double beta1, double beta2, double eps, double decay, boolean amsgrad) {
-        AdamWOptions options = new AdamWOptions(rate);
-        options.betas().put(beta1, beta2);
-        options.eps().put(eps);
-        options.weight_decay().put(decay);
-        options.amsgrad().put(amsgrad);
-        return new Optimizer(new AdamW(model.asTorch().parameters(), options));
+        MemorySegment params = check(smile_module_parameters(model.asModule()));
+        try {
+            return new Optimizer(smile_adamw_create(params, rate, beta1, beta2, eps, decay, amsgrad ? 1 : 0));
+        } finally {
+            smile_tensor_vec_free(params);
+        }
     }
 
     /**
@@ -167,12 +168,11 @@ public class Optimizer {
      * @return the optimizer.
      */
     public static Optimizer RMSprop(Model model, double rate, double alpha, double eps, double decay, double momentum, boolean centered) {
-        RMSpropOptions options = new RMSpropOptions(rate);
-        options.alpha().put(alpha);
-        options.eps().put(eps);
-        options.momentum().put(momentum);
-        options.weight_decay().put(decay);
-        options.centered().put(centered);
-        return new Optimizer(new RMSprop(model.asTorch().parameters(), options));
+        MemorySegment params = check(smile_module_parameters(model.asModule()));
+        try {
+            return new Optimizer(smile_rmsprop_create(params, rate, alpha, eps, decay, momentum, centered ? 1 : 0));
+        } finally {
+            smile_tensor_vec_free(params);
+        }
     }
 }
