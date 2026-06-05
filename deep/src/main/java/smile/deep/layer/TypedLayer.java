@@ -18,7 +18,7 @@ package smile.deep.layer;
 
 import java.lang.foreign.MemorySegment;
 import java.lang.ref.Cleaner;
-import smile.deep.tensor.Native;
+import smile.torch.Native;
 
 /**
  * Base class for layers backed by a native {@code smile_torch} module

@@ -20,9 +20,9 @@ import java.io.Serializable;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import smile.deep.layer.Layer;
-import smile.deep.tensor.Native;
+import smile.torch.Native;
 
-import static smile.deep.tensor.Native.check;
+import static smile.torch.Native.check;
 import static smile.torch.smile_torch_h.smile_module_create;
 import static smile.torch.smile_torch_h.smile_module_free;
 

@@ -14,16 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.deep.tensor;
+package smile.torch;
 
-import java.lang.foreign.Arena;
-import java.lang.foreign.FunctionDescriptor;
-import java.lang.foreign.Linker;
 import java.lang.foreign.MemorySegment;
-import java.lang.foreign.SymbolLookup;
-import java.lang.invoke.MethodHandle;
 import java.lang.ref.Cleaner;
-import smile.torch.smile_torch_h;
 
 /**
  * Internal helpers for the FFM (Foreign Function and Memory API) binding to the
@@ -77,14 +71,14 @@ public final class Native {
     }
 
     /** Frees an {@code ST_Tensor} handle exactly once. Used as a cleaning action. */
-    record FreeTensor(MemorySegment handle) implements Runnable {
+    public record FreeTensor(MemorySegment handle) implements Runnable {
         @Override public void run() {
             smile_torch_h.smile_tensor_free(handle);
         }
     }
 
     /** Frees an {@code ST_TensorIndex} handle exactly once. Used as a cleaning action. */
-    record FreeIndex(MemorySegment handle) implements Runnable {
+    public record FreeIndex(MemorySegment handle) implements Runnable {
         @Override public void run() {
             smile_torch_h.smile_tensor_index_free(handle);
         }

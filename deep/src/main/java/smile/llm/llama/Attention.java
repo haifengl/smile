@@ -20,12 +20,12 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import smile.deep.layer.LinearLayer;
 import smile.deep.tensor.Index;
-import smile.deep.tensor.Native;
+import smile.torch.Native;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.RotaryPositionalEncoding;
 
-import static smile.deep.tensor.Native.check;
+import static smile.torch.Native.check;
 import static smile.torch.smile_torch_h.smile_module_create;
 import static smile.torch.smile_torch_h.smile_module_free;
 import static smile.torch.smile_torch_h.smile_module_register_module;
