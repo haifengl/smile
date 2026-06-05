@@ -44,7 +44,7 @@ public class DatasetTest {
     @Tag("integration")
     public void test() throws IOException {
         Device device = Device.preferredDevice();
-        device.setDefaultDevice();
+        Tensor.setDefaultOptions(new Tensor.Options().device(device));
         Model net = new Model(new SequentialBlock(
                 Layer.relu(784, 64, 0.5),
                 Layer.relu(64, 32),
@@ -63,7 +63,7 @@ public class DatasetTest {
         Loss loss = Loss.nll();
         net.train(100, optimizer, loss, dataset);
 
-        try (var guard = Tensor.noGradGuard()) {
+        try (var __ = Tensor.noGradGuard()) {
             Map<String, Double> metrics = net.eval(dataset,
                     new Accuracy(),
                     new Precision(Averaging.Micro),
@@ -88,27 +88,43 @@ public class DatasetTest {
     @Test
     public void testGivenEmptyFloatIntDataWhenCreatingDatasetThenThrows() {
         assertThrows(IllegalArgumentException.class,
-                () -> Dataset.of(new float[0][0], new int[0], 32));
+                () -> {
+                    try (Dataset __ = Dataset.of(new float[0][0], new int[0], 32)) {
+                        fail("Expected Dataset.of to throw for empty float/int data");
+                    }
+                });
     }
 
     @Test
     public void testGivenEmptyDoubleIntDataWhenCreatingDatasetThenThrows() {
         assertThrows(IllegalArgumentException.class,
-                () -> Dataset.of(new double[0][0], new int[0], 32));
+                () -> {
+                    try (Dataset __ = Dataset.of(new double[0][0], new int[0], 32)) {
+                        fail("Expected Dataset.of to throw for empty double/int data");
+                    }
+                });
     }
 
     @Test
     public void testGivenZeroBatchSizeWhenCreatingDatasetThenThrows() {
         float[][] x = {{1f, 2f}, {3f, 4f}};
         int[] y = {0, 1};
-        assertThrows(IllegalArgumentException.class, () -> Dataset.of(x, y, 0));
+        assertThrows(IllegalArgumentException.class, () -> {
+            try (Dataset __ = Dataset.of(x, y, 0)) {
+                fail("Expected Dataset.of to throw for zero batch size");
+            }
+        });
     }
 
     @Test
     public void testGivenNegativeBatchSizeWhenCreatingDatasetThenThrows() {
         float[][] x = {{1f, 2f}};
         int[] y = {0};
-        assertThrows(IllegalArgumentException.class, () -> Dataset.of(x, y, -1));
+        assertThrows(IllegalArgumentException.class, () -> {
+            try (Dataset __ = Dataset.of(x, y, -1)) {
+                fail("Expected Dataset.of to throw for negative batch size");
+            }
+        });
     }
 
     // -----------------------------------------------------------------------

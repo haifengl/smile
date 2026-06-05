@@ -623,7 +623,7 @@ public class TensorTest {
     public void testGivenTwoWrappersAroundSameTorchTensorWhenEqualsThenTrue() {
         // Given: a Tensor whose underlying native object is shared
         Tensor a = Tensor.ones(3);
-        Tensor b = new Tensor(a.asTorch());  // same native object
+        Tensor b = new Tensor(a.handle());  // same native object
         // When / Then
         assertEquals(a, b, "Wrappers around same native object must be equal");
         assertEquals(a.hashCode(), b.hashCode(), "Equal tensors must have same hashCode");
@@ -688,9 +688,9 @@ public class TensorTest {
     // -----------------------------------------------------------------------
 
     @Test
-    public void testGivenScalarTypeWhenAsTorchCalledThenNotNull() {
+    public void testGivenScalarTypeWhenCodeCalledThenReturnsPositiveNativeCode() {
         for (ScalarType st : ScalarType.values()) {
-            assertNotNull(st.asTorch(), "asTorch() should not return null for " + st);
+            assertTrue(st.code() > 0, "code() should return a positive native code for " + st);
         }
     }
 

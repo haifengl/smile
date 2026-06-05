@@ -20,6 +20,8 @@ import org.junit.jupiter.api.*;
 import smile.deep.layer.BatchNorm2dLayer;
 import smile.deep.tensor.Tensor;
 import static org.junit.jupiter.api.Assertions.*;
+import static smile.torch.smile_torch_h.smile_module_eval;
+import static smile.torch.smile_torch_h.smile_module_train;
 
 /**
  * Unit tests for vision layer primitives: {@link MBConvConfig}, {@link Conv2dNormActivation},
@@ -184,7 +186,7 @@ public class VisionLayerTest {
         // Before fix: "Row".equals("row") → false; forward() would skip row-specific logic.
         // After fix: mode is normalized to lowercase in constructor.
         StochasticDepth sd = new StochasticDepth(0.0, "Row");
-        sd.asTorch().train(true);
+        smile_module_train(sd.asModule(), 1);
         Tensor input = Tensor.rand(4, 8);
         Tensor output = sd.forward(input);
         // p=0 → identity regardless of mode
@@ -214,7 +216,7 @@ public class VisionLayerTest {
     @Test
     public void testGivenStochasticDepthInEvalModeWhenForwardThenReturnsSameTensor() {
         StochasticDepth sd = new StochasticDepth(0.5, "row");
-        sd.asTorch().eval(); // eval mode → no dropout
+        smile_module_eval(sd.asModule()); // eval mode → no dropout
         Tensor input = Tensor.rand(4, 8);
         Tensor output = sd.forward(input);
         assertSame(input, output);
@@ -235,7 +237,7 @@ public class VisionLayerTest {
     @Test
     public void testGivenStochasticDepthInTrainModeWhenForwardThenOutputShapeIsPreserved() {
         StochasticDepth sd = new StochasticDepth(0.3, "row");
-        sd.asTorch().train(true);
+        smile_module_train(sd.asModule(), 1);
         Tensor input = Tensor.rand(4, 8, 8);
         Tensor output = sd.forward(input);
         assertArrayEquals(input.shape(), output.shape());
@@ -252,7 +254,7 @@ public class VisionLayerTest {
         Conv2dNormActivation cna = new Conv2dNormActivation(
                 new Conv2dNormActivation.Options(3, 16, 3, BatchNorm2dLayer::new,
                         new smile.deep.activation.ReLU(true)));
-        cna.asTorch().train(true);
+        cna.train();
         Tensor input = Tensor.rand(2, 3, 8, 8);  // [N, C, H, W]
         Tensor output = cna.forward(input);
         assertEquals(2,  output.size(0));
@@ -266,7 +268,7 @@ public class VisionLayerTest {
         Conv2dNormActivation cna = new Conv2dNormActivation(
                 new Conv2dNormActivation.Options(8, 16, 1,
                         BatchNorm2dLayer::new, null));
-        cna.asTorch().train(true);
+        cna.train();
         Tensor input = Tensor.rand(2, 8, 4, 4);
         assertDoesNotThrow(() -> {
             Tensor out = cna.forward(input);
@@ -301,7 +303,7 @@ public class VisionLayerTest {
         // expandRatio=4, kernel=3, stride=1, in==out → residual path active
         MBConvConfig cfg = MBConvConfig.MBConv(4, 3, 1, 16, 16, 1);
         MBConv block = new MBConv(cfg, 0.0, BatchNorm2dLayer::new);
-        block.asTorch().train(true);
+        block.train();
         Tensor input = Tensor.rand(2, 16, 8, 8);
         Tensor output = block.forward(input);
         assertEquals(2,  output.size(0));
@@ -314,7 +316,7 @@ public class VisionLayerTest {
         // stride=2 → no residual; spatial dims halved
         MBConvConfig cfg = MBConvConfig.MBConv(4, 3, 2, 16, 32, 1);
         MBConv block = new MBConv(cfg, 0.0, BatchNorm2dLayer::new);
-        block.asTorch().train(true);
+        block.train();
         Tensor input = Tensor.rand(2, 16, 8, 8);
         Tensor output = block.forward(input);
         assertEquals(2,  output.size(0));
@@ -341,7 +343,7 @@ public class VisionLayerTest {
         // expandRatio=1 → no intermediate expansion; in==out, stride=1 → residual
         MBConvConfig cfg = MBConvConfig.FusedMBConv(1, 3, 1, 24, 24, 2);
         FusedMBConv block = new FusedMBConv(cfg, 0.0, BatchNorm2dLayer::new);
-        block.asTorch().train(true);
+        block.train();
         Tensor input = Tensor.rand(2, 24, 8, 8);
         Tensor output = block.forward(input);
         assertEquals(2,  output.size(0));
@@ -354,7 +356,7 @@ public class VisionLayerTest {
         // expandRatio=4, stride=2 → expand+project path; no residual
         MBConvConfig cfg = MBConvConfig.FusedMBConv(4, 3, 2, 24, 48, 4);
         FusedMBConv block = new FusedMBConv(cfg, 0.0, BatchNorm2dLayer::new);
-        block.asTorch().train(true);
+        block.train();
         Tensor input = Tensor.rand(2, 24, 8, 8);
         Tensor output = block.forward(input);
         assertEquals(2,  output.size(0));
