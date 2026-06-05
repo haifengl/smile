@@ -158,6 +158,14 @@ static at::TensorOptions get_opts(ST_TensorOptions opts) {
 }
 
 // =============================================================================
+// Optimizers — helpers
+// =============================================================================
+
+static std::vector<at::Tensor> extract_params(ST_TensorVec v) {
+    return v ? v->vec : std::vector<at::Tensor>{};
+}
+
+// =============================================================================
 // CUDA / Device utilities
 // =============================================================================
 
@@ -1239,14 +1247,6 @@ ST_Tensor smile_adaptive_avgpool2d_forward(ST_AdaptiveAvgPool2d p, ST_Tensor i) 
 }
 ST_Module smile_adaptive_avgpool2d_as_module(ST_AdaptiveAvgPool2d p) {
     if (!p) return nullptr; BORROW_MODULE(p, mod);
-}
-
-// =============================================================================
-// Optimizers — helpers
-// =============================================================================
-
-static std::vector<at::Tensor> extract_params(ST_TensorVec v) {
-    return v ? v->vec : std::vector<at::Tensor>{};
 }
 
 // =============================================================================
