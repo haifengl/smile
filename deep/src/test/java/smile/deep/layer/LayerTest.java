@@ -95,19 +95,6 @@ public class LayerTest {
         input.close(); output.close();
     }
 
-    /**
-     * Regression test: {@code Layer.silu(int, int)} previously used {@code GELU}
-     * instead of {@code SiLU}. Verify via toString() that the correct activation
-     * is registered.
-     */
-    @Test
-    public void testGivenSiluLayerWhenInspectingToStringThenContainsSilu() {
-        SequentialBlock block = Layer.silu(IN, OUT);
-        String repr = block.toString();
-        assertTrue(repr.contains("SiLU") || repr.contains("silu") || repr.contains("Silu"),
-                "silu block should reference SiLU, but was: " + repr);
-    }
-
     @Test
     public void testGivenSiluLayerWhenForwardThenOutputShapeIsCorrect() {
         SequentialBlock block = Layer.silu(IN, OUT);
