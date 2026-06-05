@@ -49,6 +49,8 @@
 // ── CUDA introspection (compiled only when CUDA is present) ───────────────────
 #ifdef USE_CUDA
 #  include <cuda_runtime.h>
+#  include <c10/cuda/CUDACachingAllocator.h>
+#  include <ATen/cuda/CUDAContext.h>
 #endif
 
 // =============================================================================
@@ -231,18 +233,22 @@ int64_t smile_cuda_total_memory(int device_index) {
 }
 
 void smile_cuda_empty_cache(void) {
+#ifdef USE_CUDA
     ST_TRY_BEGIN
         c10::cuda::CUDACachingAllocator::emptyCache();
     ST_TRY_END
+#endif
 }
 
 int smile_cuda_is_bf16_supported(void) {
+#ifdef USE_CUDA
     ST_TRY_BEGIN
         int dev = at::cuda::current_device();
         cudaDeviceProp prop{};
         cudaGetDeviceProperties(&prop, dev);
         return (prop.major >= 8) ? 1 : 0;
     ST_TRY_END
+#endif
     return 0;
 }
 
@@ -254,11 +260,7 @@ int smile_mps_is_available(void) {
 }
 
 void smile_mps_empty_cache(void) {
-#if defined(__APPLE__)
-    ST_TRY_BEGIN
-        at::mps::emptyCache();
-    ST_TRY_END
-#endif
+    /* torch::mps does not expose a public emptyCache() API; no-op. */
 }
 
 int  smile_get_num_threads(void) {
@@ -314,7 +316,7 @@ void smile_tensor_options_free(ST_TensorOptions opts) { delete opts; }
 ST_TensorOptions smile_tensor_options_dtype(ST_TensorOptions opts, ST_DType dtype) {
     if (!opts) return nullptr;
     if (dtype == ST_DTYPE_UNDEFINED)
-        opts->opts = opts->opts.dtype(c10::nullopt);
+        opts->opts = opts->opts.dtype(std::optional<at::ScalarType>{});
     else
         opts->opts = opts->opts.dtype(to_scalar_type(dtype));
     return opts;
@@ -325,7 +327,7 @@ ST_TensorOptions smile_tensor_options_device(ST_TensorOptions opts, ST_Device de
     if (device)
         opts->opts = opts->opts.device(device->d);
     else
-        opts->opts = opts->opts.device(c10::nullopt);
+        opts->opts = opts->opts.device(std::optional<c10::Device>{});
     return opts;
 }
 
@@ -338,7 +340,7 @@ ST_TensorOptions smile_tensor_options_layout(ST_TensorOptions opts, ST_Layout la
 ST_TensorOptions smile_tensor_options_requires_grad(ST_TensorOptions opts, int requires_grad) {
     if (!opts) return nullptr;
     if (requires_grad < 0)
-        opts->opts = opts->opts.requires_grad(c10::nullopt);
+        opts->opts = opts->opts.requires_grad(std::optional<bool>{});
     else
         opts->opts = opts->opts.requires_grad(static_cast<bool>(requires_grad));
     return opts;
@@ -378,7 +380,12 @@ ST_Tensor smile_tensor_clone(ST_Tensor t) {
     ST_TRY_BEGIN return new ST_Tensor_{ (expr) }; ST_TRY_END return nullptr
 
 ST_Tensor smile_tensor_eye(const int64_t *shape, int ndim, ST_TensorOptions opts) {
-    MAKE_TENSOR(torch::eye(to_shape(shape, ndim), get_opts(opts)));
+    if (!shape || ndim < 1) return nullptr;
+    if (ndim == 1) {
+        MAKE_TENSOR(torch::eye(shape[0], get_opts(opts)));
+    } else {
+        MAKE_TENSOR(torch::eye(shape[0], shape[1], get_opts(opts)));
+    }
 }
 ST_Tensor smile_tensor_full(const int64_t *shape, int ndim, ST_Scalar value, ST_TensorOptions opts) {
     if (!value) return nullptr;
@@ -463,7 +470,7 @@ int smile_tensor_shape(ST_Tensor t, int64_t *shape, int max_dims) {
 // Tensor — Data Pointers
 // =============================================================================
 
-uint8_t *smile_tensor_data_ptr_bool  (ST_Tensor t) { return t ? t->t.data_ptr<bool>()    : nullptr; }
+uint8_t *smile_tensor_data_ptr_bool  (ST_Tensor t) { return t ? reinterpret_cast<uint8_t*>(t->t.data_ptr<bool>()) : nullptr; }
 int8_t  *smile_tensor_data_ptr_byte  (ST_Tensor t) { return t ? t->t.data_ptr<int8_t>()  : nullptr; }
 int16_t *smile_tensor_data_ptr_short (ST_Tensor t) { return t ? t->t.data_ptr<int16_t>() : nullptr; }
 int32_t *smile_tensor_data_ptr_int   (ST_Tensor t) { return t ? t->t.data_ptr<int32_t>() : nullptr; }
@@ -494,10 +501,11 @@ ST_Tensor smile_tensor_to_dtype(ST_Tensor t, ST_DType dtype) {
 
 ST_Tensor smile_tensor_to_device(ST_Tensor t, ST_Device device, ST_DType dtype) {
     if (!t || !device) return nullptr;
-    if (dtype == ST_DTYPE_UNDEFINED)
+    if (dtype == ST_DTYPE_UNDEFINED) {
         MAKE_TENSOR(t->t.to(device->d));
-    else
+    } else {
         MAKE_TENSOR(t->t.to(device->d, to_scalar_type(dtype)));
+    }
 }
 
 // =============================================================================
@@ -535,26 +543,29 @@ ST_Tensor smile_tensor_all (ST_Tensor t) { MAKE_TENSOR(t->t.all()); }
 ST_Tensor smile_tensor_sum_dims(ST_Tensor t, const int64_t *dims, int ndim,
                                 int keepdim, ST_DType dtype) {
     auto d = to_shape(dims, ndim);
-    if (dtype == ST_DTYPE_UNDEFINED)
+    if (dtype == ST_DTYPE_UNDEFINED) {
         MAKE_TENSOR(t->t.sum(d, static_cast<bool>(keepdim)));
-    else
+    } else {
         MAKE_TENSOR(t->t.sum(d, static_cast<bool>(keepdim), to_scalar_type(dtype)));
+    }
 }
 
 ST_Tensor smile_tensor_mean_dims(ST_Tensor t, const int64_t *dims, int ndim,
                                  int keepdim, ST_DType dtype) {
     auto d = to_shape(dims, ndim);
-    if (dtype == ST_DTYPE_UNDEFINED)
+    if (dtype == ST_DTYPE_UNDEFINED) {
         MAKE_TENSOR(t->t.mean(d, static_cast<bool>(keepdim)));
-    else
+    } else {
         MAKE_TENSOR(t->t.mean(d, static_cast<bool>(keepdim), to_scalar_type(dtype)));
+    }
 }
 
 ST_Tensor smile_tensor_argmax(ST_Tensor t, int64_t dim, int keepdim, int has_dim) {
-    if (!has_dim)
+    if (!has_dim) {
         MAKE_TENSOR(t->t.argmax());
-    else
+    } else {
         MAKE_TENSOR(t->t.argmax(dim, static_cast<bool>(keepdim)));
+    }
 }
 
 int smile_tensor_topk(ST_Tensor t, int64_t k, int64_t dim, int largest, int sorted,
@@ -834,7 +845,7 @@ ST_Tensor smile_torch_hardshrink (ST_Tensor x, double lam) {
 ST_Tensor smile_torch_softshrink (ST_Tensor x, double lam) {
     MAKE_TENSOR(torch::softshrink(x->t, at::Scalar(lam)));
 }
-ST_Tensor smile_torch_tanhshrink (ST_Tensor x) { MAKE_TENSOR(torch::tanhshrink(x->t)); }
+ST_Tensor smile_torch_tanhshrink (ST_Tensor x) { MAKE_TENSOR(torch::nn::functional::tanhshrink(x->t)); }
 
 // =============================================================================
 // Loss functions
@@ -846,12 +857,12 @@ ST_Tensor smile_torch_nll_loss  (ST_Tensor i, ST_Tensor t) { MAKE_TENSOR(torch::
 
 ST_Tensor smile_torch_cross_entropy(ST_Tensor input, ST_Tensor target,
                                      int64_t ignore_index, ST_Reduction reduction) {
-    auto opts = torch::nn::CrossEntropyLossOptions()
-                    .ignore_index(ignore_index)
-                    .reduction(static_cast<torch::Reduction::Reduction>(reduction));
-    MAKE_TENSOR(torch::cross_entropy_loss(input->t, target->t,
-                                          {}, opts.reduction(), opts.ignore_index(),
-                                          opts.label_smoothing()));
+    MAKE_TENSOR(torch::cross_entropy_loss(
+        input->t, target->t,
+        /*weight=*/{},
+        /*reduction=*/static_cast<int64_t>(reduction),
+        /*ignore_index=*/ignore_index,
+        /*label_smoothing=*/0.0));
 }
 ST_Tensor smile_torch_hinge_embedding_loss       (ST_Tensor i, ST_Tensor t) {
     MAKE_TENSOR(torch::hinge_embedding_loss(i->t, t->t));
@@ -1002,7 +1013,7 @@ int smile_input_archive_load_from(ST_InputArchive a, const char *path, ST_Device
 }
 
 ST_OutputArchive smile_output_archive_create(void) {
-    ST_TRY_BEGIN return new ST_OutputArchive_{}; ST_TRY_END return nullptr;
+    ST_TRY_BEGIN return new ST_OutputArchive_{ torch::serialize::OutputArchive() }; ST_TRY_END return nullptr;
 }
 void smile_output_archive_free(ST_OutputArchive a) { delete a; }
 
