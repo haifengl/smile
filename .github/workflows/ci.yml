@@ -61,8 +61,8 @@ jobs:
           echo "Downloading: ${LIBTORCH_URL}"
           curl -fsSL --retry 5 --retry-delay 10 -o "libtorch.zip" "${LIBTORCH_URL}"
           unzip -q -o "libtorch.zip" -d "deep"
-          echo "LD_LIBRARY_PATH=deep/libtorch/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
-          echo "LD_LIBRARY_PATH=deep/libtorch/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}" >> "$GITHUB_ENV"
+          ln -s deep/libtorch/lib studio/src/universal/libtorch
+          ls studio/src/universal/libtorch
 
       - name: Set up Java 25
         uses: actions/setup-java@v5
