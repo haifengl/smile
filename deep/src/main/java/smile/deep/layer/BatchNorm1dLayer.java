@@ -16,10 +16,11 @@
  */
 package smile.deep.layer;
 
-import org.bytedeco.pytorch.BatchNorm1dImpl;
-import org.bytedeco.pytorch.BatchNormOptions;
-import org.bytedeco.pytorch.Module;
+import java.lang.foreign.MemorySegment;
 import smile.deep.tensor.Tensor;
+
+import static smile.deep.tensor.Native.check;
+import static smile.torch.smile_torch_h.*;
 
 /**
  * A batch normalization layer that re-centers and normalizes the output
@@ -29,10 +30,7 @@ import smile.deep.tensor.Tensor;
  *
  * @author Haifeng Li
  */
-public class BatchNorm1dLayer implements Layer {
-    /** Implementation. */
-    private final BatchNorm1dImpl module;
-
+public class BatchNorm1dLayer extends TypedLayer {
     /**
      * Constructor.
      * @param channels the number of input channels.
@@ -51,23 +49,23 @@ public class BatchNorm1dLayer implements Layer {
      * @param affine when set to true, this layer has learnable affine parameters.
      */
     public BatchNorm1dLayer(int channels, double eps, double momentum, boolean affine) {
+        super(create(channels, eps, momentum, affine));
         if (momentum < 0.0 || momentum > 1.0) {
             throw new IllegalArgumentException("momentum must be in [0, 1], but got " + momentum);
         }
-        var options = new BatchNormOptions(channels);
-        options.eps().put(eps);
-        if (momentum > 0.0) options.momentum().put(momentum);
-        options.affine().put(affine);
-        this.module = new BatchNorm1dImpl(options);
     }
 
-    @Override
-    public Module asTorch() {
-        return module;
+    private static Handles create(int channels, double eps, double momentum, boolean affine) {
+        MemorySegment h = check(smile_batchnorm1d_create(channels, eps, momentum, affine ? 1 : 0));
+        MemorySegment m = check(smile_batchnorm1d_as_module(h));
+        return new Handles(h, m, () -> {
+            smile_module_free(m);
+            smile_batchnorm1d_free(h);
+        });
     }
 
     @Override
     public Tensor forward(Tensor input) {
-        return new Tensor(module.forward(input.asTorch()));
+        return new Tensor(smile_batchnorm1d_forward(handle, input.handle()));
     }
 }

@@ -16,10 +16,13 @@
  */
 package smile.deep.layer;
 
-import org.bytedeco.javacpp.LongPointer;
-import org.bytedeco.pytorch.AvgPool2dImpl;
-import org.bytedeco.pytorch.Module;
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
 import smile.deep.tensor.Tensor;
+
+import static java.lang.foreign.ValueLayout.JAVA_LONG;
+import static smile.deep.tensor.Native.check;
+import static smile.torch.smile_torch_h.*;
 
 /**
  * An average pooling layer that reduces a tensor by combining cells,
@@ -27,9 +30,7 @@ import smile.deep.tensor.Tensor;
  *
  * @author Haifeng Li
  */
-public class AvgPool2dLayer implements Layer {
-    private final AvgPool2dImpl module;
-
+public class AvgPool2dLayer extends TypedLayer {
     /**
      * Constructor.
      * @param kernel the window/kernel size.
@@ -44,18 +45,24 @@ public class AvgPool2dLayer implements Layer {
      * @param width the window/kernel width.
      */
     public AvgPool2dLayer(int height, int width) {
-        try (var kernel = new LongPointer(height, width)) {
-            this.module = new AvgPool2dImpl(kernel);
-        }
+        super(create(height, width));
     }
 
-    @Override
-    public Module asTorch() {
-        return module;
+    private static Handles create(int height, int width) {
+        MemorySegment h;
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment kernel = arena.allocateFrom(JAVA_LONG, height, width);
+            h = check(smile_avgpool2d_create(kernel, MemorySegment.NULL, MemorySegment.NULL));
+        }
+        MemorySegment m = check(smile_avgpool2d_as_module(h));
+        return new Handles(h, m, () -> {
+            smile_module_free(m);
+            smile_avgpool2d_free(h);
+        });
     }
 
     @Override
     public Tensor forward(Tensor input) {
-        return new Tensor(module.forward(input.asTorch()));
+        return new Tensor(smile_avgpool2d_forward(handle, input.handle()));
     }
 }

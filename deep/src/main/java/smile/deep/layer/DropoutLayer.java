@@ -16,10 +16,11 @@
  */
 package smile.deep.layer;
 
-import org.bytedeco.pytorch.DropoutImpl;
-import org.bytedeco.pytorch.DropoutOptions;
-import org.bytedeco.pytorch.Module;
+import java.lang.foreign.MemorySegment;
 import smile.deep.tensor.Tensor;
+
+import static smile.deep.tensor.Native.check;
+import static smile.torch.smile_torch_h.*;
 
 /**
  * A dropout layer that randomly zeroes some of the elements of
@@ -35,9 +36,7 @@ import smile.deep.tensor.Tensor;
  *
  * @author Haifeng Li
  */
-public class DropoutLayer implements Layer {
-    private final DropoutImpl module;
-
+public class DropoutLayer extends TypedLayer {
     /**
      * Constructor.
      * @param p the dropout probability.
@@ -52,20 +51,21 @@ public class DropoutLayer implements Layer {
      * @param inplace true if the operation executes in-place.
      */
     public DropoutLayer(double p, boolean inplace) {
-        DropoutOptions options = new DropoutOptions();
-        options.p().put(p);
-        options.inplace().put(inplace);
-        this.module = new DropoutImpl(options);
+        super(create(p, inplace));
     }
 
-    @Override
-    public Module asTorch() {
-        return module;
+    private static Handles create(double p, boolean inplace) {
+        MemorySegment h = check(smile_dropout_create(p, inplace ? 1 : 0));
+        MemorySegment m = check(smile_dropout_as_module(h));
+        return new Handles(h, m, () -> {
+            smile_module_free(m);
+            smile_dropout_free(h);
+        });
     }
 
     @Override
     public Tensor forward(Tensor input) {
-        if (!module.is_training()) return input;
-        return new Tensor(module.forward(input.asTorch()));
+        if (smile_dropout_is_training(handle) == 0) return input;
+        return new Tensor(smile_dropout_forward(handle, input.handle()));
     }
 }

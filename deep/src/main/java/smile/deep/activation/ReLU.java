@@ -16,8 +16,10 @@
  */
 package smile.deep.activation;
 
-import org.bytedeco.pytorch.global.torch;
 import smile.deep.tensor.Tensor;
+
+import static smile.torch.smile_torch_h.smile_torch_relu;
+import static smile.torch.smile_torch_h.smile_torch_relu_;
 
 /**
  * Rectified Linear Unit activation function.
@@ -35,12 +37,10 @@ public class ReLU extends ActivationFunction {
 
     @Override
     public Tensor forward(Tensor input) {
-        var x = input.asTorch();
         if (inplace) {
-            torch.relu_(x);
+            smile_torch_relu_(input.handle());
             return input;
-        } else {
-            return new Tensor(torch.relu(x));
         }
+        return new Tensor(smile_torch_relu(input.handle()));
     }
 }
