@@ -17,7 +17,7 @@ deep/src/test/resources/data/mnist
 **/smile_serve.db
 
 # Native library
-deep/lib
+studio/src/universal/libtorch
 /*.dylib
 
 # Clojure
