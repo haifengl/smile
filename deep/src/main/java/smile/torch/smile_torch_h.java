@@ -892,41 +892,23 @@ public class smile_torch_h extends smile_torch_h$shared {
      * }
      */
     public static final AddressLayout ST_Slice = smile_torch_h.C_POINTER;
-    private static final int ST_DTYPE_BOOL = (int)11L;
+    private static final int ST_DTYPE_BYTE = (int)0L;
     /**
      * {@snippet lang=c :
-     * enum <anonymous>.ST_DTYPE_BOOL = 11
-     * }
-     */
-    public static int ST_DTYPE_BOOL() {
-        return ST_DTYPE_BOOL;
-    }
-    private static final int ST_DTYPE_QUINT8 = (int)12L;
-    /**
-     * {@snippet lang=c :
-     * enum <anonymous>.ST_DTYPE_QUINT8 = 12
-     * }
-     */
-    public static int ST_DTYPE_QUINT8() {
-        return ST_DTYPE_QUINT8;
-    }
-    private static final int ST_DTYPE_QINT8 = (int)13L;
-    /**
-     * {@snippet lang=c :
-     * enum <anonymous>.ST_DTYPE_QINT8 = 13
-     * }
-     */
-    public static int ST_DTYPE_QINT8() {
-        return ST_DTYPE_QINT8;
-    }
-    private static final int ST_DTYPE_BYTE = (int)1L;
-    /**
-     * {@snippet lang=c :
-     * enum <anonymous>.ST_DTYPE_BYTE = 1
+     * enum <anonymous>.ST_DTYPE_BYTE = 0
      * }
      */
     public static int ST_DTYPE_BYTE() {
         return ST_DTYPE_BYTE;
+    }
+    private static final int ST_DTYPE_CHAR = (int)1L;
+    /**
+     * {@snippet lang=c :
+     * enum <anonymous>.ST_DTYPE_CHAR = 1
+     * }
+     */
+    public static int ST_DTYPE_CHAR() {
+        return ST_DTYPE_CHAR;
     }
     private static final int ST_DTYPE_SHORT = (int)2L;
     /**
@@ -955,15 +937,6 @@ public class smile_torch_h extends smile_torch_h$shared {
     public static int ST_DTYPE_LONG() {
         return ST_DTYPE_LONG;
     }
-    private static final int ST_DTYPE_BFLOAT16 = (int)15L;
-    /**
-     * {@snippet lang=c :
-     * enum <anonymous>.ST_DTYPE_BFLOAT16 = 15
-     * }
-     */
-    public static int ST_DTYPE_BFLOAT16() {
-        return ST_DTYPE_BFLOAT16;
-    }
     private static final int ST_DTYPE_HALF = (int)5L;
     /**
      * {@snippet lang=c :
@@ -990,6 +963,204 @@ public class smile_torch_h extends smile_torch_h$shared {
      */
     public static int ST_DTYPE_DOUBLE() {
         return ST_DTYPE_DOUBLE;
+    }
+    private static final int ST_DTYPE_COMPLEX_HALF = (int)8L;
+    /**
+     * {@snippet lang=c :
+     * enum <anonymous>.ST_DTYPE_COMPLEX_HALF = 8
+     * }
+     */
+    public static int ST_DTYPE_COMPLEX_HALF() {
+        return ST_DTYPE_COMPLEX_HALF;
+    }
+    private static final int ST_DTYPE_COMPLEX_FLOAT = (int)9L;
+    /**
+     * {@snippet lang=c :
+     * enum <anonymous>.ST_DTYPE_COMPLEX_FLOAT = 9
+     * }
+     */
+    public static int ST_DTYPE_COMPLEX_FLOAT() {
+        return ST_DTYPE_COMPLEX_FLOAT;
+    }
+    private static final int ST_DTYPE_COMPLEX_DOUBLE = (int)10L;
+    /**
+     * {@snippet lang=c :
+     * enum <anonymous>.ST_DTYPE_COMPLEX_DOUBLE = 10
+     * }
+     */
+    public static int ST_DTYPE_COMPLEX_DOUBLE() {
+        return ST_DTYPE_COMPLEX_DOUBLE;
+    }
+    private static final int ST_DTYPE_BOOL = (int)11L;
+    /**
+     * {@snippet lang=c :
+     * enum <anonymous>.ST_DTYPE_BOOL = 11
+     * }
+     */
+    public static int ST_DTYPE_BOOL() {
+        return ST_DTYPE_BOOL;
+    }
+    private static final int ST_DTYPE_QUINT8 = (int)12L;
+    /**
+     * {@snippet lang=c :
+     * enum <anonymous>.ST_DTYPE_QUINT8 = 12
+     * }
+     */
+    public static int ST_DTYPE_QUINT8() {
+        return ST_DTYPE_QUINT8;
+    }
+    private static final int ST_DTYPE_QINT8 = (int)13L;
+    /**
+     * {@snippet lang=c :
+     * enum <anonymous>.ST_DTYPE_QINT8 = 13
+     * }
+     */
+    public static int ST_DTYPE_QINT8() {
+        return ST_DTYPE_QINT8;
+    }
+    private static final int ST_DTYPE_QINT32 = (int)14L;
+    /**
+     * {@snippet lang=c :
+     * enum <anonymous>.ST_DTYPE_QINT32 = 14
+     * }
+     */
+    public static int ST_DTYPE_QINT32() {
+        return ST_DTYPE_QINT32;
+    }
+    private static final int ST_DTYPE_BFLOAT16 = (int)15L;
+    /**
+     * {@snippet lang=c :
+     * enum <anonymous>.ST_DTYPE_BFLOAT16 = 15
+     * }
+     */
+    public static int ST_DTYPE_BFLOAT16() {
+        return ST_DTYPE_BFLOAT16;
+    }
+    private static final int ST_DTYPE_QUInt4x2 = (int)16L;
+    /**
+     * {@snippet lang=c :
+     * enum <anonymous>.ST_DTYPE_QUInt4x2 = 16
+     * }
+     */
+    public static int ST_DTYPE_QUInt4x2() {
+        return ST_DTYPE_QUInt4x2;
+    }
+    private static final int ST_DTYPE_QUInt2x4 = (int)17L;
+    /**
+     * {@snippet lang=c :
+     * enum <anonymous>.ST_DTYPE_QUInt2x4 = 17
+     * }
+     */
+    public static int ST_DTYPE_QUInt2x4() {
+        return ST_DTYPE_QUInt2x4;
+    }
+    private static final int ST_DTYPE_Bits1x8 = (int)18L;
+    /**
+     * {@snippet lang=c :
+     * enum <anonymous>.ST_DTYPE_Bits1x8 = 18
+     * }
+     */
+    public static int ST_DTYPE_Bits1x8() {
+        return ST_DTYPE_Bits1x8;
+    }
+    private static final int ST_DTYPE_Bits2x4 = (int)19L;
+    /**
+     * {@snippet lang=c :
+     * enum <anonymous>.ST_DTYPE_Bits2x4 = 19
+     * }
+     */
+    public static int ST_DTYPE_Bits2x4() {
+        return ST_DTYPE_Bits2x4;
+    }
+    private static final int ST_DTYPE_Bits4x2 = (int)20L;
+    /**
+     * {@snippet lang=c :
+     * enum <anonymous>.ST_DTYPE_Bits4x2 = 20
+     * }
+     */
+    public static int ST_DTYPE_Bits4x2() {
+        return ST_DTYPE_Bits4x2;
+    }
+    private static final int ST_DTYPE_Bits8 = (int)21L;
+    /**
+     * {@snippet lang=c :
+     * enum <anonymous>.ST_DTYPE_Bits8 = 21
+     * }
+     */
+    public static int ST_DTYPE_Bits8() {
+        return ST_DTYPE_Bits8;
+    }
+    private static final int ST_DTYPE_Bits16 = (int)22L;
+    /**
+     * {@snippet lang=c :
+     * enum <anonymous>.ST_DTYPE_Bits16 = 22
+     * }
+     */
+    public static int ST_DTYPE_Bits16() {
+        return ST_DTYPE_Bits16;
+    }
+    private static final int ST_DTYPE_Float8_e5m2 = (int)23L;
+    /**
+     * {@snippet lang=c :
+     * enum <anonymous>.ST_DTYPE_Float8_e5m2 = 23
+     * }
+     */
+    public static int ST_DTYPE_Float8_e5m2() {
+        return ST_DTYPE_Float8_e5m2;
+    }
+    private static final int ST_DTYPE_Float8_e4m3fn = (int)24L;
+    /**
+     * {@snippet lang=c :
+     * enum <anonymous>.ST_DTYPE_Float8_e4m3fn = 24
+     * }
+     */
+    public static int ST_DTYPE_Float8_e4m3fn() {
+        return ST_DTYPE_Float8_e4m3fn;
+    }
+    private static final int ST_DTYPE_Float8_e5m2fnuz = (int)25L;
+    /**
+     * {@snippet lang=c :
+     * enum <anonymous>.ST_DTYPE_Float8_e5m2fnuz = 25
+     * }
+     */
+    public static int ST_DTYPE_Float8_e5m2fnuz() {
+        return ST_DTYPE_Float8_e5m2fnuz;
+    }
+    private static final int ST_DTYPE_Float8_e4m3fnuz = (int)26L;
+    /**
+     * {@snippet lang=c :
+     * enum <anonymous>.ST_DTYPE_Float8_e4m3fnuz = 26
+     * }
+     */
+    public static int ST_DTYPE_Float8_e4m3fnuz() {
+        return ST_DTYPE_Float8_e4m3fnuz;
+    }
+    private static final int ST_DTYPE_UInt16 = (int)27L;
+    /**
+     * {@snippet lang=c :
+     * enum <anonymous>.ST_DTYPE_UInt16 = 27
+     * }
+     */
+    public static int ST_DTYPE_UInt16() {
+        return ST_DTYPE_UInt16;
+    }
+    private static final int ST_DTYPE_UInt32 = (int)28L;
+    /**
+     * {@snippet lang=c :
+     * enum <anonymous>.ST_DTYPE_UInt32 = 28
+     * }
+     */
+    public static int ST_DTYPE_UInt32() {
+        return ST_DTYPE_UInt32;
+    }
+    private static final int ST_DTYPE_UInt64 = (int)29L;
+    /**
+     * {@snippet lang=c :
+     * enum <anonymous>.ST_DTYPE_UInt64 = 29
+     * }
+     */
+    public static int ST_DTYPE_UInt64() {
+        return ST_DTYPE_UInt64;
     }
     private static final int ST_DTYPE_UNDEFINED = (int)255L;
     /**
