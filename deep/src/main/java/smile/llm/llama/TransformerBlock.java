@@ -78,8 +78,8 @@ public class TransformerBlock {
             this.module = check(smile_module_create(MemorySegment.NULL));
             smile_module_register_module(module, arena.allocateFrom("attention"), attention.module);
             smile_module_register_module(module, arena.allocateFrom("feed_forward"), feedForward.module);
-            smile_module_register_module(module, arena.allocateFrom("attention_norm"), attentionNorm.asModule());
-            smile_module_register_module(module, arena.allocateFrom("ffn_norm"), ffnNorm.asModule());
+            smile_module_register_module(module, arena.allocateFrom("attention_norm"), attentionNorm.module());
+            smile_module_register_module(module, arena.allocateFrom("ffn_norm"), ffnNorm.module());
         }
         MemorySegment m = this.module;
         Native.CLEANER.register(this, () -> smile_module_free(m));

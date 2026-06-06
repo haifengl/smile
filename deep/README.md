@@ -262,7 +262,7 @@ All layers implement the `Layer` interface:
 ```java
 public interface Layer extends Function<Tensor, Tensor> {
     Tensor forward(Tensor input);
-    MemorySegment asModule();    // native ST_Module handle
+    MemorySegment module();      // native ST_Module handle
     String moduleName();         // native/fallback module name
     Layer to(Device device);     // move to another device
 }

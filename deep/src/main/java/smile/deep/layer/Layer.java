@@ -47,14 +47,14 @@ public interface Layer extends Function<Tensor, Tensor> {
      * Returns the native {@code ST_Module} handle for this layer.
      * @return the native {@code ST_Module} handle.
      */
-    MemorySegment asModule();
+    MemorySegment module();
 
     /**
      * Returns the module name.
      * @return the module name.
      */
     default String moduleName() {
-        MemorySegment name = smile_torch_h.smile_module_name(asModule());
+        MemorySegment name = smile_torch_h.smile_module_name(module());
         if (name == null || name.address() == 0) {
             return getClass().getSimpleName();
         }
@@ -69,7 +69,7 @@ public interface Layer extends Function<Tensor, Tensor> {
     default Layer to(Device device) {
         MemorySegment d = device.toNative();
         try {
-            smile_torch_h.smile_module_to_device(asModule(), d, 1);
+            smile_torch_h.smile_module_to_device(module(), d, 1);
         } finally {
             smile_torch_h.smile_device_free(d);
         }
@@ -85,7 +85,7 @@ public interface Layer extends Function<Tensor, Tensor> {
     default Layer to(Device device, ScalarType dtype) {
         MemorySegment d = device.toNative();
         try {
-            smile_torch_h.smile_module_to_dtype(asModule(), d, dtype.code(), 1);
+            smile_torch_h.smile_module_to_dtype(module(), d, dtype.code(), 1);
         } finally {
             smile_torch_h.smile_device_free(d);
         }

@@ -186,7 +186,7 @@ public class VisionLayerTest {
         // Before fix: "Row".equals("row") → false; forward() would skip row-specific logic.
         // After fix: mode is normalized to lowercase in constructor.
         StochasticDepth sd = new StochasticDepth(0.0, "Row");
-        smile_module_train(sd.asModule(), 1);
+        smile_module_train(sd.module(), 1);
         Tensor input = Tensor.rand(4, 8);
         Tensor output = sd.forward(input);
         // p=0 → identity regardless of mode
@@ -216,7 +216,7 @@ public class VisionLayerTest {
     @Test
     public void testGivenStochasticDepthInEvalModeWhenForwardThenReturnsSameTensor() {
         StochasticDepth sd = new StochasticDepth(0.5, "row");
-        smile_module_eval(sd.asModule()); // eval mode → no dropout
+        smile_module_eval(sd.module()); // eval mode → no dropout
         Tensor input = Tensor.rand(4, 8);
         Tensor output = sd.forward(input);
         assertSame(input, output);
@@ -237,7 +237,7 @@ public class VisionLayerTest {
     @Test
     public void testGivenStochasticDepthInTrainModeWhenForwardThenOutputShapeIsPreserved() {
         StochasticDepth sd = new StochasticDepth(0.3, "row");
-        smile_module_train(sd.asModule(), 1);
+        smile_module_train(sd.module(), 1);
         Tensor input = Tensor.rand(4, 8, 8);
         Tensor output = sd.forward(input);
         assertArrayEquals(input.shape(), output.shape());

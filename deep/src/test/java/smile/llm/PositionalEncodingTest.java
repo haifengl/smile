@@ -148,7 +148,7 @@ public class PositionalEncodingTest {
     @Test
     public void testGivenPositionalEncodingAsModuleWhenCalledThenReturnsModuleHandle() {
         PositionalEncoding pe = new PositionalEncoding(8, 16);
-        assertNotNull(pe.asModule());
+        assertNotNull(pe.module());
     }
 
     @Test
