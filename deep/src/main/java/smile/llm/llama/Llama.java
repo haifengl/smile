@@ -232,9 +232,12 @@ public class Llama {
 
             int prevPos = 0;
             if (minPromptLen == totalLen) {
-                var logits = model.forward(tokens, prevPos);
-                if (logprobs) {
-                    tokenLogprobs = Tensor.crossEntropy(logits.transpose(1, 2), tokens, "none", pad).neg_();
+                try (var logits = model.forward(tokens, prevPos)) {
+                    if (logprobs) {
+                        try (var transposed = logits.transpose(1, 2)) {
+                            tokenLogprobs = Tensor.crossEntropy(transposed, tokens, "none", pad).neg_();
+                        }
+                    }
                 }
             }
 
@@ -320,10 +323,15 @@ public class Llama {
                 if (eos) break;
             }
 
-            var longArray = tokens.to(Device.CPU()).longArray();
+            long[] longArray;
+            try (var cpuTokens = tokens.to(Device.CPU())) {
+                longArray = cpuTokens.longArray();
+            }
             float[] logprobArray = null;
             if (logprobs) {
-                logprobArray = tokenLogprobs.to(Device.CPU()).floatArray();
+                try (var cpuLogprobs = tokenLogprobs.to(Device.CPU())) {
+                    logprobArray = cpuLogprobs.floatArray();
+                }
             }
             ChatCompletion[] predictions = new ChatCompletion[batchSize];
             for (int i = 0; i < batchSize; i++) {
