@@ -63,4 +63,9 @@ abstract class TypedLayer implements Layer {
     public MemorySegment asModule() {
         return module;
     }
+
+    @Override
+    public String toString() {
+        return moduleName();
+    }
 }

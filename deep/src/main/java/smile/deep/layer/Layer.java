@@ -50,6 +50,18 @@ public interface Layer extends Function<Tensor, Tensor> {
     MemorySegment asModule();
 
     /**
+     * Returns the module name.
+     * @return the module name.
+     */
+    default String moduleName() {
+        MemorySegment name = smile_torch_h.smile_module_name(asModule());
+        if (name == null || name.address() == 0) {
+            return getClass().getSimpleName();
+        }
+        return name.reinterpret(Long.MAX_VALUE).getString(0);
+    }
+
+    /**
      * Moves the layer block to a device.
      * @param device the compute device.
      * @return this layer.
