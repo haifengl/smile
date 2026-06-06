@@ -30,7 +30,7 @@ import static smile.torch.smile_torch_h.*;
  *
  * @author Haifeng Li
  */
-public class AvgPool2dLayer extends AbstractLayer {
+public class AvgPool2dLayer extends ModuleLayer {
     /**
      * Constructor.
      * @param kernel the window/kernel size.

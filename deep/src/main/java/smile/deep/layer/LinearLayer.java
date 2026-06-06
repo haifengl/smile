@@ -27,7 +27,7 @@ import static smile.torch.smile_torch_h.*;
  *
  * @author Haifeng Li
  */
-public class LinearLayer extends AbstractLayer {
+public class LinearLayer extends ModuleLayer {
     /**
      * Constructor.
      * @param in the number of input features.
