@@ -127,7 +127,7 @@ public class Transformer extends LayerBlock {
         }
 
         h = norm.forward(h);
-        return output.forward(h).to(ScalarType.Float32);
+        return output.forward(h).to(ScalarType.Float);
     }
 
     @Override

@@ -91,18 +91,37 @@ extern "C" const char *smile_last_error(void) {
 
 static c10::ScalarType to_scalar_type(ST_DType dt) {
     switch (dt) {
-        case ST_DTYPE_BOOL:     return c10::ScalarType::Bool;
-        case ST_DTYPE_QUINT8:   return c10::ScalarType::QUInt8;
-        case ST_DTYPE_QINT8:    return c10::ScalarType::QInt8;
-        case ST_DTYPE_BYTE:     return c10::ScalarType::Byte;
-        case ST_DTYPE_SHORT:    return c10::ScalarType::Short;
-        case ST_DTYPE_INT:      return c10::ScalarType::Int;
-        case ST_DTYPE_LONG:     return c10::ScalarType::Long;
-        case ST_DTYPE_BFLOAT16: return c10::ScalarType::BFloat16;
-        case ST_DTYPE_HALF:     return c10::ScalarType::Half;
-        case ST_DTYPE_FLOAT:    return c10::ScalarType::Float;
-        case ST_DTYPE_DOUBLE:   return c10::ScalarType::Double;
-        default: return c10::ScalarType::Undefined;
+        case ST_DTYPE_BYTE:            return c10::ScalarType::Byte;
+        case ST_DTYPE_CHAR:            return c10::ScalarType::Char;
+        case ST_DTYPE_SHORT:           return c10::ScalarType::Short;
+        case ST_DTYPE_INT:             return c10::ScalarType::Int;
+        case ST_DTYPE_LONG:            return c10::ScalarType::Long;
+        case ST_DTYPE_HALF:            return c10::ScalarType::Half;
+        case ST_DTYPE_FLOAT:           return c10::ScalarType::Float;
+        case ST_DTYPE_DOUBLE:          return c10::ScalarType::Double;
+        case ST_DTYPE_COMPLEX_HALF:    return c10::ScalarType::ComplexHalf;
+        case ST_DTYPE_COMPLEX_FLOAT:   return c10::ScalarType::ComplexFloat;
+        case ST_DTYPE_COMPLEX_DOUBLE:  return c10::ScalarType::ComplexDouble;
+        case ST_DTYPE_BOOL:            return c10::ScalarType::Bool;
+        case ST_DTYPE_QUINT8:          return c10::ScalarType::QUInt8;
+        case ST_DTYPE_QINT8:           return c10::ScalarType::QInt8;
+        case ST_DTYPE_QINT32:          return c10::ScalarType::QInt32;
+        case ST_DTYPE_BFLOAT16:        return c10::ScalarType::BFloat16;
+        case ST_DTYPE_QUInt4x2:        return c10::ScalarType::QUInt4x2;
+        case ST_DTYPE_QUInt2x4:        return c10::ScalarType::QUInt2x4;
+        case ST_DTYPE_Bits1x8:         return c10::ScalarType::Bits1x8;
+        case ST_DTYPE_Bits2x4:         return c10::ScalarType::Bits2x4;
+        case ST_DTYPE_Bits4x2:         return c10::ScalarType::Bits4x2;
+        case ST_DTYPE_Bits8:           return c10::ScalarType::Bits8;
+        case ST_DTYPE_Bits16:          return c10::ScalarType::Bits16;
+        case ST_DTYPE_Float8_e5m2:     return c10::ScalarType::Float8_e5m2;
+        case ST_DTYPE_Float8_e4m3fn:   return c10::ScalarType::Float8_e4m3fn;
+        case ST_DTYPE_Float8_e5m2fnuz: return c10::ScalarType::Float8_e5m2fnuz;
+        case ST_DTYPE_Float8_e4m3fnuz: return c10::ScalarType::Float8_e4m3fnuz;
+        case ST_DTYPE_UInt16:          return c10::ScalarType::UInt16;
+        case ST_DTYPE_UInt32:          return c10::ScalarType::UInt32;
+        case ST_DTYPE_UInt64:          return c10::ScalarType::UInt64;
+        default:                       return c10::ScalarType::Undefined;
     }
 }
 

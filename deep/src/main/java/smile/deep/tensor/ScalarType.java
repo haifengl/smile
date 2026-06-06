@@ -42,14 +42,14 @@ public enum ScalarType {
      * Half-precision floating-point number. It contains 5 exponent bits and 11
      * 11-bit precision (10 explicitly stored).
      */
-    Float16(5),
+    Half(5),
     /** Single-precision floating-point number. */
-    Float32(6),
+    Float(6),
     /** Double-precision floating-point number. */
-    Float64(7),
-    Complex16(8),
-    Complex32(9),
-    Complex64(10),
+    Double(7),
+    ComplexHalf(8),
+    ComplexFloat(9),
+    ComplexDouble(10),
     Bool(11),
     /**
      * 8-bit quantized unsigned tensor type which represents a compressed

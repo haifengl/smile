@@ -67,7 +67,7 @@ public class RMSNormLayer implements Layer {
 
     @Override
     public Tensor forward(Tensor input) {
-        Tensor x = input.to(ScalarType.Float32);
+        Tensor x = input.to(ScalarType.Float);
         Tensor output = x.mul(x.pow(2).mean(-1, true).add_(eps).rsqrt_()).to(input.dtype());
         return output.mul_(weight);
     }
