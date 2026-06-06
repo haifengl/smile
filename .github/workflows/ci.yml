@@ -62,7 +62,7 @@ jobs:
           curl -fsSL --retry 5 --retry-delay 10 -o "libtorch.zip" "${LIBTORCH_URL}"
           unzip -q -o "libtorch.zip" -d "deep"
           ln -s deep/libtorch/lib studio/src/universal/libtorch
-          ls studio/src/universal/libtorch
+          ls -l studio/src/universal/libtorch/
 
       - name: Set up Java 25
         uses: actions/setup-java@v5
