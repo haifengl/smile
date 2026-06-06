@@ -24,8 +24,11 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.ToIntFunction;
 import javax.imageio.ImageIO;
 import smile.deep.Dataset;
@@ -49,6 +52,23 @@ public class ImageDataset implements Dataset {
     private final int batch;
     private final Transform transform;
     private final ToIntFunction<String> targetTransform;
+    private final Set<LoaderState> loaders = ConcurrentHashMap.newKeySet();
+    private final AtomicBoolean closed = new AtomicBoolean(false);
+
+    /** Runtime state for one dataset iterator loader. */
+    private static final class LoaderState {
+        final BlockingQueue<Object> queue = new LinkedBlockingQueue<>(100);
+        final AtomicBoolean done = new AtomicBoolean(false);
+        final AtomicBoolean cancelled = new AtomicBoolean(false);
+        final Object end = new Object();
+        Thread thread;
+
+        void cancel() {
+            if (cancelled.compareAndSet(false, true) && thread != null) {
+                thread.interrupt();
+            }
+        }
+    }
 
     /**
      * Constructor.
@@ -90,7 +110,12 @@ public class ImageDataset implements Dataset {
 
     @Override
     public void close() {
-        // We don't hold any (external) resources.
+        if (!closed.compareAndSet(false, true)) return;
+
+        for (var loader : loaders) {
+            shutdown(loader);
+        }
+        loaders.clear();
     }
 
     @Override
@@ -100,50 +125,130 @@ public class ImageDataset implements Dataset {
 
     @Override
     public Iterator<SampleBatch> iterator() {
+        if (closed.get()) {
+            throw new IllegalStateException("Dataset is already closed");
+        }
+
+        final LoaderState loader = new LoaderState();
+        loaders.add(loader);
         final int size = samples.size();
         final int[] permutation = MathEx.permutate(size);
-        final BlockingQueue<SampleBatch> queue = new LinkedBlockingQueue<>(100);
 
         final int start = Math.min(batch, size);
         final int[] index = Arrays.copyOf(permutation, start);
 
         try {
             // prefetch the first batch
-            queue.put(readImages(index));
+            loader.queue.put(readImages(index));
         } catch (Exception ex) {
             logger.error("Failed to load the first batch", ex);
+            loader.done.set(true);
+            if (!loader.queue.offer(loader.end)) {
+                drainQueue(loader);
+                boolean enqueued = loader.queue.offer(loader.end);
+                if (!enqueued) {
+                    logger.debug("Failed to enqueue end marker after draining queue");
+                }
+            }
         }
 
-        var thread = Thread.ofPlatform().name("image-dataset-loader").start(() -> {
-                  for (int i = start; i < size; ) {
-                      int n = Math.min(batch, size - i);
-                      System.arraycopy(permutation, i, index,  0, n);
-                      i += n;
+        loader.thread = Thread.ofPlatform().name("image-dataset-loader").start(() -> {
+                  try {
+                      for (int i = start; i < size && !loader.cancelled.get(); ) {
+                          int n = Math.min(batch, size - i);
+                          System.arraycopy(permutation, i, index,  0, n);
+                          i += n;
 
-                      try {
-                          queue.put(readImages(n == index.length ? index : Arrays.copyOf(index, n)));
-                      } catch (Exception ex) {
-                          logger.error("Failed to load images", ex);
+                          try {
+                              loader.queue.put(readImages(n == index.length ? index : Arrays.copyOf(index, n)));
+                          } catch (InterruptedException ex) {
+                              Thread.currentThread().interrupt();
+                              break;
+                          } catch (Exception ex) {
+                              logger.error("Failed to load images", ex);
+                              break;
+                          }
+                      }
+                  } finally {
+                      loader.done.set(true);
+                      if (!loader.queue.offer(loader.end)) {
+                          drainQueue(loader);
+                          boolean enqueued = loader.queue.offer(loader.end);
+                          if (!enqueued) {
+                              logger.debug("Failed to enqueue end marker after draining queue");
+                          }
                       }
                   }
               });
 
         return new Iterator<>() {
+            Object next;
+            final AtomicBoolean cleaned = new AtomicBoolean(false);
+
+            private void cleanup() {
+                if (cleaned.compareAndSet(false, true)) {
+                    shutdown(loader);
+                    loaders.remove(loader);
+                }
+            }
+
+            private void load() {
+                if (next != null) {
+                    return;
+                }
+
+                if (loader.done.get() && loader.queue.isEmpty()) {
+                    next = loader.end;
+                    return;
+                }
+
+                try {
+                    next = loader.queue.take();
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                    cleanup();
+                    throw new NoSuchElementException("Image loading interrupted: " + ex.getMessage());
+                }
+            }
+
             @Override
             public boolean hasNext() {
-                return !queue.isEmpty() || thread.isAlive();
+                load();
+                if (next == loader.end) {
+                    cleanup();
+                    return false;
+                }
+                return true;
             }
 
             @Override
             public SampleBatch next() {
-                try {
-                    return queue.take();
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-                    throw new NoSuchElementException("Image loading interrupted: " + ex.getMessage());
+                load();
+                if (next == loader.end) {
+                    cleanup();
+                    throw new NoSuchElementException("No more batches");
                 }
+
+                Object item = next;
+                next = null;
+                return (SampleBatch) item;
             }
         };
+    }
+
+    private static void drainQueue(LoaderState loader) {
+        Object item;
+        while ((item = loader.queue.poll()) != null) {
+            if (item instanceof SampleBatch batch) {
+                batch.close();
+            }
+        }
+    }
+
+    private static void shutdown(LoaderState loader) {
+        loader.cancel();
+        loader.done.set(true);
+        drainQueue(loader);
     }
 
     /**
