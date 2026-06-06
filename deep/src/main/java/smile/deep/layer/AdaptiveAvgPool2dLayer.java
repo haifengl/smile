@@ -31,7 +31,7 @@ import static smile.torch.smile_torch_h.*;
  *
  * @author Haifeng Li
  */
-public class AdaptiveAvgPool2dLayer extends AbstractLayer {
+public class AdaptiveAvgPool2dLayer extends ModuleLayer {
     /**
      * Constructor.
      * @param size the output size.

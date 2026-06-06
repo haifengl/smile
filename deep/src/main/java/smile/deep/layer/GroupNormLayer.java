@@ -29,7 +29,7 @@ import static smile.torch.smile_torch_h.*;
  *
  * @author Haifeng Li
  */
-public class GroupNormLayer extends AbstractLayer {
+public class GroupNormLayer extends ModuleLayer {
     /**
      * Constructor.
      * @param groups the number of groups to separate the channels into.

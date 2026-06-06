@@ -30,7 +30,7 @@ import static smile.torch.smile_torch_h.*;
  *
  * @author Haifeng Li
  */
-public class BatchNorm2dLayer extends AbstractLayer {
+public class BatchNorm2dLayer extends ModuleLayer {
     /**
      * Constructor.
      * @param channels the number of input channels.
