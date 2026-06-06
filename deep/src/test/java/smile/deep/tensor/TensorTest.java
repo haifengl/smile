@@ -551,7 +551,8 @@ public class TensorTest {
         Tensor input = Tensor.of(new float[]{2.0f, 1.0f, 0.1f, 0.1f, 2.0f, 0.1f}, 2, 3);
         Tensor target = Tensor.of(new long[]{0L, 1L}, 2L);
         Tensor loss = Tensor.crossEntropy(input, target, "none", -100);
-        assertTrue(loss.doubleValue() > 0, "loss should be positive");
+        assertTrue(loss.get(0).floatValue() > 0, "loss should be positive");
+        assertTrue(loss.get(1).floatValue() > 0, "loss should be positive");
         input.close(); target.close(); loss.close();
     }
 
@@ -561,7 +562,7 @@ public class TensorTest {
         Tensor target = Tensor.of(new long[]{0L, 1L}, 2L);
         Tensor loss = Tensor.crossEntropy(input, target, "mean", -100);
         assertEquals(0, loss.dim(), "mean reduction should return a scalar");
-        assertTrue(loss.doubleValue() > 0, "loss should be positive");
+        assertTrue(loss.floatValue() > 0, "loss should be positive");
         input.close(); target.close(); loss.close();
     }
 
@@ -690,7 +691,7 @@ public class TensorTest {
     @Test
     public void testGivenScalarTypeWhenCodeCalledThenReturnsPositiveNativeCode() {
         for (ScalarType st : ScalarType.values()) {
-            assertTrue(st.code() > 0, "code() should return a positive native code for " + st);
+            assertTrue(st.code() >= 0, "code() should return a positive native code for " + st);
         }
     }
 

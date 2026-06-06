@@ -92,17 +92,22 @@ typedef struct ST_Slice_         *ST_Slice;
  * ========================================================================= */
 
 typedef enum {
-    ST_DTYPE_BOOL      =  11,
-    ST_DTYPE_QUINT8    =  12,
-    ST_DTYPE_QINT8     =  13,
-    ST_DTYPE_BYTE      =   1,   /* uint8  */
+    ST_DTYPE_BYTE      =   0,   /* uint8  */
+    ST_DTYPE_CHAR      =   1,   /* int8   */
     ST_DTYPE_SHORT     =   2,   /* int16  */
     ST_DTYPE_INT       =   3,   /* int32  */
     ST_DTYPE_LONG      =   4,   /* int64  */
-    ST_DTYPE_BFLOAT16  =  15,
     ST_DTYPE_HALF      =   5,   /* float16 */
     ST_DTYPE_FLOAT     =   6,   /* float32 */
     ST_DTYPE_DOUBLE    =   7,   /* float64 */
+    ST_DTYPE_COMPLEX_HALF   =   8,   /* complex float16 */
+    ST_DTYPE_COMPLEX_FLOAT  =   9,   /* complex float32 */
+    ST_DTYPE_COMPLEX_DOUBLE =  10,   /* complex float64 */
+    ST_DTYPE_BOOL      =  11,
+    ST_DTYPE_QUINT8    =  12,
+    ST_DTYPE_QINT8     =  13,
+    ST_DTYPE_QINT32    =  14,
+    ST_DTYPE_BFLOAT16  =  15,
     ST_DTYPE_UNDEFINED = 255
 } ST_DType;
 

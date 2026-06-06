@@ -924,14 +924,10 @@ public class Tensor implements AutoCloseable {
     public byte[] byteArray() {
         checkContiguous();
         // Bool tensors use the same storage layout as Byte but have a different dtype.
-        // Cast to Int8 so data_ptr_byte() succeeds.
-        if (smile_tensor_dtype(handle) == ScalarType.BOOL_CODE) {
-            try (Tensor t = to(ScalarType.Int8)) {
-                return t.byteArray();
-            }
-        }
+        MemorySegment data = smile_tensor_dtype(handle) == ScalarType.Bool.code() ?
+            check(smile_tensor_data_ptr_bool(handle)) :
+            check(smile_tensor_data_ptr_byte(handle));
         int n = lengthAsInt();
-        MemorySegment data = check(smile_tensor_data_ptr_byte(handle));
         return data.reinterpret(n).toArray(JAVA_BYTE);
     }
 
