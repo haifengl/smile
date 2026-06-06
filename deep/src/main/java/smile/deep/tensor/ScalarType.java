@@ -25,6 +25,33 @@ import java.util.Optional;
  */
 public enum ScalarType {
     /**
+     * 8-bit unsigned integer (maps to PyTorch {@code torch.uint8} / {@code torch.Byte}).
+     * Note: PyTorch uses {@code Byte} for the <em>unsigned</em> 8-bit type, so Java
+     * {@code byte} values are interpreted in the range [0, 255] when converting to/from
+     * this type.
+     */
+    UInt8(0),
+    Int8(1),
+    /** 16-bit integer. */
+    Int16(2),
+    /** 32-bit integer. */
+    Int32(3),
+    /** 64-bit integer. */
+    Int64(4),
+    /**
+     * Half-precision floating-point number. It contains 5 exponent bits and 11
+     * 11-bit precision (10 explicitly stored).
+     */
+    Float16(5),
+    /** Single-precision floating-point number. */
+    Float32(6),
+    /** Double-precision floating-point number. */
+    Float64(7),
+    Complex16(8),
+    Complex32(9),
+    Complex64(10),
+    Bool(11),
+    /**
      * 8-bit quantized unsigned tensor type which represents a compressed
      * floating point tensor.
      */
@@ -35,18 +62,10 @@ public enum ScalarType {
      */
     QInt8(13),
     /**
-     * 8-bit unsigned integer (maps to PyTorch {@code torch.uint8} / {@code torch.Byte}).
-     * Note: PyTorch uses {@code Byte} for the <em>unsigned</em> 8-bit type, so Java
-     * {@code byte} values are interpreted in the range [0, 255] when converting to/from
-     * this type.
+     * 32-bit quantized signed tensor type which represents a compressed
+     * floating point tensor.
      */
-    Int8(1),
-    /** 16-bit integer. */
-    Int16(2),
-    /** 32-bit integer. */
-    Int32(3),
-    /** 64-bit integer. */
-    Int64(4),
+    QInt32(14),
     /**
      * The bfloat16 (brain floating point) floating-point format occupies 16 bits.
      * This format is a shortened version of the 32-bit IEEE 754 single-precision
@@ -54,19 +73,7 @@ public enum ScalarType {
      * floating-point numbers by retaining 8 exponent bits, but supports only an
      * 8-bit precision rather than the 24-bit significand of the single precision.
      */
-    BFloat16(15),
-    /**
-     * Half-precision floating-point number. It contains 5 exponent bits and 11
-     * 11-bit precision (10 explicitly stored).
-     */
-    Float16(5),
-    /** Single-precision floating-point number. */
-    Float32(6),
-    /** Double-precision floating-point number. */
-    Float64(7);
-
-    /** The {@code ST_DType} code used by the native API for the boolean type. */
-    static final int BOOL_CODE = 11;
+    BFloat16(15);
 
     /** The native {@code ST_DType} code. */
     final int code;
