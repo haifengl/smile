@@ -1,7 +1,10 @@
 # SMILE — Deep Learning
 
-The `smile-deep` module wraps the **PyTorch / LibTorch C++ runtime**,
-giving Java applications GPU-accelerated deep learning without leaving the JVM.
+The `smile-deep` module wraps the **PyTorch / LibTorch C++ runtime** via a
+small native `smile_torch` library and Java 25's **Foreign Function and Memory
+API (FFM)**. The low-level Java bindings in `smile.torch` are generated with
+`jextract`, and the higher-level `smile.deep` API keeps Java applications on
+the JVM while still reaching CPU, CUDA, and MPS backends.
 
 ---
 
@@ -24,11 +27,11 @@ giving Java applications GPU-accelerated deep learning without leaving the JVM.
    - [Sequential Composition](#sequential-composition)
 5. [Activation Functions (`smile.deep.activation`)](#activation-functions-smiledeepactivation)
 6. [Loss Functions (`smile.deep.Loss`)](#loss-functions-smiledeeploss)
-7. [Optimizers (`smile.deep.Optimizer`)](#optimizers-smiledeeoptimizer)
+7. [Optimizers (`smile.deep.Optimizer`)](#optimizers-smiledeepoptimizer)
 8. [Model API (`smile.deep.Model`)](#model-api-smiledeepmodel)
 9. [Metrics (`smile.deep.metric`)](#metrics-smiledeepmetric)
-10. [Data Loading (`smile.deep.Dataset`)](#data-loading-smiledeepsdataset)
-11. [CUDA Utilities (`smile.deep.CUDA`)](#cuda-utilities-smiledeecuda)
+10. [Data Loading (`smile.deep.Dataset`)](#data-loading-smiledeepdataset)
+11. [CUDA Utilities (`smile.deep.CUDA`)](#cuda-utilities-smiledeepcuda)
 12. [Large Language Models (`smile.llm`)](#large-language-models-smilellm)
     - [Core Types](#core-types)
     - [Tokenizer (`smile.llm.tokenizer`)](#tokenizer-smilellmtokenizer)
@@ -55,9 +58,29 @@ dependencies {
 }
 ```
 
-The module ships CPU-only LibTorch by default.  For GPU support, make sure the
-native CUDA libraries are on the `java.library.path` and that your Bytedeco
-`pytorch` classifier matches your CUDA version (e.g. `linux-x86_64-gpu-cuda12.4`).
+Runtime requirements:
+
+- Java 25 or newer.
+- The native `smile_torch` shared library and its LibTorch dependencies must be
+  discoverable by the platform loader:
+  - **Windows:** `PATH`
+  - **Linux:** `LD_LIBRARY_PATH`
+  - **macOS:** `DYLD_LIBRARY_PATH`
+- When launching outside Gradle or Smile Studio, enable FFM access explicitly:
+
+```text
+--enable-native-access=ALL-UNNAMED
+```
+
+SMILE's own Gradle test configuration also adds:
+
+```text
+--add-opens=java.base/java.nio=ALL-UNNAMED
+```
+
+If you run `smile-deep` from a custom launcher and hit native-access or buffer
+interop errors, mirror that setting as well. In this repository, tests point
+the native loader at `studio/src/universal/bin` and `studio/src/universal/libtorch`.
 
 ---
 
@@ -75,6 +98,10 @@ smile.deep
 ├── Dataset.java   Dataset interface
 ├── DatasetImpl.java, DataSampler.java, SampleBatch.java
 └── CUDA.java      GPU info helpers
+
+smile.torch
+├── smile_torch_h.java  jextract-generated FFM downcalls for the C ABI
+└── Native.java         Cleaner/error-handling helpers over raw FFM bindings
 
 smile.llm
 ├── tokenizer/     Tokenizer interface + Tiktoken (BPE) implementation
@@ -96,6 +123,10 @@ smile.vision
 ├── ImageDataset.java   Folder-per-class dataset with background prefetch
 └── ImageNet.java       1000-class ImageNet label/folder arrays + utilities
 ```
+
+The native side lives in `deep/src/main/cpp` and exposes a compact C ABI
+(`smile_torch`) over LibTorch. This hourglass layer keeps the Java API on top
+of FFM while isolating the higher-level code from LibTorch's C++ ABI.
 
 ---
 
@@ -231,8 +262,9 @@ All layers implement the `Layer` interface:
 ```java
 public interface Layer extends Function<Tensor, Tensor> {
     Tensor forward(Tensor input);
-    Module asTorch();             // underlying PyTorch Module
-    Layer  to(Device device);    // move to GPU
+    MemorySegment asModule();    // native ST_Module handle
+    String moduleName();         // native/fallback module name
+    Layer to(Device device);     // move to another device
 }
 ```
 
@@ -384,16 +416,13 @@ Tensor tmLoss = Loss.tripleMarginRanking(anchor, positive, negative);
 ```java
 import smile.deep.Optimizer;
 
-var params = model.asTorch().parameters();
-
-Optimizer sgd    = Optimizer.sgd(params, 0.01);            // lr=0.01
-Optimizer sgdM   = Optimizer.sgd(params, 0.01, 0.9);       // + momentum
-Optimizer adam   = Optimizer.adam(params, 1e-3);
-Optimizer adamW  = Optimizer.adamW(params, 1e-3);
-Optimizer rms    = Optimizer.rmsprop(params, 1e-3);
+Optimizer sgd   = Optimizer.SGD(model, 0.01);
+Optimizer adam  = Optimizer.Adam(model, 1e-3);
+Optimizer adamW = Optimizer.AdamW(model, 1e-3);
+Optimizer rms   = Optimizer.RMSprop(model, 1e-3);
 
 // Per step
-optimizer.zeroGrad();
+optimizer.reset();
 loss.backward();
 optimizer.step();
 ```
@@ -402,18 +431,16 @@ optimizer.step();
 
 ## Model API (`smile.deep.Model`)
 
-Extend `Model` to define custom architectures:
+Compose a `Model` from a `LayerBlock` to define custom architectures:
 
 ```java
-public class MyCNN extends Model {
-    private final Conv2dLayer conv1;
-    private final LinearLayer fc;
+LayerBlock net = new LayerBlock("MyCNN") {
+    private final Conv2dLayer conv1 = Layer.conv2d(1, 32, 3);
+    private final LinearLayer fc = Layer.linear(32 * 13 * 13, 10);
 
-    public MyCNN() {
-        this.conv1 = Layer.conv2d(1, 32, 3);
-        this.fc    = Layer.linear(32 * 13 * 13, 10);
-        register("conv1", conv1);
-        register("fc",    fc);
+    {
+        add("conv1", conv1);
+        add("fc", fc);
     }
 
     @Override
@@ -424,29 +451,31 @@ public class MyCNN extends Model {
         h = h.view(h.size(0), -1);
         return fc.forward(h);
     }
-}
+};
+
+Model model = new Model(net);
 ```
 
 ### Training Loop
 
 ```java
-MyCNN model = new MyCNN();
-Optimizer optimizer = Optimizer.adam(model.asTorch().parameters(), 1e-3);
+Optimizer optimizer = Optimizer.Adam(model, 1e-3);
 Loss criterion = Loss.crossEntropy();
 
 model.train(
     10,                        // epochs
-    dataset,                   // Dataset<SampleBatch>
-    criterion,
     optimizer,
-    new Accuracy(),            // metric to track
-    testDataset                // optional eval dataset
+    criterion,
+    dataset,                   // training dataset
+    testDataset,               // optional validation dataset
+    null,                      // optional checkpoint path
+    new Accuracy()             // metric(s) to track during validation
 );
 ```
 
 The `Model.train(...)` method handles:
 - shuffling via `DataSampler`
-- zero-grad / forward / backward / step
+- optimizer reset / forward / backward / step
 - metric accumulation and logging per epoch
 
 ---
@@ -524,7 +553,7 @@ boolean bf16 = Tensor.isBF16Supported();       // Ampere or newer
 ## Large Language Models (`smile.llm`)
 
 The `smile.llm` package provides building blocks and a complete LLaMA-3
-inference stack on top of LibTorch.
+inference stack on top of the same FFM-backed LibTorch bridge.
 
 ### Core Types
 
@@ -678,7 +707,9 @@ llama.generate(prompt, 200, 0.8, 0.95, false, 0L, publisher);
 publisher.close();
 ```
 
-> **Note:** GPU inference requires CUDA libraries on `java.library.path`.
+> **Note:** GPU inference requires the CUDA-enabled LibTorch libraries to be
+> discoverable on the platform loader path (`PATH`, `LD_LIBRARY_PATH`, or
+> `DYLD_LIBRARY_PATH`, depending on the OS).
 > On Ampere or newer hardware, the model is loaded in BFloat16; on older GPUs,
 > Float16 is used.  CPU inference runs in Float32.
 
@@ -878,17 +909,17 @@ SequentialBlock mlp = new SequentialBlock(
     Layer.relu(256, 128),
     Layer.logSoftmax(128, 10)
 );
+Model model = new Model(mlp);
 
 // 2. Optimizer + loss
-var params = mlp.asTorch().parameters();
-Optimizer optimizer = Optimizer.adam(params, 1e-3);
-Loss      criterion = Loss.nll();
+Optimizer optimizer = Optimizer.Adam(model, 1e-3);
+Loss criterion = Loss.nll();
 
 // 3. Training loop
 for (int epoch = 0; epoch < 5; epoch++) {
     for (SampleBatch batch : trainSampler) {
-        optimizer.zeroGrad();
-        Tensor logp  = mlp.forward(batch.data());
+        optimizer.reset();
+        Tensor logp  = model.forward(batch.data());
         Tensor loss  = criterion.apply(logp, batch.target());
         loss.backward();
         optimizer.step();
@@ -899,17 +930,17 @@ for (int epoch = 0; epoch < 5; epoch++) {
 ### Training a LeNet on MNIST
 
 ```java
-public class LeNet extends Model {
+LayerBlock lenetNet = new LayerBlock("LeNet") {
     private final Conv2dLayer conv1 = Layer.conv2d(1, 6, 5);
     private final Conv2dLayer conv2 = Layer.conv2d(6, 16, 5);
-    private final LinearLayer fc1  = Layer.linear(16 * 4 * 4, 120);
-    private final LinearLayer fc2  = Layer.linear(120, 84);
-    private final LinearLayer fc3  = Layer.linear(84, 10);
+    private final LinearLayer fc1 = Layer.linear(16 * 4 * 4, 120);
+    private final LinearLayer fc2 = Layer.linear(120, 84);
+    private final LinearLayer fc3 = Layer.linear(84, 10);
     private final MaxPool2dLayer pool = Layer.maxPool2d(2);
 
-    public LeNet() {
-        register("conv1", conv1); register("conv2", conv2);
-        register("fc1", fc1);   register("fc2", fc2); register("fc3", fc3);
+    {
+        add("conv1", conv1); add("conv2", conv2);
+        add("fc1", fc1); add("fc2", fc2); add("fc3", fc3);
     }
 
     @Override
@@ -923,17 +954,18 @@ public class LeNet extends Model {
         x = new ReLU(true).forward(fc2.forward(x));
         return new LogSoftmax().forward(fc3.forward(x));
     }
-}
+};
 
 // Train on MNIST dataset
-LeNet lenet = new LeNet();
+Model lenet = new Model(lenetNet);
 lenet.train(
     10,
-    mnistTrainDataset,
+    Optimizer.SGD(lenet, 0.01, 0.9, 0.0, 0.0, false),
     Loss.nll(),
-    Optimizer.sgd(lenet.asTorch().parameters(), 0.01, 0.9),
-    new Accuracy(),
-    mnistTestDataset
+    mnistTrainDataset,
+    mnistTestDataset,
+    null,
+    new Accuracy()
 );
 ```
 
@@ -948,7 +980,7 @@ lenet.train(
 # Compile tests only (fast check)
 ./gradlew :deep:compileTestJava
 
-# Run all tests (requires LibTorch native library on PATH)
+# Run all tests
 ./gradlew :deep:test
 
 # Run a specific test class
@@ -961,9 +993,10 @@ lenet.train(
 ./gradlew :deep:test --tests "smile.vision.ImageNetTest"
 ```
 
-> **Note:** Tests require the PyTorch / LibTorch native libraries to be present.
-> On CI without GPU, the tests run on CPU-only LibTorch.  Tests that require CUDA
-> can be tagged `@Tag("gpu")` and excluded with `-DexcludeTags=gpu`.
+> **Note:** The Gradle test configuration in this repository already sets the
+> required native-library search path and JVM flags for FFM. If you run deep
+> examples from your own launcher, make sure `smile_torch` and LibTorch are on
+> the OS loader path and pass `--enable-native-access=ALL-UNNAMED`.
 
 ---
 
