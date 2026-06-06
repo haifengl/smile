@@ -66,6 +66,6 @@ public abstract class AbstractLayer implements Layer {
 
     @Override
     public String toString() {
-        return moduleName();
+        return name();
     }
 }

@@ -75,7 +75,7 @@ public abstract class LayerBlock implements Layer {
 
     @Override
     public String toString() {
-        return moduleName();
+        return name();
     }
 
     /**
