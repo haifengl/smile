@@ -70,9 +70,11 @@ public class PositionalEncoding implements Layer {
              Tensor angles  = position.mul(divTerm)) {
             pe = Tensor.zeros(end, dim);
             try (Tensor sinVal = angles.sin();
-                 Tensor cosVal = angles.cos()) {
-                pe.put_(sinVal, Colon, slice(0, null, 2));
-                pe.put_(cosVal, Colon, slice(1, null, 2));
+                 Tensor cosVal = angles.cos();
+                 var even = slice(0, null, 2);
+                 var odd = slice(1, null, 2)) {
+                pe.put_(sinVal, Colon, even);
+                pe.put_(cosVal, Colon, odd);
             }
             pe.setRequireGrad(false);
             registerBuffer(pe);
@@ -88,7 +90,8 @@ public class PositionalEncoding implements Layer {
 
     @Override
     public Tensor forward(Tensor input) {
-        try (Tensor p = pe.get(slice(null, input.size(0)), Colon)) {
+        try (var rows = slice(null, input.size(0));
+             Tensor p = pe.get(rows, Colon)) {
             return input.add(p);
         }
     }
