@@ -65,8 +65,8 @@ public class PositionalEncoding implements Layer {
         MemorySegment m = this.module;
         Native.CLEANER.register(this, () -> smile_module_free(m));
 
-        try (Tensor position = Tensor.arange(0, end, 1).to(ScalarType.Float32).unsqueeze(1);
-             Tensor divTerm = Tensor.arange(0, dim, 2).to(ScalarType.Float32).mul_(-Math.log(theta) / dim).exp_();
+        try (Tensor position = Tensor.arange(0, end, 1).to(ScalarType.Float).unsqueeze(1);
+             Tensor divTerm = Tensor.arange(0, dim, 2).to(ScalarType.Float).mul_(-Math.log(theta) / dim).exp_();
              Tensor angles  = position.mul(divTerm)) {
             pe = Tensor.zeros(end, dim);
             try (Tensor sinVal = angles.sin();

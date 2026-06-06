@@ -52,8 +52,8 @@ public interface RotaryPositionalEncoding {
         xqShape[ndim] = xkShape[ndim] = 2;
 
         try (var scope = new AutoScope()) {
-            Tensor xq_ = scope.add(xq.to(ScalarType.Float32).reshape(xqShape).viewAsComplex());
-            Tensor xk_ = scope.add(xk.to(ScalarType.Float32).reshape(xkShape).viewAsComplex());
+            Tensor xq_ = scope.add(xq.to(ScalarType.Float).reshape(xqShape).viewAsComplex());
+            Tensor xk_ = scope.add(xk.to(ScalarType.Float).reshape(xkShape).viewAsComplex());
             Tensor pe = scope.add(reshapeForBroadcast(cis, xq_));
             Tensor xq_out = scope.add(xq_.mul_(pe).viewAsReal().flatten(3));
             Tensor xk_out = scope.add(xk_.mul_(pe).viewAsReal().flatten(3));
@@ -83,8 +83,8 @@ public interface RotaryPositionalEncoding {
     static Tensor computeFreqCis(int dim, int end, double theta, boolean scaling) {
         // Explicitly convert tensor to float32 as the default is bf16.
         // On the other hand, view_as_complex cannot apply on bf16.
-        try (Tensor t = Tensor.arange(0, end, 1).to(ScalarType.Float32);
-             Tensor f = Tensor.arange(0, dim, 2).to(ScalarType.Float32).mul_(-Math.log(theta) / dim).exp_()) {
+        try (Tensor t = Tensor.arange(0, end, 1).to(ScalarType.Float);
+             Tensor f = Tensor.arange(0, dim, 2).to(ScalarType.Float).mul_(-Math.log(theta) / dim).exp_()) {
             // When scaling=true, scale() modifies f in-place and returns the same
             // reference — so we must NOT assign freqs into the try-resources again
             // to avoid a double-close on f.

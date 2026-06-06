@@ -107,7 +107,7 @@ public class Llama {
 
             // half precision to lower memory usage.
             smile_torch_h.smile_set_default_dtype(
-                    (Tensor.isBF16Supported() ? ScalarType.BFloat16 : ScalarType.Float16).code());
+                    (Tensor.isBF16Supported() ? ScalarType.BFloat16 : ScalarType.Half).code());
             var time = System.currentTimeMillis() - startTime;
             logger.info("Initialized CUDA[{}]: {}.{} seconds", deviceId, time / 1000, time % 1000);
         }
@@ -215,7 +215,7 @@ public class Llama {
 
             Tensor tokenLogprobs = null;
             if (logprobs) {
-                var options = new Tensor.Options().device(model.device()).requireGradients(false).dtype(ScalarType.Float32);
+                var options = new Tensor.Options().device(model.device()).requireGradients(false).dtype(ScalarType.Float);
                 tokenLogprobs = Tensor.zeros(options, batchSize, totalLen);
             }
 

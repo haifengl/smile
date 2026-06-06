@@ -92,23 +92,37 @@ typedef struct ST_Slice_         *ST_Slice;
  * ========================================================================= */
 
 typedef enum {
-    ST_DTYPE_BYTE      =   0,   /* uint8  */
-    ST_DTYPE_CHAR      =   1,   /* int8   */
-    ST_DTYPE_SHORT     =   2,   /* int16  */
-    ST_DTYPE_INT       =   3,   /* int32  */
-    ST_DTYPE_LONG      =   4,   /* int64  */
-    ST_DTYPE_HALF      =   5,   /* float16 */
-    ST_DTYPE_FLOAT     =   6,   /* float32 */
-    ST_DTYPE_DOUBLE    =   7,   /* float64 */
-    ST_DTYPE_COMPLEX_HALF   =   8,   /* complex float16 */
-    ST_DTYPE_COMPLEX_FLOAT  =   9,   /* complex float32 */
-    ST_DTYPE_COMPLEX_DOUBLE =  10,   /* complex float64 */
-    ST_DTYPE_BOOL      =  11,
-    ST_DTYPE_QUINT8    =  12,
-    ST_DTYPE_QINT8     =  13,
-    ST_DTYPE_QINT32    =  14,
-    ST_DTYPE_BFLOAT16  =  15,
-    ST_DTYPE_UNDEFINED = 255
+    ST_DTYPE_BYTE            =   0,   /* uint8  */
+    ST_DTYPE_CHAR            =   1,   /* int8   */
+    ST_DTYPE_SHORT           =   2,   /* int16  */
+    ST_DTYPE_INT             =   3,   /* int32  */
+    ST_DTYPE_LONG            =   4,   /* int64  */
+    ST_DTYPE_HALF            =   5,   /* float16 */
+    ST_DTYPE_FLOAT           =   6,   /* float32 */
+    ST_DTYPE_DOUBLE          =   7,   /* float64 */
+    ST_DTYPE_COMPLEX_HALF    =   8,   /* complex float16 */
+    ST_DTYPE_COMPLEX_FLOAT   =   9,   /* complex float32 */
+    ST_DTYPE_COMPLEX_DOUBLE  =  10,   /* complex float64 */
+    ST_DTYPE_BOOL            =  11,
+    ST_DTYPE_QUINT8          =  12,
+    ST_DTYPE_QINT8           =  13,
+    ST_DTYPE_QINT32          =  14,
+    ST_DTYPE_BFLOAT16        =  15,
+    ST_DTYPE_QUInt4x2        =  16,
+    ST_DTYPE_QUInt2x4        =  17,
+    ST_DTYPE_Bits1x8         =  18,
+    ST_DTYPE_Bits2x4         =  19,
+    ST_DTYPE_Bits4x2         =  20,
+    ST_DTYPE_Bits8           =  21,
+    ST_DTYPE_Bits16          =  22,
+    ST_DTYPE_Float8_e5m2     =  23,
+    ST_DTYPE_Float8_e4m3fn   =  24,
+    ST_DTYPE_Float8_e5m2fnuz =  25,
+    ST_DTYPE_Float8_e4m3fnuz =  26,
+    ST_DTYPE_UInt16          =  27,
+    ST_DTYPE_UInt32          =  28,
+    ST_DTYPE_UInt64          =  29,
+    ST_DTYPE_UNDEFINED       = 255
 } ST_DType;
 
 /* =========================================================================

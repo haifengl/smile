@@ -130,8 +130,8 @@ public class RotaryPositionalEncodingTest {
     public void testGivenApplyWhenCalledThenOutputDtypeMatchesInput() {
         // Tiny test: batch=1, seqlen=2, numHeads=2, headDim=4 (must be even)
         int batchSize = 1, seqLen = 2, numHeads = 2, headDim = 4;
-        Tensor xq  = Tensor.rand(batchSize, seqLen, numHeads, headDim).to(ScalarType.Float32);
-        Tensor xk  = Tensor.rand(batchSize, seqLen, numHeads, headDim).to(ScalarType.Float32);
+        Tensor xq  = Tensor.rand(batchSize, seqLen, numHeads, headDim).to(ScalarType.Float);
+        Tensor xk  = Tensor.rand(batchSize, seqLen, numHeads, headDim).to(ScalarType.Float);
         Tensor cis = RotaryPositionalEncoding.computeFreqCis(headDim, seqLen, 10000.0, false);
 
         var out = RotaryPositionalEncoding.apply(xq, xk, cis);
@@ -180,8 +180,8 @@ public class RotaryPositionalEncodingTest {
         Tensor cis = RotaryPositionalEncoding.computeFreqCis(headDim, seqLen, 10000.0, false);
 
         var out = RotaryPositionalEncoding.apply(xq, xk, cis);
-        assertEquals(smile.deep.tensor.ScalarType.Float32, out._1().dtype());
-        assertEquals(smile.deep.tensor.ScalarType.Float32, out._2().dtype());
+        assertEquals(smile.deep.tensor.ScalarType.Float, out._1().dtype());
+        assertEquals(smile.deep.tensor.ScalarType.Float, out._2().dtype());
         assertArrayEquals(xq.shape(), out._1().shape());
         assertArrayEquals(xk.shape(), out._2().shape());
         xq.close(); xk.close(); cis.close();

@@ -518,7 +518,7 @@ public class TensorTest {
         Tensor t = Tensor.of(new float[]{-1f, 2f, -3f, 4f}, 4);
         Tensor cond = t.gt(0.0);
         // Use double scalars so the result is Float64; cast to float for comparison
-        Tensor r = Tensor.where(cond, 1.0, 0.0).to(ScalarType.Float32);
+        Tensor r = Tensor.where(cond, 1.0, 0.0).to(ScalarType.Float);
         Tensor c = r.contiguous();
         assertArrayEquals(new float[]{0f, 1f, 0f, 1f}, c.floatArray(), 1e-7f);
         t.close(); cond.close(); r.close(); c.close();
@@ -582,7 +582,7 @@ public class TensorTest {
     @Test
     public void testGivenFloat32TensorWhenQueryingDtypeThenReturnsFloat32() {
         Tensor t = Tensor.ones(3);
-        assertEquals(ScalarType.Float32, t.dtype());
+        assertEquals(ScalarType.Float, t.dtype());
         t.close();
     }
 
@@ -1094,7 +1094,7 @@ public class TensorTest {
         Tensor t = Tensor.ones(3);
         var opt = t.dtypeOptional();
         assertTrue(opt.isPresent());
-        assertEquals(ScalarType.Float32, opt.get());
+        assertEquals(ScalarType.Float, opt.get());
         t.close();
     }
 }
