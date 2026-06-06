@@ -40,7 +40,6 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @Tag("integration")
 public class EfficientNetTest {
-
     @Test
     public void testGivenEfficientNetV2SWhenForwardOnPandaAndLennaThenTop1MatchesExpected() throws IOException {
         Device device = Device.preferredDevice();
@@ -54,16 +53,21 @@ public class EfficientNetTest {
 
         try (var guard = Tensor.noGradGuard()) {
             // warm-up pass
-            var output = model.forward(panda);
+            try (var warmup = model.forward(panda)) {
+                // no-op; warm-up allocation is explicitly closed
+            }
 
             // timed pass with batch of 2
-            output = model.forward(lenna, panda);
-
-            var topk = output.topk(5);
-            topk._2().to(Device.CPU());
-            // Verify top-1 predictions
-            assertEquals(515, topk._2().getInt(0, 0), "Lenna top-1 class should be 515");
-            assertEquals(388, topk._2().getInt(1, 0), "Panda top-1 class should be 388");
+            try (var output = model.forward(lenna, panda)) {
+                var topk = output.topk(5);
+                try (var values = topk._1();
+                     var indices = topk._2();
+                     var indicesCPU = indices.to(Device.CPU())) {
+                    // Verify top-1 predictions
+                    assertEquals(515, indicesCPU.getInt(0, 0), "Lenna top-1 class should be 515");
+                    assertEquals(388, indicesCPU.getInt(1, 0), "Panda top-1 class should be 388");
+                }
+            }
         }
     }
 
