@@ -36,7 +36,7 @@ import static smile.torch.smile_torch_h.*;
  *
  * @author Haifeng Li
  */
-public class DropoutLayer extends TypedLayer {
+public class DropoutLayer extends AbstractLayer {
     /**
      * Constructor.
      * @param p the dropout probability.

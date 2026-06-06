@@ -29,7 +29,7 @@ import static smile.torch.smile_torch_h.*;
  *
  * @author Haifeng Li
  */
-public class Conv2dLayer extends TypedLayer {
+public class Conv2dLayer extends AbstractLayer {
     /**
      * Constructor.
      * @param in the number of input channels.

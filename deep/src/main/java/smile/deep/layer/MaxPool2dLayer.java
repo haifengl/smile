@@ -30,7 +30,7 @@ import static smile.torch.smile_torch_h.*;
  *
  * @author Haifeng Li
  */
-public class MaxPool2dLayer extends TypedLayer {
+public class MaxPool2dLayer extends AbstractLayer {
     /**
      * Constructor.
      * @param kernel the window/kernel size.
