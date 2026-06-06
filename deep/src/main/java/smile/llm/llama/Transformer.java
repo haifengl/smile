@@ -28,6 +28,7 @@ import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.RotaryPositionalEncoding;
+import smile.util.AutoScope;
 
 import static smile.torch.smile_torch_h.smile_module_free;
 import static smile.torch.smile_torch_h.smile_module_list_create;
@@ -109,25 +110,28 @@ public class Transformer extends LayerBlock {
     public Tensor forward(Tensor tokens, int startPos) {
         long[] shape = tokens.shape();
         int seqlen = (int) shape[1];
-        Tensor h = tokEmbeddings.forward(tokens);
-        Tensor freqs = cis.get(Index.slice(startPos, startPos+seqlen));
+        try (var scope = new AutoScope();
+             var pos = Index.slice(startPos, startPos + seqlen)) {
+            Tensor h = scope.add(tokEmbeddings.forward(tokens));
+            Tensor freqs = scope.add(cis.get(pos));
 
-        Tensor mask = null;
-        if (seqlen > 1) {
-            mask = Tensor.full(Float.NEGATIVE_INFINITY, seqlen, seqlen);
-            mask.triu_(1);
-            try (var zeros = Tensor.zeros(seqlen, startPos)) {
-                mask = Tensor.hstack(zeros, mask);
+            Tensor mask = null;
+            if (seqlen > 1) {
+                mask = scope.add(Tensor.full(Float.NEGATIVE_INFINITY, seqlen, seqlen));
+                mask.triu_(1);
+                try (var zeros = Tensor.zeros(seqlen, startPos)) {
+                    mask = scope.add(Tensor.hstack(zeros, mask));
+                }
+                mask = scope.add(mask.to(h.dtype()));
             }
-            mask = mask.to(h.dtype());
-        }
 
-        for (var layer : layers) {
-            h = layer.forward(h, startPos, freqs, mask);
-        }
+            for (var layer : layers) {
+                h = scope.add(layer.forward(h, startPos, freqs, mask));
+            }
 
-        h = norm.forward(h);
-        return output.forward(h).to(ScalarType.Float);
+            Tensor normalized = scope.add(norm.forward(h));
+            return output.forward(normalized).to(ScalarType.Float);
+        }
     }
 
     @Override

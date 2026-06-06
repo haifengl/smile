@@ -24,6 +24,7 @@ import smile.torch.Native;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.RotaryPositionalEncoding;
+import smile.util.AutoScope;
 
 import static smile.torch.Native.check;
 import static smile.torch.smile_torch_h.smile_module_create;
@@ -99,39 +100,46 @@ public class Attention {
         int batchSize = (int) shape[0];
         int seqlen = (int) shape[1];
 
-        Tensor xq = wq.forward(x);
-        Tensor xk = wk.forward(x);
-        Tensor xv = wv.forward(x);
+        try (var scope = new AutoScope()) {
+            Tensor xq = scope.add(wq.forward(x).view(batchSize, seqlen, numLocalHeads, headDim));
+            Tensor xk = scope.add(wk.forward(x).view(batchSize, seqlen, numLocalKvHeads, headDim));
+            Tensor xv = scope.add(wv.forward(x).view(batchSize, seqlen, numLocalKvHeads, headDim));
 
-        xq = xq.view(batchSize, seqlen, numLocalHeads, headDim);
-        xk = xk.view(batchSize, seqlen, numLocalKvHeads, headDim);
-        xv = xv.view(batchSize, seqlen, numLocalKvHeads, headDim);
+            var tuple = RotaryPositionalEncoding.apply(xq, xk, cis);
+            xq = scope.add(tuple._1());
+            xk = scope.add(tuple._2());
 
-        var tuple = RotaryPositionalEncoding.apply(xq, xk, cis);
-        xq = tuple._1();
-        xk = tuple._2();
+            try (var batch = Index.slice(0, batchSize);
+                 var span = Index.slice(startPos, startPos + seqlen)) {
+                cacheK.put_(xk, batch, span);
+                cacheV.put_(xv, batch, span);
+            }
 
-        cacheK.put_(xk, Index.slice(0, batchSize), Index.slice(startPos, startPos + seqlen));
-        cacheV.put_(xv, Index.slice(0, batchSize), Index.slice(startPos, startPos + seqlen));
+            Tensor keys;
+            Tensor values;
+            try (var batch = Index.slice(0, batchSize);
+                 var span = Index.slice(0, startPos + seqlen)) {
+                keys = scope.add(cacheK.get(batch, span));
+                values = scope.add(cacheV.get(batch, span));
+            }
 
-        var keys = cacheK.get(Index.slice(0, batchSize), Index.slice(0, startPos + seqlen));
-        var values = cacheV.get(Index.slice(0, batchSize), Index.slice(0, startPos + seqlen));
+            // repeat k/v heads if n_kv_heads < n_heads
+            keys = scope.add(repeatKV(keys, numRep));
+            values = scope.add(repeatKV(values, numRep));
 
-        // repeat k/v heads if n_kv_heads < n_heads
-        keys = repeatKV(keys, numRep);  // (bs, cache_len + seqlen, n_local_heads, head_dim)
-        values = repeatKV(values, numRep);  // (bs, cache_len + seqlen, n_local_heads, head_dim)
-
-        xq = xq.transpose(1, 2);  // (bs, n_local_heads, seqlen, head_dim)
-        keys = keys.transpose(1, 2);  // (bs, n_local_heads, cache_len + seqlen, head_dim)
-        values = values.transpose(1, 2);  // (bs, n_local_heads, cache_len + seqlen, head_dim)
-        var scores = xq.matmul(keys.transpose(2, 3)).div_(Math.sqrt(headDim));
-        if (mask != null) {
-            scores = scores.add_(mask);  // (bs, n_local_heads, seqlen, cache_len + seqlen)
+            xq = scope.add(xq.transpose(1, 2));  // (bs, n_local_heads, seqlen, head_dim)
+            keys = scope.add(keys.transpose(1, 2));  // (bs, n_local_heads, cache_len + seqlen, head_dim)
+            values = scope.add(values.transpose(1, 2));  // (bs, n_local_heads, cache_len + seqlen, head_dim)
+            Tensor keysT = scope.add(keys.transpose(2, 3));
+            Tensor scores = scope.add(xq.matmul(keysT).div_(Math.sqrt(headDim)));
+            if (mask != null) {
+                scores = scope.add(scores.add(mask));  // (bs, n_local_heads, seqlen, cache_len + seqlen)
+            }
+            scores = scope.add(scores.to(ScalarType.Float).softmax(-1).to(xq.dtype()));
+            Tensor output = scope.add(scores.matmul(values));  // (bs, n_local_heads, seqlen, head_dim)
+            output = scope.add(output.transpose(1, 2).contiguous().view(batchSize, seqlen, -1));
+            return wo.forward(output);
         }
-        scores = scores.to(ScalarType.Float).softmax(-1).to(xq.dtype());
-        var output = scores.matmul(values);  // (bs, n_local_heads, seqlen, head_dim)
-        output = output.transpose(1, 2).contiguous().view(batchSize, seqlen, -1);
-        return wo.forward(output);
     }
 
     /**

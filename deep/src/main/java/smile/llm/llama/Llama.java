@@ -208,8 +208,10 @@ public class Llama {
             int pad = tokenizer.pad();
             Tensor tokens = Tensor.full(pad, batchSize, totalLen);
             for (int i = 0; i < batchSize; i++) {
-                try (var prompt = Tensor.of(prompts[i])) {
-                    tokens.put_(prompt, Index.of(i), Index.slice(0, prompts[i].length));
+                try (var prompt = Tensor.of(prompts[i]);
+                     var row = Index.of(i);
+                     var span = Index.slice(0, prompts[i].length)) {
+                    tokens.put_(prompt, row, span);
                 }
             }
 
@@ -240,34 +242,54 @@ public class Llama {
             for (int curPos = minPromptLen; curPos < totalLen; curPos++) {
                 try (var loopScope = new AutoScope()) {
                     Tensor.push(loopScope);
-                    var logits = model.forward(tokens.get(Index.Colon, Index.slice(prevPos, curPos)), prevPos);
+                    Tensor logits;
+                    try (var span = Index.slice(prevPos, curPos);
+                         var window = tokens.get(Index.Colon, span)) {
+                        logits = model.forward(window, prevPos);
+                    }
+
                     Tensor nextToken;
-                    if (temperature > 0) {
-                        var probs = logits.get(Index.Colon, Index.of(-1)).div(temperature).softmax(-1);
-                        nextToken = probs.topp(topp);
-                    } else {
-                        nextToken = logits.get(Index.Colon, Index.of(-1)).argmax(-1, false);
+                    try (var last = Index.of(-1);
+                         var tail = logits.get(Index.Colon, last)) {
+                        if (temperature > 0) {
+                            try (var probs = tail.div(temperature).softmax(-1)) {
+                                nextToken = probs.topp(topp);
+                            }
+                        } else {
+                            nextToken = tail.argmax(-1, false);
+                        }
                     }
 
                     nextToken = nextToken.reshape(-1);
                     // only replace token if prompt has already been generated
-                    nextToken = Tensor.where(
-                            inputTextMask.get(Index.Colon, Index.of(curPos)),
-                            tokens.get(Index.Colon, Index.of(curPos)),
-                            nextToken);
-                    tokens.put_(nextToken, Index.Colon, Index.of(curPos));
-
-                    if (logprobs) {
-                        var entropy = Tensor.crossEntropy(
-                                logits.transpose(1, 2),
-                                tokens.get(Index.Colon, Index.slice(prevPos + 1, curPos + 1)),
-                                "none", pad).neg_();
-                        tokenLogprobs.put_(entropy, Index.Colon, Index.slice(prevPos + 1, curPos + 1));
+                    try (var cur = Index.of(curPos);
+                         var textMask = inputTextMask.get(Index.Colon, cur);
+                         var currentTokens = tokens.get(Index.Colon, cur);
+                         var merged = Tensor.where(textMask, currentTokens, nextToken)) {
+                        nextToken.close();
+                        nextToken = merged.detach();
+                        tokens.put_(nextToken, Index.Colon, cur);
                     }
 
-                    var text = inputTextMask.get(Index.Colon, Index.of(curPos)).not();
-                    var stop = nextToken.isin(stopTokens);
-                    eosReached.or_(text.and_(stop));
+                    if (logprobs) {
+                        try (var targetSpan = Index.slice(prevPos + 1, curPos + 1);
+                             var targets = tokens.get(Index.Colon, targetSpan);
+                             var transposed = logits.transpose(1, 2);
+                             var entropy = Tensor.crossEntropy(transposed, targets, "none", pad).neg_();
+                             var outSpan = Index.slice(prevPos + 1, curPos + 1)) {
+                            tokenLogprobs.put_(entropy, Index.Colon, outSpan);
+                        }
+                    }
+
+                    try (var cur = Index.of(curPos);
+                         var text = inputTextMask.get(Index.Colon, cur).not();
+                         var stop = nextToken.isin(stopTokens);
+                         var textAndStop = text.and(stop)) {
+                        eosReached.or_(textAndStop);
+                    }
+
+                    logits.close();
+                    nextToken.close();
                     prevPos = curPos;
                     // Free up memory at each iteration
                     Tensor.pop();
@@ -277,7 +299,13 @@ public class Llama {
                 if (publisher != null && (curPos - chunkPos >= 20 || curPos == totalLen-1 || eos)) {
                     int end = eos ? curPos : curPos + 1;
                     if (end > chunkPos) {
-                        var longArray = tokens.get(Index.of(0), Index.slice(chunkPos, end)).to(Device.CPU()).longArray();
+                        long[] longArray;
+                        try (var row = Index.of(0);
+                             var span = Index.slice(chunkPos, end);
+                             var chunkTokens = tokens.get(row, span);
+                             var cpuTokens = chunkTokens.to(Device.CPU())) {
+                            longArray = cpuTokens.longArray();
+                        }
                         var completion = Arrays.stream(longArray).mapToInt(x -> (int) x).toArray();
                         try {
                             var chunk = tokenizer.tryDecode(completion);

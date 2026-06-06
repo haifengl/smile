@@ -185,8 +185,9 @@ class DatasetImpl implements Dataset {
                     index = Arrays.copyOf(index, j);
                 }
 
-                var idx = Index.of(index);
-                return new SampleBatch(data.get(idx), target.get(idx));
+                try (var idx = Index.of(index)) {
+                    return new SampleBatch(data.get(idx), target.get(idx));
+                }
             }
         };
     }
