@@ -88,7 +88,9 @@ public class MBConv extends LayerBlock {
 
             if (useResidual) {
                 output = stochasticDepth.forward(output);
-                output.add_(input);
+                Tensor residual = output.add(input);
+                output.close();
+                output = residual;
             }
 
             return output;
