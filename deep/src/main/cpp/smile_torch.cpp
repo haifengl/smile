@@ -620,7 +620,7 @@ ST_Tensor smile_tensor_mul_s  (ST_Tensor t, ST_Scalar s)                       {
 ST_Tensor smile_tensor_mul_t  (ST_Tensor a, ST_Tensor b)                       { MAKE_TENSOR(a->t.mul(b->t)); }
 ST_Tensor smile_tensor_div_s  (ST_Tensor t, ST_Scalar s)                       { MAKE_TENSOR(t->t.div(s->s)); }
 ST_Tensor smile_tensor_div_t  (ST_Tensor a, ST_Tensor b)                       { MAKE_TENSOR(a->t.div(b->t)); }
-ST_Tensor smile_tensor_pow_s  (ST_Tensor t, ST_Scalar e)                       { MAKE_TENSOR(t->t.float_power(e->s)); }
+ST_Tensor smile_tensor_pow_s  (ST_Tensor t, ST_Scalar e)                       { MAKE_TENSOR(t->t.pow(e->s)); }
 
 // =============================================================================
 // Tensor — Arithmetic (in-place)
@@ -637,7 +637,7 @@ void smile_tensor_mul_s_    (ST_Tensor t, ST_Scalar s)                  { if (t&
 void smile_tensor_mul_t_    (ST_Tensor a, ST_Tensor b)                  { if (a&&b) a->t.mul_(b->t); }
 void smile_tensor_div_s_    (ST_Tensor t, ST_Scalar s)                  { if (t&&s) t->t.div_(s->s); }
 void smile_tensor_div_t_    (ST_Tensor a, ST_Tensor b)                  { if (a&&b) a->t.div_(b->t); }
-void smile_tensor_pow_s_    (ST_Tensor t, ST_Scalar e)                  { if (t&&e) t->t.float_power_(e->s); }
+void smile_tensor_pow_s_    (ST_Tensor t, ST_Scalar e)                  { if (t&&e) t->t.pow_(e->s); }
 void smile_tensor_fill_     (ST_Tensor t, ST_Scalar v)                  { if (t&&v) t->t.fill_(v->s); }
 void smile_tensor_bernoulli_ (ST_Tensor t, double p)                    { if (t) t->t.bernoulli_(p); }
 void smile_tensor_mul_scalar_(ST_Tensor t, double s)                    { if (t) t->t.mul_(at::Scalar(s)); }
