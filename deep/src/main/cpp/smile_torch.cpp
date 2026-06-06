@@ -626,21 +626,51 @@ ST_Tensor smile_tensor_pow_s  (ST_Tensor t, ST_Scalar e)                       {
 // Tensor — Arithmetic (in-place)
 // =============================================================================
 
-void smile_tensor_neg_      (ST_Tensor t)                               { if (t) t->t.neg_(); }
-void smile_tensor_add_s_    (ST_Tensor t, ST_Scalar s)                  { if (t&&s) t->t.add_(s->s); }
-void smile_tensor_add_t_    (ST_Tensor a, ST_Tensor b)                  { if (a&&b) a->t.add_(b->t); }
-void smile_tensor_add_t_s_  (ST_Tensor a, ST_Tensor b, ST_Scalar alpha) { if (a&&b&&alpha) a->t.add_(b->t, alpha->s); }
-void smile_tensor_sub_s_    (ST_Tensor t, ST_Scalar s)                  { if (t&&s) t->t.sub_(s->s); }
-void smile_tensor_sub_t_    (ST_Tensor a, ST_Tensor b)                  { if (a&&b) a->t.sub_(b->t); }
-void smile_tensor_sub_t_s_  (ST_Tensor a, ST_Tensor b, ST_Scalar alpha) { if (a&&b&&alpha) a->t.sub_(b->t, alpha->s); }
-void smile_tensor_mul_s_    (ST_Tensor t, ST_Scalar s)                  { if (t&&s) t->t.mul_(s->s); }
-void smile_tensor_mul_t_    (ST_Tensor a, ST_Tensor b)                  { if (a&&b) a->t.mul_(b->t); }
-void smile_tensor_div_s_    (ST_Tensor t, ST_Scalar s)                  { if (t&&s) t->t.div_(s->s); }
-void smile_tensor_div_t_    (ST_Tensor a, ST_Tensor b)                  { if (a&&b) a->t.div_(b->t); }
-void smile_tensor_pow_s_    (ST_Tensor t, ST_Scalar e)                  { if (t&&e) t->t.pow_(e->s); }
-void smile_tensor_fill_     (ST_Tensor t, ST_Scalar v)                  { if (t&&v) t->t.fill_(v->s); }
-void smile_tensor_bernoulli_ (ST_Tensor t, double p)                    { if (t) t->t.bernoulli_(p); }
-void smile_tensor_mul_scalar_(ST_Tensor t, double s)                    { if (t) t->t.mul_(at::Scalar(s)); }
+void smile_tensor_neg_      (ST_Tensor t) {
+    if (t) { ST_TRY_BEGIN t->t.neg_(); ST_TRY_END }
+}
+void smile_tensor_add_s_    (ST_Tensor t, ST_Scalar s) {
+    if (t&&s) { ST_TRY_BEGIN t->t.add_(s->s); ST_TRY_END }
+}
+void smile_tensor_add_t_    (ST_Tensor a, ST_Tensor b) {
+    if (a&&b) { ST_TRY_BEGIN a->t.add_(b->t); ST_TRY_END }
+}
+void smile_tensor_add_t_s_  (ST_Tensor a, ST_Tensor b, ST_Scalar alpha) {
+    if (a&&b&&alpha) { ST_TRY_BEGIN a->t.add_(b->t, alpha->s); ST_TRY_END }
+}
+void smile_tensor_sub_s_    (ST_Tensor t, ST_Scalar s) {
+    if (t&&s) { ST_TRY_BEGIN t->t.sub_(s->s); ST_TRY_END }
+}
+void smile_tensor_sub_t_    (ST_Tensor a, ST_Tensor b) {
+    if (a&&b) { ST_TRY_BEGIN a->t.sub_(b->t); ST_TRY_END }
+}
+void smile_tensor_sub_t_s_  (ST_Tensor a, ST_Tensor b, ST_Scalar alpha) {
+    if (a&&b&&alpha) { ST_TRY_BEGIN a->t.sub_(b->t, alpha->s); ST_TRY_END }
+}
+void smile_tensor_mul_s_    (ST_Tensor t, ST_Scalar s) {
+    if (t&&s) { ST_TRY_BEGIN t->t.mul_(s->s); ST_TRY_END }
+}
+void smile_tensor_mul_t_    (ST_Tensor a, ST_Tensor b) {
+    if (a&&b) { ST_TRY_BEGIN a->t.mul_(b->t); ST_TRY_END }
+}
+void smile_tensor_div_s_    (ST_Tensor t, ST_Scalar s) {
+    if (t&&s) { ST_TRY_BEGIN t->t.div_(s->s); ST_TRY_END }
+}
+void smile_tensor_div_t_    (ST_Tensor a, ST_Tensor b) {
+    if (a&&b) { ST_TRY_BEGIN a->t.div_(b->t); ST_TRY_END }
+}
+void smile_tensor_pow_s_    (ST_Tensor t, ST_Scalar e) {
+    if (t&&e) { ST_TRY_BEGIN t->t.pow_(e->s); ST_TRY_END }
+}
+void smile_tensor_fill_     (ST_Tensor t, ST_Scalar v) {
+    if (t&&v) { ST_TRY_BEGIN t->t.fill_(v->s); ST_TRY_END }
+}
+void smile_tensor_bernoulli_ (ST_Tensor t, double p) {
+    if (t) { ST_TRY_BEGIN t->t.bernoulli_(p); ST_TRY_END }
+}
+void smile_tensor_mul_scalar_(ST_Tensor t, double s) {
+    if (t) { ST_TRY_BEGIN t->t.mul_(at::Scalar(s)); ST_TRY_END }
+}
 
 // =============================================================================
 // Tensor — Element-wise math
@@ -655,14 +685,30 @@ ST_Tensor smile_tensor_sin  (ST_Tensor t) { MAKE_TENSOR(t->t.sin()); }
 ST_Tensor smile_tensor_acos (ST_Tensor t) { MAKE_TENSOR(t->t.acos()); }
 ST_Tensor smile_tensor_asin (ST_Tensor t) { MAKE_TENSOR(t->t.asin()); }
 
-void smile_tensor_abs_  (ST_Tensor t) { if (t) t->t.abs_(); }
-void smile_tensor_log_  (ST_Tensor t) { if (t) t->t.log_(); }
-void smile_tensor_exp_  (ST_Tensor t) { if (t) t->t.exp_(); }
-void smile_tensor_rsqrt_(ST_Tensor t) { if (t) t->t.rsqrt_(); }
-void smile_tensor_cos_  (ST_Tensor t) { if (t) t->t.cos_(); }
-void smile_tensor_sin_  (ST_Tensor t) { if (t) t->t.sin_(); }
-void smile_tensor_acos_ (ST_Tensor t) { if (t) t->t.acos_(); }
-void smile_tensor_asin_ (ST_Tensor t) { if (t) t->t.asin_(); }
+void smile_tensor_abs_  (ST_Tensor t) {
+    if (t) { ST_TRY_BEGIN t->t.abs_(); ST_TRY_END }
+}
+void smile_tensor_log_  (ST_Tensor t) {
+    if (t) { ST_TRY_BEGIN t->t.log_(); ST_TRY_END }
+}
+void smile_tensor_exp_  (ST_Tensor t) {
+    if (t) { ST_TRY_BEGIN t->t.exp_(); ST_TRY_END }
+}
+void smile_tensor_rsqrt_(ST_Tensor t) {
+    if (t) { ST_TRY_BEGIN t->t.rsqrt_(); ST_TRY_END }
+}
+void smile_tensor_cos_  (ST_Tensor t) {
+    if (t) { ST_TRY_BEGIN t->t.cos_(); ST_TRY_END }
+}
+void smile_tensor_sin_  (ST_Tensor t) {
+    if (t) { ST_TRY_BEGIN t->t.sin_(); ST_TRY_END }
+}
+void smile_tensor_acos_ (ST_Tensor t) {
+    if (t) { ST_TRY_BEGIN t->t.acos_(); ST_TRY_END }
+}
+void smile_tensor_asin_ (ST_Tensor t) {
+    if (t) { ST_TRY_BEGIN t->t.asin_(); ST_TRY_END }
+}
 
 static std::optional<at::Scalar> maybe_scalar(int has, ST_Scalar s) {
     if (has && s) return s->s;
