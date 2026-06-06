@@ -51,22 +51,15 @@ public class EfficientNetTest {
         var lenna = ImageIO.read(Path.of("deep/src/test/resources/data/image/Lenna.png").toFile());
         var panda = ImageIO.read(Path.of("deep/src/test/resources/data/image/panda.jpg").toFile());
 
-        try (var guard = Tensor.noGradGuard()) {
-            // warm-up pass
-            try (var warmup = model.forward(panda)) {
-                // no-op; warm-up allocation is explicitly closed
-            }
-
-            // timed pass with batch of 2
-            try (var output = model.forward(lenna, panda)) {
-                var topk = output.topk(5);
-                try (var values = topk._1();
-                     var indices = topk._2();
-                     var indicesCPU = indices.to(Device.CPU())) {
-                    // Verify top-1 predictions
-                    assertEquals(515, indicesCPU.getInt(0, 0), "Lenna top-1 class should be 515");
-                    assertEquals(388, indicesCPU.getInt(1, 0), "Panda top-1 class should be 388");
-                }
+        try (var guard = Tensor.noGradGuard();
+             var output = model.forward(lenna, panda)) {
+            var topk = output.topk(5);
+            try (var values = topk._1();
+                 var indices = topk._2();
+                 var indicesCPU = indices.to(Device.CPU())) {
+                 // Verify top-1 predictions
+                 assertEquals(515, indicesCPU.getInt(0, 0), "Lenna top-1 class should be 515");
+                 assertEquals(388, indicesCPU.getInt(1, 0), "Panda top-1 class should be 388");
             }
         }
     }
