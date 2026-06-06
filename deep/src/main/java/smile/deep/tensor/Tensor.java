@@ -175,6 +175,7 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor setRequireGrad(boolean required) {
         smile_tensor_set_requires_grad(handle, required ? 1 : 0);
+        throwIfNativeError();
         return this;
     }
 
@@ -408,6 +409,7 @@ public class Tensor implements AutoCloseable {
     /** Computes the gradients. */
     public void backward() {
         smile_tensor_backward(handle);
+        throwIfNativeError();
     }
 
     /**
@@ -419,6 +421,7 @@ public class Tensor implements AutoCloseable {
         MemorySegment s = iscalar(x);
         try {
             smile_tensor_fill_(handle, s);
+            throwIfNativeError();
             return this;
         } finally {
             smile_scalar_free(s);
@@ -434,6 +437,7 @@ public class Tensor implements AutoCloseable {
         MemorySegment s = fscalar(x);
         try {
             smile_tensor_fill_(handle, s);
+            throwIfNativeError();
             return this;
         } finally {
             smile_scalar_free(s);
@@ -447,6 +451,7 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor bernoulli_(double p) {
         smile_tensor_bernoulli_(handle, p);
+        throwIfNativeError();
         return this;
     }
 
@@ -493,6 +498,7 @@ public class Tensor implements AutoCloseable {
         MemorySegment vec = indexVec(indices);
         try {
             smile_tensor_index_put_(handle, vec, source.handle);
+            throwIfNativeError();
             return this;
         } finally {
             smile_tensor_index_vec_free(vec);
@@ -511,6 +517,7 @@ public class Tensor implements AutoCloseable {
         try {
             smile_tensor_index_vec_push(vec, idx);
             smile_tensor_index_put_(handle, vec, source.handle);
+            throwIfNativeError();
             return this;
         } finally {
             smile_tensor_index_vec_free(vec);
@@ -655,6 +662,7 @@ public class Tensor implements AutoCloseable {
         MemorySegment vec = indexVec(indices);
         try {
             smile_tensor_index_put_scalar_(handle, vec, scalar);
+            throwIfNativeError();
             return this;
         } finally {
             smile_tensor_index_vec_free(vec);
@@ -1061,6 +1069,7 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor triu_(long diagonal) {
         smile_tensor_triu_(handle, diagonal);
+        throwIfNativeError();
         return this;
     }
 
@@ -1572,6 +1581,7 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor rsqrt_() {
         smile_tensor_rsqrt_(handle);
+        throwIfNativeError();
         return this;
     }
 
@@ -1605,6 +1615,7 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor abs_() {
         smile_tensor_abs_(handle);
+        throwIfNativeError();
         return this;
     }
 
@@ -1622,6 +1633,7 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor log_() {
         smile_tensor_log_(handle);
+        throwIfNativeError();
         return this;
     }
 
@@ -1653,6 +1665,7 @@ public class Tensor implements AutoCloseable {
         MemorySegment hi = fscalar(max);
         try {
             smile_tensor_clamp_(handle, 1, lo, 1, hi);
+            throwIfNativeError();
             return this;
         } finally {
             smile_scalar_free(lo);
@@ -1674,6 +1687,7 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor exp_() {
         smile_tensor_exp_(handle);
+        throwIfNativeError();
         return this;
     }
 
@@ -1722,6 +1736,7 @@ public class Tensor implements AutoCloseable {
         try (Arena arena = Arena.ofConfined()) {
             MemorySegment r = arena.allocateFrom(reduce);
             smile_tensor_scatter_reduce_(handle, dim, index.handle, source.handle, r);
+            throwIfNativeError();
             return this;
         }
     }
@@ -1784,6 +1799,7 @@ public class Tensor implements AutoCloseable {
     private Tensor addScalarInplace(MemorySegment s) {
         try {
             smile_tensor_add_s_(handle, s);
+            throwIfNativeError();
             return this;
         } finally {
             smile_scalar_free(s);
@@ -1806,6 +1822,7 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor add_(Tensor other) {
         smile_tensor_add_t_(handle, other.handle);
+        throwIfNativeError();
         return this;
     }
 
@@ -1834,6 +1851,7 @@ public class Tensor implements AutoCloseable {
         MemorySegment s = fscalar(alpha);
         try {
             smile_tensor_add_t_s_(handle, other.handle, s);
+            throwIfNativeError();
             return this;
         } finally {
             smile_scalar_free(s);
@@ -1887,6 +1905,7 @@ public class Tensor implements AutoCloseable {
     private Tensor subScalarInplace(MemorySegment s) {
         try {
             smile_tensor_sub_s_(handle, s);
+            throwIfNativeError();
             return this;
         } finally {
             smile_scalar_free(s);
@@ -1909,6 +1928,7 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor sub_(Tensor other) {
         smile_tensor_sub_t_(handle, other.handle);
+        throwIfNativeError();
         return this;
     }
 
@@ -1937,6 +1957,7 @@ public class Tensor implements AutoCloseable {
         MemorySegment s = fscalar(alpha);
         try {
             smile_tensor_sub_t_s_(handle, other.handle, s);
+            throwIfNativeError();
             return this;
         } finally {
             smile_scalar_free(s);
@@ -1990,6 +2011,7 @@ public class Tensor implements AutoCloseable {
     private Tensor mulScalarInplace(MemorySegment s) {
         try {
             smile_tensor_mul_s_(handle, s);
+            throwIfNativeError();
             return this;
         } finally {
             smile_scalar_free(s);
@@ -2012,6 +2034,7 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor mul_(Tensor other) {
         smile_tensor_mul_t_(handle, other.handle);
+        throwIfNativeError();
         return this;
     }
 
@@ -2062,6 +2085,7 @@ public class Tensor implements AutoCloseable {
     private Tensor divScalarInplace(MemorySegment s) {
         try {
             smile_tensor_div_s_(handle, s);
+            throwIfNativeError();
             return this;
         } finally {
             smile_scalar_free(s);
@@ -2084,6 +2108,7 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor div_(Tensor other) {
         smile_tensor_div_t_(handle, other.handle);
+        throwIfNativeError();
         return this;
     }
 
@@ -2110,6 +2135,7 @@ public class Tensor implements AutoCloseable {
         MemorySegment s = fscalar(exponent);
         try {
             smile_tensor_pow_s_(handle, s);
+            throwIfNativeError();
             return this;
         } finally {
             smile_scalar_free(s);
@@ -2130,6 +2156,7 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor cos_() {
         smile_tensor_cos_(handle);
+        throwIfNativeError();
         return this;
     }
 
@@ -2147,6 +2174,7 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor sin_() {
         smile_tensor_sin_(handle);
+        throwIfNativeError();
         return this;
     }
 
@@ -2164,6 +2192,7 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor acos_() {
         smile_tensor_acos_(handle);
+        throwIfNativeError();
         return this;
     }
 
@@ -2181,6 +2210,7 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor asin_() {
         smile_tensor_asin_(handle);
+        throwIfNativeError();
         return this;
     }
 
@@ -2221,6 +2251,7 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor not_() {
         smile_tensor_logical_not_(handle);
+        throwIfNativeError();
         return this;
     }
 
@@ -2240,6 +2271,7 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor and_(Tensor other) {
         smile_tensor_logical_and_(handle, other.handle);
+        throwIfNativeError();
         return this;
     }
 
@@ -2259,6 +2291,7 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor or_(Tensor other) {
         smile_tensor_logical_or_(handle, other.handle);
+        throwIfNativeError();
         return this;
     }
 
@@ -2291,7 +2324,16 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor dropout_(double p) {
         smile_tensor_free(check(smile_torch_dropout(handle, p, 1)));
+        throwIfNativeError();
         return this;
+    }
+
+    /** Throws when the native bridge recorded an error for the current thread. */
+    private static void throwIfNativeError() {
+        String err = Native.lastError();
+        if (!err.isEmpty()) {
+            throw new RuntimeException(err);
+        }
     }
 
     /**
