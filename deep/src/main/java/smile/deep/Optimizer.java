@@ -78,7 +78,7 @@ public class Optimizer {
      * @return the optimizer.
      */
     public static Optimizer SGD(Model model, double rate, double momentum, double decay, double dampening, boolean nesterov) {
-        MemorySegment params = check(smile_module_parameters(model.asModule()));
+        MemorySegment params = check(smile_module_parameters(model.module()));
         try {
             return new Optimizer(smile_sgd_create(params, rate, momentum, decay, dampening, nesterov ? 1 : 0));
         } finally {
@@ -108,7 +108,7 @@ public class Optimizer {
      * @return the optimizer.
      */
     public static Optimizer Adam(Model model, double rate, double beta1, double beta2, double eps, double decay, boolean amsgrad) {
-        MemorySegment params = check(smile_module_parameters(model.asModule()));
+        MemorySegment params = check(smile_module_parameters(model.module()));
         try {
             return new Optimizer(smile_adam_create(params, rate, beta1, beta2, eps, decay, amsgrad ? 1 : 0));
         } finally {
@@ -138,7 +138,7 @@ public class Optimizer {
      * @return the optimizer.
      */
     public static Optimizer AdamW(Model model, double rate, double beta1, double beta2, double eps, double decay, boolean amsgrad) {
-        MemorySegment params = check(smile_module_parameters(model.asModule()));
+        MemorySegment params = check(smile_module_parameters(model.module()));
         try {
             return new Optimizer(smile_adamw_create(params, rate, beta1, beta2, eps, decay, amsgrad ? 1 : 0));
         } finally {
@@ -168,7 +168,7 @@ public class Optimizer {
      * @return the optimizer.
      */
     public static Optimizer RMSprop(Model model, double rate, double alpha, double eps, double decay, double momentum, boolean centered) {
-        MemorySegment params = check(smile_module_parameters(model.asModule()));
+        MemorySegment params = check(smile_module_parameters(model.module()));
         try {
             return new Optimizer(smile_rmsprop_create(params, rate, alpha, eps, decay, momentum, centered ? 1 : 0));
         } finally {

@@ -72,8 +72,16 @@ public class Model implements Function<Tensor, Tensor> {
      * Returns the native {@code ST_Module} handle of the network.
      * @return the native {@code ST_Module} handle.
      */
-    public MemorySegment asModule() {
+    public MemorySegment module() {
         return net.module();
+    }
+
+    /**
+     * Returns true if the layer block is in training mode.
+     * @return true if the layer block is in training mode.
+     */
+    public boolean isTraining() {
+        return net.isTraining();
     }
 
     /**
