@@ -50,10 +50,10 @@ public interface Layer extends Function<Tensor, Tensor> {
     MemorySegment module();
 
     /**
-     * Returns the module name.
-     * @return the module name.
+     * Returns the layer/module name.
+     * @return the layer/module name.
      */
-    default String moduleName() {
+    default String name() {
         MemorySegment name = smile_torch_h.smile_module_name(module());
         if (name == null || name.address() == 0) {
             return getClass().getSimpleName();
