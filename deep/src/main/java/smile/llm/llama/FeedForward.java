@@ -63,9 +63,9 @@ public class FeedForward {
 
         try (Arena arena = Arena.ofConfined()) {
             this.module = check(smile_module_create(MemorySegment.NULL));
-            smile_module_register_module(module, arena.allocateFrom("w1"), w1.asModule());
-            smile_module_register_module(module, arena.allocateFrom("w2"), w2.asModule());
-            smile_module_register_module(module, arena.allocateFrom("w3"), w3.asModule());
+            smile_module_register_module(module, arena.allocateFrom("w1"), w1.module());
+            smile_module_register_module(module, arena.allocateFrom("w2"), w2.module());
+            smile_module_register_module(module, arena.allocateFrom("w3"), w3.module());
         }
         MemorySegment m = this.module;
         Native.CLEANER.register(this, () -> smile_module_free(m));

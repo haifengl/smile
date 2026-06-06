@@ -72,7 +72,7 @@ public abstract class ActivationFunction implements Layer, Serializable {
     }
 
     @Override
-    public MemorySegment asModule() {
+    public MemorySegment module() {
         return module;
     }
 }

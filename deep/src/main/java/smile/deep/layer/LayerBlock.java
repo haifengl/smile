@@ -69,7 +69,7 @@ public abstract class LayerBlock implements Layer {
     }
 
     @Override
-    public MemorySegment asModule() {
+    public MemorySegment module() {
         return module;
     }
 
@@ -85,7 +85,7 @@ public abstract class LayerBlock implements Layer {
      * @return this object.
      */
     public LayerBlock add(String name, Layer layer) {
-        return add(name, layer.asModule());
+        return add(name, layer.module());
     }
 
     /**

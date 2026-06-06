@@ -62,7 +62,7 @@ public class StochasticDepth implements Layer {
     }
 
     @Override
-    public MemorySegment asModule() {
+    public MemorySegment module() {
         return module;
     }
 

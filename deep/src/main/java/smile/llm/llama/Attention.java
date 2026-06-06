@@ -78,10 +78,10 @@ public class Attention {
 
         try (Arena arena = Arena.ofConfined()) {
             this.module = check(smile_module_create(MemorySegment.NULL));
-            smile_module_register_module(module, arena.allocateFrom("wq"), wq.asModule());
-            smile_module_register_module(module, arena.allocateFrom("wk"), wk.asModule());
-            smile_module_register_module(module, arena.allocateFrom("wv"), wv.asModule());
-            smile_module_register_module(module, arena.allocateFrom("wo"), wo.asModule());
+            smile_module_register_module(module, arena.allocateFrom("wq"), wq.module());
+            smile_module_register_module(module, arena.allocateFrom("wk"), wk.module());
+            smile_module_register_module(module, arena.allocateFrom("wv"), wv.module());
+            smile_module_register_module(module, arena.allocateFrom("wo"), wo.module());
         }
         MemorySegment m = this.module;
         Native.CLEANER.register(this, () -> smile_module_free(m));

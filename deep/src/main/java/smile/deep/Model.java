@@ -73,7 +73,7 @@ public class Model implements Function<Tensor, Tensor> {
      * @return the native {@code ST_Module} handle.
      */
     public MemorySegment asModule() {
-        return net.asModule();
+        return net.module();
     }
 
     /**
