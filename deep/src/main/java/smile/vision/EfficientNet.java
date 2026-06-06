@@ -121,14 +121,11 @@ public class EfficientNet extends LayerBlock {
 
     @Override
     public Tensor forward(Tensor input) {
-        Tensor t1 = features.forward(input);
-        Tensor t2 = avgpool.forward(t1);
-        t1.close();
-        Tensor t3 = t2.flatten(1);
-        Tensor output = classifier.forward(t3);
-        t2.close();
-        t3.close();
-        return output;
+        try (Tensor t1 = features.forward(input);
+             Tensor t2 = avgpool.forward(t1);
+             Tensor t3 = t2.flatten(1)) {
+            return classifier.forward(t3);
+        }
     }
 
     /**

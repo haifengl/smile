@@ -167,7 +167,9 @@ public class Model implements Function<Tensor, Tensor> {
      */
     public Tensor forward(Tensor input) {
         if (device != null && !device.equals(input.device())) {
-            input = input.to(device);
+            try (Tensor moved = input.to(device)) {
+                return net.forward(moved);
+            }
         }
         return net.forward(input);
     }

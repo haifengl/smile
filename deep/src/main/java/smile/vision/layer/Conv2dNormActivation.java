@@ -140,18 +140,17 @@ public class Conv2dNormActivation extends SequentialBlock {
 
     @Override
     public Tensor forward(Tensor input) {
-        Tensor t1 = conv.forward(input);
-        Tensor t2 = norm.forward(t1);
-        t1.close();
-
-        Tensor output = t2;
-        if (activation != null) {
-            output = activation.forward(t2);
-            if (!activation.isInplace()) {
-                t2.close();
+        try (Tensor t1 = conv.forward(input);
+             Tensor t2 = norm.forward(t1)) {
+            if (activation == null) {
+                return t2.detach();
             }
-        }
 
-        return output;
+            Tensor output = activation.forward(t2);
+            if (activation.isInplace()) {
+                return t2.detach();
+            }
+            return output;
+        }
     }
 }

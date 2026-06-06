@@ -143,12 +143,10 @@ public class ImageDataset implements Dataset {
         } catch (Exception ex) {
             logger.error("Failed to load the first batch", ex);
             loader.done.set(true);
-            if (!loader.queue.offer(loader.end)) {
-                drainQueue(loader);
-                boolean enqueued = loader.queue.offer(loader.end);
-                if (!enqueued) {
-                    logger.debug("Failed to enqueue end marker after draining queue");
-                }
+            try {
+                loader.queue.put(loader.end);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
             }
         }
 
@@ -171,12 +169,10 @@ public class ImageDataset implements Dataset {
                       }
                   } finally {
                       loader.done.set(true);
-                      if (!loader.queue.offer(loader.end)) {
-                          drainQueue(loader);
-                          boolean enqueued = loader.queue.offer(loader.end);
-                          if (!enqueued) {
-                              logger.debug("Failed to enqueue end marker after draining queue");
-                          }
+                      try {
+                          loader.queue.put(loader.end);
+                      } catch (InterruptedException ex) {
+                          Thread.currentThread().interrupt();
                       }
                   }
               });
@@ -248,6 +244,10 @@ public class ImageDataset implements Dataset {
     private static void shutdown(LoaderState loader) {
         loader.cancel();
         loader.done.set(true);
+        boolean enqueued = loader.queue.offer(loader.end);
+        if (!enqueued) {
+            logger.debug("End marker queue is full during shutdown");
+        }
         drainQueue(loader);
     }
 
@@ -264,8 +264,18 @@ public class ImageDataset implements Dataset {
         for (int i = 0; i < n; i++) {
             var sample = samples.get(index[i]);
             images[i] = ImageIO.read(sample.file);
+            if (images[i] == null) {
+                throw new IOException("Unsupported or unreadable image: " + sample.file);
+            }
             target[i] = targetTransform.applyAsInt(sample.label);
         }
-        return new SampleBatch(transform.forward(images), Tensor.of(target, images.length));
+        Tensor data = transform.forward(images);
+        try {
+            Tensor labels = Tensor.of(target, images.length);
+            return new SampleBatch(data, labels);
+        } catch (RuntimeException ex) {
+            data.close();
+            throw ex;
+        }
     }
 }
