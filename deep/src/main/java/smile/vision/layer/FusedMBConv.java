@@ -79,9 +79,7 @@ public class FusedMBConv extends LayerBlock {
 
             if (useResidual) {
                 output = stochasticDepth.forward(output);
-                Tensor residual = output.add(input);
-                output.close();
-                output = residual;
+                output.add_(input);
             }
 
             return output;
