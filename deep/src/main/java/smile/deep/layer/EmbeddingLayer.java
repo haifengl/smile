@@ -32,7 +32,7 @@ import static smile.torch.smile_torch_h.*;
  *
  * @author Haifeng Li
  */
-public class EmbeddingLayer extends TypedLayer {
+public class EmbeddingLayer extends AbstractLayer {
     /** The optional scaling factor. */
     private final double alpha;
 

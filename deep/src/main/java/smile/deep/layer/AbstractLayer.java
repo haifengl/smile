@@ -31,7 +31,7 @@ import smile.torch.Native;
  *
  * @author Haifeng Li
  */
-abstract class TypedLayer implements Layer {
+public abstract class AbstractLayer implements Layer {
     /**
      * Bundles the two native handles for a layer with the action that frees
      * them. Built by each subclass's static factory before calling {@code super}.
@@ -53,7 +53,7 @@ abstract class TypedLayer implements Layer {
      * Constructor.
      * @param handles the native handles and their cleanup action.
      */
-    TypedLayer(Handles handles) {
+    AbstractLayer(Handles handles) {
         this.handle = handles.handle();
         this.module = handles.module();
         this.cleanable = Native.CLEANER.register(this, handles.cleanup());
