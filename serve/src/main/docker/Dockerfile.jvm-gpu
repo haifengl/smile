@@ -7,11 +7,11 @@
 #
 # Then, build the image with:
 #
-# docker build -f src/main/docker/Dockerfile.jvm -t quarkus/smile-serve-jvm .
+# docker build -f src/main/docker/Dockerfile.jvm-gpu -t quarkus/smile-serve-gpu .
 #
 # Then run the container using:
 #
-# docker run -i --rm -p 8080:8080 quarkus/smile-serve-jvm
+# docker run -i --rm -p 8080:8080 quarkus/smile-serve-gpu
 #
 # If you want to include the debug port into your docker image
 # you will have to expose the debug port (default 5005 being the default) like this :  EXPOSE 8080 5005.
@@ -114,8 +114,9 @@ ENV LD_LIBRARY_PATH="/usr/local/onnxruntime/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_
 
 # Install LibTorch
 ARG TORCH_VERSION=2.12.0
+ARG CUDA_VERSION=130
 RUN curl -fsSL --retry 5 --retry-delay 10 -o libtorch.zip \
-    "https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-${TORCH_VERSION}%2Bcpu.zip"
+    "https://download.pytorch.org/libtorch/cu${CUDA_VERSION}/libtorch-shared-with-deps-${TORCH_VERSION}%2Bcu${CUDA_VERSION}.zip"
 RUN unzip -q -o libtorch.zip -d /usr/local
 RUN rm -f libtorch.zip
 ENV LD_LIBRARY_PATH="/usr/local/libtorch/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"

@@ -1,4 +1,4 @@
-name: Publish smile-serve container image
+name: Publish smile-serve container images
 
 on:
   workflow_dispatch:
@@ -7,18 +7,28 @@ on:
         description: 'Custom version number (e.g., 6.0.1)'
         required: true
         type: string
-        default: '6.0.1'
+        default: '6.2.0'
   release:
     types: [published]
 
 env:
   REGISTRY: ghcr.io
   NAMESPACE: haifengl
-  IMAGE_NAME: smile-serve
 
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - image_name: smile-serve
+            tag_suffix: ""
+            dockerfile: ./serve/src/main/docker/Dockerfile.jvm
+            context: ./serve
+          - image_name: smile-serve
+            tag_suffix: "-gpu"
+            dockerfile: ./serve/src/main/docker/Dockerfile.jvm-gpu
+            context: ./serve
 
     permissions:
       contents: read
@@ -62,22 +72,22 @@ jobs:
         id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ matrix.image_name }}
           tags: |
             # Apply semantic versioning tags (e.g., 1.2.3, 1.2, 1)
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=raw,value=${{ github.event.inputs.version }}
+            type=semver,pattern={{version}},suffix=${{ matrix.tag_suffix }}
+            type=semver,pattern={{major}}.{{minor}},suffix=${{ matrix.tag_suffix }}
+            type=semver,pattern={{major}},suffix=${{ matrix.tag_suffix }}
+            type=raw,value=${{ github.event.inputs.version }}${{ matrix.tag_suffix }}
             # Apply the 'latest' tag only on the default branch push
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest${{ matrix.tag_suffix }},enable={{is_default_branch}}
 
       - name: Build and push Docker image
         id: push
         uses: docker/build-push-action@v7
         with:
-          context: ./serve
-          file: ./serve/src/main/docker/Dockerfile.jvm
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -85,6 +95,6 @@ jobs:
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v4
         with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ env.IMAGE_NAME}}
+          subject-name: ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ matrix.image_name }}
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
