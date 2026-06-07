@@ -310,7 +310,7 @@ int   smile_device_is_cpu (ST_Device d) { return d && d->d.is_cpu()  ? 1 : 0; }
 int   smile_device_is_cuda(ST_Device d) { return d && d->d.is_cuda() ? 1 : 0; }
 int   smile_device_is_mps (ST_Device d) { return d && d->d.is_mps()  ? 1 : 0; }
 int8_t smile_device_index (ST_Device d) {
-    return d ? static_cast<int8_t>(d->d.index()) : -1;
+    return d ? static_cast<int8_t>(d->d.index()) : 0;
 }
 
 int smile_device_str(ST_Device d, char *buf, int buf_len) {
