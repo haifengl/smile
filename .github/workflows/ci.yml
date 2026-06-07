@@ -59,11 +59,9 @@ jobs:
           LIBTORCH_URL="https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-TORCH_VERSION%2Bcpu.zip"
           LIBTORCH_URL="${LIBTORCH_URL/TORCH_VERSION/${{ env.TORCH_VERSION }}}"
           echo "Downloading: ${LIBTORCH_URL}"
-          curl -fsSL --retry 5 --retry-delay 10 -o "libtorch.zip" "${LIBTORCH_URL}"
-          unzip -q -o "libtorch.zip" -d "deep"
+          curl -fsSL --retry 5 --retry-delay 10 -o libtorch.zip "${LIBTORCH_URL}"
+          unzip -q -o libtorch.zip -d deep
           ln -sfr "${{ github.workspace }}/deep/libtorch/lib" studio/src/universal/libtorch
-          ls -l studio/src/universal/
-          ls -l studio/src/universal/libtorch/
 
       - name: Set up Java 25
         uses: actions/setup-java@v5
