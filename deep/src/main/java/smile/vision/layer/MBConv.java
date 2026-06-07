@@ -83,15 +83,18 @@ public class MBConv extends LayerBlock {
 
     @Override
     public Tensor forward(Tensor input) {
-        try (input) {
-            Tensor output = block.forward(input);
+        Tensor output = block.forward(input);
 
-            if (useResidual) {
-                output = stochasticDepth.forward(output);
-                output.add_(input);
+        if (useResidual) {
+            Tensor blockOut = output;
+            output = stochasticDepth.forward(blockOut);
+            if (output != blockOut) {
+                // stochasticDepth produced a new tensor; release the intermediate one.
+                blockOut.close();
             }
-
-            return output;
+            output.add_(input);
         }
+
+        return output;
     }
 }
