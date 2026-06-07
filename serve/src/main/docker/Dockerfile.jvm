@@ -112,6 +112,14 @@ RUN curl -L https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VE
 # Add CAPI to LD_LIBRARY_PATH
 ENV LD_LIBRARY_PATH="/usr/local/onnxruntime/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 
+# Install LibTorch
+ARG TORCH_VERSION=2.12.0
+RUN curl -fsSL --retry 5 --retry-delay 10 -o libtorch.zip \
+    "https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-${TORCH_VERSION}%2Bcpu.zip"
+RUN unzip -q -o libtorch.zip -d /usr/local
+RUN rm libtorch.zip
+ENV LD_LIBRARY_PATH="/usr/local/libtorch/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+
 # We make four distinct layers so if there are application changes the library layers can be re-used
 COPY --chown=185 build/quarkus-app/lib/ /deployments/lib/
 COPY --chown=185 build/quarkus-app/*.jar /deployments/
