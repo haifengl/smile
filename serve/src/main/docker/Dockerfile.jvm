@@ -85,8 +85,8 @@ ENV LANGUAGE='en_US:en'
 USER root
 # Install OpenBLAS for native BLAS support
 RUN microdnf install -y openblas && microdnf clean all
-# Install gzip and tar to extract ONNX library from the tarball
-RUN microdnf install -y gzip tar && microdnf clean all
+# Install gzip and tar to extract LibTorch/ONNX library from the tarball
+RUN microdnf install -y unzip gzip tar && microdnf clean all
 
 # As epel-release package is not available on this image and microdnf cannot install remote package,
 # we have to use curl and rpm to install it mannually.
@@ -117,7 +117,7 @@ ARG TORCH_VERSION=2.12.0
 RUN curl -fsSL --retry 5 --retry-delay 10 -o libtorch.zip \
     "https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-${TORCH_VERSION}%2Bcpu.zip"
 RUN unzip -q -o libtorch.zip -d /usr/local
-RUN rm libtorch.zip
+RUN rm -f libtorch.zip
 ENV LD_LIBRARY_PATH="/usr/local/libtorch/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 
 # We make four distinct layers so if there are application changes the library layers can be re-used
