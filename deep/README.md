@@ -930,7 +930,7 @@ for (int epoch = 0; epoch < 5; epoch++) {
 ### Training a LeNet on MNIST
 
 ```java
-LayerBlock lenetNet = new LayerBlock("LeNet") {
+LayerBlock net = new LayerBlock("LeNet") {
     private final Conv2dLayer conv1 = Layer.conv2d(1, 6, 5);
     private final Conv2dLayer conv2 = Layer.conv2d(6, 16, 5);
     private final LinearLayer fc1 = Layer.linear(16 * 4 * 4, 120);
@@ -957,7 +957,7 @@ LayerBlock lenetNet = new LayerBlock("LeNet") {
 };
 
 // Train on MNIST dataset
-Model lenet = new Model(lenetNet);
+Model lenet = new Model(net);
 lenet.train(
     10,
     Optimizer.SGD(lenet, 0.01, 0.9, 0.0, 0.0, false),

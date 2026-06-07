@@ -268,8 +268,7 @@ cp /opt/homebrew/lib/libarpack.dylib .
 Add that directory to `PATH`.
 
 **GPU (CUDA)** — make sure the LibTorch CUDA native libraries are on
-`java.library.path` and that your Bytedeco `pytorch` classifier matches
-your CUDA version (e.g., `linux-x86_64-gpu-cuda12.4`).
+PATH (Windows) or LD_LIBRARY_PATH (Linux).
 
 ---
 
