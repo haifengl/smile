@@ -286,12 +286,12 @@ public class VisionLayerTest {
         // 8 channels in, squeeze to 2
         SqueezeExcitation se = new SqueezeExcitation(8, 2);
         Tensor input = Tensor.rand(2, 8, 4, 4);
-        Tensor output = se.forward(input);
-        assertEquals(2, output.size(0));
-        assertEquals(8, output.size(1));
-        assertEquals(4, output.size(2));
-        assertEquals(4, output.size(3));
-        output.close();
+        try (input; Tensor output = se.forward(input)) {
+            assertEquals(2, output.size(0));
+            assertEquals(8, output.size(1));
+            assertEquals(4, output.size(2));
+            assertEquals(4, output.size(3));
+        }
     }
 
     // -----------------------------------------------------------------------
@@ -305,10 +305,10 @@ public class VisionLayerTest {
         MBConv block = new MBConv(cfg, 0.0, BatchNorm2dLayer::new);
         block.train();
         Tensor input = Tensor.rand(2, 16, 8, 8);
-        Tensor output = block.forward(input);
-        assertEquals(2,  output.size(0));
-        assertEquals(16, output.size(1));
-        output.close();
+        try (input; Tensor output = block.forward(input)) {
+            assertEquals(2,  output.size(0));
+            assertEquals(16, output.size(1));
+        }
     }
 
     @Test
@@ -318,12 +318,12 @@ public class VisionLayerTest {
         MBConv block = new MBConv(cfg, 0.0, BatchNorm2dLayer::new);
         block.train();
         Tensor input = Tensor.rand(2, 16, 8, 8);
-        Tensor output = block.forward(input);
-        assertEquals(2,  output.size(0));
-        assertEquals(32, output.size(1));
-        assertEquals(4,  output.size(2)); // H/2
-        assertEquals(4,  output.size(3)); // W/2
-        output.close();
+        try (input; Tensor output = block.forward(input)) {
+            assertEquals(2,  output.size(0));
+            assertEquals(32, output.size(1));
+            assertEquals(4,  output.size(2)); // H/2
+            assertEquals(4,  output.size(3)); // W/2
+        }
     }
 
     @Test
@@ -345,10 +345,10 @@ public class VisionLayerTest {
         FusedMBConv block = new FusedMBConv(cfg, 0.0, BatchNorm2dLayer::new);
         block.train();
         Tensor input = Tensor.rand(2, 24, 8, 8);
-        Tensor output = block.forward(input);
-        assertEquals(2,  output.size(0));
-        assertEquals(24, output.size(1));
-        output.close();
+        try (input; Tensor output = block.forward(input)) {
+            assertEquals(2,  output.size(0));
+            assertEquals(24, output.size(1));
+        }
     }
 
     @Test
@@ -358,10 +358,10 @@ public class VisionLayerTest {
         FusedMBConv block = new FusedMBConv(cfg, 0.0, BatchNorm2dLayer::new);
         block.train();
         Tensor input = Tensor.rand(2, 24, 8, 8);
-        Tensor output = block.forward(input);
-        assertEquals(2,  output.size(0));
-        assertEquals(48, output.size(1));
-        output.close();
+        try (input; Tensor output = block.forward(input)) {
+            assertEquals(2,  output.size(0));
+            assertEquals(48, output.size(1));
+        }
     }
 }
 
