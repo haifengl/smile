@@ -54,7 +54,7 @@ bashScriptConfigLocation := Some("${app_home}/../conf/smile.ini")
 batScriptConfigLocation := Some("%APP_HOME%\\conf\\smile.ini")
 
 bashScriptExtraDefines ++= Seq(
-  """export SMILE_HOME="${app_home}/.."""",
+  """export SMILE_HOME=$(dirname "${app_home}")""",
   """addJava "-XX:MaxMetaspaceSize=1024M"""",
   """addJava "-Xss4M"""",
   """addJava "--add-opens=java.base/java.nio=ALL-UNNAMED"""",
@@ -77,6 +77,10 @@ bashScriptExtraDefines ++= Seq(
     |  else
     |    ln -sf /usr/local/lib/libarpack.dylib libarpack.dylib
     |  fi
+    |  ln -sf "${SMILE_HOME}/bin/libsmile_torch.dylib" libsmile_torch.dylib
+    |  for file in ${SMILE_HOME}/libtorch/*.dylib; do
+    |    ln -sf "$file" .
+    |  done
     |fi""".stripMargin,
   """source "$SMILE_HOME/venv/bin/activate""""
 )
