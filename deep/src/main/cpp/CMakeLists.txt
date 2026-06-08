@@ -54,6 +54,9 @@ if(NOT LIBTORCH_ROOT)
         CACHE PATH "Root directory of the libtorch installation")
 endif()
 
+set(CMAKE_MACOSX_RPATH ON)
+set(CMAKE_INSTALL_RPATH "@loader_path/;@loader_path/../libtorch")
+
 # Resolve relative paths so find_package can locate TorchConfig.cmake.
 get_filename_component(LIBTORCH_ROOT "${LIBTORCH_ROOT}" ABSOLUTE)
 message(STATUS "LIBTORCH_ROOT = ${LIBTORCH_ROOT}")
