@@ -64,24 +64,6 @@ bashScriptExtraDefines ++= Seq(
   """addJava "-Dscala.repl.autoruncode=${app_home}/predef.sc"""",
   """export PYTHONPATH="${PYTHONPATH}:${app_home}/../lib/ioa-agent-1.0.0.jar"""",
   """export PYTHONUTF8=1""",
-  """
-    |if [[ "$OSTYPE" == "darwin"* ]]; then
-    |  echo "Creating library symlinks in working directory to work around SIP"
-    |  ONNX_CAPI_DIR=`find $SMILE_HOME -type d -name "capi" -path "*/onnxruntime/capi" 2>/dev/null | head -n 1`
-    |  ONNX_LIB="${ONNX_CAPI_DIR}/libonnxruntime.dylib"
-    |  if [ -e "$ONNX_LIB" ]; then
-    |    ln -sf ${ONNX_LIB} libonnxruntime.dylib
-    |  fi
-    |  if [[ $(uname -m) == 'arm64' ]]; then
-    |    ln -sf /opt/homebrew/lib/libarpack.dylib libarpack.dylib
-    |  else
-    |    ln -sf /usr/local/lib/libarpack.dylib libarpack.dylib
-    |  fi
-    |  ln -sf "${SMILE_HOME}/bin/libsmile_torch.dylib" libsmile_torch.dylib
-    |  for file in ${SMILE_HOME}/libtorch/*.dylib; do
-    |    ln -sf "$file" .
-    |  done
-    |fi""".stripMargin,
   """source "$SMILE_HOME/venv/bin/activate""""
 )
 

@@ -137,3 +137,19 @@ import smile.nlp.*;
 import smile.wavelet.*;
 
 // In the below, add anything you want to execute at the start of the Shell session.
+if (smile.util.OS.isMacOS()) {
+    var home = System.getProperty("smile.home");
+    System.load(home + "/libtorch/libtorch.dylib");
+    System.load(home + "/bin/libsmile_torch.dylib");
+
+    if (Files.exists(Path.of("/opt/homebrew/lib/libarpack.dylib"))) {
+        System.load("/opt/homebrew/lib/libarpack.dylib");
+    } else if (Files.exists(Path.of("/usr/local/lib/libarpack.dylib"))) {
+        System.load("/usr/local/lib/libarpack.dylib");
+    }
+
+    Files.find(Path.of(home, "venv", "lib"), 10,
+        (p, a) -> p.getFileName().toString().equals("libonnxruntime.dylib"))
+        .findFirst()
+        .ifPresent(p -> System.load(p.toAbsolutePath().toString()));
+}
