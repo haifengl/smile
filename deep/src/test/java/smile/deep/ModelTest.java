@@ -19,12 +19,12 @@ package smile.deep;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import smile.deep.layer.Layer;
 import smile.deep.layer.SequentialBlock;
 import smile.deep.metric.Accuracy;
 import smile.deep.metric.Averaging;
 import smile.deep.metric.Precision;
 import smile.deep.metric.Recall;
-import smile.deep.layer.Layer;
 import smile.deep.tensor.*;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -86,9 +86,9 @@ public class ModelTest {
                 System.out.format("Testing %s = %.2f%%\n", entry.getKey(), 100 * entry.getValue());
             }
             accuracy = metrics.get("Accuracy");
-            assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Precision"), 0.001);
-            assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Recall"), 0.001);
-            assertEquals(metrics.get("Accuracy"), metrics.get("Weighted-Recall"), 0.001);
+            assertEquals(accuracy, metrics.get("Micro-Precision"), 0.001);
+            assertEquals(accuracy, metrics.get("Micro-Recall"), 0.001);
+            assertEquals(accuracy, metrics.get("Weighted-Recall"), 0.001);
         }
 
         // Serialize the model as a checkpoint.
