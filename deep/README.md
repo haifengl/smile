@@ -1,10 +1,10 @@
 # SMILE — Deep Learning
 
-The `smile-deep` module wraps the **PyTorch / LibTorch C++ runtime** via a
-small native `smile_torch` library and Java 25's **Foreign Function and Memory
-API (FFM)**. The low-level Java bindings in `smile.torch` are generated with
-`jextract`, and the higher-level `smile.deep` API keeps Java applications on
-the JVM while still reaching CPU, CUDA, and MPS backends.
+The `smile-deep` module provides idiomatic Java API for deep learning
+on the JVM while still reaching CPU, CUDA, and MPS backends by wrapping
+the PyTorch / LibTorch C++ runtime. It also provides tiktoken BPE tokenizer,
+LLaMA-3 inference, EfficientNet-V2, and an image classification pipeline
+out of the box.
 
 ---
 
@@ -100,7 +100,7 @@ smile.deep
 └── CUDA.java      GPU info helpers
 
 smile.torch
-├── smile_torch_h.java  jextract-generated FFM downcalls for the C ABI
+├── smile_torch_h.java  FFM downcalls for the C ABI
 └── Native.java         Cleaner/error-handling helpers over raw FFM bindings
 
 smile.llm
