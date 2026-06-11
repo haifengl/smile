@@ -31,12 +31,13 @@ public enum ScalarType {
      * this type.
      */
     UInt8(0),
+    /** 8-bit signed integer. */
     Int8(1),
-    /** 16-bit integer. */
+    /** 16-bit signed integer. */
     Int16(2),
-    /** 32-bit integer. */
+    /** 32-bit signed integer. */
     Int32(3),
-    /** 64-bit integer. */
+    /** 64-bit signed integer. */
     Int64(4),
     /**
      * Half-precision floating-point number. It contains 5 exponent bits and 11
@@ -47,9 +48,13 @@ public enum ScalarType {
     Float(6),
     /** Double-precision floating-point number. */
     Double(7),
+    /** Half-precision floating-point complex number. */
     ComplexHalf(8),
+    /** Single-precision floating-point complex number. */
     ComplexFloat(9),
+    /** Double-precision floating-point complex number. */
     ComplexDouble(10),
+    /** Boolean data type. */
     Bool(11),
     /**
      * 8-bit quantized unsigned tensor type which represents a compressed
@@ -73,7 +78,60 @@ public enum ScalarType {
      * floating-point numbers by retaining 8 exponent bits, but supports only an
      * 8-bit precision rather than the 24-bit significand of the single precision.
      */
-    BFloat16(15);
+    BFloat16(15),
+    /** 4-bit unsigned quantized integer, packed into standard 8-bit bytes. */
+    QUInt4x2(16),
+    /** 2-bit unsigned quantized integer, packed into standard 8-bit bytes. */
+    QUInt2x4(17),
+    /** Uninterpreted 1-bit values, packed into standard 8-bit bytes. */
+    Bits1x8(18),
+    /** Uninterpreted 2-bit values, packed into standard 8-bit bytes. */
+    Bits2x4(19),
+    /** Uninterpreted 4-bit values, packed into standard 8-bit bytes. */
+    Bits4x2(20),
+    /** Uninterpreted 8-bit values. */
+    Bits8(21),
+    /** Uninterpreted 16-bit values. */
+    Bits16(22),
+    /** 8-bit floating point, S-E-M 1-5-2. */
+    Float8e5m2(23),
+    /**
+     * 8-bit floating point, S-E-M 1-4-3.
+     * <p>
+     * F (Finite): The format only supports finite numbers and does not support positive or negative infinity (Inf).
+     * If a mathematical operation overflows, it results in a NaN rather than infinity.
+     * <p>
+     * N (NaN): It has a special encoding for NaN (Not a Number).
+     */
+    Float8e4m3fn(24),
+    /**
+     * 8-bit floating point, S-E-M 1-5-2.
+     * <p>
+     * F (Finite): The format only supports finite numbers and does not support positive or negative infinity (Inf).
+     * If a mathematical operation overflows, it results in a NaN rather than infinity.
+     * <p>
+     * N (NaN): It has a special encoding for NaN (Not a Number).
+     * <p>
+     * UZ (Unsigned Zero): It only supports an unsigned zero.
+     */
+    Float8e5m2fnuz(25),
+    /**
+     * 8-bit floating point, S-E-M 1-4-3.
+     * <p>
+     * F (Finite): The format only supports finite numbers and does not support positive or negative infinity (Inf).
+     * If a mathematical operation overflows, it results in a NaN rather than infinity.
+     * <p>
+     * N (NaN): It has a special encoding for NaN (Not a Number).
+     * <p>
+     * UZ (Unsigned Zero): It only supports an unsigned zero.
+     */
+    Float8e4m3fnuz(26),
+    /** 16-bit unsigned integer. */
+    UInt16(27),
+    /** 32-bit unsigned integer. */
+    UInt32(28),
+    /** 64-bit unsigned integer. */
+    UInt64(29);
 
     /** The native {@code ST_DType} code. */
     final int code;
