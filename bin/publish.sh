@@ -65,7 +65,7 @@ while true; do
             # sbt ++2.13.18 spark/publishSigned
             # check_error "sbt spark/publish"
             break;;
-        [Nn]* ) break;;
+        [Nn]* ) exit 0;;
         * ) echo "Please answer yes or no.";;
     esac
 done
@@ -77,21 +77,21 @@ while true; do
             sbt sonaRelease
             check_error "sbt sonaRelease"
             break;;
-        [Nn]* ) break;;
+        [Nn]* ) exit 0;;
         * ) echo "Please answer yes or no.";;
     esac
 done
 
-while true; do
-    read -p "Do you want to publish smile-clojure? (yes/no): " ans
-    case $ans in
-        [Yy]* )
-            cd ../clojure
-            ./lein deploy clojars
-            check_error "lein deploy clojars"
-            cd ..
-            break;;
-        [Nn]* ) break;;
-        * ) echo "Please answer yes or no.";;
-    esac
-done
+#while true; do
+#    read -p "Do you want to publish smile-clojure? (yes/no): " ans
+#    case $ans in
+#        [Yy]* )
+#            cd ../clojure
+#            ./lein deploy clojars
+#            check_error "lein deploy clojars"
+#            cd ..
+#            break;;
+#        [Nn]* ) break;;
+#        * ) echo "Please answer yes or no.";;
+#    esac
+#done
