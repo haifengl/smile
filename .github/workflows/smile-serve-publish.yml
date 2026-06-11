@@ -55,6 +55,11 @@ jobs:
         with:
           node-version: 24
 
+      - name: Debug Frontend Installation
+        run: |
+          cd serve/src/main/webui
+          npm ci
+
       - name: Build app
         run: ./gradlew :serve:build -x test
         env:
