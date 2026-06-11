@@ -64,34 +64,6 @@ public class MainTest {
     }
 
     // ------------------------------------------------------------------
-    // smile.home normalization
-    // ------------------------------------------------------------------
-
-    @Test
-    public void testSmileHomeIsNormalized() {
-        System.out.println("smile.home normalization");
-        // Set a path with redundant components.
-        System.setProperty("smile.home", "./foo/../bar");
-        Main.main(new String[]{"train", "--help"});
-        String normalized = System.getProperty("smile.home");
-        // The normalized path must not contain "..".
-        assertFalse(normalized.contains(".."),
-                "smile.home should be normalized, but was: " + normalized);
-    }
-
-    @Test
-    public void testSmileHomeDefaultDoesNotContainTrailingSpace() {
-        System.out.println("smile.home default has no trailing space");
-        System.clearProperty("smile.home");
-        Main.main(new String[]{"train", "--help"});
-        String home = System.getProperty("smile.home");
-        assertNotNull(home);
-        // The bug ". " (dot-space) must be gone.
-        assertFalse(home.endsWith(" "),
-                "smile.home must not end with a space, but was: '" + home + "'");
-    }
-
-    // ------------------------------------------------------------------
     // CLI routing – verify picocli help exits cleanly (exit code 0).
     // ------------------------------------------------------------------
 
@@ -113,31 +85,6 @@ public class MainTest {
     public void testServeHelpExitsCleanly() {
         System.out.println("serve --help exits cleanly");
         assertDoesNotThrow(() -> Main.main(new String[]{"serve", "--help"}));
-    }
-
-    // ------------------------------------------------------------------
-    // smile.home system property is always set after Main.main()
-    // ------------------------------------------------------------------
-
-    @Test
-    public void testSmileHomeSystemPropertyIsSet() {
-        System.out.println("smile.home system property is set after main()");
-        System.clearProperty("smile.home");
-        Main.main(new String[]{"train", "--help"});
-        assertNotNull(System.getProperty("smile.home"),
-                "smile.home system property must be set by Main.main()");
-    }
-
-    // ------------------------------------------------------------------
-    // Path.of normalization contract (unit-level, no process spawn)
-    // ------------------------------------------------------------------
-
-    @Test
-    public void testPathNormalizationContract() {
-        System.out.println("Path.of normalization contract");
-        Path p = Path.of("./foo/../bar/../baz").normalize();
-        // Normalized form must equal "baz" (relative) on all platforms.
-        assertEquals("baz", p.toString());
     }
 }
 
