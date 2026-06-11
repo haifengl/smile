@@ -1,4 +1,4 @@
-name: Publish smile-serve container images
+name: Publish smile-serve Container Images
 
 on:
   workflow_dispatch:
@@ -55,10 +55,10 @@ jobs:
         with:
           node-version: 24
 
-      - name: Debug Frontend Installation
+      - name: Run npm install for Quinoa
         run: |
           cd serve/src/main/webui
-          npm ci
+          npm install
 
       - name: Build app
         run: ./gradlew :serve:build -x test
