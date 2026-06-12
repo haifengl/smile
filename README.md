@@ -259,8 +259,8 @@ sudo apt install libopenblas-dev libarpack2-dev
 **macOS (Homebrew)**
 ```shell
 brew install arpack
-# If macOS SIP strips DYLD_LIBRARY_PATH, copy the dylib to your working dir:
-cp /opt/homebrew/lib/libarpack.dylib .
+# If macOS SIP strips DYLD_LIBRARY_PATH, create a symlink to the dylib in your working dir:
+ln -s /opt/homebrew/lib/libarpack.dylib .
 ```
 
 **Windows** — pre-built DLLs are included in the `bin/` directory of the
@@ -304,7 +304,6 @@ Download a pre-packaged release from the
 [releases page](https://github.com/haifengl/smile/releases), then:
 
 ```shell
-cd bin
 path/to/smile/bin/setup      # install required native dependencies
 path/to/smile/bin/smile      # launch SMILE Studio from your project directory
 ```
