@@ -81,6 +81,9 @@ public final class Notepad extends JFrame implements SearchListener, DocumentLis
         editor.setFont(Monospaced.getFont());
         editor.setCodeFoldingEnabled(true);
         editor.setMarkOccurrences(true);
+        Monospaced.addListener((e) -> {
+            SwingUtilities.invokeLater(() -> editor.setFont((Font) e.getNewValue()));
+        });
 
         if (dict != null) {
             editor.addParser(dict);
