@@ -14,4 +14,7 @@
   :jvm-opts ["-XX:MaxRAMPercentage=75.0"
              "-XX:+UseStringDeduplication"
              "-XX:+UseG1GC"]
+  ;; Tests load datasets from the repo's shared test resources via the
+  ;; "smile.home" property (lein runs with the clojure/ directory as CWD).
+  :profiles {:test {:jvm-opts ["-Dsmile.home=../base/src/test/resources"]}}
   :repl-options {:init-ns smile.ai})
