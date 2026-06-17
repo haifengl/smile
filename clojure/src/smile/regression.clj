@@ -19,7 +19,12 @@
   (:import [smile.regression OLS RidgeRegression LASSO MLP RBFNetwork SVM
                              RegressionTree RandomForest GradientTreeBoost
                              GaussianProcessRegression]
-           [smile.model.cart Loss]))
+           [smile.regression OLS$Options OLS$Method LASSO$Options
+                             SVM$Options RegressionTree$Options
+                             RandomForest$Options GradientTreeBoost$Options
+                             GaussianProcessRegression$Options]
+           [smile.model.cart Loss]
+           [smile.util.function TimeFunction]))
 
 (defn lm
   "Fitting linear models (ordinary least squares).
@@ -73,7 +78,9 @@
   `method` is the fitting method ('qr' or 'svd').
   `recursive` is the flag if the return model supports recursive least squares."
   ([formula data] (lm formula data "qr" true true))
-  ([formula data method, stderr recursive] (OLS/fit formula data method stderr recursive)))
+  ([formula data method, stderr recursive]
+   (OLS/fit formula data
+     (OLS$Options. (OLS$Method/valueOf (.toUpperCase ^String method)) stderr recursive))))
 
 (defn ridge
   "Ridge Regression.
@@ -138,7 +145,8 @@
   `tol` is the tolerance for stopping iterations (relative target duality gap).
   `max-iter` is the maximum number of iterations."
   ([formula data lambda] (lasso formula data lambda 0.001 5000))
-  ([formula data lambda tol max-iter] (LASSO/fit formula data lambda tol max-iter)))
+  ([formula data lambda tol max-iter]
+   (LASSO/fit formula data (LASSO$Options. (double lambda) (double tol) (int max-iter)))))
 
 (defn mlp
   "Multilayer perceptron neural network.
@@ -232,11 +240,11 @@
   ([x y builders] (mlp x y builders 10 0.1 0.0 0.0))
   ([x y builders epochs eta alpha lambda]
    (let [net (MLP. builders)]
-     ((.setLearningRate net eta)
-      (.setMomentum net alpha)
-      (.setWeightDecay net lambda)
-      (dotimes [i epochs] (.update net x, y))
-      net))))
+     (.setLearningRate net (TimeFunction/constant eta))
+     (.setMomentum net (TimeFunction/constant alpha))
+     (.setWeightDecay net lambda)
+     (dotimes [_ epochs] (.update net x y))
+     net)))
 
 (defn rbfnet
   "Radial basis function networks.
@@ -312,7 +320,7 @@
   `C` is the soft margin penalty parameter.
   `tol` is the tolerance of convergence test."
   ([x y kernel eps C] (svm x y kernel eps C 1E-3))
-  ([x y kernel eps C tol] (SVM/fit x y kernel eps C tol)))
+  ([x y kernel eps C tol] (SVM/fit x y kernel (SVM$Options. (double eps) (double C) (double tol)))))
 
 (defn cart
   "Regression tree.
@@ -385,7 +393,8 @@
   `node-size` is the minimum size of leaf nodes."
   ([formula data] (cart formula data 20 0 5))
   ([formula data max-depth max-nodes node-size]
-   (RegressionTree/fit formula data max-depth max-nodes node-size)))
+   (RegressionTree/fit formula data
+     (RegressionTree$Options. (int max-depth) (int max-nodes) (int node-size)))))
 
 (defn random-forest
   "Random forest.
@@ -438,7 +447,9 @@
   with replacement. < 1.0 means sampling without replacement."
   ([formula data] (random-forest formula data 500 0 20 500 5 1.0))
   ([formula data ntrees mtry max-depth max-nodes node-size subsample]
-   (RandomForest/fit formula data ntrees mtry max-depth max-nodes node-size subsample)))
+   (RandomForest/fit formula data
+     (RandomForest$Options. (int ntrees) (int mtry) (int max-depth) (int max-nodes)
+                            (int node-size) (double subsample) nil nil))))
 
 (defn gbm 
   "Gradient boosted classification trees.
@@ -513,7 +524,9 @@
   `subsample` is the sampling fraction for stochastic tree boosting."
   ([formula data] (gbm formula data (Loss/lad) 500 20 6 5 0.05 0.7))
   ([formula data loss ntrees max-depth max-nodes node-size shrinkage subsample]
-   (GradientTreeBoost/fit formula data loss ntrees max-depth max-nodes node-size shrinkage subsample)))
+   (GradientTreeBoost/fit formula data
+     (GradientTreeBoost$Options. loss (int ntrees) (int max-depth) (int max-nodes)
+                                 (int node-size) (double shrinkage) (double subsample) nil nil))))
 
 (defn gpr
   "Gaussian process.
@@ -560,8 +573,10 @@
   `normalize` is the option to normalize the response variable.
   `tol` is the stopping tolerance for HPO.
   `max-iter` is the maximum number of iterations for HPO. No HPO if maxIter <= 0."
-  ([x y kernel noise] (GaussianProcessRegression/fit x y kernel noise))
-  ([x y kernel noise normalize tol max-iter] (GaussianProcessRegression/fit x y kernel noise normalize tol max-iter)))
+  ([x y kernel noise] (GaussianProcessRegression/fit x y kernel (GaussianProcessRegression$Options. (double noise))))
+  ([x y kernel noise normalize tol max-iter]
+   (GaussianProcessRegression/fit x y kernel
+     (GaussianProcessRegression$Options. (double noise) (boolean normalize) (double tol) (int max-iter)))))
 
 (defn gpr-approx
   "Approximate Gaussian process with a subset of regressors.
@@ -573,8 +588,9 @@
   `kernel` is the Mercer kernel.
   `noise` is the noise variance, which also works as a regularization parameter.
   `normalize` is the option to normalize the response variable."
-  ([x y t kernel noise] (GaussianProcessRegression/fit x y t kernel noise))
-  ([x y t kernel noise normalize] (GaussianProcessRegression/fit x y t kernel noise normalize)))
+  ([x y t kernel noise] (GaussianProcessRegression/fit x y t kernel (GaussianProcessRegression$Options. (double noise))))
+  ([x y t kernel noise normalize]
+   (GaussianProcessRegression/fit x y t kernel (GaussianProcessRegression$Options. (double noise) (boolean normalize)))))
 
 (defn gpr-nystrom
   "Approximate Gaussian process with Nystrom approximation of kernel matrix.
@@ -586,6 +602,7 @@
   `kernel` is the Mercer kernel.
   `noise` is the noise variance, which also works as a regularization parameter.
   `normalize` is the option to normalize the response variable."
-  ([x y t kernel noise] (GaussianProcessRegression/nystrom x y t kernel noise))
-  ([x y t kernel noise normalize] (GaussianProcessRegression/nystrom x y t kernel noise normalize)))
+  ([x y t kernel noise] (GaussianProcessRegression/nystrom x y t kernel (GaussianProcessRegression$Options. (double noise))))
+  ([x y t kernel noise normalize]
+   (GaussianProcessRegression/nystrom x y t kernel (GaussianProcessRegression$Options. (double noise) (boolean normalize)))))
 

@@ -20,7 +20,12 @@
                                  MLP RBFNetwork SVM DecisionTree
                                  RandomForest GradientTreeBoost
                                  AdaBoost FLD LDA QDA RDA]
-           [smile.model.cart SplitRule]))
+           [smile.classification LogisticRegression$Options
+                                 Maxent$Options SVM$Options
+                                 DecisionTree$Options RandomForest$Options
+                                 GradientTreeBoost$Options AdaBoost$Options]
+           [smile.model.cart SplitRule]
+           [smile.util.function TimeFunction]))
 
 (defn knn
   "K-nearest neighbor classifier.
@@ -86,7 +91,8 @@
   `tol` is the tolerance for stopping iterations.
   `max-iter` is the maximum number of iterations."
   ([x y] (logit x y 0.0 1E-5 500))
-  ([x y lambda tol max-iter] (LogisticRegression/fit x y lambda tol max-iter)))
+  ([x y lambda tol max-iter]
+   (LogisticRegression/fit x y (LogisticRegression$Options. (double lambda) (double tol) (int max-iter)))))
 
 (defn maxent
   "Maximum Entropy classifier.
@@ -116,7 +122,8 @@
   `tol` is the tolerance for stopping iterations.
   `max-iter` is the maximum number of iterations."
   ([p x y] (maxent p x y 0.1 1E-5 500))
-  ([p x y lambda tol max-iter] (Maxent/fit p x y lambda tol max-iter)))
+  ([p x y lambda tol max-iter]
+   (Maxent/fit p x y (Maxent$Options. (double lambda) (double tol) (int max-iter)))))
 
 (defn mlp
   "Multilayer perceptron neural network.
@@ -210,11 +217,11 @@
   ([x y builders] (mlp x y builders 10 0.1 0.0 0.0))
   ([x y builders epochs eta alpha lambda]
    (let [net (MLP. builders)]
-     ((.setLearningRate net eta)
-      (.setMomentum net alpha)
-      (.setWeightDecay net lambda)
-      (dotimes [i epochs] (.update net x, y))
-      net))))
+     (.setLearningRate net (TimeFunction/constant eta))
+     (.setMomentum net (TimeFunction/constant alpha))
+     (.setWeightDecay net lambda)
+     (dotimes [_ epochs] (.update net x y))
+     net)))
 
 (defn rbfnet
   "Radial basis function networks.
@@ -326,7 +333,7 @@
   `C` is the regularization parameter.
   `tol` is the tolerance of convergence test."
   ([x y kernel C] (svm x y kernel C 1E-3))
-  ([x y kernel C tol] (SVM/fit x y kernel C tol)))
+  ([x y kernel C tol] (SVM/fit x y kernel (SVM$Options. (double C) (double tol) (int 1)))))
 
 (defn cart
   "Decision tree.
@@ -400,7 +407,8 @@
   `split-rule` is the splitting rule."
   ([formula data] (cart formula data SplitRule/GINI 20 0 5))
   ([formula data split-rule max-depth max-nodes node-size]
-   (DecisionTree/fit formula data split-rule max-depth max-nodes node-size)))
+   (DecisionTree/fit formula data
+     (DecisionTree$Options. split-rule (int max-depth) (int max-nodes) (int node-size)))))
 
 (defn random-forest
   "Random forest.
@@ -454,7 +462,9 @@
   `split-rule` is Decision tree node split rule."
   ([formula data] (random-forest formula data 500 0 SplitRule/GINI 20 500 5 1.0))
   ([formula data ntrees mtry split-rule max-depth max-nodes node-size subsample]
-   (RandomForest/fit formula data ntrees mtry split-rule max-depth max-nodes node-size subsample)))
+   (RandomForest/fit formula data
+     (RandomForest$Options. (int ntrees) (int mtry) split-rule (int max-depth)
+                            (int max-nodes) (int node-size) (double subsample) nil nil nil))))
 
 (defn gbm 
   "Gradient boosted classification trees.
@@ -528,7 +538,9 @@
   `subsample` is the sampling fraction for stochastic tree boosting."
   ([formula data] (gbm formula data 500 20 6 5 0.05 0.7))
   ([formula data ntrees max-depth max-nodes node-size shrinkage subsample]
-   (GradientTreeBoost/fit formula data ntrees max-depth max-nodes node-size shrinkage subsample)))
+   (GradientTreeBoost/fit formula data
+     (GradientTreeBoost$Options. (int ntrees) (int max-depth) (int max-nodes) (int node-size)
+                                 (double shrinkage) (double subsample) nil nil))))
 
 (defn adaboost
   "Adaptive boosting.
@@ -563,7 +575,8 @@
   `node-size` is the minimum size of leaf nodes."
   ([formula data] (adaboost formula data 500 20 6 1))
   ([formula data ntrees max-depth max-nodes node-size]
-   (AdaBoost/fit formula data ntrees max-depth max-nodes node-size)))
+   (AdaBoost/fit formula data
+     (AdaBoost$Options. (int ntrees) (int max-depth) (int max-nodes) (int node-size) nil nil))))
 
 (defn fld
   "Fisher's linear discriminant.

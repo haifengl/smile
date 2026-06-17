@@ -16,9 +16,12 @@
 (ns smile.clustering
   "Clustering Analysis"
   {:author "Haifeng Li"}
-  (:import [smile.clustering HierarchicalClustering PartitionClustering
-                             KMeans XMeans GMeans SIB DeterministicAnnealing
-                             CLARANS DBSCAN DENCLUE MEC SpectralClustering]
+  (:import [smile.clustering Clustering HierarchicalClustering
+                             KMeans KMedoids XMeans GMeans SIB DeterministicAnnealing
+                             DBSCAN DENCLUE MEC SpectralClustering]
+           [smile.clustering Clustering$Options
+                             DeterministicAnnealing$Options
+                             SpectralClustering$Options]
            [smile.clustering.linkage SingleLinkage CompleteLinkage
                                      UPGMALinkage UPGMCLinkage
                                      WPGMALinkage WPGMCLinkage WardLinkage]
@@ -100,9 +103,9 @@
   `runs` is the number of runs of K-Means algorithm."
   ([data k] (kmeans data k 100 1E-4 10))
   ([data k max-iter tol runs]
-   (PartitionClustering/run runs
+   (Clustering/run runs
      (reify java.util.function.Supplier
-       (get [this] (KMeans/fit data k max-iter tol))))))
+       (get [this] (KMeans/fit data (Clustering$Options. (int k) (int max-iter) (double tol) nil)))))))
 
 (defn xmeans
   "X-Means clustering.
@@ -116,8 +119,10 @@
   Criterion (BIC).
 
   `data` is the data set.
-  `k` is the maximum number of clusters."
-  [data k] (XMeans/fit data k))
+  `k` is the maximum number of clusters.
+  `max-iter` is the maximum number of iterations."
+  ([data k] (XMeans/fit data k 100))
+  ([data k max-iter] (XMeans/fit data k max-iter)))
 
 (defn gmeans
   "G-Means clustering.
@@ -130,8 +135,10 @@
   the hypothesis that the data assigned to each k-means center are Gaussian.
 
   `data` is the data set.
-  `k` is the maximum number of clusters."
-  [data k] (GMeans/fit data k))
+  `k` is the maximum number of clusters.
+  `max-iter` is the maximum number of iterations."
+  ([data k] (GMeans/fit data k 100))
+  ([data k max-iter] (GMeans/fit data k max-iter)))
 
 (defn sib
   "Sequential Information Bottleneck algorithm.
@@ -166,7 +173,7 @@
   `runs` is the number of runs of SIB algorithm."
   ([data k] (sib data k 100 8))
   ([data k max-iter runs]
-   (PartitionClustering/run runs
+   (Clustering/run runs
      (reify java.util.function.Supplier
        (get [this] (SIB/fit data k max-iter))))))
 
@@ -192,41 +199,32 @@
   `split-tol` is the tolerance to split a cluster."
   ([data k] (dac data k 0.9 100 1E-4 0.01))
   ([data k alpha max-iter tol split-tol]
-   (DeterministicAnnealing/fit data k alpha max-iter tol split-tol)))
+   (DeterministicAnnealing/fit data
+     (DeterministicAnnealing$Options. (int k) (double alpha) (int max-iter)
+                                      (double tol) (double split-tol) nil))))
 
-(defn clarans
-  "Clustering Large Applications based upon RANdomized Search.
+(defn kmedoids
+  "K-Medoids clustering.
 
-  CLARANS is an efficient medoid-based clustering algorithm. The k-medoids
-  algorithm is an adaptation of the k-means algorithm. Rather than calculate
-  the mean of the items in each cluster, a representative item, or medoid, is
-  chosen for each cluster at each iteration. In CLARANS, the process of
-  finding k medoids from n objects is viewed abstractly as searching through
-  a certain graph. In the graph, a node is represented by a set of k objects
-  as selected medoids. Two nodes are neighbors if their sets differ by only
-  one object. In each iteration, CLARANS considers a set of randomly chosen
-  neighbor nodes as candidate of new medoids. We will move to the neighbor
-  node if the neighbor is a better choice for medoids. Otherwise, a local
-  optima is discovered. The entire process is repeated multiple time to find
-  better.
+  The k-medoids algorithm is an adaptation of the k-means algorithm. Rather
+  than calculate the mean of the items in each cluster, a representative item,
+  or medoid, is chosen for each cluster at each iteration. The k-medoids
+  algorithm is more robust to noise and outliers than k-means because it
+  minimizes a sum of pairwise dissimilarities instead of a sum of squared
+  Euclidean distances.
 
-  CLARANS has two parameters: the maximum number of neighbors examined
-  (maxNeighbor) and the number of local minima obtained (numLocal). The
-  higher the value of maxNeighbor, the closer is CLARANS to PAM, and the
-  longer is each search of a local minima. But the quality of such a local
-  minima is higher and fewer local minima needs to be obtained.
+  This method runs the algorithm for given times and returns the best one with
+  the smallest distortion.
 
   `data` is the data set.
   `distance` is the distance/dissimilarity measure.
   `k` is the number of clusters.
-  `max-neighbor` is the maximum number of neighbors examined during a random
-  search of local minima.
-  `num-local` is the number of local minima to search for."
-  ([data distance k max-neighbor] (clarans data distance k max-neighbor 16))
-  ([data distance k max-neighbor num-local]
-   (PartitionClustering/run num-local
+  `runs` is the number of runs of the algorithm."
+  ([data distance k] (KMedoids/fit data distance k))
+  ([data distance k runs]
+   (Clustering/run runs
      (reify java.util.function.Supplier
-       (get [this] (CLARANS/fit data distance k max-neighbor))))))
+       (get [this] (KMedoids/fit data distance k))))))
 
 (defn dbscan
   "Density-Based Spatial Clustering of Applications with Noise.
@@ -367,6 +365,8 @@
   is a somewhat sensitive parameter. To search for the best setting,
   one may pick the value that gives the tightest clusters (smallest
   distortion, see { @link #distortion()}) in feature space."
-  ([data k sigma] (SpectralClustering/fit data k sigma))
-  ([data k l sigma] (SpectralClustering/fit data k l sigma)))
+  ([data k sigma] (specc data k 0 sigma))
+  ([data k l sigma]
+   (SpectralClustering/fit data
+     (SpectralClustering$Options. (int k) (int l) (double sigma) (int 100) (double 1E-4) nil))))
 

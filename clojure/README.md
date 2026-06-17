@@ -13,7 +13,7 @@ for programming guides and more information.
 
 For Clojure API, add the following dependency to your project or build file:
 ```
-    [org.clojars.haifengl/smile "4.2.0"]
+    [org.clojars.haifengl/smile "6.2.0"]
 ```
 
 Some algorithms rely on BLAS and LAPACK (e.g. manifold learning,
