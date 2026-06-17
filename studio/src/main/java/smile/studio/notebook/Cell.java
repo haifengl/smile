@@ -173,7 +173,7 @@ public class Cell extends JPanel {
         InputMap inputMap = editor.getInputMap(JComponent.WHEN_FOCUSED);
         ActionMap actionMap = editor.getActionMap();
 
-        if (coder != null && coder.llm() != null) {
+        if (coder != null && coder.llm().isPresent()) {
             inputMap.put(KeyStroke.getKeyStroke("TAB"), "complete-code");
             actionMap.put("complete-code", new AbstractAction() {
                 @Override
