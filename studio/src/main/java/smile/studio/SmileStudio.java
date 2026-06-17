@@ -52,6 +52,7 @@ import smile.swing.Button;
 import smile.studio.notebook.Cell;
 import smile.studio.notebook.Notebook;
 import smile.util.OS;
+import smile.util.Strings;
 import smile.util.lsp.LanguageService;
 import static smile.swing.SmileUtilities.scaleImageIcon;
 
@@ -277,7 +278,7 @@ public class SmileStudio extends JFrame implements SearchListener {
                 case "Azure OpenAI" -> OpenAI.azure(
                         prefs.get("azureOpenAIApiKey", ""),
                         prefs.get("azureOpenAIBaseUrl", ""),
-                        prefs.get("azureOpenAIModel", "gpt-5.3-codex"));
+                        prefs.get("azureOpenAIModel", "gpt-5.5"));
 
                 // Don't call withApiKey or withBaseUrl for Anthropic and Gemini client.
                 // As they read from system properties directly, calling withApiKey will
@@ -305,7 +306,10 @@ public class SmileStudio extends JFrame implements SearchListener {
                     }
                     var apiKey = prefs.get("chatCompletionsApiKey", "");
                     if (apiKey.isBlank()) {
-                        throw new RuntimeException("missing API Key");
+                        apiKey = System.getenv("AWS_BEARER_TOKEN_BEDROCK");
+                        if (Strings.isNullOrBlank(apiKey)) {
+                            throw new RuntimeException("missing API Key");
+                        }
                     }
                     yield new ChatCompletions(
                             baseUrl,
