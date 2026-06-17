@@ -289,10 +289,8 @@ fun dac(data: Array<DoubleArray>, k: Int, alpha: Double = 0.9, maxIter: Int = 10
  * @param data the data set.
  * @param distance the distance/dissimilarity measure.
  * @param k the number of clusters.
- * @param maxNeighbor the maximum number of neighbors examined during a random search of local minima.
- * @param numLocal the number of local minima to search for.
  */
-fun <T> clarans(data: Array<T>, distance: Distance<T>, k: Int): CentroidClustering<T, T> {
+fun <T> kmedoids(data: Array<T>, distance: Distance<T>, k: Int): CentroidClustering<T, T> {
     return KMedoids.fit(data, distance, k)
 }
 

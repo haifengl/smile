@@ -325,7 +325,7 @@ package object clustering {
     * @param distance    the distance/dissimilarity measure.
     * @param k           the number of clusters.
     */
-  def clarans[T <: AnyRef](data: Array[T], distance: Distance[T], k: Int): CentroidClustering[T, T] = time("CLARANS") {
+  def kmedoids[T <: AnyRef](data: Array[T], distance: Distance[T], k: Int): CentroidClustering[T, T] = time("KMedoids") {
     KMedoids.fit(data, distance, k)
   }
 
