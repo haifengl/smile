@@ -317,7 +317,7 @@ public class AgentCLI extends JPanel {
     }
 
     private boolean isAgentAvailable(OutputArea output) {
-        if (agent == null || agent.llm() == null) {
+        if (agent == null || agent.llm().isEmpty()) {
             if (output.getLineCount() > 0) output.append("\n\n");
             output.println(bundle.getString("NoAIServiceError"));
             return false;
@@ -342,7 +342,7 @@ public class AgentCLI extends JPanel {
                 /predict            Run batch inference
                 /serve              Start an inference service""");
 
-        if (agent != null && agent.llm() != null) {
+        if (agent != null && agent.llm().isPresent()) {
             for (var skill : agent.skills()) {
                 if (skill.isUserInvocable()) {
                     sb.append(String.format("\n/%-18s ", skill.name()))
@@ -534,7 +534,7 @@ Please provide your summary based on the conversation so far, following this str
             return;
         }
 
-        if (agent == null || agent.llm() == null) {
+        if (agent == null || agent.llm().isEmpty()) {
             intent.output().setText(bundle.getString("NoAIServiceError"));
             return;
         }
@@ -569,7 +569,7 @@ Please provide your summary based on the conversation so far, following this str
                 });
 
                 // Auto compact if total tokens exceed the threshold, otherwise render Markdown if applicable.
-                if (totalTokens > agent.llm().compactThreshold()) {
+                if (totalTokens > agent.llm().map(LLM::compactThreshold).orElse(180_000)) {
                     SwingUtilities.invokeLater(() ->
                             intent.output().append("\n\n[The conversation session is too long, a compact command will be executed to summarize conversation.]\n"));
                     compact("", intent);
