@@ -33,9 +33,9 @@ import smile.sort.QuickSort;
  * first described as an artificial neural network by Teuvo Kohonen, and is
  * sometimes called a Kohonen map.
  * <p>
- * While it is typical to consider SOMs as related to feed-forward networks where
- * the nodes are visualized as being attached, this type of architecture is
- * fundamentally different in arrangement and motivation because SOMs use a
+ * While it is typical to consider SOMs as related to feed-forward networks
+ * where the nodes are visualized as being attached, this type of architecture
+ * is fundamentally different in arrangement and motivation because SOMs use a
  * neighborhood function to preserve the topological properties of the input
  * space. This makes SOMs useful for visualizing low-dimensional views of
  * high-dimensional data, akin to multidimensional scaling.
@@ -95,7 +95,7 @@ public class SOM implements VectorQuantizer {
      * @param j the column index of neuron in the lattice.
      * @param w the weight vector.
      */
-    private record Neuron(int i, int j, double[] w) implements Serializable { }
+    public record Neuron(int i, int j, double[] w) implements Serializable { }
     
     /**
      * The number of rows in the lattice.
@@ -198,7 +198,6 @@ public class SOM implements VectorQuantizer {
      * @return the lattice.
      */
     public static double[][][] lattice(int nrow, int ncol, double[][] samples) {
-        int n = samples.length;
         int k = nrow * ncol;
         double[][] seeds = CentroidClustering.seeds(samples, k);
 
@@ -310,8 +309,12 @@ public class SOM implements VectorQuantizer {
         return bmu(x).w;
     }
 
-    /** Returns the best matching unit. */
-    private Neuron bmu(double[] x) {
+    /**
+     * Returns the best matching unit for a sample.
+     * @param x a sample.
+     * @return the best matching unit.
+     */
+    public Neuron bmu(double[] x) {
         if (x == null) {
             throw new IllegalArgumentException("Input vector is null");
         }
