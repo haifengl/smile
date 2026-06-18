@@ -78,17 +78,18 @@ public class JavaKernel extends Kernel<SnippetEvent> {
         if (smile.util.OS.isMacOS()) {
             eval("""
                 import java.nio.file.*;
-                System.load(System.getProperty("smile.home") + "/libtorch/libtorch.dylib");
-                System.load(System.getProperty("smile.home") + "/bin/libsmile_torch.dylib");
                 if (Files.exists(Path.of("/opt/homebrew/lib/libarpack.dylib"))) {
                     System.load("/opt/homebrew/lib/libarpack.dylib");
                 } else if (Files.exists(Path.of("/usr/local/lib/libarpack.dylib"))) {
                     System.load("/usr/local/lib/libarpack.dylib");
                 }
-                Files.find(Path.of(home, "venv", "lib"), 10,
-                    (p, a) -> p.getFileName().toString().equals("libonnxruntime.dylib"))
-                    .findFirst()
-                    .ifPresent(p -> System.load(p.toAbsolutePath().toString()));""");
+                Files.find(Path.of(System.getProperty("smile.home"), "venv"), 10,
+                    (p, a) -> {
+                        var name = p.getFileName().toString();
+                        return name.equals("libonnxruntime.dylib") || name.equals("libtorch.dylib");
+                    })
+                    .forEach(p -> System.load(p.toAbsolutePath().toString()));
+                System.load(System.getProperty("smile.home") + "/bin/libsmile_torch.dylib");""");
         }
     }
 
