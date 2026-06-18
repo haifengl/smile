@@ -102,12 +102,12 @@ jobs:
           path: ${{ matrix.archive-name }}
           key: libtorch-${{ matrix.os-label }}-${{ env.TORCH_VERSION }}
 
-      - name: Download libtorch
+      - name: Download LibTorch
         if: steps.cache-libtorch.outputs.cache-hit != 'true'
         shell: bash
         run: |
-          # Substitute the TORCH_VERSION placeholder in the URL template.
           LIBTORCH_URL="${{ matrix.libtorch-url-template }}"
+          # Substitute the TORCH_VERSION placeholder in the URL template.
           LIBTORCH_URL="${LIBTORCH_URL/TORCH_VERSION/${{ env.TORCH_VERSION }}}"
           echo "Downloading: ${LIBTORCH_URL}"
           curl -fsSL --retry 5 --retry-delay 10 \
@@ -115,7 +115,7 @@ jobs:
                "${LIBTORCH_URL}"
 
       # ----------------------------------------------------------------
-      # 3. Unzip libtorch into deep/libtorch/
+      # 3. Unzip LibTorch into deep/libtorch/
       #    The archives contain a top-level "libtorch/" directory, so
       #    unzipping into "deep/" produces "deep/libtorch/".
       # ----------------------------------------------------------------
@@ -127,14 +127,14 @@ jobs:
                          -DestinationPath "${{ matrix.unzip-dest }}" `
                          -Force
 
-      - name: Unzip libtorch (Unix)
+      - name: Unzip LibTorch (Unix)
         if: runner.os != 'Windows'
         shell: bash
         run: |
           unzip -q -o "${{ matrix.archive-name }}" \
                 -d "${{ matrix.unzip-dest }}"
 
-      - name: Verify libtorch layout
+      - name: Verify LibTorch layout
         shell: bash
         run: |
           echo "--- deep/libtorch contents (top level) ---"
@@ -190,7 +190,7 @@ jobs:
         shell: pwsh
         working-directory: ${{ env.BUILD_DIR }}
         run: |
-          # Add libtorch DLLs to PATH so the test executable can find them.
+          # Add LibTorch DLLs to PATH so the test executable can find them.
           $env:PATH = "${{ github.workspace }}\deep\libtorch\lib;" + $env:PATH
           ctest --build-config Release --output-on-failure --timeout 60
 
@@ -199,7 +199,7 @@ jobs:
         shell: bash
         working-directory: ${{ env.BUILD_DIR }}
         run: |
-          # Prepend the libtorch shared-library directory to the search path.
+          # Prepend the LibTorch shared-library directory to the search path.
           if [ "${{ runner.os }}" = "macOS" ]; then
             export DYLD_LIBRARY_PATH="${{ github.workspace }}/deep/libtorch/lib:${DYLD_LIBRARY_PATH:-}"
           else

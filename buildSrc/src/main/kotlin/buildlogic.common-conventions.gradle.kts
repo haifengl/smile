@@ -41,7 +41,7 @@ tasks.withType<Test>().all {
 
     val osName = System.getProperty("os.name").lowercase()
     val libPath = file("${rootDir.path}/studio/src/universal/bin").absolutePath
-    val torchPath = file("${rootDir.path}/studio/src/universal/libtorch").absolutePath
+    val torchPath = file("${rootDir.path}/deep/libtorch/lib").absolutePath
     if (osName.contains("windows")) {
         // On Windows, DLLs are found via the PATH
         val currentPath = System.getenv("PATH") ?: ""

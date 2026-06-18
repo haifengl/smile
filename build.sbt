@@ -42,7 +42,7 @@ lazy val commonSettings = Seq(
   ),
   Test / envVars ++= {
     val binDir = s"${(Test / baseDirectory).value}/studio/src/universal/bin"
-    val torchDir = s"${(Test / baseDirectory).value}/studio/src/universal/libtorch"
+    val torchDir = s"${(Test / baseDirectory).value}/deep/libtorch/lib"
     Map(os match {
       case "windows" =>
         "PATH" -> s"$binDir;$torchDir;${System.getenv("PATH")}"
