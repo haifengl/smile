@@ -64,7 +64,8 @@ bashScriptExtraDefines ++= Seq(
   """addJava "-Dscala.repl.autoruncode=${app_home}/predef.sc"""",
   """export PYTHONPATH="${PYTHONPATH}:${app_home}/../lib/ioa-agent-1.0.0.jar"""",
   """export PYTHONUTF8=1""",
-  """source "$SMILE_HOME/venv/bin/activate""""
+  """source "$SMILE_HOME/venv/bin/activate"""",
+  """export LD_LIBRARY_PATH=${app_home}/../venv/Lib/site-packages/torch/lib:${app_home}/../venv/Lib/site-packages/onnxruntime/capi:$LD_LIBRARY_PATH"""
 )
 
 batScriptExtraDefines ++= Seq(
