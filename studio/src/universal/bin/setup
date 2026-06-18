@@ -26,25 +26,28 @@ if [ ! -f "$VENV_DIR/bin/activate" ]; then
     python3 -m venv "$VENV_DIR"
     if [ $? -ne 0 ]; then
         echo "Failed to create the virtual environment. Ensure Python is installed and added to PATH."
+        exit 1
     else
         echo "Virtual environment created successfully."
-        source "$VENV_DIR/bin/activate"
-        python -m pip install --upgrade pip setuptools wheel
-        pip install -r "$APP_DIR/../conf/requirements.txt"
-        pip install uv
-        uv tool install ty@latest
-
-        pip install onnxruntime
-        # Create a symlink to the latest libonnxruntime in the capi directory
-        ONNX_CAPI_DIR=`find $VENV_DIR -type d -name "capi" -path "*/onnxruntime/capi" 2>/dev/null | head -n 1`
-        ONNX_LIB=`ls -t ${ONNX_CAPI_DIR}/libonnxruntime.* | head -n 1`
-        if [ -n "$ONNX_LIB" ]; then
-          if [[ "$OSTYPE" == "darwin"* ]]; then
-            ln -sf `basename ${ONNX_LIB}` ${ONNX_CAPI_DIR}/libonnxruntime.dylib
-          else
-            ln -sf `basename ${ONNX_LIB}` ${ONNX_CAPI_DIR}/libonnxruntime.so
-          fi
-        fi
     fi
+fi
+
+echo "Installing Python packages..."
+source "$VENV_DIR/bin/activate"
+python -m pip install --upgrade pip setuptools wheel
+pip install -r "$APP_DIR/../conf/requirements.txt"
+pip install uv
+uv tool install ty@latest
+
+pip install onnxruntime
+# Create a symlink to the latest libonnxruntime in the capi directory
+ONNX_CAPI_DIR=`find $VENV_DIR -type d -name "capi" -path "*/onnxruntime/capi" 2>/dev/null | head -n 1`
+ONNX_LIB=`ls -t ${ONNX_CAPI_DIR}/libonnxruntime.* | head -n 1`
+if [ -n "$ONNX_LIB" ]; then
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    ln -sf `basename ${ONNX_LIB}` ${ONNX_CAPI_DIR}/libonnxruntime.dylib
+  else
+    ln -sf `basename ${ONNX_LIB}` ${ONNX_CAPI_DIR}/libonnxruntime.so
+  fi
 fi
 

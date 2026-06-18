@@ -1,4 +1,4 @@
-@REM smile setup script
+@REM SMILE setup script
 
 @echo off
 ECHO Installing ripgrep...
@@ -12,12 +12,16 @@ IF NOT EXIST "%VENV_DIR%\\Scripts\\activate.bat" (
     python -m venv %VENV_DIR%
     IF ERRORLEVEL 1 (
         ECHO Failed to create the virtual environment. Ensure Python is installed and added to PATH.
+        EXIT /b 1
     ) ELSE (
         ECHO Virtual environment created successfully.
-        CALL "%VENV_DIR%\\Scripts\\activate.bat"
-        python -m pip install --upgrade pip setuptools wheel
-        pip install -r %APP_HOME%\\conf\\requirements.txt
-        pip install uv
-        uv tool install ty@latest
     )
 )
+
+ECHO Installing Python packages...
+CALL "%VENV_DIR%\\Scripts\\activate.bat"
+python -m pip install --upgrade pip setuptools wheel
+pip install -r %APP_HOME%\\conf\\requirements.txt
+pip install uv
+uv tool install ty@latest
+
