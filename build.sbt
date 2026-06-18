@@ -47,7 +47,7 @@ lazy val commonSettings = Seq(
       case "windows" =>
         "PATH" -> s"$binDir;$torchDir;${System.getenv("PATH")}"
       case "mac" =>
-        "DYLD_LIBRARY_PATH" -> s"$binDir:$torchDir:${System.getenv("DYLD_LIBRARY_PATH")}"
+        "DYLD_LIBRARY_PATH" -> s"$binDir:$torchDir:/opt/homebrew/lib/:${System.getenv("DYLD_LIBRARY_PATH")}"
       case _ =>
         "LD_LIBRARY_PATH" -> s"$binDir:$torchDir:${System.getenv("LD_LIBRARY_PATH")}"
     }
