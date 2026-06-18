@@ -79,17 +79,20 @@ batScriptExtraDefines ++= Seq(
   """set "JAVA_HOME=%APP_HOME%\jbr"""",
   """set OPENBLAS_NO_AVX512=1""",
   """set OPENBLAS_NUM_THREAD=1""",
-  """set "PATH=%~dp0;%APP_HOME%\libtorch;!PATH!"""",
   """set PYTHONPATH=%PYTHONPATH%;%APP_HOME%\lib\ioa-agent-1.0.0.jar""",
   """set PYTHONUTF8=1""",
-  """CALL "%APP_HOME%\\venv\\Scripts\\activate.bat""""
+  """CALL "%APP_HOME%\venv\Scripts\activate.bat"""",
+  // activate.bat will set PATH with %PATH%, which is processed during parsing
+  // and thus does not include the new entries. We need to set PATH afterward
+  // to make sure the new entries are included.
+  """set "PATH=%~dp0;%APP_HOME%\venv\Lib\site-packages\torch\lib;!PATH!""""
 )
 
 libraryDependencies ++= Seq(
   "org.scala-lang"   %% "scala3-compiler"    % scalaVersion.value,
   "info.picocli"      % "picocli"            % "4.7.7",
   "ch.qos.logback"    % "logback-classic"    % "1.5.34",
-  "com.openai"        % "openai-java"        % "4.40.0",
+  "com.openai"        % "openai-java"        % "4.41.0",
   "com.anthropic"     % "anthropic-java"     % "2.40.1",
   "com.google.genai"  % "google-genai"       % "1.53.0",
   "org.commonmark"    % "commonmark"         % "0.28.0",
