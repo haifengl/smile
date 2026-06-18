@@ -51,11 +51,11 @@ public class EfficientNetTest {
         var lenna = ImageIO.read(Path.of("deep/src/test/resources/data/image/Lenna.png").toFile());
         var panda = ImageIO.read(Path.of("deep/src/test/resources/data/image/panda.jpg").toFile());
 
-        try (var guard = Tensor.noGradGuard();
+        try (var __ = Tensor.noGradGuard();
              var output = model.forward(lenna, panda)) {
-            var topk = output.topk(5);
-            try (var values = topk._1();
-                 var indices = topk._2();
+            var top5 = output.topk(5);
+            try (var values = top5._1();
+                 var indices = top5._2();
                  var indicesCPU = indices.to(Device.CPU())) {
                  // Verify top-1 predictions
                  assertEquals(515, indicesCPU.getInt(0, 0), "Lenna top-1 class should be 515");
@@ -66,22 +66,23 @@ public class EfficientNetTest {
 
     @Test
     public void testGivenEfficientNetV2SWhenTrainingOneEpochThenNoException() throws IOException {
-        if (!Files.exists(Path.of("deep/src/test/resources/data/imagenet-mini"))) {
+        if (!Files.exists(Path.of("data/imagenet-mini"))) {
             System.out.println("ImageNet-mini dataset not found, skipping EfficientNet training test.");
             return;
         }
 
         var model = EfficientNet.V2S();
         var transform = Transform.classification(384, 384);
-        var data = new ImageDataset(64, "deep/src/test/resources/data/imagenet-mini/train", transform, ImageNet.folder2Target);
-        var test = new ImageDataset(16, "deep/src/test/resources/data/imagenet-mini/val",   transform, ImageNet.folder2Target);
+        try (var data = new ImageDataset(64, "data/imagenet-mini/train", transform, ImageNet.folder2Target);
+             var test = new ImageDataset(16, "data/imagenet-mini/val",   transform, ImageNet.folder2Target)) {
 
-        var schedule = TimeFunction.piecewise(new int[] { 50000 },
-                TimeFunction.linear(0.0001, 50000, 0.01),
-                TimeFunction.cosine(0.0001, 50000, 0.01));
-        model.setLearningRateSchedule(schedule);
-        Optimizer optimizer = Optimizer.RMSprop(model, 0.0001, 0.9, 1E-07, 1E-05, 0.9, false);
-        // Should complete without throwing
-        assertDoesNotThrow(() -> model.train(1, optimizer, Loss.nll(), data, test, null, new Accuracy()));
+            var schedule = TimeFunction.piecewise(new int[]{50000},
+                    TimeFunction.linear(0.0001, 50000, 0.01),
+                    TimeFunction.cosine(0.0001, 50000, 0.01));
+            model.setLearningRateSchedule(schedule);
+            Optimizer optimizer = Optimizer.RMSprop(model, 0.0001, 0.9, 1E-07, 1E-05, 0.9, false);
+            // Should complete without throwing
+            assertDoesNotThrow(() -> model.train(1, optimizer, Loss.nll(), data, test, null, new Accuracy()));
+        }
     }
 }
