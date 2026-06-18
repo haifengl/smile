@@ -283,8 +283,17 @@ public class SmileStudio extends JFrame implements SearchListener {
                 // Don't call withApiKey or withBaseUrl for Anthropic and Gemini client.
                 // As they read from system properties directly, calling withApiKey will
                 // cause errors.
-                case "Anthropic" ->
-                    new Anthropic(prefs.get("anthropicModel", "claude-sonnet-4-6"));
+                case "Anthropic" -> {
+                    if (System.getProperty(Anthropic.BASE_URL_PROPERTY_KEY, "").contains("bedrock") &&
+                        System.getProperty(Anthropic.API_KEY_PROPERTY_KEY) == null) {
+                        var apiKey = System.getenv("AWS_BEARER_TOKEN_BEDROCK");
+                        if (!Strings.isNullOrBlank(apiKey)) {
+                            System.setProperty(Anthropic.API_KEY_PROPERTY_KEY, apiKey);
+                        }
+                    }
+
+                    yield new Anthropic(prefs.get("anthropicModel", "claude-sonnet-4-6"));
+                }
 
                 case "Google Gemini" ->
                     new GoogleGemini(
