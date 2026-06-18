@@ -82,8 +82,8 @@ public class HMMPOSTaggerTest {
         MathEx.setSeed(19650218);
         List<String[]> sentences = new ArrayList<>();
         List<PennTreebankPOS[]> tags = new ArrayList<>();
-        HMMPOSTagger.read("nlp/src/test/resources/data/PennTreebank/PennTreebank2/TAGGED/POS/WSJ", sentences, tags);
-        if (sentences.isEmpty()) return; // data not available — skip
+        HMMPOSTagger.read("data/nlp/PennTreebank/PennTreebank2/TAGGED/POS/WSJ", sentences, tags);
+        if (sentences.isEmpty()) return; // skip test as data is not available
 
         String[][] x = sentences.toArray(new String[0][]);
         PennTreebankPOS[][] y = tags.toArray(new PennTreebankPOS[0][]);
@@ -117,8 +117,8 @@ public class HMMPOSTaggerTest {
         MathEx.setSeed(19650218);
         List<String[]> sentences = new ArrayList<>();
         List<PennTreebankPOS[]> tags = new ArrayList<>();
-        HMMPOSTagger.read("nlp/src/test/resources/data/PennTreebank/PennTreebank2/TAGGED/POS/BROWN", sentences, tags);
-        if (sentences.isEmpty()) return; // data not available — skip
+        HMMPOSTagger.read("data/nlp/PennTreebank/PennTreebank2/TAGGED/POS/BROWN", sentences, tags);
+        if (sentences.isEmpty()) return; // data not available - skip
 
         String[][] x = sentences.toArray(new String[0][]);
         PennTreebankPOS[][] y = tags.toArray(new PennTreebankPOS[0][]);
