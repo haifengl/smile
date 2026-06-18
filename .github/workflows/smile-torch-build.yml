@@ -36,7 +36,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  TORCH_VERSION: "2.12.0"
+  TORCH_VERSION: "2.12.1"
   BUILD_DIR: build/cpp
 
 jobs:
