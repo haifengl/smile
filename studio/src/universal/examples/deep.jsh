@@ -23,8 +23,8 @@ Model net = new Model(new SequentialBlock(
         input -> input.reshape(input.size(0), 784)
 ).to(device);
 
-Dataset data = Dataset.mnist("deep/src/test/resources/data/mnist", true, 64);
-Dataset test = Dataset.mnist("deep/src/test/resources/data/mnist", false, 64);
+Dataset data = Dataset.mnist("data/mnist", true, 64);
+Dataset test = Dataset.mnist("data/mnist", false, 64);
 
 // Instantiate an SGD optimization algorithm to update our model's parameters.
 Optimizer optimizer = Optimizer.SGD(net, 0.01);

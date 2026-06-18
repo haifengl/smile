@@ -44,7 +44,7 @@ public class ModelTest {
     @Test
     @Tag("integration")
     public void test() {
-        if (!Files.exists(Path.of("deep/src/test/resources/data/mnist"))) {
+        if (!Files.exists(Path.of("data/mnist"))) {
             System.out.println("MNIST dataset not found, skipping Model training test.");
             return;
         }
@@ -58,8 +58,8 @@ public class ModelTest {
                 input -> input.reshape(input.size(0), 784)
         ).to(device);
 
-        Dataset data = Dataset.mnist("deep/src/test/resources/data/mnist", true, 64);
-        Dataset test = Dataset.mnist("deep/src/test/resources/data/mnist", false, 64);
+        Dataset data = Dataset.mnist("data/mnist", true, 64);
+        Dataset test = Dataset.mnist("data/mnist", false, 64);
 
         // Instantiate an SGD optimization algorithm to update our model's parameters.
         Optimizer optimizer = Optimizer.SGD(net, 0.01);
