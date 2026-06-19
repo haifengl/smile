@@ -84,19 +84,6 @@ public class AgentCLI extends JPanel {
 
         intents.add(new Intent(this));
         intents.add(Box.createVerticalGlue());
-
-        Monospaced.addListener((e) ->
-                SwingUtilities.invokeLater(() -> {
-                    Font font = (Font) e.getNewValue();
-                    for (int i = 0; i < intents.getComponentCount(); i++) {
-                        if (intents.getComponent(i) instanceof Intent cmd) {
-                            cmd.indicator().setFont(font);
-                            cmd.editor().setFont(font);
-                            cmd.output().setFont(font);
-                        }
-                    }
-                })
-        );
     }
 
     /**

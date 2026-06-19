@@ -29,7 +29,7 @@ import smile.util.lsp.LanguageService;
  *
  * @author Haifeng Li
  */
-public class Editor extends RSyntaxTextArea {
+public class Editor extends ThemedTextArea {
     /** Auto-completion provider. */
     private LspCompletionProvider provider;
 
@@ -50,7 +50,6 @@ public class Editor extends RSyntaxTextArea {
      */
     public Editor(int rows, int cols, String style) {
         super(rows, cols);
-        putClientProperty("FlatLaf.styleClass", "monospaced");
         setSyntaxEditingStyle(style);
         setLineWrap(true);
         setWrapStyleWord(true);
@@ -58,14 +57,6 @@ public class Editor extends RSyntaxTextArea {
             setCodeFoldingEnabled(true);
             setTabSize(4);
         }
-
-        DarkTheme.apply(this);
-        // Listen for global Look and Feel changes
-        UIManager.addPropertyChangeListener(evt -> {
-            if ("lookAndFeel".equals(evt.getPropertyName())) {
-                DarkTheme.apply(this);
-            }
-        });
 
         InputMap inputMap = getInputMap(JComponent.WHEN_FOCUSED);
         ActionMap actionMap = getActionMap();

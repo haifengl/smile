@@ -26,7 +26,6 @@ import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 import javax.swing.text.*;
 import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import smile.plot.swing.Palette;
 
 /**
@@ -34,7 +33,7 @@ import smile.plot.swing.Palette;
  *
  * @author Haifeng Li
  */
-public class OutputArea extends RSyntaxTextArea implements HyperlinkListener {
+public class OutputArea extends ThemedTextArea implements HyperlinkListener {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OutputArea.class);
     private final DefaultHighlightPainter painter = new DefaultHighlightPainter(Palette.LIGHT_PINK);
     private final Pattern pattern = Pattern.compile("ERROR|WARN|Recoverable issue|Rejected snippet|Unresolved dependencies|Exception:");
@@ -45,11 +44,9 @@ public class OutputArea extends RSyntaxTextArea implements HyperlinkListener {
      * Constructor.
      */
     public OutputArea() {
-        putClientProperty("FlatLaf.styleClass", "monospaced");
         setEditable(false);
         setLineWrap(true);
         setWrapStyleWord(true);
-        DarkTheme.apply(this);
 
         // RSyntaxTextArea related settings.
         setSyntaxEditingStyle(SYNTAX_STYLE_MARKDOWN);

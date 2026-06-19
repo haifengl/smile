@@ -35,7 +35,6 @@ import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import smile.io.Paths;
 import smile.studio.SmileStudio;
 import smile.studio.kernel.*;
-import smile.studio.text.Monospaced;
 import smile.studio.text.Editor;
 import smile.swing.ScrollablePanel;
 import smile.util.ipynb.JupyterNotebook;
@@ -136,18 +135,6 @@ public class Notebook extends JPanel implements DocumentListener {
                 scrollTo(first.editor());
             });
         }
-
-        Monospaced.addListener((e) ->
-                SwingUtilities.invokeLater(() -> {
-                    Font font = (Font) e.getNewValue();
-                    for (int i = 0; i < cells.getComponentCount(); i++) {
-                        if (cells.getComponent(i) instanceof Cell cell) {
-                            cell.editor().setFont(font);
-                            cell.output().setFont(font);
-                        }
-                    }
-                })
-        );
     }
 
     /**
