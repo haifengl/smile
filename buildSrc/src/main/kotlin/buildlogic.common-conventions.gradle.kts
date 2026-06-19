@@ -1,5 +1,5 @@
 group = "com.github.haifengl"
-version = "6.2.1"
+version = "6.2.2"
 extra["isReleaseVersion"] = !version.toString().endsWith("SNAPSHOT")
 
 repositories {
@@ -49,7 +49,7 @@ tasks.withType<Test>().all {
     } else if (osName.contains("mac")) {
         // On macOS, shared libraries (.dylib) use DYLD_LIBRARY_PATH
         val currentDyldPath = System.getenv("DYLD_LIBRARY_PATH") ?: ""
-        environment("DYLD_LIBRARY_PATH", "$libPath:$torchPath:$currentDyldPath")
+        environment("DYLD_LIBRARY_PATH", "$libPath:$torchPath:/opt/homebrew/lib/:/usr/local/lib:$currentDyldPath")
     } else {
         // On Linux, shared libraries (.so) use LD_LIBRARY_PATH
         val currentLdPath = System.getenv("LD_LIBRARY_PATH") ?: ""
