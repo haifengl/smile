@@ -67,7 +67,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
         setLayout(new BorderLayout());
         this.prefs = prefs;
 
-        themeCombo.setSelectedItem(prefs.get(UI_THEME_KEY, "Light"));
+        themeCombo.setSelectedItem(prefs.get(UI_THEME_KEY, "Dark"));
         aiServiceCombo.setSelectedItem(prefs.get(AI_SERVICE_KEY, aiServiceOptions[0]));
         themeCombo.addActionListener(this);
         aiServiceCombo.addActionListener(this);
