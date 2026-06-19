@@ -28,6 +28,7 @@ import javax.swing.text.*;
 import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import smile.plot.swing.Palette;
+import smile.studio.text.DarkTheme;
 
 /**
  * Text area for output stream.
@@ -49,6 +50,7 @@ public class OutputArea extends RSyntaxTextArea implements HyperlinkListener {
         setEditable(false);
         setLineWrap(true);
         setWrapStyleWord(true);
+        DarkTheme.apply(this);
 
         // RSyntaxTextArea related settings.
         setSyntaxEditingStyle(SYNTAX_STYLE_MARKDOWN);
