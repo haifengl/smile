@@ -45,9 +45,9 @@ import static smile.studio.cli.IntentType.*;
  */
 public class Intent extends JPanel {
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Intent.class.getName(), Locale.getDefault());
-    private static final Color inputColor = new Color(220, 248, 198);
     private static final Color borderColor = Palette.web("#8dd4e8");
     // Input pane
+    private Color inputPaneColor = UIManager.getColor("TextField.background");
     private final JPanel inputPane = new JPanel(new BorderLayout());
     private final JLabel indicator = new JLabel(">", SwingConstants.CENTER);
     private final IntentEditor editor = new IntentEditor(1, 80);
@@ -86,6 +86,21 @@ public class Intent extends JPanel {
         add(inputPane, BorderLayout.CENTER);
         add(outputPane, BorderLayout.SOUTH);
         cli.hintWindow().addEditor(editor);
+
+        // Listen for global Look and Feel changes
+        UIManager.addPropertyChangeListener(evt -> {
+            if ("lookAndFeel".equals(evt.getPropertyName())) {
+                inputPaneColor = UIManager.getColor("TextField.background");
+                if (editor.isEditable()) {
+                    editor.setBackground(inputPaneColor);
+                    controlPane.setBackground(inputPaneColor);
+                    intentTypeComboBox.setBackground(inputPaneColor);
+                    effortComboBox.setBackground(inputPaneColor);
+                    inputPane.setBackground(inputPaneColor);
+                    inputPane.setBorder(createRoundBorder());
+                }
+            }
+        });
     }
 
     /** Initializes the input pane. */
@@ -105,7 +120,7 @@ public class Intent extends JPanel {
         editor.setWrapStyleWord(true);
         editor.setOpaque(false);
         editor.setHighlightCurrentLine(false);
-        editor.setBackground(inputColor);
+        editor.setBackground(inputPaneColor);
 
         status.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
         stopButton.setVisible(false);
@@ -120,7 +135,7 @@ public class Intent extends JPanel {
         footer.setOpaque(false);
         footer.add(Box.createHorizontalStrut(indicator.getPreferredSize().width));
 
-        controlPane.setBackground(inputColor);
+        controlPane.setBackground(inputPaneColor);
         controlPane.add(intentTypeComboBox);
         controlPane.add(Box.createHorizontalStrut(20));
         controlPane.add(reasoningLabel);
@@ -129,7 +144,7 @@ public class Intent extends JPanel {
         footer.add(status);
         footer.add(Box.createHorizontalGlue());
 
-        inputPane.setBackground(inputColor);
+        inputPane.setBackground(inputPaneColor);
         inputPane.setBorder(createRoundBorder());
         inputPane.add(sidebar, BorderLayout.WEST);
         inputPane.add(editor, BorderLayout.CENTER);
@@ -146,8 +161,7 @@ public class Intent extends JPanel {
         var effortComboBox = new JComboBox<>(levels);
         effortComboBox.setSelectedItem(levels[0]);
         effortComboBox.setBorder(BorderFactory.createEmptyBorder());
-        effortComboBox.setBackground(inputColor);
-        effortComboBox.setForeground(Color.DARK_GRAY);
+        effortComboBox.setBackground(inputPaneColor);
         if (effortComboBox.getComponentCount() > 0 &&
             effortComboBox.getComponent(0) instanceof AbstractButton button) {
             button.setVisible(false);
@@ -165,8 +179,7 @@ public class Intent extends JPanel {
     private void initIntentTypeComboBox() {
         intentTypeComboBox.setSelectedItem(Instructions);
         intentTypeComboBox.setBorder(BorderFactory.createEmptyBorder());
-        intentTypeComboBox.setBackground(inputColor);
-        intentTypeComboBox.setForeground(Color.DARK_GRAY);
+        intentTypeComboBox.setBackground(inputPaneColor);
         if (intentTypeComboBox.getComponentCount() > 0 &&
             intentTypeComboBox.getComponent(0) instanceof AbstractButton button) {
             button.setVisible(false);
@@ -327,10 +340,11 @@ public class Intent extends JPanel {
         intentTypeComboBox.setEnabled(editable);
         editor.setEditable(editable);
         if (editable) {
-            editor.setBackground(inputColor);
-            inputPane.setBackground(inputColor);
-            intentTypeComboBox.setBackground(inputColor);
-            effortComboBox.setBackground(inputColor);
+            editor.setBackground(inputPaneColor);
+            inputPane.setBackground(inputPaneColor);
+            controlPane.setBackground(inputPaneColor);
+            intentTypeComboBox.setBackground(inputPaneColor);
+            effortComboBox.setBackground(inputPaneColor);
         } else {
             editor.setBackground(getBackground());
             inputPane.setBackground(getBackground());
