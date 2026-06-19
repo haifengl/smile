@@ -118,7 +118,7 @@ public class HMMPOSTaggerTest {
         List<String[]> sentences = new ArrayList<>();
         List<PennTreebankPOS[]> tags = new ArrayList<>();
         HMMPOSTagger.read("data/nlp/PennTreebank/PennTreebank2/TAGGED/POS/BROWN", sentences, tags);
-        if (sentences.isEmpty()) return; // data not available - skip
+        if (sentences.isEmpty()) return; // skip test as data is not available
 
         String[][] x = sentences.toArray(new String[0][]);
         PennTreebankPOS[][] y = tags.toArray(new PennTreebankPOS[0][]);

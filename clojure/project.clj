@@ -10,7 +10,7 @@
   :plugins [[lein-codox "0.10.8"]]
   :codox {:doc-files ["README.md"]
           :project {:name "Smile - Clojure" :description "Copyright © 2010-2026 Haifeng Li. All rights reserved. Use is subject to license terms."}
-          :output-path "../doc/api/clojure"}
+          :output-path "../doc/clojure"}
   :jvm-opts ["-XX:MaxRAMPercentage=75.0"
              "-XX:+UseStringDeduplication"
              "-XX:+UseG1GC"]
