@@ -6,4 +6,4 @@ Compile / doc / scalacOptions ++= Seq(
   "-project", "Smile - JSON",
   "-doc-root-content", baseDirectory.value + "/root-doc.txt"
 )
-Compile / doc / target := baseDirectory.value / "../doc/api/json"
+Compile / doc / target := baseDirectory.value / "../doc/json"

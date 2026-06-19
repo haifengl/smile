@@ -24,6 +24,6 @@ dokka {
         }
     }
     dokkaPublications.html {
-        outputDirectory.set(layout.buildDirectory.dir("../../doc/api/kotlin"))
+        outputDirectory.set(layout.buildDirectory.dir("../../doc/kotlin"))
     }
 }
