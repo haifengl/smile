@@ -35,7 +35,7 @@ import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import smile.io.Paths;
 import smile.studio.SmileStudio;
 import smile.studio.kernel.*;
-import smile.studio.Monospaced;
+import smile.studio.text.Monospaced;
 import smile.studio.text.Editor;
 import smile.swing.ScrollablePanel;
 import smile.util.ipynb.JupyterNotebook;

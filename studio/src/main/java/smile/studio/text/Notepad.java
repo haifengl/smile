@@ -41,7 +41,6 @@ import org.fife.ui.rsyntaxtextarea.ErrorStrip;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.fife.ui.rtextarea.SearchContext;
 import org.fife.ui.rtextarea.SearchEngine;
-import smile.studio.Monospaced;
 import smile.studio.StatusBar;
 
 /**

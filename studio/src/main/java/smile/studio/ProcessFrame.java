@@ -24,6 +24,7 @@ import java.awt.event.WindowEvent;
 import java.io.*;
 import java.util.Arrays;
 import smile.util.OS;
+import smile.studio.text.Monospaced;
 
 /**
  * A frame to run a process and displays its output.

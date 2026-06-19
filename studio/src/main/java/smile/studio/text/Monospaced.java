@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.studio;
+package smile.studio.text;
 
 import java.awt.Font;
 import java.awt.font.TextAttribute;
@@ -22,6 +22,7 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.Map;
 import javax.swing.*;
+import smile.studio.SmileStudio;
 
 /**
  * The monospaced font for view components.

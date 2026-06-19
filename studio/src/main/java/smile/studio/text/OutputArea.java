@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.studio;
+package smile.studio.text;
 
 import java.awt.*;
 import java.io.IOException;
@@ -28,7 +28,6 @@ import javax.swing.text.*;
 import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import smile.plot.swing.Palette;
-import smile.studio.text.DarkTheme;
 
 /**
  * Text area for output stream.

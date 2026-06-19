@@ -22,8 +22,6 @@ import java.nio.file.Path;
 import org.fife.ui.autocomplete.AutoCompletion;
 import org.fife.ui.rsyntaxtextarea.*;
 import smile.io.Paths;
-import smile.studio.Markdown;
-import smile.studio.Monospaced;
 import smile.util.lsp.LanguageService;
 
 /**
