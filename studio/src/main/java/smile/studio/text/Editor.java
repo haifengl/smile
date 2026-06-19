@@ -18,14 +18,12 @@ package smile.studio.text;
 
 import javax.swing.*;
 import java.awt.event.*;
-import java.io.IOException;
 import java.nio.file.Path;
 import org.fife.ui.autocomplete.AutoCompletion;
 import org.fife.ui.rsyntaxtextarea.*;
 import smile.io.Paths;
 import smile.studio.Markdown;
 import smile.studio.Monospaced;
-import smile.studio.SmileStudio;
 import smile.util.lsp.LanguageService;
 
 /**
@@ -34,19 +32,6 @@ import smile.util.lsp.LanguageService;
  * @author Haifeng Li
  */
 public class Editor extends RSyntaxTextArea {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Editor.class);
-    /** Dark theme. */
-    private static final Theme DARK_THEME = loadTheme("dark");
-    /** Druid theme. */
-    private static final Theme DRUID_THEME = loadTheme("druid");
-    /** Eclipse theme. */
-    private static final Theme ECLIPSE_THEME = loadTheme("eclipse");
-    /** IntelliJ IDEA theme. */
-    private static final Theme IDEA_THEME = loadTheme("idea");
-    /** Monokai theme. */
-    private static final Theme MONOKAI_THEME = loadTheme("monokai");
-    /** Visual Studio theme. */
-    private static final Theme VS_THEME = loadTheme("vs");
     /** Auto-completion provider. */
     private LspCompletionProvider provider;
 
@@ -71,7 +56,7 @@ public class Editor extends RSyntaxTextArea {
         setSyntaxEditingStyle(style);
         setLineWrap(true);
         setWrapStyleWord(true);
-        setDarkTheme(this);
+        DarkTheme.apply(this);
         if (!style.equals(SYNTAX_STYLE_NONE)) {
             setCodeFoldingEnabled(true);
             setTabSize(4);
@@ -178,33 +163,5 @@ public class Editor extends RSyntaxTextArea {
             case "properties" -> SYNTAX_STYLE_PROPERTIES_FILE;
             default -> SYNTAX_STYLE_NONE;
         };
-    }
-
-    /**
-     * Applies dark theme.
-     */
-    public static void setDarkTheme(RSyntaxTextArea textArea) {
-        if (DARK_THEME != null) {
-            String theme = SmileStudio.preferences().get("Theme", "");
-            if (theme.equals("Dark") || theme.equals("Darcula") || theme.equals("macDark")) {
-                DARK_THEME.apply(textArea);
-            }
-        }
-    }
-
-    /**
-     * Loads a built-in theme.
-     *
-     * @param theme the theme name.
-     */
-    private static Theme loadTheme(String theme) {
-        try {
-            return Theme.load(RSyntaxTextArea.class.getResourceAsStream(
-                        "/org/fife/ui/rsyntaxtextarea/themes/" + theme + ".xml"
-                ));
-        } catch (IOException ex) {
-            logger.error("Failed to load {} theme: {}", theme, ex.getMessage());
-        }
-        return null;
     }
 }

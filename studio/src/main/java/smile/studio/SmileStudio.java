@@ -51,7 +51,6 @@ import smile.studio.workspace.Workspace;
 import smile.swing.Button;
 import smile.studio.notebook.Cell;
 import smile.studio.notebook.Notebook;
-import smile.util.OS;
 import smile.util.Strings;
 import smile.util.lsp.LanguageService;
 import static smile.swing.SmileUtilities.scaleImageIcon;
@@ -130,7 +129,7 @@ public class SmileStudio extends JFrame implements SearchListener {
         Thread.ofPlatform().name("jdt-server-starter").daemon(true).start(() -> {
             try {
                 var handler = new LspServerNotificationHandler("JDT", statusBar);
-                var command = (OS.isWindows() ? "cmd.exe /c " : "bash -c ")
+                var command = (SystemInfo.isWindows ? "cmd.exe /c " : "bash -c ")
                         + System.getProperty("smile.home") + "/jdtls/bin/jdtls";
                 var jdtls = LanguageService.of(cwd, command);
                 jdtls.start(handler);
@@ -955,15 +954,18 @@ public class SmileStudio extends JFrame implements SearchListener {
         FlatLaf.registerCustomDefaultsSource("smile.studio");
         // FlatLaf.setup() must be called in the main method, before creating
         // any Swing components or the Event Dispatch Thread (EDT).
-        String theme = SmileStudio.prefs.get("Theme",
-                SystemInfo.isMacOS ? "macLight" : "Light");
+        String theme = SmileStudio.prefs.get("Theme", "Light");
         switch (theme) {
-            case "Light" -> FlatLightLaf.setup();
-            case "Dark" -> FlatDarkLaf.setup();
+            case "Light" -> {
+                if (SystemInfo.isMacOS) FlatMacLightLaf.setup();
+                else FlatLightLaf.setup();
+            }
+            case "Dark" -> {
+                if (SystemInfo.isMacOS) FlatMacDarkLaf.setup();
+                else FlatDarkLaf.setup();
+            }
             case "IntelliJ" -> FlatIntelliJLaf.setup();
             case "Darcula" -> FlatDarculaLaf.setup();
-            case "macLight" -> FlatMacLightLaf.setup();
-            case "macDark" -> FlatMacDarkLaf.setup();
             default -> {
                 logger.warn("Unknown theme '{}', falling back to Light", theme);
                 FlatLightLaf.setup();
