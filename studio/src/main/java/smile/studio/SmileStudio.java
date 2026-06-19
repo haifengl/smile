@@ -954,18 +954,10 @@ public class SmileStudio extends JFrame implements SearchListener {
         FlatLaf.registerCustomDefaultsSource("smile.studio");
         // FlatLaf.setup() must be called in the main method, before creating
         // any Swing components or the Event Dispatch Thread (EDT).
-        String theme = SmileStudio.prefs.get(SettingsDialog.UI_THEME_KEY, "Light");
+        String theme = SmileStudio.prefs.get(SettingsDialog.UI_THEME_KEY, "Dark");
         switch (theme) {
-            case "Light" -> {
-                if (SystemInfo.isMacOS) FlatMacLightLaf.setup();
-                else FlatLightLaf.setup();
-            }
-            case "Dark" -> {
-                if (SystemInfo.isMacOS) FlatMacDarkLaf.setup();
-                else FlatDarkLaf.setup();
-            }
-            case "IntelliJ" -> FlatIntelliJLaf.setup();
-            case "Darcula" -> FlatDarculaLaf.setup();
+            case "Light", "IntelliJ" -> FlatIntelliJLaf.setup();
+            case "Dark", "Darcula" -> FlatDarculaLaf.setup();
             default -> {
                 logger.warn("Unknown theme '{}', falling back to Light", theme);
                 FlatLightLaf.setup();
