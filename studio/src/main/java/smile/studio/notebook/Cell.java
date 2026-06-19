@@ -31,11 +31,11 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jdesktop.swingx.JXTextField;
 import ioa.agent.Coder;
 import ioa.llm.client.StreamResponseHandler;
-import smile.studio.Markdown;
 import smile.studio.kernel.Kernel;
 import smile.studio.kernel.PostRunNavigation;
-import smile.studio.Monospaced;
-import smile.studio.OutputArea;
+import smile.studio.text.Markdown;
+import smile.studio.text.Monospaced;
+import smile.studio.text.OutputArea;
 import static org.fife.ui.rsyntaxtextarea.SyntaxConstants.*;
 
 /**

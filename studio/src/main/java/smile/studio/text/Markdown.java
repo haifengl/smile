@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.studio;
+package smile.studio.text;
 
 import javax.swing.*;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -32,6 +32,7 @@ import org.xhtmlrenderer.swing.BasicPanel;
 import org.xhtmlrenderer.swing.LinkListener;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import smile.studio.SmileStudio;
 
 /**
  * A component to render Markdown text.

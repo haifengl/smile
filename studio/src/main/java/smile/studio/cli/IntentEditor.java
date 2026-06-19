@@ -16,7 +16,7 @@
  */
 package smile.studio.cli;
 
-import smile.studio.Monospaced;
+import smile.studio.text.Monospaced;
 import smile.studio.text.Editor;
 
 /**

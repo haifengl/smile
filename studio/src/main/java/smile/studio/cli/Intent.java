@@ -32,9 +32,9 @@ import ioa.llm.client.LLM;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import ioa.llm.tool.Question;
 import smile.plot.swing.Palette;
-import smile.studio.Markdown;
-import smile.studio.Monospaced;
-import smile.studio.OutputArea;
+import smile.studio.text.Markdown;
+import smile.studio.text.Monospaced;
+import smile.studio.text.OutputArea;
 import static smile.studio.cli.IntentType.*;
 
 /**
