@@ -73,6 +73,8 @@ public class SettingsDialog extends JDialog implements ActionListener {
         setLayout(new BorderLayout());
         this.prefs = prefs;
 
+        themeCombo.setSelectedItem(prefs.get(UI_THEME_KEY, "Light"));
+        aiServiceCombo.setSelectedItem(prefs.get(AI_SERVICE_KEY, aiServiceOptions[0]));
         themeCombo.addActionListener(this);
         aiServiceCombo.addActionListener(this);
         add(createServiceChoice(), BorderLayout.NORTH);
@@ -84,7 +86,6 @@ public class SettingsDialog extends JDialog implements ActionListener {
 
         // Add the dynamic panel to the center of the dialog
         add(cardPane, BorderLayout.CENTER);
-        aiServiceCombo.setSelectedItem(prefs.get(AI_SERVICE_KEY, aiServiceOptions[0]));
 
         // Panel for the buttons
         add(createButtonPane(), BorderLayout.SOUTH);
@@ -108,13 +109,13 @@ public class SettingsDialog extends JDialog implements ActionListener {
         gbc.gridx = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
-        themeCombo.setSelectedItem(prefs.get(UI_THEME_KEY, "Light"));
         pane.add(themeCombo, gbc);
 
-        // Row 1
+        // Row 1: AI Service
         gbc.gridx = 0; // Column 0
         gbc.gridy = 1; // Row 1
-        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.NONE; // Reset fill for label
+        gbc.weightx = 0.0; // Reset weightx for label
         JLabel serviceLabel = new JLabel(bundle.getString("Service"));
         pane.add(serviceLabel, gbc);
 
@@ -150,7 +151,6 @@ public class SettingsDialog extends JDialog implements ActionListener {
         // Row 2
         gbc.gridx = 0; // Column 0
         gbc.gridy = 1; // Row 1
-        gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.NONE; // Reset fill for label
         gbc.weightx = 0.0; // Reset weightx for label
         JLabel baseUrlLabel = new JLabel(bundle.getString("BaseUrl"));
@@ -167,7 +167,6 @@ public class SettingsDialog extends JDialog implements ActionListener {
         // Row 3
         gbc.gridx = 0; // Column 0
         gbc.gridy = 2; // Row 2
-        gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.NONE; // Reset fill for label
         gbc.weightx = 0.0; // Reset weightx for label
         JLabel modelLabel = new JLabel(bundle.getString("Model"));
