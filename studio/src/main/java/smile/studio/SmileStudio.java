@@ -247,7 +247,7 @@ public class SmileStudio extends JFrame implements SearchListener {
      *         or initialization fails.
      */
     public static LLM createLLM() {
-        var service = prefs.get("aiService", "");
+        var service = prefs.get(SettingsDialog.AI_SERVICE_KEY, "");
         if (service.isBlank()) {
             return null;
         }
@@ -954,7 +954,7 @@ public class SmileStudio extends JFrame implements SearchListener {
         FlatLaf.registerCustomDefaultsSource("smile.studio");
         // FlatLaf.setup() must be called in the main method, before creating
         // any Swing components or the Event Dispatch Thread (EDT).
-        String theme = SmileStudio.prefs.get("Theme", "Light");
+        String theme = SmileStudio.prefs.get(SettingsDialog.UI_THEME_KEY, "Light");
         switch (theme) {
             case "Light" -> {
                 if (SystemInfo.isMacOS) FlatMacLightLaf.setup();
