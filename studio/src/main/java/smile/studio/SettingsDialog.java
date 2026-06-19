@@ -16,13 +16,7 @@
  */
 package smile.studio;
 
-import com.formdev.flatlaf.FlatDarkLaf;
-import com.formdev.flatlaf.FlatLaf;
-import com.formdev.flatlaf.FlatLightLaf;
-import com.formdev.flatlaf.themes.FlatMacDarkLaf;
-import com.formdev.flatlaf.themes.FlatMacLightLaf;
-import com.formdev.flatlaf.util.SystemInfo;
-
+import com.formdev.flatlaf.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -222,11 +216,9 @@ public class SettingsDialog extends JDialog implements ActionListener {
             prefs.put(UI_THEME_KEY, theme);
             try {
                 if ("Dark".equals(theme)) {
-                    var laf = SystemInfo.isMacOS ? new FlatMacDarkLaf() : new FlatDarkLaf();
-                    UIManager.setLookAndFeel(laf);
+                    UIManager.setLookAndFeel(new FlatIntelliJLaf());
                 } else {
-                    var laf = SystemInfo.isMacOS ? new FlatMacLightLaf() : new FlatLightLaf();
-                    UIManager.setLookAndFeel(laf);
+                    UIManager.setLookAndFeel(new FlatDarculaLaf());
                 }
 
                 // Tells FlatLaf to refresh all open frames and dialogs
