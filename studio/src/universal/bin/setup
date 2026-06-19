@@ -37,7 +37,7 @@ source "$VENV_DIR/bin/activate"
 python -m pip install --upgrade pip setuptools wheel
 pip install -r "$APP_DIR/../conf/requirements.txt"
 pip install uv
-uv tool install ty@latest
+uv tool install ty@latest --force
 
 pip install onnxruntime
 # Create a symlink to the latest libonnxruntime in the capi directory

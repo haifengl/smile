@@ -54,11 +54,18 @@ public class Editor extends RSyntaxTextArea {
         setSyntaxEditingStyle(style);
         setLineWrap(true);
         setWrapStyleWord(true);
-        DarkTheme.apply(this);
         if (!style.equals(SYNTAX_STYLE_NONE)) {
             setCodeFoldingEnabled(true);
             setTabSize(4);
         }
+
+        DarkTheme.apply(this);
+        // Listen for global Look and Feel changes
+        UIManager.addPropertyChangeListener(evt -> {
+            if ("lookAndFeel".equals(evt.getPropertyName())) {
+                DarkTheme.apply(this);
+            }
+        });
 
         InputMap inputMap = getInputMap(JComponent.WHEN_FOCUSED);
         ActionMap actionMap = getActionMap();

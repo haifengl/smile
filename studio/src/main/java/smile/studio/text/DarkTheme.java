@@ -45,8 +45,10 @@ public interface DarkTheme {
      * @param textArea the text area to be dark.
      */
     static void apply(RSyntaxTextArea textArea) {
-        if (FlatLaf.isLafDark() && DARK_THEME != null) {
-            DARK_THEME.apply(textArea);
+        if (FlatLaf.isLafDark()) {
+            if (DARK_THEME != null) DARK_THEME.apply(textArea);
+        } else {
+            if (IDEA_THEME != null) IDEA_THEME.apply(textArea);
         }
     }
 
