@@ -187,6 +187,24 @@ static std::vector<at::Tensor> extract_params(ST_TensorVec v) {
 }
 
 // =============================================================================
+// Tensor — helper for shape vector
+// =============================================================================
+
+static std::vector<int64_t> to_shape(const int64_t *shape, int ndim) {
+    return std::vector<int64_t>(shape, shape + ndim);
+}
+
+static std::optional<at::Scalar> maybe_scalar(int has, ST_Scalar s) {
+    if (has && s) return s->s;
+    return std::nullopt;
+}
+
+static std::vector<int64_t> param2(const int64_t *p, int64_t def) {
+    if (p) return {p[0], p[1]};
+    return {def, def};
+}
+
+// =============================================================================
 // CUDA / Device utilities
 // =============================================================================
 
@@ -376,14 +394,6 @@ ST_Scalar smile_scalar_from_float(double value) {
     ST_TRY_BEGIN return new ST_Scalar_{ at::Scalar(value) }; ST_TRY_END return nullptr;
 }
 void smile_scalar_free(ST_Scalar s) { delete s; }
-
-// =============================================================================
-// Tensor — helper for shape vector
-// =============================================================================
-
-static std::vector<int64_t> to_shape(const int64_t *shape, int ndim) {
-    return std::vector<int64_t>(shape, shape + ndim);
-}
 
 // =============================================================================
 // Tensor — Construction
@@ -708,11 +718,6 @@ void smile_tensor_acos_ (ST_Tensor t) {
 }
 void smile_tensor_asin_ (ST_Tensor t) {
     if (t) { ST_TRY_BEGIN t->t.asin_(); ST_TRY_END }
-}
-
-static std::optional<at::Scalar> maybe_scalar(int has, ST_Scalar s) {
-    if (has && s) return s->s;
-    return std::nullopt;
 }
 
 ST_Tensor smile_tensor_clamp(ST_Tensor t, int has_min, ST_Scalar mn,
@@ -1157,11 +1162,6 @@ ST_Module smile_linear_as_module(ST_Linear l) {
 // =============================================================================
 // Conv2d
 // =============================================================================
-
-static std::vector<int64_t> param2(const int64_t *p, int64_t def) {
-    if (p) return {p[0], p[1]};
-    return {def, def};
-}
 
 ST_Conv2d smile_conv2d_create(int64_t in, int64_t out,
                                const int64_t *kernel,

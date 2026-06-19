@@ -15,7 +15,7 @@ lazy val commonSettings = Seq(
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("https://haifengl.github.io/")),
-  version := "6.2.1",
+  version := "6.2.2",
 
   // Run in a separate JVM, to make sure sbt waits until all threads have
   // finished before returning.
@@ -47,7 +47,7 @@ lazy val commonSettings = Seq(
       case "windows" =>
         "PATH" -> s"$binDir;$torchDir;${System.getenv("PATH")}"
       case "mac" =>
-        "DYLD_LIBRARY_PATH" -> s"$binDir:$torchDir:${System.getenv("DYLD_LIBRARY_PATH")}"
+        "DYLD_LIBRARY_PATH" -> s"$binDir:$torchDir:/opt/homebrew/lib/:/usr/local/lib:${System.getenv("DYLD_LIBRARY_PATH")}"
       case _ =>
         "LD_LIBRARY_PATH" -> s"$binDir:$torchDir:${System.getenv("LD_LIBRARY_PATH")}"
     }
