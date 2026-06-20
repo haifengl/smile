@@ -96,7 +96,7 @@ libraryDependencies ++= Seq(
   "com.openai"        % "openai-java"        % "4.41.0",
   "com.anthropic"     % "anthropic-java"     % "2.42.0",
   "com.google.genai"  % "google-genai"       % "1.53.0",
-  "org.commonmark"    % "commonmark"         % "0.28.0",
+  "org.commonmark"    % "commonmark"         % "0.29.0",
   "org.xhtmlrenderer" % "flying-saucer-core" % "10.3.0",
   "org.eclipse.lsp4j" % "org.eclipse.lsp4j"  % "1.0.0",
   "com.fifesoft"      % "rsyntaxtextarea"    % "3.6.3",
