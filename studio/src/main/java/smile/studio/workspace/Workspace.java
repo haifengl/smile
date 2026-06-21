@@ -259,7 +259,7 @@ public class Workspace extends JSplitPane {
         var cli = new AgentCLI(coder);
         cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
                         bundle.getString("WelcomeSeparator") + '\n' +
-                        MessageFormat.format(bundle.getString("PythonCoderWelcome"), System.getProperty("user.dir")),
+                        MessageFormat.format(bundle.getString("JavaCoderWelcome"), System.getProperty("user.dir")),
                 bundle.getString("CoderTips"));
         return cli;
     }
@@ -271,7 +271,7 @@ public class Workspace extends JSplitPane {
         var cli = new AgentCLI(coder);
         cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
                         bundle.getString("WelcomeSeparator") + '\n' +
-                        MessageFormat.format(bundle.getString("JavaCoderWelcome"), System.getProperty("user.dir")),
+                        MessageFormat.format(bundle.getString("PythonCoderWelcome"), System.getProperty("user.dir")),
                 bundle.getString("CoderTips"));
         return cli;
     }
