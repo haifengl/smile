@@ -44,6 +44,8 @@ cd website
 npm install
 npm run deploy
 check_error "!!"
+mkdir -p _site/api
+mv ../doc/* _site/api/
 
 # build binary package
 cd ..
