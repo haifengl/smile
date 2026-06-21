@@ -934,9 +934,10 @@ public class SmileStudio extends JFrame implements SearchListener {
         }
 
         if (SystemInfo.isWindows) {
-            // Icons may become blurry due to desktop scaling.
-            // Set to 1.0 for no scaling.
-            System.setProperty("sun.java2d.uiScale", "1.0");
+            // Icons may become blurry due to desktop scaling with standard JDK.
+            // However, JBR optimizes HiDPI scaling.
+            // Set to 1.0 for no scaling if running with standard JDK.
+            //System.setProperty("sun.java2d.uiScale", "1.0");
         }
 
         if (SystemInfo.isLinux) {
