@@ -201,7 +201,6 @@ lazy val scala = project.in(file("scala"))
 lazy val spark = project.in(file("spark"))
   .settings(scalaSettings: _*)
   .settings(scalaVersion := scala213)
-  .settings(publish / skip := true)
   .dependsOn(core)
 
 lazy val kotlin = project.in(file("kotlin"))
