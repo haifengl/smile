@@ -11,11 +11,8 @@ packageName := "smile"
 packageSummary := "Statistical Machine Intelligence and Learning Engine"
 packageDescription :=
   """
-    |SMILE is a fast and comprehensive machine learning, NLP, linear algebra,
-    |graph, interpolation, and visualization system in Java and Scala.
-    |With advanced data structures and algorithms, SMILE delivers
-    |state-of-art performance. SMILE is well documented and please check out
-    |the project website for programming guides and more information.
+    |SMILE is a comprehensive, high-performance machine learning framework
+    |for the JVM. SMILE Studio is an agentic IDE for data science.
     |""".stripMargin
 
 import com.typesafe.sbt.packager.MappingsHelper._
