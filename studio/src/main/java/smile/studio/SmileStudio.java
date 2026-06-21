@@ -100,7 +100,10 @@ public class SmileStudio extends JFrame implements SearchListener {
         initMenuAndToolBar();
 
         JPanel contentPane = new JPanel(new BorderLayout());
-        contentPane.add(toolBar, BorderLayout.NORTH);
+        // Don't show toolbar on Windows/Linux to reduce UI clutter.
+        // However, macOS red/orange/green buttons overlap Swing components
+        // without toolbar, which we adjust the location.
+        if (SystemInfo.isMacOS) contentPane.add(toolBar, BorderLayout.NORTH);
         contentPane.add(workspace, BorderLayout.CENTER);
         contentPane.add(statusBar, BorderLayout.SOUTH);
         setContentPane(contentPane);
