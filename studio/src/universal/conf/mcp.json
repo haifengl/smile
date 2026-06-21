@@ -1,5 +1,22 @@
 {
   "servers": {
-
+    "toolbox-bigquery": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@toolbox-sdk/server",
+        "--prebuilt=bigquery",
+        "--stdio"
+      ],
+      "windows": {
+        "command": "cmd.exe",
+        "args": ["/c", "npx",
+          "-y",
+          "@toolbox-sdk/server",
+          "--prebuilt=bigquery",
+          "--stdio"]
+      }
+    }
   }
 }
