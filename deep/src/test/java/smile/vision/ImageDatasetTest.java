@@ -38,7 +38,7 @@ public class ImageDatasetTest {
         }
 
         var transform = Transform.classification(384, 384);
-        try (var data = new ImageDataset(4, "deep/src/test/resources/data/imagenet-mini/train", transform, ImageNet.folder2Target)) {
+        try (var data = new ImageDataset("deep/src/test/resources/data/imagenet-mini/train", 4, transform, ImageNet.folder2Target)) {
             assertEquals(34745, data.size());
             var iter = data.iterator();
             assertTrue(iter.hasNext());

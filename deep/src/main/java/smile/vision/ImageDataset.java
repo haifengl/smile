@@ -19,6 +19,7 @@ package smile.vision;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -72,13 +73,13 @@ public class ImageDataset implements Dataset {
 
     /**
      * Constructor.
-     * @param batch the mini-batch size.
      * @param root the root directory of image dataset.
+     * @param batch the mini-batch size.
      * @param transform the transformation from image to tensor.
      * @param targetTransform the transform from image label to class index.
      * @throws IOException if the root directory doesn't exist or doesn't have images.
      */
-    public ImageDataset(int batch, String root, Transform transform, ToIntFunction<String> targetTransform) throws IOException {
+    public ImageDataset(String root, int batch, Transform transform, ToIntFunction<String> targetTransform) throws IOException {
         this.batch = batch;
         this.transform = transform;
         this.targetTransform = targetTransform;
@@ -106,6 +107,46 @@ public class ImageDataset implements Dataset {
         if (samples.isEmpty()) {
             throw new IOException("No JPEG or PNG images found in " + root);
         }
+    }
+
+    /**
+     * Constructor.
+     * @param images the list of image files. The folder name of an image file
+     *               will be used as the class label.
+     * @param batch the mini-batch size.
+     * @param transform the transformation from image to tensor.
+     * @param targetTransform the transform from image label to class index.
+     */
+    public ImageDataset(ArrayList<Path> images, int batch, Transform transform, ToIntFunction<String> targetTransform) {
+        this.batch = batch;
+        this.transform = transform;
+        this.targetTransform = targetTransform;
+
+        for (var image : images) {
+            String label = image.getParent().getFileName().toString();
+            samples.add(new ImageFile(image.toFile(), label));
+        }
+    }
+
+    /**
+     * Returns a random sample of the dataset with the given size.
+     * The sample shares the same image files and transforms with
+     * the original dataset. The sample is useful for quick testing
+     * or debugging on a smaller subset of the data.
+     * @param size the sample size.
+     * @return a random sample of the dataset with the given size.
+     */
+    public ImageDataset sample(int size) {
+        if (size >= samples.size()) {
+            throw new IllegalArgumentException("Sample size is greater than data size: " + size + " > " + samples.size());
+        }
+
+        var index = MathEx.permutate(samples.size());
+        ArrayList<Path> images = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            images.add(samples.get(index[i]).file.toPath());
+        }
+        return new ImageDataset(images, batch, transform, targetTransform);
     }
 
     @Override
