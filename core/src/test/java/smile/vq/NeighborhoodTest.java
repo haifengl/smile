@@ -22,9 +22,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class NeighborhoodTest {
     @Test
-    void givenBubbleNeighborhood_whenInsideAndOutsideRadius_thenExpectedValues() {
+    void givenSquareNeighborhood_whenInsideAndOutsideRadius_thenExpectedValues() {
         // Given
-        Neighborhood neighborhood = Neighborhood.bubble(2);
+        Neighborhood neighborhood = Neighborhood.square(2);
 
         // When
         double winner = neighborhood.of(0, 0, 0);
@@ -53,6 +53,91 @@ class NeighborhoodTest {
         assertEquals(1.0, winnerAtStart, 1E-12);
         assertTrue(nearAtStart > nearLater);
         assertTrue(nearLater > 0.0);
+    }
+
+    @Test
+    void givenSquareNeighborhoodWithWidthOne_whenEvaluated_thenOnlyWinnerIsUpdated() {
+        // Given
+        Neighborhood neighborhood = Neighborhood.square(1);
+
+        // When
+        double winner = neighborhood.of(0, 0, 5);
+        double horizontalNeighbor = neighborhood.of(1, 0, 5);
+        double verticalNeighbor = neighborhood.of(0, -1, 5);
+
+        // Then
+        assertEquals(1.0, winner);
+        assertEquals(0.0, horizontalNeighbor);
+        assertEquals(0.0, verticalNeighbor);
+    }
+
+    @Test
+    void givenBubbleNeighborhood_whenPointIsOnRadiusBoundary_thenItIsIncluded() {
+        // Given
+        Neighborhood neighborhood = Neighborhood.bubble(2);
+
+        // When
+        double winner = neighborhood.of(0, 0, 0);
+        double onBoundary = neighborhood.of(0, 2, 7);
+        double diagonalInside = neighborhood.of(1, 1, 7);
+        double outside = neighborhood.of(2, 1, 7);
+
+        // Then
+        assertEquals(1.0, winner);
+        assertEquals(1.0, onBoundary);
+        assertEquals(1.0, diagonalInside);
+        assertEquals(0.0, outside);
+    }
+
+    @Test
+    void givenTriangleNeighborhood_whenDistanceAndTimeIncrease_thenResponseDropsLinearlyToZero() {
+        // Given
+        Neighborhood neighborhood = Neighborhood.triangle(2.0, 100.0);
+
+        // When
+        double winnerAtStart = neighborhood.of(0, 0, 0);
+        double nearAtStart = neighborhood.of(1, 0, 0);
+        double boundaryAtStart = neighborhood.of(2, 0, 0);
+        double nearLater = neighborhood.of(1, 0, 100);
+
+        // Then
+        assertEquals(1.0, winnerAtStart, 1E-12);
+        assertEquals(0.5, nearAtStart, 1E-12);
+        assertEquals(0.0, boundaryAtStart, 1E-12);
+        assertEquals(0.0, nearLater, 1E-12);
+    }
+
+    @Test
+    void givenGaussianNeighborhood_whenPointsHaveSameDistance_thenResponseIsSymmetric() {
+        // Given
+        Neighborhood neighborhood = Neighborhood.Gaussian(2.0, 100.0);
+
+        // When
+        double horizontal = neighborhood.of(1, 0, 0);
+        double vertical = neighborhood.of(0, -1, 0);
+        double diagonal = neighborhood.of(1, 1, 0);
+
+        // Then
+        assertEquals(Math.exp(-0.125), horizontal, 1E-12);
+        assertEquals(horizontal, vertical, 1E-12);
+        assertEquals(Math.exp(-0.25), diagonal, 1E-12);
+    }
+
+    @Test
+    void givenMexicanHatNeighborhood_whenDistanceIncreases_thenFarNeighborsArePenalized() {
+        // Given
+        Neighborhood neighborhood = Neighborhood.MexicanHat(2.0, 100.0);
+
+        // When
+        double winnerAtStart = neighborhood.of(0, 0, 0);
+        double nearAtStart = neighborhood.of(1, 0, 0);
+        double farAtStart = neighborhood.of(5, 0, 0);
+
+        // Then
+        assertEquals(1.0, winnerAtStart, 1E-12);
+        assertTrue(nearAtStart > 0.0);
+        assertTrue(nearAtStart < winnerAtStart);
+        assertTrue(farAtStart < 0.0);
     }
 }
 
