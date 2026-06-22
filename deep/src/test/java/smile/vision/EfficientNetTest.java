@@ -73,8 +73,8 @@ public class EfficientNetTest {
 
         var model = EfficientNet.V2S();
         var transform = Transform.classification(384, 384);
-        try (var data = new ImageDataset(64, "data/imagenet-mini/train", transform, ImageNet.folder2Target);
-             var test = new ImageDataset(16, "data/imagenet-mini/val",   transform, ImageNet.folder2Target)) {
+        try (var data = new ImageDataset("data/imagenet-mini/train", 64, transform, ImageNet.folder2Target);
+             var test = new ImageDataset("data/imagenet-mini/val",   16, transform, ImageNet.folder2Target)) {
 
             var schedule = TimeFunction.piecewise(new int[]{50000},
                     TimeFunction.linear(0.0001, 50000, 0.01),
@@ -82,7 +82,7 @@ public class EfficientNetTest {
             model.setLearningRateSchedule(schedule);
             Optimizer optimizer = Optimizer.RMSprop(model, 0.0001, 0.9, 1E-07, 1E-05, 0.9, false);
             // Should complete without throwing
-            assertDoesNotThrow(() -> model.train(1, optimizer, Loss.nll(), data, test, null, new Accuracy()));
+            assertDoesNotThrow(() -> model.train(1, optimizer, Loss.nll(), data.sample(640), test.sample(160), null, new Accuracy()));
         }
     }
 }

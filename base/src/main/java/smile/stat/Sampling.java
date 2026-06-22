@@ -60,7 +60,7 @@ public interface Sampling {
      * Returns the strata of samples as a two-dimensional
      * array. Each row is the sample indices of stratum.
      *
-     * @param category the strata labels.
+     * @param category the strata label.
      * @return the strata of samples as a two-dimensional array.
      *         Each row is the sample indices of stratum.
      */
@@ -111,7 +111,7 @@ public interface Sampling {
      * must be assigned to one and only one stratum. Then simple random
      * sampling is applied within each stratum.
      *
-     * @param category the strata labels.
+     * @param category the strata label.
      * @param subsample sampling rate. Draw samples with replacement if it is 1.0.
      * @return the indices of selected samples.
      */
