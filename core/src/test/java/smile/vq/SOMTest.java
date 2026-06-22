@@ -83,8 +83,8 @@ public class SOMTest {
 
     @Test
     @Tag("integration")
-    public void testUSPS() {
-        System.out.println("USPS");
+    public void testSOM() {
+        System.out.println("SOM");
 
         int epochs = 20;
         double[][][] lattice = SOM.lattice(20, 20, x);
