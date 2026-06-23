@@ -43,18 +43,36 @@ public class Monospaced {
     );
 
     /** The shared font; persisted via {@link SmileStudio#preferences()}. */
-    private static Font font = UIManager.getFont("monospaced.font")
+    private static Font font = baseFont()
             .deriveFont(attributes)
             .deriveFont(Math.clamp(SmileStudio.preferences().getFloat("monospaced", 14f),
                     MIN_FONT_SIZE, MAX_FONT_SIZE));
 
-    /** A singleton instance used as the source object for font-change events. */
-    private static final Monospaced bean = new Monospaced();
+    /** A stable source object for font-change events. */
+    private static final Object bean = new Object();
     /** Property-change support. */
     private static final PropertyChangeSupport pcs = new PropertyChangeSupport(bean);
 
     /** Private constructor – utility class. */
     private Monospaced() {
+    }
+
+    /**
+     * Returns a stable base monospaced font even when the look-and-feel
+     * does not define {@code monospaced.font} (e.g. headless test runs).
+     */
+    private static Font baseFont() {
+        Font uiMonospaced = UIManager.getFont("monospaced.font");
+        if (uiMonospaced != null) {
+            return uiMonospaced;
+        }
+
+        Font textAreaFont = UIManager.getFont("TextArea.font");
+        if (textAreaFont != null) {
+            return new Font(Font.MONOSPACED, textAreaFont.getStyle(), textAreaFont.getSize());
+        }
+
+        return new Font(Font.MONOSPACED, Font.PLAIN, 14);
     }
 
     /**
