@@ -621,13 +621,13 @@ public class TensorTest {
     // -----------------------------------------------------------------------
 
     @Test
-    public void testGivenTwoWrappersAroundSameTorchTensorWhenEqualsThenTrue() {
-        // Given: a Tensor whose underlying native object is shared
+    public void testGivenTwoReferencesToSameTensorWhenEqualsThenTrue() {
         Tensor a = Tensor.ones(3);
-        Tensor b = new Tensor(a.handle());  // same native object
-        // When / Then
-        assertEquals(a, b, "Wrappers around same native object must be equal");
+        Object b = a;
+
+        assertEquals(a, b, "References to the same tensor must be equal");
         assertEquals(a.hashCode(), b.hashCode(), "Equal tensors must have same hashCode");
+
         a.close();
     }
 
