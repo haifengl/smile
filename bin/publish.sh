@@ -89,6 +89,8 @@ while true; do
     case $ans in
         [Yy]* )
             cd ../clojure
+            ./lein test
+            check_error "lein test"
             ./lein deploy clojars
             check_error "lein deploy clojars"
             cd ..
