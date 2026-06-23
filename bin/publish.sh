@@ -17,6 +17,7 @@ fi
 
 sbt clean
 rm -rf doc/*
+rm -rf website/_site/api
 sbt unidoc
 check_error "!!"
 mv target/javaunidoc doc/java
@@ -32,13 +33,6 @@ find doc/scala -name '*.html' -exec bin/gtag.sh {} \;
 ./gradlew :kotlin:dokkaGenerate
 check_error "!!"
 find doc/kotlin -name '*.html' -exec bin/gtag.sh {} \;
-
-cd clojure
-./lein codox
-check_error "!!"
-cd ..
-find doc/clojure -name '*.html' -exec tidy -m {} \;
-find doc/clojure -name '*.html' -exec bin/gtag.sh {} \;
 
 cd website
 npm install
@@ -77,7 +71,7 @@ while true; do
     case $ans in
         [Yy]* )
             sbt sonaRelease
-            check_error "sbt sonaRelease"
+            check_error "sbt release"
             break;;
         [Nn]* ) exit 0;;
         * ) echo "Please answer yes or no.";;
@@ -91,9 +85,18 @@ while true; do
             cd ../clojure
             ./lein test
             check_error "lein test"
+
+            ./lein codox
+            check_error "lein codox"
+
             ./lein deploy clojars
-            check_error "lein deploy clojars"
+            check_error "lein deploy"
+
             cd ..
+            find doc/clojure -name '*.html' -exec tidy -m {} \;
+            find doc/clojure -name '*.html' -exec bin/gtag.sh {} \;
+            mv doc/clojure website/_site/api/
+
             break;;
         [Nn]* ) break;;
         * ) echo "Please answer yes or no.";;
