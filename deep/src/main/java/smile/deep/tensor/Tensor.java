@@ -122,6 +122,10 @@ public class Tensor implements AutoCloseable {
 
     /**
      * Constructor.
+     * <p>
+     * Ownership note: this wrapper takes ownership of {@code handle} and will
+     * release it on {@link #close()} (or via Cleaner fallback). Do not create
+     * multiple {@code Tensor} wrappers for the same native handle.
      * @param handle the native {@code ST_Tensor} handle.
      */
     public Tensor(MemorySegment handle) {
