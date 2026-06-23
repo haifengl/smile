@@ -159,12 +159,12 @@ The `deep/README.md` covers:
 | [README](serve/README.md) | Building and running the server, `/chat/completions` endpoint, SSE streaming, configuration |
 
 ### `studio/` — Interactive Shell & Desktop IDE
-> REPL / notebook environment for Java, Scala, and Kotlin
+> An agentic IDE for data science using Python or SMILE
 
 | Document                      | Topics |
 |-------------------------------|---|
-| [README.md](studio/README.md) | Desktop Studio notebook UI, cell types, output rendering |
-| [CLI](studio/CLI.md)    | CLI entry points (`smile`, `smile shell`, `smile scala`, `smile kotlin`, `smile server`) |
+| [README.md](studio/README.md) | Desktop Studio UX                                                    |
+| [CLI](studio/CLI.md)    | CLI entry points (`smile`, `smile shell`, `smile scala`, `smile serve`) |
 
 ### `scala/` — Scala API
 > Idiomatic Scala shim — concise wrappers, symbolic operators, Scala collections integration
@@ -295,10 +295,10 @@ For visualization examples, see [plot/README.md](plot/README.md).
 
 ---
 
-## SMILE Studio & Shell
+## SMILE Studio
 
-SMILE ships with an interactive desktop Studio (notebook-style) and a set of
-CLI shells.  See [studio/README.md](studio/README.md) for full documentation.
+SMILE Studio is an agentic IDE for data science using Python or [SMILE](https://haifengl.github.io/) on JVM.
+See [studio/README.md](studio/README.md) for full documentation.
 
 Download a pre-packaged release from the
 [releases page](https://github.com/haifengl/smile/releases), then:
@@ -310,14 +310,14 @@ path/to/smile/bin/smile      # launch SMILE Studio from your project directory
 
 Other entry points:
 
-| Command         | Description |
-|-----------------|---|
-| `smile`         | Desktop notebook IDE |
+| Command         | Description                                    |
+|-----------------|------------------------------------------------|
+| `smile`         | Desktop agentic IDE                            |
 | `smile shell`   | Java REPL with all SMILE packages pre-imported |
-| `smile scala`   | Scala REPL |
-| `smile train`   | Train a supervised learning model     |
-| `smile predict` | Predict on a file using a saved model             |
-| `smile serve`   | Start the LLM inference server |
+| `smile scala`   | Scala REPL                                     |
+| `smile train`   | Train a supervised learning model              |
+| `smile predict` | Predict on a file using a saved model          |
+| `smile serve`   | Start the LLM inference server                 |
 
 To increase the JVM heap:
 ```shell
