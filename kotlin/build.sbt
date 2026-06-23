@@ -2,7 +2,8 @@ name := "smile-kotlin"
 
 packageOptions += Package.ManifestAttributes("Automatic-Module-Name" -> "smile.kotlin")
 
-unmanagedSources / excludeFilter := HiddenFileFilter || "build.gradle.kts"
+// Exclude any gradle kts scripts from being picked up as sources
+unmanagedSources / excludeFilter := (unmanagedSources / excludeFilter).value || "*.gradle.kts"
 
 import kotlin.Keys._
 kotlinLib("stdlib")
