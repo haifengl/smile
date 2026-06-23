@@ -22,6 +22,7 @@ hs_err_pid*
 .nrepl-port
 .lein-repl-*
 clojure/pom.xml*
+clojure/.lein-failures
 
 # Node.js
 node_modules
