@@ -82,7 +82,7 @@ while true; do
     read -p "Do you want to publish smile-clojure? (yes/no): " ans
     case $ans in
         [Yy]* )
-            cd ../clojure
+            cd clojure
             ./lein test
             check_error "lein test"
 
