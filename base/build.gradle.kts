@@ -6,6 +6,7 @@ dependencies {
     api("org.apache.commons:commons-csv:1.14.1")
     api("org.duckdb:duckdb_jdbc:1.5.4.0")
     api(libs.bundles.jackson)
+    api(libs.bundles.fastxml) // evict older version used by avro and arrow
     implementation(libs.bundles.arrow)
     implementation("org.eclipse.lsp4j:org.eclipse.lsp4j:1.0.0")
     implementation("com.epam:parso:2.0.14") // SAS7BDAT

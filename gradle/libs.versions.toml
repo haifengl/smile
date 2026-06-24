@@ -1,11 +1,14 @@
 [versions]
 arrow = "19.0.0"
+fastxml = "2.22.0"
 jackson = "3.2.0"
 jsonschema = "4.38.0"
 
 [libraries]
 arrow-dataset = { module = "org.apache.arrow:arrow-dataset", version.ref = "arrow" }
 arrow-memory-netty = { module = "org.apache.arrow:arrow-memory-unsafe", version.ref = "arrow" }
+fastxml-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "fastxml" }
+fastxml-datatype = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "fastxml" }
 jackson-databind = { module = "tools.jackson.core:jackson-databind", version.ref = "jackson" }
 jackson-yaml = { module = "tools.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
 jsonschema-generator = { module = "com.github.victools:jsonschema-generator", version.ref = "jsonschema" }
@@ -17,3 +20,4 @@ swingx = { module = "org.swinglabs:swingx", version = "1.6.1" }
 [bundles]
 arrow = ["arrow-dataset", "arrow-memory-netty"]
 jackson = ["jackson-databind", "jackson-yaml", "jsonschema-generator", "jsonschema-jackson"]
+fastxml = ["fastxml-databind", "fastxml-datatype"]
