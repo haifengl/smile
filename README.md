@@ -9,6 +9,10 @@ SMILE also provides idiomatic APIs for **Scala** and **Kotlin**.
 With advanced data structures and algorithms, SMILE delivers state-of-the-art
 performance across every aspect of machine learning.
 
+SMILE Studio is an agentic IDE for data science using Python, Java, or Scala.
+See [studio/README.md](studio/README.md) how to get your first project up and
+start interacting with your data with natural language in a few minutes.
+
 ---
 
 ## Table of Contents
