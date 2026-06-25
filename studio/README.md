@@ -71,17 +71,42 @@ All four panels are arranged in a resizable split-pane layout, and the applicati
 
 ## 2. Starting SMILE Studio
 
-Run SMILE Studio from your project's root directory so that relative paths in notebooks resolve correctly:
+Getting your first project up and running takes just a few minutes.
+Follow these quick steps to set up your environment and start
+interacting with your data with natural language.
 
-```bash
-# Unix / macOS
-cd /your/project
-path/to/smile/bin/smile
+1. **Download & Unzip**
 
-# Windows
-cd C:\your\project
-path\to\smile\bin\smile
+Download the [SMILE package](https://github.com/haifengl/smile/releases/download/v6.2.3/smile-6.2.3.zip)
+and unzip it on your machine.
+
+2. **Configure Your Environment**
+
+Run the setup script to configure everything automatically:
+```shell
+/path/to/smile/bin/setup
 ```
+
+3. **Prepare Your Project Directory**
+
+Create a new directory for your work (e.g., `myproject`) and place your
+datasets into the `myproject/input` folder.
+
+4. **Launch SMILE Studio**
+
+Navigate into your project folder and start the studio application:
+
+```shell
+cd myproject/
+/path/to/smile/bin/smile
+```
+
+5. **Initialize & Prompt**
+
+Once inside the studio, run `/init` to describe your project and goals.
+From there, you can run `/automl`, use other slash commands, or simply type
+out what you want to do in natural language!
+
 
 > **Note:** SMILE Studio must be started in a graphical (non-headless) environment. If the JVM is running in headless mode the application will print an error and exit.
 
