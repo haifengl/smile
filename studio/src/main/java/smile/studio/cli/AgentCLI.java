@@ -516,8 +516,14 @@ public class AgentCLI extends JPanel {
             @Override
             public void onException(Throwable ex) {
                 SwingUtilities.invokeLater(() -> {
+                    Throwable rootCause = ex;
+                    // Loop until getCause() returns null or points to itself
+                    while (rootCause.getCause() != null && rootCause.getCause() != rootCause) {
+                        rootCause = rootCause.getCause();
+                    }
                     intent.setProgress(false);
-                    intent.output().append("\nError: " + ex.getMessage());
+                    intent.setStatus(rootCause.getClass().getSimpleName());
+                    intent.output().append("\n" + rootCause.getMessage());
                 });
             }
 
