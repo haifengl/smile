@@ -68,7 +68,6 @@ public class SettingsDialog extends JDialog implements ActionListener {
         this.prefs = prefs;
 
         themeCombo.setSelectedItem(prefs.get(UI_THEME_KEY, "Dark"));
-        aiServiceCombo.setSelectedItem(prefs.get(AI_SERVICE_KEY, aiServiceOptions[0]));
         themeCombo.addActionListener(this);
         aiServiceCombo.addActionListener(this);
         add(createServiceChoice(), BorderLayout.NORTH);
@@ -80,6 +79,9 @@ public class SettingsDialog extends JDialog implements ActionListener {
 
         // Add the dynamic panel to the center of the dialog
         add(cardPane, BorderLayout.CENTER);
+        // Set the AI service value after adding action listener and all cards
+        // so that the card pane shows existing values properly.
+        aiServiceCombo.setSelectedItem(prefs.get(AI_SERVICE_KEY, aiServiceOptions[0]));
 
         // Panel for the buttons
         add(createButtonPane(), BorderLayout.SOUTH);
