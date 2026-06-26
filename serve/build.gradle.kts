@@ -4,9 +4,9 @@ plugins {
     id("jacoco-report-aggregation")
 }
 
-val quarkusPlatformGroupId: String by project
-val quarkusPlatformArtifactId: String by project
-val quarkusPlatformVersion: String by project
+val quarkusPlatformGroupId = extra["quarkusPlatformGroupId"] as String
+val quarkusPlatformArtifactId = extra["quarkusPlatformArtifactId"] as String
+val quarkusPlatformVersion = extra["quarkusPlatformVersion"] as String
 
 dependencies {
     implementation(project(":core"))
