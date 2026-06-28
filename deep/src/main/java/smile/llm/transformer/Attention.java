@@ -16,10 +16,10 @@
  */
 package smile.llm.transformer;
 
+import java.lang.foreign.MemorySegment;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.Tensor;
-
-import java.lang.foreign.MemorySegment;
+import static smile.torch.smile_torch_h.smile_torch_scaled_dot_product_attention;
 
 /**
  * Multi-head attention. Multi-head attention is a core component of
@@ -51,6 +51,46 @@ public interface Attention {
      * @return pytorch module.
      */
     MemorySegment module();
+
+    /**
+     * Computes the scaled dot product attention on query, key and value tensors, using
+     * an optional attention mask if passed, and applying dropout if a probability
+     * greater than 0.0 is specified.
+     * @param query the query tensor.
+     * @param key the key tensor.
+     * @param value the value tensor.
+     * @param mask the attention mask.
+     * @return the attention output.
+     */
+    default Tensor apply(Tensor query, Tensor key, Tensor value, Tensor mask) {
+        return apply(query, key, value, mask, 0.0, false, 0.0);
+    }
+
+    /**
+     * Computes the scaled dot product attention on query, key and value tensors, using
+     * an optional attention mask if passed, and applying dropout if a probability
+     * greater than 0.0 is specified.
+     * @param query the query tensor.
+     * @param key the key tensor.
+     * @param value the value tensor.
+     * @param mask the attention mask.
+     * @param dropout the dropout probability; if greater than 0.0, dropout is applied.
+     * @param isCausal If set to true, the attention masking is a lower triangular
+     *                 matrix when the mask is a square matrix. The attention masking
+     *                 has the form of the upper left causal bias due to the alignment
+     *                 when the mask is a non-square matrix. An error is thrown if both
+     *                 attn_mask and is_causal are set.
+     * @param scale Optional scaling factor applied prior to softmax. If <= 0, the standard
+     *              scaling factor is used.
+     * @return the attention output.
+     */
+    default Tensor apply(Tensor query, Tensor key, Tensor value, Tensor mask,
+                         double dropout, boolean isCausal, double scale) {
+        var handle = smile_torch_scaled_dot_product_attention(query.handle(), key.handle(), value.handle(),
+                mask == null ? MemorySegment.NULL : mask.handle(),
+                dropout, isCausal ? 1 : 0, scale > 0 ? 1 : 0, scale);
+        return new Tensor(handle);
+    }
 
     /**
      * Efficiently repeat a tensor.
