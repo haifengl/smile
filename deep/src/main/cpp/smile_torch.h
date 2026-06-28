@@ -561,6 +561,33 @@ SMILE_API ST_Tensor smile_torch_where_tt(ST_Tensor cond, ST_Tensor input, ST_Ten
 SMILE_API ST_Tensor smile_torch_where_ts(ST_Tensor cond, ST_Tensor input, ST_Scalar other);
 
 /* =========================================================================
+ * Attention — scaled_dot_product_attention
+ * ========================================================================= */
+
+/**
+ * Computes scaled dot-product attention: softmax(Q @ K^T / scale) @ V.
+ *
+ * @param query   query tensor  [B, nhead, L, E]
+ * @param key     key tensor    [B, nhead, S, E]
+ * @param value   value tensor  [B, nhead, S, Ev]
+ * @param attn_mask optional attention mask [L, S] or [B, nhead, L, S]; pass NULL for none
+ * @param dropout_p dropout probability (0.0 = no dropout)
+ * @param is_causal if 1, applies causal masking; attn_mask is ignored if this is set
+ * @param has_scale 1 if scale is provided, 0 to use default (1/sqrt(E))
+ * @param scale     scaling factor; only used if has_scale is 1
+ * @return attention output tensor [B, nhead, L, Ev]
+ */
+SMILE_API ST_Tensor smile_torch_scaled_dot_product_attention(
+    ST_Tensor query,
+    ST_Tensor key,
+    ST_Tensor value,
+    ST_Tensor attn_mask,
+    double dropout_p,
+    int is_causal,
+    int has_scale,
+    double scale);
+
+/* =========================================================================
  * Activation functions (global)
  * ========================================================================= */
 
