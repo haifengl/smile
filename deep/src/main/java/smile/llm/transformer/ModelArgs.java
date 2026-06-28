@@ -14,14 +14,14 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.llm.llama;
+package smile.llm.transformer;
 
 import java.io.File;
 import java.io.IOException;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * LLaMA model hyperparameters.
+ * LLM model hyperparameters.
  * @param dim the dimension of token embedding.
  * @param numLayers the number of transformer blocks.
  * @param numHeads the number of attention heads.

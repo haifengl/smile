@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.llm.llama;
+package smile.llm.transformer;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
@@ -23,7 +23,6 @@ import smile.deep.tensor.Index;
 import smile.torch.Native;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
-import smile.llm.RotaryPositionalEncoding;
 import smile.util.AutoScope;
 
 import static smile.torch.Native.check;
@@ -32,12 +31,16 @@ import static smile.torch.smile_torch_h.smile_module_free;
 import static smile.torch.smile_torch_h.smile_module_register_module;
 
 /**
- * Multi-head attention. It caches key and value information, applying rotary
- * embeddings, and performing linear transformations.
+ * Grouped Query Attention (GQA). GQA is a highly efficient transformer
+ * attention mechanism that bridges the gap between traditional
+ * Multi-Head Attention (MHA) and Multi-Query Attention (MQA).
+ * By grouping sets of query heads to share a single Key and Value head,
+ * GQA drastically reduces memory usage during inference while maintaining
+ * model quality.
  *
  * @author Haifeng Li
  */
-public class Attention {
+public class GroupedQueryAttention implements Attention {
     /** PyTorch module. */
     final MemorySegment module;
     /** The number of key and value heads. */
@@ -59,7 +62,7 @@ public class Attention {
      * Constructor.
      * @param args the model configuration parameters.
      */
-    public Attention(ModelArgs args) {
+    public GroupedQueryAttention(ModelArgs args) {
         this.numKvHeads = args.numKvHeads() == null ? args.numHeads() : args.numKvHeads();
         // Don't support torch.distributed yet
         int modelParallelSize = 1; // torch.distributed.get_world_size(group=get_model_parallel_group());
@@ -87,14 +90,12 @@ public class Attention {
         Native.CLEANER.register(this, () -> smile_module_free(m));
     }
 
-    /**
-     * Forward pass through the attention module.
-     * @param x the input tensor.
-     * @param startPos the starting position for attention caching.
-     * @param cis the precomputed frequency tensor.
-     * @param mask the attention mask tensor.
-     * @return the output tensor.
-     */
+    @Override
+    public MemorySegment module() {
+        return module;
+    }
+
+    @Override
     public Tensor forward(Tensor x, int startPos, Tensor cis, Tensor mask) {
         long[] shape = x.shape();
         int batchSize = (int) shape[0];
@@ -139,28 +140,6 @@ public class Attention {
             Tensor output = scope.add(scores.matmul(values));  // (bs, n_local_heads, seqlen, head_dim)
             output = scope.add(output.transpose(1, 2).contiguous().view(batchSize, seqlen, -1));
             return wo.forward(output);
-        }
-    }
-
-    /**
-     * Efficiently repeat a tensor.
-     * @param input the input tensor to repeat.
-     * @param numRep the number of times to repeat.
-     * @return the repeated tensor.
-     */
-    private Tensor repeatKV(Tensor input, int numRep) {
-        if (numRep == 1) {
-            return input;
-        } else {
-            long[] shape = input.shape();
-            long batchSize = shape[0];
-            long seqlen = shape[1];
-            long numKvHeads = shape[2];
-            long headDim = shape[3];
-            try (var x = input.get(Index.Colon, Index.Colon, Index.Colon, Index.None, Index.Colon)) {
-                return x.expand(batchSize, seqlen, numKvHeads, numRep, headDim)
-                        .reshape(batchSize, seqlen, numKvHeads * numRep, headDim);
-            }
         }
     }
 }
