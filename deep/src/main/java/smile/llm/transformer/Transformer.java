@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.llm.llama;
+package smile.llm.transformer;
 
 import java.lang.foreign.MemorySegment;
 import java.util.ArrayList;
@@ -27,7 +27,6 @@ import smile.deep.tensor.Device;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
-import smile.llm.RotaryPositionalEncoding;
 import smile.util.AutoScope;
 
 import static smile.torch.smile_torch_h.smile_module_free;
@@ -99,6 +98,14 @@ public class Transformer extends LayerBlock {
         add("norm", norm);
         add("output", output);
         to(device);
+    }
+
+    /**
+     * Returns the model configuration parameters.
+     * @return the model configuration parameters.
+     */
+    public ModelArgs params() {
+        return params;
     }
 
     /**

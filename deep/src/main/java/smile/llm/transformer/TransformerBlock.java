@@ -14,14 +14,13 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.llm.llama;
+package smile.llm.transformer;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import smile.deep.layer.RMSNormLayer;
 import smile.torch.Native;
 import smile.deep.tensor.Tensor;
-
 import static smile.torch.Native.check;
 import static smile.torch.smile_torch_h.smile_module_create;
 import static smile.torch.smile_torch_h.smile_module_free;
@@ -64,7 +63,7 @@ public class TransformerBlock {
         this.numHeads = args.numHeads();
         this.dim = args.dim();
         this.headDim = args.dim() / args.numHeads();
-        this.attention = new Attention(args);
+        this.attention = new GroupedQueryAttention(args);
         this.feedForward = new FeedForward(
                 args.dim(),
                 4 * args.dim(),
@@ -76,7 +75,7 @@ public class TransformerBlock {
 
         try (Arena arena = Arena.ofConfined()) {
             this.module = check(smile_module_create(MemorySegment.NULL));
-            smile_module_register_module(module, arena.allocateFrom("attention"), attention.module);
+            smile_module_register_module(module, arena.allocateFrom("attention"), attention.module());
             smile_module_register_module(module, arena.allocateFrom("feed_forward"), feedForward.module);
             smile_module_register_module(module, arena.allocateFrom("attention_norm"), attentionNorm.module());
             smile_module_register_module(module, arena.allocateFrom("ffn_norm"), ffnNorm.module());

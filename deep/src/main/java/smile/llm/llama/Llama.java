@@ -27,6 +27,8 @@ import smile.deep.tensor.Tensor;
 import smile.llm.ChatCompletion;
 import smile.llm.FinishReason;
 import smile.llm.Message;
+import smile.llm.transformer.ModelArgs;
+import smile.llm.transformer.Transformer;
 import smile.torch.smile_torch_h;
 import smile.util.AutoScope;
 
@@ -175,9 +177,11 @@ public class Llama {
      * The batch size must be 1.
      * @return The generated text completion.
      */
-    public ChatCompletion[] generate(int[][] prompts, int maxGenLen, double temperature, double topp, boolean logprobs, long seed, SubmissionPublisher<String> publisher) {
+    public ChatCompletion[] generate(int[][] prompts, int maxGenLen, double temperature,
+                                     double topp, boolean logprobs, long seed,
+                                     SubmissionPublisher<String> publisher) {
         int batchSize = prompts.length;
-        if (batchSize > model.params.maxBatchSize()) {
+        if (batchSize > model.params().maxBatchSize()) {
             throw new IllegalArgumentException("The number of prompts is greater than max_batch_size");
         }
 
@@ -191,7 +195,7 @@ public class Llama {
             minPromptLen = Math.min(minPromptLen, prompt.length);
             maxPromptLen = Math.max(maxPromptLen, prompt.length);
         }
-        if (maxPromptLen > model.params.maxSeqLen()) {
+        if (maxPromptLen > model.params().maxSeqLen()) {
             throw new IllegalArgumentException("The prompt length is greater than max_seq_len");
         }
 
@@ -203,7 +207,7 @@ public class Llama {
         try (var guard = Tensor.noGradGuard();
              var scope = new AutoScope()) {
             Tensor.push(scope);
-            int totalLen = Math.min(model.params.maxSeqLen(), maxGenLen + maxPromptLen);
+            int totalLen = Math.min(model.params().maxSeqLen(), maxGenLen + maxPromptLen);
 
             int pad = tokenizer.pad();
             Tensor tokens = Tensor.full(pad, batchSize, totalLen);
