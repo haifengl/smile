@@ -894,6 +894,39 @@ ST_Tensor smile_torch_where_ts(ST_Tensor c, ST_Tensor i, ST_Scalar o) {
 }
 
 // =============================================================================
+// Attention — scaled_dot_product_attention
+// =============================================================================
+
+ST_Tensor smile_torch_scaled_dot_product_attention(
+    ST_Tensor query,
+    ST_Tensor key,
+    ST_Tensor value,
+    ST_Tensor attn_mask,
+    double dropout_p,
+    int is_causal,
+    int has_scale,
+    double scale) {
+    if (!query || !key || !value) return nullptr;
+    ST_TRY_BEGIN
+        at::Tensor mask;
+        if (attn_mask) mask = attn_mask->t;
+
+        std::optional<double> scale_opt;
+        if (has_scale) scale_opt = scale;
+
+        MAKE_TENSOR(at::scaled_dot_product_attention(
+            query->t,
+            key->t,
+            value->t,
+            mask,
+            dropout_p,
+            static_cast<bool>(is_causal),
+            scale_opt));
+    ST_TRY_END
+    return nullptr;
+}
+
+// =============================================================================
 // Activation functions
 // =============================================================================
 

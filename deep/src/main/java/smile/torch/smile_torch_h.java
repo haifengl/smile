@@ -12859,6 +12859,73 @@ public class smile_torch_h extends smile_torch_h$shared {
         }
     }
 
+    private static class smile_torch_scaled_dot_product_attention {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            smile_torch_h.C_POINTER,
+            smile_torch_h.C_POINTER,
+            smile_torch_h.C_POINTER,
+            smile_torch_h.C_POINTER,
+            smile_torch_h.C_POINTER,
+            smile_torch_h.C_DOUBLE,
+            smile_torch_h.C_INT,
+            smile_torch_h.C_INT,
+            smile_torch_h.C_DOUBLE
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("smile_torch_scaled_dot_product_attention");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * Function descriptor for:
+     * {@snippet lang=c :
+     * ST_Tensor smile_torch_scaled_dot_product_attention(ST_Tensor query, ST_Tensor key, ST_Tensor value, ST_Tensor attn_mask, double dropout_p, int is_causal, int has_scale, double scale)
+     * }
+     */
+    public static FunctionDescriptor smile_torch_scaled_dot_product_attention$descriptor() {
+        return smile_torch_scaled_dot_product_attention.DESC;
+    }
+
+    /**
+     * Downcall method handle for:
+     * {@snippet lang=c :
+     * ST_Tensor smile_torch_scaled_dot_product_attention(ST_Tensor query, ST_Tensor key, ST_Tensor value, ST_Tensor attn_mask, double dropout_p, int is_causal, int has_scale, double scale)
+     * }
+     */
+    public static MethodHandle smile_torch_scaled_dot_product_attention$handle() {
+        return smile_torch_scaled_dot_product_attention.HANDLE;
+    }
+
+    /**
+     * Address for:
+     * {@snippet lang=c :
+     * ST_Tensor smile_torch_scaled_dot_product_attention(ST_Tensor query, ST_Tensor key, ST_Tensor value, ST_Tensor attn_mask, double dropout_p, int is_causal, int has_scale, double scale)
+     * }
+     */
+    public static MemorySegment smile_torch_scaled_dot_product_attention$address() {
+        return smile_torch_scaled_dot_product_attention.ADDR;
+    }
+
+    /**
+     * {@snippet lang=c :
+     * ST_Tensor smile_torch_scaled_dot_product_attention(ST_Tensor query, ST_Tensor key, ST_Tensor value, ST_Tensor attn_mask, double dropout_p, int is_causal, int has_scale, double scale)
+     * }
+     */
+    public static MemorySegment smile_torch_scaled_dot_product_attention(MemorySegment query, MemorySegment key, MemorySegment value, MemorySegment attn_mask, double dropout_p, int is_causal, int has_scale, double scale) {
+        var mh$ = smile_torch_scaled_dot_product_attention.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("smile_torch_scaled_dot_product_attention", query, key, value, attn_mask, dropout_p, is_causal, has_scale, scale);
+            }
+            return (MemorySegment)mh$.invokeExact(query, key, value, attn_mask, dropout_p, is_causal, has_scale, scale);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
     private static class smile_torch_relu {
         public static final FunctionDescriptor DESC = FunctionDescriptor.of(
             smile_torch_h.C_POINTER,
