@@ -40,8 +40,8 @@ public class SettingsDialog extends JDialog implements ActionListener {
     private static final String MODEL = "Model";
     private static final String[] UI_THEMES = {"Light", "Dark"};
     // Interactions API is not yet supported on Vertex
-    private static final String[] aiServiceOptions = {"OpenAI", "Azure OpenAI", "Anthropic", "Google Gemini", /*"Google Vertex AI",*/ "Chat Completions Compatible"};
-    private static final String[] aiServiceKeys = {"openai", "azureOpenAI", "anthropic", "googleGemini", /*"googleVertexAI",*/ "chatCompletions"};
+    private static final String[] aiServiceOptions = {"OpenAI", "Azure OpenAI", "Anthropic", "Google Gemini", "Google Gemini Enterprise", "Chat Completions Compatible"};
+    private static final String[] aiServiceKeys = {"openai", "azureOpenAI", "anthropic", "googleGemini", "googleEnterprise", "chatCompletions"};
     private static final String[] openaiModels = {"gpt-5.5-pro", "gpt-5.5", "gpt-5.4-mini", "gpt-5.4-nano"};
     private static final String[] anthropicModels = {"claude-fable-5", "claude-opus-4-8", "claude-sonnet-4-6", "claude-haiku-4-5"};
     private static final String[] geminiModels = {"gemini-3.5-flash", "gemini-3.1-pro-preview", "gemini-3.1-flash-lite"};
