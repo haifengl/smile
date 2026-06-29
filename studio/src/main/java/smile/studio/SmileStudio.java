@@ -298,13 +298,12 @@ public class SmileStudio extends JFrame implements SearchListener {
                 case "Google Gemini" ->
                     new GoogleGemini(
                             prefs.get("googleGeminiApiKey", ""),
-                            prefs.get("googleGeminiModel", "gemini-3-flash-preview"));
+                            prefs.get("googleGeminiModel", "gemini-3.1-pro-preview"));
 
-                case "Google VertexAI" ->
-                    GoogleGemini.vertex(
-                            prefs.get("googleVertexAIApiKey", ""),
-                            prefs.get("googleVertexAIBaseUrl", ""),
-                            prefs.get("googleVertexAIModel", "gemini-3.1-pro-preview"));
+                case "Google Gemini Enterprise" ->
+                    GoogleGemini.enterprise(
+                            prefs.get("googleEnterpriseApiKey", ""),
+                            prefs.get("googleEnterpriseModel", "gemini-3.1-pro-preview"));
 
                 default -> {
                     // Many AI services are compatible with OpenAI ChatCompletions API,
