@@ -120,9 +120,7 @@ public class TreeNode {
 
     @Override
     public String toString() {
-        return "TreeNode{id=" + id +
-               ", keyLen=" + (key != null ? key.length : 0) +
-               ", lockRef=" + lockRef +
-               ", evicted=" + isEvicted() + "}";
+        return "TreeNode{id=%d, keyLen=%d, lockRef=%d, evicted=%b}".formatted(
+                id, key != null ? key.length : 0, lockRef, isEvicted());
     }
 }

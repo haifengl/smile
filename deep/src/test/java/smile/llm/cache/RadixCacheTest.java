@@ -29,16 +29,9 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class RadixCacheTest {
 
-    /** Helper to create a 1-D int64 KV index tensor from a long vararg. */
+    /** Creates a 1-D {@code int64} KV index tensor from a {@code long} vararg. */
     private static Tensor kv(long... indices) {
         return Tensor.of(indices);
-    }
-
-    /** Helper to extract a long[] from a MatchResult and close the tensor. */
-    private static long[] toArray(MatchResult result) {
-        long[] arr = result.indices().longArray();
-        result.indices().close();
-        return arr;
     }
 
     // ===== Insert and match =====
@@ -46,107 +39,110 @@ public class RadixCacheTest {
     @Test
     public void testGivenEmptyCacheWhenInsertSingleSequenceThenMatchReturnsFullSequence() {
         // Given
-        RadixCache cache = new RadixCache();
-        int[] tokens = {1, 2, 3};
+        var cache = new RadixCache();
+        var tokens = new int[]{1, 2, 3};
 
         // When
-        try (Tensor kv = kv(10L, 20L, 30L)) {
+        try (var kv = kv(10L, 20L, 30L)) {
             cache.insert(tokens, kv);
         }
-        MatchResult result = cache.matchPrefix(tokens);
 
-        // Then
-        assertArrayEquals(new long[]{10L, 20L, 30L}, toArray(result));
+        // Then – MatchResult is AutoCloseable; tensor released at end of block
+        try (var result = cache.matchPrefix(tokens)) {
+            assertArrayEquals(new long[]{10L, 20L, 30L}, result.indices().longArray());
+        }
         cache.reset();
     }
 
     @Test
     public void testGivenCacheWithPrefixWhenInsertLongerSequenceThenMatchReturnsCachedPrefix() {
         // Given
-        RadixCache cache = new RadixCache();
-        try (Tensor kv = kv(10L, 20L, 30L)) {
+        var cache = new RadixCache();
+        try (var kv = kv(10L, 20L, 30L)) {
             cache.insert(new int[]{1, 2, 3}, kv);
         }
 
         // When – insert a longer sequence sharing the same prefix
         InsertResult insertResult;
-        try (Tensor kv = kv(10L, 20L, 30L, 40L, 50L)) {
+        try (var kv = kv(10L, 20L, 30L, 40L, 50L)) {
             insertResult = cache.insert(new int[]{1, 2, 3, 4, 5}, kv);
         }
-        MatchResult matchResult = cache.matchPrefix(new int[]{1, 2, 3, 4, 5});
 
         // Then – all 5 tokens should be cached after the second insert
         assertEquals(3, insertResult.prefixLen());
-        assertArrayEquals(new long[]{10L, 20L, 30L, 40L, 50L}, toArray(matchResult));
+        try (var result = cache.matchPrefix(new int[]{1, 2, 3, 4, 5})) {
+            assertArrayEquals(new long[]{10L, 20L, 30L, 40L, 50L}, result.indices().longArray());
+        }
         cache.reset();
     }
 
     @Test
     public void testGivenCacheWhenInsertDivergingSequencesThenBothAreMatched() {
         // Given
-        RadixCache cache = new RadixCache();
-        try (Tensor kv1 = kv(10L, 20L, 30L);
-             Tensor kv2 = kv(10L, 20L, 40L, 50L)) {
+        var cache = new RadixCache();
+        try (var kv1 = kv(10L, 20L, 30L);
+             var kv2 = kv(10L, 20L, 40L, 50L)) {
             cache.insert(new int[]{1, 2, 3}, kv1);
             cache.insert(new int[]{1, 2, 4, 5}, kv2);
         }
 
         // Then – seq1 is fully cached
-        MatchResult r1 = cache.matchPrefix(new int[]{1, 2, 3});
-        assertArrayEquals(new long[]{10L, 20L, 30L}, toArray(r1));
+        try (var r1 = cache.matchPrefix(new int[]{1, 2, 3})) {
+            assertArrayEquals(new long[]{10L, 20L, 30L}, r1.indices().longArray());
+        }
 
         // Then – seq2 is fully cached, sharing the first 2 tokens with seq1
-        MatchResult r2 = cache.matchPrefix(new int[]{1, 2, 4, 5});
-        assertArrayEquals(new long[]{10L, 20L, 40L, 50L}, toArray(r2));
+        try (var r2 = cache.matchPrefix(new int[]{1, 2, 4, 5})) {
+            assertArrayEquals(new long[]{10L, 20L, 40L, 50L}, r2.indices().longArray());
+        }
         cache.reset();
     }
 
     @Test
     public void testGivenCacheWhenMatchUnknownSequenceThenReturnsEmpty() {
         // Given
-        RadixCache cache = new RadixCache();
-        try (Tensor kv = kv(10L, 20L, 30L)) {
+        var cache = new RadixCache();
+        try (var kv = kv(10L, 20L, 30L)) {
             cache.insert(new int[]{1, 2, 3}, kv);
         }
 
         // When
-        MatchResult result = cache.matchPrefix(new int[]{9, 8, 7});
-
-        // Then
-        assertEquals(0, result.length());
-        assertSame(cache.root, result.lastNode());
-        result.indices().close();
+        try (var result = cache.matchPrefix(new int[]{9, 8, 7})) {
+            // Then
+            assertEquals(0, result.length());
+            assertSame(cache.root, result.lastNode());
+        }
         cache.reset();
     }
 
     @Test
     public void testGivenCacheWhenMatchPartialPrefixThenReturnsMatchedPortion() {
         // Given
-        RadixCache cache = new RadixCache();
-        try (Tensor kv = kv(10L, 20L, 30L, 40L, 50L)) {
+        var cache = new RadixCache();
+        try (var kv = kv(10L, 20L, 30L, 40L, 50L)) {
             cache.insert(new int[]{1, 2, 3, 4, 5}, kv);
         }
 
         // When – query shares first 3 tokens, then diverges
-        MatchResult result = cache.matchPrefix(new int[]{1, 2, 3, 9, 9});
-
-        // Then – only the first 3 matched tokens are returned
-        assertEquals(3, result.length());
-        assertArrayEquals(new long[]{10L, 20L, 30L}, toArray(result));
+        try (var result = cache.matchPrefix(new int[]{1, 2, 3, 9, 9})) {
+            // Then – only the first 3 matched tokens are returned
+            assertEquals(3, result.length());
+            assertArrayEquals(new long[]{10L, 20L, 30L}, result.indices().longArray());
+        }
         cache.reset();
     }
 
     @Test
     public void testGivenCacheWhenInsertSameSequenceTwiceThenPrefixLenIsFullLength() {
         // Given
-        RadixCache cache = new RadixCache();
-        try (Tensor kv = kv(10L, 20L, 30L)) {
+        var cache = new RadixCache();
+        try (var kv = kv(10L, 20L, 30L)) {
             cache.insert(new int[]{1, 2, 3}, kv);
         }
 
         // When
         InsertResult result;
-        try (Tensor kv = kv(10L, 20L, 30L)) {
+        try (var kv = kv(10L, 20L, 30L)) {
             result = cache.insert(new int[]{1, 2, 3}, kv);
         }
 
@@ -160,13 +156,13 @@ public class RadixCacheTest {
     @Test
     public void testGivenCacheAfterMultipleInsertsThenTotalSizeIsCorrect() {
         // Given
-        RadixCache cache = new RadixCache();
+        var cache = new RadixCache();
 
         // When
-        try (Tensor t1 = kv(10L, 20L, 30L);
-             Tensor t2 = kv(10L, 20L, 40L, 50L);
-             Tensor t3 = kv(10L, 20L, 40L, 50L, 60L, 70L);
-             Tensor t4 = kv(80L, 90L, 100L)) {
+        try (var t1 = kv(10L, 20L, 30L);
+             var t2 = kv(10L, 20L, 40L, 50L);
+             var t3 = kv(10L, 20L, 40L, 50L, 60L, 70L);
+             var t4 = kv(80L, 90L, 100L)) {
             cache.insert(new int[]{1, 2, 3}, t1);
             cache.insert(new int[]{1, 2, 4, 5}, t2);
             cache.insert(new int[]{1, 2, 4, 5, 6, 7}, t3);
@@ -181,8 +177,8 @@ public class RadixCacheTest {
     @Test
     public void testGivenCacheWhenResetThenTotalSizeIsZero() {
         // Given
-        RadixCache cache = new RadixCache();
-        try (Tensor kv = kv(10L, 20L, 30L)) {
+        var cache = new RadixCache();
+        try (var kv = kv(10L, 20L, 30L)) {
             cache.insert(new int[]{1, 2, 3}, kv);
         }
 
@@ -200,17 +196,17 @@ public class RadixCacheTest {
     @Test
     public void testGivenCacheWhenEvictThenKvIndicesAreFreedAndSizeDecreases() {
         // Given
-        RadixCache cache = new RadixCache();
-        try (Tensor t1 = kv(10L, 20L, 30L);
-             Tensor t2 = kv(40L, 50L, 60L)) {
+        var cache = new RadixCache();
+        try (var t1 = kv(10L, 20L, 30L);
+             var t2 = kv(40L, 50L, 60L)) {
             cache.insert(new int[]{1, 2, 3}, t1);
             cache.insert(new int[]{4, 5, 6}, t2);
         }
         assertEquals(6, cache.evictableSize());
 
         // When
-        List<long[]> freed = new ArrayList<>();
-        int numEvicted = cache.evict(3, t -> {
+        var freed = new ArrayList<long[]>();
+        var numEvicted = cache.evict(3, t -> {
             freed.add(t.longArray());
             t.close();
         });
@@ -225,42 +221,45 @@ public class RadixCacheTest {
     @Test
     public void testGivenLockedNodeWhenEvictThenLockedNodeIsNotEvicted() {
         // Given
-        RadixCache cache = new RadixCache();
-        try (Tensor t1 = kv(10L, 20L, 30L);
-             Tensor t2 = kv(40L, 50L, 60L)) {
+        var cache = new RadixCache();
+        try (var t1 = kv(10L, 20L, 30L);
+             var t2 = kv(40L, 50L, 60L)) {
             cache.insert(new int[]{1, 2, 3}, t1);
             cache.insert(new int[]{4, 5, 6}, t2);
         }
 
-        MatchResult locked = cache.matchPrefix(new int[]{1, 2, 3});
-        cache.incLockRef(locked.lastNode());
-        locked.indices().close();
+        TreeNode lockedNode;
+        try (var locked = cache.matchPrefix(new int[]{1, 2, 3})) {
+            lockedNode = locked.lastNode();
+            cache.incLockRef(lockedNode);
+        }
 
         // When – try to evict 6 tokens (entire cache)
         cache.evict(6, Tensor::close);
 
         // Then – locked sequence is preserved
-        MatchResult afterEvict = cache.matchPrefix(new int[]{1, 2, 3});
-        assertEquals(3, afterEvict.length());
-        afterEvict.indices().close();
+        try (var afterEvict = cache.matchPrefix(new int[]{1, 2, 3})) {
+            assertEquals(3, afterEvict.length());
+        }
 
-        cache.decLockRef(locked.lastNode());
+        cache.decLockRef(lockedNode);
         cache.reset();
     }
 
     @Test
     public void testGivenLockedAndUnlockedNodesWhenDecLockRefThenNodeBecomesEvictable() {
         // Given
-        RadixCache cache = new RadixCache();
-        try (Tensor kv = kv(10L, 20L, 30L)) {
+        var cache = new RadixCache();
+        try (var kv = kv(10L, 20L, 30L)) {
             cache.insert(new int[]{1, 2, 3}, kv);
         }
 
-        MatchResult result = cache.matchPrefix(new int[]{1, 2, 3});
-        TreeNode node = result.lastNode();
-        result.indices().close();
+        TreeNode node;
+        try (var result = cache.matchPrefix(new int[]{1, 2, 3})) {
+            node = result.lastNode();
+        }
 
-        int beforeLock = cache.evictableSize();
+        var beforeLock = cache.evictableSize();
         cache.incLockRef(node);
         assertEquals(0, cache.evictableSize());
 
@@ -277,10 +276,10 @@ public class RadixCacheTest {
     @Test
     public void testGivenNewCacheWhenInsertThenEvictableSizeEqualsTotalSize() {
         // Given
-        RadixCache cache = new RadixCache();
+        var cache = new RadixCache();
 
         // When
-        try (Tensor kv = kv(10L, 20L, 30L)) {
+        try (var kv = kv(10L, 20L, 30L)) {
             cache.insert(new int[]{1, 2, 3}, kv);
         }
 
@@ -293,21 +292,24 @@ public class RadixCacheTest {
     @Test
     public void testGivenInsertedSequenceWhenIncLockRefThenEvictableSizeDecreasesAndProtectedIncreases() {
         // Given
-        RadixCache cache = new RadixCache();
-        try (Tensor kv = kv(10L, 20L, 30L)) {
+        var cache = new RadixCache();
+        try (var kv = kv(10L, 20L, 30L)) {
             cache.insert(new int[]{1, 2, 3}, kv);
         }
-        MatchResult result = cache.matchPrefix(new int[]{1, 2, 3});
-        result.indices().close();
+
+        TreeNode node;
+        try (var result = cache.matchPrefix(new int[]{1, 2, 3})) {
+            node = result.lastNode();
+        }
 
         // When
-        cache.incLockRef(result.lastNode());
+        cache.incLockRef(node);
 
         // Then
         assertEquals(0, cache.evictableSize());
         assertEquals(3, cache.protectedSize());
 
-        cache.decLockRef(result.lastNode());
+        cache.decLockRef(node);
         cache.reset();
     }
 
@@ -316,35 +318,35 @@ public class RadixCacheTest {
     @Test
     public void testGivenPageSizeOfTwoWhenInsertOddLengthSequenceThenTailIsDropped() {
         // Given
-        RadixCache cache = new RadixCache(2);
+        var cache = new RadixCache(2);
 
         // When – 5 tokens: only 4 are page-aligned
-        try (Tensor kv = kv(10L, 20L, 30L, 40L, 50L)) {
+        try (var kv = kv(10L, 20L, 30L, 40L, 50L)) {
             cache.insert(new int[]{1, 2, 3, 4, 5}, kv);
         }
-        MatchResult result = cache.matchPrefix(new int[]{1, 2, 3, 4, 5});
 
         // Then – 4 tokens cached (page-aligned)
-        assertEquals(4, result.length());
-        result.indices().close();
+        try (var result = cache.matchPrefix(new int[]{1, 2, 3, 4, 5})) {
+            assertEquals(4, result.length());
+        }
         cache.reset();
     }
 
     @Test
     public void testGivenPageSizeOfTwoWhenMatchSharedPrefixThenResultIsPageAligned() {
         // Given
-        RadixCache cache = new RadixCache(2);
-        try (Tensor kv = kv(10L, 20L, 30L, 40L, 50L, 60L)) {
+        var cache = new RadixCache(2);
+        try (var kv = kv(10L, 20L, 30L, 40L, 50L, 60L)) {
             cache.insert(new int[]{1, 2, 3, 4, 5, 6}, kv);
         }
 
         // When – query matches first 3 tokens of a page-size-2 cache;
         // only 2 tokens (first full page) should be returned.
-        MatchResult result = cache.matchPrefix(new int[]{1, 2, 3, 9});
-
-        // Then
-        assertEquals(2, result.length());
-        assertArrayEquals(new long[]{10L, 20L}, toArray(result));
+        try (var result = cache.matchPrefix(new int[]{1, 2, 3, 9})) {
+            // Then
+            assertEquals(2, result.length());
+            assertArrayEquals(new long[]{10L, 20L}, result.indices().longArray());
+        }
         cache.reset();
     }
 
@@ -353,21 +355,21 @@ public class RadixCacheTest {
     @Test
     public void testGivenDifferentExtraKeysThenNamespacesAreIsolated() {
         // Given
-        RadixCache cache = new RadixCache();
-        int[] tokens = {1, 2, 3};
-        try (Tensor kvA = kv(10L, 20L, 30L);
-             Tensor kvB = kv(100L, 200L, 300L)) {
+        var cache = new RadixCache();
+        var tokens = new int[]{1, 2, 3};
+        try (var kvA = kv(10L, 20L, 30L);
+             var kvB = kv(100L, 200L, 300L)) {
             cache.insert(tokens, kvA, "lora-a", 0);
             cache.insert(tokens, kvB, "lora-b", 0);
         }
 
-        // When
-        MatchResult ra = cache.matchPrefix(tokens, "lora-a");
-        MatchResult rb = cache.matchPrefix(tokens, "lora-b");
-
         // Then – each namespace returns its own KV indices
-        assertArrayEquals(new long[]{10L, 20L, 30L}, toArray(ra));
-        assertArrayEquals(new long[]{100L, 200L, 300L}, toArray(rb));
+        try (var ra = cache.matchPrefix(tokens, "lora-a")) {
+            assertArrayEquals(new long[]{10L, 20L, 30L}, ra.indices().longArray());
+        }
+        try (var rb = cache.matchPrefix(tokens, "lora-b")) {
+            assertArrayEquals(new long[]{100L, 200L, 300L}, rb.indices().longArray());
+        }
         cache.reset();
     }
 
@@ -376,40 +378,41 @@ public class RadixCacheTest {
     @Test
     public void testGivenLongCachedSequenceWhenMatchPartialThenNodeIsSplitAndRematched() {
         // Given
-        RadixCache cache = new RadixCache();
-        try (Tensor kv = kv(10L, 20L, 30L, 40L, 50L)) {
+        var cache = new RadixCache();
+        try (var kv = kv(10L, 20L, 30L, 40L, 50L)) {
             cache.insert(new int[]{1, 2, 3, 4, 5}, kv);
         }
 
         // When – first match triggers a split at position 3
-        MatchResult r1 = cache.matchPrefix(new int[]{1, 2, 3, 9, 9});
-        assertEquals(3, r1.length());
-        long[] first = toArray(r1);
+        long[] first;
+        try (var r1 = cache.matchPrefix(new int[]{1, 2, 3, 9, 9})) {
+            assertEquals(3, r1.length());
+            first = r1.indices().longArray();
+        }
 
         // When – second match reuses the split node
-        MatchResult r2 = cache.matchPrefix(new int[]{1, 2, 3, 9, 9});
-
-        // Then – result is stable across multiple queries
-        assertEquals(3, r2.length());
-        assertArrayEquals(first, toArray(r2));
+        try (var r2 = cache.matchPrefix(new int[]{1, 2, 3, 9, 9})) {
+            // Then – result is stable across multiple queries
+            assertEquals(3, r2.length());
+            assertArrayEquals(first, r2.indices().longArray());
+        }
         cache.reset();
     }
 
     @Test
     public void testGivenCacheWhenMatchEmptyKeyThenReturnsRootAndEmptyIndices() {
         // Given
-        RadixCache cache = new RadixCache();
-        try (Tensor kv = kv(10L, 20L, 30L)) {
+        var cache = new RadixCache();
+        try (var kv = kv(10L, 20L, 30L)) {
             cache.insert(new int[]{1, 2, 3}, kv);
         }
 
         // When
-        MatchResult result = cache.matchPrefix(new int[0]);
-
-        // Then
-        assertEquals(0, result.length());
-        assertSame(cache.root, result.lastNode());
-        result.indices().close();
+        try (var result = cache.matchPrefix(new int[0])) {
+            // Then
+            assertEquals(0, result.length());
+            assertSame(cache.root, result.lastNode());
+        }
         cache.reset();
     }
 }
