@@ -47,20 +47,20 @@ import smile.deep.tensor.Tensor;
  * nodes.
  *
  * <h2>Reference counting and eviction</h2>
- * Every node carries a {@link TreeNode#lockRef lock reference count}.
+ * Every node carries a {@link RadixTreeNode#lockRef lock reference count}.
  * Calling {@link #incLockRef} prevents a node and all its ancestors from being
  * evicted; {@link #decLockRef} releases the protection. Eviction follows an
  * LRU policy applied to <em>evictable leaves</em> — nodes whose
  * {@code lockRef} is zero and that have no live (non-evicted) children.
  *
  * <h2>Tensor ownership</h2>
- * Each {@link TreeNode} <em>owns</em> its {@link TreeNode#value} tensor and is
+ * Each {@link RadixTreeNode} <em>owns</em> its {@link RadixTreeNode#value} tensor and is
  * responsible for closing it when the node is evicted or split. The
  * {@link MatchResult} returned by {@link #matchPrefix} is {@link AutoCloseable}:
  * use try-with-resources to release the underlying tensor automatically.
  *
  * @author Haifeng Li
- * @see TreeNode
+ * @see RadixTreeNode
  * @see MatchResult
  * @see InsertResult
  */
@@ -74,7 +74,7 @@ public class RadixCache {
     final int pageSize;
 
     /** Sentinel root node. Always has {@code lockRef = 1} so it is never evicted. */
-    TreeNode root;
+    RadixTreeNode root;
 
     /** Total token count across all evictable (lockRef == 0) nodes. */
     int evictableSize;
@@ -87,7 +87,7 @@ public class RadixCache {
      * A node qualifies when {@code lockRef == 0} and every child (if any)
      * has already been evicted.
      */
-    final Set<TreeNode> evictableLeaves = new HashSet<>();
+    final Set<RadixTreeNode> evictableLeaves = new HashSet<>();
 
     /**
      * Constructor.
@@ -109,14 +109,14 @@ public class RadixCache {
 
     /**
      * Resets the cache, discarding all stored KV data and reference counts.
-     * Every live {@link TreeNode#value} tensor is closed before the tree is cleared.
+     * Every live {@link RadixTreeNode#value} tensor is closed before the tree is cleared.
      * The root sentinel is re-created with an empty key.
      */
     public void reset() {
         if (root != null) {
             closeTensors(root);
         }
-        root = new TreeNode(Integer.MIN_VALUE);
+        root = new RadixTreeNode(Integer.MIN_VALUE);
         root.key = new int[0];
         root.value = Tensor.of(new long[0]);
         root.lockRef = 1;
@@ -148,7 +148,7 @@ public class RadixCache {
      * automatically split at the boundary, improving future lookups. The evictable
      * size is unchanged because the total number of tokens is conserved.
      *
-     * <p>This call refreshes the {@link TreeNode#lastAccessTime} of every visited
+     * <p>This call refreshes the {@link RadixTreeNode#lastAccessTime} of every visited
      * node, feeding the LRU eviction policy.
      *
      * @param tokenIds the token ID sequence to look up.
@@ -275,7 +275,7 @@ public class RadixCache {
 
         if (remaining > 0) {
             // Append a new leaf for the tokens not yet in the tree.
-            var newNode = new TreeNode(priority);
+            var newNode = new RadixTreeNode(priority);
             newNode.extraKey = extraKey;
             newNode.parent = node;
             newNode.key = Arrays.copyOfRange(tokenIds, offset, offset + remaining);
@@ -315,7 +315,7 @@ public class RadixCache {
      */
     public int evict(int numTokens, Consumer<Tensor> freeCallback) {
         // Build an LRU min-heap from the current evictable leaves.
-        var heap = new PriorityQueue<TreeNode>(Comparator.comparingDouble(n -> n.lastAccessTime));
+        var heap = new PriorityQueue<RadixTreeNode>(Comparator.comparingDouble(n -> n.lastAccessTime));
         heap.addAll(evictableLeaves);
 
         var numEvicted = 0;
@@ -358,7 +358,7 @@ public class RadixCache {
      * @param node the node to protect (may be {@code null}, which is a no-op).
      * @return the change in {@link #evictableSize} (always &le; 0).
      */
-    public int incLockRef(TreeNode node) {
+    public int incLockRef(RadixTreeNode node) {
         if (node == null) return 0;
         var delta = 0;
         while (node != root) {
@@ -382,7 +382,7 @@ public class RadixCache {
      * @param node the node to release (may be {@code null}, which is a no-op).
      * @return the change in {@link #evictableSize} (always &ge; 0).
      */
-    public int decLockRef(TreeNode node) {
+    public int decLockRef(RadixTreeNode node) {
         if (node == null) return 0;
         var delta = 0;
         while (node != root) {
@@ -425,7 +425,7 @@ public class RadixCache {
      */
     public int totalSize() {
         var total = 0;
-        var stack = new ArrayDeque<TreeNode>();
+        var stack = new ArrayDeque<RadixTreeNode>();
         stack.push(root);
         while (!stack.isEmpty()) {
             var node = stack.pop();
@@ -452,11 +452,11 @@ public class RadixCache {
     // ===== Internal helpers =====
 
     /**
-     * Builds the {@link ChildKey} used to look up a child node whose edge
+     * Builds the {@link RadixKey} used to look up a child node whose edge
      * starts at {@code tokens[offset]}.
      */
-    private ChildKey childKey(String extraKey, int[] tokens, int offset) {
-        return new ChildKey(extraKey, Arrays.copyOfRange(tokens, offset, offset + pageSize));
+    private RadixKey childKey(String extraKey, int[] tokens, int offset) {
+        return new RadixKey(extraKey, Arrays.copyOfRange(tokens, offset, offset + pageSize));
     }
 
     /**
@@ -485,15 +485,15 @@ public class RadixCache {
      *
      * The parent's children map is updated in-place (same lookup key, different
      * target). The evictable and protected sizes are unchanged because the total
-     * number of tokens is conserved. The original {@link TreeNode#value} tensor
+     * number of tokens is conserved. The original {@link RadixTreeNode#value} tensor
      * is closed and replaced by two independent slices.
      *
      * @param child    the node to split.
      * @param splitLen number of tokens in the new prefix node (multiple of {@code pageSize}).
      * @return the newly created prefix node.
      */
-    private TreeNode splitNode(TreeNode child, int splitLen) {
-        var newNode = new TreeNode(child.priority);
+    private RadixTreeNode splitNode(RadixTreeNode child, int splitLen) {
+        var newNode = new RadixTreeNode(child.priority);
         newNode.hitCount = child.hitCount;
         newNode.extraKey = child.extraKey;
         newNode.parent = child.parent;
@@ -501,9 +501,9 @@ public class RadixCache {
         newNode.key = Arrays.copyOf(child.key, splitLen);
 
         // Compute both lookup keys from the original child.key before truncating it.
-        var suffixLookupKey = new ChildKey(child.extraKey,
+        var suffixLookupKey = new RadixKey(child.extraKey,
                 Arrays.copyOfRange(child.key, splitLen, splitLen + pageSize));
-        var parentLookupKey = new ChildKey(child.extraKey,
+        var parentLookupKey = new RadixKey(child.extraKey,
                 Arrays.copyOf(child.key, pageSize));
 
         // Split the KV index tensor into two independent tensors, then close the original.
@@ -536,8 +536,8 @@ public class RadixCache {
      * @param node the leaf node to delete.
      * @return the detached KV index tensor (caller must close it).
      */
-    private Tensor deleteLeaf(TreeNode node) {
-        node.parent.children.remove(new ChildKey(node.extraKey, Arrays.copyOf(node.key, pageSize)));
+    private Tensor deleteLeaf(RadixTreeNode node) {
+        node.parent.children.remove(new RadixKey(node.extraKey, Arrays.copyOf(node.key, pageSize)));
         evictableSize -= node.key.length;
         evictableLeaves.remove(node);
         var value = node.value;
@@ -555,7 +555,7 @@ public class RadixCache {
      *   <li>every child (if any) has already been evicted.</li>
      * </ol>
      */
-    private void updateLeafStatus(TreeNode node) {
+    private void updateLeafStatus(RadixTreeNode node) {
         if (node.isEvicted() || node.lockRef > 0) {
             evictableLeaves.remove(node);
             return;
@@ -590,11 +590,11 @@ public class RadixCache {
     }
 
     /**
-     * Closes all live {@link TreeNode#value} tensors in the subtree
+     * Closes all live {@link RadixTreeNode#value} tensors in the subtree
      * rooted at {@code node}. Used during {@link #reset()}.
      */
-    private void closeTensors(TreeNode node) {
-        var stack = new ArrayDeque<TreeNode>();
+    private void closeTensors(RadixTreeNode node) {
+        var stack = new ArrayDeque<RadixTreeNode>();
         stack.push(node);
         while (!stack.isEmpty()) {
             var current = stack.pop();
@@ -606,7 +606,7 @@ public class RadixCache {
     }
 
     /** Prints the subtree rooted at {@code node} with indentation for debugging. */
-    private void printHelper(TreeNode node, int indent) {
+    private void printHelper(RadixTreeNode node, int indent) {
         var keyLen = node.key != null ? node.key.length : 0;
         var preview = node.key != null
                 ? Arrays.copyOf(node.key, Math.min(keyLen, 10))

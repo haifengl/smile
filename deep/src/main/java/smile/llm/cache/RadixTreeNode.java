@@ -35,17 +35,17 @@ import smile.deep.tensor.Tensor;
  *
  * @author Haifeng Li
  */
-public class TreeNode {
+public class RadixTreeNode {
     private static final AtomicLong COUNTER = new AtomicLong(0);
 
     /** Unique, monotonically increasing node identifier. */
     public final long id;
 
     /** Child nodes keyed by the first {@code pageSize} tokens on each outgoing edge. */
-    final HashMap<ChildKey, TreeNode> children = new HashMap<>();
+    final HashMap<RadixKey, RadixTreeNode> children = new HashMap<>();
 
     /** Parent node in the tree; {@code null} only for the root sentinel. */
-    TreeNode parent;
+    RadixTreeNode parent;
 
     /**
      * Token IDs stored on the edge leading into this node.
@@ -96,7 +96,7 @@ public class TreeNode {
      * Constructor.
      * @param priority initial eviction priority.
      */
-    TreeNode(int priority) {
+    RadixTreeNode(int priority) {
         this.id = COUNTER.getAndIncrement();
         this.priority = priority;
         double now = System.nanoTime() * 1e-9;
@@ -105,7 +105,7 @@ public class TreeNode {
     }
 
     /** Constructor with default priority of 0. */
-    TreeNode() {
+    RadixTreeNode() {
         this(0);
     }
 

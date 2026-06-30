@@ -38,7 +38,7 @@ import java.util.Objects;
  *
  * @author Haifeng Li
  */
-record ChildKey(String extraKey, int[] tokens) {
+record RadixKey(String extraKey, int[] tokens) {
 
     /**
      * Value-based equality that uses {@link Arrays#equals} for the
@@ -48,7 +48,7 @@ record ChildKey(String extraKey, int[] tokens) {
      */
     @Override
     public boolean equals(Object obj) {
-        return obj instanceof ChildKey(var e, var t)
+        return obj instanceof RadixKey(var e, var t)
                 && Objects.equals(extraKey, e)
                 && Arrays.equals(tokens, t);
     }
