@@ -17,7 +17,7 @@
 package smile.llm.cache;
 
 import java.util.ArrayList;
-import java.util.List;
+
 import org.junit.jupiter.api.*;
 import smile.deep.tensor.Tensor;
 import static org.junit.jupiter.api.Assertions.*;
@@ -228,7 +228,7 @@ public class RadixCacheTest {
             cache.insert(new int[]{4, 5, 6}, t2);
         }
 
-        TreeNode lockedNode;
+        RadixTreeNode lockedNode;
         try (var locked = cache.matchPrefix(new int[]{1, 2, 3})) {
             lockedNode = locked.lastNode();
             cache.incLockRef(lockedNode);
@@ -254,7 +254,7 @@ public class RadixCacheTest {
             cache.insert(new int[]{1, 2, 3}, kv);
         }
 
-        TreeNode node;
+        RadixTreeNode node;
         try (var result = cache.matchPrefix(new int[]{1, 2, 3})) {
             node = result.lastNode();
         }
@@ -297,7 +297,7 @@ public class RadixCacheTest {
             cache.insert(new int[]{1, 2, 3}, kv);
         }
 
-        TreeNode node;
+        RadixTreeNode node;
         try (var result = cache.matchPrefix(new int[]{1, 2, 3})) {
             node = result.lastNode();
         }

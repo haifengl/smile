@@ -38,14 +38,14 @@ import smile.deep.tensor.Tensor;
  *                 prefix found. Its length is always a multiple of the cache's
  *                 {@code pageSize}. An empty tensor (length 0) means nothing
  *                 was found in the cache.
- * @param lastNode the deepest {@link TreeNode} reached during matching. Callers
+ * @param lastNode the deepest {@link RadixTreeNode} reached during matching. Callers
  *                 should pass this node to {@link RadixCache#incLockRef} to
  *                 protect the matched prefix from eviction while the request
  *                 is in flight, and to {@link RadixCache#decLockRef} when done.
  *
  * @author Haifeng Li
  */
-public record MatchResult(Tensor indices, TreeNode lastNode) implements AutoCloseable {
+public record MatchResult(Tensor indices, RadixTreeNode lastNode) implements AutoCloseable {
 
     /**
      * Returns the number of matched token slots (equal to {@code indices.length()}).

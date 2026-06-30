@@ -22,10 +22,10 @@ package smile.llm.cache;
  * @param prefixLen the number of tokens that were already present in the cache
  *                  before this insert. The caller may free the duplicate KV
  *                  cache entries for indices {@code [0, prefixLen)}.
- * @param lastNode  the {@link TreeNode} that holds the newly inserted (or
+ * @param lastNode  the {@link RadixTreeNode} that holds the newly inserted (or
  *                  previously cached) tokens. The caller should keep a
  *                  reference to this node for lock-reference management.
  *
  * @author Haifeng Li
  */
-public record InsertResult(int prefixLen, TreeNode lastNode) {}
+public record InsertResult(int prefixLen, RadixTreeNode lastNode) {}
