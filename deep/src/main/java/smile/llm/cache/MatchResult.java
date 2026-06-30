@@ -21,9 +21,17 @@ import smile.deep.tensor.Tensor;
 /**
  * Result returned by {@link RadixCache#matchPrefix}.
  *
- * <p>The caller <strong>owns</strong> the {@link #indices()} tensor and is
- * responsible for closing it (e.g., via try-with-resources or an explicit
- * {@link Tensor#close()}) when it is no longer needed.
+ * <p>This record implements {@link AutoCloseable} so callers can use
+ * try-with-resources to release the {@link #indices()} tensor automatically:
+ * <pre>{@code
+ * try (var result = cache.matchPrefix(tokenIds)) {
+ *     process(result.indices());
+ * }
+ * }</pre>
+ *
+ * <p>The caller <strong>owns</strong> the {@link #indices()} tensor. If
+ * try-with-resources is not used, the caller must call {@link #close()}
+ * (or {@code indices().close()}) explicitly.
  *
  * @param indices  a freshly-allocated 1-D {@code int64} tensor containing the
  *                 concatenated KV cache slot indices for the longest cached
@@ -37,12 +45,22 @@ import smile.deep.tensor.Tensor;
  *
  * @author Haifeng Li
  */
-public record MatchResult(Tensor indices, TreeNode lastNode) {
+public record MatchResult(Tensor indices, TreeNode lastNode) implements AutoCloseable {
+
     /**
      * Returns the number of matched token slots (equal to {@code indices.length()}).
      * @return the number of matched tokens.
      */
     public int length() {
         return (int) indices.length();
+    }
+
+    /**
+     * Releases the {@link #indices()} tensor. Called automatically when this
+     * result is used in a try-with-resources statement.
+     */
+    @Override
+    public void close() {
+        indices.close();
     }
 }

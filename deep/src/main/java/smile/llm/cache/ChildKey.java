@@ -25,31 +25,38 @@ import java.util.Objects;
  * of a tree edge, providing O(1) child lookup while supporting namespace
  * isolation (e.g., different LoRA adapter IDs).
  *
+ * <p>This is a {@code record} rather than a plain class because its only role
+ * is to act as an immutable, value-based HashMap key. The default record
+ * {@code equals} and {@code hashCode} are overridden because one component is
+ * an {@code int[]}, whose identity-based {@code hashCode} would break map
+ * semantics; {@link Arrays#equals} and {@link Arrays#hashCode} are used
+ * instead.
+ *
+ * @param extraKey optional namespace tag (e.g., LoRA adapter ID);
+ *                 {@code null} for the default namespace.
+ * @param tokens   the first {@code pageSize} token IDs on the tree edge.
+ *
  * @author Haifeng Li
  */
-class ChildKey {
-    /** Optional namespace tag (e.g., LoRA adapter ID). {@code null} for the default namespace. */
-    final String extraKey;
-    /** The first {@code pageSize} token IDs on the tree edge. */
-    final int[] tokens;
+record ChildKey(String extraKey, int[] tokens) {
 
     /**
-     * Constructor.
-     * @param extraKey optional namespace tag, or {@code null}.
-     * @param tokens   the first {@code pageSize} token IDs.
+     * Value-based equality that uses {@link Arrays#equals} for the
+     * {@code int[]} component. The record pattern
+     * {@code ChildKey(var e, var t)} deconstructs the other instance without
+     * an explicit cast.
      */
-    ChildKey(String extraKey, int[] tokens) {
-        this.extraKey = extraKey;
-        this.tokens = tokens;
-    }
-
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (!(obj instanceof ChildKey other)) return false;
-        return Objects.equals(extraKey, other.extraKey) && Arrays.equals(tokens, other.tokens);
+        return obj instanceof ChildKey(var e, var t)
+                && Objects.equals(extraKey, e)
+                && Arrays.equals(tokens, t);
     }
 
+    /**
+     * Content-based hash code that uses {@link Arrays#hashCode} for the
+     * {@code int[]} component so that structurally equal keys collide.
+     */
     @Override
     public int hashCode() {
         return 31 * Objects.hashCode(extraKey) + Arrays.hashCode(tokens);
@@ -57,6 +64,6 @@ class ChildKey {
 
     @Override
     public String toString() {
-        return "ChildKey{extraKey=" + extraKey + ", tokens=" + Arrays.toString(tokens) + "}";
+        return "ChildKey[extraKey=%s, tokens=%s]".formatted(extraKey, Arrays.toString(tokens));
     }
 }

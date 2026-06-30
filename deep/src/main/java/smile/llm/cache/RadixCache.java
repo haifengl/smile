@@ -20,7 +20,6 @@ import java.util.*;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 
 /**
@@ -57,8 +56,8 @@ import smile.deep.tensor.Tensor;
  * <h2>Tensor ownership</h2>
  * Each {@link TreeNode} <em>owns</em> its {@link TreeNode#value} tensor and is
  * responsible for closing it when the node is evicted or split. The
- * {@link MatchResult#indices()} tensor returned by {@link #matchPrefix} is a
- * freshly allocated tensor owned by the caller.
+ * {@link MatchResult} returned by {@link #matchPrefix} is {@link AutoCloseable}:
+ * use try-with-resources to release the underlying tensor automatically.
  *
  * @author Haifeng Li
  * @see TreeNode
@@ -132,8 +131,8 @@ public class RadixCache {
      * {@code null} extra key.
      *
      * @param tokenIds the token ID sequence to look up.
-     * @return the match result. The caller owns the returned
-     *         {@link MatchResult#indices()} tensor and must close it when done.
+     * @return the match result. Use try-with-resources to release the enclosed
+     *         tensor automatically, or call {@link MatchResult#close()} explicitly.
      */
     public MatchResult matchPrefix(int[] tokenIds) {
         return matchPrefix(tokenIds, null);
@@ -154,34 +153,34 @@ public class RadixCache {
      *
      * @param tokenIds the token ID sequence to look up.
      * @param extraKey optional namespace tag, or {@code null} for the default namespace.
-     * @return the match result. The caller owns the returned
-     *         {@link MatchResult#indices()} tensor and must close it when done.
+     * @return the match result. Use try-with-resources to release the enclosed
+     *         tensor automatically, or call {@link MatchResult#close()} explicitly.
      */
     public MatchResult matchPrefix(int[] tokenIds, String extraKey) {
-        int alignedLen = (tokenIds.length / pageSize) * pageSize;
+        var alignedLen = (tokenIds.length / pageSize) * pageSize;
         if (alignedLen == 0) {
             return new MatchResult(emptyTensor(), root);
         }
 
-        double accessTime = System.nanoTime() * 1e-9;
+        var accessTime = System.nanoTime() * 1e-9;
         root.lastAccessTime = accessTime;
 
-        List<long[]> chunks = new ArrayList<>();
-        TreeNode node = root;
-        int offset = 0;
-        int remaining = alignedLen;
+        var chunks = new ArrayList<long[]>();
+        var node = root;
+        var offset = 0;
+        var remaining = alignedLen;
 
         while (remaining > 0) {
-            ChildKey childKey = childKey(extraKey, tokenIds, offset);
-            TreeNode child = node.children.get(childKey);
+            var childKey = childKey(extraKey, tokenIds, offset);
+            var child = node.children.get(childKey);
             if (child == null) break;
 
             child.lastAccessTime = accessTime;
-            int prefixLen = matchTokens(child.key, tokenIds, offset);
+            var prefixLen = matchTokens(child.key, tokenIds, offset);
 
             if (prefixLen < child.key.length) {
                 // Partial match: split child so future lookups land on a precise boundary.
-                TreeNode newNode = splitNode(child, prefixLen);
+                var newNode = splitNode(child, prefixLen);
                 chunks.add(newNode.value.longArray());
                 node = newNode;
                 break;
@@ -231,38 +230,38 @@ public class RadixCache {
      * @return the insert result.
      */
     public InsertResult insert(int[] tokenIds, Tensor kvIndices, String extraKey, int priority) {
-        int alignedLen = (tokenIds.length / pageSize) * pageSize;
+        var alignedLen = (tokenIds.length / pageSize) * pageSize;
         if (alignedLen == 0) {
             return new InsertResult(0, root);
         }
 
         // Extract all indices once; sliced copies are made below without repeated
         // native-to-Java round-trips for each page.
-        long[] allKvIndices = kvIndices.longArray();
+        var allKvIndices = kvIndices.longArray();
 
-        double accessTime = System.nanoTime() * 1e-9;
+        var accessTime = System.nanoTime() * 1e-9;
         root.lastAccessTime = accessTime;
         root.priority = Math.max(root.priority, priority);
 
-        int offset = 0;
-        int remaining = alignedLen;
-        int totalPrefixLen = 0;
-        TreeNode node = root;
+        var offset = 0;
+        var remaining = alignedLen;
+        var totalPrefixLen = 0;
+        var node = root;
 
         while (remaining > 0) {
-            ChildKey childKey = childKey(extraKey, tokenIds, offset);
-            TreeNode child = node.children.get(childKey);
+            var childKey = childKey(extraKey, tokenIds, offset);
+            var child = node.children.get(childKey);
             if (child == null) break;
 
             child.lastAccessTime = accessTime;
-            int prefixLen = matchTokens(child.key, tokenIds, offset);
+            var prefixLen = matchTokens(child.key, tokenIds, offset);
             totalPrefixLen += prefixLen;
             offset += prefixLen;
             remaining -= prefixLen;
 
             if (prefixLen < child.key.length) {
                 // Divergence in the middle of an existing edge: split it.
-                TreeNode newNode = splitNode(child, prefixLen);
+                var newNode = splitNode(child, prefixLen);
                 newNode.priority = Math.max(newNode.priority, priority);
                 newNode.hitCount++;
                 node = newNode;
@@ -276,18 +275,14 @@ public class RadixCache {
 
         if (remaining > 0) {
             // Append a new leaf for the tokens not yet in the tree.
-            int[] newKey = Arrays.copyOfRange(tokenIds, offset, offset + remaining);
-            long[] newKvSlice = Arrays.copyOfRange(allKvIndices, offset, offset + remaining);
-
-            TreeNode newNode = new TreeNode(priority);
+            var newNode = new TreeNode(priority);
             newNode.extraKey = extraKey;
             newNode.parent = node;
-            newNode.key = newKey;
-            newNode.value = Tensor.of(newKvSlice);
+            newNode.key = Arrays.copyOfRange(tokenIds, offset, offset + remaining);
+            newNode.value = Tensor.of(Arrays.copyOfRange(allKvIndices, offset, offset + remaining));
             newNode.hitCount = 1;
 
-            ChildKey childKey = childKey(extraKey, tokenIds, offset);
-            node.children.put(childKey, newNode);
+            node.children.put(childKey(extraKey, tokenIds, offset), newNode);
             evictableSize += remaining;
 
             updateLeafStatus(node);
@@ -320,19 +315,18 @@ public class RadixCache {
      */
     public int evict(int numTokens, Consumer<Tensor> freeCallback) {
         // Build an LRU min-heap from the current evictable leaves.
-        PriorityQueue<TreeNode> heap = new PriorityQueue<>(
-                Comparator.comparingDouble(n -> n.lastAccessTime));
+        var heap = new PriorityQueue<TreeNode>(Comparator.comparingDouble(n -> n.lastAccessTime));
         heap.addAll(evictableLeaves);
 
-        int numEvicted = 0;
+        var numEvicted = 0;
         while (numEvicted < numTokens && !heap.isEmpty()) {
-            TreeNode x = heap.poll();
+            var x = heap.poll();
             // Skip nodes that were already evicted in this round.
             if (x.isEvicted()) continue;
 
-            int tokenCount = x.key.length;
-            TreeNode parent = x.parent;
-            Tensor value = deleteLeaf(x);
+            var tokenCount = x.key.length;
+            var parent = x.parent;
+            var value = deleteLeaf(x);
 
             if (freeCallback != null) {
                 freeCallback.accept(value);
@@ -366,7 +360,7 @@ public class RadixCache {
      */
     public int incLockRef(TreeNode node) {
         if (node == null) return 0;
-        int delta = 0;
+        var delta = 0;
         while (node != root) {
             if (node.lockRef == 0) {
                 evictableSize -= node.key.length;
@@ -390,7 +384,7 @@ public class RadixCache {
      */
     public int decLockRef(TreeNode node) {
         if (node == null) return 0;
-        int delta = 0;
+        var delta = 0;
         while (node != root) {
             if (node.lockRef == 1) {
                 evictableSize += node.key.length;
@@ -430,15 +424,15 @@ public class RadixCache {
      * @return total cached token count.
      */
     public int totalSize() {
-        int total = 0;
-        Deque<TreeNode> stack = new ArrayDeque<>();
+        var total = 0;
+        var stack = new ArrayDeque<TreeNode>();
         stack.push(root);
         while (!stack.isEmpty()) {
-            TreeNode node = stack.pop();
+            var node = stack.pop();
             if (node.value != null) {
                 total += (int) node.value.length();
             }
-            for (TreeNode child : node.children.values()) {
+            for (var child : node.children.values()) {
                 if (!child.isEvicted()) {
                     stack.push(child);
                 }
@@ -462,8 +456,7 @@ public class RadixCache {
      * starts at {@code tokens[offset]}.
      */
     private ChildKey childKey(String extraKey, int[] tokens, int offset) {
-        int[] keyTokens = Arrays.copyOfRange(tokens, offset, offset + pageSize);
-        return new ChildKey(extraKey, keyTokens);
+        return new ChildKey(extraKey, Arrays.copyOfRange(tokens, offset, offset + pageSize));
     }
 
     /**
@@ -473,8 +466,8 @@ public class RadixCache {
      * child is only visited after its first {@code pageSize} tokens already matched.
      */
     private int matchTokens(int[] nodeKey, int[] tokens, int offset) {
-        int maxMatch = Math.min(nodeKey.length, tokens.length - offset);
-        int matched = 0;
+        var maxMatch = Math.min(nodeKey.length, tokens.length - offset);
+        var matched = 0;
         while (matched < maxMatch && nodeKey[matched] == tokens[offset + matched]) {
             matched++;
         }
@@ -500,7 +493,7 @@ public class RadixCache {
      * @return the newly created prefix node.
      */
     private TreeNode splitNode(TreeNode child, int splitLen) {
-        TreeNode newNode = new TreeNode(child.priority);
+        var newNode = new TreeNode(child.priority);
         newNode.hitCount = child.hitCount;
         newNode.extraKey = child.extraKey;
         newNode.parent = child.parent;
@@ -508,15 +501,15 @@ public class RadixCache {
         newNode.key = Arrays.copyOf(child.key, splitLen);
 
         // Compute both lookup keys from the original child.key before truncating it.
-        ChildKey suffixLookupKey = new ChildKey(child.extraKey,
+        var suffixLookupKey = new ChildKey(child.extraKey,
                 Arrays.copyOfRange(child.key, splitLen, splitLen + pageSize));
-        ChildKey parentLookupKey = new ChildKey(child.extraKey,
+        var parentLookupKey = new ChildKey(child.extraKey,
                 Arrays.copyOf(child.key, pageSize));
 
         // Split the KV index tensor into two independent tensors, then close the original.
-        long[] origIndices = child.value.longArray();
+        var origIndices = child.value.longArray();
         newNode.value = Tensor.of(Arrays.copyOf(origIndices, splitLen));
-        Tensor childNewValue = Tensor.of(Arrays.copyOfRange(origIndices, splitLen, origIndices.length));
+        var childNewValue = Tensor.of(Arrays.copyOfRange(origIndices, splitLen, origIndices.length));
         child.value.close();
         child.value = childNewValue;
 
@@ -544,11 +537,10 @@ public class RadixCache {
      * @return the detached KV index tensor (caller must close it).
      */
     private Tensor deleteLeaf(TreeNode node) {
-        ChildKey key = new ChildKey(node.extraKey, Arrays.copyOf(node.key, pageSize));
-        node.parent.children.remove(key);
+        node.parent.children.remove(new ChildKey(node.extraKey, Arrays.copyOf(node.key, pageSize)));
         evictableSize -= node.key.length;
         evictableLeaves.remove(node);
-        Tensor value = node.value;
+        var value = node.value;
         node.value = null;
         updateLeafStatus(node.parent);
         return value;
@@ -568,15 +560,12 @@ public class RadixCache {
             evictableLeaves.remove(node);
             return;
         }
-
-        for (TreeNode child : node.children.values()) {
-            if (!child.isEvicted()) {
-                evictableLeaves.remove(node);
-                return;
-            }
+        var hasLiveChild = node.children.values().stream().anyMatch(c -> !c.isEvicted());
+        if (hasLiveChild) {
+            evictableLeaves.remove(node);
+        } else {
+            evictableLeaves.add(node);
         }
-
-        evictableLeaves.add(node);
     }
 
     /**
@@ -584,14 +573,11 @@ public class RadixCache {
      * {@code int64} {@link Tensor}. Returns an empty tensor when the list is empty.
      */
     private Tensor tensorOf(List<long[]> chunks) {
-        if (chunks.isEmpty()) {
-            return emptyTensor();
-        }
-        int total = 0;
-        for (long[] chunk : chunks) total += chunk.length;
-        long[] result = new long[total];
-        int pos = 0;
-        for (long[] chunk : chunks) {
+        if (chunks.isEmpty()) return emptyTensor();
+        var total = chunks.stream().mapToInt(c -> c.length).sum();
+        var result = new long[total];
+        var pos = 0;
+        for (var chunk : chunks) {
             System.arraycopy(chunk, 0, result, pos, chunk.length);
             pos += chunk.length;
         }
@@ -604,14 +590,14 @@ public class RadixCache {
     }
 
     /**
-     * Recursively closes all live {@link TreeNode#value} tensors in the subtree
+     * Closes all live {@link TreeNode#value} tensors in the subtree
      * rooted at {@code node}. Used during {@link #reset()}.
      */
     private void closeTensors(TreeNode node) {
-        Deque<TreeNode> stack = new ArrayDeque<>();
+        var stack = new ArrayDeque<TreeNode>();
         stack.push(node);
         while (!stack.isEmpty()) {
-            TreeNode current = stack.pop();
+            var current = stack.pop();
             if (current.value != null) {
                 current.value.close();
             }
@@ -619,16 +605,15 @@ public class RadixCache {
         }
     }
 
-    /** Recursively prints the subtree rooted at {@code node} with indentation. */
+    /** Prints the subtree rooted at {@code node} with indentation for debugging. */
     private void printHelper(TreeNode node, int indent) {
-        int keyLen = node.key != null ? node.key.length : 0;
-        int[] preview = node.key != null
+        var keyLen = node.key != null ? node.key.length : 0;
+        var preview = node.key != null
                 ? Arrays.copyOf(node.key, Math.min(keyLen, 10))
                 : new int[0];
-        System.out.printf("%s[len=%d key=%s lockRef=%d]%n",
-                " ".repeat(indent), keyLen,
-                Arrays.toString(preview), node.lockRef);
-        for (TreeNode child : node.children.values()) {
+        System.out.println("%s[len=%d key=%s lockRef=%d]".formatted(
+                " ".repeat(indent), keyLen, Arrays.toString(preview), node.lockRef));
+        for (var child : node.children.values()) {
             printHelper(child, indent + 2);
         }
     }
