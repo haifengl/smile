@@ -103,7 +103,7 @@ lazy val javaSettings = commonSettings ++ Seq(
   Compile / doc / javacOptions ++= Seq(
     //"-Xdoclint:none",
     "--allow-script-in-comments",
-    "-doctitle", """Smile &mdash; Statistical Machine Intelligence &amp; Learning Engine""",
+    "-doctitle", """SMILE &mdash; Statistical Machine Intelligence &amp; Learning Engine""",
     "--add-script", "project/gtag.js",
     "-bottom", """Copyright &copy; 2010-2026 Haifeng Li. All rights reserved.
                  |Use is subject to <a href="https://raw.githubusercontent.com/haifengl/smile/master/LICENSE">license terms.</a>
@@ -112,7 +112,7 @@ lazy val javaSettings = commonSettings ++ Seq(
   libraryDependencies ++= Seq(
     "org.slf4j" % "slf4j-api" % "2.0.18",
     "org.slf4j" % "slf4j-simple" % "2.0.18" % Test,
-    "org.junit.jupiter" % "junit-jupiter-engine" % "6.1.0" % Test,
+    "org.junit.jupiter" % "junit-jupiter-engine" % "6.1.1" % Test,
     "com.github.sbt.junit" % "jupiter-interface" % JupiterKeys.jupiterVersion.value % Test
   )
 )
@@ -154,7 +154,7 @@ lazy val scalaSettings = commonSettings ++ Seq(
 JavaUnidoc / unidoc / javacOptions ++= Seq(
   "-Xdoclint:none",
   "--allow-script-in-comments",
-  "-doctitle", """Smile &mdash; Statistical Machine Intelligence &amp; Learning Engine""",
+  "-doctitle", """SMILE &mdash; Statistical Machine Intelligence &amp; Learning Engine""",
   "--add-script", "project/gtag.js",
   "-bottom", """Copyright &copy; 2010-2026 Haifeng Li. All rights reserved.
                |Use is subject to <a href="https://raw.githubusercontent.com/haifengl/smile/master/LICENSE">license terms.</a>
@@ -167,7 +167,7 @@ lazy val root = project.in(file("."))
   .settings(publish / skip := true)
   .settings(crossScalaVersions := Nil)
   .settings(
-    JavaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(json, scala, spark, kotlin, studio)
+    (JavaUnidoc / unidoc / unidocProjectFilter) := inAnyProject -- inProjects(json, scala, spark, kotlin, studio)
   )
   .aggregate(core, base, nlp, deep, plot, json, scala, spark, kotlin, studio)
 
