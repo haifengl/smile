@@ -292,7 +292,7 @@ public class SmileStudio extends JFrame implements SearchListener {
                         }
                     }
 
-                    yield new Anthropic(prefs.get("anthropicModel", "claude-sonnet-4-6"));
+                    yield new Anthropic(prefs.get("anthropicModel", "claude-sonnet-5"));
                 }
 
                 case "Google Gemini" ->
