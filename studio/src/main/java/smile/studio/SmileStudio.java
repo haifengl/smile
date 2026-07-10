@@ -302,7 +302,8 @@ public class SmileStudio extends JFrame implements SearchListener {
 
                 case "Google Gemini Enterprise" ->
                     GoogleGemini.enterprise(
-                            prefs.get("googleEnterpriseApiKey", ""),
+                            prefs.get("googleEnterpriseApiKey", ""), // Project
+                            prefs.get("googleEnterpriseBaseUrl", ""), // Location
                             prefs.get("googleEnterpriseModel", "gemini-3.1-pro-preview"));
 
                 default -> {

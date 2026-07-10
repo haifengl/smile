@@ -133,7 +133,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
         gbc.gridx = 0; // Column 0
         gbc.gridy = 0; // Row 0
         gbc.anchor = GridBagConstraints.WEST;
-        JLabel apiKeyLabel = new JLabel(bundle.getString("APIKey"));
+        JLabel apiKeyLabel = new JLabel(bundle.getString(service.equals("googleEnterprise") ? "Project" : "APIKey"));
         card.add(apiKeyLabel, gbc);
 
         gbc.gridx = 1; // Column 1
@@ -149,7 +149,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
         gbc.gridy = 1; // Row 1
         gbc.fill = GridBagConstraints.NONE; // Reset fill for label
         gbc.weightx = 0.0; // Reset weightx for label
-        JLabel baseUrlLabel = new JLabel(bundle.getString("BaseUrl"));
+        JLabel baseUrlLabel = new JLabel(bundle.getString(service.equals("googleEnterprise") ? "Location" : "BaseUrl"));
         card.add(baseUrlLabel, gbc);
 
         gbc.gridx = 1; // Column 1
