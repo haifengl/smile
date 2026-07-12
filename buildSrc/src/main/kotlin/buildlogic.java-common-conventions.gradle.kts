@@ -9,7 +9,7 @@ dependencies {
     implementation("org.slf4j:slf4j-api:2.0.18")
 
     // Use JUnit Jupiter for testing.
-    testImplementation("org.junit.jupiter:junit-jupiter:6.1.1")
+    testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testRuntimeOnly("org.slf4j:slf4j-simple:2.0.18")
 }
@@ -54,7 +54,8 @@ tasks.named<Test>("test") {
     // Forward any smile.test.* Gradle project properties (-P) to the test JVM
     // as system properties (-D), so that gated tests can be enabled with e.g.:
     //   ./gradlew :base:test -Psmile.test.network=true
-    project.properties
-        .filter { (k, v) -> k.startsWith("smile.test.") && v != null }
-        .forEach { (k, v) -> systemProperty(k, v.toString()) }
+    val testNetwork = providers.gradleProperty("smile.test.network")
+    if (testNetwork.isPresent) {
+        systemProperty("smile.test.network", testNetwork.get())
+    }
 }
