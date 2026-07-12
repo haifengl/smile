@@ -421,7 +421,7 @@ var est2 = EmpiricalDistribution.fit(data, xs);
 
 ### Multivariate Gaussian
 
-**`MultivariateGaussianDistribution(double[] mean, DenseMatrix cov)`**  
+**`MultivariateGaussianDistribution(double[] mean, DenseMatrix cov)`**
 **`MultivariateGaussianDistribution(double[] mean, double[] variance)`** (diagonal)
 
 ```java
@@ -559,7 +559,7 @@ int label = mix.map(2.5);            // hard assignment (most probable)
 
 ### Kernel Density Estimation
 
-**`KernelDensity(double[] data)`**  
+**`KernelDensity(double[] data)`**
 **`KernelDensity(double[] data, double bandwidth)`**
 
 Uses a **Gaussian kernel** with Scott's rule for bandwidth selection
