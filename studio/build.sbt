@@ -112,13 +112,14 @@ libraryDependencies ++= Seq(
 )
 
 libraryDependencies ++= {
-  val jacksonV = "3.2.0"
+  val jacksonV = "3.2.1"
+  val jsonschemaV = "4.38.0"
   Seq(
     "tools.jackson.core"       % "jackson-databind"            % jacksonV,
     "tools.jackson.dataformat" % "jackson-dataformat-yaml"     % jacksonV,
-    "com.github.victools"      % "jsonschema-generator"        % "4.38.0",
-    "com.github.victools"      % "jsonschema-module-jackson"   % "4.38.0",
-    "com.github.victools"      % "jsonschema-module-swagger-2" % "4.38.0"
+    "com.github.victools"      % "jsonschema-generator"        % jsonschemaV,
+    "com.github.victools"      % "jsonschema-module-jackson"   % jsonschemaV,
+    "com.github.victools"      % "jsonschema-module-swagger-2" % jsonschemaV
   )
 }
 

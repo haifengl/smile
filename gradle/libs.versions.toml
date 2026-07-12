@@ -1,7 +1,7 @@
 [versions]
 arrow = "19.0.0"
 fastxml = "2.22.1"
-jackson = "3.2.0"
+jackson = "3.2.1"
 jsonschema = "4.38.0"
 
 [libraries]
