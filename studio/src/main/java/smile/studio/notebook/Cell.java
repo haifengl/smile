@@ -27,17 +27,16 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.text.BadLocationException;
-import com.formdev.flatlaf.util.SystemInfo;
-import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jdesktop.swingx.JXTextField;
 import ioa.agent.Coder;
 import ioa.llm.client.StreamResponseHandler;
-import smile.studio.Markdown;
 import smile.studio.kernel.Kernel;
 import smile.studio.kernel.PostRunNavigation;
-import smile.studio.Monospaced;
-import smile.studio.OutputArea;
+import smile.studio.text.Markdown;
+import smile.studio.text.Monospaced;
+import smile.studio.text.OutputArea;
+import static org.fife.ui.rsyntaxtextarea.SyntaxConstants.*;
 
 /**
  * A cell is a multiline coding field, and its contents can be executed
@@ -64,7 +63,7 @@ public class Cell extends JPanel {
     private final JButton upButton = new JButton("↑");
     private final JButton downButton = new JButton("↓");
     // Windows doesn't show broom emoji properly
-    private final JButton clearButton = new JButton(SystemInfo.isMacOS ? "🧹" : "⌫");
+    private final JButton clearButton = new JButton("⌫");
     private final JButton deleteButton = new JButton("⌦");
     private final Coder coder;
     private final String syntaxStyle;
@@ -174,7 +173,7 @@ public class Cell extends JPanel {
         InputMap inputMap = editor.getInputMap(JComponent.WHEN_FOCUSED);
         ActionMap actionMap = editor.getActionMap();
 
-        if (coder != null && coder.llm() != null) {
+        if (coder != null && coder.llm().isPresent()) {
             inputMap.put(KeyStroke.getKeyStroke("TAB"), "complete-code");
             actionMap.put("complete-code", new AbstractAction() {
                 @Override
@@ -235,7 +234,7 @@ public class Cell extends JPanel {
                         if (ex != null) {
                             logger.warn("Code completion failed: {}", ex.getMessage());
                             SwingUtilities.invokeLater(() ->
-                                    JOptionPane.showMessageDialog(Cell.this,
+                                    JOptionPane.showMessageDialog(null,
                                             "Code completion failed: " + ex.getMessage(),
                                             bundle.getString("AIService"),
                                             JOptionPane.ERROR_MESSAGE));
@@ -303,8 +302,14 @@ public class Cell extends JPanel {
         String before = getCodeGenerationBeforeContext();
         String after = getCodeGenerationAfterContext();
         editor.insert("\n", editor.getCaretPosition());
+        var comment = switch (syntaxStyle) {
+            case SYNTAX_STYLE_PYTHON -> "#";
+            case SYNTAX_STYLE_JAVA -> "///";
+            case SYNTAX_STYLE_SQL -> "--";
+            default -> "//";
+        } + " ";
         for (String line : wrap(task, 80)) {
-            editor.insert("/// " + line + "\n", editor.getCaretPosition());
+            editor.insert(comment + line + "\n", editor.getCaretPosition());
         }
 
         // Run code completion in a worker thread as join() blocks.
@@ -328,7 +333,8 @@ public class Cell extends JPanel {
                     @Override
                     public void onException(Throwable ex) {
                         SwingUtilities.invokeLater(() ->
-                                JOptionPane.showMessageDialog(Cell.this,
+                                JOptionPane.showMessageDialog(
+                                        null,
                                         "Code generation failed: " + ex.getMessage(),
                                         bundle.getString("AIService"),
                                         JOptionPane.ERROR_MESSAGE));
@@ -493,10 +499,10 @@ public class Cell extends JPanel {
             return success;
         } catch (Throwable t) {
             output().println("✖ ERROR during execution: " + t);
-            logger.error("Error during execution: ", t);
+            logger.error("Error during execution: {}", t.getMessage());
             return false;
         } finally {
-            kernel.removeOutputArea();;
+            kernel.removeOutputArea();
             SwingUtilities.invokeLater(() -> {
                 setRunning(false);
                 setExecutionCount(executionCount);
@@ -578,9 +584,9 @@ public class Cell extends JPanel {
             case Code ->
                     editor.setSyntaxEditingStyle(syntaxStyle);
             case Markdown ->
-                    editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_MARKDOWN);
+                    editor.setSyntaxEditingStyle(SYNTAX_STYLE_MARKDOWN);
             case Raw ->
-                    editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);
+                    editor.setSyntaxEditingStyle(SYNTAX_STYLE_NONE);
         }
     }
 

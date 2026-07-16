@@ -62,21 +62,29 @@ public class SqueezeExcitation extends LayerBlock {
         add("scale_activation", sigma);
     }
 
+    /**
+     * Forward pass. This method does <em>not</em> take ownership of {@code input};
+     * the caller remains responsible for closing it.
+     *
+     * @param input the input tensor.
+     * @return the output tensor.
+     */
     @Override
     public Tensor forward(Tensor input) {
-        Tensor t1 = avgpool.forward(input);
-        Tensor t2 = conv1.forward(t1);
-        t1.close();
-
-        t2 = delta.forward(t2);
-        Tensor t3 = conv2.forward(t2);
-        t2.close();
-
-        t3 = sigma.forward(t3);
-        Tensor output = t3.mul(input);
-        t3.close();
-        input.close();
-
-        return output;
+        try (Tensor t1 = avgpool.forward(input);
+             Tensor c1 = conv1.forward(t1)) {
+            Tensor a1 = delta.forward(c1);
+            Tensor c2 = null;
+            Tensor a2 = null;
+            try {
+                c2 = conv2.forward(a1);
+                a2 = sigma.forward(c2);
+                return a2.mul(input);
+            } finally {
+                if (a2 != null && a2 != c2) a2.close();
+                if (c2 != null) c2.close();
+                if (a1 != null && a1 != c1) a1.close();
+            }
+        }
     }
 }

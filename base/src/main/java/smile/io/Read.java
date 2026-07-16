@@ -19,7 +19,8 @@ package smile.io;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
+import java.io.InvalidClassException;
+import java.io.ObjectInputFilter;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -44,18 +45,51 @@ import smile.util.Strings;
 public interface Read {
     /**
      * Reads a serialized object from a file.
+     *
+     * <p>Deserialization is guarded by a built-in {@link ObjectInputFilter}
+     * allow-list that permits only {@code smile.*}, common {@code java.lang},
+     * {@code java.util}, {@code java.math}, and {@code java.time} classes.
+     * All other classes are rejected with {@link InvalidClassException}
+     * before any deserialization callback executes, preventing gadget-chain
+     * exploits.</p>
+     *
      * @param path the file path.
-     * @return the serialized object.
-     * @throws IOException when fails to read the stream.
+     * @return the deserialized object.
+     * @throws IOException when fails to read the stream or a disallowed class
+     *         is encountered.
      * @throws ClassNotFoundException when fails to load the class.
      */
     static Object object(Path path) throws IOException, ClassNotFoundException {
-        InputStream file = Files.newInputStream(path);
-        ObjectInputStream in = new ObjectInputStream(file);
-        Object o = in.readObject();
-        in.close();
-        file.close();
-        return o;
+        try (InputStream file = Files.newInputStream(path);
+             SmileObjectInputStream in = new SmileObjectInputStream(file)) {
+            return in.readObject();
+        }
+    }
+
+    /**
+     * Reads a serialized object from a file using a caller-supplied
+     * {@link ObjectInputFilter} merged with the built-in SMILE allow-list.
+     *
+     * <p>Use this overload when the serialized artifact contains classes outside
+     * the default allow-list (e.g. third-party model integrations).  The
+     * {@code extraFilter} is consulted first; any class it does not explicitly
+     * permit falls through to the built-in allow-list.  The built-in deny-all
+     * fallback still applies for anything neither filter permits.</p>
+     *
+     * @param path        the file path.
+     * @param extraFilter an additional {@link ObjectInputFilter} to merge with
+     *                    the built-in allow-list; must not be {@code null}.
+     * @return the deserialized object.
+     * @throws IOException when fails to read the stream or a disallowed class
+     *         is encountered.
+     * @throws ClassNotFoundException when fails to load the class.
+     */
+    static Object object(Path path, ObjectInputFilter extraFilter)
+            throws IOException, ClassNotFoundException {
+        try (InputStream file = Files.newInputStream(path);
+             SmileObjectInputStream in = new SmileObjectInputStream(file, extraFilter)) {
+            return in.readObject();
+        }
     }
 
     /**
@@ -73,26 +107,34 @@ public interface Read {
      * @param path the input file path.
      * @param format the optional file format specification. For csv files,
      *               it is such as <code>delimiter=\t,header=true,comment=#,escape=\,quote="</code>.
-     *               For json files, it is the file mode (single-line or
-     *               multi-line). For avro files, it is the path to the schema
+     *               For JSON files, it is the file mode (single-line or
+     *               multi-line). For Avro files, it is the path to the schema
      *               file.
      * @throws Exception when fails to read the file.
      * @return the data frame.
      */
     static DataFrame data(String path, String format) throws Exception {
-        int dotIndex = path.lastIndexOf(".");
-        String ext = dotIndex < 0 ? "csv" : path.substring(dotIndex + 1);
+        // Derive extension from the last segment of the path only,
+        // so that URIs like "s3://bucket/file" are handled correctly.
+        String basename = path;
+        int slash = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
+        if (slash >= 0) basename = path.substring(slash + 1);
+        // Strip query / fragment if present
+        int query = basename.indexOf('?');
+        if (query >= 0) basename = basename.substring(0, query);
+
+        int dotIndex = basename.lastIndexOf('.');
+        String ext = dotIndex < 0 ? "csv" : basename.substring(dotIndex + 1);
         switch (ext) {
             case "dat":
             case "txt":
             case "csv": return csv(path, format);
             case "arff": return arff(path);
-            case "json":
-                JSON.Mode mode = format == null ? JSON.Mode.SINGLE_LINE : JSON.Mode.valueOf(format);
-                return json(path, mode, null);
+            case "json": return json(path, JSON.Mode.parse(format), null);
             case "sas7bdat": return sas(path);
             case "avro": return avro(path, format);
-            case "parquet": return parquet(path);
+            // Parquet.read() will convert Path to a proper URI string
+            case "parquet": return parquet(Path.of(path));
             case "feather": return arrow(path);
             default:
                 if (format != null) {
@@ -128,6 +170,8 @@ public interface Read {
      * @return the data frame.
      */
     static DataFrame csv(String path, String format) throws IOException, URISyntaxException {
+        if (Strings.isNullOrBlank(format)) return csv(path);
+
         CSVFormat.Builder formatBuilder = CSVFormat.Builder.create();
         for (String token : format.split(",")) {
             String[] option = token.split("=");
@@ -576,6 +620,9 @@ public interface Read {
                     }
 
                     int j = Integer.parseInt(pair[0]) - 1;
+                    if (j < 0) {
+                        throw new NumberFormatException("libsvm index must be >= 1, got: " + pair[0]);
+                    }
                     double x = Double.parseDouble(pair[1]);
                     row.set(j, x);
                 }

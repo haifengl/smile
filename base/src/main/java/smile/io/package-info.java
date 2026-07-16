@@ -16,7 +16,7 @@
  */
 
 /**
- * Interfaces to read/write a Dataset.
+ * Interfaces to read/write a {@link smile.data.Dataset Dataset}.
  * 
  * @author Haifeng Li
  */

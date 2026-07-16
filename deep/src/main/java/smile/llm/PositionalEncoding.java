@@ -16,12 +16,18 @@
  */
 package smile.llm;
 
-import org.bytedeco.pytorch.Module;
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
 import smile.deep.layer.Layer;
 import smile.deep.tensor.Device;
+import smile.torch.Native;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import static smile.deep.tensor.Index.*;
+import static smile.torch.Native.check;
+import static smile.torch.smile_torch_h.smile_module_create;
+import static smile.torch.smile_torch_h.smile_module_free;
+import static smile.torch.smile_torch_h.smile_module_register_buffer;
 
 /**
  * Positional encoding in original Transformer. Positional encoding injects
@@ -33,9 +39,9 @@ import static smile.deep.tensor.Index.*;
  * @author Haifeng Li
  */
 public class PositionalEncoding implements Layer {
-    private final Module module = new Module("PositionalEncoding");
+    private final MemorySegment module;
     /** The positional encoding tensor. */
-    private final Tensor pe;
+    private Tensor pe;
 
     /**
      * Constructor.
@@ -53,26 +59,45 @@ public class PositionalEncoding implements Layer {
      * @param theta the scaling factor for frequency computation.
      */
     public PositionalEncoding(int dim, int end, double theta) {
-        try (Tensor position = Tensor.arange(0, end,1).to(ScalarType.Float32).unsqueeze(1);
-             Tensor divTerm = Tensor.arange(0, dim, 2).to(ScalarType.Float32).mul_(-Math.log(theta) / dim).exp_()) {
-            position.mul_(divTerm);
+        try (Arena arena = Arena.ofConfined()) {
+            this.module = check(smile_module_create(arena.allocateFrom("PositionalEncoding")));
+        }
+        MemorySegment m = this.module;
+        Native.CLEANER.register(this, () -> smile_module_free(m));
+
+        try (Tensor position = Tensor.arange(0, end, 1).to(ScalarType.Float).unsqueeze(1);
+             Tensor divTerm = Tensor.arange(0, dim, 2).to(ScalarType.Float).mul_(-Math.log(theta) / dim).exp_();
+             Tensor angles  = position.mul(divTerm)) {
             pe = Tensor.zeros(end, dim);
-            pe.put_(position.sin(), Colon, slice(0, null, 2));
-            pe.put_(position.cos(), Colon, slice(1, null, 2));
+            try (Tensor sinVal = angles.sin();
+                 Tensor cosVal = angles.cos();
+                 var even = slice(0, null, 2);
+                 var odd = slice(1, null, 2)) {
+                pe.put_(sinVal, Colon, even);
+                pe.put_(cosVal, Colon, odd);
+            }
             pe.setRequireGrad(false);
-            module.register_buffer("pe", pe.asTorch());
+            registerBuffer(pe);
+        }
+    }
+
+    /** Registers the positional-encoding tensor as the module's "pe" buffer. */
+    private void registerBuffer(Tensor tensor) {
+        try (Arena arena = Arena.ofConfined()) {
+            smile_module_register_buffer(module, arena.allocateFrom("pe"), tensor.handle());
         }
     }
 
     @Override
     public Tensor forward(Tensor input) {
-        try (Tensor p = pe.get(slice(null, input.size(0)), Colon)) {
+        try (var rows = slice(null, input.size(0));
+             Tensor p = pe.get(rows, Colon)) {
             return input.add(p);
         }
     }
 
     @Override
-    public Module asTorch() {
+    public MemorySegment module() {
         return module;
     }
 
@@ -82,7 +107,10 @@ public class PositionalEncoding implements Layer {
      * @return this encoder.
      */
     public PositionalEncoding to(Device device) {
-        pe.to(device);
+        Tensor newPe = pe.to(device);
+        registerBuffer(newPe);
+        pe.close();
+        pe = newPe;
         return this;
     }
 }

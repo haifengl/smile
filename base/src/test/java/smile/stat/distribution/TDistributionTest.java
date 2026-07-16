@@ -166,4 +166,68 @@ public class TDistributionTest {
         assertEquals(2.527977, instance.quantile(0.99), 1E-6);
         assertEquals(3.551808, instance.quantile(0.999), 1E-6);
     }
+
+    /**
+     * Test that mean is undefined for nu=1 (Cauchy distribution).
+     */
+    @Test
+    public void testMeanUndefinedNu1() {
+        System.out.println("t-distribution mean undefined for nu=1");
+        TDistribution cauchy = new TDistribution(1);
+        assertThrows(UnsupportedOperationException.class, cauchy::mean);
+    }
+
+    /**
+     * Test that variance is infinite for nu=2.
+     */
+    @Test
+    public void testVarianceInfiniteNu2() {
+        System.out.println("t-distribution variance infinite for nu=2");
+        TDistribution t2 = new TDistribution(2);
+        assertEquals(Double.POSITIVE_INFINITY, t2.variance());
+    }
+
+    /**
+     * Test that variance is undefined for nu=1.
+     */
+    @Test
+    public void testVarianceUndefinedNu1() {
+        System.out.println("t-distribution variance undefined for nu=1");
+        TDistribution cauchy = new TDistribution(1);
+        assertThrows(UnsupportedOperationException.class, cauchy::variance);
+    }
+
+    /**
+     * Test the two-tailed cdf and quantile methods.
+     */
+    @Test
+    public void testTwoTailed() {
+        System.out.println("t-distribution two-tailed");
+        TDistribution instance = new TDistribution(20);
+        // cdf2tailed(x) = P(|T| <= x) = 1 - 2*(1-cdf(x))
+        double x = 2.086;
+        double expected = 1.0 - 2.0 * (1.0 - instance.cdf(x));
+        assertEquals(expected, instance.cdf2tailed(x), 1E-6);
+        // quantile2tailed is the inverse
+        double q = instance.quantile2tailed(0.05);
+        assertTrue(q > 0);
+        assertEquals(0.05, instance.cdf2tailed(q), 1E-5);
+    }
+
+    /**
+     * Test that rand() samples have mean ≈ 0 and variance ≈ nu/(nu-2) for nu > 2.
+     */
+    @Test
+    public void testRandMoments() {
+        System.out.println("t rand moments");
+        smile.math.MathEx.setSeed(19650218);
+        int nu = 10;
+        TDistribution d = new TDistribution(nu);
+        double[] samples = d.rand(10000);
+        double mean = smile.math.MathEx.mean(samples);
+        double var = smile.math.MathEx.var(samples);
+        assertEquals(0.0, mean, 0.05);
+        assertEquals((double) nu / (nu - 2), var, 0.15);
+    }
 }
+

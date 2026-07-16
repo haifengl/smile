@@ -150,7 +150,15 @@ public record InformationValue(String feature, double iv, double[] woe, double[]
                         return iv.woe[i];
                     } else {
                         i = Arrays.binarySearch(iv.breaks, x);
-                        if (i < 0) i = -i - 1;
+                        if (i < 0) {
+                            // Not an exact match: insertion point gives the bin index.
+                            i = -i - 1;
+                        } else {
+                            // Exact match of a break point: the value belongs to the
+                            // next bin (the break was set as the first element of
+                            // bin i+1 during fitting).
+                            i = i + 1;
+                        }
                     }
                     return iv.woe[i];
                 }

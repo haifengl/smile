@@ -109,6 +109,70 @@ public class WeibullDistribution implements Distribution {
         entropy = 0.5772156649015328606 * (1 - 1 / k) + Math.log(lambda / k) + 1;
     }
 
+    /**
+     * Estimates the distribution parameters by MLE using Newton-Raphson iteration
+     * for the shape parameter k, then computing lambda analytically.
+     *
+     * @param data the training data (all values must be positive).
+     * @return the distribution.
+     */
+    public static WeibullDistribution fit(double[] data) {
+        for (double d : data) {
+            if (d <= 0) {
+                throw new IllegalArgumentException("Samples contain non-positive values.");
+            }
+        }
+
+        int n = data.length;
+        double[] logX = new double[n];
+        for (int i = 0; i < n; i++) {
+            logX[i] = Math.log(data[i]);
+        }
+
+        // Initial estimate of k via method of moments approximation
+        double mean = MathEx.mean(data);
+        double var = MathEx.var(data);
+        double cv2 = var / (mean * mean);
+        // Solve Gamma(1+2/k)/Gamma^2(1+1/k) - 1 = cv2 numerically starting from:
+        double k = Math.pow(cv2, -1.086); // rough initial approximation
+
+        // Newton-Raphson for k: maximize log-likelihood
+        for (int iter = 0; iter < 100; iter++) {
+            // sum(x^k * log(x)) / sum(x^k) - 1/k - mean(log(x)) = 0
+            double sumXk = 0.0, sumXkLogX = 0.0;
+            for (int i = 0; i < n; i++) {
+                double xk = Math.pow(data[i], k);
+                sumXk += xk;
+                sumXkLogX += xk * logX[i];
+            }
+
+            double meanLogX = MathEx.mean(logX);
+            double f = sumXkLogX / sumXk - 1.0 / k - meanLogX;
+
+            // Derivative df/dk
+            double sumXkLogX2 = 0.0;
+            for (int i = 0; i < n; i++) {
+                double xk = Math.pow(data[i], k);
+                sumXkLogX2 += xk * logX[i] * logX[i];
+            }
+            double dfdk = (sumXkLogX2 * sumXk - sumXkLogX * sumXkLogX) / (sumXk * sumXk) + 1.0 / (k * k);
+
+            double dk = f / dfdk;
+            k -= dk;
+            if (k <= 0) k = 1e-6;
+            if (Math.abs(dk) < 1e-10) break;
+        }
+
+        // lambda is estimated analytically given k
+        double sumXk = 0.0;
+        for (double d : data) {
+            sumXk += Math.pow(d, k);
+        }
+        double lambda = Math.pow(sumXk / n, 1.0 / k);
+
+        return new WeibullDistribution(k, lambda);
+    }
+
     @Override
     public int length() {
         return 2;

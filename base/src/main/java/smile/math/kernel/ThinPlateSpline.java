@@ -71,6 +71,7 @@ public class ThinPlateSpline implements IsotropicKernel {
 
     @Override
     public double k(double dist) {
+        if (dist == 0.0) return 0.0;
         double d = dist / sigma;
         return d * d * Math.log(d);
     }
@@ -78,6 +79,11 @@ public class ThinPlateSpline implements IsotropicKernel {
     @Override
     public double[] kg(double dist) {
         double[] g = new double[2];
+        if (dist == 0.0) {
+            g[0] = 0.0;
+            g[1] = 0.0;
+            return g;
+        }
         double d = dist / sigma;
         double k = d * d * Math.log(d);
         g[0] = k;

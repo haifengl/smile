@@ -117,7 +117,7 @@ public class DoubleVector extends PrimitiveVector {
 
     @Override
     public boolean getBoolean(int i) {
-        return MathEx.isZero(vector[i]);
+        return !MathEx.isZero(vector[i]);
     }
 
     @Override

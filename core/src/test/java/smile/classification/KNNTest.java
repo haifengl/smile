@@ -44,6 +44,7 @@ public class KNNTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach
@@ -95,26 +96,24 @@ public class KNNTest {
     @Test
     public void testPenDigits() throws Exception {
         System.out.println("Pen Digits");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var pen = new PenDigits();
         var result = CrossValidation.classification(10, pen.x(), pen.y(),
                 (x, y) -> KNN.fit(x, y, 3));
 
         System.out.println(result);
-        assertEquals(0.9947, result.avg().accuracy(), 1E-4);
+        assertEquals(0.9944, result.avg().accuracy(), 1E-4);
     }
 
     @Test
     public void testBreastCancer() throws Exception {
         System.out.println("Breast Cancer");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         var cancer = new BreastCancer();
         var result = CrossValidation.classification(10, cancer.x(), cancer.y(),
                 (x, y) -> KNN.fit(x, y, 3));
 
         System.out.println(result);
-        assertEquals(0.9232, result.avg().accuracy(), 1E-4);
+        assertEquals(0.9229, result.avg().accuracy(), 1E-4);
     }
 
     @Test
@@ -131,6 +130,7 @@ public class KNNTest {
     }
 
     @Test
+    @Tag("integration")
     public void testUSPS() throws Exception {
         System.out.println("USPS");
         var usps = new USPS();
@@ -144,5 +144,17 @@ public class KNNTest {
 
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
+    }
+
+    @Test
+    public void givenInvalidTrainingData_whenFittingKNN_thenThrowIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> KNN.fit(new double[0][0], new int[0], 1));
+        assertThrows(IllegalArgumentException.class, () -> KNN.fit(new double[][] {{1.0}, {2.0}}, new int[] {0, 1}, 3));
+    }
+
+    @Test
+    public void givenInvalidPosteriorSize_whenPredictingSoftKNN_thenThrowIllegalArgumentException() {
+        KNN<double[]> model = KNN.fit(new double[][] {{0.0}, {1.0}}, new int[] {0, 1}, 1);
+        assertThrows(IllegalArgumentException.class, () -> model.predict(new double[] {0.0}, new double[1]));
     }
 }

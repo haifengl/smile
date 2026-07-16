@@ -20,10 +20,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.SubmissionPublisher;
-import org.bytedeco.cuda.global.cudart;
-import org.bytedeco.pytorch.TypeMeta;
-import org.bytedeco.pytorch.global.torch;
-import org.bytedeco.pytorch.global.torch_cuda;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
@@ -31,6 +27,7 @@ import smile.deep.tensor.Tensor;
 import smile.llm.ChatCompletion;
 import smile.llm.FinishReason;
 import smile.llm.Message;
+import smile.torch.smile_torch_h;
 import smile.util.AutoScope;
 
 /**
@@ -41,7 +38,7 @@ import smile.util.AutoScope;
 public class Llama {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Llama.class);
     /** The model family name. */
-    final String family = "meta/llama3";
+    static final String family = "meta/llama3";
     /** The model instance name. */
     final String name;
     /** The transformer model. */
@@ -106,14 +103,11 @@ public class Llama {
         Device device = Device.CPU();
         if (deviceId >= 0) {
             var startTime = System.currentTimeMillis();
-            cudart.cuInit(0);
-            torch_cuda.set_device(deviceId);
             device = Device.CUDA(deviceId);
 
             // half precision to lower memory usage.
-            var meta = new TypeMeta();
-            meta.put(Tensor.isBF16Supported() ? torch.ScalarType.BFloat16 : torch.ScalarType.Half);
-            torch.set_default_dtype(meta);
+            smile_torch_h.smile_set_default_dtype(
+                    (Tensor.isBF16Supported() ? ScalarType.BFloat16 : ScalarType.Half).code());
             var time = System.currentTimeMillis() - startTime;
             logger.info("Initialized CUDA[{}]: {}.{} seconds", deviceId, time / 1000, time % 1000);
         }
@@ -156,7 +150,9 @@ public class Llama {
      */
     private static List<String> getCheckpoints(File dir) {
         List<String> checkpoints = new ArrayList<>();
-        for (var file : dir.listFiles()) {
+        var files = dir.listFiles();
+        if (files == null) return checkpoints;
+        for (var file : files) {
             var path = file.getPath();
             if (path.endsWith(".pt")) {
                 checkpoints.add(path);
@@ -201,7 +197,7 @@ public class Llama {
 
         // seed must be the same in all processes
         if (seed != 0) {
-            torch.manual_seed(seed);
+            smile_torch_h.smile_manual_seed(seed);
         }
 
         try (var guard = Tensor.noGradGuard();
@@ -212,13 +208,16 @@ public class Llama {
             int pad = tokenizer.pad();
             Tensor tokens = Tensor.full(pad, batchSize, totalLen);
             for (int i = 0; i < batchSize; i++) {
-                var prompt = Tensor.of(prompts[i]);
-                tokens.put_(prompt, Index.of(i), Index.slice(0, prompts[i].length));
+                try (var prompt = Tensor.of(prompts[i]);
+                     var row = Index.of(i);
+                     var span = Index.slice(0, prompts[i].length)) {
+                    tokens.put_(prompt, row, span);
+                }
             }
 
             Tensor tokenLogprobs = null;
             if (logprobs) {
-                var options = new Tensor.Options().device(model.device()).requireGradients(false).dtype(ScalarType.Float32);
+                var options = new Tensor.Options().device(model.device()).requireGradients(false).dtype(ScalarType.Float);
                 tokenLogprobs = Tensor.zeros(options, batchSize, totalLen);
             }
 
@@ -233,9 +232,12 @@ public class Llama {
 
             int prevPos = 0;
             if (minPromptLen == totalLen) {
-                var logits = model.forward(tokens, prevPos);
-                if (logprobs) {
-                    tokenLogprobs = Tensor.crossEntropy(logits.transpose(1, 2), tokens, "none", pad).neg_();
+                try (var logits = model.forward(tokens, prevPos)) {
+                    if (logprobs) {
+                        try (var transposed = logits.transpose(1, 2)) {
+                            tokenLogprobs = Tensor.crossEntropy(transposed, tokens, "none", pad).neg_();
+                        }
+                    }
                 }
             }
 
@@ -243,34 +245,54 @@ public class Llama {
             for (int curPos = minPromptLen; curPos < totalLen; curPos++) {
                 try (var loopScope = new AutoScope()) {
                     Tensor.push(loopScope);
-                    var logits = model.forward(tokens.get(Index.Colon, Index.slice(prevPos, curPos)), prevPos);
+                    Tensor logits;
+                    try (var span = Index.slice(prevPos, curPos);
+                         var window = tokens.get(Index.Colon, span)) {
+                        logits = model.forward(window, prevPos);
+                    }
+
                     Tensor nextToken;
-                    if (temperature > 0) {
-                        var probs = logits.get(Index.Colon, Index.of(-1)).div(temperature).softmax(-1);
-                        nextToken = probs.topp(topp);
-                    } else {
-                        nextToken = logits.get(Index.Colon, Index.of(-1)).argmax(-1, false);
+                    try (var last = Index.of(-1);
+                         var tail = logits.get(Index.Colon, last)) {
+                        if (temperature > 0) {
+                            try (var probs = tail.div(temperature).softmax(-1)) {
+                                nextToken = probs.topp(topp);
+                            }
+                        } else {
+                            nextToken = tail.argmax(-1, false);
+                        }
                     }
 
                     nextToken = nextToken.reshape(-1);
                     // only replace token if prompt has already been generated
-                    nextToken = Tensor.where(
-                            inputTextMask.get(Index.Colon, Index.of(curPos)),
-                            tokens.get(Index.Colon, Index.of(curPos)),
-                            nextToken);
-                    tokens.put_(nextToken, Index.Colon, Index.of(curPos));
-
-                    if (logprobs) {
-                        var entropy = Tensor.crossEntropy(
-                                logits.transpose(1, 2),
-                                tokens.get(Index.Colon, Index.slice(prevPos + 1, curPos + 1)),
-                                "none", pad).neg_();
-                        tokenLogprobs.put_(entropy, Index.Colon, Index.slice(prevPos + 1, curPos + 1));
+                    try (var cur = Index.of(curPos);
+                         var textMask = inputTextMask.get(Index.Colon, cur);
+                         var currentTokens = tokens.get(Index.Colon, cur);
+                         var merged = Tensor.where(textMask, currentTokens, nextToken)) {
+                        nextToken.close();
+                        nextToken = merged.detach();
+                        tokens.put_(nextToken, Index.Colon, cur);
                     }
 
-                    var text = inputTextMask.get(Index.Colon, Index.of(curPos)).not();
-                    var stop = nextToken.isin(stopTokens);
-                    eosReached.or_(text.and_(stop));
+                    if (logprobs) {
+                        try (var targetSpan = Index.slice(prevPos + 1, curPos + 1);
+                             var targets = tokens.get(Index.Colon, targetSpan);
+                             var transposed = logits.transpose(1, 2);
+                             var entropy = Tensor.crossEntropy(transposed, targets, "none", pad).neg_();
+                             var outSpan = Index.slice(prevPos + 1, curPos + 1)) {
+                            tokenLogprobs.put_(entropy, Index.Colon, outSpan);
+                        }
+                    }
+
+                    try (var cur = Index.of(curPos);
+                         var text = inputTextMask.get(Index.Colon, cur).not();
+                         var stop = nextToken.isin(stopTokens);
+                         var textAndStop = text.and(stop)) {
+                        eosReached.or_(textAndStop);
+                    }
+
+                    logits.close();
+                    nextToken.close();
                     prevPos = curPos;
                     // Free up memory at each iteration
                     Tensor.pop();
@@ -280,7 +302,13 @@ public class Llama {
                 if (publisher != null && (curPos - chunkPos >= 20 || curPos == totalLen-1 || eos)) {
                     int end = eos ? curPos : curPos + 1;
                     if (end > chunkPos) {
-                        var longArray = tokens.get(Index.of(0), Index.slice(chunkPos, end)).to(Device.CPU()).longArray();
+                        long[] longArray;
+                        try (var row = Index.of(0);
+                             var span = Index.slice(chunkPos, end);
+                             var chunkTokens = tokens.get(row, span);
+                             var cpuTokens = chunkTokens.to(Device.CPU())) {
+                            longArray = cpuTokens.longArray();
+                        }
                         var completion = Arrays.stream(longArray).mapToInt(x -> (int) x).toArray();
                         try {
                             var chunk = tokenizer.tryDecode(completion);
@@ -295,10 +323,15 @@ public class Llama {
                 if (eos) break;
             }
 
-            var longArray = tokens.to(Device.CPU()).longArray();
+            long[] longArray;
+            try (var cpuTokens = tokens.to(Device.CPU())) {
+                longArray = cpuTokens.longArray();
+            }
             float[] logprobArray = null;
             if (logprobs) {
-                logprobArray = tokenLogprobs.to(Device.CPU()).floatArray();
+                try (var cpuLogprobs = tokenLogprobs.to(Device.CPU())) {
+                    logprobArray = cpuLogprobs.floatArray();
+                }
             }
             ChatCompletion[] predictions = new ChatCompletion[batchSize];
             for (int i = 0; i < batchSize; i++) {
@@ -336,7 +369,6 @@ public class Llama {
 
             if (publisher != null) publisher.close();
             Tensor.pop();
-            System.gc();
             return predictions;
         }
     }

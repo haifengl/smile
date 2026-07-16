@@ -85,7 +85,7 @@ public record TSNE(double cost, double[][] coordinates) implements Serializable 
      * @param eta the learning rate. Usually in the range [10.0, 1000.0].
      *            If the learning rate is too high, the data may look like
      *            a "ball" with any point approximately equidistant from its
-     *            nearest neighbours. If the learning rate is too low, most
+     *            nearest neighbors. If the learning rate is too low, most
      *            points may look compressed in a dense cloud with few outliers.
      * @param earlyExaggeration Controls how tight natural clusters in the original
      *                          space are in the embedded space and how much space
@@ -140,7 +140,7 @@ public record TSNE(double cost, double[][] coordinates) implements Serializable 
                 throw new IllegalArgumentException("Invalid final momentum: " + finalMomentum);
             }
             if (momentumSwitchIter <= 0 || momentumSwitchIter >= maxIter) {
-                throw new IllegalArgumentException("Invalid learning rate: " + momentumSwitchIter);
+                throw new IllegalArgumentException("Invalid momentum switch iteration: " + momentumSwitchIter);
             }
             if (minGain <= 0) {
                 throw new IllegalArgumentException("Invalid minimum gain: " + minGain);
@@ -156,7 +156,7 @@ public record TSNE(double cost, double[][] coordinates) implements Serializable 
          * @param eta the learning rate. Usually in the range [10.0, 1000.0].
          *            If the learning rate is too high, the data may look like
          *            a "ball" with any point approximately equidistant from its
-         *            nearest neighbours. If the learning rate is too low, most
+         *            nearest neighbors. If the learning rate is too low, most
          *            points may look compressed in a dense cloud with few outliers.
          * @param earlyExaggeration Controls how tight natural clusters in the original
          *                          space are in the embedded space and how much space
@@ -169,7 +169,7 @@ public record TSNE(double cost, double[][] coordinates) implements Serializable 
          * @param maxIter the maximum number of iterations. Should be at least 250.
          */
         public Options(int d, double perplexity, double eta, double earlyExaggeration, int maxIter) {
-            this(d, perplexity, eta, earlyExaggeration, maxIter, 50, 1E-7, 0.5, 0.8, 250, 0.01, null);
+            this(d, perplexity, eta, earlyExaggeration, maxIter, 50, 1E-7, 0.5, 0.8, Math.min(250, maxIter - 1), 0.01, null);
         }
 
         /**
@@ -202,14 +202,14 @@ public record TSNE(double cost, double[][] coordinates) implements Serializable 
             int d = Integer.parseInt(props.getProperty("smile.t_sne.d", "2"));
             double perplexity = Double.parseDouble(props.getProperty("smile.t_sne.perplexity", "20"));
             double eta = Double.parseDouble(props.getProperty("smile.t_sne.eta", "200"));
-            double earlyExaggeration = Double.parseDouble(props.getProperty("smile.t_sne.early_exaggeration"));
+            double earlyExaggeration = Double.parseDouble(props.getProperty("smile.t_sne.early_exaggeration", "12"));
             int maxIter = Integer.parseInt(props.getProperty("smile.t_sne.iterations", "1000"));
             int maxIterWithoutProgress = Integer.parseInt(props.getProperty("smile.t_sne.max_iterations_without_progress", "50"));
             double tol = Double.parseDouble(props.getProperty("smile.t_sne.tolerance", "1E-7"));
-            double momentum = Double.parseDouble(props.getProperty("smile.t_sne.momentum"));
-            double finalMomentum = Double.parseDouble(props.getProperty("smile.t_sne.final_momentum"));
-            int momentumSwitchIter = Integer.parseInt(props.getProperty("smile.t_sne.momentum_switch"));
-            double minGain = Double.parseDouble(props.getProperty("smile.t_sne.momentum_switch"));
+            double momentum = Double.parseDouble(props.getProperty("smile.t_sne.momentum", "0.5"));
+            double finalMomentum = Double.parseDouble(props.getProperty("smile.t_sne.final_momentum", "0.8"));
+            int momentumSwitchIter = Integer.parseInt(props.getProperty("smile.t_sne.momentum_switch", "250"));
+            double minGain = Double.parseDouble(props.getProperty("smile.t_sne.min_gain", "0.01"));
             return new Options(d, perplexity, eta, earlyExaggeration, maxIter, maxIterWithoutProgress, tol,
                     momentum, finalMomentum, momentumSwitchIter, minGain, null);
         }

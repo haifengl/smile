@@ -52,9 +52,9 @@ public record RegressionValidation<M>(M model, double[] truth, double[] predicti
     /**
      * Trains and validates a model on a train/validation split.
      * @param x the training data.
-     * @param y the responsible variable of training data.
+     * @param y the response variable of training data.
      * @param testx the validation data.
-     * @param testy the responsible variable of validation data.
+     * @param testy the response variable of validation data.
      * @param trainer the lambda to train the model.
      * @param <T> the data type of samples.
      * @param <M> the model type.
@@ -77,7 +77,7 @@ public record RegressionValidation<M>(M model, double[] truth, double[] predicti
      * Trains and validates a model on multiple train/validation split.
      * @param bags the data splits.
      * @param x the training data.
-     * @param y the responsible variable.
+     * @param y the response variable.
      * @param trainer the lambda to train the model.
      * @param <T> the data type of samples.
      * @param <M> the model type.

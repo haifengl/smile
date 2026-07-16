@@ -523,7 +523,7 @@ public abstract class DenseMatrix implements Matrix, Serializable {
     }
 
     /**
-     * Returns the standard deviations of each column.
+     * Returns the sample standard deviations of each column (denominator n-1).
      * @return the standard deviations of each column.
      */
     public Vector colSds() {
@@ -537,11 +537,31 @@ public abstract class DenseMatrix implements Matrix, Serializable {
                 sumsq += a * a;
             }
             mu /= m;
-            // safeguard of negative variance due to floating errors
-            double variance = Math.max(sumsq / m - mu * mu, 0.0);
+            // Use sample variance (n-1 denominator), guard against negative due to floating errors
+            double variance = m > 1 ? Math.max((sumsq - m * mu * mu) / (m - 1), 0.0) : 0.0;
             sd.set(j, Math.sqrt(variance));
         }
+        return sd;
+    }
 
+    /**
+     * Returns the sample standard deviations of each row (denominator n-1).
+     * @return the standard deviations of each row.
+     */
+    public Vector rowSds() {
+        Vector sd = vector(m);
+        for (int i = 0; i < m; i++) {
+            double mu = 0.0;
+            double sumsq = 0.0;
+            for (int j = 0; j < n; j++) {
+                double a = get(i, j);
+                mu += a;
+                sumsq += a * a;
+            }
+            mu /= n;
+            double variance = n > 1 ? Math.max((sumsq - n * mu * mu) / (n - 1), 0.0) : 0.0;
+            sd.set(i, Math.sqrt(variance));
+        }
         return sd;
     }
 
@@ -588,6 +608,53 @@ public abstract class DenseMatrix implements Matrix, Serializable {
         }
 
         return matrix;
+    }
+
+    /**
+     * Returns the Frobenius norm (square root of sum of squared elements).
+     * @return the Frobenius norm.
+     */
+    public double norm() {
+        double sum = 0.0;
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                double a = get(i, j);
+                sum += a * a;
+            }
+        }
+        return Math.sqrt(sum);
+    }
+
+    /**
+     * Returns the matrix L1 norm (maximum absolute column sum).
+     * @return the L1 norm.
+     */
+    public double norm1() {
+        double max = 0.0;
+        for (int j = 0; j < n; j++) {
+            double colSum = 0.0;
+            for (int i = 0; i < m; i++) {
+                colSum += Math.abs(get(i, j));
+            }
+            max = Math.max(max, colSum);
+        }
+        return max;
+    }
+
+    /**
+     * Returns the matrix infinity norm (maximum absolute row sum).
+     * @return the infinity norm.
+     */
+    public double normInf() {
+        double max = 0.0;
+        for (int i = 0; i < m; i++) {
+            double rowSum = 0.0;
+            for (int j = 0; j < n; j++) {
+                rowSum += Math.abs(get(i, j));
+            }
+            max = Math.max(max, rowSum);
+        }
+        return max;
     }
 
     /**
@@ -639,7 +706,7 @@ public abstract class DenseMatrix implements Matrix, Serializable {
         } else {
             for (int j = 0; j < n; j++) {
                 for (int i = 0; i < m; i++) {
-                    set(i, j, alpha * get(i, j) + alpha * x.get(i, j));
+                    set(i, j, get(i, j) + alpha * x.get(i, j));
                 }
             }
         }

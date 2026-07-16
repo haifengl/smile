@@ -25,7 +25,7 @@ import org.apache.spark.ml.linalg.{Vector, Vectors}
 import org.apache.spark.ml.param.*
 import org.apache.spark.ml.util.*
 import org.apache.spark.ml.util.Instrumentation.*
-import org.apache.spark.sql.Dataset
+import org.apache.spark.sql.{Dataset, SparkSession}
 import org.apache.spark.storage.StorageLevel
 import org.json4s.*
 import org.json4s.JsonDSL.*
@@ -60,11 +60,13 @@ private[ml] object SmileClassifierParams {
         .toList
     )
 
-    DefaultParamsWriter.saveMetadata(instance, path, sc, extraMetadata, Some(jsonParams))
+    val session = SparkSession.builder().sparkContext(sc).getOrCreate()
+    DefaultParamsWriter.saveMetadata(instance, path, session, extraMetadata, Some(jsonParams))
   }
 
   def loadImpl(path: String, sc: SparkContext, expectedClassName: String): DefaultParamsReader.Metadata = {
-    DefaultParamsReader.loadMetadata(path, sc, expectedClassName)
+    val session = SparkSession.builder().sparkContext(sc).getOrCreate()
+    DefaultParamsReader.loadMetadata(path, session, expectedClassName)
   }
 }
 

@@ -106,11 +106,12 @@ public class LinearKernelMachine implements Serializable {
         }
 
         double[] w = new double[p];
-        double[] alpha = kernelMachine.w;
 
-        for (int[] x : kernelMachine.vectors) {
+        for (int j = 0; j < kernelMachine.vectors.length; j++) {
+            int[] x = kernelMachine.vectors[j];
+            double alpha = kernelMachine.w[j];
             for (int i : x) {
-                w[i] += alpha[i];
+                w[i] += alpha;
             }
         }
 
@@ -129,11 +130,12 @@ public class LinearKernelMachine implements Serializable {
         }
 
         double[] w = new double[p];
-        double[] alpha = kernelMachine.w;
 
-        for (SparseArray x : kernelMachine.vectors) {
+        for (int j = 0; j < kernelMachine.vectors.length; j++) {
+            SparseArray x = kernelMachine.vectors[j];
+            double alpha = kernelMachine.w[j];
             for (SparseArray.Entry e : x) {
-                w[e.index()] += alpha[e.index()] * e.value();
+                w[e.index()] += alpha * e.value();
             }
         }
 

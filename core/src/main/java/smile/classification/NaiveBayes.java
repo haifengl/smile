@@ -41,7 +41,7 @@ import java.io.Serial;
  * <h2>References</h2>
  * <ol>
  * <li> Christopher D. Manning, Prabhakar Raghavan, and Hinrich Schutze. Introduction to Information Retrieval, Chapter 13, 2009.</li>
- * <li> Kevin P. Murphy. Machina Learning A Probability Perspective, Chapter 3, 2012.</li>
+ * <li> Kevin P. Murphy. Machine Learning A Probability Perspective, Chapter 3, 2012.</li>
  * </ol>
  *
  * @see Distribution
@@ -152,7 +152,10 @@ public class NaiveBayes extends AbstractClassifier<double[]> {
     @Override
     public int predict(double[] x, double[] posteriori) {
         if (x.length != p) {
-            throw new IllegalArgumentException(String.format("Invalid input vector size: %d", x.length));
+            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
+        }
+        if (posteriori.length != k) {
+            throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected: %d", posteriori.length, k));
         }
 
         for (int i = 0; i < k; i++) {

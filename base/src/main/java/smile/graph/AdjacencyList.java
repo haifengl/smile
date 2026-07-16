@@ -116,10 +116,8 @@ public class AdjacencyList extends Graph implements Serializable {
     @Override
     public int getInDegree(int vertex) {
         int degree = 0;
-        int n = graph.length;
-
-        for (int i = 0; i < n; i++) {
-            if (hasEdge(i, vertex)) {
+        for (SparseArray row : graph) {
+            if (row.get(vertex) != 0.0) {
                 degree++;
             }
         }

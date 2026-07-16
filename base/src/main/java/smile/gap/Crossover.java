@@ -26,9 +26,10 @@ import smile.math.MathEx;
 public enum Crossover {
 
     /**
-     * Single point crossover - one crossover point is selected, binary
-     * string from beginning of chromosome to the crossover point is copied
-     * from one parent, the rest is copied from the second parent.
+     * Single point crossover. A random crossover point is selected.
+     * The binary string from beginning of chromosome to the crossover
+     * point is copied from one parent. The rest is copied from the
+     * second parent.
      */
     SINGLE_POINT {
         @Override
@@ -36,6 +37,10 @@ public enum Crossover {
             byte[] dad = father.bits();
             byte[] mom = mother.bits();
             int length = dad.length;
+            if (length < 2) {
+                throw new IllegalArgumentException("Single Point Crossover is not possible for chromosome of length " + length);
+            }
+
             byte[] son = new byte[length];
             byte[] daughter = new byte[length];
 
@@ -55,11 +60,11 @@ public enum Crossover {
     },
 
     /**
-     * Two point crossover - two crossover point are selected, binary string
-     * from beginning of chromosome to the first crossover point is copied
-     * from one parent, the part from the first to the second crossover
-     * point is copied from the second parent and the rest is copied from
-     * the first parent.
+     * Two point crossover. Two random crossover points are selected.
+     * The binary string from beginning of chromosome to the first
+     * crossover point is copied from one parent. The part from
+     * the first to the second crossover point is copied from the
+     * second parent. The rest is copied from the first parent.
      */
     TWO_POINT {
         @Override
@@ -67,6 +72,10 @@ public enum Crossover {
             byte[] dad = father.bits();
             byte[] mom = mother.bits();
             int length = dad.length;
+            if (length < 3) {
+                throw new IllegalArgumentException("Two Point Crossover is not possible for chromosome of length " + length);
+            }
+
             byte[] son = new byte[length];
             byte[] daughter = new byte[length];
 

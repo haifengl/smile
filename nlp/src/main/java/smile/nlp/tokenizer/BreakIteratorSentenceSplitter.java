@@ -23,7 +23,10 @@ import java.util.Locale;
 /**
  * A sentence splitter based on the java.text.BreakIterator, which supports
  * multiple natural languages (selected by locale setting).
- * 
+ * <p>
+ * <b>Note:</b> {@code BreakIterator} is <em>not thread-safe</em>. Each thread
+ * should create its own {@code BreakIteratorSentenceSplitter} instance.
+ *
  * @author Haifeng Li
  */
 public class BreakIteratorSentenceSplitter implements SentenceSplitter {
@@ -56,7 +59,10 @@ public class BreakIteratorSentenceSplitter implements SentenceSplitter {
         for (int end = boundary.next();
                 end != BreakIterator.DONE;
                 start = end, end = boundary.next()) {
-            sentences.add(text.substring(start, end).trim());
+            String sentence = text.substring(start, end).trim();
+            if (!sentence.isEmpty()) {
+                sentences.add(sentence);
+            }
         }
 
         return sentences.toArray(new String[0]);

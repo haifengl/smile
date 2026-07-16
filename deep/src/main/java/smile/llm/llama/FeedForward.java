@@ -16,10 +16,17 @@
  */
 package smile.llm.llama;
 
-import org.bytedeco.pytorch.Module;
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
 import smile.deep.activation.SiLU;
 import smile.deep.layer.LinearLayer;
+import smile.torch.Native;
 import smile.deep.tensor.Tensor;
+
+import static smile.torch.Native.check;
+import static smile.torch.smile_torch_h.smile_module_create;
+import static smile.torch.smile_torch_h.smile_module_free;
+import static smile.torch.smile_torch_h.smile_module_register_module;
 
 /**
  * Feedforward layer in Transformer. It has two linear transformations and
@@ -30,7 +37,7 @@ import smile.deep.tensor.Tensor;
 public class FeedForward {
     final LinearLayer w1, w2, w3;
     final SiLU silu;
-    final Module module;
+    final MemorySegment module;
 
     /**
      * Constructor.
@@ -45,7 +52,7 @@ public class FeedForward {
     public FeedForward(int dim, int hiddenDim, int multipleOf, Double ffnDimMultiplier) {
         hiddenDim = (int) (2 * hiddenDim / 3.0);
         // custom dim factor multiplier
-        if (ffnDimMultiplier != null){
+        if (ffnDimMultiplier != null) {
             hiddenDim = (int) (ffnDimMultiplier * hiddenDim);
         }
         hiddenDim = multipleOf * ((hiddenDim + multipleOf - 1) / multipleOf);
@@ -54,10 +61,14 @@ public class FeedForward {
         this.w3 = new LinearLayer(dim, hiddenDim, false);
         this.silu = new SiLU(true);
 
-        this.module = new Module();
-        this.module.register_module("w1", w1.asTorch());
-        this.module.register_module("w2", w2.asTorch());
-        this.module.register_module("w3", w3.asTorch());
+        try (Arena arena = Arena.ofConfined()) {
+            this.module = check(smile_module_create(MemorySegment.NULL));
+            smile_module_register_module(module, arena.allocateFrom("w1"), w1.module());
+            smile_module_register_module(module, arena.allocateFrom("w2"), w2.module());
+            smile_module_register_module(module, arena.allocateFrom("w3"), w3.module());
+        }
+        MemorySegment m = this.module;
+        Native.CLEANER.register(this, () -> smile_module_free(m));
     }
 
     /**

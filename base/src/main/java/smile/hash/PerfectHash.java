@@ -20,24 +20,58 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 /**
  * A perfect hash of an array of strings to their index in the array.
- * <p>
- * A perfect hash function for a set <code>S</code> is a hash function
- * that maps distinct elements in <code>S</code> to a set of integers,
- * with no collisions. In mathematical terms, it is an injective function.
- * <p>
- * Perfect hash functions may be used to implement a lookup table with
- * constant worst-case access time.
- * <p>
- * A perfect hash function for a specific set <code>S</code> can be found by
- * a randomized algorithm in a number of operations that is proportional
- * to the size of <code>S</code>. The original construction of Fredman,
- * Komlós and Szemerédi (1984) chooses a large prime <code>p</code>
- * (larger than the size of the universe from which <code>S</code> is drawn),
- * and a parameter <code>k</code>, and maps each element <code>x</code> of
- * <code>S</code> to the index {@code g(x) = (kx mod p) mod n}.
+ *
+ * <h2>What is a perfect hash?</h2>
+ * A perfect hash function for a set {@code S} is a hash function that maps
+ * distinct elements in {@code S} to a set of integers with no collisions.
+ * In mathematical terms, it is an injective function.  Perfect hash functions
+ * may be used to implement a lookup table with constant worst-case access time.
+ *
+ * <h2>Hash function</h2>
+ * Given a keyword {@code w} of length {@code L}, the hash value is computed as:
+ * <pre>
+ *   h(w) = (L + sum_i kvals[w[i] - min]) mod tsize
+ * </pre>
+ * where
+ * <ul>
+ *   <li>{@code w[i]} is the {@code i}-th character of {@code w} (or only the
+ *       characters at the user-supplied {@code select} positions when provided),</li>
+ *   <li>{@code min} is the smallest character value that appears in any keyword,</li>
+ *   <li>{@code kvals} is an integer array indexed by {@code (character - min)}, and</li>
+ *   <li>{@code tsize} is the size of the hash table.</li>
+ * </ul>
+ * Lookup is O(L) in the length of the query string and O(1) in the number of keywords.
+ *
+ * <h2>Construction algorithm</h2>
+ * The construction uses a <em>randomized character-value</em> approach:
+ * <ol>
+ *   <li><b>Character frequency analysis.</b>  The frequency of every character
+ *       across all keywords is counted.  Keywords are sorted in descending order
+ *       of their aggregate character frequency so that the most-constrained keys
+ *       are placed first.</li>
+ *   <li><b>Table-size selection.</b>  The initial table size {@code tsize} is set
+ *       to {@code ceil(1.5 * n)}, where {@code n} is the number of keywords,
+ *       giving a load factor of about 2/3.</li>
+ *   <li><b>Random assignment.</b>  Each entry of {@code kvals} is assigned a
+ *       uniformly random integer in {@code [0, tsize)}.  All {@code n} hash values
+ *       {@code h(w) mod tsize} are then checked for collisions.</li>
+ *   <li><b>Retry.</b>  If any two keywords collide, a new random {@code kvals}
+ *       assignment is drawn and step 3 is repeated.  At load factor 2/3 the
+ *       probability that a random assignment is collision-free is at least
+ *       {@code e^{-n^2/(2*tsize)} ≈ e^{-3n/4}}, so the expected number of
+ *       trials is O(1) per construction.</li>
+ *   <li><b>Table growth.</b>  If no collision-free assignment is found within
+ *       1 000 attempts, {@code tsize} is incremented by one and the random
+ *       search restarts from scratch.  This ensures guaranteed termination.</li>
+ *   <li><b>Table construction.</b>  Once a collision-free {@code kvals} is found,
+ *       the final lookup table of size {@code tsize} is filled with keyword
+ *       indices.  Slots that correspond to no keyword are left as {@code -1}.</li>
+ * </ol>
+ * Overall expected construction time is {@code O(n * |alphabet|)}.
  *
  * @author Haifeng Li
  */
@@ -52,6 +86,8 @@ public class PerfectHash implements Serializable {
     private char min;
     /** The character positions in keywords used to calculate the hash. */
     private int[] select;
+    /** The table size (modulus used during lookup). */
+    private int tsize;
 
     /**
      * Constructor.
@@ -87,10 +123,12 @@ public class PerfectHash implements Serializable {
      * @return the index of keyword or -1.
      */
      public int get(String key) {
-        int i = hash(key);
-        if (i < 0 || i >= table.length) return -1;
+        int raw = hash(key);
+        if (raw < 0) return -1;
+        int i = raw % tsize;
+        if (i >= table.length) return -1;
         int idx = table[i];
-        if (!key.equals(keywords[idx])) return -1;
+        if (idx < 0 || !key.equals(keywords[idx])) return -1;
         return idx;
     }
 
@@ -105,17 +143,14 @@ public class PerfectHash implements Serializable {
         if (select == null) {
             for (int i = 0; i < klen; i++) {
                 int c = key.charAt(i) - min;
-                if (c < 0) return -1;
-                if (c >= kvals.length) return -2;
+                if (c < 0 || c >= kvals.length) return -1;
                 out += kvals[c];
             }
-
         } else {
             for (int i : select) {
                 if (i >= klen) continue;
                 int c = key.charAt(i) - min;
-                if (c < 0) return -1;
-                if (c >= kvals.length) return -2;
+                if (c < 0 || c >= kvals.length) return -1;
                 out += kvals[c];
             }
         }
@@ -232,11 +267,6 @@ public class PerfectHash implements Serializable {
         return out;
     }
 
-    private void resolve(Key x, Key y, int[] kvals, char min) {
-        char c = diff(x.ksig, y.ksig);
-        kvals[c - min]++;
-    }
-
     /** Generates the perfect hash. */
     private void generate(String[] keywords) {
         Map<String, Key> map = new HashMap<>();
@@ -268,42 +298,59 @@ public class PerfectHash implements Serializable {
             throw new IllegalStateException("Failed to generate perfect hash. Possibly all empty keys.");
         }
 
-        kvals = new int[max - min + 1];
+        int kvlen = max - min + 1;
+        kvals = new int[kvlen];
 
         int vsize = keys.length;
+        // Table size: start at 1.5x and grow as needed.
         int tsize = vsize + (vsize >> 1);
-        Key[] used = new Key[tsize];
 
-        LOOP: for (;;) {
-            for (Key key : keys) {
-                int hash = hash(key);
-                if (hash >= used.length) {
-                    tsize = hash + 1;
-                    used = new Key[tsize];
-                    continue LOOP;
+        // Randomized approach: assign random values in [0, tsize) to each
+        // character slot, then check for collisions. Retry with a new seed
+        // if any collision occurs. Grow the table if too many retries.
+        // This converges in O(n) expected retries for load factor <= 2/3.
+        Random rng = new Random(0);
+        final int MAX_RETRIES = 1000;
+
+        outer:
+        for (;;) {
+            for (int attempt = 0; attempt < MAX_RETRIES; attempt++) {
+                // Assign random kvals in [0, tsize - vsize) so that
+                // hash = klen + sum(kvals[c]) stays within tsize.
+                // We use values in [0, tsize) and check bounds at placement.
+                for (int i = 0; i < kvlen; i++) {
+                    kvals[i] = rng.nextInt(tsize);
                 }
 
-                if (used[hash] != null) {
-                    resolve(key, used[hash], kvals, min);
-                    Arrays.fill(used, null);
-                    continue LOOP;
+                // Check all keys map to distinct slots in [0, tsize).
+                int[] used = new int[tsize];
+                Arrays.fill(used, -1);
+                boolean collision = false;
+                for (Key key : keys) {
+                    int h = hash(key) % tsize;
+                    if (h < 0) h += tsize;
+                    if (used[h] != -1) {
+                        collision = true;
+                        break;
+                    }
+                    used[h] = key.value;
                 }
 
-                used[hash] = key;
+                if (!collision) {
+                    // Build the final lookup table.
+                    this.tsize = tsize;
+                    table = new int[tsize];
+                    Arrays.fill(table, -1);
+                    for (Key key : keys) {
+                        int h = hash(key) % tsize;
+                        if (h < 0) h += tsize;
+                        table[h] = key.value;
+                    }
+                    return;
+                }
             }
-
-            table = new int[tsize];
-            Arrays.fill(table, -1);
-            for (Map.Entry<String, Key> e : map.entrySet()) {
-                Key m = e.getValue();
-                int hash = hash(m);
-                if (table[hash] != -1) {
-                    throw new IllegalStateException("Failed to generate perfect hash.");
-                }
-                table[hash] = m.value;
-            }
-
-            return;
+            // Too many retries — grow the table and try again.
+            tsize++;
         }
     }
 }

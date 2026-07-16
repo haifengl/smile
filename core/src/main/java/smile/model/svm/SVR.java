@@ -173,6 +173,10 @@ public class SVR<T> {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
 
+        if (x.length == 0) {
+            throw new IllegalArgumentException("Empty training data.");
+        }
+
         int n = x.length;
         K = new double[n][];
 

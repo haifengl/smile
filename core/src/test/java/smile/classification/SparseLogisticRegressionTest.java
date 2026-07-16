@@ -22,6 +22,7 @@ import smile.data.SampleInstance;
 import smile.datasets.USPS;
 import smile.io.Read;
 import smile.io.Write;
+import smile.math.MathEx;
 import smile.util.SparseArray;
 import smile.validation.metric.Error;
 import org.junit.jupiter.api.*;
@@ -46,6 +47,7 @@ public class SparseLogisticRegressionTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach
@@ -69,6 +71,7 @@ public class SparseLogisticRegressionTest {
     }
 
     @Test
+    @Tag("integration")
     public void testUSPS() throws Exception {
         System.out.println("USPS");
         var usps = new USPS();

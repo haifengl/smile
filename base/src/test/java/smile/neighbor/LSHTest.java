@@ -53,6 +53,7 @@ public class LSHTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218);
     }
 
     @AfterEach

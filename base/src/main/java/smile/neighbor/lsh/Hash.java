@@ -19,9 +19,6 @@ package smile.neighbor.lsh;
 import java.io.Serial;
 import java.io.Serializable;
 import smile.math.MathEx;
-import smile.tensor.DenseMatrix;
-import smile.tensor.Vector;
-import static smile.tensor.ScalarType.*;
 
 /**
  * The hash function for Euclidean spaces.
@@ -63,10 +60,12 @@ public class Hash implements Serializable {
     int[] c;
 
     /**
-     * The random vectors with entries chosen independently from a Gaussian
-     * distribution.
+     * The random projection matrix. Each row a[i] is a k-dimensional random
+     * vector with entries drawn independently from a Gaussian distribution.
+     * Stored as a plain double[][] for cache-friendly, allocation-free dot
+     * products (avoids the DenseMatrix/Vector overhead).
      */
-    DenseMatrix a;
+    double[][] a;
     /**
      * Real numbers chosen uniformly from the range [0, w].
      */
@@ -109,9 +108,18 @@ public class Hash implements Serializable {
         this.w = w;
         this.H = H;
 
-        a = DenseMatrix.randn(Float64, k, d);
-        b = new double[k];
+        // Build plain double[][] projection matrix (k rows, d columns).
+        // Fill in column-major order (outer=col, inner=row) to match the
+        // original DenseMatrix.randn which drew values column by column.
+        var norm = smile.stat.distribution.GaussianDistribution.getInstance();
+        a = new double[k][d];
+        for (int j = 0; j < d; j++) {
+            for (int i = 0; i < k; i++) {
+                a[i][j] = norm.rand();
+            }
+        }
 
+        b = new double[k];
         for (int i = 0; i < k; i++) {
             b[i] = MathEx.random(0, w);
         }
@@ -125,31 +133,37 @@ public class Hash implements Serializable {
     }
 
     /**
-     * Returns the raw hash value of given vector x.
+     * Returns the raw hash value of given vector x for the i-th hash function.
+     * Computes (dot(a[i], x) + b[i]) / w without any heap allocation.
      *
      * @param x the vector to be hashed.
      * @param i the i-th hash function to be employed.
      * @return the raw hash value.
      */
     double hash(double[] x, int i) {
+        double[] ai = a[i];
         double g = b[i];
         for (int j = 0; j < d; j++) {
-            g += a.get(i, j) * x[j];
+            g += ai[j] * x[j];
         }
         return g / w;
     }
 
     /**
-     * Apply hash functions on given vector x.
+     * Apply hash functions on given vector x and return the universal bucket index.
+     * Uses the pre-allocated row arrays directly — no Vector allocation.
      * @param x the vector to be hashed.
      * @return the bucket of hash table for given vector x.
      */
     public int hash(double[] x) {
-        Vector h = a.mv(x);
-
         long g = 0;
         for (int i = 0; i < k; i++) {
-            int hi = (int) Math.floor((h.get(i) + b[i]) / w);
+            double[] ai = a[i];
+            double dot = b[i];
+            for (int j = 0; j < d; j++) {
+                dot += ai[j] * x[j];
+            }
+            int hi = (int) Math.floor(dot / w);
             g += (long) c[i] * hi;
         }
 

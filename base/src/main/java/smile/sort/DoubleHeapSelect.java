@@ -74,6 +74,26 @@ public class DoubleHeapSelect {
     }
 
     /**
+     * Returns the number of objects that have been added into heap.
+     * @return the number of objects that have been added into heap.
+     */
+    public int size() {
+        return n;
+    }
+
+    /**
+     * Returns a copy of the tracked smallest values in heap (unsorted) order.
+     * The length of the returned array is {@code min(k, n)}.
+     * @return the tracked values.
+     */
+    public double[] toArray() {
+        int len = Math.min(k, n);
+        double[] result = new double[len];
+        System.arraycopy(heap, 1, result, 0, len);
+        return result;
+    }
+
+    /**
      * Returns the k-<i>th</i> smallest value seen so far.
      * @return the k-<i>th</i> smallest value.
      */
@@ -113,14 +133,6 @@ public class DoubleHeapSelect {
         }
     }
 
-    /**
-     * Place the array in max-heap order. Note that the array is not fully sorted.
-     */
-    private static void heapify(double[] arr, int n) {
-        for (int i = n / 2; i >= 1; i--) {
-            Sort.siftDown(arr, i, n);
-        }
-    }
 
     /**
      * Sorts the specified array into descending order. It is based on Shell

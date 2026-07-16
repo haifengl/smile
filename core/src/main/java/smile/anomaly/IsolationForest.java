@@ -85,22 +85,39 @@ public class IsolationForest implements Serializable {
     private final double c;
     /**
      * The extension level, i.e. how many dimension are specified
-     * in the random slope. With 0 extension level, it is coincident
-     * with the standard Isolation Forest.
+     * in the random slope. {@code 0} is coincident with the standard
+     * Isolation Forest. Larger values increase extension.
      */
     private final int extensionLevel;
+    /**
+     * The dimensionality of input samples.
+     */
+    private final int p;
 
     /**
      * Constructor.
      *
      * @param n the number of samples to train the forest.
+     * @param p the dimensionality of input samples.
      * @param extensionLevel the extension level, i.e. how many dimension
      *                       are specified in the random slope.
+     *                       {@code 0} means standard Isolation Forest.
      * @param trees forest of isolation trees.
      */
-    public IsolationForest(int n, int extensionLevel, IsolationTree... trees) {
+    public IsolationForest(int n, int p, int extensionLevel, IsolationTree... trees) {
+        if (n < 2) {
+            throw new IllegalArgumentException("Too few training samples: " + n);
+        }
+        if (p < 1) {
+            throw new IllegalArgumentException("Invalid dimensionality: " + p);
+        }
+        if (trees == null || trees.length == 0) {
+            throw new IllegalArgumentException("No isolation trees provided");
+        }
+
         this.trees = trees;
         this.extensionLevel = extensionLevel;
+        this.p = p;
         this.c = factor(n);
     }
 
@@ -109,7 +126,9 @@ public class IsolationForest implements Serializable {
      * @param ntrees the number of trees.
      * @param maxDepth the maximum depth of the tree.
      * @param subsample the sampling rate for training tree.
-     * @param extensionLevel the extension level.
+     * @param extensionLevel the extension level. {@code 0} means standard
+     *                       Isolation Forest. Valid range is {@code [0, p-1]},
+     *                       where {@code p} is input dimensionality.
      */
     public record Options(int ntrees, int maxDepth, double subsample, int extensionLevel) {
         /** Constructor. */
@@ -120,6 +139,10 @@ public class IsolationForest implements Serializable {
 
             if (subsample <= 0 || subsample >= 1) {
                 throw new IllegalArgumentException("Invalid sampling rating: " + subsample);
+            }
+
+            if (extensionLevel < 0) {
+                throw new IllegalArgumentException("Invalid extension level: " + extensionLevel);
             }
         }
 
@@ -160,6 +183,8 @@ public class IsolationForest implements Serializable {
      * Fits an isolation forest.
      *
      * @param data the training data.
+     *             When using default options, this fits standard Isolation Forest
+     *             ({@code extensionLevel = 0}).
      * @return the model.
      */
     public static IsolationForest fit(double[][] data) {
@@ -167,33 +192,57 @@ public class IsolationForest implements Serializable {
     }
 
     /**
-     * Fits a random forest for classification.
+     * Fits an isolation forest.
      *
      * @param data the training data.
-     * @param options the hyperparameters.
+     * @param options the hyperparameters. In particular,
+     *                {@code options.extensionLevel()} controls extension level.
+     *                {@code 0} means standard Isolation Forest.
      * @return the model.
      */
     public static IsolationForest fit(double[][] data, Options options) {
-        int extensionLevel = options.extensionLevel > 0 ? options.extensionLevel : data[0].length - 1;
-        if (options.extensionLevel >= data[0].length) {
+        if (data == null || data.length < 2) {
+            throw new IllegalArgumentException("IsolationForest requires at least 2 samples");
+        }
+        if (options == null) {
+            throw new IllegalArgumentException("options is null");
+        }
+
+        int p = data[0].length;
+        if (p == 0) {
+            throw new IllegalArgumentException("Input dimensionality is zero");
+        }
+        for (int i = 0; i < data.length; i++) {
+            if (data[i] == null) {
+                throw new IllegalArgumentException("Sample at index " + i + " is null");
+            }
+            if (data[i].length != p) {
+                throw new IllegalArgumentException("Invalid input dimension: expected " + p + ", actual " + data[i].length);
+            }
+        }
+
+        int extensionLevel = options.extensionLevel;
+        if (extensionLevel >= p) {
             throw new IllegalArgumentException("Invalid extension level: " + extensionLevel);
         }
 
-        int maxDepth = options.maxDepth > 0 ? options.maxDepth : (int) MathEx.log2(data.length);
-
         final int n = data.length;
-        final int m = (int) Math.round(n * options.subsample);
+        final int m = Math.max(2, (int) Math.round(n * options.subsample));
+        final int depth = options.maxDepth > 0 ? options.maxDepth : (int) MathEx.log2(m);
 
         IsolationTree[] trees = IntStream.range(0, options.ntrees).parallel().mapToObj(k -> {
             ArrayList<double[]> samples = new ArrayList<>(m);
-            for (int i : MathEx.permutate(n)) {
-                samples.add(data[i]);
+            int[] permutation = MathEx.permutate(n);
+            for (int i = 0; i < m; i++) {
+                int j = permutation[i];
+                samples.add(data[j]);
             }
 
-            return new IsolationTree(samples, maxDepth, extensionLevel);
+
+            return new IsolationTree(samples, depth, extensionLevel);
         }).toArray(IsolationTree[]::new);
 
-        return new IsolationForest(n, extensionLevel, trees);
+        return new IsolationForest(n, p, extensionLevel, trees);
     }
 
     /**
@@ -211,24 +260,36 @@ public class IsolationForest implements Serializable {
      * @return the isolation trees in the model.
      */
     public IsolationTree[] trees() {
-        return trees;
+        return trees.clone();
     }
 
     /**
-     * Returns the extension level.
+     * Returns the extension level. {@code 0} means standard Isolation Forest.
+     * Valid range is {@code [0, p-1]}, where {@code p} is input dimensionality.
+     *
      * @return the extension level.
      */
-    public int getExtensionLevel() {
+    public int extensionLevel() {
         return extensionLevel;
     }
 
     /**
-     * Returns the anomaly score.
+     * Returns the anomaly score in the range {@code (0, 1]}.
+     * Scores closer to 1 indicate anomalies; scores around 0.5 are normal.
+     * Specifically, a score significantly above 0.5 (e.g., {@code > 0.6})
+     * suggests an anomaly, while a score well below 0.5 suggests a normal instance.
      *
      * @param x the sample.
-     * @return the anomaly score.
+     * @return the anomaly score in {@code (0, 1]}.
      */
     public double score(double[] x) {
+        if (x == null) {
+            throw new IllegalArgumentException("Input sample is null");
+        }
+        if (x.length != p) {
+            throw new IllegalArgumentException("Invalid input dimension: expected " + p + ", actual " + x.length);
+        }
+
         double length = 0.0;
         for (IsolationTree tree : trees) {
             length += tree.path(x);
@@ -242,10 +303,23 @@ public class IsolationForest implements Serializable {
      * Returns the anomaly scores.
      *
      * @param x the samples.
-     * @return the anomaly scores.
+     * @return the anomaly scores in {@code (0, 1]}.
      */
     public double[] score(double[][] x) {
         return Arrays.stream(x).parallel().mapToDouble(this::score).toArray();
+    }
+
+    /**
+     * Predicts whether a sample is an anomaly using the given threshold.
+     *
+     * @param x the sample.
+     * @param threshold the anomaly score threshold. A sample is considered
+     *                  an anomaly if its score exceeds this value.
+     *                  Typical values are in the range {@code (0.5, 1.0)}.
+     * @return {@code true} if the sample is predicted as an anomaly.
+     */
+    public boolean predict(double[] x, double threshold) {
+        return score(x) > threshold;
     }
 
     /**
@@ -256,6 +330,9 @@ public class IsolationForest implements Serializable {
      * @return the normalizing factor.
      */
     static double factor(int n) {
+        if (n < 2) {
+            throw new IllegalArgumentException("n must be >= 2: " + n);
+        }
         return 2.0 * ((Math.log(n-1) + EULER) - (n - 1.0) / n);
     }
 }

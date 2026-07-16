@@ -112,13 +112,18 @@ public class PennTreebankTokenizer implements Tokenizer {
         text = DELIMITERS[2].matcher(text).replaceAll(" $1");
         text = DELIMITERS[3].matcher(text).replaceAll(" . ");
 
-        String[] words = WHITESPACE.split(text);
+        String[] words = WHITESPACE.split(text.trim());
         if (words.length > 1 && words[words.length-1].equals(".")) {
             if (EnglishAbbreviations.contains(words[words.length-2])) {
                 words[words.length-2] = words[words.length-2] + ".";
             }
         }
 
-        return words;
+        // Filter empty tokens that may result from leading/trailing whitespace.
+        java.util.ArrayList<String> result = new java.util.ArrayList<>();
+        for (String w : words) {
+            if (!w.isEmpty()) result.add(w);
+        }
+        return result.toArray(new String[0]);
     }
 }

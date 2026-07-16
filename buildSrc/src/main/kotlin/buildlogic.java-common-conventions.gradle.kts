@@ -6,12 +6,12 @@ plugins {
 }
 
 dependencies {
-    implementation("org.slf4j:slf4j-api:2.0.17")
+    implementation("org.slf4j:slf4j-api:2.0.18")
 
     // Use JUnit Jupiter for testing.
-    testImplementation("org.junit.jupiter:junit-jupiter:5.14.3")
+    testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testRuntimeOnly("org.slf4j:slf4j-simple:2.0.17")
+    testRuntimeOnly("org.slf4j:slf4j-simple:2.0.18")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
@@ -42,6 +42,20 @@ tasks.withType<JavaCompile> {
 
 tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
-    useJUnitPlatform()
+    useJUnitPlatform {
+        // Allow callers to skip tagged groups, e.g.:
+        //   ./gradlew :deep:test -DexcludeTags=integration
+        val excludeTagsProp = System.getProperty("excludeTags")
+        if (!excludeTagsProp.isNullOrBlank()) {
+            excludeTags(*excludeTagsProp.split(",").map(String::trim).toTypedArray())
+        }
+    }
     workingDir = project.rootDir
+    // Forward any smile.test.* Gradle project properties (-P) to the test JVM
+    // as system properties (-D), so that gated tests can be enabled with e.g.:
+    //   ./gradlew :base:test -Psmile.test.network=true
+    val testNetwork = providers.gradleProperty("smile.test.network")
+    if (testNetwork.isPresent) {
+        systemProperty("smile.test.network", testNetwork.get())
+    }
 }

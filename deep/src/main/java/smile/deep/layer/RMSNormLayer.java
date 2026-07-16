@@ -16,9 +16,14 @@
  */
 package smile.deep.layer;
 
-import org.bytedeco.pytorch.Module;
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
+import smile.torch.Native;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
+
+import static smile.torch.Native.check;
+import static smile.torch.smile_torch_h.*;
 
 /**
  * Root Mean Square Layer Normalization. RMSNorm regularizes the summed inputs
@@ -29,10 +34,11 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class RMSNormLayer implements Layer {
-    private final Module module = new Module("RMSNorm");
+    /** The neural network module ({@code ST_Module}). */
+    private final MemorySegment module;
     /** The term added to the denominator to improve numerical stability. */
     private final double eps;
-    /** The positional encoding tensor. */
+    /** The learnable per-element scale parameter. */
     private final Tensor weight;
 
     /**
@@ -50,19 +56,29 @@ public class RMSNormLayer implements Layer {
      */
     public RMSNormLayer(int dim, double eps) {
         this.eps = eps;
-        weight = Tensor.ones(dim);
-        module.register_parameter("weight", weight.asTorch());
+        this.weight = Tensor.ones(dim);
+        try (Arena arena = Arena.ofConfined()) {
+            this.module = check(smile_module_create(arena.allocateFrom("RMSNorm")));
+            smile_module_register_parameter(module, arena.allocateFrom("weight"), weight.handle());
+        }
+        MemorySegment m = this.module;
+        Native.CLEANER.register(this, () -> smile_module_free(m));
     }
 
     @Override
     public Tensor forward(Tensor input) {
-        Tensor x = input.to(ScalarType.Float32);
-        Tensor output = x.mul(x.pow(2).mean(-1, true).add_(eps).rsqrt_()).to(input.dtype());
-        return output.mul_(weight);
+        try (Tensor x = input.to(ScalarType.Float);
+             Tensor x2 = x.pow(2);
+             Tensor mean = x2.mean(-1, true);
+             Tensor denom = mean.add(eps).rsqrt_();
+             Tensor normalized = x.mul(denom);
+             Tensor output = normalized.to(input.dtype())) {
+            return output.mul(weight);
+        }
     }
 
     @Override
-    public Module asTorch() {
+    public MemorySegment module() {
         return module;
     }
 }

@@ -61,7 +61,7 @@ public class ObjectType implements DataType {
         } else if (clazz == Integer.class) {
             format = DataTypes.IntType::toString;
         } else if (clazz == Long.class) {
-            format = DataTypes.IntType::toString;
+            format = DataTypes.LongType::toString;
         } else {
             format = Object::toString;
         }
@@ -154,5 +154,10 @@ public class ObjectType implements DataType {
         }
 
         return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return clazz.hashCode();
     }
 }

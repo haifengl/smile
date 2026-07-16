@@ -19,7 +19,7 @@ package smile.studio.kernel;
 import javax.swing.*;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import smile.studio.OutputArea;
+import smile.studio.text.OutputArea;
 
 /**
  * Redirect console output stream to an OutputArea.

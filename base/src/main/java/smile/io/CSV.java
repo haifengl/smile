@@ -46,6 +46,7 @@ import smile.data.type.StructType;
  * @author Haifeng Li
  */
 public class CSV {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CSV.class);
     /** The schema of data structure. */
     private StructType schema;
     /** The CSV file format. */
@@ -158,6 +159,11 @@ public class CSV {
             boolean[] missing = new boolean[schema.length()];
 
             for (CSVRecord record : csv) {
+                if (record.size() < fields.size()) {
+                    logger.warn("Expected {} fields. Skip record with {} fields: {}", fields.size(), record.size(), record.values());
+                    continue;
+                }
+
                 Object[] row = new Object[fields.size()];
                 for (int i = 0; i < fields.size(); i++) {
                     String s = record.get(i).trim();

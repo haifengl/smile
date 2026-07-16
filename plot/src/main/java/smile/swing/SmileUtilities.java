@@ -17,6 +17,8 @@
 package smile.swing;
 
 import javax.swing.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import smile.data.DataFrame;
@@ -33,6 +35,44 @@ import smile.tensor.SparseMatrix;
  * @author Haifeng Li
  */
 public interface SmileUtilities {
+    /**
+     * Returns the line number given a text offset.
+     * @param editor the text component.
+     * @param offset the text offset.
+     * @return the line number.
+     */
+    static int getLineOfOffset(JTextComponent editor, int offset) {
+        return editor.getDocument().getDefaultRootElement().getElementIndex(offset);
+    }
+
+    /**
+     * Returns the start offset of a line.
+     * @param editor the text component.
+     * @param line the line number.
+     * @return the start offset.
+     */
+    static int getOffsetOfLine(JTextComponent editor, int line) {
+        return editor.getDocument().getDefaultRootElement().getElement(line).getStartOffset();
+    }
+
+    /**
+     * Returns the word ending at the text offset.
+     * @param editor the text component.
+     * @param offset the text offset.
+     * @return the word ending at the text offset.
+     * @throws BadLocationException if the offset is invalid.
+     */
+    static String getWordAt(JTextComponent editor, int offset) throws BadLocationException {
+        int line = getLineOfOffset(editor, offset);
+        int start = getOffsetOfLine(editor, line);
+        String text = editor.getText(start, offset - start);
+        String[] words = text.trim().split("[.\\s]+");
+        if (words.length > 0) {
+            return words[words.length - 1];
+        }
+        return "";
+    }
+
     /**
      * Scales an image icon to desired size.
      * @param icon the input image icon.
@@ -76,10 +116,21 @@ public interface SmileUtilities {
     /**
      * Shows the data frame in a window.
      * @param df the data frame to display.
-     * @return a new JFrame that displays the matrix in a table.
+     * @return a new JFrame that displays the data frame in a table.
      */
     static JFrame show(DataFrame df) {
-        JFrame frame = new JFrame();
+        return show(df, "DataFrame [" + df.nrow() + " × " + df.ncol() + "]");
+    }
+
+    /**
+     * Shows the data frame in a window.
+     * @param df the data frame to display.
+     * @param title the title of the window.
+     * @return a new JFrame that displays the data frame in a table.
+     */
+    static JFrame show(DataFrame df, String title) {
+        JFrame frame = new JFrame(title);
+        frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         javax.swing.SwingUtilities.invokeLater(() -> {
             DataFrameTableModel model = new DataFrameTableModel(df);
             Table table = new Table(model);
@@ -90,7 +141,6 @@ public interface SmileUtilities {
             contentPane.add(scrollPane, BorderLayout.CENTER);
 
             frame.setContentPane(contentPane);
-            frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
             frame.setSize(new java.awt.Dimension(1280, 1000));
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
@@ -113,7 +163,18 @@ public interface SmileUtilities {
      * @return a new JFrame that displays the matrix in a table.
      */
     static JFrame show(Matrix matrix) {
-        JFrame frame = new JFrame();
+        return show(matrix, "Matrix [" + matrix.nrow() + " × " + matrix.ncol() + "]");
+    }
+
+    /**
+     * Shows the matrix in a window.
+     * @param matrix the matrix to display.
+     * @param title the title of the window.
+     * @return a new JFrame that displays the matrix in a table.
+     */
+    static JFrame show(Matrix matrix, String title) {
+        JFrame frame = new JFrame(title);
+        frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         javax.swing.SwingUtilities.invokeLater(() -> {
             MatrixTableModel model = new MatrixTableModel(matrix);
             Table table = new Table(model);
@@ -124,7 +185,6 @@ public interface SmileUtilities {
             contentPane.add(scrollPane, BorderLayout.CENTER);
 
             frame.setContentPane(contentPane);
-            frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
             frame.setSize(new java.awt.Dimension(1280, 1000));
             frame.setLocationRelativeTo(null);
 

@@ -19,6 +19,7 @@ package smile
 import scala.language.implicitConversions
 import scala.jdk.CollectionConverters.*
 import smile.math.MathEx
+import smile.nlp.Bigram
 import smile.nlp.dictionary.StopWords
 import smile.nlp.pos.{HMMPOSTagger, PennTreebankPOS}
 import smile.nlp.stemmer.{LancasterStemmer, PorterStemmer}
@@ -60,7 +61,7 @@ package object nlp {
     */
   def corpus(text: scala.collection.Seq[String]): SimpleCorpus = {
     val corpus = new SimpleCorpus
-    text.foreach(text => corpus.add(new Text(text)))
+    text.foreach(text => corpus.add(corpus.doc(text)))
     corpus
   }
 
@@ -81,8 +82,8 @@ package object nlp {
     * @return significant bigram collocations in descending order
     *         of likelihood ratio.
     */
-  def bigram(k: Int, minFreq: Int, text: String*): Array[smile.nlp.collocation.Bigram] = time("Bi-gram collocation") {
-    smile.nlp.collocation.Bigram.of(corpus(text), k, minFreq)
+  def bigram(k: Int, minFreq: Int, text: String*): Seq[Bigram] = time("Bi-gram collocation") {
+    corpus(text).bigrams(k, minFreq).asScala.toSeq
   }
 
   /** Identify bigram collocations whose p-value is less than
@@ -94,8 +95,8 @@ package object nlp {
     * @return significant bigram collocations in descending order
     *         of likelihood ratio.
     */
-  def bigram(p: Double, minFreq: Int, text: String*): Array[smile.nlp.collocation.Bigram] = time("Bi-gram collocation") {
-    smile.nlp.collocation.Bigram.of(corpus(text), p, minFreq)
+  def bigram(p: Double, minFreq: Int, text: String*): Seq[Bigram] = time("Bi-gram collocation") {
+    corpus(text).bigrams(p, minFreq).asScala.toSeq
   }
 
   /** An Apiori-like algorithm to extract n-gram phrases.
@@ -105,7 +106,7 @@ package object nlp {
     * @param text input text.
     * @return An array of sets of n-grams. The i-th entry is the set of i-grams.
     */
-  def ngram(maxNGramSize: Int, minFreq: Int, text: String*): Array[Array[smile.nlp.collocation.NGram]] = time("N-gram collocation") {
+  def ngram(maxNGramSize: Int, minFreq: Int, text: String*): Array[Array[NGram]] = time("N-gram collocation") {
     val sentences = text.flatMap { text =>
       text.sentences.map { sentence =>
         sentence.words("none").map { word =>
@@ -114,7 +115,7 @@ package object nlp {
       }
     }
 
-    smile.nlp.collocation.NGram.of(sentences.asJava, maxNGramSize, minFreq)
+    NGram.apriori(sentences.asJava, maxNGramSize, minFreq)
   }
 
   /** Part-of-speech taggers.
@@ -378,8 +379,8 @@ package nlp {
       * @param k the number of top keywords to return.
       * @return the top keywords.
       */
-    def keywords(k: Int = 10): Array[smile.nlp.collocation.NGram] = {
-      smile.nlp.keyword.CooccurrenceKeywords.of(text, k)
+    def keywords(k: Int = 10): Seq[NGram] = {
+      Text.of(text).keywords(k).asScala.toSeq
     }
   }
 

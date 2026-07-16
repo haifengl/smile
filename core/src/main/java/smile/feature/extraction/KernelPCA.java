@@ -33,7 +33,7 @@ import java.io.Serial;
  * @see smile.feature.extraction.PCA
  * @see smile.math.kernel.MercerKernel
  * @see smile.manifold.KPCA
-] *
+ *
  * @author Haifeng Li
  */
 public class KernelPCA extends Projection {

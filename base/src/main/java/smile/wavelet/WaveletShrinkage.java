@@ -41,7 +41,10 @@ import smile.math.MathEx;
  * T = &sigma; sqrt(2*log(N)), where N is the length of time series
  * and &sigma; is the estimate of standard deviation of the noise by the
  * so-called scaled median absolute deviation (MAD) computed from the high-pass
- * wavelet coefficients of the first level of the transform. 
+ * wavelet coefficients of the first level of the transform.
+ * <p>
+ * Note: the scaling coefficient at index 0 (the global mean) is always
+ * preserved and never thresholded.
  *
  * @author Haifeng Li
  */
@@ -69,26 +72,66 @@ public interface WaveletShrinkage {
         wavelet.transform(t);
 
         int n = t.length;
-        int nh = t.length >> 1;
+        int nh = n >> 1;
 
+        // Use a copy for MAD estimation so t is not modified prematurely.
         double[] wc = new double[nh];
         System.arraycopy(t, nh, wc, 0, nh);
         double error = MathEx.mad(wc) / 0.6745;
 
         double lambda = error * Math.sqrt(2 * Math.log(n));
 
+        // Start from index 1 to preserve the coarsest scaling coefficient t[0].
         if (soft) {
-            for (int i = 2; i < n; i++) {
+            for (int i = 1; i < n; i++) {
                 t[i] = Math.signum(t[i]) * Math.max(Math.abs(t[i]) - lambda, 0.0);
             }
         } else {
-            for (int i = 2; i < n; i++) {
+            for (int i = 1; i < n; i++) {
                 if (Math.abs(t[i]) < lambda) {
                     t[i] = 0.0;
                 }
             }
         }
-        
+
         wavelet.inverse(t);
+    }
+
+    /**
+     * Adaptive hard-thresholding denoising of a 2-D signal (e.g. an image)
+     * by applying the 1-D wavelet transform independently to each row and
+     * then each column.
+     *
+     * @param matrix the 2-D signal. Each dimension must be a power of 2.
+     * @param wavelet the wavelet to use.
+     */
+    static void denoise2D(double[][] matrix, Wavelet wavelet) {
+        denoise2D(matrix, wavelet, false);
+    }
+
+    /**
+     * Adaptive denoising of a 2-D signal (e.g. an image) by applying the
+     * 1-D wavelet transform independently to each row and then each column.
+     *
+     * @param matrix the 2-D signal. Each dimension must be a power of 2.
+     * @param wavelet the wavelet to use.
+     * @param soft true if apply soft thresholding.
+     */
+    static void denoise2D(double[][] matrix, Wavelet wavelet, boolean soft) {
+        int rows = matrix.length;
+        int cols = matrix[0].length;
+
+        // Transform rows.
+        for (double[] row : matrix) {
+            denoise(row, wavelet, soft);
+        }
+
+        // Transform columns.
+        double[] col = new double[rows];
+        for (int j = 0; j < cols; j++) {
+            for (int i = 0; i < rows; i++) col[i] = matrix[i][j];
+            denoise(col, wavelet, soft);
+            for (int i = 0; i < rows; i++) matrix[i][j] = col[i];
+        }
     }
 }

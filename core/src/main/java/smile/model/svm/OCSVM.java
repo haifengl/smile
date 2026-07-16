@@ -114,6 +114,10 @@ public class OCSVM<T> {
      * @return the model.
      */
     public KernelMachine<T> fit(T[] x) {
+        if (x.length == 0) {
+            throw new IllegalArgumentException("Empty training data.");
+        }
+
         this.x = x;
         int n = x.length;
         K = new double[n][n];
@@ -126,7 +130,8 @@ public class OCSVM<T> {
         });
 
         // Initialize support vectors.
-        int vl = (int) Math.round(nu * n);
+        // Math.max(1,...) guards against vl=0 (when nu*n < 0.5) which would set C=Infinity.
+        int vl = Math.max(1, (int) Math.round(nu * n));
         C = 1.0 / vl;
 
         int[] index = MathEx.permutate(n);

@@ -204,7 +204,11 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
      * @return the column vector.
      */
     public ValueVector column(String name) {
-        return columns.get(schema.indexOf(name));
+        int colIdx = schema.indexOf(name);
+        if (colIdx < 0) {
+            throw new IllegalArgumentException("Column '" + name + "' not found.");
+        }
+        return columns.get(colIdx);
     }
 
     /**
@@ -600,6 +604,173 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
     }
 
     /**
+     * Renames a column.
+     * @param name the current column name.
+     * @param newName the new column name.
+     * @return this dataframe.
+     */
+    public DataFrame rename(String name, String newName) {
+        int colIdx = schema.indexOf(name);
+        if (colIdx < 0) {
+            throw new IllegalArgumentException("Column '" + name + "' not found.");
+        }
+
+        schema.rename(name, newName);
+        columns.set(colIdx, columns.get(colIdx).withName(newName));
+        return this;
+    }
+
+    /**
+     * Returns a new data frame containing rows in the range [from, to).
+     * @param from the initial index of the range, inclusive.
+     * @param to the final index of the range, exclusive.
+     * @return a new data frame of the selected rows.
+     */
+    public DataFrame slice(int from, int to) {
+        if (from < 0 || from > size()) {
+            throw new IllegalArgumentException("from: " + from + ", size: " + size());
+        }
+        if (to < from || to > size()) {
+            throw new IllegalArgumentException("to: " + to + ", size: " + size());
+        }
+        int len = to - from;
+        int[] indices = new int[len];
+        for (int i = 0; i < len; i++) indices[i] = from + i;
+        return get(Index.of(indices));
+    }
+
+    /**
+     * Returns a random sample of rows without replacement.
+     * @param n the number of rows to sample.
+     * @return a new data frame of sampled rows.
+     */
+    public DataFrame sample(int n) {
+        int[] indices = MathEx.permutate(size());
+        int[] selected = Arrays.copyOf(indices, Math.min(n, size()));
+        Arrays.sort(selected);
+        return get(Index.of(selected));
+    }
+
+    /**
+     * Returns a new DataFrame sorted by the given column in ascending order.
+     * @param column the column name to sort by.
+     * @return a new sorted data frame.
+     */
+    public DataFrame sort(String column) {
+        return sort(column, true);
+    }
+
+    /**
+     * Returns a new DataFrame sorted by the given column.
+     * @param column the column name to sort by.
+     * @param ascending if true, sort in ascending order; otherwise descending.
+     * @return a new sorted data frame.
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public DataFrame sort(String column, boolean ascending) {
+        int colIdx = schema.indexOf(column);
+        if (colIdx < 0) {
+            throw new IllegalArgumentException("Column '" + column + "' not found.");
+        }
+
+        ValueVector v = columns.get(colIdx);
+        int n = size();
+        Integer[] idx = new Integer[n];
+        for (int i = 0; i < n; i++) idx[i] = i;
+
+        if (ascending) {
+            Arrays.sort(idx, (a, b) -> {
+                Object va = v.get(a), vb = v.get(b);
+                if (va == null && vb == null) return 0;
+                if (va == null) return 1;
+                if (vb == null) return -1;
+                if (va instanceof Comparable c) return c.compareTo(vb);
+                return Double.compare(v.getDouble(a), v.getDouble(b));
+            });
+        } else {
+            Arrays.sort(idx, (a, b) -> {
+                Object va = v.get(a), vb = v.get(b);
+                if (va == null && vb == null) return 0;
+                if (va == null) return 1;
+                if (vb == null) return -1;
+                if (va instanceof Comparable c) return -c.compareTo(vb);
+                return Double.compare(v.getDouble(b), v.getDouble(a));
+            });
+        }
+
+        int[] order = new int[n];
+        for (int i = 0; i < n; i++) order[i] = idx[i];
+        return get(Index.of(order));
+    }
+
+    /**
+     * Applies a single filter predicate to the data frame.
+     * @param column the column name.
+     * @param operator Comparison operator. One of: {@literal =, !=, <, <=, >, >=, contains, startswith, endswith}.
+     * @param value Comparison value as a string; numeric strings are auto-parsed for numeric columns.
+     * @return the filtered data frame.
+     */
+    public DataFrame filter(String column, String operator, String value) {
+        int colIdx = schema.indexOf(column);
+        if (colIdx < 0) {
+            throw new IllegalArgumentException("Column '" + column + "' not found.");
+        }
+
+        boolean numeric = schema().field(colIdx).dtype().isNumeric();
+        boolean[] mask = new boolean[nrow()];
+
+        for (int i = 0; i < nrow(); i++) {
+            Tuple row = get(i);
+            mask[i] = applyFilter(row, colIdx, numeric, operator.toLowerCase(), value);
+        }
+
+        return get(mask);
+    }
+
+    /**
+     * Applies a single filter predicate to one row value.
+     * @param row the row tuple.
+     * @param colIdx the column index.
+     * @param numeric true if the column is of numeric values.
+     * @param op Comparison operator. One of: {@literal =, !=, <, <=, >, >=, contains, startswith, endswith}.
+     * @param filterValue Comparison value as a string; numeric strings are auto-parsed for numeric columns.
+     * @return true if the row value satisfies the filter condition.
+     */
+    private static boolean applyFilter(Tuple row, int colIdx, boolean numeric, String op, String filterValue) {
+        try {
+            if (numeric) {
+                double rowVal = row.getDouble(colIdx);
+                double cmpVal = Double.parseDouble(filterValue);
+                return switch (op) {
+                    case "=" , "==" -> rowVal == cmpVal;
+                    case "!="       -> rowVal != cmpVal;
+                    case "<"        -> rowVal <  cmpVal;
+                    case "<="       -> rowVal <= cmpVal;
+                    case ">"        -> rowVal >  cmpVal;
+                    case ">="       -> rowVal >= cmpVal;
+                    default         -> false;
+                };
+            } else {
+                String rowVal = String.valueOf(row.get(colIdx));
+                return switch (op) {
+                    case "=" , "==" -> rowVal.equals(filterValue);
+                    case "!="       -> !rowVal.equals(filterValue);
+                    case "<"        -> rowVal.compareTo(filterValue) < 0;
+                    case "<="       -> rowVal.compareTo(filterValue) <= 0;
+                    case ">"        -> rowVal.compareTo(filterValue) > 0;
+                    case ">="       -> rowVal.compareTo(filterValue) >= 0;
+                    case "contains"    -> rowVal.contains(filterValue);
+                    case "startswith"  -> rowVal.startsWith(filterValue);
+                    case "endswith"    -> rowVal.endsWith(filterValue);
+                    default            -> false;
+                };
+            }
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
      * Joins two data frames on their index. If either dataframe has no index,
      * merges them horizontally by columns.
      * @param other the data frames to merge.
@@ -878,10 +1049,14 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
         DenseMatrix matrix = DenseMatrix.zeros(Float64, nrow, colNames.size());
         matrix.withColNames(colNames.toArray(new String[0]));
         if (rowNames != null) {
-            int j = schema.indexOf(rowNames);
+            int colIdx = schema.indexOf(rowNames);
+            if (colIdx < 0) {
+                throw new IllegalArgumentException("Column '" + rowNames + "' not found.");
+            }
+
             String[] rows = new String[nrow];
             for (int i = 0; i < nrow; i++) {
-                rows[i] = getString(i, j);
+                rows[i] = getString(i, colIdx);
             }
             matrix.withRowNames(rows);
         }
@@ -1055,15 +1230,18 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
      * @return the string representation of rows in specified range.
      */
     public String toString(int from, int to, boolean truncate) {
-        if (from < 0 || from >= size()) {
+        if (from < 0 || from > size()) {
             throw new IllegalArgumentException("from: " + from + ", size: " + size());
         }
 
         if (to <= from) {
-            throw new IllegalArgumentException("'to' must be greater than 'from'");
+            return "Empty DataFrame\n";
         }
 
         to = Math.min(to, size());
+        if (to <= from) {
+            return "Empty DataFrame\n";
+        }
         StringBuilder sb = new StringBuilder();
         boolean hasMoreData = from == 0 && size() > to;
         int numCols = ncol() + 1;
@@ -1345,7 +1523,23 @@ public record DataFrame(StructType schema, List<ValueVector> columns, RowIndex i
      */
     public static DataFrame of(StructType schema, List<? extends Tuple> data) {
         if (data.isEmpty()) {
-            throw new IllegalArgumentException("Empty tuple collections");
+            // Return a zero-row DataFrame with the correct schema.
+            var fields = schema.fields();
+            ValueVector[] vectors = fields.stream().map(field ->
+                (ValueVector) switch (field.dtype().id()) {
+                    case Int     -> new IntVector(field, new int[0]);
+                    case Long    -> new LongVector(field, new long[0]);
+                    case Double  -> new DoubleVector(field, new double[0]);
+                    case Float   -> new FloatVector(field, new float[0]);
+                    case Boolean -> new BooleanVector(field, new boolean[0]);
+                    case Byte    -> new ByteVector(field, new byte[0]);
+                    case Short   -> new ShortVector(field, new short[0]);
+                    case Char    -> new CharVector(field, new char[0]);
+                    case String  -> new StringVector(field, new String[0]);
+                    default      -> new ObjectVector<>(field, new Object[0]);
+                }
+            ).toArray(ValueVector[]::new);
+            return new DataFrame(schema, new ArrayList<>(Arrays.asList(vectors)), null);
         }
 
         int n = data.size();

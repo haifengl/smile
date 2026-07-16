@@ -1,17 +1,22 @@
 {
   "servers": {
-    "context7": {
+    "toolbox-bigquery": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp"],
+      "args": [
+        "-y",
+        "@toolbox-sdk/server",
+        "--prebuilt=bigquery",
+        "--stdio"
+      ],
       "windows": {
         "command": "cmd.exe",
-        "args": ["/c", "npx", "-y", "@upstash/context7-mcp"]
+        "args": ["/c", "npx",
+          "-y",
+          "@toolbox-sdk/server",
+          "--prebuilt=bigquery",
+          "--stdio"]
       }
-    },
-    "exa": {
-      "type": "http",
-      "url": "https://mcp.exa.ai"
     }
   }
 }

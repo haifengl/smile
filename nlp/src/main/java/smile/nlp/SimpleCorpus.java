@@ -16,28 +16,20 @@
  */
 package smile.nlp;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
+import java.util.*;
 import smile.nlp.dictionary.EnglishPunctuations;
 import smile.nlp.dictionary.EnglishStopWords;
 import smile.nlp.dictionary.Punctuations;
 import smile.nlp.dictionary.StopWords;
 import smile.nlp.relevance.Relevance;
 import smile.nlp.relevance.RelevanceRanker;
-import smile.nlp.tokenizer.SentenceSplitter;
-import smile.nlp.tokenizer.SimpleSentenceSplitter;
-import smile.nlp.tokenizer.SimpleTokenizer;
-import smile.nlp.tokenizer.Tokenizer;
+import smile.nlp.tokenizer.*;
+import smile.sort.HeapSelect;
+import smile.stat.distribution.ChiSquareDistribution;
 import smile.util.MutableInt;
 
 /**
- * An in-memory text corpus. Useful for text feature engineering.
+ * An in-memory document corpus. Useful for text feature engineering.
  *
  * @author Haifeng Li
  */
@@ -50,7 +42,7 @@ public class SimpleCorpus implements Corpus {
     /**
      * The set of documents.
      */
-    private final List<SimpleText> docs = new ArrayList<>();
+    private final List<Document> docs = new ArrayList<>();
     /**
      * Frequency of single tokens.
      */
@@ -62,7 +54,7 @@ public class SimpleCorpus implements Corpus {
     /**
      * Inverted file storing a mapping from terms to the documents containing it.
      */
-    private final HashMap<String, List<SimpleText>> invertedFile = new HashMap<>();
+    private final HashMap<String, List<Document>> invertedFile = new HashMap<>();
     /**
      * Sentence splitter.
      */
@@ -104,14 +96,23 @@ public class SimpleCorpus implements Corpus {
     }
 
     /**
-     * Adds a document to the corpus.
-     * @param text the document text.
-     * @return the document.
+     * Creates a document with corpus's tokenizer, stop word filter, etc.
+     * @param text the text content.
+     * @return the document with unique id.
      */
-    public Text add(Text text) {
+    public Document doc(String text) {
+        return doc(Text.of(text));
+    }
+
+    /**
+     * Creates a document with corpus's tokenizer, stop word filter, etc.
+     * @param text the text.
+     * @return the document with unique id.
+     */
+    public Document doc(Text text) {
         ArrayList<String> bag = new ArrayList<>();
-        
-        for (String sentence : splitter.split(text.body)) {
+
+        for (String sentence : splitter.split(text.content())) {
             String[] tokens = tokenizer.split(sentence);
             for (int i = 0; i < tokens.length; i++) {
                 tokens[i] = tokens[i].toLowerCase();
@@ -128,7 +129,7 @@ public class SimpleCorpus implements Corpus {
                 if (keep) {
                     size++;
                     bag.add(w);
-                    
+
                     MutableInt count = freq.get(w);
                     if (count == null) {
                         freq.put(w, new MutableInt(1));
@@ -141,7 +142,7 @@ public class SimpleCorpus implements Corpus {
             for (int i = 0; i < tokens.length - 1; i++) {
                 String w1 = tokens[i];
                 String w2 = tokens[i + 1];
-                
+
                 if (freq.containsKey(w1) && freq.containsKey(w2)) {
                     Bigram bigram = new Bigram(w1, w2);
                     MutableInt count = freq2.get(bigram);
@@ -159,15 +160,21 @@ public class SimpleCorpus implements Corpus {
             words[i] = bag.get(i);
         }
 
-        SimpleText doc = new SimpleText(text.id, text.title, text.body, words);
+        String id = UUID.randomUUID().toString();
+        return new SimpleDocument(id, text.title(), text.content(), words);
+    }
+
+    /**
+     * Adds a document to the corpus.
+     * @param doc the document.
+     */
+    public void add(Document doc) {
         docs.add(doc);
 
         for (String term : doc.unique()) {
-            List<SimpleText> hit = invertedFile.computeIfAbsent(term, k -> new ArrayList<>());
+            List<Document> hit = invertedFile.computeIfAbsent(term, k -> new ArrayList<>());
             hit.add(doc);
         }
-
-        return doc;
     }
 
     @Override
@@ -192,7 +199,7 @@ public class SimpleCorpus implements Corpus {
 
     @Override
     public int avgDocSize() {
-        return (int) (size / docs.size());
+        return docs.isEmpty() ? 0 : (int) (size / docs.size());
     }
 
     @Override
@@ -230,12 +237,12 @@ public class SimpleCorpus implements Corpus {
     @Override
     public Iterator<Relevance> search(RelevanceRanker ranker, String term) {
         if (invertedFile.containsKey(term)) {
-            List<SimpleText> hits = invertedFile.get(term);
+            List<Document> hits = invertedFile.get(term);
 
             int n = hits.size();
 
             ArrayList<Relevance> rank = new ArrayList<>(n);
-            for (SimpleText doc : hits) {
+            for (var doc : hits) {
                 int tf = doc.tf(term);
                 rank.add(new Relevance(doc, ranker.rank(this, doc, term, tf, n)));
             }
@@ -249,7 +256,7 @@ public class SimpleCorpus implements Corpus {
 
     @Override
     public Iterator<Relevance> search(RelevanceRanker ranker, String[] terms) {
-        Set<SimpleText> hits = new HashSet<>();
+        Set<Document> hits = new HashSet<>();
 
         for (String term : terms) {
             if (invertedFile.containsKey(term)) {
@@ -263,7 +270,7 @@ public class SimpleCorpus implements Corpus {
         }
         
         ArrayList<Relevance> rank = new ArrayList<>(n);
-        for (SimpleText doc : hits) {
+        for (var doc : hits) {
             double r = 0.0;
             for (String term : terms) {
                 int tf = doc.tf(term);
@@ -275,5 +282,108 @@ public class SimpleCorpus implements Corpus {
 
         rank.sort(Collections.reverseOrder());
         return rank.iterator();
+    }
+
+    /**
+     * Chi-square distribution with 1 degree of freedom.
+     */
+    private static final ChiSquareDistribution chisq = new ChiSquareDistribution(1);
+
+    /**
+     * Finds top k bigram collocations in the corpus.
+     * @param k the top k bigram to compute.
+     * @param minFrequency The minimum frequency of bigram in the corpus.
+     * @return the significant bigram collocations in the descending order
+     * of likelihood ratio.
+     */
+    public List<Bigram> bigrams(int k, int minFrequency) {
+        if (k <= 0) throw new IllegalArgumentException("k must be positive: " + k);
+
+        HeapSelect<Bigram> heap = new HeapSelect<>(Bigram.class, k);
+        Iterator<Bigram> iterator = bigrams();
+        while (iterator.hasNext()) {
+            smile.nlp.Bigram bigram = iterator.next();
+            int c12 = count(bigram);
+
+            if (c12 > minFrequency) {
+                int c1 = count(bigram.w1());
+                int c2 = count(bigram.w2());
+
+                double score = likelihoodRatio(c1, c2, c12, size());
+                // Store negated score so HeapSelect (min-heap) keeps the top-k
+                heap.add(new Bigram(bigram.w1(), bigram.w2(), c12, -score));
+            }
+        }
+
+        heap.sort();
+        // un-negate scores for actual score
+        List<Bigram> collocations = new ArrayList<>();
+        for (var bigram : heap.toArray()) {
+            collocations.add(new Bigram(bigram.w1(), bigram.w2(), bigram.count(), -bigram.score()));
+        }
+
+        // Reverse so result is descending by actual score
+        return collocations.reversed();
+    }
+
+    /**
+     * Finds bigram collocations in the given corpus whose p-value is less than
+     * the given threshold.
+     * @param p the p-value threshold
+     * @param minFrequency The minimum frequency of bigram in the corpus.
+     * @return the significant bigram collocations in descending order of likelihood ratio.
+     */
+    public List<Bigram> bigrams(double p, int minFrequency) {
+        if (p <= 0.0 || p >= 1.0) {
+            throw new IllegalArgumentException("Invalid p = " + p);
+        }
+
+        double cutoff = chisq.quantile(p);
+        ArrayList<Bigram> collocations = new ArrayList<>();
+        Iterator<Bigram> iterator = bigrams();
+        while (iterator.hasNext()) {
+            smile.nlp.Bigram bigram = iterator.next();
+            int c12 = count(bigram);
+
+            if (c12 > minFrequency) {
+                int c1 = count(bigram.w1());
+                int c2 = count(bigram.w2());
+
+                double score = likelihoodRatio(c1, c2, c12, size());
+                if (score > cutoff) {
+                    collocations.add(new Bigram(bigram.w1(), bigram.w2(), c12, score));
+                }
+            }
+        }
+
+        collocations.sort(Comparator.reverseOrder());
+        return collocations;
+    }
+
+    /**
+     * Returns the likelihood ratio test statistic -2 log &lambda;
+     * @param c1 the number of occurrences of w1.
+     * @param c2 the number of occurrences of w2.
+     * @param c12 the number of occurrences of w1 w2.
+     * @param N the number of tokens in the corpus.
+     */
+    private static double likelihoodRatio(int c1, int c2, int c12, long N) {
+        double p = (double) c2 / N;
+        double p1 = (double) c12 / c1;
+        double p2 = (double) (c2 - c12) / (N - c1);
+
+        double logLambda = logL(c12, c1, p) + logL(c2-c12, N-c1, p) - logL(c12, c1, p1) - logL(c2-c12, N-c1, p2);
+        return -2 * logLambda;
+    }
+
+    /**
+     * Help function for calculating likelihood ratio statistic.
+     * Probabilities are clipped to (0.01, 0.99) to avoid log(0) or log(1-0)
+     * yielding -Infinity, which would corrupt the statistic.
+     */
+    private static double logL(int k, long n, double x) {
+        if (x == 0.0) x = 0.01;
+        if (x == 1.0) x = 0.99;
+        return k * Math.log(x) + (n-k) * Math.log(1-x);
     }
 }

@@ -16,29 +16,48 @@
  */
 package smile.deep.tensor;
 
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
+import java.lang.ref.Cleaner;
+import java.util.ArrayDeque;
 import java.util.Arrays;
-import java.util.Stack;
-import org.bytedeco.cuda.cudart.cudaDeviceProp;
-import org.bytedeco.cuda.global.cudart;
-import org.bytedeco.pytorch.*;
-import org.bytedeco.pytorch.global.torch;
-import org.bytedeco.pytorch.global.torch_cuda;
+import java.util.Deque;
+import java.util.Optional;
+
+import smile.torch.Native;
 import smile.util.AutoScope;
 import smile.util.Tuple2;
+
+import static java.lang.foreign.ValueLayout.JAVA_BYTE;
+import static java.lang.foreign.ValueLayout.JAVA_DOUBLE;
+import static java.lang.foreign.ValueLayout.JAVA_FLOAT;
+import static java.lang.foreign.ValueLayout.JAVA_INT;
+import static java.lang.foreign.ValueLayout.JAVA_LONG;
+import static java.lang.foreign.ValueLayout.JAVA_SHORT;
+import static smile.torch.Native.check;
+import static smile.torch.smile_torch_h.*;
 
 /**
  * A Tensor is a multidimensional array containing elements of a single data type.
  *
+ * <p>This class is a thin, idiomatic wrapper over the {@code smile_torch} native
+ * library, accessed through the Foreign Function and Memory API. Each instance
+ * owns an {@code ST_Tensor} handle that is released by {@link #close()}, by the
+ * enclosing {@link AutoScope}, or as a last resort by a {@link Cleaner} once the
+ * wrapper becomes unreachable.
+ *
  * @author Haifeng Li
  */
 public class Tensor implements AutoCloseable {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Tensor.class);
-    /** A scope controls the lifecycle of tensors, providing timely deallocation. */
-    private static final Stack<AutoScope> scopes = new Stack<>();
+    /** A thread-local scope stack controls the lifecycle of tensors, providing timely deallocation. */
+    private static final ThreadLocal<Deque<AutoScope>> scopes =
+            ThreadLocal.withInitial(ArrayDeque::new);
     /** Default options such as device and dtype. */
     private static Options defaultOptions;
-    /** PyTorch Tensor handle. */
-    final org.bytedeco.pytorch.Tensor value;
+    /** Native {@code ST_Tensor} handle. */
+    final MemorySegment handle;
+    /** Releases the native handle once this tensor becomes unreachable. */
+    private final Cleaner.Cleanable cleanable;
 
     /**
      * Sets the default options to create tensors. This does not affect
@@ -59,23 +78,7 @@ public class Tensor implements AutoCloseable {
      * @return true if bf16 works and is performant.
      */
     public static boolean isBF16Supported() {
-        try {
-            var device = torch_cuda.current_device();
-            var prop = new cudaDeviceProp();
-            var code = cudart.cudaGetDeviceProperties(prop, device);
-            if (code != cudart.CUDA_SUCCESS) return false;
-
-            // The version is returned as (1000 major + 10 minor).
-            int[] version = new int[1];
-            code = cudart.cudaRuntimeGetVersion(version);
-            if (code != cudart.CUDA_SUCCESS) return false;
-
-            return version[0] >= 11000 && prop.major() >= 8;
-        } catch (Throwable ex) {
-            // UnsatisfiedLinkError
-            logger.info("Failed to get device properties: {}", ex.getMessage());
-            return false;
-        }
+        return smile_cuda_is_bf16_supported() != 0;
     }
 
     /**
@@ -103,7 +106,7 @@ public class Tensor implements AutoCloseable {
      * @param scope a scope to automatically release tensors.
      */
     public static void push(AutoScope scope) {
-        scopes.push(scope);
+        scopes.get().push(scope);
     }
 
     /**
@@ -112,53 +115,60 @@ public class Tensor implements AutoCloseable {
      * @return the top level scope.
      */
     public static AutoScope pop() {
-        var scope = scopes.pop();
+        var scope = scopes.get().pop();
         scope.close();
         return scope;
     }
 
     /**
      * Constructor.
-     * @param tensor PyTorch Tensor object.
+     * <p>
+     * Ownership note: this wrapper takes ownership of {@code handle} and will
+     * release it on {@link #close()} (or via Cleaner fallback). Do not create
+     * multiple {@code Tensor} wrappers for the same native handle.
+     * @param handle the native {@code ST_Tensor} handle.
      */
-    public Tensor(org.bytedeco.pytorch.Tensor tensor) {
-        this.value = tensor;
-        if (!scopes.isEmpty()) {
-            scopes.peek().add(this);
+    public Tensor(MemorySegment handle) {
+        this.handle = check(handle);
+        this.cleanable = Native.CLEANER.register(this, new Native.FreeTensor(this.handle));
+        Deque<AutoScope> stack = scopes.get();
+        if (!stack.isEmpty()) {
+            stack.peek().add(this);
         }
     }
 
     /** Prints the tensor on the standard output. */
     public void print() {
-        torch.print(value);
+        smile_torch_print(handle);
     }
 
     @Override
     public boolean equals(java.lang.Object other) {
-        if (other instanceof Tensor t) {
-            return value == t.value;
-        }
-        return false;
+        return other instanceof Tensor t && handle.address() == t.handle.address();
+    }
+
+    @Override
+    public int hashCode() {
+        return Long.hashCode(handle.address());
     }
 
     @Override
     public void close() {
-        if (!value.isNull()) {
-            value.close();
-        }
+        cleanable.clean();
     }
 
     @Override
     public String toString() {
-        return String.format("%s%s", value, Arrays.toString(value.shape()));
+        String type = dtypeOptional().map(Enum::name).orElse("?");
+        return String.format("Tensor(dtype=%s, shape=%s)", type, Arrays.toString(shape()));
     }
 
     /**
-     * Returns the PyTorch tensor object.
-     * @return the PyTorch tensor object.
+     * Returns the native {@code ST_Tensor} handle.
+     * @return the native {@code ST_Tensor} handle.
      */
-    public org.bytedeco.pytorch.Tensor asTorch() {
-        return this.value;
+    public MemorySegment handle() {
+        return handle;
     }
 
     /**
@@ -168,7 +178,8 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor setRequireGrad(boolean required) {
-        value.set_requires_grad(required);
+        smile_tensor_set_requires_grad(handle, required ? 1 : 0);
+        throwIfNativeError();
         return this;
     }
 
@@ -177,7 +188,7 @@ public class Tensor implements AutoCloseable {
      * @return true if autograd should record operations on this tensor.
      */
     public boolean getRequireGrad() {
-        return value.requires_grad();
+        return smile_tensor_requires_grad(handle) != 0;
     }
 
     /**
@@ -187,7 +198,7 @@ public class Tensor implements AutoCloseable {
      * @return a new tensor that doesn't require gradient.
      */
     public Tensor detach() {
-        return new Tensor(value.detach());
+        return new Tensor(smile_tensor_detach(handle));
     }
 
     /**
@@ -196,7 +207,7 @@ public class Tensor implements AutoCloseable {
      * @return The cloned tensor.
      */
     public Tensor to(ScalarType dtype) {
-        return new Tensor(value.to(dtype.value));
+        return new Tensor(smile_tensor_to_dtype(handle, dtype.code));
     }
 
     /**
@@ -205,7 +216,7 @@ public class Tensor implements AutoCloseable {
      * @return The cloned tensor.
      */
     public Tensor to(Device device) {
-        return new Tensor(value.to(device.value, value.dtype()));
+        return to(device, dtype());
     }
 
     /**
@@ -215,21 +226,30 @@ public class Tensor implements AutoCloseable {
      * @return The cloned tensor.
      */
     public Tensor to(Device device, ScalarType dtype) {
-        return new Tensor(value.to(device.value, dtype.value));
+        MemorySegment dev = device.toNative();
+        try {
+            return new Tensor(smile_tensor_to_device(handle, dev, dtype.code));
+        } finally {
+            smile_device_free(dev);
+        }
+    }
+
+    /**
+     * Returns the element data type.
+     * @return the element data type, or empty if the type is not mapped.
+     */
+    public Optional<ScalarType> dtypeOptional() {
+        return ScalarType.of(smile_tensor_dtype(handle));
     }
 
     /**
      * Returns the element data type.
      * @return the element data type.
+     * @throws IllegalStateException if the native dtype has no Java mapping.
      */
     public ScalarType dtype() {
-        byte typeValue = value.dtype().toScalarType().value;
-        for (ScalarType dtype : ScalarType.values()) {
-            if (dtype.value.value == typeValue) {
-                return dtype;
-            }
-        }
-        return null;
+        return dtypeOptional().orElseThrow(() ->
+                new IllegalStateException("Unknown native scalar type: " + smile_tensor_dtype(handle)));
     }
 
     /**
@@ -237,7 +257,12 @@ public class Tensor implements AutoCloseable {
      * @return the device.
      */
     public Device device() {
-        return new Device(value.device());
+        MemorySegment device = smile_tensor_device(handle);
+        try {
+            return Device.fromNative(device);
+        } finally {
+            smile_device_free(device);
+        }
     }
 
     /**
@@ -245,7 +270,7 @@ public class Tensor implements AutoCloseable {
      * @return the number of dimensions of tensor
      */
     public int dim() {
-        return (int) value.dim();
+        return smile_tensor_dim(handle);
     }
 
     /**
@@ -253,7 +278,13 @@ public class Tensor implements AutoCloseable {
      * @return the shape of the tensor.
      */
     public long[] shape() {
-        return value.shape();
+        int dim = smile_tensor_dim(handle);
+        if (dim <= 0) return new long[0];
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment buf = arena.allocate(JAVA_LONG, dim);
+            smile_tensor_shape(handle, buf, dim);
+            return buf.toArray(JAVA_LONG);
+        }
     }
 
     /**
@@ -262,7 +293,7 @@ public class Tensor implements AutoCloseable {
      * @return the size of given dimension.
      */
     public long size(int dim) {
-        return value.size(dim);
+        return smile_tensor_size(handle, dim);
     }
 
     /**
@@ -271,10 +302,24 @@ public class Tensor implements AutoCloseable {
      */
     public long length() {
         long length = 1;
-        for (var size : value.shape()) {
+        for (var size : shape()) {
             length *= size;
         }
         return length;
+    }
+
+    /**
+     * Returns the number of elements as an int, used by array extraction methods.
+     * @throws ArithmeticException if the number of elements exceeds Integer.MAX_VALUE.
+     */
+    private int lengthAsInt() {
+        long len = length();
+        if (len > Integer.MAX_VALUE) {
+            throw new ArithmeticException(
+                "Tensor has " + len + " elements, which exceeds Integer.MAX_VALUE. " +
+                "Use a smaller tensor or extract a slice first.");
+        }
+        return (int) len;
     }
 
     /**
@@ -282,7 +327,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor neg() {
-        return new Tensor(value.neg());
+        return new Tensor(smile_tensor_neg(handle));
     }
 
     /**
@@ -290,7 +335,7 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor neg_() {
-        value.neg_();
+        smile_tensor_neg_(handle);
         return this;
     }
 
@@ -299,7 +344,7 @@ public class Tensor implements AutoCloseable {
      * @return a contiguous in memory tensor containing the same data as this tensor.
      */
     public Tensor contiguous() {
-        return new Tensor(value.contiguous());
+        return new Tensor(smile_tensor_contiguous(handle));
     }
 
     /**
@@ -310,7 +355,9 @@ public class Tensor implements AutoCloseable {
      * @return the tensor view with the expanded size.
      */
     public Tensor expand(long... size) {
-        return new Tensor(value.expand(size));
+        try (Arena arena = Arena.ofConfined()) {
+            return new Tensor(smile_tensor_expand(handle, longs(arena, size), size.length));
+        }
     }
 
     /**
@@ -322,7 +369,9 @@ public class Tensor implements AutoCloseable {
      * @return the tensor with the specified shape.
      */
     public Tensor reshape(long... shape) {
-        return new Tensor(value.reshape(shape));
+        try (Arena arena = Arena.ofConfined()) {
+            return new Tensor(smile_tensor_reshape(handle, longs(arena, shape), shape.length));
+        }
     }
 
     /**
@@ -344,7 +393,7 @@ public class Tensor implements AutoCloseable {
      * @return the tensor with the specified shape.
      */
     public Tensor flatten(int startDim) {
-        return new Tensor(value.flatten(startDim, -1));
+        return flatten(startDim, -1);
     }
 
     /**
@@ -358,12 +407,13 @@ public class Tensor implements AutoCloseable {
      * @return the tensor with the specified shape.
      */
     public Tensor flatten(int startDim, int endDim) {
-        return new Tensor(value.flatten(startDim, endDim));
+        return new Tensor(smile_tensor_flatten(handle, startDim, endDim));
     }
 
     /** Computes the gradients. */
     public void backward() {
-        value.backward();
+        smile_tensor_backward(handle);
+        throwIfNativeError();
     }
 
     /**
@@ -372,8 +422,14 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor fill_(int x) {
-        value.fill_(new Scalar(x));
-        return this;
+        MemorySegment s = iscalar(x);
+        try {
+            smile_tensor_fill_(handle, s);
+            throwIfNativeError();
+            return this;
+        } finally {
+            smile_scalar_free(s);
+        }
     }
 
     /**
@@ -382,8 +438,14 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor fill_(double x) {
-        value.fill_(new Scalar(x));
-        return this;
+        MemorySegment s = fscalar(x);
+        try {
+            smile_tensor_fill_(handle, s);
+            throwIfNativeError();
+            return this;
+        } finally {
+            smile_scalar_free(s);
+        }
     }
 
     /**
@@ -392,7 +454,8 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor bernoulli_(double p) {
-        value.bernoulli_(p, null);
+        smile_tensor_bernoulli_(handle, p);
+        throwIfNativeError();
         return this;
     }
 
@@ -402,72 +465,9 @@ public class Tensor implements AutoCloseable {
      * @return the permuted tensor.
      */
     public Tensor permute(long... dims) {
-        return new Tensor(value.permute(dims));
-    }
-
-    /**
-     * Returns a tensor index vector.
-     * @param indices the indices along the dimensions.
-     * @return the index vector.
-     */
-    private TensorIndexVector indexVector(int... indices) {
-        TensorIndexVector vector = new TensorIndexVector();
-        for (var index : indices) {
-            vector.push_back(new TensorIndex(index));
+        try (Arena arena = Arena.ofConfined()) {
+            return new Tensor(smile_tensor_permute(handle, longs(arena, dims), dims.length));
         }
-        return vector;
-    }
-
-    /**
-     * Returns a tensor index vector.
-     * @param indices the indices along the dimensions.
-     * @return the index vector.
-     */
-    private TensorIndexVector indexVector(long... indices) {
-        TensorIndexVector vector = new TensorIndexVector();
-        for (var index : indices) {
-            vector.push_back(new TensorIndex(index));
-        }
-        return vector;
-    }
-
-    /**
-     * Returns a tensor index vector.
-     * @param indices the indices along the dimensions.
-     * @return the index vector.
-     */
-    private TensorIndexVector indexVector(Tensor... indices) {
-        TensorIndexVector vector = new TensorIndexVector();
-        for (var index : indices) {
-            vector.push_back(new TensorIndex(index.value));
-        }
-        return vector;
-    }
-
-    /**
-     * Returns a tensor index vector.
-     * @param indices the indices along the dimensions.
-     * @return the index vector.
-     */
-    private TensorIndexVector indexVector(Index... indices) {
-        TensorIndexVector vector = new TensorIndexVector();
-        for (var index : indices) {
-            vector.push_back(index.value);
-        }
-        return vector;
-    }
-
-    /**
-     * Returns a tensor index vector.
-     * @param indices the indices along the dimensions.
-     * @return the index vector.
-     */
-    private TensorOptionalList indexList(Index... indices) {
-        TensorOptionalList list = new TensorOptionalList();
-        for (Index index : indices) {
-            list.push_back(new TensorOptional(index.value));
-        }
-        return list;
     }
 
     /**
@@ -477,7 +477,8 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor put(Tensor source, Index... indices) {
-        return new Tensor(value.index_put(indexList(indices), source.value));
+        Tensor out = new Tensor(smile_tensor_clone(handle));
+        return out.put_(source, indices);
     }
 
     /**
@@ -487,7 +488,8 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor put(Tensor source, Tensor index) {
-        return new Tensor(value.put(index.value, source.value));
+        Tensor out = new Tensor(smile_tensor_clone(handle));
+        return out.put_(source, index);
     }
 
     /**
@@ -497,8 +499,14 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor put_(Tensor source, Index... indices) {
-        value.index_put_(indexVector(indices), source.value);
-        return this;
+        MemorySegment vec = indexVec(indices);
+        try {
+            smile_tensor_index_put_(handle, vec, source.handle);
+            throwIfNativeError();
+            return this;
+        } finally {
+            smile_tensor_index_vec_free(vec);
+        }
     }
 
     /**
@@ -508,8 +516,17 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor put_(Tensor source, Tensor index) {
-        value.put_(index.value, source.value);
-        return this;
+        MemorySegment idx = smile_tensor_index_from_tensor(index.handle);
+        MemorySegment vec = smile_tensor_index_vec_create();
+        try {
+            smile_tensor_index_vec_push(vec, idx);
+            smile_tensor_index_put_(handle, vec, source.handle);
+            throwIfNativeError();
+            return this;
+        } finally {
+            smile_tensor_index_vec_free(vec);
+            smile_tensor_index_free(idx);
+        }
     }
 
     /**
@@ -520,8 +537,7 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor put_(byte x, int... indices) {
-        value.index_put_(indexVector(indices), new Scalar((x)));
-        return this;
+        return putScalar(iscalar(x), toLong(indices));
     }
 
     /**
@@ -532,8 +548,7 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor put_(byte x, long... indices) {
-        value.index_put_(indexVector(indices), new Scalar((x)));
-        return this;
+        return putScalar(iscalar(x), indices);
     }
 
     /**
@@ -544,8 +559,7 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor put_(short x, int... indices) {
-        value.index_put_(indexVector(indices), new Scalar((x)));
-        return this;
+        return putScalar(iscalar(x), toLong(indices));
     }
 
     /**
@@ -556,8 +570,7 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor put_(short x, long... indices) {
-        value.index_put_(indexVector(indices), new Scalar((x)));
-        return this;
+        return putScalar(iscalar(x), indices);
     }
 
     /**
@@ -568,8 +581,7 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor put_(int x, int... indices) {
-        value.index_put_(indexVector(indices), new Scalar((x)));
-        return this;
+        return putScalar(iscalar(x), toLong(indices));
     }
 
     /**
@@ -580,8 +592,7 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor put_(int x, long... indices) {
-        value.index_put_(indexVector(indices), new Scalar((x)));
-        return this;
+        return putScalar(iscalar(x), indices);
     }
 
     /**
@@ -592,8 +603,7 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor put_(long x, int... indices) {
-        value.index_put_(indexVector(indices), new Scalar((x)));
-        return this;
+        return putScalar(iscalar(x), toLong(indices));
     }
 
     /**
@@ -604,8 +614,7 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor put_(long x, long... indices) {
-        value.index_put_(indexVector(indices), new Scalar((x)));
-        return this;
+        return putScalar(iscalar(x), indices);
     }
 
     /**
@@ -616,8 +625,7 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor put_(float x, int... indices) {
-        value.index_put_(indexVector(indices), new Scalar((x)));
-        return this;
+        return putScalar(fscalar(x), toLong(indices));
     }
 
     /**
@@ -628,8 +636,7 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor put_(float x, long... indices) {
-        value.index_put_(indexVector(indices), new Scalar((x)));
-        return this;
+        return putScalar(fscalar(x), indices);
     }
 
     /**
@@ -640,8 +647,7 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor put_(double x, int... indices) {
-        value.index_put_(indexVector(indices), new Scalar((x)));
-        return this;
+        return putScalar(fscalar(x), toLong(indices));
     }
 
     /**
@@ -652,8 +658,20 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor put_(double x, long... indices) {
-        value.index_put_(indexVector(indices), new Scalar((x)));
-        return this;
+        return putScalar(fscalar(x), indices);
+    }
+
+    /** Scatters a scalar (consuming the handle) at the given integer indices. */
+    private Tensor putScalar(MemorySegment scalar, long[] indices) {
+        MemorySegment vec = indexVec(indices);
+        try {
+            smile_tensor_index_put_scalar_(handle, vec, scalar);
+            throwIfNativeError();
+            return this;
+        } finally {
+            smile_tensor_index_vec_free(vec);
+            smile_scalar_free(scalar);
+        }
     }
 
     /**
@@ -662,7 +680,7 @@ public class Tensor implements AutoCloseable {
      * @return the sub-tensor.
      */
     public Tensor get(int... indices) {
-        return new Tensor(value.index(indexVector(indices)));
+        return new Tensor(indexed(toLong(indices)));
     }
 
     /**
@@ -671,7 +689,7 @@ public class Tensor implements AutoCloseable {
      * @return the sub-tensor.
      */
     public Tensor get(long... indices) {
-        return new Tensor(value.index(indexVector(indices)));
+        return new Tensor(indexed(indices));
     }
 
     /**
@@ -680,7 +698,12 @@ public class Tensor implements AutoCloseable {
      * @return the sub-tensor.
      */
     public Tensor get(Index... indices) {
-        return new Tensor(value.index(indexVector(indices)));
+        MemorySegment vec = indexVec(indices);
+        try {
+            return new Tensor(smile_tensor_index(handle, vec));
+        } finally {
+            smile_tensor_index_vec_free(vec);
+        }
     }
 
     /**
@@ -689,8 +712,15 @@ public class Tensor implements AutoCloseable {
      * @return the sub-tensor.
      */
     public Tensor get(Tensor index) {
-        TensorIndexVector indexVector = new TensorIndexVector(new TensorIndex(index.value));
-        return new Tensor(value.index(indexVector));
+        MemorySegment idx = smile_tensor_index_from_tensor(index.handle);
+        MemorySegment vec = smile_tensor_index_vec_create();
+        try {
+            smile_tensor_index_vec_push(vec, idx);
+            return new Tensor(smile_tensor_index(handle, vec));
+        } finally {
+            smile_tensor_index_vec_free(vec);
+            smile_tensor_index_free(idx);
+        }
     }
 
     /**
@@ -700,7 +730,7 @@ public class Tensor implements AutoCloseable {
      * @return the element value.
      */
     public byte getByte(int... indices) {
-        return value.index(indexVector(indices)).item_byte();
+        return getByte(toLong(indices));
     }
 
     /**
@@ -710,7 +740,12 @@ public class Tensor implements AutoCloseable {
      * @return the element value.
      */
     public byte getByte(long... indices) {
-        return value.index(indexVector(indices)).item_byte();
+        MemorySegment sub = indexed(indices);
+        try {
+            return smile_tensor_item_byte(sub);
+        } finally {
+            smile_tensor_free(sub);
+        }
     }
 
     /**
@@ -720,7 +755,7 @@ public class Tensor implements AutoCloseable {
      * @return the element value.
      */
     public short getShort(int... indices) {
-        return value.index(indexVector(indices)).item_short();
+        return getShort(toLong(indices));
     }
 
     /**
@@ -730,7 +765,12 @@ public class Tensor implements AutoCloseable {
      * @return the element value.
      */
     public short getShort(long... indices) {
-        return value.index(indexVector(indices)).item_short();
+        MemorySegment sub = indexed(indices);
+        try {
+            return smile_tensor_item_short(sub);
+        } finally {
+            smile_tensor_free(sub);
+        }
     }
 
     /**
@@ -740,7 +780,7 @@ public class Tensor implements AutoCloseable {
      * @return the element value.
      */
     public int getInt(int... indices) {
-        return value.index(indexVector(indices)).item_int();
+        return getInt(toLong(indices));
     }
 
     /**
@@ -750,7 +790,12 @@ public class Tensor implements AutoCloseable {
      * @return the element value.
      */
     public int getInt(long... indices) {
-        return value.index(indexVector(indices)).item_int();
+        MemorySegment sub = indexed(indices);
+        try {
+            return smile_tensor_item_int(sub);
+        } finally {
+            smile_tensor_free(sub);
+        }
     }
 
     /**
@@ -760,7 +805,7 @@ public class Tensor implements AutoCloseable {
      * @return the element value.
      */
     public long getLong(int... indices) {
-        return value.index(indexVector(indices)).item_long();
+        return getLong(toLong(indices));
     }
 
     /**
@@ -770,7 +815,12 @@ public class Tensor implements AutoCloseable {
      * @return the element value.
      */
     public long getLong(long... indices) {
-        return value.index(indexVector(indices)).item_long();
+        MemorySegment sub = indexed(indices);
+        try {
+            return smile_tensor_item_long(sub);
+        } finally {
+            smile_tensor_free(sub);
+        }
     }
 
     /**
@@ -780,7 +830,7 @@ public class Tensor implements AutoCloseable {
      * @return the element value.
      */
     public float getFloat(int... indices) {
-        return value.index(indexVector(indices)).item_float();
+        return getFloat(toLong(indices));
     }
 
     /**
@@ -790,7 +840,12 @@ public class Tensor implements AutoCloseable {
      * @return the element value.
      */
     public float getFloat(long... indices) {
-        return value.index(indexVector(indices)).item_float();
+        MemorySegment sub = indexed(indices);
+        try {
+            return smile_tensor_item_float(sub);
+        } finally {
+            smile_tensor_free(sub);
+        }
     }
 
     /**
@@ -800,7 +855,7 @@ public class Tensor implements AutoCloseable {
      * @return the element value.
      */
     public double getDouble(int... indices) {
-        return value.index(indexVector(indices)).item_double();
+        return getDouble(toLong(indices));
     }
 
     /**
@@ -810,7 +865,12 @@ public class Tensor implements AutoCloseable {
      * @return the element value.
      */
     public double getDouble(long... indices) {
-        return value.index(indexVector(indices)).item_double();
+        MemorySegment sub = indexed(indices);
+        try {
+            return smile_tensor_item_double(sub);
+        } finally {
+            smile_tensor_free(sub);
+        }
     }
 
     /**
@@ -818,7 +878,7 @@ public class Tensor implements AutoCloseable {
      * @return the boolean value when the tensor holds a single value.
      */
     public boolean boolValue() {
-        return value.item_bool();
+        return smile_tensor_item_bool(handle) != 0;
     }
 
     /**
@@ -826,7 +886,7 @@ public class Tensor implements AutoCloseable {
      * @return the byte value when the tensor holds a single value.
      */
     public byte byteValue() {
-        return value.item_byte();
+        return smile_tensor_item_byte(handle);
     }
 
     /**
@@ -834,7 +894,7 @@ public class Tensor implements AutoCloseable {
      * @return the short value when the tensor holds a single value.
      */
     public short shortValue() {
-        return value.item_short();
+        return smile_tensor_item_short(handle);
     }
 
     /**
@@ -842,7 +902,7 @@ public class Tensor implements AutoCloseable {
      * @return the int value when the tensor holds a single value.
      */
     public int intValue() {
-        return value.item_int();
+        return smile_tensor_item_int(handle);
     }
 
     /**
@@ -850,7 +910,7 @@ public class Tensor implements AutoCloseable {
      * @return the long value when the tensor holds a single value.
      */
     public long longValue() {
-        return value.item_long();
+        return smile_tensor_item_long(handle);
     }
 
     /**
@@ -858,7 +918,7 @@ public class Tensor implements AutoCloseable {
      * @return the float value when the tensor holds a single value.
      */
     public float floatValue() {
-        return value.item_float();
+        return smile_tensor_item_float(handle);
     }
 
     /**
@@ -866,7 +926,7 @@ public class Tensor implements AutoCloseable {
      * @return the double value when the tensor holds a single value.
      */
     public double doubleValue() {
-        return value.item_double();
+        return smile_tensor_item_double(handle);
     }
 
     /**
@@ -874,13 +934,13 @@ public class Tensor implements AutoCloseable {
      * @return the byte array of tensor elements.
      */
     public byte[] byteArray() {
-        if (value.is_view()) {
-            throw new UnsupportedOperationException("copy tensor view to array");
-        }
-        var array = new byte[(int) length()];
-        var data = value.data_ptr_byte();
-        data.get(array);
-        return array;
+        checkContiguous();
+        // Bool tensors use the same storage layout as Byte but have a different dtype.
+        MemorySegment data = smile_tensor_dtype(handle) == ScalarType.Bool.code() ?
+            check(smile_tensor_data_ptr_bool(handle)) :
+            check(smile_tensor_data_ptr_byte(handle));
+        int n = lengthAsInt();
+        return data.reinterpret(n).toArray(JAVA_BYTE);
     }
 
     /**
@@ -888,13 +948,10 @@ public class Tensor implements AutoCloseable {
      * @return the short integer array of tensor elements.
      */
     public short[] shortArray() {
-        if (value.is_view()) {
-            throw new UnsupportedOperationException("copy tensor view to array");
-        }
-        var array = new short[(int) length()];
-        var data = value.data_ptr_short();
-        data.get(array);
-        return array;
+        checkContiguous();
+        int n = lengthAsInt();
+        MemorySegment data = check(smile_tensor_data_ptr_short(handle));
+        return data.reinterpret(n * 2L).toArray(JAVA_SHORT);
     }
 
     /**
@@ -902,13 +959,10 @@ public class Tensor implements AutoCloseable {
      * @return the integer array of tensor elements.
      */
     public int[] intArray() {
-        if (value.is_view()) {
-            throw new UnsupportedOperationException("copy tensor view to array");
-        }
-        var array = new int[(int) length()];
-        var data = value.data_ptr_int();
-        data.get(array);
-        return array;
+        checkContiguous();
+        int n = lengthAsInt();
+        MemorySegment data = check(smile_tensor_data_ptr_int(handle));
+        return data.reinterpret(n * 4L).toArray(JAVA_INT);
     }
 
     /**
@@ -916,13 +970,10 @@ public class Tensor implements AutoCloseable {
      * @return the long integer array of tensor elements.
      */
     public long[] longArray() {
-        if (value.is_view()) {
-            throw new UnsupportedOperationException("copy tensor view to array");
-        }
-        var array = new long[(int) length()];
-        var data = value.data_ptr_long();
-        data.get(array);
-        return array;
+        checkContiguous();
+        int n = lengthAsInt();
+        MemorySegment data = check(smile_tensor_data_ptr_long(handle));
+        return data.reinterpret(n * 8L).toArray(JAVA_LONG);
     }
 
     /**
@@ -930,13 +981,10 @@ public class Tensor implements AutoCloseable {
      * @return the float array of tensor elements.
      */
     public float[] floatArray() {
-        if (value.is_view()) {
-            throw new UnsupportedOperationException("copy tensor view to array");
-        }
-        var array = new float[(int) length()];
-        var data = value.data_ptr_float();
-        data.get(array);
-        return array;
+        checkContiguous();
+        int n = lengthAsInt();
+        MemorySegment data = check(smile_tensor_data_ptr_float(handle));
+        return data.reinterpret(n * 4L).toArray(JAVA_FLOAT);
     }
 
     /**
@@ -944,13 +992,17 @@ public class Tensor implements AutoCloseable {
      * @return the double array of tensor elements.
      */
     public double[] doubleArray() {
-        if (value.is_view()) {
-            throw new UnsupportedOperationException("copy tensor view to array");
+        checkContiguous();
+        int n = lengthAsInt();
+        MemorySegment data = check(smile_tensor_data_ptr_double(handle));
+        return data.reinterpret(n * 8L).toArray(JAVA_DOUBLE);
+    }
+
+    /** Throws if the tensor is a non-contiguous view that cannot be copied directly. */
+    private void checkContiguous() {
+        if (smile_tensor_is_view(handle) != 0) {
+            throw new UnsupportedOperationException("Cannot copy a non-contiguous tensor view to array; call contiguous() first.");
         }
-        var array = new double[(int) length()];
-        var data = value.data_ptr_double();
-        data.get(array);
-        return array;
     }
 
     /**
@@ -967,7 +1019,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor unsqueeze(long dim) {
-        return new Tensor(value.unsqueeze(dim));
+        return new Tensor(smile_tensor_unsqueeze(handle, dim));
     }
 
     /**
@@ -992,7 +1044,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor transpose(long dim0, long dim1) {
-        return new Tensor(value.transpose(dim0, dim1));
+        return new Tensor(smile_tensor_transpose(handle, dim0, dim1));
     }
 
     /**
@@ -1006,7 +1058,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor triu(long diagonal) {
-        return new Tensor(value.triu(diagonal));
+        return new Tensor(smile_tensor_triu(handle, diagonal));
     }
 
     /**
@@ -1020,7 +1072,8 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor triu_(long diagonal) {
-        value.triu_(diagonal);
+        smile_tensor_triu_(handle, diagonal);
+        throwIfNativeError();
         return this;
     }
 
@@ -1032,8 +1085,10 @@ public class Tensor implements AutoCloseable {
      * @param shape the shape of view tensor.
      * @return the view tensor.
      */
-    public Tensor view(long...shape) {
-        return new Tensor(value.view(shape));
+    public Tensor view(long... shape) {
+        try (Arena arena = Arena.ofConfined()) {
+            return new Tensor(smile_tensor_view(handle, longs(arena, shape), shape.length));
+        }
     }
 
     /**
@@ -1041,7 +1096,7 @@ public class Tensor implements AutoCloseable {
      * @return the complex tensor view.
      */
     public Tensor viewAsComplex() {
-        return new Tensor(torch.view_as_complex(value));
+        return new Tensor(smile_torch_view_as_complex(handle));
     }
 
     /**
@@ -1049,7 +1104,7 @@ public class Tensor implements AutoCloseable {
      * @return the real tensor view.
      */
     public Tensor viewAsReal() {
-        return new Tensor(torch.view_as_real(value));
+        return new Tensor(smile_torch_view_as_real(handle));
     }
 
     /**
@@ -1060,7 +1115,7 @@ public class Tensor implements AutoCloseable {
      * @return the indices of the maximum value of a tensor across a dimension.
      */
     public Tensor argmax(int dim, boolean keepDim) {
-        return new Tensor(value.argmax(new LongOptional(dim), keepDim));
+        return new Tensor(smile_tensor_argmax(handle, dim, keepDim ? 1 : 0, 1));
     }
 
     /**
@@ -1070,8 +1125,7 @@ public class Tensor implements AutoCloseable {
      * @return the values and indices of the largest k elements.
      */
     public Tuple2<Tensor, Tensor> topk(int k) {
-        var topk = value.topk(k);
-        return new Tuple2<>(new Tensor(topk.get0()), new Tensor(topk.get1()));
+        return topk(k, -1, true, true);
     }
 
     /**
@@ -1084,8 +1138,14 @@ public class Tensor implements AutoCloseable {
      * @return the values and indices of the largest k elements.
      */
     public Tuple2<Tensor, Tensor> topk(int k, int dim, boolean largest, boolean sorted) {
-        var topk = value.topk(k, dim, largest, sorted);
-        return new Tuple2<>(new Tensor(topk.get0()), new Tensor(topk.get1()));
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment values = arena.allocate(C_POINTER);
+            MemorySegment indices = arena.allocate(C_POINTER);
+            if (smile_tensor_topk(handle, k, dim, largest ? 1 : 0, sorted ? 1 : 0, values, indices) != 0) {
+                throw new RuntimeException(Native.lastError());
+            }
+            return new Tuple2<>(new Tensor(values.get(C_POINTER, 0)), new Tensor(indices.get(C_POINTER, 0)));
+        }
     }
 
     /**
@@ -1098,22 +1158,52 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor topp(double p) {
         try (var scope = new AutoScope()) {
-            var sort = torch.sort(value, -1, true);
-            var probsSort = scope.add(sort.get0());
-            var probsIdx = scope.add(sort.get1());
-            var probsSum = scope.add(torch.cumsum(probsSort, -1));
+            var sort = sort(-1, true);
+            var probsSort = scope.add(sort._1());
+            var probsIdx = scope.add(sort._2());
+            var probsSum = scope.add(probsSort.cumsum(-1));
 
-            var mask = scope.add(probsSum.sub_(probsSort).gt(new Scalar(p)));
-            TensorIndexVector indexVector = new TensorIndexVector();
-            indexVector.push_back(new TensorIndex(mask));
-            probsSort.index_put_(indexVector, new Scalar(0.0f));
+            var mask = scope.add(probsSum.sub_(probsSort).gt(p));
+            // probsSort[mask] = 0
+            MemorySegment idx = smile_tensor_index_from_tensor(mask.handle);
+            MemorySegment vec = smile_tensor_index_vec_create();
+            MemorySegment zero = fscalar(0.0);
+            try {
+                smile_tensor_index_vec_push(vec, idx);
+                smile_tensor_index_put_scalar_(probsSort.handle, vec, zero);
+            } finally {
+                smile_scalar_free(zero);
+                smile_tensor_index_vec_free(vec);
+                smile_tensor_index_free(idx);
+            }
 
-            var sum = scope.add(probsSort.sum(new long[]{-1}, true, new ScalarTypeOptional()));
+            var sum = scope.add(probsSort.sum(-1, true));
             probsSort.div_(sum);
-            var sample = scope.add(torch.multinomial(probsSort, 1));
-            sample = torch.gather(probsIdx, -1, sample);
-            return new Tensor(sample);
+            var sample = scope.add(probsSort.multinomial(1));
+            return probsIdx.gather(-1, sample);
         }
+    }
+
+    /** Sorts the elements along a dimension, returning (values, indices). */
+    private Tuple2<Tensor, Tensor> sort(long dim, boolean descending) {
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment values = arena.allocate(C_POINTER);
+            MemorySegment indices = arena.allocate(C_POINTER);
+            if (smile_torch_sort(handle, dim, descending ? 1 : 0, values, indices) != 0) {
+                throw new RuntimeException(Native.lastError());
+            }
+            return new Tuple2<>(new Tensor(values.get(C_POINTER, 0)), new Tensor(indices.get(C_POINTER, 0)));
+        }
+    }
+
+    /** Returns the cumulative sum along a dimension. */
+    private Tensor cumsum(long dim) {
+        return new Tensor(smile_torch_cumsum(handle, dim));
+    }
+
+    /** Draws samples from a multinomial distribution. */
+    private Tensor multinomial(long numSamples) {
+        return new Tensor(smile_torch_multinomial(handle, numSamples));
     }
 
     /**
@@ -1122,11 +1212,12 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public static Tensor hstack(Tensor... tensors) {
-        var vector = new TensorVector();
-        for (var tensor : tensors) {
-            vector.push_back(tensor.value);
+        MemorySegment vec = tensorVec(tensors);
+        try {
+            return new Tensor(smile_torch_hstack(vec));
+        } finally {
+            smile_tensor_vec_free(vec);
         }
-        return new Tensor(torch.hstack(vector));
     }
 
     /**
@@ -1135,11 +1226,12 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public static Tensor vstack(Tensor... tensors) {
-        var vector = new TensorVector();
-        for (var tensor : tensors) {
-            vector.push_back(tensor.value);
+        MemorySegment vec = tensorVec(tensors);
+        try {
+            return new Tensor(smile_torch_vstack(vec));
+        } finally {
+            smile_tensor_vec_free(vec);
         }
-        return new Tensor(torch.vstack(vector));
     }
 
     /**
@@ -1150,7 +1242,7 @@ public class Tensor implements AutoCloseable {
      * @return the complex tensor.
      */
     public static Tensor polar(Tensor abs, Tensor angle) {
-        return new Tensor(torch.polar(abs.value, angle.value));
+        return new Tensor(smile_torch_polar(abs.handle, angle.handle));
     }
 
     /**
@@ -1170,15 +1262,13 @@ public class Tensor implements AutoCloseable {
      * @return the cross entropy loss between input logits and target.
      */
     public static Tensor crossEntropy(Tensor input, Tensor target, String reduction, long ignoreIndex) {
-        var kind = switch (reduction) {
-            case "none", "mean" -> new kMean();
-            case "sum" -> new kSum();
+        int kind = switch (reduction) {
+            case "none" -> 0;
+            case "mean" -> 1;
+            case "sum" -> 2;
             default -> throw new IllegalArgumentException("Invalid reduction: " + reduction);
         };
-        var options = new CrossEntropyLossOptions();
-        options.ignore_index().put(ignoreIndex);
-        options.reduction().put(kind);
-        return new Tensor(torch.cross_entropy(input.value, target.value, options));
+        return new Tensor(smile_torch_cross_entropy(input.handle, target.handle, ignoreIndex, kind));
     }
 
     /**
@@ -1192,7 +1282,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public static Tensor where(Tensor condition, Tensor input, Tensor other) {
-        return new Tensor(torch.where(condition.value, input.value, other.value));
+        return new Tensor(smile_torch_where_tt(condition.handle, input.handle, other.handle));
     }
 
     /**
@@ -1206,7 +1296,14 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public static Tensor where(Tensor condition, int input, int other) {
-        return new Tensor(torch.where(condition.value, new Scalar(input), new Scalar(other)));
+        try (Tensor in = full(input)) {
+            MemorySegment s = iscalar(other);
+            try {
+                return new Tensor(smile_torch_where_ts(condition.handle, in.handle, s));
+            } finally {
+                smile_scalar_free(s);
+            }
+        }
     }
 
     /**
@@ -1220,7 +1317,14 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public static Tensor where(Tensor condition, double input, double other) {
-        return new Tensor(torch.where(condition.value, new Scalar(input), new Scalar(other)));
+        try (Tensor in = full(input)) {
+            MemorySegment s = fscalar(other);
+            try {
+                return new Tensor(smile_torch_where_ts(condition.handle, in.handle, s));
+            } finally {
+                smile_scalar_free(s);
+            }
+        }
     }
 
     /**
@@ -1229,7 +1333,7 @@ public class Tensor implements AutoCloseable {
      * @return the matrix product of two tensors.
      */
     public Tensor matmul(Tensor other) {
-        return new Tensor(value.matmul(other.value));
+        return new Tensor(smile_tensor_matmul(handle, other.handle));
     }
 
     /**
@@ -1238,7 +1342,7 @@ public class Tensor implements AutoCloseable {
      * @return the outer product of two tensors.
      */
     public Tensor outer(Tensor other) {
-        return new Tensor(value.outer(other.value));
+        return new Tensor(smile_tensor_outer(handle, other.handle));
     }
 
     /**
@@ -1247,7 +1351,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor eq(int other) {
-        return new Tensor(value.eq(new Scalar(other)));
+        return scalarCompare(iscalar(other), Comparison.EQ);
     }
 
     /**
@@ -1256,7 +1360,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor eq(double other) {
-        return new Tensor(value.eq(new Scalar(other)));
+        return scalarCompare(fscalar(other), Comparison.EQ);
     }
 
     /**
@@ -1265,7 +1369,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor eq(Tensor other) {
-        return new Tensor(value.eq(other.value));
+        return new Tensor(smile_tensor_eq_t(handle, other.handle));
     }
 
     /**
@@ -1274,7 +1378,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor ne(int other) {
-        return new Tensor(value.ne(new Scalar(other)));
+        return scalarCompare(iscalar(other), Comparison.NE);
     }
 
     /**
@@ -1283,7 +1387,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor ne(double other) {
-        return new Tensor(value.ne(new Scalar(other)));
+        return scalarCompare(fscalar(other), Comparison.NE);
     }
 
     /**
@@ -1292,7 +1396,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor ne(Tensor other) {
-        return new Tensor(value.ne(other.value));
+        return new Tensor(smile_tensor_ne_t(handle, other.handle));
     }
 
     /**
@@ -1301,7 +1405,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor lt(double other) {
-        return new Tensor(value.lt(new Scalar(other)));
+        return scalarCompare(fscalar(other), Comparison.LT);
     }
 
     /**
@@ -1310,7 +1414,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor lt(int other) {
-        return new Tensor(value.lt(new Scalar(other)));
+        return scalarCompare(iscalar(other), Comparison.LT);
     }
 
     /**
@@ -1319,7 +1423,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor lt(Tensor other) {
-        return new Tensor(value.lt(other.value));
+        return new Tensor(smile_tensor_lt_t(handle, other.handle));
     }
 
     /**
@@ -1328,7 +1432,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor le(int other) {
-        return new Tensor(value.le(new Scalar(other)));
+        return scalarCompare(iscalar(other), Comparison.LE);
     }
 
     /**
@@ -1337,7 +1441,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor le(double other) {
-        return new Tensor(value.le(new Scalar(other)));
+        return scalarCompare(fscalar(other), Comparison.LE);
     }
 
     /**
@@ -1346,7 +1450,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor le(Tensor other) {
-        return new Tensor(value.le(other.value));
+        return new Tensor(smile_tensor_le_t(handle, other.handle));
     }
 
     /**
@@ -1355,7 +1459,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor gt(int other) {
-        return new Tensor(value.gt(new Scalar(other)));
+        return scalarCompare(iscalar(other), Comparison.GT);
     }
 
     /**
@@ -1364,7 +1468,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor gt(double other) {
-        return new Tensor(value.gt(new Scalar(other)));
+        return scalarCompare(fscalar(other), Comparison.GT);
     }
 
     /**
@@ -1373,7 +1477,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor gt(Tensor other) {
-        return new Tensor(value.gt(other.value));
+        return new Tensor(smile_tensor_gt_t(handle, other.handle));
     }
 
     /**
@@ -1382,7 +1486,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor ge(int other) {
-        return new Tensor(value.ge(new Scalar(other)));
+        return scalarCompare(iscalar(other), Comparison.GE);
     }
 
     /**
@@ -1391,7 +1495,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor ge(double other) {
-        return new Tensor(value.ge(new Scalar(other)));
+        return scalarCompare(fscalar(other), Comparison.GE);
     }
 
     /**
@@ -1400,7 +1504,27 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor ge(Tensor other) {
-        return new Tensor(value.ge(other.value));
+        return new Tensor(smile_tensor_ge_t(handle, other.handle));
+    }
+
+    /** The scalar comparison operators. */
+    private enum Comparison { EQ, NE, LT, LE, GT, GE }
+
+    /** Applies a scalar comparison (consuming the scalar handle). */
+    private Tensor scalarCompare(MemorySegment s, Comparison op) {
+        try {
+            MemorySegment result = switch (op) {
+                case EQ -> smile_tensor_eq_s(handle, s);
+                case NE -> smile_tensor_ne_s(handle, s);
+                case LT -> smile_tensor_lt_s(handle, s);
+                case LE -> smile_tensor_le_s(handle, s);
+                case GT -> smile_tensor_gt_s(handle, s);
+                case GE -> smile_tensor_ge_s(handle, s);
+            };
+            return new Tensor(result);
+        } finally {
+            smile_scalar_free(s);
+        }
     }
 
     /**
@@ -1408,7 +1532,21 @@ public class Tensor implements AutoCloseable {
      * @return the sum of all elements.
      */
     public Tensor sum() {
-        return new Tensor(value.sum());
+        return new Tensor(smile_tensor_sum(handle));
+    }
+
+    /**
+     * Returns the sum along a dimension in the tensor.
+     * @param dim the dimension to reduce.
+     * @param keepDim whether the output tensor has dim retained or not.
+     * @return the output tensor.
+     */
+    public Tensor sum(int dim, boolean keepDim) {
+        int dtype = smile_tensor_dtype(handle);
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment dims = arena.allocateFrom(JAVA_LONG, dim);
+            return new Tensor(smile_tensor_sum_dims(handle, dims, 1, keepDim ? 1 : 0, dtype));
+        }
     }
 
     /**
@@ -1416,7 +1554,7 @@ public class Tensor implements AutoCloseable {
      * @return the mean of all elements.
      */
     public Tensor mean() {
-        return new Tensor(value.mean());
+        return new Tensor(smile_tensor_mean(handle));
     }
 
     /**
@@ -1426,7 +1564,11 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor mean(int dim, boolean keepDim) {
-        return new Tensor(value.mean(new long[]{dim}, keepDim, new ScalarTypeOptional(value.dtype())));
+        int dtype = smile_tensor_dtype(handle);
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment dims = arena.allocateFrom(JAVA_LONG, dim);
+            return new Tensor(smile_tensor_mean_dims(handle, dims, 1, keepDim ? 1 : 0, dtype));
+        }
     }
 
     /**
@@ -1434,7 +1576,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor rsqrt() {
-        return new Tensor(value.rsqrt());
+        return new Tensor(smile_tensor_rsqrt(handle));
     }
 
     /**
@@ -1442,8 +1584,97 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor rsqrt_() {
-        value.rsqrt_();
+        smile_tensor_rsqrt_(handle);
+        throwIfNativeError();
         return this;
+    }
+
+    /**
+     * Returns the minimum value of all elements in the tensor.
+     * @return the minimum scalar tensor.
+     */
+    public Tensor min() {
+        return new Tensor(smile_tensor_min(handle));
+    }
+
+    /**
+     * Returns the maximum value of all elements in the tensor.
+     * @return the maximum scalar tensor.
+     */
+    public Tensor max() {
+        return new Tensor(smile_tensor_max(handle));
+    }
+
+    /**
+     * Returns a new tensor with the absolute value of the elements of input.
+     * @return the output tensor.
+     */
+    public Tensor abs() {
+        return new Tensor(smile_tensor_abs(handle));
+    }
+
+    /**
+     * Computes the absolute value of the elements of input in place.
+     * @return this tensor.
+     */
+    public Tensor abs_() {
+        smile_tensor_abs_(handle);
+        throwIfNativeError();
+        return this;
+    }
+
+    /**
+     * Returns a new tensor with the natural logarithm of the elements of input.
+     * @return the output tensor.
+     */
+    public Tensor log() {
+        return new Tensor(smile_tensor_log(handle));
+    }
+
+    /**
+     * Computes the natural logarithm of the elements of input in place.
+     * @return this tensor.
+     */
+    public Tensor log_() {
+        smile_tensor_log_(handle);
+        throwIfNativeError();
+        return this;
+    }
+
+    /**
+     * Clamps all elements in input into the range [{@code min}, {@code max}].
+     * @param min lower-bound of the range to be clamped to.
+     * @param max upper-bound of the range to be clamped to.
+     * @return the output tensor.
+     */
+    public Tensor clamp(double min, double max) {
+        MemorySegment lo = fscalar(min);
+        MemorySegment hi = fscalar(max);
+        try {
+            return new Tensor(smile_tensor_clamp(handle, 1, lo, 1, hi));
+        } finally {
+            smile_scalar_free(lo);
+            smile_scalar_free(hi);
+        }
+    }
+
+    /**
+     * Clamps all elements in input into the range [{@code min}, {@code max}] in place.
+     * @param min lower-bound of the range to be clamped to.
+     * @param max upper-bound of the range to be clamped to.
+     * @return this tensor.
+     */
+    public Tensor clamp_(double min, double max) {
+        MemorySegment lo = fscalar(min);
+        MemorySegment hi = fscalar(max);
+        try {
+            smile_tensor_clamp_(handle, 1, lo, 1, hi);
+            throwIfNativeError();
+            return this;
+        } finally {
+            smile_scalar_free(lo);
+            smile_scalar_free(hi);
+        }
     }
 
     /**
@@ -1451,7 +1682,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor exp() {
-        return new Tensor(value.exp());
+        return new Tensor(smile_tensor_exp(handle));
     }
 
     /**
@@ -1459,7 +1690,9 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor exp_() {
-        return new Tensor(value.exp_());
+        smile_tensor_exp_(handle);
+        throwIfNativeError();
+        return this;
     }
 
     /**
@@ -1480,7 +1713,10 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor scatterReduce(int dim, Tensor index, Tensor source, String reduce) {
-        return new Tensor(value.scatter_reduce(dim, index.value, source.value, reduce));
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment r = arena.allocateFrom(reduce);
+            return new Tensor(smile_tensor_scatter_reduce(handle, dim, index.handle, source.handle, r));
+        }
     }
 
     /**
@@ -1501,8 +1737,12 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor scatterReduce_(int dim, Tensor index, Tensor source, String reduce) {
-        value.scatter_reduce_(dim, index.value, source.value, reduce);
-        return this;
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment r = arena.allocateFrom(reduce);
+            smile_tensor_scatter_reduce_(handle, dim, index.handle, source.handle, r);
+            throwIfNativeError();
+            return this;
+        }
     }
 
     /**
@@ -1513,7 +1753,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor gather(int dim, Tensor index) {
-        return new Tensor(value.gather(dim, index.value));
+        return new Tensor(smile_torch_gather(handle, dim, index.handle));
     }
 
     /**
@@ -1522,7 +1762,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor add(float other) {
-        return new Tensor(value.add(new Scalar(other)));
+        return addScalar(fscalar(other));
     }
 
     /**
@@ -1531,8 +1771,7 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor add_(float other) {
-        value.add_(new Scalar(other));
-        return this;
+        return addScalarInplace(fscalar(other));
     }
 
     /**
@@ -1541,7 +1780,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor add(double other) {
-        return new Tensor(value.add(new Scalar(other)));
+        return addScalar(fscalar(other));
     }
 
     /**
@@ -1550,8 +1789,25 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor add_(double other) {
-        value.add_(new Scalar(other));
-        return this;
+        return addScalarInplace(fscalar(other));
+    }
+
+    private Tensor addScalar(MemorySegment s) {
+        try {
+            return new Tensor(smile_tensor_add_s(handle, s));
+        } finally {
+            smile_scalar_free(s);
+        }
+    }
+
+    private Tensor addScalarInplace(MemorySegment s) {
+        try {
+            smile_tensor_add_s_(handle, s);
+            throwIfNativeError();
+            return this;
+        } finally {
+            smile_scalar_free(s);
+        }
     }
 
     /**
@@ -1560,7 +1816,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor add(Tensor other) {
-        return new Tensor(value.add(other.value));
+        return new Tensor(smile_tensor_add_t(handle, other.handle));
     }
 
     /**
@@ -1569,7 +1825,8 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor add_(Tensor other) {
-        value.add_(other.value);
+        smile_tensor_add_t_(handle, other.handle);
+        throwIfNativeError();
         return this;
     }
 
@@ -1580,7 +1837,12 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor add(Tensor other, double alpha) {
-        return new Tensor(value.add(other.value, new Scalar(alpha)));
+        MemorySegment s = fscalar(alpha);
+        try {
+            return new Tensor(smile_tensor_add_t_s(handle, other.handle, s));
+        } finally {
+            smile_scalar_free(s);
+        }
     }
 
     /**
@@ -1590,8 +1852,14 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor add_(Tensor other, double alpha) {
-        value.add_(other.value, new Scalar(alpha));
-        return this;
+        MemorySegment s = fscalar(alpha);
+        try {
+            smile_tensor_add_t_s_(handle, other.handle, s);
+            throwIfNativeError();
+            return this;
+        } finally {
+            smile_scalar_free(s);
+        }
     }
 
     /**
@@ -1600,7 +1868,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor sub(float other) {
-        return new Tensor(value.sub(new Scalar(other)));
+        return subScalar(fscalar(other));
     }
 
     /**
@@ -1609,17 +1877,16 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor sub_(float other) {
-        return new Tensor(value.sub(new Scalar(other)));
+        return subScalarInplace(fscalar(other));
     }
 
     /**
-     * Returns A -= b.
+     * Returns A - b.
      * @param other a scalar value.
-     * @return this tensor.
+     * @return the output tensor.
      */
     public Tensor sub(double other) {
-        value.sub_(new Scalar(other));
-        return this;
+        return subScalar(fscalar(other));
     }
 
     /**
@@ -1628,8 +1895,25 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor sub_(double other) {
-        value.sub_(new Scalar(other));
-        return this;
+        return subScalarInplace(fscalar(other));
+    }
+
+    private Tensor subScalar(MemorySegment s) {
+        try {
+            return new Tensor(smile_tensor_sub_s(handle, s));
+        } finally {
+            smile_scalar_free(s);
+        }
+    }
+
+    private Tensor subScalarInplace(MemorySegment s) {
+        try {
+            smile_tensor_sub_s_(handle, s);
+            throwIfNativeError();
+            return this;
+        } finally {
+            smile_scalar_free(s);
+        }
     }
 
     /**
@@ -1638,7 +1922,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor sub(Tensor other) {
-        return new Tensor(value.sub(other.value));
+        return new Tensor(smile_tensor_sub_t(handle, other.handle));
     }
 
     /**
@@ -1647,7 +1931,8 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor sub_(Tensor other) {
-        value.sub_(other.value);
+        smile_tensor_sub_t_(handle, other.handle);
+        throwIfNativeError();
         return this;
     }
 
@@ -1658,7 +1943,12 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor sub(Tensor other, double alpha) {
-        return new Tensor(value.sub(other.value, new Scalar(alpha)));
+        MemorySegment s = fscalar(alpha);
+        try {
+            return new Tensor(smile_tensor_sub_t_s(handle, other.handle, s));
+        } finally {
+            smile_scalar_free(s);
+        }
     }
 
     /**
@@ -1668,8 +1958,14 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor sub_(Tensor other, double alpha) {
-        value.sub_(other.value, new Scalar(alpha));
-        return this;
+        MemorySegment s = fscalar(alpha);
+        try {
+            smile_tensor_sub_t_s_(handle, other.handle, s);
+            throwIfNativeError();
+            return this;
+        } finally {
+            smile_scalar_free(s);
+        }
     }
 
     /**
@@ -1678,7 +1974,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor mul(float other) {
-        return new Tensor(value.mul(new Scalar(other)));
+        return mulScalar(fscalar(other));
     }
 
     /**
@@ -1687,8 +1983,7 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor mul_(float other) {
-        value.mul_(new Scalar(other));
-        return this;
+        return mulScalarInplace(fscalar(other));
     }
 
     /**
@@ -1697,7 +1992,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor mul(double other) {
-        return new Tensor(value.mul(new Scalar(other)));
+        return mulScalar(fscalar(other));
     }
 
     /**
@@ -1706,8 +2001,25 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor mul_(double other) {
-        value.mul_(new Scalar(other));
-        return this;
+        return mulScalarInplace(fscalar(other));
+    }
+
+    private Tensor mulScalar(MemorySegment s) {
+        try {
+            return new Tensor(smile_tensor_mul_s(handle, s));
+        } finally {
+            smile_scalar_free(s);
+        }
+    }
+
+    private Tensor mulScalarInplace(MemorySegment s) {
+        try {
+            smile_tensor_mul_s_(handle, s);
+            throwIfNativeError();
+            return this;
+        } finally {
+            smile_scalar_free(s);
+        }
     }
 
     /**
@@ -1716,7 +2028,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor mul(Tensor other) {
-        return new Tensor(value.mul(other.value));
+        return new Tensor(smile_tensor_mul_t(handle, other.handle));
     }
 
     /**
@@ -1725,7 +2037,8 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor mul_(Tensor other) {
-        value.mul_(other.value);
+        smile_tensor_mul_t_(handle, other.handle);
+        throwIfNativeError();
         return this;
     }
 
@@ -1735,7 +2048,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor div(float other) {
-        return new Tensor(value.div(new Scalar(other)));
+        return divScalar(fscalar(other));
     }
 
     /**
@@ -1744,8 +2057,7 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor div_(float other) {
-        value.div_(new Scalar(other));
-        return this;
+        return divScalarInplace(fscalar(other));
     }
 
     /**
@@ -1754,7 +2066,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor div(double other) {
-        return new Tensor(value.div(new Scalar(other)));
+        return divScalar(fscalar(other));
     }
 
     /**
@@ -1763,8 +2075,25 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor div_(double other) {
-        value.div_(new Scalar(other));
-        return this;
+        return divScalarInplace(fscalar(other));
+    }
+
+    private Tensor divScalar(MemorySegment s) {
+        try {
+            return new Tensor(smile_tensor_div_s(handle, s));
+        } finally {
+            smile_scalar_free(s);
+        }
+    }
+
+    private Tensor divScalarInplace(MemorySegment s) {
+        try {
+            smile_tensor_div_s_(handle, s);
+            throwIfNativeError();
+            return this;
+        } finally {
+            smile_scalar_free(s);
+        }
     }
 
     /**
@@ -1773,7 +2102,7 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public Tensor div(Tensor other) {
-        return new Tensor(value.div(other.value));
+        return new Tensor(smile_tensor_div_t(handle, other.handle));
     }
 
     /**
@@ -1782,7 +2111,8 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor div_(Tensor other) {
-        value.div_(other.value);
+        smile_tensor_div_t_(handle, other.handle);
+        throwIfNativeError();
         return this;
     }
 
@@ -1792,7 +2122,12 @@ public class Tensor implements AutoCloseable {
      * @return a new tensor with the power of the elements of input.
      */
     public Tensor pow(double exponent) {
-        return new Tensor(value.pow(new Scalar(exponent)));
+        MemorySegment s = fscalar(exponent);
+        try {
+            return new Tensor(smile_tensor_pow_s(handle, s));
+        } finally {
+            smile_scalar_free(s);
+        }
     }
 
     /**
@@ -1801,8 +2136,14 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor pow_(double exponent) {
-        value.pow_(new Scalar(exponent));
-        return this;
+        MemorySegment s = fscalar(exponent);
+        try {
+            smile_tensor_pow_s_(handle, s);
+            throwIfNativeError();
+            return this;
+        } finally {
+            smile_scalar_free(s);
+        }
     }
 
     /**
@@ -1810,7 +2151,7 @@ public class Tensor implements AutoCloseable {
      * @return a new tensor with the cosine of the elements of input.
      */
     public Tensor cos() {
-        return new Tensor(value.cos());
+        return new Tensor(smile_tensor_cos(handle));
     }
 
     /**
@@ -1818,7 +2159,8 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor cos_() {
-        value.cos_();
+        smile_tensor_cos_(handle);
+        throwIfNativeError();
         return this;
     }
 
@@ -1827,7 +2169,7 @@ public class Tensor implements AutoCloseable {
      * @return a new tensor with the sine of the elements of input.
      */
     public Tensor sin() {
-        return new Tensor(value.sin());
+        return new Tensor(smile_tensor_sin(handle));
     }
 
     /**
@@ -1835,7 +2177,8 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor sin_() {
-        value.sin_();
+        smile_tensor_sin_(handle);
+        throwIfNativeError();
         return this;
     }
 
@@ -1844,7 +2187,7 @@ public class Tensor implements AutoCloseable {
      * @return a new tensor with the arccosine of the elements of input.
      */
     public Tensor acos() {
-        return new Tensor(value.acos());
+        return new Tensor(smile_tensor_acos(handle));
     }
 
     /**
@@ -1852,7 +2195,8 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor acos_() {
-        value.acos_();
+        smile_tensor_acos_(handle);
+        throwIfNativeError();
         return this;
     }
 
@@ -1861,7 +2205,7 @@ public class Tensor implements AutoCloseable {
      * @return a new tensor with the arcsine of the elements of input.
      */
     public Tensor asin() {
-        return new Tensor(value.asin());
+        return new Tensor(smile_tensor_asin(handle));
     }
 
     /**
@@ -1869,7 +2213,8 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor asin_() {
-        value.asin_();
+        smile_tensor_asin_(handle);
+        throwIfNativeError();
         return this;
     }
 
@@ -1880,7 +2225,7 @@ public class Tensor implements AutoCloseable {
      * @return a boolean tensor.
      */
     public Tensor isin(Tensor other) {
-        return new Tensor(torch.isin(value, other.value));
+        return new Tensor(smile_torch_isin(handle, other.handle));
     }
 
     /**
@@ -1888,7 +2233,12 @@ public class Tensor implements AutoCloseable {
      * @return the output tensor.
      */
     public boolean all() {
-        return value.all().item_bool();
+        MemorySegment result = check(smile_tensor_all(handle));
+        try {
+            return smile_tensor_item_bool(result) != 0;
+        } finally {
+            smile_tensor_free(result);
+        }
     }
 
     /**
@@ -1896,15 +2246,17 @@ public class Tensor implements AutoCloseable {
      * @return a new tensor of logical not results.
      */
     public Tensor not() {
-        return new Tensor(value.logical_not());
+        return new Tensor(smile_tensor_logical_not(handle));
     }
 
     /**
-     * Returns logical NOT of this tensor.
-     * @return a new tensor of logical not results.
+     * Computes logical NOT of this tensor in place.
+     * @return this tensor.
      */
     public Tensor not_() {
-        return new Tensor(value.logical_not_());
+        smile_tensor_logical_not_(handle);
+        throwIfNativeError();
+        return this;
     }
 
     /**
@@ -1913,7 +2265,7 @@ public class Tensor implements AutoCloseable {
      * @return a new tensor of logical and results.
      */
     public Tensor and(Tensor other) {
-        return new Tensor(value.logical_and(other.value));
+        return new Tensor(smile_tensor_logical_and(handle, other.handle));
     }
 
     /**
@@ -1922,7 +2274,8 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor and_(Tensor other) {
-        value.logical_and_(other.value);
+        smile_tensor_logical_and_(handle, other.handle);
+        throwIfNativeError();
         return this;
     }
 
@@ -1932,7 +2285,7 @@ public class Tensor implements AutoCloseable {
      * @return a new tensor of logical and results.
      */
     public Tensor or(Tensor other) {
-        return new Tensor(value.logical_or(other.value));
+        return new Tensor(smile_tensor_logical_or(handle, other.handle));
     }
 
     /**
@@ -1941,7 +2294,8 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor or_(Tensor other) {
-        value.logical_or_(other.value);
+        smile_tensor_logical_or_(handle, other.handle);
+        throwIfNativeError();
         return this;
     }
 
@@ -1951,7 +2305,7 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor softmax(int dim) {
-        return new Tensor(torch.softmax(value, dim));
+        return new Tensor(smile_torch_softmax(handle, dim));
     }
 
     /**
@@ -1962,7 +2316,7 @@ public class Tensor implements AutoCloseable {
      * @return a new tensor after random dropouts.
      */
     public Tensor dropout(double p) {
-        return new Tensor(torch.dropout(value, p, false));
+        return new Tensor(smile_torch_dropout(handle, p, 0));
     }
 
     /**
@@ -1973,8 +2327,17 @@ public class Tensor implements AutoCloseable {
      * @return this tensor.
      */
     public Tensor dropout_(double p) {
-        torch.dropout(value, p, true);
+        smile_tensor_free(check(smile_torch_dropout(handle, p, 1)));
+        throwIfNativeError();
         return this;
+    }
+
+    /** Throws when the native bridge recorded an error for the current thread. */
+    private static void throwIfNativeError() {
+        String err = Native.lastError();
+        if (!err.isEmpty()) {
+            throw new RuntimeException(err);
+        }
     }
 
     /**
@@ -1985,7 +2348,9 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor newZeros(long... shape) {
         if (shape.length == 0) shape = shape();
-        return new Tensor(value.new_zeros(shape));
+        try (Arena arena = Arena.ofConfined()) {
+            return new Tensor(smile_tensor_new_zeros(handle, longs(arena, shape), shape.length));
+        }
     }
 
     /**
@@ -1996,7 +2361,9 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor newOnes(long... shape) {
         if (shape.length == 0) shape = shape();
-        return new Tensor(value.new_ones(shape));
+        try (Arena arena = Arena.ofConfined()) {
+            return new Tensor(smile_tensor_new_ones(handle, longs(arena, shape), shape.length));
+        }
     }
 
     /**
@@ -2006,7 +2373,9 @@ public class Tensor implements AutoCloseable {
      */
     public static Tensor eye(long shape) {
         if (defaultOptions != null) return eye(defaultOptions, shape);
-        return new Tensor(torch.eye(shape));
+        try (Arena arena = Arena.ofConfined()) {
+            return new Tensor(smile_tensor_eye(arena.allocateFrom(JAVA_LONG, shape), 1, MemorySegment.NULL));
+        }
     }
 
     /**
@@ -2016,7 +2385,12 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor eye(Options options, long shape) {
-        return new Tensor(torch.eye(shape, options.value));
+        MemorySegment opts = options.toNative();
+        try (Arena arena = Arena.ofConfined()) {
+            return new Tensor(smile_tensor_eye(arena.allocateFrom(JAVA_LONG, shape), 1, opts));
+        } finally {
+            smile_tensor_options_free(opts);
+        }
     }
 
     /**
@@ -2026,10 +2400,14 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor full(long value, long... shape) {
-        var tensor = defaultOptions == null ?
-                torch.full(shape, new Scalar(value)) :
-                torch.full(shape, new Scalar(value), defaultOptions.value);
-        return new Tensor(tensor);
+        MemorySegment opts = defaultOptions == null ? MemorySegment.NULL : defaultOptions.toNative();
+        MemorySegment s = iscalar(value);
+        try (Arena arena = Arena.ofConfined()) {
+            return new Tensor(smile_tensor_full(longs(arena, shape), shape.length, s, opts));
+        } finally {
+            smile_scalar_free(s);
+            if (opts.address() != 0) smile_tensor_options_free(opts);
+        }
     }
 
     /**
@@ -2039,10 +2417,14 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor full(double value, long... shape) {
-        var tensor = defaultOptions == null ?
-                torch.full(shape, new Scalar((float) value)) :
-                torch.full(shape, new Scalar((float) value), defaultOptions.value);
-        return new Tensor(tensor);
+        MemorySegment opts = defaultOptions == null ? MemorySegment.NULL : defaultOptions.toNative();
+        MemorySegment s = fscalar(value);
+        try (Arena arena = Arena.ofConfined()) {
+            return new Tensor(smile_tensor_full(longs(arena, shape), shape.length, s, opts));
+        } finally {
+            smile_scalar_free(s);
+            if (opts.address() != 0) smile_tensor_options_free(opts);
+        }
     }
 
     /**
@@ -2052,7 +2434,9 @@ public class Tensor implements AutoCloseable {
      */
     public static Tensor empty(long... shape) {
         if (defaultOptions != null) return empty(defaultOptions, shape);
-        return new Tensor(torch.empty(shape));
+        try (Arena arena = Arena.ofConfined()) {
+            return new Tensor(smile_tensor_empty(longs(arena, shape), shape.length, MemorySegment.NULL));
+        }
     }
 
     /**
@@ -2062,7 +2446,7 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor empty(Options options, long... shape) {
-        return new Tensor(torch.empty(shape, options.value, null));
+        return factory(Tensor::emptyNative, options, shape);
     }
 
     /**
@@ -2072,7 +2456,9 @@ public class Tensor implements AutoCloseable {
      */
     public static Tensor zeros(long... shape) {
         if (defaultOptions != null) return zeros(defaultOptions, shape);
-        return new Tensor(torch.zeros(shape));
+        try (Arena arena = Arena.ofConfined()) {
+            return new Tensor(smile_tensor_zeros(longs(arena, shape), shape.length, MemorySegment.NULL));
+        }
     }
 
     /**
@@ -2082,7 +2468,7 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor zeros(Options options, long... shape) {
-        return new Tensor(torch.zeros(shape, options.value));
+        return factory(Tensor::zerosNative, options, shape);
     }
 
     /**
@@ -2092,7 +2478,9 @@ public class Tensor implements AutoCloseable {
      */
     public static Tensor ones(long... shape) {
         if (defaultOptions != null) return ones(defaultOptions, shape);
-        return new Tensor(torch.ones(shape));
+        try (Arena arena = Arena.ofConfined()) {
+            return new Tensor(smile_tensor_ones(longs(arena, shape), shape.length, MemorySegment.NULL));
+        }
     }
 
     /**
@@ -2102,7 +2490,7 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor ones(Options options, long... shape) {
-        return new Tensor(torch.ones(shape, options.value));
+        return factory(Tensor::onesNative, options, shape);
     }
 
     /**
@@ -2112,7 +2500,9 @@ public class Tensor implements AutoCloseable {
      */
     public static Tensor rand(long... shape) {
         if (defaultOptions != null) return rand(defaultOptions, shape);
-        return new Tensor(torch.rand(shape));
+        try (Arena arena = Arena.ofConfined()) {
+            return new Tensor(smile_tensor_rand(longs(arena, shape), shape.length, MemorySegment.NULL));
+        }
     }
 
     /**
@@ -2122,7 +2512,7 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor rand(Options options, long... shape) {
-        return new Tensor(torch.rand(shape, options.value));
+        return factory(Tensor::randNative, options, shape);
     }
 
     /**
@@ -2132,7 +2522,9 @@ public class Tensor implements AutoCloseable {
      */
     public static Tensor randn(long... shape) {
         if (defaultOptions != null) return randn(defaultOptions, shape);
-        return new Tensor(torch.randn(shape));
+        try (Arena arena = Arena.ofConfined()) {
+            return new Tensor(smile_tensor_randn(longs(arena, shape), shape.length, MemorySegment.NULL));
+        }
     }
 
     /**
@@ -2142,7 +2534,42 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor randn(Options options, long... shape) {
-        return new Tensor(torch.randn(shape, options.value));
+        return factory(Tensor::randnNative, options, shape);
+    }
+
+    /** A native tensor factory of the form {@code f(shape, ndim, opts)}. */
+    @FunctionalInterface
+    private interface TensorFactory {
+        MemorySegment apply(MemorySegment shape, int ndim, MemorySegment opts);
+    }
+
+    private static Tensor factory(TensorFactory f, Options options, long[] shape) {
+        MemorySegment opts = options.toNative();
+        try (Arena arena = Arena.ofConfined()) {
+            return new Tensor(f.apply(longs(arena, shape), shape.length, opts));
+        } finally {
+            smile_tensor_options_free(opts);
+        }
+    }
+
+    private static MemorySegment emptyNative(MemorySegment shape, int ndim, MemorySegment opts) {
+        return smile_tensor_empty(shape, ndim, opts);
+    }
+
+    private static MemorySegment zerosNative(MemorySegment shape, int ndim, MemorySegment opts) {
+        return smile_tensor_zeros(shape, ndim, opts);
+    }
+
+    private static MemorySegment onesNative(MemorySegment shape, int ndim, MemorySegment opts) {
+        return smile_tensor_ones(shape, ndim, opts);
+    }
+
+    private static MemorySegment randNative(MemorySegment shape, int ndim, MemorySegment opts) {
+        return smile_tensor_rand(shape, ndim, opts);
+    }
+
+    private static MemorySegment randnNative(MemorySegment shape, int ndim, MemorySegment opts) {
+        return smile_tensor_randn(shape, ndim, opts);
     }
 
     /**
@@ -2155,7 +2582,13 @@ public class Tensor implements AutoCloseable {
      * @return a 1-D tensor.
      */
     public static Tensor arange(long start, long end, long step) {
-        return new Tensor(torch.arange(new Scalar(start), new Scalar(end), new Scalar(step)));
+        MemorySegment opts = smile_tensor_options_create();
+        try {
+            smile_tensor_options_dtype(opts, ScalarType.Int64.code);
+            return new Tensor(smile_tensor_arange(start, end, step, opts));
+        } finally {
+            smile_tensor_options_free(opts);
+        }
     }
 
     /**
@@ -2165,10 +2598,14 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor of(boolean[] data, long... shape) {
-        if (shape.length == 0) {
-            shape = new long[] { data.length };
+        if (shape.length == 0) shape = new long[] { data.length };
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment d = arena.allocate(JAVA_BYTE, data.length);
+            for (int i = 0; i < data.length; i++) {
+                d.set(JAVA_BYTE, i, (byte) (data[i] ? 1 : 0));
+            }
+            return new Tensor(smile_tensor_from_bool(d, arena.allocateFrom(JAVA_LONG, shape), shape.length));
         }
-        return new Tensor(org.bytedeco.pytorch.Tensor.create(data, shape));
     }
 
     /**
@@ -2178,10 +2615,11 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor of(byte[] data, long... shape) {
-        if (shape.length == 0) {
-            shape = new long[] { data.length };
+        if (shape.length == 0) shape = new long[] { data.length };
+        try (Arena arena = Arena.ofConfined()) {
+            return new Tensor(smile_tensor_from_byte(arena.allocateFrom(JAVA_BYTE, data),
+                    arena.allocateFrom(JAVA_LONG, shape), shape.length));
         }
-        return new Tensor(org.bytedeco.pytorch.Tensor.create(data, shape));
     }
 
     /**
@@ -2191,10 +2629,11 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor of(short[] data, long... shape) {
-        if (shape.length == 0) {
-            shape = new long[] { data.length };
+        if (shape.length == 0) shape = new long[] { data.length };
+        try (Arena arena = Arena.ofConfined()) {
+            return new Tensor(smile_tensor_from_short(arena.allocateFrom(JAVA_SHORT, data),
+                    arena.allocateFrom(JAVA_LONG, shape), shape.length));
         }
-        return new Tensor(org.bytedeco.pytorch.Tensor.create(data, shape));
     }
 
     /**
@@ -2204,10 +2643,11 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor of(int[] data, long... shape) {
-        if (shape.length == 0) {
-            shape = new long[] { data.length };
+        if (shape.length == 0) shape = new long[] { data.length };
+        try (Arena arena = Arena.ofConfined()) {
+            return new Tensor(smile_tensor_from_int(arena.allocateFrom(JAVA_INT, data),
+                    arena.allocateFrom(JAVA_LONG, shape), shape.length));
         }
-        return new Tensor(org.bytedeco.pytorch.Tensor.create(data, shape));
     }
 
     /**
@@ -2217,10 +2657,11 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor of(long[] data, long... shape) {
-        if (shape.length == 0) {
-            shape = new long[] { data.length };
+        if (shape.length == 0) shape = new long[] { data.length };
+        try (Arena arena = Arena.ofConfined()) {
+            return new Tensor(smile_tensor_from_long(arena.allocateFrom(JAVA_LONG, data),
+                    arena.allocateFrom(JAVA_LONG, shape), shape.length));
         }
-        return new Tensor(org.bytedeco.pytorch.Tensor.create(data, shape));
     }
 
     /**
@@ -2230,10 +2671,11 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor of(float[] data, long... shape) {
-        if (shape.length == 0) {
-            shape = new long[] { data.length };
+        if (shape.length == 0) shape = new long[] { data.length };
+        try (Arena arena = Arena.ofConfined()) {
+            return new Tensor(smile_tensor_from_float(arena.allocateFrom(JAVA_FLOAT, data),
+                    arena.allocateFrom(JAVA_LONG, shape), shape.length));
         }
-        return new Tensor(org.bytedeco.pytorch.Tensor.create(data, shape));
     }
 
     /**
@@ -2243,10 +2685,77 @@ public class Tensor implements AutoCloseable {
      * @return the created tensor.
      */
     public static Tensor of(double[] data, long... shape) {
-        if (shape.length == 0) {
-            shape = new long[] { data.length };
+        if (shape.length == 0) shape = new long[] { data.length };
+        try (Arena arena = Arena.ofConfined()) {
+            return new Tensor(smile_tensor_from_double(arena.allocateFrom(JAVA_DOUBLE, data),
+                    arena.allocateFrom(JAVA_LONG, shape), shape.length));
         }
-        return new Tensor(org.bytedeco.pytorch.Tensor.create(data, shape));
+    }
+
+    // =========================================================================
+    // Internal FFM helpers
+    // =========================================================================
+
+    /** Allocates a {@code int64_t[]} argument, or NULL for an empty array. */
+    private static MemorySegment longs(Arena arena, long[] values) {
+        return values.length == 0 ? MemorySegment.NULL : arena.allocateFrom(JAVA_LONG, values);
+    }
+
+    /** Creates an integer scalar handle that the caller must free. */
+    private static MemorySegment iscalar(long value) {
+        return check(smile_scalar_from_int(value));
+    }
+
+    /** Creates a floating-point scalar handle that the caller must free. */
+    private static MemorySegment fscalar(double value) {
+        return check(smile_scalar_from_float(value));
+    }
+
+    private static long[] toLong(int[] indices) {
+        long[] result = new long[indices.length];
+        for (int i = 0; i < indices.length; i++) {
+            result[i] = indices[i];
+        }
+        return result;
+    }
+
+    /** Builds an index vector from integer indices; the caller must free it. */
+    private static MemorySegment indexVec(long[] indices) {
+        MemorySegment vec = smile_tensor_index_vec_create();
+        for (long i : indices) {
+            MemorySegment idx = smile_tensor_index_from_int(i);
+            smile_tensor_index_vec_push(vec, idx);
+            smile_tensor_index_free(idx);
+        }
+        return vec;
+    }
+
+    /** Builds an index vector from indices; the caller must free it. */
+    private static MemorySegment indexVec(Index[] indices) {
+        MemorySegment vec = smile_tensor_index_vec_create();
+        for (Index i : indices) {
+            smile_tensor_index_vec_push(vec, i.handle);
+        }
+        return vec;
+    }
+
+    /** Indexes this tensor with integer indices, returning an owned handle. */
+    private MemorySegment indexed(long[] indices) {
+        MemorySegment vec = indexVec(indices);
+        try {
+            return check(smile_tensor_index(handle, vec));
+        } finally {
+            smile_tensor_index_vec_free(vec);
+        }
+    }
+
+    /** Builds a tensor vector from the given tensors; the caller must free it. */
+    private static MemorySegment tensorVec(Tensor[] tensors) {
+        MemorySegment vec = smile_tensor_vec_create();
+        for (Tensor t : tensors) {
+            smile_tensor_vec_push(vec, t.handle);
+        }
+        return vec;
     }
 
     /**
@@ -2256,11 +2765,17 @@ public class Tensor implements AutoCloseable {
      * changed afterward).
      */
     public static class Options {
-        /** PyTorch options object. */
-        TensorOptions value;
+        /** The data type of the elements, or null for the default. */
+        private ScalarType dtype;
+        /** The compute device, or null for the default. */
+        private Device device;
+        /** The memory layout, or null for the default. */
+        private Layout layout;
+        /** Whether gradients are required, or null for the default. */
+        private Boolean requireGrad;
+
         /** Constructor with default values for every axis. */
         public Options() {
-            this.value = new TensorOptions();
         }
 
         /**
@@ -2269,7 +2784,7 @@ public class Tensor implements AutoCloseable {
          * @return this options object.
          */
         public Options dtype(ScalarType type) {
-            value = value.dtype(new ScalarTypeOptional(type.value));
+            this.dtype = type;
             return this;
         }
 
@@ -2279,7 +2794,7 @@ public class Tensor implements AutoCloseable {
          * @return this options object.
          */
         public Options device(Device device) {
-            value = value.device(new DeviceOptional(device.value));
+            this.device = device;
             return this;
         }
 
@@ -2289,7 +2804,7 @@ public class Tensor implements AutoCloseable {
          * @return this options object.
          */
         public Options layout(Layout layout) {
-            value = value.layout(new LayoutOptional(layout.value));
+            this.layout = layout;
             return this;
         }
 
@@ -2300,8 +2815,29 @@ public class Tensor implements AutoCloseable {
          * @return this options object.
          */
         public Options requireGradients(boolean required) {
-            value = value.requires_grad(new BoolOptional(required));
+            this.requireGrad = required;
             return this;
+        }
+
+        /**
+         * Materializes a native {@code ST_TensorOptions} handle for these
+         * options. The caller must free it with {@code smile_tensor_options_free}.
+         * @return a new {@code ST_TensorOptions} handle.
+         */
+        MemorySegment toNative() {
+            MemorySegment opts = check(smile_tensor_options_create());
+            if (dtype != null) smile_tensor_options_dtype(opts, dtype.code);
+            if (layout != null) smile_tensor_options_layout(opts, layout.code);
+            if (requireGrad != null) smile_tensor_options_requires_grad(opts, requireGrad ? 1 : 0);
+            if (device != null) {
+                MemorySegment dev = device.toNative();
+                try {
+                    smile_tensor_options_device(opts, dev);
+                } finally {
+                    smile_device_free(dev);
+                }
+            }
+            return opts;
         }
     }
 }

@@ -114,6 +114,7 @@ public class RandomForestTest {
     
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
         System.setProperty("smile.regression_tree.bins", "100");
     }
     
@@ -135,12 +136,12 @@ public class RandomForestTest {
             System.out.format("%-15s %12.4f%n", model.schema().names()[i], importance[i]);
         }
 
-        assertEquals(39293.8193, importance[0], 1E-4);
-        assertEquals( 6578.6575, importance[1], 1E-4);
-        assertEquals(10222.5344, importance[2], 1E-4);
-        assertEquals(36198.4239, importance[3], 1E-4);
-        assertEquals(30099.2986, importance[4], 1E-4);
-        assertEquals(31644.9317, importance[5], 1E-4);
+        assertEquals(32580.4028, importance[0], 1E-4);
+        assertEquals( 5872.3672, importance[1], 1E-4);
+        assertEquals( 5124.2676, importance[2], 1E-4);
+        assertEquals(38992.9114, importance[3], 1E-4);
+        assertEquals(36341.8140, importance[4], 1E-4);
+        assertEquals(35111.9799, importance[5], 1E-4);
 
         System.out.println("----- Progressive RMSE -----");
         double[][] test = model.test(longley.data());
@@ -152,7 +153,7 @@ public class RandomForestTest {
                 (f, x) -> RandomForest.fit(f, x, options));
 
         System.out.println(metrics);
-        assertEquals(2.7034, metrics.rmse(), 1E-4);
+        assertEquals(2.73, metrics.rmse(), 1E-4);
 
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
@@ -184,7 +185,7 @@ public class RandomForestTest {
     public void testCPU() throws Exception {
         System.out.println("CPU");
         var cpu = new CPU();
-        assertEquals(69.0170, test(cpu.formula(), cpu.data()), 1E-4);
+        assertEquals(75.9862, test(cpu.formula(), cpu.data()), 1E-4);
     }
 
     @Test
@@ -192,21 +193,21 @@ public class RandomForestTest {
         System.out.println("2dplanes - exact");
         System.setProperty("smile.regression_tree.bins", "1");
         var planes = new Planes2D();
-        assertEquals(1.3581, test(planes.formula(), planes.data()), 1E-4);
+        assertEquals(1.3302, test(planes.formula(), planes.data()), 1E-4);
     }
 
     @Test
     public void test2DPlanesHist() throws Exception {
         System.out.println("2dplanes - hist");
         var planes = new Planes2D();
-        assertEquals(1.2999, test( planes.formula(), planes.data()), 1E-4);
+        assertEquals(1.2771, test( planes.formula(), planes.data()), 1E-4);
     }
 
     @Test
     public void testAbalone() throws Exception {
         System.out.println("abalone");
         var abalone = new Abalone();
-        assertEquals(2.1930, test(abalone.formula(), abalone.train()), 1E-4);
+        assertEquals(2.1844, test(abalone.formula(), abalone.train()), 1E-4);
     }
 
     @Test
@@ -228,14 +229,14 @@ public class RandomForestTest {
     public void testBank32nhHist() throws Exception {
         System.out.println("bank32nh - hist");
         var bank32nh = new Bank32nh();
-        assertEquals(0.0996, test(bank32nh.formula(), bank32nh.data()), 1E-4);
+        assertEquals(0.0993, test(bank32nh.formula(), bank32nh.data()), 1E-4);
     }
 
     @Test
     public void testAutoMPG() throws Exception {
         System.out.println("autoMPG");
         var autoMPG = new AutoMPG();
-        assertEquals(3.5532, test(autoMPG.formula(), autoMPG.data()), 1E-4);
+        assertEquals(3.4152, test(autoMPG.formula(), autoMPG.data()), 1E-4);
     }
 
     @Test
@@ -243,21 +244,21 @@ public class RandomForestTest {
         System.out.println("cal_housing");
         System.setProperty("smile.regression_tree.bins", "300");
         var calHousing = new CalHousing();
-        assertEquals(59481.6595, test(calHousing.formula(), calHousing.data()), 1E-4);
+        assertEquals(60113.8039, test(calHousing.formula(), calHousing.data()), 1E-4);
     }
 
     @Test
     public void testPuma8nh() throws Exception {
         System.out.println("puma8nh");
         var puma = new Puma8NH();
-        assertEquals(3.3895, test(puma.formula(), puma.data()), 1E-4);
+        assertEquals(3.3753, test(puma.formula(), puma.data()), 1E-4);
     }
 
     @Test
     public void testKin8nm() throws Exception {
         System.out.println("kin8nm");
         var kin8nm = new Kin8nm();
-        assertEquals(0.1774, test(kin8nm.formula(), kin8nm.data()), 1E-4);
+        assertEquals(0.1776, test(kin8nm.formula(), kin8nm.data()), 1E-4);
     }
 
     @Test
@@ -271,7 +272,7 @@ public class RandomForestTest {
 
         double rmse = RMSE.of(abalone.testy(), model.predict(abalone.test()));
         System.out.format("RMSE = %.4f%n", rmse);
-        assertEquals(2.0734, rmse, 1E-4);
+        assertEquals(2.0749, rmse, 1E-4);
 
         RandomForest trimmed = model.trim(40);
         assertEquals(50, model.size());
@@ -286,7 +287,7 @@ public class RandomForestTest {
         assertTrue(rmse1 > rmse2);
 
         rmse = RMSE.of(abalone.testy(), trimmed.predict(abalone.test()));
-        assertEquals(2.0748, rmse, 1E-4);
+        assertEquals(2.0788, rmse, 1E-4);
     }
 
     @Test
@@ -304,14 +305,13 @@ public class RandomForestTest {
         System.out.format("Forest 1 RMSE = %.4f%n", rmse1);
         System.out.format("Forest 2 RMSE = %.4f%n", rmse2);
         System.out.format("Merged   RMSE = %.4f%n", rmse);
-        assertEquals(2.0734, rmse1, 1E-4);
-        assertEquals(2.0759, rmse2, 1E-4);
-        assertEquals(2.0715, rmse,  1E-4);
+        assertEquals(2.0749, rmse1, 1E-4);
+        assertEquals(2.0834, rmse2, 1E-4);
+        assertEquals(2.0759, rmse,  1E-4);
     }
 
     @Test
     public void testShap() throws Exception {
-        MathEx.setSeed(19650218); // to get repeatable results.
         System.setProperty("smile.regression_tree.bins", "1");
         var bostonHousing = new BostonHousing();
         var options = new RandomForest.Options(100, 3, 20, 100, 5, 1.0, seeds, null);
@@ -333,7 +333,7 @@ public class RandomForestTest {
             System.out.format("%-15s %12.4f%n", fields[i], shap[i]);
         }
 
-        String[] expected = {"CHAS", "RAD", "B", "ZN", "AGE", "DIS", "TAX", "CRIM", "INDUS", "NOX", "PTRATIO", "RM", "LSTAT"};
+        String[] expected = {"ZN", "CHAS", "RAD", "B", "AGE", "DIS", "TAX", "CRIM", "NOX", "INDUS", "PTRATIO", "RM", "LSTAT"};
         assertArrayEquals(expected, fields);
     }
 }

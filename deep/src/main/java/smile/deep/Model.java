@@ -16,10 +16,10 @@
  */
 package smile.deep;
 
+import java.lang.foreign.MemorySegment;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Function;
-import org.bytedeco.pytorch.Module;
 import smile.deep.layer.LayerBlock;
 import smile.deep.metric.Metric;
 import smile.deep.tensor.Device;
@@ -69,11 +69,19 @@ public class Model implements Function<Tensor, Tensor> {
     }
 
     /**
-     * Returns the PyTorch Module object.
-     * @return the PyTorch Module object.
+     * Returns the native {@code ST_Module} handle of the network.
+     * @return the native {@code ST_Module} handle.
      */
-    public Module asTorch() {
-        return net.asTorch();
+    public MemorySegment module() {
+        return net.module();
+    }
+
+    /**
+     * Returns true if the layer block is in training mode.
+     * @return true if the layer block is in training mode.
+     */
+    public boolean isTraining() {
+        return net.isTraining();
     }
 
     /**
@@ -167,7 +175,9 @@ public class Model implements Function<Tensor, Tensor> {
      */
     public Tensor forward(Tensor input) {
         if (device != null && !device.equals(input.device())) {
-            input = input.to(device);
+            try (Tensor moved = input.to(device)) {
+                return net.forward(moved);
+            }
         }
         return net.forward(input);
     }
@@ -202,6 +212,7 @@ public class Model implements Function<Tensor, Tensor> {
      * @param metrics the evaluation metrics.
      */
     public void train(int epochs, Optimizer optimizer, Loss loss, Dataset train, Dataset test, String checkpoint, Metric... metrics) {
+        if (epochs <= 0) throw new IllegalArgumentException("epochs must be positive: " + epochs);
         if (test != null && metrics.length == 0) {
             throw new IllegalArgumentException("Validation dataset is provided without metrics");
         }
@@ -212,38 +223,50 @@ public class Model implements Function<Tensor, Tensor> {
         for (int epoch = 1; epoch <= epochs; ++epoch) {
             // Iterate the data loader to yield batches from the dataset.
             for (SampleBatch batch : train) {
-                Tensor data = device == null ? batch.data() : (dtype == null ? batch.data().to(device) : batch.data().to(device, dtype));
-                Tensor target = device == null ? batch.target() : batch.target().to(device);
+                Tensor batchData = batch.data();
+                Tensor batchTarget = batch.target();
+                Tensor data = null;
+                Tensor target = null;
+                Tensor prediction = null;
+                Tensor error = null;
+                try {
+                    data = device == null ? batchData : (dtype == null ? batchData.to(device) : batchData.to(device, dtype));
+                    target = device == null ? batchTarget : batchTarget.to(device);
 
-                if (transform != null) {
-                    var input = data;
-                    data = transform.apply(input);
-                    input.close();
+                    if (transform != null) {
+                        Tensor transformed = transform.apply(data);
+                        if (data != batchData) {
+                            data.close();
+                        }
+                        data = transformed;
+                    }
+
+                    // Reset gradients.
+                    optimizer.reset();
+                    // Execute the model on the input data.
+                    prediction = net.forward(data);
+                    // Compute a loss value to judge the prediction of our model.
+                    error = loss.apply(prediction, target);
+                    lossValue += error.floatValue();
+                    // Compute gradients of the loss w.r.t. the parameters of our model.
+                    error.backward();
+                    // Update the parameters based on the calculated gradients.
+                    optimizer.step();
+                } finally {
+                    if (error != null) error.close();
+                    if (prediction != null) prediction.close();
+                    if (data != null && data != batchData) data.close();
+                    if (target != null && target != batchTarget) target.close();
+                    batch.close();
                 }
 
-                // Reset gradients.
-                optimizer.reset();
-                // Execute the model on the input data.
-                Tensor prediction = net.forward(data);
-                // Compute a loss value to judge the prediction of our model.
-                Tensor error = loss.apply(prediction, target);
-                lossValue += error.floatValue();
-                // Compute gradients of the loss w.r.t. the parameters of our model.
-                error.backward();
-                // Update the parameters based on the calculated gradients.
-                optimizer.step();
-
-                // Explicitly free native memory
-                data.close();
-                target.close();
-                batch.close();
-
+                ++batchIndex;
                 if (learningRateSchedule != null) {
                     double rate = learningRateSchedule.apply(batchIndex);
                     optimizer.setLearningRate(rate);
                 }
 
-                if (++batchIndex % 100 == 0) {
+                if (batchIndex % 100 == 0) {
                     String msg = String.format("Epoch: %d | Batch: %d | Loss: %.4f", epoch, batchIndex, lossValue / 100);
                     if (learningRateSchedule != null) {
                         double rate = learningRateSchedule.apply(batchIndex);
@@ -306,25 +329,37 @@ public class Model implements Function<Tensor, Tensor> {
      */
     public Map<String, Double> eval(Dataset dataset, Metric... metrics) {
         eval(); // evaluation mode
+        try (var guard = Tensor.noGradGuard()) {
         for (SampleBatch batch : dataset) {
-            Tensor data   = device == null ? batch.data()   : (dtype == null ? batch.data().to(device) : batch.data().to(device, dtype));
-            Tensor target = device == null ? batch.target() : batch.target().to(device);
+            Tensor batchData = batch.data();
+            Tensor batchTarget = batch.target();
+            Tensor data = null;
+            Tensor target = null;
+            Tensor output = null;
+            try {
+                data = device == null ? batchData : (dtype == null ? batchData.to(device) : batchData.to(device, dtype));
+                target = device == null ? batchTarget : batchTarget.to(device);
 
-            if (transform != null) {
-                var input = data;
-                data = transform.apply(input);
-                input.close();
-            }
+                if (transform != null) {
+                    Tensor transformed = transform.apply(data);
+                    if (data != batchData) {
+                        data.close();
+                    }
+                    data = transformed;
+                }
 
-            Tensor output = net.forward(data);
-            for (var metric : metrics) {
-                metric.update(output, target);
+                output = net.forward(data);
+                for (var metric : metrics) {
+                    metric.update(output, target);
+                }
+            } finally {
+                if (output != null) output.close();
+                if (data != null && data != batchData) data.close();
+                if (target != null && target != batchTarget) target.close();
+                batch.close();
             }
-            // Explicitly free native memory
-            data.close();
-            target.close();
-            batch.close();
         }
+        } // end noGradGuard
 
         Map<String, Double> map = new TreeMap<>();
         for (var metric : metrics) {

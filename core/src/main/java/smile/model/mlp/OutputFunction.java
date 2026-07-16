@@ -42,7 +42,7 @@ public enum OutputFunction {
                     break;
 
                 case LIKELIHOOD:
-                    throw new IllegalStateException("SOFTMAX must work with LIKELIHOOD cost function");
+                    throw new IllegalStateException("LINEAR output function cannot be used with LIKELIHOOD cost function");
             }
         }
     },
@@ -80,7 +80,7 @@ public enum OutputFunction {
     },
 
     /**
-     * Softmax for multi-class cross entropy objection function.
+     * Softmax for multi-class cross entropy objective function.
      * The values of units in output layer can be regarded as posteriori
      * probabilities of each class.
      */

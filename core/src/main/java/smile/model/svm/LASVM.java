@@ -144,6 +144,18 @@ public class LASVM<T> implements Serializable {
      * @return the model.
      */
     public KernelMachine<T> fit(T[] x, int[] y, int epochs) {
+        if (x.length != y.length) {
+            throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
+        }
+
+        if (x.length == 0) {
+            throw new IllegalArgumentException("Empty training data.");
+        }
+
+        if (epochs < 1) {
+            throw new IllegalArgumentException("Invalid number of epochs: " + epochs);
+        }
+
         this.x = x;
         this.K = new double[x.length][];
 

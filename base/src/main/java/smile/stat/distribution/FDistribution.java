@@ -95,13 +95,16 @@ public class FDistribution implements Distribution {
 
     @Override
     public double rand() {
-        return inverseTransformSampling();
+        // F(d1,d2) = (χ²(d1)/d1) / (χ²(d2)/d2)
+        double chi1 = new GammaDistribution(nu1 / 2.0, 2.0).rand();
+        double chi2 = new GammaDistribution(nu2 / 2.0, 2.0).rand();
+        return (chi1 / nu1) / (chi2 / nu2);
     }
 
     @Override
     public double p(double x) {
         if (x <= 0.0) {
-            throw new IllegalArgumentException("Invalid x: " + x);
+            return 0.0;
         }
 
         return Math.exp((0.5 * nu1 - 1.0) * Math.log(x) - 0.5 * (nu1 + nu2) * Math.log(nu2 + nu1 * x) + fac);
@@ -110,7 +113,7 @@ public class FDistribution implements Distribution {
     @Override
     public double logp(double x) {
         if (x <= 0.0) {
-            throw new IllegalArgumentException("Invalid x: " + x);
+            return Double.NEGATIVE_INFINITY;
         }
 
         return (0.5 * nu1 - 1.0) * Math.log(x) - 0.5 * (nu1 + nu2) * Math.log(nu2 + nu1 * x) + fac;
@@ -118,8 +121,8 @@ public class FDistribution implements Distribution {
 
     @Override
     public double cdf(double x) {
-        if (x < 0.0) {
-            throw new IllegalArgumentException("Invalid x: " + x);
+        if (x <= 0.0) {
+            return 0.0;
         }
 
         return Beta.regularizedIncompleteBetaFunction(0.5 * nu1, 0.5 * nu2, nu1 * x / (nu2 + nu1 * x));

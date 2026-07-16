@@ -76,4 +76,10 @@ public class LOOCVTest {
             assertTrue(Arrays.binarySearch(splits[i], i) < 0);
         }
     }
+
+    @Test
+    public void givenInvalidSampleSize_whenCreatingLoocvSplits_thenThrowIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> LOOCV.of(0));
+        assertThrows(IllegalArgumentException.class, () -> LOOCV.of(-1));
+    }
 }

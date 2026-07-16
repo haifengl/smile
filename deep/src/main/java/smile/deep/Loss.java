@@ -18,7 +18,8 @@ package smile.deep;
 
 import java.util.function.BiFunction;
 import smile.deep.tensor.Tensor;
-import org.bytedeco.pytorch.global.torch;
+
+import static smile.torch.smile_torch_h.*;
 
 /**
  * Loss functions.
@@ -31,7 +32,7 @@ public interface Loss extends BiFunction<Tensor, Tensor, Tensor> {
      * @return the loss functor.
      */
     static Loss l1() {
-        return (input, target) -> new Tensor(torch.l1_loss(input.asTorch(), target.asTorch()));
+        return (input, target) -> new Tensor(smile_torch_l1_loss(input.handle(), target.handle()));
     }
 
     /**
@@ -39,7 +40,7 @@ public interface Loss extends BiFunction<Tensor, Tensor, Tensor> {
      * @return the loss functor.
      */
     static Loss mse() {
-        return (input, target) -> new Tensor(torch.mse_loss(input.asTorch(), target.asTorch()));
+        return (input, target) -> new Tensor(smile_torch_mse_loss(input.handle(), target.handle()));
     }
 
     /**
@@ -47,7 +48,7 @@ public interface Loss extends BiFunction<Tensor, Tensor, Tensor> {
      * @return the loss functor.
      */
     static Loss nll() {
-        return (input, target) -> new Tensor(torch.nll_loss(input.asTorch(), target.asTorch()));
+        return (input, target) -> new Tensor(smile_torch_nll_loss(input.handle(), target.handle()));
     }
 
     /**
@@ -55,7 +56,8 @@ public interface Loss extends BiFunction<Tensor, Tensor, Tensor> {
      * @return the loss functor.
      */
     static Loss crossEntropy() {
-        return (input, target) -> new Tensor(torch.cross_entropy_loss(input.asTorch(), target.asTorch()));
+        // ignore_index = -100, reduction = mean (ST_REDUCTION_MEAN = 1) — PyTorch defaults.
+        return (input, target) -> new Tensor(smile_torch_cross_entropy(input.handle(), target.handle(), -100L, ST_REDUCTION_MEAN()));
     }
 
     /**
@@ -63,7 +65,45 @@ public interface Loss extends BiFunction<Tensor, Tensor, Tensor> {
      * @return the loss functor.
      */
     static Loss hingeEmbedding() {
-        return (input, target) -> new Tensor(torch.hinge_embedding_loss(input.asTorch(), target.asTorch()));
+        return (input, target) -> new Tensor(smile_torch_hinge_embedding_loss(input.handle(), target.handle()));
+    }
+
+    /**
+     * Binary Cross-Entropy Loss Function. Measures the binary cross-entropy
+     * between the target and the input probabilities. Input should be in [0,1].
+     * @return the loss functor.
+     */
+    static Loss bce() {
+        return (input, target) -> new Tensor(smile_torch_binary_cross_entropy(input.handle(), target.handle()));
+    }
+
+    /**
+     * Binary Cross-Entropy with Logits Loss Function. Combines a sigmoid
+     * activation and binary cross-entropy in a numerically stable way.
+     * @return the loss functor.
+     */
+    static Loss bceWithLogits() {
+        return (input, target) -> new Tensor(smile_torch_binary_cross_entropy_logits(input.handle(), target.handle()));
+    }
+
+    /**
+     * Smooth L1 (Huber) Loss Function. Uses a squared term if the absolute
+     * element-wise error falls below beta (default 1) and an L1 term otherwise.
+     * This is less sensitive to outliers than MSE and avoids the gradient
+     * discontinuity of plain MAE.
+     * @return the loss functor.
+     */
+    static Loss smoothL1() {
+        return (input, target) -> new Tensor(smile_torch_smooth_l1_loss(input.handle(), target.handle()));
+    }
+
+    /**
+     * Huber Loss Function. Equivalent to smooth L1 when delta = 1.
+     * @param delta the threshold at which to change between L1 and L2.
+     * @return the loss functor.
+     */
+    static Loss huber(double delta) {
+        return (input, target) -> new Tensor(smile_torch_huber_loss(input.handle(), target.handle(), delta));
     }
 
     /**
@@ -71,7 +111,7 @@ public interface Loss extends BiFunction<Tensor, Tensor, Tensor> {
      * @return the loss functor.
      */
     static Loss kl() {
-        return (input, target) -> new Tensor(torch.kl_div(input.asTorch(), target.asTorch()));
+        return (input, target) -> new Tensor(smile_torch_kl_div(input.handle(), target.handle()));
     }
 
     /**
@@ -82,7 +122,7 @@ public interface Loss extends BiFunction<Tensor, Tensor, Tensor> {
      * @return the loss.
      */
     static Tensor marginRanking(Tensor input1, Tensor input2, Tensor target) {
-        return new Tensor(torch.margin_ranking_loss(input1.asTorch(), input2.asTorch(), target.asTorch()));
+        return new Tensor(smile_torch_margin_ranking_loss(input1.handle(), input2.handle(), target.handle()));
     }
 
     /**
@@ -93,6 +133,6 @@ public interface Loss extends BiFunction<Tensor, Tensor, Tensor> {
      * @return the loss.
      */
     static Tensor tripleMarginRanking(Tensor anchor, Tensor positive, Tensor negative) {
-        return new Tensor(torch.triplet_margin_loss(anchor.asTorch(), positive.asTorch(), negative.asTorch()));
+        return new Tensor(smile_torch_triplet_margin_loss(anchor.handle(), positive.handle(), negative.handle()));
     }
 }

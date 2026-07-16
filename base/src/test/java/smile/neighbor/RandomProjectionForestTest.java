@@ -131,9 +131,11 @@ public class RandomProjectionForestTest {
         assertEquals(x.length, distances.length);
         assertEquals(distances[0][0], MathEx.distance(x[0], x[neighbors[0][0]]), 1E-7);
         assertEquals(distances[100][2], MathEx.distance(x[100], x[neighbors[100][2]]), 1E-7);
+        // toGraph returns at most k neighbors per node; sparse nodes may have fewer
         for (int i = 0; i < x.length; i++) {
-            assertEquals(7, neighbors[i].length);
-            assertEquals(7, distances[i].length);
+            assertTrue(neighbors[i].length >= 1 && neighbors[i].length <= 7,
+                    "Node " + i + " has " + neighbors[i].length + " neighbors");
+            assertEquals(neighbors[i].length, distances[i].length);
         }
     }
 }

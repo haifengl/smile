@@ -29,14 +29,21 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.core.json.JsonObject;
 import org.jboss.resteasy.reactive.RestStreamElementType;
 
 /**
- * Model inference API.
+ * REST resource exposing the model inference API at {@code /api/v1/models}.
+ *
+ * <ul>
+ *   <li>{@code GET  /models}           – list all loaded model IDs.</li>
+ *   <li>{@code GET  /models/{id}}      – retrieve model metadata.</li>
+ *   <li>{@code POST /models/{id}}      – single JSON inference request.</li>
+ *   <li>{@code POST /models/{id}/stream} – streaming inference (JSON lines or CSV).</li>
+ * </ul>
+ *
  * @author Haifeng Li
  */
 @Path("/models")
@@ -45,15 +52,23 @@ public class InferenceResource {
     @Inject
     InferenceService service;
 
-    @Inject
-    ObjectMapper objectMapper; // Inject the Quarkus-provided Jackson ObjectMapper
-
+    /**
+     * Returns the IDs of all loaded models.
+     *
+     * @return alphabetically sorted list of model IDs.
+     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<String> list() {
         return service.models();
     }
 
+    /**
+     * Returns the metadata of a single model.
+     *
+     * @param id the model ID.
+     * @return the model metadata (404 if not found).
+     */
     @GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -61,6 +76,13 @@ public class InferenceResource {
         return service.getModel(id).metadata();
     }
 
+    /**
+     * Performs a single inference on JSON-encoded feature values.
+     *
+     * @param id      the model ID.
+     * @param request JSON object whose keys are feature names.
+     * @return the inference response with prediction and optional probabilities.
+     */
     @POST
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -69,13 +91,29 @@ public class InferenceResource {
         return service.predict(id, request);
     }
 
+    /**
+     * Performs streaming inference over a multi-line request body.
+     * Each non-blank line is treated as a separate sample:
+     * either a JSON object (if {@code Content-Type: application/json}) or
+     * a comma-separated row of values (if {@code Content-Type: text/plain}).
+     * Results are emitted as a server-sent stream of plain-text lines.
+     *
+     * @param contentType the MIME type of each input line.
+     * @param id          the model ID.
+     * @param input       the request body input stream.
+     * @return a reactive stream of inference result strings.
+     */
     @POST
     @Path("/{id}/stream")
     @Consumes({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    @RestStreamElementType(MediaType.TEXT_PLAIN) // Important for streaming item by item without buffering
-    public Multi<String> csv(@HeaderParam("Content-Type") String contentType, @PathParam("id") String id, InputStream input) {
+    @RestStreamElementType(MediaType.TEXT_PLAIN)
+    public Multi<String> stream(@HeaderParam("Content-Type") String contentType,
+                                @PathParam("id") String id,
+                                InputStream input) {
         var model = service.getModel(id);
-        boolean json = MediaType.APPLICATION_JSON.equals(contentType);
+        // Treat any content-type that starts with "application/json" as JSON,
+        // including "application/json; charset=utf-8".
+        boolean json = contentType != null && contentType.startsWith(MediaType.APPLICATION_JSON);
         return Multi.createFrom().emitter(emitter -> {
             Infrastructure.getDefaultWorkerPool().submit(() -> {
                 try (var reader = new BufferedReader(new InputStreamReader(input))) {

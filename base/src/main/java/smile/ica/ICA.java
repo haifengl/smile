@@ -242,9 +242,9 @@ public record ICA(double[][] components) implements Serializable {
                 // normalize
                 MathEx.unitize2(w);
 
-                // Test for termination condition. Note that the algorithm has
-                // converged if the direction of w and wOld is the same, this
-                // is why we test the two cases.check if convergence
+                // Test for termination condition. The algorithm has converged
+                // if the direction of w and wold is the same (or opposite),
+                // so we check both w-wold and w+wold and take the minimum norm.
                 for (int j = 0; j < n; j++) {
                     wdif[j] = (w[j] - wold[j]);
                 }

@@ -276,7 +276,8 @@ public class EmpiricalDistribution extends DiscreteDistribution {
         if (k < x.min || k > x.max) {
             return Double.NEGATIVE_INFINITY;
         } else {
-            return Math.log(p[x.indexOf(k)]);
+            double pk = p[x.indexOf(k)];
+            return pk == 0.0 ? Double.NEGATIVE_INFINITY : Math.log(pk);
         }
     }
 
@@ -287,7 +288,12 @@ public class EmpiricalDistribution extends DiscreteDistribution {
         } else if (k >= x.max) {
             return 1.0;
         } else {
-            return cdf[x.indexOf((int) Math.floor(k))];
+            // Find the largest value in the set <= floor(k).
+            int ki = (int) Math.floor(k);
+            while (ki >= x.min && !x.contains(ki)) {
+                ki--;
+            }
+            return ki < x.min ? 0.0 : cdf[x.indexOf(ki)];
         }
     }
 

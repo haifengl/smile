@@ -18,10 +18,12 @@ package smile.feature.transform;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import smile.data.Tuple;
 import smile.data.transform.Transform;
 import smile.data.type.StructType;
+import smile.math.MathEx;
 
 /**
  * Normalize samples individually to unit norm. Each sample (i.e. each row of
@@ -51,10 +53,13 @@ public class Normalizer implements Transform {
 
     /**
      * Constructor.
-     * @param norm the vector norm.
-     * @param columns the columns to transform.
+     * @param norm the vector norm. Must not be {@code null}.
+     * @param columns the columns to transform. Must not be empty.
+     * @throws NullPointerException if {@code norm} is {@code null}.
+     * @throws IllegalArgumentException if no columns are specified.
      */
     public Normalizer(Norm norm, String... columns) {
+        Objects.requireNonNull(norm, "norm");
         if (columns.length == 0) {
             throw new IllegalArgumentException("Empty list of columns to transform");
         }
@@ -86,7 +91,7 @@ public class Normalizer implements Transform {
                 norm = Math.sqrt(norm);
         }
 
-        final double scale = norm;
+        final double scale = MathEx.isZero(norm) ? 1.0 : norm;
         return new smile.data.AbstractTuple(schema) {
             @Override
             public Object get(int i) {

@@ -22,34 +22,42 @@ import java.util.TreeMap;
 import smile.model.Model;
 
 /**
- * The metadata of model.
+ * Immutable metadata describing a loaded inference model.
  *
+ * @param id        the model identifier ({@code <name>-<version>}).
+ * @param algorithm the learning algorithm name.
+ * @param schema    the input feature schema ({@code field → type descriptor}).
+ * @param tags      arbitrary key/value properties stored with the model.
  * @author Haifeng Li
  */
-public class ModelMetadata {
-    /** Data type. */
-    public record Type(String type, boolean nullable) {}
-    /** The model id. */
-    public String id;
-    /** The learning algorithm. */
-    public String algorithm;
-    /** The data schema. */
-    public Map<String, Type> schema;
-    /** The model tags. */
-    public Properties tags;
+public record ModelMetadata(String id,
+                             String algorithm,
+                             Map<String, FieldType> schema,
+                             Properties tags) {
 
-    /** Constructor. */
-    public ModelMetadata() {
+    /**
+     * Descriptor for a single input feature field.
+     *
+     * @param type     the data-type name (e.g. {@code "float"}).
+     * @param nullable whether the field accepts {@code null} values.
+     */
+    public record FieldType(String type, boolean nullable) {}
+
+    /**
+     * Constructs metadata from a loaded {@link Model}.
+     *
+     * @param id    the composite model identifier.
+     * @param model the loaded model.
+     */
+    public ModelMetadata(String id, Model model) {
+        this(id, model.algorithm(), buildSchema(model), model.tags());
     }
 
-    /** Constructor. */
-    public ModelMetadata(String id, Model model) {
-        this.id = id;
-        this.algorithm = model.algorithm();
-        this.schema = new TreeMap<>();
-        this.tags = model.tags();
+    private static Map<String, FieldType> buildSchema(Model model) {
+        var schema = new TreeMap<String, FieldType>();
         for (var field : model.schema().fields()) {
-            schema.put(field.name(), new Type(field.dtype().name(), field.dtype().isNullable()));
+            schema.put(field.name(), new FieldType(field.dtype().name(), field.dtype().isNullable()));
         }
+        return schema;
     }
 }

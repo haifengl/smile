@@ -37,6 +37,10 @@ public interface Sampling {
      * @return the indices of selected samples.
      */
     static int[] random(int n, double subsample) {
+        if (n <= 0) throw new IllegalArgumentException("n must be positive: " + n);
+        if (subsample <= 0.0 || subsample > 1.0)
+            throw new IllegalArgumentException("subsample must be in (0, 1]: " + subsample);
+
         if (subsample == 1.0) {
             // draw with replacement.
             int[] samples = new int[n];
@@ -56,7 +60,7 @@ public interface Sampling {
      * Returns the strata of samples as a two-dimensional
      * array. Each row is the sample indices of stratum.
      *
-     * @param category the strata labels.
+     * @param category the strata label.
      * @return the strata of samples as a two-dimensional array.
      *         Each row is the sample indices of stratum.
      */
@@ -107,7 +111,7 @@ public interface Sampling {
      * must be assigned to one and only one stratum. Then simple random
      * sampling is applied within each stratum.
      *
-     * @param category the strata labels.
+     * @param category the strata label.
      * @param subsample sampling rate. Draw samples with replacement if it is 1.0.
      * @return the indices of selected samples.
      */
@@ -182,6 +186,8 @@ public interface Sampling {
      * @return Latin hypercube of n-by-d matrix.
      */
     static int[][] latin(int n, int d) {
+        if (n <= 0) throw new IllegalArgumentException("n must be positive: " + n);
+        if (d <= 0) throw new IllegalArgumentException("d must be positive: " + d);
         int[][] hypercube = new int[n][d];
         int[] intervals = MathEx.permutate(n);
         for (int j = 0; j < d; j++) {

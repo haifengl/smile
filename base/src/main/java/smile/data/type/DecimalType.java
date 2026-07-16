@@ -63,4 +63,9 @@ public class DecimalType implements DataType {
     public boolean equals(Object o) {
         return o instanceof DecimalType;
     }
+
+    @Override
+    public int hashCode() {
+        return DecimalType.class.hashCode();
+    }
 }

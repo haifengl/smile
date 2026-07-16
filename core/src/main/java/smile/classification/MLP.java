@@ -169,7 +169,7 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
 
     @Override
     public int[] classes() {
-        return classes.values;
+        return classes.values.clone();
     }
 
     @Override
@@ -255,11 +255,20 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
      * @return the model.
      */
     public static MLP fit(double[][] x, int[] y, Properties params) {
+        if (x == null || x.length == 0) {
+            throw new IllegalArgumentException("Training data is empty");
+        }
+        if (y == null || y.length != x.length) {
+            throw new IllegalArgumentException("The sizes of X and Y don't match");
+        }
+
         int p = x[0].length;
-        int k = MathEx.max(y) + 1;
+        ClassLabels codec = ClassLabels.fit(y);
+        int k = codec.k;
+        int[] encodedY = codec.y;
 
         LayerBuilder[] layers = Layer.of(k, p, params.getProperty("smile.mlp.layers", "ReLU(100)"));
-        MLP model = new MLP(layers);
+        MLP model = new MLP(codec.classes, layers);
         model.setParameters(params);
 
         int epochs = Integer.parseInt(params.getProperty("smile.mlp.epochs", "100"));
@@ -274,7 +283,7 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
                 for (int j = 0; j < size; j++) {
                     int index = permutation[i + j];
                     batchx[j] = x[index];
-                    batchy[j] = y[index];
+                    batchy[j] = encodedY[index];
                 }
 
                 if (size < batch) {

@@ -1,0 +1,54 @@
+name: Create Release
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+
+permissions:
+  contents: write  # Required to create releases and tags
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Extract and validate version tag
+        id: tag
+        run: |
+          # head_commit.message is only available for push events.
+          # Use git command to reliably get the commit message.
+          # Take only the first line of the commit message so a multi-line body
+          # (which GitHub appends after a blank line) does not corrupt the tag name.
+          TAG=$(git log -1 --pretty=%B | head -n 1 | tr -d '[:space:]')
+
+          # Validate that it matches the vMAJOR.MINOR.PATCH pattern strictly.
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Commit subject '$TAG' does not match vMAJOR.MINOR.PATCH — skipping release."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub Release
+        if: steps.tag.outputs.skip == 'false'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.tag.outputs.tag }}"
+
+          # Guard against re-releasing an already-existing tag.
+          if gh release view "$TAG" &>/dev/null; then
+            echo "Release $TAG already exists — skipping."
+            exit 0
+          fi
+
+          gh release create "$TAG" \
+            --title "Release $TAG" \
+            --target "${{ github.sha }}" \
+            --generate-notes

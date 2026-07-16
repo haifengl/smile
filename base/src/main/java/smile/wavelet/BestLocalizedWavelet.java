@@ -59,18 +59,26 @@ public class BestLocalizedWavelet extends Wavelet {
     };
 
     /**
+     * Validates n and returns the corresponding coefficient array.
+     * @param n the number of wavelet coefficients (14, 18, or 20).
+     * @return the coefficient array.
+     */
+    private static double[] coefficients(int n) {
+        return switch (n) {
+            case 14 -> c14;
+            case 18 -> c18;
+            case 20 -> c20;
+            default -> throw new IllegalArgumentException(
+                    String.format("n = %d not supported. Must be 14, 18, or 20.", n));
+        };
+    }
+
+    /**
      * Constructor. Create a Best Localized wavelet with n coefficients.
      * n = 14, 18, or 20 are supported.
      * @param n the number of wavelet coefficients.
      */
     public BestLocalizedWavelet(int n) {
-        super(n == 14 ? c14 :
-              n == 18 ? c18 :
-              n == 20 ? c20 : c14
-            );
-
-        if ( n != 14 && n != 18 && n != 20) {
-            throw new IllegalArgumentException(String.format("n = %d not yet implemented.", n));
-        }
+        super(coefficients(n));
     }
 }

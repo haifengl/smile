@@ -154,4 +154,35 @@ public class FDistributionTest {
         assertEquals(7.180539, instance.quantile(0.9999), 1E-6);
     }
 
+    /**
+     * Test boundary conditions: x <= 0 should return 0 / NEGATIVE_INFINITY, not throw.
+     */
+    @Test
+    public void testBoundaryX() {
+        System.out.println("F boundary x<=0");
+        FDistribution instance = new FDistribution(5, 10);
+        assertEquals(0.0, instance.p(0.0));
+        assertEquals(0.0, instance.p(-1.0));
+        assertTrue(Double.isInfinite(instance.logp(0.0)));
+        assertTrue(Double.isInfinite(instance.logp(-1.0)));
+        assertEquals(0.0, instance.cdf(0.0));
+        assertEquals(0.0, instance.cdf(-5.0));
+    }
+
+    /**
+     * Test that rand() samples have mean ≈ nu2/(nu2-2) for nu2 > 2.
+     */
+    @Test
+    public void testRandMoments() {
+        System.out.println("F rand moments");
+        smile.math.MathEx.setSeed(19650218);
+        int nu1 = 5, nu2 = 20;
+        FDistribution d = new FDistribution(nu1, nu2);
+        double[] samples = d.rand(10000);
+        double mean = smile.math.MathEx.mean(samples);
+        // E[F(d1,d2)] = d2/(d2-2) for d2 > 2
+        double expectedMean = (double) nu2 / (nu2 - 2);
+        assertEquals(expectedMean, mean, 0.05);
+    }
 }
+

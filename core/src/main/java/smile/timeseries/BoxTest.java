@@ -25,6 +25,12 @@ import smile.math.special.Gamma;
  * @author Haifeng Li
  */
 public class BoxTest {
+    private static void validateLag(double[] x, int lag) {
+        if (lag <= 0 || lag >= x.length) {
+            throw new IllegalArgumentException("Invalid lag = " + lag + " for series length " + x.length);
+        }
+    }
+
     /** The type of test. */
     public enum Type {
         /** Box-Pierce test. */
@@ -92,6 +98,8 @@ public class BoxTest {
      * @return the test results.
      */
     public static BoxTest pierce(double[] x, int lag) {
+        validateLag(x, lag);
+
         double q = 0.0;
         for (int l = 1; l <= lag; l++) {
             double r = TimeSeries.acf(x, l);
@@ -105,13 +113,15 @@ public class BoxTest {
     }
 
     /**
-     * Box-Pierce test.
+     * Ljung-Box test.
      *
      * @param x time series
      * @param lag the statistic will be based on lag autocorrelation coefficients.
      * @return the test results.
      */
     public static BoxTest ljung(double[] x, int lag) {
+        validateLag(x, lag);
+
         int n = x.length;
         double q = 0.0;
         for (int l = 1; l <= lag; l++) {

@@ -33,9 +33,9 @@ import smile.sort.QuickSort;
  * first described as an artificial neural network by Teuvo Kohonen, and is
  * sometimes called a Kohonen map.
  * <p>
- * While it is typical to consider SOMs as related to feed-forward networks where
- * the nodes are visualized as being attached, this type of architecture is
- * fundamentally different in arrangement and motivation because SOMs use a
+ * While it is typical to consider SOMs as related to feed-forward networks
+ * where the nodes are visualized as being attached, this type of architecture
+ * is fundamentally different in arrangement and motivation because SOMs use a
  * neighborhood function to preserve the topological properties of the input
  * space. This makes SOMs useful for visualizing low-dimensional views of
  * high-dimensional data, akin to multidimensional scaling.
@@ -80,7 +80,7 @@ import smile.sort.QuickSort;
  *
  * <h2>References</h2>
  * <ol>
- * <li> Teuvo KohonenDan. Self-organizing maps. Springer, 3rd edition, 2000. </li>
+ * <li> Teuvo Kohonen. Self-organizing maps. Springer, 3rd edition, 2000. </li>
  * </ol>
  * 
  * @author Haifeng Li
@@ -95,7 +95,7 @@ public class SOM implements VectorQuantizer {
      * @param j the column index of neuron in the lattice.
      * @param w the weight vector.
      */
-    private record Neuron(int i, int j, double[] w) implements Serializable { }
+    public record Neuron(int i, int j, double[] w) implements Serializable { }
     
     /**
      * The number of rows in the lattice.
@@ -105,6 +105,10 @@ public class SOM implements VectorQuantizer {
      * The number of columns in the lattice.
      */
     private final int ncol;
+    /**
+     * The dimensionality of input vectors.
+     */
+    private final int d;
     /**
      * The lattice of neurons.
      */
@@ -141,10 +145,37 @@ public class SOM implements VectorQuantizer {
      * @param theta the neighborhood function.
      */
     public SOM(double[][][] neurons, TimeFunction alpha, Neighborhood theta) {
+        if (neurons == null || neurons.length == 0 || neurons[0].length == 0) {
+            throw new IllegalArgumentException("Invalid neuron lattice shape");
+        }
+        if (alpha == null) {
+            throw new IllegalArgumentException("alpha is null");
+        }
+        if (theta == null) {
+            throw new IllegalArgumentException("theta is null");
+        }
+
         this.alpha = alpha;
         this.theta = theta;
         this.nrow = neurons.length;
         this.ncol = neurons[0].length;
+
+        int d = neurons[0][0].length;
+        if (d == 0) {
+            throw new IllegalArgumentException("Neuron dimension is zero");
+        }
+        this.d = d;
+
+        for (int i = 0; i < nrow; i++) {
+            if (neurons[i].length != ncol) {
+                throw new IllegalArgumentException("Inconsistent number of columns in neuron lattice");
+            }
+            for (int j = 0; j < ncol; j++) {
+                if (neurons[i][j].length != d) {
+                    throw new IllegalArgumentException("Inconsistent neuron dimensionality");
+                }
+            }
+        }
         
         this.map = new Neuron[nrow][ncol];
         this.neurons = new Neuron[nrow * ncol];
@@ -167,7 +198,6 @@ public class SOM implements VectorQuantizer {
      * @return the lattice.
      */
     public static double[][][] lattice(int nrow, int ncol, double[][] samples) {
-        int n = samples.length;
         int k = nrow * ncol;
         double[][] seeds = CentroidClustering.seeds(samples, k);
 
@@ -245,29 +275,31 @@ public class SOM implements VectorQuantizer {
         double[][] umatrix = new double[nrow][ncol];
         for (int i = 0; i < nrow - 1; i++) {
             for (int j = 0; j < ncol - 1; j++) {
-                double dist = Math.sqrt(MathEx.distance(map[i][j].w, map[i][j + 1].w));
+                double dist = MathEx.distance(map[i][j].w, map[i][j + 1].w);
                 umatrix[i][j] = Math.max(umatrix[i][j], dist);
                 umatrix[i][j + 1] = Math.max(umatrix[i][j + 1], dist);
 
-                dist = Math.sqrt(MathEx.distance(map[i][j].w, map[i + 1][j].w));
+                dist = MathEx.distance(map[i][j].w, map[i + 1][j].w);
                 umatrix[i][j] = Math.max(umatrix[i][j], dist);
                 umatrix[i + 1][j] = Math.max(umatrix[i + 1][j], dist);
             }
         }
 
         for (int i = 0; i < nrow - 1; i++) {
-            double dist = Math.sqrt(MathEx.distance(map[i][ncol - 1].w, map[i + 1][ncol - 1].w));
+            double dist = MathEx.distance(map[i][ncol - 1].w, map[i + 1][ncol - 1].w);
             umatrix[i][ncol - 1] = Math.max(umatrix[i][ncol - 1], dist);
             umatrix[i + 1][ncol - 1] = Math.max(umatrix[i + 1][ncol - 1], dist);
         }
 
         for (int j = 0; j < ncol - 1; j++) {
-            double dist = Math.sqrt(MathEx.distance(map[nrow - 1][j].w, map[nrow - 1][j + 1].w));
+            double dist = MathEx.distance(map[nrow - 1][j].w, map[nrow - 1][j + 1].w);
             umatrix[nrow - 1][j] = Math.max(umatrix[nrow - 1][j], dist);
             umatrix[nrow - 1][j + 1] = Math.max(umatrix[nrow - 1][j + 1], dist);
         }
 
-        umatrix[nrow - 1][ncol - 1] = Math.max(umatrix[nrow - 1][ncol - 2], umatrix[nrow - 2][ncol - 1]);
+        if (nrow > 1 && ncol > 1) {
+            umatrix[nrow - 1][ncol - 1] = Math.max(umatrix[nrow - 1][ncol - 2], umatrix[nrow - 2][ncol - 1]);
+        }
 
         return umatrix;
     }
@@ -277,8 +309,19 @@ public class SOM implements VectorQuantizer {
         return bmu(x).w;
     }
 
-    /** Returns the best matching unit. */
-    private Neuron bmu(double[] x) {
+    /**
+     * Returns the best matching unit for a sample.
+     * @param x a sample.
+     * @return the best matching unit.
+     */
+    public Neuron bmu(double[] x) {
+        if (x == null) {
+            throw new IllegalArgumentException("Input vector is null");
+        }
+        if (x.length != d) {
+            throw new IllegalArgumentException("Invalid input dimension: expected " + d + ", actual " + x.length);
+        }
+
         IntStream.range(0, neurons.length).parallel().forEach(i -> dist[i] = MathEx.distance(neurons[i].w, x));
         QuickSort.sort(dist, neurons);
         return neurons[0];

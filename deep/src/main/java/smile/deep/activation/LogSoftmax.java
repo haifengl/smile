@@ -16,8 +16,9 @@
  */
 package smile.deep.activation;
 
-import org.bytedeco.pytorch.global.torch;
 import smile.deep.tensor.Tensor;
+
+import static smile.torch.smile_torch_h.smile_torch_log_softmax;
 
 /**
  * Log softmax activation function.
@@ -25,15 +26,27 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class LogSoftmax extends ActivationFunction {
+    /** The dimension along which log softmax will be computed. */
+    final int dim;
+
     /**
      * Constructor.
      */
     public LogSoftmax() {
+        this(1);
+    }
+
+    /**
+     * Constructor.
+     * @param dim the dimension along which log softmax will be computed.
+     */
+    public LogSoftmax(int dim) {
         super("LogSoftmax", false);
+        this.dim = dim;
     }
 
     @Override
     public Tensor forward(Tensor x) {
-        return new Tensor(torch.log_softmax(x.asTorch(), 1));
+        return new Tensor(smile_torch_log_softmax(x.handle(), dim));
     }
 }

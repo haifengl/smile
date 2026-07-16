@@ -135,15 +135,18 @@ public class KernelDensity implements Distribution {
      */
     @Override
     public double entropy() {
-        throw new UnsupportedOperationException("Not supported.");
+        throw new UnsupportedOperationException("KernelDensity does not support entropy().");
     }
 
     /**
-     * Random number generator. Not supported.
+     * Generates a random sample using the "smoothed bootstrap" approach:
+     * pick a random data point and perturb it by the kernel (Gaussian noise).
+     * @return a random number.
      */
     @Override
     public double rand() {
-        throw new UnsupportedOperationException("Not supported.");
+        int i = MathEx.randomInt(x.length);
+        return x[i] + gaussian.rand();
     }
 
     @Override
@@ -168,38 +171,81 @@ public class KernelDensity implements Distribution {
 
     @Override
     public double logp(double x) {
-        return Math.log(p(x));
+        // Use log-sum-exp over the active window for numerical stability
+        int start = Arrays.binarySearch(this.x, x - 5 * h);
+        if (start < 0) start = -start - 1;
+        int end = Arrays.binarySearch(this.x, x + 5 * h);
+        if (end < 0) end = -end - 1;
+
+        if (start >= end) return Double.NEGATIVE_INFINITY;
+
+        double maxLog = Double.NEGATIVE_INFINITY;
+        for (int i = start; i < end; i++) {
+            double lp = gaussian.logp(this.x[i] - x);
+            if (lp > maxLog) maxLog = lp;
+        }
+
+        double sumExp = 0.0;
+        for (int i = start; i < end; i++) {
+            sumExp += Math.exp(gaussian.logp(this.x[i] - x) - maxLog);
+        }
+
+        return maxLog + Math.log(sumExp) - Math.log(this.x.length);
     }
 
     /**
-     * Cumulative distribution function. Not supported.
+     * Cumulative distribution function estimated as the average of
+     * individual kernel CDFs over the sample points.
+     * @param x a real number.
+     * @return the estimated CDF value.
      */
     @Override
     public double cdf(double x) {
-        throw new UnsupportedOperationException("Not supported.");
+        double sum = 0.0;
+        for (double xi : this.x) {
+            sum += gaussian.cdf(x - xi);
+        }
+        return sum / this.x.length;
     }
 
     /**
-     * Inverse of CDF. Not supported.
+     * Inverse of CDF by bisection numeric root finding.
+     * @param p the probability.
+     * @return the quantile.
      */
     @Override
     public double quantile(double p) {
-        throw new UnsupportedOperationException("Not supported.");
+        if (p < 0.0 || p > 1.0) {
+            throw new IllegalArgumentException("Invalid p: " + p);
+        }
+        // Search range based on sample range plus several bandwidths
+        double xmin = this.x[0] - 5 * h;
+        double xmax = this.x[this.x.length - 1] + 5 * h;
+        return quantile(p, xmin, xmax);
     }
 
     /**
-     * The likelihood of the samples. Not supported.
-     */
-    @Override
-    public double likelihood(double[] x) {
-        throw new UnsupportedOperationException("Not supported.");
-    }
-
-    /**
-     * The log likelihood of the samples. Not supported.
+     * The log likelihood of the samples.
+     * @param x a set of samples.
+     * @return the log likelihood.
      */
     @Override
     public double logLikelihood(double[] x) {
-        throw new UnsupportedOperationException("Not supported.");
+        double L = 0.0;
+        for (double xi : x) {
+            double lp = logp(xi);
+            if (Double.isFinite(lp)) L += lp;
+        }
+        return L;
+    }
+
+    /**
+     * The likelihood of the samples.
+     * @param x a set of samples.
+     * @return the likelihood.
+     */
+    @Override
+    public double likelihood(double[] x) {
+        return Math.exp(logLikelihood(x));
     }
 }

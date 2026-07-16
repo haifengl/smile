@@ -120,9 +120,10 @@ public class Data {
      * the parent.
      * @param json JSON content to parse.
      * @return this object.
+     * @throws tools.jackson.core.JacksonException if the JSON is malformed.
      */
-    public Data values(String json) {
-        spec.set("values", VegaLite.mapper.valueToTree(json));
+    public Data values(String json) throws tools.jackson.core.JacksonException {
+        spec.set("values", VegaLite.mapper.readTree(json));
         return this;
     }
 

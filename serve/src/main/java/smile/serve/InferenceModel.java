@@ -17,8 +17,6 @@
 package smile.serve;
 
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
 import io.vertx.core.json.JsonObject;
 import jakarta.ws.rs.BadRequestException;
 import smile.data.Tuple;
@@ -117,41 +115,53 @@ public class InferenceModel {
     }
 
     /**
-     * Converts a JSON object to a SMILE tuple.
+     * Converts a JSON object to a SMILE tuple. Each field in the model
+     * schema must be present as a key in {@code values}.
+     *
      * @param values the JSON object.
      * @return the tuple.
-     * @throws BadRequestException if invalid request body.
+     * @throws BadRequestException if the request is missing required fields.
      */
     public Tuple json(JsonObject values) throws BadRequestException {
+        if (values == null) throw new BadRequestException("Request body must not be null");
         StructType schema = model.schema();
-        if (values.size() < schema.length()) throw new BadRequestException();
-
         var row = new Object[schema.length()];
         for (int i = 0; i < row.length; i++) {
-            row[i] = values.getValue(schema.field(i).name());
+            String name = schema.field(i).name();
+            if (!values.containsKey(name)) {
+                throw new BadRequestException("Missing required field: " + name);
+            }
+            row[i] = values.getValue(name);
         }
         return Tuple.of(schema, row);
     }
 
     /**
-     * Converts a CSV line to a SMILE tuple.
+     * Converts a CSV line to a SMILE tuple. The number of comma-separated
+     * tokens must be at least the number of fields in the model schema.
+     *
      * @param line the CSV line.
      * @return the tuple.
-     * @throws BadRequestException if invalid request body.
+     * @throws BadRequestException if the line has too few columns or an
+     *         unparseable value.
      */
     public Tuple csv(String line) throws BadRequestException {
-        var values = line.split(",");
+        if (line == null || line.isBlank()) throw new BadRequestException("CSV line must not be blank");
+        var values = line.split(",", -1);   // -1 keeps trailing empty tokens
         StructType schema = model.schema();
-        if (values.length < schema.length()) throw new BadRequestException();
+        if (values.length < schema.length()) {
+            throw new BadRequestException(
+                    "Expected at least %d CSV columns but got %d".formatted(schema.length(), values.length));
+        }
 
         try {
             var row = new Object[schema.length()];
             for (int i = 0; i < row.length; i++) {
-                row[i] = schema.field(i).valueOf(values[i]);
+                row[i] = schema.field(i).valueOf(values[i].trim());
             }
             return Tuple.of(schema, row);
         } catch (Exception ex) {
-            throw new BadRequestException(ex.getMessage());
+            throw new BadRequestException("Failed to parse CSV: " + ex.getMessage());
         }
     }
 }

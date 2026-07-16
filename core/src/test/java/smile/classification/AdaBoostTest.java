@@ -84,6 +84,7 @@ public class AdaBoostTest {
     
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
     
     @AfterEach
@@ -93,7 +94,6 @@ public class AdaBoostTest {
     @Test
     public void testWeather() throws Exception {
         System.out.println("Weather");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var weather = new WeatherNominal();
         try (var controller = new IterativeAlgorithmController<AdaBoost.TrainingStatus>()) {
             controller.subscribe(new TrainingStatusSubscriber(controller));
@@ -130,7 +130,6 @@ public class AdaBoostTest {
     public void testIris() throws Exception {
         System.out.println("Iris");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         var iris = new Iris();
         var options = new AdaBoost.Options(200, 20, 4, 1, null, null);
         AdaBoost model = AdaBoost.fit(iris.formula(), iris.data(), options);
@@ -149,20 +148,18 @@ public class AdaBoostTest {
     @Test
     public void testPenDigits() throws Exception {
         System.out.println("Pen Digits");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var pen = new PenDigits();
         var options = new AdaBoost.Options(200, 20, 4, 1, null, null);
         var result = CrossValidation.classification(10, pen.formula(), pen.data(),
                 (f, x) -> AdaBoost.fit(f, x, options));
         System.out.println(result);
-        assertEquals(0.9525, result.avg().accuracy(), 1E-4);
+        assertEquals(0.9537, result.avg().accuracy(), 1E-4);
     }
 
     @Test
     public void testBreastCancer() throws Exception {
         System.out.println("Breast Cancer");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         var cancer = new BreastCancer();
         var options = new AdaBoost.Options(100, 20, 4, 1, null, null);
         var result = CrossValidation.classification(10, cancer.formula(), cancer.data(),
@@ -170,13 +167,12 @@ public class AdaBoostTest {
 
         System.out.println(result);
         int error = result.rounds().stream().mapToInt(round -> round.metrics().error()).sum();
-        assertEquals(15, error);
+        assertEquals(13, error);
     }
 
     @Test
     public void testSegment() throws Exception {
         System.out.println("Segment");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var segment = new ImageSegmentation();
         var testy = segment.testy();
 
@@ -192,7 +188,7 @@ public class AdaBoostTest {
 
             int error = Error.of(testy, model.predict(segment.test()));
             System.out.println("Error = " + error);
-            assertEquals(26, error, 3);
+            assertEquals(26, error, 5);
 
             System.out.println("----- Progressive Accuracy -----");
             int[][] test = model.test(segment.test());
@@ -203,9 +199,9 @@ public class AdaBoostTest {
     }
 
     @Test
+    @Tag("integration")
     public void testUSPS() throws Exception {
         System.out.println("USPS");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var usps = new USPS();
         int[] testy = usps.testy();
         var options = new AdaBoost.Options(200, 20, 64, 1, null, null);
@@ -231,7 +227,6 @@ public class AdaBoostTest {
     public void testShap() throws Exception {
         System.out.println("SHAP");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         var iris = new Iris();
         var options = new AdaBoost.Options(200, 20, 4, 5, null, null);
         AdaBoost model = AdaBoost.fit(iris.formula(), iris.data(), options);

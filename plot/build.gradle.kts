@@ -4,6 +4,5 @@ plugins {
 
 dependencies {
     api(project(":base"))
-    implementation(libs.jackson)
     implementation(libs.swingx)
 }

@@ -21,15 +21,28 @@ import smile.math.random.MersenneTwister;
 import smile.math.random.UniversalGenerator;
 
 /**
- * This is a high quality random number generator as a replacement of
- * the standard Random class of Java system.
- * 
+ * A high-quality random number generator that combines two complementary
+ * generators:
+ * <ul>
+ * <li>A {@link UniversalGenerator} (Marsaglia–Zaman–Tsang) for uniform
+ *     floating-point values. It has a period of 2<sup>144</sup> and passes
+ *     all standard statistical tests.</li>
+ * <li>A {@link MersenneTwister} (MT19937) for integer values. It has a period
+ *     of 2<sup>19937</sup>−1 and excellent equidistribution properties.</li>
+ * </ul>
+ * Both generators are seeded together by {@link #setSeed(long)} so that the
+ * combined stream is reproducible from a single seed.
+ *
  * @author Haifeng Li
  */
 public class Random {
 
     private final UniversalGenerator real;
     private final MersenneTwister twister;
+    /** Cached spare Gaussian value from Box-Muller transform. */
+    private double spareGaussian;
+    /** True if a cached Gaussian value is available. */
+    private boolean hasSpareGaussian = false;
 
     /**
      * Initialize with default random number generator engine.
@@ -55,6 +68,7 @@ public class Random {
     public void setSeed(long seed) {
         real.setSeed(seed);
         twister.setSeed(seed);
+        hasSpareGaussian = false;
     }
 
     /**
@@ -74,28 +88,36 @@ public class Random {
     }
 
     /**
-     * Generate a uniform random number in the range [lo, hi)
-     * @param lo lower limit of range
-     * @param hi upper limit of range
-     * @return a uniform random real in the range [lo, hi)
+     * Generate a uniform random number in the range [lo, hi).
+     * @param lo lower limit of range (inclusive).
+     * @param hi upper limit of range (exclusive).
+     * @return a uniform random real in the range [lo, hi).
+     * @throws IllegalArgumentException if {@code lo >= hi}.
      */
     public double nextDouble(double lo, double hi) {
-        return (lo + (hi - lo) * nextDouble());
+        if (lo >= hi) {
+            throw new IllegalArgumentException(
+                String.format("lo (%s) must be less than hi (%s)", lo, hi));
+        }
+        return lo + (hi - lo) * nextDouble();
     }
 
     /**
-     * Generate n uniform random numbers in the range [lo, hi)
-     * @param lo lower limit of range
-     * @param hi upper limit of range
-     * @param d array of random numbers to be generated
+     * Generate n uniform random numbers in the range [lo, hi).
+     * @param d     array to fill with random numbers.
+     * @param lo    lower limit of range (inclusive).
+     * @param hi    upper limit of range (exclusive).
+     * @throws IllegalArgumentException if {@code lo >= hi}.
      */
     public void nextDoubles(double[] d, double lo, double hi) {
+        if (lo >= hi) {
+            throw new IllegalArgumentException(
+                String.format("lo (%s) must be less than hi (%s)", lo, hi));
+        }
         real.nextDoubles(d);
-
-        double l = hi - lo;        
-        int n = d.length;
-        for (int i = 0; i < n; i++) {
-            d[i] = lo + l * d[i];
+        double range = hi - lo;
+        for (int i = 0; i < d.length; i++) {
+            d[i] = lo + range * d[i];
         }
     }
 
@@ -106,11 +128,11 @@ public class Random {
     public int nextInt() {
         return twister.nextInt();
     }
-    
+
     /**
      * Returns a random integer in [0, n).
-     * @param n the upper bound of random number.
-     * @return a random integer.
+     * @param n the upper bound of random number (exclusive); must be positive.
+     * @return a random integer in [0, n).
      */
     public int nextInt(int n) {
         return twister.nextInt(n);
@@ -122,6 +144,22 @@ public class Random {
      */
     public long nextLong() {
         return twister.nextLong();
+    }
+
+    /**
+     * Returns a random boolean value.
+     * @return {@code true} or {@code false} with equal probability.
+     */
+    public boolean nextBoolean() {
+        return twister.nextInt() < 0;  // sign bit of a uniform int is unbiased
+    }
+
+    /**
+     * Returns a random float uniformly distributed in [0, 1).
+     * @return a random float.
+     */
+    public float nextFloat() {
+        return (twister.nextInt() >>> 8) / ((float) (1 << 24));
     }
 
     /**
@@ -137,46 +175,116 @@ public class Random {
     }
 
     /**
-     * Permutates an array.
+     * Permutates an array in-place using the Fisher-Yates shuffle.
      * @param x the array.
      */
     public void permutate(int[] x) {
-        for (int i = 0; i < x.length; i++) {
-            int j = i + nextInt(x.length - i);
+        // Stop at length-1: the last element has nowhere else to go.
+        for (int i = x.length - 1; i > 0; i--) {
+            int j = nextInt(i + 1);
             MathEx.swap(x, i, j);
         }
     }
 
     /**
-     * Permutates an array.
+     * Permutates an array in-place using the Fisher-Yates shuffle.
      * @param x the array.
      */
     public void permutate(float[] x) {
-        for (int i = 0; i < x.length; i++) {
-            int j = i + nextInt(x.length - i);
+        for (int i = x.length - 1; i > 0; i--) {
+            int j = nextInt(i + 1);
             MathEx.swap(x, i, j);
         }
     }
 
     /**
-     * Permutates an array.
+     * Permutates an array in-place using the Fisher-Yates shuffle.
      * @param x the array.
      */
     public void permutate(double[] x) {
-        for (int i = 0; i < x.length; i++) {
-            int j = i + nextInt(x.length - i);
+        for (int i = x.length - 1; i > 0; i--) {
+            int j = nextInt(i + 1);
             MathEx.swap(x, i, j);
         }
     }
 
     /**
-     * Permutates an array.
+     * Permutates an array in-place using the Fisher-Yates shuffle.
      * @param x the array.
      */
     public void permutate(Object[] x) {
-        for (int i = 0; i < x.length; i++) {
-            int j = i + nextInt(x.length - i);
+        for (int i = x.length - 1; i > 0; i--) {
+            int j = nextInt(i + 1);
             MathEx.swap(x, i, j);
         }
+    }
+
+    /**
+     * Returns a random number from the standard normal distribution N(0, 1).
+     * Uses the polar form of the Box-Muller transform; pairs of values are
+     * generated and the spare is cached for the next call.
+     *
+     * @return a standard normal random number.
+     */
+    public double nextGaussian() {
+        if (hasSpareGaussian) {
+            hasSpareGaussian = false;
+            return spareGaussian;
+        }
+
+        double u, v, s;
+        do {
+            u = nextDouble() * 2.0 - 1.0;
+            v = nextDouble() * 2.0 - 1.0;
+            s = u * u + v * v;
+        } while (s >= 1.0 || s == 0.0);
+
+        double mul = Math.sqrt(-2.0 * Math.log(s) / s);
+        spareGaussian = v * mul;
+        hasSpareGaussian = true;
+        return u * mul;
+    }
+
+    /**
+     * Returns a random number from the normal distribution N(mu, sigma).
+     *
+     * @param mu    the mean.
+     * @param sigma the standard deviation.
+     * @return a normal random number.
+     */
+    public double nextGaussian(double mu, double sigma) {
+        return mu + sigma * nextGaussian();
+    }
+
+    /**
+     * Randomly samples {@code k} distinct indices from the range
+     * {@code [0, n)} without replacement, using a partial Fisher-Yates
+     * shuffle. The result is returned in an unspecified order.
+     *
+     * @param n the population size; must be positive.
+     * @param k the sample size; must satisfy {@code 0 <= k <= n}.
+     * @return an array of {@code k} distinct indices.
+     * @throws IllegalArgumentException if {@code k < 0} or {@code k > n}.
+     */
+    public int[] sample(int n, int k) {
+        if (k < 0 || k > n) {
+            throw new IllegalArgumentException(
+                String.format("k (%d) must be in [0, n=%d]", k, n));
+        }
+        int[] result = new int[k];
+        if (k == 0) return result;
+
+        // Partial Fisher-Yates: build only the first k elements of a
+        // permutation of [0, n) using a HashMap for the "swapped" positions
+        // so we never allocate the full n-element array.
+        java.util.HashMap<Integer, Integer> swapped = new java.util.HashMap<>();
+        for (int i = 0; i < k; i++) {
+            int j = i + nextInt(n - i);
+            int xi = swapped.getOrDefault(i, i);
+            int xj = swapped.getOrDefault(j, j);
+            swapped.put(j, xi);
+            result[i] = xj;
+        }
+        return result;
     }
 }

@@ -16,38 +16,40 @@
  */
 package smile.deep.activation;
 
-import org.bytedeco.pytorch.Scalar;
-import org.bytedeco.pytorch.global.torch;
 import smile.deep.tensor.Tensor;
 
+import static smile.torch.smile_torch_h.smile_torch_softshrink;
+
 /**
- * Soft Shrink activation function.
+ * Soft shrink activation function.
  *
  * @author Haifeng Li
  */
 public class SoftShrink extends ActivationFunction {
-    /** The lambda value in the formulation. */
-    final Scalar lambda;
+    /** The lambda value for the soft shrinkage formulation. */
+    final double lambda;
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     */
     public SoftShrink() {
         this(0.5);
     }
 
     /**
      * Constructor.
-     * @param lambda The lambda value in the formulation.
+     * @param lambda the lambda value for the soft shrinkage formulation.
      */
     public SoftShrink(double lambda) {
         super(String.format("SoftShrink(%.4f)", lambda), false);
         if (lambda < 0.0) {
             throw new IllegalArgumentException("Invalid lambda: " + lambda);
         }
-        this.lambda = new Scalar(lambda);
+        this.lambda = lambda;
     }
 
     @Override
     public Tensor forward(Tensor x) {
-        return new Tensor(torch.softshrink(x.asTorch(), lambda));
+        return new Tensor(smile_torch_softshrink(x.handle(), lambda));
     }
 }

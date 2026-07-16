@@ -18,19 +18,23 @@ package smile.studio.cli;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.Locale;
+import java.util.ResourceBundle;
+import java.util.concurrent.Callable;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultEditorKit;
 import com.formdev.flatlaf.ui.FlatLineBorder;
 import com.formdev.flatlaf.util.SystemInfo;
-import org.fife.ui.autocomplete.AutoCompletion;
+import ioa.llm.client.LLM;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import ioa.llm.tool.Question;
 import smile.plot.swing.Palette;
-import smile.studio.Editor;
-import smile.studio.Markdown;
-import smile.studio.Monospaced;
-import smile.studio.OutputArea;
+import smile.studio.text.Markdown;
+import smile.studio.text.Monospaced;
+import smile.studio.text.OutputArea;
 import static smile.studio.cli.IntentType.*;
 
 /**
@@ -40,15 +44,26 @@ import static smile.studio.cli.IntentType.*;
  * @author Haifeng Li
  */
 public class Intent extends JPanel {
-    private static final Color inputColor = new Color(220, 248, 198);
+    private static final ResourceBundle bundle = ResourceBundle.getBundle(Intent.class.getName(), Locale.getDefault());
     private static final Color borderColor = Palette.web("#8dd4e8");
-    private final JPanel footer = new JPanel();
+    // Input pane
+    private Color inputPaneColor = UIManager.getColor("TextField.background");
     private final JPanel inputPane = new JPanel(new BorderLayout());
     private final JLabel indicator = new JLabel(">", SwingConstants.CENTER);
+    private final IntentEditor editor = new IntentEditor(1, 80);
+    // Footer for controls and status
+    private final JPanel footer = new JPanel();
+    // Left side for intent type, reasoning effort and status bar
+    private final JPanel controlPane = new JPanel(new FlowLayout(FlowLayout.LEFT));
     private final JComboBox<IntentType> intentTypeComboBox = new JComboBox<>(IntentType.values());
-    private final Editor editor = new Editor(1, 80, SyntaxConstants.SYNTAX_STYLE_NONE);
+    private final JLabel reasoningLabel = new JLabel(bundle.getString("ReasoningEffort"));
+    private final JComboBox<String> effortComboBox;
     private final JLabel status = new JLabel();
+    // Right side for status and stop button.
+    private final JPanel progressPane = new JPanel(new FlowLayout(FlowLayout.RIGHT));
     private final JProgressBar progress = new JProgressBar();
+    private final JButton stopButton = new JButton("❌");
+    // Output pane
     private final JPanel outputPane = new JPanel();
     private OutputArea output = createOutputArea();
 
@@ -60,19 +75,32 @@ public class Intent extends JPanel {
         super(new BorderLayout(5, 5));
         setBorder(new EmptyBorder(8,8,8,8));
 
+        effortComboBox = initEffortComboBox(cli);
+        effortComboBox.setSelectedItem(cli.getReasoningEffort());
         initInputPane();
         initActionMap(cli);
-
-        var ac = new AutoCompletion(cli.hints());
-        ac.setAutoActivationEnabled(true);
-        ac.setAutoActivationDelay(500);
-        ac.install(editor);
 
         outputPane.setLayout(new BoxLayout(outputPane, BoxLayout.Y_AXIS));
         outputPane.add(output);
 
         add(inputPane, BorderLayout.CENTER);
         add(outputPane, BorderLayout.SOUTH);
+        cli.hintWindow().addEditor(editor);
+
+        // Listen for global Look and Feel changes
+        UIManager.addPropertyChangeListener(evt -> {
+            if ("lookAndFeel".equals(evt.getPropertyName())) {
+                inputPaneColor = UIManager.getColor("TextField.background");
+                if (editor.isEditable()) {
+                    editor.setBackground(inputPaneColor);
+                    controlPane.setBackground(inputPaneColor);
+                    intentTypeComboBox.setBackground(inputPaneColor);
+                    effortComboBox.setBackground(inputPaneColor);
+                    inputPane.setBackground(inputPaneColor);
+                    inputPane.setBorder(createRoundBorder());
+                }
+            }
+        });
     }
 
     /** Initializes the input pane. */
@@ -92,32 +120,66 @@ public class Intent extends JPanel {
         editor.setWrapStyleWord(true);
         editor.setOpaque(false);
         editor.setHighlightCurrentLine(false);
-        editor.setBackground(inputColor);
+        editor.setBackground(inputPaneColor);
 
         status.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
-        progress.setMaximumSize(new Dimension(200, 12));
+        stopButton.setVisible(false);
+        stopButton.setToolTipText(bundle.getString("Stop"));
+        progress.putClientProperty("JProgressBar.largeHeight", true);
+        progressPane.add(progress);
+        progressPane.add(Box.createHorizontalStrut(10));
+        progressPane.add(stopButton);
 
         initIntentTypeComboBox();
         footer.setLayout(new BoxLayout(footer, BoxLayout.X_AXIS));
         footer.setOpaque(false);
         footer.add(Box.createHorizontalStrut(indicator.getPreferredSize().width));
-        footer.add(intentTypeComboBox);
+
+        controlPane.setBackground(inputPaneColor);
+        controlPane.add(intentTypeComboBox);
+        controlPane.add(Box.createHorizontalStrut(20));
+        controlPane.add(reasoningLabel);
+        controlPane.add(effortComboBox);
+        footer.add(controlPane);
         footer.add(status);
         footer.add(Box.createHorizontalGlue());
 
-        inputPane.setBackground(inputColor);
+        inputPane.setBackground(inputPaneColor);
         inputPane.setBorder(createRoundBorder());
         inputPane.add(sidebar, BorderLayout.WEST);
         inputPane.add(editor, BorderLayout.CENTER);
         inputPane.add(footer, BorderLayout.SOUTH);
     }
 
+    /** Initializes the reasoning effort combo box. */
+    private JComboBox<String> initEffortComboBox(AgentCLI cli) {
+        ArrayList<String> effortLevels =new ArrayList<>();
+        effortLevels.add(LLM.DEFAULT_REASONING_EFFORT);
+        cli.agent().llm().ifPresent(model -> effortLevels.addAll(model.reasoningEffortLevels()));
+
+        var levels = effortLevels.toArray(new String[0]);
+        var effortComboBox = new JComboBox<>(levels);
+        effortComboBox.setSelectedItem(levels[0]);
+        effortComboBox.setBorder(BorderFactory.createEmptyBorder());
+        effortComboBox.setBackground(inputPaneColor);
+        if (effortComboBox.getComponentCount() > 0 &&
+            effortComboBox.getComponent(0) instanceof AbstractButton button) {
+            button.setVisible(false);
+        }
+
+        effortComboBox.addItemListener(e -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                cli.setReasoningEffort((String) effortComboBox.getSelectedItem());
+            }
+        });
+        return effortComboBox;
+    }
+
     /** Initializes the intent type combo box. */
     private void initIntentTypeComboBox() {
         intentTypeComboBox.setSelectedItem(Instructions);
         intentTypeComboBox.setBorder(BorderFactory.createEmptyBorder());
-        intentTypeComboBox.setBackground(inputColor);
-        intentTypeComboBox.setForeground(Color.DARK_GRAY);
+        intentTypeComboBox.setBackground(inputPaneColor);
         if (intentTypeComboBox.getComponentCount() > 0 &&
             intentTypeComboBox.getComponent(0) instanceof AbstractButton button) {
             button.setVisible(false);
@@ -130,10 +192,20 @@ public class Intent extends JPanel {
                 indicator.setToolTipText(intentType.toString());
                 editor.requestFocusInWindow();
 
+                if (effortComboBox != null) {
+                    if (intentType == Instructions || intentType == Command) {
+                        reasoningLabel.setVisible(true);
+                        effortComboBox.setVisible(true);
+                    } else {
+                        reasoningLabel.setVisible(false);
+                        effortComboBox.setVisible(false);
+                    }
+                }
+
                 switch (intentType) {
                     case Shell -> {
                         if (SystemInfo.isWindows) {
-                            editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_WINDOWS_BATCH);
+                            editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_POWERSHELL);
                         } else {
                             editor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_UNIX_SHELL);
                         }
@@ -150,7 +222,10 @@ public class Intent extends JPanel {
     private void initActionMap(AgentCLI cli) {
         InputMap inputMap = editor.getInputMap(JComponent.WHEN_FOCUSED);
         ActionMap actionMap = editor.getActionMap();
-        inputMap.put(KeyStroke.getKeyStroke("ctrl ENTER"), "run");
+        // Map Shift+Enter to the default newline action (insert-break)
+        inputMap.put(KeyStroke.getKeyStroke("shift ENTER"), DefaultEditorKit.insertBreakAction);
+
+        inputMap.put(KeyStroke.getKeyStroke("ENTER"), "run");
         actionMap.put("run", new AbstractAction() {
             @Override public void actionPerformed(ActionEvent e) {
                 if (!editor.isEditable()) return;
@@ -189,6 +264,27 @@ public class Intent extends JPanel {
         });
     }
 
+    /**
+     * Sets the stop action for the intent.
+     * @param stop the lambda to stop execution.
+     */
+    public <T> void setStopAction(Callable<T> stop) {
+        stopButton.setVisible(true);
+        stopButton.addActionListener(e -> {
+            try {
+                stop.call();
+                stopButton.setEnabled(false);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(
+                        Intent.this,
+                        ex.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
+            }
+        });
+    }
+
     /** Creates an output area. */
     private OutputArea createOutputArea() {
         OutputArea output = new OutputArea();
@@ -197,6 +293,15 @@ public class Intent extends JPanel {
         output.setLineWrap(true);
         output.setWrapStyleWord(true);
         return output;
+    }
+
+    /**
+     * Returns the reasoning effort level.
+     * @return the reasoning effort level.
+     */
+    public String getReasoningEffort() {
+        return effortComboBox.getSelectedIndex() == 0 ? ""
+                : (String) effortComboBox.getSelectedItem();
     }
 
     /**
@@ -235,14 +340,15 @@ public class Intent extends JPanel {
         intentTypeComboBox.setEnabled(editable);
         editor.setEditable(editable);
         if (editable) {
-            editor.setBackground(inputColor);
-            inputPane.setBackground(inputColor);
-            intentTypeComboBox.setBackground(inputColor);
-
+            editor.setBackground(inputPaneColor);
+            inputPane.setBackground(inputPaneColor);
+            controlPane.setBackground(inputPaneColor);
+            intentTypeComboBox.setBackground(inputPaneColor);
+            effortComboBox.setBackground(inputPaneColor);
         } else {
             editor.setBackground(getBackground());
             inputPane.setBackground(getBackground());
-            footer.remove(intentTypeComboBox);
+            footer.remove(controlPane);
         }
     }
 
@@ -294,11 +400,11 @@ public class Intent extends JPanel {
         if (on) {
             progress.setIndeterminate(true);
             progress.setEnabled(true);
-            footer.add(progress);
+            footer.add(progressPane);
         } else {
             progress.setIndeterminate(false);
             progress.setEnabled(false);
-            footer.remove(progress);
+            footer.remove(progressPane);
             // Repaint the footer to reflect the removal of the progress bar.
             // This is necessary as Swing is optimized for lazy evaluation.
             footer.repaint();
@@ -317,7 +423,7 @@ public class Intent extends JPanel {
      * Returns the intent editor.
      * @return the intent editor.
      */
-    public Editor editor() {
+    public IntentEditor editor() {
         return editor;
     }
 

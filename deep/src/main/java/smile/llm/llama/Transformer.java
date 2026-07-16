@@ -16,9 +16,9 @@
  */
 package smile.llm.llama;
 
+import java.lang.foreign.MemorySegment;
 import java.util.ArrayList;
 import java.util.List;
-import org.bytedeco.pytorch.ModuleListImpl;
 import smile.deep.layer.EmbeddingLayer;
 import smile.deep.layer.LinearLayer;
 import smile.deep.layer.LayerBlock;
@@ -28,6 +28,13 @@ import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.RotaryPositionalEncoding;
+import smile.util.AutoScope;
+
+import static smile.torch.smile_torch_h.smile_module_free;
+import static smile.torch.smile_torch_h.smile_module_list_create;
+import static smile.torch.smile_torch_h.smile_module_list_free;
+import static smile.torch.smile_torch_h.smile_module_list_push_back;
+import static smile.torch.smile_torch_h.smile_module_list_as_module;
 
 /**
  * The Transformer model. It consists of token embeddings, stacked
@@ -67,11 +74,11 @@ public class Transformer extends LayerBlock {
         this.tokEmbeddings = new EmbeddingLayer(params.vocabSize(), params.dim());
 
         this.layers = new ArrayList<>();
-        var moduleList = new ModuleListImpl();
+        MemorySegment moduleList = smile_module_list_create();
         for (int layerId = 0; layerId < params.numLayers(); layerId++) {
             var block = new TransformerBlock(layerId, params);
             this.layers.add(block);
-            moduleList.push_back(block.module);
+            smile_module_list_push_back(moduleList, block.module);
         }
 
         this.norm = new RMSNormLayer(params.dim(), params.normEps());
@@ -84,7 +91,10 @@ public class Transformer extends LayerBlock {
                 params.ropeTheta(),
                 params.scaledRope()).to(device);
 
-        module.register_module("layers", moduleList);
+        MemorySegment listAsModule = smile_module_list_as_module(moduleList);
+        add("layers", listAsModule);
+        smile_module_free(listAsModule);
+        smile_module_list_free(moduleList);
         add("tok_embeddings", tokEmbeddings);
         add("norm", norm);
         add("output", output);
@@ -100,28 +110,28 @@ public class Transformer extends LayerBlock {
     public Tensor forward(Tensor tokens, int startPos) {
         long[] shape = tokens.shape();
         int seqlen = (int) shape[1];
-        Tensor h = tokEmbeddings.forward(tokens);
-        Tensor freqs = cis.get(Index.slice(startPos, startPos+seqlen));
+        try (var scope = new AutoScope();
+             var pos = Index.slice(startPos, startPos + seqlen)) {
+            Tensor h = scope.add(tokEmbeddings.forward(tokens));
+            Tensor freqs = scope.add(cis.get(pos));
 
-        Tensor mask = null;
-        if (seqlen > 1) {
-            mask = Tensor.full(Float.NEGATIVE_INFINITY, seqlen, seqlen);
-            mask.triu_(1);
-            // When performing key-value caching, we compute the attention scores
-            // only for the new sequence. Thus, the matrix of scores is of size
-            // (seqlen, cache_len + seqlen), and the only masked entries are (i, j) for
-            // j > cache_len + i, since row i corresponds to token cache_len + i.
-            var zeros = Tensor.zeros(seqlen, startPos);
-            mask = Tensor.hstack(zeros, mask);
-            mask = mask.to(h.dtype());
+            Tensor mask = null;
+            if (seqlen > 1) {
+                mask = scope.add(Tensor.full(Float.NEGATIVE_INFINITY, seqlen, seqlen));
+                mask.triu_(1);
+                try (var zeros = Tensor.zeros(seqlen, startPos)) {
+                    mask = scope.add(Tensor.hstack(zeros, mask));
+                }
+                mask = scope.add(mask.to(h.dtype()));
+            }
+
+            for (var layer : layers) {
+                h = scope.add(layer.forward(h, startPos, freqs, mask));
+            }
+
+            Tensor normalized = scope.add(norm.forward(h));
+            return output.forward(normalized).to(ScalarType.Float);
         }
-
-        for (var layer : layers) {
-            h = layer.forward(h, startPos, freqs, mask);
-        }
-
-        h = norm.forward(h);
-        return output.forward(h).to(ScalarType.Float32);
     }
 
     @Override

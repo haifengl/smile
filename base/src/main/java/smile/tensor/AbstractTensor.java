@@ -83,13 +83,26 @@ public abstract class AbstractTensor implements Tensor {
     }
 
     /**
-     * Returns the offset of cell at the given index.
-     * @param index the cell index.
+     * Returns the offset of cell at the given index. Supports partial
+     * indices for sub-tensor slicing: the index may specify fewer dimensions
+     * than {@link #dim()}, in which case the remaining dimensions start at 0.
+     *
+     * @param index the cell index (may be shorter than {@link #dim()}).
      * @return the offset.
+     * @throws IllegalArgumentException if index.length &gt; dim().
+     * @throws IndexOutOfBoundsException if any index component is out of bounds.
      */
     long offset(int[] index) {
+        if (index.length > shape.length) {
+            throw new IllegalArgumentException(String.format(
+                "Index length %d exceeds tensor dim %d", index.length, shape.length));
+        }
         long offset = 0;
         for (int i = 0; i < index.length; i++) {
+            if (index[i] < 0 || index[i] >= shape[i]) {
+                throw new IndexOutOfBoundsException(String.format(
+                    "Index %d out of bounds [0, %d) for dimension %d", index[i], shape[i], i));
+            }
             offset += index[i] * stride[i];
         }
         return offset;

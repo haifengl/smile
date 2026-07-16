@@ -71,10 +71,15 @@ import java.util.Arrays;
  */
 public record AssociationRule(int[] antecedent, int[] consequent, double support, double confidence, double lift, double leverage) {
 
+    /**
+     * Two rules are considered equal if they have the same antecedent,
+     * consequent, support, and confidence. {@code lift} and {@code leverage}
+     * are derived metrics and are intentionally excluded from equality.
+     */
     @Override
     public boolean equals(Object o) {
         if (o instanceof AssociationRule a) {
-            return support == a.support && confidence != a.confidence
+            return support == a.support && confidence == a.confidence
                     && Arrays.equals(antecedent, a.antecedent)
                     && Arrays.equals(consequent, a.consequent);
         }

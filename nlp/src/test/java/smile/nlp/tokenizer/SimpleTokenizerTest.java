@@ -322,4 +322,19 @@ public class SimpleTokenizerTest {
             assertEquals(expResult[i], result[i]);
         }
     }
+
+    /**
+     * Test the apply() method from the Tokenizer / Function interface.
+     */
+    @Test
+    public void testApplyFunctionInterface() {
+        // Given a Tokenizer used as a Function<String, String[]>
+        // When calling apply()
+        // Then it should return the same result as split()
+        String text = "Hello, world.";
+        Tokenizer tokenizer = new SimpleTokenizer();
+        String[] viaSplit = tokenizer.split(text);
+        String[] viaApply = tokenizer.apply(text);
+        assertArrayEquals(viaSplit, viaApply);
+    }
 }

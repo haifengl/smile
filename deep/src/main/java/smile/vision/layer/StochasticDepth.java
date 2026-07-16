@@ -16,10 +16,17 @@
  */
 package smile.vision.layer;
 
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
 import java.util.Arrays;
-import org.bytedeco.pytorch.Module;
 import smile.deep.layer.Layer;
+import smile.torch.Native;
 import smile.deep.tensor.Tensor;
+
+import static smile.torch.Native.check;
+import static smile.torch.smile_torch_h.smile_module_create;
+import static smile.torch.smile_torch_h.smile_module_free;
+import static smile.torch.smile_torch_h.smile_module_is_training;
 
 /**
  * Stochastic Depth for randomly dropping residual branches of residual
@@ -28,13 +35,13 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public class StochasticDepth implements Layer {
-    private final Module module = new Module("StochasticDepth");
+    private final MemorySegment module;
     private final double p;
     private final String mode;
 
     /**
      * Constructor.
-     * @param p the number of channels in the input image.
+     * @param p the drop probability. Must be in [0, 1].
      * @param mode "batch" or "row". "batch" randomly zeroes the entire input,
      *            "row" zeroes randomly selected rows from the batch.
      */
@@ -46,17 +53,22 @@ public class StochasticDepth implements Layer {
             throw new IllegalArgumentException("mode has to be either 'batch' or 'row', but got " + mode);
         }
         this.p = p;
-        this.mode = mode;
+        this.mode = mode.toLowerCase();
+        try (Arena arena = Arena.ofConfined()) {
+            this.module = check(smile_module_create(arena.allocateFrom("StochasticDepth")));
+        }
+        MemorySegment m = this.module;
+        Native.CLEANER.register(this, () -> smile_module_free(m));
     }
 
     @Override
-    public Module asTorch() {
+    public MemorySegment module() {
         return module;
     }
 
     @Override
     public Tensor forward(Tensor input) {
-        if (!module.is_training() || p == 0.0) {
+        if (smile_module_is_training(module) == 0 || p == 0.0) {
             return input;
         }
 
@@ -71,10 +83,12 @@ public class StochasticDepth implements Layer {
                 .dtype(input.dtype())
                 .device(input.device());
         Tensor noise = Tensor.empty(options, shape);
-        noise = noise.bernoulli_(survivalRate);
+        noise.bernoulli_(survivalRate);
         if (survivalRate > 0.0) {
             noise.div_(survivalRate);
         }
-        return input.mul(noise);
+        Tensor output = input.mul(noise);
+        noise.close();
+        return output;
     }
 }

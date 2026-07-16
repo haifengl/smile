@@ -119,7 +119,7 @@ public class Axis {
      * Set the slices of axis.
      */
     private void setTicks() {
-        // slicing initialisation
+        // slicing initialization
         double[] gridLocation;
         double[] tickLocation;
         String[] marks = null;

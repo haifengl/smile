@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import smile.sort.QuickSort;
+import smile.util.OS;
 
 /**
  * FP-tree data structure used in FP-growth (frequent pattern growth)
@@ -215,8 +216,9 @@ public class FPTree {
     int numFreqItems = 0;
     /**
      * The size of largest item set (with only frequent items) in the database.
+     * Zero when no items have been inserted yet (e.g. no item meets minSupport).
      */
-    int maxItemSetSize = -1;
+    int maxItemSetSize = 0;
     /**
      * The order of items according to their supports.
      */
@@ -294,14 +296,28 @@ public class FPTree {
      * @return the frequency of single items
      */
     private int[] freq(Stream<int[]> itemsets) {
-        int n = Integer.parseInt(System.getProperty("smile.arm.items", "65536"));
-        int[] f = new int[n];
+        int n = OS.getProperty("smile.arm.items", 65536);
+        int[] count = new int[n];
         itemsets.forEach(itemset -> {
             numTransactions++;
-            for (int i : itemset) f[i]++;
+            // Support is transaction-level presence, not multiplicity within a transaction.
+            Arrays.sort(itemset);
+            int prev = -1;
+            for (int item : itemset) {
+                if (item != prev) {
+                    count[item]++;
+                    prev = item;
+                }
+            }
         });
-        while (f[--n] == 0);
-        return Arrays.copyOf(f, n+1);
+
+        if (numTransactions == 0) {
+            throw new IllegalArgumentException("Empty stream of itemsets");
+        }
+
+        // Find the effective number of items.
+        while (count[--n] == 0);
+        return Arrays.copyOf(count, n+1);
     }
     
     /**
@@ -314,6 +330,9 @@ public class FPTree {
      * @return a full built FP-tree.
      */
     public static FPTree of(int minSupport, Supplier<Stream<int[]>> supplier) {
+        if (minSupport < 1) {
+            throw new IllegalArgumentException("minSupport must be >= 1: " + minSupport);
+        }
         FPTree tree = new FPTree(minSupport, supplier.get());
         tree.add(supplier.get());
         return tree;
@@ -345,6 +364,9 @@ public class FPTree {
      * @return a full built FP-tree.
      */
     public static FPTree of(int minSupport, int[][] itemsets) {
+        if (minSupport < 1) {
+            throw new IllegalArgumentException("minSupport must be >= 1: " + minSupport);
+        }
         FPTree tree = new FPTree(minSupport, Arrays.stream(itemsets));
         tree.add(Arrays.stream(itemsets));
         return tree;
@@ -361,6 +383,9 @@ public class FPTree {
      * @return a full built FP-tree.
      */
     public static FPTree of(double minSupport, int[][] itemsets) {
+        if (minSupport <= 0 || minSupport > 1) {
+            throw new IllegalArgumentException("minSupport (percentage) must be in (0, 1]: " + minSupport);
+        }
         FPTree tree = new FPTree(minSupport, Arrays.stream(itemsets));
         tree.add(Arrays.stream(itemsets));
         return tree;
@@ -413,15 +438,14 @@ public class FPTree {
             
             // Note that itemset may contain duplicated items. We should keep
             // only one in case of getting incorrect support value.
+            int unique = 1;
             for (int i = 1; i < m; i++) {
-                if (itemset[i] == itemset[i-1]) {
-                    m--;
-                    for (int j = i; j < m; j++) {
-                        itemset[j] = itemset[j+1];
-                    }
+                if (itemset[i] != itemset[unique - 1]) {
+                    itemset[unique++] = itemset[i];
                 }
             }
-            
+            m = unique;
+
             root.add(0, m, itemset, 1);
         }
     }

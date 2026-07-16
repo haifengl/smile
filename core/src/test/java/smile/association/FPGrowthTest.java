@@ -17,6 +17,7 @@
 package smile.association;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -101,6 +102,7 @@ public class FPGrowthTest {
     }
 
     @Test
+    @Tag("integration")
     public void testPima() {
         System.out.println("pima");
 
@@ -109,10 +111,100 @@ public class FPGrowthTest {
     }
     
     @Test
+    @Tag("integration")
     public void testKosarak() {
         System.out.println("kosarak");
 
         FPTree tree = FPTree.of(1500, () -> ItemSetTestData.read("transaction/kosarak.dat"));
         assertEquals(219725, FPGrowth.apply(tree).count());
+    }
+
+    @Test
+    public void givenFPGrowthIterator_whenExhausted_thenNextThrowsNoSuchElementException() {
+        // Given
+        FPTree tree = FPTree.of(3, itemsets);
+        FPGrowth growth = new FPGrowth(tree);
+        var iterator = growth.iterator();
+        while (iterator.hasNext()) {
+            iterator.next();
+        }
+
+        // When / Then
+        assertThrows(NoSuchElementException.class, iterator::next);
+    }
+
+    @Test
+    public void givenDuplicateItemsInTransactions_whenMining_thenSupportIsNotInflated() {
+        // Given
+        int[][] duplicated = {
+                {1, 1, 2},
+                {1, 2},
+                {1, 1, 1, 2}
+        };
+
+        // When
+        FPTree tree = FPTree.of(2, duplicated);
+        List<ItemSet> results = FPGrowth.apply(tree).toList();
+
+        // Then
+        assertEquals(3, supportOf(results, 1));
+        assertEquals(3, supportOf(results, 2));
+        assertEquals(3, supportOf(results, 1, 2));
+    }
+
+    private static int supportOf(List<ItemSet> sets, int... items) {
+        for (ItemSet set : sets) {
+            if (sameItems(set.items(), items)) {
+                return set.support();
+            }
+        }
+        fail("Missing itemset");
+        return -1;
+    }
+
+    private static boolean sameItems(int[] a, int[] b) {
+        if (a.length != b.length) return false;
+        for (int x : a) {
+            boolean found = false;
+            for (int y : b) {
+                if (x == y) { found = true; break; }
+            }
+            if (!found) return false;
+        }
+        return true;
+    }
+
+    @Test
+    public void givenItemSet_whenEqualsHashCodeToString_thenCorrect() {
+        // Given
+        ItemSet a = new ItemSet(new int[]{1, 2, 3}, 5);
+        ItemSet b = new ItemSet(new int[]{1, 2, 3}, 5);
+        ItemSet c = new ItemSet(new int[]{1, 2, 3}, 4);
+        ItemSet d = new ItemSet(new int[]{1, 2},    5);
+
+        // equals / hashCode
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
+        assertNotEquals(a, c);
+        assertNotEquals(a, d);
+
+        // toString
+        String s = a.toString();
+        assertTrue(s.contains("support"), "toString should mention 'support'");
+        assertTrue(s.contains("5"),       "toString should include the support value");
+    }
+
+    @Test
+    public void givenPercentageMinSupport_whenFPGrowth_thenConsistentWithAbsoluteSupport() {
+        // Given — 10 transactions, 30% = 3
+        FPTree treeAbs = FPTree.of(3,   itemsets);
+        FPTree treePct = FPTree.of(0.3, itemsets);
+
+        // When
+        long countAbs = FPGrowth.apply(treeAbs).count();
+        long countPct = FPGrowth.apply(treePct).count();
+
+        // Then
+        assertEquals(countAbs, countPct);
     }
 }

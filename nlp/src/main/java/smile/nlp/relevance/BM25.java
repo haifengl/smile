@@ -17,7 +17,7 @@
 package smile.nlp.relevance;
 
 import smile.nlp.Corpus;
-import smile.nlp.TextTerms;
+import smile.nlp.Document;
 
 /**
  * The BM25 weighting scheme, often called Okapi weighting, after the system in
@@ -107,6 +107,30 @@ public class BM25 implements RelevanceRanker {
     }
 
     /**
+     * Returns the k1 parameter.
+     * @return k1.
+     */
+    public double k1() {
+        return k1;
+    }
+
+    /**
+     * Returns the b parameter.
+     * @return b.
+     */
+    public double b() {
+        return b;
+    }
+
+    /**
+     * Returns the delta parameter (BM25+ lower-bounding term).
+     * @return delta.
+     */
+    public double delta() {
+        return delta;
+    }
+
+    /**
      * Returns the relevance score between a term and a document based on a corpus.
      * @param termFreq the term frequency in the text body.
      * @param docSize the text length.
@@ -186,7 +210,7 @@ public class BM25 implements RelevanceRanker {
     }
 
     @Override
-    public double rank(Corpus corpus, TextTerms doc, String term, int tf, int n) {
+    public double rank(Corpus corpus, Document doc, String term, int tf, int n) {
         if (tf <= 0) return 0.0;
 
         int N = corpus.docCount();
@@ -197,7 +221,7 @@ public class BM25 implements RelevanceRanker {
     }
 
     @Override
-    public double rank(Corpus corpus, TextTerms doc, String[] terms, int[] tf, int n) {
+    public double rank(Corpus corpus, Document doc, String[] terms, int[] tf, int n) {
         int N = corpus.docCount();
         int docSize = doc.size();
         int avgDocSize = corpus.avgDocSize();

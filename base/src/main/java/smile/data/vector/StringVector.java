@@ -17,7 +17,6 @@
 package smile.data.vector;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.DoubleStream;
@@ -63,8 +62,11 @@ public class StringVector extends ObjectVector<String> {
      * @return the nominal scale.
      */
     public NominalScale nominal() {
-        List<String> levels = distinct();
-        Collections.sort(levels);
+        List<String> levels = stream()
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .sorted()
+                .toList();
         return new NominalScale(levels);
     }
 

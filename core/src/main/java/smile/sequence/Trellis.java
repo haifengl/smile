@@ -17,7 +17,8 @@
 package smile.sequence;
 
 /**
- * The dynamic programming table in CRF's Baum–Welch algorithm.
+ * The dynamic programming table for CRF forward-backward inference
+ * and gradient computation during gradient tree boosting training.
  *
  * @author Haifeng Li
  */

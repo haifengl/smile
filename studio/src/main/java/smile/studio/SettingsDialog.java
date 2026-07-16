@@ -16,6 +16,7 @@
  */
 package smile.studio;
 
+import com.formdev.flatlaf.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -23,7 +24,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.*;
 import java.util.prefs.Preferences;
-import smile.studio.SmileStudio;
 
 /**
  * The application preference and configuration dialog.
@@ -31,19 +31,28 @@ import smile.studio.SmileStudio;
  * @author Haifeng Li
  */
 public class SettingsDialog extends JDialog implements ActionListener {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SettingsDialog.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(SettingsDialog.class.getName(), Locale.getDefault());
-    private static final String AI_SERVICE = "aiService";
+    public static final String AI_SERVICE_KEY = "aiService";
+    public static final String UI_THEME_KEY = "uiTheme";
     private static final String API_KEY = "ApiKey";
     private static final String BASE_URL = "BaseUrl";
     private static final String MODEL = "Model";
-    private static final String[] options = {"OpenAI", "Azure OpenAI", "Anthropic", "Google Gemini", "Google Vertex AI"};
-    private static final String[] keys = {"openai", "azureOpenAI", "anthropic", "googleGemini", "googleVertexAI"};
-    private final JComboBox<String> comboBox = new JComboBox<>(options);;
+    private static final String[] UI_THEMES = {"Light", "Dark"};
+    // Interactions API is not yet supported on Vertex
+    private static final String[] aiServiceOptions = {"OpenAI", "Azure OpenAI", "Anthropic", "Google Gemini", "Google Gemini Enterprise", "Chat Completions Compatible"};
+    private static final String[] aiServiceKeys = {"openai", "azureOpenAI", "anthropic", "googleGemini", "googleEnterprise", "chatCompletions"};
+    private static final String[] openaiModels = {"gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna", "gpt-5.4-mini"};
+    private static final String[] anthropicModels = {"claude-fable-5", "claude-opus-4-8", "claude-sonnet-5", "claude-haiku-4-5"};
+    private static final String[] geminiModels = {"gemini-3.5-flash", "gemini-3.1-pro-preview", "gemini-3.1-flash-lite"};
+    private static final String[] otherModels = {"llama3.2", "qwen3.5", "minimax-m2.7", "kimi-k2.6", "deepseek-r1"};
+    private final JComboBox<String> themeCombo = new JComboBox<>(UI_THEMES);
+    private final JComboBox<String> aiServiceCombo = new JComboBox<>(aiServiceOptions);;
     private final CardLayout cardLayout = new CardLayout();
     private final JPanel cardPane = new JPanel(cardLayout);
     private final Map<String, JTextField> apiKeyFields = new TreeMap<>();
     private final Map<String, JTextField> baseUrlFields = new TreeMap<>();
-    private final Map<String, JTextField> modelFields = new TreeMap<>();
+    private final Map<String, JComboBox<String>> modelFields = new TreeMap<>();
     private final Preferences prefs;
 
     /**
@@ -58,17 +67,21 @@ public class SettingsDialog extends JDialog implements ActionListener {
         setLayout(new BorderLayout());
         this.prefs = prefs;
 
-        comboBox.addActionListener(this);
+        themeCombo.setSelectedItem(prefs.get(UI_THEME_KEY, "Dark"));
+        themeCombo.addActionListener(this);
+        aiServiceCombo.addActionListener(this);
         add(createServiceChoice(), BorderLayout.NORTH);
 
         // Add the panels to the dynamic panel with unique names
-        for (int i = 0; i < options.length; i++) {
-            cardPane.add(createServiceCard(keys[i]), options[i]);
+        for (int i = 0; i < aiServiceOptions.length; i++) {
+            cardPane.add(createServiceCard(aiServiceKeys[i]), aiServiceOptions[i]);
         }
 
         // Add the dynamic panel to the center of the dialog
         add(cardPane, BorderLayout.CENTER);
-        comboBox.setSelectedItem(prefs.get(AI_SERVICE, options[0]));
+        // Set the AI service value after adding action listener and all cards
+        // so that the card pane shows existing values properly.
+        aiServiceCombo.setSelectedItem(prefs.get(AI_SERVICE_KEY, aiServiceOptions[0]));
 
         // Panel for the buttons
         add(createButtonPane(), BorderLayout.SOUTH);
@@ -82,22 +95,35 @@ public class SettingsDialog extends JDialog implements ActionListener {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        // Row 1
-        gbc.gridx = 0; // Column 0
-        gbc.gridy = 0; // Row 0
+        // Row 0: UI Theme
+        gbc.gridx = 0;
+        gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.WEST;
-        JLabel apiKeyLabel = new JLabel(bundle.getString("Service"));
-        pane.add(apiKeyLabel, gbc);
+        JLabel themeLabel = new JLabel(bundle.getString("Theme"));
+        pane.add(themeLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        pane.add(themeCombo, gbc);
+
+        // Row 1: AI Service
+        gbc.gridx = 0; // Column 0
+        gbc.gridy = 1; // Row 1
+        gbc.fill = GridBagConstraints.NONE; // Reset fill for label
+        gbc.weightx = 0.0; // Reset weightx for label
+        JLabel serviceLabel = new JLabel(bundle.getString("Service"));
+        pane.add(serviceLabel, gbc);
 
         gbc.gridx = 1; // Column 1
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0; // Allow text field to take extra horizontal space
-        pane.add(comboBox, gbc);
+        pane.add(aiServiceCombo, gbc);
 
         return pane;
     }
 
-    private JPanel createServiceCard(String key) {
+    private JPanel createServiceCard(String service) {
         JPanel card = new JPanel(new GridBagLayout());
         card.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
         GridBagConstraints gbc = new GridBagConstraints();
@@ -107,38 +133,36 @@ public class SettingsDialog extends JDialog implements ActionListener {
         gbc.gridx = 0; // Column 0
         gbc.gridy = 0; // Row 0
         gbc.anchor = GridBagConstraints.WEST;
-        JLabel apiKeyLabel = new JLabel(bundle.getString("APIKey"));
+        JLabel apiKeyLabel = new JLabel(bundle.getString(service.equals("googleEnterprise") ? "Project" : "APIKey"));
         card.add(apiKeyLabel, gbc);
 
         gbc.gridx = 1; // Column 1
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0; // Allow text field to take extra horizontal space
         JTextField apiKeyField = new JTextField(25);
-        apiKeyField.setText(prefs.get(key + "ApiKey", ""));
-        apiKeyFields.put(key, apiKeyField);
+        apiKeyField.setText(prefs.get(service + "ApiKey", ""));
+        apiKeyFields.put(service, apiKeyField);
         card.add(apiKeyField, gbc);
 
         // Row 2
         gbc.gridx = 0; // Column 0
         gbc.gridy = 1; // Row 1
-        gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.NONE; // Reset fill for label
         gbc.weightx = 0.0; // Reset weightx for label
-        JLabel baseUrlLabel = new JLabel(bundle.getString("BaseUrl"));
+        JLabel baseUrlLabel = new JLabel(bundle.getString(service.equals("googleEnterprise") ? "Location" : "BaseUrl"));
         card.add(baseUrlLabel, gbc);
 
         gbc.gridx = 1; // Column 1
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
         JTextField baseUrlField = new JTextField(25);
-        baseUrlField.setText(prefs.get(key + "BaseUrl", ""));
-        baseUrlFields.put(key, baseUrlField);
+        baseUrlField.setText(prefs.get(service + "BaseUrl", ""));
+        baseUrlFields.put(service, baseUrlField);
         card.add(baseUrlField, gbc);
 
         // Row 3
         gbc.gridx = 0; // Column 0
         gbc.gridy = 2; // Row 2
-        gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.NONE; // Reset fill for label
         gbc.weightx = 0.0; // Reset weightx for label
         JLabel modelLabel = new JLabel(bundle.getString("Model"));
@@ -147,9 +171,16 @@ public class SettingsDialog extends JDialog implements ActionListener {
         gbc.gridx = 1; // Column 1
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
-        JTextField modelField = new JTextField(25);
-        modelField.setText(prefs.get(key + "Model", ""));
-        modelFields.put(key, modelField);
+        JComboBox<String> modelField = switch (service) {
+            case "openai", "azureOpenAI" -> new JComboBox<>(openaiModels);
+            case "anthropic" -> new JComboBox<>(anthropicModels);
+            case "googleGemini", "googleVertexAI" -> new JComboBox<>(geminiModels);
+            case "chatCompletions" -> new JComboBox<>(otherModels);
+            default -> new JComboBox<>();
+        };
+        modelField.setEditable(true);
+        modelField.setSelectedItem(prefs.get(service + "Model", ""));
+        modelFields.put(service, modelField);
         card.add(modelField, gbc);
 
         return card;
@@ -165,13 +196,14 @@ public class SettingsDialog extends JDialog implements ActionListener {
         getRootPane().setDefaultButton(okButton);
 
         okButton.addActionListener((e) -> {
-            prefs.put(AI_SERVICE, options[comboBox.getSelectedIndex()]);
-            for (String service : keys) {
+            prefs.put(UI_THEME_KEY, (String) themeCombo.getSelectedItem());
+            prefs.put(AI_SERVICE_KEY, aiServiceOptions[aiServiceCombo.getSelectedIndex()]);
+            for (String service : aiServiceKeys) {
                 prefs.put(service + API_KEY, apiKeyFields.get(service).getText());
                 prefs.put(service + BASE_URL, baseUrlFields.get(service).getText());
-                prefs.put(service + MODEL, modelFields.get(service).getText());
+                prefs.put(service + MODEL, (String) modelFields.get(service).getSelectedItem());
             }
-            SmileStudio.initLLM();
+            SmileStudio.updateLLM();
             dispose();
         });
 
@@ -181,16 +213,32 @@ public class SettingsDialog extends JDialog implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        // This method is called when the JComboBox selection changes
-        String selectedOption = (String) comboBox.getSelectedItem();
+        if (e.getSource() == themeCombo) {
+            String theme = (String) themeCombo.getSelectedItem();
+            prefs.put(UI_THEME_KEY, theme);
+            try {
+                if ("Dark".equals(theme)) {
+                    UIManager.setLookAndFeel(new FlatIntelliJLaf());
+                } else {
+                    UIManager.setLookAndFeel(new FlatDarculaLaf());
+                }
 
-        // Tell the CardLayout to show the panel corresponding to the selected option
-        cardLayout.show(cardPane, selectedOption);
+                // Tells FlatLaf to refresh all open frames and dialogs
+                FlatLaf.updateUI();
+            } catch (UnsupportedLookAndFeelException ex) {
+                logger.error("Failed to setup L&F: {}", ex.getMessage());
+            }
+        } else if (e.getSource() == aiServiceCombo) {
+            String selectedOption = (String) aiServiceCombo.getSelectedItem();
 
-        // Repaint and revalidate the container to ensure correct display
-        cardPane.revalidate();
-        cardPane.repaint();
-        // Call pack() if the new panel has a different preferred size
-        pack();
+            // Tell the CardLayout to show the panel corresponding to the selected option
+            cardLayout.show(cardPane, selectedOption);
+
+            // Repaint and revalidate the container to ensure correct display
+            cardPane.revalidate();
+            cardPane.repaint();
+            // Call pack() if the new panel has a different preferred size
+            pack();
+        }
     }
 }

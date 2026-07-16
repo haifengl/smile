@@ -45,11 +45,11 @@ public interface Bootstrap {
      * @return the samplings.
      */
     static Bag[] of(int n, int k) {
-        if (n < 0) {
+        if (n <= 0) {
             throw new IllegalArgumentException("Invalid sample size: " + n);
         }
 
-        if (k < 0) {
+        if (k <= 0) {
             throw new IllegalArgumentException("Invalid number of bootstrap: " + k);
         }
 
@@ -91,7 +91,11 @@ public interface Bootstrap {
      * @return the samplings.
      */
     static Bag[] of(int[] category, int k) {
-        if (k < 0) {
+        if (category.length == 0) {
+            throw new IllegalArgumentException("Empty category labels.");
+        }
+
+        if (k <= 0) {
             throw new IllegalArgumentException("Invalid number of bootstrap: " + k);
         }
 

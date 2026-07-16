@@ -56,6 +56,11 @@ public abstract class CategoricalMeasure implements Measure {
      */
     final Map<String, Number> level2value;
     /**
+     * Map an integer value to its factor index in [0, size).
+     * Only populated when values are not standard factors [0, 1, 2, ..., k).
+     */
+    final int[] value2factor;
+    /**
      * The flag if the values are of standard factor [0, 1, 2, ..., k).
      */
     final boolean factor;
@@ -116,14 +121,31 @@ public abstract class CategoricalMeasure implements Measure {
             }
         }
 
-        boolean factor = true;
+        boolean isFactor = true;
         for (int i = 0; i < values.length; i++) {
             if (values[i] != i) {
-                factor = false;
+                isFactor = false;
                 break;
             }
         }
-        this.factor = factor;
+        this.factor = isFactor;
+
+        // Build reverse lookup from value -> factor index for non-factor scales
+        if (!isFactor) {
+            int maxValue = Arrays.stream(values).max().orElse(0);
+            // Use array if max value is within reasonable range; else leave as null and do linear scan
+            if (maxValue < values.length * 4 && maxValue >= 0) {
+                value2factor = new int[maxValue + 1];
+                Arrays.fill(value2factor, -1);
+                for (int i = 0; i < values.length; i++) {
+                    value2factor[values[i]] = i;
+                }
+            } else {
+                value2factor = null;
+            }
+        } else {
+            value2factor = null;
+        }
     }
 
     /**
@@ -175,10 +197,41 @@ public abstract class CategoricalMeasure implements Measure {
     /**
      * Returns the level string representation.
      * @param value the level value.
-     * @return the level string representation.
+     * @return the level string representation, or null if not found.
      */
     public String level(int value) {
         return value2level.get(value);
+    }
+
+    /**
+     * Returns true if this measure contains the given integer value.
+     * @param value the integer value to check.
+     * @return true if value is a valid level code.
+     */
+    public boolean contains(int value) {
+        return value2level.containsKey(value);
+    }
+
+    /**
+     * Returns true if this measure contains the given level string.
+     * @param level the level string to check.
+     * @return true if the level string is a valid level.
+     */
+    public boolean contains(String level) {
+        return level2value.containsKey(level);
+    }
+
+    /**
+     * Returns the ordinal index (0-based position in the levels array)
+     * of the given level string, or -1 if not found.
+     * @param level the level string.
+     * @return the index in the levels array, or -1 if not found.
+     */
+    public int indexOf(String level) {
+        for (int i = 0; i < levels.length; i++) {
+            if (levels[i].equals(level)) return i;
+        }
+        return -1;
     }
 
     /**
@@ -188,6 +241,14 @@ public abstract class CategoricalMeasure implements Measure {
      */
     public int factor(int value) {
         if (factor) return value;
+
+        if (value2factor != null) {
+            if (value >= 0 && value < value2factor.length) {
+                int f = value2factor[value];
+                if (f >= 0) return f;
+            }
+            throw new IllegalArgumentException("Invalid level: " + value);
+        }
 
         for (int j = 0; j < values.length; j++) {
             if (values[j] == value) return j;
@@ -221,6 +282,7 @@ public abstract class CategoricalMeasure implements Measure {
 
     @Override
     public String toString(Object o) {
+        if (o == null) return "null";
         return level(((Number) o).intValue());
     }
 
@@ -234,7 +296,11 @@ public abstract class CategoricalMeasure implements Measure {
         if (o instanceof CategoricalMeasure measure) {
             return Arrays.equals(levels, measure.levels) && Arrays.equals(values, measure.values);
         }
-
         return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return 31 * Arrays.hashCode(levels) + Arrays.hashCode(values);
     }
 }

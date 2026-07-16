@@ -137,7 +137,7 @@ public class IntHashSet {
      * Returns true if this set contained the element (or equivalently,
      * if this set changed as a result of the call).
      * @param key the element.
-     * @return true if this set contains the specified element.
+     * @return true if this set contained the specified element.
      */
     public boolean remove(int key) {
         if (key == FREE_KEY) {
@@ -150,14 +150,54 @@ public class IntHashSet {
             if (k == FREE_KEY) {
                 return false;
             }
-
             if (k == key) {
-                keys[ptr] = FREE_KEY;
+                shiftKeys(ptr);
+                --size;
                 return true;
             }
-
             ptr = (ptr + 1) & mask;
         } while (true);
+    }
+
+    /**
+     * Shifts entries after a deletion to preserve probe-chain integrity
+     * for open-addressing with linear probing (Robin Hood backward-shift).
+     */
+    private void shiftKeys(int pos) {
+        while (true) {
+            int next = (pos + 1) & mask;
+            while (true) {
+                int k = keys[next];
+                if (k == FREE_KEY) {
+                    keys[pos] = FREE_KEY;
+                    return;
+                }
+                int slot = hash(k);
+                if (!inRange(pos + 1, next, slot)) {
+                    keys[pos] = k;
+                    pos = next;
+                    break;
+                }
+                next = (next + 1) & mask;
+            }
+        }
+    }
+
+    /**
+     * Returns true if {@code slot} is in the circular range [lo, hi] (inclusive).
+     */
+    private boolean inRange(int lo, int hi, int slot) {
+        lo &= mask;
+        if (lo <= hi) return lo <= slot && slot <= hi;
+        return slot >= lo || slot <= hi;
+    }
+
+    /**
+     * Returns true if this set contains no elements.
+     * @return true if this set is empty.
+     */
+    public boolean isEmpty() {
+        return size == 0;
     }
 
     /**
@@ -176,8 +216,7 @@ public class IntHashSet {
         int[] a = new int[size];
         int i = 0;
         for (int k : keys) {
-            if (k != FREE_KEY)
-                a[i++] = k;
+            if (k != FREE_KEY) a[i++] = k;
         }
         return a;
     }
@@ -192,13 +231,22 @@ public class IntHashSet {
 
         keys = new int[newCapacity];
         Arrays.fill(keys, FREE_KEY);
+        size = 0;   // reset: rawAdd re-counts
 
         for (int i = 0; i < oldCapacity; i++) {
             int oldKey = oldKeys[i];
             if (oldKey != FREE_KEY) {
-                add(oldKey);
+                rawAdd(oldKey);
             }
         }
+    }
+
+    /** Insert without rehash check — used only during rehash itself. */
+    private void rawAdd(int key) {
+        int ptr = hash(key);
+        while (keys[ptr] != FREE_KEY) ptr = (ptr + 1) & mask;
+        keys[ptr] = key;
+        size++;
     }
 
     /**

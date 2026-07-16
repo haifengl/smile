@@ -28,11 +28,7 @@ import smile.studio.SmileStudio;
  * @author Haifeng Li
  */
 public class Main {
-    static void main(String[] args) {
-        // Normalize home path
-        var home = Path.of(System.getProperty("smile.home", ". ")).normalize();
-        System.setProperty("smile.home", home.toString());
-
+    public static void main(String[] args) {
         var command = "";
         var options = args;
         if (args.length > 0) {

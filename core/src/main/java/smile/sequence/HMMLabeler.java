@@ -147,7 +147,7 @@ public class HMMLabeler<T> implements SequenceLabeler<T> {
      * Returns the most likely state sequence given the observation sequence by
      * the Viterbi algorithm, which maximizes the probability of
      * <code>P(I | O, HMM)</code>. In the calculation, we may get ties. In this
-     * case, one of them is chosen randomly.
+     * case, the smallest-index state is chosen.
      *
      * @param o an observation sequence.
      * @return the most likely state sequence.

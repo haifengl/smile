@@ -153,7 +153,7 @@ public class ARMA implements Serializable {
 
         for (int i = 0; i < n; i++) {
             RSS += MathEx.pow2(residuals[i]);
-            TSS += MathEx.pow2(fittedValues[i] - ybar);
+            TSS += MathEx.pow2(x[x.length - n + i] - ybar);
         }
 
         df = n;
@@ -322,6 +322,10 @@ public class ARMA implements Serializable {
         int m = p + q + 20;
         int k = Math.max(p, q);
         int n = x.length - m - k;
+        if (n <= 0) {
+            throw new IllegalArgumentException(String.format(
+                    "Time series is too short for ARMA(%d, %d): length=%d, required>%d", p, q, x.length, m + k));
+        }
 
         AR arm = AR.fit(x, m);
         double[] a = new double[x.length];
@@ -354,7 +358,7 @@ public class ARMA implements Serializable {
 
         double[] ar = arma.slice(0, p).toArray(new double[p]);
         double[] ma = arma.slice(p, p+q).toArray(new double[q]);
-        ARMA model = new ARMA(x, ar, ma, arma.get(p+q), fittedValues, Arrays.copyOfRange(a, m+k, n));
+        ARMA model = new ARMA(x, ar, ma, arma.get(p+q), fittedValues, Arrays.copyOfRange(a, m+k, x.length));
 
         Cholesky cholesky = X.ata().cholesky();
         DenseMatrix inv = cholesky.inverse();
@@ -412,13 +416,17 @@ public class ARMA implements Serializable {
      * @return l-step ahead forecast.
      */
     public double[] forecast(int l) {
+        if (l <= 0) {
+            throw new IllegalArgumentException("Invalid forecast horizon l = " + l);
+        }
+
         int k = Math.max(p, q);
         double[] x = new double[k + l];
         double[] a = new double[k + l];
         System.arraycopy(this.x, this.x.length - k, x, 0, k);
         System.arraycopy(this.residuals, this.residuals.length - k, a, 0, k);
         for (int i = 0; i < l; i++) {
-            x[p + i] = forecast(x, a, k+i);
+            x[k + i] = forecast(x, a, k+i);
         }
         return Arrays.copyOfRange(x, k, x.length);
     }

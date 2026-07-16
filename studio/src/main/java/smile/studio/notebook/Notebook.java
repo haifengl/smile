@@ -17,6 +17,7 @@
 package smile.studio.notebook;
 
 import javax.swing.*;
+import javax.swing.Timer;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
@@ -24,6 +25,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
@@ -31,8 +33,9 @@ import java.util.function.Consumer;
 import ioa.agent.Coder;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import smile.io.Paths;
+import smile.studio.SmileStudio;
 import smile.studio.kernel.*;
-import smile.studio.Monospaced;
+import smile.studio.text.Editor;
 import smile.swing.ScrollablePanel;
 import smile.util.ipynb.JupyterNotebook;
 
@@ -72,14 +75,13 @@ public class Notebook extends JPanel implements DocumentListener {
     /**
      * Constructor.
      * @param file the notebook file. If null, a new notebook will be created.
-     * @param coder the coding assistant agent.
+     * @param coders the coding assistant agents.
      * @param postRunAction the action to perform after running cells.
      */
-    public Notebook(Path file, Coder coder, Consumer<Kernel<?>> postRunAction) {
+    public Notebook(Path file, Map<String, Coder> coders, Consumer<Kernel<?>> postRunAction) {
         super(new BorderLayout());
         this.file = file;
         this.postRunAction = postRunAction;
-        this.coder = coder;
 
         cells.setLayout(new BoxLayout(cells, BoxLayout.Y_AXIS));
         scrollPane.getVerticalScrollBar().setUnitIncrement(18);
@@ -103,6 +105,7 @@ public class Notebook extends JPanel implements DocumentListener {
         jupyter = ipynb;
         lang = initLang();
         syntaxStyle = initSyntaxStyle();
+        coder = coders.get(lang);
         initKernel();
 
         if (Files.exists(file)) {
@@ -132,18 +135,6 @@ public class Notebook extends JPanel implements DocumentListener {
                 scrollTo(first.editor());
             });
         }
-
-        Monospaced.addListener((e) ->
-                SwingUtilities.invokeLater(() -> {
-                    Font font = (Font) e.getNewValue();
-                    for (int i = 0; i < cells.getComponentCount(); i++) {
-                        if (cells.getComponent(i) instanceof Cell cell) {
-                            cell.editor().setFont(font);
-                            cell.output().setFont(font);
-                        }
-                    }
-                })
-        );
     }
 
     /**
@@ -269,7 +260,6 @@ public class Notebook extends JPanel implements DocumentListener {
         return switch (lang) {
             case "Java" -> new JavaKernel();
             case "Scala" -> new ScriptKernel("scala");
-            case "Kotlin" -> new ScriptKernel("kotlin");
             case "Python" -> {
                 try {
                     yield new PythonKernel();
@@ -283,7 +273,7 @@ public class Notebook extends JPanel implements DocumentListener {
             }
             default -> {
                 JOptionPane.showMessageDialog(this,
-                        String.format(bundle.getString("UnsupportedNotebookMessage"), file.getFileName()),
+                        MessageFormat.format(bundle.getString("UnsupportedNotebookMessage"), file.getFileName()),
                         bundle.getString("UnsupportedNotebookTitle"),
                         JOptionPane.ERROR_MESSAGE);
                 yield null;
@@ -296,10 +286,31 @@ public class Notebook extends JPanel implements DocumentListener {
         SwingWorker<Kernel<?>, Kernel<?>> worker = new SwingWorker<>() {
             @Override
             protected Kernel<?> doInBackground() throws IOException, UnsupportedOperationException {
+                // TODO: remove when we switch to LazyConstant.
+                if (lang.equalsIgnoreCase("Scala")) {
+                    // ScriptKernel sets system out/err during initialization, which may cause
+                    // LSP/MCP process output to ScriptKernel's streams. Delay the initialization
+                    // until the app is fully started to avoid the confusion.
+                    boolean isShowing = false;
+                    for (var win : Window.getWindows()) {
+                        if (win instanceof SmileStudio && win.isShowing()) {
+                            isShowing = true;
+                            break;
+                        }
+                    }
+                    if (!isShowing) {
+                        try {
+                            // Delay 5 seconds if the app is not fully started yet.
+                            Thread.sleep(5000);
+                        } catch (InterruptedException e) {
+                            // ignore
+                        }
+                    }
+                }
+
                 kernel = switch (lang) {
                     case "Java" -> new JavaKernel();
                     case "Scala" -> new ScriptKernel("scala");
-                    case "Kotlin" -> new ScriptKernel("kotlin");
                     case "Python" -> new PythonKernel();
                     default -> throw new UnsupportedOperationException();
                 };
@@ -316,7 +327,7 @@ public class Notebook extends JPanel implements DocumentListener {
                                 JOptionPane.ERROR_MESSAGE);
                     } else {
                         JOptionPane.showMessageDialog(Notebook.this,
-                                String.format(bundle.getString("UnsupportedKernelMessage"), lang),
+                                MessageFormat.format(bundle.getString("UnsupportedKernelMessage"), lang),
                                 "Error",
                                 JOptionPane.ERROR_MESSAGE);
                     }
@@ -330,17 +341,26 @@ public class Notebook extends JPanel implements DocumentListener {
      * Shuts down the execution engine and frees resources.
      */
     public void close() {
-        kernel.close();
+        if (kernel != null) {
+            kernel.close();
+        }
+
+        // close autocomplete providers
+        for (int i = 0; i < cells.getComponentCount(); i++) {
+            getCell(i).editor().close();
+        }
     }
 
     /** Restarts the kernel and clears all output. */
     public void restart() {
+        if (kernel == null) return;
         kernel.restart();
         clearAllOutputs();
     }
 
     /** Attempts to stop currently running code. */
     public void stop() {
+        if (kernel == null) return;
         kernel.stop();
     }
 
@@ -417,7 +437,23 @@ public class Notebook extends JPanel implements DocumentListener {
         cell.editor().setText(source);
         cell.setType(cellType(type));
         cell.editor().getDocument().addDocumentListener(this);
+        enableAutoComplete(cell.editor());
         return cell;
+    }
+
+    /** Enables the auto-completion for a cell based on the notebook file. */
+    private void enableAutoComplete(Editor editor) {
+        // Delay 10 seconds if notebook is not fully loaded,
+        // which usually happens at start up time. This heuristic
+        // is to ensure language servers ready.
+        int delay = isShowing() ? 100 : 10000;
+        Timer timer = new Timer(delay, e -> {
+            var fileUrl = "untitled:/" + file.getFileName() + "/" + UUID.randomUUID();
+            editor.setAutoComplete(fileUrl, editor.getSyntaxEditingStyle());
+        });
+
+        timer.setRepeats(false); // Only fire once
+        timer.start();
     }
 
     /** Determines the cell separator based on file extension. */
@@ -533,7 +569,6 @@ public class Notebook extends JPanel implements DocumentListener {
     private void saveAsSource() throws IOException {
         List<String> blocks = new ArrayList<>();
         for (int i = 0; i < cells.getComponentCount(); i++) {
-            Cell cell = getCell(i);
             blocks.add(getCell(i).editor().getText());
         }
         String sep = "\n" + separator(file) + "\n";
@@ -582,6 +617,8 @@ public class Notebook extends JPanel implements DocumentListener {
     public Cell addCell(Cell insertAfter) {
         Cell cell = new Cell(this);
         cell.editor().getDocument().addDocumentListener(this);
+        enableAutoComplete(cell.editor());
+
         int idx = (insertAfter == null) ? cells.getComponentCount()
                                         : indexOf(insertAfter) + 1;
         cells.add(cell, idx);
@@ -670,6 +707,14 @@ public class Notebook extends JPanel implements DocumentListener {
     }
 
     /**
+     * Returns the number of cells.
+     * @return the number of cells.
+     */
+    public int getCellCount() {
+        return cells.getComponentCount();
+    }
+
+    /**
      * Returns the cell at specific index.
      *
      * @param index the cell index.
@@ -705,6 +750,12 @@ public class Notebook extends JPanel implements DocumentListener {
      * @param behavior post-run navigation behavior.
      */
     public synchronized void runCell(Cell cell, PostRunNavigation behavior) {
+        if (kernel == null) {
+            JOptionPane.showMessageDialog(this,
+                    MessageFormat.format(bundle.getString("UnsupportedKernelMessage"), lang),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
         if (kernel.isRunning()) {
             showRaceConditionDialog();
             return;
@@ -798,6 +849,12 @@ public class Notebook extends JPanel implements DocumentListener {
      * @param cell the selected cell.
      */
     public synchronized void runCellAndBelow(Cell cell) {
+        if (kernel == null) {
+            JOptionPane.showMessageDialog(this,
+                    MessageFormat.format(bundle.getString("UnsupportedKernelMessage"), lang),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
         if (kernel.isRunning()) {
             showRaceConditionDialog();
             return;
@@ -817,6 +874,12 @@ public class Notebook extends JPanel implements DocumentListener {
      * Runs all cells.
      */
     public synchronized void runAllCells() {
+        if (kernel == null) {
+            JOptionPane.showMessageDialog(this,
+                    MessageFormat.format(bundle.getString("UnsupportedKernelMessage"), lang),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
         if (kernel.isRunning()) {
             showRaceConditionDialog();
             return;

@@ -19,8 +19,8 @@ package smile.feature.imputation;
 import java.util.function.Function;
 import org.junit.jupiter.api.*;
 import smile.datasets.SyntheticControl;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import smile.math.MathEx;
+import static org.junit.jupiter.api.Assertions.*;
 import static smile.feature.imputation.SimpleImputerTest.impute;
 
 /**
@@ -42,6 +42,7 @@ public class SVDImputerTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach
@@ -57,8 +58,64 @@ public class SVDImputerTest {
 
         Function<double[][], double[][]> imputer = x -> SVDImputer.impute(x, k, 10);
         assertEquals(13.50, impute(imputer, data, 0.01), 1E-2);
-        assertEquals(15.84, impute(imputer, data, 0.05), 1E-2);
-        assertEquals(14.94, impute(imputer, data, 0.10), 1E-2);
+        assertEquals(15.42, impute(imputer, data, 0.05), 1E-2);
+        assertEquals(16.10, impute(imputer, data, 0.10), 1E-2);
         // Matrix will be rank deficient with higher missing rate.
+    }
+
+    @Test
+    public void testGivenInvalidKWhenImputingThenIllegalArgumentException() {
+        double[][] data = {{1.0, 2.0}, {3.0, 4.0}, {5.0, 6.0}};
+        assertThrows(IllegalArgumentException.class, () -> SVDImputer.impute(data, 0, 5));
+    }
+
+    @Test
+    public void testGivenKExceedingMinDimensionWhenImputingThenIllegalArgumentException() {
+        // data is 3x2, so k must be <= min(3,2) = 2
+        double[][] data = {{1.0, 2.0}, {3.0, 4.0}, {5.0, 6.0}};
+        assertThrows(IllegalArgumentException.class, () -> SVDImputer.impute(data, 3, 5));
+    }
+
+    @Test
+    public void testGivenInvalidMaxIterWhenImputingThenIllegalArgumentException() {
+        double[][] data = {{1.0, 2.0}, {3.0, 4.0}, {5.0, 6.0}};
+        assertThrows(IllegalArgumentException.class, () -> SVDImputer.impute(data, 1, 0));
+    }
+
+    @Test
+    public void testGivenAllMissingRowWhenImputingThenIllegalArgumentException() {
+        double[][] data = {
+                {1.0, 2.0},
+                {Double.NaN, Double.NaN},  // entire row missing
+                {3.0, 4.0}
+        };
+        assertThrows(IllegalArgumentException.class, () -> SVDImputer.impute(data, 1, 5));
+    }
+
+    @Test
+    public void testGivenAllMissingColumnWhenImputingThenIllegalArgumentException() {
+        double[][] data = {
+                {1.0, Double.NaN},
+                {2.0, Double.NaN},
+                {3.0, Double.NaN}
+        };
+        assertThrows(IllegalArgumentException.class, () -> SVDImputer.impute(data, 1, 5));
+    }
+
+    @Test
+    public void testGivenCompleteDataWhenImputingThenOutputMatchesInput() {
+        double[][] data = {
+                {1.0, 2.0, 3.0},
+                {4.0, 5.0, 6.0},
+                {7.0, 8.0, 9.0}
+        };
+        double[][] result = SVDImputer.impute(data, 2, 5);
+        // No missing values; imputed result should reproduce the original.
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < data[i].length; j++) {
+                assertEquals(data[i][j], result[i][j], 1e-6,
+                        "complete data should be preserved at [" + i + "][" + j + "]");
+            }
+        }
     }
 }

@@ -47,6 +47,7 @@ public class RBFNetworkTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach
@@ -56,7 +57,6 @@ public class RBFNetworkTest {
     @Test
     public void testLongley() throws Exception {
         System.out.println("longley");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var longley = new Longley();
         double[][] x = longley.x();
         double[] y = longley.y();
@@ -76,35 +76,31 @@ public class RBFNetworkTest {
     public void testCPU() throws Exception {
         System.out.println("CPU");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         var cpu = new CPU();
         double[][] x = cpu.x();
         double[] y = cpu.y();
         MathEx.standardize(x);
-        RegressionValidations<RBFNetwork<double[]>> result = CrossValidation.regression(10, x, y,
+        RegressionValidations<RBFNetwork<double[]>> result = CrossValidation.regression(20, x, y,
                 (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
 
         System.out.println(result);
-        assertEquals(18.8318, result.avg().rmse(), 1E-4);
+        assertEquals(10.7870, result.avg().rmse(), 1E-4);
     }
 
     @Test
     public void test2DPlanes() throws Exception {
         System.out.println("2dplanes");
-        MathEx.setSeed(19650218); // to get repeatable results.
         var planes = new Planes2D();
         var result = CrossValidation.regression(10, planes.x(), planes.y(),
                 (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
 
         System.out.println(result);
-        assertEquals(1.5210, result.avg().rmse(), 1E-4);
+        assertEquals(1.6042, result.avg().rmse(), 1E-4);
     }
 
     @Test
     public void testAilerons() throws Exception {
         System.out.println("ailerons");
-
-        MathEx.setSeed(19650218); // to get repeatable results.
 
         var ailerons = new Ailerons();
         double[][] x = ailerons.x();
@@ -114,14 +110,12 @@ public class RBFNetworkTest {
                 (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
 
         System.out.println(result);
-        assertEquals(0.00025, result.avg().rmse(), 1E-5);
+        assertEquals(0.00024, result.avg().rmse(), 1E-5);
     }
 
     @Test
     public void testBank32nh() throws Exception {
         System.out.println("bank32nh");
-
-        MathEx.setSeed(19650218); // to get repeatable results.
 
         var bank32nh = new Bank32nh();
         double[][] x = bank32nh.x();
@@ -131,6 +125,6 @@ public class RBFNetworkTest {
                 (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
 
         System.out.println(result);
-        assertEquals(0.0851, result.avg().rmse(), 1E-4);
+        assertEquals(0.0868, result.avg().rmse(), 1E-4);
     }
 }

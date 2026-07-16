@@ -40,6 +40,11 @@ public class MultiquadricRadialBasis implements RadialBasisFunction {
     /**
      * The scale factor.
      */
+    private final double r0;
+
+    /**
+     * The square of scale factor (cached for performance).
+     */
     private final double r02;
 
     /**
@@ -51,10 +56,22 @@ public class MultiquadricRadialBasis implements RadialBasisFunction {
 
     /**
      * Constructor.
-     * @param scale the scale parameter.
+     * @param scale the scale parameter. Must be positive.
      */
     public MultiquadricRadialBasis(double scale) {
+        if (scale <= 0) {
+            throw new IllegalArgumentException("scale is not positive: " + scale);
+        }
+        r0 = scale;
         r02 = scale * scale;
+    }
+
+    /**
+     * Returns the scale factor r0.
+     * @return the scale factor.
+     */
+    public double scale() {
+        return r0;
     }
 
     @Override
@@ -64,6 +81,6 @@ public class MultiquadricRadialBasis implements RadialBasisFunction {
 
     @Override
     public String toString() {
-        return String.format("Multiquadric Radial Basis (r0 = %.4f)", r02);
+        return String.format("MultiquadricRadialBasis(r0 = %.4f)", r0);
     }
 }

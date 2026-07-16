@@ -17,13 +17,17 @@
 package smile.nlp.dictionary;
 
 import java.util.Iterator;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * A dictionary is a set of words in some natural language.
  *
  * @author Haifeng Li
  */
-public interface Dictionary {
+public interface Dictionary extends Iterable<String> {
 
     /**
      * Returns true if this dictionary contains the specified word.
@@ -43,4 +47,14 @@ public interface Dictionary {
      * @return the iterator.
      */
     Iterator<String> iterator();
+
+    /**
+     * Returns a sequential stream of the words in this dictionary.
+     * @return a stream of words.
+     */
+    default Stream<String> stream() {
+        Spliterator<String> spliterator = Spliterators.spliterator(
+                iterator(), size(), Spliterator.DISTINCT | Spliterator.NONNULL);
+        return StreamSupport.stream(spliterator, false);
+    }
 }

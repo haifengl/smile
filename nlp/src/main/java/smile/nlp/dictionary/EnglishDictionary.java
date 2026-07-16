@@ -35,7 +35,7 @@ public enum EnglishDictionary implements Dictionary {
     CONCISE("/smile/nlp/dictionary/dictionary_en.txt");
 
     /**
-     * A list of abbreviations.
+     * A set of words in this dictionary.
      */
     private final HashSet<String> dict;
 
@@ -58,8 +58,9 @@ public enum EnglishDictionary implements Dictionary {
                 }
             }
         } catch (IOException ex) {
-            final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EnglishDictionary.class);
-            logger.error("Failed to load English dictionary", ex);
+            // Logger cannot be a static field in an enum (initialized after constants).
+            org.slf4j.LoggerFactory.getLogger(EnglishDictionary.class)
+                    .error("Failed to load English dictionary", ex);
         }
     }
 

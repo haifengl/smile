@@ -43,16 +43,20 @@ import static smile.tensor.ScalarType.*;
  * Extra basic numeric functions. The following functions are
  * included:
  * <ul>
- * <li> scalar functions: sqr, factorial, lfactorial, choose, lchoose, log2 are
- * provided.
- * <li> vector functions: min, max, mean, sum, var, sd, cov, L<sub>1</sub> norm,
- * L<sub>2</sub> norm, L<sub>&infin;</sub> norm, normalize, unitize, cor, Spearman
- * correlation, Kendall correlation, distance, dot product, histogram, vector
- * (element-wise) copy, equal, plus, minus, times, and divide.
- * <li> matrix functions: min, max, rowSums, colSums, rowMeans, colMeans, transpose,
- * cov, cor, matrix copy, equals.
- * <li> random functions: random, randomInt, and permutate.
+ * <li> scalar functions: sqr, factorial, lfactorial, choose, lchoose, log2,
+ * log (underflow-safe), log1pe (softplus), sigmoid, clamp are provided.
+ * <li> vector functions: min, max, mean, sum, var (Welford), sd, cov,
+ * L<sub>1</sub> norm, L<sub>2</sub> norm, L<sub>&infin;</sub> norm,
+ * normalize, unitize, cor, Spearman correlation, Kendall correlation,
+ * distance, dot product, softmax, entropy, KL divergence, Jensen-Shannon
+ * divergence, histogram, vector (element-wise) copy, equal, plus, minus,
+ * times, divide, axpy, clamp.
+ * <li> matrix functions: min, max, rowSums, colSums, rowMeans, colMeans,
+ * colStdevs (Welford), transpose, cov, cor, matrix copy, equals, pdist, pdot.
+ * <li> random functions: random, randomInt, randn (scalar/vector/matrix),
+ * and permutate.
  * <li> Find the root of a univariate function with or without derivative.
+ * <li> Solve a tridiagonal linear system.
  * </uL>
  *
  * @author Haifeng Li
@@ -311,17 +315,19 @@ public class MathEx {
     }
 
     /**
-     * Returns natural log(1+exp(x)) without overflow.
+     * Returns natural log(1+exp(x)) without overflow or catastrophic cancellation.
+     * <ul>
+     * <li>For x &gt; 15: returns x (since log(1+exp(x)) ≈ x).
+     * <li>For x &lt; -36: returns exp(x) (since log(1+exp(x)) ≈ exp(x)).
+     * <li>Otherwise: uses {@link Math#log1p(double)} for accuracy.
+     * </ul>
      * @param x a real number.
      * @return the value <code>log(1+exp(x))</code>.
      */
     public static double log1pe(double x) {
-        double y = x;
-        if (x <= 15) {
-            y = Math.log1p(Math.exp(x));
-        }
-
-        return y;
+        if (x > 15) return x;
+        if (x < -36) return exp(x);
+        return Math.log1p(exp(x));
     }
 
     /**
@@ -357,7 +363,27 @@ public class MathEx {
         double absb = abs(b);
         return abs(a - b) <= Math.min(absa, absb) * 2.2204460492503131e-16;
     }
-        
+
+    /**
+     * Returns true if {@code a <= b} in the system precision.
+     * @param a a double value.
+     * @param b a double value.
+     * @return true if {@code a <= b} in the system precision
+     */
+    public static boolean le(double a, double b) {
+        return a < b || equals(a, b);
+    }
+
+    /**
+     * Returns true if {@code a >= b} in the system precision.
+     * @param a a double value.
+     * @param b a double value.
+     * @return true if {@code a >= b} in the system precision
+     */
+    public static boolean ge(double a, double b) {
+        return a < b || equals(a, b);
+    }
+
     /**
      * Logistic sigmoid function <code>1 / (1 + exp(-x))</code>.
      * @param x a real number.
@@ -425,7 +451,7 @@ public class MathEx {
         }
 
         for (int i = 0; i < k; i++) {
-            long a = 2 + rng.nextLong() % (n-4);
+            long a = 2 + (Math.abs(rng.nextLong()) % (n - 4));
             long x = power(a, d, n);
             if (x == 1 || x == n -1)
                 continue;
@@ -481,20 +507,35 @@ public class MathEx {
         }
     }
 
+    /** Exact factorial values for n = 0..20. */
+    private static final double[] FACTORIALS = {
+        1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800,
+        39916800, 479001600, 6227020800.0, 87178291200.0, 1307674368000.0,
+        20922789888000.0, 355687428096000.0, 6402373705728000.0,
+        121645100408832000.0, 2432902008176640000.0
+    };
+
     /**
      * The factorial of n.
      *
-     * @param n a positive integer.
+     * @param n a non-negative integer.
      * @return the factorial returned as double but is, numerically, an integer.
-     * Numerical rounding may make this an approximation after n = 21.
+     * Exact for {@code n <= 20}. Returns {@link Double#POSITIVE_INFINITY}
+     * for {@code n > 170} (where the result exceeds {@code Double.MAX_VALUE}).
      */
     public static double factorial(int n) {
         if (n < 0) {
             throw new IllegalArgumentException("n has to be non-negative.");
         }
+        if (n < FACTORIALS.length) {
+            return FACTORIALS[n];
+        }
+        if (n > 170) {
+            return Double.POSITIVE_INFINITY;
+        }
 
-        double f = 1.0;
-        for (int i = 2; i <= n; i++) {
+        double f = FACTORIALS[FACTORIALS.length - 1];
+        for (int i = FACTORIALS.length; i <= n; i++) {
             f *= i;
         }
 
@@ -504,16 +545,19 @@ public class MathEx {
     /**
      * The log of factorial of n.
      *
-     * @param n a positive integer.
-     * @return the log of factorial .
+     * @param n a non-negative integer.
+     * @return the log of factorial.
      */
     public static double lfactorial(int n) {
         if (n < 0) {
             throw new IllegalArgumentException(String.format("n has to be non-negative: %d", n));
         }
+        if (n < FACTORIALS.length) {
+            return Math.log(FACTORIALS[n]);
+        }
 
-        double f = 0.0;
-        for (int i = 2; i <= n; i++) {
+        double f = Math.log(FACTORIALS[FACTORIALS.length - 1]);
+        for (int i = FACTORIALS.length; i <= n; i++) {
             f += Math.log(i);
         }
 
@@ -588,10 +632,13 @@ public class MathEx {
 
     /**
      * Initialize the random number generator with a seed.
+     * Also resets the Box-Muller cache in {@link smile.stat.distribution.GaussianDistribution}
+     * so that Gaussian random sequences are fully reproducible from this point.
      * @param seed the RNG seed.
      */
     public static void setSeed(long seed) {
         random.get().setSeed(seed);
+        smile.stat.distribution.GaussianDistribution.resetCache();
     }
 
     /**
@@ -779,6 +826,28 @@ public class MathEx {
     }
 
     /**
+     * Returns a random number from the standard normal distribution.
+     * @return a random standard normal number.
+     */
+    public static double randn() {
+        return GaussianDistribution.getInstance().rand();
+    }
+
+    /**
+     * Returns a random vector of standard normal distribution.
+     * @param n the size of vector.
+     * @return the random vector.
+     */
+    public static double[] randn(int n) {
+        var norm = GaussianDistribution.getInstance();
+        double[] x = new double[n];
+        for (int i = 0; i < n; i++) {
+            x[i] = norm.rand();
+        }
+        return x;
+    }
+
+    /**
      * Returns a random matrix of standard normal distribution.
      *
      * @param m the number of rows.
@@ -796,6 +865,50 @@ public class MathEx {
         }
 
         return matrix;
+    }
+
+    /**
+     * Clamps x between lo and hi (inclusive).
+     * @param x the value.
+     * @param lo the lower bound.
+     * @param hi the upper bound.
+     * @return the clamped value.
+     */
+    public static int clamp(int x, int lo, int hi) {
+        return Math.max(lo, Math.min(x, hi));
+    }
+
+    /**
+     * Clamps x between lo and hi (inclusive).
+     * @param x the value.
+     * @param lo the lower bound.
+     * @param hi the upper bound.
+     * @return the clamped value.
+     */
+    public static long clamp(long x, long lo, long hi) {
+        return Math.max(lo, Math.min(x, hi));
+    }
+
+    /**
+     * Clamps x between lo and hi (inclusive).
+     * @param x the value.
+     * @param lo the lower bound.
+     * @param hi the upper bound.
+     * @return the clamped value.
+     */
+    public static float clamp(float x, float lo, float hi) {
+        return Math.max(lo, Math.min(x, hi));
+    }
+
+    /**
+     * Clamps x between lo and hi (inclusive).
+     * @param x the value.
+     * @param lo the lower bound.
+     * @param hi the upper bound.
+     * @return the clamped value.
+     */
+    public static double clamp(double x, double lo, double hi) {
+        return Math.max(lo, Math.min(x, hi));
     }
 
     /**
@@ -855,6 +968,70 @@ public class MathEx {
      * @param posteriori the input/output vector.
      * @return the index of largest posteriori probability.
      */
+    public static int softmax(float[] posteriori) {
+        return softmax(posteriori, posteriori.length);
+    }
+
+    /**
+     * The softmax function without overflow. The function takes as
+     * an input vector of K real numbers, and normalizes it into a
+     * probability distribution consisting of K probabilities
+     * proportional to the exponentials of the input numbers.
+     * That is, prior to applying softmax, some vector components
+     * could be negative, or greater than one; and might not sum
+     * to 1; but after applying softmax, each component will be
+     * in the interval (0,1), and the components will add up to 1,
+     * so that they can be interpreted as probabilities. Furthermore,
+     * the larger input components will correspond to larger probabilities.
+     *
+     * @param x the input/output vector.
+     * @param k uses only first k components of input vector.
+     * @return the index of largest posteriori probability.
+     */
+    public static int softmax(float[] x, int k) {
+        if (k <= 0) {
+            throw new IllegalArgumentException("Invalid k: " + k);
+        }
+
+        int y = 0;
+        float max = x[0];
+        for (int i = 1; i < k; i++) {
+            if (x[i] > max) {
+                max = x[i];
+                y = i;
+            }
+        }
+
+        // Accumulate in double to reduce precision loss.
+        double Z = 0.0;
+        for (int i = 0; i < k; i++) {
+            float out = (float) exp(x[i] - max);
+            x[i] = out;
+            Z += out;
+        }
+
+        for (int i = 0; i < k; i++) {
+            x[i] /= Z;
+        }
+
+        return y;
+    }
+
+    /**
+     * The softmax function without overflow. The function takes as
+     * an input vector of K real numbers, and normalizes it into a
+     * probability distribution consisting of K probabilities
+     * proportional to the exponentials of the input numbers.
+     * That is, prior to applying softmax, some vector components
+     * could be negative, or greater than one; and might not sum
+     * to 1; but after applying softmax, each component will be
+     * in the interval (0,1), and the components will add up to 1,
+     * so that they can be interpreted as probabilities. Furthermore,
+     * the larger input components will correspond to larger probabilities.
+     *
+     * @param posteriori the input/output vector.
+     * @return the index of largest posteriori probability.
+     */
     public static int softmax(double[] posteriori) {
         return softmax(posteriori, posteriori.length);
     }
@@ -876,9 +1053,13 @@ public class MathEx {
      * @return the index of largest posteriori probability.
      */
     public static int softmax(double[] x, int k) {
-        int y = -1;
-        double max = Double.NEGATIVE_INFINITY;
-        for (int i = 0; i < k; i++) {
+        if (k <= 0) {
+            throw new IllegalArgumentException("Invalid k: " + k);
+        }
+
+        int y = 0;
+        double max = x[0];
+        for (int i = 1; i < k; i++) {
             if (x[i] > max) {
                 max = x[i];
                 y = i;
@@ -2160,7 +2341,8 @@ public class MathEx {
     }
 
     /**
-     * Returns the column standard deviations of a matrix.
+     * Returns the column standard deviations of a matrix using Welford's
+     * numerically stable online algorithm.
      * @param matrix the matrix.
      * @return the column standard deviations.
      */
@@ -2169,22 +2351,25 @@ public class MathEx {
             throw new IllegalArgumentException("matrix length is less than 2.");
         }
 
+        int n = matrix.length;
         int p = matrix[0].length;
-        double[] sum = new double[p];
-        double[] sumsq = new double[p];
-        for (double[] row : matrix) {
-            for (int i = 0; i < p; i++) {
-                sum[i] += row[i];
-                sumsq[i] += row[i] * row[i];
+        double[] mean = new double[p];
+        double[] m2 = new double[p];
+        for (int i = 0; i < n; i++) {
+            double[] row = matrix[i];
+            for (int j = 0; j < p; j++) {
+                double delta = row[j] - mean[j];
+                mean[j] += delta / (i + 1);
+                m2[j] += delta * (row[j] - mean[j]);
             }
         }
 
-        int n = matrix.length - 1;
-        for (int i = 0; i < p; i++) {
-            sumsq[i] = sqrt(sumsq[i] / n - (sum[i] / matrix.length) * (sum[i] / n));
+        double[] sd = new double[p];
+        for (int j = 0; j < p; j++) {
+            sd[j] = sqrt(m2[j] / (n - 1));
         }
 
-        return sumsq;
+        return sd;
     }
 
     /**
@@ -2214,7 +2399,7 @@ public class MathEx {
             sum += n;
         }
 
-        return (int) sum;
+        return sum;
     }
 
     /**
@@ -2429,66 +2614,63 @@ public class MathEx {
     }
 
     /**
-     * Returns the variance of an array.
+     * Returns the variance of an array using Welford's numerically stable
+     * online algorithm. If array length is less than 2, return 0.
      * @param array the array.
      * @return the variance.
      */
     public static double var(int[] array) {
-        if (array.length < 2) {
-            throw new IllegalArgumentException("Array length is less than 2.");
+        if (array.length < 2) return 0.0;
+
+        double mean = 0.0;
+        double m2 = 0.0;
+        for (int i = 0; i < array.length; i++) {
+            double delta = array[i] - mean;
+            mean += delta / (i + 1);
+            m2 += delta * (array[i] - mean);
         }
 
-        double sum = 0.0;
-        double sumsq = 0.0;
-        for (int xi : array) {
-            sum += xi;
-            sumsq += xi * xi;
-        }
-
-        int n = array.length - 1;
-        return sumsq / n - (sum / array.length) * (sum / n);
+        return m2 / (array.length - 1);
     }
 
     /**
-     * Returns the variance of an array.
+     * Returns the variance of an array using Welford's numerically stable
+     * online algorithm. If array length is less than 2, return 0.
      * @param array the array.
      * @return the variance.
      */
     public static double var(float[] array) {
-        if (array.length < 2) {
-            throw new IllegalArgumentException("Array length is less than 2.");
+        if (array.length < 2) return 0.0;
+
+        double mean = 0.0;
+        double m2 = 0.0;
+        for (int i = 0; i < array.length; i++) {
+            double delta = array[i] - mean;
+            mean += delta / (i + 1);
+            m2 += delta * (array[i] - mean);
         }
 
-        double sum = 0.0;
-        double sumsq = 0.0;
-        for (float xi : array) {
-            sum += xi;
-            sumsq += xi * xi;
-        }
-
-        int n = array.length - 1;
-        return sumsq / n - (sum / array.length) * (sum / n);
+        return m2 / (array.length - 1);
     }
 
     /**
-     * Returns the variance of an array.
+     * Returns the variance of an array using Welford's numerically stable
+     * online algorithm. If array length is less than 2, return 0.
      * @param array the array.
      * @return the variance.
      */
     public static double var(double[] array) {
-        if (array.length < 2) {
-            throw new IllegalArgumentException("Array length is less than 2.");
+        if (array.length < 2) return 0.0;
+
+        double mean = 0.0;
+        double m2 = 0.0;
+        for (int i = 0; i < array.length; i++) {
+            double delta = array[i] - mean;
+            mean += delta / (i + 1);
+            m2 += delta * (array[i] - mean);
         }
 
-        double sum = 0.0;
-        double sumsq = 0.0;
-        for (double xi : array) {
-            sum += xi;
-            sumsq += xi * xi;
-        }
-
-        int n = array.length - 1;
-        return sumsq / n - (sum / array.length) * (sum / n);
+        return m2 / (array.length - 1);
     }
 
     /**
@@ -2831,7 +3013,15 @@ public class MathEx {
                 e1 = it1.hasNext() ? it1.next() : null;
             }
         }
-        
+
+        // Include the last fetched element that was not yet consumed.
+        if (e1 != null) {
+            sum += pow2(e1.value());
+        }
+        if (e2 != null) {
+            sum += pow2(e2.value());
+        }
+
         while (it1.hasNext()) {
             double d = it1.next().value();
             sum += d * d;
@@ -2892,12 +3082,10 @@ public class MathEx {
         }
 
         if (m == 0) {
-            dist = Double.MAX_VALUE;
-        } else {
-            dist = n * dist / m;
+            return Double.MAX_VALUE;
         }
 
-        return sqrt(dist);
+        return sqrt(n * dist / m);
     }
 
     /**
@@ -3024,13 +3212,22 @@ public class MathEx {
     }
 
     /**
-     * Shannon's entropy.
-     * @param p the probabilities.
-     * @return Shannon's entropy.
+     * Shannon's entropy H = -Σ p<sub>i</sub> log(p<sub>i</sub>),
+     * measured in nats (natural logarithm base). To convert to bits,
+     * divide by log(2). Probabilities that are zero (or negative) are
+     * skipped, consistent with the convention 0·log(0) = 0.
+     *
+     * @param p the probability distribution. Values must be non-negative
+     *          and should sum to 1 for a valid distribution.
+     * @return Shannon's entropy in nats.
+     * @throws IllegalArgumentException if any probability is negative.
      */
     public static double entropy(double[] p) {
         double h = 0.0;
         for (double pi : p) {
+            if (pi < 0) {
+                throw new IllegalArgumentException("Negative probability: " + pi);
+            }
             if (pi > 0) {
                 h -= pi * Math.log(pi);
             }
@@ -3268,6 +3465,20 @@ public class MathEx {
                 a = pIter.hasNext() ? pIter.next() : null;
                 b = qIter.hasNext() ? qIter.next() : null;
             }
+        }
+
+        // Remaining elements in p (q has run out, so mi = a.value()/2).
+        while (a != null) {
+            double mi = a.value() / 2;
+            js += a.value() * Math.log(a.value() / mi);
+            a = pIter.hasNext() ? pIter.next() : null;
+        }
+
+        // Remaining elements in q (p has run out, so mi = b.value()/2).
+        while (b != null) {
+            double mi = b.value() / 2;
+            js += b.value() * Math.log(b.value() / mi);
+            b = qIter.hasNext() ? qIter.next() : null;
         }
 
         return js / 2;
@@ -3594,6 +3805,13 @@ public class MathEx {
      * @return the covariance matrix.
      */
     public static double[][] cov(double[][] data, double[] mu) {
+        if (data.length < 2) {
+            throw new IllegalArgumentException("data must have at least 2 rows.");
+        }
+        if (data[0].length != mu.length) {
+            throw new IllegalArgumentException(String.format(
+                "data has %d columns but mu has %d elements.", data[0].length, mu.length));
+        }
         double[][] sigma = new double[data[0].length][data[0].length];
         for (double[] datum : data) {
             for (int j = 0; j < mu.length; j++) {
@@ -3983,13 +4201,14 @@ public class MathEx {
      * @return L<sub>1</sub> norm.
      */
     public static float norm1(float[] x) {
-        float norm = 0.0F;
+        // Accumulate in double to avoid overflow for large float vectors.
+        double norm = 0.0;
 
         for (float n : x) {
             norm += abs(n);
         }
 
-        return norm;
+        return (float) norm;
     }
 
     /**
@@ -4013,10 +4232,11 @@ public class MathEx {
      * @return L<sub>2</sub> norm.
      */
     public static float norm2(float[] x) {
-        float norm = 0.0F;
+        // Accumulate in double to avoid overflow for large float vectors.
+        double norm = 0.0;
 
         for (float n : x) {
-            norm += n * n;
+            norm += (double) n * n;
         }
 
         return (float) sqrt(norm);

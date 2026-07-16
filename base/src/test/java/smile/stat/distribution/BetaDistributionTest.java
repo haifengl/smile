@@ -158,4 +158,33 @@ public class BetaDistributionTest {
         assertEquals(0.5103163, instance.quantile(0.9), 1E-5);
         assertEquals(0.7056863, instance.quantile(0.99), 1E-5);
     }
+
+    /**
+     * Test that logp(x) == log(p(x)) for interior points.
+     */
+    @Test
+    public void testLogpConsistency() {
+        System.out.println("Beta logp consistency");
+        BetaDistribution instance = new BetaDistribution(2, 5);
+        for (double x : new double[]{0.1, 0.2, 0.3, 0.5, 0.8}) {
+            double px = instance.p(x);
+            assertEquals(Math.log(px), instance.logp(x), 1E-9);
+        }
+    }
+
+    /**
+     * Test logp edge cases x=0 and x=1.
+     */
+    @Test
+    public void testLogpEdgeCases() {
+        System.out.println("Beta logp edge cases");
+        // alpha > 1: p(0) = 0, logp(0) = -Inf
+        BetaDistribution d1 = new BetaDistribution(2, 2);
+        assertEquals(Double.NEGATIVE_INFINITY, d1.logp(0.0));
+        assertEquals(Double.NEGATIVE_INFINITY, d1.logp(1.0));
+        // Out of range
+        assertEquals(Double.NEGATIVE_INFINITY, d1.logp(-0.1));
+        assertEquals(Double.NEGATIVE_INFINITY, d1.logp(1.1));
+    }
 }
+

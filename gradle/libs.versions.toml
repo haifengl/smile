@@ -1,12 +1,23 @@
 [versions]
-arrow = "18.3.0"
+arrow = "19.0.0"
+fastxml = "2.22.1"
+jackson = "3.2.1"
+jsonschema = "4.38.0"
 
 [libraries]
 arrow-dataset = { module = "org.apache.arrow:arrow-dataset", version.ref = "arrow" }
-arrow-memory-netty = { module = "org.apache.arrow:arrow-memory-netty", version.ref = "arrow" }
-jackson = { module = "tools.jackson.core:jackson-databind", version = "3.1.1" }
-sqlite = { module = "org.xerial:sqlite-jdbc", version = "3.51.3.0" }
+arrow-memory-netty = { module = "org.apache.arrow:arrow-memory-unsafe", version.ref = "arrow" }
+fastxml-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "fastxml" }
+fastxml-datatype = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "fastxml" }
+jackson-databind = { module = "tools.jackson.core:jackson-databind", version.ref = "jackson" }
+jackson-yaml = { module = "tools.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
+jsonschema-generator = { module = "com.github.victools:jsonschema-generator", version.ref = "jsonschema" }
+jsonschema-jackson = { module = "com.github.victools:jsonschema-module-jackson", version.ref = "jsonschema" }
+jsonschema-swagger = { module = "com.github.victools:jsonschema-module-swagger-2", version.ref = "jsonschema" }
+sqlite = { module = "org.xerial:sqlite-jdbc", version = "3.53.2.0" }
 swingx = { module = "org.swinglabs:swingx", version = "1.6.1" }
 
 [bundles]
 arrow = ["arrow-dataset", "arrow-memory-netty"]
+jackson = ["jackson-databind", "jackson-yaml", "jsonschema-generator", "jsonschema-jackson"]
+fastxml = ["fastxml-databind", "fastxml-datatype"]

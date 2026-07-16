@@ -107,7 +107,10 @@ public record SignalNoiseRatio(String feature, double ratio) implements Comparab
             double sd1 = MathEx.stdev(x1);
             double sd2 = MathEx.stdev(x2);
 
-            double s2n = Math.abs(mu1 - mu2) / (sd1 + sd2);
+            double denom = sd1 + sd2;
+            // When both classes have zero variance and identical means the
+            // feature is constant and carries no information (S2N = 0).
+            double s2n = denom == 0.0 && mu1 == mu2 ? 0.0 : Math.abs(mu1 - mu2) / denom;
             return new SignalNoiseRatio(field.name(), s2n);
         }).toArray(SignalNoiseRatio[]::new);
     }

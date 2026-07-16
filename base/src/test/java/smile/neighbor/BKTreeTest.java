@@ -29,36 +29,22 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng Li
  */
 public class BKTreeTest {
-    String[] words;
-    BKTree<String, String> bktree;
-    LinearSearch<String, String> naive;
-
-    public BKTreeTest() throws Exception {
-        var wordnet = new WordNet();
-        words = Arrays.copyOf(wordnet.words(), 10000);
-
-        long start = System.currentTimeMillis();
-        bktree = BKTree.of(words, new EditDistance(50, true));
-        double time = (System.currentTimeMillis() - start) / 1000.0;
-        System.out.format("Building BK-tree: %.2fs%n", time);
-
-        naive = LinearSearch.of(words, new EditDistance(true));
-    }
+    static String[] words;
+    static BKTree<String, String> bktree;
+    static LinearSearch<String, String> naive;
 
     @BeforeAll
     public static void setUpClass() throws Exception {
-    }
+        var wordnet = new WordNet();
+        words = Arrays.copyOf(wordnet.words(), 10000);
 
-    @AfterAll
-    public static void tearDownClass() throws Exception {
-    }
+        var distance = new EditDistance(50, true);
+        long start = System.currentTimeMillis();
+        bktree = BKTree.of(words, distance);
+        double time = (System.currentTimeMillis() - start) / 1000.0;
+        System.out.format("Building BK-tree: %.2fs%n", time);
 
-    @BeforeEach
-    public void setUp() {
-    }
-
-    @AfterEach
-    public void tearDown() {
+        naive = LinearSearch.of(words, distance);
     }
 
     @Test
@@ -69,13 +55,6 @@ public class BKTreeTest {
         for (int i = 1000; i < 1100; i++) {
             bktree.search(words[i], 1, n1);
             naive.search(words[i], 1, n2);
-            /*
-            System.out.println(i+" "+words[i]);
-            java.util.Collections.sort(n1);
-            java.util.Collections.sort(n2);
-            System.out.println(n1.stream().map(Objects::toString).collect(Collectors.joining(", ")));
-            System.out.println(n2.stream().map(Objects::toString).collect(Collectors.joining(", ")));
-             */
             assertEquals(n1.size(), n2.size());
             String[] s1 = new String[n1.size()];
             String[] s2 = new String[n2.size()];

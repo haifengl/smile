@@ -21,16 +21,33 @@ import jakarta.persistence.*;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import org.hibernate.annotations.CreationTimestamp;
 
+/**
+ * A single message turn within a {@link Conversation}.
+ * Each item stores the role ({@code user} or {@code assistant}) and the
+ * corresponding message content, together with a creation timestamp.
+ */
 @Entity
+@Table(name = "ConversationItem",
+       indexes = @Index(name = "idx_conversation_item_conversation_id",
+                        columnList = "conversation_id"))
 public class ConversationItem extends PanacheEntityBase {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
-    @Column(name = "conversation_id")
+
+    /** Reference to the parent conversation. */
+    @Column(name = "conversation_id", nullable = false)
     public Long conversationId;
+
     @CreationTimestamp
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false, updatable = false)
     public Instant createdAt;
+
+    /** The speaker role, e.g. {@code "user"} or {@code "assistant"}. */
+    @Column(nullable = false, length = 32)
     public String role;
+
+    /** The raw message text. */
+    @Column(nullable = false, columnDefinition = "TEXT")
     public String content;
 }

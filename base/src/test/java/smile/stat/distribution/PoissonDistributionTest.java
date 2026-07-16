@@ -187,4 +187,39 @@ public class PoissonDistributionTest {
         assertEquals(6, instance.quantile(0.9), 1E-6);
         assertEquals(8, instance.quantile(0.99), 1E-6);
     }
+
+    /**
+     * Test lambda=0 degenerate Poisson: P(X=0)=1, P(X>0)=0, logp consistent.
+     */
+    @Test
+    public void testLambdaZero() {
+        System.out.println("Poisson lambda=0");
+        PoissonDistribution d = new PoissonDistribution(0.0);
+        // p(0) must be 1
+        assertEquals(1.0, d.p(0), 1E-10);
+        assertEquals(0.0, d.p(1), 1E-10);
+        // logp(0) = log(1) = 0, no NaN
+        assertEquals(0.0, d.logp(0), 1E-10);
+        assertTrue(Double.isInfinite(d.logp(1)));
+        // cdf
+        assertEquals(1.0, d.cdf(0), 1E-10);
+        assertEquals(0.0, d.cdf(-1), 1E-10);
+    }
+
+    /**
+     * Test that p(k) == exp(logp(k)) for consistency.
+     */
+    @Test
+    public void testPLogpConsistency() {
+        System.out.println("Poisson p/logp consistency");
+        PoissonDistribution d = new PoissonDistribution(3.5);
+        for (int k = 0; k <= 20; k++) {
+            double pk = d.p(k);
+            double lpk = d.logp(k);
+            if (pk > 0) {
+                assertEquals(pk, Math.exp(lpk), pk * 1E-10);
+            }
+        }
+    }
 }
+

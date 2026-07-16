@@ -16,33 +16,30 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 fi
 
 sbt clean
-rm -rf doc/api/*
+rm -rf doc/*
+rm -rf website/_site/api
 sbt unidoc
 check_error "!!"
-mv target/javaunidoc doc/api/java
+mv target/javaunidoc doc/java
 
 sbt json/doc
 check_error "!!"
-find doc/api/json -name '*.html' -exec bin/gtag.sh {} \;
+find doc/json -name '*.html' -exec bin/gtag.sh {} \;
 
 sbt scala/doc
 check_error "!!"
-find doc/api/scala -name '*.html' -exec bin/gtag.sh {} \;
+find doc/scala -name '*.html' -exec bin/gtag.sh {} \;
 
 ./gradlew :kotlin:dokkaGenerate
 check_error "!!"
-find doc/api/kotlin -name '*.html' -exec bin/gtag.sh {} \;
-
-#cd clojure
-#./lein codox
-#check_error "!!"
-#cd ..
-#find doc/api/clojure -name '*.html' -exec tidy -m {} \;
-#find doc/api/clojure -name '*.html' -exec bin/gtag.sh {} \;
+find doc/kotlin -name '*.html' -exec bin/gtag.sh {} \;
 
 cd website
+npm install
 npm run deploy
 check_error "!!"
+mkdir -p _site/api
+mv ../doc/* _site/api/
 
 # build binary package
 cd ..
@@ -64,7 +61,7 @@ while true; do
             # sbt ++2.13.18 spark/publishSigned
             # check_error "sbt spark/publish"
             break;;
-        [Nn]* ) break;;
+        [Nn]* ) exit 0;;
         * ) echo "Please answer yes or no.";;
     esac
 done
@@ -74,9 +71,9 @@ while true; do
     case $ans in
         [Yy]* )
             sbt sonaRelease
-            check_error "sbt sonaRelease"
+            check_error "sbt release"
             break;;
-        [Nn]* ) break;;
+        [Nn]* ) exit 0;;
         * ) echo "Please answer yes or no.";;
     esac
 done
@@ -85,10 +82,21 @@ while true; do
     read -p "Do you want to publish smile-clojure? (yes/no): " ans
     case $ans in
         [Yy]* )
-            cd ../clojure
+            cd clojure
+            ./lein test
+            check_error "lein test"
+
+            ./lein codox
+            check_error "lein codox"
+
             ./lein deploy clojars
-            check_error "lein deploy clojars"
+            check_error "lein deploy"
+
             cd ..
+            find doc/clojure -name '*.html' -exec tidy -m {} \;
+            find doc/clojure -name '*.html' -exec bin/gtag.sh {} \;
+            mv doc/clojure website/_site/api/
+
             break;;
         [Nn]* ) break;;
         * ) echo "Please answer yes or no.";;

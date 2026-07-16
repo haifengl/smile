@@ -67,7 +67,7 @@ public class BIRCH implements VectorQuantizer {
      */
     public final int L;
     /**
-     * THe maximum radius of a sub-cluster.
+     * The maximum radius of a sub-cluster.
      */
     public final double T;
     /**
@@ -454,6 +454,19 @@ public class BIRCH implements VectorQuantizer {
      * @param T the maximum radius of a sub-cluster.
      */
     public BIRCH(int d, int B, int L, double T) {
+        if (d <= 0) {
+            throw new IllegalArgumentException("Invalid dimension: " + d);
+        }
+        if (B < 2) {
+            throw new IllegalArgumentException("Invalid branching factor: " + B);
+        }
+        if (L < 2) {
+            throw new IllegalArgumentException("Invalid leaf capacity: " + L);
+        }
+        if (!(T > 0 && Double.isFinite(T))) {
+            throw new IllegalArgumentException("Invalid radius threshold: " + T);
+        }
+
         this.d = d;
         this.B = B;
         this.L = L;
@@ -462,6 +475,8 @@ public class BIRCH implements VectorQuantizer {
 
     @Override
     public void update(double[] x) {
+        checkInput(x);
+
         if (root == null) {
             root = new Leaf(x);
         } else {
@@ -472,6 +487,12 @@ public class BIRCH implements VectorQuantizer {
 
     @Override
     public double[] quantize(double[] x) {
+        checkInput(x);
+
+        if (root == null) {
+            throw new IllegalStateException("Model has no clustering features");
+        }
+
         ClusteringFeature cluster = root.nearest(x);
         return cluster.centroid();
     }
@@ -481,6 +502,10 @@ public class BIRCH implements VectorQuantizer {
      * @return the cluster centroids of leaf nodes.
      */
     public double[][] centroids() {
+        if (root == null) {
+            throw new IllegalStateException("Model has no clustering features");
+        }
+
         ArrayList<double[]> list = new ArrayList<>();
         centroids(root, list);
         return list.toArray(new double[list.size()][]);
@@ -497,6 +522,16 @@ public class BIRCH implements VectorQuantizer {
             for (int i = 0; i < parent.k; i++) {
                 centroids(parent.children[i], list);
             }
+        }
+    }
+
+    /** Validates input vector shape. */
+    private void checkInput(double[] x) {
+        if (x == null) {
+            throw new IllegalArgumentException("Input vector is null");
+        }
+        if (x.length != d) {
+            throw new IllegalArgumentException("Invalid input dimension: expected " + d + ", actual " + x.length);
         }
     }
 }

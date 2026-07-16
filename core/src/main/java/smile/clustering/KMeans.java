@@ -17,10 +17,12 @@
 package smile.clustering;
 
 import java.util.Arrays;
-import java.util.function.ToDoubleBiFunction;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
+import smile.math.distance.Distance;
 import smile.math.distance.EuclideanDistance;
+import smile.tensor.ScalarType;
+import smile.tensor.Vector;
 import smile.util.AlgoStatus;
 
 /**
@@ -88,6 +90,88 @@ public class KMeans {
     }
 
     /**
+     * Fits k-means clustering on single-precision input data.
+     * @param data the input data of which each row is an observation.
+     * @param k the number of clusters.
+     * @param maxIter the maximum number of iterations.
+     * @return the model.
+     */
+    public static CentroidClustering<float[], float[]> fit(float[][] data, int k, int maxIter) {
+        return fit(data, new Clustering.Options(k, maxIter));
+    }
+
+    /**
+     * Fits k-means clustering on single-precision input data. A
+     * {@link BBDTree} backed by {@link ScalarType#Float32} vectors is used
+     * internally to reduce memory usage.
+     *
+     * @param data the input data of which each row is an observation.
+     * @param options the hyperparameters.
+     * @return the model.
+     */
+    public static CentroidClustering<float[], float[]> fit(float[][] data, Clustering.Options options) {
+        validateOptions(options, data.length);
+        return fit(new BBDTree(data), data, options);
+    }
+
+    /**
+     * Partitions single-precision data into k clusters.
+     * @param bbd the BBD-tree of data for fast clustering.
+     * @param data the input data of which each row is an observation.
+     * @param options the hyperparameters.
+     * @return the model.
+     */
+    public static CentroidClustering<float[], float[]> fit(BBDTree bbd, float[][] data, Clustering.Options options) {
+        validateOptions(options, data.length);
+
+        int k = options.k();
+        int maxIter = options.maxIter();
+        double tol = options.tol();
+        var controller = options.controller();
+        int n = data.length;
+        int d = data[0].length;
+
+        Distance<float[]> distance = MathEx::distance;
+        var clustering = CentroidClustering.init("K-Means", data, k, distance);
+        double distortion = clustering.distortion();
+        logger.info("Initial distortion = {}", distortion);
+
+        var size = clustering.size();
+        var group = clustering.group();
+        var centroids = clustering.centers();
+        updateCentroids(clustering, data);
+
+        var vCentroids = Arrays.stream(centroids).map(Vector::column).toArray(Vector[]::new);
+        var vSum = IntStream.range(0, k)
+                .mapToObj(i -> Vector.zeros(ScalarType.Float32, d))
+                .toArray(Vector[]::new);
+        double diff = Double.MAX_VALUE;
+        for (int iter = 1; iter <= maxIter && diff > tol; iter++) {
+            double wcss = bbd.clustering(k, vCentroids, vSum, size, group);
+            diff = distortion - wcss;
+            distortion = wcss;
+
+            logger.info("Iteration {}: distortion = {}", iter, distortion);
+            if (controller != null) {
+                controller.submit(new AlgoStatus(iter, distortion));
+                if (controller.isInterrupted()) break;
+            }
+        }
+
+        // In case of early stop, recalculate centroids and re-wrap.
+        if (diff > tol) {
+            updateCentroids(clustering, data);
+        }
+
+        var proximity = clustering.proximity();
+        IntStream.range(0, n).parallel().forEach(i -> {
+            double dist = distance.applyAsDouble(data[i], centroids[group[i]]);
+            proximity[i] = dist * dist;
+        });
+        return new CentroidClustering<>("K-Means", centroids, distance, group, proximity);
+    }
+
+    /**
      * Fits k-means clustering.
      * @param data the input data of which each row is an observation.
      * @param k the number of clusters.
@@ -105,6 +189,7 @@ public class KMeans {
      * @return the model.
      */
     public static CentroidClustering<double[], double[]> fit(double[][] data, Clustering.Options options) {
+        validateOptions(options, data.length);
         return fit(new BBDTree(data), data, options);
     }
 
@@ -116,6 +201,9 @@ public class KMeans {
      * @return the model.
      */
     public static CentroidClustering<double[], double[]> fit(BBDTree bbd, double[][] data, Clustering.Options options) {
+        validateOptions(options, data.length);
+        validateData(data, false);
+
         int k = options.k();
         int maxIter = options.maxIter();
         double tol = options.tol();
@@ -123,7 +211,7 @@ public class KMeans {
         int n = data.length;
         int d = data[0].length;
 
-        ToDoubleBiFunction<double[], double[]> distance = new EuclideanDistance();
+        Distance<double[]> distance = new EuclideanDistance();
         var clustering = CentroidClustering.init("K-Means", data, k, distance);
         double distortion = clustering.distortion();
         logger.info("Initial distortion = {}", distortion);
@@ -134,10 +222,13 @@ public class KMeans {
         var centroids = clustering.centers();
         updateCentroids(clustering, data);
 
-        double[][] sum = new double[k][d];
+        var vCentroids = Arrays.stream(centroids).map(Vector::column).toArray(Vector[]::new);
+        var vSum = IntStream.range(0, k)
+                .mapToObj(i -> Vector.zeros(ScalarType.Float64, d))
+                .toArray(Vector[]::new);
         double diff = Double.MAX_VALUE;
         for (int iter = 1; iter <= maxIter && diff > tol; iter++) {
-            double wcss = bbd.clustering(k, centroids, sum, size, group);
+            double wcss = bbd.clustering(k, vCentroids, vSum, size, group);
             diff = distortion - wcss;
             distortion = wcss;
 
@@ -158,7 +249,7 @@ public class KMeans {
             double dist = distance.applyAsDouble(data[i], centroids[group[i]]);
             proximity[i] = dist * dist;
         });
-        return new CentroidClustering<>("X-Means", centroids, distance, group, proximity);
+        return new CentroidClustering<>("K-Means", centroids, distance, group, proximity);
     }
 
     /**
@@ -179,6 +270,9 @@ public class KMeans {
      * @return the model.
      */
     public static CentroidClustering<double[], double[]> lloyd(double[][] data, Clustering.Options options) {
+        validateOptions(options, data.length);
+        validateData(data, true);
+
         int k = options.k();
         int maxIter = options.maxIter();
         double tol = options.tol();
@@ -186,7 +280,7 @@ public class KMeans {
         int n = data.length;
         int d = data[0].length;
 
-        ToDoubleBiFunction<double[], double[]> distance = MathEx::distanceWithMissingValues;
+        Distance<double[]> distance = MathEx::distanceWithMissingValues;
         var clustering = CentroidClustering.init("K-Means", data, k, distance);
         double distortion = clustering.distortion();
         logger.info("Initial distortion = {}", distortion);
@@ -216,6 +310,35 @@ public class KMeans {
         }
 
         return clustering;
+    }
+
+    /**
+     * Calculates the new centroids in the new clusters (single-precision).
+     */
+    static void updateCentroids(CentroidClustering<float[], float[]> clustering, float[][] data) {
+        int n = data.length;
+        int[] size = clustering.size();
+        int[] group = clustering.group();
+        float[][] centroids = clustering.centers();
+        int k = centroids.length;
+        int d = centroids[0].length;
+
+        Arrays.fill(size, 0);
+        IntStream.range(0, k).parallel().forEach(cluster -> {
+            float[] centroid = new float[d];
+            for (int i = 0; i < n; i++) {
+                if (group[i] == cluster) {
+                    size[cluster]++;
+                    for (int j = 0; j < d; j++) {
+                        centroid[j] += data[i][j];
+                    }
+                }
+            }
+            for (int j = 0; j < d; j++) {
+                centroid[j] /= size[cluster];
+            }
+            centroids[cluster] = centroid;
+        });
     }
 
     /**
@@ -260,6 +383,7 @@ public class KMeans {
         int k = centroids.length;
         int d = centroids[0].length;
 
+        Arrays.fill(size, 0);
         IntStream.range(0, k).parallel().forEach(cluster -> {
             double[] centroid = new double[d];
             Arrays.fill(notNaN[cluster], 0);
@@ -276,9 +400,58 @@ public class KMeans {
             }
 
             for (int j = 0; j < d; j++) {
-                centroid[j] /= notNaN[cluster][j];
+                if (notNaN[cluster][j] > 0) {
+                    centroid[j] /= notNaN[cluster][j];
+                } else {
+                    // Keep previous coordinate when a cluster has only missing values in this dimension.
+                    centroid[j] = centroids[cluster][j];
+                }
             }
             centroids[cluster] = centroid;
         });
+    }
+
+    /**
+     * Validates the hyperparameters for K-Means.
+     * @param options the clustering options.
+     * @param n the number of observations.
+     */
+    private static void validateOptions(Clustering.Options options, int n) {
+        if (options.k() > n) {
+            throw new IllegalArgumentException(
+                    String.format("Number of clusters %d cannot be greater than the number of observations %d.",
+                            options.k(), n));
+        }
+    }
+
+    /**
+     * Validates matrix-shaped finite input data for K-Means.
+     * @param data the input data.
+     * @param allowNaN true if allows the input data to contain NaN values.
+     */
+    private static void validateData(double[][] data, boolean allowNaN) {
+        if (data.length == 0) {
+            throw new IllegalArgumentException("Empty input data.");
+        }
+
+        int d = data[0].length;
+        if (d == 0) {
+            throw new IllegalArgumentException("Empty feature vectors.");
+        }
+
+        for (int i = 1; i < data.length; i++) {
+            if (data[i].length != d) {
+                throw new IllegalArgumentException("Ragged input data at row " + i);
+            }
+        }
+
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < d; j++) {
+                double x = data[i][j];
+                if (Double.isInfinite(x) || (!allowNaN && Double.isNaN(x))) {
+                    throw new IllegalArgumentException(String.format("Invalid value at row %d col %d: %s", i, j, x));
+                }
+            }
+        }
     }
 }

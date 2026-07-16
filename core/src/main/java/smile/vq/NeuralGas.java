@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.function.ToDoubleBiFunction;
 import java.util.stream.IntStream;
-import smile.clustering.CentroidClustering;
 import smile.graph.AdjacencyMatrix;
 import smile.graph.Graph;
 import smile.graph.Graph.Edge;
@@ -82,6 +81,10 @@ public class NeuralGas implements VectorQuantizer {
      */
     private final Neuron[] neurons;
     /**
+     * The dimensionality of input vectors.
+     */
+    private final int d;
+    /**
      * The network of neurons.
      */
     private final AdjacencyMatrix graph;
@@ -119,6 +122,31 @@ public class NeuralGas implements VectorQuantizer {
      *                 iterations for one or two epochs.
      */
     public NeuralGas(double[][] neurons, TimeFunction alpha, TimeFunction theta, TimeFunction lifetime) {
+        if (neurons == null || neurons.length < 2) {
+            throw new IllegalArgumentException("NeuralGas requires at least 2 neurons");
+        }
+        if (alpha == null) {
+            throw new IllegalArgumentException("alpha is null");
+        }
+        if (theta == null) {
+            throw new IllegalArgumentException("theta is null");
+        }
+        if (lifetime == null) {
+            throw new IllegalArgumentException("lifetime is null");
+        }
+
+        int d = neurons[0].length;
+        if (d == 0) {
+            throw new IllegalArgumentException("Neuron dimension is zero");
+        }
+        this.d = d;
+
+        for (double[] neuron : neurons) {
+            if (neuron.length != d) {
+                throw new IllegalArgumentException("Inconsistent neuron dimensionality");
+            }
+        }
+
         this.neurons = IntStream.range(0, neurons.length).mapToObj(i -> new Neuron(i, neurons[i].clone())).toArray(Neuron[]::new);
         this.alpha = alpha;
         this.theta = theta;
@@ -155,8 +183,9 @@ public class NeuralGas implements VectorQuantizer {
 
     @Override
     public void update(double[] x) {
+        checkInput(x);
+
         int k = neurons.length;
-        int d = x.length;
 
         IntStream.range(0, neurons.length).parallel().forEach(i -> dist[i] = MathEx.distance(neurons[i].w, x));
         QuickSort.sort(dist, neurons);
@@ -180,7 +209,23 @@ public class NeuralGas implements VectorQuantizer {
 
     @Override
     public double[] quantize(double[] x) {
+        checkInput(x);
+
+        if (neurons.length == 0) {
+            throw new IllegalStateException("No neurons available");
+        }
+
         IntStream.range(0, neurons.length).parallel().forEach(i -> dist[i] = MathEx.distance(neurons[i].w, x));
         return neurons[MathEx.whichMin(dist)].w;
+    }
+
+    /** Validates input vector shape. */
+    private void checkInput(double[] x) {
+        if (x == null) {
+            throw new IllegalArgumentException("Input vector is null");
+        }
+        if (x.length != d) {
+            throw new IllegalArgumentException("Invalid input dimension: expected " + d + ", actual " + x.length);
+        }
     }
 }

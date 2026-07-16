@@ -71,7 +71,7 @@ public class FScore implements ClassificationMetric {
      */
     public FScore(double beta, Averaging strategy) {
         if (beta <= 0.0) {
-            throw new IllegalArgumentException("Negative beta");
+            throw new IllegalArgumentException("Non-positive beta: " + beta);
         }
 
         this.beta = beta;

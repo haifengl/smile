@@ -41,6 +41,10 @@ public class NeuralMap implements VectorQuantizer {
     private static final long serialVersionUID = 2L;
 
     /**
+     * The dimensionality of signals.
+     */
+    private final int d;
+    /**
      * The number of signals processed so far.
      */
     private int t = 0;
@@ -68,16 +72,36 @@ public class NeuralMap implements VectorQuantizer {
      * Neurons in the neural network.
      */
     private final ArrayList<Neuron> neurons = new ArrayList<>();
-
     /**
      * Constructor.
+     * @param d the dimensionality of signals.
      * @param r the distance threshold to activate the nearest neuron of a signal.
      * @param epsBest the learning rate to update activated neuron.
      * @param epsNeighbor the learning rate to update neighbors of activated neuron.
      * @param edgeLifetime the maximum age of edges.
      * @param beta decrease the freshness of all neurons by multiply them with beta.
      */
-    public NeuralMap(double r, double epsBest, double epsNeighbor, int edgeLifetime, double beta) {
+    public NeuralMap(int d, double r, double epsBest, double epsNeighbor, int edgeLifetime, double beta) {
+        if (d <= 0) {
+            throw new IllegalArgumentException("Invalid dimension: " + d);
+        }
+        if (!(r > 0 && Double.isFinite(r))) {
+            throw new IllegalArgumentException("Invalid radius: " + r);
+        }
+        if (!(epsBest >= 0 && Double.isFinite(epsBest))) {
+            throw new IllegalArgumentException("Invalid epsBest: " + epsBest);
+        }
+        if (!(epsNeighbor >= 0 && Double.isFinite(epsNeighbor))) {
+            throw new IllegalArgumentException("Invalid epsNeighbor: " + epsNeighbor);
+        }
+        if (edgeLifetime <= 0) {
+            throw new IllegalArgumentException("Invalid edgeLifetime: " + edgeLifetime);
+        }
+        if (!(beta > 0 && beta <= 1.0 && Double.isFinite(beta))) {
+            throw new IllegalArgumentException("Invalid beta: " + beta);
+        }
+
+        this.d = d;
         this.r = r;
         this.epsBest = epsBest;
         this.epsNeighbor = epsNeighbor;
@@ -87,6 +111,8 @@ public class NeuralMap implements VectorQuantizer {
 
     @Override
     public void update(double[] x) {
+        checkInputForUpdate(x);
+
         t++;
 
         if (neurons.size() < 2) {
@@ -184,6 +210,10 @@ public class NeuralMap implements VectorQuantizer {
      *            be a small value (e.g. 1E-7).
      */
     public void clear(double eps) {
+        if (!(eps >= 0 && Double.isFinite(eps))) {
+            throw new IllegalArgumentException("Invalid freshness threshold: " + eps);
+        }
+
         ArrayList<Neuron> noise = new ArrayList<>();
         for (Neuron neuron : neurons) {
             if (neuron.counter < eps) {
@@ -211,6 +241,12 @@ public class NeuralMap implements VectorQuantizer {
 
     @Override
     public double[] quantize(double[] x) {
+        checkInputForQuantize(x);
+
+        if (neurons.isEmpty()) {
+            throw new IllegalStateException("No neurons available");
+        }
+
         neurons.stream().parallel().forEach(node -> node.distance(x));
 
         Neuron bmu = neurons.getFirst();
@@ -221,5 +257,26 @@ public class NeuralMap implements VectorQuantizer {
         }
 
         return bmu.w;
+    }
+
+    /** Validates input for update while allowing dimension inference on first sample. */
+    private void checkInputForUpdate(double[] x) {
+        if (x == null) {
+            throw new IllegalArgumentException("Input vector is null");
+        }
+        if (x.length != d) {
+            throw new IllegalArgumentException("Invalid input dimension: expected " + d + ", actual " + x.length);
+        }
+    }
+
+    /** Validates input for quantization against learned model dimensionality. */
+    private void checkInputForQuantize(double[] x) {
+        if (x == null) {
+            throw new IllegalArgumentException("Input vector is null");
+        }
+
+        if (x.length != d) {
+            throw new IllegalArgumentException("Invalid input dimension: expected " + d + ", actual " + x.length);
+        }
     }
 }

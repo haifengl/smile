@@ -16,12 +16,13 @@
  */
 package smile.deep.layer;
 
+import java.lang.foreign.MemorySegment;
 import java.util.function.Function;
-import org.bytedeco.pytorch.Module;
 import smile.deep.activation.*;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
+import smile.torch.smile_torch_h;
 
 /**
  * A layer in the neural network.
@@ -43,10 +44,22 @@ public interface Layer extends Function<Tensor, Tensor> {
     }
 
     /**
-     * Returns the PyTorch Module object.
-     * @return the PyTorch Module object.
+     * Returns the native {@code ST_Module} handle for this layer.
+     * @return the native {@code ST_Module} handle.
      */
-    Module asTorch();
+    MemorySegment module();
+
+    /**
+     * Returns the layer/module name.
+     * @return the layer/module name.
+     */
+    default String name() {
+        MemorySegment name = smile_torch_h.smile_module_name(module());
+        if (name == null || name.address() == 0) {
+            return getClass().getSimpleName();
+        }
+        return name.reinterpret(Long.MAX_VALUE).getString(0);
+    }
 
     /**
      * Moves the layer block to a device.
@@ -54,7 +67,12 @@ public interface Layer extends Function<Tensor, Tensor> {
      * @return this layer.
      */
     default Layer to(Device device) {
-        asTorch().to(device.asTorch(), true);
+        MemorySegment d = device.toNative();
+        try {
+            smile_torch_h.smile_module_to_device(module(), d, 1);
+        } finally {
+            smile_torch_h.smile_device_free(d);
+        }
         return this;
     }
 
@@ -65,7 +83,12 @@ public interface Layer extends Function<Tensor, Tensor> {
      * @return this layer.
      */
     default Layer to(Device device, ScalarType dtype) {
-        asTorch().to(device.asTorch(), dtype.asTorch(), true);
+        MemorySegment d = device.toNative();
+        try {
+            smile_torch_h.smile_module_to_dtype(module(), d, dtype.code(), 1);
+        } finally {
+            smile_torch_h.smile_device_free(d);
+        }
         return this;
     }
 
@@ -176,7 +199,7 @@ public interface Layer extends Function<Tensor, Tensor> {
     static SequentialBlock silu(int in, int out) {
         return new SequentialBlock(
                 new LinearLayer(in, out),
-                new GELU(true)
+                new SiLU(true)
         );
     }
 
@@ -300,6 +323,59 @@ public interface Layer extends Function<Tensor, Tensor> {
     }
 
     /**
+     * Returns a fully connected layer with ELU activation function.
+     * @param in the number of input features.
+     * @param out the number of output features.
+     * @return a fully connected layer.
+     */
+    static SequentialBlock elu(int in, int out) {
+        return new SequentialBlock(
+                new LinearLayer(in, out),
+                new ELU(1.0, true)
+        );
+    }
+
+    /**
+     * Returns a fully connected layer with ELU activation function.
+     * @param in the number of input features.
+     * @param out the number of output features.
+     * @param alpha the alpha value for the ELU formulation.
+     * @return a fully connected layer.
+     */
+    static SequentialBlock elu(int in, int out, double alpha) {
+        return new SequentialBlock(
+                new LinearLayer(in, out),
+                new ELU(alpha, true)
+        );
+    }
+
+    /**
+     * Returns a fully connected layer with Hard Swish activation function.
+     * @param in the number of input features.
+     * @param out the number of output features.
+     * @return a fully connected layer.
+     */
+    static SequentialBlock hardswish(int in, int out) {
+        return new SequentialBlock(
+                new LinearLayer(in, out),
+                new Hardswish(true)
+        );
+    }
+
+    /**
+     * Returns a fully connected layer with Mish activation function.
+     * @param in the number of input features.
+     * @param out the number of output features.
+     * @return a fully connected layer.
+     */
+    static SequentialBlock mish(int in, int out) {
+        return new SequentialBlock(
+                new LinearLayer(in, out),
+                new Mish(true)
+        );
+    }
+
+    /**
      * Returns a convolutional layer.
      * @param in the number of input channels.
      * @param out the number of output features.
@@ -366,7 +442,7 @@ public interface Layer extends Function<Tensor, Tensor> {
      * Returns an average pooling layer that reduces a tensor by combining cells,
      * and assigning the average value of the input cells to the output cell.
      * @param size the window/kernel size.
-     * @return a max pooling layer.
+     * @return an average pooling layer.
      */
     static AvgPool2dLayer avgPool2d(int size) {
         return new AvgPool2dLayer(size);
@@ -468,7 +544,7 @@ public interface Layer extends Function<Tensor, Tensor> {
      *
      * @param numTokens the size of the dictionary of embeddings.
      * @param dim the size of each embedding vector.
-     * @return a dropout layer.
+     * @return an embedding layer.
      */
     static EmbeddingLayer embedding(int numTokens, int dim) {
         return embedding(numTokens, dim, 1.0);
@@ -485,9 +561,33 @@ public interface Layer extends Function<Tensor, Tensor> {
      * @param numTokens the size of the dictionary of embeddings.
      * @param dim the size of each embedding vector.
      * @param alpha optional scaling factor.
-     * @return a dropout layer.
+     * @return an embedding layer.
      */
     static EmbeddingLayer embedding(int numTokens, int dim, double alpha) {
         return new EmbeddingLayer(numTokens, dim, alpha);
+    }
+
+    /**
+     * Returns a group normalization layer. The input channels are separated
+     * into groups and the mean and standard-deviation are calculated separately
+     * over each group.
+     * @param groups the number of groups to separate the channels into.
+     *               The number of channels must be divisible by groups.
+     * @param channels the number of input channels.
+     * @return a group normalization layer.
+     */
+    static GroupNormLayer groupNorm(int groups, int channels) {
+        return new GroupNormLayer(groups, channels);
+    }
+
+    /**
+     * Returns an RMS normalization layer. RMSNorm regularizes the summed
+     * inputs according to root mean square (RMS), giving the model
+     * re-scaling invariance and implicit learning rate adaptation.
+     * @param dim the layer/feature dimension to normalize.
+     * @return an RMS normalization layer.
+     */
+    static RMSNormLayer rmsNorm(int dim) {
+        return new RMSNormLayer(dim);
     }
 }

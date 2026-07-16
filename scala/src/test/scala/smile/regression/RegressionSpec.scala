@@ -93,7 +93,7 @@ class RegressionSpec extends Specification {
 
       val error = RMSE.of(longley.y(), model.predict(longley.data))
       println("Training RMSE = " + error)
-      error must beCloseTo(1.6549, 1E-4)
+      error must beCloseTo(1.6392, 1E-4)
     }
 
     "Gradient Boosting" in {
@@ -108,7 +108,7 @@ class RegressionSpec extends Specification {
 
       val error = RMSE.of(longley.y(), model.predict(longley.data))
       println("Training RMSE = " + error)
-      error must beCloseTo(2.3512, 1E-4)
+      error must beCloseTo(2.1894, 1E-4)
     }
   }
 }

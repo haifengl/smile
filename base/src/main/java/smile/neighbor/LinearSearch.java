@@ -21,6 +21,8 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
+
+import smile.math.MathEx;
 import smile.math.distance.Distance;
 import smile.sort.HeapSelect;
 
@@ -142,6 +144,14 @@ public class LinearSearch<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Ser
         return String.format("Linear Search (%s)", distance);
     }
 
+    /**
+     * Returns the number of data objects.
+     * @return the number of data objects.
+     */
+    public int size() {
+        return data.size();
+    }
+
     /** Returns a neighbor object. */
     private Neighbor<K, V> neighbor(int i, double distance) {
         return new Neighbor<>(keys.get(i), data.get(i), i, distance);
@@ -204,7 +214,7 @@ public class LinearSearch<K, V> implements KNNSearch<K, V>, RNNSearch<K, V>, Ser
 
         double[] dist = keys.parallelStream().mapToDouble(x -> distance.d(x, q)).toArray();
         for (int i = 0; i < dist.length; i++) {
-            if (dist[i] <= radius && q != keys.get(i)) {
+            if (MathEx.le(dist[i], radius) && q != keys.get(i)) {
                 neighbors.add(neighbor(i, dist[i]));
             }
         }

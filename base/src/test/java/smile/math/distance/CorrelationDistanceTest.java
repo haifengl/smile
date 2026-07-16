@@ -45,11 +45,11 @@ public class CorrelationDistanceTest {
     }
 
     /**
-     * Test of distance method, of class CorrelationDistance.
+     * Test of Pearson correlation distance.
      */
     @Test
-    public void testDistance() {
-        System.out.println("distance");
+    public void testPearsonDistance() {
+        System.out.println("Pearson distance");
         double[] x = {1.0, 2.0, 3.0, 4.0};
         double[] y = {4.0, 3.0, 2.0, 1.0};
         double[] z = {4.0, 2.0, 3.0, 1.0};
@@ -60,5 +60,57 @@ public class CorrelationDistanceTest {
         assertEquals(2.0, cor.d(x, y), 1E-5);
         assertEquals(0.2, cor.d(y, z), 1E-5);
         assertEquals(0.5313153, cor.d(w, v), 1E-7);
+    }
+
+    /**
+     * Test of Spearman correlation distance.
+     */
+    @Test
+    public void testSpearmanDistance() {
+        System.out.println("Spearman distance");
+        double[] x = {1.0, 2.0, 3.0, 4.0};
+        double[] y = {4.0, 3.0, 2.0, 1.0};
+        CorrelationDistance spearman = new CorrelationDistance("spearman");
+        // Perfect reverse ranking => Spearman cor = -1 => distance = 2
+        assertEquals(2.0, spearman.d(x, y), 1E-5);
+        // Same vector => distance = 0
+        assertEquals(0.0, spearman.d(x, x), 1E-5);
+    }
+
+    /**
+     * Test of Kendall correlation distance.
+     */
+    @Test
+    public void testKendallDistance() {
+        System.out.println("Kendall distance");
+        double[] x = {1.0, 2.0, 3.0, 4.0};
+        double[] y = {4.0, 3.0, 2.0, 1.0};
+        CorrelationDistance kendall = new CorrelationDistance("kendall");
+        // Perfect reverse ranking => Kendall tau = -1 => distance = 2
+        assertEquals(2.0, kendall.d(x, y), 1E-5);
+        assertEquals(0.0, kendall.d(x, x), 1E-5);
+    }
+
+    @Test
+    public void testInvalidMethod() {
+        System.out.println("invalid method");
+        assertThrows(IllegalArgumentException.class, () -> new CorrelationDistance("invalid"));
+    }
+
+    @Test
+    public void testSymmetry() {
+        System.out.println("symmetry");
+        double[] x = {1.0, 3.0, 5.0, 2.0};
+        double[] y = {2.0, 1.0, 4.0, 3.0};
+        CorrelationDistance cor = new CorrelationDistance();
+        assertEquals(cor.d(x, y), cor.d(y, x), 1E-9);
+    }
+
+    @Test
+    public void testToString() {
+        System.out.println("toString");
+        assertTrue(new CorrelationDistance("pearson").toString().contains("pearson"));
+        assertTrue(new CorrelationDistance("spearman").toString().contains("spearman"));
+        assertTrue(new CorrelationDistance("kendall").toString().contains("kendall"));
     }
 }

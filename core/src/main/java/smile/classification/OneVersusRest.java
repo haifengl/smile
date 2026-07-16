@@ -84,7 +84,7 @@ public class OneVersusRest<T> extends AbstractClassifier<T> {
         super(labels);
         this.classifiers = classifiers;
         this.platt = platt;
-        this. k = classifiers.length;
+        this.k = classifiers.length;
     }
 
     /**
@@ -210,7 +210,7 @@ public class OneVersusRest<T> extends AbstractClassifier<T> {
 
     @Override
     public boolean isSoft() {
-        return true;
+        return platt != null;
     }
 
     @Override

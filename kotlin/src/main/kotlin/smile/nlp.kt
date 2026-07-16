@@ -17,8 +17,6 @@
 package smile.nlp
 
 import smile.math.MathEx
-import smile.nlp.collocation.Bigram
-import smile.nlp.collocation.NGram
 import smile.nlp.dictionary.EnglishStopWords
 import smile.nlp.dictionary.StopWords
 import smile.nlp.pos.HMMPOSTagger
@@ -64,7 +62,7 @@ fun lancaster(word: String): String = lancaster.stem(word)
  */
 fun corpus(text: List<String>): SimpleCorpus {
     return SimpleCorpus().apply {
-        text.forEach { s -> add(Text(s)) }
+        text.forEach { s -> add(doc(s)) }
     }
 }
 
@@ -75,7 +73,7 @@ fun corpus(text: List<String>): SimpleCorpus {
  *
  * Finding collocations requires first calculating the frequencies of words
  * and their appearance in the context of other words. Often the collection
- * of words will then requiring filtering to only retain useful content terms.
+ * of words will then require filtering to only retain useful content terms.
  * Each n-gram of words may then be scored according to some association measure,
  * in order to determine the relative likelihood of each n-gram being a
  * collocation.
@@ -86,8 +84,8 @@ fun corpus(text: List<String>): SimpleCorpus {
  * @return significant bigram collocations in descending order
  *         of likelihood ratio.
  */
-fun bigram(k: Int, minFreq: Int, text: List<String>): Array<Bigram> {
-    return Bigram.of(corpus(text), k, minFreq)
+fun bigrams(k: Int, minFreq: Int, text: List<String>): List<Bigram> {
+    return corpus(text).bigrams(k, minFreq)
 }
 
 /**
@@ -100,8 +98,8 @@ fun bigram(k: Int, minFreq: Int, text: List<String>): Array<Bigram> {
  * @return significant bigram collocations in descending order
  *         of likelihood ratio.
  */
-fun bigram(p: Double, minFreq: Int, text: List<String>): Array<Bigram> {
-    return Bigram.of(corpus(text), p, minFreq)
+fun bigrams(p: Double, minFreq: Int, text: List<String>): List<Bigram> {
+    return corpus(text).bigrams(p, minFreq)
 }
 
 /**
@@ -121,7 +119,7 @@ fun ngram(maxNGramSize: Int, minFreq: Int, text: List<String>): Array<Array<NGra
         }
     }
 
-    return NGram.of(sentences, maxNGramSize, minFreq)
+    return NGram.apriori(sentences, maxNGramSize, minFreq)
 }
 
 /**
@@ -370,6 +368,6 @@ fun String.postag(): Array<PennTreebankPOS> {
  * @param k the number of top keywords to return.
  * @return the top keywords.
  */
-fun String.keywords(k: Int = 10): Array<NGram> {
-    return smile.nlp.keyword.CooccurrenceKeywords.of(this, k)
+fun String.keywords(k: Int = 10): List<NGram> {
+    return Text.of(this).keywords(k)
 }

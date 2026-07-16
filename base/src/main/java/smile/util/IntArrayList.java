@@ -163,10 +163,14 @@ public final class IntArrayList implements Serializable {
     /**
      * Returns the value at the specified position in this list.
      *
-     * @param index index of the value to return 
-     * @return the value at the specified position in this list 
+     * @param index index of the value to return
+     * @return the value at the specified position in this list
+     * @throws IndexOutOfBoundsException if the index is out of range ({@code index < 0 || index >= size()})
      */
     public int get(int index) {
+        if (index < 0 || index >= size) {
+            throw new IndexOutOfBoundsException(String.valueOf(index));
+        }
         return data[index];
     }
 

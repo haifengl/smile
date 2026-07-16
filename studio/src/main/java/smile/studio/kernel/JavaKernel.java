@@ -75,6 +75,22 @@ public class JavaKernel extends Kernel<SnippetEvent> {
             javax.swing.SwingUtilities.invokeLater(() -> {
                 com.formdev.flatlaf.FlatLightLaf.setup();
             });""");
+        if (smile.util.OS.isMacOS()) {
+            eval("""
+                import java.nio.file.*;
+                if (Files.exists(Path.of("/opt/homebrew/lib/libarpack.dylib"))) {
+                    System.load("/opt/homebrew/lib/libarpack.dylib");
+                } else if (Files.exists(Path.of("/usr/local/lib/libarpack.dylib"))) {
+                    System.load("/usr/local/lib/libarpack.dylib");
+                }
+                Files.find(Path.of(System.getProperty("smile.home"), "venv"), 10,
+                    (p, a) -> {
+                        var name = p.getFileName().toString();
+                        return name.equals("libonnxruntime.dylib") || name.equals("libtorch.dylib");
+                    })
+                    .forEach(p -> System.load(p.toAbsolutePath().toString()));
+                System.load(System.getProperty("smile.home") + "/bin/libsmile_torch.dylib");""");
+        }
     }
 
     @Override
@@ -89,10 +105,12 @@ public class JavaKernel extends Kernel<SnippetEvent> {
 
     @Override
     public void reset() {
-        // This command removes all previously entered snippets and resets
-        // the JShell session to its initial state, including reloading
-        // the default startup scripts.
-        jshell.eval("/reset");
+        // Drop all snippets, restoring the JShell session to its initial state.
+        // jshell.eval("/reset") does not work — "/reset" is a jshell tool command,
+        // not a Java expression. Drop every snippet individually instead.
+        jshell.snippets()
+              .filter(s -> jshell.status(s) != Snippet.Status.DROPPED)
+              .forEach(jshell::drop);
     }
 
     @Override
@@ -117,7 +135,7 @@ public class JavaKernel extends Kernel<SnippetEvent> {
             process(events);
             for (var event : events) {
                 if (event.exception() != null) {
-                    logger.error("Evaluation error: ", event.exception());
+                    logger.error("Evaluation error: {}", event.exception().getMessage());
                     return false;
                 }
 
@@ -156,14 +174,14 @@ public class JavaKernel extends Kernel<SnippetEvent> {
             if (event.status() == Snippet.Status.VALID && event.snippet() instanceof VarSnippet variable) {
                 if (!variable.name().matches("\\$\\d+")) {
                     String typeName = variable.typeName();
-                    output.print("⇒ " + typeName + " " + variable.name() + " = ");
+                    if (output != null) output.print("⇒ " + typeName + " " + variable.name() + " = ");
 
                     String value = event.value();
                     if (value == null) {
-                        output.println("null");
+                        if (output != null) output.println("null");
                     } else {
                         if (typeName.endsWith("DataFrame")) {
-                            output.println();
+                            if (output != null) output.println();
                         } else if (typeName.contains("[]")) {
                             // The type may be generic with array, e.g., SVM<double[]>
                             int index = value.indexOf('{');
@@ -171,31 +189,33 @@ public class JavaKernel extends Kernel<SnippetEvent> {
                                 value = value.substring(0, index);
                             }
                         }
-                        output.println(value);
+                        if (output != null) output.println(value);
                     }
                 }
             } else if (event.status() == Snippet.Status.REJECTED) {
-                output.println("✖ Rejected snippet: " + event.snippet().source());
+                if (output != null) output.println("✖ Rejected snippet: " + event.snippet().source());
             } else if (event.status() == Snippet.Status.RECOVERABLE_DEFINED ||
                        event.status() == Snippet.Status.RECOVERABLE_NOT_DEFINED) {
-                output.println("⚠ Recoverable issue: " + event.snippet().source());
+                if (output != null) output.println("⚠ Recoverable issue: " + event.snippet().source());
                 if (event.snippet() instanceof DeclarationSnippet snippet) {
-                    output.println("⚠ Unresolved dependencies:");
-                    unresolvedDependencies(snippet).forEach(name -> output.println("  └ " + name));
+                    if (output != null) output.println("⚠ Unresolved dependencies:");
+                    unresolvedDependencies(snippet).forEach(name -> {
+                        if (output != null) output.println("  └ " + name);
+                    });
                 }
             }
 
             diagnostics(event.snippet()).forEach(diag -> {
                 String kind = diag.isError() ? "ERROR" : "WARN";
-                output.println(String.format("%s: %s",
+                if (output != null) output.println(String.format("%s: %s",
                         kind, diag.getMessage(Locale.getDefault())));
             });
 
             if (event.exception() instanceof EvalException ex) {
-                output.println(ex.getExceptionClassName() + ": " + (ex.getMessage() != null ? ex.getMessage() : ""));
+                if (output != null) output.println(ex.getExceptionClassName() + ": " + (ex.getMessage() != null ? ex.getMessage() : ""));
                 // JShell exception stack trace is often concise
                 for (StackTraceElement ste : ex.getStackTrace()) {
-                    output.println("  at " + ste.toString());
+                    if (output != null) output.println("  at " + ste.toString());
                 }
             }
         }

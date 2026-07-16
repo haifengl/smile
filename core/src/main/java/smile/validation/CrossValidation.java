@@ -53,11 +53,11 @@ public interface CrossValidation {
      * @return k-fold data splits.
      */
     static Bag[] of(int n, int k) {
-        if (n < 0) {
+        if (n <= 0) {
             throw new IllegalArgumentException("Invalid sample size: " + n);
         }
 
-        if (k < 0 || k > n) {
+        if (k <= 0 || k > n) {
             throw new IllegalArgumentException("Invalid number of CV rounds: " + k);
         }
 
@@ -95,7 +95,11 @@ public interface CrossValidation {
      * @return k-fold data splits.
      */
     static Bag[] stratify(int[] category, int k) {
-        if (k < 0) {
+        if (category.length == 0) {
+            throw new IllegalArgumentException("Empty category labels.");
+        }
+
+        if (k <= 0 || k > category.length) {
             throw new IllegalArgumentException("Invalid number of folds: " + k);
         }
 
@@ -173,7 +177,11 @@ public interface CrossValidation {
      * @return k-fold data splits.
      */
     static Bag[] nonoverlap(int[] group, int k) {
-        if (k < 0) {
+        if (group.length == 0) {
+            throw new IllegalArgumentException("Empty group labels.");
+        }
+
+        if (k <= 0) {
             throw new IllegalArgumentException("Invalid number of folds: " + k);
         }
 
@@ -181,7 +189,7 @@ public interface CrossValidation {
         int m = unique.length;
 
         if (k > m) {
-            throw new IllegalArgumentException("k-fold must be not greater than the than number of groups");
+            throw new IllegalArgumentException("k-fold must be not greater than the number of groups");
         }
 
         Arrays.sort(unique);

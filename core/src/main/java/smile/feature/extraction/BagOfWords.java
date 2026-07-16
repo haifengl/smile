@@ -146,6 +146,9 @@ public class BagOfWords implements Transform {
 
     @Override
     public Tuple apply(Tuple x) {
+        if (columns == null) {
+            throw new UnsupportedOperationException("BagOfWords was constructed without DataFrame columns; use apply(String) instead.");
+        }
         int[] bag = new int[featureIndex.size()];
 
         for (String column : columns) {

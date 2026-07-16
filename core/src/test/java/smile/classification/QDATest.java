@@ -47,6 +47,7 @@ public class QDATest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach
@@ -75,11 +76,10 @@ public class QDATest {
     public void testBreastCancer() throws Exception {
         System.out.println("Breast Cancer");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         var cancer = new BreastCancer();
         ClassificationValidations<QDA> result = CrossValidation.classification(10, cancer.x(), cancer.y(), QDA::fit);
 
         System.out.println(result);
-        assertEquals(0.9589, result.avg().accuracy(), 1E-4);
+        assertEquals(0.9543, result.avg().accuracy(), 1E-4);
     }
 }

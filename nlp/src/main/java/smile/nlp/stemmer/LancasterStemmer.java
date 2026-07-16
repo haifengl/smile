@@ -27,7 +27,7 @@ import java.util.ArrayList;
  * based iterative stemmer. The stemmer, although remaining efficient and
  * easily implemented, is known to be very strong and aggressive. The stemmer
  * utilizes a single table of rules, each of which may specify
- * the removal or replacement of an ending. For details, see
+ * the removal or replacement of an ending.
  *
  * <h2>References</h2>
  * <ol>
@@ -306,7 +306,7 @@ public class LancasterStemmer implements Stemmer {
     }
 
     /**
-     * Determin whether ch is a vowel or not uses prev determination
+     * Determine whether ch is a vowel or not uses prev determination
      * when ch == y
      */
     private boolean vowel(char ch, char prev) {
@@ -321,10 +321,10 @@ public class LancasterStemmer implements Stemmer {
     }
 
     /**
-     * Returns the relavent array index for specified char 'a' to 'z'.
+     * Returns the relevant array index for specified char 'a' to 'z'.
      */
     private static int charCode(char ch) {
-        return ((int) ch) - 97;
+        return ch - 'a';
     }
 
     /**
@@ -345,13 +345,14 @@ public class LancasterStemmer implements Stemmer {
     }
 
     /**
-     * Remove all non letter or digit characters from word
+     * Remove all non-letter characters from word (retains only a–z after
+     * lower-casing).
      */
     private String cleanup(String word) {
         int last = word.length();
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < last; i++) {
-            if ((word.charAt(i) >= 'a') & (word.charAt(i) <= 'z')) {
+            if ((word.charAt(i) >= 'a') && (word.charAt(i) <= 'z')) {
                 sb.append(word.charAt(i));
             }
         }
@@ -360,10 +361,11 @@ public class LancasterStemmer implements Stemmer {
 
     @Override
     public String stem(String word) {
+        if (word == null || word.isEmpty()) return word;
         // Convert input to lowercase and remove all chars that are not a letter.
         word = cleanup(word.toLowerCase());
 
-        //if str's length is greater than 2 then remove prefixes
+        // If str's length is greater than 3 then remove prefixes
         if ((word.length() > 3) && (stripPrefix)) {
             word = stripPrefixes(word);
         }

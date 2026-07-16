@@ -18,7 +18,7 @@
   {:author "Haifeng Li"}
   (:import [smile.io Read]
            [smile.data DataFrame]
-           [org.apache.commons.csv CSVFormat]))
+           [org.apache.commons.csv CSVFormat CSVFormat$Builder]))
 
 (defn read-jdbc
   "Reads a JDBC query result to a data frame."
@@ -27,11 +27,14 @@
 
 (defn read-csv
   "Reads a CSV file."
-  ([path] (read-csv path \, true))
+  ([path] (Read/csv path))
   ([path delimiter header]
-  (let [base (.withDelimiter CSVFormat/DEFAULT delimiter)
-        format (if header (.withFirstRecordAsHeader base) base)]
-     (Read/csv path format))))
+   (let [builder (CSVFormat$Builder/create CSVFormat/DEFAULT)]
+     (.setDelimiter builder (str delimiter))
+     (when header
+       (.setHeader builder (make-array String 0))
+       (.setSkipHeaderRecord builder true))
+     (Read/csv path (.get builder)))))
 
 (defn read-arff
   "Reads an ARFF file."

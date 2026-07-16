@@ -20,11 +20,15 @@ import smile.llm.FinishReason;
 import smile.llm.Message;
 
 /**
- * The chat completion response.
+ * Represents a single non-streaming chat completion choice.
+ * Currently reserved for future non-streaming API support;
+ * streaming responses are emitted as plain-text chunks directly.
  *
  * @author Haifeng Li
  */
 public class CompletionResponse {
+    /** The generated assistant message. */
     public Message message;
+    /** The reason generation stopped (e.g. max tokens, stop sequence). */
     public FinishReason finishReason;
 }

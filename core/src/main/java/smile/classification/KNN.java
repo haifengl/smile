@@ -125,8 +125,16 @@ public class KNN<T> extends AbstractClassifier<T> {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
 
+        if (x.length == 0) {
+            throw new IllegalArgumentException("Empty training samples.");
+        }
+
         if (k < 1) {
             throw new IllegalArgumentException("Illegal k = " + k);
+        }
+
+        if (k > x.length) {
+            throw new IllegalArgumentException(String.format("Illegal k = %d greater than training size %d", k, x.length));
         }
 
         KNNSearch<T, T> knn;
@@ -161,8 +169,16 @@ public class KNN<T> extends AbstractClassifier<T> {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
 
+        if (x.length == 0) {
+            throw new IllegalArgumentException("Empty training samples.");
+        }
+
         if (k < 1) {
             throw new IllegalArgumentException("Illegal k = " + k);
+        }
+
+        if (k > x.length) {
+            throw new IllegalArgumentException(String.format("Illegal k = %d greater than training size %d", k, x.length));
         }
 
         KNNSearch<double[], double[]> knn;
@@ -207,6 +223,10 @@ public class KNN<T> extends AbstractClassifier<T> {
 
     @Override
     public int predict(T x, double[] posteriori) {
+        if (posteriori.length != classes.size()) {
+            throw new IllegalArgumentException("Invalid posteriori vector size: " + posteriori.length);
+        }
+
         Neighbor<T,T>[] neighbors = knn.search(x, k);
         if (k == 1) {
             if (neighbors[0] == null) {

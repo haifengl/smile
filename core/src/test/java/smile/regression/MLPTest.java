@@ -48,6 +48,7 @@ public class MLPTest {
     
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
     
     @AfterEach
@@ -80,8 +81,6 @@ public class MLPTest {
     public void test(String dataset, double[][] x, double[] y, Scaler scaler, double expected, LayerBuilder... builders) {
         System.out.println(dataset);
 
-        MathEx.setSeed(19650218); // to get repeatable results.
-
         DataFrame data = DataFrame.of(x);
         InvertibleColumnTransform standardizer = Standardizer.fit(data);
         System.out.println(standardizer);
@@ -112,7 +111,7 @@ public class MLPTest {
         var cpu = new CPU();
         double[][] x = cpu.x();
         double[] y = cpu.y();
-        test("CPU", x, y, Scaler.standardizer(y, true), 65.4472,
+        test("CPU", x, y, Scaler.standardizer(y, true), 76.0831,
                 Layer.input(x[0].length), Layer.rectifier(30), Layer.sigmoid(30));
     }
 
@@ -157,7 +156,7 @@ public class MLPTest {
         var calHousing = new CalHousing();
         double[][] x = calHousing.x();
         double[] y = calHousing.y();
-        test("cal_housing", x, y, null, 115720.1382,
+        test("cal_housing", x, y, null, 115729.1878,
                 Layer.input(x[0].length), Layer.rectifier(40), Layer.sigmoid(30));
     }
 

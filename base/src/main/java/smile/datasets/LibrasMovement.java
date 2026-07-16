@@ -61,7 +61,9 @@ public record LibrasMovement(DataFrame data, Formula formula) {
     }
 
     /**
-     * Returns the class labels.
+     * Returns the class labels in 0-based encoding.
+     * The raw file uses 1-based class codes (1–15); this method
+     * subtracts 1 so that labels are in the range [0, 14].
      * @return the class labels.
      */
     public int[] y() {

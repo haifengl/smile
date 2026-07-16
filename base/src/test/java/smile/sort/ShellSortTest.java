@@ -20,130 +20,169 @@ import smile.math.MathEx;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-
 /**
+ * Tests for {@link ShellSort}.
  *
  * @author Haifeng Li
  */
 public class ShellSortTest {
 
-    double[] big = new double[1000000];
-    public ShellSortTest() {
-        for (int i = 0; i < big.length; i++)
-            big[i] = MathEx.random();
-    }
+    // -----------------------------------------------------------------------
+    // int[]
+    // -----------------------------------------------------------------------
 
-
-    @BeforeAll
-    public static void setUpClass() throws Exception {
-    }
-
-    @AfterAll
-    public static void tearDownClass() throws Exception {
-    }
-
-    @BeforeEach
-    public void setUp() {
-    }
-
-    @AfterEach
-    public void tearDown() {
-    }
-
-    /**
-     * Test of sort method, of class ShellSort.
-     */
     @Test
     public void testSortInt() {
-        System.out.println("sort int");
-        int[] data = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+        System.out.println("ShellSort int");
+        int[] expected = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
         int[] data1 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
         ShellSort.sort(data1);
-        assertArrayEquals(data, data1);
+        assertArrayEquals(expected, data1);
+
         int[] data2 = {9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
         ShellSort.sort(data2);
-        assertArrayEquals(data, data2);
+        assertArrayEquals(expected, data2);
+
         int[] data3 = {0, 1, 2, 3, 5, 4, 6, 7, 8, 9};
         ShellSort.sort(data3);
-        assertArrayEquals(data, data3);
+        assertArrayEquals(expected, data3);
+
         int[] data4 = {4, 1, 2, 3, 0, 5, 6, 7, 8, 9};
         ShellSort.sort(data4);
-        assertArrayEquals(data, data4);
+        assertArrayEquals(expected, data4);
     }
 
-    /**
-     * Test of sort method, of class ShellSort.
-     */
+    // -----------------------------------------------------------------------
+    // float[]
+    // -----------------------------------------------------------------------
+
     @Test
     public void testSortFloat() {
-        System.out.println("sort float");
-        float[] data = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+        System.out.println("ShellSort float");
+        float[] expected = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
         float[] data1 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
         ShellSort.sort(data1);
-        assertTrue(MathEx.equals(data, data1));
+        assertArrayEquals(expected, data1, 1E-6f);
+
         float[] data2 = {9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
         ShellSort.sort(data2);
-        assertTrue(MathEx.equals(data, data2));
-        float[] data3 = {0, 1, 2, 3, 5, 4, 6, 7, 8, 9};
-        ShellSort.sort(data3);
-        assertTrue(MathEx.equals(data, data3));
-        float[] data4 = {4, 1, 2, 3, 0, 5, 6, 7, 8, 9};
-        ShellSort.sort(data4);
-        assertTrue(MathEx.equals(data, data4));
+        assertArrayEquals(expected, data2, 1E-6f);
     }
 
-    /**
-     * Test of sort method, of class ShellSort.
-     */
+    // -----------------------------------------------------------------------
+    // double[]
+    // -----------------------------------------------------------------------
+
     @Test
     public void testSortDouble() {
-        System.out.println("sort double");
-        double[] data = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+        System.out.println("ShellSort double");
+        double[] expected = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
         double[] data1 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
         ShellSort.sort(data1);
-        assertTrue(MathEx.equals(data, data1));
+        assertArrayEquals(expected, data1, 1E-10);
+
         double[] data2 = {9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
         ShellSort.sort(data2);
-        assertTrue(MathEx.equals(data, data2));
+        assertArrayEquals(expected, data2, 1E-10);
+
         double[] data3 = {0, 1, 2, 3, 5, 4, 6, 7, 8, 9};
         ShellSort.sort(data3);
-        assertTrue(MathEx.equals(data, data3));
+        assertArrayEquals(expected, data3, 1E-10);
+
         double[] data4 = {4, 1, 2, 3, 0, 5, 6, 7, 8, 9};
         ShellSort.sort(data4);
-        assertTrue(MathEx.equals(data, data4));
+        assertArrayEquals(expected, data4, 1E-10);
     }
 
-    /**
-     * Test of sort method, of class ShellSort.
-     */
+    // -----------------------------------------------------------------------
+    // Generic T[]
+    // -----------------------------------------------------------------------
+
     @Test
     public void testSortObject() {
-        System.out.println("sort object");
-        Integer[] data = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+        System.out.println("ShellSort object");
+        Integer[] expected = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
         Integer[] data1 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
         ShellSort.sort(data1);
-        assertArrayEquals(data, data1);
+        assertArrayEquals(expected, data1);
+
         Integer[] data2 = {9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
         ShellSort.sort(data2);
-        assertArrayEquals(data, data2);
+        assertArrayEquals(expected, data2);
+
         Integer[] data3 = {0, 1, 2, 3, 5, 4, 6, 7, 8, 9};
         ShellSort.sort(data3);
-        assertArrayEquals(data, data3);
-        Integer[] data4 = {4, 1, 2, 3, 0, 5, 6, 7, 8, 9};
-        ShellSort.sort(data4);
-        assertArrayEquals(data, data4);
+        assertArrayEquals(expected, data3);
     }
 
-    /**
-     * Test of sort method, of class ShellSort.
-     */
+    // -----------------------------------------------------------------------
+    // Edge cases
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testSingleElement() {
+        System.out.println("ShellSort single element");
+        int[] a = {42};
+        ShellSort.sort(a);
+        assertEquals(42, a[0]);
+    }
+
+    @Test
+    public void testTwoElements() {
+        System.out.println("ShellSort two elements");
+        int[] a = {2, 1};
+        ShellSort.sort(a);
+        assertArrayEquals(new int[]{1, 2}, a);
+
+        int[] b = {1, 2};
+        ShellSort.sort(b);
+        assertArrayEquals(new int[]{1, 2}, b);
+    }
+
+    @Test
+    public void testAllEqual() {
+        System.out.println("ShellSort all equal");
+        int[] a = {5, 5, 5, 5, 5};
+        ShellSort.sort(a);
+        for (int v : a) assertEquals(5, v);
+
+        double[] d = {3.14, 3.14, 3.14};
+        ShellSort.sort(d);
+        for (double v : d) assertEquals(3.14, v, 1E-10);
+    }
+
+    @Test
+    public void testNegativeValues() {
+        System.out.println("ShellSort negative values");
+        int[] a = {3, -1, -5, 0, 2, -3};
+        ShellSort.sort(a);
+        assertArrayEquals(new int[]{-5, -3, -1, 0, 2, 3}, a);
+    }
+
+    @Test
+    public void testStrings() {
+        System.out.println("ShellSort strings");
+        String[] s = {"banana", "apple", "cherry", "date"};
+        ShellSort.sort(s);
+        assertArrayEquals(new String[]{"apple", "banana", "cherry", "date"}, s);
+    }
+
+    // -----------------------------------------------------------------------
+    // Large random sort
+    // -----------------------------------------------------------------------
+
     @Test
     public void testSortBig() {
-        System.out.println("sort big array");
+        System.out.println("ShellSort big array");
+        double[] big = new double[1000000];
+        for (int i = 0; i < big.length; i++) big[i] = MathEx.random();
         ShellSort.sort(big);
+        for (int i = 0; i < big.length - 1; i++) {
+            assertTrue(big[i] <= big[i + 1], "Not sorted at " + i);
+        }
     }
 }

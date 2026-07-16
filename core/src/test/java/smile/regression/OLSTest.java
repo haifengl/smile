@@ -48,6 +48,7 @@ public class OLSTest {
 
     @BeforeEach
     public void setUp() {
+        MathEx.setSeed(19650218); // to get repeatable results.
     }
 
     @AfterEach
@@ -107,7 +108,6 @@ public class OLSTest {
     public void testCPU() throws Exception {
         System.out.println("CPU");
 
-        MathEx.setSeed(19650218); // to get repeatable results.
         var cpu = new CPU();
         LinearModel model = OLS.fit(cpu.formula(), cpu.data());
         System.out.println(model);
@@ -115,7 +115,7 @@ public class OLSTest {
         RegressionValidations<LinearModel> result = CrossValidation.regression(10, cpu.formula(), cpu.data(), OLS::fit);
 
         System.out.println(result);
-        assertEquals(51.0009, result.avg().rmse(), 1E-4);
+        assertEquals(55.8208, result.avg().rmse(), 1E-4);
     }
 
     @Test

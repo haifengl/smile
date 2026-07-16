@@ -649,9 +649,12 @@ public abstract class Graph {
      * Returns the minimum spanning tree (MST) for a weighted undirected
      * graph by Prim's algorithm. MST is a subset of the edges that forms
      * a tree that includes every vertex, where the total weight of all
-     * the edges in the tree is minimized.
-     * @param mst an output container to hold edges in the MST.
-     * @return the cost of minimum spanning tree.
+     * the edges in the tree is minimized. For a disconnected graph, the
+     * method returns the minimum spanning <em>forest</em> — one spanning
+     * tree per connected component.
+     * @param mst an output container to hold edges in the MST/forest,
+     *            or {@code null} if the edges are not needed.
+     * @return the total cost of the minimum spanning tree / forest.
      */
     public double prim(List<Edge> mst) {
         if (digraph) {
@@ -674,7 +677,7 @@ public abstract class Graph {
         int[] parent = new int[n];
         Arrays.fill(parent, -1);
 
-        // Total weight of the MST
+        // Total weight of the MST/forest
         double totalWeight = 0.0;
 
         // Start the MST from node 0
@@ -694,7 +697,17 @@ public abstract class Graph {
             }
 
             if (u == -1) {
-                throw new RuntimeException("Failed to construct MST");
+                // Graph is disconnected — find the next unvisited vertex to start
+                // a new component (spanning forest).
+                for (int v = 0; v < n; v++) {
+                    if (!inMST[v]) {
+                        u = v;
+                        minEdgeWeight[v] = 0.0;
+                        minWeight = 0.0;
+                        break;
+                    }
+                }
+                if (u == -1) break; // All vertices processed
             }
 
             // Include this vertex in the MST

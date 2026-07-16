@@ -162,4 +162,43 @@ public class BernoulliDistributionTest {
         assertEquals(0, instance.quantile(0.7), 1E-7);
         assertEquals(1, instance.quantile(1), 1E-7);
     }
+
+    /**
+     * Test edge case p=0: only outcome is 0.
+     */
+    @Test
+    public void testPZero() {
+        System.out.println("Bernoulli p=0");
+        BernoulliDistribution d = new BernoulliDistribution(0.0);
+        assertEquals(1.0, d.p(0), 1E-10);
+        assertEquals(0.0, d.p(1), 1E-10);
+        assertEquals(0.0, d.logp(0), 1E-10);      // log(1) = 0
+        assertTrue(Double.isInfinite(d.logp(1)));   // log(0) = -inf
+    }
+
+    /**
+     * Test edge case p=1: only outcome is 1.
+     */
+    @Test
+    public void testPOne() {
+        System.out.println("Bernoulli p=1");
+        BernoulliDistribution d = new BernoulliDistribution(1.0);
+        assertEquals(0.0, d.p(0), 1E-10);
+        assertEquals(1.0, d.p(1), 1E-10);
+        assertTrue(Double.isInfinite(d.logp(0)));   // log(0) = -inf
+        assertEquals(0.0, d.logp(1), 1E-10);        // log(1) = 0
+    }
+
+    /**
+     * Test BernoulliDistribution constructed from boolean array.
+     */
+    @Test
+    public void testFromBooleanArray() {
+        System.out.println("Bernoulli from boolean array");
+        boolean[] data = {true, false, true, true, false};
+        BernoulliDistribution d = new BernoulliDistribution(data);
+        assertEquals(0.6, d.p, 1E-10);
+        assertEquals(0.4, d.q, 1E-10);
+    }
 }
+

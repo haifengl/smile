@@ -31,7 +31,7 @@ import java.io.Serial;
  * the basis of the popular Student's t-tests for the statistical significance
  * of the difference between two sample means, and for confidence intervals
  * for the difference between two population means. The Student's
- * t-distribution is a special case of the generalised hyperbolic distribution.
+ * t-distribution is a special case of the generalized hyperbolic distribution.
  *
  * @author Haifeng Li
  */
@@ -80,11 +80,23 @@ public class TDistribution implements Distribution {
 
     @Override
     public double variance() {
+        if (nu == 1) {
+            throw new UnsupportedOperationException("Variance is undefined for t-distribution with nu = 1");
+        }
+        if (nu == 2) {
+            return Double.POSITIVE_INFINITY;
+        }
         return nu / (nu - 2.0);
     }
 
     @Override
     public double sd() {
+        if (nu == 1) {
+            throw new UnsupportedOperationException("SD is undefined for t-distribution with nu = 1");
+        }
+        if (nu == 2) {
+            return Double.POSITIVE_INFINITY;
+        }
         return Math.sqrt(nu / (nu - 2.0));
     }
 
@@ -100,7 +112,10 @@ public class TDistribution implements Distribution {
 
     @Override
     public double rand() {
-        return inverseTransformSampling();
+        // t(ν) = Z / sqrt(χ²(ν)/ν), where Z ~ N(0,1) independent of χ²(ν)
+        double z = GaussianDistribution.getInstance().rand();
+        double chi2 = new GammaDistribution(nu / 2.0, 2.0).rand(); // χ²(ν) = Gamma(ν/2, 2)
+        return z / Math.sqrt(chi2 / nu);
     }
 
     @Override

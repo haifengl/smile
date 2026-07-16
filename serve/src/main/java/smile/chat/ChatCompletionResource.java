@@ -26,7 +26,6 @@ import jakarta.ws.rs.ServiceUnavailableException;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.smallrye.mutiny.Multi;
 import io.vertx.ext.web.RoutingContext;
 import org.eclipse.microprofile.context.ManagedExecutor;
@@ -35,7 +34,13 @@ import smile.llm.ChatCompletion;
 import smile.llm.Role;
 
 /**
- * Chat completion API.
+ * REST resource exposing the OpenAI-compatible chat completion API at
+ * {@code /api/v1/chat/completions}.
+ *
+ * <p>The endpoint streams generated tokens back to the client as plain-text
+ * chunks via server-sent events. Conversation history is persisted to the
+ * configured database after generation completes.
+ *
  * @author Haifeng Li
  */
 @Path("/chat/completions")
@@ -45,45 +50,70 @@ public class ChatCompletionResource {
     ChatService service;
 
     @Inject
-    ObjectMapper objectMapper; // Inject the Quarkus-provided Jackson ObjectMapper
-
-    @Inject
     RoutingContext routingContext;
 
     @Inject
     ManagedExecutor executor;
 
+    /**
+     * Generates a chat completion for the supplied dialog.
+     *
+     * <p>The response is streamed token by token. Each emitted item is one
+     * text chunk preceded by a space so that SSE clients do not swallow the
+     * first character after the {@code data:} prefix.
+     *
+     * @param headers HTTP request headers (used to capture client metadata).
+     * @param request the completion request containing the message history
+     *                and generation parameters.
+     * @return a reactive stream of generated text chunks.
+     * @throws ServiceUnavailableException if the LLM model is not loaded.
+     */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    @RestStreamElementType(MediaType.TEXT_PLAIN) // Important for streaming item by item without buffering
-    public Multi<String> complete(@Context HttpHeaders headers, CompletionRequest request) throws ServiceUnavailableException {
+    @RestStreamElementType(MediaType.TEXT_PLAIN)
+    public Multi<String> complete(@Context HttpHeaders headers, CompletionRequest request)
+            throws ServiceUnavailableException {
         if (!service.isAvailable()) throw new ServiceUnavailableException();
+
         Conversation conversation = new Conversation();
-        // Must set context in the endpoint instead of supplyAsync.
-        // Otherwise, routingContext is undefined in the worker thread.
+        // Must capture routing context on the endpoint thread; it is not available
+        // inside the worker thread dispatched by executor.supplyAsync.
         conversation.setContext(routingContext, headers);
 
         SubmissionPublisher<String> publisher = new SubmissionPublisher<>();
         executor.supplyAsync(() -> {
             var completions = service.complete(request, publisher);
-            saveConversation(conversation, request, completions);
+            if (completions != null) {
+                saveConversation(conversation, request, completions);
+            }
             return completions;
         });
         return Multi.createFrom()
                 .publisher(publisher)
-                .map(chunk -> " " + chunk); // in case client eats the space after 'data:'
+                .map(chunk -> " " + chunk); // leading space prevents SSE client from eating first char
     }
 
+    /**
+     * Persists the user message and assistant reply(ies) for this turn.
+     *
+     * <p>If the {@link CompletionRequest#conversation} ID is absent or
+     * non-positive, a new {@link Conversation} record is created first.
+     *
+     * @param conversation the conversation context captured from the request.
+     * @param request      the original completion request.
+     * @param completions  the generated completions returned by the model.
+     */
     @Transactional
     public void saveConversation(Conversation conversation,
-                                 CompletionRequest request,
-                                 ChatCompletion[] completions) {
+                                  CompletionRequest request,
+                                  ChatCompletion[] completions) {
         Long conversationId = request.conversation;
         if (conversationId == null || conversationId <= 0) {
             conversation.persist();
             conversationId = conversation.id;
         }
 
+        // Persist the last user message in this turn.
         for (int i = request.messages.length; i-- > 0;) {
             var message = request.messages[i];
             if (message.role() == Role.user) {
@@ -96,6 +126,7 @@ public class ChatCompletionResource {
             }
         }
 
+        // Persist each assistant completion.
         for (var completion : completions) {
             ConversationItem item = new ConversationItem();
             item.conversationId = conversationId;

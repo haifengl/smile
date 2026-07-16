@@ -192,7 +192,7 @@ public record LevenbergMarquardt(double[] parameters, double[] fittedValues, dou
             }
 
             logger.info("SSE after {} iterations: {}", iter, sbest);
-            if (ss < MathEx.EPSILON || ss > sgoal) {
+            if (sbest < MathEx.EPSILON || sbest > sgoal) {
                 logger.info("converges on SSE after {} iterations", iter);
                 break;
             }
@@ -358,7 +358,7 @@ public record LevenbergMarquardt(double[] parameters, double[] fittedValues, dou
             }
 
             logger.info("SSE after {} iterations: {}", iter, sbest);
-            if (ss < MathEx.EPSILON || ss > sgoal) {
+            if (sbest < MathEx.EPSILON || sbest > sgoal) {
                 logger.info("converges on SSE after {} iterations", iter);
                 break;
             }

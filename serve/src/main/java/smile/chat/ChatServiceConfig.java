@@ -20,19 +20,37 @@ import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
 
 /**
- * The chat service configuration.
+ * Configuration for the LLM chat completion service.
+ * All properties are prefixed with {@code smile.chat}.
  *
  * @author Haifeng Li
  */
 @ConfigMapping(prefix = "smile.chat")
 public interface ChatServiceConfig {
-    /** The location of LLM model. */
+    /** Path to the LLM model directory or file. */
     String model();
+
+    /** Path to the SentencePiece tokenizer model file. */
     String tokenizer();
+
+    /**
+     * Maximum sequence length (context window) in tokens.
+     * Defaults to {@code 4096}.
+     */
     @WithDefault("4096")
     int maxSeqLen();
+
+    /**
+     * Maximum batch size for parallel generation.
+     * Defaults to {@code 1}.
+     */
     @WithDefault("1")
     int maxBatchSize();
+
+    /**
+     * GPU device index to use for inference ({@code 0}-based).
+     * Defaults to {@code 0} (first GPU).
+     */
     @WithDefault("0")
     byte device();
 }

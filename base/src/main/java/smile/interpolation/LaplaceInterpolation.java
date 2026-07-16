@@ -118,7 +118,10 @@ public interface LaplaceInterpolation {
         }
 
         bnrm = snorm(b);
+        if (bnrm == 0.0) return 0.0;
+
         asolve(r, z);
+        if (snorm(r) == 0.0) return 0.0;
 
         for (int iter = 0; iter < maxIter; iter++) {
             asolve(rr, zz);

@@ -29,17 +29,16 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import com.formdev.flatlaf.util.SystemInfo;
 import ioa.agent.Context;
-import org.fife.ui.autocomplete.BasicCompletion;
-import org.fife.ui.autocomplete.CompletionProvider;
-import org.fife.ui.autocomplete.DefaultCompletionProvider;
+import ioa.llm.client.LLM;
 import ioa.agent.Agent;
 import ioa.agent.memory.Skill;
 import ioa.llm.client.StreamResponseHandler;
 import ioa.llm.tool.Question;
 import smile.plot.swing.Palette;
-import smile.studio.Monospaced;
-import smile.studio.Notepad;
-import smile.studio.OutputArea;
+import smile.studio.SmileStudio;
+import smile.studio.text.HintWindow;
+import smile.studio.text.Notepad;
+import smile.studio.text.OutputArea;
 import smile.swing.ScrollablePanel;
 import smile.util.OS;
 import smile.util.Strings;
@@ -52,19 +51,14 @@ import smile.util.Strings;
 public class AgentCLI extends JPanel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AgentCLI.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(AgentCLI.class.getName(), Locale.getDefault());
-    /**
-     * The threshold for compacting conversation session by summarization.
-     * If the total tokens of conversation session exceeds this threshold,
-     * a compact command will be automatically executed to free up space
-     * in the context window.
-     */
-    private static final int COMPACT_THRESHOLD = Integer.parseInt(System.getProperty("smile.agent.auto.compact", "180000"));
     /** The container of conversation. */
     private final JPanel intents = new ScrollablePanel();
     /** The agent. */
     private final Agent agent;
-    /** The provider of slash command hints. */
-    private final CompletionProvider hints;
+    /** The reasoning effort level. */
+    private String reasoningEffort = LLM.DEFAULT_REASONING_EFFORT;
+    /** The hint window for showing argument hints of slash commands. */
+    private final HintWindow hintWindow;
 
     /**
      * Constructor.
@@ -73,7 +67,11 @@ public class AgentCLI extends JPanel {
     public AgentCLI(Agent agent) {
         super(new BorderLayout());
         this.agent = agent;
-        this.hints = createCompletionProvider();
+        var frame = Arrays.stream(Window.getWindows())
+              .filter(win -> win instanceof SmileStudio)
+              .findFirst();
+        var hints = createHintMap();
+        this.hintWindow = new HintWindow(frame.orElse(null), hints);
 
         setBorder(new EmptyBorder(0, 0, 0, 8));
         intents.setLayout(new BoxLayout(intents, BoxLayout.Y_AXIS));
@@ -85,19 +83,38 @@ public class AgentCLI extends JPanel {
 
         intents.add(new Intent(this));
         intents.add(Box.createVerticalGlue());
+    }
 
-        Monospaced.addListener((e) ->
-                SwingUtilities.invokeLater(() -> {
-                    Font font = (Font) e.getNewValue();
-                    for (int i = 0; i < intents.getComponentCount(); i++) {
-                        if (intents.getComponent(i) instanceof Intent cmd) {
-                            cmd.indicator().setFont(font);
-                            cmd.editor().setFont(font);
-                            cmd.output().setFont(font);
-                        }
-                    }
-                })
-        );
+    /**
+     * Returns the agent.
+     * @return the agent.
+     */
+    public Agent agent() {
+        return agent;
+    }
+
+    /**
+     * Returns the hint window for showing argument hints of slash commands.
+     * @return the hint window.
+     */
+    public HintWindow hintWindow() {
+        return hintWindow;
+    }
+
+    /**
+     * Returns the reasoning effort level.
+     * @return the reasoning effort level.
+     */
+    public String getReasoningEffort() {
+        return reasoningEffort;
+    }
+
+    /**
+     * Sets the reasoning effort level.
+     * @param reasoningEffort the reasoning effort level.
+     */
+    public void setReasoningEffort(String reasoningEffort) {
+        this.reasoningEffort = reasoningEffort;
     }
 
     /** Append a new intent box. */
@@ -141,42 +158,30 @@ public class AgentCLI extends JPanel {
     }
 
     /**
-     * Creates a provider of slash command argument hint.
+     * Creates a map from slash command to argument hint.
      */
-    private CompletionProvider createCompletionProvider() {
-        DefaultCompletionProvider provider = new DefaultCompletionProvider();
-
-        provider.addCompletion(new BasicCompletion(provider,
-                "/memory [show|add|edit|refresh]"));
-        provider.addCompletion(new BasicCompletion(provider,
-                "/compact [instructions]"));
-        provider.addCompletion(new BasicCompletion(provider,
-                "/plan [off|short description of goals or tasks]"));
-        provider.addCompletion(new BasicCompletion(provider,
-                "/open [file path]"));
-        provider.addCompletion(new BasicCompletion(provider,
-                "/train [-h for helps]"));
-        provider.addCompletion(new BasicCompletion(provider,
-                "/predict [-h for helps]"));
-        provider.addCompletion(new BasicCompletion(provider,
-                "/serve [-h for helps]"));
+    private Map<String, String> createHintMap() {
+        Map<String, String> hints = new HashMap<>();
+        hints.put("/memory", "[show|add|edit|refresh]");
+        hints.put("/memory show", "[ENTER to display the long term memory]");
+        hints.put("/memory add", "[additional instructions]");
+        hints.put("/memory edit", "[ENTER to open a notepad to edit the long term memory]");
+        hints.put("/memory refresh", "[ENTER to reload the context from disk]");
+        hints.put("/compact", "[instructions]");
+        hints.put("/plan", "[off|short description of goals or tasks]");
+        hints.put("/edit", "[file path]");
+        hints.put("/train", "[ENTER for helps]");
+        hints.put("/predict", "[ENTER for helps]");
+        hints.put("/serve", "[ENTER for helps]");
 
         if (agent != null) {
             for (var skill : agent.skills()) {
                 if (skill.isUserInvocable()) {
-                    skill.hint().ifPresent(hint -> provider.addCompletion(
-                            new BasicCompletion(provider, "/" + skill.name() + " " + hint)));
+                    skill.hint().ifPresent(hint -> hints.put("/" + skill.name(), hint));
                 }
             }
         }
 
-        return provider;
-    }
-
-    /**
-     * Returns a provider of slash command argument hint.
-     */
-    public CompletionProvider hints() {
         return hints;
     }
 
@@ -216,6 +221,8 @@ public class AgentCLI extends JPanel {
                             .redirectErrorStream(true)
                             .start();
 
+                    intent.setProgress(true);
+                    intent.setStopAction(process::destroyForcibly);
                     // Read output from the command
                     var reader = new BufferedReader(
                             new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
@@ -258,7 +265,8 @@ public class AgentCLI extends JPanel {
 
             @Override
             protected void done() {
-                // process and done are called in EDT, so we can safely update the UI here.
+                intent.setProgress(false);
+                // process() and done() are called in EDT, so we can safely update the UI here.
                 output.highlight();
             }
         };
@@ -271,7 +279,7 @@ public class AgentCLI extends JPanel {
             String[] args = instructions.split("\\s+");
             switch (args[0]) {
                 case "help" -> help(intent.output());
-                case "open" -> open(args, intent.output());
+                case "edit" -> edit(args, intent.output());
                 case "train", "predict", "serve" -> runShellCommand(intent, IntentType.Command, instructions);
                 case "memory" -> memory(args, instructions, intent);
                 case "system" -> showSystemPrompt(intent.output()); // for debugging
@@ -286,9 +294,9 @@ public class AgentCLI extends JPanel {
     }
 
     /** Opens a notepad to edit file. */
-    private void open(String[] args, OutputArea output) {
+    private void edit(String[] args, OutputArea output) {
         if (args.length < 2) {
-            output.println("Usage: /open [file path]");
+            output.println("Usage: /edit [file path]");
             return;
         }
 
@@ -297,7 +305,7 @@ public class AgentCLI extends JPanel {
     }
 
     private boolean isAgentAvailable(OutputArea output) {
-        if (agent == null || agent.llm() == null) {
+        if (agent == null || agent.llm().isEmpty()) {
             if (output.getLineCount() > 0) output.append("\n\n");
             output.println(bundle.getString("NoAIServiceError"));
             return false;
@@ -309,26 +317,24 @@ public class AgentCLI extends JPanel {
         StringBuilder sb = new StringBuilder("""
                 The following commands are available:
                 
-                /memory show\tDisplay the content of long-term memory
-                /memory add\tAdd facts or notes to long-term memory
-                /memory edit\tOpen a notepad to edit to long-term memory
-                /memory refresh\tReload the context from disk
-                /plan\t\tEnter the plan mode.
-                /plan off\tExit  the plan mode.
-                /clear\t\tClear the current conversation session.
-                /compact\tSummarize the conversation and retain critical details.
-                /open\t\tOpen a text file to edit.
-                /train\t\tTrain a machine learning model
-                /predict\tRun batch inference
-                /serve\t\tStart an inference service""");
+                /memory show        Display the content of long term memory
+                /memory add         Add facts or notes to long term memory
+                /memory edit        Open a notepad to edit the long term memory
+                /memory refresh     Reload the context from disk
+                /plan               Enter the plan mode.
+                /plan off           Exit  the plan mode.
+                /clear              Clear the current conversation session.
+                /compact            Summarize the conversation and retain critical details.
+                /edit               Edit a file with notepad.
+                /train              Train a machine learning model
+                /predict            Run batch inference
+                /serve              Start an inference service""");
 
-        if (agent != null && agent.llm() != null) {
+        if (agent != null && agent.llm().isPresent()) {
             for (var skill : agent.skills()) {
                 if (skill.isUserInvocable()) {
-                    sb.append("\n/")
-                            .append(skill.name())
-                            .append(skill.name().length() > 6 ? "\t" : "\t\t")
-                            .append(skill.description());
+                    sb.append(String.format("\n/%-18s ", skill.name()))
+                      .append(skill.description().split("\\.", 2)[0]);
                 }
             }
         }
@@ -389,13 +395,13 @@ public class AgentCLI extends JPanel {
         }
     }
 
-    /** Open a notepad to edit the project long-term memory. */
+    /** Open a notepad to edit the project's long term memory. */
     private void editMemory(OutputArea output) {
         Notepad.open(agent.context().path().resolve(Context.SMILE_MD));
-        output.setText("SMILE.md is opened in a notepad window. Edit and save the file to update the long-term memory.");
+        output.setText("SMILE.md is opened in a notepad window. Edit and save the file to update the long term memory.");
     }
 
-    /** Displays the project long-term memory. */
+    /** Displays the project's long term memory. */
     private void showMemory(OutputArea output) {
         output.setText(agent.instructions());
     }
@@ -408,7 +414,7 @@ public class AgentCLI extends JPanel {
     /** Reloads the context from disk. */
     private void refreshMemory(OutputArea output) {
         agent.refresh();
-        output.println("Long-term memory was reloaded.");
+        output.println("Long term memory was reloaded.");
     }
 
     /** Clears the current conversation session. */
@@ -434,73 +440,22 @@ public class AgentCLI extends JPanel {
 
     /** Compacts conversation session by summarization. */
     private void compact(String instructions, Intent intent) {
-        var prompt = """
-Your task is to create a detailed summary of the conversation so far, paying close attention to the user's explicit requests and your previous actions.
-This summary should be thorough in capturing technical details, code patterns, and architectural decisions that would be essential for continuing development work without losing context.
+        var prompt = "";
+        try (var is = ioa.llm.Conversation.class.getClassLoader().getResourceAsStream("/ioa/llm/compact.md")) {
+            if (is == null) {
+                logger.error("ioa.llm.compact not found.");
+            } else {
+                // Reads all bytes and converts them into a String using UTF-8 encoding
+                prompt = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+            }
+        } catch (IOException ex) {
+            logger.error("Failed to read compact instructions: {}", ex.getMessage());
+        }
 
-Before providing your final summary, wrap your analysis in <analysis> tags to organize your thoughts and ensure you've covered all necessary points. In your analysis process:
-
-1. Chronologically analyze each message and section of the conversation. For each section thoroughly identify:
-    - The user's explicit requests and intents
-    - Your approach to addressing the user's requests
-    - Key decisions, technical concepts and code patterns
-    - Specific details like file names, full code snippets, function signatures, file edits, etc
-2. Double-check for technical accuracy and completeness, addressing each required element thoroughly.
-
-Your summary should include the following sections:
-
-1. Primary Request and Intent: Capture all of the user's explicit requests and intents in detail
-2. Key Technical Concepts: List all important technical concepts, technologies, and frameworks discussed.
-3. Files and Code Sections: Enumerate specific files and code sections examined, modified, or created. Pay special attention to the most recent messages and include full code snippets where applicable and include a summary of why this file read or edit is important.
-4. Problem Solving: Document problems solved and any ongoing troubleshooting efforts.
-5. Pending Tasks: Outline any pending tasks that you have explicitly been asked to work on.
-6. Current Work: Describe in detail precisely what was being worked on immediately before this summary request, paying special attention to the most recent messages from both user and assistant. Include file names and code snippets where applicable.
-7. Optional Next Step: List the next step that you will take that is related to the most recent work you were doing. IMPORTANT: ensure that this step is DIRECTLY in line with the user's explicit requests, and the task you were working on immediately before this summary request. If your last task was concluded, then only list next steps if they are explicitly in line with the users request. Do not start on tangential requests without confirming with the user first.
-8. If there is a next step, include direct quotes from the most recent conversation showing exactly what task you were working on and where you left off. This should be verbatim to ensure there's no drift in task interpretation.
-
-Here's an example of how your output should be structured:
-
-<example>
-<analysis>
-[Your thought process, ensuring all points are covered thoroughly and accurately]
-</analysis>
-
-<summary>
-1. Primary Request and Intent:
-   [Detailed description]
-
-2. Key Technical Concepts:
-    - [Concept 1]
-    - [Concept 2]
-    - [...]
-
-3. Files and Code Sections:
-    - [File Name 1]
-        - [Summary of why this file is important]
-        - [Summary of the changes made to this file, if any]
-        - [Important Code Snippet]
-    - [File Name 2]
-        - [Important Code Snippet]
-    - [...]
-
-4. Problem Solving:
-   [Description of solved problems and ongoing troubleshooting]
-
-5. Pending Tasks:
-    - [Task 1]
-    - [Task 2]
-    - [...]
-
-6. Current Work:
-   [Precise description of current work]
-
-7. Optional Next Step:
-   [Optional Next step to take]
-
-</summary>
-</example>
-
-Please provide your summary based on the conversation so far, following this structure and ensuring precision and thoroughness in your response.""";
+        if (prompt.isBlank()) {
+            logger.error("No compact instructions specified.");
+            return;
+        }
 
         if (!instructions.isBlank()) {
             prompt = prompt + "\n\n" + instructions;
@@ -516,12 +471,20 @@ Please provide your summary based on the conversation so far, following this str
             return;
         }
 
-        if (agent == null || agent.llm() == null) {
+        if (agent == null || agent.llm().isEmpty()) {
             intent.output().setText(bundle.getString("NoAIServiceError"));
             return;
         }
 
+        if (LLM.DEFAULT_REASONING_EFFORT.equals(reasoningEffort)) {
+            agent.conversation().params().setProperty(LLM.REASONING_EFFORT, "");
+        } else {
+            agent.conversation().params().setProperty(LLM.REASONING_EFFORT, reasoningEffort);
+        }
+
         intent.setProgress(true);
+        agent.conversation().params().setProperty(LLM.INTERRUPTED, "false");
+        intent.setStopAction(() -> agent.conversation().params().setProperty(LLM.INTERRUPTED, "true"));
 
         // Stream processing runs in a background thread so that we don't
         // need to create a SwingWorker thread.
@@ -543,7 +506,7 @@ Please provide your summary based on the conversation so far, following this str
                 });
 
                 // Auto compact if total tokens exceed the threshold, otherwise render Markdown if applicable.
-                if (totalTokens > COMPACT_THRESHOLD) {
+                if (totalTokens > agent.llm().map(LLM::compactThreshold).orElse(180_000)) {
                     SwingUtilities.invokeLater(() ->
                             intent.output().append("\n\n[The conversation session is too long, a compact command will be executed to summarize conversation.]\n"));
                     compact("", intent);
@@ -553,8 +516,14 @@ Please provide your summary based on the conversation so far, following this str
             @Override
             public void onException(Throwable ex) {
                 SwingUtilities.invokeLater(() -> {
+                    Throwable rootCause = ex;
+                    // Loop until getCause() returns null or points to itself
+                    while (rootCause.getCause() != null && rootCause.getCause() != rootCause) {
+                        rootCause = rootCause.getCause();
+                    }
                     intent.setProgress(false);
-                    intent.output().append("\nError: " + ex.getMessage());
+                    intent.setStatus(rootCause.getClass().getSimpleName());
+                    intent.output().append("\n" + rootCause.getMessage());
                 });
             }
 

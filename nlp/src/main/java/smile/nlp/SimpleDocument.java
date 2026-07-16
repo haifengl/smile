@@ -1,0 +1,183 @@
+/*
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
+ *
+ * SMILE is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * SMILE is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
+ */
+package smile.nlp;
+
+import java.util.*;
+import smile.nlp.stemmer.PorterStemmer;
+import smile.nlp.tokenizer.SimpleParagraphSplitter;
+import smile.nlp.tokenizer.SimpleSentenceSplitter;
+import smile.nlp.tokenizer.SimpleTokenizer;
+import smile.sort.QuickSort;
+import smile.util.MutableInt;
+import smile.util.Strings;
+import smile.util.Trie;
+
+/**
+ * A list-of-words representation of documents.
+ *
+ * @author Haifeng Li
+ */
+public class SimpleDocument implements Text, Document, AnchorText {
+    /**
+     * The id of document in the corpus.
+     */
+    private final String id;
+    /**
+     * The text title;
+     */
+    private final String title;
+    /**
+     * The text content.
+     */
+    private final String content;
+    /**
+     * All anchor text in the corpus pointing to this text.
+     */
+    private String anchor;
+    /**
+     * The list of words.
+     */
+    private final String[] words;
+    /**
+     * The term frequency.
+     */
+    private final HashMap<String, MutableInt> freq = new HashMap<>();
+    /**
+     * The maximum term frequency over all terms in the documents;
+     */
+    private int maxtf;
+
+    /**
+     * Constructor.
+     * @param id the id of document.
+     * @param title the text title.
+     * @param content the text content.
+     * @param words the word list of document.
+     */
+    public SimpleDocument(String id, String title, String content, String[] words) {
+        this.id = id;
+        this.title = title;
+        this.content = content;
+        this.words = words;
+
+        for (String w : words) {
+            MutableInt count = freq.get(w);
+            if (count == null) {
+                count = new MutableInt(1);
+                freq.put(w, count);
+            } else {
+                count.increment();
+            }
+
+            if (count.value > maxtf) {
+                maxtf = count.value;
+            }
+        }
+    }
+
+    @Override
+    public String id() {
+        return id;
+    }
+
+    @Override
+    public String title() {
+        return title;
+    }
+
+    @Override
+    public String content() {
+        return content;
+    }
+
+    @Override
+    public int size() {
+        return words.length;
+    }
+
+    @Override
+    public Iterable<String> words() {
+        return Arrays.asList(words);
+    }
+
+    @Override
+    public Iterable<String> unique() {
+        return freq.keySet();
+    }
+    
+    @Override
+    public int tf(String term) {
+        MutableInt count = freq.get(term);
+        return count == null ? 0 : count.value;
+    }
+
+    @Override
+    public int maxtf() {
+        return maxtf;
+    }
+
+    /**
+     * Returns the anchor text if any. The anchor text is the visible,
+     * clickable text in a hyperlink. The anchor text is all the
+     * anchor text in the corpus pointing to this text.
+     */
+    public String getAnchor() {
+        return anchor;
+    }
+    
+    /**
+     * Sets the anchor text. Note that anchor is all link labels in the corpus
+     * pointing to this text. So addAnchor is more appropriate in most cases.
+     */
+    public SimpleDocument setAnchor(String anchor) {
+        this.anchor = anchor;
+        return this;
+    }
+    
+    public SimpleDocument addAnchor(String linkLabel) {
+        if (anchor == null) {
+            anchor = linkLabel;
+        } else {
+            anchor = anchor + "\n" + linkLabel;
+        }
+        return this;
+    }
+    
+    @Override
+    public String toString() {
+        return String.format("Document[%s]", Strings.isNullOrEmpty(title) ? id : title);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+
+        final SimpleDocument other = (SimpleDocument) obj;
+        return id.equals(other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
+}

@@ -17,31 +17,33 @@
 package smile.linalg;
 
 /**
- * The format of packed matrix storage. The packed storage format compactly
- * stores matrix elements when only one part of the matrix, the upper or lower
- * triangle, is necessary to determine all the elements of the matrix.
- * This is the case when the matrix is upper triangular, lower triangular,
- * symmetric, or Hermitian.
+ * Which triangular part of a symmetric or triangular matrix is stored.
+ *
+ * <p>When a matrix is symmetric, Hermitian, or triangular, only one triangular
+ * half needs to be stored. BLAS and LAPACK use this flag to indicate which half
+ * is present in memory:
+ * <ul>
+ *   <li>{@link #UPPER} — only the upper triangular part (including the diagonal) is stored.</li>
+ *   <li>{@link #LOWER} — only the lower triangular part (including the diagonal) is stored.</li>
+ * </ul>
+ *
+ * <p>Use {@link #flip(UPLO)} to convert between the two, which is required when
+ * switching between row-major and column-major layouts (the upper triangle of a
+ * row-major matrix corresponds to the lower triangle in column-major layout).
  */
 public enum UPLO {
     /**
-     * Upper triangle is stored. The packed storage format compactly stores
-     * matrix elements when only one part of the matrix, the upper or lower
-     * triangle, is necessary to determine all the elements of the matrix.
-     * This is the case when the matrix is upper triangular, lower triangular,
-     * symmetric, or Hermitian.
+     * Upper triangular part is stored (including diagonal).
+     * The lower triangle is inferred by symmetry and need not be present in memory.
      */
     UPPER(121, (byte) 'U'),
     /**
-     * Lower triangle is stored. The packed storage format compactly stores
-     * matrix elements when only one part of the matrix, the upper or lower
-     * triangle, is necessary to determine all the elements of the matrix.
-     * This is the case when the matrix is upper triangular, lower triangular,
-     * symmetric, or Hermitian.
+     * Lower triangular part is stored (including diagonal).
+     * The upper triangle is inferred by symmetry and need not be present in memory.
      */
     LOWER(122, (byte) 'L');
 
-    /** Byte value passed to BLAS. */
+    /** Integer value passed to CBLAS. */
     private final int blas;
     /** Byte value passed to LAPACK. */
     private final byte lapack;
@@ -53,27 +55,81 @@ public enum UPLO {
     }
 
     /**
-     * Returns the int value for BLAS.
-     * @return the int value for BLAS.
+     * Returns the integer value for CBLAS.
+     * @return the CBLAS integer value.
      */
     public int blas() { return blas; }
 
     /**
      * Returns the byte value for LAPACK.
-     * @return the byte value for LAPACK.
+     * @return the LAPACK byte value.
      */
     public byte lapack() { return lapack; }
 
     /**
-     * Flips the value, null safe.
-     * @param value an UPLO value.
-     * @return the flipped value.
+     * Returns {@code true} if the upper triangle is stored.
+     * @return {@code true} if upper.
+     */
+    public boolean isUpper() { return this == UPPER; }
+
+    /**
+     * Returns {@code true} if the lower triangle is stored.
+     * @return {@code true} if lower.
+     */
+    public boolean isLower() { return this == LOWER; }
+
+    /**
+     * Returns a human-readable description of this storage flag.
+     * @return a human-readable description.
+     */
+    public String description() {
+        return switch (this) {
+            case UPPER -> "Upper triangular part stored";
+            case LOWER -> "Lower triangular part stored";
+        };
+    }
+
+    /**
+     * Flips between {@link #UPPER} and {@link #LOWER}, null-safe.
+     *
+     * <p>This is useful when switching between row-major and column-major
+     * representations: the upper triangle of a row-major matrix corresponds
+     * to the lower triangle when the same data is interpreted in column-major.
+     *
+     * @param value an {@code UPLO} value, may be {@code null}.
+     * @return the flipped value, or {@code null} if the input is {@code null}.
      */
     public static UPLO flip(UPLO value) {
         return switch (value) {
-            case null -> null;
+            case null  -> null;
             case UPPER -> LOWER;
             case LOWER -> UPPER;
         };
+    }
+
+    /**
+     * Returns the {@code UPLO} constant corresponding to the given CBLAS integer value.
+     * @param value the CBLAS integer value ({@code 121} for upper, {@code 122} for lower).
+     * @return the matching {@code UPLO} constant.
+     * @throws IllegalArgumentException if the value does not match any constant.
+     */
+    public static UPLO fromBlas(int value) {
+        for (UPLO u : values()) {
+            if (u.blas == value) return u;
+        }
+        throw new IllegalArgumentException("Unknown CBLAS UPLO value: " + value);
+    }
+
+    /**
+     * Returns the {@code UPLO} constant corresponding to the given LAPACK byte value.
+     * @param value the LAPACK byte value ({@code 'U'} or {@code 'L'}).
+     * @return the matching {@code UPLO} constant.
+     * @throws IllegalArgumentException if the value does not match any constant.
+     */
+    public static UPLO fromLapack(byte value) {
+        for (UPLO u : values()) {
+            if (u.lapack == value) return u;
+        }
+        throw new IllegalArgumentException("Unknown LAPACK UPLO value: " + (char) value);
     }
 }

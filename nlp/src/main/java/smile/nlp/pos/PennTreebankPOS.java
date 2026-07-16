@@ -444,12 +444,16 @@ public enum PennTreebankPOS {
     }
     
     /**
-     * Returns an enum value from a string. Note that valueOf cannot be
-     * overridden, so we have to use this workaround for converting custom
-     * strings to enum values without using valueOf method.
+     * Returns an enum constant from its string representation.
+     * Punctuation symbols (e.g. {@code "."}, {@code ","}, {@code "("}) are
+     * automatically mapped to their named enum counterparts before lookup,
+     * so callers do not need to handle the mapping themselves.
      *
-     * @param value the string value.
-     * @return the enum value.
+     * @param value the string representation of the tag (e.g. {@code "NN"},
+     *              {@code "VBZ"}, {@code "."}, {@code ","}).
+     * @return the matching {@link PennTreebankPOS} constant.
+     * @throws IllegalArgumentException if {@code value} does not match any
+     *         known tag or punctuation symbol.
      */
     public static PennTreebankPOS getValue(String value) {
         String s = map.get(value);

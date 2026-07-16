@@ -40,6 +40,8 @@ class DatasetImpl implements Dataset {
      * @param batch the mini-batch size.
      */
     public DatasetImpl(float[][] data, int[] target, int batch) {
+        if (data.length == 0) throw new IllegalArgumentException("data must not be empty");
+        if (batch <= 0) throw new IllegalArgumentException("batch size must be positive: " + batch);
         int n = data.length;
         int p = data[0].length;
 
@@ -64,6 +66,8 @@ class DatasetImpl implements Dataset {
      * @param batch the mini-batch size.
      */
     public DatasetImpl(double[][] data, int[] target, int batch) {
+        if (data.length == 0) throw new IllegalArgumentException("data must not be empty");
+        if (batch <= 0) throw new IllegalArgumentException("batch size must be positive: " + batch);
         int n = data.length;
         int p = data[0].length;
 
@@ -90,6 +94,8 @@ class DatasetImpl implements Dataset {
      * @param batch the mini-batch size.
      */
     public DatasetImpl(float[][] data, float[] target, int batch) {
+        if (data.length == 0) throw new IllegalArgumentException("data must not be empty");
+        if (batch <= 0) throw new IllegalArgumentException("batch size must be positive: " + batch);
         int n = data.length;
         int p = data[0].length;
 
@@ -112,6 +118,8 @@ class DatasetImpl implements Dataset {
      * @param batch the mini-batch size.
      */
     public DatasetImpl(double[][] data, double[] target, int batch) {
+        if (data.length == 0) throw new IllegalArgumentException("data must not be empty");
+        if (batch <= 0) throw new IllegalArgumentException("batch size must be positive: " + batch);
         int n = data.length;
         int p = data[0].length;
 
@@ -129,6 +137,20 @@ class DatasetImpl implements Dataset {
         this.batch = batch;
     }
 
+    /**
+     * Constructor.
+     * @param data the data tensor whose first dimension indexes the samples.
+     * @param target the target tensor whose first dimension indexes the samples.
+     * @param batch the mini-batch size.
+     */
+    DatasetImpl(Tensor data, Tensor target, int batch) {
+        if (batch <= 0) throw new IllegalArgumentException("batch size must be positive: " + batch);
+        this.data = data;
+        this.target = target;
+        this.size = (int) data.shape()[0];
+        this.batch = batch;
+    }
+
     @Override
     public void close() {
         data.close();
@@ -137,8 +159,8 @@ class DatasetImpl implements Dataset {
 
     @Override
     public long size() {
-    return size;
-}
+        return size;
+    }
 
     @Override
     public Iterator<SampleBatch> iterator() {
@@ -163,8 +185,9 @@ class DatasetImpl implements Dataset {
                     index = Arrays.copyOf(index, j);
                 }
 
-                var idx = Index.of(index);
-                return new SampleBatch(data.get(idx), target.get(idx));
+                try (var idx = Index.of(index)) {
+                    return new SampleBatch(data.get(idx), target.get(idx));
+                }
             }
         };
     }

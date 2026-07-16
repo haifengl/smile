@@ -97,6 +97,9 @@ public class GrowingNeuralGas implements VectorQuantizer {
      * @param d the dimensionality of signals.
      */
     public GrowingNeuralGas(int d) {
+        if (d <= 0) {
+            throw new IllegalArgumentException("Invalid dimension: " + d);
+        }
         this.d = d;
     }
 
@@ -113,6 +116,28 @@ public class GrowingNeuralGas implements VectorQuantizer {
      * @param beta decrease all error variables by multiply them with beta.
      */
     public GrowingNeuralGas(int d, double epsBest, double epsNeighbor, int edgeLifetime, int lambda, double alpha, double beta) {
+        if (d <= 0) {
+            throw new IllegalArgumentException("Invalid dimension: " + d);
+        }
+        if (!(epsBest >= 0 && Double.isFinite(epsBest))) {
+            throw new IllegalArgumentException("Invalid epsBest: " + epsBest);
+        }
+        if (!(epsNeighbor >= 0 && Double.isFinite(epsNeighbor))) {
+            throw new IllegalArgumentException("Invalid epsNeighbor: " + epsNeighbor);
+        }
+        if (edgeLifetime <= 0) {
+            throw new IllegalArgumentException("Invalid edgeLifetime: " + edgeLifetime);
+        }
+        if (lambda <= 0) {
+            throw new IllegalArgumentException("Invalid lambda: " + lambda);
+        }
+        if (!(alpha > 0 && alpha <= 1.0 && Double.isFinite(alpha))) {
+            throw new IllegalArgumentException("Invalid alpha: " + alpha);
+        }
+        if (!(beta > 0 && beta <= 1.0 && Double.isFinite(beta))) {
+            throw new IllegalArgumentException("Invalid beta: " + beta);
+        }
+
         this.d = d;
         this.epsBest = epsBest;
         this.epsNeighbor = epsNeighbor;
@@ -124,6 +149,8 @@ public class GrowingNeuralGas implements VectorQuantizer {
 
     @Override
     public void update(double[] x) {
+        checkInput(x);
+
         t++;
 
         if (neurons.size() < 2) {
@@ -196,34 +223,37 @@ public class GrowingNeuralGas implements VectorQuantizer {
                 }
             }
 
-            // Find the neighbor of q with the largest error variable.
-            Neuron f = q.edges.getFirst().neighbor;
-            for (Edge edge : q.edges) {
-                if (edge.neighbor.counter > f.counter) {
-                    f = edge.neighbor;
+            // Insert a new neuron only if q has topological neighbors.
+            if (!q.edges.isEmpty()) {
+                // Find the neighbor of q with the largest error variable.
+                Neuron f = q.edges.getFirst().neighbor;
+                for (Edge edge : q.edges) {
+                    if (edge.neighbor.counter > f.counter) {
+                        f = edge.neighbor;
+                    }
                 }
+
+                // Decrease the error variables of q and f.
+                q.counter *= alpha;
+                f.counter *= alpha;
+
+                // Insert a new neuron halfway between q and f.
+                double[] w = new double[d];
+                for (int i = 0; i < d; i++) {
+                    w[i] = (q.w[i] + f.w[i]) / 2;
+                }
+
+                Neuron r = new Neuron(w, q.counter);
+                neurons.add(r);
+
+                // Remove the connection (q, f) and add connections (q, r) and (r, f)
+                q.removeEdge(f);
+                f.removeEdge(q);
+                q.addEdge(r);
+                f.addEdge(r);
+                r.addEdge(q);
+                r.addEdge(f);
             }
-
-            // Decrease the error variables of q and f.
-            q.counter *= alpha;
-            f.counter *= alpha;
-
-            // Insert a new neuron halfway between q and f.
-            double[] w = new double[d];
-            for (int i = 0; i < d; i++) {
-                w[i] += (q.w[i] + f.w[i]) / 2;
-            }
-
-            Neuron r = new Neuron(w, q.counter);
-            neurons.add(r);
-
-            // Remove the connection (q, f) and add connections (q, r) and (r, f)
-            q.removeEdge(f);
-            f.removeEdge(q);
-            q.addEdge(r);
-            f.addEdge(r);
-            r.addEdge(q);
-            r.addEdge(f);
         }
 
         // Decrease all error variables.
@@ -242,6 +272,12 @@ public class GrowingNeuralGas implements VectorQuantizer {
 
     @Override
     public double[] quantize(double[] x) {
+        checkInput(x);
+
+        if (neurons.isEmpty()) {
+            throw new IllegalStateException("No neurons available");
+        }
+
         neurons.stream().parallel().forEach(neuron -> neuron.distance(x));
 
         Neuron bmu = neurons.getFirst();
@@ -252,5 +288,15 @@ public class GrowingNeuralGas implements VectorQuantizer {
         }
 
         return bmu.w;
+    }
+
+    /** Validates input vector shape. */
+    private void checkInput(double[] x) {
+        if (x == null) {
+            throw new IllegalArgumentException("Input vector is null");
+        }
+        if (x.length != d) {
+            throw new IllegalArgumentException("Invalid input dimension: expected " + d + ", actual " + x.length);
+        }
     }
 }

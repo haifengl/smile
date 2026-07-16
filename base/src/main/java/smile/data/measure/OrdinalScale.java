@@ -47,12 +47,34 @@ public class OrdinalScale extends CategoricalMeasure {
 
     /**
      * Constructor.
-     * @param values the valid values.
+     * @param values the valid values (will be sorted in ascending order,
+     *               with levels reordered to match).
      * @param levels the levels of discrete values.
      */
     public OrdinalScale(int[] values, String[] levels) {
-        super(values, levels);
-        Arrays.sort(values);
+        super(sortedValues(values), sortedLevels(values, levels));
+    }
+
+    /**
+     * Returns values sorted in ascending order.
+     */
+    private static int[] sortedValues(int[] values) {
+        int[] sorted = values.clone();
+        java.util.Arrays.sort(sorted);
+        return sorted;
+    }
+
+    /**
+     * Returns levels reordered to match the sorted values.
+     */
+    private static String[] sortedLevels(int[] values, String[] levels) {
+        // Build index array that maps sorted position -> original position
+        Integer[] idx = new Integer[values.length];
+        for (int i = 0; i < values.length; i++) idx[i] = i;
+        java.util.Arrays.sort(idx, java.util.Comparator.comparingInt(i -> values[i]));
+        String[] sorted = new String[levels.length];
+        for (int i = 0; i < idx.length; i++) sorted[i] = levels[idx[i]];
+        return sorted;
     }
 
     /**
@@ -80,9 +102,13 @@ public class OrdinalScale extends CategoricalMeasure {
     @Override
     public boolean equals(Object o) {
         if (o instanceof OrdinalScale scale) {
-            return Arrays.equals(levels, scale.levels);
+            return Arrays.equals(levels, scale.levels) && Arrays.equals(values, scale.values);
         }
-
         return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return 31 * Arrays.hashCode(levels) + Arrays.hashCode(values);
     }
 }

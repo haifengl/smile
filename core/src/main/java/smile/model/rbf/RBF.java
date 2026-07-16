@@ -68,7 +68,7 @@ public class RBF<T> implements Serializable {
      * Constructor.
      *
      * @param center the center of neuron.
-     * @param rbf the radial basis functions.
+     * @param rbf the radial basis function.
      * @param distance the distance metric functor.
      */
     public RBF(T center, RadialBasisFunction rbf, Metric<T> distance) {
@@ -90,7 +90,7 @@ public class RBF<T> implements Serializable {
      * Makes a set of RBF neurons.
      *
      * @param centers the neuron centers.
-     * @param basis the radial basis functions.
+     * @param basis the radial basis function.
      * @param distance the distance metric functor.
      * @param <T> the data type of samples.
      * @return the RBF neurons.
@@ -116,6 +116,10 @@ public class RBF<T> implements Serializable {
      */
     public static <T> RBF<T>[] of(T[] centers, RadialBasisFunction[] basis, Metric<T> distance) {
         int k = centers.length;
+        if (basis.length != k) {
+            throw new IllegalArgumentException("The number of basis functions doesn't match the number of centers: " + basis.length + " != " + k);
+        }
+
         @SuppressWarnings("unchecked")
         RBF<T>[] rbf = new RBF[k];
         for (int i = 0; i < k; i++) {
@@ -274,7 +278,8 @@ public class RBF<T> implements Serializable {
      * @return Gaussian RBF functions with parameter learned from data.
      */
     public static RBF<double[]>[] fit(double[][] x, int k, double r) {
-        if (r <= 0.0) {
+        // Since NaN <= 0.0 evaluates to false, a NaN r was silently accepted with r <= 0.0.
+        if (!(r > 0.0)) {
             throw new IllegalArgumentException("Invalid scaling parameter: " + r);
         }
 
@@ -350,7 +355,7 @@ public class RBF<T> implements Serializable {
      * @return Gaussian RBF functions with parameter learned from data.
      */
     public static <T> RBF<T>[] fit(T[] x, Metric<T> distance, int k, double r) {
-        if (r <= 0.0) {
+        if (!(r > 0.0)) {
             throw new IllegalArgumentException("Invalid scaling parameter: " + r);
         }
 

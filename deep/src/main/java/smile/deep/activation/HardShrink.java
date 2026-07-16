@@ -16,38 +16,40 @@
  */
 package smile.deep.activation;
 
-import org.bytedeco.pytorch.Scalar;
-import org.bytedeco.pytorch.global.torch;
 import smile.deep.tensor.Tensor;
 
+import static smile.torch.smile_torch_h.smile_torch_hardshrink;
+
 /**
- * Hard Shrink activation function.
+ * Hard shrink activation function.
  *
  * @author Haifeng Li
  */
 public class HardShrink extends ActivationFunction {
-    /** The lambda value in the formulation. */
-    final Scalar lambda;
+    /** The lambda value for the hard shrinkage formulation. */
+    final double lambda;
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     */
     public HardShrink() {
         this(0.5);
     }
 
     /**
      * Constructor.
-     * @param lambda The lambda value in the formulation.
+     * @param lambda the lambda value for the hard shrinkage formulation.
      */
     public HardShrink(double lambda) {
         super(String.format("HardShrink(%.4f)", lambda), false);
         if (lambda < 0.0) {
             throw new IllegalArgumentException("Invalid lambda: " + lambda);
         }
-        this.lambda = new Scalar(lambda);
+        this.lambda = lambda;
     }
 
     @Override
     public Tensor forward(Tensor x) {
-        return new Tensor(torch.hardshrink(x.asTorch(), lambda));
+        return new Tensor(smile_torch_hardshrink(x.handle(), lambda));
     }
 }

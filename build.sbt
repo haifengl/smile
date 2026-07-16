@@ -6,8 +6,6 @@ lazy val supportedScalaVersions = List(scala213, scala3)
 lazy val os = sys.props.get("os.name").get.toLowerCase.split(" ")(0)
 
 lazy val commonSettings = Seq(
-  resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
-
   // skip packageDoc task on stage
   Compile / packageDoc / mappings := Seq(),
   // always set scala version including Java only modules
@@ -17,7 +15,7 @@ lazy val commonSettings = Seq(
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("https://haifengl.github.io/")),
-  version := "5.2.2",
+  version := "6.2.4",
 
   // Run in a separate JVM, to make sure sbt waits until all threads have
   // finished before returning.
@@ -30,22 +28,28 @@ lazy val commonSettings = Seq(
   Test / parallelExecution := false,
   Test / publishArtifact := false,
   Test / javaOptions ++= Seq(
-    "-XX:+UseG1GC",
-    "-XX:MaxMetaspaceSize=1024M",
+    "-XX:+UseZGC",
     "-Xss4M",
-    "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug",
+    "-XX:MaxMetaspaceSize=1024M",
+    "-XX:+UseCompactObjectHeaders",
+    "-XX:+UseCompressedOops",
+    "-XX:ObjectAlignmentInBytes=16",
+    "-XX:+UseNUMA",
+    "-XX:+UseStringDeduplication",
+    "--enable-native-access=ALL-UNNAMED",
     "--add-opens=java.base/java.nio=ALL-UNNAMED",
-    "--enable-native-access=ALL-UNNAMED"
+    "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
   ),
   Test / envVars ++= {
     val binDir = s"${(Test / baseDirectory).value}/studio/src/universal/bin"
+    val torchDir = s"${(Test / baseDirectory).value}/deep/libtorch/lib"
     Map(os match {
       case "windows" =>
-        "PATH" -> s"$binDir;${System.getenv("PATH")}"
+        "PATH" -> s"$binDir;$torchDir;${System.getenv("PATH")}"
       case "mac" =>
-        "DYLD_LIBRARY_PATH" -> s"$binDir:${System.getenv("DYLD_LIBRARY_PATH")}"
+        "DYLD_LIBRARY_PATH" -> s"$binDir:$torchDir:/opt/homebrew/lib/:/usr/local/lib:${System.getenv("DYLD_LIBRARY_PATH")}"
       case _ =>
-        "LD_LIBRARY_PATH" -> s"$binDir:${System.getenv("LD_LIBRARY_PATH")}"
+        "LD_LIBRARY_PATH" -> s"$binDir:$torchDir:${System.getenv("LD_LIBRARY_PATH")}"
     }
   )},
 
@@ -93,21 +97,22 @@ lazy val javaSettings = commonSettings ++ Seq(
     "-Xlint:unchecked",
     "-parameters", // for Gemini AFC
     "-source", "25",
-    "-target", "25"
+    "-target", "25",
+    "--enable-preview"
   ),
   Compile / doc / javacOptions ++= Seq(
     //"-Xdoclint:none",
     "--allow-script-in-comments",
-    "-doctitle", """Smile &mdash; Statistical Machine Intelligence &amp; Learning Engine""",
+    "-doctitle", """SMILE &mdash; Statistical Machine Intelligence &amp; Learning Engine""",
     "--add-script", "project/gtag.js",
     "-bottom", """Copyright &copy; 2010-2026 Haifeng Li. All rights reserved.
                  |Use is subject to <a href="https://raw.githubusercontent.com/haifengl/smile/master/LICENSE">license terms.</a>
                  |<script async src="https://www.googletagmanager.com/gtag/js?id=G-57GD08QCML"></script>""".stripMargin
   ),
   libraryDependencies ++= Seq(
-    "org.slf4j" % "slf4j-api" % "2.0.17",
-    "org.slf4j" % "slf4j-simple" % "2.0.17" % Test,
-    "org.junit.jupiter" % "junit-jupiter-engine" % "6.0.3" % Test,
+    "org.slf4j" % "slf4j-api" % "2.0.18",
+    "org.slf4j" % "slf4j-simple" % "2.0.18" % Test,
+    "org.junit.jupiter" % "junit-jupiter-engine" % "6.1.2" % Test,
     "com.github.sbt.junit" % "jupiter-interface" % JupiterKeys.jupiterVersion.value % Test
   )
 )
@@ -141,7 +146,7 @@ lazy val scalaSettings = commonSettings ++ Seq(
   ),
   libraryDependencies ++= Seq(
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.6",
-    "org.slf4j" % "slf4j-simple" % "2.0.17" % Test,
+    "org.slf4j" % "slf4j-simple" % "2.0.18" % Test,
     "org.specs2" %% "specs2-core" % "4.23.0" % Test
   ),
 )
@@ -149,7 +154,7 @@ lazy val scalaSettings = commonSettings ++ Seq(
 JavaUnidoc / unidoc / javacOptions ++= Seq(
   "-Xdoclint:none",
   "--allow-script-in-comments",
-  "-doctitle", """Smile &mdash; Statistical Machine Intelligence &amp; Learning Engine""",
+  "-doctitle", """SMILE &mdash; Statistical Machine Intelligence &amp; Learning Engine""",
   "--add-script", "project/gtag.js",
   "-bottom", """Copyright &copy; 2010-2026 Haifeng Li. All rights reserved.
                |Use is subject to <a href="https://raw.githubusercontent.com/haifengl/smile/master/LICENSE">license terms.</a>
@@ -162,7 +167,7 @@ lazy val root = project.in(file("."))
   .settings(publish / skip := true)
   .settings(crossScalaVersions := Nil)
   .settings(
-    JavaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(json, scala, spark, kotlin, studio)
+    (JavaUnidoc / unidoc / unidocProjectFilter) := inAnyProject -- inProjects(json, scala, spark, kotlin, studio)
   )
   .aggregate(core, base, nlp, deep, plot, json, scala, spark, kotlin, studio)
 
@@ -196,7 +201,6 @@ lazy val scala = project.in(file("scala"))
 lazy val spark = project.in(file("spark"))
   .settings(scalaSettings: _*)
   .settings(scalaVersion := scala213)
-  .settings(publish / skip := true)
   .dependsOn(core)
 
 lazy val kotlin = project.in(file("kotlin"))
@@ -209,4 +213,4 @@ lazy val studio = project.in(file("studio"))
   .settings(javaSettings: _*)
   .settings(scalaSettings: _*)
   .settings(publish / skip := true)
-  .dependsOn(scala)
+  .dependsOn(deep, scala)

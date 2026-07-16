@@ -17,6 +17,7 @@
 package smile.data.vector;
 
 import java.util.BitSet;
+import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
@@ -71,11 +72,17 @@ public class NullableByteVector extends NullablePrimitiveVector {
     }
 
     @Override
+    public DoubleStream doubleStream() {
+        return index().mapToDouble(i -> nullMask.get(i) ? Double.NaN : vector[i]);
+    }
+
+    @Override
     public void set(int i, Object value) {
         if (value == null) {
             nullMask.set(i);
         } else if (value instanceof Number n) {
             vector[i] = n.byteValue();
+            nullMask.clear(i);
         } else {
             throw new IllegalArgumentException("Invalid value type: " + value.getClass());
         }

@@ -17,7 +17,10 @@
   "Manifold Learning"
   {:author "Haifeng Li"}
   (:import [smile.manifold IsoMap LLE LaplacianEigenmap TSNE UMAP
-                           MDS IsotonicMDS SammonMapping]))
+                           MDS IsotonicMDS SammonMapping]
+           [smile.manifold IsoMap$Options LLE$Options LaplacianEigenmap$Options
+                           TSNE$Options UMAP$Options MDS$Options
+                           IsotonicMDS$Options SammonMapping$Options]))
 
 (defn isomap
   "Isometric feature mapping.
@@ -59,7 +62,7 @@
   `k` is the number of nearest neighbors.
   If `c-isomap` is true, run C-Isomap algorithm. Otherwise standard algorithm."
   ([data k] (isomap data k 2 true))
-  ([data k d c-isomap] (IsoMap/of data k d c-isomap)))
+  ([data k d c-isomap] (IsoMap/fit data (IsoMap$Options. (int k) (int d) (boolean c-isomap)))))
 
 (defn lle
   "Locally Linear Embedding.
@@ -79,8 +82,8 @@
   `data` is the data set.
   `d` is the dimension of the manifold.
   `k` is the number of nearest neighbors."
-  ([data k] (lle data k 2 true))
-  ([data k d] (LLE/of data k d)))
+  ([data k] (lle data k 2))
+  ([data k d] (LLE/fit data (LLE$Options. (int k) (int d)))))
 
 (defn laplacian
   "Laplacian Eigenmap.
@@ -103,7 +106,7 @@
   e<sup>-||x-y||<sup>2</sup> / t</sup>. Non-positive value means
   discrete weights."
   ([data k] (laplacian data k 2 -1.0))
-  ([data k d t] (LaplacianEigenmap/of data k d t)))
+  ([data k d t] (LaplacianEigenmap/fit data (LaplacianEigenmap$Options. (int k) (int d) (double t)))))
 
 (defn tsne
   "t-distributed stochastic neighbor embedding.
@@ -123,7 +126,8 @@
   `eta` is the learning rate.
   `iterations` is the number of iterations."
   ([data] (tsne data 2 20.0 200.0 1000))
-  ([data d perplexity eta iterations] (TSNE. data d perplexity eta iterations)))
+  ([data d perplexity eta iterations]
+   (TSNE/fit data (TSNE$Options. (int d) (double perplexity) (double eta) (double 12.0) (int iterations)))))
 
 (defn umap
   "Unnifold Approximation and Projection.
@@ -173,10 +177,12 @@
   `repulsionStrength` is the weight applied to negative samples in low
   dimensional embedding optimization. Values higher than one will result in
   greater weight being given to negative samples, default 1.0."
-  ([data k] (UMAP/of data k))
-  ([data distance k] (UMAP/of data distance k))
-  ([data k d epochs learningRate minDist spread negativeSamples repulsionStrength localConnectivity] (UMAP/of data k d epochs learningRate minDist spread negativeSamples repulsionStrength localConnectivity))
-  ([data distance k d epochs learningRate minDist spread negativeSamples repulsionStrength localConnectivity] (UMAP/of data distance k d epochs learningRate minDist spread negativeSamples repulsionStrength localConnectivity)))
+  ([data k] (UMAP/fit data (UMAP$Options. (int k))))
+  ([data distance k] (UMAP/fit data distance (UMAP$Options. (int k))))
+  ([data k d epochs learningRate minDist spread negativeSamples repulsionStrength localConnectivity]
+   (UMAP/fit data (UMAP$Options. (int k) (int d) (int epochs) (double learningRate) (double minDist) (double spread) (int negativeSamples) (double repulsionStrength) (double localConnectivity))))
+  ([data distance k d epochs learningRate minDist spread negativeSamples repulsionStrength localConnectivity]
+   (UMAP/fit data distance (UMAP$Options. (int k) (int d) (int epochs) (double learningRate) (double minDist) (double spread) (int negativeSamples) (double repulsionStrength) (double localConnectivity)))))
 
 (defn mds
   "Classical multidimensional scaling, also known as principal coordinates analysis.
@@ -205,7 +211,7 @@
   possibly to minimize the dimensionality of the Euclidean space required for
   representing the objects."
   ([proximity k] (mds proximity k false))
-  ([proximity k positive] (MDS/of proximity k positive)))
+  ([proximity k positive] (MDS/fit proximity (MDS$Options. (int k) (boolean positive)))))
 
 (defn isomds
   "Kruskal's nonmetric MDS.
@@ -224,7 +230,7 @@
   `tol` is the tolerance for stopping iterations.
   `max-iter` is the maximum number of iterations."
   ([proximity k] (isomds proximity k 0.0001 200))
-  ([proximity k tol max-iter] (IsotonicMDS/of proximity k tol max-iter)))
+  ([proximity k tol max-iter] (IsotonicMDS/fit proximity (IsotonicMDS$Options. (int k) (double tol) (int max-iter)))))
 
 (defn sammon
   "Sammon's mapping.
@@ -267,5 +273,6 @@
   `step-tol` is the tolerance on step size.
   `max-iter` is the maximum number of iterations."
    ([proximity k] (sammon proximity k 0.2, 0.0001 0.001 100))
-   ([proximity k lambda tol step-tol max-iter] (SammonMapping/of proximity k lambda tol step-tol max-iter)))
+   ([proximity k lambda tol step-tol max-iter]
+    (SammonMapping/fit proximity (SammonMapping$Options. (int k) (double lambda) (int max-iter) (double tol) (double step-tol) nil))))
  

@@ -420,7 +420,7 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
     }
 
     /**
-     * Returs the root node.
+     * Returns the root node.
      * @return root node.
      */
     public Node root() {

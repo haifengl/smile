@@ -88,7 +88,16 @@ public interface Histogram {
         int min = MathEx.min(data);
         int max = MathEx.max(data);
         int span = max - min + 1;
-        
+
+        // Degenerate case: all values are the same — put them all in one bin.
+        if (span == 1) {
+            double[][] freq = new double[3][1];
+            freq[0][0] = min - 0.5;
+            freq[1][0] = min + 0.5;
+            freq[2][0] = data.length;
+            return freq;
+        }
+
         int width = 1;
         int residual = 1;
         while (residual > 0) {
@@ -205,7 +214,7 @@ public interface Histogram {
         for (int i = 0; i < k; i++) {
             freq[0][i] = breaks[i];
             freq[1][i] = breaks[i + 1];
-            freq[2][i] = 0.0f;
+            freq[2][i] = 0.0;
         }
 
         for (float d : data) {
@@ -273,7 +282,7 @@ public interface Histogram {
         for (int i = 0; i < k; i++) {
             freq[0][i] = breaks[i];
             freq[1][i] = breaks[i + 1];
-            freq[2][i] = 0.0f;
+            freq[2][i] = 0.0;
         }
 
         for (double d : data) {
@@ -414,6 +423,8 @@ public interface Histogram {
      */
     static int scott(double[] x) {
         double h = Math.ceil(3.5 * MathEx.stdev(x) / Math.pow(x.length, 1.0/3));
-        return bins(x, h);
+        int k = bins(x, h);
+        if (k < 5) k = 5;
+        return k;
     }
 }

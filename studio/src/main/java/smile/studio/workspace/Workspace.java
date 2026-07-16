@@ -19,11 +19,14 @@ package smile.studio.workspace;
 import javax.swing.*;
 import javax.swing.Timer;
 import javax.swing.tree.TreePath;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.*;
 import java.nio.file.*;
+import java.text.MessageFormat;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.*;
 import java.util.function.IntConsumer;
 import com.formdev.flatlaf.util.SystemFileChooser;
@@ -31,12 +34,12 @@ import ioa.agent.Analyst;
 import ioa.agent.Coder;
 import smile.io.Paths;
 import smile.shell.JShell;
-import smile.studio.Notepad;
 import smile.studio.SmileStudio;
-import smile.swing.FileExplorer;
-import smile.swing.tree.DirectoryTreeNode;
 import smile.studio.cli.AgentCLI;
 import smile.studio.notebook.Notebook;
+import smile.studio.text.Notepad;
+import smile.swing.FileExplorer;
+import smile.swing.tree.DirectoryTreeNode;
 
 /**
  * A notebook workspace.
@@ -52,7 +55,8 @@ public class Workspace extends JSplitPane {
     private static final String[] SMILE_FILE_EXTENSIONS = {
             "java", "jsh", // Java source files and JShell snippets
             "scala", "sc", // Scala source files and Ammonite scripts
-            "kt", "kts",   // Kotlin source files and scripts
+            // Kotlin's support for JSR-223 was deprecated in Kotlin 2.2.0.
+            //"kt", "kts",   // Kotlin source files and scripts
             "py", "ipynb"  // Python source files and Jupyter notebooks
     };
     /**
@@ -62,73 +66,48 @@ public class Workspace extends JSplitPane {
     /**
      * The project pane consists of explorer and notebook.
      */
-    final JSplitPane project = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+    private final JSplitPane project = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
     /**
      * The tabbed pane for file/environment explorers.
      */
-    final JTabbedPane explorerTabs = new JTabbedPane();
+    private final JTabbedPane explorerTabs = new JTabbedPane();
     /**
      * The tabbed pane for notebooks.
      */
-    final JTabbedPane notebookTabs = new JTabbedPane();
+    private final JTabbedPane notebookTabs = new JTabbedPane();
     /**
      * The tabbed pane for agent CLIs.
      */
-    final JTabbedPane agentTabs = new JTabbedPane();
-    /**
-     * The absolute paths of opened files.
-     */
-    final List<String> files = new ArrayList<>();
+    private final JTabbedPane agentTabs = new JTabbedPane();
     /**
      * The editor of notebook.
      */
-    final List<Notebook> notebooks = new ArrayList<>();
+    private final List<Notebook> notebooks = new ArrayList<>();
+    /**
+     * Index from absolute, normalized path string to the open {@link Notebook},
+     * enabling O(1) lookup in {@link #handleFileChanged} and {@link #openNotebook}.
+     */
+    private final Map<String, Notebook> notebookIndex = new HashMap<>();
     /**
      * The file explorer of current working directory.
      */
-    final FileExplorer fileExplorer;
+    private final FileExplorer fileExplorer;
     /**
      * The explorer of runtime information.
      */
-    final KernelExplorer kernelExplorer;
+    private final KernelExplorer kernelExplorer;
     /**
-     * The coding agent.
+     * The coding agents for each programming language.
      */
-    final Coder coder;
+    private final Map<String, Coder> coders = new HashMap<>();
     /**
      * The current working directory for the workspace.
      */
-    final Path cwd;
-
-    // -----------------------------------------------------------------------
-    // File-change watching (WatchService)
-    // -----------------------------------------------------------------------
-
+    private final Path cwd;
     /**
-     * OS-level file-change watcher.
+     * File-change watcher — single source of truth for the set of open files.
      */
-    private WatchService watchService;
-    /**
-     * Maps each WatchKey to the directory it was registered for.
-     */
-    private final Map<WatchKey, Path> watchKeys = new ConcurrentHashMap<>();
-    /**
-     * Records the last modification time (ms) of every open file as of the
-     * most recent save/open performed by <em>this</em> process. Used to
-     * distinguish our own writes from external changes.
-     */
-    private final Map<String, Long> knownModTimes = new ConcurrentHashMap<>();
-    /**
-     * Pending reload-prompt timers keyed by absolute file path string.
-     * A timer is started when the first MODIFY event arrives; it fires after a
-     * short debounce period so that rapid sequences of events produce only one
-     * dialog.
-     */
-    private final Map<String, javax.swing.Timer> pendingReloads = new ConcurrentHashMap<>();
-    /**
-     * Background thread that polls the WatchService.
-     */
-    private Thread watchThread;
+    private final OpenFileWatcher fileWatcher = new OpenFileWatcher(List.of(), this::handleFileChanged);
 
     /**
      * Constructor.
@@ -142,7 +121,8 @@ public class Workspace extends JSplitPane {
         fileChooser.setCurrentDirectory(cwd.toFile());
 
         Analyst analyst = initAnalyst(cwd);
-        coder = initCoder(cwd);
+        coders.put("Java", initJavaCoder(cwd));
+        coders.put("Python", initPythonCoder(cwd));
         fileExplorer = new FileExplorer(cwd);
         kernelExplorer = new KernelExplorer(fileChooser);
         explorerTabs.addTab("Project", new JScrollPane(fileExplorer));
@@ -153,8 +133,8 @@ public class Workspace extends JSplitPane {
         }
 
         // Open a default notebook if there is no previously opened file.
-        if (files.isEmpty()) {
-            openNotebook(Path.of("Untitled.java"));
+        if (fileWatcher.files().isEmpty()) {
+            openNotebook(cwd.resolve("Untitled.jsh"));
             // Initialized as true so that we won't try to save sample code.
             // Delay 200ms so that it be called after DocumentUpdate events.
             Timer timer = new Timer(200, e -> notebooks.getFirst().setSaved(true));
@@ -167,7 +147,8 @@ public class Workspace extends JSplitPane {
         }
 
         agentTabs.addTab("📊 Clair the Analyst", analystCLI(analyst));
-        agentTabs.addTab("☕ James the Java Guru", coderCLI(coder));
+        agentTabs.addTab("☕ James the Java Guru", javaCoderCLI(coders.get("Java")));
+        agentTabs.addTab("\uD83D\uDC0D Guido the Pythonista", pythonCoderCLI(coders.get("Python")));
 
         project.setLeftComponent(explorerTabs);
         project.setRightComponent(notebookTabs);
@@ -179,7 +160,6 @@ public class Workspace extends JSplitPane {
         setLeftComponent(project);
         setRightComponent(agentTabs);
         setResizeWeight(0.55);
-        startFileWatcher();
     }
 
     /**
@@ -203,6 +183,17 @@ public class Workspace extends JSplitPane {
                                     openNotebook(path);
                                 } else if (!Paths.isBinary(path)) {
                                     Notepad.open(path);
+                                } else {
+                                    var desktop = Desktop.getDesktop();
+                                    if (desktop.isSupported(Desktop.Action.OPEN)) {
+                                        try {
+                                            desktop.open(path.toFile());
+                                        } catch (IOException ex) {
+                                            JOptionPane.showMessageDialog(Workspace.this,
+                                                    "Failed to open: " + ex.getMessage(),
+                                                    "Error", JOptionPane.ERROR_MESSAGE);
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -217,21 +208,33 @@ public class Workspace extends JSplitPane {
      */
     private Analyst initAnalyst(Path cwd) {
         try {
-            return new Analyst("data-analyst", SmileStudio.llm(), cwd);
+            return new Analyst("analyst", SmileStudio::llm, cwd);
         } catch (Exception ex) {
-            logger.error("Failed to initialize data analyst agent", ex);
+            logger.error("Failed to initialize data analyst agent: {}", ex.getMessage());
         }
         return null;
     }
 
     /**
-     * Initializes the coding agent.
+     * Initializes the Java coding agent.
      */
-    private Coder initCoder(Path cwd) {
+    private Coder initJavaCoder(Path cwd) {
         try {
-            return new Coder("java-coder", SmileStudio.llm(), cwd);
+            return new Coder("java-coder", SmileStudio::llm, cwd);
         } catch (Exception ex) {
-            logger.error("Failed to initialize Java coding agent", ex);
+            logger.error("Failed to initialize Java coding agent: {}", ex.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Initializes the Python coding agent.
+     */
+    private Coder initPythonCoder(Path cwd) {
+        try {
+            return new Coder("pythonista", SmileStudio::llm, cwd);
+        } catch (Exception ex) {
+            logger.error("Failed to initialize Python coding agent: {}", ex.getMessage());
         }
         return null;
     }
@@ -242,62 +245,34 @@ public class Workspace extends JSplitPane {
     private AgentCLI analystCLI(Analyst analyst) {
         var cli = new AgentCLI(analyst);
 
-        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") + """
-                        =====================================================================
-                        Welcome! I am Clair, your AI assistant for machine learning modeling.
-                        
-                        /help for available commands, /init for initializing your project
-                        cwd:\s""" + System.getProperty("user.dir"),
-
-                """
-                        As a state-of-the-art machine learning engineering agent,
-                        I can help you with:
-                        
-                        🤖 Automatic end-to-end ML/AI solutions based on your requirements.
-                        🔍 Best practices and state-of-the-art methods with web search.
-                        🏅 Targeted code block refinement by ablation study.
-                        🤝 Improved solution using iterative ensemble strategy.
-                        📊 Advanced interactive data visualization.
-                        📂 Process data from CSV, ARFF, JSON, Avro, Parquet, Iceberg, to SQL.
-                        🌐 Built-in inference server.
-                        
-                        💡 Tips for getting started:
-                        1. Ctrl + ENTER to execute your intents.
-                        2. Ctrl + SPACE to show slash command argument hint.
-                        3. Ctrl + Click on output links to open browser.
-                        4. Run /init to create a SMILE.md file with instructions for agents.
-                        5. Be as specific as you would with another data scientist for the best result.
-                        6. Data visualization can be feed to AI agents for interpretation and advices.
-                        7. Create custom slash commands for reusable prompts or workflows.
-                        8. Run Shell commands starting with an exclamation mark (!).
-                        9. AI can make mistakes. Always review agent's responses.""");
-
+        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
+                        bundle.getString("WelcomeSeparator") + '\n' +
+                        MessageFormat.format(bundle.getString("AnalystWelcome"), System.getProperty("user.dir")),
+                bundle.getString("AnalystTips"));
         return cli;
     }
 
     /**
-     * Creates a coding agent cli.
+     * Creates a Java coding agent cli.
      */
-    private AgentCLI coderCLI(Coder coder) {
+    private AgentCLI javaCoderCLI(Coder coder) {
         var cli = new AgentCLI(coder);
-        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") + """
-                        =====================================================================
-                        Welcome! I am James, your AI assistant for Java programming.
-                        
-                        I can help with code completion and generation in the notebook too.
-                        cwd:\s""" + System.getProperty("user.dir"),
+        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
+                        bundle.getString("WelcomeSeparator") + '\n' +
+                        MessageFormat.format(bundle.getString("JavaCoderWelcome"), System.getProperty("user.dir")),
+                bundle.getString("CoderTips"));
+        return cli;
+    }
 
-                """
-                        💡 Tips for getting started:
-                        1. Ctrl + ENTER to execute your intents.
-                        2. Ctrl + SPACE to show slash command argument hint.
-                        3. Ctrl + Click on output links to open browser.
-                        4. TAB to complete code in the notebook.
-                        5. Be as specific as you would with another programmer for the best result.
-                        6. Create custom slash commands for reusable prompts or workflows.
-                        7. Run Shell commands starting with an exclamation mark (!).
-                        8. AI can make mistakes. Always review agent's responses.""");
-
+    /**
+     * Creates a Python coding agent cli.
+     */
+    private AgentCLI pythonCoderCLI(Coder coder) {
+        var cli = new AgentCLI(coder);
+        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
+                        bundle.getString("WelcomeSeparator") + '\n' +
+                        MessageFormat.format(bundle.getString("PythonCoderWelcome"), System.getProperty("user.dir")),
+                bundle.getString("CoderTips"));
         return cli;
     }
 
@@ -311,7 +286,7 @@ public class Workspace extends JSplitPane {
                     Notebook notebook = (Notebook) notebookTabs.getComponentAt(tabIndex);
                     if (closeNotebook(notebook)) {
                         notebookTabs.removeTabAt(tabIndex);
-                        files.remove(notebook.getFile().toString());
+                        // files and fileWatcher are already updated inside closeNotebook().
                     }
                 });
     }
@@ -336,15 +311,19 @@ public class Workspace extends JSplitPane {
         Properties properties = new Properties();
 
         // Store each file path with a unique key (e.g., file.1, file.2, ...)
-        for (int i = 0; i < files.size(); i++) {
-            // Using a simple numeric key allows for a list-like structure
-            properties.setProperty("file." + (i + 1), files.get(i));
+        // fileWatcher.files() preserves insertion order via the LinkedHashSet.
+        List<String> openFiles = fileWatcher.files();
+        for (int i = 0; i < openFiles.size(); i++) {
+            properties.setProperty("file." + (i + 1), openFiles.get(i));
         }
 
-        try (OutputStream output = new FileOutputStream(path.toFile())) {
-            properties.store(output, "Smile Studio Properties");
+        try {
+            Files.createDirectories(path.getParent());
+            try (OutputStream output = Files.newOutputStream(path)) {
+                properties.store(output, "Smile Studio Properties");
+            }
         } catch (IOException e) {
-            logger.error("Error saving studio properties file: ", e);
+            logger.error("Error saving studio properties file: {}", e.getMessage());
         }
     }
 
@@ -356,18 +335,18 @@ public class Workspace extends JSplitPane {
         List<Path> files = new ArrayList<>();
         if (Files.exists(path)) {
             Properties properties = new Properties();
-            try (FileInputStream input = new FileInputStream(path.toFile())) {
+            try (InputStream input = Files.newInputStream(path)) {
                 properties.load(input);
                 for (int i = 1; i <= 100; i++) {
                     String file = properties.getProperty("file." + i);
                     if (file != null) {
                         files.add(Path.of(file));
                     } else {
-                        break; // stop if no more file entries
+                        break;
                     }
                 }
             } catch (IOException ex) {
-                logger.error("Error reading studio properties file: ", ex);
+                logger.error("Error reading studio properties file: {}", ex.getMessage());
             }
         }
 
@@ -404,8 +383,8 @@ public class Workspace extends JSplitPane {
     public void openNotebook(Path path) {
         path = path.toAbsolutePath().normalize();
         var filename = path.getFileName().toString();
-        // already opened
-        if (files.contains(path.toString())) {
+        // already opened — just switch to its tab
+        if (fileWatcher.isOpen(path)) {
             int index = notebookTabs.indexOfTab(filename);
             if (index != -1) {
                 notebookTabs.setSelectedIndex(index);
@@ -413,13 +392,14 @@ public class Workspace extends JSplitPane {
                 logger.warn("Tab {} not found", filename);
             }
         } else {
-            Notebook notebook = new Notebook(path, coder, kernelExplorer::refresh);
+            Notebook notebook = new Notebook(path, coders, kernelExplorer::refresh);
             notebookTabs.addTab(filename, notebook);
             notebookTabs.setSelectedComponent(notebook);
             notebooks.add(notebook);
-            files.add(path.toString());
-            recordModTime(path);
-            watchDirectory(path.getParent());
+            notebookIndex.put(path.toString(), notebook);
+            fileWatcher.addFile(path);
+            fileWatcher.recordModTime(path);
+            fileWatcher.watchDirectory(path.getParent());
         }
     }
 
@@ -453,7 +433,9 @@ public class Workspace extends JSplitPane {
             // Shuts down the execution engines and frees resources.
             notebook.close();
             notebooks.remove(notebook);
-            files.remove(notebook.getFile().toString());
+            Path absPath = notebook.getFile().toAbsolutePath().normalize();
+            notebookIndex.remove(absPath.toString());
+            fileWatcher.removeFile(absPath);
         }
         return confirmed;
     }
@@ -466,7 +448,7 @@ public class Workspace extends JSplitPane {
     private int confirmSaveNotebook(Notebook notebook) {
         if (notebook.isSaved()) return JOptionPane.NO_OPTION;
         return JOptionPane.showConfirmDialog(this,
-                String.format(bundle.getString("SaveMessage"), notebook.getFile().getFileName()),
+                MessageFormat.format(bundle.getString("SaveMessage"), notebook.getFile().getFileName()),
                 bundle.getString("SaveTitle"),
                 JOptionPane.YES_NO_CANCEL_OPTION);
     }
@@ -480,6 +462,9 @@ public class Workspace extends JSplitPane {
      * or the save operation is canceled.
      */
     public boolean saveNotebook(Notebook notebook, boolean saveAs) {
+        Path oldPath = notebook.getFile() != null
+                ? notebook.getFile().toAbsolutePath().normalize() : null;
+
         if (notebook.getFile() == null || saveAs) {
             fileChooser.setDialogTitle(bundle.getString("SaveNotebook"));
             fileChooser.setFileFilter(new SystemFileChooser.FileNameExtensionFilter(
@@ -500,10 +485,22 @@ public class Workspace extends JSplitPane {
 
         try {
             notebook.save();
+            Path newPath = notebook.getFile().toAbsolutePath().normalize();
+
+            // If the path changed (Save As), update index and watcher.
+            if (!newPath.equals(oldPath)) {
+                if (oldPath != null) {
+                    notebookIndex.remove(oldPath.toString());
+                    fileWatcher.removeFile(oldPath);
+                }
+                notebookIndex.put(newPath.toString(), notebook);
+                fileWatcher.addFile(newPath);
+                fileWatcher.watchDirectory(newPath.getParent());
+            }
+
             // Update the known mod time so our own write is not mistaken
             // for an external change when the WatchService event arrives.
-            recordModTime(notebook.getFile().toAbsolutePath().normalize());
-            watchDirectory(notebook.getFile().toAbsolutePath().normalize().getParent());
+            fileWatcher.recordModTime(newPath);
             return true;
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(this,
@@ -511,6 +508,15 @@ public class Workspace extends JSplitPane {
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
         return false;
+    }
+
+    /**
+     * Returns the current working directory for the workspace.
+     *
+     * @return the current working directory.
+     */
+    public Path cwd() {
+        return cwd;
     }
 
     /**
@@ -541,134 +547,6 @@ public class Workspace extends JSplitPane {
         });
     }
 
-    // -----------------------------------------------------------------------
-    // File-change watcher implementation
-    // -----------------------------------------------------------------------
-
-    /**
-     * Starts the background {@link WatchService} thread.
-     * Must be called once during construction after all notebooks are opened.
-     */
-    private void startFileWatcher() {
-        try {
-            watchService = FileSystems.getDefault().newWatchService();
-        } catch (IOException ex) {
-            logger.error("Failed to create WatchService; external change detection disabled.", ex);
-            return;
-        }
-
-        watchThread = Thread.ofVirtual().name("workspace-file-watcher").start(() -> {
-            try {
-                while (!Thread.currentThread().isInterrupted()) {
-                    WatchKey key = watchService.poll(500, TimeUnit.MILLISECONDS);
-                    if (key == null) continue;
-
-                    Path dir = watchKeys.get(key);
-                    if (dir == null) {
-                        key.cancel();
-                        continue;
-                    }
-
-                    for (WatchEvent<?> event : key.pollEvents()) {
-                        WatchEvent.Kind<?> kind = event.kind();
-                        if (kind == StandardWatchEventKinds.OVERFLOW) continue;
-
-                        @SuppressWarnings("unchecked")
-                        Path changed = dir.resolve(((WatchEvent<Path>) event).context())
-                                .toAbsolutePath().normalize();
-
-                        if (kind == StandardWatchEventKinds.ENTRY_MODIFY
-                                && files.contains(changed.toString())) {
-                            scheduleReloadPrompt(changed);
-                        }
-                    }
-
-                    if (!key.reset()) {
-                        watchKeys.remove(key);
-                    }
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        });
-    }
-
-    /**
-     * Registers a directory with the {@link WatchService} if not already
-     * registered. Safe to call multiple times for the same directory.
-     *
-     * @param dir the directory to watch.
-     */
-    private void watchDirectory(Path dir) {
-        if (watchService == null || dir == null) return;
-        // Skip if already watching this directory
-        if (watchKeys.containsValue(dir)) return;
-        try {
-            WatchKey key = dir.register(watchService,
-                    StandardWatchEventKinds.ENTRY_MODIFY);
-            watchKeys.put(key, dir);
-            logger.debug("Watching directory: {}", dir);
-        } catch (IOException ex) {
-            logger.warn("Cannot watch directory {}: {}", dir, ex.getMessage());
-        }
-    }
-
-    /**
-     * Records the current on-disk modification time of {@code path} in
-     * {@link #knownModTimes}. Call this after opening or saving a file so
-     * that the watcher can tell apart our own writes from external ones.
-     *
-     * @param path the absolute, normalized file path.
-     */
-    private void recordModTime(Path path) {
-        try {
-            if (Files.exists(path)) {
-                knownModTimes.put(path.toString(),
-                        Files.getLastModifiedTime(path).toMillis());
-            }
-        } catch (IOException ex) {
-            logger.warn("Cannot record mod time for {}: {}", path, ex.getMessage());
-        }
-    }
-
-    /**
-     * Schedules (or re-schedules) a debounced reload prompt for the given
-     * file.  Multiple MODIFY events arriving within {@code DEBOUNCE_MS}
-     * milliseconds are coalesced into a single dialog.
-     *
-     * @param path the changed file path (absolute, normalized).
-     */
-    private void scheduleReloadPrompt(Path path) {
-        final int DEBOUNCE_MS = 500;
-        String key = path.toString();
-
-        // Cancel any existing timer for this file
-        javax.swing.Timer existing = pendingReloads.remove(key);
-        if (existing != null) existing.stop();
-
-        javax.swing.Timer timer = new javax.swing.Timer(DEBOUNCE_MS, e -> {
-            pendingReloads.remove(key);
-            // Double-check: is the mod time actually different from what we know?
-            try {
-                long diskMod = Files.getLastModifiedTime(path).toMillis();
-                Long known = knownModTimes.get(key);
-                if (known != null && diskMod <= known) {
-                    // Ignore our own save.
-                    return;
-                }
-                // Update the recorded time so we don't prompt again for the
-                // same modification if the user chooses not to reload.
-                knownModTimes.put(key, diskMod);
-            } catch (IOException ex) {
-                logger.warn("Cannot read mod time for {}: {}", path, ex.getMessage());
-            }
-            SwingUtilities.invokeLater(() -> handleFileChanged(path));
-        });
-        timer.setRepeats(false);
-        pendingReloads.put(key, timer);
-        timer.start();
-    }
-
     /**
      * Called on the Swing EDT when an external change to {@code path} has
      * been detected.  Presents a confirm dialog and reloads the notebook if
@@ -677,22 +555,14 @@ public class Workspace extends JSplitPane {
      * @param path the changed file path (absolute, normalized).
      */
     private void handleFileChanged(Path path) {
-        // Find the open notebook for this path
-        Notebook target = null;
-        for (Notebook nb : notebooks) {
-            if (nb.getFile().toAbsolutePath().normalize().equals(path)) {
-                target = nb;
-                break;
-            }
-        }
-        if (target == null) return;
+        Notebook notebook = notebookIndex.get(path.toString());
+        if (notebook == null) return;
 
-        final Notebook notebook = target;
         String filename = path.getFileName().toString();
 
         int choice = JOptionPane.showConfirmDialog(
                 this,
-                String.format(bundle.getString("ExternalChangeMessage"), filename),
+                MessageFormat.format(bundle.getString("ExternalChangeMessage"), filename),
                 bundle.getString("ExternalChangeTitle"),
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.QUESTION_MESSAGE);
@@ -717,15 +587,17 @@ public class Workspace extends JSplitPane {
         // as the user just confirmed they want the disk version).
         notebook.close();
         notebooks.remove(notebook);
-        files.remove(path.toString());
+        notebookIndex.remove(path.toString());
+        // fileSet stays unchanged — same path, still open.
 
-        // Open fresh copy
-        Notebook fresh = new Notebook(path, coder, kernelExplorer::refresh);
+        // Open fresh copy at the same tab position.
+        Notebook fresh = new Notebook(path, coders, kernelExplorer::refresh);
         notebookTabs.setComponentAt(tabIndex, fresh);
         notebookTabs.setSelectedIndex(tabIndex);
         notebooks.add(fresh);
-        files.add(path.toString());
-        recordModTime(path);
+        notebookIndex.put(path.toString(), fresh);
+        // Record updated mod time so the next save isn't mistaken for external change.
+        fileWatcher.recordModTime(path);
 
         logger.info("Reloaded notebook from disk: {}", path);
     }
@@ -735,18 +607,6 @@ public class Workspace extends JSplitPane {
      * workspace is being disposed (e.g. application shutdown).
      */
     public void shutdown() {
-        if (watchThread != null) {
-            watchThread.interrupt();
-        }
-        // Cancel all pending debounce timers
-        pendingReloads.values().forEach(javax.swing.Timer::stop);
-        pendingReloads.clear();
-        if (watchService != null) {
-            try {
-                watchService.close();
-            } catch (IOException ex) {
-                logger.warn("Error closing WatchService", ex);
-            }
-        }
+        fileWatcher.shutdown();
     }
 }

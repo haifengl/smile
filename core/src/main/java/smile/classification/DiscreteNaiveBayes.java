@@ -71,7 +71,7 @@ import java.util.Arrays;
  * <ol>
  * <li> Rennie, Jason D., et al. Tackling the poor assumptions of naive Bayes text classifiers. ICML, 2003.</li>
  * <li> Christopher D. Manning, Prabhakar Raghavan, and Hinrich Schutze. Introduction to Information Retrieval, Chapter 13, 2009.</li>
- * <li> Kevin P. Murphy. Machina Learning A Probability Perspective, Chapter 3, 2012.</li>
+ * <li> Kevin P. Murphy. Machine Learning A Probability Perspective, Chapter 3, 2012.</li>
  * </ol>
  *
  * @see Distribution
@@ -503,7 +503,7 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
 
                     MathEx.unitize2(d);
 
-                    int yi = y[i];
+                    int yi = classes.indexOf(y[i]);
                     for (int t = 0; t < p; t++) {
                         logcondprob[yi][t] += d[t];
                     }
@@ -628,7 +628,7 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
 
                     MathEx.unitize2(d);
 
-                    int yi = y[i];
+                    int yi = classes.indexOf(y[i]);
                     for (int t = 0; t < p; t++) {
                         logcondprob[yi][t] += d[t];
                     }
@@ -829,7 +829,7 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
         }
 
         MathEx.softmax(posteriori);
-        return MathEx.whichMax(posteriori);
+        return classes.valueOf(MathEx.whichMax(posteriori));
     }
 
     /**
