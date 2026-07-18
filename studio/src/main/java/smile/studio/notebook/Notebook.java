@@ -473,7 +473,6 @@ public class Notebook extends JPanel implements DocumentListener {
         List<Cell> cells = new ArrayList<>();
         String separator = separator(file);
 
-
         List<String> current = new ArrayList<>();
         for (String line : lines) {
             if (line.trim().equals(separator)) {
