@@ -473,21 +473,22 @@ public class Notebook extends JPanel implements DocumentListener {
         List<Cell> cells = new ArrayList<>();
         String separator = separator(file);
 
-        StringBuilder current = new StringBuilder();
+
+        List<String> current = new ArrayList<>();
         for (String line : lines) {
             if (line.trim().equals(separator)) {
                 if (!current.isEmpty()) {
-                    cells.add(createCell(current.toString(), "code"));
+                    cells.add(createCell(String.join("\n", current).stripTrailing(), "code"));
                 }
-                current = new StringBuilder();
+                current = new ArrayList<>();
             } else {
-                current.append(line).append('\n');
+                current.add(line);
             }
         }
 
         // The last cell may not end with separator.
         if (!current.isEmpty()) {
-            cells.add(createCell(current.toString(), "code"));
+            cells.add(createCell(String.join("\n", current).stripTrailing(), "code"));
         }
         return cells;
     }
