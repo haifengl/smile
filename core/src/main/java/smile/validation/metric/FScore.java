@@ -17,6 +17,7 @@
 package smile.validation.metric;
 
 import java.io.Serial;
+import smile.math.MathEx;
 
 /**
  * The F-score (or F-measure) considers both the precision and the recall of the test
@@ -100,7 +101,40 @@ public class FScore implements ClassificationMetric {
      * @return the metric.
      */
     public static double of(int[] truth, int[] prediction, double beta, Averaging strategy) {
+        if (truth.length != prediction.length) {
+            throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", truth.length, prediction.length));
+        }
+
         double beta2 = beta * beta;
+
+        // Macro/Weighted F-score is the average of the per-class F-scores, not the
+        // F-score of the averaged precision and recall (those are not interchangeable).
+        if (strategy == Averaging.Macro || strategy == Averaging.Weighted) {
+            int numClasses = Math.max(MathEx.max(truth), MathEx.max(prediction)) + 1;
+            int[] tp = new int[numClasses];
+            int[] fp = new int[numClasses];
+            int[] size = new int[numClasses];
+            for (int i = 0; i < truth.length; i++) {
+                size[truth[i]]++;
+                if (truth[i] == prediction[i]) {
+                    tp[truth[i]]++;
+                } else {
+                    fp[prediction[i]]++;
+                }
+            }
+
+            double sum = 0.0;
+            for (int i = 0; i < numClasses; i++) {
+                double p = tp[i] + fp[i] == 0 ? 0.0 : (double) tp[i] / (tp[i] + fp[i]);
+                double r = size[i] == 0 ? 0.0 : (double) tp[i] / size[i];
+                double denom = beta2 * p + r;
+                double f = denom == 0.0 ? 0.0 : (1 + beta2) * p * r / denom;
+                sum += strategy == Averaging.Weighted ? f * size[i] : f;
+            }
+            return strategy == Averaging.Weighted ? sum / truth.length : sum / numClasses;
+        }
+
+        // Micro-averaging and binary reduce to a single (precision, recall) pair.
         double p = Precision.of(truth, prediction, strategy);
         double r = Recall.of(truth, prediction, strategy);
         return (1 + beta2) * (p * r) / (beta2 * p + r);
