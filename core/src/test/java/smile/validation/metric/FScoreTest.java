@@ -96,9 +96,11 @@ public class FScoreTest {
                 0, 0, 0, 0, 0, 0, 0, 2, 3, 2, 2, 2, 3, 1, 3, 3, 3, 4, 5, 4, 4, 4, 4, 1, 5, 5
         };
         FScore instance = new FScore(1.0, Averaging.Macro);
-        double expResult = 0.8432;
+        // Mean of the per-class F1 scores (scikit-learn average='macro'). The
+        // previous value 0.8432 was F1 of the averaged precision and recall (#772).
+        double expResult = 0.840906;
         double result = instance.score(truth, prediction);
-        assertEquals(expResult, result, 1E-4);
+        assertEquals(expResult, result, 1E-5);
     }
 
     @Test
@@ -115,8 +117,40 @@ public class FScoreTest {
                 0, 0, 0, 0, 0, 0, 0, 2, 3, 2, 2, 2, 3, 1, 3, 3, 3, 4, 5, 4, 4, 4, 4, 1, 5, 5
         };
         FScore instance = new FScore(1.0, Averaging.Weighted);
-        double expResult = 0.8907;
+        // Support-weighted mean of the per-class F1 scores (scikit-learn
+        // average='weighted'). The previous value 0.8907 was F1 of the averaged
+        // precision and recall (#772).
+        double expResult = 0.889227;
         double result = instance.score(truth, prediction);
-        assertEquals(expResult, result, 1E-4);
+        assertEquals(expResult, result, 1E-5);
+    }
+
+    @Test
+    public void testMacroPerClass() {
+        System.out.println("Macro-FScore per-class");
+        // Equal supports (2/2/2); per-class F1 = [2/3, 4/5, 1]. Values verified
+        // against scikit-learn fbeta_score(average='macro').
+        int[] truth      = {0, 0, 1, 1, 2, 2};
+        int[] prediction = {0, 1, 1, 1, 2, 2};
+        assertEquals(0.822222, FScore.of(truth, prediction, 1.0, Averaging.Macro), 1E-6);
+        assertEquals(0.821549, FScore.of(truth, prediction, 2.0, Averaging.Macro), 1E-6);
+        assertEquals(0.849206, FScore.of(truth, prediction, 0.5, Averaging.Macro), 1E-6);
+        // With equal supports the weighted average matches the macro average.
+        assertEquals(0.822222, FScore.of(truth, prediction, 1.0, Averaging.Weighted), 1E-6);
+    }
+
+    @Test
+    public void testWeightedVsMacro() {
+        System.out.println("Weighted vs Macro FScore");
+        // Unequal supports (3/2/1) so weighted and macro differ. Values verified
+        // against scikit-learn fbeta_score(average='macro'/'weighted'/'micro').
+        int[] truth      = {0, 0, 0, 1, 1, 2};
+        int[] prediction = {0, 0, 1, 1, 2, 2};
+        assertEquals(0.655556, FScore.of(truth, prediction, 1.0, Averaging.Macro),    1E-6);
+        assertEquals(0.677778, FScore.of(truth, prediction, 1.0, Averaging.Weighted), 1E-6);
+        assertEquals(0.682540, FScore.of(truth, prediction, 2.0, Averaging.Macro),    1E-6);
+        assertEquals(0.662698, FScore.of(truth, prediction, 2.0, Averaging.Weighted), 1E-6);
+        // Micro F-score is unaffected (micro precision == micro recall == accuracy).
+        assertEquals(0.666667, FScore.of(truth, prediction, 1.0, Averaging.Micro),    1E-6);
     }
 }
