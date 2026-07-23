@@ -214,7 +214,7 @@ MeasurementMatrix mm2 = MeasurementMatrix.partial(rows, n);
 ```
 
 **When to use:** when only a random subset of signal samples can be acquired
-(e.g. missing data, random sub-Nyquist sampling).  
+(e.g. missing data, random sub-Nyquist sampling).
 **Requirement:** the signal must be sparse in a basis *incoherent* with the
 identity (e.g. the DFT basis); it will not work if the signal is sparse in
 the canonical (time/space) domain itself.
@@ -318,7 +318,7 @@ System.out.println("Iterations: " + result.iter());
 4. Update residual `r = y − A_S c_S`.
 5. Repeat until `|S| = k` or `‖r‖₂ / ‖y‖₂ < tol`.
 
-**Complexity per iteration:** O(mn) correlation + O(mk²) least-squares.  
+**Complexity per iteration:** O(mn) correlation + O(mk²) least-squares.
 **Total:** O(k(mn + mk²)).
 
 **When to use:**

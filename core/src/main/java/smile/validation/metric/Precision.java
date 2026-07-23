@@ -103,7 +103,7 @@ public class Precision implements ClassificationMetric {
         int length = strategy == Averaging.Macro || strategy == Averaging.Weighted ? numClasses : 1;
         int[] tp = new int[length];
         int[] fp = new int[length];
-        int[] size = new int[numClasses];
+        int[] size = new int[numClasses]; // number of samples per class
 
         int n = truth.length;
         for (var target : truth) {
@@ -134,7 +134,7 @@ public class Precision implements ClassificationMetric {
 
         double[] precision = new double[tp.length];
         for (int i = 0; i < tp.length; i++) {
-            precision[i] = (double) tp[i] / (tp[i] + fp[i]);
+            precision[i] = (tp[i] + fp[i] == 0) ? 0.0 : (double) tp[i] / (tp[i] + fp[i]);
         }
 
         if (strategy == Averaging.Macro) {

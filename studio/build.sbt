@@ -90,9 +90,9 @@ batScriptExtraDefines ++= Seq(
 libraryDependencies ++= Seq(
   "org.scala-lang"   %% "scala3-compiler"    % scalaVersion.value,
   "info.picocli"      % "picocli"            % "4.7.7",
-  "ch.qos.logback"    % "logback-classic"    % "1.5.34",
-  "com.openai"        % "openai-java"        % "4.41.0",
-  "com.anthropic"     % "anthropic-java"     % "2.42.0",
+  "ch.qos.logback"    % "logback-classic"    % "1.5.38",
+  "com.openai"        % "openai-java"        % "4.42.0",
+  "com.anthropic"     % "anthropic-java"     % "2.48.0",
   "com.google.genai"  % "google-genai"       % "1.53.0",
   "org.commonmark"    % "commonmark"         % "0.29.0",
   "org.xhtmlrenderer" % "flying-saucer-core" % "10.3.0",
@@ -100,10 +100,10 @@ libraryDependencies ++= Seq(
   "com.fifesoft"      % "rsyntaxtextarea"    % "3.6.3",
   "com.fifesoft"      % "rstaui"             % "3.3.2",
   "com.fifesoft"      % "spellchecker"       % "3.4.1",
-  "com.formdev"       % "flatlaf"            % "3.7.1",
+  "com.formdev"       % "flatlaf"            % "3.7.2",
   "com.formdev"       % "flatlaf-fonts-jetbrains-mono" % "2.304",
   "org.apache.maven"  % "maven-resolver-provider" % "3.9.16",
-  "org.apache.maven.resolver"   % "maven-resolver-supplier-mvn4" % "2.0.18",
+  "org.apache.maven.resolver"   % "maven-resolver-supplier-mvn4" % "2.0.20",
   "io.modelcontextprotocol.sdk" % "mcp"          % "2.0.0",
   "io.github.furstenheim"       % "copy_down"    % "1.1",
   "org.jsoup"                   % "jsoup"        % "1.22.2",
@@ -112,13 +112,14 @@ libraryDependencies ++= Seq(
 )
 
 libraryDependencies ++= {
-  val jacksonV = "3.2.0"
+  val jacksonV = "3.2.1"
+  val jsonschemaV = "4.38.0"
   Seq(
     "tools.jackson.core"       % "jackson-databind"            % jacksonV,
     "tools.jackson.dataformat" % "jackson-dataformat-yaml"     % jacksonV,
-    "com.github.victools"      % "jsonschema-generator"        % "4.38.0",
-    "com.github.victools"      % "jsonschema-module-jackson"   % "4.38.0",
-    "com.github.victools"      % "jsonschema-module-swagger-2" % "4.38.0"
+    "com.github.victools"      % "jsonschema-generator"        % jsonschemaV,
+    "com.github.victools"      % "jsonschema-module-jackson"   % jsonschemaV,
+    "com.github.victools"      % "jsonschema-module-swagger-2" % jsonschemaV
   )
 }
 

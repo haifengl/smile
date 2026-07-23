@@ -5,6 +5,19 @@ pip install jupyterlab_google_analytics
 mkdir -p /srv/conda/envs/notebook/share/jupyter/lab/settings
 cp project/overrides.json /srv/conda/envs/notebook/share/jupyter/lab/settings/overrides.json
 
+# Setting JDK25
+JAVA_PATH="/usr/lib/jvm/java-25-openjdk-amd64/bin/java"
+JAVAC_PATH="/usr/lib/jvm/java-25-openjdk-amd64/bin/javac"
+
+echo "Setting OpenJDK 25 as the default system Java..."
+sudo update-alternatives --set java "$JAVA_PATH"
+sudo update-alternatives --set javac "$JAVAC_PATH"
+
+# Install Rapaio Jupyter Kernel
+curl -LO https://github.com/padreati/rapaio-jupyter-kernel/releases/download/3.0.4/rapaio-jupyter-kernel-3.0.4.jar
+java -jar ./rapaio-jupyter-kernel-3.0.4.jar -i -auto
+rm ./rapaio-jupyter-kernel-3.0.4.jar
+
 # Install coursier
 curl -Lo coursier https://git.io/coursier-cli
 chmod +x coursier
