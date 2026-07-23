@@ -42,8 +42,8 @@ public class SettingsDialog extends JDialog implements ActionListener {
     // Interactions API is not yet supported on Vertex
     private static final String[] aiServiceOptions = {"OpenAI", "Azure OpenAI", "Anthropic", "Google Gemini", "Google Gemini Enterprise", "Chat Completions Compatible"};
     private static final String[] aiServiceKeys = {"openai", "azureOpenAI", "anthropic", "googleGemini", "googleEnterprise", "chatCompletions"};
-    private static final String[] openaiModels = {"gpt-5.5-pro", "gpt-5.5", "gpt-5.4-mini", "gpt-5.4-nano"};
-    private static final String[] anthropicModels = {"claude-fable-5", "claude-opus-4-8", "claude-sonnet-4-6", "claude-haiku-4-5"};
+    private static final String[] openaiModels = {"gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna", "gpt-5.4-mini"};
+    private static final String[] anthropicModels = {"claude-fable-5", "claude-opus-4-8", "claude-sonnet-5", "claude-haiku-4-5"};
     private static final String[] geminiModels = {"gemini-3.5-flash", "gemini-3.1-pro-preview", "gemini-3.1-flash-lite"};
     private static final String[] otherModels = {"llama3.2", "qwen3.5", "minimax-m2.7", "kimi-k2.6", "deepseek-r1"};
     private final JComboBox<String> themeCombo = new JComboBox<>(UI_THEMES);
@@ -133,7 +133,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
         gbc.gridx = 0; // Column 0
         gbc.gridy = 0; // Row 0
         gbc.anchor = GridBagConstraints.WEST;
-        JLabel apiKeyLabel = new JLabel(bundle.getString("APIKey"));
+        JLabel apiKeyLabel = new JLabel(bundle.getString(service.equals("googleEnterprise") ? "Project" : "APIKey"));
         card.add(apiKeyLabel, gbc);
 
         gbc.gridx = 1; // Column 1
@@ -149,7 +149,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
         gbc.gridy = 1; // Row 1
         gbc.fill = GridBagConstraints.NONE; // Reset fill for label
         gbc.weightx = 0.0; // Reset weightx for label
-        JLabel baseUrlLabel = new JLabel(bundle.getString("BaseUrl"));
+        JLabel baseUrlLabel = new JLabel(bundle.getString(service.equals("googleEnterprise") ? "Location" : "BaseUrl"));
         card.add(baseUrlLabel, gbc);
 
         gbc.gridx = 1; // Column 1

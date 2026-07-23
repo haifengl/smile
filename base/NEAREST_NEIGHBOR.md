@@ -302,7 +302,7 @@ tree.search("color", 2.0, results);
 
 ### Complexity
 
-Building: `O(N log N)` average.  
+Building: `O(N log N)` average.
 Query: `O(N^(r/d))` where `r` is the radius and `d` is the maximum branching
 distance — typically much faster than linear scan for small radii.
 

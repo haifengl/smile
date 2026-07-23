@@ -100,7 +100,7 @@ public class Recall implements ClassificationMetric {
 
         int length = strategy == Averaging.Macro || strategy == Averaging.Weighted ? numClasses : 1;
         int[] tp = new int[length];
-        int[] size = new int[numClasses];
+        int[] size = new int[numClasses]; // number of samples per class
 
         int n = truth.length;
         for (var target : truth) {
@@ -125,10 +125,11 @@ public class Recall implements ClassificationMetric {
 
         double[] recall = new double[tp.length];
         if (tp.length == 1) {
-            recall[0] = (double) tp[0] / (strategy == null ? size[1] : n);
+            int denom = strategy == null ? size[1] : n;
+            recall[0] = denom == 0 ? 0.0 : (double) tp[0] / denom;
         } else {
             for (int i = 0; i < tp.length; i++) {
-                recall[i] = (double) tp[i] / size[i];
+                recall[i] = size[i] == 0 ? 0.0 : (double) tp[i] / size[i];
             }
         }
 

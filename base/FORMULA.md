@@ -443,9 +443,9 @@ date("checkIn",   DateFeature.HOUR, DateFeature.MINUTE)
 | `MINUTE` | Time, DateTime | 0–59 | — |
 | `SECOND` | Time, DateTime | 0–59 | — |
 
-> **Type safety:**  
-> - Requesting `HOUR`/`MINUTE`/`SECOND` on a `Date` column throws `UnsupportedOperationException`.  
-> - Requesting `YEAR`/`MONTH`/… on a `Time` column throws `UnsupportedOperationException`.  
+> **Type safety:**
+> - Requesting `HOUR`/`MINUTE`/`SECOND` on a `Date` column throws `UnsupportedOperationException`.
+> - Requesting `YEAR`/`MONTH`/… on a `Time` column throws `UnsupportedOperationException`.
 > - `DateTime` columns support all features.
 
 **String formula:**
