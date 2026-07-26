@@ -452,7 +452,7 @@ public class GLM implements DataFrameRegression, Serializable {
             ztest[i][0] = beta.get(i);
             ztest[i][1] = Math.sqrt(inv.get(i, i));
             ztest[i][2] = ztest[i][0] / ztest[i][1];
-            ztest[i][3] = 2.0 - Erf.erfc(-0.707106781186547524 * Math.abs(ztest[i][2]));
+            ztest[i][3] = Erf.erfc(0.707106781186547524 * Math.abs(ztest[i][2]));
         }
 
         return new GLM(formula, schema, model, beta.toArray(new double[0]), model.logLikelihood(y, mu),

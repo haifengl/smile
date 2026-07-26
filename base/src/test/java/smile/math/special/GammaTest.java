@@ -286,5 +286,41 @@ public class GammaTest {
         // ψ(10) ≈ 2.25175...
         assertEquals(2.251753, Gamma.digamma(10.0), 1E-6);
     }
+
+    @Test
+    public void testUpperIncompleteGammaFarTail() {
+        System.out.println("Q(s,x) far tail");
+        // Reference values from mpmath at 120 digits.
+        double[][] cases = {
+                { 0.5,  35.0, 5.930445850082487E-17},
+                { 1.0,  37.0, 8.533047625744066E-17},
+                { 2.0,  40.0, 1.7418252446695514E-16},
+                {10.0,  60.0, 2.85150775555202E-16},
+                { 0.5,  50.0, 1.523970604832105E-23},
+                { 1.0,  50.0, 1.9287498479639178E-22},
+                { 5.0,  50.0, 5.4497019829205295E-17},
+                { 1.5,  50.0, 1.554159431389605E-21},
+                { 1.0, 100.0, 3.720075976020836E-44},
+                {50.0, 200.0, 1.6927979958857087E-37},
+                { 0.5, 500.0, 1.7958327848007262E-219},
+        };
+        for (double[] c : cases) {
+            double q = Gamma.regularizedUpperIncompleteGamma(c[0], c[1]);
+            assertEquals(c[2], q, Math.abs(c[2]) * 1E-6,
+                    String.format("Q(%.1f, %.1f) = %s", c[0], c[1], q));
+        }
+    }
+
+    @Test
+    public void testUpperIncompleteGammaStrictlyDecreasing() {
+        System.out.println("Q(s,x) strictly decreasing into the tail");
+        double prev = Double.MAX_VALUE;
+        for (double x = 30.0; x <= 300.0; x += 5.0) {
+            double q = Gamma.regularizedUpperIncompleteGamma(2.0, x);
+            assertTrue(q > 0.0, "Q(2, " + x + ") = " + q);
+            assertTrue(q < prev, "Q(2, " + x + ") = " + q + " is not below Q(2, " + (x - 5.0) + ")");
+            prev = q;
+        }
+    }
 }
 

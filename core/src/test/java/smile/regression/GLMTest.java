@@ -25,6 +25,7 @@ import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.math.MathEx;
+import smile.math.special.Erf;
 import smile.regression.glm.*;
 import smile.io.Read;
 import smile.io.Write;
@@ -82,6 +83,14 @@ public class GLMTest {
             for (int j = 0; j < 4; j++) {
                 assertEquals(ztest[i][j], model.ztest()[i][j], 1E-4);
             }
+        }
+
+        // The two significant coefficients round to 0.00000 above, but their
+        // p-values are not 0. References from mpmath at 120 digits.
+        assertEquals(4.995317351262854E-108, model.ztest()[0][3], 1E-114);
+        assertEquals(4.331279226426007E-135, model.ztest()[2][3], 1E-141);
+        for (double[] row : model.ztest()) {
+            assertEquals(Erf.erfc(Math.abs(row[2]) / Math.sqrt(2.0)), row[3], Math.abs(row[3]) * 1E-9);
         }
 
         java.nio.file.Path temp = Write.object(model);
