@@ -115,20 +115,28 @@ public class Precision implements Metric {
         this.size.add_(size);
     }
 
-    @Override
-    public double compute() {
-        if (tp == null) return 0.0;
-        // Guard against zero denominator (no predicted positives for a class):
-        // replace 0 entries in (tp+fp) with 1 so that TP/1 = 0 precision for
-        // classes that were never predicted positive.
+    /**
+     * Returns the precision of each class, before any averaging is applied.
+     * Guard against zero denominator (no predicted positives for a class):
+     * replace 0 entries in (tp+fp) with 1 so that TP/1 = 0 precision for
+     * classes that were never predicted positive.
+     * @return the per-class precision.
+     */
+    Tensor score() {
         Tensor denom = tp.add(fp);
         Tensor ones  = denom.newOnes(denom.shape());
         Tensor safe  = Tensor.where(denom.gt(0), denom, ones);
-        Tensor precision = tp.div(safe);
+        return tp.div(safe);
+    }
+
+    @Override
+    public double compute() {
+        if (tp == null) return 0.0;
+        Tensor precision = score();
         if (strategy == Averaging.Macro) {
             precision = precision.mean();
         } else if (strategy == Averaging.Weighted) {
-            precision = precision.mul(size).sum().div(size.sum());
+            return Averaging.weighted(precision, size);
         }
         return precision.doubleValue();
     }

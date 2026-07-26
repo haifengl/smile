@@ -546,4 +546,154 @@ public class MetricTest {
                 "Weighted recall should equal accuracy for perfect predictions");
         output.close(); tgt.close();
     }
+
+    // -----------------------------------------------------------------------
+    // Macro/weighted F1 with unequal per-class scores
+    //
+    // Confusion matrix (rows = truth, columns = prediction):
+    //
+    //          pred 0  pred 1  pred 2   support
+    // true 0        4       6       0        10
+    // true 1        0       2       0         2
+    // true 2        0       0       3         3
+    //
+    // per-class precision = [4/4, 2/8, 3/3] = [1, 1/4,   1]
+    // per-class recall    = [4/10, 2/2, 3/3] = [2/5,  1,   1]
+    // per-class F1        = [4/7,  2/5,  1]
+    //
+    // macro F1    = (4/7 + 2/5 + 1) / 3           = 23/35  = 0.65714286
+    // weighted F1 = (10*4/7 + 2*2/5 + 3*1) / 15   = 111/175 = 0.63428571
+    //
+    // Averaging precision and recall first gives macro P = 3/4, macro R = 4/5
+    // and 2PR/(P+R) = 0.77419355, and weighted P = 9/10, weighted R = 3/5 and
+    // 2PR/(P+R) = 0.72 — neither is an F1 score of anything.
+    // -----------------------------------------------------------------------
+
+    /** Truth labels of the imbalanced three-class fixture above. */
+    private static final int[] IMBALANCED_TRUTH = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 2};
+    /** Predictions of the imbalanced three-class fixture above. */
+    private static final int[] IMBALANCED_PRED  = {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2};
+
+    @Test
+    public void testGivenUnequalPerClassScoresWhenComputingMacroF1ThenAveragesPerClassF1() {
+        Tensor output = logits(IMBALANCED_PRED, 3);
+        Tensor tgt    = target(IMBALANCED_TRUTH);
+        F1Score metric = new F1Score(Averaging.Macro);
+
+        metric.update(output, tgt);
+        assertEquals(23.0 / 35.0, metric.compute(), 1e-6);
+        output.close(); tgt.close();
+    }
+
+    @Test
+    public void testGivenUnequalPerClassScoresWhenComputingWeightedF1ThenAveragesPerClassF1() {
+        Tensor output = logits(IMBALANCED_PRED, 3);
+        Tensor tgt    = target(IMBALANCED_TRUTH);
+        F1Score metric = new F1Score(Averaging.Weighted);
+
+        metric.update(output, tgt);
+        assertEquals(111.0 / 175.0, metric.compute(), 1e-6);
+        output.close(); tgt.close();
+    }
+
+    @Test
+    public void testGivenUnequalPerClassScoresWhenComputingMacroF1ThenNotHarmonicMeanOfAverages() {
+        Tensor output = logits(IMBALANCED_PRED, 3);
+        Tensor tgt    = target(IMBALANCED_TRUTH);
+
+        F1Score   f1 = new F1Score(Averaging.Macro);
+        Precision p  = new Precision(Averaging.Macro);
+        Recall    r  = new Recall(Averaging.Macro);
+        f1.update(output, tgt);
+        p.update(output, tgt);
+        r.update(output, tgt);
+
+        double averaged = 2 * p.compute() * r.compute() / (p.compute() + r.compute());
+        assertEquals(0.7741935, averaged, 1e-6);
+        assertNotEquals(averaged, f1.compute(), 1e-3,
+                "macro F1 must average the per-class F1 scores, not combine the averaged precision and recall");
+        output.close(); tgt.close();
+    }
+
+    @Test
+    public void testGivenMultipleBatchesWhenComputingMacroF1ThenAveragesOverAccumulatedCounts() {
+        // Same 15 samples as above, split across two updates. The metric accumulates
+        // counts, so the result must match the single-batch value.
+        int[] truth1 = {0, 0, 0, 0, 0, 0, 0};
+        int[] pred1  = {0, 0, 0, 0, 1, 1, 1};
+        int[] truth2 = {0, 0, 0, 1, 1, 2, 2, 2};
+        int[] pred2  = {1, 1, 1, 1, 1, 2, 2, 2};
+
+        Tensor out1 = logits(pred1, 3); Tensor tgt1 = target(truth1);
+        Tensor out2 = logits(pred2, 3); Tensor tgt2 = target(truth2);
+
+        F1Score metric = new F1Score(Averaging.Macro);
+        metric.update(out1, tgt1);
+        metric.update(out2, tgt2);
+
+        assertEquals(23.0 / 35.0, metric.compute(), 1e-6);
+        out1.close(); tgt1.close(); out2.close(); tgt2.close();
+    }
+
+    // -----------------------------------------------------------------------
+    // Micro-averaging when a class has no instance in the batch
+    //
+    //          pred 0  pred 1  pred 2   support
+    // true 0        4       1       0         5
+    // true 1        1       4       0         5
+    // true 2        0       0       0         0
+    //
+    // 8 of 10 samples are correct, so accuracy, micro precision, micro recall
+    // and micro F1 are all 0.8. Class 2 has no instance; its per-class guard
+    // must not leak into the micro denominator.
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testGivenClassWithoutInstancesWhenComputingMicroRecallThenEqualsAccuracy() {
+        int[] truth = {0, 0, 0, 0, 0, 1, 1, 1, 1, 1};
+        int[] pred  = {0, 0, 0, 0, 1, 0, 1, 1, 1, 1};
+        Tensor output = logits(pred, 3); Tensor tgt = target(truth);
+
+        Accuracy acc  = new Accuracy();
+        Recall microR = new Recall(Averaging.Micro);
+        acc.update(output, tgt);
+        microR.update(output, tgt);
+
+        assertEquals(0.8, acc.compute(), 1e-6);
+        assertEquals(0.8, microR.compute(), 1e-6);
+        output.close(); tgt.close();
+    }
+
+    @Test
+    public void testGivenClassWithoutInstancesWhenComputingMicroF1ThenEqualsAccuracy() {
+        int[] truth = {0, 0, 0, 0, 0, 1, 1, 1, 1, 1};
+        int[] pred  = {0, 0, 0, 0, 1, 0, 1, 1, 1, 1};
+        Tensor output = logits(pred, 3); Tensor tgt = target(truth);
+
+        Precision microP = new Precision(Averaging.Micro);
+        F1Score   microF = new F1Score(Averaging.Micro);
+        microP.update(output, tgt);
+        microF.update(output, tgt);
+
+        assertEquals(0.8, microP.compute(), 1e-6);
+        assertEquals(0.8, microF.compute(), 1e-6);
+        output.close(); tgt.close();
+    }
+
+    @Test
+    public void testGivenWeightedMetricsWhenResetThenComputeReturnsZero() {
+        // reset() is called at the end of every epoch. Macro and micro already
+        // returned 0 for the empty state; weighted must not return NaN either.
+        Tensor output = logits(IMBALANCED_PRED, 3);
+        Tensor tgt    = target(IMBALANCED_TRUTH);
+
+        for (Metric metric : new Metric[]{new Precision(Averaging.Weighted),
+                                          new Recall(Averaging.Weighted),
+                                          new F1Score(Averaging.Weighted)}) {
+            metric.update(output, tgt);
+            metric.reset();
+            assertEquals(0.0, metric.compute(), 1e-9, metric.name());
+        }
+        output.close(); tgt.close();
+    }
 }
