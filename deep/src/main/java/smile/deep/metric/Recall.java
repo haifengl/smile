@@ -115,25 +115,38 @@ public class Recall implements Metric {
         this.size.add_(size);
     }
 
+    /**
+     * Returns the recall of each class, before any averaging is applied.
+     * Guard against zero denominator: replace 0-count classes with 1
+     * so that TP/1 = 0 recall, avoiding NaN.
+     * @return the per-class recall.
+     */
+    Tensor score() {
+        Tensor ones     = size.newOnes(size.shape());
+        Tensor safeSize = Tensor.where(size.gt(0), size, ones);
+        return tp.div(safeSize);
+    }
+
     @Override
     public double compute() {
         if (tp == null) return 0.0;
         Tensor recall;
-        // Guard against zero denominator: replace 0-count classes with 1
-        // so that TP/1 = 0 recall, avoiding NaN.
-        Tensor ones     = size.newOnes(size.shape());
-        Tensor safeSize = Tensor.where(size.gt(0), size, ones);
-        if (tp.size(0) == 1) {
-            long positives = size.getLong(1);
-            recall = strategy == null ? tp.div(Math.max(1L, positives)) : tp.div(safeSize.sum());
+        if (strategy == null || strategy == Averaging.Micro) {
+            // Both reduce to a single ratio of true positives over the actual
+            // positives (binary) or over all the samples (micro). The per-class
+            // guard of score() must not be applied here: counting an empty class
+            // as one sample would inflate the denominator and micro recall would
+            // no longer be equal to accuracy.
+            double positives = strategy == null ? size.getLong(1) : size.sum().doubleValue();
+            recall = tp.div(Math.max(1.0, positives));
         } else {
-            recall = tp.div(safeSize);
+            recall = score();
         }
 
         if (strategy == Averaging.Macro) {
             recall = recall.mean();
         } else if (strategy == Averaging.Weighted) {
-            recall = recall.mul(size).sum().div(size.sum());
+            return Averaging.weighted(recall, size);
         }
         return recall.doubleValue();
     }
