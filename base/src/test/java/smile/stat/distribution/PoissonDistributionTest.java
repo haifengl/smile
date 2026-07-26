@@ -171,6 +171,20 @@ public class PoissonDistributionTest {
     }
 
     /**
+     * cdf() is the upper incomplete gamma, whose far tail used to collapse to 0.
+     * Reference values from mpmath at 120 digits.
+     */
+    @Test
+    public void testCdfFarTail() {
+        System.out.println("cdf far tail");
+        PoissonDistribution instance = new PoissonDistribution(500);
+        assertEquals(1.9241648854434787E-14, instance.cdf(340), 1E-20);
+        assertEquals(4.336865760332492E-18,  instance.cdf(320), 1E-24);
+        assertEquals(2.8361496727739246E-22, instance.cdf(300), 1E-28);
+        assertEquals(2.4265925398339247E-35, instance.cdf(250), 1E-41);
+    }
+
+    /**
      * Test of quantile method, of class Poisson.
      */
     @Test
