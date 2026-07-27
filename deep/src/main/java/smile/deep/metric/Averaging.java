@@ -16,6 +16,8 @@
  */
 package smile.deep.metric;
 
+import smile.deep.tensor.Tensor;
+
 /**
  * The averaging strategy to aggregate binary performance metrics across
  * multi-classes.
@@ -43,5 +45,18 @@ public enum Averaging {
      * Weighted macro for imbalanced classes. Note that weighted recall is
      * equal to accuracy.
      */
-    Weighted
+    Weighted;
+
+    /**
+     * Returns the support-weighted average of per-class scores. Shared by the
+     * metrics so that they all reduce the {@link #Weighted} strategy the same
+     * way, including the empty-state case right after {@code reset()}.
+     * @param score the score of each class.
+     * @param size the number of samples of each class.
+     * @return the weighted average, or 0 if there is no sample.
+     */
+    static double weighted(Tensor score, Tensor size) {
+        double n = size.sum().doubleValue();
+        return n == 0.0 ? 0.0 : score.mul(size).sum().doubleValue() / n;
+    }
 }
