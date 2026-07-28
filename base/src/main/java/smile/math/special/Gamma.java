@@ -149,7 +149,7 @@ public class Gamma {
             igf = regularizedIncompleteGammaSeries(s, x);
         } else {
             // Continued fraction representation
-            igf = regularizedIncompleteGammaFraction(s, x);
+            igf = 1.0 - regularizedUpperIncompleteGammaFraction(s, x);
         }
 
         return igf;
@@ -159,7 +159,7 @@ public class Gamma {
      * Regularized Upper/Complementary Incomplete Gamma Function
      * Q(s,x) = 1 - P(s,x) = 1 - <i>&#8747;<sub><small>0</small></sub><sup><small>x</small></sup> e<sup>-t</sup> t<sup>(s-1)</sup> dt</i>
      * <p>
-     * Returns 0 when x = 0, and {@code Double.NaN} when x is NaN.
+     * Returns 1 when x = 0, and {@code Double.NaN} when x is NaN.
      *
      * @param s {@code s >= 0}
      * @param x {@code x >= 0}
@@ -187,7 +187,7 @@ public class Gamma {
             return 1.0 - regularizedIncompleteGammaSeries(s, x);
         } else {
             // Continued fraction representation
-            return 1.0 - regularizedIncompleteGammaFraction(s, x);
+            return regularizedUpperIncompleteGammaFraction(s, x);
         }
     }
 
@@ -228,18 +228,21 @@ public class Gamma {
     }
 
     /**
-     * Regularized Incomplete Gamma Function P(a,x) = <i><big>&#8747;</big><sub><small>0</small></sub><sup><small>x</small></sup> e<sup>-t</sup> t<sup>(a-1)</sup> dt</i>.
+     * Regularized Upper Incomplete Gamma Function Q(a,x) = <i><big>&#8747;</big><sub><small>x</small></sub><sup><small>&#8734;</small></sup> e<sup>-t</sup> t<sup>(a-1)</sup> dt</i>.
      * Continued Fraction representation of the function - valid for {@code x >= a + 1}.
      * This method follows the general procedure used in Numerical Recipes.
+     * <p>
+     * Q is returned rather than P = 1 - Q: for {@code x >= a + 1} Q is the small
+     * quantity, and forming it as 1 - P would round it to a multiple of
+     * 2<sup>-53</sup> and to exactly 0 below 2<sup>-54</sup>.
      */
-    private static double regularizedIncompleteGammaFraction(double a, double x) {
+    private static double regularizedUpperIncompleteGammaFraction(double a, double x) {
         if (a < 0.0 || x < 0.0 || x < a + 1) {
             throw new IllegalArgumentException(String.format("Invalid a = %f, x = %f", a, x));
         }
 
         int i = 0;
         double ii;
-        double igf;
         boolean check = true;
 
         double loggamma = lgamma(a);
@@ -271,11 +274,10 @@ public class Gamma {
             }
             if (i >= INCOMPLETE_GAMMA_MAX_ITERATIONS) {
                 check = false;
-                logger.error("Gamma.regularizedIncompleteGammaFraction: Maximum number of iterations was exceeded");
+                logger.error("Gamma.regularizedUpperIncompleteGammaFraction: Maximum number of iterations was exceeded");
             }
         }
-        igf = 1.0 - exp(-x + a * log(x) - loggamma) * prod;
-        return igf;
+        return exp(-x + a * log(x) - loggamma) * prod;
     }
 
     /**
