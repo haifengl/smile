@@ -101,4 +101,27 @@ public class ChiSqTestTest {
         assertEquals(5.179, test.chisq(), 1E-3);
         assertEquals(0.2695, test.pvalue(), 1E-4);
     }
+
+    /**
+     * All three tests share the upper incomplete gamma, whose far tail used to
+     * collapse to 0. Reference p-values from mpmath at 120 digits.
+     */
+    @Test
+    public void testFarTailPValue() {
+        System.out.println("far tail p-value");
+        ChiSqTest one = ChiSqTest.test(new int[]{150, 50, 150, 50}, new double[]{0.25, 0.25, 0.25, 0.25});
+        assertEquals(100.0, one.chisq(), 1E-9);
+        assertEquals(3, one.df(), 1E-10);
+        assertEquals(1.554159431389605E-21, one.pvalue(), 1E-27);
+
+        ChiSqTest two = ChiSqTest.test(new int[]{100, 10, 100, 10}, new int[]{10, 100, 10, 100});
+        assertEquals(294.5455, two.chisq(), 1E-4);
+        assertEquals(3, two.df(), 1E-10);
+        assertEquals(1.507476167666212E-63, two.pvalue(), 1E-69);
+
+        ChiSqTest table = ChiSqTest.test(new int[][]{{100, 10}, {10, 100}});
+        assertEquals(144.0182, table.chisq(), 1E-4);
+        assertEquals(1, table.df(), 1E-10);
+        assertEquals(3.520591654384769E-33, table.pvalue(), 1E-39);
+    }
 }
