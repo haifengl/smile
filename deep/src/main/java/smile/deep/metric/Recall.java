@@ -109,10 +109,15 @@ public class Recall implements Metric {
             } else {
                 tp = target.newZeros(numClasses).scatterReduce_(0, target.get(eq), one, "sum");
             }
+            eq.close();
         }
 
         this.tp.add_(tp);
         this.size.add_(size);
+        prediction.close();
+        tp.close();
+        one.close();
+        size.close();
     }
 
     /**
@@ -122,14 +127,16 @@ public class Recall implements Metric {
      * @return the per-class recall.
      */
     Tensor score() {
-        Tensor ones     = size.newOnes(size.shape());
-        Tensor safeSize = Tensor.where(size.gt(0), size, ones);
-        return tp.div(safeSize);
+        try (Tensor ones     = size.newOnes(size.shape());
+             Tensor safeSize = Tensor.where(size.gt(0), size, ones)) {
+            return tp.div(safeSize);
+        }
     }
 
     @Override
     public double compute() {
         if (tp == null) return 0.0;
+
         Tensor recall;
         if (strategy == null || strategy == Averaging.Micro) {
             // Both reduce to a single ratio of true positives over the actual
@@ -143,12 +150,14 @@ public class Recall implements Metric {
             recall = score();
         }
 
-        if (strategy == Averaging.Macro) {
-            recall = recall.mean();
-        } else if (strategy == Averaging.Weighted) {
-            return Averaging.weighted(recall, size);
-        }
-        return recall.doubleValue();
+        var value = switch (strategy) {
+            case null -> recall.doubleValue();
+            case Micro -> recall.doubleValue();
+            case Macro -> recall.mean().doubleValue();
+            case Weighted -> Averaging.weighted(recall, size);
+        };
+        recall.close();
+        return value;
     }
 
     @Override
