@@ -87,4 +87,47 @@ public class CorTestTest {
         assertEquals(0.4444444, test.cor(), 1E-7);
         assertEquals(0.0953, test.pvalue(), 1E-4);
     }
+
+    /**
+     * Test of spearman on a large sample. The n<sup>3</sup>-n rank
+     * normalization must be evaluated in double; computed in int it
+     * overflows for n >= 1291, pushing the coefficient outside [-1, 1].
+     */
+    @Test
+    public void testSpearmanLargeSample() {
+        System.out.println("spearman large sample");
+        // Strictly anti-correlated ranks (no ties): true Spearman rho is -1.
+        for (int n : new int[]{1290, 1291, 2000}) {
+            double[] x = new double[n];
+            double[] y = new double[n];
+            for (int i = 0; i < n; i++) {
+                x[i] = i;
+                y[i] = n - 1 - i;
+            }
+            double rho = CorTest.spearman(x, y).cor();
+            assertTrue(rho >= -1.0 && rho <= 1.0, "rho out of range at n=" + n + ": " + rho);
+            assertEquals(-1.0, rho, 1E-10, "n=" + n);
+        }
+    }
+
+    /**
+     * Test of kendall on a large sample. The concordant/discordant pair
+     * counters reach n(n-1)/2 and must be long; computed in int they
+     * overflow for n >= 65537, yielding NaN from the root of a negative count.
+     */
+    @Test
+    public void testKendallLargeSample() {
+        System.out.println("kendall large sample");
+        // Perfectly concordant ranks (no ties): true Kendall tau is +1.
+        int n = 65537;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i < n; i++) {
+            x[i] = i;
+            y[i] = i;
+        }
+        double tau = CorTest.kendall(x, y).cor();
+        assertTrue(tau >= -1.0 && tau <= 1.0, "tau out of range: " + tau);
+        assertEquals(1.0, tau, 1E-10);
+    }
 }
