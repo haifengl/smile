@@ -62,21 +62,17 @@ public class MatthewsCorrelation implements ClassificationMetric {
             throw new IllegalArgumentException("MCC can only be applied to binary classification: " + confusion);
         }
 
-        int tp = matrix[1][1];
-        int tn = matrix[0][0];
-        int fp = matrix[0][1];
-        int fn = matrix[1][0];
-
         // Compute in long to avoid int overflow of tp * tn on large samples (cf. AUC).
-        long numerator = (long) tp * tn - (long) fp * fn;
+        long tp = matrix[1][1];
+        long tn = matrix[0][0];
+        long fp = matrix[0][1];
+        long fn = matrix[1][0];
+
+        double numerator = tp * tn - fp * fn;
         double denominator = Math.sqrt(tp + fp) * Math.sqrt(tp + fn) * Math.sqrt(tn + fp) * Math.sqrt(tn + fn);
 
         // A zero marginal makes the denominator 0; MCC is 0 by convention.
-        if (denominator == 0.0) {
-            return 0.0;
-        }
-
-        return numerator / denominator;
+        return denominator == 0.0 ? 0.0 : numerator / denominator;
     }
 
     @Override
