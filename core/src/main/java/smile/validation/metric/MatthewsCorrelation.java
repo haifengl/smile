@@ -67,8 +67,14 @@ public class MatthewsCorrelation implements ClassificationMetric {
         int fp = matrix[0][1];
         int fn = matrix[1][0];
 
-        int numerator = (tp * tn - fp * fn);
+        // Compute in long to avoid int overflow of tp * tn on large samples (cf. AUC).
+        long numerator = (long) tp * tn - (long) fp * fn;
         double denominator = Math.sqrt(tp + fp) * Math.sqrt(tp + fn) * Math.sqrt(tn + fp) * Math.sqrt(tn + fn);
+
+        // A zero marginal makes the denominator 0; MCC is 0 by convention.
+        if (denominator == 0.0) {
+            return 0.0;
+        }
 
         return numerator / denominator;
     }
