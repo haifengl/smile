@@ -14,7 +14,7 @@ jackson-yaml = { module = "tools.jackson.dataformat:jackson-dataformat-yaml", ve
 jsonschema-generator = { module = "com.github.victools:jsonschema-generator", version.ref = "jsonschema" }
 jsonschema-jackson = { module = "com.github.victools:jsonschema-module-jackson", version.ref = "jsonschema" }
 jsonschema-swagger = { module = "com.github.victools:jsonschema-module-swagger-2", version.ref = "jsonschema" }
-sqlite = { module = "org.xerial:sqlite-jdbc", version = "3.53.2.0" }
+sqlite = { module = "org.xerial:sqlite-jdbc", version = "3.53.2.1" }
 swingx = { module = "org.swinglabs:swingx", version = "1.6.1" }
 
 [bundles]
