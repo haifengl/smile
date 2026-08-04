@@ -71,6 +71,28 @@ public class BoxTestTest {
         assertEquals(0.1074, box.pvalue, 1E-4);
     }
 
+    /**
+     * Squared log returns cluster strongly, so both statistics land deep in the
+     * upper incomplete gamma tail, which used to collapse to 0.
+     * Reference p-values from mpmath at 120 digits.
+     */
+    @Test
+    public void testFarTailPValue() {
+        System.out.println("far tail p-value");
+        double[] squared = new double[logPriceDiff.length];
+        for (int i = 0; i < squared.length; i++) {
+            squared[i] = logPriceDiff[i] * logPriceDiff[i];
+        }
+
+        BoxTest pierce = BoxTest.pierce(squared, 5);
+        assertEquals(298.9329, pierce.q, 1E-4);
+        assertEquals(1.6985648788603546E-62, pierce.pvalue, 1E-68);
+
+        BoxTest ljung = BoxTest.ljung(squared, 5);
+        assertEquals(299.6063, ljung.q, 1E-4);
+        assertEquals(1.2170258639750189E-62, ljung.pvalue, 1E-68);
+    }
+
     @Test
     public void givenInvalidLag_whenRunningPortmanteauTests_thenThrowIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class, () -> BoxTest.pierce(logPriceDiff, 0));

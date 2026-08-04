@@ -166,7 +166,8 @@ public record CorTest(String method, double cor, double t, double df, double pva
             d += MathEx.pow2(wksp1[j] - wksp2[j]);
         }
 
-        double en3n = n * n * n - n;
+        // for large n, n * n * n overflows int before widening. promote first.
+        double en3n = (double) n * n * n - n;
         double fac = (1.0 - sf / en3n) * (1.0 - sg / en3n);
         double rs = (1.0 - (6.0 / en3n) * (d + (sf + sg) / 12.0)) / Math.sqrt(fac);
         fac = (rs + 1.0) * (1.0 - rs);
@@ -197,7 +198,9 @@ public record CorTest(String method, double cor, double t, double df, double pva
             throw new IllegalArgumentException("Input vectors have different size");
         }
 
-        int is = 0, n2 = 0, n1 = 0, n = x.length;
+        // pair counters reach n(n-1)/2, overflowing int for large n. use long.
+        long is = 0, n2 = 0, n1 = 0;
+        int n = x.length;
         double aa, a2, a1;
         for (int j = 0; j < n - 1; j++) {
             for (int k = j + 1; k < n; k++) {

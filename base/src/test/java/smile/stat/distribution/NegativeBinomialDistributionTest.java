@@ -164,5 +164,27 @@ public class NegativeBinomialDistributionTest {
         assertEquals(3.0, est.r, 0.5);
         assertEquals(0.3, est.p, 0.05);
     }
+
+    /**
+     * p(k) used to overflow past k = 161. Mean is 90 and sd is 30 here, so those
+     * are ordinary values. Reference values from mpmath at 120 digits.
+     */
+    @Test
+    public void testPmfLargeK() {
+        System.out.println("p(k) for large k");
+        NegativeBinomialDistribution instance = new NegativeBinomialDistribution(10, 0.1);
+        assertEquals(0.0011318291241213503,  instance.p(161), 1E-15);
+        assertEquals(0.0010752376679152827,  instance.p(162), 1E-15);
+        assertEquals(0.0007442757647287806,  instance.p(169), 1E-15);
+        assertEquals(1.1790936128864348E-7,  instance.p(300), 1E-16);
+
+        double sum = 0.0;
+        for (int k = 0; k <= 400; k++) {
+            assertTrue(Double.isFinite(instance.p(k)), "p(" + k + ") = " + instance.p(k));
+            sum += instance.p(k);
+        }
+        // The pmf sum has to agree with cdf(), which goes through the incomplete beta.
+        assertEquals(instance.cdf(400), sum, 1E-9);
+    }
 }
 
