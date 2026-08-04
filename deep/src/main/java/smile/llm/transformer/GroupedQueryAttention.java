@@ -21,7 +21,6 @@ import java.lang.foreign.MemorySegment;
 import smile.deep.layer.LinearLayer;
 import smile.deep.tensor.Index;
 import smile.torch.Native;
-import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.util.AutoScope;
 
@@ -128,16 +127,10 @@ public class GroupedQueryAttention implements Attention {
             keys = scope.add(repeatKV(keys, numRep));
             values = scope.add(repeatKV(values, numRep));
 
-            xq = scope.add(xq.transpose(1, 2));  // (bs, n_local_heads, seqlen, head_dim)
-            keys = scope.add(keys.transpose(1, 2));  // (bs, n_local_heads, cache_len + seqlen, head_dim)
-            values = scope.add(values.transpose(1, 2));  // (bs, n_local_heads, cache_len + seqlen, head_dim)
-            Tensor keysT = scope.add(keys.transpose(2, 3));
-            Tensor scores = scope.add(xq.matmul(keysT).div_(Math.sqrt(headDim)));
-            if (mask != null) {
-                scores = scope.add(scores.add(mask));  // (bs, n_local_heads, seqlen, cache_len + seqlen)
-            }
-            scores = scope.add(scores.to(ScalarType.Float).softmax(-1).to(xq.dtype()));
-            Tensor output = scope.add(scores.matmul(values));  // (bs, n_local_heads, seqlen, head_dim)
+            xq = scope.add(xq.transpose(1, 2));      // (bs, n_local_heads, seqlen, head_dim)
+            keys = scope.add(keys.transpose(1, 2));   // (bs, n_local_heads, cache_len + seqlen, head_dim)
+            values = scope.add(values.transpose(1, 2)); // (bs, n_local_heads, cache_len + seqlen, head_dim)
+            Tensor output = scope.add(apply(xq, keys, values, mask)); // (bs, n_local_heads, seqlen, head_dim)
             output = scope.add(output.transpose(1, 2).contiguous().view(batchSize, seqlen, -1));
             return wo.forward(output);
         }
