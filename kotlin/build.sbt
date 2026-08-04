@@ -8,6 +8,6 @@ unmanagedSources / excludeFilter := (unmanagedSources / excludeFilter).value || 
 import kotlin.Keys._
 kotlinLib("stdlib")
 
-kotlinVersion := "2.4.0"
+kotlinVersion := "2.4.10"
 kotlincJvmTarget := "25"
 

@@ -26,6 +26,9 @@ import smile.deep.tensor.Tensor;
  * </pre>
  * It reaches its best value at 1 (perfect precision and recall) and
  * its worst value at 0.
+ * <p>
+ * For multi-class problems, the macro and weighted F1 are the (weighted)
+ * average of the per-class F1 scores.
  *
  * @author Haifeng Li
  */
@@ -61,7 +64,7 @@ public class F1Score implements Metric {
      * @param strategy the averaging strategy (Macro, Micro, or Weighted).
      */
     public F1Score(Averaging strategy) {
-        this.strategy = strategy;
+        this.strategy  = strategy;
         this.precision = new Precision(strategy);
         this.recall    = new Recall(strategy);
     }
@@ -84,6 +87,23 @@ public class F1Score implements Metric {
 
     @Override
     public double compute() {
+        if (strategy == Averaging.Macro || strategy == Averaging.Weighted) {
+            if (precision.tp == null) return 0.0;
+            // The F-score is not linear in precision and recall, so the macro and
+            // weighted F1 are the average of the per-class F1 scores, not the F1
+            // of the averaged precision and recall.
+            try (Tensor p = precision.score();
+                 Tensor r = recall.score();
+                 Tensor denom = p.add(r);
+                 Tensor ones = denom.newOnes(denom.shape());
+                 Tensor f1 = p.mul(r).mul(2.0).div(Tensor.where(denom.gt(0), denom, ones))) {
+                return strategy == Averaging.Macro ? f1.mean().doubleValue()
+                        : Averaging.weighted(f1, recall.size);
+            }
+        }
+
+        // Binary classification and micro-averaging reduce to a single
+        // precision/recall pair, whose harmonic mean is the F1 score.
         double p = precision.compute();
         double r = recall.compute();
         double denom = p + r;

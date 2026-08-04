@@ -108,29 +108,47 @@ public class Precision implements Metric {
                 tp = target.newZeros(numClasses).scatterReduce_(0, target.get(eq), one, "sum");
                 fp = target.newZeros(numClasses).scatterReduce_(0, prediction.get(ne), one, "sum");
             }
+            eq.close();
+            ne.close();
         }
 
         this.tp.add_(tp);
         this.fp.add_(fp);
         this.size.add_(size);
+        prediction.close();
+        tp.close();
+        fp.close();
+        one.close();
+        size.close();
+    }
+
+    /**
+     * Returns the precision of each class, before any averaging is applied.
+     * Guard against zero denominator (no predicted positives for a class):
+     * replace 0 entries in (tp+fp) with 1 so that TP/1 = 0 precision for
+     * classes that were never predicted positive.
+     * @return the per-class precision.
+     */
+    Tensor score() {
+        try (Tensor denom = tp.add(fp);
+             Tensor ones  = denom.newOnes(denom.shape());
+             Tensor safe  = Tensor.where(denom.gt(0), denom, ones)) {
+            return tp.div(safe);
+        }
     }
 
     @Override
     public double compute() {
         if (tp == null) return 0.0;
-        // Guard against zero denominator (no predicted positives for a class):
-        // replace 0 entries in (tp+fp) with 1 so that TP/1 = 0 precision for
-        // classes that were never predicted positive.
-        Tensor denom = tp.add(fp);
-        Tensor ones  = denom.newOnes(denom.shape());
-        Tensor safe  = Tensor.where(denom.gt(0), denom, ones);
-        Tensor precision = tp.div(safe);
-        if (strategy == Averaging.Macro) {
-            precision = precision.mean();
-        } else if (strategy == Averaging.Weighted) {
-            precision = precision.mul(size).sum().div(size.sum());
+
+        try (Tensor precision = score()) {
+            if (strategy == Averaging.Macro) {
+                return precision.mean().doubleValue();
+            } else if (strategy == Averaging.Weighted) {
+                return Averaging.weighted(precision, size);
+            }
+            return precision.doubleValue();
         }
-        return precision.doubleValue();
     }
 
     @Override

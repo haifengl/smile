@@ -18,10 +18,8 @@ package smile.stat.distribution;
 
 import java.io.Serial;
 import smile.math.MathEx;
-import static smile.math.MathEx.factorial;
 import static smile.math.MathEx.lfactorial;
 import static smile.math.special.Beta.regularizedIncompleteBetaFunction;
-import static smile.math.special.Gamma.gamma;
 import static smile.math.special.Gamma.lgamma;
 
 /**
@@ -153,7 +151,7 @@ public class NegativeBinomialDistribution extends DiscreteDistribution {
         if (k < 0) {
             return 0.0;
         } else {
-            return gamma(r + k) / (factorial(k) * gamma(r)) * Math.pow(p, r) * Math.pow(1 - p, k);
+            return Math.exp(logp(k));
         }
     }
 
