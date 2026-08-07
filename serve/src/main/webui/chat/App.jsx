@@ -15,11 +15,17 @@
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
 import { useEffect, useState } from 'react'
-import { SSE } from 'sse.js'
+import OpenAI from 'openai'
 import Chat from './components/Chat'
 import InternetIcon from './assets/internet.svg'
 import LlamaIcon from './assets/llama.svg'
 import './App.css'
+
+const client = new OpenAI({
+  baseURL: '/api/v1',
+  apiKey: 'not-needed',
+  dangerouslyAllowBrowser: true,
+})
 
 function App() {
   const user = {
@@ -117,9 +123,6 @@ function App() {
     };
 
     if (data["stream"]) {
-      requestOptions['headers']['Accept'] = 'text/event-stream';
-      requestOptions['payload'] = JSON.stringify(data);
-
       const history = messages;
       const message = {
         text: '',
@@ -127,41 +130,33 @@ function App() {
         createdAt: new Date(),
       };
 
-      let source = new SSE(url, requestOptions);
-      source.addEventListener('message', (e) => {
-        message.text += e.data;
-        setMessages([...history, message]);
-      });
+      try {
+        const stream = client.chat.completions.stream({
+          model: data.model,
+          messages: data.messages,
+        }, {
+          headers: { 'Cache-Control': 'no-cache' },
+          extra_body: { conversation: conversationId },
+        });
 
-      source.addEventListener('open', (e) => {
-        console.log('SSE open: ' + e.responseCode);
-      });
-
-      source.addEventListener('abort', (e) => {
-        console.log('SSE abort');
-        setShowTypingIndicator(false);
-      });
-
-      source.addEventListener('readystatechange', (e) => {
-        console.log('SSE ready state: ' + e.readyState);
-        if (e.readyState === 2) { // CLOSED
-          setShowTypingIndicator(false);
+        for await (const chunk of stream) {
+          const delta = chunk.choices[0]?.delta?.content;
+          if (delta) {
+            message.text += delta;
+            setMessages([...history, message]);
+          }
         }
-      });
-
-      source.addEventListener('error', (e) => {
-        console.log('SSE error: ' + e.responseCode);
+      } catch (error) {
+        console.error('SSE error:', error);
         messages.push({
           text: "Sorry, the service isn't available right now. Please try again later.",
           user: server,
           createdAt: new Date(),
         });
-
         setMessages([...messages]);
+      } finally {
         setShowTypingIndicator(false);
-      });
-
-      source.stream();
+      }
     } else {
       requestOptions['body'] = JSON.stringify(data);
       fetch(url, requestOptions)
