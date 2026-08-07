@@ -74,6 +74,15 @@ public class ChatService {
     }
 
     /**
+     * Returns the fully-qualified model identifier (e.g. {@code meta/llama3/Meta-Llama-3-8B}).
+     *
+     * @return the model name string, or {@code "unknown"} when the model is not loaded.
+     */
+    public String modelName() {
+        return model != null ? model.toString() : "unknown";
+    }
+
+    /**
      * Completes a chat dialog.
      *
      * @param request   the chat completion request.

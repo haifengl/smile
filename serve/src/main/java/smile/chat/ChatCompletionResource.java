@@ -16,7 +16,14 @@
  */
 package smile.chat;
 
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.SubmissionPublisher;
+import java.util.concurrent.atomic.AtomicBoolean;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.Consumes;
@@ -27,19 +34,24 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.Uni;
 import io.vertx.ext.web.RoutingContext;
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.jboss.resteasy.reactive.RestStreamElementType;
 import smile.llm.ChatCompletion;
+import smile.llm.FinishReason;
 import smile.llm.Role;
 
 /**
  * REST resource exposing the OpenAI-compatible chat completion API at
  * {@code /api/v1/chat/completions}.
  *
- * <p>The endpoint streams generated tokens back to the client as plain-text
- * chunks via server-sent events. Conversation history is persisted to the
- * configured database after generation completes.
+ * <p>The endpoint streams generated tokens back to the client as server-sent
+ * events. Each SSE {@code data:} payload is a JSON object following the
+ * OpenAI Chat Completions streaming format ({@code object: "chat.completion.chunk"}).
+ * The stream is terminated by a {@code data: [DONE]} sentinel event.
+ * Conversation history is persisted to the configured database after generation
+ * completes.
  *
  * @author Haifeng Li
  */
@@ -55,17 +67,20 @@ public class ChatCompletionResource {
     @Inject
     ManagedExecutor executor;
 
+    @Inject
+    ObjectMapper objectMapper;
+
     /**
      * Generates a chat completion for the supplied dialog.
      *
-     * <p>The response is streamed token by token. Each emitted item is one
-     * text chunk preceded by a space so that SSE clients do not swallow the
-     * first character after the {@code data:} prefix.
+     * <p>The response is streamed token by token as SSE events. Each event
+     * payload is a JSON {@code ChatCompletionChunk} object. The final data
+     * event is the literal string {@code [DONE]}.
      *
      * @param headers HTTP request headers (used to capture client metadata).
      * @param request the completion request containing the message history
      *                and generation parameters.
-     * @return a reactive stream of generated text chunks.
+     * @return a reactive stream of SSE data payloads.
      * @throws ServiceUnavailableException if the LLM model is not loaded.
      */
     @POST
@@ -80,17 +95,53 @@ public class ChatCompletionResource {
         // inside the worker thread dispatched by executor.supplyAsync.
         conversation.setContext(routingContext, headers);
 
+        String id = "chatcmpl-" + UUID.randomUUID().toString().replace("-", "");
+        long created = Instant.now().getEpochSecond();
+        String modelName = service.modelName();
+        AtomicBoolean isFirst = new AtomicBoolean(true);
+
         SubmissionPublisher<String> publisher = new SubmissionPublisher<>();
+        // Completed with the ChatCompletion[] result as soon as the model finishes
+        // generating (before saveConversation), so the finish-reason chunk can be
+        // emitted without waiting for the DB write.
+        CompletableFuture<ChatCompletion[]> future = new CompletableFuture<>();
+
         executor.supplyAsync(() -> {
             var completions = service.complete(request, publisher);
+            future.complete(completions);
             if (completions != null) {
                 saveConversation(conversation, request, completions);
             }
             return completions;
         });
-        return Multi.createFrom()
+
+        // Map each raw token chunk to an OpenAI-format JSON string.
+        Multi<String> tokenStream = Multi.createFrom()
                 .publisher(publisher)
-                .map(chunk -> " " + chunk); // leading space prevents SSE client from eating first char
+                .map(chunk -> {
+                    boolean first = isFirst.compareAndSet(true, false);
+                    var delta = first
+                            ? new ChatCompletionChunk.Delta("assistant", chunk)
+                            : new ChatCompletionChunk.Delta(null, chunk);
+                    var choice = new ChatCompletionChunk.Choice(0, delta, null, null);
+                    var event = new ChatCompletionChunk(id, "chat.completion.chunk", created, modelName, List.of(choice));
+                    return toJson(event);
+                });
+
+        // After the token stream completes, emit the finish-reason chunk and [DONE].
+        Multi<String> finishStream = Uni.createFrom()
+                .completionStage(future)
+                .onItem().transformToMulti(completions -> {
+                    FinishReason reason = (completions != null && completions.length > 0)
+                            ? completions[0].reason()
+                            : FinishReason.stop;
+                    var delta = new ChatCompletionChunk.Delta(null, null);
+                    var choice = new ChatCompletionChunk.Choice(0, delta, null, reason);
+                    var event = new ChatCompletionChunk(id, "chat.completion.chunk", created, modelName, List.of(choice));
+                    return Multi.createFrom().items(toJson(event), "[DONE]");
+                });
+
+        return Multi.createBy().concatenating().streams(tokenStream, finishStream);
     }
 
     /**
@@ -133,6 +184,20 @@ public class ChatCompletionResource {
             item.role = Role.assistant.toString();
             item.content = completion.content();
             item.persist();
+        }
+    }
+
+    /**
+     * Serializes an object to a JSON string, wrapping any checked exception.
+     *
+     * @param value the object to serialize.
+     * @return the JSON string.
+     */
+    private String toJson(Object value) {
+        try {
+            return objectMapper.writeValueAsString(value);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize SSE chunk", e);
         }
     }
 }
