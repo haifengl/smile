@@ -17,7 +17,7 @@
     "remark-gemoji": "^8.0.0",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
-    "sse.js": "^2.8.0",
+    "openai": "^4.104.0",
     "@rjsf/core": "^6.4.2",
     "@rjsf/validator-ajv8": "^6.4.2"
   },
