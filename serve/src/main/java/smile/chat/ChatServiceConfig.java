@@ -30,7 +30,13 @@ public interface ChatServiceConfig {
     /** Path to the LLM model directory or file. */
     String model();
 
-    /** Path to the SentencePiece tokenizer model file. */
+    /**
+     * Path to the SentencePiece tokenizer model file.
+     * When left blank and {@code smile.chat.model} is resolved as a Hugging Face
+     * repository ID, the tokenizer is downloaded automatically from the same
+     * repository ({@code tokenizer.model}).
+     */
+    @WithDefault("")
     String tokenizer();
 
     /**
