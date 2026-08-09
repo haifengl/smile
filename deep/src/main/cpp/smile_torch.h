@@ -423,6 +423,9 @@ SMILE_API void smile_tensor_pow_s_    (ST_Tensor t, ST_Scalar exponent);
 SMILE_API void smile_tensor_fill_     (ST_Tensor t, ST_Scalar value);
 SMILE_API void smile_tensor_bernoulli_(ST_Tensor t, double p);
 
+/** Copies {@code src} into {@code dst} in-place (shapes must be broadcast-compatible). */
+SMILE_API void smile_tensor_copy_(ST_Tensor dst, ST_Tensor src);
+
 /* =========================================================================
  * Tensor — Element-wise math
  * ========================================================================= */
@@ -673,6 +676,23 @@ SMILE_API void smile_module_to_dtype (ST_Module m, ST_Device device, ST_DType dt
 
 SMILE_API void smile_module_save(ST_Module m, ST_OutputArchive archive);
 SMILE_API void smile_module_load(ST_Module m, ST_InputArchive  archive);
+
+/**
+ * Loads a flat state dict into m by matching named_parameters() keys.
+ *
+ * @param names   array of fully-qualified parameter names
+ *                (e.g. "layers.0.attention.wq.weight")
+ * @param tensors array of tensors parallel to names
+ * @param n       number of entries
+ * @param strict  when non-zero, every module parameter must be present in the
+ *                state dict and every state-dict key must match a module parameter
+ * @return 0 on success, -1 on failure (see smile_last_error)
+ */
+SMILE_API int smile_module_load_state_dict(ST_Module m,
+                                           const char **names,
+                                           ST_Tensor *tensors,
+                                           int64_t n,
+                                           int strict);
 
 /* =========================================================================
  * ModuleList

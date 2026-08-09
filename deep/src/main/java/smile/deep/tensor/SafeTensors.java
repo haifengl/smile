@@ -101,7 +101,7 @@ public record SafeTensors(Map<String, Tensor> tensors, Map<String, String> metad
      * @return the parsed safetensors file.
      * @throws IOException if an I/O error occurs.
      */
-    static SafeTensors read(String path, Device device) throws IOException {
+    public static SafeTensors read(String path, Device device) throws IOException {
         try (RandomAccessFile file = new RandomAccessFile(path, "r");
              FileChannel channel = file.getChannel()) {
 

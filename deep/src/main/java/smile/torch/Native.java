@@ -16,8 +16,15 @@
  */
 package smile.torch;
 
+import java.lang.foreign.Arena;
+import java.lang.foreign.FunctionDescriptor;
+import java.lang.foreign.Linker;
 import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
+import java.lang.invoke.MethodHandle;
 import java.lang.ref.Cleaner;
+import java.util.Map;
+import smile.deep.tensor.Tensor;
 
 /**
  * Internal helpers for the FFM (Foreign Function and Memory API) binding to the
@@ -45,6 +52,18 @@ public final class Native {
      */
     public static final Cleaner CLEANER = Cleaner.create();
 
+    private static final class Bindings {
+        static final Linker LINKER = Linker.nativeLinker();
+        static final MethodHandle LOAD_STATE_DICT = LINKER.downcallHandle(
+                smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_module_load_state_dict"),
+                FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT));
+        static final MethodHandle TENSOR_COPY = LINKER.downcallHandle(
+                smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_tensor_copy_"),
+                FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+    }
+
     /**
      * Returns the message describing the most recent native failure, or an empty
      * string if none.
@@ -68,6 +87,66 @@ public final class Native {
             throw new RuntimeException(msg.isEmpty() ? "smile_torch native call failed" : msg);
         }
         return handle;
+    }
+
+    /**
+     * Copies {@code src} into {@code dst} in-place.
+     *
+     * @param dst the destination tensor.
+     * @param src the source tensor.
+     */
+    public static void copy_(Tensor dst, Tensor src) {
+        try {
+            Bindings.TENSOR_COPY.invokeExact(dst.handle(), src.handle());
+        } catch (Throwable t) {
+            throw new RuntimeException(lastError().isEmpty() ? t.getMessage() : lastError(), t);
+        }
+        String err = lastError();
+        if (!err.isEmpty()) {
+            throw new RuntimeException(err);
+        }
+    }
+
+    /**
+     * Loads a flat state dict into a module by matching {@code named_parameters()} keys.
+     *
+     * @param module the native {@code ST_Module} handle.
+     * @param stateDict map from fully-qualified parameter name to tensor.
+     * @param strict when {@code true}, every module parameter must be present and
+     *               every state-dict key must match a module parameter.
+     */
+    public static void loadStateDict(MemorySegment module, Map<String, Tensor> stateDict, boolean strict) {
+        if (stateDict.isEmpty()) {
+            if (strict) {
+                throw new IllegalArgumentException("Empty state dict with strict=true");
+            }
+            return;
+        }
+
+        try (Arena arena = Arena.ofConfined()) {
+            int n = stateDict.size();
+            MemorySegment names = arena.allocate(ValueLayout.ADDRESS, n);
+            MemorySegment tensors = arena.allocate(ValueLayout.ADDRESS, n);
+            int i = 0;
+            for (var entry : stateDict.entrySet()) {
+                names.setAtIndex(ValueLayout.ADDRESS, i, arena.allocateFrom(entry.getKey()));
+                tensors.setAtIndex(ValueLayout.ADDRESS, i, entry.getValue().handle());
+                i++;
+            }
+
+            int rc;
+            try {
+                rc = (int) Bindings.LOAD_STATE_DICT.invokeExact(
+                        module, names, tensors, (long) n, strict ? 1 : 0);
+            } catch (Throwable t) {
+                throw new RuntimeException("smile_module_load_state_dict failed", t);
+            }
+            if (rc != 0) {
+                String msg = lastError();
+                throw new RuntimeException(msg.isEmpty()
+                        ? "smile_module_load_state_dict failed" : msg);
+            }
+        }
     }
 
     /** Frees an {@code ST_Tensor} handle exactly once. Used as a cleaning action. */

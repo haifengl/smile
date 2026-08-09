@@ -64,12 +64,9 @@ public class TransformerBlock {
         this.dim = args.dim();
         this.headDim = args.dim() / args.numHeads();
         this.attention = new GroupedQueryAttention(args);
-        this.feedForward = new FeedForward(
-                args.dim(),
-                4 * args.dim(),
-                args.multipleOf(),
-                args.ffnDimMultiplier()
-        );
+        this.feedForward = args.intermediateSize() != null
+                ? new FeedForward(args.dim(), args.intermediateSize())
+                : new FeedForward(args.dim(), 4 * args.dim(), args.multipleOf(), args.ffnDimMultiplier());
         this.attentionNorm = new RMSNormLayer(args.dim(), args.normEps());
         this.ffnNorm = new RMSNormLayer(args.dim(), args.normEps());
 

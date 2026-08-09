@@ -43,6 +43,8 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <unordered_map>
+#include <unordered_set>
 #include <optional>
 #include <limits>
 
@@ -678,6 +680,9 @@ void smile_tensor_fill_     (ST_Tensor t, ST_Scalar v) {
 void smile_tensor_bernoulli_ (ST_Tensor t, double p) {
     if (t) { ST_TRY_BEGIN t->t.bernoulli_(p); ST_TRY_END }
 }
+void smile_tensor_copy_(ST_Tensor dst, ST_Tensor src) {
+    if (dst && src) { ST_TRY_BEGIN dst->t.copy_(src->t); ST_TRY_END }
+}
 void smile_tensor_mul_scalar_(ST_Tensor t, double s) {
     if (t) { ST_TRY_BEGIN t->t.mul_(at::Scalar(s)); ST_TRY_END }
 }
@@ -1092,6 +1097,57 @@ void smile_module_save(ST_Module m, ST_OutputArchive a) {
 }
 void smile_module_load(ST_Module m, ST_InputArchive a) {
     if (m && a) { ST_TRY_BEGIN m->m->load(a->archive); ST_TRY_END }
+}
+
+int smile_module_load_state_dict(ST_Module m,
+                                 const char **names,
+                                 ST_Tensor *tensors,
+                                 int64_t n,
+                                 int strict) {
+    if (!m || !names || !tensors || n < 0) {
+        set_error("smile_module_load_state_dict: invalid arguments");
+        return -1;
+    }
+    ST_TRY_BEGIN
+        std::unordered_map<std::string, at::Tensor> state;
+        state.reserve(static_cast<size_t>(n));
+        for (int64_t i = 0; i < n; i++) {
+            if (!names[i] || !tensors[i]) {
+                set_error("smile_module_load_state_dict: null name or tensor at index "
+                          + std::to_string(i));
+                return -1;
+            }
+            state.emplace(names[i], tensors[i]->t);
+        }
+
+        auto params = m->m->named_parameters(/*recurse=*/true);
+        std::unordered_set<std::string> used;
+        used.reserve(params.size());
+
+        for (auto &p : params) {
+            auto it = state.find(p.key());
+            if (it == state.end()) {
+                if (strict) {
+                    set_error("smile_module_load_state_dict: missing key '" + p.key() + "'");
+                    return -1;
+                }
+                continue;
+            }
+            p.value().copy_(it->second);
+            used.insert(p.key());
+        }
+
+        if (strict) {
+            for (auto &kv : state) {
+                if (!used.count(kv.first)) {
+                    set_error("smile_module_load_state_dict: unexpected key '" + kv.first + "'");
+                    return -1;
+                }
+            }
+        }
+        return 0;
+    ST_TRY_END
+    return -1;
 }
 
 // =============================================================================

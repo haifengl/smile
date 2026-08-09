@@ -41,6 +41,7 @@ public class ModelArgsTest {
         assertEquals(-1, args.vocabSize());
         assertEquals(256, args.multipleOf(), "multipleOf should default to 256, not 356");
         assertNull(args.ffnDimMultiplier());
+        assertNull(args.intermediateSize());
         assertEquals(1e-5, args.normEps(), 1e-10);
         assertEquals(500000.0, args.ropeTheta(), 1.0);
         assertFalse(args.scaledRope());
@@ -108,5 +109,31 @@ public class ModelArgsTest {
         GroupedQueryAttention attn = new GroupedQueryAttention(args);
         assertEquals(2, attn.numKvHeads);
         assertEquals(2, attn.numRep);
+    }
+
+    // -----------------------------------------------------------------------
+    // ModelArgs — HuggingFace config.json
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testGivenHuggingFaceConfigWhenLoadedThenFieldsMapped() throws IOException {
+        ModelArgs args = ModelArgs.fromHuggingFace("deep/src/test/resources/llama/config.json", 1, 4096);
+        assertEquals(4096, args.dim());
+        assertEquals(32, args.numLayers());
+        assertEquals(32, args.numHeads());
+        assertEquals(8, args.numKvHeads());
+        assertEquals(128256, args.vocabSize());
+        assertEquals(14336, args.intermediateSize());
+        assertEquals(1e-5, args.normEps(), 1e-12);
+        assertEquals(500000.0, args.ropeTheta(), 1.0);
+        assertTrue(args.scaledRope(), "rope_type=llama3 should enable scaled RoPE");
+        assertEquals(1, args.maxBatchSize());
+        assertEquals(4096, args.maxSeqLen());
+    }
+
+    @Test
+    public void testGivenNonexistentHuggingFaceConfigWhenLoadedThenThrowsIOException() {
+        assertThrows(IOException.class,
+                () -> ModelArgs.fromHuggingFace("nonexistent/config.json", 1, 128));
     }
 }
