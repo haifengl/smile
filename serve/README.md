@@ -166,6 +166,7 @@ the corresponding profiles.
 | `smile.chat.max_seq_len` | `4096` | Maximum sequence length in tokens |
 | `smile.chat.max_batch_size` | `1` | Maximum generation batch size |
 | `smile.chat.device` | `0` | GPU device index (`%dev` default: `7`) |
+| `smile.mem.fraction.static` | `0.85` | Fraction of free GPU memory (after weights load) reserved for the shared KV cache pool |
 | `quarkus.datasource.db-kind` | `postgresql` | Database backend for chat history |
 | `quarkus.datasource.jdbc.url` | `jdbc:postgresql://localhost:5432/smile` | JDBC connection URL |
 | `quarkus.hibernate-orm.active` | `false` | Enable ORM (set `true` when database is available) |

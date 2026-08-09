@@ -34,6 +34,7 @@ import smile.deep.tensor.Tensor;
 import smile.llm.ChatCompletion;
 import smile.llm.FinishReason;
 import smile.llm.Message;
+import smile.llm.cache.KvCachePool;
 import smile.llm.transformer.ModelArgs;
 import smile.llm.transformer.Transformer;
 import smile.torch.smile_torch_h;
@@ -110,6 +111,28 @@ public class Llama {
      * @return an instance of Llama model.
      */
     public static Llama build(String checkpointDir, String tokenizerPath, int maxBatchSize, int maxSeqLen, byte deviceId) throws IOException {
+        return build(checkpointDir, tokenizerPath, maxBatchSize, maxSeqLen, deviceId, 0);
+    }
+
+    /**
+     * Builds a Llama instance by initializing and loading a model checkpoint.
+     *
+     * <p>When {@code memFractionStatic > 0}, a {@link KvCachePool} is allocated
+     * after weight loading using that fraction of the remaining free device
+     * memory (see {@code smile.mem.fraction.static} in smile-serve).
+     *
+     * @param checkpointDir the directory path of checkpoint files.
+     * @param tokenizerPath the path of tokenizer model file.
+     * @param maxBatchSize the maximum batch size for inference.
+     * @param maxSeqLen the maximum sequence length for input text.
+     * @param deviceId the optional CUDA device ID. If negative, don't use CUDA.
+     * @param memFractionStatic fraction of free GPU memory for the KV cache pool;
+     *                          {@code <= 0} keeps the default test-sized pool.
+     * @throws IOException if fail to open model checkpoint.
+     * @return an instance of Llama model.
+     */
+    public static Llama build(String checkpointDir, String tokenizerPath, int maxBatchSize,
+                              int maxSeqLen, byte deviceId, double memFractionStatic) throws IOException {
         File dir = new File(checkpointDir);
         if (!dir.exists() || !dir.isDirectory()) {
             throw new IllegalArgumentException("Checkpoint directory doesn't exist: " + checkpointDir);
@@ -121,13 +144,14 @@ public class Llama {
         int rank = Integer.parseInt(localRank);
 
         Device device = Device.CPU();
+        ScalarType cacheDtype = ScalarType.Float;
         if (deviceId >= 0) {
             var startTime = System.currentTimeMillis();
             device = Device.CUDA(deviceId);
 
             // half precision to lower memory usage.
-            smile_torch_h.smile_set_default_dtype(
-                    (Tensor.isBF16Supported() ? ScalarType.BFloat16 : ScalarType.Half).code());
+            cacheDtype = Tensor.isBF16Supported() ? ScalarType.BFloat16 : ScalarType.Half;
+            smile_torch_h.smile_set_default_dtype(cacheDtype.code());
             var time = System.currentTimeMillis() - startTime;
             logger.info("Initialized CUDA[{}]: {}.{} seconds", deviceId, time / 1000, time % 1000);
         }
@@ -177,6 +201,16 @@ public class Llama {
             }
             Collections.sort(checkpoints);
             model.load(checkpoints.get(rank));
+        }
+
+        // Size the shared KV cache from residual free memory after weights load.
+        // Release the bootstrap (test-sized) pool first so the free-memory
+        // reading is not reduced by its buffers.
+        if (memFractionStatic > 0) {
+            model.kvCachePool().close();
+            device.emptyCache();
+            var pool = KvCachePool.allocate(modelArgs, device, cacheDtype, memFractionStatic);
+            model.setKvCachePool(pool, false);
         }
 
         var time = System.currentTimeMillis() - startTime;
@@ -462,6 +496,7 @@ public class Llama {
              var scope = new AutoScope()) {
             Tensor.push(scope);
             int totalLen = Math.min(model.params().maxSeqLen(), maxGenLen + maxPromptLen);
+            model.kvCachePool().bindRequests(batchSize, totalLen);
 
             int pad = tokenizer.pad();
             Tensor tokens = Tensor.full(pad, batchSize, totalLen);
@@ -628,6 +663,8 @@ public class Llama {
             if (publisher != null) publisher.close();
             Tensor.pop();
             return predictions;
+        } finally {
+            model.kvCachePool().unbindRequests();
         }
     }
 

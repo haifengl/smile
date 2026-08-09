@@ -64,16 +64,22 @@ public class ChatService {
      * Loads the LLM upon application start.
      * The {@code @ApplicationScoped} scope ensures the model is loaded once and reused.
      *
+     * <p>After weights are loaded, a shared {@link smile.llm.cache.KvCachePool}
+     * is allocated using {@link MemConfig#fractionStatic()} of the remaining
+     * free GPU memory.
+     *
      * @param config the chat service configuration.
+     * @param mem    GPU memory budgeting configuration.
      */
     @Inject
-    public ChatService(ChatServiceConfig config) {
+    public ChatService(ChatServiceConfig config, MemConfig mem) {
         try {
+            double memFraction = mem.fractionStatic();
             if (Files.exists(Path.of(config.model()))) {
                 model = Llama.build(config.model(), config.tokenizer(),
-                        config.maxBatchSize(), config.maxSeqLen(), config.device());
+                        config.maxBatchSize(), config.maxSeqLen(), config.device(), memFraction);
             } else {
-                model = loadFromHuggingFace(config);
+                model = loadFromHuggingFace(config, memFraction);
             }
         } catch (Exception ex) {
             logger.errorf(ex, "Failed to load model '%s'", config.model());
@@ -119,10 +125,11 @@ public class ChatService {
      * tokenizer ({@code original/tokenizer.model} or {@code tokenizer.model}).
      *
      * @param config the chat service configuration; {@code config.model()} is the HF repo ID.
+     * @param memFractionStatic fraction of free GPU memory for the KV cache pool.
      * @return the loaded Llama model.
      * @throws Exception if a required file cannot be downloaded or the model fails to load.
      */
-    private Llama loadFromHuggingFace(ChatServiceConfig config) throws Exception {
+    private Llama loadFromHuggingFace(ChatServiceConfig config, double memFractionStatic) throws Exception {
         String repoId = config.model();
         logger.infof("Model directory '%s' not found locally. Downloading from Hugging Face Hub...", repoId);
 
@@ -138,7 +145,7 @@ public class ChatService {
 
         String tokenizerPath = resolveTokenizer(repoId, config.tokenizer());
         return Llama.build(checkpointDir, tokenizerPath,
-                config.maxBatchSize(), config.maxSeqLen(), config.device());
+                config.maxBatchSize(), config.maxSeqLen(), config.device(), memFractionStatic);
     }
 
     /**

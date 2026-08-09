@@ -27,6 +27,7 @@ import smile.deep.tensor.Device;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
+import smile.llm.cache.KvCachePool;
 import smile.util.AutoScope;
 
 import static smile.torch.smile_torch_h.smile_module_free;
@@ -60,22 +61,38 @@ public class Transformer extends LayerBlock {
     final LinearLayer output;
     /** The precomputed cosine and sine frequencies. */
     final Tensor cis;
+    /** Shared KV cache pool used by all attention layers. */
+    KvCachePool kvCachePool;
+
+    /**
+     * Constructor that allocates a small test-sized KV cache pool.
+     * @param args the model configuration parameters.
+     * @param device the compute device.
+     */
+    public Transformer(ModelArgs args, Device device) {
+        this(args, device, KvCachePool.forTesting(args, device));
+    }
 
     /**
      * Constructor.
      * @param args the model configuration parameters.
      * @param device the compute device.
+     * @param kvCachePool the shared KV cache pool managed by the inference engine.
      */
-    public Transformer(ModelArgs args, Device device) {
+    public Transformer(ModelArgs args, Device device, KvCachePool kvCachePool) {
+        if (kvCachePool == null) {
+            throw new IllegalArgumentException("kvCachePool must not be null");
+        }
         this.params = args;
         this.vocabSize = params.vocabSize();
         this.numLayers = params.numLayers();
+        this.kvCachePool = kvCachePool;
         this.tokEmbeddings = new EmbeddingLayer(params.vocabSize(), params.dim());
 
         this.layers = new ArrayList<>();
         MemorySegment moduleList = smile_module_list_create();
         for (int layerId = 0; layerId < params.numLayers(); layerId++) {
-            var block = new TransformerBlock(layerId, params);
+            var block = new TransformerBlock(layerId, params, kvCachePool);
             this.layers.add(block);
             smile_module_list_push_back(moduleList, block.module);
         }
@@ -106,6 +123,48 @@ public class Transformer extends LayerBlock {
      */
     public ModelArgs params() {
         return params;
+    }
+
+    /**
+     * Returns the shared KV cache pool.
+     * @return the KV cache pool.
+     */
+    public KvCachePool kvCachePool() {
+        return kvCachePool;
+    }
+
+    /**
+     * Replaces the shared KV cache pool on every attention layer.
+     * Closes the previous pool. Intended to be called once after weight loading
+     * so the pool can be sized from residual device memory.
+     *
+     * @param pool the new pool (must not be {@code null}).
+     */
+    public void setKvCachePool(KvCachePool pool) {
+        setKvCachePool(pool, true);
+    }
+
+    /**
+     * Replaces the shared KV cache pool on every attention layer.
+     *
+     * @param pool          the new pool (must not be {@code null}).
+     * @param closePrevious when {@code true}, closes the previously installed pool.
+     */
+    public void setKvCachePool(KvCachePool pool, boolean closePrevious) {
+        if (pool == null) throw new IllegalArgumentException("pool must not be null");
+        if (pool.numLayers() < numLayers) {
+            throw new IllegalArgumentException("pool.numLayers < model numLayers");
+        }
+        var previous = this.kvCachePool;
+        this.kvCachePool = pool;
+        for (var layer : layers) {
+            if (layer.attention instanceof GroupedQueryAttention gqa) {
+                gqa.setCachePool(pool);
+            }
+        }
+        if (closePrevious && previous != null && previous != pool) {
+            previous.close();
+        }
     }
 
     /**

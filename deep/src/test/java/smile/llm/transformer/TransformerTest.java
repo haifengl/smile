@@ -80,12 +80,16 @@ public class TransformerTest {
     }
 
     @Test
-    public void testGivenAttentionWhenConstructedThenCachesHaveCorrectShape() {
+    public void testGivenAttentionWhenConstructedThenUsesSharedKvCachePool() {
         // maxBatchSize=2, maxSeqLen=32, numLocalKvHeads=4, headDim=16
         ModelArgs args = new ModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 2, 32);
-        GroupedQueryAttention attn = new GroupedQueryAttention(args);
-        assertArrayEquals(new long[]{2, 32, 4, 16}, attn.cacheK.shape());
-        assertArrayEquals(new long[]{2, 32, 4, 16}, attn.cacheV.shape());
+        var pool = smile.llm.cache.KvCachePool.forTesting(args, Device.CPU());
+        GroupedQueryAttention attn = new GroupedQueryAttention(args, pool, 0);
+        assertEquals(2 * 32, pool.numSlots());
+        assertEquals(0, attn.layerId);
+        assertEquals(16, attn.headDim);
+        assertEquals(4, attn.numKvHeads);
+        pool.close();
     }
 
     // -----------------------------------------------------------------------
