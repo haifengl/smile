@@ -18,10 +18,17 @@ package smile.llm.llama;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.SubmissionPublisher;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Index;
+import smile.deep.tensor.SafeTensors;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.ChatCompletion;
@@ -41,6 +48,9 @@ public class Llama {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Llama.class);
     /** The model family name. */
     static final String family = "meta/llama3";
+    /** Matches HuggingFace layer weight names such as {@code model.layers.12.self_attn.q_proj.weight}. */
+    private static final Pattern HF_LAYER_WEIGHT = Pattern.compile(
+            "^model\\.layers\\.(\\d+)\\.(self_attn|mlp|input_layernorm|post_attention_layernorm)\\.(.+)$");
     /** The model instance name. */
     final String name;
     /** The transformer model. */
@@ -83,10 +93,18 @@ public class Llama {
 
     /**
      * Builds a Llama instance by initializing and loading a model checkpoint.
+     *
+     * <p>Supports two on-disk layouts:
+     * <ul>
+     *   <li><b>Meta</b> — {@code params.json} plus {@code consolidated.*.pt} shards.</li>
+     *   <li><b>HuggingFace</b> — {@code config.json} plus {@code *.safetensors}
+     *       (optionally indexed by {@code model.safetensors.index.json}).</li>
+     * </ul>
+     *
      * @param checkpointDir the directory path of checkpoint files.
      * @param tokenizerPath the path of tokenizer model file.
-     * @param maxSeqLen the maximum sequence length for input text.
      * @param maxBatchSize the maximum batch size for inference.
+     * @param maxSeqLen the maximum sequence length for input text.
      * @param deviceId the optional CUDA device ID. If negative, don't use CUDA.
      * @throws IOException if fail to open model checkpoint.
      * @return an instance of Llama model.
@@ -118,16 +136,24 @@ public class Llama {
         Tensor.setDefaultOptions(options);
 
         var startTime = System.currentTimeMillis();
-        List<String> checkpoints = getCheckpoints(dir);
-        if (checkpoints.isEmpty()) {
-            throw new IllegalArgumentException("No checkpoint files found in " + checkpointDir);
-        }
+        Path configJson = Path.of(checkpointDir, "config.json");
+        Path paramsJson = Path.of(checkpointDir, "params.json");
+        boolean huggingFace = Files.exists(configJson)
+                && (Files.exists(Path.of(checkpointDir, "model.safetensors.index.json"))
+                    || !getSafeTensorFiles(dir).isEmpty());
 
-        if (checkpoints.size() != modelParallelSize) {
-            throw new IllegalStateException(String.format("Loading a checkpoint for MP=%d but world size is %d", checkpoints.size(), modelParallelSize));
+        ModelArgs modelArgs;
+        if (huggingFace) {
+            modelArgs = ModelArgs.fromHuggingFace(configJson.toString(), maxBatchSize, maxSeqLen);
+        } else if (Files.exists(paramsJson)) {
+            modelArgs = ModelArgs.from(paramsJson.toString(), maxBatchSize, maxSeqLen);
+        } else if (Files.exists(configJson)) {
+            huggingFace = true;
+            modelArgs = ModelArgs.fromHuggingFace(configJson.toString(), maxBatchSize, maxSeqLen);
+        } else {
+            throw new IllegalArgumentException(
+                    "Neither params.json nor config.json found in " + checkpointDir);
         }
-
-        var modelArgs = ModelArgs.from(checkpointDir + "/params.json", maxBatchSize, maxSeqLen);
 
         var tokenizer = Tokenizer.of(tokenizerPath);
         if (tokenizer.size() != modelArgs.vocabSize()) {
@@ -136,9 +162,22 @@ public class Llama {
 
         var model = new Transformer(modelArgs, device);
         model.eval();
-        Collections.sort(checkpoints);
-        var checkpoint = checkpoints.get(rank);
-        model.load(checkpoint);
+
+        if (huggingFace) {
+            loadHuggingFaceWeights(model, dir, device);
+        } else {
+            List<String> checkpoints = getCheckpoints(dir);
+            if (checkpoints.isEmpty()) {
+                throw new IllegalArgumentException("No checkpoint files found in " + checkpointDir);
+            }
+            if (checkpoints.size() != modelParallelSize) {
+                throw new IllegalStateException(String.format(
+                        "Loading a checkpoint for MP=%d but world size is %d",
+                        checkpoints.size(), modelParallelSize));
+            }
+            Collections.sort(checkpoints);
+            model.load(checkpoints.get(rank));
+        }
 
         var time = System.currentTimeMillis() - startTime;
         logger.info("Model {}[{}]: loaded in {}.{} seconds", checkpointDir, rank, time/1000, time%1000);
@@ -146,7 +185,7 @@ public class Llama {
     }
 
     /**
-     * Returns the checkpoint file paths.
+     * Returns the Meta-format {@code .pt} checkpoint file paths.
      * @param dir the checkpoint directory.
      * @return the checkpoint file paths.
      */
@@ -161,6 +200,221 @@ public class Llama {
             }
         }
         return checkpoints;
+    }
+
+    /**
+     * Returns safetensors shard file names present in {@code dir}.
+     * @param dir the checkpoint directory.
+     * @return sorted list of {@code *.safetensors} file names (not full paths).
+     */
+    private static List<String> getSafeTensorFiles(File dir) {
+        List<String> files = new ArrayList<>();
+        var listed = dir.listFiles();
+        if (listed == null) return files;
+        for (var file : listed) {
+            if (file.isFile() && file.getName().endsWith(".safetensors")) {
+                files.add(file.getName());
+            }
+        }
+        Collections.sort(files);
+        return files;
+    }
+
+    /**
+     * Loads HuggingFace safetensors weights into {@code model}.
+     *
+     * <p>Weight names are remapped from the HuggingFace convention
+     * ({@code model.layers.N.self_attn.q_proj.weight}, …) to the Meta / SMILE
+     * convention ({@code layers.N.attention.wq.weight}, …). Query and key
+     * projection weights are reverse-permuted so they match SMILE's Meta-style
+     * RoPE layout.
+     *
+     * @param model the transformer to load into.
+     * @param dir the HuggingFace model directory.
+     * @param device the device on which tensors are materialised.
+     * @throws IOException if a weight file cannot be read.
+     */
+    private static void loadHuggingFaceWeights(Transformer model, File dir, Device device) throws IOException {
+        Map<String, String> weightMap = readWeightMap(dir);
+        // Group tensor names by shard file for memory-efficient loading.
+        Map<String, List<String>> shardToKeys = new LinkedHashMap<>();
+        for (var entry : weightMap.entrySet()) {
+            shardToKeys.computeIfAbsent(entry.getValue(), k -> new ArrayList<>()).add(entry.getKey());
+        }
+
+        int numHeads = model.params().numHeads();
+        int numKvHeads = model.params().numKvHeads() != null
+                ? model.params().numKvHeads() : numHeads;
+        Set<String> loaded = new HashSet<>();
+
+        for (var shardEntry : shardToKeys.entrySet()) {
+            String shardFile = shardEntry.getKey();
+            Path shardPath = Path.of(dir.getPath(), shardFile);
+            logger.info("Loading safetensors shard: {}", shardFile);
+            SafeTensors st = SafeTensors.read(shardPath.toString(), device);
+            try {
+                Map<String, Tensor> stateDict = new HashMap<>();
+                List<Tensor> owned = new ArrayList<>();
+                try {
+                    for (String hfName : shardEntry.getValue()) {
+                        Tensor src = st.tensors().get(hfName);
+                        if (src == null) {
+                            throw new IOException("Tensor '" + hfName + "' missing from " + shardFile);
+                        }
+                        String smileName = remapHuggingFaceName(hfName);
+                        if (smileName == null) {
+                            logger.debug("Skipping unrecognized HF weight: {}", hfName);
+                            continue;
+                        }
+
+                        Tensor value = src;
+                        if (smileName.endsWith(".attention.wq.weight")) {
+                            value = reversePermute(src, numHeads);
+                            owned.add(value);
+                        } else if (smileName.endsWith(".attention.wk.weight")) {
+                            value = reversePermute(src, numKvHeads);
+                            owned.add(value);
+                        }
+                        stateDict.put(smileName, value);
+                        loaded.add(smileName);
+                    }
+
+                    // Tied embeddings: some checkpoints omit lm_head.weight.
+                    if (st.tensors().containsKey("model.embed_tokens.weight")
+                            && !weightMap.containsKey("lm_head.weight")
+                            && !loaded.contains("output.weight")) {
+                        stateDict.put("output.weight", st.tensors().get("model.embed_tokens.weight"));
+                        loaded.add("output.weight");
+                    }
+
+                    model.loadStateDict(stateDict, false);
+                } finally {
+                    for (Tensor t : owned) {
+                        t.close();
+                    }
+                }
+            } finally {
+                for (Tensor t : st.tensors().values()) {
+                    t.close();
+                }
+            }
+        }
+
+        logger.info("Loaded {} parameters from HuggingFace safetensors", loaded.size());
+    }
+
+    /**
+     * Reads the shard weight map from {@code model.safetensors.index.json}, or
+     * synthesises a single-shard map when only standalone {@code *.safetensors}
+     * files are present.
+     */
+    private static Map<String, String> readWeightMap(File dir) throws IOException {
+        Path indexPath = Path.of(dir.getPath(), "model.safetensors.index.json");
+        if (Files.exists(indexPath)) {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(indexPath.toFile());
+            JsonNode weightMap = root.get("weight_map");
+            if (weightMap == null || !weightMap.isObject()) {
+                throw new IOException("Invalid model.safetensors.index.json: missing weight_map");
+            }
+            Map<String, String> map = new LinkedHashMap<>();
+            for (var entry : weightMap.properties()) {
+                map.put(entry.getKey(), entry.getValue().asString());
+            }
+            return map;
+        }
+
+        List<String> shards = getSafeTensorFiles(dir);
+        if (shards.isEmpty()) {
+            throw new IOException("No safetensors files found in " + dir);
+        }
+        if (shards.size() > 1) {
+            throw new IOException(
+                    "Multiple safetensors files found but no model.safetensors.index.json in " + dir);
+        }
+
+        // Single-file checkpoint: discover tensor names from the file header.
+        SafeTensors st = SafeTensors.read(Path.of(dir.getPath(), shards.getFirst()).toString(), Device.CPU());
+        try {
+            Map<String, String> map = new LinkedHashMap<>();
+            for (String name : st.tensors().keySet()) {
+                map.put(name, shards.getFirst());
+            }
+            return map;
+        } finally {
+            for (Tensor t : st.tensors().values()) {
+                t.close();
+            }
+        }
+    }
+
+    /**
+     * Maps a HuggingFace parameter name to the Meta / SMILE module name.
+     *
+     * @param hfName the HuggingFace weight name.
+     * @return the SMILE parameter name, or {@code null} if the weight is unused.
+     */
+    static String remapHuggingFaceName(String hfName) {
+        if ("model.embed_tokens.weight".equals(hfName)) {
+            return "tok_embeddings.weight";
+        }
+        if ("model.norm.weight".equals(hfName)) {
+            return "norm.weight";
+        }
+        if ("lm_head.weight".equals(hfName)) {
+            return "output.weight";
+        }
+
+        Matcher m = HF_LAYER_WEIGHT.matcher(hfName);
+        if (!m.matches()) {
+            return null;
+        }
+        String layer = m.group(1);
+        String component = m.group(2);
+        String rest = m.group(3);
+
+        return switch (component) {
+            case "self_attn" -> switch (rest) {
+                case "q_proj.weight" -> "layers." + layer + ".attention.wq.weight";
+                case "k_proj.weight" -> "layers." + layer + ".attention.wk.weight";
+                case "v_proj.weight" -> "layers." + layer + ".attention.wv.weight";
+                case "o_proj.weight" -> "layers." + layer + ".attention.wo.weight";
+                default -> null;
+            };
+            case "mlp" -> switch (rest) {
+                case "gate_proj.weight" -> "layers." + layer + ".feed_forward.w1.weight";
+                case "down_proj.weight" -> "layers." + layer + ".feed_forward.w2.weight";
+                case "up_proj.weight" -> "layers." + layer + ".feed_forward.w3.weight";
+                default -> null;
+            };
+            case "input_layernorm" -> "layers." + layer + ".attention_norm.weight";
+            case "post_attention_layernorm" -> "layers." + layer + ".ffn_norm.weight";
+            default -> null;
+        };
+    }
+
+    /**
+     * Undoes the HuggingFace Q/K permutation applied when converting Meta
+     * checkpoints, restoring the layout expected by Meta-style RoPE.
+     *
+     * <p>{@code w.view(n_heads, 2, head_dim/2, dim).transpose(1, 2).reshape(...)}
+     *
+     * @param w the HuggingFace projection weight {@code [out_features, in_features]}.
+     * @param nHeads the number of attention heads for this projection.
+     * @return a new contiguous tensor in Meta layout (caller owns it).
+     */
+    static Tensor reversePermute(Tensor w, int nHeads) {
+        long dim1 = w.shape()[0];
+        long dim2 = w.shape()[1];
+        long headDim = dim1 / nHeads;
+        try (Tensor viewed = w.view(nHeads, 2, headDim / 2, dim2);
+             Tensor transposed = viewed.transpose(1, 2);
+             Tensor cont = transposed.contiguous();
+             Tensor reshaped = cont.reshape(dim1, dim2)) {
+            // Clone so the returned tensor owns its storage independently of
+            // the temporary views closed by this try-with-resources.
+            return new Tensor(smile_torch_h.smile_tensor_clone(reshaped.handle()));
+        }
     }
 
     /**
@@ -221,8 +475,8 @@ public class Llama {
 
             Tensor tokenLogprobs = null;
             if (logprobs) {
-                var options = new Tensor.Options().device(model.device()).requireGradients(false).dtype(ScalarType.Float);
-                tokenLogprobs = Tensor.zeros(options, batchSize, totalLen);
+                var opts = new Tensor.Options().device(model.device()).requireGradients(false).dtype(ScalarType.Float);
+                tokenLogprobs = Tensor.zeros(opts, batchSize, totalLen);
             }
 
             Tensor eosReached = Tensor.of(new boolean[batchSize]);

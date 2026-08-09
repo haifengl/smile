@@ -18,9 +18,11 @@ package smile.deep.layer;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
+import java.util.Map;
 import smile.deep.tensor.Device;
-import smile.torch.Native;
 import smile.deep.tensor.ScalarType;
+import smile.deep.tensor.Tensor;
+import smile.torch.Native;
 
 import static smile.torch.Native.check;
 import static smile.torch.smile_torch_h.*;
@@ -178,6 +180,19 @@ public abstract class LayerBlock implements Layer {
             smile_input_archive_free(archive);
             if (d.address() != 0) smile_device_free(d);
         }
+        if (device != null) device.emptyCache();
+    }
+
+    /**
+     * Loads parameters from a flat state dictionary whose keys match
+     * {@code named_parameters()} names (e.g. {@code "layers.0.attention.wq.weight"}).
+     *
+     * @param stateDict map from fully-qualified parameter name to tensor.
+     * @param strict when {@code true}, every module parameter must be present and
+     *               every state-dict key must match a module parameter.
+     */
+    public void loadStateDict(Map<String, Tensor> stateDict, boolean strict) {
+        Native.loadStateDict(module, stateDict, strict);
         if (device != null) device.emptyCache();
     }
 

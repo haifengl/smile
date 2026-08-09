@@ -29,6 +29,9 @@ import tools.jackson.databind.ObjectMapper;
  * @param vocabSize the size of the vocabulary.
  * @param multipleOf make SwiGLU hidden layer size multiple of large power of 2.
  * @param ffnDimMultiplier the multiplier for the hidden dimension of the feedforward layers.
+ * @param intermediateSize the explicit FFN hidden dimension size (takes priority over multipleOf/ffnDimMultiplier).
+ *                         When non-null, the FeedForward layer uses this size directly, as provided by
+ *                         HuggingFace {@code config.json}'s {@code intermediate_size} field.
  * @param normEps the epsilon value used for numerical stability in normalization layers.
  * @param ropeTheta the theta parameter in rotary positional encoding.
  * @param scaledRope scale RoPE positional encoding if true.
@@ -44,6 +47,7 @@ public record ModelArgs(int dim,
                         int vocabSize,
                         int multipleOf,
                         Double ffnDimMultiplier,
+                        Integer intermediateSize,
                         double normEps,
                         double ropeTheta,
                         boolean scaledRope,
@@ -54,11 +58,24 @@ public record ModelArgs(int dim,
      * Constructor with default parameter values.
      */
     public ModelArgs() {
-        this(4096, 32, 32, null, -1, 256, null, 1E-5, 500000, false, 32, 2048);
+        this(4096, 32, 32, null, -1, 256, null, null, 1E-5, 500000, false, 32, 2048);
     }
 
     /**
-     * Loads the model hyperparameters from a JSON file.
+     * Constructor without an explicit FFN intermediate size (Meta-format layout).
+     * The feed-forward hidden dimension is derived from {@code multipleOf} /
+     * {@code ffnDimMultiplier}.
+     */
+    public ModelArgs(int dim, int numLayers, int numHeads, Integer numKvHeads,
+                     int vocabSize, int multipleOf, Double ffnDimMultiplier,
+                     double normEps, double ropeTheta, boolean scaledRope,
+                     int maxBatchSize, int maxSeqLen) {
+        this(dim, numLayers, numHeads, numKvHeads, vocabSize, multipleOf,
+                ffnDimMultiplier, null, normEps, ropeTheta, scaledRope, maxBatchSize, maxSeqLen);
+    }
+
+    /**
+     * Loads the model hyperparameters from a Meta-format {@code params.json} file.
      * @param path the file path.
      * @param maxBatchSize the maximum batch size.
      * @param maxSeqLen the maximum sequence length for input data.
@@ -80,9 +97,54 @@ public record ModelArgs(int dim,
                 node.get("vocab_size").asInt(),
                 node.get("multiple_of").asInt(),
                 node.has("ffn_dim_multiplier") ? node.get("ffn_dim_multiplier").asDouble() : null,
+                null,
                 node.get("norm_eps").asDouble(),
                 node.has("rope_theta") ? node.get("rope_theta").asDouble() : 10000.0,
                 node.has("use_scaled_rope") && node.get("use_scaled_rope").asBoolean(),
+                maxBatchSize,
+                maxSeqLen
+        );
+    }
+
+    /**
+     * Loads the model hyperparameters from a HuggingFace {@code config.json} file.
+     * The {@code config.json} uses different field names and conventions from Meta's
+     * {@code params.json}, notably {@code hidden_size} instead of {@code dim} and
+     * {@code intermediate_size} instead of a computed FFN hidden dim.
+     * @param path the file path.
+     * @param maxBatchSize the maximum batch size.
+     * @param maxSeqLen the maximum sequence length for input data.
+     * @throws IOException if fail to open the config file.
+     * @return the model hyperparameters.
+     */
+    public static ModelArgs fromHuggingFace(String path, int maxBatchSize, int maxSeqLen) throws IOException {
+        File file = new File(path);
+        if (!file.exists()) {
+            throw new IOException("HuggingFace config file not found: " + path);
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        var node = mapper.readTree(file);
+
+        boolean scaledRope = false;
+        if (node.has("rope_scaling")) {
+            var scaling = node.get("rope_scaling");
+            if (scaling.has("rope_type")) {
+                scaledRope = "llama3".equalsIgnoreCase(scaling.get("rope_type").asString());
+            }
+        }
+
+        return new ModelArgs(
+                node.get("hidden_size").asInt(),
+                node.get("num_hidden_layers").asInt(),
+                node.get("num_attention_heads").asInt(),
+                node.has("num_key_value_heads") ? node.get("num_key_value_heads").asInt() : null,
+                node.get("vocab_size").asInt(),
+                1,
+                null,
+                node.has("intermediate_size") ? node.get("intermediate_size").asInt() : null,
+                node.has("rms_norm_eps") ? node.get("rms_norm_eps").asDouble() : 1e-5,
+                node.has("rope_theta") ? node.get("rope_theta").asDouble() : 10000.0,
+                scaledRope,
                 maxBatchSize,
                 maxSeqLen
         );

@@ -40,6 +40,27 @@ public class FeedForward {
     final MemorySegment module;
 
     /**
+     * Constructor with an explicit intermediate size, as provided by HuggingFace {@code config.json}.
+     * @param dim the dimension of input tensor.
+     * @param intermediateSize the FFN hidden dimension size, used directly without further computation.
+     */
+    public FeedForward(int dim, int intermediateSize) {
+        this.w1 = new LinearLayer(dim, intermediateSize, false);
+        this.w2 = new LinearLayer(intermediateSize, dim, false);
+        this.w3 = new LinearLayer(dim, intermediateSize, false);
+        this.silu = new SiLU(true);
+
+        try (Arena arena = Arena.ofConfined()) {
+            this.module = check(smile_module_create(MemorySegment.NULL));
+            smile_module_register_module(module, arena.allocateFrom("w1"), w1.module());
+            smile_module_register_module(module, arena.allocateFrom("w2"), w2.module());
+            smile_module_register_module(module, arena.allocateFrom("w3"), w3.module());
+        }
+        MemorySegment m = this.module;
+        Native.CLEANER.register(this, () -> smile_module_free(m));
+    }
+
+    /**
      * Constructor.
      * @param dim the dimension of input tensor.
      * @param hiddenDim the dimension of hidden layer. First, hiddenDim is set
