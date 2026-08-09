@@ -17,8 +17,10 @@
 package smile.deep;
 
 import smile.deep.tensor.Device;
+import smile.torch.Native;
 import static smile.torch.smile_torch_h.smile_cuda_device_count;
 import static smile.torch.smile_torch_h.smile_cuda_is_available;
+import static smile.torch.smile_torch_h.smile_cuda_total_memory;
 
 /**
  * NVIDIA CUDA helper functions.
@@ -40,6 +42,24 @@ public interface CUDA {
      */
     static long deviceCount() {
         return smile_cuda_device_count();
+    }
+
+    /**
+     * Returns the total global memory of a CUDA device in bytes.
+     * @param deviceIndex the CUDA device index.
+     * @return total memory in bytes, or {@code -1} on error.
+     */
+    static long totalMemory(int deviceIndex) {
+        return smile_cuda_total_memory(deviceIndex);
+    }
+
+    /**
+     * Returns the currently free device memory of a CUDA device in bytes.
+     * @param deviceIndex the CUDA device index.
+     * @return free memory in bytes.
+     */
+    static long freeMemory(int deviceIndex) {
+        return Native.cudaMemGetInfo(deviceIndex)[0];
     }
 
     /**

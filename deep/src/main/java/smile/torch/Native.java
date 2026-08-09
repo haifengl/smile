@@ -62,6 +62,10 @@ public final class Native {
         static final MethodHandle TENSOR_COPY = LINKER.downcallHandle(
                 smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_tensor_copy_"),
                 FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+        static final MethodHandle CUDA_MEM_GET_INFO = LINKER.downcallHandle(
+                smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_cuda_mem_get_info"),
+                FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
     }
 
     /**
@@ -146,6 +150,32 @@ public final class Native {
                 throw new RuntimeException(msg.isEmpty()
                         ? "smile_module_load_state_dict failed" : msg);
             }
+        }
+    }
+
+    /**
+     * Queries free and total CUDA device memory via {@code cudaMemGetInfo}.
+     *
+     * @param deviceIndex the CUDA device index.
+     * @return {@code long[2]} of {@code {freeBytes, totalBytes}}.
+     * @throws RuntimeException if the query fails (e.g. CUDA unavailable).
+     */
+    public static long[] cudaMemGetInfo(int deviceIndex) {
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment free = arena.allocate(ValueLayout.JAVA_LONG);
+            MemorySegment total = arena.allocate(ValueLayout.JAVA_LONG);
+            int rc;
+            try {
+                rc = (int) Bindings.CUDA_MEM_GET_INFO.invokeExact(deviceIndex, free, total);
+            } catch (Throwable t) {
+                throw new RuntimeException("smile_cuda_mem_get_info failed", t);
+            }
+            if (rc != 0) {
+                String msg = lastError();
+                throw new RuntimeException(msg.isEmpty()
+                        ? "smile_cuda_mem_get_info failed" : msg);
+            }
+            return new long[]{free.get(ValueLayout.JAVA_LONG, 0), total.get(ValueLayout.JAVA_LONG, 0)};
         }
     }
 

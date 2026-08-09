@@ -271,6 +271,25 @@ int64_t smile_cuda_total_memory(int device_index) {
     return -1;
 }
 
+int smile_cuda_mem_get_info(int device_index, int64_t *free_bytes, int64_t *total_bytes) {
+    if (!free_bytes || !total_bytes) return -1;
+#ifdef USE_CUDA
+    ST_TRY_BEGIN
+        int prev = -1;
+        cudaGetDevice(&prev);
+        if (cudaSetDevice(device_index) != cudaSuccess) return -1;
+        size_t free_mem = 0, total_mem = 0;
+        cudaError_t err = cudaMemGetInfo(&free_mem, &total_mem);
+        if (prev >= 0) cudaSetDevice(prev);
+        if (err != cudaSuccess) return -1;
+        *free_bytes = static_cast<int64_t>(free_mem);
+        *total_bytes = static_cast<int64_t>(total_mem);
+        return 0;
+    ST_TRY_END
+#endif
+    return -1;
+}
+
 void smile_cuda_empty_cache(void) {
 #ifdef USE_CUDA
     ST_TRY_BEGIN
@@ -913,7 +932,9 @@ ST_Tensor smile_torch_scaled_dot_product_attention(
     double scale) {
     if (!query || !key || !value) return nullptr;
     ST_TRY_BEGIN
-        at::Tensor mask;
+        // Pass nullopt when no mask is provided; an uninitialized at::Tensor
+        // is rejected by SDPA's dtype validation.
+        std::optional<at::Tensor> mask;
         if (attn_mask) mask = attn_mask->t;
 
         std::optional<double> scale_opt;

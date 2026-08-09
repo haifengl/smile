@@ -19,8 +19,10 @@ package smile.llm.transformer;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import smile.deep.layer.RMSNormLayer;
-import smile.torch.Native;
+import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
+import smile.llm.cache.KvCachePool;
+import smile.torch.Native;
 import static smile.torch.Native.check;
 import static smile.torch.smile_torch_h.smile_module_create;
 import static smile.torch.smile_torch_h.smile_module_free;
@@ -57,13 +59,14 @@ public class TransformerBlock {
      * Constructor.
      * @param layerId the identifier of the block.
      * @param args the model configuration parameters.
+     * @param cachePool the shared KV cache pool.
      */
-    public TransformerBlock(int layerId, ModelArgs args) {
+    public TransformerBlock(int layerId, ModelArgs args, KvCachePool cachePool) {
         this.layerId = layerId;
         this.numHeads = args.numHeads();
         this.dim = args.dim();
         this.headDim = args.dim() / args.numHeads();
-        this.attention = new GroupedQueryAttention(args);
+        this.attention = new GroupedQueryAttention(args, cachePool, layerId);
         this.feedForward = args.intermediateSize() != null
                 ? new FeedForward(args.dim(), args.intermediateSize())
                 : new FeedForward(args.dim(), 4 * args.dim(), args.multipleOf(), args.ffnDimMultiplier());
@@ -79,6 +82,15 @@ public class TransformerBlock {
         }
         MemorySegment m = this.module;
         Native.CLEANER.register(this, () -> smile_module_free(m));
+    }
+
+    /**
+     * Convenience constructor that allocates a private test-sized KV pool.
+     * @param layerId the identifier of the block.
+     * @param args the model configuration parameters.
+     */
+    public TransformerBlock(int layerId, ModelArgs args) {
+        this(layerId, args, KvCachePool.forTesting(args, Device.CPU()));
     }
 
     /**

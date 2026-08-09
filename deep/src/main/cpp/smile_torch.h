@@ -194,6 +194,12 @@ SMILE_API int smile_cuda_device_name(int device_index, char *buf, int buf_len);
 /** Returns the total memory (bytes) of CUDA device at index, or -1 on error. */
 SMILE_API int64_t smile_cuda_total_memory(int device_index);
 
+/**
+ * Writes the free and total device memory (bytes) for {@code device_index}
+ * into {@code free_bytes} and {@code total_bytes}. Returns 0 on success, -1 on error.
+ */
+SMILE_API int smile_cuda_mem_get_info(int device_index, int64_t *free_bytes, int64_t *total_bytes);
+
 /** Frees cached CUDA memory held by the allocator. */
 SMILE_API void smile_cuda_empty_cache(void);
 

@@ -19,9 +19,10 @@ package smile.llm.transformer;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import smile.deep.layer.LinearLayer;
-import smile.deep.tensor.Index;
+import smile.deep.tensor.Device;
 import smile.torch.Native;
 import smile.deep.tensor.Tensor;
+import smile.llm.cache.KvCachePool;
 import smile.util.AutoScope;
 
 import static smile.torch.Native.check;
@@ -36,6 +37,11 @@ import static smile.torch.smile_torch_h.smile_module_register_module;
  * By grouping sets of query heads to share a single Key and Value head,
  * GQA drastically reduces memory usage during inference while maintaining
  * model quality.
+ *
+ * <p>KV activations are stored in a shared {@link KvCachePool} managed by
+ * the inference engine (e.g. smile-serve), enabling radix-tree prefix reuse
+ * across requests instead of allocating a private
+ * {@code maxBatchSize × maxSeqLen} buffer per layer.
  *
  * @author Haifeng Li
  */
@@ -54,14 +60,23 @@ public class GroupedQueryAttention implements Attention {
     final int headDim;
     /** Linear transformation for queries, keys, values, and output. */
     final LinearLayer wq, wk, wv, wo;
-    /** Cached keys and values. */
-    final Tensor cacheK, cacheV;
+    /** Shared KV cache pool owned by the inference engine. */
+    KvCachePool cachePool;
+    /** Index of this layer within the transformer stack. */
+    final int layerId;
 
     /**
      * Constructor.
      * @param args the model configuration parameters.
+     * @param cachePool the shared KV cache pool (must not be {@code null}).
+     * @param layerId zero-based layer index within the transformer.
      */
-    public GroupedQueryAttention(ModelArgs args) {
+    public GroupedQueryAttention(ModelArgs args, KvCachePool cachePool, int layerId) {
+        if (cachePool == null) {
+            throw new IllegalArgumentException("cachePool must not be null");
+        }
+        this.cachePool = cachePool;
+        this.layerId = layerId;
         this.numKvHeads = args.numKvHeads() == null ? args.numHeads() : args.numKvHeads();
         // Don't support torch.distributed yet
         int modelParallelSize = 1; // torch.distributed.get_world_size(group=get_model_parallel_group());
@@ -75,9 +90,6 @@ public class GroupedQueryAttention implements Attention {
         this.wv = new LinearLayer(args.dim(), numKvHeads * headDim, false);
         this.wo = new LinearLayer(args.numHeads() * headDim, args.dim(), false);
 
-        this.cacheK = Tensor.zeros(args.maxBatchSize(), args.maxSeqLen(), numLocalKvHeads, headDim);
-        this.cacheV = Tensor.zeros(args.maxBatchSize(), args.maxSeqLen(), numLocalKvHeads, headDim);
-
         try (Arena arena = Arena.ofConfined()) {
             this.module = check(smile_module_create(MemorySegment.NULL));
             smile_module_register_module(module, arena.allocateFrom("wq"), wq.module());
@@ -89,9 +101,31 @@ public class GroupedQueryAttention implements Attention {
         Native.CLEANER.register(this, () -> smile_module_free(m));
     }
 
+    /**
+     * Convenience constructor that allocates a small test pool sized to
+     * {@code maxBatchSize × maxSeqLen}. Prefer the
+     * {@link #GroupedQueryAttention(ModelArgs, KvCachePool, int)} overload
+     * in production so the inference engine can share one pool across layers.
+     *
+     * @param args the model configuration parameters.
+     */
+    public GroupedQueryAttention(ModelArgs args) {
+        this(args, KvCachePool.forTesting(args, Device.CPU()), 0);
+    }
+
     @Override
     public MemorySegment module() {
         return module;
+    }
+
+    /**
+     * Replaces the KV cache pool (used after model weights are loaded so the
+     * pool can be sized from residual GPU memory).
+     * @param cachePool the new shared pool.
+     */
+    void setCachePool(KvCachePool cachePool) {
+        if (cachePool == null) throw new IllegalArgumentException("cachePool must not be null");
+        this.cachePool = cachePool;
     }
 
     @Override
@@ -109,19 +143,10 @@ public class GroupedQueryAttention implements Attention {
             xq = scope.add(tuple._1());
             xk = scope.add(tuple._2());
 
-            try (var batch = Index.slice(0, batchSize);
-                 var span = Index.slice(startPos, startPos + seqlen)) {
-                cacheK.put_(xk, batch, span);
-                cacheV.put_(xv, batch, span);
-            }
-
-            Tensor keys;
-            Tensor values;
-            try (var batch = Index.slice(0, batchSize);
-                 var span = Index.slice(0, startPos + seqlen)) {
-                keys = scope.add(cacheK.get(batch, span));
-                values = scope.add(cacheV.get(batch, span));
-            }
+            cachePool.put(layerId, startPos, xk, xv);
+            var cached = cachePool.get(layerId, startPos + seqlen);
+            Tensor keys = scope.add(cached._1());
+            Tensor values = scope.add(cached._2());
 
             // repeat k/v heads if n_kv_heads < n_heads
             keys = scope.add(repeatKV(keys, numRep));
