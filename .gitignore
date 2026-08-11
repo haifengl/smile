@@ -13,7 +13,7 @@ hs_err_pid*
 # Test data
 /data
 /model
-**/smile_serve.db
+**/*.db
 
 # Native library
 /deep/libtorch
