@@ -1,7 +1,7 @@
 name := "smile"
 
 lazy val scala213 = "2.13.18"
-lazy val scala3 = "3.3.7"
+lazy val scala3 = "3.3.8"
 lazy val supportedScalaVersions = List(scala213, scala3)
 lazy val os = sys.props.get("os.name").get.toLowerCase.split(" ")(0)
 
@@ -112,7 +112,7 @@ lazy val javaSettings = commonSettings ++ Seq(
   libraryDependencies ++= Seq(
     "org.slf4j" % "slf4j-api" % "2.0.18",
     "org.slf4j" % "slf4j-simple" % "2.0.18" % Test,
-    "org.junit.jupiter" % "junit-jupiter-engine" % "6.1.2" % Test,
+    "org.junit.jupiter" % "junit-jupiter-engine" % "6.1.3" % Test,
     "com.github.sbt.junit" % "jupiter-interface" % JupiterKeys.jupiterVersion.value % Test
   )
 )

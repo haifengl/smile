@@ -4,7 +4,7 @@ plugins {
 
 dependencies {
     api("org.apache.commons:commons-csv:1.14.1")
-    api("org.duckdb:duckdb_jdbc:1.5.5.0")
+    api("org.duckdb:duckdb_jdbc:1.5.5.1")
     api(libs.bundles.jackson)
     api(libs.bundles.fastxml) // evict older version used by avro and arrow
     implementation(libs.bundles.arrow)
