@@ -19,10 +19,10 @@ dependencies {
     implementation("io.quarkus:quarkus-hibernate-orm-panache")
     implementation("io.quarkus:quarkus-jdbc-postgresql")
     implementation("io.quarkus:quarkus-jdbc-h2")
-    implementation("io.quarkiverse.quinoa:quarkus-quinoa:2.8.2")
+    implementation("io.quarkiverse.quinoa:quarkus-quinoa:2.8.4")
     testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.quarkus:quarkus-test-h2")
-    testImplementation("io.rest-assured:rest-assured:6.0.0")
+    testImplementation("io.rest-assured:rest-assured:6.0.1")
 
     // JaCoCo aggregated report
     jacocoAggregation(project(":base"))

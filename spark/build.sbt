@@ -3,7 +3,7 @@ name := "smile-spark"
 packageOptions += Package.ManifestAttributes("Automatic-Module-Name" -> "smile.spark")
 
 libraryDependencies ++= {
-  val sparkV = "4.1.2"
+  val sparkV = "4.2.0"
   Seq(
     "org.apache.spark" %% "spark-core"  % sparkV % Provided,
     "org.apache.spark" %% "spark-sql"   % sparkV % Provided,
