@@ -16,19 +16,20 @@ packageDescription :=
     |""".stripMargin
 
 import com.typesafe.sbt.packager.MappingsHelper._
+
 Universal / mappings ++= Seq(
-  (baseDirectory.value / "README.md") -> "README.md",
-  (baseDirectory.value / "CLI.md") -> "CLI.md",
-  (baseDirectory.value / "../COPYING") -> "COPYING",
-  (baseDirectory.value / "../LICENSE") -> "LICENSE"
+  fileConverter.value.toVirtualFile((baseDirectory.value / "README.md").toPath) -> "README.md",
+  fileConverter.value.toVirtualFile((baseDirectory.value / "CLI.md").toPath) -> "CLI.md",
+  fileConverter.value.toVirtualFile((baseDirectory.value / "../COPYING").toPath) -> "COPYING",
+  fileConverter.value.toVirtualFile((baseDirectory.value / "../LICENSE").toPath) -> "LICENSE"
 )
-Universal / mappings ++= contentOf("serve/build/quarkus-app/")
-  .map {
-    case (file, path) => (file, s"serve/$path")
+Universal / mappings ++= contentOf(baseDirectory.value / "serve" / "build" / "quarkus-app")
+  .map { case (file, path) =>
+    fileConverter.value.toVirtualFile(file.toPath) -> s"serve/$path"
   }
-Universal / mappings ++= contentOf("base/src/test/resources/data/")
-  .filter {
-    case (file, path) => path.startsWith("mnist") ||
+Universal / mappings ++= contentOf(baseDirectory.value / "base" / "src" / "test" / "resources" / "data")
+  .filter { case (file, path) =>
+      path.startsWith("mnist") ||
       path.startsWith("usps") ||
       path.startsWith("sqlite") ||
       path.startsWith("kylo") ||
@@ -40,8 +41,8 @@ Universal / mappings ++= contentOf("base/src/test/resources/data/")
       path.startsWith("sparse") ||
       path.startsWith("matrix")
   }
-  .map {
-    case (file, path) => (file, s"data/$path")
+  .map { case (file, path) =>
+    fileConverter.value.toVirtualFile(file.toPath) -> s"data/$path"
   }
 
 // dealing with long classpaths
@@ -128,7 +129,7 @@ libraryDependencies ++= {
   Seq(
     "org.apache.arrow"   % "arrow-dataset"       % arrowV,
     "org.apache.arrow"   % "arrow-memory-unsafe" % arrowV,
-    "org.apache.avro"    % "avro"                % "1.12.1" exclude("org.slf4j", "slf4j-log4j12"),
+   ("org.apache.avro"    % "avro"                % "1.12.1").exclude("org.slf4j", "slf4j-log4j12"),
     "org.xerial.snappy"  % "snappy-java"         % "1.1.10.8", // for avro
     "com.epam"           % "parso"               % "2.0.14"    // SAS7BDAT
   )

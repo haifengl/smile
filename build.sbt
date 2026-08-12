@@ -14,7 +14,7 @@ lazy val commonSettings = Seq(
   description := "Statistical Machine Intelligence and Learning Engine",
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
-  organizationHomepage := Some(url("https://haifengl.github.io/")),
+  organizationHomepage := Some(uri("https://haifengl.github.io/")),
   version := "6.2.5",
 
   // Run in a separate JVM, to make sure sbt waits until all threads have
@@ -61,10 +61,10 @@ lazy val commonSettings = Seq(
   },
   publishMavenStyle := true,
   pomIncludeRepository := { _ => false },
-  homepage := Some(url("https://haifengl.github.io/")),
+  homepage := Some(uri("https://haifengl.github.io/")),
   scmInfo := Some(
     ScmInfo(
-      url("https://github.com/haifengl/smile"),
+      uri("https://github.com/haifengl/smile"),
       "scm:git:git@github.com:haifengl/smile.git"
     )
   ),
@@ -73,17 +73,17 @@ lazy val commonSettings = Seq(
       id = "haifengl",
       name = "Haifeng Li",
       email = "",
-      url = url("https://github.com/haifengl")
+      url = uri("https://github.com/haifengl")
     ),
     Developer(
       id = "kklioss",
       name = "Karl Li",
       email = "",
-      url = url("https://github.com/kklioss")
+      url = uri("https://github.com/kklioss")
     )
   ),
   licenses := List(
-    "GNU 3" -> url("https://opensource.org/licenses/GPL-3.0")
+    "GNU 3" -> uri("https://opensource.org/licenses/GPL-3.0")
   )
 )
 
@@ -161,8 +161,23 @@ JavaUnidoc / unidoc / javacOptions ++= Seq(
                |<script async src="https://www.googletagmanager.com/gtag/js?id=G-57GD08QCML"></script>""".stripMargin
 )
 
+// Prevent lintUnused from reporting keys that are intentionally defined
+Global / excludeLintKeys ++= Set(
+  JavaUnidoc / unidoc / javacOptions,
+  Debian / executableScriptName,
+  Debian / sourceDirectory,
+  Rpm / daemonStdoutLogFile,
+  Rpm / executableScriptName,
+  Rpm / name,
+  Rpm / sourceDirectory,
+  Universal / executableScriptName,
+  UniversalDocs / name,
+  UniversalSrc / name,
+  rpmScriptsDirectory
+)
+
 lazy val root = project.in(file("."))
-  .settings(commonSettings: _*)
+  .settings(commonSettings*)
   .enablePlugins(JavaUnidocPlugin)
   .settings(publish / skip := true)
   .settings(crossScalaVersions := Nil)
@@ -172,45 +187,44 @@ lazy val root = project.in(file("."))
   .aggregate(core, base, nlp, deep, plot, json, scala, spark, kotlin, studio)
 
 lazy val base = project.in(file("base"))
-  .settings(javaSettings: _*)
+  .settings(javaSettings*)
 
 lazy val core = project.in(file("core"))
-  .settings(javaSettings: _*)
+  .settings(javaSettings*)
   .dependsOn(base % "provided->provided;compile->compile;test->test;runtime->runtime")
 
 lazy val deep = project.in(file("deep"))
-  .settings(javaSettings: _*)
+  .settings(javaSettings*)
   .dependsOn(base)
 
 lazy val nlp = project.in(file("nlp"))
-  .settings(javaSettings: _*)
+  .settings(javaSettings*)
   .dependsOn(core)
 
 lazy val plot = project.in(file("plot"))
-  .settings(javaSettings: _*)
+  .settings(javaSettings*)
   .dependsOn(base)
 
 lazy val json = project.in(file("json"))
-  .settings(scalaSettings: _*)
+  .settings(scalaSettings*)
 
 lazy val scala = project.in(file("scala"))
-  .settings(scalaSettings: _*)
+  .settings(scalaSettings*)
   .dependsOn(base % "provided->provided;compile->compile;test->test;runtime->runtime")
   .dependsOn(core, nlp, plot, json)
 
 lazy val spark = project.in(file("spark"))
-  .settings(scalaSettings: _*)
+  .settings(scalaSettings*)
   .settings(scalaVersion := scala213)
   .dependsOn(core)
 
 lazy val kotlin = project.in(file("kotlin"))
-  .settings(javaSettings: _*)
-  .enablePlugins(KotlinPlugin)
+  .settings(javaSettings*)
   .dependsOn(base % "provided->provided;compile->compile;test->test;runtime->runtime")
   .dependsOn(core, nlp)
 
 lazy val studio = project.in(file("studio"))
-  .settings(javaSettings: _*)
-  .settings(scalaSettings: _*)
+  .settings(javaSettings*)
+  .settings(scalaSettings*)
   .settings(publish / skip := true)
   .dependsOn(deep, scala)
