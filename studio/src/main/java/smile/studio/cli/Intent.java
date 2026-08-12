@@ -155,7 +155,10 @@ public class Intent extends JPanel {
     private JComboBox<String> initEffortComboBox(AgentCLI cli) {
         ArrayList<String> effortLevels =new ArrayList<>();
         effortLevels.add(LLM.DEFAULT_REASONING_EFFORT);
-        cli.agent().llm().ifPresent(model -> effortLevels.addAll(model.reasoningEffortLevels()));
+
+        if (cli.agent() != null) {
+            cli.agent().llm().ifPresent(model -> effortLevels.addAll(model.reasoningEffortLevels()));
+        }
 
         var levels = effortLevels.toArray(new String[0]);
         var effortComboBox = new JComboBox<>(levels);
