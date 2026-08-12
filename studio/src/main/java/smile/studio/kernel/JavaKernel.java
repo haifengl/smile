@@ -120,16 +120,16 @@ public class JavaKernel extends Kernel<SnippetEvent> {
 
     @Override
     public boolean eval(String code, List<Object> values) {
+        for (String line : code.split("\\r?\\n")) {
+            String trimmed = line.trim();
+            if (trimmed.startsWith("//!")) {
+                evalMagic(trimmed.substring(3));
+            }
+        }
+
         SourceCodeAnalysis.CompletionInfo info = sourceAnalyzer.analyzeCompletion(code);
         while (info.completeness().isComplete()) {
             String source = info.source();
-            String[] lines = source.split("\\r?\\n");
-            for (String line : lines) {
-                line = line.trim();
-                if (line.startsWith("//!")) {
-                    evalMagic(line.substring(3));
-                }
-            }
 
             List<SnippetEvent> events = jshell.eval(source);
             process(events);
