@@ -42,13 +42,15 @@ import smile.util.HuggingFaceHub;
  * <ul>
  *   <li>If the value is an existing local directory, the model is loaded
  *       directly from that path.</li>
- *   <li>Otherwise the value is treated as a Hugging Face Hub repository ID
- *       (e.g. {@code meta-llama/Llama-3.1-8B}) and the required model
- *       files are downloaded to the local HF cache before loading.</li>
+ *   <li>Else if the value looks like a Hugging Face Hub repository ID
+ *       ({@code owner/name}), the required model files are downloaded to
+ *       the local HF cache before loading.</li>
+ *   <li>Otherwise the chat service stays unavailable (no HF download is
+ *       attempted for filesystem-like paths).</li>
  * </ul>
  *
  * <p>If the model cannot be loaded, the service starts in an
- * <em>unavailable</em> state and every request returns HTTP 503.
+ * <em>unavailable</em> state and every chat request returns HTTP 503.
  *
  * @author Haifeng Li
  */
@@ -73,17 +75,49 @@ public class ChatService {
      */
     @Inject
     public ChatService(ChatServiceConfig config, MemConfig mem) {
+        String modelSpec = config.model();
         try {
             double memFraction = mem.fractionStatic();
-            if (Files.exists(Path.of(config.model()))) {
-                model = Llama.build(config.model(), config.tokenizer(),
+            Path localPath = Path.of(modelSpec);
+            if (Files.isDirectory(localPath)) {
+                model = Llama.build(modelSpec, config.tokenizer(),
                         config.maxBatchSize(), config.maxSeqLen(), config.device(), memFraction);
-            } else {
+            } else if (looksLikeHuggingFaceRepoId(modelSpec)) {
                 model = loadFromHuggingFace(config, memFraction);
+            } else {
+                logger.warnf("Chat model '%s' is neither a local directory nor a Hugging Face "
+                        + "repository ID; chat completions will return HTTP 503", modelSpec);
             }
         } catch (Exception ex) {
-            logger.errorf(ex, "Failed to load model '%s'", config.model());
+            // Keep the service up in an unavailable state so classic ML / ONNX
+            // endpoints still work; chat requests return HTTP 503.
+            logger.warnf(ex, "Failed to load chat model '%s'; chat completions will return HTTP 503",
+                    modelSpec);
         }
+    }
+
+    /**
+     * Returns {@code true} when {@code spec} looks like a Hugging Face Hub
+     * repository ID ({@code owner/name}), not a filesystem path.
+     *
+     * <p>Rejects absolute paths, relative path prefixes ({@code ./}, {@code ../}),
+     * Windows drive letters, and multi-segment paths such as
+     * {@code serve/src/test/resources/...}.
+     *
+     * @param spec the configured {@code smile.chat.model} value.
+     * @return {@code true} if the value should be resolved via Hugging Face Hub.
+     */
+    static boolean looksLikeHuggingFaceRepoId(String spec) {
+        if (spec == null || spec.isBlank()) return false;
+        String s = spec.trim();
+        if (s.startsWith("/") || s.startsWith(".") || s.contains("\\") || s.contains(":")) {
+            return false;
+        }
+        int slash = s.indexOf('/');
+        if (slash <= 0 || slash != s.lastIndexOf('/') || slash == s.length() - 1) {
+            return false;
+        }
+        return true;
     }
 
     /**
