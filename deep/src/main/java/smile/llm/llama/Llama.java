@@ -290,7 +290,9 @@ public class Llama {
             String shardFile = shardEntry.getKey();
             Path shardPath = Path.of(dir.getPath(), shardFile);
             logger.info("Loading safetensors shard: {}", shardFile);
-            SafeTensors st = SafeTensors.read(shardPath.toString(), device);
+            // Load only the tensors declared for this shard — avoids mapping
+            // multi-gigabyte files that exceed MappedByteBuffer's 2 GiB limit.
+            SafeTensors st = SafeTensors.read(shardPath.toString(), device, shardEntry.getValue());
             try {
                 Map<String, Tensor> stateDict = new HashMap<>();
                 List<Tensor> owned = new ArrayList<>();
@@ -372,19 +374,14 @@ public class Llama {
                     "Multiple safetensors files found but no model.safetensors.index.json in " + dir);
         }
 
-        // Single-file checkpoint: discover tensor names from the file header.
-        SafeTensors st = SafeTensors.read(Path.of(dir.getPath(), shards.getFirst()).toString(), Device.CPU());
-        try {
-            Map<String, String> map = new LinkedHashMap<>();
-            for (String name : st.tensors().keySet()) {
-                map.put(name, shards.getFirst());
-            }
-            return map;
-        } finally {
-            for (Tensor t : st.tensors().values()) {
-                t.close();
-            }
+        // Single-file checkpoint: discover tensor names from the file header
+        // without materialising multi-gigabyte weight data.
+        String shard = shards.getFirst();
+        Map<String, String> map = new LinkedHashMap<>();
+        for (String name : SafeTensors.listTensors(Path.of(dir.getPath(), shard).toString())) {
+            map.put(name, shard);
         }
+        return map;
     }
 
     /**
