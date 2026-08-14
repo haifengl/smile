@@ -79,6 +79,16 @@ public class ThemedTextArea extends RSyntaxTextArea {
     private void initTheme() {
         putClientProperty("FlatLaf.styleClass", "monospaced");
 
+        var caret = new org.fife.ui.rtextarea.ConfigurableCaret() {
+            @Override
+            public void setVisible(boolean visible) {
+                super.setVisible(visible && isEditable());
+            }
+        };
+        caret.setBlinkRate(getCaret().getBlinkRate());
+        setCaret(caret);
+        syncCaretUpdatePolicy();
+
         applyTheme();
         // Listen for global Look and Feel changes
         UIManager.addPropertyChangeListener(evt -> {
@@ -118,6 +128,21 @@ public class ThemedTextArea extends RSyntaxTextArea {
             if (DARK_THEME != null) DARK_THEME.apply(this);
         } else {
             if (IDEA_THEME != null) IDEA_THEME.apply(this);
+        }
+        setFont(Monospaced.getFont());
+    }
+
+    @Override
+    public void setEditable(boolean editable) {
+        super.setEditable(editable);
+        syncCaretUpdatePolicy();
+    }
+
+    private void syncCaretUpdatePolicy() {
+        if (getCaret() instanceof javax.swing.text.DefaultCaret caret) {
+            caret.setUpdatePolicy(isEditable()
+                    ? javax.swing.text.DefaultCaret.UPDATE_WHEN_ON_EDT
+                    : javax.swing.text.DefaultCaret.NEVER_UPDATE);
         }
     }
 
