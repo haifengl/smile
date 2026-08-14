@@ -86,9 +86,7 @@ public class ChatCompletionResource {
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    // OpenAI SDKs send Accept: application/json even for streaming; also advertise
-    // text/event-stream so content negotiation succeeds for either client.
-    @Produces({MediaType.SERVER_SENT_EVENTS, MediaType.APPLICATION_JSON})
+    @Produces(MediaType.SERVER_SENT_EVENTS)
     @RestStreamElementType(MediaType.TEXT_PLAIN)
     public Multi<String> complete(@Context HttpHeaders headers, CompletionRequest request)
             throws ServiceUnavailableException {
