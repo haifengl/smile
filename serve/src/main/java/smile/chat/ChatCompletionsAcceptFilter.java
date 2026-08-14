@@ -16,35 +16,38 @@
  */
 package smile.chat;
 
-import jakarta.annotation.Priority;
-import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
-import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.ext.Provider;
+import org.jboss.resteasy.reactive.server.ServerRequestFilter;
 
 /**
- * Rewrites {@code Accept} for {@code POST /chat/completions} so OpenAI SDKs
- * (which send {@code Accept: application/json} even when streaming) negotiate
- * successfully against the SSE endpoint.
+ * Rewrites {@code Accept} for {@code POST .../chat/completions} before JAX-RS
+ * resource matching.
+ *
+ * <p>OpenAI SDKs send {@code Accept: application/json} even for streaming
+ * requests. Content negotiation runs in {@code ClassRoutingHandler} before
+ * ordinary {@code ContainerRequestFilter}s, so this filter must be
+ * {@code preMatching = true}.
  *
  * @author Haifeng Li
  */
-@Provider
-@Priority(Priorities.HEADER_DECORATOR)
-public class ChatCompletionsAcceptFilter implements ContainerRequestFilter {
+public class ChatCompletionsAcceptFilter {
 
-    @Override
-    public void filter(ContainerRequestContext requestContext) {
+    /**
+     * Forces {@code Accept: text/event-stream} for chat completion POSTs.
+     *
+     * @param requestContext the incoming request.
+     */
+    @ServerRequestFilter(preMatching = true)
+    public void rewriteAccept(ContainerRequestContext requestContext) {
         if (!"POST".equalsIgnoreCase(requestContext.getMethod())) {
             return;
         }
         String path = requestContext.getUriInfo().getPath();
-        if (path == null || !path.endsWith("chat/completions")) {
+        if (path == null || !path.contains("chat/completions")) {
             return;
         }
-        // Force SSE acceptance; the resource always streams token chunks.
         requestContext.getHeaders().putSingle(HttpHeaders.ACCEPT, MediaType.SERVER_SENT_EVENTS);
     }
 }
