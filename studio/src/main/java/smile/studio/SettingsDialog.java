@@ -218,9 +218,9 @@ public class SettingsDialog extends JDialog implements ActionListener {
             prefs.put(UI_THEME_KEY, theme);
             try {
                 if ("Dark".equals(theme)) {
-                    UIManager.setLookAndFeel(new FlatIntelliJLaf());
-                } else {
                     UIManager.setLookAndFeel(new FlatDarculaLaf());
+                } else {
+                    UIManager.setLookAndFeel(new FlatIntelliJLaf());
                 }
 
                 // Tells FlatLaf to refresh all open frames and dialogs
