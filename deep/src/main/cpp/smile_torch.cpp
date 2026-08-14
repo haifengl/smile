@@ -1170,6 +1170,11 @@ int smile_module_load_state_dict(ST_Module m,
         return -1;
     }
     ST_TRY_BEGIN
+        // Match torch.nn.Module.load_state_dict: copy_ into leaf parameters
+        // that require grad must run under NoGradGuard, otherwise
+        // check_inplace fails ("leaf Variable that requires grad...").
+        torch::NoGradGuard no_grad;
+
         std::unordered_map<std::string, at::Tensor> state;
         state.reserve(static_cast<size_t>(n));
         for (int64_t i = 0; i < n; i++) {

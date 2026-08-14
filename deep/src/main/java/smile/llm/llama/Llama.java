@@ -192,7 +192,6 @@ public class Llama {
                 ? KvCachePool.bootstrap(modelArgs)
                 : KvCachePool.forTesting(modelArgs, device);
         var model = new Transformer(modelArgs, device, bootstrap);
-        model.eval();
 
         if (huggingFace) {
             loadHuggingFaceWeights(model, dir, device);
@@ -209,6 +208,7 @@ public class Llama {
             Collections.sort(checkpoints);
             model.load(checkpoints.get(rank));
         }
+        model.eval();
 
         // Size the shared KV cache from residual free memory after weights load.
         if (memFractionStatic > 0) {
