@@ -4,12 +4,7 @@
 sudo apt update
 sudo apt install -y libopenblas-dev libarpack2
 
-# Install Quarkus
-curl -Ls https://sh.jbang.dev | bash -s - trust add https://repo1.maven.org/maven2/io/quarkus/quarkus-cli/
-curl -Ls https://sh.jbang.dev | bash -s - app install --fresh --force quarkus@quarkusio
+# Install CUDA
+sudo apt update
+sudo apt install -y cuda-toolkit-12-6 libnccl2 libnccl-dev libcusparselt0 libcudnn9-cuda-12 libnvshmem3-cuda-12
 
-cd chat
-npm install
-
-cd ../web
-npm install
