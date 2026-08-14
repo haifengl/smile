@@ -196,6 +196,38 @@ static std::vector<int64_t> to_shape(const int64_t *shape, int ndim) {
     return std::vector<int64_t>(shape, shape + ndim);
 }
 
+static int64_t shape_numel(const std::vector<int64_t> &sizes) {
+    int64_t n = 1;
+    for (auto s : sizes) n *= s;
+    return n;
+}
+
+/**
+ * Copies a host buffer into a fresh CPU tensor of the given dtype.
+ * Avoids {@code torch::from_blob(...).clone()}, which can trip PyObjectSlot
+ * asserts in libtorch builds without a Python interpreter (especially for
+ * empty tensors after the process-wide default dtype/device has been changed).
+ */
+template <typename T>
+static ST_Tensor tensor_from_host(const T *data, const int64_t *shape, int ndim,
+                                  c10::ScalarType dtype) {
+    auto sizes = to_shape(shape, ndim);
+    ST_TRY_BEGIN
+        auto opts = torch::TensorOptions().dtype(dtype).device(torch::kCPU);
+        auto t = torch::empty(sizes, opts);
+        int64_t n = shape_numel(sizes);
+        if (n > 0) {
+            if (!data) {
+                set_error("tensor_from_host: null data with non-empty shape");
+                return nullptr;
+            }
+            std::memcpy(t.data_ptr<T>(), data, static_cast<size_t>(n) * sizeof(T));
+        }
+        return new ST_Tensor_{ std::move(t) };
+    ST_TRY_END
+    return nullptr;
+}
+
 static std::optional<at::Scalar> maybe_scalar(int has, ST_Scalar s) {
     if (has && s) return s->s;
     return std::nullopt;
@@ -461,32 +493,40 @@ ST_Tensor smile_tensor_arange(double start, double end, double step, ST_TensorOp
 }
 
 ST_Tensor smile_tensor_from_bool  (const uint8_t *data, const int64_t *shape, int ndim) {
-    MAKE_TENSOR(torch::from_blob(const_cast<uint8_t*>(data), to_shape(shape,ndim),
-                                 at::dtype(at::kBool)).clone());
+    auto sizes = to_shape(shape, ndim);
+    ST_TRY_BEGIN
+        auto opts = torch::TensorOptions().dtype(at::kBool).device(torch::kCPU);
+        auto t = torch::empty(sizes, opts);
+        int64_t n = shape_numel(sizes);
+        if (n > 0) {
+            if (!data) {
+                set_error("smile_tensor_from_bool: null data with non-empty shape");
+                return nullptr;
+            }
+            // Bool storage is 1 byte per element; copy without data_ptr<uint8_t>().
+            std::memcpy(t.data_ptr<bool>(), data, static_cast<size_t>(n));
+        }
+        return new ST_Tensor_{ std::move(t) };
+    ST_TRY_END
+    return nullptr;
 }
 ST_Tensor smile_tensor_from_byte  (const int8_t  *data, const int64_t *shape, int ndim) {
-    MAKE_TENSOR(torch::from_blob(const_cast<int8_t*>(data), to_shape(shape,ndim),
-                                 at::dtype(at::kChar)).clone());
+    return tensor_from_host(data, shape, ndim, at::kChar);
 }
 ST_Tensor smile_tensor_from_short (const int16_t *data, const int64_t *shape, int ndim) {
-    MAKE_TENSOR(torch::from_blob(const_cast<int16_t*>(data), to_shape(shape,ndim),
-                                 at::dtype(at::kShort)).clone());
+    return tensor_from_host(data, shape, ndim, at::kShort);
 }
 ST_Tensor smile_tensor_from_int   (const int32_t *data, const int64_t *shape, int ndim) {
-    MAKE_TENSOR(torch::from_blob(const_cast<int32_t*>(data), to_shape(shape,ndim),
-                                 at::dtype(at::kInt)).clone());
+    return tensor_from_host(data, shape, ndim, at::kInt);
 }
 ST_Tensor smile_tensor_from_long  (const int64_t *data, const int64_t *shape, int ndim) {
-    MAKE_TENSOR(torch::from_blob(const_cast<int64_t*>(data), to_shape(shape,ndim),
-                                 at::dtype(at::kLong)).clone());
+    return tensor_from_host(data, shape, ndim, at::kLong);
 }
 ST_Tensor smile_tensor_from_float (const float   *data, const int64_t *shape, int ndim) {
-    MAKE_TENSOR(torch::from_blob(const_cast<float*>(data), to_shape(shape,ndim),
-                                 at::dtype(at::kFloat)).clone());
+    return tensor_from_host(data, shape, ndim, at::kFloat);
 }
 ST_Tensor smile_tensor_from_double(const double  *data, const int64_t *shape, int ndim) {
-    MAKE_TENSOR(torch::from_blob(const_cast<double*>(data), to_shape(shape,ndim),
-                                 at::dtype(at::kDouble)).clone());
+    return tensor_from_host(data, shape, ndim, at::kDouble);
 }
 
 // =============================================================================

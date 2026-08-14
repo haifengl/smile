@@ -184,7 +184,14 @@ public class Llama {
             throw new IllegalStateException("Tokenizer and ModelArgs have different vocabulary size.");
         }
 
-        var model = new Transformer(modelArgs, device);
+        // When a static memory fraction is configured, use a tiny CPU placeholder
+        // pool during weight load, then replace it with a GPU pool sized from
+        // residual free memory. Avoids allocating a full maxBatch×maxSeqLen CUDA
+        // bootstrap cache (and related empty-tensor pitfalls) before weights load.
+        KvCachePool bootstrap = memFractionStatic > 0
+                ? KvCachePool.bootstrap(modelArgs)
+                : KvCachePool.forTesting(modelArgs, device);
+        var model = new Transformer(modelArgs, device, bootstrap);
         model.eval();
 
         if (huggingFace) {
@@ -204,8 +211,6 @@ public class Llama {
         }
 
         // Size the shared KV cache from residual free memory after weights load.
-        // Release the bootstrap (test-sized) pool first so the free-memory
-        // reading is not reduced by its buffers.
         if (memFractionStatic > 0) {
             model.kvCachePool().close();
             device.emptyCache();
