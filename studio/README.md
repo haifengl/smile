@@ -77,8 +77,9 @@ interacting with your data with natural language.
 
 1. **Download & Unzip**
 
-Download the [SMILE package](https://github.com/haifengl/smile/releases/download/v6.2.3/smile-6.2.3.zip)
-and unzip it on your machine.
+Download the latest SMILE package from the
+[latest release page](https://github.com/haifengl/smile/releases/latest)
+(grab the `smile-<version>.zip` asset) and unzip it on your machine.
 
 2. **Configure Your Environment**
 
