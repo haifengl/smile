@@ -29,6 +29,7 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.ServiceUnavailableException;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.HttpHeaders;
@@ -85,6 +86,9 @@ public class ChatCompletionResource {
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
+    // OpenAI SDKs send Accept: application/json even for streaming; also advertise
+    // text/event-stream so content negotiation succeeds for either client.
+    @Produces({MediaType.SERVER_SENT_EVENTS, MediaType.APPLICATION_JSON})
     @RestStreamElementType(MediaType.TEXT_PLAIN)
     public Multi<String> complete(@Context HttpHeaders headers, CompletionRequest request)
             throws ServiceUnavailableException {
