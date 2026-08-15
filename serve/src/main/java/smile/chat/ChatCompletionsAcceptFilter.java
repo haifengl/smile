@@ -57,7 +57,7 @@ public class ChatCompletionsAcceptFilter {
 
         InputStream entityStream = requestContext.getEntityStream();
         if (entityStream == null) {
-            requestContext.getHeaders().putSingle(HttpHeaders.ACCEPT, MediaType.SERVER_SENT_EVENTS);
+            requestContext.getHeaders().putSingle(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
             return Uni.createFrom().voidItem();
         }
 

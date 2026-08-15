@@ -55,7 +55,7 @@ public class ChatServiceTest {
         var body = """
                 {"messages":[{"role":"user","content":"hi"}],"max_tokens":8}
                 """;
-        // When posting a chat completion (streaming default)
+        // When posting a chat completion with stream:true
         // Then the response is HTTP 503
         given()
             .contentType(ContentType.JSON)
@@ -93,10 +93,12 @@ public class ChatServiceTest {
 
     @Test
     public void testGivenStreamFlagInBodyWhenParsedThenHonorsFalse() {
-        assertTrue(ChatCompletionsStreamFlag.streamFlag("{}".getBytes()));
+        assertFalse(ChatCompletionsStreamFlag.streamFlag("{}".getBytes()));
         assertTrue(ChatCompletionsStreamFlag.streamFlag("{\"stream\":true}".getBytes()));
         assertFalse(ChatCompletionsStreamFlag.streamFlag("{\"stream\":false}".getBytes()));
         assertFalse(ChatCompletionsStreamFlag.streamFlag("{\"stream\": false, \"messages\":[]}".getBytes()));
+        assertTrue(ChatCompletionsStreamFlag.streamFlag("{\"stream\":\"true\"}".getBytes()));
+        assertFalse(ChatCompletionsStreamFlag.streamFlag("{\"stream\":\"false\"}".getBytes()));
     }
 
     @Test
