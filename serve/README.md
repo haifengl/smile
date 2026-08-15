@@ -358,6 +358,14 @@ At startup, `OnnxService` scans the folder specified by the property
 `InferenceSession`. The model ID is the file name without
 the `.onnx` extension (e.g., `resnet50.onnx` → ID `resnet50`).
 
+**Native library:** the ONNX Runtime shared library
+(`libonnxruntime.so` / `libonnxruntime.dylib` / `onnxruntime.dll`) must be
+on the OS library search path, and the JVM must
+include `--enable-native-access=ALL-UNNAMED`. If the library is missing,
+startup continues without ONNX models (endpoints return 404) rather than
+aborting the whole serve process. Download pre-built binaries from the
+[ORT releases](https://github.com/microsoft/onnxruntime/releases) page.
+
 ### 5.2 Get ONNX Model Info
 
 Returns graph metadata and the typed, shaped input/output node descriptors.
