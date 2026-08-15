@@ -202,8 +202,8 @@ public class ChatCompletionResource {
     /**
      * Persists the user message and assistant reply(ies) for this turn.
      *
-     * <p>If the {@link CompletionRequest#conversation} ID is absent or
-     * non-positive, a new {@link Conversation} record is created first.
+     * <p>If {@link CompletionRequest#conversation} is absent or blank, a new
+     * {@link Conversation} record is created first.
      *
      * @param conversation the conversation context captured from the request.
      * @param request      the original completion request.
@@ -213,8 +213,8 @@ public class ChatCompletionResource {
     public void saveConversation(Conversation conversation,
                                   CompletionRequest request,
                                   ChatCompletion[] completions) {
-        Long conversationId = request.conversation;
-        if (conversationId == null || conversationId <= 0) {
+        Long conversationId = ConversationIds.parseOptional(request.conversation);
+        if (conversationId == null) {
             conversation.persist();
             conversationId = conversation.id;
         }

@@ -612,41 +612,96 @@ curl -X POST http://localhost:8080/api/v1/chat/completions \
 ### 6.2 Conversation History API
 
 Chat history is stored in a relational database (PostgreSQL in production,
-SQLite in dev mode). The API base path is `/api/v1/conversations`.
+H2 in dev mode). The API base path is `/api/v1/conversations`.
 
-#### List conversations
+Create, retrieve, update, and delete follow the
+[OpenAI Conversations](https://developers.openai.com/api/reference/resources/conversations)
+shapes. Conversation ids are strings of the form `conv_<n>`. List and
+`GET .../items` are smile extensions (OpenAI has no list endpoint; items use a
+separate OpenAI items API that smile does not implement yet).
+
+#### List conversations (smile extension)
 
 ```
 GET /api/v1/conversations?pageIndex=0&pageSize=25
 ```
 
-Returns conversations in reverse-chronological order (newest first).
-Pagination parameters default to page 0 with 25 records per page.
+Returns OpenAI-shaped conversation objects in reverse-chronological order
+(newest first). Pagination defaults to page 0 with 25 records per page.
 
 ```shell
 curl "http://localhost:8080/api/v1/conversations?pageSize=10"
 ```
 
-#### Get a single conversation
+#### Create a conversation
 
 ```
-GET /api/v1/conversations/{id}
+POST /api/v1/conversations
+Content-Type: application/json
 ```
 
-Returns the conversation record (metadata only, no messages). Returns 404 if
-the ID does not exist.
+Optional body fields: `metadata` (≤16 string pairs) and `items` (≤20 message
+items with `role` + text `content`).
 
-#### Get conversation messages
+```shell
+curl http://localhost:8080/api/v1/conversations \
+  -H "Content-Type: application/json" \
+  -d '{"metadata":{"topic":"demo"},"items":[{"type":"message","role":"user","content":"Hello!"}]}'
+```
+
+```json
+{
+  "id": "conv_1",
+  "object": "conversation",
+  "created_at": 1741900000,
+  "metadata": {"topic": "demo"}
+}
+```
+
+#### Retrieve a conversation
 
 ```
-GET /api/v1/conversations/{id}/items?pageIndex=0&pageSize=25
+GET /api/v1/conversations/{conversation_id}
+```
+
+#### Update a conversation
+
+```
+POST /api/v1/conversations/{conversation_id}
+Content-Type: application/json
+```
+
+```shell
+curl http://localhost:8080/api/v1/conversations/conv_1 \
+  -H "Content-Type: application/json" \
+  -d '{"metadata":{"topic":"project-x"}}'
+```
+
+#### Delete a conversation
+
+```
+DELETE /api/v1/conversations/{conversation_id}
+```
+
+```json
+{
+  "id": "conv_1",
+  "object": "conversation.deleted",
+  "deleted": true
+}
+```
+
+#### Get conversation messages (smile extension)
+
+```
+GET /api/v1/conversations/{conversation_id}/items?pageIndex=0&pageSize=25
 ```
 
 Returns the individual message turns (`role` + `content` + `createdAt`)
 in chronological order.
 
 ```shell
-curl http://localhost:8080/api/v1/conversations/42/items
+curl http://localhost:8080/api/v1/conversations/conv_42/items
 ```
 
 ```json
@@ -655,24 +710,6 @@ curl http://localhost:8080/api/v1/conversations/42/items
   { "id": 2, "conversationId": 42, "role": "assistant", "content": "The capital of France is Paris.", "createdAt": "2026-04-15T10:00:02Z" }
 ]
 ```
-
-#### Create a conversation record manually
-
-```
-POST /api/v1/conversations
-Content-Type: application/json
-```
-
-Useful for creating a labelled conversation before sending the first chat
-message. The server records the client IP and User-Agent automatically.
-
-#### Delete a conversation
-
-```
-DELETE /api/v1/conversations/{id}
-```
-
-Returns 204 on success, 404 if not found.
 
 ---
 
@@ -782,11 +819,12 @@ The test class `InferenceResourceTest` covers:
 | Method | Path | Description |
 |---|---|---|
 | `POST` | `/chat/completions` | Streaming LLM chat completion (SSE) |
-| `GET` | `/conversations` | List conversations (paginated) |
-| `GET` | `/conversations/{id}` | Get conversation metadata |
-| `POST` | `/conversations` | Create a conversation record |
-| `DELETE` | `/conversations/{id}` | Delete a conversation |
-| `GET` | `/conversations/{id}/items` | List message turns (paginated) |
+| `GET` | `/conversations` | List conversations (paginated; smile extension) |
+| `GET` | `/conversations/{conversation_id}` | Retrieve conversation (OpenAI-compatible) |
+| `POST` | `/conversations` | Create conversation (OpenAI-compatible) |
+| `POST` | `/conversations/{conversation_id}` | Update conversation metadata (OpenAI-compatible) |
+| `DELETE` | `/conversations/{conversation_id}` | Delete conversation (OpenAI-compatible) |
+| `GET` | `/conversations/{conversation_id}/items` | List message turns (paginated; smile extension) |
 
 
 ---

@@ -53,7 +53,7 @@ function App() {
   ])
 
   const [showTypingIndicator, setShowTypingIndicator] = useState(false)
-  const [conversationId, setConversationId] = useState(0)
+  const [conversationId, setConversationId] = useState(null)
   const sendingRef = useRef(false)
   const sentSystemPromptRef = useRef(false)
 

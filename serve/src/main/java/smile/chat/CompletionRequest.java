@@ -28,8 +28,8 @@ import smile.llm.Message;
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class CompletionRequest {
-    /** Optional ID of an existing conversation to append to. */
-    public Long conversation;
+    /** Optional ID of an existing conversation to append to ({@code conv_<id>}). */
+    public String conversation;
     /** The ordered list of dialog messages. Must not be {@code null}. */
     public Message[] messages;
     /** Maximum number of new tokens to generate. Default: {@code 2048}. */
