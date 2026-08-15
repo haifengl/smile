@@ -323,11 +323,7 @@ function OnnxForm({ modelId }) {
                   </p>
                 </div>
               )}
-              <button
-                type="submit"
-                className="infer-btn infer-btn-primary"
-                disabled={!imageFile || busy}
-              >
+              <button type="submit" disabled={!imageFile || busy}>
                 {submitting ? "Running…" : "Predict"}
               </button>
             </form>
@@ -380,11 +376,10 @@ function OnnxForm({ modelId }) {
             <div className="infer-batch-actions">
               <button
                 type="button"
-                className="infer-btn infer-btn-primary"
                 onClick={handleFilePredict}
                 disabled={!batchFile || busy}
               >
-                {streaming ? `Streaming… (${streamCount})` : "Run file"}
+                {streaming ? `Streaming… (${streamCount})` : "Run"}
               </button>
               {streaming && (
                 <button

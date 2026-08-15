@@ -250,11 +250,10 @@ function SmileForm({ modelId }) {
             <div className="infer-batch-actions">
               <button
                 type="button"
-                className="infer-btn infer-btn-primary"
                 onClick={handleFilePredict}
                 disabled={!file || streaming}
               >
-                {streaming ? `Streaming… (${streamCount})` : "Run file"}
+                {streaming ? `Streaming… (${streamCount})` : "Run"}
               </button>
               {streaming && (
                 <button
