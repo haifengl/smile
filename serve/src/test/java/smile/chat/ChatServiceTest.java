@@ -168,4 +168,31 @@ public class ChatServiceTest {
             }
         }
     }
+
+    @Test
+    public void testGivenBrokenOriginalTokenizerSymlinkWhenResolvedThenFallsBackToRoot() throws Exception {
+        Path dir = Files.createTempDirectory("smile-chat-tok-broken");
+        try {
+            Path original = dir.resolve("original");
+            Files.createDirectories(original);
+            // Same wrong relative target HF caches sometimes contain for nested files.
+            Files.createSymbolicLink(original.resolve("tokenizer.model"),
+                    Path.of("../../blobs/missing"));
+            Path rootTok = dir.resolve("tokenizer.model");
+            Files.writeString(rootTok, "dummy");
+
+            String resolved = ChatService.resolveLocalTokenizer(dir);
+            assertTrue(resolved.endsWith("tokenizer.model"));
+            assertFalse(resolved.contains("original"));
+        } finally {
+            try (var walk = Files.walk(dir)) {
+                walk.sorted(java.util.Comparator.reverseOrder()).forEach(p -> {
+                    try {
+                        Files.deleteIfExists(p);
+                    } catch (Exception ignored) {
+                    }
+                });
+            }
+        }
+    }
 }
