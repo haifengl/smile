@@ -32,7 +32,7 @@ import smile.serve.OnnxService;
  *
  * <p>Lists every loaded model in one catalog: chat LLMs, ONNX graphs, and
  * SMILE {@code .sml} models. Classic SMILE inference remains under
- * {@code /api/v1/ml/models}; ONNX inference under {@code /api/v1/onnx}.
+ * {@code /api/v1/ml/models/{id}}; ONNX inference under {@code /api/v1/onnx/{id}}.
  *
  * @author Haifeng Li
  * @see <a href="https://developers.openai.com/api/reference/resources/models/methods/list">OpenAI List models</a>

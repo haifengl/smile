@@ -32,22 +32,6 @@ import static org.hamcrest.CoreMatchers.notNullValue;
  */
 @QuarkusTest
 public class InferenceResourceTest {
-    // ------------------------------------------------------------------ list
-    /**
-     * GET /ml/models should return the list of loaded model IDs.
-     */
-    @Test
-    public void testListModels() {
-        // Given a running server with one loaded model
-        // When listing all models
-        // Then the response contains exactly the expected model ID
-        given()
-            .when().get("/api/v1/ml/models")
-            .then()
-                .statusCode(200)
-                .contentType(ContentType.JSON)
-                .body(is("[\"iris_random_forest-1\"]"));
-    }
     // --------------------------------------------------------------- get metadata
     /**
      * GET /ml/models/{id} should return the full metadata for a known model.

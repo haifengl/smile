@@ -98,15 +98,6 @@ public class OnnxService {
     }
 
     /**
-     * Returns the IDs of all loaded ONNX models in alphabetical order.
-     *
-     * @return the list of model IDs.
-     */
-    public List<String> models() {
-        return new ArrayList<>(models.keySet());
-    }
-
-    /**
      * Returns OpenAI-shaped descriptors for every loaded ONNX model.
      *
      * <p>{@code owned_by} uses ONNX custom metadata {@code author}/{@code owner}
