@@ -47,7 +47,12 @@ import smile.util.AutoScope;
  */
 public class Llama {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Llama.class);
-    /** The model family name. */
+    /**
+     * Architecture family label for this implementation.
+     * Not the public chat API model id — serve uses {@code smile.chat.model}
+     * (HF repo id or directory name) so non-Llama models are not forced under
+     * a Meta prefix.
+     */
     static final String family = "meta/llama3";
     /** Matches HuggingFace layer weight names such as {@code model.layers.12.self_attn.q_proj.weight}. */
     private static final Pattern HF_LAYER_WEIGHT = Pattern.compile(

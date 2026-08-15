@@ -565,8 +565,9 @@ database after generation finishes.
 
 | Field | Type | Default | Description |
 |---|---|---|---|
+| `model` | `string` | loaded model | Must match the loaded model id when set (HF repo id or local directory name); omit/empty to use the loaded model |
 | `messages` | `Message[]` | *required* | Ordered dialog turns |
-| `conversation` | `Long` | `null` | Existing conversation ID to append to |
+| `conversation` | `string` | `null` | Existing conversation id (`conv_<n>`) to append to |
 | `max_tokens` | `int` | `2048` | Maximum new tokens to generate |
 | `temperature` | `double` | `0.6` | Sampling temperature (higher = more random) |
 | `top_p` | `double` | `0.9` | Nucleus-sampling threshold |

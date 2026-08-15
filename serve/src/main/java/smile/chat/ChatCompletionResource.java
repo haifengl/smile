@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
@@ -87,6 +88,8 @@ public class ChatCompletionResource {
      *                and generation parameters.
      * @return a reactive stream of SSE data payloads.
      * @throws ServiceUnavailableException if the LLM model is not loaded.
+     * @throws NotFoundException if {@code request.model} is set and does not
+     *         match the loaded model id.
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -95,6 +98,11 @@ public class ChatCompletionResource {
     public Multi<String> complete(@Context HttpHeaders headers, CompletionRequest request)
             throws ServiceUnavailableException {
         if (!service.isAvailable()) throw new ServiceUnavailableException();
+        if (!service.acceptsModel(request.model)) {
+            throw new NotFoundException(
+                    "The model `" + request.model + "` does not exist or is not loaded (loaded: `"
+                            + service.modelName() + "`)");
+        }
 
         Conversation conversation = new Conversation();
         // Must capture routing context on the endpoint thread; it is not available

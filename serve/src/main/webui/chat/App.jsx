@@ -113,7 +113,7 @@ function App() {
 
     try {
       const stream = await client.chat.completions.create({
-        model: 'meta/llama3',
+        // Omit model to use whatever LLM smile-serve has loaded.
         messages: chatMessages,
         stream: true,
         max_tokens: 512,
