@@ -19,6 +19,7 @@ package smile.chat;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
 import java.util.concurrent.SubmissionPublisher;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -107,7 +108,14 @@ public class ChatCompletionResource {
         // Emitter runs on subscription — subscribe the publisher before generate().
         return Multi.createFrom().emitter(emitter -> {
             AtomicBoolean isFirst = new AtomicBoolean(true);
-            SubmissionPublisher<String> publisher = new SubmissionPublisher<>();
+            // Completed with ChatCompletion[] after generate returns (publisher may
+            // already have closed). Finish/[DONE] wait on this so they never race
+            // ahead of asynchronously delivered content onNext calls.
+            CompletableFuture<ChatCompletion[]> resultFuture = new CompletableFuture<>();
+            // Deliver onNext/onComplete on the submitting thread so the last content
+            // chunk is emitted before publisher.close() returns from generate().
+            SubmissionPublisher<String> publisher =
+                    new SubmissionPublisher<>(Runnable::run, Flow.defaultBufferSize());
 
             publisher.subscribe(new Flow.Subscriber<>() {
                 @Override
@@ -132,6 +140,7 @@ public class ChatCompletionResource {
 
                 @Override
                 public void onError(Throwable throwable) {
+                    resultFuture.completeExceptionally(throwable);
                     if (!emitter.isCancelled()) {
                         emitter.fail(throwable);
                     }
@@ -139,7 +148,27 @@ public class ChatCompletionResource {
 
                 @Override
                 public void onComplete() {
-                    // Publisher closes at end of generate(); finish chunk is emitted from the worker.
+                    // Guaranteed after all onNext. Wait for generate() to publish the
+                    // finish reason, then terminate the SSE stream in OpenAI order:
+                    // content deltas → finish_reason chunk → [DONE].
+                    resultFuture.whenComplete((completions, error) -> {
+                        if (emitter.isCancelled()) {
+                            return;
+                        }
+                        if (error != null) {
+                            emitter.fail(error);
+                            return;
+                        }
+                        FinishReason reason = (completions != null && completions.length > 0)
+                                ? completions[0].reason()
+                                : FinishReason.stop;
+                        var delta = new ChatCompletionChunk.Delta(null, null);
+                        var choice = new ChatCompletionChunk.Choice(0, delta, null, reason);
+                        var event = new ChatCompletionChunk(id, "chat.completion.chunk", created, modelName, List.of(choice));
+                        emitter.emit(toJson(event));
+                        emitter.emit("[DONE]");
+                        emitter.complete();
+                    });
                 }
             });
 
@@ -152,32 +181,19 @@ public class ChatCompletionResource {
             });
 
             executor.supplyAsync(() -> {
-                ChatCompletion[] completions = null;
                 try {
-                    completions = service.complete(request, publisher);
-                    FinishReason reason = (completions != null && completions.length > 0)
-                            ? completions[0].reason()
-                            : FinishReason.stop;
-                    if (!emitter.isCancelled()) {
-                        var delta = new ChatCompletionChunk.Delta(null, null);
-                        var choice = new ChatCompletionChunk.Choice(0, delta, null, reason);
-                        var event = new ChatCompletionChunk(id, "chat.completion.chunk", created, modelName, List.of(choice));
-                        emitter.emit(toJson(event));
-                        emitter.emit("[DONE]");
-                        emitter.complete();
-                    }
+                    var completions = service.complete(request, publisher);
+                    resultFuture.complete(completions);
                     if (completions != null) {
                         saveConversation(conversation, request, completions);
                     }
                     return completions;
                 } catch (Throwable t) {
+                    resultFuture.completeExceptionally(t);
                     if (!publisher.isClosed()) {
                         publisher.close();
                     }
-                    if (!emitter.isCancelled()) {
-                        emitter.fail(t);
-                    }
-                    return completions;
+                    return null;
                 }
             });
         });
