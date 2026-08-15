@@ -40,7 +40,6 @@ import io.smallrye.common.annotation.Blocking;
 import io.smallrye.mutiny.Multi;
 import io.vertx.ext.web.RoutingContext;
 import org.eclipse.microprofile.context.ManagedExecutor;
-import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.RestStreamElementType;
 import smile.llm.ChatCompletion;
 import smile.llm.FinishReason;
@@ -50,14 +49,12 @@ import smile.llm.Role;
  * REST resource exposing the OpenAI-compatible chat completion API at
  * {@code /api/v1/chat/completions}.
  *
- * <p>When {@code stream} is true (smile default), tokens are streamed as SSE
- * {@code chat.completion.chunk} events ending with {@code [DONE]}.
+ * <p>When {@code stream} is true (smile default), the method returns a
+ * {@link Multi} of SSE payloads directly (required for Quarkus SSE framing).
  * When {@code stream} is false, a single {@code chat.completion} JSON body is
- * returned.
- *
- * <p>The method is produced as {@code application/json} so OpenAI clients that
- * always send {@code Accept: application/json} match. Streaming responses set
- * {@code Content-Type: text/event-stream} on the {@link RestResponse}.
+ * returned. {@link ChatCompletionsAcceptFilter} sets {@code Accept} from the
+ * body {@code stream} flag so the correct method is selected even when clients
+ * send {@code Accept: application/json}.
  *
  * @author Haifeng Li
  */
@@ -77,40 +74,51 @@ public class ChatCompletionResource {
     ObjectMapper objectMapper;
 
     /**
-     * Chat completion — JSON when {@code stream: false}, SSE when streaming.
+     * Non-streaming chat completion ({@code stream: false}).
      *
      * @param headers HTTP request headers.
      * @param request completion request.
-     * @return JSON completion object or SSE multi of chunk payloads.
+     * @return OpenAI {@code chat.completion} JSON object.
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @RestStreamElementType(MediaType.TEXT_PLAIN)
     @Blocking
-    public RestResponse<?> complete(@Context HttpHeaders headers, CompletionRequest request) {
+    public ChatCompletionObject completeJson(@Context HttpHeaders headers, CompletionRequest request) {
         validate(request);
         Conversation conversation = newConversation(headers);
         String id = newCompletionId();
         long created = Instant.now().getEpochSecond();
         String modelName = service.modelName();
 
-        if (!request.isStream()) {
-            ChatCompletion[] completions = service.complete(request, null);
-            if (completions != null) {
-                saveConversation(conversation, request, completions);
-            }
-            return RestResponse.ok(ChatCompletionObject.of(id, created, modelName, completions));
+        ChatCompletion[] completions = service.complete(request, null);
+        if (completions != null) {
+            saveConversation(conversation, request, completions);
         }
-
-        Multi<String> multi = streamMulti(id, created, modelName, conversation, request);
-        return RestResponse.ResponseBuilder.ok(multi)
-                .type(MediaType.SERVER_SENT_EVENTS_TYPE)
-                .build();
+        return ChatCompletionObject.of(id, created, modelName, completions);
     }
 
-    private Multi<String> streamMulti(String id, long created, String modelName,
-                                      Conversation conversation, CompletionRequest request) {
+    /**
+     * Streaming chat completion ({@code stream: true} or omitted).
+     *
+     * <p>Must return {@link Multi} directly — wrapping it in {@code RestResponse}
+     * causes Quarkus to write the Multi's {@code toString()} instead of SSE.
+     *
+     * @param headers HTTP request headers.
+     * @param request completion request.
+     * @return SSE stream of JSON chunk payloads plus a final {@code [DONE]}.
+     */
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.SERVER_SENT_EVENTS)
+    @RestStreamElementType(MediaType.TEXT_PLAIN)
+    public Multi<String> completeStream(@Context HttpHeaders headers, CompletionRequest request) {
+        validate(request);
+        Conversation conversation = newConversation(headers);
+        String id = newCompletionId();
+        long created = Instant.now().getEpochSecond();
+        String modelName = service.modelName();
+
         return Multi.createFrom().emitter(emitter -> {
             AtomicBoolean isFirst = new AtomicBoolean(true);
             CompletableFuture<ChatCompletion[]> resultFuture = new CompletableFuture<>();
