@@ -9,9 +9,9 @@ that brings together three complementary inference capabilities on the JVM:
 
 | Capability | API prefix | Description                                                    |
 |---|---|----------------------------------------------------------------|
-| **Classic ML** | `/api/v1/models` | Serialized SMILE models (`.sml`) — classifiers and regressors |
+| **Classic ML** | `/api/v1/ml/models` | Serialized SMILE models (`.sml`) — classifiers and regressors |
 | **ONNX Runtime** | `/api/v1/onnx` | Any model in the ONNX open format (`.onnx`)                    |
-| **LLM Chat** | `/api/v1/chat` | Llama 3 chat completions with conversation persistence         |
+| **LLM Chat** | `/api/v1/chat`, `/api/v1/models` | OpenAI-compatible chat completions and model listing |
 
 A React-based web UI is bundled and served from the same process.
 
@@ -41,8 +41,9 @@ A React-based web UI is bundled and served from the same process.
    - [Streaming Inference](#55-streaming-inference)
    - [Tensor Types and Shape Resolution](#56-tensor-types-and-shape-resolution)
 6. [LLM Chat API](#6-llm-chat-api)
-   - [Chat Completions](#61-chat-completions)
-   - [Conversation History API](#62-conversation-history-api)
+   - [List models](#61-list-models)
+   - [Chat Completions](#62-chat-completions)
+   - [Conversation History API](#63-conversation-history-api)
 7. [Web UI](#7-web-ui)
 8. [Database](#8-database)
 9. [Testing](#9-testing)
@@ -200,13 +201,13 @@ is loaded; if it is a directory every `.sml` file in the directory is loaded.
 Returns the IDs of all loaded models in alphabetical order.
 
 ```
-GET /api/v1/models
+GET /api/v1/ml/models
 ```
 
 **Example:**
 
 ```shell
-curl http://localhost:8080/api/v1/models
+curl http://localhost:8080/api/v1/ml/models
 ```
 
 ```json
@@ -218,13 +219,13 @@ curl http://localhost:8080/api/v1/models
 Returns the algorithm name, input schema, and tags for a model.
 
 ```
-GET /api/v1/models/{id}
+GET /api/v1/ml/models/{id}
 ```
 
 **Example:**
 
 ```shell
-curl http://localhost:8080/api/v1/models/iris_random_forest-1
+curl http://localhost:8080/api/v1/ml/models/iris_random_forest-1
 ```
 
 ```json
@@ -251,7 +252,7 @@ is the **column order** used by the CSV streaming endpoint.
 Send one sample as a JSON object and receive the prediction synchronously.
 
 ```
-POST /api/v1/models/{id}
+POST /api/v1/ml/models/{id}
 Content-Type: application/json
 ```
 
@@ -261,7 +262,7 @@ defined in the model schema. **All non-nullable fields are required.**
 **Classification example (iris):**
 
 ```shell
-curl -X POST http://localhost:8080/api/v1/models/iris_random_forest-1 \
+curl -X POST http://localhost:8080/api/v1/ml/models/iris_random_forest-1 \
   -H "Content-Type: application/json" \
   -d '{
     "sepallength": 5.1,
@@ -297,7 +298,7 @@ Process many samples in a single request. The server returns results as a
 stream — one `data:` line per input sample.
 
 ```
-POST /api/v1/models/{id}/stream
+POST /api/v1/ml/models/{id}/stream
 Content-Type: text/plain          ← CSV mode
 Content-Type: application/json   ← JSON-lines mode
 ```
@@ -306,13 +307,13 @@ Content-Type: application/json   ← JSON-lines mode
 
 Each non-blank line is a comma-separated row of feature values in the **same
 column order as the model schema** (alphabetical by field name, as shown by
-`GET /api/v1/models/{id}`).
+`GET /api/v1/ml/models/{id}`).
 
 ```shell
 cat iris.csv | curl -X POST \
   -H "Content-Type: text/plain" \
   --data-binary @- \
-  http://localhost:8080/api/v1/models/iris_random_forest-1/stream
+  http://localhost:8080/api/v1/ml/models/iris_random_forest-1/stream
 ```
 
 Where `iris.csv` might contain:
@@ -342,7 +343,7 @@ This is more verbose but supports named fields in any order.
 cat iris.jsonl | curl -X POST \
   -H "Content-Type: application/json" \
   --data-binary @- \
-  http://localhost:8080/api/v1/models/iris_random_forest-1/stream
+  http://localhost:8080/api/v1/ml/models/iris_random_forest-1/stream
 ```
 
 Where `iris.jsonl` contains:
@@ -550,7 +551,40 @@ The LLM is optional: if the path specified by the property `smile.chat.model`
 does not exist on the file system, `ChatService` starts in an *unavailable*
 state and every request to the chat endpoints returns **HTTP 503 Service Unavailable**.
 
-### 6.1 Chat Completions
+### 6.1 List models
+
+```
+GET /api/v1/models
+```
+
+OpenAI-compatible listing of the loaded chat LLM
+([List models](https://developers.openai.com/api/reference/resources/models/methods/list)).
+Classic SMILE `.sml` models are listed under `/api/v1/ml/models` instead.
+
+```shell
+curl http://localhost:8080/api/v1/models
+```
+
+```json
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "meta-llama/Llama-3.1-8B-Instruct",
+      "object": "model",
+      "created": 1741900000,
+      "owned_by": "meta-llama",
+      "shutdown_date": null
+    }
+  ]
+}
+```
+
+`owned_by` is the Hugging Face owner (first segment of the repo id). For a
+locally loaded checkpoint it is the first segment of `Llama.family()`
+(currently `meta` from `meta/llama3`).
+
+### 6.2 Chat Completions
 
 ```
 POST /api/v1/chat/completions
@@ -610,7 +644,7 @@ curl -X POST http://localhost:8080/api/v1/chat/completions \
   }'
 ```
 
-### 6.2 Conversation History API
+### 6.3 Conversation History API
 
 Chat history is stored in a relational database (PostgreSQL in production,
 H2 in dev mode). The API base path is `/api/v1/conversations`.
@@ -781,30 +815,30 @@ The test class `InferenceResourceTest` covers:
 
 | Test | Endpoint | Scenario |
 |---|---|---|
-| `testListModels` | `GET /models` | Returns the correct model IDs |
-| `testGetModelMetadata` | `GET /models/{id}` | Returns algorithm, schema, and nullability |
-| `testGetUnknownModelReturns404` | `GET /models/{id}` | 404 for unknown ID |
-| `testPredictJsonReturnsPredictionAndProbabilities` | `POST /models/{id}` | Correct label + probabilities |
-| `testPredictJsonWithZeroFeaturesReturnsValidPrediction` | `POST /models/{id}` | Edge case: all-zero features |
-| `testPredictJsonMissingFieldReturns400` | `POST /models/{id}` | 400 for missing field |
-| `testPredictUnknownModelReturns404` | `POST /models/{id}` | 404 for unknown model |
-| `testStreamCsvReturnsPredictions` | `POST /models/{id}/stream` | 3 CSV rows → 3 SSE data lines |
-| `testStreamJsonLinesReturnsPredictions` | `POST /models/{id}/stream` | 2 JSON-lines → 2 SSE data lines |
-| `testStreamCsvTooFewColumnsEmitsNoPredictions` | `POST /models/{id}/stream` | Bad CSV closes stream |
-| `testStreamUnknownModelReturns404` | `POST /models/{id}/stream` | 404 before stream starts |
+| `testListModels` | `GET /ml/models` | Returns the correct model IDs |
+| `testGetModelMetadata` | `GET /ml/models/{id}` | Returns algorithm, schema, and nullability |
+| `testGetUnknownModelReturns404` | `GET /ml/models/{id}` | 404 for unknown ID |
+| `testPredictJsonReturnsPredictionAndProbabilities` | `POST /ml/models/{id}` | Correct label + probabilities |
+| `testPredictJsonWithZeroFeaturesReturnsValidPrediction` | `POST /ml/models/{id}` | Edge case: all-zero features |
+| `testPredictJsonMissingFieldReturns400` | `POST /ml/models/{id}` | 400 for missing field |
+| `testPredictUnknownModelReturns404` | `POST /ml/models/{id}` | 404 for unknown model |
+| `testStreamCsvReturnsPredictions` | `POST /ml/models/{id}/stream` | 3 CSV rows → 3 SSE data lines |
+| `testStreamJsonLinesReturnsPredictions` | `POST /ml/models/{id}/stream` | 2 JSON-lines → 2 SSE data lines |
+| `testStreamCsvTooFewColumnsEmitsNoPredictions` | `POST /ml/models/{id}/stream` | Bad CSV closes stream |
+| `testStreamUnknownModelReturns404` | `POST /ml/models/{id}/stream` | 404 before stream starts |
 
 ---
 
 ## API Quick Reference
 
-### Classic ML — `/api/v1/models`
+### Classic ML — `/api/v1/ml/models`
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/models` | List all loaded model IDs |
-| `GET` | `/models/{id}` | Get model metadata and schema |
-| `POST` | `/models/{id}` | Single JSON inference |
-| `POST` | `/models/{id}/stream` | Streaming CSV or JSON-lines inference |
+| `GET` | `/ml/models` | List all loaded model IDs |
+| `GET` | `/ml/models/{id}` | Get model metadata and schema |
+| `POST` | `/ml/models/{id}` | Single JSON inference |
+| `POST` | `/ml/models/{id}/stream` | Streaming CSV or JSON-lines inference |
 
 ### ONNX — `/api/v1/onnx`
 
@@ -815,10 +849,11 @@ The test class `InferenceResourceTest` covers:
 | `POST` | `/onnx/{id}` | Single JSON inference |
 | `POST` | `/onnx/{id}/stream` | Streaming CSV or JSON-lines inference |
 
-### Chat — `/api/v1/chat` and `/api/v1/conversations`
+### Chat — `/api/v1/models`, `/api/v1/chat`, `/api/v1/conversations`
 
 | Method | Path | Description |
 |---|---|---|
+| `GET` | `/models` | List loaded chat LLMs (OpenAI-compatible) |
 | `POST` | `/chat/completions` | Streaming LLM chat completion (SSE) |
 | `GET` | `/conversations` | List conversations (paginated; smile extension) |
 | `GET` | `/conversations/{conversation_id}` | Retrieve conversation (OpenAI-compatible) |

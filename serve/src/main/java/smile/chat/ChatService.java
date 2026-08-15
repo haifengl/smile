@@ -20,6 +20,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.util.List;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.SubmissionPublisher;
@@ -67,6 +69,10 @@ public class ChatService {
      * Llama-family prefix for historical reasons.
      */
     private final String modelId;
+    /** OpenAI {@code owned_by} value for the loaded model. */
+    private String ownedBy = "unknown";
+    /** Unix epoch seconds when the model finished loading. */
+    private long createdAt;
 
     /**
      * Loads the LLM upon application start.
@@ -89,8 +95,12 @@ public class ChatService {
             if (Files.isDirectory(localPath)) {
                 model = Llama.build(modelSpec, config.tokenizer(),
                         config.maxBatchSize(), config.maxSeqLen(), config.device(), memFraction);
+                ownedBy = ownerFromFamily(model.family());
+                createdAt = Instant.now().getEpochSecond();
             } else if (looksLikeHuggingFaceRepoId(modelSpec)) {
                 model = loadFromHuggingFace(config, memFraction);
+                ownedBy = ownerFromHuggingFaceId(modelSpec);
+                createdAt = Instant.now().getEpochSecond();
             } else {
                 logger.warnf("Chat model '%s' is neither a local directory nor a Hugging Face "
                         + "repository ID; chat completions will return HTTP 503", modelSpec);
@@ -100,6 +110,7 @@ public class ChatService {
             // endpoints still work; chat requests return HTTP 503.
             logger.warnf(ex, "Failed to load chat model '%s'; chat completions will return HTTP 503",
                     modelSpec);
+            model = null;
         }
     }
 
@@ -171,6 +182,49 @@ public class ChatService {
      */
     public String modelName() {
         return model != null ? modelId : "unknown";
+    }
+
+    /**
+     * Returns OpenAI-shaped descriptors for currently loaded chat models.
+     *
+     * @return a singleton list when a model is loaded; otherwise empty.
+     */
+    public List<ModelObject> listModels() {
+        if (model == null) {
+            return List.of();
+        }
+        return List.of(ModelObject.of(modelId, createdAt, ownedBy));
+    }
+
+    /**
+     * Derives {@code owned_by} from a Hugging Face repo id ({@code owner/name}).
+     *
+     * @param repoId the Hugging Face repository id.
+     * @return the owner segment, or the whole id when no slash is present.
+     */
+    static String ownerFromHuggingFaceId(String repoId) {
+        if (repoId == null || repoId.isBlank()) {
+            return "unknown";
+        }
+        String id = repoId.trim();
+        int slash = id.indexOf('/');
+        return slash > 0 ? id.substring(0, slash) : id;
+    }
+
+    /**
+     * Derives {@code owned_by} from {@link Llama#family()} for locally loaded
+     * checkpoints (first path segment, e.g. {@code meta} from {@code meta/llama3}).
+     *
+     * @param family the model family label.
+     * @return the first segment of the family string.
+     */
+    static String ownerFromFamily(String family) {
+        if (family == null || family.isBlank()) {
+            return "unknown";
+        }
+        String f = family.trim();
+        int slash = f.indexOf('/');
+        return slash > 0 ? f.substring(0, slash) : f;
     }
 
     /**

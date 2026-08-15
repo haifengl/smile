@@ -26,7 +26,7 @@ function App() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch("/api/v1/models")
+    fetch("/api/v1/ml/models")
       .then((res) => {
         if (!res.ok) {
           throw new Error("Failed to fetch models");

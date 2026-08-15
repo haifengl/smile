@@ -64,7 +64,7 @@ function InferenceForm({ model }) {
       return jsonSchema;
     };
 
-    fetch(`/api/v1/models/${model}`)
+    fetch(`/api/v1/ml/models/${model}`)
       .then((res) => {
         if (!res.ok) {
           throw new Error("Failed to fetch model schema");
@@ -83,7 +83,7 @@ function InferenceForm({ model }) {
 
   const handleSubmit = ({ formData }) => {
     console.log("Submitted data:", formData);
-    fetch(`/api/v1/models/${model}`, {
+    fetch(`/api/v1/ml/models/${model}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),
