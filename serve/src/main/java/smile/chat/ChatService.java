@@ -393,6 +393,10 @@ public class ChatService {
         for (String candidate : candidates) {
             try {
                 Path path = HuggingFaceHub.download(repoId, candidate);
+                if (!Files.isRegularFile(path)) {
+                    logger.warnf("Tokenizer candidate '%s' is not a readable file: %s", candidate, path);
+                    continue;
+                }
                 logger.infof("Downloaded tokenizer: %s", path);
                 return path.toString();
             } catch (FileNotFoundException ignored) {

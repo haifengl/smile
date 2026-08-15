@@ -50,6 +50,7 @@ import java.util.UUID;
  *     snapshots/
  *       {commit_hash}/
  *         {filename}      ← relative symlink → ../../blobs/{sha256}
+ *         original/...    ← nested files use extra ../ (e.g. ../../../blobs/...)
  *     refs/
  *       {revision}        ← text file containing the resolved commit hash
  * </pre>
@@ -284,7 +285,7 @@ public class HuggingFaceHub {
         // ----------------------------------------------------------------
         if (!forceDownload && commitHash != null) {
             Path snapshotFile = snapshotsDir.resolve(commitHash).resolve(filename);
-            if (Files.exists(snapshotFile)) {
+            if (isUsableCachedFile(snapshotFile)) {
                 logger.debug("Cache hit: {}", snapshotFile);
                 return snapshotFile;
             }
@@ -297,14 +298,14 @@ public class HuggingFaceHub {
             // Try to find any existing snapshot for this file.
             if (commitHash != null) {
                 Path snapshotFile = snapshotsDir.resolve(commitHash).resolve(filename);
-                if (Files.exists(snapshotFile)) return snapshotFile;
+                if (isUsableCachedFile(snapshotFile)) return snapshotFile;
             }
             // Scan all known snapshots.
             if (Files.exists(snapshotsDir)) {
                 try (var stream = Files.list(snapshotsDir)) {
                     Optional<Path> found = stream
                             .map(s -> s.resolve(resolvedFilename))
-                            .filter(Files::exists)
+                            .filter(HuggingFaceHub::isUsableCachedFile)
                             .findFirst();
                     if (found.isPresent()) return found.get();
                 }
@@ -322,7 +323,7 @@ public class HuggingFaceHub {
         // Send ETag of existing blob for conditional requests.
         if (!forceDownload && commitHash != null) {
             Path snapshotFile = snapshotsDir.resolve(commitHash).resolve(filename);
-            if (Files.isSymbolicLink(snapshotFile)) {
+            if (Files.isSymbolicLink(snapshotFile) && isUsableCachedFile(snapshotFile)) {
                 Path blobPath = snapshotFile.toRealPath();
                 String existingEtag = blobPath.getFileName().toString();
                 headBuilder.header("If-None-Match", "\"" + existingEtag + "\"");
@@ -340,7 +341,7 @@ public class HuggingFaceHub {
             logger.warn("HEAD request failed for {}: {}", fileUrl, e.getMessage());
             if (commitHash != null) {
                 Path snapshotFile = snapshotsDir.resolve(commitHash).resolve(filename);
-                if (Files.exists(snapshotFile)) {
+                if (isUsableCachedFile(snapshotFile)) {
                     logger.info("Falling back to cached file: {}", snapshotFile);
                     return snapshotFile;
                 }
@@ -402,7 +403,7 @@ public class HuggingFaceHub {
         // ----------------------------------------------------------------
         // 304 Not Modified: cached blob is still valid
         // ----------------------------------------------------------------
-        if (headStatus == 304 && Files.exists(snapshotFile)) {
+        if (headStatus == 304 && isUsableCachedFile(snapshotFile)) {
             logger.debug("304 Not Modified — using cached: {}", snapshotFile);
             return snapshotFile;
         }
@@ -413,7 +414,7 @@ public class HuggingFaceHub {
         Path blobPath = blobSha != null ? blobsDir.resolve(blobSha) : null;
         if (!forceDownload && blobPath != null && Files.exists(blobPath)) {
             // Blob exists; just (re-)create the snapshot symlink.
-            createOrUpdateSymlink(snapshotFile, blobPath, blobsDir, snapshotDir);
+            createOrUpdateSymlink(snapshotFile, blobPath);
             logger.debug("Blob cache hit: {}", blobPath);
             return snapshotFile;
         }
@@ -473,7 +474,7 @@ public class HuggingFaceHub {
         }
 
         // Create / update snapshot symlink → blob.
-        createOrUpdateSymlink(snapshotFile, blobPath, blobsDir, snapshotDir);
+        createOrUpdateSymlink(snapshotFile, blobPath);
         return snapshotFile;
     }
 
@@ -653,29 +654,61 @@ public class HuggingFaceHub {
     }
 
     /**
+     * Returns {@code true} when {@code path} resolves to a readable regular file.
+     *
+     * <p>Broken or wrongly-rooted snapshot symlinks (common for nested paths such
+     * as {@code original/tokenizer.model}) are treated as cache misses.
+     *
+     * @param path candidate snapshot path.
+     * @return {@code true} if the path can be opened as a regular file.
+     */
+    private static boolean isUsableCachedFile(Path path) {
+        return Files.isRegularFile(path);
+    }
+
+    /**
+     * Relative symlink target from {@code linkPath}'s parent directory to
+     * {@code blobPath}. Nested snapshot files need extra {@code ../} segments
+     * compared with root-level files.
+     *
+     * @param linkPath path of the symlink to create.
+     * @param blobPath absolute or relative path of the blob file.
+     * @return relative target suitable for {@link Files#createSymbolicLink}.
+     */
+    static Path relativeBlobTarget(Path linkPath, Path blobPath) {
+        Path parent = linkPath.getParent();
+        if (parent == null) {
+            throw new IllegalArgumentException("Cannot create symlink at filesystem root: " + linkPath);
+        }
+        return parent.toAbsolutePath().normalize()
+                .relativize(blobPath.toAbsolutePath().normalize());
+    }
+
+    /**
      * Creates or replaces a relative symbolic link at {@code linkPath} pointing
      * to the blob file at {@code blobPath}.
      *
      * <p>The link target is expressed as a <em>relative</em> path from
-     * {@code linkPath}'s parent to {@code blobPath}.
+     * {@code linkPath}'s parent to {@code blobPath} (not from the snapshot root),
+     * so nested files such as {@code original/tokenizer.model} resolve correctly.
      *
      * <p>On platforms that do not support symbolic links (e.g. Windows without
      * Developer Mode or Administrator privileges), a hard link is attempted first;
      * if that also fails, a plain file copy is performed as a last resort so that
      * the download always succeeds.
      *
-     * @param linkPath    the path at which the symlink (or copy) should appear.
-     * @param blobPath    the actual blob file to link to.
-     * @param blobsDir    the {@code blobs/} directory (used to compute the relative path).
-     * @param snapshotDir the {@code snapshots/{commit}/} directory (parent of the link).
+     * @param linkPath the path at which the symlink (or copy) should appear.
+     * @param blobPath the actual blob file to link to.
      * @throws IOException if the filesystem operation fails completely.
      */
-    private static void createOrUpdateSymlink(Path linkPath, Path blobPath,
-                                              Path blobsDir, Path snapshotDir) throws IOException {
-        // Compute relative path from the symlink's directory to the blob.
-        Path relTarget = snapshotDir.relativize(blobPath);
+    private static void createOrUpdateSymlink(Path linkPath, Path blobPath) throws IOException {
+        Path linkParent = linkPath.getParent();
+        if (linkParent != null) {
+            Files.createDirectories(linkParent);
+        }
+        Path relTarget = relativeBlobTarget(linkPath, blobPath);
 
-        // Delete a stale link / file first.
+        // Delete a stale link / file first (including broken symlinks).
         Files.deleteIfExists(linkPath);
 
         try {
@@ -790,7 +823,7 @@ public class HuggingFaceHub {
 
         if (!forceDownload && commitHash != null) {
             Path snapshotFile = snapshotsDir.resolve(commitHash).resolve(filename);
-            if (Files.exists(snapshotFile)) {
+            if (isUsableCachedFile(snapshotFile)) {
                 logger.debug("Cache hit: {}", snapshotFile);
                 return snapshotFile;
             }
@@ -799,13 +832,13 @@ public class HuggingFaceHub {
         if (localFilesOnly) {
             if (commitHash != null) {
                 Path snapshotFile = snapshotsDir.resolve(commitHash).resolve(filename);
-                if (Files.exists(snapshotFile)) return snapshotFile;
+                if (isUsableCachedFile(snapshotFile)) return snapshotFile;
             }
             if (Files.exists(snapshotsDir)) {
                 try (var stream = Files.list(snapshotsDir)) {
                     Optional<Path> found = stream
                             .map(s -> s.resolve(resolvedFilename))
-                            .filter(Files::exists)
+                            .filter(HuggingFaceHub::isUsableCachedFile)
                             .findFirst();
                     if (found.isPresent()) return found.get();
                 }
@@ -819,7 +852,7 @@ public class HuggingFaceHub {
 
         if (!forceDownload && commitHash != null) {
             Path snapshotFile = snapshotsDir.resolve(commitHash).resolve(filename);
-            if (Files.isSymbolicLink(snapshotFile)) {
+            if (Files.isSymbolicLink(snapshotFile) && isUsableCachedFile(snapshotFile)) {
                 Path blobPath = snapshotFile.toRealPath();
                 String existingEtag = blobPath.getFileName().toString();
                 headBuilder.header("If-None-Match", "\"" + existingEtag + "\"");
@@ -836,7 +869,7 @@ public class HuggingFaceHub {
             logger.warn("HEAD request failed for {}: {}", fileUrl, e.getMessage());
             if (commitHash != null) {
                 Path snapshotFile = snapshotsDir.resolve(commitHash).resolve(filename);
-                if (Files.exists(snapshotFile)) {
+                if (isUsableCachedFile(snapshotFile)) {
                     logger.info("Falling back to cached file: {}", snapshotFile);
                     return snapshotFile;
                 }
@@ -872,14 +905,14 @@ public class HuggingFaceHub {
         Files.createDirectories(snapshotDir);
         if (snapshotFile.getParent() != null) Files.createDirectories(snapshotFile.getParent());
 
-        if (headStatus == 304 && Files.exists(snapshotFile)) {
+        if (headStatus == 304 && isUsableCachedFile(snapshotFile)) {
             logger.debug("304 Not Modified — using cached: {}", snapshotFile);
             return snapshotFile;
         }
 
         Path blobPath = blobSha != null ? blobsDir.resolve(blobSha) : null;
         if (!forceDownload && blobPath != null && Files.exists(blobPath)) {
-            createOrUpdateSymlink(snapshotFile, blobPath, blobsDir, snapshotDir);
+            createOrUpdateSymlink(snapshotFile, blobPath);
             logger.debug("Blob cache hit: {}", blobPath);
             return snapshotFile;
         }
@@ -912,7 +945,7 @@ public class HuggingFaceHub {
             throw e;
         }
 
-        createOrUpdateSymlink(snapshotFile, blobPath, blobsDir, snapshotDir);
+        createOrUpdateSymlink(snapshotFile, blobPath);
         return snapshotFile;
     }
 
