@@ -17,6 +17,7 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
 import InferenceForm from "./InferenceForm";
+import ChatApp from "../chat/ChatApp";
 import "./App.css";
 
 function App() {
@@ -31,18 +32,28 @@ function App() {
       fetch("/api/v1/onnx")
         .then((res) => (res.ok ? res.json() : []))
         .catch(() => []),
-    ]).then(([smileIds, onnxIds]) => {
-      const smile = (Array.isArray(smileIds) ? smileIds : []).map((id) => ({
-        id,
-        type: "smile",
-      }));
-      const onnx = (Array.isArray(onnxIds) ? onnxIds : []).map((id) => ({
-        id,
-        type: "onnx",
-      }));
-      setModels([...smile, ...onnx]);
+      fetch("/api/v1/models")
+        .then((res) => (res.ok ? res.json() : { data: [] }))
+        .catch(() => ({ data: [] })),
+    ]).then(([smileIds, onnxIds, catalog]) => {
+      const smileList = Array.isArray(smileIds) ? smileIds : [];
+      const onnxList = Array.isArray(onnxIds) ? onnxIds : [];
+      const smileSet = new Set(smileList);
+      const onnxSet = new Set(onnxList);
+
+      const smile = smileList.map((id) => ({ id, type: "smile" }));
+      const onnx = onnxList.map((id) => ({ id, type: "onnx" }));
+
+      const catalogData = Array.isArray(catalog?.data) ? catalog.data : [];
+      const chat = catalogData
+        .filter((m) => m?.id && !smileSet.has(m.id) && !onnxSet.has(m.id))
+        .map((m) => ({ id: m.id, type: "chat" }));
+
+      setModels([...chat, ...smile, ...onnx]);
     });
   }, []);
+
+  const isChat = selectedModel?.type === "chat";
 
   return (
     <div className="app">
@@ -51,8 +62,17 @@ function App() {
         selectedModel={selectedModel}
         onSelect={setSelectedModel}
       />
-      <div className="content">
-        <InferenceForm model={selectedModel} />
+      <div className={isChat ? "content content-chat" : "content"}>
+        {isChat ? (
+          <ChatApp
+            key={selectedModel.id}
+            model={selectedModel.id}
+            title={selectedModel.id}
+            embedded
+          />
+        ) : (
+          <InferenceForm model={selectedModel} />
+        )}
       </div>
     </div>
   );

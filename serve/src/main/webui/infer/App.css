@@ -1,15 +1,18 @@
 .app {
   display: flex;
-  height: 100vh;
+  height: calc(100vh - 72px); /* leave room for site header on /infer */
   width: 100%;
   font-family: Arial, sans-serif;
+  overflow: hidden;
 }
 
 .sidebar {
   width: 280px;
+  flex-shrink: 0;
   background: #1e1e2f;
   color: white;
   padding: 16px;
+  overflow-y: auto;
 }
 
 .sidebar h2 {
@@ -72,6 +75,11 @@
   color: #dce4ff;
 }
 
+.badge-chat {
+  background: #6b4a3d;
+  color: #ffe8dc;
+}
+
 .sidebar li:hover {
   background: #2e2e4f;
 }
@@ -121,9 +129,20 @@
 
 .content {
   flex: 1;
+  min-width: 0;
+  min-height: 0;
   padding: 24px;
   background: white;
   color: black;
+  overflow: auto;
+}
+
+/* Chat fills the pane; no outer padding so the transcript can scroll. */
+.content-chat {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .toast {

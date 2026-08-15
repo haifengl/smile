@@ -16,7 +16,14 @@
  */
 import React from "react";
 
+const BADGE_LABEL = {
+  smile: "SMILE",
+  onnx: "ONNX",
+  chat: "CHAT",
+};
+
 function Sidebar({ models, onSelect, selectedModel }) {
+  const chat = models.filter((m) => m.type === "chat");
   const smile = models.filter((m) => m.type === "smile");
   const onnx = models.filter((m) => m.type === "onnx");
 
@@ -40,9 +47,11 @@ function Sidebar({ models, onSelect, selectedModel }) {
                 className={active ? "active" : ""}
                 onClick={() => onSelect(model)}
               >
-                <span className="model-name">{model.id}</span>
+                <span className="model-name" title={model.id}>
+                  {model.id}
+                </span>
                 <span className={`badge badge-${model.type}`}>
-                  {model.type === "onnx" ? "ONNX" : "SMILE"}
+                  {BADGE_LABEL[model.type] || model.type.toUpperCase()}
                 </span>
               </li>
             );
@@ -56,6 +65,7 @@ function Sidebar({ models, onSelect, selectedModel }) {
     <div className="sidebar">
       <h2>Models</h2>
       {models.length === 0 && <p className="sidebar-empty">No models loaded</p>}
+      {renderGroup("Chat", chat)}
       {renderGroup("SMILE", smile)}
       {renderGroup("ONNX", onnx)}
     </div>

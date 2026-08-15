@@ -766,13 +766,13 @@ curl http://localhost:8080/api/v1/conversations/conv_42/items
 A React-based web interface is bundled via [Quarkus Quinoa](https://quarkiverse.github.io/quarkiverse-docs/quarkus-quinoa/dev/).
 It is served from the root URL and provides:
 
-- **Inference UI** (`/infer`) — select a loaded **SMILE** (`.sml`) or **ONNX**
-  (`.onnx`) model from the sidebar. SMILE models get a schema-driven form.
-  ONNX models get a numeric form from input tensor shapes, or an image upload
-  when a 4-D vision-like input is detected (NCHW/NHWC); you can override the
-  mode manually. Chat LLMs are listed under `/models` but not in `/infer`.
-- **Chat UI** (`/chat`) — a conversational interface for the Llama chat service
-  with streaming token display and Markdown/math rendering.
+- **Inference UI** (`/infer`) — unified model shell: sidebar lists **chat**,
+  **SMILE** (`.sml`), and **ONNX** (`.onnx`) models. Selecting a chat model
+  embeds the shared chat module in the right pane; SMILE models get a
+  schema-driven form; ONNX models get a numeric form from tensor shapes, or
+  an image upload when a 4-D vision-like input is detected (overrideable).
+- **Chat UI** (`/chat`) — standalone entry for the same chat module (streaming
+  tokens, Markdown/math), without the infer sidebar.
 
 In dev mode the React development server runs on port **5173** and requests
 are proxied to the Quarkus backend. The production build (`dist/`) is served
