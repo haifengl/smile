@@ -16,6 +16,7 @@
  */
 package smile.chat;
 
+import java.util.ArrayList;
 import java.util.List;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
@@ -23,12 +24,15 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import io.smallrye.common.annotation.RunOnVirtualThread;
+import smile.serve.InferenceService;
+import smile.serve.OnnxService;
 
 /**
  * OpenAI-compatible models API at {@code /api/v1/models}.
  *
- * <p>Lists the chat LLM(s) currently loaded by {@link ChatService}. Classic
- * SMILE {@code .sml} inference lives under {@code /api/v1/ml/models}.
+ * <p>Lists every loaded model in one catalog: chat LLMs, ONNX graphs, and
+ * SMILE {@code .sml} models. Classic SMILE inference remains under
+ * {@code /api/v1/ml/models}; ONNX inference under {@code /api/v1/onnx}.
  *
  * @author Haifeng Li
  * @see <a href="https://developers.openai.com/api/reference/resources/models/methods/list">OpenAI List models</a>
@@ -41,13 +45,23 @@ public class ModelsResource {
     @Inject
     ChatService chatService;
 
+    @Inject
+    InferenceService inferenceService;
+
+    @Inject
+    OnnxService onnxService;
+
     /**
-     * Lists currently available chat models.
+     * Lists all currently available models (chat, ONNX, and SMILE).
      *
      * @return OpenAI-shaped {@code { object: "list", data: [...] }}.
      */
     @GET
     public ModelList list() {
-        return ModelList.of(chatService.listModels());
+        List<ModelObject> data = new ArrayList<>();
+        data.addAll(chatService.listModels());
+        data.addAll(inferenceService.listOpenAiModels());
+        data.addAll(onnxService.listOpenAiModels());
+        return ModelList.of(data);
     }
 }

@@ -70,7 +70,7 @@ public class ChatService {
      */
     private final String modelId;
     /** OpenAI {@code owned_by} value for the loaded model. */
-    private String ownedBy = "unknown";
+    private String ownedBy = ModelObject.UNKNOWN_OWNER;
     /** Unix epoch seconds when the model finished loading. */
     private long createdAt;
 
@@ -204,7 +204,7 @@ public class ChatService {
      */
     static String ownerFromHuggingFaceId(String repoId) {
         if (repoId == null || repoId.isBlank()) {
-            return "unknown";
+            return ModelObject.UNKNOWN_OWNER;
         }
         String id = repoId.trim();
         int slash = id.indexOf('/');
@@ -220,7 +220,7 @@ public class ChatService {
      */
     static String ownerFromFamily(String family) {
         if (family == null || family.isBlank()) {
-            return "unknown";
+            return ModelObject.UNKNOWN_OWNER;
         }
         String f = family.trim();
         int slash = f.indexOf('/');

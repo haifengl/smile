@@ -32,6 +32,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import org.jboss.logging.Logger;
+import smile.chat.ModelObject;
 import smile.onnx.InferenceSession;
 import smile.io.Paths;
 
@@ -103,6 +104,25 @@ public class OnnxService {
      */
     public List<String> models() {
         return new ArrayList<>(models.keySet());
+    }
+
+    /**
+     * Returns OpenAI-shaped descriptors for every loaded ONNX model.
+     *
+     * <p>{@code owned_by} uses ONNX custom metadata {@code author}/{@code owner}
+     * when present; otherwise {@link smile.chat.ModelObject#UNKNOWN_OWNER}.
+     *
+     * @return OpenAI model objects in id order.
+     */
+    public List<ModelObject> listOpenAiModels() {
+        List<ModelObject> result = new ArrayList<>();
+        for (OnnxModel model : models.values()) {
+            result.add(ModelObject.of(
+                    model.id(),
+                    ModelObject.createdFromPath(model.path()),
+                    ModelObject.ownedByFromMap(model.info().customMeta())));
+        }
+        return result;
     }
 
     /**
