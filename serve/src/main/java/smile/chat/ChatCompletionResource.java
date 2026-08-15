@@ -49,12 +49,12 @@ import smile.llm.Role;
  * REST resource exposing the OpenAI-compatible chat completion API at
  * {@code /api/v1/chat/completions}.
  *
- * <p>When {@code stream} is true (smile default), the method returns a
+ * <p>When {@code stream} is true, the method returns a
  * {@link Multi} of SSE payloads directly (required for Quarkus SSE framing).
- * When {@code stream} is false, a single {@code chat.completion} JSON body is
- * returned. {@link ChatCompletionsAcceptFilter} sets {@code Accept} from the
- * body {@code stream} flag so the correct method is selected even when clients
- * send {@code Accept: application/json}.
+ * When {@code stream} is false or omitted (OpenAI default), a single
+ * {@code chat.completion} JSON body is returned. {@link ChatCompletionsAcceptFilter}
+ * sets {@code Accept} from the body {@code stream} flag so the correct method is
+ * selected even when clients send {@code Accept: application/json}.
  *
  * @author Haifeng Li
  */
@@ -74,7 +74,7 @@ public class ChatCompletionResource {
     ObjectMapper objectMapper;
 
     /**
-     * Non-streaming chat completion ({@code stream: false}).
+     * Non-streaming chat completion ({@code stream: false} or omitted).
      *
      * @param headers HTTP request headers.
      * @param request completion request.
@@ -99,7 +99,7 @@ public class ChatCompletionResource {
     }
 
     /**
-     * Streaming chat completion ({@code stream: true} or omitted).
+     * Streaming chat completion ({@code stream: true}).
      *
      * <p>Must return {@link Multi} directly — wrapping it in {@code RestResponse}
      * causes Quarkus to write the Multi's {@code toString()} instead of SSE.

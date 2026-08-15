@@ -30,31 +30,31 @@ public final class ChatCompletionsStreamFlag {
     /**
      * Parses the {@code stream} boolean from a raw JSON body.
      *
-     * <p>Omitted / unparseable → {@code true} (smile streaming default).
+     * <p>Omitted / unparseable → {@code false} (OpenAI default).
      *
      * @param body raw request bytes.
      * @return whether SSE streaming should be used.
      */
     public static boolean streamFlag(byte[] body) {
         if (body == null || body.length == 0) {
-            return true;
+            return false;
         }
         String json = new String(body, StandardCharsets.UTF_8);
         try {
             var node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(json);
             var stream = node.get("stream");
             if (stream == null || stream.isNull()) {
-                return true;
+                return false;
             }
             if (stream.isBoolean()) {
                 return stream.booleanValue();
             }
             if (stream.isTextual()) {
-                return !stream.asText().equalsIgnoreCase("false");
+                return stream.asText().equalsIgnoreCase("true");
             }
-            return true;
+            return false;
         } catch (Exception e) {
-            return true;
+            return false;
         }
     }
 }

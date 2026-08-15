@@ -58,10 +58,11 @@ public class CompletionRequest {
     /** Random seed for reproducible generation ({@code 0} = non-deterministic). */
     public long seed = 0;
     /**
-     * When {@code true} (smile default), respond with SSE token chunks.
-     * When {@code false}, respond with a single OpenAI {@code chat.completion} JSON body.
+     * When {@code true}, respond with SSE token chunks.
+     * When {@code false} or omitted (OpenAI default), respond with a single
+     * OpenAI {@code chat.completion} JSON body.
      */
-    public Boolean stream = Boolean.TRUE;
+    public Boolean stream = Boolean.FALSE;
 
     /**
      * Resolves the generation length limit.
@@ -84,12 +85,11 @@ public class CompletionRequest {
     /**
      * Whether this request should use SSE streaming.
      *
-     * <p>{@code null} is treated as {@code true} (smile default; OpenAI's default
-     * is {@code false}, but existing smile clients expect streaming).
+     * <p>{@code null} is treated as {@code false} (OpenAI default).
      *
      * @return {@code true} for SSE; {@code false} for a single JSON completion.
      */
     public boolean isStream() {
-        return stream == null || stream;
+        return Boolean.TRUE.equals(stream);
     }
 }

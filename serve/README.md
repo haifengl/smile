@@ -638,9 +638,9 @@ POST /api/v1/chat/completions
 Content-Type: application/json
 ```
 
-Tokens are streamed back as Server-Sent Events when `stream` is true
-(the smile default), or returned as a single OpenAI `chat.completion`
-JSON object when `stream` is false. The conversation (user message +
+Tokens are streamed back as Server-Sent Events when `stream` is true,
+or returned as a single OpenAI `chat.completion` JSON object when `stream`
+is false or omitted (OpenAI default). The conversation (user message +
 assistant reply) is automatically persisted to the configured database after
 generation finishes.
 
@@ -657,17 +657,18 @@ generation finishes.
 | `top_p` | `double` | `0.9` | Nucleus-sampling threshold |
 | `logprobs` | `boolean` | `false` | Include log-probabilities |
 | `seed` | `long` | `0` | Random seed (0 = non-deterministic) |
-| `stream` | `boolean` | `true` | `true` → SSE chunks; `false` → single `chat.completion` JSON |
+| `stream` | `boolean` | `false` | `true` → SSE chunks; `false`/omitted → single `chat.completion` JSON |
 
 Each `Message` has a `role` (`system`, `user`, or `assistant`) and `content`.
 
-**Streaming example (`stream` omitted or `true`):**
+**Streaming example (`stream: true`):**
 
 ```shell
 curl -X POST http://localhost:8080/api/v1/chat/completions \
   -H "Content-Type: application/json" \
   -N \
   -d '{
+    "stream": true,
     "messages": [
       {"role": "system",  "content": "You are a helpful assistant."},
       {"role": "user",    "content": "What is the capital of France?"}
@@ -680,13 +681,12 @@ curl -X POST http://localhost:8080/api/v1/chat/completions \
 The response is an SSE stream of OpenAI-shaped `chat.completion.chunk` JSON
 events, terminated by `data: [DONE]`.
 
-**Non-streaming example (`stream: false`):**
+**Non-streaming example (`stream` omitted or `false`):**
 
 ```shell
 curl -X POST http://localhost:8080/api/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "stream": false,
     "messages": [
       {"role": "user", "content": "What is the capital of France?"}
     ],
