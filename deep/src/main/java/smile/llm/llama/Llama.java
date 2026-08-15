@@ -606,10 +606,14 @@ public class Llama {
                         }
                         var completion = Arrays.stream(longArray).mapToInt(x -> (int) x).toArray();
                         try {
-                            var chunk = tokenizer.tryDecode(completion);
-                            publisher.submit(chunk);
-                            chunkPos = curPos + 1;
-                        } catch (Exception ex) {
+                            // Skip special tokens so chat headers/eot are not shown as text.
+                            var chunk = tokenizer.tryDecode(completion, true);
+                            chunkPos = end; // advance only after a successful UTF-8 decode
+                            if (!chunk.isEmpty()) {
+                                publisher.submit(chunk);
+                            }
+                        } catch (java.nio.charset.CharacterCodingException ex) {
+                            // Incomplete multibyte sequence at chunk boundary — wait for more tokens.
                             logger.debug("Cannot decode a chunk", ex);
                         }
                     }

@@ -19,7 +19,7 @@ package smile.chat;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Flow;
 import java.util.concurrent.SubmissionPublisher;
 import java.util.concurrent.atomic.AtomicBoolean;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -35,7 +35,6 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import io.smallrye.mutiny.Multi;
-import io.smallrye.mutiny.Uni;
 import io.vertx.ext.web.RoutingContext;
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.jboss.resteasy.reactive.RestStreamElementType;
@@ -78,6 +77,10 @@ public class ChatCompletionResource {
      * payload is a JSON {@code ChatCompletionChunk} object. The final data
      * event is the literal string {@code [DONE]}.
      *
+     * <p>Generation starts only after the returned {@link Multi} is subscribed
+     * (i.e. after the SSE response is opened), so token chunks are not dropped
+     * by {@link SubmissionPublisher} before a subscriber exists.
+     *
      * @param headers HTTP request headers (used to capture client metadata).
      * @param request the completion request containing the message history
      *                and generation parameters.
@@ -100,50 +103,84 @@ public class ChatCompletionResource {
         String id = "chatcmpl-" + UUID.randomUUID().toString().replace("-", "");
         long created = Instant.now().getEpochSecond();
         String modelName = service.modelName();
-        AtomicBoolean isFirst = new AtomicBoolean(true);
 
-        SubmissionPublisher<String> publisher = new SubmissionPublisher<>();
-        // Completed with the ChatCompletion[] result as soon as the model finishes
-        // generating (before saveConversation), so the finish-reason chunk can be
-        // emitted without waiting for the DB write.
-        CompletableFuture<ChatCompletion[]> future = new CompletableFuture<>();
+        // Emitter runs on subscription — subscribe the publisher before generate().
+        return Multi.createFrom().emitter(emitter -> {
+            AtomicBoolean isFirst = new AtomicBoolean(true);
+            SubmissionPublisher<String> publisher = new SubmissionPublisher<>();
 
-        executor.supplyAsync(() -> {
-            var completions = service.complete(request, publisher);
-            future.complete(completions);
-            if (completions != null) {
-                saveConversation(conversation, request, completions);
-            }
-            return completions;
-        });
+            publisher.subscribe(new Flow.Subscriber<>() {
+                @Override
+                public void onSubscribe(Flow.Subscription subscription) {
+                    subscription.request(Long.MAX_VALUE);
+                }
 
-        // Map each raw token chunk to an OpenAI-format JSON string.
-        Multi<String> tokenStream = Multi.createFrom()
-                .publisher(publisher)
-                .map(chunk -> {
+                @Override
+                public void onNext(String chunk) {
+                    if (emitter.isCancelled()) {
+                        publisher.close();
+                        return;
+                    }
                     boolean first = isFirst.compareAndSet(true, false);
                     var delta = first
                             ? new ChatCompletionChunk.Delta("assistant", chunk)
                             : new ChatCompletionChunk.Delta(null, chunk);
                     var choice = new ChatCompletionChunk.Choice(0, delta, null, null);
                     var event = new ChatCompletionChunk(id, "chat.completion.chunk", created, modelName, List.of(choice));
-                    return toJson(event);
-                });
+                    emitter.emit(toJson(event));
+                }
 
-        // After the token stream completes, emit the finish-reason chunk and [DONE].
-        Multi<String> finishStream = Uni.createFrom()
-                .completionStage(future)
-                .onItem().transformToMulti(completions -> {
+                @Override
+                public void onError(Throwable throwable) {
+                    if (!emitter.isCancelled()) {
+                        emitter.fail(throwable);
+                    }
+                }
+
+                @Override
+                public void onComplete() {
+                    // Publisher closes at end of generate(); finish chunk is emitted from the worker.
+                }
+            });
+
+            emitter.onTermination(() -> {
+                try {
+                    publisher.close();
+                } catch (Exception ignored) {
+                    // already closed
+                }
+            });
+
+            executor.supplyAsync(() -> {
+                ChatCompletion[] completions = null;
+                try {
+                    completions = service.complete(request, publisher);
                     FinishReason reason = (completions != null && completions.length > 0)
                             ? completions[0].reason()
                             : FinishReason.stop;
-                    var delta = new ChatCompletionChunk.Delta(null, null);
-                    var choice = new ChatCompletionChunk.Choice(0, delta, null, reason);
-                    var event = new ChatCompletionChunk(id, "chat.completion.chunk", created, modelName, List.of(choice));
-                    return Multi.createFrom().items(toJson(event), "[DONE]");
-                });
-
-        return Multi.createBy().concatenating().streams(tokenStream, finishStream);
+                    if (!emitter.isCancelled()) {
+                        var delta = new ChatCompletionChunk.Delta(null, null);
+                        var choice = new ChatCompletionChunk.Choice(0, delta, null, reason);
+                        var event = new ChatCompletionChunk(id, "chat.completion.chunk", created, modelName, List.of(choice));
+                        emitter.emit(toJson(event));
+                        emitter.emit("[DONE]");
+                        emitter.complete();
+                    }
+                    if (completions != null) {
+                        saveConversation(conversation, request, completions);
+                    }
+                    return completions;
+                } catch (Throwable t) {
+                    if (!publisher.isClosed()) {
+                        publisher.close();
+                    }
+                    if (!emitter.isCancelled()) {
+                        emitter.fail(t);
+                    }
+                    return completions;
+                }
+            });
+        });
     }
 
     /**
