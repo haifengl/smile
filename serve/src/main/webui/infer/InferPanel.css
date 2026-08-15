@@ -102,13 +102,25 @@
 }
 
 .infer-btn-primary {
-  background: #1e1e2f;
-  border-color: #1e1e2f;
+  background: #0066ff;
+  border-color: #0066ff;
   color: #fff;
 }
 
 .infer-btn-primary:hover:not(:disabled) {
-  background: #2e2e4f;
+  background: #0052cc;
+  border-color: #0052cc;
+}
+
+/* Match RJSF Submit sizing so Run aligns with Submit. */
+.infer-inputs .rjsf button[type="submit"],
+.infer-batch-actions .infer-btn-primary {
+  box-sizing: border-box;
+  min-width: 6.5em;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  border-radius: 8px;
 }
 
 .infer-error {
@@ -151,14 +163,16 @@
   font-size: 12px;
 }
 
-.infer-results-scroll {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  padding: 12px;
+.infer-results-actions {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.infer-results-actions .infer-btn {
+  padding: 6px 10px;
+  font-size: 12px;
 }
 
 .infer-results-empty {
@@ -169,51 +183,124 @@
   font-size: 14px;
 }
 
-.infer-result-card {
+.infer-table-header-wrap {
   background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  padding: 10px 12px;
-  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  border-bottom: 1px solid #e5e7eb;
+  overflow: hidden;
 }
 
-.infer-result-meta {
-  display: flex;
-  align-items: center;
-  margin-bottom: 6px;
-}
-
-.infer-result-badge {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: #4338ca;
-  background: #eef2ff;
-  border-radius: 999px;
-  padding: 2px 8px;
-}
-
-.infer-result-body {
-  margin: 0;
-  padding: 10px 12px;
-  background: #0f172a;
-  color: #e2e8f0;
-  border-radius: 8px;
-  font-size: 12.5px;
-  line-height: 1.45;
+.infer-table-scroll {
+  flex: 1;
+  min-height: 0;
   overflow: auto;
-  white-space: pre-wrap;
-  word-break: break-word;
+  background: #fff;
+}
+
+.infer-table-spacer {
+  position: relative;
+  width: 100%;
+}
+
+.infer-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 12.5px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
     "Liberation Mono", "Courier New", monospace;
 }
 
-.infer-streaming-indicator {
-  text-align: center;
-  font-size: 13px;
-  color: #6b7280;
-  padding: 8px;
+.infer-table-header {
+  background: #f1f5f9;
+}
+
+.infer-table-body {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  will-change: transform;
+}
+
+.infer-table th,
+.infer-table td {
+  padding: 0 10px;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid #eef2f7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #0f172a;
+}
+
+.infer-table th {
+  height: 32px;
+  font-weight: 600;
+  color: #475569;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.infer-col-index {
+  width: 56px;
+}
+
+.infer-table td.infer-col-index,
+.infer-table th.infer-col-index,
+.infer-table .infer-col-index {
+  width: 56px;
+  color: #94a3b8;
+  font-variant-numeric: tabular-nums;
+}
+
+.infer-row-expandable {
+  cursor: pointer;
+}
+
+.infer-row-expandable:hover {
+  background: #f8fafc;
+}
+
+.infer-row-error td {
+  color: #b00020;
+  background: #fef2f2;
+}
+
+.infer-row-detail {
+  border-top: 1px solid #e5e7eb;
+  background: #0f172a;
+  color: #e2e8f0;
+  max-height: 160px;
+  overflow: auto;
+}
+
+.infer-row-detail-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.infer-row-detail-title .infer-btn {
+  padding: 4px 8px;
+  font-size: 11px;
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+.infer-row-detail pre {
+  margin: 0;
+  padding: 8px 12px 12px;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .onnx-form .model-meta h2 {
