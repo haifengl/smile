@@ -25,7 +25,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import tools.jackson.databind.JsonNode;
@@ -45,56 +47,7 @@ import tools.jackson.databind.node.ObjectNode;
  */
 public record SafeTensors(Map<String, Tensor> tensors, Map<String, String> metadata) {
     /**
-     * Reads a safetensors file from disk.
-     *
-     * <p>The binary format consists of three sections:
-     * <ol>
-     *   <li>An 8-byte little-endian {@code uint64} specifying the byte length N of
-     *       the JSON header.</li>
-     *   <li>N bytes of UTF-8 JSON. Each key names a tensor and its value is an object
-     *       with three fields:
-     *       <ul>
-     *         <li>{@code "dtype"} &mdash; dtype string (see table below).</li>
-     *         <li>{@code "shape"} &mdash; JSON array of dimension sizes.</li>
-     *         <li>{@code "data_offsets"} &mdash; {@code [start, end]} byte range within
-     *             the data region (start inclusive, end exclusive).</li>
-     *       </ul>
-     *       The reserved key {@code "__metadata__"} holds a string-to-string object
-     *       that populates {@link #metadata()}.
-     *   </li>
-     *   <li>The raw tensor data, stored in little-endian byte order.</li>
-     * </ol>
-     *
-     * <p><b>Dtype mapping</b>
-     * <table>
-     *   <caption>Safetensors dtype string to {@link ScalarType}</caption>
-     *   <tr><th>Safetensors dtype</th><th>ScalarType</th><th>Notes</th></tr>
-     *   <tr><td>BOOL</td><td>{@link ScalarType#Bool}</td><td></td></tr>
-     *   <tr><td>I8</td><td>{@link ScalarType#Int8}</td><td></td></tr>
-     *   <tr><td>U8</td><td>{@link ScalarType#UInt8}</td><td></td></tr>
-     *   <tr><td>I16</td><td>{@link ScalarType#Int16}</td><td></td></tr>
-     *   <tr><td>U16</td><td>{@link ScalarType#UInt16}</td><td></td></tr>
-     *   <tr><td>I32</td><td>{@link ScalarType#Int32}</td><td></td></tr>
-     *   <tr><td>U32</td><td>{@link ScalarType#UInt32}</td><td></td></tr>
-     *   <tr><td>I64</td><td>{@link ScalarType#Int64}</td><td></td></tr>
-     *   <tr><td>U64</td><td>{@link ScalarType#UInt64}</td><td></td></tr>
-     *   <tr><td>F16</td><td>{@link ScalarType#Half}</td>
-     *       <td>Raw half-precision bits are widened to {@code float32} via
-     *           {@link Float#float16ToFloat} and the tensor is re-narrowed to
-     *           {@link ScalarType#Half}; lossless.</td></tr>
-     *   <tr><td>BF16</td><td>{@link ScalarType#BFloat16}</td>
-     *       <td>The 16 raw bits are placed in the upper half of a {@code float32}
-     *           word (lower 16 bits zeroed) and the tensor is re-narrowed to
-     *           {@link ScalarType#BFloat16}; lossless.</td></tr>
-     *   <tr><td>F32</td><td>{@link ScalarType#Float}</td><td></td></tr>
-     *   <tr><td>F64</td><td>{@link ScalarType#Double}</td><td></td></tr>
-     *   <tr><td>F8_E4M3</td><td>{@link ScalarType#Float8e4m3fn}</td>
-     *       <td>Decoded from the E4M3FN format: 1 sign, 4 exponent (bias 7),
-     *           3 mantissa bits. No infinities; {@code 0x7F} encodes NaN.</td></tr>
-     *   <tr><td>F8_E5M2</td><td>{@link ScalarType#Float8e5m2}</td>
-     *       <td>Decoded from the E5M2 format: 1 sign, 5 exponent (bias 15),
-     *           2 mantissa bits. Supports infinities and NaN (IEEE-like).</td></tr>
-     * </table>
+     * Reads a safetensors file from disk, materialising every tensor.
      *
      * @param path the file path to read.
      * @param device the device on which to store the loaded tensors.
@@ -102,64 +55,153 @@ public record SafeTensors(Map<String, Tensor> tensors, Map<String, String> metad
      * @throws IOException if an I/O error occurs.
      */
     public static SafeTensors read(String path, Device device) throws IOException {
+        return read(path, device, null);
+    }
+
+    /**
+     * Reads selected tensors from a safetensors file.
+     *
+     * <p>Each tensor is loaded with a positioned {@link FileChannel#read} of its
+     * {@code data_offsets} range. The data region is <em>not</em> memory-mapped as
+     * a whole, so shards larger than {@link Integer#MAX_VALUE} bytes (common for
+     * multi-gigabyte LLM checkpoints) load correctly. Individual tensors must still
+     * fit in a Java {@link ByteBuffer} ({@code ≤ Integer.MAX_VALUE} bytes).
+     *
+     * @param path the file path to read.
+     * @param device the device on which to store the loaded tensors.
+     * @param include when non-{@code null}, only tensors whose names are in this
+     *                collection are materialised; {@code null} loads all tensors.
+     * @return the parsed safetensors subset (metadata is always populated).
+     * @throws IOException if an I/O error occurs.
+     */
+    public static SafeTensors read(String path, Device device, Collection<String> include)
+            throws IOException {
         try (RandomAccessFile file = new RandomAccessFile(path, "r");
              FileChannel channel = file.getChannel()) {
 
-            // 1. Read the 8-byte header length (little-endian).
-            ByteBuffer lengthBuffer = ByteBuffer.allocate(8);
-            lengthBuffer.order(ByteOrder.LITTLE_ENDIAN);
-            channel.read(lengthBuffer);
-            lengthBuffer.flip();
-            long headerLength = lengthBuffer.getLong();
-
-            // 2. Read the JSON header.
-            ByteBuffer headerBuffer = ByteBuffer.allocate((int) headerLength);
-            channel.read(headerBuffer);
-            headerBuffer.flip();
-            String jsonHeader = StandardCharsets.UTF_8.decode(headerBuffer).toString();
-
-            // 3. Memory-map the tensor data region for zero-copy performance.
-            long dataStartOffset = 8 + headerLength;
-            long dataLength = channel.size() - dataStartOffset;
-            java.nio.MappedByteBuffer dataBuffer = channel.map(
-                    FileChannel.MapMode.READ_ONLY, dataStartOffset, dataLength
-            );
-            dataBuffer.order(ByteOrder.LITTLE_ENDIAN);
-
-            // 4. Parse the JSON header and materialise each tensor.
-            JsonNode root = new ObjectMapper().readTree(jsonHeader);
+            Header header = readHeader(channel);
             Map<String, Tensor> tensors = new HashMap<>();
-            Map<String, String> metadata = new HashMap<>();
-            for (var entry : root.properties()) {
+            for (var entry : header.tensors.entrySet()) {
                 String name = entry.getKey();
-                JsonNode node = entry.getValue();
-
-                if (name.equals("__metadata__")) {
-                    for (var meta : node.properties()) {
-                        metadata.put(meta.getKey(), meta.getValue().asString());
-                    }
+                if (include != null && !include.contains(name)) {
                     continue;
                 }
-
-                String dtype = node.get("dtype").asString();
-                JsonNode shapeNode = node.get("shape");
-                long[] shape = new long[shapeNode.size()];
-                for (int i = 0; i < shape.length; i++) {
-                    shape[i] = shapeNode.get(i).asLong();
-                }
-
-                JsonNode offsets = node.get("data_offsets");
-                long begin = offsets.get(0).asLong();
-                long end = offsets.get(1).asLong();
-                int length = (int) (end - begin);
-                ByteBuffer bytes = dataBuffer.slice((int) begin, length).order(ByteOrder.LITTLE_ENDIAN);
-
-                tensors.put(name, toTensor(dtype, bytes, length, shape, device));
+                TensorInfo info = entry.getValue();
+                ByteBuffer bytes = readRange(channel, header.dataStartOffset + info.begin, info.end - info.begin);
+                tensors.put(name, toTensor(info.dtype, bytes, bytes.remaining(), info.shape, device));
             }
-
-            return new SafeTensors(tensors, metadata);
+            return new SafeTensors(tensors, header.metadata);
         }
     }
+
+    /**
+     * Returns the tensor names declared in a safetensors header without loading
+     * any tensor data. Suitable for building a weight map from a single large
+     * checkpoint file.
+     *
+     * @param path the safetensors file path.
+     * @return tensor names in header order (excluding {@code __metadata__}).
+     * @throws IOException if an I/O error occurs.
+     */
+    public static List<String> listTensors(String path) throws IOException {
+        try (RandomAccessFile file = new RandomAccessFile(path, "r");
+             FileChannel channel = file.getChannel()) {
+            return new ArrayList<>(readHeader(channel).tensors.keySet());
+        }
+    }
+
+    /**
+     * Parses the safetensors JSON header and returns tensor descriptors without
+     * reading the data region.
+     */
+    private static Header readHeader(FileChannel channel) throws IOException {
+        // 1. Read the 8-byte header length (little-endian).
+        ByteBuffer lengthBuffer = ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN);
+        readFully(channel, lengthBuffer, 0);
+        lengthBuffer.flip();
+        long headerLength = lengthBuffer.getLong();
+        if (headerLength < 0 || headerLength > Integer.MAX_VALUE) {
+            throw new IOException("Invalid safetensors header length: " + headerLength);
+        }
+
+        // 2. Read the JSON header.
+        ByteBuffer headerBuffer = ByteBuffer.allocate((int) headerLength).order(ByteOrder.LITTLE_ENDIAN);
+        readFully(channel, headerBuffer, 8);
+        headerBuffer.flip();
+        String jsonHeader = StandardCharsets.UTF_8.decode(headerBuffer).toString();
+
+        long dataStartOffset = 8 + headerLength;
+        JsonNode root = new ObjectMapper().readTree(jsonHeader);
+        Map<String, TensorInfo> tensors = new LinkedHashMap<>();
+        Map<String, String> metadata = new HashMap<>();
+        for (var entry : root.properties()) {
+            String name = entry.getKey();
+            JsonNode node = entry.getValue();
+
+            if (name.equals("__metadata__")) {
+                for (var meta : node.properties()) {
+                    metadata.put(meta.getKey(), meta.getValue().asString());
+                }
+                continue;
+            }
+
+            String dtype = node.get("dtype").asString();
+            JsonNode shapeNode = node.get("shape");
+            long[] shape = new long[shapeNode.size()];
+            for (int i = 0; i < shape.length; i++) {
+                shape[i] = shapeNode.get(i).asLong();
+            }
+
+            JsonNode offsets = node.get("data_offsets");
+            long begin = offsets.get(0).asLong();
+            long end = offsets.get(1).asLong();
+            if (begin < 0 || end < begin) {
+                throw new IOException("Invalid data_offsets for tensor '" + name + "': [" + begin + ", " + end + "]");
+            }
+            tensors.put(name, new TensorInfo(dtype, shape, begin, end));
+        }
+        return new Header(dataStartOffset, tensors, metadata);
+    }
+
+    /**
+     * Reads {@code length} bytes starting at absolute file {@code position}
+     * into a little-endian heap buffer.
+     */
+    private static ByteBuffer readRange(FileChannel channel, long position, long length)
+            throws IOException {
+        if (length < 0) {
+            throw new IOException("Negative safetensors data length: " + length);
+        }
+        if (length > Integer.MAX_VALUE) {
+            throw new IOException(
+                    "Tensor data block exceeds Integer.MAX_VALUE bytes (" + length + ")");
+        }
+        ByteBuffer buf = ByteBuffer.allocate((int) length).order(ByteOrder.LITTLE_ENDIAN);
+        readFully(channel, buf, position);
+        buf.flip();
+        return buf;
+    }
+
+    /** Fills {@code buf} by reading from {@code channel} at {@code position}. */
+    private static void readFully(FileChannel channel, ByteBuffer buf, long position)
+            throws IOException {
+        long pos = position;
+        while (buf.hasRemaining()) {
+            int n = channel.read(buf, pos);
+            if (n < 0) {
+                throw new IOException("Unexpected EOF reading safetensors at offset " + pos);
+            }
+            pos += n;
+        }
+    }
+
+    /** Header + per-tensor descriptors (offsets relative to the data region). */
+    private record Header(long dataStartOffset,
+                          Map<String, TensorInfo> tensors,
+                          Map<String, String> metadata) {}
+
+    /** Descriptor for one tensor in the safetensors header. */
+    private record TensorInfo(String dtype, long[] shape, long begin, long end) {}
 
     /**
      * Writes this {@code SafeTensors} object to a file.

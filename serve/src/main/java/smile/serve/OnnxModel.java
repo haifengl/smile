@@ -23,6 +23,7 @@ import java.util.Map;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import jakarta.ws.rs.BadRequestException;
+import smile.chat.OnnxModelDetails;
 import smile.onnx.ElementType;
 import smile.onnx.InferenceSession;
 import smile.onnx.NodeInfo;
@@ -123,6 +124,15 @@ public class OnnxModel implements AutoCloseable {
      */
     public OnnxModelInfo info() {
         return info;
+    }
+
+    /**
+     * Returns rich ONNX details for {@code GET /models/{id}}.
+     *
+     * @return onnx details including producer/domain and I/O shapes.
+     */
+    public OnnxModelDetails details() {
+        return OnnxModelDetails.of(session.metadata(), info);
     }
 
     // -----------------------------------------------------------------------

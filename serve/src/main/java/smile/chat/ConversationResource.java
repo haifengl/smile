@@ -16,24 +16,35 @@
  */
 package smile.chat;
 
+import java.util.HashMap;
 import java.util.List;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.ws.rs.*;
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;
 import io.smallrye.common.annotation.RunOnVirtualThread;
 import io.vertx.ext.web.RoutingContext;
 
 /**
- * REST resource exposing CRUD operations on persisted {@link Conversation}
- * records at {@code /api/v1/conversations}.
+ * REST resource for conversations at {@code /api/v1/conversations}.
  *
- * <p>All methods run on virtual threads to avoid blocking the event loop.
+ * <p>Create, retrieve, update, and delete follow the
+ * <a href="https://developers.openai.com/api/reference/resources/conversations">OpenAI
+ * Conversations API</a> shapes. {@link #list} is a smile extension (OpenAI has
+ * no list endpoint).
  *
  * @author Haifeng Li
  */
@@ -47,80 +58,143 @@ public class ConversationResource {
     RoutingContext routingContext;
 
     /**
-     * Lists conversations in reverse chronological order.
+     * Lists conversations in reverse chronological order (smile extension).
      *
      * @param pageIndex zero-based page index (default {@code 0}).
      * @param pageSize  number of records per page (default {@code 25}).
-     * @return a page of conversations.
+     * @return a page of OpenAI-shaped conversation objects.
      */
     @GET
-    public List<Conversation> list(@QueryParam("pageIndex") @DefaultValue("0") int pageIndex,
-                                   @QueryParam("pageSize") @DefaultValue("25") int pageSize) {
+    public List<ConversationObject> list(@QueryParam("pageIndex") @DefaultValue("0") int pageIndex,
+                                         @QueryParam("pageSize") @DefaultValue("25") int pageSize) {
         return Conversation.findAll(Sort.by("createdAt").descending())
                 .page(Page.of(pageIndex, pageSize))
-                .list();
+                .<Conversation>list()
+                .stream()
+                .map(ConversationObject::from)
+                .toList();
     }
 
     /**
-     * Returns the conversation with the given ID.
+     * Retrieves a conversation ({@code GET /conversations/{conversation_id}}).
      *
-     * @param id the conversation ID.
-     * @return the conversation, or HTTP 404 if not found.
+     * @param conversationId external conversation id.
+     * @return the conversation object.
      */
     @GET
-    @Path("/{id}")
-    public Response get(@PathParam("id") Long id) {
-        Conversation c = Conversation.findById(id);
-        if (c == null) return Response.status(Response.Status.NOT_FOUND).build();
-        return Response.ok(c).build();
+    @Path("/{conversation_id}")
+    public ConversationObject get(@PathParam("conversation_id") String conversationId) {
+        return ConversationObject.from(ConversationIds.findRequired(conversationId));
     }
 
     /**
-     * Creates a new conversation record.
+     * Creates a conversation ({@code POST /conversations}).
      *
-     * @param headers      HTTP request headers (for client metadata capture).
-     * @param conversation the conversation to persist.
-     * @return HTTP 201 with the created entity.
+     * @param headers HTTP headers (client IP / user-agent capture).
+     * @param request optional body with {@code metadata} and {@code items}.
+     * @return the created conversation object.
      */
     @POST
     @Transactional
-    public Response create(@Context HttpHeaders headers, Conversation conversation) {
+    public ConversationObject create(@Context HttpHeaders headers, CreateConversationRequest request) {
+        if (request == null) {
+            request = new CreateConversationRequest();
+        }
+        ConversationIds.validateMetadata(request.metadata);
+        if (request.items != null && request.items.size() > 20) {
+            throw new BadRequestException("items may contain at most 20 entries");
+        }
+
+        Conversation conversation = new Conversation();
         conversation.setContext(routingContext, headers);
+        if (request.metadata != null) {
+            conversation.metadata = new HashMap<>(request.metadata);
+        }
         conversation.persist();
-        return Response.status(Response.Status.CREATED).entity(conversation).build();
+
+        if (request.items != null) {
+            for (ConversationItemInput item : request.items) {
+                persistInputItem(conversation.id, item);
+            }
+        }
+        return ConversationObject.from(conversation);
     }
 
     /**
-     * Deletes the conversation with the given ID.
+     * Updates conversation metadata ({@code POST /conversations/{conversation_id}}).
      *
-     * @param id the conversation ID.
-     * @return HTTP 204 on success, HTTP 404 if not found.
+     * @param conversationId external conversation id.
+     * @param request        body containing replacement {@code metadata}.
+     * @return the updated conversation object.
+     */
+    @POST
+    @Path("/{conversation_id}")
+    @Transactional
+    public ConversationObject update(@PathParam("conversation_id") String conversationId,
+                                     UpdateConversationRequest request) {
+        Conversation conversation = ConversationIds.findRequired(conversationId);
+        if (request != null && request.metadata != null) {
+            ConversationIds.validateMetadata(request.metadata);
+            conversation.metadata = new HashMap<>(request.metadata);
+        }
+        return ConversationObject.from(conversation);
+    }
+
+    /**
+     * Deletes a conversation ({@code DELETE /conversations/{conversation_id}}).
+     *
+     * <p>Matching {@link ConversationItem} rows are removed as well so the
+     * local database stays consistent (OpenAI keeps remote items; smile does not).
+     *
+     * @param conversationId external conversation id.
+     * @return OpenAI-compatible deleted resource acknowledgement.
      */
     @DELETE
-    @Path("/{id}")
+    @Path("/{conversation_id}")
     @Transactional
-    public Response delete(@PathParam("id") Long id) {
-        boolean deleted = Conversation.deleteById(id);
-        return deleted
-                ? Response.noContent().build()
-                : Response.status(Response.Status.NOT_FOUND).build();
+    public ConversationDeleted delete(@PathParam("conversation_id") String conversationId) {
+        Conversation conversation = ConversationIds.findRequired(conversationId);
+        String externalId = ConversationIds.toExternalId(conversation.id);
+        ConversationItem.delete("conversationId", conversation.id);
+        conversation.delete();
+        return ConversationDeleted.of(externalId);
     }
 
     /**
-     * Returns the message turns belonging to a conversation.
+     * Returns message turns for a conversation (smile extension; not the OpenAI
+     * items API).
      *
-     * @param id        the conversation ID.
-     * @param pageIndex zero-based page index (default {@code 0}).
-     * @param pageSize  number of items per page (default {@code 25}).
+     * @param conversationId external conversation id.
+     * @param pageIndex      zero-based page index (default {@code 0}).
+     * @param pageSize       number of items per page (default {@code 25}).
      * @return a page of conversation items in chronological order.
      */
     @GET
-    @Path("/{id}/items")
-    public List<ConversationItem> getItems(@PathParam("id") Long id,
+    @Path("/{conversation_id}/items")
+    public List<ConversationItem> getItems(@PathParam("conversation_id") String conversationId,
                                            @QueryParam("pageIndex") @DefaultValue("0") int pageIndex,
                                            @QueryParam("pageSize") @DefaultValue("25") int pageSize) {
-        return ConversationItem.find("conversationId", Sort.by("createdAt"), id)
+        Conversation conversation = ConversationIds.findRequired(conversationId);
+        return ConversationItem.find("conversationId", Sort.by("createdAt"), conversation.id)
                 .page(Page.of(pageIndex, pageSize))
                 .list();
+    }
+
+    /**
+     * Persists a create-time input item when it has a role and extractable text.
+     */
+    private static void persistInputItem(long conversationId, ConversationItemInput item) {
+        if (item == null || item.role == null || item.role.isBlank()) {
+            return;
+        }
+        String text = item.contentText();
+        if (text == null) {
+            return;
+        }
+        ConversationItem row = new ConversationItem();
+        row.conversationId = conversationId;
+        row.role = item.role;
+        row.content = text;
+        row.persist();
     }
 }

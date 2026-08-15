@@ -47,7 +47,12 @@ import smile.util.AutoScope;
  */
 public class Llama {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Llama.class);
-    /** The model family name. */
+    /**
+     * Architecture family label for this implementation.
+     * Not the public chat API model id — serve uses {@code smile.chat.model}
+     * (HF repo id or directory name) so non-Llama models are not forced under
+     * a Meta prefix.
+     */
     static final String family = "meta/llama3";
     /** Matches HuggingFace layer weight names such as {@code model.layers.12.self_attn.q_proj.weight}. */
     private static final Pattern HF_LAYER_WEIGHT = Pattern.compile(
@@ -82,6 +87,15 @@ public class Llama {
      */
     public String family() {
         return family;
+    }
+
+    /**
+     * Returns the transformer hyperparameters loaded from the checkpoint.
+     *
+     * @return model args from {@code config.json} / {@code params.json}.
+     */
+    public ModelArgs params() {
+        return model.params();
     }
 
     /**
@@ -184,8 +198,14 @@ public class Llama {
             throw new IllegalStateException("Tokenizer and ModelArgs have different vocabulary size.");
         }
 
-        var model = new Transformer(modelArgs, device);
-        model.eval();
+        // When a static memory fraction is configured, use a tiny CPU placeholder
+        // pool during weight load, then replace it with a GPU pool sized from
+        // residual free memory. Avoids allocating a full maxBatch×maxSeqLen CUDA
+        // bootstrap cache (and related empty-tensor pitfalls) before weights load.
+        KvCachePool bootstrap = memFractionStatic > 0
+                ? KvCachePool.bootstrap(modelArgs)
+                : KvCachePool.forTesting(modelArgs, device);
+        var model = new Transformer(modelArgs, device, bootstrap);
 
         if (huggingFace) {
             loadHuggingFaceWeights(model, dir, device);
@@ -202,10 +222,9 @@ public class Llama {
             Collections.sort(checkpoints);
             model.load(checkpoints.get(rank));
         }
+        model.eval();
 
         // Size the shared KV cache from residual free memory after weights load.
-        // Release the bootstrap (test-sized) pool first so the free-memory
-        // reading is not reduced by its buffers.
         if (memFractionStatic > 0) {
             model.kvCachePool().close();
             device.emptyCache();
@@ -285,7 +304,9 @@ public class Llama {
             String shardFile = shardEntry.getKey();
             Path shardPath = Path.of(dir.getPath(), shardFile);
             logger.info("Loading safetensors shard: {}", shardFile);
-            SafeTensors st = SafeTensors.read(shardPath.toString(), device);
+            // Load only the tensors declared for this shard — avoids mapping
+            // multi-gigabyte files that exceed MappedByteBuffer's 2 GiB limit.
+            SafeTensors st = SafeTensors.read(shardPath.toString(), device, shardEntry.getValue());
             try {
                 Map<String, Tensor> stateDict = new HashMap<>();
                 List<Tensor> owned = new ArrayList<>();
@@ -367,19 +388,14 @@ public class Llama {
                     "Multiple safetensors files found but no model.safetensors.index.json in " + dir);
         }
 
-        // Single-file checkpoint: discover tensor names from the file header.
-        SafeTensors st = SafeTensors.read(Path.of(dir.getPath(), shards.getFirst()).toString(), Device.CPU());
-        try {
-            Map<String, String> map = new LinkedHashMap<>();
-            for (String name : st.tensors().keySet()) {
-                map.put(name, shards.getFirst());
-            }
-            return map;
-        } finally {
-            for (Tensor t : st.tensors().values()) {
-                t.close();
-            }
+        // Single-file checkpoint: discover tensor names from the file header
+        // without materialising multi-gigabyte weight data.
+        String shard = shards.getFirst();
+        Map<String, String> map = new LinkedHashMap<>();
+        for (String name : SafeTensors.listTensors(Path.of(dir.getPath(), shard).toString())) {
+            map.put(name, shard);
         }
+        return map;
     }
 
     /**
@@ -604,10 +620,14 @@ public class Llama {
                         }
                         var completion = Arrays.stream(longArray).mapToInt(x -> (int) x).toArray();
                         try {
-                            var chunk = tokenizer.tryDecode(completion);
-                            publisher.submit(chunk);
-                            chunkPos = curPos + 1;
-                        } catch (Exception ex) {
+                            // Skip special tokens so chat headers/eot are not shown as text.
+                            var chunk = tokenizer.tryDecode(completion, true);
+                            chunkPos = end; // advance only after a successful UTF-8 decode
+                            if (!chunk.isEmpty()) {
+                                publisher.submit(chunk);
+                            }
+                        } catch (java.nio.charset.CharacterCodingException ex) {
+                            // Incomplete multibyte sequence at chunk boundary — wait for more tokens.
                             logger.debug("Cannot decode a chunk", ex);
                         }
                     }

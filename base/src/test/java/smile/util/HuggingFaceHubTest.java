@@ -528,6 +528,41 @@ public class HuggingFaceHubTest {
     // -----------------------------------------------------------------------
 
     /**
+     * Nested snapshot files need an extra {@code ../} versus root-level files
+     * when linking into {@code blobs/}.
+     */
+    @Test
+    public void testRelativeBlobTarget_nestedVsRoot() throws Exception {
+        Path cacheDir = Files.createTempDirectory("smile-hf-rel-");
+        try {
+            Path blobsDir = cacheDir.resolve("blobs");
+            Path snapshotDir = cacheDir.resolve("snapshots").resolve("abc123");
+            Files.createDirectories(blobsDir);
+            Files.createDirectories(snapshotDir.resolve("original"));
+
+            Path blob = blobsDir.resolve("deadbeef");
+            Files.writeString(blob, "tok");
+
+            Path rootLink = snapshotDir.resolve("tokenizer.model");
+            Path nestedLink = snapshotDir.resolve("original").resolve("tokenizer.model");
+
+            assertEquals(Path.of("../../blobs/deadbeef"),
+                    HuggingFaceHub.relativeBlobTarget(rootLink, blob));
+            assertEquals(Path.of("../../../blobs/deadbeef"),
+                    HuggingFaceHub.relativeBlobTarget(nestedLink, blob));
+
+            // Simulate the old bug (target rooted at snapshotDir), then confirm
+            // the corrected relative target resolves to the blob.
+            Files.createSymbolicLink(nestedLink,
+                    HuggingFaceHub.relativeBlobTarget(nestedLink, blob));
+            assertTrue(Files.isRegularFile(nestedLink));
+            assertEquals("tok", Files.readString(nestedLink));
+        } finally {
+            deleteRecursively(cacheDir);
+        }
+    }
+
+    /**
      * Plain ASCII filename — must pass through unchanged.
      */
     @Test

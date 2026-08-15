@@ -9,9 +9,9 @@ that brings together three complementary inference capabilities on the JVM:
 
 | Capability | API prefix | Description                                                    |
 |---|---|----------------------------------------------------------------|
-| **Classic ML** | `/api/v1/models` | Serialized SMILE models (`.sml`) — classifiers and regressors |
+| **Classic ML** | `/api/v1/ml/models` | Serialized SMILE models (`.sml`) — classifiers and regressors |
 | **ONNX Runtime** | `/api/v1/onnx` | Any model in the ONNX open format (`.onnx`)                    |
-| **LLM Chat** | `/api/v1/chat` | Llama 3 chat completions with conversation persistence         |
+| **LLM Chat** | `/api/v1/chat`, `/api/v1/models` | OpenAI-compatible chat completions and model list/retrieve |
 
 A React-based web UI is bundled and served from the same process.
 
@@ -28,21 +28,21 @@ A React-based web UI is bundled and served from the same process.
 3. [Configuration Reference](#3-configuration-reference)
 4. [Classic ML Inference API](#4-classic-ml-inference-api)
    - [Model Format](#41-model-format)
-   - [List Models](#42-list-models)
-   - [Get Model Metadata](#43-get-model-metadata)
-   - [Single Inference (JSON)](#44-single-inference-json)
-   - [Streaming Inference (CSV / JSON-lines)](#45-streaming-inference-csv--json-lines)
-   - [Model IDs](#46-model-ids)
+   - [Get Model Metadata](#42-get-model-metadata)
+   - [Single Inference (JSON)](#43-single-inference-json)
+   - [Streaming Inference (CSV / JSON-lines)](#44-streaming-inference-csv--json-lines)
+   - [Model IDs](#45-model-ids)
 5. [ONNX Inference API](#5-onnx-inference-api)
    - [Model Format](#51-model-format)
-   - [List ONNX Models](#52-list-onnx-models)
-   - [Get ONNX Model Info](#53-get-onnx-model-info)
-   - [Single Inference (JSON)](#54-single-inference-json)
-   - [Streaming Inference](#55-streaming-inference)
-   - [Tensor Types and Shape Resolution](#56-tensor-types-and-shape-resolution)
+   - [Get ONNX Model Info](#52-get-onnx-model-info)
+   - [Single Inference (JSON)](#53-single-inference-json)
+   - [Streaming Inference](#54-streaming-inference)
+   - [Tensor Types and Shape Resolution](#55-tensor-types-and-shape-resolution)
 6. [LLM Chat API](#6-llm-chat-api)
-   - [Chat Completions](#61-chat-completions)
-   - [Conversation History API](#62-conversation-history-api)
+   - [List models](#61-list-models)
+   - [Retrieve model](#62-retrieve-model)
+   - [Chat Completions](#63-chat-completions)
+   - [Conversation History API](#64-conversation-history-api)
 7. [Web UI](#7-web-ui)
 8. [Database](#8-database)
 9. [Testing](#9-testing)
@@ -161,8 +161,7 @@ the corresponding profiles.
 | `quarkus.rest.path` | `/api/v1` | Global REST path prefix |
 | `smile.serve.model` | `../model` | Path to a `.sml` file or directory of `.sml` files |
 | `smile.onnx.model` | `../model` | Path to a `.onnx` file or directory of `.onnx` files |
-| `smile.chat.model` | `../model/Llama3.1-8B-Instruct` | Directory containing the Llama model |
-| `smile.chat.tokenizer` | `../model/Llama3.1-8B-Instruct/tokenizer.model` | SentencePiece tokenizer path |
+| `smile.chat.model` | `../model/Llama3.1-8B-Instruct` | Local HF-layout checkpoint directory, or Hugging Face repo id (`owner/name`). Tokenizer is resolved next to the checkpoint (`original/tokenizer.model` or `tokenizer.model`) |
 | `smile.chat.max_seq_len` | `4096` | Maximum sequence length in tokens |
 | `smile.chat.max_batch_size` | `1` | Maximum generation batch size |
 | `smile.chat.device` | `0` | GPU device index (`%dev` default: `7`) |
@@ -195,36 +194,19 @@ At startup, `InferenceService` scans the path specified by the property
 `smile.serve.model`. If the path is a regular `.sml` file only that model
 is loaded; if it is a directory every `.sml` file in the directory is loaded.
 
-### 4.2 List Models
-
-Returns the IDs of all loaded models in alphabetical order.
-
-```
-GET /api/v1/models
-```
-
-**Example:**
-
-```shell
-curl http://localhost:8080/api/v1/models
-```
-
-```json
-["iris_random_forest-1", "titanic_logistic-2"]
-```
-
-### 4.3 Get Model Metadata
+### 4.2 Get Model Metadata
 
 Returns the algorithm name, input schema, and tags for a model.
+Use `GET /api/v1/models` to discover loaded model IDs.
 
 ```
-GET /api/v1/models/{id}
+GET /api/v1/ml/models/{id}
 ```
 
 **Example:**
 
 ```shell
-curl http://localhost:8080/api/v1/models/iris_random_forest-1
+curl http://localhost:8080/api/v1/ml/models/iris_random_forest-1
 ```
 
 ```json
@@ -246,12 +228,12 @@ curl http://localhost:8080/api/v1/models/iris_random_forest-1
 The `schema` object lists every input feature in alphabetical order — this
 is the **column order** used by the CSV streaming endpoint.
 
-### 4.4 Single Inference (JSON)
+### 4.3 Single Inference (JSON)
 
 Send one sample as a JSON object and receive the prediction synchronously.
 
 ```
-POST /api/v1/models/{id}
+POST /api/v1/ml/models/{id}
 Content-Type: application/json
 ```
 
@@ -261,7 +243,7 @@ defined in the model schema. **All non-nullable fields are required.**
 **Classification example (iris):**
 
 ```shell
-curl -X POST http://localhost:8080/api/v1/models/iris_random_forest-1 \
+curl -X POST http://localhost:8080/api/v1/ml/models/iris_random_forest-1 \
   -H "Content-Type: application/json" \
   -d '{
     "sepallength": 5.1,
@@ -290,14 +272,14 @@ curl -X POST http://localhost:8080/api/v1/models/iris_random_forest-1 \
 | `400 Bad Request` | Missing required field, or malformed JSON |
 | `404 Not Found` | Unknown model ID |
 
-### 4.5 Streaming Inference (CSV / JSON-lines)
+### 4.4 Streaming Inference (CSV / JSON-lines)
 
 Process many samples in a single request. The server returns results as a
 [Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events)
 stream — one `data:` line per input sample.
 
 ```
-POST /api/v1/models/{id}/stream
+POST /api/v1/ml/models/{id}/stream
 Content-Type: text/plain          ← CSV mode
 Content-Type: application/json   ← JSON-lines mode
 ```
@@ -306,13 +288,13 @@ Content-Type: application/json   ← JSON-lines mode
 
 Each non-blank line is a comma-separated row of feature values in the **same
 column order as the model schema** (alphabetical by field name, as shown by
-`GET /api/v1/models/{id}`).
+`GET /api/v1/ml/models/{id}`).
 
 ```shell
 cat iris.csv | curl -X POST \
   -H "Content-Type: text/plain" \
   --data-binary @- \
-  http://localhost:8080/api/v1/models/iris_random_forest-1/stream
+  http://localhost:8080/api/v1/ml/models/iris_random_forest-1/stream
 ```
 
 Where `iris.csv` might contain:
@@ -342,7 +324,7 @@ This is more verbose but supports named fields in any order.
 cat iris.jsonl | curl -X POST \
   -H "Content-Type: application/json" \
   --data-binary @- \
-  http://localhost:8080/api/v1/models/iris_random_forest-1/stream
+  http://localhost:8080/api/v1/ml/models/iris_random_forest-1/stream
 ```
 
 Where `iris.jsonl` contains:
@@ -352,7 +334,7 @@ Where `iris.jsonl` contains:
 {"sepallength":6.7,"sepalwidth":3.0,"petallength":5.2,"petalwidth":2.3}
 ```
 
-### 4.6 Model IDs
+### 4.5 Model IDs
 
 A model's ID is constructed as `<name>-<version>` from the model's embedded
 metadata tags (`smile.model.Model.ID` and `smile.model.Model.VERSION`).
@@ -376,23 +358,10 @@ At startup, `OnnxService` scans the folder specified by the property
 `InferenceSession`. The model ID is the file name without
 the `.onnx` extension (e.g., `resnet50.onnx` → ID `resnet50`).
 
-### 5.2 List ONNX Models
-
-```
-GET /api/v1/onnx
-```
-
-```shell
-curl http://localhost:8080/api/v1/onnx
-```
-
-```json
-["resnet50", "sentiment_bert"]
-```
-
-### 5.3 Get ONNX Model Info
+### 5.2 Get ONNX Model Info
 
 Returns graph metadata and the typed, shaped input/output node descriptors.
+Use `GET /api/v1/models` to discover loaded model IDs.
 
 ```
 GET /api/v1/onnx/{id}
@@ -431,7 +400,7 @@ curl http://localhost:8080/api/v1/onnx/resnet50
 A shape value of `-1` means that dimension is **dynamic** (determined at
 inference time from the input data).
 
-### 5.4 Single Inference (JSON)
+### 5.3 Single Inference (JSON)
 
 ```
 POST /api/v1/onnx/{id}
@@ -487,7 +456,7 @@ curl -X POST http://localhost:8080/api/v1/onnx/bert_classifier \
 | `400 Bad Request` | Missing input, wrong element count, non-numeric values |
 | `404 Not Found` | Unknown model ID |
 
-### 5.5 Streaming Inference
+### 5.4 Streaming Inference
 
 Identical in structure to the classic ML streaming endpoint but returns
 JSON objects:
@@ -524,7 +493,7 @@ cat samples.jsonl | curl -X POST \
   http://localhost:8080/api/v1/onnx/bert_classifier/stream
 ```
 
-### 5.6 Tensor Types and Shape Resolution
+### 5.5 Tensor Types and Shape Resolution
 
 The server automatically resolves the ORT tensor shape from the model's
 declared input shape and the actual array length:
@@ -550,39 +519,156 @@ The LLM is optional: if the path specified by the property `smile.chat.model`
 does not exist on the file system, `ChatService` starts in an *unavailable*
 state and every request to the chat endpoints returns **HTTP 503 Service Unavailable**.
 
-### 6.1 Chat Completions
+### 6.1 List models
+
+```
+GET /api/v1/models
+```
+
+OpenAI-compatible catalog of **all** loaded models — chat LLMs, ONNX graphs,
+and SMILE {@code .sml} models
+([List models](https://developers.openai.com/api/reference/resources/models/methods/list)).
+
+Inference still uses type-specific paths:
+`/api/v1/chat/completions`, `/api/v1/onnx/{id}`, `/api/v1/ml/models/{id}`.
+
+```shell
+curl http://localhost:8080/api/v1/models
+```
+
+```json
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "meta-llama/Llama-3.1-8B-Instruct",
+      "object": "model",
+      "created": 1741900000,
+      "owned_by": "meta-llama",
+      "shutdown_date": null,
+      "kind": "LLM"
+    },
+    {
+      "id": "iris_random_forest-1",
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "Unknown",
+      "shutdown_date": null,
+      "kind": "random-forest"
+    },
+    {
+      "id": "resnet50",
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "Unknown",
+      "shutdown_date": null,
+      "kind": "ONNX"
+    }
+  ]
+}
+```
+
+`kind` values:
+
+- **`LLM`** — chat / completion models
+- **`ONNX`** — ONNX Runtime graphs
+- **SMILE algorithm name** — e.g. `random-forest`, `cart`, `logistic` (from the `.sml` model)
+
+`owned_by` rules:
+
+- **Chat (HF):** first segment of the repo id (`meta-llama/...` → `meta-llama`)
+- **Chat (local):** first segment of `Llama.family()` (`meta/llama3` → `meta`)
+- **SMILE `.sml`:** tag `author`, else `owner`; otherwise `Unknown`
+- **ONNX:** custom metadata `author`/`owner` when present; otherwise `Unknown`
+
+### 6.2 Retrieve model
+
+```
+GET /api/v1/models/{id}
+```
+
+OpenAI-compatible
+[retrieve model](https://developers.openai.com/api/reference/resources/models/methods/retrieve).
+Returns the same base `ModelObject` fields as list entries, plus an optional
+type-specific detail block. Does **not** run inference — use
+`/chat/completions`, `/onnx/{id}`, or `/ml/models/{id}` for that.
+
+Ids may contain slashes (e.g. Hugging Face repo ids).
+
+| `kind` | Extra field | Contents |
+|---|---|---|
+| SMILE algorithm | `smile` | `formula`, `schema`, `tags`, `train` / `validation` / `test` metrics (finite values only) |
+| `ONNX` | `onnx` | producer, domain, graph info, I/O shapes, custom metadata from the `.onnx` file |
+| `LLM` | `llm` | family, source (`local`/`huggingface`), architecture from `config.json` / `params.json` |
+
+List responses omit `smile` / `onnx` / `llm` so the catalog stays lean.
+
+```shell
+curl http://localhost:8080/api/v1/models/iris_random_forest-1
+```
+
+```json
+{
+  "id": "iris_random_forest-1",
+  "object": "model",
+  "created": 1710000000,
+  "owned_by": "Unknown",
+  "shutdown_date": null,
+  "kind": "random-forest",
+  "smile": {
+    "formula": "class ~ .",
+    "schema": {
+      "petallength": { "type": "float", "nullable": false }
+    },
+    "tags": {},
+    "train": {
+      "accuracy": 0.97,
+      "size": 150
+    },
+    "validation": null,
+    "test": null
+  }
+}
+```
+
+### 6.3 Chat Completions
 
 ```
 POST /api/v1/chat/completions
 Content-Type: application/json
 ```
 
-Tokens are streamed back as Server-Sent Events. The conversation (user
-message + assistant reply) is automatically persisted to the configured
-database after generation finishes.
+Tokens are streamed back as Server-Sent Events when `stream` is true,
+or returned as a single OpenAI `chat.completion` JSON object when `stream`
+is false or omitted (OpenAI default). The conversation (user message +
+assistant reply) is automatically persisted to the configured database after
+generation finishes.
 
 **Request body fields (`snake_case`):**
 
 | Field | Type | Default | Description |
 |---|---|---|---|
+| `model` | `string` | loaded model | Must match the loaded model id when set (HF repo id or local directory name); omit/empty to use the loaded model |
 | `messages` | `Message[]` | *required* | Ordered dialog turns |
-| `conversation` | `Long` | `null` | Existing conversation ID to append to |
-| `max_tokens` | `int` | `2048` | Maximum new tokens to generate |
+| `conversation` | `string` | `null` | Existing conversation id (`conv_<n>`) to append to |
+| `max_tokens` | `int` | `2048` | Max new tokens (legacy OpenAI name) |
+| `max_completion_tokens` | `int` | — | Alias for `max_tokens`; takes precedence when set |
 | `temperature` | `double` | `0.6` | Sampling temperature (higher = more random) |
 | `top_p` | `double` | `0.9` | Nucleus-sampling threshold |
 | `logprobs` | `boolean` | `false` | Include log-probabilities |
 | `seed` | `long` | `0` | Random seed (0 = non-deterministic) |
-| `stream` | `boolean` | `true` | Reserved; always streams |
+| `stream` | `boolean` | `false` | `true` → SSE chunks; `false`/omitted → single `chat.completion` JSON |
 
 Each `Message` has a `role` (`system`, `user`, or `assistant`) and `content`.
 
-**Example — single-turn:**
+**Streaming example (`stream: true`):**
 
 ```shell
 curl -X POST http://localhost:8080/api/v1/chat/completions \
   -H "Content-Type: application/json" \
   -N \
   -d '{
+    "stream": true,
     "messages": [
       {"role": "system",  "content": "You are a helpful assistant."},
       {"role": "user",    "content": "What is the capital of France?"}
@@ -592,8 +678,43 @@ curl -X POST http://localhost:8080/api/v1/chat/completions \
   }'
 ```
 
-The response is an SSE stream of plain-text token chunks ending when
-generation is complete.
+The response is an SSE stream of OpenAI-shaped `chat.completion.chunk` JSON
+events, terminated by `data: [DONE]`.
+
+**Non-streaming example (`stream` omitted or `false`):**
+
+```shell
+curl -X POST http://localhost:8080/api/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messages": [
+      {"role": "user", "content": "What is the capital of France?"}
+    ],
+    "max_completion_tokens": 256
+  }'
+```
+
+```json
+{
+  "id": "chatcmpl-...",
+  "object": "chat.completion",
+  "created": 1741900000,
+  "model": "meta-llama/Llama-3.1-8B-Instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": { "role": "assistant", "content": "Paris." },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 20,
+    "completion_tokens": 3,
+    "total_tokens": 23
+  }
+}
+```
 
 **Example — continue a previous conversation:**
 
@@ -609,44 +730,99 @@ curl -X POST http://localhost:8080/api/v1/chat/completions \
   }'
 ```
 
-### 6.2 Conversation History API
+### 6.4 Conversation History API
 
 Chat history is stored in a relational database (PostgreSQL in production,
-SQLite in dev mode). The API base path is `/api/v1/conversations`.
+H2 in dev mode). The API base path is `/api/v1/conversations`.
 
-#### List conversations
+Create, retrieve, update, and delete follow the
+[OpenAI Conversations](https://developers.openai.com/api/reference/resources/conversations)
+shapes. Conversation ids are strings of the form `conv_<n>`. List and
+`GET .../items` are smile extensions (OpenAI has no list endpoint; items use a
+separate OpenAI items API that smile does not implement yet).
+
+#### List conversations (smile extension)
 
 ```
 GET /api/v1/conversations?pageIndex=0&pageSize=25
 ```
 
-Returns conversations in reverse-chronological order (newest first).
-Pagination parameters default to page 0 with 25 records per page.
+Returns OpenAI-shaped conversation objects in reverse-chronological order
+(newest first). Pagination defaults to page 0 with 25 records per page.
 
 ```shell
 curl "http://localhost:8080/api/v1/conversations?pageSize=10"
 ```
 
-#### Get a single conversation
+#### Create a conversation
 
 ```
-GET /api/v1/conversations/{id}
+POST /api/v1/conversations
+Content-Type: application/json
 ```
 
-Returns the conversation record (metadata only, no messages). Returns 404 if
-the ID does not exist.
+Optional body fields: `metadata` (≤16 string pairs) and `items` (≤20 message
+items with `role` + text `content`).
 
-#### Get conversation messages
+```shell
+curl http://localhost:8080/api/v1/conversations \
+  -H "Content-Type: application/json" \
+  -d '{"metadata":{"topic":"demo"},"items":[{"type":"message","role":"user","content":"Hello!"}]}'
+```
+
+```json
+{
+  "id": "conv_1",
+  "object": "conversation",
+  "created_at": 1741900000,
+  "metadata": {"topic": "demo"}
+}
+```
+
+#### Retrieve a conversation
 
 ```
-GET /api/v1/conversations/{id}/items?pageIndex=0&pageSize=25
+GET /api/v1/conversations/{conversation_id}
+```
+
+#### Update a conversation
+
+```
+POST /api/v1/conversations/{conversation_id}
+Content-Type: application/json
+```
+
+```shell
+curl http://localhost:8080/api/v1/conversations/conv_1 \
+  -H "Content-Type: application/json" \
+  -d '{"metadata":{"topic":"project-x"}}'
+```
+
+#### Delete a conversation
+
+```
+DELETE /api/v1/conversations/{conversation_id}
+```
+
+```json
+{
+  "id": "conv_1",
+  "object": "conversation.deleted",
+  "deleted": true
+}
+```
+
+#### Get conversation messages (smile extension)
+
+```
+GET /api/v1/conversations/{conversation_id}/items?pageIndex=0&pageSize=25
 ```
 
 Returns the individual message turns (`role` + `content` + `createdAt`)
 in chronological order.
 
 ```shell
-curl http://localhost:8080/api/v1/conversations/42/items
+curl http://localhost:8080/api/v1/conversations/conv_42/items
 ```
 
 ```json
@@ -656,24 +832,6 @@ curl http://localhost:8080/api/v1/conversations/42/items
 ]
 ```
 
-#### Create a conversation record manually
-
-```
-POST /api/v1/conversations
-Content-Type: application/json
-```
-
-Useful for creating a labelled conversation before sending the first chat
-message. The server records the client IP and User-Agent automatically.
-
-#### Delete a conversation
-
-```
-DELETE /api/v1/conversations/{id}
-```
-
-Returns 204 on success, 404 if not found.
-
 ---
 
 ## 7. Web UI
@@ -681,11 +839,13 @@ Returns 204 on success, 404 if not found.
 A React-based web interface is bundled via [Quarkus Quinoa](https://quarkiverse.github.io/quarkiverse-docs/quarkus-quinoa/dev/).
 It is served from the root URL and provides:
 
-- **Inference UI** (`/infer`) — select a loaded SMILE model from the sidebar,
-  fill in the auto-generated form (derived from the model schema), and view
-  the prediction result.
-- **Chat UI** (`/chat`) — a conversational interface for the Llama chat service
-  with streaming token display and Markdown/math rendering.
+- **Inference UI** (`/infer`) — unified model shell: sidebar lists **chat**,
+  **SMILE** (`.sml`), and **ONNX** (`.onnx`) models. Selecting a chat model
+  embeds the shared chat module in the right pane; SMILE models get a
+  schema-driven form; ONNX models get a numeric form from tensor shapes, or
+  an image upload when a 4-D vision-like input is detected (overrideable).
+- **Chat UI** (`/chat`) — standalone entry for the same chat module (streaming
+  tokens, Markdown/math), without the infer sidebar.
 
 In dev mode the React development server runs on port **5173** and requests
 are proxied to the Quarkus backend. The production build (`dist/`) is served
@@ -743,50 +903,50 @@ The test class `InferenceResourceTest` covers:
 
 | Test | Endpoint | Scenario |
 |---|---|---|
-| `testListModels` | `GET /models` | Returns the correct model IDs |
-| `testGetModelMetadata` | `GET /models/{id}` | Returns algorithm, schema, and nullability |
-| `testGetUnknownModelReturns404` | `GET /models/{id}` | 404 for unknown ID |
-| `testPredictJsonReturnsPredictionAndProbabilities` | `POST /models/{id}` | Correct label + probabilities |
-| `testPredictJsonWithZeroFeaturesReturnsValidPrediction` | `POST /models/{id}` | Edge case: all-zero features |
-| `testPredictJsonMissingFieldReturns400` | `POST /models/{id}` | 400 for missing field |
-| `testPredictUnknownModelReturns404` | `POST /models/{id}` | 404 for unknown model |
-| `testStreamCsvReturnsPredictions` | `POST /models/{id}/stream` | 3 CSV rows → 3 SSE data lines |
-| `testStreamJsonLinesReturnsPredictions` | `POST /models/{id}/stream` | 2 JSON-lines → 2 SSE data lines |
-| `testStreamCsvTooFewColumnsEmitsNoPredictions` | `POST /models/{id}/stream` | Bad CSV closes stream |
-| `testStreamUnknownModelReturns404` | `POST /models/{id}/stream` | 404 before stream starts |
+| `testGetModelMetadata` | `GET /ml/models/{id}` | Returns algorithm, schema, and nullability |
+| `testGetUnknownModelReturns404` | `GET /ml/models/{id}` | 404 for unknown ID |
+| `testPredictJsonReturnsPredictionAndProbabilities` | `POST /ml/models/{id}` | Correct label + probabilities |
+| `testPredictJsonWithZeroFeaturesReturnsValidPrediction` | `POST /ml/models/{id}` | Edge case: all-zero features |
+| `testPredictJsonMissingFieldReturns400` | `POST /ml/models/{id}` | 400 for missing field |
+| `testPredictUnknownModelReturns404` | `POST /ml/models/{id}` | 404 for unknown model |
+| `testStreamCsvReturnsPredictions` | `POST /ml/models/{id}/stream` | 3 CSV rows → 3 SSE data lines |
+| `testStreamJsonLinesReturnsPredictions` | `POST /ml/models/{id}/stream` | 2 JSON-lines → 2 SSE data lines |
+| `testStreamCsvTooFewColumnsEmitsNoPredictions` | `POST /ml/models/{id}/stream` | Bad CSV closes stream |
+| `testStreamUnknownModelReturns404` | `POST /ml/models/{id}/stream` | 404 before stream starts |
 
 ---
 
 ## API Quick Reference
 
-### Classic ML — `/api/v1/models`
+### Classic ML — `/api/v1/ml/models`
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/models` | List all loaded model IDs |
-| `GET` | `/models/{id}` | Get model metadata and schema |
-| `POST` | `/models/{id}` | Single JSON inference |
-| `POST` | `/models/{id}/stream` | Streaming CSV or JSON-lines inference |
+| `GET` | `/ml/models/{id}` | Get model metadata and schema |
+| `POST` | `/ml/models/{id}` | Single JSON inference |
+| `POST` | `/ml/models/{id}/stream` | Streaming CSV or JSON-lines inference |
 
 ### ONNX — `/api/v1/onnx`
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/onnx` | List all loaded ONNX model IDs |
 | `GET` | `/onnx/{id}` | Get graph info, input/output shapes |
 | `POST` | `/onnx/{id}` | Single JSON inference |
 | `POST` | `/onnx/{id}/stream` | Streaming CSV or JSON-lines inference |
 
-### Chat — `/api/v1/chat` and `/api/v1/conversations`
+### Chat — `/api/v1/models`, `/api/v1/chat`, `/api/v1/conversations`
 
 | Method | Path | Description |
 |---|---|---|
-| `POST` | `/chat/completions` | Streaming LLM chat completion (SSE) |
-| `GET` | `/conversations` | List conversations (paginated) |
-| `GET` | `/conversations/{id}` | Get conversation metadata |
-| `POST` | `/conversations` | Create a conversation record |
-| `DELETE` | `/conversations/{id}` | Delete a conversation |
-| `GET` | `/conversations/{id}/items` | List message turns (paginated) |
+| `GET` | `/models` | List all loaded models — chat, ONNX, SMILE (OpenAI-compatible) |
+| `GET` | `/models/{id}` | Retrieve a model by id (OpenAI-compatible) |
+| `POST` | `/chat/completions` | Chat completion — SSE when `stream: true`, JSON when `stream: false` |
+| `GET` | `/conversations` | List conversations (paginated; smile extension) |
+| `GET` | `/conversations/{conversation_id}` | Retrieve conversation (OpenAI-compatible) |
+| `POST` | `/conversations` | Create conversation (OpenAI-compatible) |
+| `POST` | `/conversations/{conversation_id}` | Update conversation metadata (OpenAI-compatible) |
+| `DELETE` | `/conversations/{conversation_id}` | Delete conversation (OpenAI-compatible) |
+| `GET` | `/conversations/{conversation_id}/items` | List message turns (paginated; smile extension) |
 
 
 ---

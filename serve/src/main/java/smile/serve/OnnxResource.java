@@ -19,7 +19,6 @@ package smile.serve;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.List;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -39,12 +38,13 @@ import org.jboss.resteasy.reactive.RestStreamElementType;
  * {@code /api/v1/onnx}.
  *
  * <ul>
- *   <li>{@code GET  /onnx}               – list all loaded ONNX model IDs.</li>
  *   <li>{@code GET  /onnx/{id}}          – retrieve ONNX model metadata.</li>
  *   <li>{@code POST /onnx/{id}}          – single JSON inference request.</li>
  *   <li>{@code POST /onnx/{id}/stream}   – streaming inference (JSON lines
  *       or CSV text for single-input models).</li>
  * </ul>
+ *
+ * <p>The unified model catalog is {@code GET /api/v1/models}.
  *
  * <h2>Request format</h2>
  * <p>For single-shot inference, the request body is a JSON object mapping
@@ -72,17 +72,6 @@ public class OnnxResource {
 
     @Inject
     OnnxService service;
-
-    /**
-     * Returns the IDs of all loaded ONNX models.
-     *
-     * @return alphabetically sorted list of model IDs.
-     */
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<String> list() {
-        return service.models();
-    }
 
     /**
      * Returns the metadata of a single ONNX model, including its graph name,

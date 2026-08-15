@@ -16,19 +16,22 @@
  */
 package smile.chat;
 
-import smile.llm.FinishReason;
-import smile.llm.Message;
+import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
 /**
- * Represents a single non-streaming chat completion choice.
- * Currently reserved for future non-streaming API support;
- * streaming responses are emitted as plain-text chunks directly.
+ * Request body for {@code POST /conversations/{conversation_id}} (OpenAI update).
  *
  * @author Haifeng Li
  */
-public class CompletionResponse {
-    /** The generated assistant message. */
-    public Message message;
-    /** The reason generation stopped (e.g. max tokens, stop sequence). */
-    public FinishReason finishReason;
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class UpdateConversationRequest {
+    /**
+     * Replacement metadata map (≤16 pairs; keys ≤64 chars, values ≤512 chars).
+     * When {@code null}, existing metadata is left unchanged.
+     */
+    public Map<String, String> metadata;
 }

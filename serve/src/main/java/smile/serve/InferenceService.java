@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.Stream;
 import io.quarkus.runtime.Startup;
@@ -32,6 +33,8 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import org.jboss.logging.Logger;
+import smile.chat.ModelObject;
+import smile.chat.SmileModelDetails;
 import smile.io.Read;
 import smile.model.Model;
 
@@ -99,12 +102,61 @@ public class InferenceService {
     }
 
     /**
-     * Returns the list of loaded model IDs in alphabetical order.
+     * Returns OpenAI-shaped descriptors for every loaded SMILE {@code .sml} model.
      *
-     * @return the list of model IDs.
+     * <p>{@code owned_by} comes from the model tag {@code author} or {@code owner}
+     * when present; otherwise {@link smile.chat.ModelObject#UNKNOWN_OWNER}.
+     *
+     * @return OpenAI model objects in id order.
      */
-    public List<String> models() {
-        return new ArrayList<>(models.keySet());
+    public List<ModelObject> listOpenAiModels() {
+        List<ModelObject> result = new ArrayList<>();
+        for (InferenceModel model : models.values()) {
+            var meta = model.metadata();
+            result.add(ModelObject.of(
+                    model.id(),
+                    ModelObject.createdFromPath(model.path()),
+                    ModelObject.ownedByFromTags(meta.tags()),
+                    meta.algorithm()));
+        }
+        return result;
+    }
+
+    /**
+     * Looks up a loaded SMILE model as an OpenAI {@link ModelObject}.
+     *
+     * @param id       the model id.
+     * @param detailed when {@code true}, include {@link smile.chat.SmileModelDetails}.
+     * @return the model object when loaded; otherwise empty.
+     */
+    public Optional<ModelObject> findOpenAiModel(String id, boolean detailed) {
+        if (id == null || id.isBlank()) {
+            return Optional.empty();
+        }
+        InferenceModel model = models.get(id);
+        if (model == null) {
+            return Optional.empty();
+        }
+        var meta = model.metadata();
+        SmileModelDetails smile = detailed ? SmileModelDetails.of(model.model(), meta) : null;
+        return Optional.of(ModelObject.of(
+                model.id(),
+                ModelObject.createdFromPath(model.path()),
+                ModelObject.ownedByFromTags(meta.tags()),
+                meta.algorithm(),
+                smile,
+                null,
+                null));
+    }
+
+    /**
+     * Looks up a loaded SMILE model as a lean OpenAI {@link ModelObject}.
+     *
+     * @param id the model id.
+     * @return the model object when loaded; otherwise empty.
+     */
+    public Optional<ModelObject> findOpenAiModel(String id) {
+        return findOpenAiModel(id, false);
     }
 
     /**

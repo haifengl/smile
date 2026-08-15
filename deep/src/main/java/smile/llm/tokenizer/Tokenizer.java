@@ -62,6 +62,20 @@ public interface Tokenizer {
      * @exception CharacterCodingException If the byte sequence is not legal UTF-8.
      */
     default String tryDecode(int[] tokens) throws CharacterCodingException {
+        return tryDecode(tokens, false);
+    }
+
+    /**
+     * Try to decode token IDs into a string.
+     *
+     * @param tokens      The list of token IDs to be decoded.
+     * @param skipSpecial when {@code true}, registered special-token IDs are
+     *                    omitted (useful for streaming chat so headers/eot are
+     *                    not shown as literal {@code <|...|>} text).
+     * @return The decoded string.
+     * @throws CharacterCodingException If the byte sequence is not legal UTF-8.
+     */
+    default String tryDecode(int[] tokens, boolean skipSpecial) throws CharacterCodingException {
         return decode(tokens);
     }
 

@@ -282,11 +282,25 @@ public class Tiktoken implements Tokenizer {
 
     @Override
     public String tryDecode(int[] tokens) throws CharacterCodingException {
+        return tryDecode(tokens, false);
+    }
+
+    @Override
+    public String tryDecode(int[] tokens, boolean skipSpecial) throws CharacterCodingException {
+        int vocabSize = ranks.size();
         int totalBytes = 0;
-        for (var token : tokens) totalBytes += decoder[token].length();
+        for (var token : tokens) {
+            if (skipSpecial && token >= vocabSize) {
+                continue;
+            }
+            totalBytes += decoder[token].length();
+        }
         byte[] buffer = new byte[totalBytes];
         int offset = 0;
         for (var token : tokens) {
+            if (skipSpecial && token >= vocabSize) {
+                continue;
+            }
             var array = decoder[token].array();
             System.arraycopy(array, 0, buffer, offset, array.length);
             offset += array.length;
