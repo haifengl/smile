@@ -7,12 +7,10 @@
 }
 
 .chat-app--standalone {
-  width: 800px;
-  max-width: 100%;
+  width: 100%;
+  max-width: 800px;
+  height: 100%;
   margin: 0 auto;
-  height: 100dvh;
-  /* mobile viewport bug fix */
-  min-height: -webkit-fill-available;
 }
 
 .chat-app--embedded {
