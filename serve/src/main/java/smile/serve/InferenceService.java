@@ -32,6 +32,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import org.jboss.logging.Logger;
+import smile.chat.ModelObject;
 import smile.io.Read;
 import smile.model.Model;
 
@@ -105,6 +106,25 @@ public class InferenceService {
      */
     public List<String> models() {
         return new ArrayList<>(models.keySet());
+    }
+
+    /**
+     * Returns OpenAI-shaped descriptors for every loaded SMILE {@code .sml} model.
+     *
+     * <p>{@code owned_by} comes from the model tag {@code author} or {@code owner}
+     * when present; otherwise {@link smile.chat.ModelObject#UNKNOWN_OWNER}.
+     *
+     * @return OpenAI model objects in id order.
+     */
+    public List<ModelObject> listOpenAiModels() {
+        List<ModelObject> result = new ArrayList<>();
+        for (InferenceModel model : models.values()) {
+            result.add(ModelObject.of(
+                    model.id(),
+                    ModelObject.createdFromPath(model.path()),
+                    ModelObject.ownedByFromTags(model.metadata().tags())));
+        }
+        return result;
     }
 
     /**

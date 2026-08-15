@@ -557,9 +557,12 @@ state and every request to the chat endpoints returns **HTTP 503 Service Unavail
 GET /api/v1/models
 ```
 
-OpenAI-compatible listing of the loaded chat LLM
+OpenAI-compatible catalog of **all** loaded models — chat LLMs, ONNX graphs,
+and SMILE {@code .sml} models
 ([List models](https://developers.openai.com/api/reference/resources/models/methods/list)).
-Classic SMILE `.sml` models are listed under `/api/v1/ml/models` instead.
+
+Inference still uses type-specific paths:
+`/api/v1/chat/completions`, `/api/v1/onnx/{id}`, `/api/v1/ml/models/{id}`.
 
 ```shell
 curl http://localhost:8080/api/v1/models
@@ -575,14 +578,24 @@ curl http://localhost:8080/api/v1/models
       "created": 1741900000,
       "owned_by": "meta-llama",
       "shutdown_date": null
+    },
+    {
+      "id": "iris_random_forest-1",
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "Unknown",
+      "shutdown_date": null
     }
   ]
 }
 ```
 
-`owned_by` is the Hugging Face owner (first segment of the repo id). For a
-locally loaded checkpoint it is the first segment of `Llama.family()`
-(currently `meta` from `meta/llama3`).
+`owned_by` rules:
+
+- **Chat (HF):** first segment of the repo id (`meta-llama/...` → `meta-llama`)
+- **Chat (local):** first segment of `Llama.family()` (`meta/llama3` → `meta`)
+- **SMILE `.sml`:** tag `author`, else `owner`; otherwise `Unknown`
+- **ONNX:** custom metadata `author`/`owner` when present; otherwise `Unknown`
 
 ### 6.2 Chat Completions
 
@@ -853,7 +866,7 @@ The test class `InferenceResourceTest` covers:
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/models` | List loaded chat LLMs (OpenAI-compatible) |
+| `GET` | `/models` | List all loaded models — chat, ONNX, SMILE (OpenAI-compatible) |
 | `POST` | `/chat/completions` | Streaming LLM chat completion (SSE) |
 | `GET` | `/conversations` | List conversations (paginated; smile extension) |
 | `GET` | `/conversations/{conversation_id}` | Retrieve conversation (OpenAI-compatible) |

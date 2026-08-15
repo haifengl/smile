@@ -16,6 +16,8 @@
  */
 package smile.chat;
 
+import java.util.Map;
+import java.util.Properties;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
 
@@ -32,27 +34,44 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ModelsResourceTest {
 
     @Test
-    public void testGivenNoChatModelWhenListThenEmptyDataArray() {
-        // %test profile leaves ChatService unavailable
+    public void testGivenLoadedSmileAndOnnxWhenListThenIncludesThem() {
+        // %test profile: chat unavailable; iris .sml (+ optional onnx) present
         given()
             .when().get("/api/v1/models")
             .then()
                 .statusCode(200)
                 .body("object", equalTo("list"))
-                .body("data", empty());
+                .body("data.id", hasItem("iris_random_forest-1"))
+                .body("data.find { it.id == 'iris_random_forest-1' }.object", equalTo("model"))
+                .body("data.find { it.id == 'iris_random_forest-1' }.owned_by", equalTo("Unknown"));
     }
 
     @Test
     public void testGivenHuggingFaceIdWhenOwnerDerivedThenUsesFirstSegment() {
         assertEquals("meta-llama", ChatService.ownerFromHuggingFaceId("meta-llama/Llama-3.1-8B-Instruct"));
         assertEquals("Qwen", ChatService.ownerFromHuggingFaceId("Qwen/Qwen2.5-7B-Instruct"));
-        assertEquals("unknown", ChatService.ownerFromHuggingFaceId(null));
+        assertEquals(ModelObject.UNKNOWN_OWNER, ChatService.ownerFromHuggingFaceId(null));
     }
 
     @Test
     public void testGivenFamilyWhenOwnerDerivedThenUsesFirstSegment() {
         assertEquals("meta", ChatService.ownerFromFamily("meta/llama3"));
         assertEquals("acme", ChatService.ownerFromFamily("acme"));
-        assertEquals("unknown", ChatService.ownerFromFamily(""));
+        assertEquals(ModelObject.UNKNOWN_OWNER, ChatService.ownerFromFamily(""));
+    }
+
+    @Test
+    public void testGivenSmileTagsWhenOwnedByResolvedThenPrefersAuthorThenOwner() {
+        Properties tags = new Properties();
+        assertEquals("Unknown", ModelObject.ownedByFromTags(tags));
+
+        tags.setProperty("owner", "team-a");
+        assertEquals("team-a", ModelObject.ownedByFromTags(tags));
+
+        tags.setProperty("author", "alice");
+        assertEquals("alice", ModelObject.ownedByFromTags(tags));
+
+        assertEquals("bob", ModelObject.ownedByFromMap(Map.of("Owner", "bob")));
+        assertEquals("Unknown", ModelObject.ownedByFromMap(Map.of()));
     }
 }
