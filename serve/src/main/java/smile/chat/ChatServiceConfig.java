@@ -23,21 +23,19 @@ import io.smallrye.config.WithDefault;
  * Configuration for the LLM chat completion service.
  * All properties are prefixed with {@code smile.chat}.
  *
+ * <p>The SentencePiece tokenizer is resolved next to the checkpoint
+ * ({@code original/tokenizer.model} or {@code tokenizer.model}); there is no
+ * separate tokenizer path property.
+ *
  * @author Haifeng Li
  */
 @ConfigMapping(prefix = "smile.chat")
 public interface ChatServiceConfig {
-    /** Path to the LLM model directory or file. */
-    String model();
-
     /**
-     * Path to the SentencePiece tokenizer model file.
-     * When left blank and {@code smile.chat.model} is resolved as a Hugging Face
-     * repository ID, the tokenizer is downloaded automatically from the same
-     * repository ({@code tokenizer.model}).
+     * Local HF-layout checkpoint directory, or a Hugging Face repository id
+     * ({@code owner/name}).
      */
-    @WithDefault("")
-    String tokenizer();
+    String model();
 
     /**
      * Maximum sequence length (context window) in tokens.

@@ -96,7 +96,8 @@ public class ChatService {
             double memFraction = mem.fractionStatic();
             Path localPath = Path.of(modelSpec);
             if (Files.isDirectory(localPath)) {
-                model = Llama.build(modelSpec, config.tokenizer(),
+                String tokenizerPath = resolveLocalTokenizer(localPath);
+                model = Llama.build(modelSpec, tokenizerPath,
                         config.maxBatchSize(), config.maxSeqLen(), config.device(), memFraction);
                 ownedBy = ownerFromFamily(model.family());
                 source = "local";
@@ -324,7 +325,7 @@ public class ChatService {
             HuggingFaceHub.download(repoId, shard);
         }
 
-        String tokenizerPath = resolveTokenizer(repoId, config.tokenizer());
+        String tokenizerPath = resolveHuggingFaceTokenizer(repoId);
         return Llama.build(checkpointDir, tokenizerPath,
                 config.maxBatchSize(), config.maxSeqLen(), config.device(), memFractionStatic);
     }
@@ -359,16 +360,35 @@ public class ChatService {
     }
 
     /**
-     * Resolves the tokenizer path: uses a configured local file when present,
-     * otherwise downloads {@code original/tokenizer.model} (Llama 3+) or
-     * {@code tokenizer.model} from the HuggingFace repo.
+     * Finds a SentencePiece tokenizer under a local HF-layout checkpoint directory.
+     *
+     * <p>Tries {@code original/tokenizer.model} (Llama 3+) then {@code tokenizer.model}.
+     *
+     * @param checkpointDir local model directory.
+     * @return absolute path to the tokenizer file.
+     * @throws IOException if neither candidate exists.
      */
-    private String resolveTokenizer(String repoId, String configuredTokenizer) throws IOException {
-        if (configuredTokenizer != null && !configuredTokenizer.isBlank()
-                && Files.exists(Path.of(configuredTokenizer))) {
-            return configuredTokenizer;
+    static String resolveLocalTokenizer(Path checkpointDir) throws IOException {
+        String[] candidates = {"original/tokenizer.model", "tokenizer.model"};
+        for (String candidate : candidates) {
+            Path path = checkpointDir.resolve(candidate);
+            if (Files.isRegularFile(path)) {
+                return path.toAbsolutePath().normalize().toString();
+            }
         }
+        throw new IOException("tokenizer.model not found under checkpoint directory: " + checkpointDir);
+    }
 
+    /**
+     * Downloads a SentencePiece tokenizer from a Hugging Face repo.
+     *
+     * <p>Tries {@code original/tokenizer.model} (Llama 3+) then {@code tokenizer.model}.
+     *
+     * @param repoId Hugging Face repository id.
+     * @return path to the downloaded tokenizer file.
+     * @throws IOException if neither candidate can be downloaded.
+     */
+    private String resolveHuggingFaceTokenizer(String repoId) throws IOException {
         String[] candidates = {"original/tokenizer.model", "tokenizer.model"};
         for (String candidate : candidates) {
             try {

@@ -16,6 +16,8 @@
  */
 package smile.chat;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import jakarta.inject.Inject;
@@ -134,5 +136,36 @@ public class ChatServiceTest {
                 ChatService.publicModelId("Qwen/Qwen2.5-7B-Instruct"));
         assertEquals("unknown", ChatService.publicModelId(null));
         assertEquals("unknown", ChatService.publicModelId("  "));
+    }
+
+    @Test
+    public void testGivenLocalCheckpointWhenTokenizerResolvedThenPrefersOriginalThenRoot() throws Exception {
+        Path dir = Files.createTempDirectory("smile-chat-tok");
+        try {
+            Path original = dir.resolve("original");
+            Files.createDirectories(original);
+            Path tok = original.resolve("tokenizer.model");
+            Files.writeString(tok, "dummy");
+            String resolved = ChatService.resolveLocalTokenizer(dir);
+            assertTrue(resolved.endsWith("original/tokenizer.model")
+                    || resolved.endsWith("original\\tokenizer.model"));
+
+            Files.delete(tok);
+            Files.delete(original);
+            Path rootTok = dir.resolve("tokenizer.model");
+            Files.writeString(rootTok, "dummy");
+            resolved = ChatService.resolveLocalTokenizer(dir);
+            assertTrue(resolved.endsWith("tokenizer.model"));
+        } finally {
+            // best-effort cleanup
+            try (var walk = Files.walk(dir)) {
+                walk.sorted(java.util.Comparator.reverseOrder()).forEach(p -> {
+                    try {
+                        Files.deleteIfExists(p);
+                    } catch (Exception ignored) {
+                    }
+                });
+            }
+        }
     }
 }

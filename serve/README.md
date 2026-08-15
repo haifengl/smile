@@ -161,8 +161,7 @@ the corresponding profiles.
 | `quarkus.rest.path` | `/api/v1` | Global REST path prefix |
 | `smile.serve.model` | `../model` | Path to a `.sml` file or directory of `.sml` files |
 | `smile.onnx.model` | `../model` | Path to a `.onnx` file or directory of `.onnx` files |
-| `smile.chat.model` | `../model/Llama3.1-8B-Instruct` | Directory containing the Llama model |
-| `smile.chat.tokenizer` | `../model/Llama3.1-8B-Instruct/tokenizer.model` | SentencePiece tokenizer path |
+| `smile.chat.model` | `../model/Llama3.1-8B-Instruct` | Local HF-layout checkpoint directory, or Hugging Face repo id (`owner/name`). Tokenizer is resolved next to the checkpoint (`original/tokenizer.model` or `tokenizer.model`) |
 | `smile.chat.max_seq_len` | `4096` | Maximum sequence length in tokens |
 | `smile.chat.max_batch_size` | `1` | Maximum generation batch size |
 | `smile.chat.device` | `0` | GPU device index (`%dev` default: `7`) |
