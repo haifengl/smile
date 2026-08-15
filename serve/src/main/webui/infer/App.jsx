@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
  *
  * SMILE is free software: you can redistribute it and/or modify it
- * it under the terms of the GNU General Public License as published by
+ * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
@@ -22,29 +22,27 @@ import "./App.css";
 function App() {
   const [models, setModels] = useState([]);
   const [selectedModel, setSelectedModel] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch("/api/v1/ml/models")
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error("Failed to fetch models");
-        }
-        return res.json();
-      })
-      .then((data) => {
-        setModels(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
+    Promise.all([
+      fetch("/api/v1/ml/models")
+        .then((res) => (res.ok ? res.json() : []))
+        .catch(() => []),
+      fetch("/api/v1/onnx")
+        .then((res) => (res.ok ? res.json() : []))
+        .catch(() => []),
+    ]).then(([smileIds, onnxIds]) => {
+      const smile = (Array.isArray(smileIds) ? smileIds : []).map((id) => ({
+        id,
+        type: "smile",
+      }));
+      const onnx = (Array.isArray(onnxIds) ? onnxIds : []).map((id) => ({
+        id,
+        type: "onnx",
+      }));
+      setModels([...smile, ...onnx]);
+    });
   }, []);
-
-  if (loading) return <p className="toast">Loading models…</p>;
-  if (error) return <p className="toast">Error: {error}</p>;
 
   return (
     <div className="app">
