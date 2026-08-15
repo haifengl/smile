@@ -25,10 +25,20 @@ a:hover {
 body {
   margin: 0;
   display: flex;
-  place-items: center;
+  justify-content: center;
+  align-items: center;
   min-width: 320px;
   min-height: 100dvh;
   overflow: hidden;
+}
+
+#root {
+  width: 100%;
+  max-width: 800px;
+  height: 100dvh;
+  /* mobile viewport bug fix */
+  min-height: -webkit-fill-available;
+  box-sizing: border-box;
 }
 
 h1 {
