@@ -20,37 +20,33 @@ import InferenceForm from "./InferenceForm";
 import ChatApp from "../chat/ChatApp";
 import "./App.css";
 
+/** Maps API {@code kind} to UI panel type. */
+function panelType(kind) {
+  if (kind === "LLM") return "chat";
+  if (kind === "ONNX") return "onnx";
+  return "smile";
+}
+
 function App() {
   const [models, setModels] = useState([]);
   const [selectedModel, setSelectedModel] = useState(null);
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/v1/ml/models")
-        .then((res) => (res.ok ? res.json() : []))
-        .catch(() => []),
-      fetch("/api/v1/onnx")
-        .then((res) => (res.ok ? res.json() : []))
-        .catch(() => []),
-      fetch("/api/v1/models")
-        .then((res) => (res.ok ? res.json() : { data: [] }))
-        .catch(() => ({ data: [] })),
-    ]).then(([smileIds, onnxIds, catalog]) => {
-      const smileList = Array.isArray(smileIds) ? smileIds : [];
-      const onnxList = Array.isArray(onnxIds) ? onnxIds : [];
-      const smileSet = new Set(smileList);
-      const onnxSet = new Set(onnxList);
-
-      const smile = smileList.map((id) => ({ id, type: "smile" }));
-      const onnx = onnxList.map((id) => ({ id, type: "onnx" }));
-
-      const catalogData = Array.isArray(catalog?.data) ? catalog.data : [];
-      const chat = catalogData
-        .filter((m) => m?.id && !smileSet.has(m.id) && !onnxSet.has(m.id))
-        .map((m) => ({ id: m.id, type: "chat" }));
-
-      setModels([...chat, ...smile, ...onnx]);
-    });
+    fetch("/api/v1/models")
+      .then((res) => (res.ok ? res.json() : { data: [] }))
+      .catch(() => ({ data: [] }))
+      .then((catalog) => {
+        const data = Array.isArray(catalog?.data) ? catalog.data : [];
+        setModels(
+          data
+            .filter((m) => m?.id)
+            .map((m) => ({
+              id: m.id,
+              kind: m.kind || "Unknown",
+              type: panelType(m.kind),
+            }))
+        );
+      });
   }, []);
 
   const isChat = selectedModel?.type === "chat";

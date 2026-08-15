@@ -119,10 +119,12 @@ public class InferenceService {
     public List<ModelObject> listOpenAiModels() {
         List<ModelObject> result = new ArrayList<>();
         for (InferenceModel model : models.values()) {
+            var meta = model.metadata();
             result.add(ModelObject.of(
                     model.id(),
                     ModelObject.createdFromPath(model.path()),
-                    ModelObject.ownedByFromTags(model.metadata().tags())));
+                    ModelObject.ownedByFromTags(meta.tags()),
+                    meta.algorithm()));
         }
         return result;
     }

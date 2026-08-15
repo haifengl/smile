@@ -577,18 +577,34 @@ curl http://localhost:8080/api/v1/models
       "object": "model",
       "created": 1741900000,
       "owned_by": "meta-llama",
-      "shutdown_date": null
+      "shutdown_date": null,
+      "kind": "LLM"
     },
     {
       "id": "iris_random_forest-1",
       "object": "model",
       "created": 1710000000,
       "owned_by": "Unknown",
-      "shutdown_date": null
+      "shutdown_date": null,
+      "kind": "random-forest"
+    },
+    {
+      "id": "resnet50",
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "Unknown",
+      "shutdown_date": null,
+      "kind": "ONNX"
     }
   ]
 }
 ```
+
+`kind` values:
+
+- **`LLM`** — chat / completion models
+- **`ONNX`** — ONNX Runtime graphs
+- **SMILE algorithm name** — e.g. `random-forest`, `cart`, `logistic` (from the `.sml` model)
 
 `owned_by` rules:
 

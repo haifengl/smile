@@ -16,12 +16,6 @@
  */
 import React from "react";
 
-const BADGE_LABEL = {
-  smile: "SMILE",
-  onnx: "ONNX",
-  chat: "CHAT",
-};
-
 function Sidebar({ models, onSelect, selectedModel }) {
   const chat = models.filter((m) => m.type === "chat");
   const smile = models.filter((m) => m.type === "smile");
@@ -41,6 +35,12 @@ function Sidebar({ models, onSelect, selectedModel }) {
               selectedModel &&
               selectedModel.type === model.type &&
               selectedModel.id === model.id;
+            const badgeClass =
+              model.type === "chat"
+                ? "badge-chat"
+                : model.type === "onnx"
+                  ? "badge-onnx"
+                  : "badge-smile";
             return (
               <li
                 key={key}
@@ -50,8 +50,8 @@ function Sidebar({ models, onSelect, selectedModel }) {
                 <span className="model-name" title={model.id}>
                   {model.id}
                 </span>
-                <span className={`badge badge-${model.type}`}>
-                  {BADGE_LABEL[model.type] || model.type.toUpperCase()}
+                <span className={`badge ${badgeClass}`} title={model.kind}>
+                  {model.kind}
                 </span>
               </li>
             );
