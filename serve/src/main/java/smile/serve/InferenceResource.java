@@ -35,18 +35,21 @@ import io.vertx.core.json.JsonObject;
 import org.jboss.resteasy.reactive.RestStreamElementType;
 
 /**
- * REST resource exposing the model inference API at {@code /api/v1/models}.
+ * REST resource exposing the classic SMILE model inference API at
+ * {@code /api/v1/ml/models}.
  *
  * <ul>
- *   <li>{@code GET  /models}           – list all loaded model IDs.</li>
- *   <li>{@code GET  /models/{id}}      – retrieve model metadata.</li>
- *   <li>{@code POST /models/{id}}      – single JSON inference request.</li>
- *   <li>{@code POST /models/{id}/stream} – streaming inference (JSON lines or CSV).</li>
+ *   <li>{@code GET  /ml/models}           – list all loaded model IDs.</li>
+ *   <li>{@code GET  /ml/models/{id}}      – retrieve model metadata.</li>
+ *   <li>{@code POST /ml/models/{id}}      – single JSON inference request.</li>
+ *   <li>{@code POST /ml/models/{id}/stream} – streaming inference (JSON lines or CSV).</li>
  * </ul>
+ *
+ * <p>OpenAI-compatible chat model listing lives at {@code GET /api/v1/models}.
  *
  * @author Haifeng Li
  */
-@Path("/models")
+@Path("/ml/models")
 public class InferenceResource {
 
     @Inject
