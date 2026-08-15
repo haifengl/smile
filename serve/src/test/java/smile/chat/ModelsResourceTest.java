@@ -48,6 +48,27 @@ public class ModelsResourceTest {
     }
 
     @Test
+    public void testGivenLoadedSmileWhenRetrieveThenReturnsModelObject() {
+        given()
+            .when().get("/api/v1/models/iris_random_forest-1")
+            .then()
+                .statusCode(200)
+                .body("id", equalTo("iris_random_forest-1"))
+                .body("object", equalTo("model"))
+                .body("owned_by", equalTo("Unknown"))
+                .body("kind", equalTo("random-forest"))
+                .body("shutdown_date", nullValue());
+    }
+
+    @Test
+    public void testGivenUnknownIdWhenRetrieveThenReturns404() {
+        given()
+            .when().get("/api/v1/models/does-not-exist")
+            .then()
+                .statusCode(404);
+    }
+
+    @Test
     public void testGivenHuggingFaceIdWhenOwnerDerivedThenUsesFirstSegment() {
         assertEquals("meta-llama", ChatService.ownerFromHuggingFaceId("meta-llama/Llama-3.1-8B-Instruct"));
         assertEquals("Qwen", ChatService.ownerFromHuggingFaceId("Qwen/Qwen2.5-7B-Instruct"));

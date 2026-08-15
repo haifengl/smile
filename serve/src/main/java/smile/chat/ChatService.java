@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
 import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.SubmissionPublisher;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -190,10 +191,23 @@ public class ChatService {
      * @return a singleton list when a model is loaded; otherwise empty.
      */
     public List<ModelObject> listModels() {
-        if (model == null) {
-            return List.of();
+        return findOpenAiModel(modelId).map(List::of).orElseGet(List::of);
+    }
+
+    /**
+     * Looks up the loaded chat model as an OpenAI {@link ModelObject}.
+     *
+     * @param id the requested model id.
+     * @return the model object when loaded and ids match; otherwise empty.
+     */
+    public Optional<ModelObject> findOpenAiModel(String id) {
+        if (model == null || id == null || id.isBlank()) {
+            return Optional.empty();
         }
-        return List.of(ModelObject.of(modelId, createdAt, ownedBy, ModelObject.KIND_LLM));
+        if (!modelId.equals(id.trim())) {
+            return Optional.empty();
+        }
+        return Optional.of(ModelObject.of(modelId, createdAt, ownedBy, ModelObject.KIND_LLM));
     }
 
     /**

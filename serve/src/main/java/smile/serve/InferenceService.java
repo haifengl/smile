@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.Stream;
 import io.quarkus.runtime.Startup;
@@ -118,6 +119,28 @@ public class InferenceService {
                     meta.algorithm()));
         }
         return result;
+    }
+
+    /**
+     * Looks up a loaded SMILE model as an OpenAI {@link ModelObject}.
+     *
+     * @param id the model id.
+     * @return the model object when loaded; otherwise empty.
+     */
+    public Optional<ModelObject> findOpenAiModel(String id) {
+        if (id == null || id.isBlank()) {
+            return Optional.empty();
+        }
+        InferenceModel model = models.get(id);
+        if (model == null) {
+            return Optional.empty();
+        }
+        var meta = model.metadata();
+        return Optional.of(ModelObject.of(
+                model.id(),
+                ModelObject.createdFromPath(model.path()),
+                ModelObject.ownedByFromTags(meta.tags()),
+                meta.algorithm()));
     }
 
     /**
