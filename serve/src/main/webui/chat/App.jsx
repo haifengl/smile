@@ -116,12 +116,17 @@ function App() {
         model: 'meta/llama3',
         messages: chatMessages,
         stream: true,
+        max_tokens: 512,
         // OpenAI-compatible extension consumed by smile-serve.
         conversation: conversationId,
       })
 
       for await (const chunk of stream) {
-        const delta = chunk.choices?.[0]?.delta?.content
+        const choice = chunk.choices?.[0]
+        if (choice?.finish_reason) {
+          break
+        }
+        const delta = choice?.delta?.content
         if (!delta) {
           continue
         }
