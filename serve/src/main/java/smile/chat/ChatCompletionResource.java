@@ -36,9 +36,11 @@ import jakarta.ws.rs.ServiceUnavailableException;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
+import io.smallrye.common.annotation.Blocking;
 import io.smallrye.mutiny.Multi;
 import io.vertx.ext.web.RoutingContext;
 import org.eclipse.microprofile.context.ManagedExecutor;
+import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.RestStreamElementType;
 import smile.llm.ChatCompletion;
 import smile.llm.FinishReason;
@@ -48,12 +50,14 @@ import smile.llm.Role;
  * REST resource exposing the OpenAI-compatible chat completion API at
  * {@code /api/v1/chat/completions}.
  *
- * <p>The endpoint streams generated tokens back to the client as server-sent
- * events. Each SSE {@code data:} payload is a JSON object following the
- * OpenAI Chat Completions streaming format ({@code object: "chat.completion.chunk"}).
- * The stream is terminated by a {@code data: [DONE]} sentinel event.
- * Conversation history is persisted to the configured database after generation
- * completes.
+ * <p>When {@code stream} is true (smile default), tokens are streamed as SSE
+ * {@code chat.completion.chunk} events ending with {@code [DONE]}.
+ * When {@code stream} is false, a single {@code chat.completion} JSON body is
+ * returned.
+ *
+ * <p>The method is produced as {@code application/json} so OpenAI clients that
+ * always send {@code Accept: application/json} match. Streaming responses set
+ * {@code Content-Type: text/event-stream} on the {@link RestResponse}.
  *
  * @author Haifeng Li
  */
@@ -73,55 +77,43 @@ public class ChatCompletionResource {
     ObjectMapper objectMapper;
 
     /**
-     * Generates a chat completion for the supplied dialog.
+     * Chat completion — JSON when {@code stream: false}, SSE when streaming.
      *
-     * <p>The response is streamed token by token as SSE events. Each event
-     * payload is a JSON {@code ChatCompletionChunk} object. The final data
-     * event is the literal string {@code [DONE]}.
-     *
-     * <p>Generation starts only after the returned {@link Multi} is subscribed
-     * (i.e. after the SSE response is opened), so token chunks are not dropped
-     * by {@link SubmissionPublisher} before a subscriber exists.
-     *
-     * @param headers HTTP request headers (used to capture client metadata).
-     * @param request the completion request containing the message history
-     *                and generation parameters.
-     * @return a reactive stream of SSE data payloads.
-     * @throws ServiceUnavailableException if the LLM model is not loaded.
-     * @throws NotFoundException if {@code request.model} is set and does not
-     *         match the loaded model id.
+     * @param headers HTTP request headers.
+     * @param request completion request.
+     * @return JSON completion object or SSE multi of chunk payloads.
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.SERVER_SENT_EVENTS)
+    @Produces(MediaType.APPLICATION_JSON)
     @RestStreamElementType(MediaType.TEXT_PLAIN)
-    public Multi<String> complete(@Context HttpHeaders headers, CompletionRequest request)
-            throws ServiceUnavailableException {
-        if (!service.isAvailable()) throw new ServiceUnavailableException();
-        if (!service.acceptsModel(request.model)) {
-            throw new NotFoundException(
-                    "The model `" + request.model + "` does not exist or is not loaded (loaded: `"
-                            + service.modelName() + "`)");
-        }
-
-        Conversation conversation = new Conversation();
-        // Must capture routing context on the endpoint thread; it is not available
-        // inside the worker thread dispatched by executor.supplyAsync.
-        conversation.setContext(routingContext, headers);
-
-        String id = "chatcmpl-" + UUID.randomUUID().toString().replace("-", "");
+    @Blocking
+    public RestResponse<?> complete(@Context HttpHeaders headers, CompletionRequest request) {
+        validate(request);
+        Conversation conversation = newConversation(headers);
+        String id = newCompletionId();
         long created = Instant.now().getEpochSecond();
         String modelName = service.modelName();
 
-        // Emitter runs on subscription — subscribe the publisher before generate().
+        if (!request.isStream()) {
+            ChatCompletion[] completions = service.complete(request, null);
+            if (completions != null) {
+                saveConversation(conversation, request, completions);
+            }
+            return RestResponse.ok(ChatCompletionObject.of(id, created, modelName, completions));
+        }
+
+        Multi<String> multi = streamMulti(id, created, modelName, conversation, request);
+        return RestResponse.ResponseBuilder.ok(multi)
+                .type(MediaType.SERVER_SENT_EVENTS_TYPE)
+                .build();
+    }
+
+    private Multi<String> streamMulti(String id, long created, String modelName,
+                                      Conversation conversation, CompletionRequest request) {
         return Multi.createFrom().emitter(emitter -> {
             AtomicBoolean isFirst = new AtomicBoolean(true);
-            // Completed with ChatCompletion[] after generate returns (publisher may
-            // already have closed). Finish/[DONE] wait on this so they never race
-            // ahead of asynchronously delivered content onNext calls.
             CompletableFuture<ChatCompletion[]> resultFuture = new CompletableFuture<>();
-            // Deliver onNext/onComplete on the submitting thread so the last content
-            // chunk is emitted before publisher.close() returns from generate().
             SubmissionPublisher<String> publisher =
                     new SubmissionPublisher<>(Runnable::run, Flow.defaultBufferSize());
 
@@ -156,9 +148,6 @@ public class ChatCompletionResource {
 
                 @Override
                 public void onComplete() {
-                    // Guaranteed after all onNext. Wait for generate() to publish the
-                    // finish reason, then terminate the SSE stream in OpenAI order:
-                    // content deltas → finish_reason chunk → [DONE].
                     resultFuture.whenComplete((completions, error) -> {
                         if (emitter.isCancelled()) {
                             return;
@@ -207,11 +196,29 @@ public class ChatCompletionResource {
         });
     }
 
+    private void validate(CompletionRequest request) {
+        if (!service.isAvailable()) {
+            throw new ServiceUnavailableException();
+        }
+        if (!service.acceptsModel(request.model)) {
+            throw new NotFoundException(
+                    "The model `" + request.model + "` does not exist or is not loaded (loaded: `"
+                            + service.modelName() + "`)");
+        }
+    }
+
+    private Conversation newConversation(HttpHeaders headers) {
+        Conversation conversation = new Conversation();
+        conversation.setContext(routingContext, headers);
+        return conversation;
+    }
+
+    private static String newCompletionId() {
+        return "chatcmpl-" + UUID.randomUUID().toString().replace("-", "");
+    }
+
     /**
      * Persists the user message and assistant reply(ies) for this turn.
-     *
-     * <p>If {@link CompletionRequest#conversation} is absent or blank, a new
-     * {@link Conversation} record is created first.
      *
      * @param conversation the conversation context captured from the request.
      * @param request      the original completion request.
@@ -227,7 +234,6 @@ public class ChatCompletionResource {
             conversationId = conversation.id;
         }
 
-        // Persist the last user message in this turn.
         for (int i = request.messages.length; i-- > 0;) {
             var message = request.messages[i];
             if (message.role() == Role.user) {
@@ -240,7 +246,6 @@ public class ChatCompletionResource {
             }
         }
 
-        // Persist each assistant completion.
         for (var completion : completions) {
             ConversationItem item = new ConversationItem();
             item.conversationId = conversationId;
@@ -250,12 +255,6 @@ public class ChatCompletionResource {
         }
     }
 
-    /**
-     * Serializes an object to a JSON string, wrapping any checked exception.
-     *
-     * @param value the object to serialize.
-     * @return the JSON string.
-     */
     private String toJson(Object value) {
         try {
             return objectMapper.writeValueAsString(value);

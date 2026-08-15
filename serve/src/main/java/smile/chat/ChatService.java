@@ -294,7 +294,7 @@ public class ChatService {
      */
     public ChatCompletion[] complete(CompletionRequest request, SubmissionPublisher<String> publisher) {
         Message[][] dialogs = { request.messages };
-        return model.chat(dialogs, request.maxTokens, request.temperature,
+        return model.chat(dialogs, request.resolveMaxTokens(), request.temperature,
                 request.topP, request.logprobs, request.seed, publisher);
     }
 
