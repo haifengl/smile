@@ -15,17 +15,18 @@
   position: relative;
   width: 100%;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   box-sizing: border-box;
 }
 
 .input-container {
   width: 100%;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   position: relative;
   box-sizing: border-box;
+  min-height: 2.4em;
 }
 
 .input-background {
@@ -34,22 +35,28 @@
   width: 100%;
   border-radius: 0.8rem;
   position: absolute;
+  inset: 0;
   border: 1px solid #ecebeb;
 }
 
 .input-element-container {
-  padding-left: 16px;
-  padding-right: 16px;
-  width:100%;
+  padding: 8px 16px;
+  width: 100%;
+  position: relative;
+  box-sizing: border-box;
 }
 
 .input-element {
+  display: block;
   width: 100%;
   border: none;
+  resize: none;
   max-height: 6.4em;
   position: relative;
   font-size: 14px;
-  overflow: scroll;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
 
   color: rgba(0,0,0,.87);
   background-color: transparent;
@@ -57,22 +64,24 @@
 
   text-align: left;
   opacity: 1;
-  
+
   min-height: 1.6em;
+  height: 1.6em;
   line-height: 1.6em;
+  white-space: pre-wrap;
   word-wrap: break-word;
   overflow-wrap: anywhere;
-  
-  &:focus{
+
+  &:focus {
     outline: none;
   }
 
-  ::-webkit-scrollbar {
+  &::-webkit-scrollbar {
     display: none;
   }
 
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .send-container {
@@ -83,9 +92,10 @@
   display: flex;
   align-items: center;
   opacity: 0.4;
-  height: 100%;
+  flex-shrink: 0;
   padding-top: 8px;
   padding-bottom: 8px;
+  align-self: flex-end;
 }
 
 .attach-placeholder {
