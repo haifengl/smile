@@ -28,13 +28,16 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
 /**
- * OpenAI-compatible model object returned by {@code GET /models}.
+ * OpenAI-compatible model object returned by {@code GET /models}, extended with
+ * a SMILE-specific {@code kind} discriminator.
  *
  * @param id           model identifier referenced by API endpoints.
  * @param created      Unix epoch seconds when the model became available.
  * @param object       always {@code "model"}.
  * @param ownedBy      organization / hub owner.
  * @param shutdownDate optional retirement date; always {@code null} for smile-serve.
+ * @param kind         model category: {@link #KIND_LLM}, {@link #KIND_ONNX}, or a
+ *                     SMILE algorithm name (e.g. {@code "random-forest"}).
  *
  * @author Haifeng Li
  * @see <a href="https://developers.openai.com/api/reference/resources/models/methods/list">OpenAI List models</a>
@@ -46,10 +49,17 @@ public record ModelObject(
         long created,
         @JsonProperty("object") String object,
         String ownedBy,
-        String shutdownDate) {
+        String shutdownDate,
+        String kind) {
 
     /** Fallback {@code owned_by} when no owner metadata is available. */
     public static final String UNKNOWN_OWNER = "Unknown";
+
+    /** {@code kind} for chat / completion LLMs. */
+    public static final String KIND_LLM = "LLM";
+
+    /** {@code kind} for ONNX Runtime graphs. */
+    public static final String KIND_ONNX = "ONNX";
 
     /**
      * Builds a model object with {@code object=model} and no shutdown date.
@@ -57,11 +67,13 @@ public record ModelObject(
      * @param id      public model id.
      * @param created load / availability timestamp (Unix seconds).
      * @param ownedBy owner string.
+     * @param kind    {@link #KIND_LLM}, {@link #KIND_ONNX}, or a SMILE algorithm name.
      * @return the model object.
      */
-    public static ModelObject of(String id, long created, String ownedBy) {
+    public static ModelObject of(String id, long created, String ownedBy, String kind) {
         String owner = (ownedBy == null || ownedBy.isBlank()) ? UNKNOWN_OWNER : ownedBy;
-        return new ModelObject(id, created, "model", owner, null);
+        String k = (kind == null || kind.isBlank()) ? UNKNOWN_OWNER : kind.trim();
+        return new ModelObject(id, created, "model", owner, null, k);
     }
 
     /**

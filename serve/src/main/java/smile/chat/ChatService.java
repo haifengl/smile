@@ -193,7 +193,7 @@ public class ChatService {
         if (model == null) {
             return List.of();
         }
-        return List.of(ModelObject.of(modelId, createdAt, ownedBy));
+        return List.of(ModelObject.of(modelId, createdAt, ownedBy, ModelObject.KIND_LLM));
     }
 
     /**

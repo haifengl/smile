@@ -63,6 +63,10 @@
   letter-spacing: 0.04em;
   padding: 2px 6px;
   border-radius: 3px;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .badge-smile {

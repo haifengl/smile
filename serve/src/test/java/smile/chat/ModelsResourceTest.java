@@ -43,7 +43,8 @@ public class ModelsResourceTest {
                 .body("object", equalTo("list"))
                 .body("data.id", hasItem("iris_random_forest-1"))
                 .body("data.find { it.id == 'iris_random_forest-1' }.object", equalTo("model"))
-                .body("data.find { it.id == 'iris_random_forest-1' }.owned_by", equalTo("Unknown"));
+                .body("data.find { it.id == 'iris_random_forest-1' }.owned_by", equalTo("Unknown"))
+                .body("data.find { it.id == 'iris_random_forest-1' }.kind", equalTo("random-forest"));
     }
 
     @Test

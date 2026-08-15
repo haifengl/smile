@@ -120,7 +120,8 @@ public class OnnxService {
             result.add(ModelObject.of(
                     model.id(),
                     ModelObject.createdFromPath(model.path()),
-                    ModelObject.ownedByFromMap(model.info().customMeta())));
+                    ModelObject.ownedByFromMap(model.info().customMeta()),
+                    ModelObject.KIND_ONNX));
         }
         return result;
     }
