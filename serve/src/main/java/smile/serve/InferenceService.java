@@ -100,15 +100,6 @@ public class InferenceService {
     }
 
     /**
-     * Returns the list of loaded model IDs in alphabetical order.
-     *
-     * @return the list of model IDs.
-     */
-    public List<String> models() {
-        return new ArrayList<>(models.keySet());
-    }
-
-    /**
      * Returns OpenAI-shaped descriptors for every loaded SMILE {@code .sml} model.
      *
      * <p>{@code owned_by} comes from the model tag {@code author} or {@code owner}

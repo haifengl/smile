@@ -19,7 +19,6 @@ package smile.serve;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.List;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -39,13 +38,12 @@ import org.jboss.resteasy.reactive.RestStreamElementType;
  * {@code /api/v1/ml/models}.
  *
  * <ul>
- *   <li>{@code GET  /ml/models}           – list all loaded model IDs.</li>
  *   <li>{@code GET  /ml/models/{id}}      – retrieve model metadata.</li>
  *   <li>{@code POST /ml/models/{id}}      – single JSON inference request.</li>
  *   <li>{@code POST /ml/models/{id}/stream} – streaming inference (JSON lines or CSV).</li>
  * </ul>
  *
- * <p>OpenAI-compatible chat model listing lives at {@code GET /api/v1/models}.
+ * <p>The unified model catalog is {@code GET /api/v1/models}.
  *
  * @author Haifeng Li
  */
@@ -54,17 +52,6 @@ public class InferenceResource {
 
     @Inject
     InferenceService service;
-
-    /**
-     * Returns the IDs of all loaded models.
-     *
-     * @return alphabetically sorted list of model IDs.
-     */
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<String> list() {
-        return service.models();
-    }
 
     /**
      * Returns the metadata of a single model.

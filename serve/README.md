@@ -28,18 +28,16 @@ A React-based web UI is bundled and served from the same process.
 3. [Configuration Reference](#3-configuration-reference)
 4. [Classic ML Inference API](#4-classic-ml-inference-api)
    - [Model Format](#41-model-format)
-   - [List Models](#42-list-models)
-   - [Get Model Metadata](#43-get-model-metadata)
-   - [Single Inference (JSON)](#44-single-inference-json)
-   - [Streaming Inference (CSV / JSON-lines)](#45-streaming-inference-csv--json-lines)
-   - [Model IDs](#46-model-ids)
+   - [Get Model Metadata](#42-get-model-metadata)
+   - [Single Inference (JSON)](#43-single-inference-json)
+   - [Streaming Inference (CSV / JSON-lines)](#44-streaming-inference-csv--json-lines)
+   - [Model IDs](#45-model-ids)
 5. [ONNX Inference API](#5-onnx-inference-api)
    - [Model Format](#51-model-format)
-   - [List ONNX Models](#52-list-onnx-models)
-   - [Get ONNX Model Info](#53-get-onnx-model-info)
-   - [Single Inference (JSON)](#54-single-inference-json)
-   - [Streaming Inference](#55-streaming-inference)
-   - [Tensor Types and Shape Resolution](#56-tensor-types-and-shape-resolution)
+   - [Get ONNX Model Info](#52-get-onnx-model-info)
+   - [Single Inference (JSON)](#53-single-inference-json)
+   - [Streaming Inference](#54-streaming-inference)
+   - [Tensor Types and Shape Resolution](#55-tensor-types-and-shape-resolution)
 6. [LLM Chat API](#6-llm-chat-api)
    - [List models](#61-list-models)
    - [Chat Completions](#62-chat-completions)
@@ -196,27 +194,10 @@ At startup, `InferenceService` scans the path specified by the property
 `smile.serve.model`. If the path is a regular `.sml` file only that model
 is loaded; if it is a directory every `.sml` file in the directory is loaded.
 
-### 4.2 List Models
-
-Returns the IDs of all loaded models in alphabetical order.
-
-```
-GET /api/v1/ml/models
-```
-
-**Example:**
-
-```shell
-curl http://localhost:8080/api/v1/ml/models
-```
-
-```json
-["iris_random_forest-1", "titanic_logistic-2"]
-```
-
-### 4.3 Get Model Metadata
+### 4.2 Get Model Metadata
 
 Returns the algorithm name, input schema, and tags for a model.
+Use `GET /api/v1/models` to discover loaded model IDs.
 
 ```
 GET /api/v1/ml/models/{id}
@@ -247,7 +228,7 @@ curl http://localhost:8080/api/v1/ml/models/iris_random_forest-1
 The `schema` object lists every input feature in alphabetical order — this
 is the **column order** used by the CSV streaming endpoint.
 
-### 4.4 Single Inference (JSON)
+### 4.3 Single Inference (JSON)
 
 Send one sample as a JSON object and receive the prediction synchronously.
 
@@ -291,7 +272,7 @@ curl -X POST http://localhost:8080/api/v1/ml/models/iris_random_forest-1 \
 | `400 Bad Request` | Missing required field, or malformed JSON |
 | `404 Not Found` | Unknown model ID |
 
-### 4.5 Streaming Inference (CSV / JSON-lines)
+### 4.4 Streaming Inference (CSV / JSON-lines)
 
 Process many samples in a single request. The server returns results as a
 [Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events)
@@ -353,7 +334,7 @@ Where `iris.jsonl` contains:
 {"sepallength":6.7,"sepalwidth":3.0,"petallength":5.2,"petalwidth":2.3}
 ```
 
-### 4.6 Model IDs
+### 4.5 Model IDs
 
 A model's ID is constructed as `<name>-<version>` from the model's embedded
 metadata tags (`smile.model.Model.ID` and `smile.model.Model.VERSION`).
@@ -377,23 +358,10 @@ At startup, `OnnxService` scans the folder specified by the property
 `InferenceSession`. The model ID is the file name without
 the `.onnx` extension (e.g., `resnet50.onnx` → ID `resnet50`).
 
-### 5.2 List ONNX Models
-
-```
-GET /api/v1/onnx
-```
-
-```shell
-curl http://localhost:8080/api/v1/onnx
-```
-
-```json
-["resnet50", "sentiment_bert"]
-```
-
-### 5.3 Get ONNX Model Info
+### 5.2 Get ONNX Model Info
 
 Returns graph metadata and the typed, shaped input/output node descriptors.
+Use `GET /api/v1/models` to discover loaded model IDs.
 
 ```
 GET /api/v1/onnx/{id}
@@ -432,7 +400,7 @@ curl http://localhost:8080/api/v1/onnx/resnet50
 A shape value of `-1` means that dimension is **dynamic** (determined at
 inference time from the input data).
 
-### 5.4 Single Inference (JSON)
+### 5.3 Single Inference (JSON)
 
 ```
 POST /api/v1/onnx/{id}
@@ -488,7 +456,7 @@ curl -X POST http://localhost:8080/api/v1/onnx/bert_classifier \
 | `400 Bad Request` | Missing input, wrong element count, non-numeric values |
 | `404 Not Found` | Unknown model ID |
 
-### 5.5 Streaming Inference
+### 5.4 Streaming Inference
 
 Identical in structure to the classic ML streaming endpoint but returns
 JSON objects:
@@ -525,7 +493,7 @@ cat samples.jsonl | curl -X POST \
   http://localhost:8080/api/v1/onnx/bert_classifier/stream
 ```
 
-### 5.6 Tensor Types and Shape Resolution
+### 5.5 Tensor Types and Shape Resolution
 
 The server automatically resolves the ORT tensor shape from the model's
 declared input shape and the actual array length:
@@ -846,7 +814,6 @@ The test class `InferenceResourceTest` covers:
 
 | Test | Endpoint | Scenario |
 |---|---|---|
-| `testListModels` | `GET /ml/models` | Returns the correct model IDs |
 | `testGetModelMetadata` | `GET /ml/models/{id}` | Returns algorithm, schema, and nullability |
 | `testGetUnknownModelReturns404` | `GET /ml/models/{id}` | 404 for unknown ID |
 | `testPredictJsonReturnsPredictionAndProbabilities` | `POST /ml/models/{id}` | Correct label + probabilities |
@@ -866,7 +833,6 @@ The test class `InferenceResourceTest` covers:
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/ml/models` | List all loaded model IDs |
 | `GET` | `/ml/models/{id}` | Get model metadata and schema |
 | `POST` | `/ml/models/{id}` | Single JSON inference |
 | `POST` | `/ml/models/{id}/stream` | Streaming CSV or JSON-lines inference |
@@ -875,7 +841,6 @@ The test class `InferenceResourceTest` covers:
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/onnx` | List all loaded ONNX model IDs |
 | `GET` | `/onnx/{id}` | Get graph info, input/output shapes |
 | `POST` | `/onnx/{id}` | Single JSON inference |
 | `POST` | `/onnx/{id}/stream` | Streaming CSV or JSON-lines inference |
