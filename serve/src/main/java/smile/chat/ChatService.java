@@ -61,6 +61,12 @@ public class ChatService {
 
     /** The loaded LLM; {@code null} when the model failed to load. */
     private Llama model;
+    /**
+     * Public model id exposed by the chat API (HF repo id or local directory
+     * name). Independent of {@link Llama#toString()}, which still embeds a
+     * Llama-family prefix for historical reasons.
+     */
+    private final String modelId;
 
     /**
      * Loads the LLM upon application start.
@@ -76,6 +82,7 @@ public class ChatService {
     @Inject
     public ChatService(ChatServiceConfig config, MemConfig mem) {
         String modelSpec = config.model();
+        this.modelId = publicModelId(modelSpec);
         try {
             double memFraction = mem.fractionStatic();
             Path localPath = Path.of(modelSpec);
@@ -94,6 +101,30 @@ public class ChatService {
             logger.warnf(ex, "Failed to load chat model '%s'; chat completions will return HTTP 503",
                     modelSpec);
         }
+    }
+
+    /**
+     * Derives the public API model id from {@code smile.chat.model}.
+     *
+     * <ul>
+     *   <li>Local directory → final path segment (e.g. {@code Llama3.1-8B-Instruct})</li>
+     *   <li>Hugging Face repo id → as configured (e.g. {@code Qwen/Qwen2.5-7B-Instruct})</li>
+     * </ul>
+     *
+     * @param modelSpec the configured {@code smile.chat.model} value.
+     * @return the public model id.
+     */
+    static String publicModelId(String modelSpec) {
+        if (modelSpec == null || modelSpec.isBlank()) {
+            return "unknown";
+        }
+        String spec = modelSpec.trim();
+        Path path = Path.of(spec);
+        if (Files.isDirectory(path)) {
+            Path fileName = path.getFileName();
+            return fileName != null ? fileName.toString() : spec;
+        }
+        return spec;
     }
 
     /**
@@ -130,12 +161,43 @@ public class ChatService {
     }
 
     /**
-     * Returns the fully-qualified model identifier (e.g. {@code meta/llama3/Meta-Llama-3-8B}).
+     * Returns the public model id used in chat completion requests/responses.
      *
-     * @return the model name string, or {@code "unknown"} when the model is not loaded.
+     * <p>This is the configured Hugging Face repo id or local directory name —
+     * not a Meta/Llama-specific prefix — so future non-Llama models keep a
+     * stable client-facing id.
+     *
+     * @return the model id, or {@code "unknown"} when the model is not loaded.
      */
     public String modelName() {
-        return model != null ? model.toString() : "unknown";
+        return model != null ? modelId : "unknown";
+    }
+
+    /**
+     * Returns {@code true} when {@code requested} may be served by the loaded model.
+     *
+     * <p>{@code null}, blank, or omitted requests are accepted and use the loaded
+     * model. Otherwise the value must equal {@link #modelName()}.
+     *
+     * @param requested the {@code model} field from the chat completion request.
+     * @return {@code true} if the request may proceed.
+     */
+    public boolean acceptsModel(String requested) {
+        return matchesModelId(requested, modelName());
+    }
+
+    /**
+     * Pure matching helper for {@link #acceptsModel(String)}.
+     *
+     * @param requested    request {@code model} value.
+     * @param loadedModelId currently loaded model id from {@link #modelName()}.
+     * @return {@code true} when the request should be accepted.
+     */
+    static boolean matchesModelId(String requested, String loadedModelId) {
+        if (requested == null || requested.isBlank()) {
+            return true;
+        }
+        return requested.trim().equals(loadedModelId);
     }
 
     /**

@@ -28,6 +28,12 @@ import smile.llm.Message;
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class CompletionRequest {
+    /**
+     * Model id to use. When {@code null}, blank, or omitted, the loaded chat
+     * model is used. When set, must equal the loaded model id (Hugging Face
+     * repo id or local directory name from {@code smile.chat.model}).
+     */
+    public String model;
     /** Optional ID of an existing conversation to append to ({@code conv_<id>}). */
     public String conversation;
     /** The ordered list of dialog messages. Must not be {@code null}. */

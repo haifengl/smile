@@ -79,4 +79,26 @@ public class ChatServiceTest {
         assertFalse(ChatService.looksLikeHuggingFaceRepoId(""));
         assertFalse(ChatService.looksLikeHuggingFaceRepoId(null));
     }
+
+    @Test
+    public void testGivenModelIdWhenMatchedThenEmptyOrExactAccepted() {
+        String loaded = "meta-llama/Llama-3.1-8B-Instruct";
+        assertTrue(ChatService.matchesModelId(null, loaded));
+        assertTrue(ChatService.matchesModelId("", loaded));
+        assertTrue(ChatService.matchesModelId("   ", loaded));
+        assertTrue(ChatService.matchesModelId(loaded, loaded));
+        assertTrue(ChatService.matchesModelId("  " + loaded + "  ", loaded));
+        assertFalse(ChatService.matchesModelId("meta/llama3", loaded));
+        assertFalse(ChatService.matchesModelId("other-model", loaded));
+    }
+
+    @Test
+    public void testGivenModelSpecWhenPublicIdDerivedThenUsesRepoOrDirectoryName() {
+        assertEquals("meta-llama/Llama-3.1-8B-Instruct",
+                ChatService.publicModelId("meta-llama/Llama-3.1-8B-Instruct"));
+        assertEquals("Qwen/Qwen2.5-7B-Instruct",
+                ChatService.publicModelId("Qwen/Qwen2.5-7B-Instruct"));
+        assertEquals("unknown", ChatService.publicModelId(null));
+        assertEquals("unknown", ChatService.publicModelId("  "));
+    }
 }
