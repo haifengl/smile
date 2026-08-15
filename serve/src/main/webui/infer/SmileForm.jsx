@@ -19,12 +19,13 @@ import Form from "@rjsf/core";
 import validator from "@rjsf/validator-ajv8";
 import {
   detectBatchFileKind,
-  formatResult,
   prepareCsv,
   readSseStream,
   toJsonLines,
   tryParseJson,
 } from "./inferStream";
+import { normalizePrediction } from "./predictionRows";
+import PredictionResults from "./PredictionResults";
 import "./InferPanel.css";
 
 function typeOf(type) {
@@ -69,16 +70,19 @@ function schemaKeys(model) {
 function SmileForm({ modelId }) {
   const [modelMeta, setModelMeta] = useState(null);
   const [schema, setSchema] = useState(null);
-  const [results, setResults] = useState([]);
+  const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [submitError, setSubmitError] = useState(null);
   const [file, setFile] = useState(null);
   const [streaming, setStreaming] = useState(false);
   const [streamCount, setStreamCount] = useState(0);
-  const resultsEndRef = useRef(null);
+  const [startedAt, setStartedAt] = useState(null);
+  const [finishedAt, setFinishedAt] = useState(null);
   const abortRef = useRef(null);
   const resultIdRef = useRef(0);
+  const pendingRef = useRef([]);
+  const flushRafRef = useRef(0);
 
   useEffect(() => {
     if (!modelId) {
@@ -88,9 +92,11 @@ function SmileForm({ modelId }) {
     setError(null);
     setSchema(null);
     setModelMeta(null);
-    setResults([]);
+    setRows([]);
     setFile(null);
     setSubmitError(null);
+    setStartedAt(null);
+    setFinishedAt(null);
 
     fetch(`/api/v1/ml/models/${modelId}`)
       .then((res) => {
@@ -111,20 +117,49 @@ function SmileForm({ modelId }) {
 
     return () => {
       abortRef.current?.abort();
+      if (flushRafRef.current) {
+        cancelAnimationFrame(flushRafRef.current);
+      }
     };
   }, [modelId]);
 
-  useEffect(() => {
-    resultsEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [results, streaming]);
+  const flushPending = () => {
+    flushRafRef.current = 0;
+    const batch = pendingRef.current;
+    if (batch.length === 0) {
+      return;
+    }
+    pendingRef.current = [];
+    setRows((prev) => [...prev, ...batch]);
+  };
 
-  const appendResult = (entry) => {
+  const queueRows = (entries) => {
+    pendingRef.current.push(...entries);
+    if (!flushRafRef.current) {
+      flushRafRef.current = requestAnimationFrame(flushPending);
+    }
+  };
+
+  const appendRow = (entry) => {
     const id = ++resultIdRef.current;
-    setResults((prev) => [...prev, { id, ...entry }]);
+    const normalized = entry.error
+      ? { id, values: {}, error: entry.error }
+      : { id, ...normalizePrediction(entry.data) };
+    setRows((prev) => [...prev, normalized]);
+  };
+
+  const beginRun = () => {
+    setStartedAt(Date.now());
+    setFinishedAt(null);
+  };
+
+  const endRun = () => {
+    setFinishedAt(Date.now());
   };
 
   const handleSubmit = ({ formData }) => {
     setSubmitError(null);
+    beginRun();
     fetch(`/api/v1/ml/models/${modelId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -137,9 +172,13 @@ function SmileForm({ modelId }) {
         return res.json();
       })
       .then((data) => {
-        appendResult({ source: "form", data });
+        appendRow({ data });
+        endRun();
       })
-      .catch((err) => setSubmitError(err.message));
+      .catch((err) => {
+        setSubmitError(err.message);
+        endRun();
+      });
   };
 
   const handleFilePredict = async () => {
@@ -159,6 +198,7 @@ function SmileForm({ modelId }) {
     const controller = new AbortController();
     abortRef.current = controller;
 
+    beginRun();
     setStreaming(true);
     setStreamCount(0);
 
@@ -194,20 +234,24 @@ function SmileForm({ modelId }) {
         (payload) => {
           n += 1;
           setStreamCount(n);
-          appendResult({
-            source: "file",
-            index: n,
-            data: tryParseJson(payload),
-          });
+          const id = ++resultIdRef.current;
+          queueRows([{ id, ...normalizePrediction(tryParseJson(payload)) }]);
         },
         controller.signal
       );
+      flushPending();
     } catch (err) {
       if (err.name !== "AbortError") {
         setSubmitError(err.message || String(err));
       }
     } finally {
+      if (flushRafRef.current) {
+        cancelAnimationFrame(flushRafRef.current);
+        flushRafRef.current = 0;
+      }
+      flushPending();
       setStreaming(false);
+      endRun();
     }
   };
 
@@ -250,6 +294,7 @@ function SmileForm({ modelId }) {
             <div className="infer-batch-actions">
               <button
                 type="button"
+                className="infer-btn infer-btn-primary"
                 onClick={handleFilePredict}
                 disabled={!file || streaming}
               >
@@ -270,49 +315,17 @@ function SmileForm({ modelId }) {
           {submitError && <p className="infer-error">{submitError}</p>}
         </section>
 
-        <aside className="infer-results" aria-live="polite">
-          <header className="infer-results-header">
-            <div>
-              <h3>Predictions</h3>
-              <p className="infer-muted">
-                {results.length === 0
-                  ? "Submit the form or run a file"
-                  : `${results.length} result${results.length === 1 ? "" : "s"}`}
-                {streaming ? " · receiving…" : ""}
-              </p>
-            </div>
-            <button
-              type="button"
-              className="infer-btn"
-              onClick={() => setResults([])}
-              disabled={results.length === 0 || streaming}
-            >
-              Clear
-            </button>
-          </header>
-
-          <div className="infer-results-scroll">
-            {results.length === 0 && !streaming && (
-              <div className="infer-results-empty">
-                Results appear here after each prediction.
-              </div>
-            )}
-            {results.map((item) => (
-              <article key={item.id} className="infer-result-card">
-                <div className="infer-result-meta">
-                  <span className="infer-result-badge">
-                    {item.source === "file" ? `#${item.index}` : "Single"}
-                  </span>
-                </div>
-                <pre className="infer-result-body">{formatResult(item.data)}</pre>
-              </article>
-            ))}
-            {streaming && (
-              <div className="infer-streaming-indicator">Streaming…</div>
-            )}
-            <div ref={resultsEndRef} />
-          </div>
-        </aside>
+        <PredictionResults
+          rows={rows}
+          streaming={streaming}
+          startedAt={startedAt}
+          finishedAt={finishedAt}
+          onClear={() => {
+            setRows([]);
+            setStartedAt(null);
+            setFinishedAt(null);
+          }}
+        />
       </div>
     </div>
   );

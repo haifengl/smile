@@ -25,18 +25,19 @@ import {
 } from "./onnxUtils";
 import {
   detectBatchFileKind,
-  formatResult,
   prepareCsv,
   readSseStream,
   toJsonLines,
   tryParseJson,
 } from "./inferStream";
+import { normalizePrediction } from "./predictionRows";
+import PredictionResults from "./PredictionResults";
 import "./InferPanel.css";
 
 function OnnxForm({ modelId }) {
   const [info, setInfo] = useState(null);
-  const [mode, setMode] = useState("auto"); // auto | numeric | image
-  const [results, setResults] = useState([]);
+  const [mode, setMode] = useState("auto");
+  const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [submitError, setSubmitError] = useState(null);
@@ -46,9 +47,12 @@ function OnnxForm({ modelId }) {
   const [batchFile, setBatchFile] = useState(null);
   const [streaming, setStreaming] = useState(false);
   const [streamCount, setStreamCount] = useState(0);
-  const resultsEndRef = useRef(null);
+  const [startedAt, setStartedAt] = useState(null);
+  const [finishedAt, setFinishedAt] = useState(null);
   const abortRef = useRef(null);
   const resultIdRef = useRef(0);
+  const pendingRef = useRef([]);
+  const flushRafRef = useRef(0);
 
   useEffect(() => {
     if (!modelId) {
@@ -57,12 +61,14 @@ function OnnxForm({ modelId }) {
     setLoading(true);
     setError(null);
     setInfo(null);
-    setResults([]);
+    setRows([]);
     setImageFile(null);
     setPreviewUrl(null);
     setBatchFile(null);
     setSubmitError(null);
     setMode("auto");
+    setStartedAt(null);
+    setFinishedAt(null);
 
     fetch(`/api/v1/onnx/${modelId}`)
       .then((res) => {
@@ -82,6 +88,9 @@ function OnnxForm({ modelId }) {
 
     return () => {
       abortRef.current?.abort();
+      if (flushRafRef.current) {
+        cancelAnimationFrame(flushRafRef.current);
+      }
     };
   }, [modelId]);
 
@@ -94,10 +103,6 @@ function OnnxForm({ modelId }) {
     setPreviewUrl(url);
     return () => URL.revokeObjectURL(url);
   }, [imageFile]);
-
-  useEffect(() => {
-    resultsEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [results, streaming]);
 
   const vision = useMemo(() => (info ? findVisionInput(info) : null), [info]);
   const effectiveMode =
@@ -113,14 +118,46 @@ function OnnxForm({ modelId }) {
     [info]
   );
 
-  const appendResult = (entry) => {
-    const id = ++resultIdRef.current;
-    setResults((prev) => [...prev, { id, ...entry }]);
+  const flushPending = () => {
+    flushRafRef.current = 0;
+    const batch = pendingRef.current;
+    if (batch.length === 0) {
+      return;
+    }
+    pendingRef.current = [];
+    setRows((prev) => [...prev, ...batch]);
   };
 
-  const runPredict = async (body, source = "form") => {
+  const queueRows = (entries) => {
+    pendingRef.current.push(...entries);
+    if (!flushRafRef.current) {
+      flushRafRef.current = requestAnimationFrame(flushPending);
+    }
+  };
+
+  const appendRow = (entry) => {
+    const id = ++resultIdRef.current;
+    setRows((prev) => [
+      ...prev,
+      entry.error
+        ? { id, values: {}, error: entry.error }
+        : { id, ...normalizePrediction(entry.data) },
+    ]);
+  };
+
+  const beginRun = () => {
+    setStartedAt(Date.now());
+    setFinishedAt(null);
+  };
+
+  const endRun = () => {
+    setFinishedAt(Date.now());
+  };
+
+  const runPredict = async (body) => {
     setSubmitting(true);
     setSubmitError(null);
+    beginRun();
     try {
       const res = await fetch(`/api/v1/onnx/${modelId}`, {
         method: "POST",
@@ -132,18 +169,19 @@ function OnnxForm({ modelId }) {
         throw new Error(text || "Failed to make an inference");
       }
       const data = await res.json();
-      appendResult({ source, data });
+      appendRow({ data });
     } catch (err) {
       setSubmitError(err.message);
     } finally {
       setSubmitting(false);
+      endRun();
     }
   };
 
   const handleNumericSubmit = ({ formData }) => {
     try {
       const body = formDataToOnnxBody(formData, info);
-      runPredict(body, "form");
+      runPredict(body);
     } catch (err) {
       setSubmitError(err.message);
     }
@@ -173,7 +211,7 @@ function OnnxForm({ modelId }) {
         );
         body[input.name] = Array(Math.max(n, 1)).fill(0);
       }
-      await runPredict(body, "image");
+      await runPredict(body);
     } catch (err) {
       setSubmitError(err.message);
     }
@@ -199,6 +237,7 @@ function OnnxForm({ modelId }) {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
+    beginRun();
     setStreaming(true);
     setStreamCount(0);
 
@@ -234,20 +273,24 @@ function OnnxForm({ modelId }) {
         (payload) => {
           n += 1;
           setStreamCount(n);
-          appendResult({
-            source: "file",
-            index: n,
-            data: tryParseJson(payload),
-          });
+          const id = ++resultIdRef.current;
+          queueRows([{ id, ...normalizePrediction(tryParseJson(payload)) }]);
         },
         controller.signal
       );
+      flushPending();
     } catch (err) {
       if (err.name !== "AbortError") {
         setSubmitError(err.message || String(err));
       }
     } finally {
+      if (flushRafRef.current) {
+        cancelAnimationFrame(flushRafRef.current);
+        flushRafRef.current = 0;
+      }
+      flushPending();
       setStreaming(false);
+      endRun();
     }
   };
 
@@ -376,6 +419,7 @@ function OnnxForm({ modelId }) {
             <div className="infer-batch-actions">
               <button
                 type="button"
+                className="infer-btn infer-btn-primary"
                 onClick={handleFilePredict}
                 disabled={!batchFile || busy}
               >
@@ -396,53 +440,17 @@ function OnnxForm({ modelId }) {
           {submitError && <p className="infer-error">{submitError}</p>}
         </section>
 
-        <aside className="infer-results" aria-live="polite">
-          <header className="infer-results-header">
-            <div>
-              <h3>Predictions</h3>
-              <p className="infer-muted">
-                {results.length === 0
-                  ? "Submit the form or run a file"
-                  : `${results.length} result${results.length === 1 ? "" : "s"}`}
-                {streaming ? " · receiving…" : ""}
-              </p>
-            </div>
-            <button
-              type="button"
-              className="infer-btn"
-              onClick={() => setResults([])}
-              disabled={results.length === 0 || streaming}
-            >
-              Clear
-            </button>
-          </header>
-
-          <div className="infer-results-scroll">
-            {results.length === 0 && !streaming && (
-              <div className="infer-results-empty">
-                Results appear here after each prediction.
-              </div>
-            )}
-            {results.map((item) => (
-              <article key={item.id} className="infer-result-card">
-                <div className="infer-result-meta">
-                  <span className="infer-result-badge">
-                    {item.source === "file"
-                      ? `#${item.index}`
-                      : item.source === "image"
-                        ? "Image"
-                        : "Single"}
-                  </span>
-                </div>
-                <pre className="infer-result-body">{formatResult(item.data)}</pre>
-              </article>
-            ))}
-            {streaming && (
-              <div className="infer-streaming-indicator">Streaming…</div>
-            )}
-            <div ref={resultsEndRef} />
-          </div>
-        </aside>
+        <PredictionResults
+          rows={rows}
+          streaming={streaming}
+          startedAt={startedAt}
+          finishedAt={finishedAt}
+          onClear={() => {
+            setRows([]);
+            setStartedAt(null);
+            setFinishedAt(null);
+          }}
+        />
       </div>
     </div>
   );

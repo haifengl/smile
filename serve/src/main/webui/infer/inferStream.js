@@ -117,16 +117,6 @@ export function prepareCsv(text, keys = []) {
   return lines.join("\n");
 }
 
-export function formatResult(data) {
-  if (data == null) {
-    return "";
-  }
-  if (typeof data === "string") {
-    return data;
-  }
-  return JSON.stringify(data, null, 2);
-}
-
 export function detectBatchFileKind(file) {
   const name = file.name.toLowerCase();
   const isCsv = name.endsWith(".csv") || file.type === "text/csv";
