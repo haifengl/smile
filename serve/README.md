@@ -639,9 +639,11 @@ POST /api/v1/chat/completions
 Content-Type: application/json
 ```
 
-Tokens are streamed back as Server-Sent Events. The conversation (user
-message + assistant reply) is automatically persisted to the configured
-database after generation finishes.
+Tokens are streamed back as Server-Sent Events when `stream` is true
+(the smile default), or returned as a single OpenAI `chat.completion`
+JSON object when `stream` is false. The conversation (user message +
+assistant reply) is automatically persisted to the configured database after
+generation finishes.
 
 **Request body fields (`snake_case`):**
 
@@ -650,16 +652,17 @@ database after generation finishes.
 | `model` | `string` | loaded model | Must match the loaded model id when set (HF repo id or local directory name); omit/empty to use the loaded model |
 | `messages` | `Message[]` | *required* | Ordered dialog turns |
 | `conversation` | `string` | `null` | Existing conversation id (`conv_<n>`) to append to |
-| `max_tokens` | `int` | `2048` | Maximum new tokens to generate |
+| `max_tokens` | `int` | `2048` | Max new tokens (legacy OpenAI name) |
+| `max_completion_tokens` | `int` | — | Alias for `max_tokens`; takes precedence when set |
 | `temperature` | `double` | `0.6` | Sampling temperature (higher = more random) |
 | `top_p` | `double` | `0.9` | Nucleus-sampling threshold |
 | `logprobs` | `boolean` | `false` | Include log-probabilities |
 | `seed` | `long` | `0` | Random seed (0 = non-deterministic) |
-| `stream` | `boolean` | `true` | Reserved; always streams |
+| `stream` | `boolean` | `true` | `true` → SSE chunks; `false` → single `chat.completion` JSON |
 
 Each `Message` has a `role` (`system`, `user`, or `assistant`) and `content`.
 
-**Example — single-turn:**
+**Streaming example (`stream` omitted or `true`):**
 
 ```shell
 curl -X POST http://localhost:8080/api/v1/chat/completions \
@@ -675,8 +678,44 @@ curl -X POST http://localhost:8080/api/v1/chat/completions \
   }'
 ```
 
-The response is an SSE stream of plain-text token chunks ending when
-generation is complete.
+The response is an SSE stream of OpenAI-shaped `chat.completion.chunk` JSON
+events, terminated by `data: [DONE]`.
+
+**Non-streaming example (`stream: false`):**
+
+```shell
+curl -X POST http://localhost:8080/api/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "stream": false,
+    "messages": [
+      {"role": "user", "content": "What is the capital of France?"}
+    ],
+    "max_completion_tokens": 256
+  }'
+```
+
+```json
+{
+  "id": "chatcmpl-...",
+  "object": "chat.completion",
+  "created": 1741900000,
+  "model": "meta-llama/Llama-3.1-8B-Instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": { "role": "assistant", "content": "Paris." },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 20,
+    "completion_tokens": 3,
+    "total_tokens": 23
+  }
+}
+```
 
 **Example — continue a previous conversation:**
 
@@ -902,7 +941,7 @@ The test class `InferenceResourceTest` covers:
 |---|---|---|
 | `GET` | `/models` | List all loaded models — chat, ONNX, SMILE (OpenAI-compatible) |
 | `GET` | `/models/{id}` | Retrieve a model by id (OpenAI-compatible) |
-| `POST` | `/chat/completions` | Streaming LLM chat completion (SSE) |
+| `POST` | `/chat/completions` | Chat completion — SSE when `stream: true`, JSON when `stream: false` |
 | `GET` | `/conversations` | List conversations (paginated; smile extension) |
 | `GET` | `/conversations/{conversation_id}` | Retrieve conversation (OpenAI-compatible) |
 | `POST` | `/conversations` | Create conversation (OpenAI-compatible) |

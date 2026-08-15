@@ -53,7 +53,7 @@ public class ChatServiceTest {
         var body = """
                 {"messages":[{"role":"user","content":"hi"}],"max_tokens":8}
                 """;
-        // When posting a chat completion
+        // When posting a chat completion (streaming default)
         // Then the response is HTTP 503
         given()
             .contentType(ContentType.JSON)
@@ -61,6 +61,40 @@ public class ChatServiceTest {
             .when().post("/api/v1/chat/completions")
             .then()
                 .statusCode(503);
+    }
+
+    @Test
+    public void testGivenUnavailableModelWhenNonStreamingThenReturns503() {
+        var body = """
+                {"stream":false,"messages":[{"role":"user","content":"hi"}],"max_completion_tokens":8}
+                """;
+        given()
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .body(body)
+            .when().post("/api/v1/chat/completions")
+            .then()
+                .statusCode(503);
+    }
+
+    @Test
+    public void testGivenMaxCompletionTokensWhenResolvedThenTakesPrecedence() {
+        CompletionRequest request = new CompletionRequest();
+        assertEquals(2048, request.resolveMaxTokens());
+
+        request.maxTokens = 100;
+        assertEquals(100, request.resolveMaxTokens());
+
+        request.maxCompletionTokens = 50;
+        assertEquals(50, request.resolveMaxTokens());
+    }
+
+    @Test
+    public void testGivenStreamFlagInBodyWhenParsedThenHonorsFalse() {
+        assertTrue(ChatCompletionsStreamFlag.streamFlag("{}".getBytes()));
+        assertTrue(ChatCompletionsStreamFlag.streamFlag("{\"stream\":true}".getBytes()));
+        assertFalse(ChatCompletionsStreamFlag.streamFlag("{\"stream\":false}".getBytes()));
+        assertFalse(ChatCompletionsStreamFlag.streamFlag("{\"stream\": false, \"messages\":[]}".getBytes()));
     }
 
     @Test
