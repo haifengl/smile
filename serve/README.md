@@ -11,7 +11,7 @@ that brings together three complementary inference capabilities on the JVM:
 |---|---|----------------------------------------------------------------|
 | **Classic ML** | `/api/v1/ml/models` | Serialized SMILE models (`.sml`) — classifiers and regressors |
 | **ONNX Runtime** | `/api/v1/onnx` | Any model in the ONNX open format (`.onnx`)                    |
-| **LLM Chat** | `/api/v1/chat`, `/api/v1/models` | OpenAI-compatible chat completions and model listing |
+| **LLM Chat** | `/api/v1/chat`, `/api/v1/models` | OpenAI-compatible chat completions and model list/retrieve |
 
 A React-based web UI is bundled and served from the same process.
 
@@ -40,8 +40,9 @@ A React-based web UI is bundled and served from the same process.
    - [Tensor Types and Shape Resolution](#55-tensor-types-and-shape-resolution)
 6. [LLM Chat API](#6-llm-chat-api)
    - [List models](#61-list-models)
-   - [Chat Completions](#62-chat-completions)
-   - [Conversation History API](#63-conversation-history-api)
+   - [Retrieve model](#62-retrieve-model)
+   - [Chat Completions](#63-chat-completions)
+   - [Conversation History API](#64-conversation-history-api)
 7. [Web UI](#7-web-ui)
 8. [Database](#8-database)
 9. [Testing](#9-testing)
@@ -581,7 +582,36 @@ curl http://localhost:8080/api/v1/models
 - **SMILE `.sml`:** tag `author`, else `owner`; otherwise `Unknown`
 - **ONNX:** custom metadata `author`/`owner` when present; otherwise `Unknown`
 
-### 6.2 Chat Completions
+### 6.2 Retrieve model
+
+```
+GET /api/v1/models/{id}
+```
+
+OpenAI-compatible
+[retrieve model](https://developers.openai.com/api/reference/resources/models/methods/retrieve).
+Returns the same `ModelObject` shape as list entries (including SMILE `kind`).
+Does **not** run inference — use `/chat/completions`, `/onnx/{id}`, or
+`/ml/models/{id}` for that.
+
+Ids may contain slashes (e.g. Hugging Face repo ids).
+
+```shell
+curl http://localhost:8080/api/v1/models/iris_random_forest-1
+```
+
+```json
+{
+  "id": "iris_random_forest-1",
+  "object": "model",
+  "created": 1710000000,
+  "owned_by": "Unknown",
+  "shutdown_date": null,
+  "kind": "random-forest"
+}
+```
+
+### 6.3 Chat Completions
 
 ```
 POST /api/v1/chat/completions
@@ -641,7 +671,7 @@ curl -X POST http://localhost:8080/api/v1/chat/completions \
   }'
 ```
 
-### 6.3 Conversation History API
+### 6.4 Conversation History API
 
 Chat history is stored in a relational database (PostgreSQL in production,
 H2 in dev mode). The API base path is `/api/v1/conversations`.
@@ -850,6 +880,7 @@ The test class `InferenceResourceTest` covers:
 | Method | Path | Description |
 |---|---|---|
 | `GET` | `/models` | List all loaded models — chat, ONNX, SMILE (OpenAI-compatible) |
+| `GET` | `/models/{id}` | Retrieve a model by id (OpenAI-compatible) |
 | `POST` | `/chat/completions` | Streaming LLM chat completion (SSE) |
 | `GET` | `/conversations` | List conversations (paginated; smile extension) |
 | `GET` | `/conversations/{conversation_id}` | Retrieve conversation (OpenAI-compatible) |

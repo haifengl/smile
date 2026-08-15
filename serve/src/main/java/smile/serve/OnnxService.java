@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.Stream;
 import io.quarkus.runtime.Startup;
@@ -115,6 +116,27 @@ public class OnnxService {
                     ModelObject.KIND_ONNX));
         }
         return result;
+    }
+
+    /**
+     * Looks up a loaded ONNX model as an OpenAI {@link ModelObject}.
+     *
+     * @param id the model id.
+     * @return the model object when loaded; otherwise empty.
+     */
+    public Optional<ModelObject> findOpenAiModel(String id) {
+        if (id == null || id.isBlank()) {
+            return Optional.empty();
+        }
+        OnnxModel model = models.get(id);
+        if (model == null) {
+            return Optional.empty();
+        }
+        return Optional.of(ModelObject.of(
+                model.id(),
+                ModelObject.createdFromPath(model.path()),
+                ModelObject.ownedByFromMap(model.info().customMeta()),
+                ModelObject.KIND_ONNX));
     }
 
     /**
