@@ -28,12 +28,27 @@ import smile.llm.Message;
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class CompletionRequest {
-    /** Optional ID of an existing conversation to append to. */
-    public Long conversation;
+    /**
+     * Model id to use. When {@code null}, blank, or omitted, the loaded chat
+     * model is used. When set, must equal the loaded model id (Hugging Face
+     * repo id or local directory name from {@code smile.chat.model}).
+     */
+    public String model;
+    /** Optional ID of an existing conversation to append to ({@code conv_<id>}). */
+    public String conversation;
     /** The ordered list of dialog messages. Must not be {@code null}. */
     public Message[] messages;
-    /** Maximum number of new tokens to generate. Default: {@code 2048}. */
-    public int maxTokens = 2048;
+    /**
+     * Maximum number of new tokens to generate. Prefer
+     * {@link #maxCompletionTokens} when both are set. Default when neither is
+     * set: {@code 2048}.
+     */
+    public Integer maxTokens;
+    /**
+     * OpenAI alias for {@link #maxTokens} ({@code max_completion_tokens}).
+     * Takes precedence when non-null.
+     */
+    public Integer maxCompletionTokens;
     /** Sampling temperature; higher values → more random. Default: {@code 0.6}. */
     public double temperature = 0.6;
     /** Nucleus-sampling top-p threshold. Default: {@code 0.9}. */
@@ -43,8 +58,38 @@ public class CompletionRequest {
     /** Random seed for reproducible generation ({@code 0} = non-deterministic). */
     public long seed = 0;
     /**
-     * Whether the client expects a streaming (SSE) response.
-     * Currently always streamed; this field is reserved for future non-streaming support.
+     * When {@code true}, respond with SSE token chunks.
+     * When {@code false} or omitted (OpenAI default), respond with a single
+     * OpenAI {@code chat.completion} JSON body.
      */
-    public boolean stream = true;
+    public Boolean stream = Boolean.FALSE;
+
+    /**
+     * Resolves the generation length limit.
+     *
+     * <p>{@code max_completion_tokens} wins when set; otherwise {@code max_tokens};
+     * otherwise {@code 2048}.
+     *
+     * @return positive max new tokens.
+     */
+    public int resolveMaxTokens() {
+        if (maxCompletionTokens != null) {
+            return maxCompletionTokens;
+        }
+        if (maxTokens != null) {
+            return maxTokens;
+        }
+        return 2048;
+    }
+
+    /**
+     * Whether this request should use SSE streaming.
+     *
+     * <p>{@code null} is treated as {@code false} (OpenAI default).
+     *
+     * @return {@code true} for SSE; {@code false} for a single JSON completion.
+     */
+    public boolean isStream() {
+        return Boolean.TRUE.equals(stream);
+    }
 }

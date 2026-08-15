@@ -1,15 +1,18 @@
 .app {
   display: flex;
-  height: 100vh;
+  height: calc(100vh - 72px); /* leave room for site header on /infer */
   width: 100%;
   font-family: Arial, sans-serif;
+  overflow: hidden;
 }
 
 .sidebar {
   width: 280px;
+  flex-shrink: 0;
   background: #1e1e2f;
   color: white;
   padding: 16px;
+  overflow-y: auto;
 }
 
 .sidebar h2 {
@@ -21,12 +24,64 @@
   padding: 0;
 }
 
+.sidebar-group {
+  margin: 16px 0 8px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #9aa0b5;
+  font-weight: 600;
+}
+
+.sidebar-empty {
+  color: #9aa0b5;
+  font-size: 14px;
+}
+
 .sidebar li {
   padding: 10px;
   cursor: pointer;
   border-radius: 4px;
   margin-bottom: 6px;
-  font-size: 16px;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sidebar li .model-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badge {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  border-radius: 3px;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badge-smile {
+  background: #3d6b4f;
+  color: #d8f5e4;
+}
+
+.badge-onnx {
+  background: #4a5a8a;
+  color: #dce4ff;
+}
+
+.badge-chat {
+  background: #6b4a3d;
+  color: #ffe8dc;
 }
 
 .sidebar li:hover {
@@ -37,11 +92,74 @@
   background: #3e3e6f;
 }
 
+.onnx-form .model-meta h2 {
+  margin: 0 0 4px;
+}
+
+.onnx-form .muted,
+.hint {
+  color: #666;
+  font-size: 14px;
+}
+
+.onnx-form .mode-toggle {
+  margin: 12px 0;
+}
+
+.onnx-form .form-error {
+  color: #b00020;
+}
+
+.image-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 480px;
+}
+
+.file-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.image-preview img {
+  max-width: 320px;
+  max-height: 320px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
 .content {
   flex: 1;
+  min-width: 0;
+  min-height: 0;
   padding: 24px;
   background: white;
   color: black;
+  overflow: auto;
+}
+
+/* Chat fills the pane; no outer padding so the transcript can scroll. */
+.content-chat {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* One keep-alive panel per visited model; inactive ones stay mounted. */
+.panel-session {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-session[hidden] {
+  display: none !important;
 }
 
 .toast {

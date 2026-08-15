@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.Stream;
 import io.quarkus.runtime.Startup;
@@ -32,6 +33,8 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import org.jboss.logging.Logger;
+import smile.chat.ModelObject;
+import smile.chat.OnnxModelDetails;
 import smile.onnx.InferenceSession;
 import smile.io.Paths;
 
@@ -97,12 +100,59 @@ public class OnnxService {
     }
 
     /**
-     * Returns the IDs of all loaded ONNX models in alphabetical order.
+     * Returns OpenAI-shaped descriptors for every loaded ONNX model.
      *
-     * @return the list of model IDs.
+     * <p>{@code owned_by} uses ONNX custom metadata {@code author}/{@code owner}
+     * when present; otherwise {@link smile.chat.ModelObject#UNKNOWN_OWNER}.
+     *
+     * @return OpenAI model objects in id order.
      */
-    public List<String> models() {
-        return new ArrayList<>(models.keySet());
+    public List<ModelObject> listOpenAiModels() {
+        List<ModelObject> result = new ArrayList<>();
+        for (OnnxModel model : models.values()) {
+            result.add(ModelObject.of(
+                    model.id(),
+                    ModelObject.createdFromPath(model.path()),
+                    ModelObject.ownedByFromMap(model.info().customMeta()),
+                    ModelObject.KIND_ONNX));
+        }
+        return result;
+    }
+
+    /**
+     * Looks up a loaded ONNX model as an OpenAI {@link ModelObject}.
+     *
+     * @param id       the model id.
+     * @param detailed when {@code true}, include {@link smile.chat.OnnxModelDetails}.
+     * @return the model object when loaded; otherwise empty.
+     */
+    public Optional<ModelObject> findOpenAiModel(String id, boolean detailed) {
+        if (id == null || id.isBlank()) {
+            return Optional.empty();
+        }
+        OnnxModel model = models.get(id);
+        if (model == null) {
+            return Optional.empty();
+        }
+        OnnxModelDetails onnx = detailed ? model.details() : null;
+        return Optional.of(ModelObject.of(
+                model.id(),
+                ModelObject.createdFromPath(model.path()),
+                ModelObject.ownedByFromMap(model.info().customMeta()),
+                ModelObject.KIND_ONNX,
+                null,
+                onnx,
+                null));
+    }
+
+    /**
+     * Looks up a loaded ONNX model as a lean OpenAI {@link ModelObject}.
+     *
+     * @param id the model id.
+     * @return the model object when loaded; otherwise empty.
+     */
+    public Optional<ModelObject> findOpenAiModel(String id) {
+        return findOpenAiModel(id, false);
     }
 
     /**

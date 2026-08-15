@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
  *
  * SMILE is free software: you can redistribute it and/or modify it
- * it under the terms of the GNU General Public License as published by
+ * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
@@ -14,47 +14,80 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
 import InferenceForm from "./InferenceForm";
+import ChatApp from "../chat/ChatApp";
 import "./App.css";
+
+/** Maps API {@code kind} to UI panel type. */
+function panelType(kind) {
+  if (kind === "LLM") return "chat";
+  if (kind === "ONNX") return "onnx";
+  return "smile";
+}
 
 function App() {
   const [models, setModels] = useState([]);
   const [selectedModel, setSelectedModel] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  /** Panels kept mounted so switching models preserves chat / form state. */
+  const [mountedModels, setMountedModels] = useState([]);
 
   useEffect(() => {
     fetch("/api/v1/models")
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error("Failed to fetch models");
-        }
-        return res.json();
-      })
-      .then((data) => {
-        setModels(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
+      .then((res) => (res.ok ? res.json() : { data: [] }))
+      .catch(() => ({ data: [] }))
+      .then((catalog) => {
+        const data = Array.isArray(catalog?.data) ? catalog.data : [];
+        setModels(
+          data
+            .filter((m) => m?.id)
+            .map((m) => ({
+              id: m.id,
+              kind: m.kind || "Unknown",
+              type: panelType(m.kind),
+            }))
+        );
       });
   }, []);
 
-  if (loading) return <p className="toast">Loading models…</p>;
-  if (error) return <p className="toast">Error: {error}</p>;
+  const selectModel = useCallback((model) => {
+    setSelectedModel(model);
+    if (model?.id) {
+      setMountedModels((prev) =>
+        prev.some((m) => m.id === model.id) ? prev : [...prev, model]
+      );
+    }
+  }, []);
+
+  const isChat = selectedModel?.type === "chat";
 
   return (
     <div className="app">
       <Sidebar
         models={models}
         selectedModel={selectedModel}
-        onSelect={setSelectedModel}
+        onSelect={selectModel}
       />
-      <div className="content">
-        <InferenceForm model={selectedModel} />
+      <div className={isChat ? "content content-chat" : "content"}>
+        {!selectedModel && (
+          <p className="toast">Select a model for inference...</p>
+        )}
+        {mountedModels.map((model) => {
+          const active = selectedModel?.id === model.id;
+          if (model.type === "chat") {
+            return (
+              <div key={model.id} className="panel-session" hidden={!active}>
+                <ChatApp model={model.id} title={model.id} embedded />
+              </div>
+            );
+          }
+          return (
+            <div key={model.id} className="panel-session" hidden={!active}>
+              <InferenceForm model={model} />
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -65,6 +65,15 @@ public class InferenceModel {
     }
 
     /**
+     * Returns the underlying SMILE {@link Model}.
+     *
+     * @return the loaded model.
+     */
+    public Model model() {
+        return model;
+    }
+
+    /**
      * Returns the model metadata.
      * @return the model metadata.
      */

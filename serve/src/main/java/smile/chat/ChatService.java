@@ -20,7 +20,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.util.List;
 import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.SubmissionPublisher;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -42,13 +45,15 @@ import smile.util.HuggingFaceHub;
  * <ul>
  *   <li>If the value is an existing local directory, the model is loaded
  *       directly from that path.</li>
- *   <li>Otherwise the value is treated as a Hugging Face Hub repository ID
- *       (e.g. {@code meta-llama/Llama-3.1-8B}) and the required model
- *       files are downloaded to the local HF cache before loading.</li>
+ *   <li>Else if the value looks like a Hugging Face Hub repository ID
+ *       ({@code owner/name}), the required model files are downloaded to
+ *       the local HF cache before loading.</li>
+ *   <li>Otherwise the chat service stays unavailable (no HF download is
+ *       attempted for filesystem-like paths).</li>
  * </ul>
  *
  * <p>If the model cannot be loaded, the service starts in an
- * <em>unavailable</em> state and every request returns HTTP 503.
+ * <em>unavailable</em> state and every chat request returns HTTP 503.
  *
  * @author Haifeng Li
  */
@@ -59,6 +64,18 @@ public class ChatService {
 
     /** The loaded LLM; {@code null} when the model failed to load. */
     private Llama model;
+    /**
+     * Public model id exposed by the chat API (HF repo id or local directory
+     * name). Independent of {@link Llama#toString()}, which still embeds a
+     * Llama-family prefix for historical reasons.
+     */
+    private final String modelId;
+    /** OpenAI {@code owned_by} value for the loaded model. */
+    private String ownedBy = ModelObject.UNKNOWN_OWNER;
+    /** Unix epoch seconds when the model finished loading. */
+    private long createdAt;
+    /** {@code "huggingface"} or {@code "local"} when a model is loaded. */
+    private String source;
 
     /**
      * Loads the LLM upon application start.
@@ -73,17 +90,82 @@ public class ChatService {
      */
     @Inject
     public ChatService(ChatServiceConfig config, MemConfig mem) {
+        String modelSpec = config.model();
+        this.modelId = publicModelId(modelSpec);
         try {
             double memFraction = mem.fractionStatic();
-            if (Files.exists(Path.of(config.model()))) {
-                model = Llama.build(config.model(), config.tokenizer(),
+            Path localPath = Path.of(modelSpec);
+            if (Files.isDirectory(localPath)) {
+                String tokenizerPath = resolveLocalTokenizer(localPath);
+                model = Llama.build(modelSpec, tokenizerPath,
                         config.maxBatchSize(), config.maxSeqLen(), config.device(), memFraction);
-            } else {
+                ownedBy = ownerFromFamily(model.family());
+                source = "local";
+                createdAt = Instant.now().getEpochSecond();
+            } else if (looksLikeHuggingFaceRepoId(modelSpec)) {
                 model = loadFromHuggingFace(config, memFraction);
+                ownedBy = ownerFromHuggingFaceId(modelSpec);
+                source = "huggingface";
+                createdAt = Instant.now().getEpochSecond();
+            } else {
+                logger.warnf("Chat model '%s' is neither a local directory nor a Hugging Face "
+                        + "repository ID; chat completions will return HTTP 503", modelSpec);
             }
         } catch (Exception ex) {
-            logger.errorf(ex, "Failed to load model '%s'", config.model());
+            // Keep the service up in an unavailable state so classic ML / ONNX
+            // endpoints still work; chat requests return HTTP 503.
+            logger.warnf(ex, "Failed to load chat model '%s'; chat completions will return HTTP 503",
+                    modelSpec);
+            model = null;
         }
+    }
+
+    /**
+     * Derives the public API model id from {@code smile.chat.model}.
+     *
+     * <ul>
+     *   <li>Local directory → final path segment (e.g. {@code Llama3.1-8B-Instruct})</li>
+     *   <li>Hugging Face repo id → as configured (e.g. {@code Qwen/Qwen2.5-7B-Instruct})</li>
+     * </ul>
+     *
+     * @param modelSpec the configured {@code smile.chat.model} value.
+     * @return the public model id.
+     */
+    static String publicModelId(String modelSpec) {
+        if (modelSpec == null || modelSpec.isBlank()) {
+            return "unknown";
+        }
+        String spec = modelSpec.trim();
+        Path path = Path.of(spec);
+        if (Files.isDirectory(path)) {
+            Path fileName = path.getFileName();
+            return fileName != null ? fileName.toString() : spec;
+        }
+        return spec;
+    }
+
+    /**
+     * Returns {@code true} when {@code spec} looks like a Hugging Face Hub
+     * repository ID ({@code owner/name}), not a filesystem path.
+     *
+     * <p>Rejects absolute paths, relative path prefixes ({@code ./}, {@code ../}),
+     * Windows drive letters, and multi-segment paths such as
+     * {@code serve/src/test/resources/...}.
+     *
+     * @param spec the configured {@code smile.chat.model} value.
+     * @return {@code true} if the value should be resolved via Hugging Face Hub.
+     */
+    static boolean looksLikeHuggingFaceRepoId(String spec) {
+        if (spec == null || spec.isBlank()) return false;
+        String s = spec.trim();
+        if (s.startsWith("/") || s.startsWith(".") || s.contains("\\") || s.contains(":")) {
+            return false;
+        }
+        int slash = s.indexOf('/');
+        if (slash <= 0 || slash != s.lastIndexOf('/') || slash == s.length() - 1) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -96,12 +178,112 @@ public class ChatService {
     }
 
     /**
-     * Returns the fully-qualified model identifier (e.g. {@code meta/llama3/Meta-Llama-3-8B}).
+     * Returns the public model id used in chat completion requests/responses.
      *
-     * @return the model name string, or {@code "unknown"} when the model is not loaded.
+     * <p>This is the configured Hugging Face repo id or local directory name —
+     * not a Meta/Llama-specific prefix — so future non-Llama models keep a
+     * stable client-facing id.
+     *
+     * @return the model id, or {@code "unknown"} when the model is not loaded.
      */
     public String modelName() {
-        return model != null ? model.toString() : "unknown";
+        return model != null ? modelId : "unknown";
+    }
+
+    /**
+     * Returns OpenAI-shaped descriptors for currently loaded chat models.
+     *
+     * @return a singleton list when a model is loaded; otherwise empty.
+     */
+    public List<ModelObject> listModels() {
+        return findOpenAiModel(modelId, false).map(List::of).orElseGet(List::of);
+    }
+
+    /**
+     * Looks up the loaded chat model as an OpenAI {@link ModelObject}.
+     *
+     * @param id       the requested model id.
+     * @param detailed when {@code true}, include {@link LlmModelDetails}.
+     * @return the model object when loaded and ids match; otherwise empty.
+     */
+    public Optional<ModelObject> findOpenAiModel(String id, boolean detailed) {
+        if (model == null || id == null || id.isBlank()) {
+            return Optional.empty();
+        }
+        if (!modelId.equals(id.trim())) {
+            return Optional.empty();
+        }
+        LlmModelDetails llm = detailed ? LlmModelDetails.of(model, source) : null;
+        return Optional.of(ModelObject.of(modelId, createdAt, ownedBy, ModelObject.KIND_LLM,
+                null, null, llm));
+    }
+
+    /**
+     * Looks up the loaded chat model as a lean OpenAI {@link ModelObject}.
+     *
+     * @param id the requested model id.
+     * @return the model object when loaded and ids match; otherwise empty.
+     */
+    public Optional<ModelObject> findOpenAiModel(String id) {
+        return findOpenAiModel(id, false);
+    }
+
+    /**
+     * Derives {@code owned_by} from a Hugging Face repo id ({@code owner/name}).
+     *
+     * @param repoId the Hugging Face repository id.
+     * @return the owner segment, or the whole id when no slash is present.
+     */
+    static String ownerFromHuggingFaceId(String repoId) {
+        if (repoId == null || repoId.isBlank()) {
+            return ModelObject.UNKNOWN_OWNER;
+        }
+        String id = repoId.trim();
+        int slash = id.indexOf('/');
+        return slash > 0 ? id.substring(0, slash) : id;
+    }
+
+    /**
+     * Derives {@code owned_by} from {@link Llama#family()} for locally loaded
+     * checkpoints (first path segment, e.g. {@code meta} from {@code meta/llama3}).
+     *
+     * @param family the model family label.
+     * @return the first segment of the family string.
+     */
+    static String ownerFromFamily(String family) {
+        if (family == null || family.isBlank()) {
+            return ModelObject.UNKNOWN_OWNER;
+        }
+        String f = family.trim();
+        int slash = f.indexOf('/');
+        return slash > 0 ? f.substring(0, slash) : f;
+    }
+
+    /**
+     * Returns {@code true} when {@code requested} may be served by the loaded model.
+     *
+     * <p>{@code null}, blank, or omitted requests are accepted and use the loaded
+     * model. Otherwise the value must equal {@link #modelName()}.
+     *
+     * @param requested the {@code model} field from the chat completion request.
+     * @return {@code true} if the request may proceed.
+     */
+    public boolean acceptsModel(String requested) {
+        return matchesModelId(requested, modelName());
+    }
+
+    /**
+     * Pure matching helper for {@link #acceptsModel(String)}.
+     *
+     * @param requested    request {@code model} value.
+     * @param loadedModelId currently loaded model id from {@link #modelName()}.
+     * @return {@code true} when the request should be accepted.
+     */
+    static boolean matchesModelId(String requested, String loadedModelId) {
+        if (requested == null || requested.isBlank()) {
+            return true;
+        }
+        return requested.trim().equals(loadedModelId);
     }
 
     /**
@@ -113,7 +295,7 @@ public class ChatService {
      */
     public ChatCompletion[] complete(CompletionRequest request, SubmissionPublisher<String> publisher) {
         Message[][] dialogs = { request.messages };
-        return model.chat(dialogs, request.maxTokens, request.temperature,
+        return model.chat(dialogs, request.resolveMaxTokens(), request.temperature,
                 request.topP, request.logprobs, request.seed, publisher);
     }
 
@@ -143,7 +325,7 @@ public class ChatService {
             HuggingFaceHub.download(repoId, shard);
         }
 
-        String tokenizerPath = resolveTokenizer(repoId, config.tokenizer());
+        String tokenizerPath = resolveHuggingFaceTokenizer(repoId);
         return Llama.build(checkpointDir, tokenizerPath,
                 config.maxBatchSize(), config.maxSeqLen(), config.device(), memFractionStatic);
     }
@@ -178,20 +360,43 @@ public class ChatService {
     }
 
     /**
-     * Resolves the tokenizer path: uses a configured local file when present,
-     * otherwise downloads {@code original/tokenizer.model} (Llama 3+) or
-     * {@code tokenizer.model} from the HuggingFace repo.
+     * Finds a SentencePiece tokenizer under a local HF-layout checkpoint directory.
+     *
+     * <p>Tries {@code original/tokenizer.model} (Llama 3+) then {@code tokenizer.model}.
+     *
+     * @param checkpointDir local model directory.
+     * @return absolute path to the tokenizer file.
+     * @throws IOException if neither candidate exists.
      */
-    private String resolveTokenizer(String repoId, String configuredTokenizer) throws IOException {
-        if (configuredTokenizer != null && !configuredTokenizer.isBlank()
-                && Files.exists(Path.of(configuredTokenizer))) {
-            return configuredTokenizer;
+    static String resolveLocalTokenizer(Path checkpointDir) throws IOException {
+        String[] candidates = {"original/tokenizer.model", "tokenizer.model"};
+        for (String candidate : candidates) {
+            Path path = checkpointDir.resolve(candidate);
+            if (Files.isRegularFile(path)) {
+                return path.toAbsolutePath().normalize().toString();
+            }
         }
+        throw new IOException("tokenizer.model not found under checkpoint directory: " + checkpointDir);
+    }
 
+    /**
+     * Downloads a SentencePiece tokenizer from a Hugging Face repo.
+     *
+     * <p>Tries {@code original/tokenizer.model} (Llama 3+) then {@code tokenizer.model}.
+     *
+     * @param repoId Hugging Face repository id.
+     * @return path to the downloaded tokenizer file.
+     * @throws IOException if neither candidate can be downloaded.
+     */
+    private String resolveHuggingFaceTokenizer(String repoId) throws IOException {
         String[] candidates = {"original/tokenizer.model", "tokenizer.model"};
         for (String candidate : candidates) {
             try {
                 Path path = HuggingFaceHub.download(repoId, candidate);
+                if (!Files.isRegularFile(path)) {
+                    logger.warnf("Tokenizer candidate '%s' is not a readable file: %s", candidate, path);
+                    continue;
+                }
                 logger.infof("Downloaded tokenizer: %s", path);
                 return path.toString();
             } catch (FileNotFoundException ignored) {

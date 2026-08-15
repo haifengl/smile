@@ -27,6 +27,7 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  padding-top: 8px;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none;  /* IE 10+ */
   ::-webkit-scrollbar { /* WebKit */
@@ -36,7 +37,7 @@
 }
 
 .buffer {
-  height: 10px;
+  height: 16px;
   width: 100%;
   position: relative;
 }

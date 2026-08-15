@@ -20,6 +20,8 @@ import java.util.*;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import smile.deep.tensor.Device;
+import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 
 /**
@@ -118,7 +120,7 @@ public class RadixCache {
         }
         root = new RadixTreeNode(Integer.MIN_VALUE);
         root.key = new int[0];
-        root.value = Tensor.of(new long[0]);
+        root.value = emptyTensor();
         root.lockRef = 1;
         evictableSize = 0;
         protectedSize = 0;
@@ -586,7 +588,12 @@ public class RadixCache {
 
     /** Returns a fresh empty 1-D {@code int64} tensor of length 0. */
     private static Tensor emptyTensor() {
-        return Tensor.of(new long[0]);
+        // Explicit CPU Int64 — must not inherit CUDA/Half default options set
+        // during Llama.build, and must avoid empty from_blob paths.
+        return Tensor.empty(new Tensor.Options()
+                .dtype(ScalarType.Int64)
+                .device(Device.CPU())
+                .requireGradients(false), 0);
     }
 
     /**
