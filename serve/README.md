@@ -590,11 +590,19 @@ GET /api/v1/models/{id}
 
 OpenAI-compatible
 [retrieve model](https://developers.openai.com/api/reference/resources/models/methods/retrieve).
-Returns the same `ModelObject` shape as list entries (including SMILE `kind`).
-Does **not** run inference — use `/chat/completions`, `/onnx/{id}`, or
-`/ml/models/{id}` for that.
+Returns the same base `ModelObject` fields as list entries, plus an optional
+type-specific detail block. Does **not** run inference — use
+`/chat/completions`, `/onnx/{id}`, or `/ml/models/{id}` for that.
 
 Ids may contain slashes (e.g. Hugging Face repo ids).
+
+| `kind` | Extra field | Contents |
+|---|---|---|
+| SMILE algorithm | `smile` | `formula`, `schema`, `tags`, `train` / `validation` / `test` metrics (finite values only) |
+| `ONNX` | `onnx` | producer, domain, graph info, I/O shapes, custom metadata from the `.onnx` file |
+| `LLM` | `llm` | family, source (`local`/`huggingface`), architecture from `config.json` / `params.json` |
+
+List responses omit `smile` / `onnx` / `llm` so the catalog stays lean.
 
 ```shell
 curl http://localhost:8080/api/v1/models/iris_random_forest-1
@@ -607,7 +615,20 @@ curl http://localhost:8080/api/v1/models/iris_random_forest-1
   "created": 1710000000,
   "owned_by": "Unknown",
   "shutdown_date": null,
-  "kind": "random-forest"
+  "kind": "random-forest",
+  "smile": {
+    "formula": "class ~ .",
+    "schema": {
+      "petallength": { "type": "float", "nullable": false }
+    },
+    "tags": {},
+    "train": {
+      "accuracy": 0.97,
+      "size": 150
+    },
+    "validation": null,
+    "test": null
+  }
 }
 ```
 

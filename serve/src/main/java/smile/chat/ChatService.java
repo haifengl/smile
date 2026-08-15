@@ -74,6 +74,8 @@ public class ChatService {
     private String ownedBy = ModelObject.UNKNOWN_OWNER;
     /** Unix epoch seconds when the model finished loading. */
     private long createdAt;
+    /** {@code "huggingface"} or {@code "local"} when a model is loaded. */
+    private String source;
 
     /**
      * Loads the LLM upon application start.
@@ -97,10 +99,12 @@ public class ChatService {
                 model = Llama.build(modelSpec, config.tokenizer(),
                         config.maxBatchSize(), config.maxSeqLen(), config.device(), memFraction);
                 ownedBy = ownerFromFamily(model.family());
+                source = "local";
                 createdAt = Instant.now().getEpochSecond();
             } else if (looksLikeHuggingFaceRepoId(modelSpec)) {
                 model = loadFromHuggingFace(config, memFraction);
                 ownedBy = ownerFromHuggingFaceId(modelSpec);
+                source = "huggingface";
                 createdAt = Instant.now().getEpochSecond();
             } else {
                 logger.warnf("Chat model '%s' is neither a local directory nor a Hugging Face "
@@ -191,23 +195,36 @@ public class ChatService {
      * @return a singleton list when a model is loaded; otherwise empty.
      */
     public List<ModelObject> listModels() {
-        return findOpenAiModel(modelId).map(List::of).orElseGet(List::of);
+        return findOpenAiModel(modelId, false).map(List::of).orElseGet(List::of);
     }
 
     /**
      * Looks up the loaded chat model as an OpenAI {@link ModelObject}.
      *
-     * @param id the requested model id.
+     * @param id       the requested model id.
+     * @param detailed when {@code true}, include {@link LlmModelDetails}.
      * @return the model object when loaded and ids match; otherwise empty.
      */
-    public Optional<ModelObject> findOpenAiModel(String id) {
+    public Optional<ModelObject> findOpenAiModel(String id, boolean detailed) {
         if (model == null || id == null || id.isBlank()) {
             return Optional.empty();
         }
         if (!modelId.equals(id.trim())) {
             return Optional.empty();
         }
-        return Optional.of(ModelObject.of(modelId, createdAt, ownedBy, ModelObject.KIND_LLM));
+        LlmModelDetails llm = detailed ? LlmModelDetails.of(model, source) : null;
+        return Optional.of(ModelObject.of(modelId, createdAt, ownedBy, ModelObject.KIND_LLM,
+                null, null, llm));
+    }
+
+    /**
+     * Looks up the loaded chat model as a lean OpenAI {@link ModelObject}.
+     *
+     * @param id the requested model id.
+     * @return the model object when loaded and ids match; otherwise empty.
+     */
+    public Optional<ModelObject> findOpenAiModel(String id) {
+        return findOpenAiModel(id, false);
     }
 
     /**

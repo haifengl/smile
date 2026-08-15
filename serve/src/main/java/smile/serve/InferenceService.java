@@ -34,6 +34,7 @@ import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import org.jboss.logging.Logger;
 import smile.chat.ModelObject;
+import smile.chat.SmileModelDetails;
 import smile.io.Read;
 import smile.model.Model;
 
@@ -124,10 +125,11 @@ public class InferenceService {
     /**
      * Looks up a loaded SMILE model as an OpenAI {@link ModelObject}.
      *
-     * @param id the model id.
+     * @param id       the model id.
+     * @param detailed when {@code true}, include {@link smile.chat.SmileModelDetails}.
      * @return the model object when loaded; otherwise empty.
      */
-    public Optional<ModelObject> findOpenAiModel(String id) {
+    public Optional<ModelObject> findOpenAiModel(String id, boolean detailed) {
         if (id == null || id.isBlank()) {
             return Optional.empty();
         }
@@ -136,11 +138,25 @@ public class InferenceService {
             return Optional.empty();
         }
         var meta = model.metadata();
+        SmileModelDetails smile = detailed ? SmileModelDetails.of(model.model(), meta) : null;
         return Optional.of(ModelObject.of(
                 model.id(),
                 ModelObject.createdFromPath(model.path()),
                 ModelObject.ownedByFromTags(meta.tags()),
-                meta.algorithm()));
+                meta.algorithm(),
+                smile,
+                null,
+                null));
+    }
+
+    /**
+     * Looks up a loaded SMILE model as a lean OpenAI {@link ModelObject}.
+     *
+     * @param id the model id.
+     * @return the model object when loaded; otherwise empty.
+     */
+    public Optional<ModelObject> findOpenAiModel(String id) {
+        return findOpenAiModel(id, false);
     }
 
     /**

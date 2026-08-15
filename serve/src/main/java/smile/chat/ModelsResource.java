@@ -83,18 +83,18 @@ public class ModelsResource {
     @GET
     @Path("/{id:.+}")
     public ModelObject retrieve(@PathParam("id") String id) {
-        return find(id).orElseThrow(() -> new NotFoundException("Model not found: " + id));
+        return findDetailed(id).orElseThrow(() -> new NotFoundException("Model not found: " + id));
     }
 
-    private Optional<ModelObject> find(String id) {
-        Optional<ModelObject> chat = chatService.findOpenAiModel(id);
+    private Optional<ModelObject> findDetailed(String id) {
+        Optional<ModelObject> chat = chatService.findOpenAiModel(id, true);
         if (chat.isPresent()) {
             return chat;
         }
-        Optional<ModelObject> smile = inferenceService.findOpenAiModel(id);
+        Optional<ModelObject> smile = inferenceService.findOpenAiModel(id, true);
         if (smile.isPresent()) {
             return smile;
         }
-        return onnxService.findOpenAiModel(id);
+        return onnxService.findOpenAiModel(id, true);
     }
 }

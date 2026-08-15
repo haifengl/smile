@@ -90,6 +90,15 @@ public class Llama {
     }
 
     /**
+     * Returns the transformer hyperparameters loaded from the checkpoint.
+     *
+     * @return model args from {@code config.json} / {@code params.json}.
+     */
+    public ModelArgs params() {
+        return model.params();
+    }
+
+    /**
      * Returns the model instance name.
      * @return the model instance name.
      */

@@ -28,8 +28,9 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
 /**
- * OpenAI-compatible model object returned by {@code GET /models}, extended with
- * a SMILE-specific {@code kind} discriminator.
+ * OpenAI-compatible model object returned by {@code GET /models} and
+ * {@code GET /models/{id}}, extended with a SMILE {@code kind} discriminator
+ * and optional type-specific detail blocks on retrieve.
  *
  * @param id           model identifier referenced by API endpoints.
  * @param created      Unix epoch seconds when the model became available.
@@ -38,9 +39,13 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
  * @param shutdownDate optional retirement date; always {@code null} for smile-serve.
  * @param kind         model category: {@link #KIND_LLM}, {@link #KIND_ONNX}, or a
  *                     SMILE algorithm name (e.g. {@code "random-forest"}).
+ * @param smile        SMILE {@code .sml} details (retrieve only).
+ * @param onnx         ONNX graph details (retrieve only).
+ * @param llm          chat LLM architecture details (retrieve only).
  *
  * @author Haifeng Li
  * @see <a href="https://developers.openai.com/api/reference/resources/models/methods/list">OpenAI List models</a>
+ * @see <a href="https://developers.openai.com/api/reference/resources/models/methods/retrieve">OpenAI Retrieve model</a>
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 @JsonInclude(JsonInclude.Include.ALWAYS)
@@ -50,7 +55,10 @@ public record ModelObject(
         @JsonProperty("object") String object,
         String ownedBy,
         String shutdownDate,
-        String kind) {
+        String kind,
+        @JsonInclude(JsonInclude.Include.NON_NULL) SmileModelDetails smile,
+        @JsonInclude(JsonInclude.Include.NON_NULL) OnnxModelDetails onnx,
+        @JsonInclude(JsonInclude.Include.NON_NULL) LlmModelDetails llm) {
 
     /** Fallback {@code owned_by} when no owner metadata is available. */
     public static final String UNKNOWN_OWNER = "Unknown";
@@ -62,7 +70,7 @@ public record ModelObject(
     public static final String KIND_ONNX = "ONNX";
 
     /**
-     * Builds a model object with {@code object=model} and no shutdown date.
+     * Builds a lean list/catalog model object (no type-specific details).
      *
      * @param id      public model id.
      * @param created load / availability timestamp (Unix seconds).
@@ -71,9 +79,26 @@ public record ModelObject(
      * @return the model object.
      */
     public static ModelObject of(String id, long created, String ownedBy, String kind) {
+        return of(id, created, ownedBy, kind, null, null, null);
+    }
+
+    /**
+     * Builds a model object, optionally with retrieve-only detail blocks.
+     *
+     * @param id      public model id.
+     * @param created load / availability timestamp (Unix seconds).
+     * @param ownedBy owner string.
+     * @param kind    {@link #KIND_LLM}, {@link #KIND_ONNX}, or a SMILE algorithm name.
+     * @param smile   SMILE details, or {@code null}.
+     * @param onnx    ONNX details, or {@code null}.
+     * @param llm     LLM details, or {@code null}.
+     * @return the model object.
+     */
+    public static ModelObject of(String id, long created, String ownedBy, String kind,
+                                 SmileModelDetails smile, OnnxModelDetails onnx, LlmModelDetails llm) {
         String owner = (ownedBy == null || ownedBy.isBlank()) ? UNKNOWN_OWNER : ownedBy;
         String k = (kind == null || kind.isBlank()) ? UNKNOWN_OWNER : kind.trim();
-        return new ModelObject(id, created, "model", owner, null, k);
+        return new ModelObject(id, created, "model", owner, null, k, smile, onnx, llm);
     }
 
     /**
