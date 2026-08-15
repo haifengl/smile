@@ -34,6 +34,7 @@ import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import org.jboss.logging.Logger;
 import smile.chat.ModelObject;
+import smile.chat.OnnxModelDetails;
 import smile.onnx.InferenceSession;
 import smile.io.Paths;
 
@@ -121,10 +122,11 @@ public class OnnxService {
     /**
      * Looks up a loaded ONNX model as an OpenAI {@link ModelObject}.
      *
-     * @param id the model id.
+     * @param id       the model id.
+     * @param detailed when {@code true}, include {@link smile.chat.OnnxModelDetails}.
      * @return the model object when loaded; otherwise empty.
      */
-    public Optional<ModelObject> findOpenAiModel(String id) {
+    public Optional<ModelObject> findOpenAiModel(String id, boolean detailed) {
         if (id == null || id.isBlank()) {
             return Optional.empty();
         }
@@ -132,11 +134,25 @@ public class OnnxService {
         if (model == null) {
             return Optional.empty();
         }
+        OnnxModelDetails onnx = detailed ? model.details() : null;
         return Optional.of(ModelObject.of(
                 model.id(),
                 ModelObject.createdFromPath(model.path()),
                 ModelObject.ownedByFromMap(model.info().customMeta()),
-                ModelObject.KIND_ONNX));
+                ModelObject.KIND_ONNX,
+                null,
+                onnx,
+                null));
+    }
+
+    /**
+     * Looks up a loaded ONNX model as a lean OpenAI {@link ModelObject}.
+     *
+     * @param id the model id.
+     * @return the model object when loaded; otherwise empty.
+     */
+    public Optional<ModelObject> findOpenAiModel(String id) {
+        return findOpenAiModel(id, false);
     }
 
     /**

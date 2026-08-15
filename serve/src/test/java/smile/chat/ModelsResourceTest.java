@@ -57,7 +57,23 @@ public class ModelsResourceTest {
                 .body("object", equalTo("model"))
                 .body("owned_by", equalTo("Unknown"))
                 .body("kind", equalTo("random-forest"))
-                .body("shutdown_date", nullValue());
+                .body("shutdown_date", nullValue())
+                .body("smile.schema.petallength.type", equalTo("float"))
+                .body("smile.train.accuracy", notNullValue())
+                .body("smile.tags", notNullValue())
+                .body("onnx", nullValue())
+                .body("llm", nullValue());
+    }
+
+    @Test
+    public void testGivenListWhenSmileModelThenOmitsDetailBlocks() {
+        given()
+            .when().get("/api/v1/models")
+            .then()
+                .statusCode(200)
+                .body("data.find { it.id == 'iris_random_forest-1' }.smile", nullValue())
+                .body("data.find { it.id == 'iris_random_forest-1' }.onnx", nullValue())
+                .body("data.find { it.id == 'iris_random_forest-1' }.llm", nullValue());
     }
 
     @Test
