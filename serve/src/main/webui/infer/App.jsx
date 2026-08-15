@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
 import InferenceForm from "./InferenceForm";
 import ChatApp from "../chat/ChatApp";
@@ -30,6 +30,8 @@ function panelType(kind) {
 function App() {
   const [models, setModels] = useState([]);
   const [selectedModel, setSelectedModel] = useState(null);
+  /** Panels kept mounted so switching models preserves chat / form state. */
+  const [mountedModels, setMountedModels] = useState([]);
 
   useEffect(() => {
     fetch("/api/v1/models")
@@ -49,6 +51,15 @@ function App() {
       });
   }, []);
 
+  const selectModel = useCallback((model) => {
+    setSelectedModel(model);
+    if (model?.id) {
+      setMountedModels((prev) =>
+        prev.some((m) => m.id === model.id) ? prev : [...prev, model]
+      );
+    }
+  }, []);
+
   const isChat = selectedModel?.type === "chat";
 
   return (
@@ -56,19 +67,27 @@ function App() {
       <Sidebar
         models={models}
         selectedModel={selectedModel}
-        onSelect={setSelectedModel}
+        onSelect={selectModel}
       />
       <div className={isChat ? "content content-chat" : "content"}>
-        {isChat ? (
-          <ChatApp
-            key={selectedModel.id}
-            model={selectedModel.id}
-            title={selectedModel.id}
-            embedded
-          />
-        ) : (
-          <InferenceForm model={selectedModel} />
+        {!selectedModel && (
+          <p className="toast">Select a model for inference...</p>
         )}
+        {mountedModels.map((model) => {
+          const active = selectedModel?.id === model.id;
+          if (model.type === "chat") {
+            return (
+              <div key={model.id} className="panel-session" hidden={!active}>
+                <ChatApp model={model.id} title={model.id} embedded />
+              </div>
+            );
+          }
+          return (
+            <div key={model.id} className="panel-session" hidden={!active}>
+              <InferenceForm model={model} />
+            </div>
+          );
+        })}
       </div>
     </div>
   );
