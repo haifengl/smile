@@ -64,7 +64,8 @@ export default function ChatApp({ model, title, embedded = false }) {
   const sendingRef = useRef(false)
   const sentSystemPromptRef = useRef(false)
 
-  // New conversation (and reset transcript) when the selected model changes.
+  // Create a conversation once on mount. In /infer, each model keeps its own
+  // ChatApp instance mounted, so switching models does not remount or reset.
   useEffect(() => {
     setMessages([WELCOME])
     setShowTypingIndicator(false)
@@ -98,7 +99,7 @@ export default function ChatApp({ model, title, embedded = false }) {
     return () => {
       cancelled = true
     }
-  }, [model])
+  }, [])
 
   const sendMessage = useCallback(async (text) => {
     if (sendingRef.current || !text?.trim()) {
