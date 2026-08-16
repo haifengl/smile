@@ -8,8 +8,8 @@
   --infer-btn-primary-hover: #0b5ed7;
   --infer-btn-deep-blue: #0066ff;
   --infer-btn-deep-blue-hover: #0052cc;
-  /* Shared so Run matches Submit width */
-  --infer-action-btn-min-width: 5.75rem;
+  /* Identical width for Submit and Run (wide enough for "Submit") */
+  --infer-action-btn-width: 7.5em;
 
   display: flex;
   flex-direction: column;
@@ -113,14 +113,14 @@
   cursor: not-allowed;
 }
 
-/* Shared geometry for Submit + Run */
+/* Shared geometry for Submit + Run — fixed equal width */
 .infer-inputs .rjsf button[type="submit"],
 .infer-inputs .infer-submit,
 .infer-batch-actions .infer-btn-run {
   box-sizing: border-box;
   display: inline-block;
-  width: auto;
-  min-width: var(--infer-action-btn-min-width);
+  width: var(--infer-action-btn-width);
+  min-width: var(--infer-action-btn-width);
   max-width: 100%;
   align-self: flex-start;
   flex: 0 0 auto;
@@ -130,6 +130,8 @@
   font-family: inherit;
   border-radius: 8px;
   color: #fff;
+  text-align: center;
+  white-space: nowrap;
   cursor: pointer;
   transition: background-color 0.2s, border-color 0.2s;
 }
@@ -154,8 +156,10 @@
   border-color: var(--infer-btn-primary-hover);
 }
 
-/* Run — Deep Blue (not the same as Primary) */
+/* Run — Deep Blue (not the same as Primary); at least as wide as Submit */
 .infer-batch-actions .infer-btn-run {
+  width: auto;
+  min-width: var(--infer-action-btn-width);
   border: 1px solid var(--infer-btn-deep-blue);
   background-color: var(--infer-btn-deep-blue);
 }
