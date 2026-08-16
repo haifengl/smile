@@ -26,6 +26,7 @@ import {
 } from "./inferStream";
 import { normalizePrediction } from "./predictionRows";
 import PredictionResults from "./PredictionResults";
+import InferActionFooter from "./InferActionFooter";
 import "./InferPanel.css";
 
 function typeOf(type) {
@@ -75,6 +76,7 @@ function SmileForm({ modelId }) {
   const [error, setError] = useState(null);
   const [submitError, setSubmitError] = useState(null);
   const [file, setFile] = useState(null);
+  const [formData, setFormData] = useState({});
   const [streaming, setStreaming] = useState(false);
   const [streamCount, setStreamCount] = useState(0);
   const [startedAt, setStartedAt] = useState(null);
@@ -94,6 +96,7 @@ function SmileForm({ modelId }) {
     setModelMeta(null);
     setRows([]);
     setFile(null);
+    setFormData({});
     setSubmitError(null);
     setStartedAt(null);
     setFinishedAt(null);
@@ -157,7 +160,14 @@ function SmileForm({ modelId }) {
     setFinishedAt(Date.now());
   };
 
+  const clearFile = () => {
+    setFile(null);
+  };
+
   const handleSubmit = ({ formData }) => {
+    if (file) {
+      return;
+    }
     setSubmitError(null);
     beginRun();
     fetch(`/api/v1/ml/models/${modelId}`, {
@@ -265,52 +275,35 @@ function SmileForm({ modelId }) {
     <div className="infer-form">
       <div className="infer-layout">
         <section className="infer-inputs">
-          <Form schema={schema} validator={validator} onSubmit={handleSubmit} />
-
-          <div className="infer-batch">
-            <h3>Batch from file</h3>
-            <p className="infer-hint">
-              Upload CSV (column order:{" "}
-              <code>{keys.join(", ") || "schema fields"}</code>) or JSON /
-              JSON-lines. Predictions stream into the panel on the right.
-            </p>
-            <label className="infer-file-label">
-              <span>CSV or JSON file</span>
-              <input
-                type="file"
-                accept=".csv,.json,.jsonl,text/csv,application/json"
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
-                disabled={streaming}
-              />
-            </label>
-            {file && (
-              <p className="infer-file-name">
-                {file.name}{" "}
-                <span className="infer-muted">
-                  ({Math.max(1, Math.round(file.size / 1024))} KB)
-                </span>
-              </p>
-            )}
-            <div className="infer-batch-actions">
-              <button
-                type="button"
-                className="infer-btn-run"
-                onClick={handleFilePredict}
-                disabled={!file || streaming}
-              >
-                {streaming ? `Streaming… (${streamCount})` : "Run"}
-              </button>
-              {streaming && (
-                <button
-                  type="button"
-                  className="infer-btn"
-                  onClick={() => abortRef.current?.abort()}
-                >
-                  Stop
-                </button>
-              )}
-            </div>
-          </div>
+          <Form
+            schema={schema}
+            validator={validator}
+            formData={formData}
+            onChange={({ formData: next }) => setFormData(next)}
+            onSubmit={handleSubmit}
+            disabled={streaming}
+          >
+            <InferActionFooter
+              file={file}
+              formData={formData}
+              schema={schema}
+              onFileChange={setFile}
+              onClearFile={clearFile}
+              onRunFile={handleFilePredict}
+              streaming={streaming}
+              streamCount={streamCount}
+              onStop={() => abortRef.current?.abort()}
+              disabled={streaming}
+              batchHint={
+                <>
+                  Upload CSV (column order:{" "}
+                  <code>{keys.join(", ") || "schema fields"}</code>) or JSON /
+                  JSON-lines. With a file selected, the primary button runs the
+                  batch; otherwise it submits the form.
+                </>
+              }
+            />
+          </Form>
 
           {submitError && <p className="infer-error">{submitError}</p>}
         </section>

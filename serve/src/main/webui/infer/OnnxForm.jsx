@@ -32,6 +32,7 @@ import {
 } from "./inferStream";
 import { normalizePrediction } from "./predictionRows";
 import PredictionResults from "./PredictionResults";
+import InferActionFooter from "./InferActionFooter";
 import "./InferPanel.css";
 
 function OnnxForm({ modelId }) {
@@ -46,6 +47,7 @@ function OnnxForm({ modelId }) {
   const [submitting, setSubmitting] = useState(false);
   const [submitProgress, setSubmitProgress] = useState(null);
   const [batchFile, setBatchFile] = useState(null);
+  const [formData, setFormData] = useState({});
   const [streaming, setStreaming] = useState(false);
   const [streamCount, setStreamCount] = useState(0);
   const [startedAt, setStartedAt] = useState(null);
@@ -66,6 +68,7 @@ function OnnxForm({ modelId }) {
     setImageFiles([]);
     setPreviewUrls([]);
     setBatchFile(null);
+    setFormData({});
     setSubmitError(null);
     setMode("auto");
     setStartedAt(null);
@@ -204,6 +207,9 @@ function OnnxForm({ modelId }) {
   };
 
   const handleNumericSubmit = ({ formData }) => {
+    if (batchFile) {
+      return;
+    }
     try {
       const body = formDataToOnnxBody(formData, info);
       runPredict(body);
@@ -453,67 +459,43 @@ function OnnxForm({ modelId }) {
                 schema={numericSchema.schema}
                 uiSchema={numericSchema.uiSchema}
                 validator={validator}
+                formData={formData}
+                onChange={({ formData: next }) => setFormData(next)}
                 onSubmit={handleNumericSubmit}
                 disabled={busy}
-              />
-            )
-          )}
-
-          {effectiveMode !== "image" && (
-          <div className="infer-batch">
-            <h3>Batch from file</h3>
-            <p className="infer-hint">
-              {inputNames.length === 1 ? (
-                <>
-                  CSV floats for input <code>{inputNames[0]}</code>, or JSON /
-                  JSON-lines with named tensors.
-                </>
-              ) : (
-                <>
-                  Use JSON / JSON-lines with inputs{" "}
-                  <code>{inputNames.join(", ") || "…"}</code>. CSV is only for
-                  single-input models.
-                </>
-              )}{" "}
-              Results stream into the panel on the right.
-            </p>
-            <label className="infer-file-label">
-              <span>CSV or JSON file</span>
-              <input
-                type="file"
-                accept=".csv,.json,.jsonl,text/csv,application/json"
-                onChange={(e) => setBatchFile(e.target.files?.[0] || null)}
-                disabled={busy}
-              />
-            </label>
-            {batchFile && (
-              <p className="infer-file-name">
-                {batchFile.name}{" "}
-                <span className="infer-muted">
-                  ({Math.max(1, Math.round(batchFile.size / 1024))} KB)
-                </span>
-              </p>
-            )}
-            <div className="infer-batch-actions">
-              <button
-                type="button"
-                className="infer-btn-run"
-                onClick={handleFilePredict}
-                disabled={!batchFile || busy}
               >
-                {streaming ? `Streaming… (${streamCount})` : "Run"}
-              </button>
-              {streaming && (
-                <button
-                  type="button"
-                  className="infer-btn"
-                  onClick={() => abortRef.current?.abort()}
-                >
-                  Stop
-                </button>
-              )}
-            </div>
-          </div>
+                <InferActionFooter
+                  file={batchFile}
+                  formData={formData}
+                  schema={numericSchema.schema}
+                  onFileChange={setBatchFile}
+                  onClearFile={() => setBatchFile(null)}
+                  onRunFile={handleFilePredict}
+                  streaming={streaming}
+                  streamCount={streamCount}
+                  onStop={() => abortRef.current?.abort()}
+                  disabled={busy}
+                  batchHint={
+                    inputNames.length === 1 ? (
+                      <>
+                        CSV floats for input <code>{inputNames[0]}</code>, or
+                        JSON / JSON-lines with named tensors. With a file
+                        selected, the primary button runs the batch; otherwise
+                        it submits the form.
+                      </>
+                    ) : (
+                      <>
+                        Use JSON / JSON-lines with inputs{" "}
+                        <code>{inputNames.join(", ") || "…"}</code>. CSV is only
+                        for single-input models. With a file selected, the
+                        primary button runs the batch; otherwise it submits the
+                        form.
+                      </>
+                    )
+                  }
+                />
+              </Form>
+            )
           )}
 
           {submitError && <p className="infer-error">{submitError}</p>}

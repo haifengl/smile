@@ -1,13 +1,10 @@
 /*
- * Button colors (do not conflate these):
- *   Submit → default Primary (#0d6efd)
- *   Run    → Deep Blue (#0066ff)
+ * Button colors:
+ *   Submit / Run → #1da1f2
  */
 .infer-form {
-  --infer-btn-primary: #0d6efd;
-  --infer-btn-primary-hover: #0b5ed7;
-  --infer-btn-deep-blue: #0066ff;
-  --infer-btn-deep-blue-hover: #0052cc;
+  --infer-btn-primary: #1da1f2;
+  --infer-btn-primary-hover: #1a91da;
   /* Identical width for Submit and Run (wide enough for "Submit") */
   --infer-action-btn-width: 7.5em;
 
@@ -86,12 +83,6 @@
   font-weight: 400;
 }
 
-.infer-batch-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-}
-
 .infer-btn {
   appearance: none;
   border: 1px solid #d1d5db;
@@ -116,7 +107,7 @@
 /* Shared geometry for Submit + Run — fixed equal width */
 .infer-inputs .rjsf button[type="submit"],
 .infer-inputs .infer-submit,
-.infer-batch-actions .infer-btn-run {
+.infer-primary-actions .infer-btn-run {
   box-sizing: border-box;
   display: inline-block;
   width: var(--infer-action-btn-width);
@@ -138,7 +129,7 @@
 
 .infer-inputs .rjsf button[type="submit"]:disabled,
 .infer-inputs .infer-submit:disabled,
-.infer-batch-actions .infer-btn-run:disabled {
+.infer-primary-actions .infer-btn-run:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
@@ -156,17 +147,47 @@
   border-color: var(--infer-btn-primary-hover);
 }
 
-/* Run — Deep Blue (not the same as Primary); at least as wide as Submit */
-.infer-batch-actions .infer-btn-run {
+/* Run — same color as Submit */
+.infer-primary-actions .infer-btn-run {
   width: auto;
   min-width: var(--infer-action-btn-width);
-  border: 1px solid var(--infer-btn-deep-blue);
-  background-color: var(--infer-btn-deep-blue);
+  border: 1px solid var(--infer-btn-primary);
+  background-color: var(--infer-btn-primary);
 }
 
-.infer-batch-actions .infer-btn-run:hover:not(:disabled) {
-  background-color: var(--infer-btn-deep-blue-hover);
-  border-color: var(--infer-btn-deep-blue-hover);
+.infer-primary-actions .infer-btn-run:hover:not(:disabled) {
+  background-color: var(--infer-btn-primary-hover);
+  border-color: var(--infer-btn-primary-hover);
+}
+
+.infer-action-footer {
+  margin-top: 8px;
+}
+
+.infer-file-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.infer-file-row .infer-file-name {
+  margin: 0;
+}
+
+.infer-file-row .infer-btn {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+.infer-primary-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
 }
 
 .infer-error {
