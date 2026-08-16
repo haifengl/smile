@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 env:
-  TORCH_VERSION: "2.12.0"
+  TORCH_VERSION: "2.13.0"
   ORT_LOGGING_LEVEL: "3"
   OMP_NUM_THREADS: "1"
   OPENBLAS_NUM_THREADS: "1"
