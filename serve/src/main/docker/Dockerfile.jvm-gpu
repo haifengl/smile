@@ -127,9 +127,12 @@ COPY --chown=185 build/quarkus-app/*.jar /deployments/
 COPY --chown=185 build/quarkus-app/app/ /deployments/app/
 COPY --chown=185 build/quarkus-app/quarkus/ /deployments/quarkus/
 
+# Add libsmile_torch.so to LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH="/deployments/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+
 EXPOSE 8080
 USER 185
-ENV JAVA_OPTS_APPEND="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --enable-native-access ALL-UNNAMED"
+ENV JAVA_OPTS_APPEND="-Dquarkus.datasource.db-kind=postgresql -Dquarkus.datasource.jdbc.url=jdbc:postgresql://localhost:5432/smile -Dquarkus.datasource.username=postgres -Dquarkus.datasource.password=admin -Dquarkus.hibernate-orm.active=false -Djava.util.logging.manager=org.jboss.logmanager.LogManager --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --enable-native-access ALL-UNNAMED"
 ENV JAVA_APP_JAR="/deployments/quarkus-run.jar"
 
 ENTRYPOINT [ "/opt/jboss/container/java/run/run-java.sh" ]
