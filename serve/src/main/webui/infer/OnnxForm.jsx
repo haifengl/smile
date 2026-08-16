@@ -41,9 +41,10 @@ function OnnxForm({ modelId }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [submitError, setSubmitError] = useState(null);
-  const [imageFile, setImageFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
+  const [imageFiles, setImageFiles] = useState([]);
+  const [previewUrls, setPreviewUrls] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [submitProgress, setSubmitProgress] = useState(null);
   const [batchFile, setBatchFile] = useState(null);
   const [streaming, setStreaming] = useState(false);
   const [streamCount, setStreamCount] = useState(0);
@@ -62,13 +63,14 @@ function OnnxForm({ modelId }) {
     setError(null);
     setInfo(null);
     setRows([]);
-    setImageFile(null);
-    setPreviewUrl(null);
+    setImageFiles([]);
+    setPreviewUrls([]);
     setBatchFile(null);
     setSubmitError(null);
     setMode("auto");
     setStartedAt(null);
     setFinishedAt(null);
+    setSubmitProgress(null);
 
     fetch(`/api/v1/onnx/${modelId}`)
       .then((res) => {
@@ -95,14 +97,16 @@ function OnnxForm({ modelId }) {
   }, [modelId]);
 
   useEffect(() => {
-    if (!imageFile) {
-      setPreviewUrl(null);
-      return;
+    if (!imageFiles.length) {
+      setPreviewUrls([]);
+      return undefined;
     }
-    const url = URL.createObjectURL(imageFile);
-    setPreviewUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [imageFile]);
+    const urls = imageFiles.map((file) => URL.createObjectURL(file));
+    setPreviewUrls(urls);
+    return () => {
+      urls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [imageFiles]);
 
   const vision = useMemo(() => (info ? findVisionInput(info) : null), [info]);
   const effectiveMode =
@@ -178,6 +182,27 @@ function OnnxForm({ modelId }) {
     }
   };
 
+  const buildImageBody = async (file) => {
+    const inputMeta = info.inputs.find((i) => i.name === vision.name);
+    const tensor = await imageFileToTensor(
+      file,
+      vision.analysis,
+      inputMeta?.elementType
+    );
+    const body = { [vision.name]: tensor };
+    for (const input of info.inputs) {
+      if (input.name === vision.name) {
+        continue;
+      }
+      const n = (input.shape || []).reduce(
+        (acc, d) => (d > 0 ? acc * d : acc),
+        1
+      );
+      body[input.name] = Array(Math.max(n, 1)).fill(0);
+    }
+    return body;
+  };
+
   const handleNumericSubmit = ({ formData }) => {
     try {
       const body = formDataToOnnxBody(formData, info);
@@ -189,31 +214,56 @@ function OnnxForm({ modelId }) {
 
   const handleImageSubmit = async (event) => {
     event.preventDefault();
-    if (!vision || !imageFile) {
-      setSubmitError("Select an image file first");
+    if (!vision || imageFiles.length === 0) {
+      setSubmitError("Select one or more image files first");
       return;
     }
+    setSubmitting(true);
+    setSubmitError(null);
+    setSubmitProgress({ done: 0, total: imageFiles.length });
+    beginRun();
     try {
-      const inputMeta = info.inputs.find((i) => i.name === vision.name);
-      const tensor = await imageFileToTensor(
-        imageFile,
-        vision.analysis,
-        inputMeta?.elementType
-      );
-      const body = { [vision.name]: tensor };
-      for (const input of info.inputs) {
-        if (input.name === vision.name) {
-          continue;
+      for (let i = 0; i < imageFiles.length; i++) {
+        const file = imageFiles[i];
+        setSubmitProgress({ done: i, total: imageFiles.length });
+        try {
+          const body = await buildImageBody(file);
+          const res = await fetch(`/api/v1/onnx/${modelId}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          if (!res.ok) {
+            const text = await res.text();
+            throw new Error(text || "Failed to make an inference");
+          }
+          const data = await res.json();
+          const id = ++resultIdRef.current;
+          const normalized = normalizePrediction(data);
+          setRows((prev) => [
+            ...prev,
+            {
+              id,
+              values: { file: file.name, ...normalized.values },
+            },
+          ]);
+        } catch (err) {
+          const id = ++resultIdRef.current;
+          setRows((prev) => [
+            ...prev,
+            {
+              id,
+              values: { file: file.name },
+              error: err.message || String(err),
+            },
+          ]);
         }
-        const n = (input.shape || []).reduce(
-          (acc, d) => (d > 0 ? acc * d : acc),
-          1
-        );
-        body[input.name] = Array(Math.max(n, 1)).fill(0);
+        setSubmitProgress({ done: i + 1, total: imageFiles.length });
       }
-      await runPredict(body);
-    } catch (err) {
-      setSubmitError(err.message);
+    } finally {
+      setSubmitting(false);
+      setSubmitProgress(null);
+      endRun();
     }
   };
 
@@ -341,33 +391,60 @@ function OnnxForm({ modelId }) {
           {effectiveMode === "image" && vision ? (
             <form className="image-form" onSubmit={handleImageSubmit}>
               <label className="infer-file-label">
-                <span>Upload image</span>
+                <span>Upload images</span>
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                  multiple
+                  onChange={(e) =>
+                    setImageFiles(Array.from(e.target.files || []))
+                  }
                   disabled={busy}
                 />
               </label>
-              {previewUrl && (
-                <div className="image-preview">
-                  <img src={previewUrl} alt="Selected input" />
-                  <p className="infer-muted">
-                    Resized to {vision.analysis.width}×{vision.analysis.height},{" "}
-                    {vision.analysis.layout.toUpperCase()}, values{" "}
-                    {(() => {
-                      const t =
-                        info.inputs.find((i) => i.name === vision.name)
-                          ?.elementType || "FLOAT";
-                      return t === "FLOAT" || t === "DOUBLE"
-                        ? "[0, 1]"
-                        : "[0, 255]";
-                    })()}
-                  </p>
+              {imageFiles.length > 0 && (
+                <p className="infer-file-name">
+                  {imageFiles.length} file{imageFiles.length === 1 ? "" : "s"}{" "}
+                  selected
+                </p>
+              )}
+              {previewUrls.length > 0 && (
+                <div className="image-preview-grid">
+                  {previewUrls.map((url, i) => (
+                    <div key={`${imageFiles[i]?.name}-${i}`} className="image-preview">
+                      <img src={url} alt={imageFiles[i]?.name || "Selected"} />
+                      <p className="infer-muted" title={imageFiles[i]?.name}>
+                        {imageFiles[i]?.name}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               )}
-              <button type="submit" disabled={!imageFile || busy}>
-                {submitting ? "Running…" : "Predict"}
+              {previewUrls.length > 0 && (
+                <p className="infer-muted">
+                  Each image is resized to {vision.analysis.width}×
+                  {vision.analysis.height},{" "}
+                  {vision.analysis.layout.toUpperCase()}, values{" "}
+                  {(() => {
+                    const t =
+                      info.inputs.find((i) => i.name === vision.name)
+                        ?.elementType || "FLOAT";
+                    return t === "FLOAT" || t === "DOUBLE"
+                      ? "[0, 1]"
+                      : "[0, 255]";
+                  })()}
+                </p>
+              )}
+              <button
+                type="submit"
+                className="infer-submit"
+                disabled={imageFiles.length === 0 || busy}
+              >
+                {submitting
+                  ? submitProgress
+                    ? `Submitting… (${submitProgress.done}/${submitProgress.total})`
+                    : "Submitting…"
+                  : "Submit"}
               </button>
             </form>
           ) : (
@@ -382,6 +459,7 @@ function OnnxForm({ modelId }) {
             )
           )}
 
+          {effectiveMode !== "image" && (
           <div className="infer-batch">
             <h3>Batch from file</h3>
             <p className="infer-hint">
@@ -419,7 +497,7 @@ function OnnxForm({ modelId }) {
             <div className="infer-batch-actions">
               <button
                 type="button"
-                className="infer-btn infer-btn-primary"
+                className="infer-btn-run"
                 onClick={handleFilePredict}
                 disabled={!batchFile || busy}
               >
@@ -436,6 +514,7 @@ function OnnxForm({ modelId }) {
               )}
             </div>
           </div>
+          )}
 
           {submitError && <p className="infer-error">{submitError}</p>}
         </section>
