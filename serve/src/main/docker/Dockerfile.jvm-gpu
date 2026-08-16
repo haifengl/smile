@@ -3,15 +3,16 @@
 #
 # Before building the container image run:
 #
-# ./gradlew build
+# ./gradlew :serve:build
+# cp studio/src/universal/bin/libsmile_torch.so serve/build/quarkus-app/lib/
 #
 # Then, build the image with:
 #
-# docker build -f src/main/docker/Dockerfile.jvm-gpu -t quarkus/smile-serve-gpu .
+# docker build -f serve/src/main/docker/Dockerfile.jvm-gpu -t quarkus/smile-serve-gpu serve
 #
 # Then run the container using:
 #
-# docker run -i --rm -p 8080:8080 quarkus/smile-serve-gpu
+# docker run -i --rm -p 8888:8080 -u root -v "$(pwd)/model":/model quarkus/smile-serve-gpu
 #
 # If you want to include the debug port into your docker image
 # you will have to expose the debug port (default 5005 being the default) like this :  EXPOSE 8080 5005.
@@ -20,7 +21,7 @@
 #
 # Then run the container using :
 #
-# docker run -i --rm -p 8080:8080 quarkus/smile-serve-jvm
+# docker run -i --rm -p 8888:8080 -u root -v "$(pwd)/model":/model -e JAVA_DEBUG=true -e "JAVA_DEBUG_PORT=*:5005" quarkus/smile-serve-gpu
 #
 # This image uses the `run-java.sh` script to run the application.
 # This scripts computes the command line to execute your Java application, and
@@ -114,7 +115,7 @@ ENV LD_LIBRARY_PATH="/usr/local/onnxruntime/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_
 
 # Install LibTorch
 ARG TORCH_VERSION=2.13.0
-ARG CUDA_VERSION=130
+ARG CUDA_VERSION=132
 RUN curl -fsSL --retry 5 --retry-delay 10 -o libtorch.zip \
     "https://download.pytorch.org/libtorch/cu${CUDA_VERSION}/libtorch-shared-with-deps-${TORCH_VERSION}%2Bcu${CUDA_VERSION}.zip"
 RUN unzip -q -o libtorch.zip -d /usr/local
