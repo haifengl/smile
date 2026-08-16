@@ -21,7 +21,7 @@
 #
 # Then run the container using :
 #
-# docker run -i --rm -p 8888:8080 -u root -v "$(pwd)/model":/model quarkus/smile-serve-jvm
+# docker run -i --rm -p 8888:8080 -u root -v "$(pwd)/model":/model -e JAVA_DEBUG=true -e "JAVA_DEBUG_PORT=*:5005" quarkus/smile-serve-jvm
 #
 # This image uses the `run-java.sh` script to run the application.
 # This scripts computes the command line to execute your Java application, and
