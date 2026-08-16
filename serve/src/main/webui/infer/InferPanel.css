@@ -1,4 +1,16 @@
+/*
+ * Button colors (do not conflate these):
+ *   Submit → default Primary (#0d6efd)
+ *   Run    → Deep Blue (#0066ff)
+ */
 .infer-form {
+  --infer-btn-primary: #0d6efd;
+  --infer-btn-primary-hover: #0b5ed7;
+  --infer-btn-deep-blue: #0066ff;
+  --infer-btn-deep-blue-hover: #0052cc;
+  /* Shared so Run matches Submit width */
+  --infer-action-btn-min-width: 5.75rem;
+
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -101,26 +113,56 @@
   cursor: not-allowed;
 }
 
-.infer-btn-primary {
-  background: #0066ff;
-  border-color: #0066ff;
-  color: #fff;
-}
-
-.infer-btn-primary:hover:not(:disabled) {
-  background: #0052cc;
-  border-color: #0052cc;
-}
-
-/* Match RJSF Submit sizing so Run aligns with Submit. */
+/* Shared geometry for Submit + Run */
 .infer-inputs .rjsf button[type="submit"],
-.infer-batch-actions .infer-btn-primary {
+.infer-inputs .infer-submit,
+.infer-batch-actions .infer-btn-run {
   box-sizing: border-box;
-  min-width: 6.5em;
+  display: inline-block;
+  width: auto;
+  min-width: var(--infer-action-btn-min-width);
+  max-width: 100%;
+  align-self: flex-start;
+  flex: 0 0 auto;
   padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
+  font-family: inherit;
   border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.infer-inputs .rjsf button[type="submit"]:disabled,
+.infer-inputs .infer-submit:disabled,
+.infer-batch-actions .infer-btn-run:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Submit — default Primary */
+.infer-inputs .rjsf button[type="submit"],
+.infer-inputs .infer-submit {
+  border: 1px solid var(--infer-btn-primary);
+  background-color: var(--infer-btn-primary);
+}
+
+.infer-inputs .rjsf button[type="submit"]:hover:not(:disabled),
+.infer-inputs .infer-submit:hover:not(:disabled) {
+  background-color: var(--infer-btn-primary-hover);
+  border-color: var(--infer-btn-primary-hover);
+}
+
+/* Run — Deep Blue (not the same as Primary) */
+.infer-batch-actions .infer-btn-run {
+  border: 1px solid var(--infer-btn-deep-blue);
+  background-color: var(--infer-btn-deep-blue);
+}
+
+.infer-batch-actions .infer-btn-run:hover:not(:disabled) {
+  background-color: var(--infer-btn-deep-blue-hover);
+  border-color: var(--infer-btn-deep-blue-hover);
 }
 
 .infer-error {
@@ -315,14 +357,31 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-width: 480px;
+  max-width: 560px;
+}
+
+.onnx-form .image-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
 }
 
 .onnx-form .image-preview img {
-  max-width: 320px;
-  max-height: 320px;
+  max-width: 100%;
+  max-height: 120px;
+  width: 100%;
+  object-fit: contain;
   border: 1px solid #ccc;
   border-radius: 4px;
+  background: #f8fafc;
+}
+
+.onnx-form .image-preview .infer-muted {
+  margin: 4px 0 0;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @media (max-width: 900px) {
