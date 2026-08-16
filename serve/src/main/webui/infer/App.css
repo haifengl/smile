@@ -138,7 +138,9 @@
   padding: 24px;
   background: white;
   color: black;
-  overflow: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Chat fills the pane; no outer padding so the transcript can scroll. */

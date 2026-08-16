@@ -182,9 +182,14 @@ export function parseNumericList(text) {
     });
 }
 
+/** ImageNet channel mean / std (RGB), matching ONNX Model Zoo classifiers. */
+const IMAGENET_MEAN = [0.485, 0.456, 0.406];
+const IMAGENET_STD = [0.229, 0.224, 0.225];
+
 /**
  * Loads an image file, resizes to the model input size, and returns a flat
- * tensor array in NCHW or NHWC layout (values in [0, 1] for FLOAT models).
+ * tensor array in NCHW or NHWC layout. FLOAT models are scaled to [0, 1]
+ * then ImageNet-normalized: {@code (x - mean) / std}.
  *
  * @param {File} file
  * @param {{ layout: 'nchw'|'nhwc', height: number, width: number, channels: number }} analysis
@@ -205,16 +210,24 @@ export function imageFileToTensor(file, analysis, elementType = "FLOAT") {
         ctx.drawImage(img, 0, 0, width, height);
         const { data } = ctx.getImageData(0, 0, width, height);
         const asFloat = !elementType || elementType === "FLOAT" || elementType === "DOUBLE";
-        const scale = asFloat ? 1 / 255 : 1;
         const out = new Array(channels * height * width);
         let o = 0;
+        const sample = (c, i) => {
+          const src = c < 3 ? data[i + c] : data[i + 3];
+          if (!asFloat) {
+            return src;
+          }
+          const x = src / 255;
+          if (c < 3) {
+            return (x - IMAGENET_MEAN[c]) / IMAGENET_STD[c];
+          }
+          return x;
+        };
         if (layout === "nchw") {
           for (let c = 0; c < channels; c++) {
             for (let y = 0; y < height; y++) {
               for (let x = 0; x < width; x++) {
-                const i = (y * width + x) * 4;
-                const src = c < 3 ? data[i + c] : data[i + 3];
-                out[o++] = src * scale;
+                out[o++] = sample(c, (y * width + x) * 4);
               }
             }
           }
@@ -223,8 +236,7 @@ export function imageFileToTensor(file, analysis, elementType = "FLOAT") {
             for (let x = 0; x < width; x++) {
               const i = (y * width + x) * 4;
               for (let c = 0; c < channels; c++) {
-                const src = c < 3 ? data[i + c] : data[i + 3];
-                out[o++] = src * scale;
+                out[o++] = sample(c, i);
               }
             }
           }

@@ -356,6 +356,10 @@ public class OnnxModel implements AutoCloseable {
      * Flattens a tensor {@link OrtValue} into a {@link JsonArray} of numbers.
      * Supports {@code FLOAT}, {@code DOUBLE}, {@code INT32}, {@code INT64},
      * {@code INT8}, {@code UINT8}, and {@code BOOL} element types.
+     *
+     * <p>Note: ImageNet classifiers typically emit <em>raw logits</em>. Apply
+     * {@code MathEx.softmax} (as in {@code InferenceSessionTest}) if you need
+     * class probabilities.
      */
     private static JsonArray ortValueToJsonArray(OrtValue value) {
         if (!value.isTensor()) {
