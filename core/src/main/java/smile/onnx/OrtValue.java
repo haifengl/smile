@@ -20,10 +20,6 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
-import java.nio.FloatBuffer;
-import java.nio.DoubleBuffer;
-import java.nio.IntBuffer;
-import java.nio.LongBuffer;
 import smile.onnx.foreign.OrtApi;
 import smile.onnx.foreign.onnxruntime_c_api_h;
 import smile.tensor.DenseMatrix;
@@ -99,10 +95,12 @@ public class OrtValue implements AutoCloseable {
      */
     public static OrtValue fromFloatArray(float[] data, long[] shape) {
         Arena arena = Arena.ofConfined();
-        MemorySegment mem = arena.allocate(MemoryLayout.sequenceLayout(data.length, ValueLayout.JAVA_FLOAT));
-        FloatBuffer buf = mem.asByteBuffer().asFloatBuffer();
-        buf.put(data);
-        return createWithData(arena, mem, (long) data.length * Float.BYTES, shape, ElementType.FLOAT);
+        long byteSize = (long) data.length * Float.BYTES;
+        // Copy via MemorySegment (native endian). Do not use asByteBuffer().asFloatBuffer()
+        // without order(ByteOrder.nativeOrder()) — asByteBuffer() defaults to BIG_ENDIAN.
+        MemorySegment mem = arena.allocate(byteSize);
+        MemorySegment.copy(MemorySegment.ofArray(data), 0, mem, 0, byteSize);
+        return createWithData(arena, mem, byteSize, shape, ElementType.FLOAT);
     }
 
     /**
@@ -115,10 +113,10 @@ public class OrtValue implements AutoCloseable {
      */
     public static OrtValue fromDoubleArray(double[] data, long[] shape) {
         Arena arena = Arena.ofConfined();
-        MemorySegment mem = arena.allocate(MemoryLayout.sequenceLayout(data.length, ValueLayout.JAVA_DOUBLE));
-        DoubleBuffer buf = mem.asByteBuffer().asDoubleBuffer();
-        buf.put(data);
-        return createWithData(arena, mem, (long) data.length * Double.BYTES, shape, ElementType.DOUBLE);
+        long byteSize = (long) data.length * Double.BYTES;
+        MemorySegment mem = arena.allocate(byteSize);
+        MemorySegment.copy(MemorySegment.ofArray(data), 0, mem, 0, byteSize);
+        return createWithData(arena, mem, byteSize, shape, ElementType.DOUBLE);
     }
 
     /**
@@ -131,10 +129,10 @@ public class OrtValue implements AutoCloseable {
      */
     public static OrtValue fromIntArray(int[] data, long[] shape) {
         Arena arena = Arena.ofConfined();
-        MemorySegment mem = arena.allocate(MemoryLayout.sequenceLayout(data.length, ValueLayout.JAVA_INT));
-        IntBuffer buf = mem.asByteBuffer().asIntBuffer();
-        buf.put(data);
-        return createWithData(arena, mem, (long) data.length * Integer.BYTES, shape, ElementType.INT32);
+        long byteSize = (long) data.length * Integer.BYTES;
+        MemorySegment mem = arena.allocate(byteSize);
+        MemorySegment.copy(MemorySegment.ofArray(data), 0, mem, 0, byteSize);
+        return createWithData(arena, mem, byteSize, shape, ElementType.INT32);
     }
 
     /**
@@ -147,10 +145,10 @@ public class OrtValue implements AutoCloseable {
      */
     public static OrtValue fromLongArray(long[] data, long[] shape) {
         Arena arena = Arena.ofConfined();
-        MemorySegment mem = arena.allocate(MemoryLayout.sequenceLayout(data.length, ValueLayout.JAVA_LONG));
-        LongBuffer buf = mem.asByteBuffer().asLongBuffer();
-        buf.put(data);
-        return createWithData(arena, mem, (long) data.length * Long.BYTES, shape, ElementType.INT64);
+        long byteSize = (long) data.length * Long.BYTES;
+        MemorySegment mem = arena.allocate(byteSize);
+        MemorySegment.copy(MemorySegment.ofArray(data), 0, mem, 0, byteSize);
+        return createWithData(arena, mem, byteSize, shape, ElementType.INT64);
     }
 
     /**
@@ -164,7 +162,7 @@ public class OrtValue implements AutoCloseable {
     public static OrtValue fromByteArray(byte[] data, long[] shape) {
         Arena arena = Arena.ofConfined();
         MemorySegment mem = arena.allocate(data.length);
-        mem.asByteBuffer().put(data);
+        MemorySegment.copy(MemorySegment.ofArray(data), 0, mem, 0, data.length);
         return createWithData(arena, mem, data.length, shape, ElementType.INT8);
     }
 
@@ -225,56 +223,45 @@ public class OrtValue implements AutoCloseable {
 
         Arena arena = Arena.ofConfined();
 
-        // Use typed NIO buffers so data is written in native byte order,
-        // exactly as the existing fromFloatArray / fromDoubleArray etc. do.
-        // We read elements via getAtIndex on the tensor's flat memory, which
-        // is correct because JTensor is row-major with no padding (stride[last]=1
-        // and all higher strides are computed from shape), so the flat linear
-        // layout matches element order 0..n-1.
+        // JTensor is row-major with no padding (stride[last]=1 and higher
+        // strides derived from shape), so flat indices 0..n-1 match ONNX layout.
+        // Copy with ValueLayout / MemorySegment (native endian). Avoid
+        // asByteBuffer().asXBuffer() without nativeOrder() — BIG_ENDIAN by default.
         MemorySegment src = tensor.memory();
         switch (scalarType) {
             case Float32 -> {
                 long byteSize = (long) n * Float.BYTES;
-                MemorySegment dst = arena.allocate(
-                        MemoryLayout.sequenceLayout(n, ValueLayout.JAVA_FLOAT));
-                FloatBuffer buf = dst.asByteBuffer().asFloatBuffer();
-                for (int i = 0; i < n; i++) buf.put(i, src.getAtIndex(ValueLayout.JAVA_FLOAT, i));
+                MemorySegment dst = arena.allocate(byteSize);
+                MemorySegment.copy(src, 0, dst, 0, byteSize);
                 return createWithData(arena, dst, byteSize, shape, elementType);
             }
             case Float64 -> {
                 long byteSize = (long) n * Double.BYTES;
-                MemorySegment dst = arena.allocate(
-                        MemoryLayout.sequenceLayout(n, ValueLayout.JAVA_DOUBLE));
-                DoubleBuffer buf = dst.asByteBuffer().asDoubleBuffer();
-                for (int i = 0; i < n; i++) buf.put(i, src.getAtIndex(ValueLayout.JAVA_DOUBLE, i));
+                MemorySegment dst = arena.allocate(byteSize);
+                MemorySegment.copy(src, 0, dst, 0, byteSize);
                 return createWithData(arena, dst, byteSize, shape, elementType);
             }
             case Int32 -> {
                 long byteSize = (long) n * Integer.BYTES;
-                MemorySegment dst = arena.allocate(
-                        MemoryLayout.sequenceLayout(n, ValueLayout.JAVA_INT));
-                IntBuffer buf = dst.asByteBuffer().asIntBuffer();
-                for (int i = 0; i < n; i++) buf.put(i, src.getAtIndex(ValueLayout.JAVA_INT, i));
+                MemorySegment dst = arena.allocate(byteSize);
+                MemorySegment.copy(src, 0, dst, 0, byteSize);
                 return createWithData(arena, dst, byteSize, shape, elementType);
             }
             case Int64 -> {
                 long byteSize = (long) n * Long.BYTES;
-                MemorySegment dst = arena.allocate(
-                        MemoryLayout.sequenceLayout(n, ValueLayout.JAVA_LONG));
-                LongBuffer buf = dst.asByteBuffer().asLongBuffer();
-                for (int i = 0; i < n; i++) buf.put(i, src.getAtIndex(ValueLayout.JAVA_LONG, i));
+                MemorySegment dst = arena.allocate(byteSize);
+                MemorySegment.copy(src, 0, dst, 0, byteSize);
                 return createWithData(arena, dst, byteSize, shape, elementType);
             }
             case Int8, QInt8, QUInt8 -> {
                 MemorySegment dst = arena.allocate(n);
-                for (int i = 0; i < n; i++) dst.set(ValueLayout.JAVA_BYTE, i, src.get(ValueLayout.JAVA_BYTE, i));
+                MemorySegment.copy(src, 0, dst, 0, n);
                 return createWithData(arena, dst, n, shape, elementType);
             }
             case Int16, Float16, BFloat16 -> {
                 long byteSize = (long) n * Short.BYTES;
-                MemorySegment dst = arena.allocate(
-                        MemoryLayout.sequenceLayout(n, ValueLayout.JAVA_SHORT));
-                for (int i = 0; i < n; i++) dst.setAtIndex(ValueLayout.JAVA_SHORT, i, src.getAtIndex(ValueLayout.JAVA_SHORT, i));
+                MemorySegment dst = arena.allocate(byteSize);
+                MemorySegment.copy(src, 0, dst, 0, byteSize);
                 return createWithData(arena, dst, byteSize, shape, elementType);
             }
             default -> {
@@ -320,11 +307,11 @@ public class OrtValue implements AutoCloseable {
             case Float32 -> {
                 long byteSize = totalElements * Float.BYTES;
                 MemorySegment dst = arena.allocate(byteSize);
-                FloatBuffer buf = dst.asByteBuffer().asFloatBuffer();
-                // DenseMatrix is column-major; iterate in row-major order for ONNX
+                // DenseMatrix is column-major; write row-major for ONNX
+                int k = 0;
                 for (int i = 0; i < m; i++) {
                     for (int j = 0; j < n; j++) {
-                        buf.put((float) matrix.get(i, j));
+                        dst.setAtIndex(ValueLayout.JAVA_FLOAT, k++, (float) matrix.get(i, j));
                     }
                 }
                 return createWithData(arena, dst, byteSize, shape, elementType);
@@ -332,10 +319,10 @@ public class OrtValue implements AutoCloseable {
             case Float64 -> {
                 long byteSize = totalElements * Double.BYTES;
                 MemorySegment dst = arena.allocate(byteSize);
-                DoubleBuffer buf = dst.asByteBuffer().asDoubleBuffer();
+                int k = 0;
                 for (int i = 0; i < m; i++) {
                     for (int j = 0; j < n; j++) {
-                        buf.put(matrix.get(i, j));
+                        dst.setAtIndex(ValueLayout.JAVA_DOUBLE, k++, matrix.get(i, j));
                     }
                 }
                 return createWithData(arena, dst, byteSize, shape, elementType);
@@ -500,12 +487,8 @@ public class OrtValue implements AutoCloseable {
     public float[] toFloatArray() {
         TensorInfo info = tensorInfo();
         long count = info.elementCount();
-        MemorySegment dataPtr = getMutableDataPointer();
-        MemorySegment seg = dataPtr.reinterpret(count * Float.BYTES);
-        float[] result = new float[(int) count];
-        FloatBuffer buf = seg.asByteBuffer().asFloatBuffer();
-        buf.get(result);
-        return result;
+        MemorySegment seg = getMutableDataPointer().reinterpret(count * Float.BYTES);
+        return seg.toArray(ValueLayout.JAVA_FLOAT);
     }
 
     /**
@@ -517,12 +500,8 @@ public class OrtValue implements AutoCloseable {
     public double[] toDoubleArray() {
         TensorInfo info = tensorInfo();
         long count = info.elementCount();
-        MemorySegment dataPtr = getMutableDataPointer();
-        MemorySegment seg = dataPtr.reinterpret(count * Double.BYTES);
-        double[] result = new double[(int) count];
-        DoubleBuffer buf = seg.asByteBuffer().asDoubleBuffer();
-        buf.get(result);
-        return result;
+        MemorySegment seg = getMutableDataPointer().reinterpret(count * Double.BYTES);
+        return seg.toArray(ValueLayout.JAVA_DOUBLE);
     }
 
     /**
@@ -534,12 +513,8 @@ public class OrtValue implements AutoCloseable {
     public int[] toIntArray() {
         TensorInfo info = tensorInfo();
         long count = info.elementCount();
-        MemorySegment dataPtr = getMutableDataPointer();
-        MemorySegment seg = dataPtr.reinterpret(count * Integer.BYTES);
-        int[] result = new int[(int) count];
-        IntBuffer buf = seg.asByteBuffer().asIntBuffer();
-        buf.get(result);
-        return result;
+        MemorySegment seg = getMutableDataPointer().reinterpret(count * Integer.BYTES);
+        return seg.toArray(ValueLayout.JAVA_INT);
     }
 
     /**
@@ -551,12 +526,8 @@ public class OrtValue implements AutoCloseable {
     public long[] toLongArray() {
         TensorInfo info = tensorInfo();
         long count = info.elementCount();
-        MemorySegment dataPtr = getMutableDataPointer();
-        MemorySegment seg = dataPtr.reinterpret(count * Long.BYTES);
-        long[] result = new long[(int) count];
-        LongBuffer buf = seg.asByteBuffer().asLongBuffer();
-        buf.get(result);
-        return result;
+        MemorySegment seg = getMutableDataPointer().reinterpret(count * Long.BYTES);
+        return seg.toArray(ValueLayout.JAVA_LONG);
     }
 
     /**
@@ -569,11 +540,8 @@ public class OrtValue implements AutoCloseable {
     public byte[] toByteArray() {
         TensorInfo info = tensorInfo();
         long count = info.elementCount();
-        MemorySegment dataPtr = getMutableDataPointer();
-        MemorySegment seg = dataPtr.reinterpret(count);
-        byte[] result = new byte[(int) count];
-        seg.asByteBuffer().get(result);
-        return result;
+        MemorySegment seg = getMutableDataPointer().reinterpret(count);
+        return seg.toArray(ValueLayout.JAVA_BYTE);
     }
 
     /**
