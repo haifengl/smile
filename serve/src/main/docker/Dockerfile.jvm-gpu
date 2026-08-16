@@ -16,6 +16,7 @@
 # Then run the container using (requires NVIDIA Container Toolkit):
 #
 # docker run -i --rm --gpus all -p 8888:8080 \
+#   -e JAVA_OPTIONS="-Dsmile.chat.model=meta-llama/Llama-3.1-8B-Instruct" \
 #   -v "$(pwd)/model":/model quarkus/smile-serve-gpu
 #
 # Optional JVM flags:
@@ -45,6 +46,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libarpack2t64 \
         libgomp1 \
         libopenblas0-pthread \
+        libnccl2 \
+        libnccl-dev \
+        libcusparselt0 \
+        libcudnn9-cuda-13 \
+        libnvshmem3-cuda-13 \
+        cuda-cupti-13-2 \
         openjdk-25-jre-headless \
         tar \
         unzip \
@@ -72,7 +79,7 @@ RUN curl -fsSL --retry 5 --retry-delay 10 -o /tmp/libtorch.zip \
     && rm -f /tmp/libtorch.zip
 
 # CUDA image already sets CUDA library paths; append ORT + LibTorch
-ENV LD_LIBRARY_PATH="/usr/local/onnxruntime/lib:/usr/local/libtorch/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+ENV LD_LIBRARY_PATH="/usr/local/onnxruntime/lib:/usr/local/libtorch/lib:/usr/lib/x86_64-linux-gnu/nvshmem/13${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 
 # We make four distinct layers so if there are application changes the library layers can be re-used
 COPY --chown=185:185 build/quarkus-app/lib/ /deployments/lib/
