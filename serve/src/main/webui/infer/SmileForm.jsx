@@ -14,9 +14,20 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Form from "@rjsf/core";
 import validator from "@rjsf/validator-ajv8";
+import {
+  detectBatchFileKind,
+  prepareCsv,
+  readSseStream,
+  toJsonLines,
+  tryParseJson,
+} from "./inferStream";
+import { normalizePrediction } from "./predictionRows";
+import PredictionResults from "./PredictionResults";
+import InferActionFooter from "./InferActionFooter";
+import "./InferPanel.css";
 
 function typeOf(type) {
   switch (type) {
@@ -53,11 +64,27 @@ function toJsonSchema(model) {
   return jsonSchema;
 }
 
+function schemaKeys(model) {
+  return model?.schema ? Object.keys(model.schema) : [];
+}
+
 function SmileForm({ modelId }) {
+  const [modelMeta, setModelMeta] = useState(null);
   const [schema, setSchema] = useState(null);
-  const [prediction, setPrediction] = useState(null);
+  const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [submitError, setSubmitError] = useState(null);
+  const [file, setFile] = useState(null);
+  const [formData, setFormData] = useState({});
+  const [streaming, setStreaming] = useState(false);
+  const [streamCount, setStreamCount] = useState(0);
+  const [startedAt, setStartedAt] = useState(null);
+  const [finishedAt, setFinishedAt] = useState(null);
+  const abortRef = useRef(null);
+  const resultIdRef = useRef(0);
+  const pendingRef = useRef([]);
+  const flushRafRef = useRef(0);
 
   useEffect(() => {
     if (!modelId) {
@@ -66,7 +93,13 @@ function SmileForm({ modelId }) {
     setLoading(true);
     setError(null);
     setSchema(null);
-    setPrediction(null);
+    setModelMeta(null);
+    setRows([]);
+    setFile(null);
+    setFormData({});
+    setSubmitError(null);
+    setStartedAt(null);
+    setFinishedAt(null);
 
     fetch(`/api/v1/ml/models/${modelId}`)
       .then((res) => {
@@ -76,6 +109,7 @@ function SmileForm({ modelId }) {
         return res.json();
       })
       .then((data) => {
+        setModelMeta(data);
         setSchema(toJsonSchema(data));
         setLoading(false);
       })
@@ -83,9 +117,65 @@ function SmileForm({ modelId }) {
         setError(err.message);
         setLoading(false);
       });
+
+    return () => {
+      abortRef.current?.abort();
+      if (flushRafRef.current) {
+        cancelAnimationFrame(flushRafRef.current);
+      }
+    };
   }, [modelId]);
 
+  const flushPending = () => {
+    flushRafRef.current = 0;
+    const batch = pendingRef.current;
+    if (batch.length === 0) {
+      return;
+    }
+    pendingRef.current = [];
+    setRows((prev) => [...prev, ...batch]);
+  };
+
+  const queueRows = (entries) => {
+    pendingRef.current.push(...entries);
+    if (!flushRafRef.current) {
+      flushRafRef.current = requestAnimationFrame(flushPending);
+    }
+  };
+
+  const appendRow = (entry) => {
+    const id = ++resultIdRef.current;
+    const normalized = entry.error
+      ? { id, values: {}, error: entry.error }
+      : { id, ...normalizePrediction(entry.data) };
+    setRows((prev) => [...prev, normalized]);
+  };
+
+  const beginRun = () => {
+    if (flushRafRef.current) {
+      cancelAnimationFrame(flushRafRef.current);
+      flushRafRef.current = 0;
+    }
+    pendingRef.current = [];
+    setRows([]);
+    setStartedAt(Date.now());
+    setFinishedAt(null);
+  };
+
+  const endRun = () => {
+    setFinishedAt(Date.now());
+  };
+
+  const clearFile = () => {
+    setFile(null);
+  };
+
   const handleSubmit = ({ formData }) => {
+    if (file) {
+      return;
+    }
+    setSubmitError(null);
+    beginRun();
     fetch(`/api/v1/ml/models/${modelId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -98,30 +188,144 @@ function SmileForm({ modelId }) {
         return res.json();
       })
       .then((data) => {
-        setPrediction(data);
-        const dialog = document.getElementById("output");
-        dialog.showModal();
-        setTimeout(() => dialog.close(), 10000);
+        appendRow({ data });
+        endRun();
       })
-      .catch((err) => setError(err.message));
+      .catch((err) => {
+        setSubmitError(err.message);
+        endRun();
+      });
+  };
+
+  const handleFilePredict = async () => {
+    if (!file || streaming) {
+      return;
+    }
+    setSubmitError(null);
+    const keys = schemaKeys(modelMeta);
+    const { isCsv, isJson } = detectBatchFileKind(file);
+
+    if (!isCsv && !isJson) {
+      setSubmitError("Choose a .csv, .json, or .jsonl file");
+      return;
+    }
+
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    beginRun();
+    setStreaming(true);
+    setStreamCount(0);
+
+    try {
+      const text = await file.text();
+      let body;
+      let contentType;
+      if (isCsv) {
+        body = prepareCsv(text, keys);
+        contentType = "text/plain";
+      } else {
+        body = toJsonLines(text);
+        contentType = "application/json";
+      }
+      if (!body.trim()) {
+        throw new Error("File has no data rows");
+      }
+
+      const res = await fetch(`/api/v1/ml/models/${modelId}/stream`, {
+        method: "POST",
+        headers: { "Content-Type": contentType },
+        body,
+        signal: controller.signal,
+      });
+      if (!res.ok) {
+        const msg = await res.text();
+        throw new Error(msg || `Stream failed (${res.status})`);
+      }
+
+      let n = 0;
+      await readSseStream(
+        res,
+        (payload) => {
+          n += 1;
+          setStreamCount(n);
+          const id = ++resultIdRef.current;
+          queueRows([{ id, ...normalizePrediction(tryParseJson(payload)) }]);
+        },
+        controller.signal
+      );
+      flushPending();
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        setSubmitError(err.message || String(err));
+      }
+    } finally {
+      if (flushRafRef.current) {
+        cancelAnimationFrame(flushRafRef.current);
+        flushRafRef.current = 0;
+      }
+      flushPending();
+      setStreaming(false);
+      endRun();
+    }
   };
 
   if (loading) return <p className="toast">Loading form…</p>;
   if (error) return <p className="toast">Error: {error}</p>;
   if (!schema) return null;
 
+  const keys = schemaKeys(modelMeta);
+
   return (
-    <div>
-      <Form schema={schema} validator={validator} onSubmit={handleSubmit} />
-      <dialog id="output">
-        <h3 style={{ marginTop: "0px" }}>Output</h3>
-        <div className="json-container">
-          <pre>{JSON.stringify(prediction, null, 2)}</pre>
-        </div>
-        <button type="button" onClick={() => document.getElementById("output").close()}>
-          Close
-        </button>
-      </dialog>
+    <div className="infer-form">
+      <div className="infer-layout">
+        <section className="infer-inputs">
+          <Form
+            schema={schema}
+            validator={validator}
+            formData={formData}
+            onChange={({ formData: next }) => setFormData(next)}
+            onSubmit={handleSubmit}
+            disabled={streaming}
+          >
+            <InferActionFooter
+              file={file}
+              formData={formData}
+              schema={schema}
+              onFileChange={setFile}
+              onClearFile={clearFile}
+              onRunFile={handleFilePredict}
+              streaming={streaming}
+              streamCount={streamCount}
+              onStop={() => abortRef.current?.abort()}
+              disabled={streaming}
+              batchHint={
+                <>
+                  Upload CSV (column order:{" "}
+                  <code>{keys.join(", ") || "schema fields"}</code>) or JSON /
+                  JSON-lines. With a file selected, the primary button runs the
+                  batch; otherwise it submits the form.
+                </>
+              }
+            />
+          </Form>
+
+          {submitError && <p className="infer-error">{submitError}</p>}
+        </section>
+
+        <PredictionResults
+          rows={rows}
+          streaming={streaming}
+          startedAt={startedAt}
+          finishedAt={finishedAt}
+          onClear={() => {
+            setRows([]);
+            setStartedAt(null);
+            setFinishedAt(null);
+          }}
+        />
+      </div>
     </div>
   );
 }

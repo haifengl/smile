@@ -94,8 +94,16 @@ public class OnnxService {
             models.put(id, model);
             logger.infof("ONNX model '%s' loaded successfully (inputs=%s, outputs=%s)",
                     id, session.inputNames(), session.outputNames());
-        } catch (Exception ex) {
-            logger.errorf(ex, "Failed to load ONNX model from '%s'", path);
+        } catch (Throwable ex) {
+            // ExceptionInInitializerError / NoClassDefFoundError are Errors, not
+            // Exceptions — typically missing libonnxruntime on java.library.path.
+            logger.errorf(ex,
+                    "Failed to load ONNX model from '%s'. "
+                            + "Ensure the onnxruntime native library (%s) is on "
+                            + "java.library.path (or the OS library search path) and "
+                            + "the JVM is started with --enable-native-access=ALL-UNNAMED. "
+                            + "ONNX endpoints will return 404 until a model loads.",
+                    path, System.mapLibraryName("onnxruntime"));
         }
     }
 

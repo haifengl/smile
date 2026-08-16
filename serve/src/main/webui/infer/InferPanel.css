@@ -1,0 +1,421 @@
+/*
+ * Button colors:
+ *   Submit / Run → #1da1f2
+ */
+.infer-form {
+  --infer-btn-primary: #1da1f2;
+  --infer-btn-primary-hover: #1a91da;
+  /* Identical width for Submit and Run (wide enough for "Submit") */
+  --infer-action-btn-width: 7.5em;
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.infer-layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 1fr) minmax(300px, 1fr);
+  gap: 20px;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  align-items: stretch;
+}
+
+.infer-inputs {
+  min-width: 0;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.infer-batch {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.infer-batch h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.infer-hint {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #6b7280;
+}
+
+.infer-hint code {
+  font-size: 12px;
+  background: #f3f4f6;
+  padding: 1px 5px;
+  border-radius: 4px;
+  color: #374151;
+}
+
+.infer-file-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.infer-file-label input[type="file"] {
+  font-weight: 400;
+}
+
+.infer-file-name {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #111827;
+}
+
+.infer-muted {
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.infer-btn {
+  appearance: none;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #111827;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.infer-btn:hover:not(:disabled) {
+  background: #f9fafb;
+}
+
+.infer-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Shared geometry for Submit + Run — fixed equal width */
+.infer-inputs .rjsf button[type="submit"],
+.infer-inputs .infer-submit,
+.infer-primary-actions .infer-btn-run {
+  box-sizing: border-box;
+  display: inline-block;
+  width: var(--infer-action-btn-width);
+  min-width: var(--infer-action-btn-width);
+  max-width: 100%;
+  align-self: flex-start;
+  flex: 0 0 auto;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  border-radius: 8px;
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.infer-inputs .rjsf button[type="submit"]:disabled,
+.infer-inputs .infer-submit:disabled,
+.infer-primary-actions .infer-btn-run:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Submit — default Primary */
+.infer-inputs .rjsf button[type="submit"],
+.infer-inputs .infer-submit {
+  border: 1px solid var(--infer-btn-primary);
+  background-color: var(--infer-btn-primary);
+}
+
+.infer-inputs .rjsf button[type="submit"]:hover:not(:disabled),
+.infer-inputs .infer-submit:hover:not(:disabled) {
+  background-color: var(--infer-btn-primary-hover);
+  border-color: var(--infer-btn-primary-hover);
+}
+
+/* Run — same color as Submit */
+.infer-primary-actions .infer-btn-run {
+  width: auto;
+  min-width: var(--infer-action-btn-width);
+  border: 1px solid var(--infer-btn-primary);
+  background-color: var(--infer-btn-primary);
+}
+
+.infer-primary-actions .infer-btn-run:hover:not(:disabled) {
+  background-color: var(--infer-btn-primary-hover);
+  border-color: var(--infer-btn-primary-hover);
+}
+
+.infer-action-footer {
+  margin-top: 8px;
+}
+
+.infer-file-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.infer-file-row .infer-file-name {
+  margin: 0;
+}
+
+.infer-file-row .infer-btn {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+.infer-primary-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.infer-error {
+  margin-top: 12px;
+  color: #b00020;
+  font-size: 14px;
+}
+
+.infer-results {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.infer-results-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.infer-results-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.infer-results-header .infer-muted {
+  margin: 4px 0 0;
+  font-size: 12px;
+}
+
+.infer-results-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.infer-results-actions .infer-btn {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.infer-results-empty {
+  margin: auto;
+  padding: 24px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.infer-table-header-wrap {
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.infer-table-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: #fff;
+}
+
+.infer-table-spacer {
+  position: relative;
+  width: 100%;
+}
+
+.infer-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 12.5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+}
+
+.infer-table-header {
+  background: #f1f5f9;
+}
+
+.infer-table-body {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  will-change: transform;
+}
+
+.infer-table th,
+.infer-table td {
+  padding: 0 10px;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid #eef2f7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #0f172a;
+}
+
+.infer-table th {
+  height: 32px;
+  font-weight: 600;
+  color: #475569;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.infer-col-index {
+  width: 56px;
+}
+
+.infer-table td.infer-col-index,
+.infer-table th.infer-col-index,
+.infer-table .infer-col-index {
+  width: 56px;
+  color: #94a3b8;
+  font-variant-numeric: tabular-nums;
+}
+
+.infer-row-expandable {
+  cursor: pointer;
+}
+
+.infer-row-expandable:hover {
+  background: #f8fafc;
+}
+
+.infer-row-error td {
+  color: #b00020;
+  background: #fef2f2;
+}
+
+.infer-row-detail {
+  border-top: 1px solid #e5e7eb;
+  background: #0f172a;
+  color: #e2e8f0;
+  max-height: 160px;
+  overflow: auto;
+}
+
+.infer-row-detail-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.infer-row-detail-title .infer-btn {
+  padding: 4px 8px;
+  font-size: 11px;
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+.infer-row-detail pre {
+  margin: 0;
+  padding: 8px 12px 12px;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.onnx-form .model-meta h2 {
+  margin: 0 0 4px;
+}
+
+.onnx-form .mode-toggle {
+  margin: 12px 0;
+}
+
+.onnx-form .image-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 560px;
+}
+
+.onnx-form .image-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.onnx-form .image-preview img {
+  max-width: 100%;
+  max-height: 120px;
+  width: 100%;
+  object-fit: contain;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #f8fafc;
+}
+
+.onnx-form .image-preview .infer-muted {
+  margin: 4px 0 0;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .infer-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(280px, 1fr);
+  }
+
+  .infer-results {
+    min-height: 280px;
+  }
+}

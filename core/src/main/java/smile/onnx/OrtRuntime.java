@@ -40,15 +40,26 @@ final class OrtRuntime {
     private static final MemorySegment ORT_API;
 
     static {
-        // OrtGetApiBase() returns a const OrtApiBase* (pointer value)
-        MemorySegment apiBase = onnxruntime_c_api_h.OrtGetApiBase();
-        // Call GetApi(version) function pointer inside OrtApiBase
-        MemorySegment getApiFn = OrtApiBase.GetApi(apiBase);
-        ORT_API = OrtApiBase.GetApi.invoke(getApiFn, ORT_API_VERSION);
-        if (ORT_API == null || ORT_API.equals(MemorySegment.NULL)) {
-            throw new IllegalStateException(
-                    "OrtGetApiBase()->GetApi(" + ORT_API_VERSION + ") returned NULL. " +
-                    "The loaded onnxruntime library may be older than API version " + ORT_API_VERSION + ".");
+        try {
+            // OrtGetApiBase() returns a const OrtApiBase* (pointer value)
+            MemorySegment apiBase = onnxruntime_c_api_h.OrtGetApiBase();
+            // Call GetApi(version) function pointer inside OrtApiBase
+            MemorySegment getApiFn = OrtApiBase.GetApi(apiBase);
+            ORT_API = OrtApiBase.GetApi.invoke(getApiFn, ORT_API_VERSION);
+            if (ORT_API == null || ORT_API.equals(MemorySegment.NULL)) {
+                throw new IllegalStateException(
+                        "OrtGetApiBase()->GetApi(" + ORT_API_VERSION + ") returned NULL. " +
+                        "The loaded onnxruntime library may be older than API version " + ORT_API_VERSION + ".");
+            }
+        } catch (Throwable t) {
+            throw new ExceptionInInitializerError(new IllegalStateException(
+                    "Failed to initialize ONNX Runtime native bindings. "
+                            + "Install onnxruntime and put "
+                            + System.mapLibraryName("onnxruntime")
+                            + " on the OS library search path. "
+                            + "Pre-built binaries: https://github.com/microsoft/onnxruntime/releases. "
+                            + "JVM also needs --enable-native-access=ALL-UNNAMED.",
+                    t));
         }
     }
 
