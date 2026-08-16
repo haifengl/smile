@@ -427,7 +427,16 @@ curl -X POST http://localhost:8080/api/v1/onnx/resnet50 \
   -d '{"input": [0.485, 0.456, 0.406, ...]}'
 ```
 
-Response — a JSON object mapping each **output name** to a flat array:
+The Infer UI image path resizes to the model’s H×W, scales to `[0, 1]`, then
+applies ImageNet channel normalization `(x - mean) / std` with
+`mean=[0.485, 0.456, 0.406]`, `std=[0.229, 0.224, 0.225]` (NCHW or NHWC as
+declared). When posting tensors yourself, use the same layout and
+normalization the model was trained with.
+
+Response — a JSON object mapping each **output name** to a flat array of
+**raw logits** (not probabilities). ImageNet classifiers from the ONNX Model
+Zoo typically omit a Softmax node; apply `MathEx.softmax` before interpreting
+scores as class probabilities (same as `InferenceSessionTest` in `core`).
 
 ```json
 {
