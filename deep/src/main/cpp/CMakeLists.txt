@@ -28,9 +28,9 @@ project(smile_torch
     LANGUAGES CXX C)
 
 # --------------------------------------------------------------------------
-# C++ standard — libtorch 2.x requires C++17; keep parity with libtorch
+# C++ standard — libtorch 2.13+ requires C++20; keep parity with libtorch
 # --------------------------------------------------------------------------
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
