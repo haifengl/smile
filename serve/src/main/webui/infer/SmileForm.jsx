@@ -152,6 +152,12 @@ function SmileForm({ modelId }) {
   };
 
   const beginRun = () => {
+    if (flushRafRef.current) {
+      cancelAnimationFrame(flushRafRef.current);
+      flushRafRef.current = 0;
+    }
+    pendingRef.current = [];
+    setRows([]);
     setStartedAt(Date.now());
     setFinishedAt(null);
   };
