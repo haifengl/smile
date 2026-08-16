@@ -61,7 +61,9 @@ jobs:
           npm install
 
       - name: Build app
-        run: ./gradlew :serve:build -x test
+        run: |
+          ./gradlew :serve:build
+          cp studio/src/universal/bin/libsmile_torch.so serve/build/quarkus-app/lib/
         env:
           NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
