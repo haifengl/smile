@@ -16,8 +16,8 @@
 # Then run the container using (requires NVIDIA Container Toolkit):
 #
 # docker run -i --rm --gpus all -p 8888:8080 \
-#   -e JAVA_OPTS="-Dsmile.chat.model=meta-llama/Llama-3.1-8B-Instruct" \
-#   -v "$(pwd)/model":/model quarkus/smile-serve-gpu
+#   -e JAVA_OPTS_APPEND="-Dsmile.chat.model=meta-llama/Llama-3.1-8B-Instruct" \
+#   -u root -v "$(pwd)/model":/model quarkus/smile-serve-gpu
 #
 # Optional JVM flags:
 # - JAVA_OPTS: replaces the default JVM options
@@ -27,7 +27,7 @@
 #
 # docker run -i --rm --gpus all -p 8888:8080 -p 5005:5005 \
 #   -e JAVA_OPTS_APPEND="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005" \
-#   -v "$(pwd)/model":/model quarkus/smile-serve-gpu
+#   -u root -v "$(pwd)/model":/model quarkus/smile-serve-gpu
 #
 ###
 FROM nvidia/cuda:13.2.0-runtime-ubuntu24.04
@@ -102,7 +102,8 @@ RUN printf '%s\n' \
 EXPOSE 8080
 USER 185
 
-ENV JAVA_APP_JAR="/deployments/quarkus-run.jar" \
-    JAVA_OPTS_APPEND="-Djava.util.logging.manager=org.jboss.logmanager.LogManager --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --enable-native-access=ALL-UNNAMED"
+ENV HF_HOME="/model/huggingface"
+ENV JAVA_APP_JAR="/deployments/quarkus-run.jar"
+ENV JAVA_OPTS_APPEND="${JAVA_OPTS_APPEND} -Djava.util.logging.manager=org.jboss.logmanager.LogManager --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --enable-native-access=ALL-UNNAMED"
 
 ENTRYPOINT [ "/deployments/run-java.sh" ]
