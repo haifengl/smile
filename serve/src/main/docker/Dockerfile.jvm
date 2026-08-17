@@ -21,7 +21,8 @@
 #
 # Then run the container using :
 #
-# docker run -i --rm -p 8888:8080 -u root -v "$(pwd)/model":/model -e JAVA_DEBUG=true -e "JAVA_DEBUG_PORT=*:5005" quarkus/smile-serve-jvm
+# docker run -i --rm -p 8888:8080 -u root -v "$(pwd)/model":/model \
+#   -e JAVA_DEBUG=true -e "JAVA_DEBUG_PORT=*:5005" quarkus/smile-serve-jvm
 #
 # This image uses the `run-java.sh` script to run the application.
 # This scripts computes the command line to execute your Java application, and
@@ -128,8 +129,9 @@ ENV LD_LIBRARY_PATH="/usr/local/onnxruntime/lib:/usr/local/libtorch/lib:/deploym
 
 EXPOSE 8080
 USER 185
-ENV JAVA_OPTS_APPEND="-Djava.util.logging.manager=org.jboss.logmanager.LogManager --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --enable-native-access ALL-UNNAMED"
+ENV HF_HOME="/model/huggingface"
 ENV JAVA_APP_JAR="/deployments/quarkus-run.jar"
+ENV JAVA_OPTS_APPEND="${JAVA_OPTS_APPEND} -Djava.util.logging.manager=org.jboss.logmanager.LogManager --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --enable-native-access ALL-UNNAMED"
 
 ENTRYPOINT [ "/opt/jboss/container/java/run/run-java.sh" ]
 
