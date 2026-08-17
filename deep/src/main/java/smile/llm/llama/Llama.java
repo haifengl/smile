@@ -125,7 +125,7 @@ public class Llama {
      * @return an instance of Llama model.
      */
     public static Llama build(String checkpointDir, String tokenizerPath, int maxBatchSize, int maxSeqLen, byte deviceId) throws IOException {
-        return build(checkpointDir, tokenizerPath, maxBatchSize, maxSeqLen, deviceId, 0);
+        return build(checkpointDir, tokenizerPath, maxBatchSize, maxSeqLen, deviceId, 0, null);
     }
 
     /**
@@ -147,6 +147,34 @@ public class Llama {
      */
     public static Llama build(String checkpointDir, String tokenizerPath, int maxBatchSize,
                               int maxSeqLen, byte deviceId, double memFractionStatic) throws IOException {
+        return build(checkpointDir, tokenizerPath, maxBatchSize, maxSeqLen, deviceId,
+                memFractionStatic, null);
+    }
+
+    /**
+     * Builds a Llama instance by initializing and loading a model checkpoint.
+     *
+     * <p>When {@code memFractionStatic > 0}, a {@link KvCachePool} is allocated
+     * after weight loading using that fraction of the remaining free device
+     * memory (see {@code smile.mem.fraction.static} in smile-serve).
+     *
+     * @param checkpointDir the directory path of checkpoint files.
+     * @param tokenizerPath the path of tokenizer model file.
+     * @param maxBatchSize the maximum batch size for inference.
+     * @param maxSeqLen the maximum sequence length for input text.
+     * @param deviceId the optional CUDA device ID. If negative, don't use CUDA.
+     * @param memFractionStatic fraction of free GPU memory for the KV cache pool;
+     *                          {@code <= 0} keeps the default test-sized pool.
+     * @param kvCacheDtype optional KV-cache element dtype name
+     *                     (e.g. {@code bfloat16}, {@code float16});
+     *                     {@code null}/blank uses {@code torch_dtype} from
+     *                     {@code config.json}, then the CUDA compute dtype.
+     * @throws IOException if fail to open model checkpoint.
+     * @return an instance of Llama model.
+     */
+    public static Llama build(String checkpointDir, String tokenizerPath, int maxBatchSize,
+                              int maxSeqLen, byte deviceId, double memFractionStatic,
+                              String kvCacheDtype) throws IOException {
         File dir = new File(checkpointDir);
         if (!dir.exists() || !dir.isDirectory()) {
             throw new IllegalArgumentException("Checkpoint directory doesn't exist: " + checkpointDir);
@@ -158,14 +186,14 @@ public class Llama {
         int rank = Integer.parseInt(localRank);
 
         Device device = Device.CPU();
-        ScalarType cacheDtype = ScalarType.Float;
+        ScalarType computeDtype = ScalarType.Float;
         if (deviceId >= 0) {
             var startTime = System.currentTimeMillis();
             device = Device.CUDA(deviceId);
 
-            // half precision to lower memory usage.
-            cacheDtype = Tensor.isBF16Supported() ? ScalarType.BFloat16 : ScalarType.Half;
-            smile_torch_h.smile_set_default_dtype(cacheDtype.code());
+            // half precision to lower memory usage for weights / activations.
+            computeDtype = Tensor.isBF16Supported() ? ScalarType.BFloat16 : ScalarType.Half;
+            smile_torch_h.smile_set_default_dtype(computeDtype.code());
             var time = System.currentTimeMillis() - startTime;
             logger.info("Initialized CUDA[{}]: {}.{} seconds", deviceId, time / 1000, time % 1000);
         }
@@ -192,6 +220,10 @@ public class Llama {
             throw new IllegalArgumentException(
                     "Neither params.json nor config.json found in " + checkpointDir);
         }
+
+        ScalarType cacheDtype = resolveKvCacheDtype(kvCacheDtype, configJson, computeDtype);
+        logger.info("KV cache dtype: {} (override={}, compute={})",
+                cacheDtype, kvCacheDtype, computeDtype);
 
         var tokenizer = Tokenizer.of(tokenizerPath);
         if (tokenizer.size() != modelArgs.vocabSize()) {
@@ -235,6 +267,83 @@ public class Llama {
         var time = System.currentTimeMillis() - startTime;
         logger.info("Model {}[{}]: loaded in {}.{} seconds", checkpointDir, rank, time/1000, time%1000);
         return new Llama(dir.getName(), model, tokenizer);
+    }
+
+    /**
+     * Resolves the KV-cache element dtype.
+     *
+     * <ol>
+     *   <li>Explicit override from {@code smile.kv.cache.dtype} when non-blank</li>
+     *   <li>{@code torch_dtype} in HuggingFace {@code config.json} when present</li>
+     *   <li>{@code fallback} (CUDA compute dtype or float32 on CPU)</li>
+     * </ol>
+     *
+     * @param override optional configured dtype name.
+     * @param configJson path to {@code config.json} (may not exist).
+     * @param fallback dtype used when neither override nor config specify one.
+     * @return the resolved dtype.
+     * @throws IOException if {@code config.json} exists but cannot be read.
+     */
+    static ScalarType resolveKvCacheDtype(String override, Path configJson, ScalarType fallback)
+            throws IOException {
+        if (override != null && !override.isBlank()) {
+            return parseDtypeName(override);
+        }
+        ScalarType fromConfig = torchDtypeFromConfig(configJson);
+        return fromConfig != null ? fromConfig : fallback;
+    }
+
+    /**
+     * Reads {@code torch_dtype} from a HuggingFace {@code config.json}, if present.
+     *
+     * @param configJson path to {@code config.json}.
+     * @return the parsed dtype, or {@code null} when absent / file missing.
+     * @throws IOException if the file exists but cannot be parsed.
+     */
+    private static ScalarType torchDtypeFromConfig(Path configJson) throws IOException {
+        if (configJson == null || !Files.isRegularFile(configJson)) {
+            return null;
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode root = mapper.readTree(configJson.toFile());
+        JsonNode dtype = root.get("torch_dtype");
+        if (dtype == null || dtype.isNull() || dtype.asString().isBlank()) {
+            return null;
+        }
+        return parseDtypeName(dtype.asString());
+    }
+
+    /**
+     * Parses a human-readable floating-point dtype name.
+     *
+     * @param name dtype name (case-insensitive), e.g. {@code bfloat16}, {@code float16}.
+     * @return the corresponding {@link ScalarType}.
+     */
+    static ScalarType parseDtypeName(String name) {
+        String key = name.trim().toLowerCase(Locale.ROOT);
+        // Normalize separators: fp8-e4m3, fp8_e4m3fn, torch.float8_e5m2, etc.
+        key = key.replace('-', '_');
+        if (key.startsWith("torch.")) {
+            key = key.substring("torch.".length());
+        }
+        return switch (key) {
+            case "bfloat16", "bf16" -> ScalarType.BFloat16;
+            case "float16", "fp16", "half" -> ScalarType.Half;
+            case "float32", "fp32", "float" -> ScalarType.Float;
+            case "float64", "fp64", "double" -> ScalarType.Double;
+            case "fp8_e4m3", "fp8_e4m3fn", "float8_e4m3", "float8_e4m3fn", "float8e4m3fn"
+                    -> ScalarType.Float8e4m3fn;
+            case "fp8_e5m2", "float8_e5m2", "float8e5m2"
+                    -> ScalarType.Float8e5m2;
+            case "fp8_e4m3fnuz", "float8_e4m3fnuz", "float8e4m3fnuz"
+                    -> ScalarType.Float8e4m3fnuz;
+            case "fp8_e5m2fnuz", "float8_e5m2fnuz", "float8e5m2fnuz"
+                    -> ScalarType.Float8e5m2fnuz;
+            default -> throw new IllegalArgumentException(
+                    "Unsupported KV cache dtype '" + name
+                            + "'; expected bfloat16, float16, float32, float64, "
+                            + "fp8_e4m3, fp8_e5m2, fp8_e4m3fnuz, or fp8_e5m2fnuz");
+        };
     }
 
     /**
