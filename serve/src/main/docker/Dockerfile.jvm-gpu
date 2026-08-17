@@ -16,7 +16,7 @@
 # Then run the container using (requires NVIDIA Container Toolkit):
 #
 # docker run -i --rm --gpus all -p 8888:8080 \
-#   -e JAVA_OPTIONS="-Dsmile.chat.model=meta-llama/Llama-3.1-8B-Instruct" \
+#   -e JAVA_OPTS="-Dsmile.chat.model=meta-llama/Llama-3.1-8B-Instruct" \
 #   -v "$(pwd)/model":/model quarkus/smile-serve-gpu
 #
 # Optional JVM flags:
@@ -72,9 +72,9 @@ RUN curl -fsSL "https://github.com/microsoft/onnxruntime/releases/download/v${OR
 
 # Install LibTorch (CUDA 13.2 build — matches this base image)
 ARG TORCH_VERSION=2.13.0
-ARG CUDA_VERSION=132
+ARG CU_VERSION=132
 RUN curl -fsSL --retry 5 --retry-delay 10 -o /tmp/libtorch.zip \
-        "https://download.pytorch.org/libtorch/cu${CUDA_VERSION}/libtorch-shared-with-deps-${TORCH_VERSION}%2Bcu${CUDA_VERSION}.zip" \
+        "https://download.pytorch.org/libtorch/cu${CU_VERSION}/libtorch-shared-with-deps-${TORCH_VERSION}%2Bcu${CU_VERSION}.zip" \
     && unzip -q -o /tmp/libtorch.zip -d /usr/local \
     && rm -f /tmp/libtorch.zip
 
@@ -103,6 +103,6 @@ EXPOSE 8080
 USER 185
 
 ENV JAVA_APP_JAR="/deployments/quarkus-run.jar" \
-    JAVA_OPTS_APPEND="-Dquarkus.datasource.db-kind=postgresql -Dquarkus.datasource.jdbc.url=jdbc:postgresql://localhost:5432/smile -Dquarkus.datasource.username=postgres -Dquarkus.datasource.password=admin -Dquarkus.hibernate-orm.active=false -Djava.util.logging.manager=org.jboss.logmanager.LogManager --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --enable-native-access=ALL-UNNAMED"
+    JAVA_OPTS_APPEND="-Djava.util.logging.manager=org.jboss.logmanager.LogManager --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --enable-native-access=ALL-UNNAMED"
 
 ENTRYPOINT [ "/deployments/run-java.sh" ]
