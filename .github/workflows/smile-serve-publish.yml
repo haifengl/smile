@@ -27,8 +27,10 @@ jobs:
             context: ./serve
           - image_name: smile-serve
             tag_suffix: "-gpu"
+            # Repo root: Dockerfile.jvm-gpu compiles CUDA libsmile_torch in a
+            # multi-stage build and COPYs serve/build/quarkus-app from here.
             dockerfile: ./serve/src/main/docker/Dockerfile.jvm-gpu
-            context: ./serve
+            context: .
 
     permissions:
       contents: read

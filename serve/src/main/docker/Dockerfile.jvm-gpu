@@ -2,16 +2,14 @@
 # This Dockerfile builds a GPU-enabled container that runs the Quarkus
 # smile-serve application in JVM mode on NVIDIA CUDA.
 #
-# Base image: nvidia/cuda:13.2.0-runtime-ubuntu24.04 (Ubuntu 24.04 + CUDA 13.2)
+# Base image: nvidia/cuda:13.2.0-*-ubuntu24.04 (Ubuntu 24.04 + CUDA 13.2)
 #
-# Before building the container image run:
+# IMPORTANT: build context must be the repository root (not serve/), so the
+# image can compile a CUDA-enabled libsmile_torch against LibTorch cu132:
 #
-# ./gradlew :serve:build
-# cp studio/src/universal/bin/libsmile_torch.so serve/build/quarkus-app/lib/
-#
-# Then, build the image with:
-#
-# docker build -f serve/src/main/docker/Dockerfile.jvm-gpu -t quarkus/smile-serve-gpu serve
+#   ./gradlew :serve:build
+#   docker build -f serve/src/main/docker/Dockerfile.jvm-gpu \
+#     -t quarkus/smile-serve-gpu .
 #
 # Then run the container using (requires NVIDIA Container Toolkit):
 #
@@ -30,7 +28,51 @@
 #   -u root -v "$(pwd)/model":/model quarkus/smile-serve-gpu
 #
 ###
-FROM nvidia/cuda:13.2.0-runtime-ubuntu24.04
+ARG CUDA_VERSION=13.2.0
+ARG TORCH_VERSION=2.13.0
+ARG CU_VERSION=132
+
+# -----------------------------------------------------------------------------
+# Stage 1: build libsmile_torch against CUDA LibTorch (needs Toolkit headers)
+# -----------------------------------------------------------------------------
+FROM nvidia/cuda:${CUDA_VERSION}-devel-ubuntu24.04 AS smile-torch-builder
+
+ARG TORCH_VERSION
+ARG CU_VERSION
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        cmake \
+        curl \
+        g++ \
+        make \
+        unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /tmp
+RUN curl -fsSL --retry 5 --retry-delay 10 -o /tmp/libtorch.zip \
+        "https://download.pytorch.org/libtorch/cu${CU_VERSION}/libtorch-shared-with-deps-${TORCH_VERSION}%2Bcu${CU_VERSION}.zip" \
+    && unzip -q -o /tmp/libtorch.zip -d /usr/local \
+    && rm -f /tmp/libtorch.zip
+
+COPY deep/src/main/cpp /src/smile_torch
+WORKDIR /src/smile_torch
+RUN cmake -S . -B /build/cpp \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DLIBTORCH_ROOT=/usr/local/libtorch \
+        -DBUILD_TESTING=OFF \
+    && cmake --build /build/cpp --config Release --parallel "$(nproc)" \
+    && test -f /build/cpp/libsmile_torch.so
+
+# -----------------------------------------------------------------------------
+# Stage 2: runtime image
+# -----------------------------------------------------------------------------
+FROM nvidia/cuda:${CUDA_VERSION}-runtime-ubuntu24.04
+
+ARG TORCH_VERSION
+ARG CU_VERSION
+ARG ORT_VERSION=1.29.0
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
@@ -65,14 +107,11 @@ RUN groupadd --system --gid 185 smile \
     && useradd --system --uid 185 --gid 185 --home-dir /deployments --shell /sbin/nologin smile
 
 # Install ONNX Runtime
-ARG ORT_VERSION=1.29.0
 RUN curl -fsSL "https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/onnxruntime-linux-x64-${ORT_VERSION}.tgz" \
     | tar -zx -C /usr/local/ \
     && mv /usr/local/onnxruntime-linux-x64-${ORT_VERSION} /usr/local/onnxruntime
 
-# Install LibTorch (CUDA 13.2 build — matches this base image)
-ARG TORCH_VERSION=2.13.0
-ARG CU_VERSION=132
+# Install LibTorch (CUDA build — matches this base image / smile_torch stage)
 RUN curl -fsSL --retry 5 --retry-delay 10 -o /tmp/libtorch.zip \
         "https://download.pytorch.org/libtorch/cu${CU_VERSION}/libtorch-shared-with-deps-${TORCH_VERSION}%2Bcu${CU_VERSION}.zip" \
     && unzip -q -o /tmp/libtorch.zip -d /usr/local \
@@ -82,12 +121,14 @@ RUN curl -fsSL --retry 5 --retry-delay 10 -o /tmp/libtorch.zip \
 ENV LD_LIBRARY_PATH="/usr/local/onnxruntime/lib:/usr/local/libtorch/lib:/usr/lib/x86_64-linux-gnu/nvshmem/13${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 
 # We make four distinct layers so if there are application changes the library layers can be re-used
-COPY --chown=185:185 build/quarkus-app/lib/ /deployments/lib/
-COPY --chown=185:185 build/quarkus-app/*.jar /deployments/
-COPY --chown=185:185 build/quarkus-app/app/ /deployments/app/
-COPY --chown=185:185 build/quarkus-app/quarkus/ /deployments/quarkus/
+COPY --chown=185:185 serve/build/quarkus-app/lib/ /deployments/lib/
+COPY --chown=185:185 serve/build/quarkus-app/*.jar /deployments/
+COPY --chown=185:185 serve/build/quarkus-app/app/ /deployments/app/
+COPY --chown=185:185 serve/build/quarkus-app/quarkus/ /deployments/quarkus/
 
-# libsmile_torch.so is copied into /deployments/lib by the build workflow
+# Replace any host-copied CPU stub with the CUDA-enabled library from stage 1
+COPY --from=smile-torch-builder --chown=185:185 /build/cpp/libsmile_torch.so /deployments/lib/libsmile_torch.so
+
 ENV LD_LIBRARY_PATH="/deployments/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 
 # Minimal launcher (Ubuntu base has no UBI run-java.sh)

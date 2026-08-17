@@ -74,13 +74,36 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
 # --------------------------------------------------------------------------
 # Optional CUDA support
+#
+# CUDA device introspection (cudaMemGetInfo, emptyCache, …) requires both:
+#   1. A CUDA-enabled LibTorch (libc10_cuda), and
+#   2. The CUDA Toolkit headers/runtime for compiling against cuda_runtime.h.
+#
+# Building against a CPU LibTorch, or without CUDAToolkit, produces a CPU-only
+# smile_torch where smile_cuda_mem_get_info always fails with a clear error.
 # --------------------------------------------------------------------------
+option(SMILE_TORCH_USE_CUDA "Enable CUDA device helpers in smile_torch" ON)
+
+find_library(SMILE_C10_CUDA_LIBRARY c10_cuda
+    PATHS "${LIBTORCH_ROOT}/lib"
+    NO_DEFAULT_PATH)
 find_package(CUDAToolkit QUIET)
-if(CUDAToolkit_FOUND)
-    message(STATUS "CUDA found: ${CUDAToolkit_VERSION}")
-    add_compile_definitions(USE_CUDA)
+
+set(SMILE_TORCH_CUDA_ENABLED OFF)
+if(SMILE_TORCH_USE_CUDA AND SMILE_C10_CUDA_LIBRARY AND CUDAToolkit_FOUND)
+    set(SMILE_TORCH_CUDA_ENABLED ON)
+    message(STATUS "CUDA enabled: toolkit ${CUDAToolkit_VERSION}, c10_cuda=${SMILE_C10_CUDA_LIBRARY}")
+elseif(SMILE_TORCH_USE_CUDA AND SMILE_C10_CUDA_LIBRARY AND NOT CUDAToolkit_FOUND)
+    message(WARNING
+        "LibTorch has c10_cuda but CUDAToolkit was not found — "
+        "building CPU-only smile_torch. Install the CUDA Toolkit matching "
+        "this LibTorch (e.g. CUDA 13.2 for cu132) and reconfigure.")
+elseif(SMILE_TORCH_USE_CUDA AND CUDAToolkit_FOUND AND NOT SMILE_C10_CUDA_LIBRARY)
+    message(WARNING
+        "CUDAToolkit ${CUDAToolkit_VERSION} found but LibTorch has no c10_cuda — "
+        "building CPU-only smile_torch. Use a CUDA LibTorch build (e.g. cu132).")
 else()
-    message(STATUS "CUDA not found — building CPU-only")
+    message(STATUS "CUDA not enabled — building CPU-only smile_torch")
 endif()
 
 # --------------------------------------------------------------------------
@@ -102,6 +125,11 @@ target_include_directories(smile_torch
 )
 
 target_link_libraries(smile_torch PRIVATE ${TORCH_LIBRARIES})
+
+if(SMILE_TORCH_CUDA_ENABLED)
+    target_compile_definitions(smile_torch PRIVATE USE_CUDA)
+    target_link_libraries(smile_torch PRIVATE CUDA::cudart)
+endif()
 
 # Hide all symbols by default; only SMILE_API-annotated functions are exported.
 set_target_properties(smile_torch PROPERTIES

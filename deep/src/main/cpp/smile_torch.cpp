@@ -71,6 +71,12 @@ static void clear_error() {
     g_last_error.clear();
 }
 
+#ifndef USE_CUDA
+static void set_error_no_cuda_build() {
+    set_error("smile_torch was built without CUDA (USE_CUDA not enabled at compile time)");
+}
+#endif
+
 /** Helper macro — wraps a block and converts any C++ exception to an error. */
 #define ST_TRY_BEGIN  try { clear_error();
 #define ST_TRY_END    } catch (const std::exception &ex) { \
@@ -263,7 +269,11 @@ int smile_cuda_runtime_version(char *buf, int buf_len) {
 #ifdef USE_CUDA
     ST_TRY_BEGIN
         int ver = 0;
-        cudaRuntimeGetVersion(&ver);
+        cudaError_t err = cudaRuntimeGetVersion(&ver);
+        if (err != cudaSuccess) {
+            set_error(cudaGetErrorString(err));
+            return -1;
+        }
         int major = ver / 1000;
         int minor = (ver % 1000) / 10;
         std::snprintf(buf, buf_len, "%d.%d", major, minor);
@@ -281,7 +291,11 @@ int smile_cuda_device_name(int device_index, char *buf, int buf_len) {
 #ifdef USE_CUDA
     ST_TRY_BEGIN
         cudaDeviceProp prop{};
-        cudaGetDeviceProperties(&prop, device_index);
+        cudaError_t err = cudaGetDeviceProperties(&prop, device_index);
+        if (err != cudaSuccess) {
+            set_error(cudaGetErrorString(err));
+            return -1;
+        }
         std::snprintf(buf, buf_len, "%s", prop.name);
         return 0;
     ST_TRY_END
@@ -296,28 +310,40 @@ int64_t smile_cuda_total_memory(int device_index) {
 #ifdef USE_CUDA
     ST_TRY_BEGIN
         cudaDeviceProp prop{};
-        if (cudaGetDeviceProperties(&prop, device_index) == cudaSuccess)
-            return static_cast<int64_t>(prop.totalGlobalMem);
+        cudaError_t err = cudaGetDeviceProperties(&prop, device_index);
+        if (err != cudaSuccess) {
+            set_error(cudaGetErrorString(err));
+            return -1;
+        }
+        return static_cast<int64_t>(prop.totalGlobalMem);
     ST_TRY_END
+#else
+    set_error_no_cuda_build();
 #endif
     return -1;
 }
 
 int smile_cuda_mem_get_info(int device_index, int64_t *free_bytes, int64_t *total_bytes) {
-    if (!free_bytes || !total_bytes) return -1;
+    if (!free_bytes || !total_bytes) {
+        set_error("smile_cuda_mem_get_info: null output pointer");
+        return -1;
+    }
 #ifdef USE_CUDA
     ST_TRY_BEGIN
-        int prev = -1;
-        cudaGetDevice(&prev);
-        if (cudaSetDevice(device_index) != cudaSuccess) return -1;
-        size_t free_mem = 0, total_mem = 0;
-        cudaError_t err = cudaMemGetInfo(&free_mem, &total_mem);
-        if (prev >= 0) cudaSetDevice(prev);
-        if (err != cudaSuccess) return -1;
-        *free_bytes = static_cast<int64_t>(free_mem);
-        *total_bytes = static_cast<int64_t>(total_mem);
+        // Prefer LibTorch's path (CUDAGuard + cudaMemGetInfo) so device
+        // context matches the caching allocator used for KV / tensors.
+        auto *alloc = c10::cuda::CUDACachingAllocator::get();
+        if (!alloc) {
+            set_error("CUDACachingAllocator is not initialized");
+            return -1;
+        }
+        auto info = alloc->getMemoryInfo(static_cast<c10::DeviceIndex>(device_index));
+        *free_bytes = static_cast<int64_t>(info.first);
+        *total_bytes = static_cast<int64_t>(info.second);
         return 0;
     ST_TRY_END
+#else
+    set_error_no_cuda_build();
 #endif
     return -1;
 }
@@ -335,7 +361,11 @@ int smile_cuda_is_bf16_supported(void) {
     ST_TRY_BEGIN
         int dev = at::cuda::current_device();
         cudaDeviceProp prop{};
-        cudaGetDeviceProperties(&prop, dev);
+        cudaError_t err = cudaGetDeviceProperties(&prop, dev);
+        if (err != cudaSuccess) {
+            set_error(cudaGetErrorString(err));
+            return 0;
+        }
         return (prop.major >= 8) ? 1 : 0;
     ST_TRY_END
 #endif
