@@ -75,7 +75,7 @@ function OnnxForm({ modelId }) {
     setFinishedAt(null);
     setSubmitProgress(null);
 
-    fetch(`/api/v1/onnx/${modelId}`)
+    fetch(`/smile/api/v1/onnx/${modelId}`)
       .then((res) => {
         if (!res.ok) {
           throw new Error("Failed to fetch ONNX model info");
@@ -172,7 +172,7 @@ function OnnxForm({ modelId }) {
     setSubmitError(null);
     beginRun();
     try {
-      const res = await fetch(`/api/v1/onnx/${modelId}`, {
+      const res = await fetch(`/smile/api/v1/onnx/${modelId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -240,7 +240,7 @@ function OnnxForm({ modelId }) {
         setSubmitProgress({ done: i, total: imageFiles.length });
         try {
           const body = await buildImageBody(file);
-          const res = await fetch(`/api/v1/onnx/${modelId}`, {
+          const res = await fetch(`/smile/api/v1/onnx/${modelId}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body),
@@ -318,7 +318,7 @@ function OnnxForm({ modelId }) {
         throw new Error("File has no data rows");
       }
 
-      const res = await fetch(`/api/v1/onnx/${modelId}/stream`, {
+      const res = await fetch(`/smile/api/v1/onnx/${modelId}/stream`, {
         method: "POST",
         headers: { "Content-Type": contentType },
         body,
