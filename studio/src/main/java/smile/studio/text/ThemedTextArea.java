@@ -87,7 +87,6 @@ public class ThemedTextArea extends RSyntaxTextArea {
         };
         caret.setBlinkRate(getCaret().getBlinkRate());
         setCaret(caret);
-        syncCaretUpdatePolicy();
 
         applyTheme();
         // Listen for global Look and Feel changes
@@ -130,20 +129,6 @@ public class ThemedTextArea extends RSyntaxTextArea {
             if (IDEA_THEME != null) IDEA_THEME.apply(this);
         }
         setFont(Monospaced.getFont());
-    }
-
-    @Override
-    public void setEditable(boolean editable) {
-        super.setEditable(editable);
-        syncCaretUpdatePolicy();
-    }
-
-    private void syncCaretUpdatePolicy() {
-        if (getCaret() instanceof javax.swing.text.DefaultCaret caret) {
-            caret.setUpdatePolicy(isEditable()
-                    ? javax.swing.text.DefaultCaret.UPDATE_WHEN_ON_EDT
-                    : javax.swing.text.DefaultCaret.NEVER_UPDATE);
-        }
     }
 
     /**
