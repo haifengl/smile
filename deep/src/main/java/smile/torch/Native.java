@@ -154,7 +154,12 @@ public final class Native {
     }
 
     /**
-     * Queries free and total CUDA device memory via {@code cudaMemGetInfo}.
+     * Queries free and total CUDA device memory via LibTorch's caching allocator
+     * ({@code cudaMemGetInfo} under a device guard).
+     *
+     * <p>Requires a {@code smile_torch} binary built with {@code USE_CUDA}
+     * (CUDA Toolkit + CUDA LibTorch). A CPU-only build fails with a clear
+     * native error rather than a silent {@code -1}.
      *
      * @param deviceIndex the CUDA device index.
      * @return {@code long[2]} of {@code {freeBytes, totalBytes}}.
