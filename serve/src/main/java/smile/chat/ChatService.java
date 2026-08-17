@@ -83,27 +83,32 @@ public class ChatService {
      *
      * <p>After weights are loaded, a shared {@link smile.llm.cache.KvCachePool}
      * is allocated using {@link MemConfig#fractionStatic()} of the remaining
-     * free GPU memory.
+     * free GPU memory. The pool element dtype comes from
+     * {@link KvCacheConfig#dtype()} when set, otherwise from the model's
+     * {@code config.json} {@code torch_dtype}.
      *
-     * @param config the chat service configuration.
-     * @param mem    GPU memory budgeting configuration.
+     * @param config  the chat service configuration.
+     * @param mem     GPU memory budgeting configuration.
+     * @param kvCache KV-cache storage configuration.
      */
     @Inject
-    public ChatService(ChatServiceConfig config, MemConfig mem) {
+    public ChatService(ChatServiceConfig config, MemConfig mem, KvCacheConfig kvCache) {
         String modelSpec = config.model();
         this.modelId = publicModelId(modelSpec);
         try {
             double memFraction = mem.fractionStatic();
+            String kvDtype = kvCache.dtype().orElse(null);
             Path localPath = Path.of(modelSpec);
             if (Files.isDirectory(localPath)) {
                 String tokenizerPath = resolveLocalTokenizer(localPath);
                 model = Llama.build(modelSpec, tokenizerPath,
-                        config.maxBatchSize(), config.maxSeqLen(), config.device(), memFraction);
+                        config.maxBatchSize(), config.maxSeqLen(), config.device(),
+                        memFraction, kvDtype);
                 ownedBy = ownerFromFamily(model.family());
                 source = "local";
                 createdAt = Instant.now().getEpochSecond();
             } else if (looksLikeHuggingFaceRepoId(modelSpec)) {
-                model = loadFromHuggingFace(config, memFraction);
+                model = loadFromHuggingFace(config, memFraction, kvDtype);
                 ownedBy = ownerFromHuggingFaceId(modelSpec);
                 source = "huggingface";
                 createdAt = Instant.now().getEpochSecond();
@@ -308,10 +313,12 @@ public class ChatService {
      *
      * @param config the chat service configuration; {@code config.model()} is the HF repo ID.
      * @param memFractionStatic fraction of free GPU memory for the KV cache pool.
+     * @param kvCacheDtype optional KV-cache dtype override ({@code null} = auto).
      * @return the loaded Llama model.
      * @throws Exception if a required file cannot be downloaded or the model fails to load.
      */
-    private Llama loadFromHuggingFace(ChatServiceConfig config, double memFractionStatic) throws Exception {
+    private Llama loadFromHuggingFace(ChatServiceConfig config, double memFractionStatic,
+                                      String kvCacheDtype) throws Exception {
         String repoId = config.model();
         logger.infof("Model directory '%s' not found locally. Downloading from Hugging Face Hub...", repoId);
 
@@ -327,7 +334,8 @@ public class ChatService {
 
         String tokenizerPath = resolveHuggingFaceTokenizer(repoId);
         return Llama.build(checkpointDir, tokenizerPath,
-                config.maxBatchSize(), config.maxSeqLen(), config.device(), memFractionStatic);
+                config.maxBatchSize(), config.maxSeqLen(), config.device(),
+                memFractionStatic, kvCacheDtype);
     }
 
     /**
