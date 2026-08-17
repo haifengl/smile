@@ -60,7 +60,7 @@ public class ChatServiceTest {
         given()
             .contentType(ContentType.JSON)
             .body(body)
-            .when().post("/api/v1/chat/completions")
+            .when().post("/smile/api/v1/chat/completions")
             .then()
                 .statusCode(503);
     }
@@ -74,7 +74,7 @@ public class ChatServiceTest {
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
             .body(body)
-            .when().post("/api/v1/chat/completions")
+            .when().post("/smile/api/v1/chat/completions")
             .then()
                 .statusCode(503);
     }

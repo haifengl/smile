@@ -37,7 +37,7 @@ public class ModelsResourceTest {
     public void testGivenLoadedSmileAndOnnxWhenListThenIncludesThem() {
         // %test profile: chat unavailable; iris .sml (+ optional onnx) present
         given()
-            .when().get("/api/v1/models")
+            .when().get("/smile/api/v1/models")
             .then()
                 .statusCode(200)
                 .body("object", equalTo("list"))
@@ -50,7 +50,7 @@ public class ModelsResourceTest {
     @Test
     public void testGivenLoadedSmileWhenRetrieveThenReturnsModelObject() {
         given()
-            .when().get("/api/v1/models/iris_random_forest-1")
+            .when().get("/smile/api/v1/models/iris_random_forest-1")
             .then()
                 .statusCode(200)
                 .body("id", equalTo("iris_random_forest-1"))
@@ -68,7 +68,7 @@ public class ModelsResourceTest {
     @Test
     public void testGivenListWhenSmileModelThenOmitsDetailBlocks() {
         given()
-            .when().get("/api/v1/models")
+            .when().get("/smile/api/v1/models")
             .then()
                 .statusCode(200)
                 .body("data.find { it.id == 'iris_random_forest-1' }.smile", nullValue())
@@ -79,7 +79,7 @@ public class ModelsResourceTest {
     @Test
     public void testGivenUnknownIdWhenRetrieveThenReturns404() {
         given()
-            .when().get("/api/v1/models/does-not-exist")
+            .when().get("/smile/api/v1/models/does-not-exist")
             .then()
                 .statusCode(404);
     }
