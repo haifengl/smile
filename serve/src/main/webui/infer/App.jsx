@@ -34,7 +34,7 @@ function App() {
   const [mountedModels, setMountedModels] = useState([]);
 
   useEffect(() => {
-    fetch("/api/v1/models")
+    fetch("/smile/api/v1/models")
       .then((res) => (res.ok ? res.json() : { data: [] }))
       .catch(() => ({ data: [] }))
       .then((catalog) => {

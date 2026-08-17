@@ -39,7 +39,7 @@ const server = {
 }
 
 const client = new OpenAI({
-  baseURL: `${window.location.origin}/api/v1`,
+  baseURL: `${window.location.origin}/smile/api/v1`,
   apiKey: 'not-needed',
   dangerouslyAllowBrowser: true,
 })
@@ -80,7 +80,7 @@ export default function ChatApp({ model, title, embedded = false }) {
     }
 
     let cancelled = false
-    fetch('/api/v1/conversations', requestOptions)
+    fetch('/smile/api/v1/conversations', requestOptions)
       .then((response) => {
         if (!response.ok) {
           throw new Error(response.statusText)
