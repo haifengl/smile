@@ -18,6 +18,7 @@ package smile.deep.tensor;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.lang.foreign.MemorySegment;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
@@ -30,6 +31,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import smile.torch.Native;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
@@ -64,8 +66,11 @@ public record SafeTensors(Map<String, Tensor> tensors, Map<String, String> metad
      * <p>Each tensor is loaded with a positioned {@link FileChannel#read} of its
      * {@code data_offsets} range. The data region is <em>not</em> memory-mapped as
      * a whole, so shards larger than {@link Integer#MAX_VALUE} bytes (common for
-     * multi-gigabyte LLM checkpoints) load correctly. Individual tensors must still
-     * fit in a Java {@link ByteBuffer} ({@code ≤ Integer.MAX_VALUE} bytes).
+     * multi-gigabyte LLM checkpoints) load correctly. Bit-identical dtypes
+     * ({@code F16}/{@code BF16}/{@code F32}/integers/…) are copied straight into
+     * LibTorch storage and may exceed {@code Integer.MAX_VALUE} bytes. Dtypes that
+     * require element-wise decoding ({@code F8_*}) still require a Java
+     * {@link ByteBuffer} and therefore {@code ≤ Integer.MAX_VALUE} bytes.
      *
      * @param path the file path to read.
      * @param device the device on which to store the loaded tensors.
@@ -87,8 +92,10 @@ public record SafeTensors(Map<String, Tensor> tensors, Map<String, String> metad
                     continue;
                 }
                 TensorInfo info = entry.getValue();
-                ByteBuffer bytes = readRange(channel, header.dataStartOffset + info.begin, info.end - info.begin);
-                tensors.put(name, toTensor(info.dtype, bytes, bytes.remaining(), info.shape, device));
+                long length = info.end - info.begin;
+                tensors.put(name, loadTensor(
+                        channel, header.dataStartOffset + info.begin, length,
+                        info.dtype, info.shape, device));
             }
             return new SafeTensors(tensors, header.metadata);
         }
@@ -165,7 +172,8 @@ public record SafeTensors(Map<String, Tensor> tensors, Map<String, String> metad
 
     /**
      * Reads {@code length} bytes starting at absolute file {@code position}
-     * into a little-endian heap buffer.
+     * into a little-endian heap buffer. Only for payloads that fit in a
+     * {@link ByteBuffer}.
      */
     private static ByteBuffer readRange(FileChannel channel, long position, long length)
             throws IOException {
@@ -180,6 +188,36 @@ public record SafeTensors(Map<String, Tensor> tensors, Map<String, String> metad
         readFully(channel, buf, position);
         buf.flip();
         return buf;
+    }
+
+    /**
+     * Copies {@code length} bytes from {@code channel} at {@code position} into
+     * {@code dest}. Supports lengths greater than {@link Integer#MAX_VALUE}.
+     */
+    private static void readInto(FileChannel channel, long position, MemorySegment dest, long length)
+            throws IOException {
+        if (length < 0) {
+            throw new IOException("Negative safetensors data length: " + length);
+        }
+        if (dest.byteSize() < length) {
+            throw new IOException("Destination segment too small: " + dest.byteSize() + " < " + length);
+        }
+        final int chunkSize = 1 << 20; // 1 MiB
+        ByteBuffer chunk = ByteBuffer.allocateDirect(chunkSize);
+        long pos = position;
+        long offset = 0;
+        long remaining = length;
+        while (remaining > 0) {
+            int n = (int) Math.min(chunkSize, remaining);
+            chunk.clear();
+            chunk.limit(n);
+            readFully(channel, chunk, pos);
+            chunk.flip();
+            MemorySegment.copy(MemorySegment.ofBuffer(chunk), 0, dest, offset, n);
+            pos += n;
+            offset += n;
+            remaining -= n;
+        }
     }
 
     /** Fills {@code buf} by reading from {@code channel} at {@code position}. */
@@ -202,6 +240,102 @@ public record SafeTensors(Map<String, Tensor> tensors, Map<String, String> metad
 
     /** Descriptor for one tensor in the safetensors header. */
     private record TensorInfo(String dtype, long[] shape, long begin, long end) {}
+
+    // -------------------------------------------------------------------------
+    // Read helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Loads one tensor from the file. Bit-identical dtypes stream into LibTorch
+     * storage (any size); decode-only dtypes use a heap {@link ByteBuffer}.
+     */
+    private static Tensor loadTensor(FileChannel channel, long position, long length,
+                                     String dtype, long[] shape, Device device)
+            throws IOException {
+        ScalarType raw = rawScalarType(dtype);
+        if (raw != null) {
+            return readRawTensor(channel, position, length, shape, raw, device);
+        }
+        ByteBuffer bytes = readRange(channel, position, length);
+        return decodeTensor(dtype, bytes, bytes.remaining(), shape, device);
+    }
+
+    /**
+     * Safetensors dtypes whose on-disk little-endian layout matches LibTorch
+     * storage and can be memcpy'd without element-wise conversion.
+     */
+    private static ScalarType rawScalarType(String dtype) {
+        return switch (dtype) {
+            case "BOOL" -> ScalarType.Bool;
+            case "I8" -> ScalarType.Int8;
+            case "U8" -> ScalarType.UInt8;
+            case "I16" -> ScalarType.Int16;
+            case "U16" -> ScalarType.UInt16;
+            case "I32" -> ScalarType.Int32;
+            case "U32" -> ScalarType.UInt32;
+            case "I64" -> ScalarType.Int64;
+            case "U64" -> ScalarType.UInt64;
+            case "F16" -> ScalarType.Half;
+            case "BF16" -> ScalarType.BFloat16;
+            case "F32" -> ScalarType.Float;
+            case "F64" -> ScalarType.Double;
+            default -> null; // F8_* and unknown
+        };
+    }
+
+    /**
+     * Allocates an empty CPU tensor and copies file bytes into its storage.
+     */
+    private static Tensor readRawTensor(FileChannel channel, long position, long length,
+                                        long[] shape, ScalarType dtype, Device device)
+            throws IOException {
+        Tensor cpu = Tensor.empty(new Tensor.Options().dtype(dtype).device(Device.CPU()), shape);
+        try {
+            long nbytes = Native.nbytes(cpu);
+            if (nbytes != length) {
+                throw new IOException(
+                        "Safetensors payload size mismatch: file has " + length
+                                + " bytes, tensor storage is " + nbytes
+                                + " (dtype=" + dtype + ", shape=" + java.util.Arrays.toString(shape) + ")");
+            }
+            if (length > 0) {
+                readInto(channel, position, Native.dataPtr(cpu), length);
+            }
+            if (device == null || device.isCPU()) {
+                Tensor out = cpu;
+                cpu = null;
+                return out;
+            }
+            Tensor moved = cpu.to(device);
+            cpu.close();
+            cpu = null;
+            return moved;
+        } finally {
+            if (cpu != null) {
+                cpu.close();
+            }
+        }
+    }
+
+    /**
+     * Materialises a tensor from its raw little-endian byte buffer, decoding
+     * types that cannot be memcpy'd (Float8).
+     */
+    private static Tensor decodeTensor(String dtype, ByteBuffer buffer, int length, long[] shape, Device device) {
+        switch (dtype) {
+            case "F8_E4M3" -> {
+                float[] data = new float[length];
+                for (int i = 0; i < length; i++) data[i] = float8e4m3ToFloat(buffer.get(i));
+                return Tensor.of(data, shape).to(device, ScalarType.Float8e4m3fn);
+            }
+            case "F8_E5M2" -> {
+                float[] data = new float[length];
+                for (int i = 0; i < length; i++) data[i] = float8e5m2ToFloat(buffer.get(i));
+                return Tensor.of(data, shape).to(device, ScalarType.Float8e5m2);
+            }
+            default -> throw new UnsupportedOperationException("Unsupported safetensors dtype: " + dtype);
+        }
+    }
 
     /**
      * Writes this {@code SafeTensors} object to a file.
@@ -266,107 +400,6 @@ public record SafeTensors(Map<String, Tensor> tensors, Map<String, String> metad
             for (byte[] chunk : chunks) {
                 channel.write(ByteBuffer.wrap(chunk));
             }
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    // Read helpers
-    // -------------------------------------------------------------------------
-
-    /**
-     * Materialises a tensor from its raw little-endian byte buffer.
-     * @param dtype the safetensors dtype string.
-     * @param buffer the little-endian tensor bytes.
-     * @param length the number of bytes.
-     * @param shape the tensor shape.
-     * @param device the device to store the tensor.
-     * @return the tensor stored on the given device.
-     */
-    private static Tensor toTensor(String dtype, ByteBuffer buffer, int length, long[] shape, Device device) {
-        switch (dtype) {
-            case "BOOL" -> {
-                boolean[] data = new boolean[length];
-                for (int i = 0; i < length; i++) data[i] = buffer.get(i) != 0;
-                return Tensor.of(data, shape).to(device);
-            }
-            case "I8" -> {
-                byte[] data = new byte[length];
-                buffer.get(data);
-                return Tensor.of(data, shape).to(device);
-            }
-            case "U8" -> {
-                // Signed Java byte carrier; bit pattern preserved by PyTorch's int8→uint8 cast.
-                byte[] data = new byte[length];
-                buffer.get(data);
-                return Tensor.of(data, shape).to(device, ScalarType.UInt8);
-            }
-            case "I16" -> {
-                short[] data = new short[length / 2];
-                buffer.asShortBuffer().get(data);
-                return Tensor.of(data, shape).to(device);
-            }
-            case "U16" -> {
-                short[] data = new short[length / 2];
-                buffer.asShortBuffer().get(data);
-                return Tensor.of(data, shape).to(device, ScalarType.UInt16);
-            }
-            case "I32" -> {
-                int[] data = new int[length / 4];
-                buffer.asIntBuffer().get(data);
-                return Tensor.of(data, shape).to(device);
-            }
-            case "U32" -> {
-                int[] data = new int[length / 4];
-                buffer.asIntBuffer().get(data);
-                return Tensor.of(data, shape).to(device, ScalarType.UInt32);
-            }
-            case "I64" -> {
-                long[] data = new long[length / 8];
-                buffer.asLongBuffer().get(data);
-                return Tensor.of(data, shape).to(device);
-            }
-            case "U64" -> {
-                long[] data = new long[length / 8];
-                buffer.asLongBuffer().get(data);
-                return Tensor.of(data, shape).to(device, ScalarType.UInt64);
-            }
-            case "F32" -> {
-                float[] data = new float[length / 4];
-                buffer.asFloatBuffer().get(data);
-                return Tensor.of(data, shape).to(device);
-            }
-            case "F64" -> {
-                double[] data = new double[length / 8];
-                buffer.asDoubleBuffer().get(data);
-                return Tensor.of(data, shape).to(device);
-            }
-            case "F16" -> {
-                // No Java primitive for half; widen to float (lossless) and let torch re-narrow.
-                short[] bits = new short[length / 2];
-                buffer.asShortBuffer().get(bits);
-                float[] data = new float[bits.length];
-                for (int i = 0; i < bits.length; i++) data[i] = Float.float16ToFloat(bits[i]);
-                return Tensor.of(data, shape).to(device, ScalarType.Half);
-            }
-            case "BF16" -> {
-                // bfloat16 is the upper 16 bits of a float32; restore by left-shifting.
-                short[] bits = new short[length / 2];
-                buffer.asShortBuffer().get(bits);
-                float[] data = new float[bits.length];
-                for (int i = 0; i < bits.length; i++) data[i] = Float.intBitsToFloat((bits[i] & 0xFFFF) << 16);
-                return Tensor.of(data, shape).to(device, ScalarType.BFloat16);
-            }
-            case "F8_E4M3" -> {
-                float[] data = new float[length];
-                for (int i = 0; i < length; i++) data[i] = float8e4m3ToFloat(buffer.get(i));
-                return Tensor.of(data, shape).to(device, ScalarType.Float8e4m3fn);
-            }
-            case "F8_E5M2" -> {
-                float[] data = new float[length];
-                for (int i = 0; i < length; i++) data[i] = float8e5m2ToFloat(buffer.get(i));
-                return Tensor.of(data, shape).to(device, ScalarType.Float8e5m2);
-            }
-            default -> throw new UnsupportedOperationException("Unsupported safetensors dtype: " + dtype);
         }
     }
 
