@@ -80,7 +80,7 @@ public interface Attention {
      *                 has the form of the upper left causal bias due to the alignment
      *                 when the mask is a non-square matrix. An error is thrown if both
      *                 attn_mask and is_causal are set.
-     * @param scale Optional scaling factor applied prior to softmax. If <= 0, the standard
+     * @param scale Optional scaling factor applied prior to softmax. If &le; 0, the standard
      *              scaling factor is used.
      * @return the attention output.
      */
