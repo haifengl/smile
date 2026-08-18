@@ -34,6 +34,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import smile.llm.*;
 import smile.llm.llama.*;
+import smile.llm.qwen.Qwen;
 import smile.util.HuggingFaceHub;
 
 /**
@@ -63,11 +64,10 @@ public class ChatService {
     private static final Logger logger = Logger.getLogger(ChatService.class);
 
     /** The loaded LLM; {@code null} when the model failed to load. */
-    private Llama model;
+    private LanguageModel model;
     /**
      * Public model id exposed by the chat API (HF repo id or local directory
-     * name). Independent of {@link Llama#toString()}, which still embeds a
-     * Llama-family prefix for historical reasons.
+     * name). Independent of family-prefixed {@code toString()} labels.
      */
     private final String modelId;
     /** OpenAI {@code owned_by} value for the loaded model. */
@@ -100,10 +100,7 @@ public class ChatService {
             String kvDtype = kvCache.dtype().orElse(null);
             Path localPath = Path.of(modelSpec);
             if (Files.isDirectory(localPath)) {
-                String tokenizerPath = resolveLocalTokenizer(localPath);
-                model = Llama.build(modelSpec, tokenizerPath,
-                        config.maxBatchSize(), config.maxSeqLen(), config.device(),
-                        memFraction, kvDtype);
+                model = loadFromLocal(localPath, config, memFraction, kvDtype);
                 ownedBy = ownerFromFamily(model.family());
                 source = "local";
                 createdAt = Instant.now().getEpochSecond();
@@ -305,20 +302,63 @@ public class ChatService {
     }
 
     /**
-     * Downloads HuggingFace-format model files and returns a loaded Llama model.
+     * Loads a chat model from a local checkpoint directory.
+     * Dispatches on {@code config.json} {@code model_type} / {@code architectures}.
+     */
+    private LanguageModel loadFromLocal(Path localPath, ChatServiceConfig config,
+                                        double memFraction, String kvDtype) throws Exception {
+        if (isQwenCheckpoint(localPath)) {
+            return Qwen.build(localPath.toString(),
+                    config.maxBatchSize(), config.maxSeqLen(), config.device(),
+                    memFraction, kvDtype);
+        }
+        String tokenizerPath = resolveLocalTokenizer(localPath);
+        return Llama.build(localPath.toString(), tokenizerPath,
+                config.maxBatchSize(), config.maxSeqLen(), config.device(),
+                memFraction, kvDtype);
+    }
+
+    /**
+     * Returns {@code true} when {@code config.json} identifies a Qwen3.5 hybrid checkpoint.
+     */
+    static boolean isQwenCheckpoint(Path checkpointDir) throws IOException {
+        Path configJson = checkpointDir.resolve("config.json");
+        if (!Files.isRegularFile(configJson)) {
+            return false;
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode root = mapper.readTree(configJson.toFile());
+        String modelType = root.has("model_type") ? root.get("model_type").asString() : "";
+        if (modelType.startsWith("qwen3_5")) {
+            return true;
+        }
+        if (root.has("architectures") && root.get("architectures").isArray()) {
+            for (JsonNode n : root.get("architectures")) {
+                String arch = n.asString();
+                if (arch != null && arch.startsWith("Qwen3_5")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Downloads HuggingFace-format model files and returns a loaded language model.
      *
      * <p>Downloads {@code config.json}, {@code model.safetensors.index.json} (when
-     * present), every safetensors shard listed in the index, and the SentencePiece
-     * tokenizer ({@code original/tokenizer.model} or {@code tokenizer.model}).
+     * present), every safetensors shard listed in the index, and the tokenizer
+     * files required by the architecture (SentencePiece for Llama, vocab/merges
+     * or {@code tokenizer.json} for Qwen).
      *
      * @param config the chat service configuration; {@code config.model()} is the HF repo ID.
      * @param memFractionStatic fraction of free GPU memory for the KV cache pool.
      * @param kvCacheDtype optional KV-cache dtype override ({@code null} = auto).
-     * @return the loaded Llama model.
+     * @return the loaded language model.
      * @throws Exception if a required file cannot be downloaded or the model fails to load.
      */
-    private Llama loadFromHuggingFace(ChatServiceConfig config, double memFractionStatic,
-                                      String kvCacheDtype) throws Exception {
+    private LanguageModel loadFromHuggingFace(ChatServiceConfig config, double memFractionStatic,
+                                              String kvCacheDtype) throws Exception {
         String repoId = config.model();
         logger.infof("Model directory '%s' not found locally. Downloading from Hugging Face Hub...", repoId);
 
@@ -332,10 +372,39 @@ public class ChatService {
             HuggingFaceHub.download(repoId, shard);
         }
 
+        Path checkpoint = Path.of(checkpointDir);
+        if (isQwenCheckpoint(checkpoint)) {
+            resolveHuggingFaceQwenTokenizer(repoId);
+            return Qwen.build(checkpointDir,
+                    config.maxBatchSize(), config.maxSeqLen(), config.device(),
+                    memFractionStatic, kvCacheDtype);
+        }
+
         String tokenizerPath = resolveHuggingFaceTokenizer(repoId);
         return Llama.build(checkpointDir, tokenizerPath,
                 config.maxBatchSize(), config.maxSeqLen(), config.device(),
                 memFractionStatic, kvCacheDtype);
+    }
+
+    /**
+     * Downloads Qwen tokenizer files ({@code tokenizer.json}, and optionally
+     * {@code vocab.json}/{@code merges.txt}).
+     */
+    private void resolveHuggingFaceQwenTokenizer(String repoId) throws IOException {
+        String[] candidates = {"tokenizer.json", "vocab.json", "merges.txt"};
+        boolean any = false;
+        for (String name : candidates) {
+            try {
+                Path path = HuggingFaceHub.download(repoId, name);
+                logger.infof("Downloaded tokenizer file: %s", path);
+                any = true;
+            } catch (Exception ex) {
+                logger.debugf("Optional tokenizer file %s not found in %s", name, repoId);
+            }
+        }
+        if (!any) {
+            throw new IOException("No Qwen tokenizer files found in Hugging Face repository: " + repoId);
+        }
     }
 
     /**
