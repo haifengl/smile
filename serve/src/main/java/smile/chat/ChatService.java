@@ -310,12 +310,32 @@ public class ChatService {
         if (isQwenCheckpoint(localPath)) {
             return Qwen.build(localPath.toString(),
                     config.maxBatchSize(), config.maxSeqLen(), config.device(),
-                    memFraction, kvDtype);
+                    memFraction, kvDtype, parallelConfig(config));
         }
         String tokenizerPath = resolveLocalTokenizer(localPath);
         return Llama.build(localPath.toString(), tokenizerPath,
                 config.maxBatchSize(), config.maxSeqLen(), config.device(),
                 memFraction, kvDtype);
+    }
+
+    /**
+     * Builds a {@link smile.llm.parallel.ParallelConfig} from chat settings.
+     * Devices are {@code device, device+1, …} for {@code tensorParallelSize}.
+     */
+    static smile.llm.parallel.ParallelConfig parallelConfig(ChatServiceConfig config) {
+        int tp = config.tensorParallelSize();
+        int pp = config.pipelineParallelSize();
+        if (pp != 1) {
+            throw new IllegalArgumentException("smile.chat.pipeline-parallel-size must be 1 until PP is implemented");
+        }
+        if (tp <= 1) {
+            return smile.llm.parallel.ParallelConfig.single(config.device());
+        }
+        byte[] devices = new byte[tp];
+        for (int i = 0; i < tp; i++) {
+            devices[i] = (byte) (config.device() + i);
+        }
+        return smile.llm.parallel.ParallelConfig.tensorParallel(devices);
     }
 
     /**
@@ -377,7 +397,7 @@ public class ChatService {
             resolveHuggingFaceQwenTokenizer(repoId);
             return Qwen.build(checkpointDir,
                     config.maxBatchSize(), config.maxSeqLen(), config.device(),
-                    memFractionStatic, kvCacheDtype);
+                    memFractionStatic, kvCacheDtype, parallelConfig(config));
         }
 
         String tokenizerPath = resolveHuggingFaceTokenizer(repoId);

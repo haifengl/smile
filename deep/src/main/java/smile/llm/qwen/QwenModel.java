@@ -27,6 +27,8 @@ import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.cache.KvCachePool;
+import smile.llm.parallel.TensorParallelGroup;
+import smile.llm.parallel.TensorShardSpec;
 import smile.util.AutoScope;
 
 import static smile.torch.smile_torch_h.smile_module_free;
@@ -37,6 +39,10 @@ import static smile.torch.smile_torch_h.smile_module_list_push_back;
 
 /**
  * Qwen3.5 hybrid text model: embeddings, hybrid blocks, final norm, LM head.
+ *
+ * <p>When constructed with a {@link TensorShardSpec}, attention / FFN / DeltaNet
+ * projections are locally sized for that TP rank. Embeddings and the LM head
+ * remain replicated (full vocab) on each rank in phase 1.
  *
  * @author Haifeng Li
  */
@@ -49,6 +55,9 @@ public class QwenModel extends LayerBlock {
     final QwenRMSNorm norm;
     final LinearLayer lmHead;
     final Tensor cis;
+    final TensorShardSpec shard;
+    final TensorParallelGroup tpGroup;
+    final int tpRank;
     KvCachePool kvCachePool;
     DeltaNetStatePool deltaNetStatePool;
 
@@ -61,6 +70,14 @@ public class QwenModel extends LayerBlock {
      * @param device      compute device.
      */
     public QwenModel(QwenModelArgs args, KvCachePool kvCachePool, DeltaNetStatePool statePool, Device device) {
+        this(args, kvCachePool, statePool, device, null, null);
+    }
+
+    /**
+     * Tensor-parallel shard constructor.
+     */
+    public QwenModel(QwenModelArgs args, KvCachePool kvCachePool, DeltaNetStatePool statePool,
+                     Device device, TensorShardSpec shard, TensorParallelGroup tpGroup) {
         if (kvCachePool == null && args.numFullAttentionLayers() > 0) {
             throw new IllegalArgumentException("kvCachePool required when full-attention layers exist");
         }
@@ -72,12 +89,15 @@ public class QwenModel extends LayerBlock {
         this.numLayers = args.numLayers();
         this.kvCachePool = kvCachePool;
         this.deltaNetStatePool = statePool;
+        this.shard = shard;
+        this.tpGroup = tpGroup;
+        this.tpRank = shard != null ? shard.tpRank() : 0;
 
         this.tokEmbeddings = new EmbeddingLayer(args.vocabSize(), args.dim());
         this.layers = new ArrayList<>();
         MemorySegment moduleList = smile_module_list_create();
         for (int i = 0; i < args.numLayers(); i++) {
-            var block = new QwenBlock(i, args, kvCachePool, statePool);
+            var block = new QwenBlock(i, args, kvCachePool, statePool, shard, tpGroup);
             layers.add(block);
             smile_module_list_push_back(moduleList, block.module);
         }
@@ -129,6 +149,14 @@ public class QwenModel extends LayerBlock {
 
     public DeltaNetStatePool deltaNetStatePool() {
         return deltaNetStatePool;
+    }
+
+    public TensorShardSpec shard() {
+        return shard;
+    }
+
+    public int tpRank() {
+        return tpRank;
     }
 
     /**

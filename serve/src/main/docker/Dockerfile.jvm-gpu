@@ -4,17 +4,21 @@
 #
 # Base image: nvidia/cuda:13.2.0-*-ubuntu24.04 (Ubuntu 24.04 + CUDA 13.2)
 #
-# IMPORTANT: build context must be the repository root (not serve/), so the
-# image can compile a CUDA-enabled libsmile_torch against LibTorch cu132:
+# IMPORTANT: build context must be the repository root (not serve/).
+# Docker rebuilds only libsmile_torch.so. The Quarkus JVM app (including
+# SafeTensors.java) is copied from serve/build/quarkus-app — so you MUST
+# rebuild Java on the host before docker build, or you will ship stale jars:
 #
 #   ./gradlew :serve:build
 #   docker build -f serve/src/main/docker/Dockerfile.jvm-gpu \
 #     -t quarkus/smile-serve-gpu .
 #
-# Then run the container using (requires NVIDIA Container Toolkit):
+# Then run the container using (requires NVIDIA Container Toolkit).
+# For Qwen 27B BF16 on 2x 40GB GPUs:
+#   -e JAVA_OPTS_APPEND="-Dsmile.chat.model=... -Dsmile.chat.tensor-parallel-size=2"
 #
 # docker run -i --rm --gpus all -p 8888:8080 \
-#   -e JAVA_OPTS_APPEND="-Dsmile.chat.model=Qwen/Qwen3.8-27B" \
+#   -e JAVA_OPTS_APPEND="-Dsmile.chat.model=Qwen/Qwen3.5-27B -Dsmile.chat.tensor-parallel-size=2" \
 #   -u root -v "$(pwd)/model":/model quarkus/smile-serve-gpu
 #
 # Optional JVM flags:
@@ -121,6 +125,8 @@ RUN curl -fsSL --retry 5 --retry-delay 10 -o /tmp/libtorch.zip \
 ENV LD_LIBRARY_PATH="/usr/local/onnxruntime/lib:/usr/local/libtorch/lib:/usr/lib/x86_64-linux-gnu/nvshmem/13${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 
 # We make four distinct layers so if there are application changes the library layers can be re-used
+# IMPORTANT: serve/build/quarkus-app must be rebuilt on the host after Java changes:
+#   ./gradlew :serve:build
 COPY --chown=185:185 serve/build/quarkus-app/lib/ /deployments/lib/
 COPY --chown=185:185 serve/build/quarkus-app/*.jar /deployments/
 COPY --chown=185:185 serve/build/quarkus-app/app/ /deployments/app/

@@ -164,6 +164,25 @@ public record QwenModelArgs(
     }
 
     /**
+     * KV layout for a tensor-parallel shard (local KV head count).
+     */
+    public KvCacheLayout kvCacheLayout(smile.llm.parallel.TensorShardSpec shard) {
+        int kvHeads = shard != null && shard.tpSize() > 1 ? shard.numKvHeads() : numKvHeads;
+        return new KvCacheLayout(numFullAttentionLayers(), kvHeads, headDim, maxBatchSize, maxSeqLen);
+    }
+
+    /**
+     * Local DeltaNet conv channel count for a TP shard.
+     */
+    public int linearConvDim(smile.llm.parallel.TensorShardSpec shard) {
+        if (shard == null || shard.tpSize() <= 1) {
+            return linearConvDim();
+        }
+        return 2 * linearKeyHeadDim * shard.linearNumKeyHeads()
+                + linearValueHeadDim * shard.linearNumValueHeads();
+    }
+
+    /**
      * DeltaNet fused QKV channel count ({@code 2*key_dim + value_dim}).
      * @return conv channel count.
      */

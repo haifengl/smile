@@ -29,6 +29,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.SubmissionPublisher;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -45,6 +48,10 @@ import smile.llm.LanguageModel;
 import smile.llm.Message;
 import smile.llm.cache.KvCachePool;
 import smile.llm.llama.Llama;
+import smile.llm.parallel.ParallelConfig;
+import smile.llm.parallel.ParallelState;
+import smile.llm.parallel.TensorParallelGroup;
+import smile.llm.parallel.TensorShardSpec;
 import smile.torch.smile_torch_h;
 import smile.util.AutoScope;
 
@@ -62,7 +69,11 @@ public class Qwen implements LanguageModel {
             "^(?:language_model\\.)?model\\.layers\\.(\\d+)\\.(self_attn|linear_attn|mlp|input_layernorm|post_attention_layernorm)\\.(.+)$");
 
     final String name;
+    /** Rank-0 model (also {@code models[0]}). */
     final QwenModel model;
+    /** One shard per TP rank; length 1 when tensor-parallel size is 1. */
+    final QwenModel[] models;
+    final TensorParallelGroup tpGroup;
     final Tokenizer tokenizer;
     final QwenModelArgs params;
 
@@ -70,8 +81,21 @@ public class Qwen implements LanguageModel {
      * Constructor.
      */
     public Qwen(String name, QwenModel model, Tokenizer tokenizer, QwenModelArgs params) {
+        this(name, new QwenModel[]{model}, null, tokenizer, params);
+    }
+
+    /**
+     * Tensor-parallel constructor.
+     */
+    public Qwen(String name, QwenModel[] models, TensorParallelGroup tpGroup,
+                Tokenizer tokenizer, QwenModelArgs params) {
+        if (models == null || models.length < 1) {
+            throw new IllegalArgumentException("models required");
+        }
         this.name = name;
-        this.model = model;
+        this.models = models;
+        this.model = models[0];
+        this.tpGroup = tpGroup;
         this.tokenizer = tokenizer;
         this.params = params;
     }
@@ -101,7 +125,7 @@ public class Qwen implements LanguageModel {
      */
     public static Qwen build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte deviceId)
             throws IOException {
-        return build(checkpointDir, maxBatchSize, maxSeqLen, deviceId, 0, null);
+        return build(checkpointDir, maxBatchSize, maxSeqLen, deviceId, 0, null, ParallelConfig.single(deviceId));
     }
 
     /**
@@ -112,24 +136,37 @@ public class Qwen implements LanguageModel {
      */
     public static Qwen build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte deviceId,
                              double memFractionStatic, String kvCacheDtype) throws IOException {
+        return build(checkpointDir, maxBatchSize, maxSeqLen, deviceId, memFractionStatic, kvCacheDtype,
+                ParallelConfig.single(deviceId));
+    }
+
+    /**
+     * Builds a Qwen instance with optional tensor parallelism.
+     *
+     * @param parallel {@link ParallelConfig#tensorParallel} for multi-GPU; {@code ppSize} must be 1.
+     */
+    public static Qwen build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte deviceId,
+                             double memFractionStatic, String kvCacheDtype,
+                             ParallelConfig parallel) throws IOException {
         File dir = new File(checkpointDir);
         if (!dir.isDirectory()) {
             throw new IllegalArgumentException("Checkpoint directory not found: " + checkpointDir);
         }
+        if (parallel == null) {
+            parallel = ParallelConfig.single(deviceId);
+        }
 
-        Device device = Device.CPU();
+        boolean cuda = deviceId >= 0 || (parallel.isTensorParallel() && parallel.devices()[0] >= 0);
         ScalarType computeDtype = ScalarType.Float;
-        if (deviceId >= 0) {
+        if (cuda) {
             var startTime = System.currentTimeMillis();
-            device = Device.CUDA(deviceId);
+            Device.CUDA(parallel.devices()[0]); // touch primary device
             computeDtype = Tensor.isBF16Supported() ? ScalarType.BFloat16 : ScalarType.Half;
             smile_torch_h.smile_set_default_dtype(computeDtype.code());
             var time = System.currentTimeMillis() - startTime;
-            logger.info("Initialized CUDA[{}]: {}.{} seconds", deviceId, time / 1000, time % 1000);
+            logger.info("Initialized CUDA (tpSize={}): {}.{} seconds",
+                    parallel.tpSize(), time / 1000, time % 1000);
         }
-
-        var options = new Tensor.Options().device(device).requireGradients(false);
-        Tensor.setDefaultOptions(options);
 
         var startTime = System.currentTimeMillis();
         Path configJson = Path.of(checkpointDir, "config.json");
@@ -146,61 +183,77 @@ public class Qwen implements LanguageModel {
             logger.warn("Tokenizer size {} != config vocab_size {}", tokenizer.size(), modelArgs.vocabSize());
         }
 
-        KvCachePool bootstrap = null;
-        if (modelArgs.numFullAttentionLayers() > 0) {
-            bootstrap = memFractionStatic > 0
-                    ? KvCachePool.bootstrap(modelArgs.kvCacheLayout())
-                    : KvCachePool.forTesting(modelArgs.kvCacheLayout(), device);
-        }
-        DeltaNetStatePool statePool = null;
-        if (modelArgs.numLinearAttentionLayers() > 0) {
-            statePool = new DeltaNetStatePool(
-                    modelArgs.numLinearAttentionLayers(),
-                    modelArgs.linearNumValueHeads(),
-                    modelArgs.linearKeyHeadDim(),
-                    modelArgs.linearValueHeadDim(),
-                    modelArgs.linearConvDim(),
-                    modelArgs.linearConvKernelDim(),
-                    modelArgs.maxBatchSize(),
-                    memFractionStatic > 0 ? Device.CPU() : device,
-                    ScalarType.Float);
-        }
+        TensorParallelGroup tpGroup = new TensorParallelGroup(parallel);
+        QwenModel[] models = new QwenModel[parallel.tpSize()];
 
-        var model = new QwenModel(modelArgs, bootstrap, statePool, device);
-        loadHuggingFaceWeights(model, dir, device);
-        model.eval();
+        for (int r = 0; r < parallel.tpSize(); r++) {
+            Device device = cuda ? Device.CUDA(parallel.devices()[r]) : Device.CPU();
+            TensorShardSpec shard = TensorShardSpec.forRank(
+                    parallel.tpSize(), r,
+                    modelArgs.numHeads(), modelArgs.numKvHeads(), modelArgs.intermediateSize(),
+                    modelArgs.linearNumKeyHeads(), modelArgs.linearNumValueHeads());
 
-        if (memFractionStatic > 0 && modelArgs.numFullAttentionLayers() > 0) {
-            model.kvCachePool().close();
-            device.emptyCache();
-            var pool = KvCachePool.allocate(modelArgs.kvCacheLayout(), device, cacheDtype, memFractionStatic);
-            model.setKvCachePool(pool, false);
-        }
-        if (memFractionStatic > 0 && modelArgs.numLinearAttentionLayers() > 0) {
-            // Re-allocate DeltaNet state on the compute device after weight load.
-            var gpuState = new DeltaNetStatePool(
-                    modelArgs.numLinearAttentionLayers(),
-                    modelArgs.linearNumValueHeads(),
-                    modelArgs.linearKeyHeadDim(),
-                    modelArgs.linearValueHeadDim(),
-                    modelArgs.linearConvDim(),
-                    modelArgs.linearConvKernelDim(),
-                    modelArgs.maxBatchSize(),
-                    device,
-                    cacheDtype);
-            var previous = model.deltaNetStatePool;
-            model.deltaNetStatePool = gpuState;
-            for (var layer : model.layers) {
-                if (layer.linearAttn != null) {
-                    layer.linearAttn.setStatePool(gpuState);
-                }
+            var options = new Tensor.Options().device(device).requireGradients(false);
+            Tensor.setDefaultOptions(options);
+
+            KvCachePool bootstrap = null;
+            if (modelArgs.numFullAttentionLayers() > 0) {
+                var layout = modelArgs.kvCacheLayout(shard);
+                bootstrap = memFractionStatic > 0
+                        ? KvCachePool.bootstrap(layout)
+                        : KvCachePool.forTesting(layout, device);
             }
-            if (previous != null) previous.close();
+            DeltaNetStatePool statePool = null;
+            if (modelArgs.numLinearAttentionLayers() > 0) {
+                statePool = new DeltaNetStatePool(
+                        modelArgs.numLinearAttentionLayers(),
+                        shard.linearNumValueHeads(),
+                        modelArgs.linearKeyHeadDim(),
+                        modelArgs.linearValueHeadDim(),
+                        modelArgs.linearConvDim(shard),
+                        modelArgs.linearConvKernelDim(),
+                        modelArgs.maxBatchSize(),
+                        memFractionStatic > 0 ? Device.CPU() : device,
+                        ScalarType.Float);
+            }
+
+            models[r] = new QwenModel(modelArgs, bootstrap, statePool, device, shard, tpGroup);
+            loadHuggingFaceWeights(models[r], dir, Device.CPU(), shard);
+            models[r].eval();
+
+            if (memFractionStatic > 0 && modelArgs.numFullAttentionLayers() > 0) {
+                models[r].kvCachePool().close();
+                device.emptyCache();
+                var pool = KvCachePool.allocate(
+                        modelArgs.kvCacheLayout(shard), device, cacheDtype, memFractionStatic);
+                models[r].setKvCachePool(pool, false);
+            }
+            if (memFractionStatic > 0 && modelArgs.numLinearAttentionLayers() > 0) {
+                var gpuState = new DeltaNetStatePool(
+                        modelArgs.numLinearAttentionLayers(),
+                        shard.linearNumValueHeads(),
+                        modelArgs.linearKeyHeadDim(),
+                        modelArgs.linearValueHeadDim(),
+                        modelArgs.linearConvDim(shard),
+                        modelArgs.linearConvKernelDim(),
+                        modelArgs.maxBatchSize(),
+                        device,
+                        cacheDtype);
+                var previous = models[r].deltaNetStatePool;
+                models[r].deltaNetStatePool = gpuState;
+                for (var layer : models[r].layers) {
+                    if (layer.linearAttn != null) {
+                        layer.linearAttn.setStatePool(gpuState);
+                    }
+                }
+                if (previous != null) previous.close();
+            }
         }
 
         var time = System.currentTimeMillis() - startTime;
-        logger.info("Model {}: loaded in {}.{} seconds", checkpointDir, time / 1000, time % 1000);
-        return new Qwen(dir.getName(), model, tokenizer, modelArgs);
+        logger.info("Model {}: loaded in {}.{} seconds (tpSize={})",
+                checkpointDir, time / 1000, time % 1000, parallel.tpSize());
+        return new Qwen(dir.getName(), models, tpGroup, tokenizer, modelArgs);
     }
 
     static ScalarType resolveKvCacheDtype(String override, Path configJson, ScalarType fallback)
@@ -222,7 +275,9 @@ public class Qwen implements LanguageModel {
         return fallback;
     }
 
-    private static void loadHuggingFaceWeights(QwenModel model, File dir, Device device) throws IOException {
+    private static void loadHuggingFaceWeights(QwenModel model, File dir, Device loadDevice,
+                                               TensorShardSpec shard) throws IOException {
+        Device target = model.device();
         Map<String, String> weightMap = readWeightMap(dir);
         Map<String, List<String>> shardToKeys = new LinkedHashMap<>();
         for (var entry : weightMap.entrySet()) {
@@ -233,51 +288,76 @@ public class Qwen implements LanguageModel {
         for (var shardEntry : shardToKeys.entrySet()) {
             String shardFile = shardEntry.getKey();
             Path shardPath = Path.of(dir.getPath(), shardFile);
-            logger.info("Loading safetensors shard: {}", shardFile);
-            SafeTensors st = SafeTensors.read(shardPath.toString(), device, shardEntry.getValue());
+            logger.info("Loading safetensors shard: {} (tpRank={})", shardFile,
+                    shard != null ? shard.tpRank() : 0);
+            // Load onto CPU first so large tensors can be sliced before hitting GPU memory.
+            SafeTensors st = SafeTensors.read(shardPath.toString(), loadDevice, shardEntry.getValue());
             try {
                 Map<String, Tensor> stateDict = new HashMap<>();
-                for (String hfName : shardEntry.getValue()) {
-                    Tensor src = st.tensors().get(hfName);
-                    if (src == null) {
-                        throw new IOException("Tensor '" + hfName + "' missing from " + shardFile);
+                List<Tensor> owned = new ArrayList<>();
+                try {
+                    for (String hfName : shardEntry.getValue()) {
+                        Tensor src = st.tensors().get(hfName);
+                        if (src == null) {
+                            throw new IOException("Tensor '" + hfName + "' missing from " + shardFile);
+                        }
+                        String smileName = remapHuggingFaceName(hfName);
+                        if (smileName == null) {
+                            logger.debug("Skipping unrecognized HF weight: {}", hfName);
+                            continue;
+                        }
+                        Tensor value = src;
+                        if (smileName.contains("linear_attn.conv1d.weight") && src.dim() == 3) {
+                            value = src.reshape(src.shape()[0], src.shape()[2]);
+                            owned.add(value);
+                        }
+                        Tensor sliced = QwenWeightShard.shard(smileName, value, model.params(), shard);
+                        if (sliced != value && sliced != src) {
+                            owned.add(sliced);
+                        }
+                        Tensor onDevice = sliced.to(target);
+                        if (onDevice != sliced) {
+                            owned.add(onDevice);
+                        }
+                        // Materialize a contiguous clone so state-dict storage outlives views.
+                        Tensor contiguous = onDevice.contiguous();
+                        if (contiguous != onDevice) {
+                            owned.add(contiguous);
+                        }
+                        stateDict.put(smileName, contiguous);
+                        loaded.add(smileName);
                     }
-                    String smileName = remapHuggingFaceName(hfName);
-                    if (smileName == null) {
-                        logger.debug("Skipping unrecognized HF weight: {}", hfName);
-                        continue;
-                    }
-                    Tensor value = src;
-                    // Conv1d weight HF shape [C,1,K] → smile [C,K]
-                    if (smileName.contains("linear_attn.conv1d.weight") && src.dim() == 3) {
-                        value = src.reshape(src.shape()[0], src.shape()[2]);
-                    }
-                    stateDict.put(smileName, value);
-                    loaded.add(smileName);
-                }
 
-                if (!weightMap.containsKey("lm_head.weight")
-                        && !weightMap.containsKey("language_model.lm_head.weight")
-                        && !loaded.contains("lm_head.weight")) {
-                    for (String embKey : List.of(
-                            "model.embed_tokens.weight",
-                            "language_model.model.embed_tokens.weight")) {
-                        if (st.tensors().containsKey(embKey)) {
-                            stateDict.put("lm_head.weight", st.tensors().get(embKey));
-                            loaded.add("lm_head.weight");
-                            break;
+                    if (!weightMap.containsKey("lm_head.weight")
+                            && !weightMap.containsKey("language_model.lm_head.weight")
+                            && !loaded.contains("lm_head.weight")) {
+                        for (String embKey : List.of(
+                                "model.embed_tokens.weight",
+                                "language_model.model.embed_tokens.weight")) {
+                            if (st.tensors().containsKey(embKey)) {
+                                Tensor emb = st.tensors().get(embKey).to(target).contiguous();
+                                owned.add(emb);
+                                stateDict.put("lm_head.weight", emb);
+                                loaded.add("lm_head.weight");
+                                break;
+                            }
                         }
                     }
-                }
 
-                model.loadStateDict(stateDict, false);
+                    model.loadStateDict(stateDict, false);
+                } finally {
+                    for (Tensor t : owned) {
+                        t.close();
+                    }
+                }
             } finally {
                 for (Tensor t : st.tensors().values()) {
                     t.close();
                 }
             }
         }
-        logger.info("Loaded {} parameters from HuggingFace safetensors", loaded.size());
+        logger.info("Loaded {} parameters from HuggingFace safetensors (tpRank={})",
+                loaded.size(), shard != null ? shard.tpRank() : 0);
     }
 
     static Map<String, String> readWeightMap(File dir) throws IOException {
@@ -407,19 +487,27 @@ public class Qwen implements LanguageModel {
             int totalLen = Math.min(params.maxSeqLen(), maxGenLen + maxPromptLen);
 
             if (model.kvCachePool() != null) {
-                model.kvCachePool().bindRequests(batchSize, totalLen);
+                for (QwenModel m : models) {
+                    if (m.kvCachePool() != null) {
+                        m.kvCachePool().bindRequests(batchSize, totalLen);
+                    }
+                }
             }
             if (model.deltaNetStatePool() != null) {
-                model.deltaNetStatePool().reset(batchSize);
+                for (QwenModel m : models) {
+                    if (m.deltaNetStatePool() != null) {
+                        m.deltaNetStatePool().reset(batchSize);
+                    }
+                }
             }
 
             int pad = tokenizer.pad();
-            Tensor tokens = Tensor.full(pad, batchSize, totalLen);
+            Tensor tokensCpu = Tensor.full(pad, batchSize, totalLen);
             for (int i = 0; i < batchSize; i++) {
                 try (var prompt = Tensor.of(prompts[i]);
                      var row = Index.of(i);
                      var span = Index.slice(0, prompts[i].length)) {
-                    tokens.put_(prompt, row, span);
+                    tokensCpu.put_(prompt, row, span);
                 }
             }
 
@@ -430,28 +518,39 @@ public class Qwen implements LanguageModel {
             }
 
             Tensor eosReached = Tensor.of(new boolean[batchSize]);
-            Tensor inputTextMask = tokens.ne(pad);
+            Tensor inputTextMask = tokensCpu.ne(pad);
             Tensor stopTokens = Tensor.of(tokenizer.stopTokens());
 
-            tokens = tokens.to(model.device());
-            eosReached = eosReached.to(model.device());
-            inputTextMask = inputTextMask.to(model.device());
-            stopTokens = stopTokens.to(model.device());
+            Tensor[] tokens = new Tensor[models.length];
+            Tensor[] eos = new Tensor[models.length];
+            Tensor[] masks = new Tensor[models.length];
+            Tensor[] stops = new Tensor[models.length];
+            for (int r = 0; r < models.length; r++) {
+                Device d = models[r].device();
+                tokens[r] = tokensCpu.to(d);
+                eos[r] = eosReached.to(d);
+                masks[r] = inputTextMask.to(d);
+                stops[r] = stopTokens.to(d);
+            }
+            tokensCpu.close();
+            eosReached.close();
+            inputTextMask.close();
+            stopTokens.close();
 
             int prevPos = 0;
             int chunkPos = minPromptLen;
+            ExecutorService pool = models.length > 1
+                    ? Executors.newFixedThreadPool(models.length)
+                    : null;
+            try {
             for (int curPos = minPromptLen; curPos < totalLen; curPos++) {
                 try (var loopScope = new AutoScope()) {
                     Tensor.push(loopScope);
-                    Tensor logits;
-                    try (var span = Index.slice(prevPos, curPos);
-                         var window = tokens.get(Index.Colon, span)) {
-                        logits = model.forward(window, prevPos);
-                    }
+                    Tensor[] logits = forwardAll(tokens, prevPos, curPos, pool);
 
                     Tensor nextToken;
                     try (var last = Index.of(-1);
-                         var tail = logits.get(Index.Colon, last)) {
+                         var tail = logits[0].get(Index.Colon, last)) {
                         if (temperature > 0) {
                             try (var probs = tail.div(temperature).softmax(-1)) {
                                 nextToken = probs.topp(topp);
@@ -463,18 +562,23 @@ public class Qwen implements LanguageModel {
 
                     nextToken = nextToken.reshape(-1);
                     try (var cur = Index.of(curPos);
-                         var textMask = inputTextMask.get(Index.Colon, cur);
-                         var currentTokens = tokens.get(Index.Colon, cur);
+                         var textMask = masks[0].get(Index.Colon, cur);
+                         var currentTokens = tokens[0].get(Index.Colon, cur);
                          var merged = Tensor.where(textMask, currentTokens, nextToken)) {
                         nextToken.close();
                         nextToken = merged.detach();
-                        tokens.put_(nextToken, Index.Colon, cur);
+                        // Write sampled token onto every TP rank's token buffer.
+                        for (int r = 0; r < models.length; r++) {
+                            Tensor local = r == 0 ? nextToken : nextToken.to(models[r].device());
+                            tokens[r].put_(local, Index.Colon, cur);
+                            if (r != 0) local.close();
+                        }
                     }
 
                     if (logprobs) {
                         try (var targetSpan = Index.slice(prevPos + 1, curPos + 1);
-                             var targets = tokens.get(Index.Colon, targetSpan);
-                             var transposed = logits.transpose(1, 2);
+                             var targets = tokens[0].get(Index.Colon, targetSpan);
+                             var transposed = logits[0].transpose(1, 2);
                              var entropy = Tensor.crossEntropy(transposed, targets, "none", pad).neg_();
                              var outSpan = Index.slice(prevPos + 1, curPos + 1)) {
                             tokenLogprobs.put_(entropy, Index.Colon, outSpan);
@@ -482,26 +586,33 @@ public class Qwen implements LanguageModel {
                     }
 
                     try (var cur = Index.of(curPos);
-                         var text = inputTextMask.get(Index.Colon, cur).not();
-                         var stop = nextToken.isin(stopTokens);
+                         var text = masks[0].get(Index.Colon, cur).not();
+                         var stop = nextToken.isin(stops[0]);
                          var textAndStop = text.and(stop)) {
-                        eosReached.or_(textAndStop);
+                        eos[0].or_(textAndStop);
+                        for (int r = 1; r < models.length; r++) {
+                            try (Tensor e = eos[0].to(models[r].device())) {
+                                smile.torch.Native.copy_(eos[r], e);
+                            }
+                        }
                     }
 
-                    logits.close();
+                    for (Tensor l : logits) {
+                        l.close();
+                    }
                     nextToken.close();
                     prevPos = curPos;
                     Tensor.pop();
                 }
 
-                boolean eos = eosReached.all();
-                if (publisher != null && (curPos - chunkPos >= 20 || curPos == totalLen - 1 || eos)) {
-                    int end = eos ? curPos : curPos + 1;
+                boolean done = eos[0].all();
+                if (publisher != null && (curPos - chunkPos >= 20 || curPos == totalLen - 1 || done)) {
+                    int end = done ? curPos : curPos + 1;
                     if (end > chunkPos) {
                         long[] longArray;
                         try (var row = Index.of(0);
                              var span = Index.slice(chunkPos, end);
-                             var chunkTokens = tokens.get(row, span);
+                             var chunkTokens = tokens[0].get(row, span);
                              var cpuTokens = chunkTokens.to(Device.CPU())) {
                             longArray = cpuTokens.longArray();
                         }
@@ -517,11 +628,14 @@ public class Qwen implements LanguageModel {
                         }
                     }
                 }
-                if (eos) break;
+                if (done) break;
+            }
+            } finally {
+                if (pool != null) pool.shutdownNow();
             }
 
             long[] longArray;
-            try (var cpuTokens = tokens.to(Device.CPU())) {
+            try (var cpuTokens = tokens[0].to(Device.CPU())) {
                 longArray = cpuTokens.longArray();
             }
             float[] logprobArray = null;
@@ -567,10 +681,47 @@ public class Qwen implements LanguageModel {
             Tensor.pop();
             return predictions;
         } finally {
-            if (model.kvCachePool() != null) {
-                model.kvCachePool().unbindRequests();
+            for (QwenModel m : models) {
+                if (m.kvCachePool() != null) {
+                    m.kvCachePool().unbindRequests();
+                }
             }
         }
+    }
+
+    /**
+     * Runs {@link QwenModel#forward} on every TP rank (in parallel when {@code tpSize > 1}).
+     */
+    private Tensor[] forwardAll(Tensor[] tokens, int prevPos, int curPos, ExecutorService pool) {
+        Tensor[] logits = new Tensor[models.length];
+        if (models.length == 1) {
+            try (var span = Index.slice(prevPos, curPos);
+                 var window = tokens[0].get(Index.Colon, span)) {
+                logits[0] = models[0].forward(window, prevPos);
+            }
+            return logits;
+        }
+        List<Future<Tensor>> futures = new ArrayList<>(models.length);
+        for (int r = 0; r < models.length; r++) {
+            final int rank = r;
+            futures.add(pool.submit(() -> {
+                ParallelState.setCurrent(tpGroup.state(rank));
+                try (var span = Index.slice(prevPos, curPos);
+                     var window = tokens[rank].get(Index.Colon, span)) {
+                    return models[rank].forward(window, prevPos);
+                } finally {
+                    ParallelState.clearCurrent();
+                }
+            }));
+        }
+        try {
+            for (int r = 0; r < models.length; r++) {
+                logits[r] = futures.get(r).get();
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("TP forward failed", e);
+        }
+        return logits;
     }
 
     /**

@@ -72,6 +72,14 @@ public final class Native {
         static final MethodHandle TENSOR_DATA_PTR = LINKER.downcallHandle(
                 smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_tensor_data_ptr"),
                 FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+        static final MethodHandle TP_ALL_REDUCE_SUM = LINKER.downcallHandle(
+                smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_tp_all_reduce_sum"),
+                FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+        static final MethodHandle TP_BROADCAST = LINKER.downcallHandle(
+                smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_tp_broadcast"),
+                FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT));
     }
 
     /**
@@ -227,6 +235,58 @@ public final class Native {
             throw new RuntimeException("smile_tensor_data_ptr returned null");
         }
         return ptr.reinterpret(nbytes);
+    }
+
+    /**
+     * In-place sum all-reduce across tensors that already reside on distinct devices.
+     *
+     * @param tensors one tensor per TP rank (same shape/dtype).
+     */
+    public static void tpAllReduceSum(Tensor[] tensors) {
+        if (tensors == null || tensors.length <= 1) {
+            return;
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment arr = arena.allocate(ValueLayout.ADDRESS, tensors.length);
+            for (int i = 0; i < tensors.length; i++) {
+                arr.setAtIndex(ValueLayout.ADDRESS, i, tensors[i].handle());
+            }
+            int rc;
+            try {
+                rc = (int) Bindings.TP_ALL_REDUCE_SUM.invokeExact(arr, tensors.length);
+            } catch (Throwable t) {
+                throw new RuntimeException("smile_tp_all_reduce_sum failed", t);
+            }
+            if (rc != 0) {
+                String msg = lastError();
+                throw new RuntimeException(msg.isEmpty() ? "smile_tp_all_reduce_sum failed" : msg);
+            }
+        }
+    }
+
+    /**
+     * Broadcasts {@code tensors[root]} onto every other entry.
+     */
+    public static void tpBroadcast(Tensor[] tensors, int root) {
+        if (tensors == null || tensors.length <= 1) {
+            return;
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment arr = arena.allocate(ValueLayout.ADDRESS, tensors.length);
+            for (int i = 0; i < tensors.length; i++) {
+                arr.setAtIndex(ValueLayout.ADDRESS, i, tensors[i].handle());
+            }
+            int rc;
+            try {
+                rc = (int) Bindings.TP_BROADCAST.invokeExact(arr, tensors.length, root);
+            } catch (Throwable t) {
+                throw new RuntimeException("smile_tp_broadcast failed", t);
+            }
+            if (rc != 0) {
+                String msg = lastError();
+                throw new RuntimeException(msg.isEmpty() ? "smile_tp_broadcast failed" : msg);
+            }
+        }
     }
 
     /** Frees an {@code ST_Tensor} handle exactly once. Used as a cleaning action. */
