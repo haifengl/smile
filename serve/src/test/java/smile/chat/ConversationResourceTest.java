@@ -36,7 +36,7 @@ public class ConversationResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body("{}")
-            .when().post("/smile/api/v1/conversations")
+            .when().post("/api/v1/conversations")
             .then()
                 .statusCode(200)
                 .body("object", equalTo("conversation"))
@@ -57,7 +57,7 @@ public class ConversationResourceTest {
                       ]
                     }
                     """)
-            .when().post("/smile/api/v1/conversations")
+            .when().post("/api/v1/conversations")
             .then()
                 .statusCode(200)
                 .body("object", equalTo("conversation"))
@@ -65,7 +65,7 @@ public class ConversationResourceTest {
                 .extract().path("id");
 
         given()
-            .when().get("/smile/api/v1/conversations/" + id)
+            .when().get("/api/v1/conversations/" + id)
             .then()
                 .statusCode(200)
                 .body("id", equalTo(id))
@@ -73,7 +73,7 @@ public class ConversationResourceTest {
                 .body("metadata.topic", equalTo("demo"));
 
         given()
-            .when().get("/smile/api/v1/conversations/" + id + "/items")
+            .when().get("/api/v1/conversations/" + id + "/items")
             .then()
                 .statusCode(200)
                 .body("size()", equalTo(1))
@@ -86,7 +86,7 @@ public class ConversationResourceTest {
         String id = given()
             .contentType(ContentType.JSON)
             .body("{\"metadata\":{\"topic\":\"old\"}}")
-            .when().post("/smile/api/v1/conversations")
+            .when().post("/api/v1/conversations")
             .then()
                 .statusCode(200)
                 .extract().path("id");
@@ -94,7 +94,7 @@ public class ConversationResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body("{\"metadata\":{\"topic\":\"project-x\"}}")
-            .when().post("/smile/api/v1/conversations/" + id)
+            .when().post("/api/v1/conversations/" + id)
             .then()
                 .statusCode(200)
                 .body("id", equalTo(id))
@@ -107,13 +107,13 @@ public class ConversationResourceTest {
         String id = given()
             .contentType(ContentType.JSON)
             .body("{}")
-            .when().post("/smile/api/v1/conversations")
+            .when().post("/api/v1/conversations")
             .then()
                 .statusCode(200)
                 .extract().path("id");
 
         given()
-            .when().delete("/smile/api/v1/conversations/" + id)
+            .when().delete("/api/v1/conversations/" + id)
             .then()
                 .statusCode(200)
                 .body("id", equalTo(id))
@@ -121,7 +121,7 @@ public class ConversationResourceTest {
                 .body("object", equalTo("conversation.deleted"));
 
         given()
-            .when().get("/smile/api/v1/conversations/" + id)
+            .when().get("/api/v1/conversations/" + id)
             .then()
                 .statusCode(404);
     }
@@ -138,7 +138,7 @@ public class ConversationResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(metadata.toString())
-            .when().post("/smile/api/v1/conversations")
+            .when().post("/api/v1/conversations")
             .then()
                 .statusCode(400);
     }
@@ -146,7 +146,7 @@ public class ConversationResourceTest {
     @Test
     public void testGivenUnknownIdWhenGetThenNotFound() {
         given()
-            .when().get("/smile/api/v1/conversations/conv_999999999")
+            .when().get("/api/v1/conversations/conv_999999999")
             .then()
                 .statusCode(404);
     }
