@@ -66,6 +66,12 @@ public final class Native {
                 smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_cuda_mem_get_info"),
                 FunctionDescriptor.of(ValueLayout.JAVA_INT,
                         ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+        static final MethodHandle TENSOR_NBYTES = LINKER.downcallHandle(
+                smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_tensor_nbytes"),
+                FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+        static final MethodHandle TENSOR_DATA_PTR = LINKER.downcallHandle(
+                smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_tensor_data_ptr"),
+                FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
     }
 
     /**
@@ -182,6 +188,45 @@ public final class Native {
             }
             return new long[]{free.get(ValueLayout.JAVA_LONG, 0), total.get(ValueLayout.JAVA_LONG, 0)};
         }
+    }
+
+    /**
+     * Returns the storage size of {@code tensor} in bytes.
+     *
+     * @param tensor the tensor.
+     * @return {@code tensor.nbytes()}.
+     */
+    public static long nbytes(Tensor tensor) {
+        try {
+            return (long) Bindings.TENSOR_NBYTES.invokeExact(tensor.handle());
+        } catch (Throwable t) {
+            throw new RuntimeException("smile_tensor_nbytes failed", t);
+        }
+    }
+
+    /**
+     * Returns a writable {@link MemorySegment} covering the contiguous storage
+     * of {@code tensor} ({@code nbytes} bytes). The tensor must be contiguous
+     * and remain reachable for the lifetime of the segment.
+     *
+     * @param tensor the contiguous tensor.
+     * @return the storage segment.
+     */
+    public static MemorySegment dataPtr(Tensor tensor) {
+        long nbytes = nbytes(tensor);
+        MemorySegment ptr;
+        try {
+            ptr = (MemorySegment) Bindings.TENSOR_DATA_PTR.invokeExact(tensor.handle());
+        } catch (Throwable t) {
+            throw new RuntimeException("smile_tensor_data_ptr failed", t);
+        }
+        if (ptr == null || ptr.address() == 0) {
+            if (nbytes == 0) {
+                return MemorySegment.NULL;
+            }
+            throw new RuntimeException("smile_tensor_data_ptr returned null");
+        }
+        return ptr.reinterpret(nbytes);
     }
 
     /** Frees an {@code ST_Tensor} handle exactly once. Used as a cleaning action. */

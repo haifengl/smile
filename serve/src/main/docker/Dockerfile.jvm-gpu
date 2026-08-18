@@ -14,7 +14,7 @@
 # Then run the container using (requires NVIDIA Container Toolkit):
 #
 # docker run -i --rm --gpus all -p 8888:8080 \
-#   -e JAVA_OPTS_APPEND="-Dsmile.chat.model=meta-llama/Llama-3.1-8B-Instruct" \
+#   -e JAVA_OPTS_APPEND="-Dsmile.chat.model=Qwen/Qwen3.8-27B" \
 #   -u root -v "$(pwd)/model":/model quarkus/smile-serve-gpu
 #
 # Optional JVM flags:

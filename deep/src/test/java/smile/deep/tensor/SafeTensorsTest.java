@@ -361,4 +361,79 @@ public class SafeTensorsTest {
         t.close();
         st.tensors().values().forEach(Tensor::close);
     }
+
+    @Test
+    public void testGivenMultiMegabyteFloatTensorWhenReadThenValuesMatch() throws Exception {
+        // Exercises chunked FileChannel → LibTorch storage copies (1 MiB chunks).
+        int n = 600_000; // 2.4 MiB of F32
+        float[] data = new float[n];
+        for (int i = 0; i < n; i++) {
+            data[i] = i * 0.001f;
+        }
+        Tensor t = Tensor.of(data, n);
+        String path = tempDir.resolve("large_f32.safetensors").toString();
+        new SafeTensors(Map.of("x", t), Map.of()).write(path);
+
+        SafeTensors st = SafeTensors.read(path, Device.CPU());
+        Tensor loaded = st.tensors().get("x");
+        assertEquals(ScalarType.Float, loaded.dtype());
+        assertArrayEquals(new long[]{n}, loaded.shape());
+        assertEquals(data[0], loaded.getFloat(0), 1e-5);
+        assertEquals(data[n / 2], loaded.getFloat(n / 2), 1e-5);
+        assertEquals(data[n - 1], loaded.getFloat(n - 1), 1e-5);
+
+        t.close();
+        loaded.close();
+    }
+
+    @Test
+    @org.junit.jupiter.api.condition.EnabledIfSystemProperty(
+            named = "smile.test.largeSafetensors", matches = "true")
+    public void testGivenBf16TensorExceedingIntMaxBytesWhenReadThenShapeIsCorrect()
+            throws Exception {
+        // ~2.000000001 GiB of BF16 — needs ~2 GiB RAM and a rebuilt smile_torch.
+        long byteLength = (long) Integer.MAX_VALUE + 1024L;
+        long numel = byteLength / 2;
+        String path = tempDir.resolve("huge_bf16.safetensors").toString();
+        writeSparseSafetensors(path, "x", "BF16", new long[]{numel}, byteLength);
+
+        SafeTensors st = SafeTensors.read(path, Device.CPU());
+        Tensor loaded = st.tensors().get("x");
+        assertEquals(ScalarType.BFloat16, loaded.dtype());
+        assertArrayEquals(new long[]{numel}, loaded.shape());
+        loaded.close();
+    }
+
+    /**
+     * Writes a safetensors file whose data region is sparse (mostly holes) so
+     * oversized tensors can be tested without writing multi-gigabyte payloads.
+     */
+    private static void writeSparseSafetensors(String path, String name, String dtype,
+                                               long[] shape, long dataBytes) throws Exception {
+        StringBuilder shapeJson = new StringBuilder("[");
+        for (int i = 0; i < shape.length; i++) {
+            if (i > 0) shapeJson.append(',');
+            shapeJson.append(shape[i]);
+        }
+        shapeJson.append(']');
+        String headerJson = "{\"" + name + "\":{\"dtype\":\"" + dtype
+                + "\",\"shape\":" + shapeJson
+                + ",\"data_offsets\":[0," + dataBytes + "]}}";
+        byte[] header = headerJson.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        try (var channel = java.nio.channels.FileChannel.open(
+                java.nio.file.Path.of(path),
+                java.nio.file.StandardOpenOption.CREATE,
+                java.nio.file.StandardOpenOption.TRUNCATE_EXISTING,
+                java.nio.file.StandardOpenOption.WRITE)) {
+            var lenBuf = java.nio.ByteBuffer.allocate(8).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+            lenBuf.putLong(header.length).flip();
+            channel.write(lenBuf);
+            channel.write(java.nio.ByteBuffer.wrap(header));
+            long dataStart = 8L + header.length;
+            if (dataBytes > 0) {
+                var one = java.nio.ByteBuffer.wrap(new byte[]{0});
+                channel.write(one, dataStart + dataBytes - 1);
+            }
+        }
+    }
 }

@@ -603,6 +603,14 @@ int64_t *smile_tensor_data_ptr_long  (ST_Tensor t) { return t ? t->t.data_ptr<in
 float   *smile_tensor_data_ptr_float (ST_Tensor t) { return t ? t->t.data_ptr<float>()   : nullptr; }
 double  *smile_tensor_data_ptr_double(ST_Tensor t) { return t ? t->t.data_ptr<double>()  : nullptr; }
 
+int64_t smile_tensor_nbytes(ST_Tensor t) {
+    return t ? static_cast<int64_t>(t->t.nbytes()) : 0;
+}
+
+void *smile_tensor_data_ptr(ST_Tensor t) {
+    return t ? t->t.data_ptr() : nullptr;
+}
+
 // =============================================================================
 // Tensor — Item
 // =============================================================================

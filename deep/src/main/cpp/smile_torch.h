@@ -330,6 +330,15 @@ SMILE_API int64_t  *smile_tensor_data_ptr_long  (ST_Tensor t);
 SMILE_API float    *smile_tensor_data_ptr_float (ST_Tensor t);
 SMILE_API double   *smile_tensor_data_ptr_double(ST_Tensor t);
 
+/** Storage size in bytes ({@code tensor.nbytes()}). */
+SMILE_API int64_t smile_tensor_nbytes(ST_Tensor t);
+/**
+ * Untyped pointer to the contiguous storage of {@code t}.
+ * Suitable for bulk memcpy of little-endian safetensors payloads
+ * (including Half / BFloat16) without going through a Java array.
+ */
+SMILE_API void *smile_tensor_data_ptr(ST_Tensor t);
+
 /* =========================================================================
  * Tensor — Item (scalar extraction)
  * ========================================================================= */
