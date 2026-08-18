@@ -210,42 +210,42 @@ The `deep/README.md` covers:
 <dependency>
   <groupId>com.github.haifengl</groupId>
   <artifactId>smile-core</artifactId>
-  <version>6.2.4</version>
+  <version>6.3.0</version>
 </dependency>
 
 <!-- Deep learning + LLMs (requires LibTorch) -->
 <dependency>
   <groupId>com.github.haifengl</groupId>
   <artifactId>smile-deep</artifactId>
-  <version>6.2.4</version>
+  <version>6.3.0</version>
 </dependency>
 
 <!-- Natural language processing -->
 <dependency>
   <groupId>com.github.haifengl</groupId>
   <artifactId>smile-nlp</artifactId>
-  <version>6.2.4</version>
+  <version>6.3.0</version>
 </dependency>
 
 <!-- Data visualization -->
 <dependency>
   <groupId>com.github.haifengl</groupId>
   <artifactId>smile-plot</artifactId>
-  <version>6.2.4</version>
+  <version>6.3.0</version>
 </dependency>
 ```
 
 ### SBT (Scala)
 
 ```scala
-libraryDependencies += "com.github.haifengl" %% "smile-scala" % "6.2.4"
+libraryDependencies += "com.github.haifengl" %% "smile-scala" % "6.3.0"
 ```
 
 ### Gradle (Kotlin)
 
 ```kotlin
 dependencies {
-    implementation("com.github.haifengl:smile-kotlin:6.2.4")
+    implementation("com.github.haifengl:smile-kotlin:6.3.0")
 }
 ```
 
@@ -361,7 +361,7 @@ SMILE provides two visualization layers:
 <dependency>
   <groupId>com.github.haifengl</groupId>
   <artifactId>smile-plot</artifactId>
-  <version>6.2.4</version>
+  <version>6.3.0</version>
 </dependency>
 ```
 
