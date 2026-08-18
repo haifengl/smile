@@ -42,7 +42,7 @@ public class InferenceResourceTest {
         // When fetching its metadata
         // Then the response contains algorithm, schema and tags
         given()
-            .when().get("/smile/api/v1/ml/models/iris_random_forest-1")
+            .when().get("/api/v1/ml/models/iris_random_forest-1")
             .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
@@ -64,7 +64,7 @@ public class InferenceResourceTest {
         // When fetching its metadata
         // Then the response is 404
         given()
-            .when().get("/smile/api/v1/ml/models/nonexistent-1")
+            .when().get("/api/v1/ml/models/nonexistent-1")
             .then()
                 .statusCode(404);
     }
@@ -83,7 +83,7 @@ public class InferenceResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(request)
-            .when().post("/smile/api/v1/ml/models/iris_random_forest-1")
+            .when().post("/api/v1/ml/models/iris_random_forest-1")
             .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
@@ -102,7 +102,7 @@ public class InferenceResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(request)
-            .when().post("/smile/api/v1/ml/models/iris_random_forest-1")
+            .when().post("/api/v1/ml/models/iris_random_forest-1")
             .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
@@ -120,7 +120,7 @@ public class InferenceResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(request)
-            .when().post("/smile/api/v1/ml/models/iris_random_forest-1")
+            .when().post("/api/v1/ml/models/iris_random_forest-1")
             .then()
                 .statusCode(400);
     }
@@ -136,7 +136,7 @@ public class InferenceResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(request)
-            .when().post("/smile/api/v1/ml/models/unknown-model-1")
+            .when().post("/api/v1/ml/models/unknown-model-1")
             .then()
                 .statusCode(404);
     }
@@ -161,7 +161,7 @@ public class InferenceResourceTest {
         String body = given()
             .contentType(ContentType.TEXT)
             .body(csvBody)
-            .when().post("/smile/api/v1/ml/models/iris_random_forest-1/stream")
+            .when().post("/api/v1/ml/models/iris_random_forest-1/stream")
             .then()
                 .statusCode(200)
                 .extract().body().asString();
@@ -193,7 +193,7 @@ public class InferenceResourceTest {
         String body = given()
             .contentType(ContentType.JSON)
             .body(jsonLines)
-            .when().post("/smile/api/v1/ml/models/iris_random_forest-1/stream")
+            .when().post("/api/v1/ml/models/iris_random_forest-1/stream")
             .then()
                 .statusCode(200)
                 .extract().body().asString();
@@ -224,7 +224,7 @@ public class InferenceResourceTest {
             String body = given()
                 .contentType(ContentType.TEXT)
                 .body(badCsv)
-                .when().post("/smile/api/v1/ml/models/iris_random_forest-1/stream")
+                .when().post("/api/v1/ml/models/iris_random_forest-1/stream")
                 .then()
                 .extract().body().asString();
             // If we get a body at all, it must contain no valid data lines.
@@ -264,7 +264,7 @@ public class InferenceResourceTest {
         given()
             .contentType(ContentType.TEXT)
             .body("5.1,3.5,1.4,0.2\n")
-            .when().post("/smile/api/v1/ml/models/ghost-model-1/stream")
+            .when().post("/api/v1/ml/models/ghost-model-1/stream")
             .then()
                 .statusCode(404);
     }
