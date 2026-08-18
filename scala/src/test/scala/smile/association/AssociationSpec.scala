@@ -16,8 +16,6 @@
  */
 package smile.association
 
-import java.util.function.Supplier
-import java.util.stream.Stream
 import org.specs2.mutable.*
 
 /**
@@ -26,7 +24,9 @@ import org.specs2.mutable.*
   */
 class AssociationSpec extends Specification {
 
-  val itemsets = Array(
+  // FPTree.of sorts/reorders each row in place. Specs2 may run examples
+  // concurrently, so every example must use a fresh deep copy.
+  def sampleItemsets: Array[Array[Int]] = Array(
     Array(1, 3),
     Array(2),
     Array(4),
@@ -39,13 +39,11 @@ class AssociationSpec extends Specification {
     Array(1, 2, 3)
   )
 
-  object streamSupplier extends Supplier[Stream[Array[Int]]] {
-    def get: Stream[Array[Int]] = Stream.of(itemsets *)
-  }
-
   "association rule mining" should {
+    sequential
+
     "FP-Growth" in {
-      val tree = fptree(3, streamSupplier)
+      val tree = FPTree.of(3, sampleItemsets)
       val results = fpgrowth(tree).toList
       results.forEach { itemSet =>
         println(itemSet)
@@ -72,7 +70,7 @@ class AssociationSpec extends Specification {
     }
 
     "ARM" in {
-      val tree = fptree(3, streamSupplier)
+      val tree = FPTree.of(3, sampleItemsets)
       val rules = arm(0.5, tree).toList
       rules.forEach { rule =>
         println(rule)

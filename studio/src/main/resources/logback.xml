@@ -2,8 +2,11 @@
     <!-- 1. Define a timestamp to create a unique file name for each session -->
     <timestamp key="bySession" datePattern="yyyyMMdd'T'HHmmss"/>
 
-    <!-- 2. Console Appender for real-time viewing -->
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <!-- 2. Console Appender for real-time viewing.
+         Use System.err so CLI commands (predict/train) can write machine-readable
+         results to stdout without interleaving log lines. -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.err</target>
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
@@ -21,7 +24,7 @@
 
     <!-- 4. Set the Root Logger level and attach both appenders -->
     <root level="INFO">
-        <appender-ref ref="STDOUT" />
+        <appender-ref ref="CONSOLE" />
         <appender-ref ref="FILE" />
     </root>
 </configuration>

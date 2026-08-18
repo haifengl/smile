@@ -1123,7 +1123,7 @@ The module includes two complementary plot APIs:
 
 - **`smile.plot.swing`** — traditional Swing-based `Canvas` charts for desktop
   use.
-- **`smile.plot.vega`** — Vega-Lite declarative charts for notebooks and
+- **`smile.vega`** — Vega-Lite declarative charts for notebooks and
   browser-based output.
 
 ### Displaying a chart (`show`)
@@ -1194,13 +1194,13 @@ val c = screeplot(pca)
 val c = text(coords, labels)
 ```
 
-### Vega-Lite charts (`smile.plot.vega.*`)
+### Vega-Lite charts (`smile.vega.*`)
 
 Build declarative specs using a fluent Scala API. The `VegaLite` companion
 object is the entry point.
 
 ```scala
-import smile.plot.vega.*
+import smile.vega.*
 
 // Single view
 val view = VegaLite.view()
@@ -1411,7 +1411,7 @@ println(df_dx.apply(env))
 | Extension mechanism | Implicit classes (`PimpedXxx`) via `implicit def` | Extension functions |
 | Formula DSL | Rich operator DSL: `~`, `+`, `-`, `::`, `&&`, `^`, function terms | Not present |
 | CAS | Full symbolic algebra (`smile.cas`) | Not present |
-| Plotting | Both Swing (`smile.plot.swing`) and Vega-Lite (`smile.plot.vega`) | Not present |
+| Plotting | Both Swing (`smile.plot.swing`) and Vega-Lite (`smile.vega`) | Not present |
 | Notebook rendering | Macro-detected at compile time (Scala 2.13) | N/A |
 | Validation API | Object-based: `validate`, `cv`, `loocv`, `bootstrap` | Top-level functions |
 | Sequence models | HMM, CRF, GCRF | Not present |

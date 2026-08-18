@@ -91,7 +91,7 @@ batScriptExtraDefines ++= Seq(
 libraryDependencies ++= Seq(
   "org.scala-lang"   %% "scala3-compiler"    % scalaVersion.value,
   "info.picocli"      % "picocli"            % "4.7.7",
-  "ch.qos.logback"    % "logback-classic"    % "1.6.1",
+  "ch.qos.logback"    % "logback-classic"    % "1.6.3",
   "com.openai"        % "openai-java"        % "4.49.0",
   "com.anthropic"     % "anthropic-java"     % "2.52.0",
   "com.google.genai"  % "google-genai"       % "1.53.0",
@@ -108,12 +108,12 @@ libraryDependencies ++= Seq(
   "io.modelcontextprotocol.sdk" % "mcp"          % "2.0.0",
   "io.github.furstenheim"       % "copy_down"    % "1.1",
   "org.jsoup"                   % "jsoup"        % "1.23.1",
-  "com.github.serpapi"          % "serpapi-java" % "1.1.0",
+  "com.github.serpapi"          % "serpapi-java" % "1.2.0",
   "com.google.code.gson"        % "gson"         % "2.14.0" // evict older version used by serpapi
 )
 
 libraryDependencies ++= {
-  val jacksonV = "3.2.1"
+  val jacksonV = "3.2.2"
   val jsonschemaV = "4.38.0"
   Seq(
     "tools.jackson.core"       % "jackson-databind"            % jacksonV,
