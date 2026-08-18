@@ -308,34 +308,85 @@ public class ChatService {
     private LanguageModel loadFromLocal(Path localPath, ChatServiceConfig config,
                                         double memFraction, String kvDtype) throws Exception {
         if (isQwenCheckpoint(localPath)) {
+            var parallel = parallelConfig(config);
             return Qwen.build(localPath.toString(),
-                    config.maxBatchSize(), config.maxSeqLen(), config.device(),
-                    memFraction, kvDtype, parallelConfig(config));
+                    config.maxBatchSize(), config.maxSeqLen(), parallel.devices()[0],
+                    memFraction, kvDtype, parallel);
         }
         String tokenizerPath = resolveLocalTokenizer(localPath);
         return Llama.build(localPath.toString(), tokenizerPath,
-                config.maxBatchSize(), config.maxSeqLen(), config.device(),
+                config.maxBatchSize(), config.maxSeqLen(), parallelConfig(config).devices()[0],
                 memFraction, kvDtype);
     }
 
     /**
      * Builds a {@link smile.llm.parallel.ParallelConfig} from chat settings.
-     * Devices are {@code device, device+1, …} for {@code tensorParallelSize}.
+     *
+     * <p>{@code smile.chat.devices} is either a single index ({@code 0}) or a
+     * comma-separated TP list ({@code 0,7}). With one device and
+     * {@code tensor-parallel-size=N>1}, consecutive devices
+     * {@code d .. d+N-1} are used.
      */
     static smile.llm.parallel.ParallelConfig parallelConfig(ChatServiceConfig config) {
-        int tp = config.tensorParallelSize();
         int pp = config.pipelineParallelSize();
         if (pp != 1) {
-            throw new IllegalArgumentException("smile.chat.pipeline-parallel-size must be 1 until PP is implemented");
+            throw new IllegalArgumentException(
+                    "smile.chat.pipeline-parallel-size must be 1 until PP is implemented");
         }
-        if (tp <= 1) {
-            return smile.llm.parallel.ParallelConfig.single(config.device());
+
+        byte[] devices = parseDevices(config);
+        if (devices.length <= 1) {
+            return smile.llm.parallel.ParallelConfig.single(devices[0]);
+        }
+        int tp = config.tensorParallelSize();
+        if (tp > 1 && tp != devices.length) {
+            throw new IllegalArgumentException(
+                    "smile.chat.devices length (" + devices.length
+                            + ") must equal smile.chat.tensor-parallel-size (" + tp + ")");
+        }
+        return smile.llm.parallel.ParallelConfig.tensorParallel(devices);
+    }
+
+    /**
+     * Parses {@code smile.chat.devices}. A single value is the base device;
+     * with {@code tensor-parallel-size > 1} it expands to consecutive indices.
+     * Multiple comma-separated values are the explicit TP device list.
+     */
+    static byte[] parseDevices(ChatServiceConfig config) {
+        String raw = config.devices();
+        if (raw == null || raw.isBlank()) {
+            throw new IllegalArgumentException("smile.chat.devices must not be blank");
+        }
+        String[] parts = raw.split(",");
+        byte[] parsed = new byte[parts.length];
+        for (int i = 0; i < parts.length; i++) {
+            String part = parts[i].trim();
+            try {
+                int idx = Integer.parseInt(part);
+                if (idx < Byte.MIN_VALUE || idx > Byte.MAX_VALUE) {
+                    throw new IllegalArgumentException("device index out of byte range: " + idx);
+                }
+                parsed[i] = (byte) idx;
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(
+                        "Invalid smile.chat.devices entry '" + part
+                                + "' (expected integer or comma-separated list, e.g. 0 or 0,7)", e);
+            }
+        }
+        if (parsed.length > 1) {
+            return parsed;
+        }
+
+        // Single base device: expand to consecutive ranks when tp > 1.
+        int tp = Math.max(1, config.tensorParallelSize());
+        if (tp == 1) {
+            return parsed;
         }
         byte[] devices = new byte[tp];
         for (int i = 0; i < tp; i++) {
-            devices[i] = (byte) (config.device() + i);
+            devices[i] = (byte) (parsed[0] + i);
         }
-        return smile.llm.parallel.ParallelConfig.tensorParallel(devices);
+        return devices;
     }
 
     /**
@@ -395,14 +446,15 @@ public class ChatService {
         Path checkpoint = Path.of(checkpointDir);
         if (isQwenCheckpoint(checkpoint)) {
             resolveHuggingFaceQwenTokenizer(repoId);
+            var parallel = parallelConfig(config);
             return Qwen.build(checkpointDir,
-                    config.maxBatchSize(), config.maxSeqLen(), config.device(),
-                    memFractionStatic, kvCacheDtype, parallelConfig(config));
+                    config.maxBatchSize(), config.maxSeqLen(), parallel.devices()[0],
+                    memFractionStatic, kvCacheDtype, parallel);
         }
 
         String tokenizerPath = resolveHuggingFaceTokenizer(repoId);
         return Llama.build(checkpointDir, tokenizerPath,
-                config.maxBatchSize(), config.maxSeqLen(), config.device(),
+                config.maxBatchSize(), config.maxSeqLen(), parallelConfig(config).devices()[0],
                 memFractionStatic, kvCacheDtype);
     }
 
