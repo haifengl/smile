@@ -105,14 +105,15 @@ smile.torch
 
 smile.llm
 ├── tokenizer/     Tokenizer interface + Tiktoken (BPE) implementation
-├── llama/         LLaMA-3 transformer: Llama, Transformer, TransformerBlock,
-│                  Attention, FeedForward, ModelArgs, Tokenizer (llama-specific)
+├── transformer/   Shared primitives: Attention, FeedForward,
+│                  PositionalEncoding, RotaryPositionalEncoding
+├── llama/         LLaMA-3: Llama, LlamaModel, LlamaBlock,
+│                  GroupedQueryAttention, LlamaModelArgs, Tokenizer
+├── qwen/          Qwen3.5 hybrid text stack
 ├── Message.java   Immutable dialog message (role + content)
 ├── Role.java      system / user / assistant / ipython
 ├── ChatCompletion.java  Inference result record
 ├── FinishReason.java    stop / length / function_call / content_filter
-├── PositionalEncoding.java   Sinusoidal (original Transformer) PE
-└── RotaryPositionalEncoding.java  RoPE (used by LLaMA)
 
 smile.vision
 ├── transform/     Transform interface, ImageClassification pipeline
@@ -632,11 +633,10 @@ A full LLaMA-3 inference implementation:
 
 | Class | Role |
 |---|---|
-| `ModelArgs` | Hyperparameter record; loaded from `params.json` |
-| `Transformer` | Top-level module — embedding + N × `TransformerBlock` + output projection |
-| `TransformerBlock` | Single decoder block: `Attention` + `FeedForward` + RMS norms |
-| `Attention` | Multi-head (grouped-query) attention with KV-cache and RoPE |
-| `FeedForward` | SwiGLU feed-forward network |
+| `LlamaModelArgs` | Hyperparameter record; loaded from `params.json` / HF `config.json` |
+| `LlamaModel` | Top-level module — embedding + N × `LlamaBlock` + output projection |
+| `LlamaBlock` | Single decoder block: `GroupedQueryAttention` + `FeedForward` + RMS norms |
+| `GroupedQueryAttention` | Grouped-query attention with KV-cache and RoPE |
 | `Tokenizer` (llama) | Thin wrapper around `smile.llm.tokenizer.Tokenizer` |
 | `Llama` | High-level entry point — `build()`, `generate()`, `chat()` |
 
