@@ -21,6 +21,7 @@ import java.lang.foreign.MemorySegment;
 import smile.deep.layer.RMSNormLayer;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
+import smile.llm.cache.KvCacheLayout;
 import smile.llm.cache.KvCachePool;
 import smile.torch.Native;
 import static smile.torch.Native.check;
@@ -57,21 +58,30 @@ public class TransformerBlock {
 
     /**
      * Constructor.
-     * @param layerId the identifier of the block.
-     * @param args the model configuration parameters.
-     * @param cachePool the shared KV cache pool.
+     *
+     * @param layerId            the identifier of the block.
+     * @param dim                token embedding dimension.
+     * @param numHeads           number of query heads.
+     * @param numKvHeads         number of key/value heads.
+     * @param intermediateSize   explicit FFN hidden size, or {@code null} to derive it.
+     * @param multipleOf         FFN rounding multiple when {@code intermediateSize} is null.
+     * @param ffnDimMultiplier   optional FFN dim multiplier when deriving size.
+     * @param normEps            RMSNorm epsilon.
+     * @param cachePool          the shared KV cache pool.
      */
-    public TransformerBlock(int layerId, ModelArgs args, KvCachePool cachePool) {
+    public TransformerBlock(int layerId, int dim, int numHeads, int numKvHeads,
+                            Integer intermediateSize, int multipleOf, Double ffnDimMultiplier,
+                            double normEps, KvCachePool cachePool) {
         this.layerId = layerId;
-        this.numHeads = args.numHeads();
-        this.dim = args.dim();
-        this.headDim = args.dim() / args.numHeads();
-        this.attention = new GroupedQueryAttention(args, cachePool, layerId);
-        this.feedForward = args.intermediateSize() != null
-                ? new FeedForward(args.dim(), args.intermediateSize())
-                : new FeedForward(args.dim(), 4 * args.dim(), args.multipleOf(), args.ffnDimMultiplier());
-        this.attentionNorm = new RMSNormLayer(args.dim(), args.normEps());
-        this.ffnNorm = new RMSNormLayer(args.dim(), args.normEps());
+        this.numHeads = numHeads;
+        this.dim = dim;
+        this.headDim = dim / numHeads;
+        this.attention = new GroupedQueryAttention(dim, numHeads, numKvHeads, cachePool, layerId);
+        this.feedForward = intermediateSize != null
+                ? new FeedForward(dim, intermediateSize)
+                : new FeedForward(dim, 4 * dim, multipleOf, ffnDimMultiplier);
+        this.attentionNorm = new RMSNormLayer(dim, normEps);
+        this.ffnNorm = new RMSNormLayer(dim, normEps);
 
         try (Arena arena = Arena.ofConfined()) {
             this.module = check(smile_module_create(MemorySegment.NULL));
@@ -86,11 +96,22 @@ public class TransformerBlock {
 
     /**
      * Convenience constructor that allocates a private test-sized KV pool.
-     * @param layerId the identifier of the block.
-     * @param args the model configuration parameters.
+     *
+     * @param layerId            the identifier of the block.
+     * @param dim                token embedding dimension.
+     * @param numHeads           number of query heads.
+     * @param numKvHeads         number of key/value heads.
+     * @param intermediateSize   explicit FFN hidden size, or {@code null}.
+     * @param multipleOf         FFN rounding multiple when deriving size.
+     * @param ffnDimMultiplier   optional FFN dim multiplier.
+     * @param normEps            RMSNorm epsilon.
+     * @param layout             cache layout for the private test pool.
      */
-    public TransformerBlock(int layerId, ModelArgs args) {
-        this(layerId, args, KvCachePool.forTesting(args, Device.CPU()));
+    public TransformerBlock(int layerId, int dim, int numHeads, int numKvHeads,
+                            Integer intermediateSize, int multipleOf, Double ffnDimMultiplier,
+                            double normEps, KvCacheLayout layout) {
+        this(layerId, dim, numHeads, numKvHeads, intermediateSize, multipleOf, ffnDimMultiplier,
+                normEps, KvCachePool.forTesting(layout, Device.CPU()));
     }
 
     /**

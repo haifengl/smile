@@ -35,7 +35,6 @@ import smile.llm.ChatCompletion;
 import smile.llm.FinishReason;
 import smile.llm.Message;
 import smile.llm.cache.KvCachePool;
-import smile.llm.transformer.ModelArgs;
 import smile.llm.transformer.Transformer;
 import smile.torch.smile_torch_h;
 import smile.util.AutoScope;
@@ -63,17 +62,21 @@ public class Llama {
     final Transformer model;
     /** The tokenizer. */
     final Tokenizer tokenizer;
+    /** Hyperparameters loaded from the checkpoint. */
+    final LlamaModelArgs params;
 
     /**
      * Constructor.
      * @param name the model name.
      * @param model the transformer model.
      * @param tokenizer the tokenizer.
+     * @param params the model hyperparameters.
      */
-    public Llama(String name, Transformer model, Tokenizer tokenizer) {
+    public Llama(String name, Transformer model, Tokenizer tokenizer, LlamaModelArgs params) {
         this.name = name;
         this.model = model;
         this.tokenizer = tokenizer;
+        this.params = params;
     }
 
     @Override
@@ -94,8 +97,8 @@ public class Llama {
      *
      * @return model args from {@code config.json} / {@code params.json}.
      */
-    public ModelArgs params() {
-        return model.params();
+    public LlamaModelArgs params() {
+        return params;
     }
 
     /**
@@ -208,14 +211,14 @@ public class Llama {
                 && (Files.exists(Path.of(checkpointDir, "model.safetensors.index.json"))
                     || !getSafeTensorFiles(dir).isEmpty());
 
-        ModelArgs modelArgs;
+        LlamaModelArgs modelArgs;
         if (huggingFace) {
-            modelArgs = ModelArgs.fromHuggingFace(configJson.toString(), maxBatchSize, maxSeqLen);
+            modelArgs = LlamaModelArgs.fromHuggingFace(configJson.toString(), maxBatchSize, maxSeqLen);
         } else if (Files.exists(paramsJson)) {
-            modelArgs = ModelArgs.from(paramsJson.toString(), maxBatchSize, maxSeqLen);
+            modelArgs = LlamaModelArgs.from(paramsJson.toString(), maxBatchSize, maxSeqLen);
         } else if (Files.exists(configJson)) {
             huggingFace = true;
-            modelArgs = ModelArgs.fromHuggingFace(configJson.toString(), maxBatchSize, maxSeqLen);
+            modelArgs = LlamaModelArgs.fromHuggingFace(configJson.toString(), maxBatchSize, maxSeqLen);
         } else {
             throw new IllegalArgumentException(
                     "Neither params.json nor config.json found in " + checkpointDir);
@@ -227,20 +230,21 @@ public class Llama {
 
         var tokenizer = Tokenizer.of(tokenizerPath);
         if (tokenizer.size() != modelArgs.vocabSize()) {
-            throw new IllegalStateException("Tokenizer and ModelArgs have different vocabulary size.");
+            throw new IllegalStateException("Tokenizer and LlamaModelArgs have different vocabulary size.");
         }
 
+        var layout = modelArgs.kvCacheLayout();
         // When a static memory fraction is configured, use a tiny CPU placeholder
         // pool during weight load, then replace it with a GPU pool sized from
         // residual free memory. Avoids allocating a full maxBatch×maxSeqLen CUDA
         // bootstrap cache (and related empty-tensor pitfalls) before weights load.
         KvCachePool bootstrap = memFractionStatic > 0
-                ? KvCachePool.bootstrap(modelArgs)
-                : KvCachePool.forTesting(modelArgs, device);
-        var model = new Transformer(modelArgs, device, bootstrap);
+                ? KvCachePool.bootstrap(layout)
+                : KvCachePool.forTesting(layout, device);
+        var model = newTransformer(modelArgs, bootstrap, device);
 
         if (huggingFace) {
-            loadHuggingFaceWeights(model, dir, device);
+            loadHuggingFaceWeights(model, modelArgs, dir, device);
         } else {
             List<String> checkpoints = getCheckpoints(dir);
             if (checkpoints.isEmpty()) {
@@ -260,13 +264,34 @@ public class Llama {
         if (memFractionStatic > 0) {
             model.kvCachePool().close();
             device.emptyCache();
-            var pool = KvCachePool.allocate(modelArgs, device, cacheDtype, memFractionStatic);
+            var pool = KvCachePool.allocate(layout, device, cacheDtype, memFractionStatic);
             model.setKvCachePool(pool, false);
         }
 
         var time = System.currentTimeMillis() - startTime;
         logger.info("Model {}[{}]: loaded in {}.{} seconds", checkpointDir, rank, time/1000, time%1000);
-        return new Llama(dir.getName(), model, tokenizer);
+        return new Llama(dir.getName(), model, tokenizer, modelArgs);
+    }
+
+    /**
+     * Builds a {@link Transformer} from Llama hyperparameters and a shared KV pool.
+     */
+    static Transformer newTransformer(LlamaModelArgs args, KvCachePool kvCachePool, Device device) {
+        return new Transformer(
+                args.dim(),
+                args.numLayers(),
+                args.numHeads(),
+                args.resolvedNumKvHeads(),
+                args.vocabSize(),
+                args.intermediateSize(),
+                args.multipleOf(),
+                args.ffnDimMultiplier(),
+                args.normEps(),
+                args.ropeTheta(),
+                args.scaledRope(),
+                args.maxSeqLen(),
+                kvCachePool,
+                device);
     }
 
     /**
@@ -396,7 +421,8 @@ public class Llama {
      * @param device the device on which tensors are materialised.
      * @throws IOException if a weight file cannot be read.
      */
-    private static void loadHuggingFaceWeights(Transformer model, File dir, Device device) throws IOException {
+    private static void loadHuggingFaceWeights(Transformer model, LlamaModelArgs args,
+                                               File dir, Device device) throws IOException {
         Map<String, String> weightMap = readWeightMap(dir);
         // Group tensor names by shard file for memory-efficient loading.
         Map<String, List<String>> shardToKeys = new LinkedHashMap<>();
@@ -404,9 +430,8 @@ public class Llama {
             shardToKeys.computeIfAbsent(entry.getValue(), k -> new ArrayList<>()).add(entry.getKey());
         }
 
-        int numHeads = model.params().numHeads();
-        int numKvHeads = model.params().numKvHeads() != null
-                ? model.params().numKvHeads() : numHeads;
+        int numHeads = args.numHeads();
+        int numKvHeads = args.resolvedNumKvHeads();
         Set<String> loaded = new HashSet<>();
 
         for (var shardEntry : shardToKeys.entrySet()) {
@@ -594,7 +619,7 @@ public class Llama {
                                      double topp, boolean logprobs, long seed,
                                      SubmissionPublisher<String> publisher) {
         int batchSize = prompts.length;
-        if (batchSize > model.params().maxBatchSize()) {
+        if (batchSize > params.maxBatchSize()) {
             throw new IllegalArgumentException("The number of prompts is greater than max_batch_size");
         }
 
@@ -608,7 +633,7 @@ public class Llama {
             minPromptLen = Math.min(minPromptLen, prompt.length);
             maxPromptLen = Math.max(maxPromptLen, prompt.length);
         }
-        if (maxPromptLen > model.params().maxSeqLen()) {
+        if (maxPromptLen > params.maxSeqLen()) {
             throw new IllegalArgumentException("The prompt length is greater than max_seq_len");
         }
 
@@ -620,7 +645,7 @@ public class Llama {
         try (var guard = Tensor.noGradGuard();
              var scope = new AutoScope()) {
             Tensor.push(scope);
-            int totalLen = Math.min(model.params().maxSeqLen(), maxGenLen + maxPromptLen);
+            int totalLen = Math.min(params.maxSeqLen(), maxGenLen + maxPromptLen);
             model.kvCachePool().bindRequests(batchSize, totalLen);
 
             int pad = tokenizer.pad();

@@ -14,14 +14,16 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.llm.transformer;
+package smile.llm.llama;
 
 import java.io.File;
 import java.io.IOException;
 import tools.jackson.databind.ObjectMapper;
+import smile.llm.cache.KvCacheLayout;
 
 /**
- * LLM model hyperparameters.
+ * Llama / Meta dense-decoder hyperparameters.
+ *
  * @param dim the dimension of token embedding.
  * @param numLayers the number of transformer blocks.
  * @param numHeads the number of attention heads.
@@ -40,24 +42,24 @@ import tools.jackson.databind.ObjectMapper;
  *
  * @author Haifeng Li
  */
-public record ModelArgs(int dim,
-                        int numLayers,
-                        int numHeads,
-                        Integer numKvHeads,
-                        int vocabSize,
-                        int multipleOf,
-                        Double ffnDimMultiplier,
-                        Integer intermediateSize,
-                        double normEps,
-                        double ropeTheta,
-                        boolean scaledRope,
-                        int maxBatchSize,
-                        int maxSeqLen) {
+public record LlamaModelArgs(int dim,
+                             int numLayers,
+                             int numHeads,
+                             Integer numKvHeads,
+                             int vocabSize,
+                             int multipleOf,
+                             Double ffnDimMultiplier,
+                             Integer intermediateSize,
+                             double normEps,
+                             double ropeTheta,
+                             boolean scaledRope,
+                             int maxBatchSize,
+                             int maxSeqLen) {
 
     /**
      * Constructor with default parameter values.
      */
-    public ModelArgs() {
+    public LlamaModelArgs() {
         this(4096, 32, 32, null, -1, 256, null, null, 1E-5, 500000, false, 32, 2048);
     }
 
@@ -66,12 +68,36 @@ public record ModelArgs(int dim,
      * The feed-forward hidden dimension is derived from {@code multipleOf} /
      * {@code ffnDimMultiplier}.
      */
-    public ModelArgs(int dim, int numLayers, int numHeads, Integer numKvHeads,
-                     int vocabSize, int multipleOf, Double ffnDimMultiplier,
-                     double normEps, double ropeTheta, boolean scaledRope,
-                     int maxBatchSize, int maxSeqLen) {
+    public LlamaModelArgs(int dim, int numLayers, int numHeads, Integer numKvHeads,
+                          int vocabSize, int multipleOf, Double ffnDimMultiplier,
+                          double normEps, double ropeTheta, boolean scaledRope,
+                          int maxBatchSize, int maxSeqLen) {
         this(dim, numLayers, numHeads, numKvHeads, vocabSize, multipleOf,
                 ffnDimMultiplier, null, normEps, ropeTheta, scaledRope, maxBatchSize, maxSeqLen);
+    }
+
+    /**
+     * Returns the resolved number of key/value heads (falls back to {@link #numHeads()}).
+     * @return KV head count.
+     */
+    public int resolvedNumKvHeads() {
+        return numKvHeads != null ? numKvHeads : numHeads;
+    }
+
+    /**
+     * Returns {@code dim / numHeads}.
+     * @return attention head dimension.
+     */
+    public int headDim() {
+        return dim / numHeads;
+    }
+
+    /**
+     * Returns a {@link KvCacheLayout} derived from these hyperparameters.
+     * @return cache layout for {@link smile.llm.cache.KvCachePool}.
+     */
+    public KvCacheLayout kvCacheLayout() {
+        return KvCacheLayout.of(numLayers, dim, numHeads, numKvHeads, maxBatchSize, maxSeqLen);
     }
 
     /**
@@ -82,14 +108,14 @@ public record ModelArgs(int dim,
      * @throws IOException if fail to open the parameter file.
      * @return the model hyperparameters.
      */
-    public static ModelArgs from(String path, int maxBatchSize, int maxSeqLen) throws IOException {
+    public static LlamaModelArgs from(String path, int maxBatchSize, int maxSeqLen) throws IOException {
         File file = new File(path);
         if (!file.exists()) {
             throw new IOException("Model params file not found: " + path);
         }
         ObjectMapper mapper = new ObjectMapper();
         var node = mapper.readTree(new File(path));
-        return new ModelArgs(
+        return new LlamaModelArgs(
                 node.get("dim").asInt(),
                 node.get("n_layers").asInt(),
                 node.get("n_heads").asInt(),
@@ -117,7 +143,8 @@ public record ModelArgs(int dim,
      * @throws IOException if fail to open the config file.
      * @return the model hyperparameters.
      */
-    public static ModelArgs fromHuggingFace(String path, int maxBatchSize, int maxSeqLen) throws IOException {
+    public static LlamaModelArgs fromHuggingFace(String path, int maxBatchSize, int maxSeqLen)
+            throws IOException {
         File file = new File(path);
         if (!file.exists()) {
             throw new IOException("HuggingFace config file not found: " + path);
@@ -133,7 +160,7 @@ public record ModelArgs(int dim,
             }
         }
 
-        return new ModelArgs(
+        return new LlamaModelArgs(
                 node.get("hidden_size").asInt(),
                 node.get("num_hidden_layers").asInt(),
                 node.get("num_attention_heads").asInt(),

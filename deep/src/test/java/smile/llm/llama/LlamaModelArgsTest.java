@@ -14,26 +14,27 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.llm.transformer;
+package smile.llm.llama;
 
 import java.io.IOException;
 import org.junit.jupiter.api.*;
+import smile.llm.cache.KvCacheLayout;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Unit tests for the {@code smile.llm.transformer.ModelArgs} class.
+ * Unit tests for {@link LlamaModelArgs}.
  *
  * @author Haifeng Li
  */
-public class ModelArgsTest {
+public class LlamaModelArgsTest {
 
     // -----------------------------------------------------------------------
-    // ModelArgs — default constructor
+    // default constructor
     // -----------------------------------------------------------------------
 
     @Test
-    public void testGivenDefaultModelArgsWhenCreatedThenValuesAreStandardDefaults() {
-        ModelArgs args = new ModelArgs();
+    public void testGivenDefaultLlamaModelArgsWhenCreatedThenValuesAreStandardDefaults() {
+        LlamaModelArgs args = new LlamaModelArgs();
         assertEquals(4096, args.dim());
         assertEquals(32, args.numLayers());
         assertEquals(32, args.numHeads());
@@ -50,12 +51,12 @@ public class ModelArgsTest {
     }
 
     // -----------------------------------------------------------------------
-    // ModelArgs — from JSON (full params)
+    // from JSON (full params)
     // -----------------------------------------------------------------------
 
     @Test
     public void testGivenFullParamsJsonWhenLoadedThenAllFieldsPopulated() throws IOException {
-        ModelArgs args = ModelArgs.from("deep/src/test/resources/llama/params.json", 4, 512);
+        LlamaModelArgs args = LlamaModelArgs.from("deep/src/test/resources/llama/params.json", 4, 512);
         assertEquals(512, args.dim());
         assertEquals(2, args.numLayers());
         assertEquals(8, args.numHeads());
@@ -74,7 +75,7 @@ public class ModelArgsTest {
     @Test
     public void testGivenMinimalParamsJsonWhenLoadedThenOptionalFieldsAreNull() throws IOException {
         // params_minimal.json omits n_kv_heads, ffn_dim_multiplier, rope_theta, use_scaled_rope
-        ModelArgs args = ModelArgs.from("deep/src/test/resources/llama/params_minimal.json", 2, 128);
+        LlamaModelArgs args = LlamaModelArgs.from("deep/src/test/resources/llama/params_minimal.json", 2, 128);
         assertEquals(512, args.dim());
         assertNull(args.numKvHeads(), "n_kv_heads absent → should be null");
         assertNull(args.ffnDimMultiplier(), "ffn_dim_multiplier absent → should be null");
@@ -85,39 +86,34 @@ public class ModelArgsTest {
     @Test
     public void testGivenNonexistentParamsFileWhenLoadedThenThrowsIOException() {
         assertThrows(IOException.class,
-                () -> ModelArgs.from("nonexistent/params.json", 1, 128));
-    }
-
-    // -----------------------------------------------------------------------
-    // ModelArgs — numKvHeads fallback in Attention
-    // -----------------------------------------------------------------------
-
-    @Test
-    public void testGivenNullNumKvHeadsWhenAttentionCreatedThenFallsBackToNumHeads() {
-        // numKvHeads=null → Attention should fall back to numHeads (no GQA)
-        ModelArgs args = new ModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 1, 64);
-        GroupedQueryAttention attn = new GroupedQueryAttention(args);
-        assertEquals(args.numHeads(), attn.numKvHeads,
-                "numKvHeads should equal numHeads when numKvHeads param is null");
-        assertEquals(1, attn.numRep, "numRep should be 1 when numKvHeads == numHeads");
+                () -> LlamaModelArgs.from("nonexistent/params.json", 1, 128));
     }
 
     @Test
-    public void testGivenGqaConfigWhenAttentionCreatedThenNumRepIsCorrect() {
-        // 4 query heads, 2 KV heads → numRep = 2
-        ModelArgs args = new ModelArgs(64, 1, 4, 2, 100, 256, null, 1e-5, 10000.0, false, 1, 64);
-        GroupedQueryAttention attn = new GroupedQueryAttention(args);
-        assertEquals(2, attn.numKvHeads);
-        assertEquals(2, attn.numRep);
+    public void testGivenArgsWhenKvCacheLayoutDerivedThenDimensionsMatch() {
+        LlamaModelArgs args = new LlamaModelArgs(64, 2, 4, 2, 100, 256, null, 1e-5, 10000.0, false, 3, 128);
+        KvCacheLayout layout = args.kvCacheLayout();
+        assertEquals(2, layout.numLayers());
+        assertEquals(2, layout.numKvHeads());
+        assertEquals(16, layout.headDim());
+        assertEquals(3, layout.maxBatchSize());
+        assertEquals(128, layout.maxSeqLen());
+    }
+
+    @Test
+    public void testGivenNullNumKvHeadsWhenResolvedThenFallsBackToNumHeads() {
+        LlamaModelArgs args = new LlamaModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 1, 64);
+        assertEquals(4, args.resolvedNumKvHeads());
+        assertEquals(16, args.headDim());
     }
 
     // -----------------------------------------------------------------------
-    // ModelArgs — HuggingFace config.json
+    // HuggingFace config.json
     // -----------------------------------------------------------------------
 
     @Test
     public void testGivenHuggingFaceConfigWhenLoadedThenFieldsMapped() throws IOException {
-        ModelArgs args = ModelArgs.fromHuggingFace("deep/src/test/resources/llama/config.json", 1, 4096);
+        LlamaModelArgs args = LlamaModelArgs.fromHuggingFace("deep/src/test/resources/llama/config.json", 1, 4096);
         assertEquals(4096, args.dim());
         assertEquals(32, args.numLayers());
         assertEquals(32, args.numHeads());
@@ -134,6 +130,6 @@ public class ModelArgsTest {
     @Test
     public void testGivenNonexistentHuggingFaceConfigWhenLoadedThenThrowsIOException() {
         assertThrows(IOException.class,
-                () -> ModelArgs.fromHuggingFace("nonexistent/config.json", 1, 128));
+                () -> LlamaModelArgs.fromHuggingFace("nonexistent/config.json", 1, 128));
     }
 }

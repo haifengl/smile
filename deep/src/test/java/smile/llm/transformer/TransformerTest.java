@@ -18,6 +18,8 @@ package smile.llm.transformer;
 
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
+import smile.llm.cache.KvCacheLayout;
+import smile.llm.cache.KvCachePool;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -32,6 +34,24 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng Li
  */
 public class TransformerTest {
+
+    private static final int DIM = 64;
+    private static final int NUM_HEADS = 4;
+    private static final int NUM_KV_HEADS = 4;
+    private static final int VOCAB = 100;
+    private static final int MULTIPLE_OF = 256;
+    private static final double NORM_EPS = 1e-5;
+    private static final double ROPE_THETA = 10000.0;
+
+    private static KvCacheLayout layout(int layers, int batch, int seq) {
+        return KvCacheLayout.of(layers, DIM, NUM_HEADS, NUM_KV_HEADS, batch, seq);
+    }
+
+    private static Transformer tinyTransformer(int layers, int batch, int seq) {
+        return new Transformer(DIM, layers, NUM_HEADS, NUM_KV_HEADS, VOCAB,
+                null, MULTIPLE_OF, null, NORM_EPS, ROPE_THETA, false, seq,
+                layout(layers, batch, seq), Device.CPU());
+    }
 
     // -----------------------------------------------------------------------
     // FeedForward — hidden dimension calculation
@@ -74,22 +94,39 @@ public class TransformerTest {
 
     @Test
     public void testGivenAttentionWhenConstructedThenHeadDimIsCorrect() {
-        ModelArgs args = new ModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 1, 32);
-        GroupedQueryAttention attn = new GroupedQueryAttention(args);
-        assertEquals(64 / 4, attn.headDim);  // dim / numHeads
+        GroupedQueryAttention attn = new GroupedQueryAttention(
+                DIM, NUM_HEADS, NUM_KV_HEADS, layout(1, 1, 32));
+        assertEquals(DIM / NUM_HEADS, attn.headDim);
     }
 
     @Test
     public void testGivenAttentionWhenConstructedThenUsesSharedKvCachePool() {
         // maxBatchSize=2, maxSeqLen=32, numLocalKvHeads=4, headDim=16
-        ModelArgs args = new ModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 2, 32);
-        var pool = smile.llm.cache.KvCachePool.forTesting(args, Device.CPU());
-        GroupedQueryAttention attn = new GroupedQueryAttention(args, pool, 0);
+        var layout = layout(1, 2, 32);
+        var pool = KvCachePool.forTesting(layout, Device.CPU());
+        GroupedQueryAttention attn = new GroupedQueryAttention(DIM, NUM_HEADS, NUM_KV_HEADS, pool, 0);
         assertEquals(2 * 32, pool.numSlots());
         assertEquals(0, attn.layerId);
         assertEquals(16, attn.headDim);
         assertEquals(4, attn.numKvHeads);
         pool.close();
+    }
+
+    @Test
+    public void testGivenGqaConfigWhenAttentionCreatedThenNumRepIsCorrect() {
+        // 4 query heads, 2 KV heads → numRep = 2
+        var layout = KvCacheLayout.of(1, DIM, 4, 2, 1, 64);
+        GroupedQueryAttention attn = new GroupedQueryAttention(DIM, 4, 2, layout);
+        assertEquals(2, attn.numKvHeads);
+        assertEquals(2, attn.numRep);
+    }
+
+    @Test
+    public void testGivenMatchingHeadsWhenAttentionCreatedThenNumRepIsOne() {
+        GroupedQueryAttention attn = new GroupedQueryAttention(
+                DIM, NUM_HEADS, NUM_KV_HEADS, layout(1, 1, 64));
+        assertEquals(NUM_HEADS, attn.numKvHeads);
+        assertEquals(1, attn.numRep);
     }
 
     // -----------------------------------------------------------------------
@@ -98,8 +135,8 @@ public class TransformerTest {
 
     @Test
     public void testGivenTransformerBlockWhenConstructedThenLayerIdIsSet() {
-        ModelArgs args = new ModelArgs(64, 2, 4, null, 100, 256, null, 1e-5, 10000.0, false, 1, 32);
-        TransformerBlock block = new TransformerBlock(1, args);
+        TransformerBlock block = new TransformerBlock(
+                1, DIM, NUM_HEADS, NUM_KV_HEADS, null, MULTIPLE_OF, null, NORM_EPS, layout(2, 1, 32));
         assertEquals(1, block.layerId);
         assertEquals(64, block.dim);
         assertEquals(4, block.numHeads);
@@ -109,8 +146,8 @@ public class TransformerTest {
     @Test
     public void testGivenTransformerBlockWhenForwardCalledThenOutputShapeMatchesInput() {
         // Tiny: dim=64, 1 head, 1 layer, batch=1, seqlen=4
-        ModelArgs args = new ModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 1, 32);
-        TransformerBlock block = new TransformerBlock(0, args);
+        TransformerBlock block = new TransformerBlock(
+                0, DIM, NUM_HEADS, NUM_KV_HEADS, null, MULTIPLE_OF, null, NORM_EPS, layout(1, 1, 32));
         // Precompute CIS for the block
         Tensor cis = RotaryPositionalEncoding.computeFreqCis(16, 32 * 2);
         Tensor freqs = cis.get(smile.deep.tensor.Index.slice(0, 4));
@@ -126,8 +163,7 @@ public class TransformerTest {
 
     @Test
     public void testGivenTransformerWhenConstructedThenVocabSizeAndLayersAreSet() {
-        ModelArgs args = new ModelArgs(64, 2, 4, null, 100, 256, null, 1e-5, 10000.0, false, 1, 32);
-        Transformer transformer = new Transformer(args, Device.CPU());
+        Transformer transformer = tinyTransformer(2, 1, 32);
         assertEquals(100, transformer.vocabSize);
         assertEquals(2, transformer.numLayers);
         assertEquals(2, transformer.layers.size());
@@ -136,8 +172,7 @@ public class TransformerTest {
     @Test
     public void testGivenTransformerWhenForwardCalledThenOutputShapeIsCorrect() {
         // output shape: [batchSize, seqLen, vocabSize]
-        ModelArgs args = new ModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 1, 32);
-        Transformer transformer = new Transformer(args, Device.CPU());
+        Transformer transformer = tinyTransformer(1, 1, 32);
         transformer.eval();
         // Token IDs in [0, vocabSize)
         Tensor tokens = Tensor.of(new long[]{1L, 2L, 3L, 4L}, 1, 4);
@@ -150,8 +185,7 @@ public class TransformerTest {
     @Test
     public void testGivenTransformerWhenForwardCalledWithSingleTokenThenNoMaskApplied() {
         // seqLen=1 → mask is null (no causal masking needed)
-        ModelArgs args = new ModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 1, 32);
-        Transformer transformer = new Transformer(args, Device.CPU());
+        Transformer transformer = tinyTransformer(1, 1, 32);
         transformer.eval();
         Tensor tokens = Tensor.of(new long[]{5L}, 1, 1);
         Tensor out = transformer.forward(tokens, 0);
@@ -162,8 +196,7 @@ public class TransformerTest {
     @Test
     public void testGivenTransformerWhenForwardCalledWithMultipleTokensThenMaskIsBuilt() {
         // seqLen>1 → causal mask is created; this should not throw
-        ModelArgs args = new ModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 1, 32);
-        Transformer transformer = new Transformer(args, Device.CPU());
+        Transformer transformer = tinyTransformer(1, 1, 32);
         transformer.eval();
         Tensor tokens = Tensor.of(new long[]{1L, 2L, 3L}, 1, 3);
         assertDoesNotThrow(() -> {

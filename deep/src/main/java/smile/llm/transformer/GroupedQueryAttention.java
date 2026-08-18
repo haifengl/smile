@@ -22,6 +22,7 @@ import smile.deep.layer.LinearLayer;
 import smile.deep.tensor.Device;
 import smile.torch.Native;
 import smile.deep.tensor.Tensor;
+import smile.llm.cache.KvCacheLayout;
 import smile.llm.cache.KvCachePool;
 import smile.util.AutoScope;
 
@@ -67,28 +68,41 @@ public class GroupedQueryAttention implements Attention {
 
     /**
      * Constructor.
-     * @param args the model configuration parameters.
-     * @param cachePool the shared KV cache pool (must not be {@code null}).
-     * @param layerId zero-based layer index within the transformer.
+     *
+     * @param dim        token embedding dimension.
+     * @param numHeads   number of query heads.
+     * @param numKvHeads number of key/value heads.
+     * @param cachePool  the shared KV cache pool (must not be {@code null}).
+     * @param layerId    zero-based layer index within the transformer.
      */
-    public GroupedQueryAttention(ModelArgs args, KvCachePool cachePool, int layerId) {
+    public GroupedQueryAttention(int dim, int numHeads, int numKvHeads,
+                                 KvCachePool cachePool, int layerId) {
         if (cachePool == null) {
             throw new IllegalArgumentException("cachePool must not be null");
         }
+        if (numHeads < 1) {
+            throw new IllegalArgumentException("numHeads must be >= 1");
+        }
+        if (numKvHeads < 1) {
+            throw new IllegalArgumentException("numKvHeads must be >= 1");
+        }
+        if (dim % numHeads != 0) {
+            throw new IllegalArgumentException("dim must be divisible by numHeads");
+        }
         this.cachePool = cachePool;
         this.layerId = layerId;
-        this.numKvHeads = args.numKvHeads() == null ? args.numHeads() : args.numKvHeads();
+        this.numKvHeads = numKvHeads;
         // Don't support torch.distributed yet
         int modelParallelSize = 1; // torch.distributed.get_world_size(group=get_model_parallel_group());
-        this.numLocalHeads = args.numHeads() / modelParallelSize;
+        this.numLocalHeads = numHeads / modelParallelSize;
         this.numLocalKvHeads = this.numKvHeads / modelParallelSize;
         this.numRep = this.numLocalHeads / this.numLocalKvHeads;
-        this.headDim = args.dim() / args.numHeads();
+        this.headDim = dim / numHeads;
 
-        this.wq = new LinearLayer(args.dim(), args.numHeads() * headDim, false);
-        this.wk = new LinearLayer(args.dim(), numKvHeads * headDim, false);
-        this.wv = new LinearLayer(args.dim(), numKvHeads * headDim, false);
-        this.wo = new LinearLayer(args.numHeads() * headDim, args.dim(), false);
+        this.wq = new LinearLayer(dim, numHeads * headDim, false);
+        this.wk = new LinearLayer(dim, numKvHeads * headDim, false);
+        this.wv = new LinearLayer(dim, numKvHeads * headDim, false);
+        this.wo = new LinearLayer(numHeads * headDim, dim, false);
 
         try (Arena arena = Arena.ofConfined()) {
             this.module = check(smile_module_create(MemorySegment.NULL));
@@ -102,15 +116,16 @@ public class GroupedQueryAttention implements Attention {
     }
 
     /**
-     * Convenience constructor that allocates a small test pool sized to
-     * {@code maxBatchSize × maxSeqLen}. Prefer the
-     * {@link #GroupedQueryAttention(ModelArgs, KvCachePool, int)} overload
-     * in production so the inference engine can share one pool across layers.
+     * Convenience constructor that allocates a small test pool sized from
+     * {@code layout}. Prefer the shared-pool overload in production.
      *
-     * @param args the model configuration parameters.
+     * @param dim        token embedding dimension.
+     * @param numHeads   number of query heads.
+     * @param numKvHeads number of key/value heads.
+     * @param layout     cache layout used for the private test pool.
      */
-    public GroupedQueryAttention(ModelArgs args) {
-        this(args, KvCachePool.forTesting(args, Device.CPU()), 0);
+    public GroupedQueryAttention(int dim, int numHeads, int numKvHeads, KvCacheLayout layout) {
+        this(dim, numHeads, numKvHeads, KvCachePool.forTesting(layout, Device.CPU()), 0);
     }
 
     @Override
