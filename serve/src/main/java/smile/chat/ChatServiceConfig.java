@@ -52,15 +52,20 @@ public interface ChatServiceConfig {
     int maxBatchSize();
 
     /**
-     * GPU device index used as TP rank 0 (or the sole device when tp=1).
+     * CUDA device index or comma-separated TP device list
+     * (e.g. {@code 0} or {@code 0,7}). A single value is the sole / base
+     * device; multiple values define the tensor-parallel ranks in order.
      * Defaults to {@code 0}.
      */
     @WithDefault("0")
-    byte device();
+    String devices();
 
     /**
-     * Tensor-parallel size. When greater than 1, devices
-     * {@code device .. device+tensorParallelSize-1} form the TP group.
+     * Tensor-parallel size. When greater than 1 and {@link #devices()} has a
+     * single entry {@code d}, ranks use consecutive devices
+     * {@code d .. d+tensorParallelSize-1}. When {@link #devices()} lists
+     * multiple indices, that list length must equal this size (or this may
+     * stay at {@code 1} and the list length defines the TP world size).
      * Defaults to {@code 1}.
      */
     @WithDefault("1")
