@@ -17,7 +17,7 @@
 package smile
 
 import smile.plot.swing.{Canvas, MultiFigurePane}
-import smile.plot.vega.VegaLite
+import smile.vega.VegaLite
 
 /** Data visualization.
   *

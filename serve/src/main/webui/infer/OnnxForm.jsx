@@ -24,6 +24,10 @@ import {
   onnxToJsonSchema,
 } from "./onnxUtils";
 import {
+  imagenetEnrichment,
+  modelLooksLikeImageNet,
+} from "./imagenetTopK";
+import {
   detectBatchFileKind,
   prepareCsv,
   readSseStream,
@@ -252,11 +256,16 @@ function OnnxForm({ modelId }) {
           const data = await res.json();
           const id = ++resultIdRef.current;
           const normalized = normalizePrediction(data);
+          const imagenet = imagenetEnrichment(data);
           setRows((prev) => [
             ...prev,
             {
               id,
-              values: { file: file.name, ...normalized.values },
+              values: {
+                file: file.name,
+                ...(imagenet ?? {}),
+                ...normalized.values,
+              },
             },
           ]);
         } catch (err) {
@@ -442,9 +451,12 @@ function OnnxForm({ modelId }) {
                       info.inputs.find((i) => i.name === vision.name)
                         ?.elementType || "FLOAT";
                     return t === "FLOAT" || t === "DOUBLE"
-                      ? "[0, 1]"
+                      ? "[0, 1] then ImageNet mean/std"
                       : "[0, 255]";
                   })()}
+                  {modelLooksLikeImageNet(info)
+                    ? ". 1000-d output → ImageNet top-5 labels assumed"
+                    : ""}
                 </p>
               )}
               <button

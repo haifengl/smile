@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite --host",
     "build": "vite build --emptyOutDir",
-    "preview": "vite preview --host"
+    "preview": "vite preview --host",
+    "test": "node --test infer/imagenetTopK.test.js"
   },
   "dependencies": {
     "react": "^19.2.8",
