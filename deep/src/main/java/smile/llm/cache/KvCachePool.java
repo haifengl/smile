@@ -25,7 +25,6 @@ import smile.deep.tensor.Device;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
-import smile.llm.transformer.ModelArgs;
 import smile.util.Tuple2;
 
 /**
@@ -139,23 +138,22 @@ public class KvCachePool implements AutoCloseable {
      * <p>Call this <em>after</em> model weights have been loaded so that the
      * free-memory reading reflects the residual capacity available for KV cache.
      *
-     * @param args        model hyperparameters.
+     * @param layout      family-agnostic cache layout.
      * @param device      compute device.
      * @param dtype       cache element dtype (typically the model weight dtype).
      * @param memFraction fraction of free GPU memory to use ({@code (0, 1]}).
      * @param pageSize    tokens per page.
      * @return the allocated pool.
      */
-    public static KvCachePool allocate(ModelArgs args, Device device, ScalarType dtype,
+    public static KvCachePool allocate(KvCacheLayout layout, Device device, ScalarType dtype,
                                        double memFraction, int pageSize) {
         if (memFraction <= 0 || memFraction > 1) {
             throw new IllegalArgumentException("memFraction must be in (0, 1]: " + memFraction);
         }
 
-        int numKvHeads = args.numKvHeads() != null ? args.numKvHeads() : args.numHeads();
-        int headDim = args.dim() / args.numHeads();
         int dtypeBytes = elementSize(dtype);
-        long bytesPerToken = 2L * args.numLayers() * numKvHeads * headDim * dtypeBytes;
+        long bytesPerToken = 2L * layout.numLayers() * layout.numKvHeads()
+                * layout.headDim() * dtypeBytes;
 
         long budget;
         if (device.isCUDA()) {
@@ -166,46 +164,46 @@ public class KvCachePool implements AutoCloseable {
                     budget, free, memFraction);
         } else {
             // CPU fallback: size to maxBatchSize × maxSeqLen (tests / CPU inference).
-            budget = bytesPerToken * args.maxBatchSize() * args.maxSeqLen();
+            budget = bytesPerToken * layout.maxBatchSize() * layout.maxSeqLen();
         }
 
         int numSlots = (int) Math.min(Integer.MAX_VALUE, Math.max(pageSize, budget / bytesPerToken));
         numSlots = (numSlots / pageSize) * pageSize;
-        int minSlots = ((args.maxSeqLen() + pageSize - 1) / pageSize) * pageSize;
+        int minSlots = ((layout.maxSeqLen() + pageSize - 1) / pageSize) * pageSize;
         if (numSlots < minSlots) {
             logger.warn("KV cache budget yields {} slots; raising to minimum {}", numSlots, minSlots);
             numSlots = minSlots;
         }
 
-        return new KvCachePool(args.numLayers(), numSlots, numKvHeads, headDim, pageSize, device, dtype);
+        return new KvCachePool(layout.numLayers(), numSlots, layout.numKvHeads(),
+                layout.headDim(), pageSize, device, dtype);
     }
 
     /**
      * Allocates a pool with {@link #DEFAULT_PAGE_SIZE}.
      *
-     * @param args        model hyperparameters.
+     * @param layout      family-agnostic cache layout.
      * @param device      compute device.
      * @param dtype       cache element dtype.
      * @param memFraction fraction of free GPU memory to use.
      * @return the allocated pool.
      */
-    public static KvCachePool allocate(ModelArgs args, Device device, ScalarType dtype, double memFraction) {
-        return allocate(args, device, dtype, memFraction, DEFAULT_PAGE_SIZE);
+    public static KvCachePool allocate(KvCacheLayout layout, Device device, ScalarType dtype,
+                                       double memFraction) {
+        return allocate(layout, device, dtype, memFraction, DEFAULT_PAGE_SIZE);
     }
 
     /**
      * Creates a small pool sized to {@code maxBatchSize × maxSeqLen} for unit tests.
      *
-     * @param args   model hyperparameters.
+     * @param layout cache layout.
      * @param device compute device.
      * @return the test pool.
      */
-    public static KvCachePool forTesting(ModelArgs args, Device device) {
+    public static KvCachePool forTesting(KvCacheLayout layout, Device device) {
         int pageSize = 1;
-        int numSlots = args.maxBatchSize() * args.maxSeqLen();
-        int numKvHeads = args.numKvHeads() != null ? args.numKvHeads() : args.numHeads();
-        int headDim = args.dim() / args.numHeads();
-        return new KvCachePool(args.numLayers(), numSlots, numKvHeads, headDim,
+        int numSlots = layout.maxBatchSize() * layout.maxSeqLen();
+        return new KvCachePool(layout.numLayers(), numSlots, layout.numKvHeads(), layout.headDim(),
                 pageSize, device, ScalarType.Float);
     }
 
@@ -214,14 +212,12 @@ public class KvCachePool implements AutoCloseable {
      * loaded. The inference engine replaces it with a sized GPU pool afterward
      * (see {@code smile.mem.fraction.static}).
      *
-     * @param args model hyperparameters.
+     * @param layout cache layout.
      * @return a minimal CPU pool (one page).
      */
-    public static KvCachePool bootstrap(ModelArgs args) {
+    public static KvCachePool bootstrap(KvCacheLayout layout) {
         int pageSize = DEFAULT_PAGE_SIZE;
-        int numKvHeads = args.numKvHeads() != null ? args.numKvHeads() : args.numHeads();
-        int headDim = args.dim() / args.numHeads();
-        return new KvCachePool(args.numLayers(), pageSize, numKvHeads, headDim,
+        return new KvCachePool(layout.numLayers(), pageSize, layout.numKvHeads(), layout.headDim(),
                 pageSize, Device.CPU(), ScalarType.Float);
     }
 

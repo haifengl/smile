@@ -17,7 +17,6 @@
 package smile.llm.llama;
 
 import smile.deep.tensor.Device;
-import smile.llm.transformer.ModelArgs;
 import smile.llm.transformer.Transformer;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,6 +30,12 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class LlamaTest {
 
+    private static Llama tinyLlama(LlamaModelArgs args) {
+        Transformer transformer = Llama.newTransformer(
+                args, smile.llm.cache.KvCachePool.forTesting(args.kvCacheLayout(), Device.CPU()), Device.CPU());
+        return new Llama("test", transformer, createTinyTokenizer(), args);
+    }
+
     // -----------------------------------------------------------------------
     // Llama — toString, family, name
     // -----------------------------------------------------------------------
@@ -43,13 +48,15 @@ public class LlamaTest {
 
     @Test
     public void testGivenLlamaWhenToStringCalledThenFormatIsCorrect() {
-        ModelArgs args = new ModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 1, 32);
-        Transformer transformer = new Transformer(args, Device.CPU());
+        LlamaModelArgs args = new LlamaModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 1, 32);
+        Transformer transformer = Llama.newTransformer(
+                args, smile.llm.cache.KvCachePool.forTesting(args.kvCacheLayout(), Device.CPU()), Device.CPU());
         Tokenizer tokenizer = createTinyTokenizer();
-        Llama llama = new Llama("llama3-tiny", transformer, tokenizer);
+        Llama llama = new Llama("llama3-tiny", transformer, tokenizer, args);
         assertEquals("meta/llama3/llama3-tiny", llama.toString());
         assertEquals("meta/llama3", llama.family());
         assertEquals("llama3-tiny", llama.name());
+        assertSame(args, llama.params());
     }
 
     @Test
@@ -64,10 +71,8 @@ public class LlamaTest {
 
     @Test
     public void testGivenGenerateWithTooManyPromptsThenThrowsIllegalArgument() {
-        ModelArgs args = new ModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 1, 32);
-        Transformer transformer = new Transformer(args, Device.CPU());
-        Tokenizer tokenizer = createTinyTokenizer();
-        Llama llama = new Llama("test", transformer, tokenizer);
+        LlamaModelArgs args = new LlamaModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 1, 32);
+        Llama llama = tinyLlama(args);
         // maxBatchSize=1, but we pass 2 prompts
         int[][] prompts = {{1, 2}, {3, 4}};
         assertThrows(IllegalArgumentException.class,
@@ -77,10 +82,8 @@ public class LlamaTest {
     @Test
     public void testGivenGenerateWithPromptTooLongThenThrowsIllegalArgument() {
         // maxSeqLen=8, prompt length=10
-        ModelArgs args = new ModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 1, 8);
-        Transformer transformer = new Transformer(args, Device.CPU());
-        Tokenizer tokenizer = createTinyTokenizer();
-        Llama llama = new Llama("test", transformer, tokenizer);
+        LlamaModelArgs args = new LlamaModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 1, 8);
+        Llama llama = tinyLlama(args);
         int[][] prompts = {new int[10]};  // prompt length 10 > maxSeqLen 8
         assertThrows(IllegalArgumentException.class,
                 () -> llama.generate(prompts, 5, 0.0, 0.9, false, 0, null));
@@ -88,10 +91,8 @@ public class LlamaTest {
 
     @Test
     public void testGivenGenerateWithPublisherAndBatchSizeGtOneThenThrowsIllegalArgument() {
-        ModelArgs args = new ModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 2, 32);
-        Transformer transformer = new Transformer(args, Device.CPU());
-        Tokenizer tokenizer = createTinyTokenizer();
-        Llama llama = new Llama("test", transformer, tokenizer);
+        LlamaModelArgs args = new LlamaModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 2, 32);
+        Llama llama = tinyLlama(args);
         int[][] prompts = {{1}, {2}};
         var publisher = new java.util.concurrent.SubmissionPublisher<String>();
         assertThrows(IllegalArgumentException.class,
@@ -102,11 +103,9 @@ public class LlamaTest {
     @Test
     public void testGivenGenerateWithGreedyDecodingThenCompletionIsReturned() {
         // Small enough to run on CPU quickly: dim=64, 1 layer, vocab=100, maxSeqLen=16
-        ModelArgs args = new ModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 1, 16);
-        Transformer transformer = new Transformer(args, Device.CPU());
-        Tokenizer tokenizer = createTinyTokenizer();
-        Llama llama = new Llama("test", transformer, tokenizer);
-        transformer.eval();
+        LlamaModelArgs args = new LlamaModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 1, 16);
+        Llama llama = tinyLlama(args);
+        llama.model.eval();
         int[][] prompts = {{1, 2, 3}};  // prompt of 3 tokens
         var results = llama.generate(prompts, 4, 0.0, 0.9, false, 42, null);
         assertNotNull(results);
@@ -131,6 +130,3 @@ public class LlamaTest {
         return new Tokenizer(ranks);
     }
 }
-
-
-

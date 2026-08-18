@@ -16,7 +16,14 @@
  */
 
 /**
- * Meta Llama models.
+ * Meta Llama 3 model family. Meta Llama 3 uses a standard decoder-only
+ * dense transformer architecture. Key design features include Grouped-Query
+ * Attention (GQA) for faster inference, a large 128k token vocabulary
+ * tokenizer, Rotary Position Embeddings (RoPE), and training scales
+ * spanning dense models from 1B up to a 405B parameter flagship.
+ * Trained with sequence lengths up to 8k tokens initially, scaling
+ * to 128k in later 3.1 updates, utilizing explicit masks to block
+ * cross-document attention.
  *
  * @author Haifeng Li
  */

@@ -20,7 +20,6 @@ import org.junit.jupiter.api.*;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
-import smile.llm.transformer.ModelArgs;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -31,16 +30,16 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class KvCachePoolTest {
 
-    private static ModelArgs tinyArgs(int layers, int batch, int seq) {
+    private static KvCacheLayout tinyLayout(int layers, int batch, int seq) {
         // dim=64, heads=4 → headDim=16, kvHeads=2
-        return new ModelArgs(64, layers, 4, 2, 100, 128, null, 1e-5, 10000.0, false, batch, seq);
+        return KvCacheLayout.of(layers, 64, 4, 2, batch, seq);
     }
 
     @Test
     public void testGivenForTestingPoolWhenBoundThenPutGetRoundTrip() {
         // Given
-        ModelArgs args = tinyArgs(2, 1, 32);
-        try (var pool = KvCachePool.forTesting(args, Device.CPU())) {
+        KvCacheLayout layout = tinyLayout(2, 1, 32);
+        try (var pool = KvCachePool.forTesting(layout, Device.CPU())) {
             assertEquals(1 * 32, pool.numSlots());
             pool.bindRequests(1, 16);
 
@@ -64,8 +63,8 @@ public class KvCachePoolTest {
     @Test
     public void testGivenPoolWhenAllocateOnCpuThenSizedToMaxBatchTimesSeq() {
         // Given / When – CPU path ignores memFraction and sizes to batch×seq
-        ModelArgs args = tinyArgs(2, 2, 64);
-        try (var pool = KvCachePool.allocate(args, Device.CPU(), ScalarType.Float, 0.85)) {
+        KvCacheLayout layout = tinyLayout(2, 2, 64);
+        try (var pool = KvCachePool.allocate(layout, Device.CPU(), ScalarType.Float, 0.85)) {
             // Then – at least maxBatchSize × maxSeqLen, page-aligned
             assertTrue(pool.numSlots() >= 2 * 64);
             assertEquals(0, pool.numSlots() % pool.pageSize());
@@ -75,7 +74,6 @@ public class KvCachePoolTest {
     @Test
     public void testGivenBoundRequestsWhenUnboundThenPagesReturnToFreeList() {
         // Given
-        ModelArgs args = tinyArgs(1, 1, 64);
         try (var pool = new KvCachePool(1, 64, 2, 16, 16, Device.CPU(), ScalarType.Float)) {
             int freeBefore = pool.freePages();
             pool.bindRequests(1, 32);

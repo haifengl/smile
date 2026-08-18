@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import smile.llm.llama.Llama;
-import smile.llm.transformer.ModelArgs;
+import smile.llm.llama.LlamaModelArgs;
 
 /**
  * Chat LLM details returned by {@code GET /models/{id}}.
@@ -63,7 +63,7 @@ public record LlmModelDetails(
      * @return llm details for retrieve responses.
      */
     public static LlmModelDetails of(Llama llama, String source) {
-        ModelArgs args = llama.params();
+        LlamaModelArgs args = llama.params();
         return new LlmModelDetails(
                 llama.family(),
                 source,

@@ -27,6 +27,7 @@ import smile.deep.tensor.Device;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
+import smile.llm.cache.KvCacheLayout;
 import smile.llm.cache.KvCachePool;
 import smile.util.AutoScope;
 
@@ -42,11 +43,12 @@ import static smile.torch.smile_torch_h.smile_module_list_as_module;
  * be used for various natural language processing tasks, such as
  * language modeling or text generation.
  *
+ * <p>Family-specific hyperparameters (Llama, Qwen, …) live outside this
+ * class; pass the resolved dimensional primitives here.
+ *
  * @author Haifeng Li
  */
 public class Transformer extends LayerBlock {
-    /** The model configuration parameters. */
-    final ModelArgs params;
     /** The vocabulary size. */
     final int vocabSize;
     /** The number of transformer blocks. */
@@ -66,46 +68,79 @@ public class Transformer extends LayerBlock {
 
     /**
      * Constructor that allocates a small test-sized KV cache pool.
-     * @param args the model configuration parameters.
-     * @param device the compute device.
+     *
+     * @param dim                token embedding dimension.
+     * @param numLayers          number of transformer blocks.
+     * @param numHeads           number of query heads.
+     * @param numKvHeads         number of key/value heads.
+     * @param vocabSize          vocabulary size.
+     * @param intermediateSize   explicit FFN hidden size, or {@code null}.
+     * @param multipleOf         FFN rounding multiple when deriving size.
+     * @param ffnDimMultiplier   optional FFN dim multiplier.
+     * @param normEps            RMSNorm epsilon.
+     * @param ropeTheta          RoPE theta.
+     * @param scaledRope         whether to use Llama-3 scaled RoPE.
+     * @param maxSeqLen          maximum sequence length (RoPE table uses {@code 2 * maxSeqLen}).
+     * @param layout             cache layout for the private test pool.
+     * @param device             compute device.
      */
-    public Transformer(ModelArgs args, Device device) {
-        this(args, device, KvCachePool.forTesting(args, device));
+    public Transformer(int dim, int numLayers, int numHeads, int numKvHeads, int vocabSize,
+                       Integer intermediateSize, int multipleOf, Double ffnDimMultiplier,
+                       double normEps, double ropeTheta, boolean scaledRope, int maxSeqLen,
+                       KvCacheLayout layout, Device device) {
+        this(dim, numLayers, numHeads, numKvHeads, vocabSize, intermediateSize, multipleOf,
+                ffnDimMultiplier, normEps, ropeTheta, scaledRope, maxSeqLen,
+                KvCachePool.forTesting(layout, device), device);
     }
 
     /**
      * Constructor.
-     * @param args the model configuration parameters.
-     * @param device the compute device.
-     * @param kvCachePool the shared KV cache pool managed by the inference engine.
+     *
+     * @param dim                token embedding dimension.
+     * @param numLayers          number of transformer blocks.
+     * @param numHeads           number of query heads.
+     * @param numKvHeads         number of key/value heads.
+     * @param vocabSize          vocabulary size.
+     * @param intermediateSize   explicit FFN hidden size, or {@code null}.
+     * @param multipleOf         FFN rounding multiple when deriving size.
+     * @param ffnDimMultiplier   optional FFN dim multiplier.
+     * @param normEps            RMSNorm epsilon.
+     * @param ropeTheta          RoPE theta.
+     * @param scaledRope         whether to use Llama-3 scaled RoPE.
+     * @param maxSeqLen          maximum sequence length (RoPE table uses {@code 2 * maxSeqLen}).
+     * @param kvCachePool        shared KV cache pool.
+     * @param device             compute device.
      */
-    public Transformer(ModelArgs args, Device device, KvCachePool kvCachePool) {
+    public Transformer(int dim, int numLayers, int numHeads, int numKvHeads, int vocabSize,
+                       Integer intermediateSize, int multipleOf, Double ffnDimMultiplier,
+                       double normEps, double ropeTheta, boolean scaledRope, int maxSeqLen,
+                       KvCachePool kvCachePool, Device device) {
         if (kvCachePool == null) {
             throw new IllegalArgumentException("kvCachePool must not be null");
         }
-        this.params = args;
-        this.vocabSize = params.vocabSize();
-        this.numLayers = params.numLayers();
+        this.vocabSize = vocabSize;
+        this.numLayers = numLayers;
         this.kvCachePool = kvCachePool;
-        this.tokEmbeddings = new EmbeddingLayer(params.vocabSize(), params.dim());
+        this.tokEmbeddings = new EmbeddingLayer(vocabSize, dim);
 
         this.layers = new ArrayList<>();
         MemorySegment moduleList = smile_module_list_create();
-        for (int layerId = 0; layerId < params.numLayers(); layerId++) {
-            var block = new TransformerBlock(layerId, params, kvCachePool);
+        for (int layerId = 0; layerId < numLayers; layerId++) {
+            var block = new TransformerBlock(layerId, dim, numHeads, numKvHeads,
+                    intermediateSize, multipleOf, ffnDimMultiplier, normEps, kvCachePool);
             this.layers.add(block);
             smile_module_list_push_back(moduleList, block.module);
         }
 
-        this.norm = new RMSNormLayer(params.dim(), params.normEps());
-        this.output = new LinearLayer(params.dim(), params.vocabSize(), false);
+        this.norm = new RMSNormLayer(dim, normEps);
+        this.output = new LinearLayer(dim, vocabSize, false);
 
         // Note that max_seq_len is multiplied by 2.
         this.cis = RotaryPositionalEncoding.computeFreqCis(
-                params.dim() / params.numHeads(),
-                params.maxSeqLen() * 2,
-                params.ropeTheta(),
-                params.scaledRope()).to(device);
+                dim / numHeads,
+                maxSeqLen * 2,
+                ropeTheta,
+                scaledRope).to(device);
 
         MemorySegment listAsModule = smile_module_list_as_module(moduleList);
         add("layers", listAsModule);
@@ -115,14 +150,6 @@ public class Transformer extends LayerBlock {
         add("norm", norm);
         add("output", output);
         to(device);
-    }
-
-    /**
-     * Returns the model configuration parameters.
-     * @return the model configuration parameters.
-     */
-    public ModelArgs params() {
-        return params;
     }
 
     /**
