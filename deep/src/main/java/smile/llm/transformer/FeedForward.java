@@ -93,6 +93,14 @@ public class FeedForward {
     }
 
     /**
+     * Returns the PyTorch module handle.
+     * @return module handle.
+     */
+    public MemorySegment module() {
+        return module;
+    }
+
+    /**
      * Feed forward.
      * @param x the input tensor.
      * @return the output tensor.

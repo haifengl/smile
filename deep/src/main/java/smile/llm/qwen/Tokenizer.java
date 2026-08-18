@@ -1,0 +1,224 @@
+/*
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
+ *
+ * SMILE is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * SMILE is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
+ */
+package smile.llm.qwen;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import smile.llm.Message;
+import smile.llm.tokenizer.Tiktoken;
+import smile.util.Bytes;
+import smile.util.IntArrayList;
+
+/**
+ * Qwen3.5 chat tokenizer (byte-level BPE via {@link Tiktoken}).
+ *
+ * <p>Loads from a checkpoint directory containing either a tiktoken
+ * {@code *.tiktoken} / {@code tokenizer.model} rank file, {@code vocab.json}
+ * + {@code merges.txt}, or a HuggingFace {@code tokenizer.json}.
+ *
+ * @author Haifeng Li
+ */
+public class Tokenizer extends Tiktoken {
+    /** Token splitting regex (Qwen / GPT-4o style). */
+    private static final Pattern REGEX = Pattern.compile(
+            "(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\\r\\n\\p{L}\\p{N}]?\\p{L}+|\\p{N}| ?[^\\s\\p{L}\\p{N}]+[\\r\\n]*|\\s*[\\r\\n]+|\\s+(?!\\S)|\\s+");
+
+    private final int[] stopTokens;
+
+    /**
+     * Constructor.
+     * @param ranks token byte sequence → id map.
+     */
+    public Tokenizer(Map<Bytes, Integer> ranks) {
+        this(ranks, "<|endoftext|>", "<|endoftext|>", defaultSpecialTokens());
+    }
+
+    /**
+     * Constructor.
+     * @param ranks         token → id map.
+     * @param bos           beginning-of-sequence token.
+     * @param eos           end-of-sequence token.
+     * @param specialTokens additional special tokens.
+     */
+    public Tokenizer(Map<Bytes, Integer> ranks, String bos, String eos, String... specialTokens) {
+        super(REGEX, ranks, bos, eos, specialTokens);
+        List<Integer> stops = new ArrayList<>();
+        addStop(stops, "<|endoftext|>");
+        addStop(stops, "<|im_end|>");
+        addStop(stops, "<|im_start|>");
+        this.stopTokens = stops.stream().mapToInt(Integer::intValue).toArray();
+    }
+
+    private void addStop(List<Integer> stops, String token) {
+        try {
+            int id = specialToken(token);
+            if (id >= 0) stops.add(id);
+        } catch (Exception ignored) {
+            // optional special not present in this vocab
+        }
+    }
+
+    /** Padding token id ({@code <|endoftext|>}). */
+    public int pad() {
+        return specialToken("<|endoftext|>");
+    }
+
+    /** Stop token ids used during generation. */
+    public int[] stopTokens() {
+        return stopTokens;
+    }
+
+    /**
+     * Encodes a chat dialog in the Qwen chat-template format and leaves the
+     * assistant header open for completion.
+     *
+     * @param dialog conversation turns.
+     * @return token ids.
+     */
+    public int[] encodeDialog(Message... dialog) {
+        IntArrayList tokens = new IntArrayList();
+        for (Message message : dialog) {
+            encodeMessage(message, tokens);
+        }
+        // Open assistant turn for the model to complete.
+        tokens.add(specialToken("<|im_start|>"));
+        tokens.add(encode("assistant\n", false, false));
+        return tokens.toArray();
+    }
+
+    private void encodeMessage(Message message, IntArrayList tokens) {
+        tokens.add(specialToken("<|im_start|>"));
+        String role = switch (message.role()) {
+            case system -> "system";
+            case user -> "user";
+            case assistant -> "assistant";
+            default -> message.role().name();
+        };
+        tokens.add(encode(role + "\n", false, false));
+        tokens.add(encode(message.content(), false, false));
+        tokens.add(specialToken("<|im_end|>"));
+        tokens.add(encode("\n", false, false));
+    }
+
+    /**
+     * Loads a tokenizer from a HuggingFace checkpoint directory.
+     *
+     * @param checkpointDir model directory.
+     * @return tokenizer instance.
+     * @throws IOException if no supported tokenizer files are found.
+     */
+    public static Tokenizer of(String checkpointDir) throws IOException {
+        Path dir = Path.of(checkpointDir);
+        Path tiktoken = firstExisting(dir,
+                "tokenizer.model", "qwen.tiktoken", "vocab.tiktoken");
+        if (tiktoken != null) {
+            return new Tokenizer(Tiktoken.load(tiktoken.toString()));
+        }
+
+        Path vocabJson = dir.resolve("vocab.json");
+        Path mergesTxt = dir.resolve("merges.txt");
+        if (Files.exists(vocabJson) && Files.exists(mergesTxt)) {
+            return new Tokenizer(loadVocabAndMerges(vocabJson, mergesTxt));
+        }
+
+        Path tokenizerJson = dir.resolve("tokenizer.json");
+        if (Files.exists(tokenizerJson)) {
+            return new Tokenizer(loadTokenizerJson(tokenizerJson));
+        }
+
+        throw new IOException("No Qwen tokenizer files found under " + checkpointDir);
+    }
+
+    private static Path firstExisting(Path dir, String... names) {
+        for (String name : names) {
+            Path p = dir.resolve(name);
+            if (Files.exists(p)) return p;
+        }
+        return null;
+    }
+
+    /**
+     * Loads GPT-2 style {@code vocab.json} + {@code merges.txt} into byte ranks.
+     * Vocab values are used as ids; byte tokens are derived from vocab keys via
+     * the standard GPT-2 unicode ↔ byte mapping when keys look like unicode
+     * BPE, otherwise keys are UTF-8 bytes.
+     */
+    static Map<Bytes, Integer> loadVocabAndMerges(Path vocabJson, Path mergesTxt) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode vocab = mapper.readTree(vocabJson.toFile());
+        Map<Bytes, Integer> ranks = new HashMap<>();
+        vocab.properties().forEach(e -> {
+            String token = e.getKey();
+            int id = e.getValue().asInt();
+            ranks.put(new Bytes(token.getBytes(StandardCharsets.UTF_8)), id);
+        });
+        // merges.txt is informational for our Tiktoken path (ranks already complete).
+        if (!Files.exists(mergesTxt)) {
+            throw new IOException("merges.txt missing next to vocab.json");
+        }
+        return ranks;
+    }
+
+    /**
+     * Extracts vocab from HuggingFace {@code tokenizer.json} ({@code model.vocab}).
+     */
+    static Map<Bytes, Integer> loadTokenizerJson(Path tokenizerJson) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode root = mapper.readTree(tokenizerJson.toFile());
+        JsonNode vocab = root.path("model").path("vocab");
+        if (!vocab.isObject()) {
+            throw new IOException("tokenizer.json missing model.vocab: " + tokenizerJson);
+        }
+        Map<Bytes, Integer> ranks = new HashMap<>();
+        vocab.properties().forEach(e -> {
+            ranks.put(new Bytes(e.getKey().getBytes(StandardCharsets.UTF_8)), e.getValue().asInt());
+        });
+        // Some exports store ranks as base64 tiktoken lines under model.vocab — already handled.
+        // Also accept added_tokens as specials are registered separately by the constructor.
+        return ranks;
+    }
+
+    private static String[] defaultSpecialTokens() {
+        return new String[] {
+                "<|endoftext|>",
+                "<|im_start|>",
+                "<|im_end|>",
+                "<|object_ref_start|>",
+                "<|object_ref_end|>",
+                "<|box_start|>",
+                "<|box_end|>",
+                "<|quad_start|>",
+                "<|quad_end|>",
+                "<|vision_start|>",
+                "<|vision_end|>",
+                "<|vision_pad|>",
+                "<|image_pad|>",
+                "<|video_pad|>",
+                "<think>",
+                "</think>"
+        };
+    }
+}

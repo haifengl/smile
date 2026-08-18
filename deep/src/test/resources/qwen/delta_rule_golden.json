@@ -1,0 +1,9 @@
+{
+  "note": "Golden vectors for recurrent gated delta rule (B=1,S=2,H=1,Dk=2,Dv=2). Generated to match HF torch_recurrent_gated_delta_rule with use_qk_l2norm=true.",
+  "query": [[[ [1.0, 0.0] ], [ [0.0, 1.0] ]]],
+  "key": [[[ [1.0, 0.0] ], [ [0.0, 1.0] ]]],
+  "value": [[[ [1.0, 2.0] ], [ [3.0, 4.0] ]]],
+  "g": [[[ -1.0 ], [ -1.0 ]]],
+  "beta": [[[ 1.0 ], [ 1.0 ]]],
+  "comment": "Shape conventions: query/key/value [B,S,H,D], g/beta [B,S,H]. Full numerical check runs in GatedDeltaNetTest when libsmile_torch is available."
+}

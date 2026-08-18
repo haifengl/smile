@@ -33,6 +33,7 @@ import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.ChatCompletion;
 import smile.llm.FinishReason;
+import smile.llm.LanguageModel;
 import smile.llm.Message;
 import smile.llm.cache.KvCachePool;
 import smile.llm.transformer.Transformer;
@@ -44,7 +45,7 @@ import smile.util.AutoScope;
  *
  * @author Haifeng Li
  */
-public class Llama {
+public class Llama implements LanguageModel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Llama.class);
     /**
      * Architecture family label for this implementation.
@@ -344,7 +345,7 @@ public class Llama {
      * @param name dtype name (case-insensitive), e.g. {@code bfloat16}, {@code float16}.
      * @return the corresponding {@link ScalarType}.
      */
-    static ScalarType parseDtypeName(String name) {
+    public static ScalarType parseDtypeName(String name) {
         String key = name.trim().toLowerCase(Locale.ROOT);
         // Normalize separators: fp8-e4m3, fp8_e4m3fn, torch.float8_e5m2, etc.
         key = key.replace('-', '_');

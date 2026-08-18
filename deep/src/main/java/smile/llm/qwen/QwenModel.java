@@ -1,0 +1,188 @@
+/*
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
+ *
+ * SMILE is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * SMILE is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
+ */
+package smile.llm.qwen;
+
+import java.lang.foreign.MemorySegment;
+import java.util.ArrayList;
+import java.util.List;
+import smile.deep.layer.EmbeddingLayer;
+import smile.deep.layer.LayerBlock;
+import smile.deep.layer.LinearLayer;
+import smile.deep.tensor.Device;
+import smile.deep.tensor.Index;
+import smile.deep.tensor.ScalarType;
+import smile.deep.tensor.Tensor;
+import smile.llm.cache.KvCachePool;
+import smile.util.AutoScope;
+
+import static smile.torch.smile_torch_h.smile_module_free;
+import static smile.torch.smile_torch_h.smile_module_list_as_module;
+import static smile.torch.smile_torch_h.smile_module_list_create;
+import static smile.torch.smile_torch_h.smile_module_list_free;
+import static smile.torch.smile_torch_h.smile_module_list_push_back;
+
+/**
+ * Qwen3.5 hybrid text model: embeddings, hybrid blocks, final norm, LM head.
+ *
+ * @author Haifeng Li
+ */
+public class QwenModel extends LayerBlock {
+    final QwenModelArgs params;
+    final int vocabSize;
+    final int numLayers;
+    final EmbeddingLayer tokEmbeddings;
+    final List<QwenBlock> layers;
+    final QwenRMSNorm norm;
+    final LinearLayer lmHead;
+    final Tensor cis;
+    KvCachePool kvCachePool;
+    DeltaNetStatePool deltaNetStatePool;
+
+    /**
+     * Constructor.
+     *
+     * @param args        hyperparameters.
+     * @param kvCachePool KV pool for full-attention layers.
+     * @param statePool   DeltaNet state pool (may be null when no linear layers).
+     * @param device      compute device.
+     */
+    public QwenModel(QwenModelArgs args, KvCachePool kvCachePool, DeltaNetStatePool statePool, Device device) {
+        if (kvCachePool == null && args.numFullAttentionLayers() > 0) {
+            throw new IllegalArgumentException("kvCachePool required when full-attention layers exist");
+        }
+        if (statePool == null && args.numLinearAttentionLayers() > 0) {
+            throw new IllegalArgumentException("statePool required when linear-attention layers exist");
+        }
+        this.params = args;
+        this.vocabSize = args.vocabSize();
+        this.numLayers = args.numLayers();
+        this.kvCachePool = kvCachePool;
+        this.deltaNetStatePool = statePool;
+
+        this.tokEmbeddings = new EmbeddingLayer(args.vocabSize(), args.dim());
+        this.layers = new ArrayList<>();
+        MemorySegment moduleList = smile_module_list_create();
+        for (int i = 0; i < args.numLayers(); i++) {
+            var block = new QwenBlock(i, args, kvCachePool, statePool);
+            layers.add(block);
+            smile_module_list_push_back(moduleList, block.module);
+        }
+        this.norm = new QwenRMSNorm(args.dim(), args.normEps());
+        this.lmHead = new LinearLayer(args.dim(), args.vocabSize(), false);
+
+        this.cis = PartialRotaryEncoding.computeFreqCis(
+                args.rotaryDim(), args.maxSeqLen() * 2, args.ropeTheta()).to(device);
+
+        MemorySegment listAsModule = smile_module_list_as_module(moduleList);
+        add("layers", listAsModule);
+        smile_module_free(listAsModule);
+        smile_module_list_free(moduleList);
+        add("embed_tokens", tokEmbeddings);
+        add("norm", norm);
+        add("lm_head", lmHead);
+        to(device);
+    }
+
+    /**
+     * Convenience constructor that allocates test-sized pools on the given device.
+     */
+    public QwenModel(QwenModelArgs args, Device device) {
+        this(args,
+                args.numFullAttentionLayers() > 0
+                        ? KvCachePool.forTesting(args.kvCacheLayout(), device) : null,
+                args.numLinearAttentionLayers() > 0
+                        ? new DeltaNetStatePool(
+                        args.numLinearAttentionLayers(),
+                        args.linearNumValueHeads(),
+                        args.linearKeyHeadDim(),
+                        args.linearValueHeadDim(),
+                        args.linearConvDim(),
+                        args.linearConvKernelDim(),
+                        args.maxBatchSize(),
+                        device,
+                        ScalarType.Float)
+                        : null,
+                device);
+    }
+
+    public QwenModelArgs params() {
+        return params;
+    }
+
+    public KvCachePool kvCachePool() {
+        return kvCachePool;
+    }
+
+    public DeltaNetStatePool deltaNetStatePool() {
+        return deltaNetStatePool;
+    }
+
+    /**
+     * Replaces the KV cache pool on every full-attention layer.
+     */
+    public void setKvCachePool(KvCachePool pool, boolean closePrevious) {
+        if (pool == null) throw new IllegalArgumentException("pool must not be null");
+        var previous = this.kvCachePool;
+        this.kvCachePool = pool;
+        for (var layer : layers) {
+            if (layer.selfAttn != null) {
+                layer.selfAttn.setCachePool(pool);
+            }
+        }
+        if (closePrevious && previous != null && previous != pool) {
+            previous.close();
+        }
+    }
+
+    /**
+     * Forward pass.
+     * @param tokens   token ids {@code [B, S]}.
+     * @param startPos cache start position.
+     * @return logits {@code [B, S, V]} in float32.
+     */
+    public Tensor forward(Tensor tokens, int startPos) {
+        long[] shape = tokens.shape();
+        int seqlen = (int) shape[1];
+        try (var scope = new AutoScope();
+             var pos = Index.slice(startPos, startPos + seqlen)) {
+            Tensor h = scope.add(tokEmbeddings.forward(tokens));
+            Tensor freqs = scope.add(cis.get(pos));
+
+            Tensor mask = null;
+            if (seqlen > 1) {
+                mask = scope.add(Tensor.full(Float.NEGATIVE_INFINITY, seqlen, seqlen));
+                mask.triu_(1);
+                try (var zeros = Tensor.zeros(seqlen, startPos)) {
+                    mask = scope.add(Tensor.hstack(zeros, mask));
+                }
+                mask = scope.add(mask.to(h.dtype()));
+            }
+
+            for (var layer : layers) {
+                h = scope.add(layer.forward(h, startPos, freqs, mask));
+            }
+
+            Tensor normalized = scope.add(norm.forward(h));
+            return lmHead.forward(normalized).to(ScalarType.Float);
+        }
+    }
+
+    @Override
+    public Tensor forward(Tensor tokens) {
+        return forward(tokens, 0);
+    }
+}
