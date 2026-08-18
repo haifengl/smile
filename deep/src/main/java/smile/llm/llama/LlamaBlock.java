@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.llm.transformer;
+package smile.llm.llama;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
@@ -23,6 +23,8 @@ import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
 import smile.llm.cache.KvCacheLayout;
 import smile.llm.cache.KvCachePool;
+import smile.llm.transformer.Attention;
+import smile.llm.transformer.FeedForward;
 import smile.torch.Native;
 import static smile.torch.Native.check;
 import static smile.torch.smile_torch_h.smile_module_create;
@@ -30,13 +32,12 @@ import static smile.torch.smile_torch_h.smile_module_free;
 import static smile.torch.smile_torch_h.smile_module_register_module;
 
 /**
- * A block in Transformer model. It consists of an attention mechanism
- * followed by a feedforward neural network. This module can be stacked
- * multiple times to create a complete Transformer model.
+ * A Llama dense-decoder block: grouped-query attention followed by a
+ * SwiGLU feed-forward network, each with a residual connection and RMSNorm.
  *
  * @author Haifeng Li
  */
-public class TransformerBlock {
+public class LlamaBlock {
     /** The id of layer block. */
     final int layerId;
     /** The number of attention heads. */
@@ -69,9 +70,9 @@ public class TransformerBlock {
      * @param normEps            RMSNorm epsilon.
      * @param cachePool          the shared KV cache pool.
      */
-    public TransformerBlock(int layerId, int dim, int numHeads, int numKvHeads,
-                            Integer intermediateSize, int multipleOf, Double ffnDimMultiplier,
-                            double normEps, KvCachePool cachePool) {
+    public LlamaBlock(int layerId, int dim, int numHeads, int numKvHeads,
+                      Integer intermediateSize, int multipleOf, Double ffnDimMultiplier,
+                      double normEps, KvCachePool cachePool) {
         this.layerId = layerId;
         this.numHeads = numHeads;
         this.dim = dim;
@@ -86,7 +87,7 @@ public class TransformerBlock {
         try (Arena arena = Arena.ofConfined()) {
             this.module = check(smile_module_create(MemorySegment.NULL));
             smile_module_register_module(module, arena.allocateFrom("attention"), attention.module());
-            smile_module_register_module(module, arena.allocateFrom("feed_forward"), feedForward.module);
+            smile_module_register_module(module, arena.allocateFrom("feed_forward"), feedForward.module());
             smile_module_register_module(module, arena.allocateFrom("attention_norm"), attentionNorm.module());
             smile_module_register_module(module, arena.allocateFrom("ffn_norm"), ffnNorm.module());
         }
@@ -107,9 +108,9 @@ public class TransformerBlock {
      * @param normEps            RMSNorm epsilon.
      * @param layout             cache layout for the private test pool.
      */
-    public TransformerBlock(int layerId, int dim, int numHeads, int numKvHeads,
-                            Integer intermediateSize, int multipleOf, Double ffnDimMultiplier,
-                            double normEps, KvCacheLayout layout) {
+    public LlamaBlock(int layerId, int dim, int numHeads, int numKvHeads,
+                      Integer intermediateSize, int multipleOf, Double ffnDimMultiplier,
+                      double normEps, KvCacheLayout layout) {
         this(layerId, dim, numHeads, numKvHeads, intermediateSize, multipleOf, ffnDimMultiplier,
                 normEps, KvCachePool.forTesting(layout, Device.CPU()));
     }

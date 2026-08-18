@@ -17,7 +17,6 @@
 package smile.llm.llama;
 
 import smile.deep.tensor.Device;
-import smile.llm.transformer.Transformer;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -31,9 +30,9 @@ import static org.junit.jupiter.api.Assertions.*;
 public class LlamaTest {
 
     private static Llama tinyLlama(LlamaModelArgs args) {
-        Transformer transformer = Llama.newTransformer(
+        LlamaModel model = Llama.newModel(
                 args, smile.llm.cache.KvCachePool.forTesting(args.kvCacheLayout(), Device.CPU()), Device.CPU());
-        return new Llama("test", transformer, createTinyTokenizer(), args);
+        return new Llama("test", model, createTinyTokenizer(), args);
     }
 
     // -----------------------------------------------------------------------
@@ -49,10 +48,10 @@ public class LlamaTest {
     @Test
     public void testGivenLlamaWhenToStringCalledThenFormatIsCorrect() {
         LlamaModelArgs args = new LlamaModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 1, 32);
-        Transformer transformer = Llama.newTransformer(
+        LlamaModel model = Llama.newModel(
                 args, smile.llm.cache.KvCachePool.forTesting(args.kvCacheLayout(), Device.CPU()), Device.CPU());
         Tokenizer tokenizer = createTinyTokenizer();
-        Llama llama = new Llama("llama3-tiny", transformer, tokenizer, args);
+        Llama llama = new Llama("llama3-tiny", model, tokenizer, args);
         assertEquals("meta/llama3/llama3-tiny", llama.toString());
         assertEquals("meta/llama3", llama.family());
         assertEquals("llama3-tiny", llama.name());

@@ -36,7 +36,6 @@ import smile.llm.FinishReason;
 import smile.llm.LanguageModel;
 import smile.llm.Message;
 import smile.llm.cache.KvCachePool;
-import smile.llm.transformer.Transformer;
 import smile.torch.smile_torch_h;
 import smile.util.AutoScope;
 
@@ -60,7 +59,7 @@ public class Llama implements LanguageModel {
     /** The model instance name. */
     final String name;
     /** The transformer model. */
-    final Transformer model;
+    final LlamaModel model;
     /** The tokenizer. */
     final Tokenizer tokenizer;
     /** Hyperparameters loaded from the checkpoint. */
@@ -73,7 +72,7 @@ public class Llama implements LanguageModel {
      * @param tokenizer the tokenizer.
      * @param params the model hyperparameters.
      */
-    public Llama(String name, Transformer model, Tokenizer tokenizer, LlamaModelArgs params) {
+    public Llama(String name, LlamaModel model, Tokenizer tokenizer, LlamaModelArgs params) {
         this.name = name;
         this.model = model;
         this.tokenizer = tokenizer;
@@ -242,7 +241,7 @@ public class Llama implements LanguageModel {
         KvCachePool bootstrap = memFractionStatic > 0
                 ? KvCachePool.bootstrap(layout)
                 : KvCachePool.forTesting(layout, device);
-        var model = newTransformer(modelArgs, bootstrap, device);
+        var model = newModel(modelArgs, bootstrap, device);
 
         if (huggingFace) {
             loadHuggingFaceWeights(model, modelArgs, dir, device);
@@ -275,10 +274,10 @@ public class Llama implements LanguageModel {
     }
 
     /**
-     * Builds a {@link Transformer} from Llama hyperparameters and a shared KV pool.
+     * Builds a {@link LlamaModel} from Llama hyperparameters and a shared KV pool.
      */
-    static Transformer newTransformer(LlamaModelArgs args, KvCachePool kvCachePool, Device device) {
-        return new Transformer(
+    static LlamaModel newModel(LlamaModelArgs args, KvCachePool kvCachePool, Device device) {
+        return new LlamaModel(
                 args.dim(),
                 args.numLayers(),
                 args.numHeads(),
@@ -417,12 +416,12 @@ public class Llama implements LanguageModel {
      * projection weights are reverse-permuted so they match SMILE's Meta-style
      * RoPE layout.
      *
-     * @param model the transformer to load into.
+     * @param model the Llama model to load into.
      * @param dir the HuggingFace model directory.
      * @param device the device on which tensors are materialised.
      * @throws IOException if a weight file cannot be read.
      */
-    private static void loadHuggingFaceWeights(Transformer model, LlamaModelArgs args,
+    private static void loadHuggingFaceWeights(LlamaModel model, LlamaModelArgs args,
                                                File dir, Device device) throws IOException {
         Map<String, String> weightMap = readWeightMap(dir);
         // Group tensor names by shard file for memory-efficient loading.

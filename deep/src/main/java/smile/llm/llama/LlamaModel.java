@@ -14,14 +14,14 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.llm.transformer;
+package smile.llm.llama;
 
 import java.lang.foreign.MemorySegment;
 import java.util.ArrayList;
 import java.util.List;
 import smile.deep.layer.EmbeddingLayer;
-import smile.deep.layer.LinearLayer;
 import smile.deep.layer.LayerBlock;
+import smile.deep.layer.LinearLayer;
 import smile.deep.layer.RMSNormLayer;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Index;
@@ -29,34 +29,30 @@ import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.cache.KvCacheLayout;
 import smile.llm.cache.KvCachePool;
+import smile.llm.transformer.RotaryPositionalEncoding;
 import smile.util.AutoScope;
 
 import static smile.torch.smile_torch_h.smile_module_free;
+import static smile.torch.smile_torch_h.smile_module_list_as_module;
 import static smile.torch.smile_torch_h.smile_module_list_create;
 import static smile.torch.smile_torch_h.smile_module_list_free;
 import static smile.torch.smile_torch_h.smile_module_list_push_back;
-import static smile.torch.smile_torch_h.smile_module_list_as_module;
 
 /**
- * The Transformer model. It consists of token embeddings, stacked
- * Transformer blocks, and the final output layer. This model can
- * be used for various natural language processing tasks, such as
- * language modeling or text generation.
- *
- * <p>Family-specific hyperparameters (Llama, Qwen, …) live outside this
- * class; pass the resolved dimensional primitives here.
+ * Llama dense decoder: token embeddings, stacked {@link LlamaBlock}s,
+ * final RMSNorm, and the output projection.
  *
  * @author Haifeng Li
  */
-public class Transformer extends LayerBlock {
+public class LlamaModel extends LayerBlock {
     /** The vocabulary size. */
     final int vocabSize;
     /** The number of transformer blocks. */
     final int numLayers;
     /** Token embeddings. */
     final EmbeddingLayer tokEmbeddings;
-    /** Transformer blocks. */
-    final List<TransformerBlock> layers;
+    /** Llama decoder blocks. */
+    final List<LlamaBlock> layers;
     /** The layer normalization for the model output. */
     final RMSNormLayer norm;
     /** The linear layer for final output. */
@@ -84,10 +80,10 @@ public class Transformer extends LayerBlock {
      * @param layout             cache layout for the private test pool.
      * @param device             compute device.
      */
-    public Transformer(int dim, int numLayers, int numHeads, int numKvHeads, int vocabSize,
-                       Integer intermediateSize, int multipleOf, Double ffnDimMultiplier,
-                       double normEps, double ropeTheta, boolean scaledRope, int maxSeqLen,
-                       KvCacheLayout layout, Device device) {
+    public LlamaModel(int dim, int numLayers, int numHeads, int numKvHeads, int vocabSize,
+                      Integer intermediateSize, int multipleOf, Double ffnDimMultiplier,
+                      double normEps, double ropeTheta, boolean scaledRope, int maxSeqLen,
+                      KvCacheLayout layout, Device device) {
         this(dim, numLayers, numHeads, numKvHeads, vocabSize, intermediateSize, multipleOf,
                 ffnDimMultiplier, normEps, ropeTheta, scaledRope, maxSeqLen,
                 KvCachePool.forTesting(layout, device), device);
@@ -111,10 +107,10 @@ public class Transformer extends LayerBlock {
      * @param kvCachePool        shared KV cache pool.
      * @param device             compute device.
      */
-    public Transformer(int dim, int numLayers, int numHeads, int numKvHeads, int vocabSize,
-                       Integer intermediateSize, int multipleOf, Double ffnDimMultiplier,
-                       double normEps, double ropeTheta, boolean scaledRope, int maxSeqLen,
-                       KvCachePool kvCachePool, Device device) {
+    public LlamaModel(int dim, int numLayers, int numHeads, int numKvHeads, int vocabSize,
+                      Integer intermediateSize, int multipleOf, Double ffnDimMultiplier,
+                      double normEps, double ropeTheta, boolean scaledRope, int maxSeqLen,
+                      KvCachePool kvCachePool, Device device) {
         if (kvCachePool == null) {
             throw new IllegalArgumentException("kvCachePool must not be null");
         }
@@ -126,7 +122,7 @@ public class Transformer extends LayerBlock {
         this.layers = new ArrayList<>();
         MemorySegment moduleList = smile_module_list_create();
         for (int layerId = 0; layerId < numLayers; layerId++) {
-            var block = new TransformerBlock(layerId, dim, numHeads, numKvHeads,
+            var block = new LlamaBlock(layerId, dim, numHeads, numKvHeads,
                     intermediateSize, multipleOf, ffnDimMultiplier, normEps, kvCachePool);
             this.layers.add(block);
             smile_module_list_push_back(moduleList, block.module);

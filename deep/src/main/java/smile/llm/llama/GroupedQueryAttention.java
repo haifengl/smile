@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.llm.transformer;
+package smile.llm.llama;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
@@ -24,6 +24,8 @@ import smile.torch.Native;
 import smile.deep.tensor.Tensor;
 import smile.llm.cache.KvCacheLayout;
 import smile.llm.cache.KvCachePool;
+import smile.llm.transformer.Attention;
+import smile.llm.transformer.RotaryPositionalEncoding;
 import smile.util.AutoScope;
 
 import static smile.torch.Native.check;
