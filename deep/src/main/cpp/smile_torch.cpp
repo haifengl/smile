@@ -1659,5 +1659,71 @@ void smile_manual_seed(int64_t seed) {
     ST_TRY_BEGIN torch::manual_seed(static_cast<uint64_t>(seed)); ST_TRY_END
 }
 
+// =============================================================================
+// Tensor parallelism collectives (peer-copy; NCCL-ready API)
+// =============================================================================
+
+int smile_tp_all_reduce_sum(ST_Tensor *tensors, int n) {
+    if (n <= 1) return 0;
+    if (!tensors) {
+        set_error("smile_tp_all_reduce_sum: null tensors");
+        return -1;
+    }
+    ST_TRY_BEGIN
+        for (int i = 0; i < n; i++) {
+            if (!tensors[i] || !tensors[i]->t.defined()) {
+                set_error("smile_tp_all_reduce_sum: null/undefined tensor");
+                return -1;
+            }
+        }
+        auto ref = tensors[0]->t;
+        for (int i = 1; i < n; i++) {
+            if (tensors[i]->t.sizes() != ref.sizes() || tensors[i]->t.dtype() != ref.dtype()) {
+                set_error("smile_tp_all_reduce_sum: shape/dtype mismatch");
+                return -1;
+            }
+        }
+        // Accumulate on the first tensor's device, then broadcast.
+        torch::Tensor acc = ref.clone();
+        for (int i = 1; i < n; i++) {
+            acc.add_(tensors[i]->t.to(acc.device(), /*non_blocking=*/false));
+        }
+        for (int i = 0; i < n; i++) {
+            tensors[i]->t.copy_(acc.to(tensors[i]->t.device(), /*non_blocking=*/false));
+        }
+        return 0;
+    ST_TRY_END
+    return -1;
+}
+
+int smile_tp_broadcast(ST_Tensor *tensors, int n, int root) {
+    if (n <= 1) return 0;
+    if (!tensors) {
+        set_error("smile_tp_broadcast: null tensors");
+        return -1;
+    }
+    if (root < 0 || root >= n) {
+        set_error("smile_tp_broadcast: root out of range");
+        return -1;
+    }
+    ST_TRY_BEGIN
+        if (!tensors[root] || !tensors[root]->t.defined()) {
+            set_error("smile_tp_broadcast: null/undefined root tensor");
+            return -1;
+        }
+        auto src = tensors[root]->t;
+        for (int i = 0; i < n; i++) {
+            if (i == root) continue;
+            if (!tensors[i] || !tensors[i]->t.defined()) {
+                set_error("smile_tp_broadcast: null/undefined tensor");
+                return -1;
+            }
+            tensors[i]->t.copy_(src.to(tensors[i]->t.device(), /*non_blocking=*/false));
+        }
+        return 0;
+    ST_TRY_END
+    return -1;
+}
+
 } // extern "C"
 

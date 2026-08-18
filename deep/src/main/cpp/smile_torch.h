@@ -900,6 +900,28 @@ SMILE_API void smile_set_default_dtype(ST_DType dtype);
 /** Seeds the global RNG for reproducible sampling. */
 SMILE_API void smile_manual_seed(int64_t seed);
 
+/* =========================================================================
+ * Tensor parallelism (single-process multi-GPU collectives)
+ * ========================================================================= */
+
+/**
+ * In-place sum all-reduce across {@code n} tensors that already live on
+ * distinct CUDA devices (same shape and dtype). When {@code n <= 1} this is a
+ * no-op. Phase-1 implementation uses peer copies; NCCL can replace it later
+ * without changing the Java API.
+ *
+ * @param tensors array of {@code n} tensor handles.
+ * @param n       number of ranks / tensors.
+ * @return 0 on success, non-zero on failure (see {@link #smile_last_error}).
+ */
+SMILE_API int smile_tp_all_reduce_sum(ST_Tensor *tensors, int n);
+
+/**
+ * Copies {@code tensors[root]} onto every other tensor (same shape/dtype,
+ * each on its own device). No-op when {@code n <= 1}.
+ */
+SMILE_API int smile_tp_broadcast(ST_Tensor *tensors, int n, int root);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

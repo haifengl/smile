@@ -24,6 +24,8 @@ import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
 import smile.llm.cache.KvCacheLayout;
 import smile.llm.cache.KvCachePool;
+import smile.llm.parallel.TensorParallelGroup;
+import smile.llm.parallel.TensorShardSpec;
 import smile.llm.transformer.Attention;
 import smile.torch.Native;
 import smile.util.AutoScope;
@@ -38,6 +40,9 @@ import static smile.torch.smile_torch_h.smile_module_register_module;
  *
  * <p>The query projection emits twice the head channels; the second half is a
  * per-token sigmoid gate applied to the attention output before {@code o_proj}.
+ *
+ * <p>Under tensor parallelism, Q/K/V projections are column-sharded by heads and
+ * {@code o_proj} is row-parallel (all-reduce after the projection).
  *
  * @author Haifeng Li
  */
@@ -58,13 +63,15 @@ public class GatedAttention implements Attention {
     KvCachePool cachePool;
     /** Index within the shared KV pool (full-attention ordinal). */
     final int kvLayerId;
+    final TensorParallelGroup tpGroup;
+    final int tpRank;
 
     /**
      * Constructor.
      *
      * @param dim        hidden size.
-     * @param numHeads   query head count.
-     * @param numKvHeads key/value head count.
+     * @param numHeads   query head count (local under TP).
+     * @param numKvHeads key/value head count (local under TP).
      * @param headDim    per-head dimension.
      * @param rotaryDim  partial RoPE dimension.
      * @param normEps    RMSNorm epsilon.
@@ -73,6 +80,15 @@ public class GatedAttention implements Attention {
      */
     public GatedAttention(int dim, int numHeads, int numKvHeads, int headDim, int rotaryDim,
                           double normEps, KvCachePool cachePool, int kvLayerId) {
+        this(dim, numHeads, numKvHeads, headDim, rotaryDim, normEps, cachePool, kvLayerId, null, 0);
+    }
+
+    /**
+     * Tensor-parallel constructor.
+     */
+    public GatedAttention(int dim, int numHeads, int numKvHeads, int headDim, int rotaryDim,
+                          double normEps, KvCachePool cachePool, int kvLayerId,
+                          TensorParallelGroup tpGroup, int tpRank) {
         if (cachePool == null) throw new IllegalArgumentException("cachePool must not be null");
         if (numHeads % numKvHeads != 0) {
             throw new IllegalArgumentException("numHeads must be divisible by numKvHeads");
@@ -84,6 +100,8 @@ public class GatedAttention implements Attention {
         this.rotaryDim = rotaryDim;
         this.cachePool = cachePool;
         this.kvLayerId = kvLayerId;
+        this.tpGroup = tpGroup;
+        this.tpRank = tpRank;
 
         this.qProj = new LinearLayer(dim, numHeads * headDim * 2, false);
         this.kProj = new LinearLayer(dim, numKvHeads * headDim, false);
@@ -103,6 +121,16 @@ public class GatedAttention implements Attention {
         }
         MemorySegment m = this.module;
         Native.CLEANER.register(this, () -> smile_module_free(m));
+    }
+
+    /**
+     * Builds attention from a shard spec (local head counts).
+     */
+    public static GatedAttention forShard(int dim, int headDim, int rotaryDim, double normEps,
+                                          KvCachePool cachePool, int kvLayerId,
+                                          TensorShardSpec shard, TensorParallelGroup tpGroup) {
+        return new GatedAttention(dim, shard.numHeads(), shard.numKvHeads(), headDim, rotaryDim,
+                normEps, cachePool, kvLayerId, tpGroup, shard.tpRank());
     }
 
     /**
@@ -132,7 +160,6 @@ public class GatedAttention implements Attention {
 
         try (var scope = new AutoScope()) {
             Tensor qFull = scope.add(qProj.forward(x).view(batchSize, seqlen, numHeads, headDim * 2));
-            // Split last dim into query and gate: [B,S,H,2*D] → two [B,S,H,D]
             Tensor query;
             Tensor gate;
             try (var qSlice = smile.deep.tensor.Index.slice(0, headDim);
@@ -170,7 +197,11 @@ public class GatedAttention implements Attention {
             Tensor attn = scope.add(apply(query, keys, values, mask, 0.0, false, scale));
             attn = scope.add(attn.transpose(1, 2).contiguous().view(batchSize, seqlen, -1));
             attn = scope.add(attn.mul(sigmoid.forward(gate)));
-            return oProj.forward(attn);
+            Tensor out = oProj.forward(attn);
+            if (tpGroup != null && tpGroup.tpSize() > 1) {
+                tpGroup.allReduceSumInPlace(tpRank, out);
+            }
+            return out;
         }
     }
 }

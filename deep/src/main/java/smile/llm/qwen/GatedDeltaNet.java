@@ -23,6 +23,8 @@ import smile.deep.layer.LinearLayer;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
+import smile.llm.parallel.TensorParallelGroup;
+import smile.llm.parallel.TensorShardSpec;
 import smile.torch.Native;
 import smile.util.AutoScope;
 
@@ -63,6 +65,8 @@ public class GatedDeltaNet {
     final Tensor dtBias;
     final QwenRMSNormGated norm;
     final Sigmoid sigmoid = new Sigmoid(false);
+    final TensorParallelGroup tpGroup;
+    final int tpRank;
 
     DeltaNetStatePool statePool;
 
@@ -74,17 +78,27 @@ public class GatedDeltaNet {
      * @param statePool      shared DeltaNet state pool.
      */
     public GatedDeltaNet(QwenModelArgs args, int linearLayerId, DeltaNetStatePool statePool) {
+        this(args, linearLayerId, statePool, null, null);
+    }
+
+    /**
+     * Tensor-parallel constructor using local head counts from {@code shard}.
+     */
+    public GatedDeltaNet(QwenModelArgs args, int linearLayerId, DeltaNetStatePool statePool,
+                         TensorShardSpec shard, TensorParallelGroup tpGroup) {
         this.hiddenSize = args.dim();
-        this.numKHeads = args.linearNumKeyHeads();
-        this.numVHeads = args.linearNumValueHeads();
+        this.numKHeads = shard != null ? shard.linearNumKeyHeads() : args.linearNumKeyHeads();
+        this.numVHeads = shard != null ? shard.linearNumValueHeads() : args.linearNumValueHeads();
         this.headKDim = args.linearKeyHeadDim();
         this.headVDim = args.linearValueHeadDim();
         this.keyDim = headKDim * numKHeads;
         this.valueDim = headVDim * numVHeads;
         this.convKernel = args.linearConvKernelDim();
-        this.convDim = args.linearConvDim();
+        this.convDim = keyDim * 2 + valueDim;
         this.linearLayerId = linearLayerId;
         this.statePool = statePool;
+        this.tpGroup = tpGroup;
+        this.tpRank = shard != null ? shard.tpRank() : 0;
 
         if (numVHeads % numKHeads != 0) {
             throw new IllegalArgumentException("linear_num_value_heads must be divisible by linear_num_key_heads");
@@ -193,7 +207,11 @@ public class GatedDeltaNet {
                 Tensor zFlat = scope.add(z.reshape(batch * seqLen * numVHeads, headVDim));
                 Tensor gated = scope.add(norm.forward(core, zFlat));
                 gated = scope.add(gated.view(batch, seqLen, valueDim));
-                return outProj.forward(gated);
+                Tensor out = outProj.forward(gated);
+                if (tpGroup != null && tpGroup.tpSize() > 1) {
+                    tpGroup.allReduceSumInPlace(tpRank, out);
+                }
+                return out;
             }
         }
     }

@@ -52,9 +52,24 @@ public interface ChatServiceConfig {
     int maxBatchSize();
 
     /**
-     * GPU device index to use for inference ({@code 0}-based).
-     * Defaults to {@code 0} (first GPU).
+     * GPU device index used as TP rank 0 (or the sole device when tp=1).
+     * Defaults to {@code 0}.
      */
     @WithDefault("0")
     byte device();
+
+    /**
+     * Tensor-parallel size. When greater than 1, devices
+     * {@code device .. device+tensorParallelSize-1} form the TP group.
+     * Defaults to {@code 1}.
+     */
+    @WithDefault("1")
+    int tensorParallelSize();
+
+    /**
+     * Pipeline-parallel size. Must remain {@code 1} until multi-node PP lands.
+     * Defaults to {@code 1}.
+     */
+    @WithDefault("1")
+    int pipelineParallelSize();
 }

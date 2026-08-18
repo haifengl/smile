@@ -20,6 +20,8 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import smile.deep.tensor.Tensor;
 import smile.llm.cache.KvCachePool;
+import smile.llm.parallel.TensorParallelGroup;
+import smile.llm.parallel.TensorShardSpec;
 import smile.llm.transformer.FeedForward;
 import smile.torch.Native;
 import smile.util.AutoScope;
@@ -54,21 +56,35 @@ public class QwenBlock {
      * @param statePool DeltaNet state pool (linear layers).
      */
     public QwenBlock(int layerId, QwenModelArgs args, KvCachePool cachePool, DeltaNetStatePool statePool) {
+        this(layerId, args, cachePool, statePool, null, null);
+    }
+
+    /**
+     * Tensor-parallel constructor.
+     */
+    public QwenBlock(int layerId, QwenModelArgs args, KvCachePool cachePool, DeltaNetStatePool statePool,
+                     TensorShardSpec shard, TensorParallelGroup tpGroup) {
         this.layerId = layerId;
         this.layerType = args.layerTypes()[layerId];
         this.inputNorm = new QwenRMSNorm(args.dim(), args.normEps());
         this.postNorm = new QwenRMSNorm(args.dim(), args.normEps());
-        this.feedForward = new FeedForward(args.dim(), args.intermediateSize());
+        this.feedForward = new FeedForward(args.dim(), args.intermediateSize(), shard, tpGroup);
 
         if (QwenModelArgs.FULL_ATTENTION.equals(layerType)) {
             int kvId = args.fullAttentionLayerIndex(layerId);
-            this.selfAttn = new GatedAttention(
-                    args.dim(), args.numHeads(), args.numKvHeads(), args.headDim(),
-                    args.rotaryDim(), args.normEps(), cachePool, kvId);
+            if (shard != null && shard.tpSize() > 1) {
+                this.selfAttn = GatedAttention.forShard(
+                        args.dim(), args.headDim(), args.rotaryDim(), args.normEps(),
+                        cachePool, kvId, shard, tpGroup);
+            } else {
+                this.selfAttn = new GatedAttention(
+                        args.dim(), args.numHeads(), args.numKvHeads(), args.headDim(),
+                        args.rotaryDim(), args.normEps(), cachePool, kvId);
+            }
             this.linearAttn = null;
         } else if (QwenModelArgs.LINEAR_ATTENTION.equals(layerType)) {
             int linId = args.linearAttentionLayerIndex(layerId);
-            this.linearAttn = new GatedDeltaNet(args, linId, statePool);
+            this.linearAttn = new GatedDeltaNet(args, linId, statePool, shard, tpGroup);
             this.selfAttn = null;
         } else {
             throw new IllegalArgumentException("Unknown layer type: " + layerType);
