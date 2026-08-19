@@ -26,6 +26,7 @@ import smile.llm.cache.KvCachePool;
 import smile.llm.transformer.Attention;
 import smile.llm.transformer.FeedForward;
 import smile.torch.Native;
+import smile.util.AutoScope;
 import static smile.torch.Native.check;
 import static smile.torch.smile_torch_h.smile_module_create;
 import static smile.torch.smile_torch_h.smile_module_free;
@@ -124,12 +125,19 @@ public class LlamaBlock {
      * @return the output tensor.
      */
     public Tensor forward(Tensor x, int startPos, Tensor cis, Tensor mask) {
-        try (Tensor anorm = attentionNorm.forward(x);
-             Tensor ax = attention.forward(anorm, startPos, cis, mask);
-             Tensor h = x.add(ax);
-             Tensor fnorm = ffnNorm.forward(h);
-             Tensor fx = feedForward.forward(fnorm)) {
-            return h.add(fx);
+        AutoScope scope = new AutoScope();
+        Tensor.push(scope);
+        try {
+            Tensor anorm = attentionNorm.forward(x);
+            Tensor ax = attention.forward(anorm, startPos, cis, mask);
+            Tensor h = x.add(ax);
+            Tensor fnorm = ffnNorm.forward(h);
+            Tensor fx = feedForward.forward(fnorm);
+            Tensor out = h.add(fx);
+            scope.remove(out);
+            return out;
+        } finally {
+            Tensor.pop();
         }
     }
 }

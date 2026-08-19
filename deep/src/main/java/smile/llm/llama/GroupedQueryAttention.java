@@ -151,30 +151,40 @@ public class GroupedQueryAttention implements Attention {
         int batchSize = (int) shape[0];
         int seqlen = (int) shape[1];
 
-        try (var scope = new AutoScope()) {
-            Tensor xq = scope.add(wq.forward(x).view(batchSize, seqlen, numLocalHeads, headDim));
-            Tensor xk = scope.add(wk.forward(x).view(batchSize, seqlen, numLocalKvHeads, headDim));
-            Tensor xv = scope.add(wv.forward(x).view(batchSize, seqlen, numLocalKvHeads, headDim));
+        AutoScope scope = new AutoScope();
+        Tensor.push(scope);
+        try {
+            Tensor qRaw = wq.forward(x);
+            Tensor xq = qRaw.view(batchSize, seqlen, numLocalHeads, headDim);
+            Tensor kRaw = wk.forward(x);
+            Tensor xk = kRaw.view(batchSize, seqlen, numLocalKvHeads, headDim);
+            Tensor vRaw = wv.forward(x);
+            Tensor xv = vRaw.view(batchSize, seqlen, numLocalKvHeads, headDim);
 
             var tuple = RotaryPositionalEncoding.apply(xq, xk, cis);
-            xq = scope.add(tuple._1());
-            xk = scope.add(tuple._2());
+            xq = tuple._1();
+            xk = tuple._2();
 
             cachePool.put(layerId, startPos, xk, xv);
             var cached = cachePool.get(layerId, startPos + seqlen);
-            Tensor keys = scope.add(cached._1());
-            Tensor values = scope.add(cached._2());
+            Tensor keys = cached._1();
+            Tensor values = cached._2();
 
-            // repeat k/v heads if n_kv_heads < n_heads
-            keys = scope.add(repeatKV(keys, numRep));
-            values = scope.add(repeatKV(values, numRep));
+            keys = repeatKV(keys, numRep);
+            values = repeatKV(values, numRep);
 
-            xq = scope.add(xq.transpose(1, 2));      // (bs, n_local_heads, seqlen, head_dim)
-            keys = scope.add(keys.transpose(1, 2));   // (bs, n_local_heads, cache_len + seqlen, head_dim)
-            values = scope.add(values.transpose(1, 2)); // (bs, n_local_heads, cache_len + seqlen, head_dim)
-            Tensor output = scope.add(apply(xq, keys, values, mask)); // (bs, n_local_heads, seqlen, head_dim)
-            output = scope.add(output.transpose(1, 2).contiguous().view(batchSize, seqlen, -1));
-            return wo.forward(output);
+            xq = xq.transpose(1, 2);
+            keys = keys.transpose(1, 2);
+            values = values.transpose(1, 2);
+            Tensor attn = apply(xq, keys, values, mask);
+            Tensor attnT = attn.transpose(1, 2);
+            Tensor attnC = attnT.contiguous();
+            Tensor flat = attnC.view(batchSize, seqlen, -1);
+            Tensor out = wo.forward(flat);
+            scope.remove(out);
+            return out;
+        } finally {
+            Tensor.pop();
         }
     }
 }
