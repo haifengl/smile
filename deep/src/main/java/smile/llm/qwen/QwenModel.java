@@ -208,12 +208,15 @@ public class QwenModel extends LayerBlock {
                 if (startPos > 0) {
                     try (var zeros = Tensor.zeros(maskOpts, seqlen, startPos)) {
                         Tensor prev = mask;
-                        mask = Tensor.hstack(zeros, mask);
-                        // prev stays on this forward scope until pop
+                        mask = Tensor.hstack(zeros, prev);
+                        prev.close();
                     }
                 }
-                Tensor maskF = mask;
-                mask = maskF.to(h.dtype());
+                if (mask.dtype() != h.dtype()) {
+                    Tensor maskF = mask;
+                    mask = maskF.to(h.dtype());
+                    maskF.close();
+                }
             }
 
             for (var layer : layers) {

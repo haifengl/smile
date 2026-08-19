@@ -100,8 +100,10 @@ public interface RotaryPositionalEncoding {
     static Tensor computeFreqCis(int dim, int end, double theta, boolean scaling) {
         // Explicitly convert tensor to float32 as the default is bf16.
         // On the other hand, view_as_complex cannot apply on bf16.
-        try (Tensor t = Tensor.arange(0, end, 1).to(ScalarType.Float);
-             Tensor f = Tensor.arange(0, dim, 2).to(ScalarType.Float).mul_(-Math.log(theta) / dim).exp_()) {
+        try (Tensor t0 = Tensor.arange(0, end, 1);
+             Tensor t = t0.to(ScalarType.Float);
+             Tensor f0 = Tensor.arange(0, dim, 2);
+             Tensor f = f0.to(ScalarType.Float).mul_(-Math.log(theta) / dim).exp_()) {
             // When scaling=true, scale() modifies f in-place and returns the same
             // reference — so we must NOT assign freqs into the try-resources again
             // to avoid a double-close on f.
