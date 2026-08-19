@@ -180,6 +180,7 @@ public class Qwen implements LanguageModel {
         logger.info("KV cache dtype: {} (override={}, compute={})", cacheDtype, kvCacheDtype, computeDtype);
 
         Tokenizer tokenizer = Tokenizer.of(checkpointDir);
+        tokenizer.requireChatSpecialsInVocab(modelArgs.vocabSize());
         if (tokenizer.size() > 0 && tokenizer.size() != modelArgs.vocabSize()) {
             logger.warn("Tokenizer size {} != config vocab_size {}", tokenizer.size(), modelArgs.vocabSize());
         }
@@ -500,9 +501,20 @@ public class Qwen implements LanguageModel {
 
         int minPromptLen = Integer.MAX_VALUE;
         int maxPromptLen = Integer.MIN_VALUE;
+        int vocabSize = params.vocabSize();
         for (var prompt : prompts) {
             minPromptLen = Math.min(minPromptLen, prompt.length);
             maxPromptLen = Math.max(maxPromptLen, prompt.length);
+            for (int token : prompt) {
+                if (token < 0 || token >= vocabSize) {
+                    throw new IllegalArgumentException(
+                            "Prompt token id " + token + " out of range for vocab_size "
+                                    + vocabSize + " (im_start="
+                                    + tokenizer.specialToken("<|im_start|>")
+                                    + ", im_end=" + tokenizer.specialToken("<|im_end|>")
+                                    + "). This causes CUDA embedding gather OOB.");
+                }
+            }
         }
         if (maxPromptLen > params.maxSeqLen()) {
             throw new IllegalArgumentException("The prompt length is greater than max_seq_len");
