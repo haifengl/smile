@@ -198,7 +198,8 @@ public record QwenModelArgs(
      *
      * @param path         path to {@code config.json}.
      * @param maxBatchSize maximum batch size.
-     * @param maxSeqLen    maximum sequence length.
+     * @param maxSeqLen    maximum sequence length; {@code <= 0} derives from
+     *                     {@code max_position_embeddings} in the config.
      * @return model args.
      * @throws IOException if the file cannot be read.
      */
@@ -219,7 +220,8 @@ public record QwenModelArgs(
      *
      * @param text         text config node.
      * @param maxBatchSize maximum batch size.
-     * @param maxSeqLen    maximum sequence length.
+     * @param maxSeqLen    maximum sequence length; {@code <= 0} derives from
+     *                     {@code max_position_embeddings} in the config.
      * @return model args.
      */
     public static QwenModelArgs fromTextConfig(JsonNode text, int maxBatchSize, int maxSeqLen) {
@@ -229,6 +231,7 @@ public record QwenModelArgs(
         int headDim = text.has("head_dim")
                 ? text.get("head_dim").asInt()
                 : hidden / numHeads;
+        int resolvedMaxSeqLen = resolveMaxSeqLen(text, maxSeqLen);
 
         double partialRotary = 0.25;
         double ropeTheta = 10000.0;
@@ -283,8 +286,33 @@ public record QwenModelArgs(
                 text.has("linear_num_value_heads") ? text.get("linear_num_value_heads").asInt() : 32,
                 layerTypes,
                 maxBatchSize,
-                maxSeqLen
+                resolvedMaxSeqLen
         );
+    }
+
+    /**
+     * Resolves serving context length like vLLM {@code max_model_len} /
+     * SGLang {@code context-length}: an explicit positive {@code maxSeqLen}
+     * wins; otherwise use {@code max_position_embeddings} (or common aliases).
+     *
+     * @param text       HF text config node.
+     * @param maxSeqLen  caller override; {@code <= 0} means auto.
+     * @return positive context length.
+     */
+    static int resolveMaxSeqLen(JsonNode text, int maxSeqLen) {
+        if (maxSeqLen > 0) {
+            return maxSeqLen;
+        }
+        if (text.has("max_position_embeddings")) {
+            return text.get("max_position_embeddings").asInt();
+        }
+        if (text.has("max_sequence_length")) {
+            return text.get("max_sequence_length").asInt();
+        }
+        if (text.has("n_positions")) {
+            return text.get("n_positions").asInt();
+        }
+        return 8192;
     }
 
     /**

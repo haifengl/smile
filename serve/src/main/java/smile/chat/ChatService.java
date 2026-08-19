@@ -82,21 +82,20 @@ public class ChatService {
      * The {@code @ApplicationScoped} scope ensures the model is loaded once and reused.
      *
      * <p>After weights are loaded, a shared {@link smile.llm.cache.KvCachePool}
-     * is allocated using {@link MemConfig#fractionStatic()} of the remaining
+     * is allocated using {@link ChatServiceConfig#memFractionStatic()} of the remaining
      * free GPU memory. The pool element dtype comes from
      * {@link KvCacheConfig#dtype()} when set, otherwise from the model's
      * {@code config.json} {@code torch_dtype}.
      *
      * @param config  the chat service configuration.
-     * @param mem     GPU memory budgeting configuration.
      * @param kvCache KV-cache storage configuration.
      */
     @Inject
-    public ChatService(ChatServiceConfig config, MemConfig mem, KvCacheConfig kvCache) {
+    public ChatService(ChatServiceConfig config, KvCacheConfig kvCache) {
         String modelSpec = config.model();
         this.modelId = publicModelId(modelSpec);
         try {
-            double memFraction = mem.fractionStatic();
+            double memFraction = config.memFractionStatic();
             String kvDtype = kvCache.dtype().orElse(null);
             Path localPath = Path.of(modelSpec);
             if (Files.isDirectory(localPath)) {

@@ -224,7 +224,7 @@ public class KvCachePool implements AutoCloseable {
     /**
      * Creates a tiny CPU-side placeholder pool used while model weights are
      * loaded. The inference engine replaces it with a sized GPU pool afterward
-     * (see {@code smile.mem.fraction.static}).
+     * (see {@code smile.chat.mem-fraction-static}).
      *
      * @param layout cache layout.
      * @return a minimal CPU pool (one page).

@@ -18,6 +18,7 @@
     "linear_value_head_dim": 128,
     "linear_num_key_heads": 16,
     "linear_num_value_heads": 48,
-    "full_attention_interval": 4
+    "full_attention_interval": 4,
+    "max_position_embeddings": 262144
   }
 }

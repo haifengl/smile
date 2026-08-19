@@ -18,6 +18,7 @@ package smile.llm.llama;
 
 import java.io.File;
 import java.io.IOException;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import smile.llm.cache.KvCacheLayout;
 
@@ -128,7 +129,7 @@ public record LlamaModelArgs(int dim,
                 node.has("rope_theta") ? node.get("rope_theta").asDouble() : 10000.0,
                 node.has("use_scaled_rope") && node.get("use_scaled_rope").asBoolean(),
                 maxBatchSize,
-                maxSeqLen
+                resolveMaxSeqLen(node, maxSeqLen)
         );
     }
 
@@ -139,7 +140,8 @@ public record LlamaModelArgs(int dim,
      * {@code intermediate_size} instead of a computed FFN hidden dim.
      * @param path the file path.
      * @param maxBatchSize the maximum batch size.
-     * @param maxSeqLen the maximum sequence length for input data.
+     * @param maxSeqLen the maximum sequence length; {@code <= 0} derives from
+     *                  {@code max_position_embeddings}.
      * @throws IOException if fail to open the config file.
      * @return the model hyperparameters.
      */
@@ -173,7 +175,31 @@ public record LlamaModelArgs(int dim,
                 node.has("rope_theta") ? node.get("rope_theta").asDouble() : 10000.0,
                 scaledRope,
                 maxBatchSize,
-                maxSeqLen
+                resolveMaxSeqLen(node, maxSeqLen)
         );
+    }
+
+    /**
+     * Resolves serving context length like vLLM {@code max_model_len}:
+     * an explicit positive {@code maxSeqLen} wins; otherwise use
+     * {@code max_position_embeddings} / common aliases from the config.
+     */
+    static int resolveMaxSeqLen(JsonNode node, int maxSeqLen) {
+        if (maxSeqLen > 0) {
+            return maxSeqLen;
+        }
+        if (node.has("max_position_embeddings")) {
+            return node.get("max_position_embeddings").asInt();
+        }
+        if (node.has("max_sequence_length")) {
+            return node.get("max_sequence_length").asInt();
+        }
+        if (node.has("max_seq_len")) {
+            return node.get("max_seq_len").asInt();
+        }
+        if (node.has("n_positions")) {
+            return node.get("n_positions").asInt();
+        }
+        return 8192;
     }
 }
