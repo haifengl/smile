@@ -181,8 +181,15 @@ public class Qwen implements LanguageModel {
 
         Tokenizer tokenizer = Tokenizer.of(checkpointDir);
         tokenizer.requireChatSpecialsInVocab(modelArgs.vocabSize());
-        if (tokenizer.size() > 0 && tokenizer.size() != modelArgs.vocabSize()) {
-            logger.warn("Tokenizer size {} != config vocab_size {}", tokenizer.size(), modelArgs.vocabSize());
+        // HF often pads embedding/lm_head (e.g. Qwen3.5: 248320 padded) above the
+        // highest tokenizer id; that is expected. Warn only if the tokenizer can
+        // emit ids the embedding table cannot hold.
+        if (tokenizer.size() > modelArgs.vocabSize()) {
+            logger.warn("Tokenizer size {} exceeds config vocab_size {}; embedding gather may OOB",
+                    tokenizer.size(), modelArgs.vocabSize());
+        } else if (tokenizer.size() > 0 && tokenizer.size() < modelArgs.vocabSize()) {
+            logger.info("Tokenizer size {} < config vocab_size {} (HF padded embedding)",
+                    tokenizer.size(), modelArgs.vocabSize());
         }
 
         TensorParallelGroup tpGroup = new TensorParallelGroup(parallelConfig);
