@@ -62,11 +62,10 @@ public class QwenRMSNorm implements Layer {
              Tensor denom = mean.add(eps).rsqrt_();
              Tensor normalized = x.mul(denom);
              Tensor scale = weight.add(1.0);
-             Tensor scaled = normalized.mul(scale);
-             // Clone: to(same dtype) may alias scaled; try-with would then return a
-             // closed handle once Tensor.push tracks these intermediates.
-             Tensor cast = scaled.to(input.dtype())) {
-            return cast.copy();
+             Tensor scaled = normalized.mul(scale)) {
+            // Safe without clone: Tensor.close() detaches from push scopes, and
+            // to() returns a distinct ST_Tensor wrapper (refcount keeps storage).
+            return scaled.to(input.dtype());
         }
     }
 

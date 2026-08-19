@@ -159,9 +159,17 @@ public class KvCachePool implements AutoCloseable {
         if (device.isCUDA()) {
             device.emptyCache();
             long free = CUDA.freeMemory(device.index());
-            budget = (long) (free * memFraction);
-            logger.info("KV cache budget: {} / {} free bytes (fraction={})",
-                    budget, free, memFraction);
+            // Leave activation headroom: DeltaNet recurrent workspace, attention
+            // temps, and RoPE/FFN intermediates. Without this, fraction=0.85 can
+            // fill the device so a single mul OOM's with only ~16MiB free.
+            long headroom = Math.max(2L * 1024 * 1024 * 1024, (long) (free * 0.25));
+            if (headroom >= free) {
+                headroom = Math.max(free / 2, pageSize * bytesPerToken);
+            }
+            long capped = Math.max(0L, free - headroom);
+            budget = Math.min((long) (free * memFraction), capped);
+            logger.info("KV cache budget: {} / {} free bytes (fraction={}, headroom={})",
+                    budget, free, memFraction, headroom);
         } else {
             // CPU fallback: size to maxBatchSize × maxSeqLen (tests / CPU inference).
             budget = bytesPerToken * layout.maxBatchSize() * layout.maxSeqLen();
@@ -357,14 +365,13 @@ public class KvCachePool implements AutoCloseable {
         try (var idx = Tensor.of(indices);
              var layerIdx = Index.of(layer);
              var layerK = kCache.get(layerIdx);
-             var layerV = vCache.get(layerIdx);
-             Tensor flatK = layerK.get(idx);
-             Tensor flatV = layerV.get(idx);
-             Tensor keyView = flatK.reshape(batch, length, numKvHeads, headDim);
-             Tensor valueView = flatV.reshape(batch, length, numKvHeads, headDim)) {
-            // Owning copies: callers may close/scopes may pop views; do not return
-            // reshape views that share storage with try-with resources.
-            return new Tuple2<>(keyView.copy(), valueView.copy());
+             var layerV = vCache.get(layerIdx)) {
+            // index_select materializes new storage; reshape is a view of that
+            // storage. The flat tensors stay on the caller's Tensor.push scope
+            // (not closed here) so LibTorch refcounting keeps storage alive.
+            Tensor keys = layerK.get(idx).reshape(batch, length, numKvHeads, headDim);
+            Tensor values = layerV.get(idx).reshape(batch, length, numKvHeads, headDim);
+            return new Tuple2<>(keys, values);
         }
     }
 

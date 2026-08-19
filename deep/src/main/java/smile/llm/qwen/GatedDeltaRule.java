@@ -21,7 +21,6 @@ import smile.deep.activation.Sigmoid;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
-import smile.torch.Native;
 import smile.util.AutoScope;
 
 /**
@@ -42,9 +41,8 @@ final class GatedDeltaRule {
     static Tensor softplus(Tensor x) {
         try (Tensor clamped = x.clamp(-20, 20);
              Tensor e = clamped.exp();
-             Tensor p = e.add(1.0);
-             Tensor out = p.log()) {
-            return out.copy();
+             Tensor p = e.add(1.0)) {
+            return p.log();
         }
     }
 
@@ -52,9 +50,8 @@ final class GatedDeltaRule {
     static Tensor l2norm(Tensor x) {
         try (Tensor x2 = x.mul(x);
              Tensor s = x2.sum(-1, true);
-             Tensor inv = s.add(1e-6).rsqrt_();
-             Tensor out = x.mul(inv)) {
-            return out.copy();
+             Tensor inv = s.add(1e-6).rsqrt_()) {
+            return x.mul(inv);
         }
     }
 
@@ -240,7 +237,7 @@ final class GatedDeltaRule {
 
             Tensor out = Tensor.zeros(opts, batch, heads, seqLen, vDim);
 
-            // Reuse one state buffer; free per-step workspace immediately.
+            // Reuse one state buffer in place; free per-step workspace immediately.
             for (int t = 0; t < seqLen; t++) {
                 AutoScope stepScope = new AutoScope();
                 Tensor.push(stepScope);
@@ -251,15 +248,17 @@ final class GatedDeltaRule {
                     Tensor gStep = gF.get(Index.Colon, Index.Colon, tIdx).exp()
                             .unsqueeze(-1).unsqueeze(-1);
                     Tensor betaStep = betaF.get(Index.Colon, Index.Colon, tIdx).unsqueeze(-1);
-                    Tensor decayed = state.mul(gStep);
+                    // Decay and write-back in place to avoid a second full state buffer.
+                    state.mul_(gStep);
                     Tensor kUnsq = kStep.unsqueeze(-1);
-                    Tensor kvMem = decayed.mul(kUnsq).sum(-2, false);
+                    Tensor kvMem = state.mul(kUnsq).sum(-2, false);
                     Tensor delta = vStep.sub(kvMem).mul(betaStep);
                     Tensor deltaUnsq = delta.unsqueeze(-2);
-                    Tensor updated = decayed.add(kUnsq.mul(deltaUnsq));
-                    Tensor y = updated.mul(qStep.unsqueeze(-1)).sum(-2, false);
+                    try (Tensor kDelta = kUnsq.mul(deltaUnsq)) {
+                        state.add_(kDelta);
+                    }
+                    Tensor y = state.mul(qStep.unsqueeze(-1)).sum(-2, false);
                     out.put_(y, Index.Colon, Index.Colon, tIdx);
-                    Native.copy_(state, updated);
                 } finally {
                     Tensor.pop();
                 }
