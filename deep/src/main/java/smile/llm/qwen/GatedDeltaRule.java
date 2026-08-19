@@ -209,18 +209,18 @@ final class GatedDeltaRule {
             double scale = 1.0 / Math.sqrt(kDim);
             q = scope.add(q.mul(scale));
 
+            var opts = new Tensor.Options()
+                    .device(query.device())
+                    .dtype(ScalarType.Float)
+                    .requireGradients(false);
             Tensor state;
             if (initialState == null) {
-                state = scope.add(Tensor.zeros(
-                        new Tensor.Options().dtype(ScalarType.Float).requireGradients(false),
-                        batch, heads, kDim, vDim));
+                state = scope.add(Tensor.zeros(opts, batch, heads, kDim, vDim));
             } else {
                 state = scope.add(initialState.to(ScalarType.Float));
             }
 
-            Tensor out = scope.add(Tensor.zeros(
-                    new Tensor.Options().dtype(ScalarType.Float).requireGradients(false),
-                    batch, heads, seqLen, vDim));
+            Tensor out = scope.add(Tensor.zeros(opts, batch, heads, seqLen, vDim));
 
             for (int t = 0; t < seqLen; t++) {
                 try (var tIdx = Index.of(t);

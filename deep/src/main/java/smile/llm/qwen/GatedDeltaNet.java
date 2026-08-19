@@ -122,7 +122,11 @@ public class GatedDeltaNet {
             smile_module_register_module(module, arena.allocateFrom("in_proj_a"), inProjA.module());
             smile_module_register_module(module, arena.allocateFrom("out_proj"), outProj.module());
             smile_module_register_module(module, arena.allocateFrom("norm"), norm.module());
-            smile_module_register_parameter(module, arena.allocateFrom("conv1d.weight"), conv1dWeight.handle());
+            // LibTorch forbids '.' in parameter names; mirror HF as submodule conv1d.weight.
+            MemorySegment conv1d = check(smile_module_create(arena.allocateFrom("conv1d")));
+            smile_module_register_parameter(conv1d, arena.allocateFrom("weight"), conv1dWeight.handle());
+            smile_module_register_module(module, arena.allocateFrom("conv1d"), conv1d);
+            smile_module_free(conv1d);
             smile_module_register_parameter(module, arena.allocateFrom("A_log"), aLog.handle());
             smile_module_register_parameter(module, arena.allocateFrom("dt_bias"), dtBias.handle());
         }

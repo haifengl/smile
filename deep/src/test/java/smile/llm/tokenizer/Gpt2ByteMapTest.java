@@ -17,6 +17,7 @@
 package smile.llm.tokenizer;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -80,12 +81,13 @@ public class Gpt2ByteMapTest {
     @Test
     public void testGivenTokenizerJsonResourceWhenEncodingDialogThenIdsInRange() throws Exception {
         Path json = Path.of(getClass().getResource("/qwen/tokenizer_bpe_sample.json").toURI());
-        var ranks = Tokenizer.loadTokenizerJson(json);
-        Tokenizer tokenizer = new Tokenizer(ranks);
-        tokenizer.requireChatSpecialsInVocab(200);
+        Path dir = Files.createTempDirectory("qwen-tok-");
+        Files.copy(json, dir.resolve("tokenizer.json"));
+        Tokenizer tokenizer = Tokenizer.of(dir.toString());
+        tokenizer.requireChatSpecialsInVocab(tokenizer.size());
         int[] ids = tokenizer.encodeDialog(new Message(Role.user, "hi"));
         for (int id : ids) {
-            assertTrue(id >= 0 && id < 200, "id=" + id);
+            assertTrue(id >= 0 && id < tokenizer.size(), "id=" + id);
             assertFalse(id == Integer.MAX_VALUE);
         }
     }
