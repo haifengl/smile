@@ -104,8 +104,10 @@ public class QwenModel extends LayerBlock {
         this.norm = new QwenRMSNorm(args.dim(), args.normEps());
         this.lmHead = new LinearLayer(args.dim(), args.vocabSize(), false);
 
-        this.cis = PartialRotaryEncoding.computeFreqCis(
-                args.rotaryDim(), args.maxSeqLen() * 2, args.ropeTheta()).to(device);
+        try (Tensor hostCis = PartialRotaryEncoding.computeFreqCis(
+                args.rotaryDim(), args.maxSeqLen() * 2, args.ropeTheta())) {
+            this.cis = hostCis.to(device);
+        }
 
         MemorySegment listAsModule = smile_module_list_as_module(moduleList);
         add("layers", listAsModule);
@@ -185,10 +187,13 @@ public class QwenModel extends LayerBlock {
     public Tensor forward(Tensor tokens, int startPos) {
         long[] shape = tokens.shape();
         int seqlen = (int) shape[1];
-        try (var scope = new AutoScope();
-             var pos = Index.slice(startPos, startPos + seqlen)) {
-            Tensor h = scope.add(tokEmbeddings.forward(tokens));
-            Tensor freqs = scope.add(cis.get(pos));
+        // Push a forward-local scope so intermediates are not retained by the
+        // caller's Tensor.push(loopScope) until the whole generate step ends.
+        AutoScope scope = new AutoScope();
+        Tensor.push(scope);
+        try (var pos = Index.slice(startPos, startPos + seqlen)) {
+            Tensor h = tokEmbeddings.forward(tokens);
+            Tensor freqs = cis.get(pos);
 
             Tensor mask = null;
             if (seqlen > 1) {
@@ -198,22 +203,34 @@ public class QwenModel extends LayerBlock {
                         .device(h.device())
                         .dtype(ScalarType.Float)
                         .requireGradients(false);
-                mask = scope.add(Tensor.zeros(maskOpts, seqlen, seqlen).fill_(Float.NEGATIVE_INFINITY));
+                mask = Tensor.zeros(maskOpts, seqlen, seqlen).fill_(Float.NEGATIVE_INFINITY);
                 mask.triu_(1);
                 if (startPos > 0) {
                     try (var zeros = Tensor.zeros(maskOpts, seqlen, startPos)) {
-                        mask = scope.add(Tensor.hstack(zeros, mask));
+                        Tensor prev = mask;
+                        mask = Tensor.hstack(zeros, mask);
+                        // prev stays on this forward scope until pop
                     }
                 }
-                mask = scope.add(mask.to(h.dtype()));
+                Tensor maskF = mask;
+                mask = maskF.to(h.dtype());
             }
 
             for (var layer : layers) {
-                h = scope.add(layer.forward(h, startPos, freqs, mask));
+                Tensor next = layer.forward(h, startPos, freqs, mask);
+                h.close();
+                h = next;
             }
 
-            Tensor normalized = scope.add(norm.forward(h));
-            return lmHead.forward(normalized).to(ScalarType.Float);
+            Tensor normalized = norm.forward(h);
+            h.close();
+            Tensor logitsF = lmHead.forward(normalized);
+            Tensor logits = logitsF.to(ScalarType.Float);
+            // Keep logits alive after pop(); everything else is freed.
+            scope.remove(logits);
+            return logits;
+        } finally {
+            Tensor.pop();
         }
     }
 

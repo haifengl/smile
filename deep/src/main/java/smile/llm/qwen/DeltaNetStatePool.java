@@ -101,6 +101,14 @@ public class DeltaNetStatePool implements AutoCloseable {
         }
     }
 
+    /**
+     * Clears the active-request binding after generate finishes.
+     * Does not free the underlying GPU buffers (they are reused).
+     */
+    public void unbind() {
+        this.boundBatch = 0;
+    }
+
     /** Active batch size from the last {@link #reset}. */
     public int boundBatch() {
         return boundBatch;

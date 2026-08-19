@@ -52,12 +52,29 @@ public interface RotaryPositionalEncoding {
         xqShape[ndim] = xkShape[ndim] = 2;
 
         try (var scope = new AutoScope()) {
-            Tensor xq_ = scope.add(xq.to(ScalarType.Float).reshape(xqShape).viewAsComplex());
-            Tensor xk_ = scope.add(xk.to(ScalarType.Float).reshape(xkShape).viewAsComplex());
-            Tensor pe = scope.add(reshapeForBroadcast(cis, xq_));
-            Tensor xq_out = scope.add(xq_.mul_(pe).viewAsReal().flatten(3));
-            Tensor xk_out = scope.add(xk_.mul_(pe).viewAsReal().flatten(3));
-            return new Tuple2<>(xq_out.to(xq.dtype()), xk_out.to(xk.dtype()));
+            Tensor.push(scope);
+            try {
+                Tensor xqF = xq.to(ScalarType.Float);
+                Tensor xqR = xqF.reshape(xqShape);
+                Tensor xq_ = xqR.viewAsComplex();
+                Tensor xkF = xk.to(ScalarType.Float);
+                Tensor xkR = xkF.reshape(xkShape);
+                Tensor xk_ = xkR.viewAsComplex();
+                Tensor pe = reshapeForBroadcast(cis, xq_);
+                Tensor xqM = xq_.mul_(pe);
+                Tensor xqReal = xqM.viewAsReal();
+                Tensor xq_out = xqReal.flatten(3);
+                Tensor xkM = xk_.mul_(pe);
+                Tensor xkReal = xkM.viewAsReal();
+                Tensor xk_out = xkReal.flatten(3);
+                Tensor qOut = xq_out.to(xq.dtype());
+                Tensor kOut = xk_out.to(xk.dtype());
+                scope.remove(qOut);
+                scope.remove(kOut);
+                return new Tuple2<>(qOut, kOut);
+            } finally {
+                Tensor.pop();
+            }
         }
     }
 

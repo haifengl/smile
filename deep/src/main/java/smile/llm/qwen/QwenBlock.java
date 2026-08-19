@@ -114,21 +114,24 @@ public class QwenBlock {
      * @return block output.
      */
     public Tensor forward(Tensor x, int startPos, Tensor cis, Tensor mask) {
-        try (var scope = new AutoScope()) {
+        AutoScope scope = new AutoScope();
+        Tensor.push(scope);
+        try {
             Tensor residual = x;
-            Tensor h = scope.add(inputNorm.forward(x));
-            Tensor mixed;
-            if (selfAttn != null) {
-                mixed = scope.add(selfAttn.forward(h, startPos, cis, mask));
-            } else {
-                mixed = scope.add(linearAttn.forward(h));
-            }
-            h = scope.add(residual.add(mixed));
+            Tensor h = inputNorm.forward(x);
+            Tensor mixed = selfAttn != null
+                    ? selfAttn.forward(h, startPos, cis, mask)
+                    : linearAttn.forward(h);
+            h = residual.add(mixed);
 
             residual = h;
-            Tensor ffIn = scope.add(postNorm.forward(h));
-            Tensor ffOut = scope.add(feedForward.forward(ffIn));
-            return residual.add(ffOut);
+            Tensor ffIn = postNorm.forward(h);
+            Tensor ffOut = feedForward.forward(ffIn);
+            Tensor out = residual.add(ffOut);
+            scope.remove(out);
+            return out;
+        } finally {
+            Tensor.pop();
         }
     }
 }

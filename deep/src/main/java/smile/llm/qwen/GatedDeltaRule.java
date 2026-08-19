@@ -21,6 +21,7 @@ import smile.deep.activation.Sigmoid;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
+import smile.torch.Native;
 import smile.util.AutoScope;
 
 /**
@@ -87,12 +88,11 @@ final class GatedDeltaRule {
             throw new IllegalArgumentException("convState length must be kernel-1");
         }
 
-        try (var scope = new AutoScope()) {
-            Tensor cat = stateLen > 0
-                    ? scope.add(concatLast3(convState, hidden))
-                    : hidden;
+        AutoScope scope = new AutoScope();
+        Tensor.push(scope);
+        try {
+            Tensor cat = stateLen > 0 ? concatLast3(convState, hidden) : hidden;
 
-            // Update conv state to the trailing kernel-1 frames.
             if (stateLen > 0) {
                 long total = cat.shape()[2];
                 try (var span = Index.slice(total - stateLen, total);
@@ -101,14 +101,11 @@ final class GatedDeltaRule {
                 }
             }
 
-            Tensor out = scope.add(Tensor.zeros(
+            Tensor out = Tensor.zeros(
                     new Tensor.Options().device(hidden.device()).dtype(hidden.dtype()).requireGradients(false),
-                    batch, channels, seqLen));
+                    batch, channels, seqLen);
 
-            // weight may be [C,K] or [C,1,K]
-            Tensor w = weight.dim() == 3
-                    ? scope.add(weight.reshape(channels, kernel))
-                    : weight;
+            Tensor w = weight.dim() == 3 ? weight.reshape(channels, kernel) : weight;
             for (int k = 0; k < kernel; k++) {
                 try (var span = Index.slice(k, k + (int) seqLen);
                      Tensor slice = cat.get(Index.Colon, Index.Colon, span);
@@ -118,7 +115,11 @@ final class GatedDeltaRule {
                     out.add_(term);
                 }
             }
-            return SILU.forward(out);
+            Tensor activated = SILU.forward(out);
+            scope.remove(activated);
+            return activated;
+        } finally {
+            Tensor.pop();
         }
     }
 
@@ -132,23 +133,23 @@ final class GatedDeltaRule {
         long channels = hidden.shape()[1];
         long seqLen = hidden.shape()[2];
 
-        try (var scope = new AutoScope()) {
+        AutoScope scope = new AutoScope();
+        Tensor.push(scope);
+        try {
             Tensor padded;
             if (stateLen > 0) {
-                Tensor left = scope.add(Tensor.zeros(
+                Tensor left = Tensor.zeros(
                         new Tensor.Options().device(hidden.device()).dtype(hidden.dtype()).requireGradients(false),
-                        batch, channels, stateLen));
-                padded = scope.add(concatLast3(left, hidden));
+                        batch, channels, stateLen);
+                padded = concatLast3(left, hidden);
             } else {
                 padded = hidden;
             }
 
-            Tensor out = scope.add(Tensor.zeros(
+            Tensor out = Tensor.zeros(
                     new Tensor.Options().device(hidden.device()).dtype(hidden.dtype()).requireGradients(false),
-                    batch, channels, seqLen));
-            Tensor w = weight.dim() == 3
-                    ? scope.add(weight.reshape(channels, kernel))
-                    : weight;
+                    batch, channels, seqLen);
+            Tensor w = weight.dim() == 3 ? weight.reshape(channels, kernel) : weight;
             for (int k = 0; k < kernel; k++) {
                 try (var span = Index.slice(k, k + (int) seqLen);
                      Tensor slice = padded.get(Index.Colon, Index.Colon, span);
@@ -166,7 +167,11 @@ final class GatedDeltaRule {
                     convState.put_(tail, Index.Colon, Index.Colon, Index.Colon);
                 }
             }
-            return SILU.forward(out);
+            Tensor activated = SILU.forward(out);
+            scope.remove(activated);
+            return activated;
+        } finally {
+            Tensor.pop();
         }
     }
 
@@ -187,19 +192,31 @@ final class GatedDeltaRule {
             Tensor query, Tensor key, Tensor value, Tensor g, Tensor beta,
             Tensor initialState, boolean outputState, boolean qkL2norm) {
 
-        try (var scope = new AutoScope()) {
+        AutoScope scope = new AutoScope();
+        Tensor.push(scope);
+        try {
             Tensor q = query;
             Tensor k = key;
             if (qkL2norm) {
-                q = scope.add(l2norm(q));
-                k = scope.add(l2norm(k));
+                q = l2norm(q);
+                k = l2norm(k);
             }
 
-            q = scope.add(q.transpose(1, 2).contiguous().to(ScalarType.Float));
-            k = scope.add(k.transpose(1, 2).contiguous().to(ScalarType.Float));
-            Tensor v = scope.add(value.transpose(1, 2).contiguous().to(ScalarType.Float));
-            Tensor betaT = scope.add(beta.transpose(1, 2).contiguous().to(ScalarType.Float));
-            Tensor gT = scope.add(g.transpose(1, 2).contiguous().to(ScalarType.Float));
+            Tensor qT = q.transpose(1, 2);
+            Tensor qC = qT.contiguous();
+            q = qC.to(ScalarType.Float);
+            Tensor kT = k.transpose(1, 2);
+            Tensor kC = kT.contiguous();
+            k = kC.to(ScalarType.Float);
+            Tensor vT = value.transpose(1, 2);
+            Tensor vC = vT.contiguous();
+            Tensor v = vC.to(ScalarType.Float);
+            Tensor betaT = beta.transpose(1, 2);
+            Tensor betaC = betaT.contiguous();
+            Tensor betaF = betaC.to(ScalarType.Float);
+            Tensor gT = g.transpose(1, 2);
+            Tensor gC = gT.contiguous();
+            Tensor gF = gC.to(ScalarType.Float);
 
             long batch = k.shape()[0];
             long heads = k.shape()[1];
@@ -207,48 +224,55 @@ final class GatedDeltaRule {
             long kDim = k.shape()[3];
             long vDim = v.shape()[3];
             double scale = 1.0 / Math.sqrt(kDim);
-            q = scope.add(q.mul(scale));
+            q = q.mul(scale);
 
             var opts = new Tensor.Options()
                     .device(query.device())
                     .dtype(ScalarType.Float)
                     .requireGradients(false);
-            Tensor state;
-            if (initialState == null) {
-                state = scope.add(Tensor.zeros(opts, batch, heads, kDim, vDim));
-            } else {
-                state = scope.add(initialState.to(ScalarType.Float));
-            }
+            Tensor state = initialState == null
+                    ? Tensor.zeros(opts, batch, heads, kDim, vDim)
+                    : initialState.to(ScalarType.Float);
 
-            Tensor out = scope.add(Tensor.zeros(opts, batch, heads, seqLen, vDim));
+            Tensor out = Tensor.zeros(opts, batch, heads, seqLen, vDim);
 
+            // Reuse one state buffer; free per-step workspace immediately.
             for (int t = 0; t < seqLen; t++) {
-                try (var tIdx = Index.of(t);
-                     Tensor qStep = q.get(Index.Colon, Index.Colon, tIdx);
-                     Tensor kStep = k.get(Index.Colon, Index.Colon, tIdx);
-                     Tensor vStep = v.get(Index.Colon, Index.Colon, tIdx);
-                     Tensor gStep = gT.get(Index.Colon, Index.Colon, tIdx).exp()
-                             .unsqueeze(-1).unsqueeze(-1);
-                     Tensor betaStep = betaT.get(Index.Colon, Index.Colon, tIdx).unsqueeze(-1)) {
-
-                    state = scope.add(state.mul(gStep));
-                    // kv_mem = (state * k.unsqueeze(-1)).sum(-2) → [B,H,Dv]
-                    Tensor kUnsq = scope.add(kStep.unsqueeze(-1));
-                    Tensor kvMem = scope.add(state.mul(kUnsq).sum(-2, false));
-                    Tensor delta = scope.add(vStep.sub(kvMem).mul(betaStep));
-                    Tensor deltaUnsq = scope.add(delta.unsqueeze(-2));
-                    state = scope.add(state.add(kUnsq.mul(deltaUnsq)));
-                    Tensor y = scope.add(state.mul(qStep.unsqueeze(-1)).sum(-2, false));
+                AutoScope stepScope = new AutoScope();
+                Tensor.push(stepScope);
+                try (var tIdx = Index.of(t)) {
+                    Tensor qStep = q.get(Index.Colon, Index.Colon, tIdx);
+                    Tensor kStep = k.get(Index.Colon, Index.Colon, tIdx);
+                    Tensor vStep = v.get(Index.Colon, Index.Colon, tIdx);
+                    Tensor gStep = gF.get(Index.Colon, Index.Colon, tIdx).exp()
+                            .unsqueeze(-1).unsqueeze(-1);
+                    Tensor betaStep = betaF.get(Index.Colon, Index.Colon, tIdx).unsqueeze(-1);
+                    Tensor decayed = state.mul(gStep);
+                    Tensor kUnsq = kStep.unsqueeze(-1);
+                    Tensor kvMem = decayed.mul(kUnsq).sum(-2, false);
+                    Tensor delta = vStep.sub(kvMem).mul(betaStep);
+                    Tensor deltaUnsq = delta.unsqueeze(-2);
+                    Tensor updated = decayed.add(kUnsq.mul(deltaUnsq));
+                    Tensor y = updated.mul(qStep.unsqueeze(-1)).sum(-2, false);
                     out.put_(y, Index.Colon, Index.Colon, tIdx);
+                    Native.copy_(state, updated);
+                } finally {
+                    Tensor.pop();
                 }
             }
 
-            Tensor core = out.transpose(1, 2).contiguous().to(query.dtype());
+            Tensor coreT = out.transpose(1, 2);
+            Tensor coreC = coreT.contiguous();
+            Tensor core = coreC.to(query.dtype());
             Tensor finalState = null;
             if (outputState) {
                 finalState = state.to(query.dtype());
+                scope.remove(finalState);
             }
+            scope.remove(core);
             return new smile.util.Tuple2<>(core, finalState);
+        } finally {
+            Tensor.pop();
         }
     }
 }

@@ -158,50 +158,64 @@ public class GatedAttention implements Attention {
         int batchSize = (int) shape[0];
         int seqlen = (int) shape[1];
 
-        try (var scope = new AutoScope()) {
-            Tensor qFull = scope.add(qProj.forward(x).view(batchSize, seqlen, numHeads, headDim * 2));
+        AutoScope scope = new AutoScope();
+        Tensor.push(scope);
+        try {
+            Tensor qRaw = qProj.forward(x);
+            Tensor qFull = qRaw.view(batchSize, seqlen, numHeads, headDim * 2);
             Tensor query;
             Tensor gate;
             try (var qSlice = smile.deep.tensor.Index.slice(0, headDim);
                  var gSlice = smile.deep.tensor.Index.slice(headDim, headDim * 2)) {
-                query = scope.add(qFull.get(smile.deep.tensor.Index.Ellipsis, qSlice));
-                gate = scope.add(qFull.get(smile.deep.tensor.Index.Ellipsis, gSlice)
-                        .reshape(batchSize, seqlen, numHeads * headDim));
+                query = qFull.get(smile.deep.tensor.Index.Ellipsis, qSlice);
+                Tensor gateSlice = qFull.get(smile.deep.tensor.Index.Ellipsis, gSlice);
+                gate = gateSlice.reshape(batchSize, seqlen, numHeads * headDim);
             }
 
-            Tensor key = scope.add(kProj.forward(x).view(batchSize, seqlen, numKvHeads, headDim));
-            Tensor value = scope.add(vProj.forward(x).view(batchSize, seqlen, numKvHeads, headDim));
+            Tensor kRaw = kProj.forward(x);
+            Tensor key = kRaw.view(batchSize, seqlen, numKvHeads, headDim);
+            Tensor vRaw = vProj.forward(x);
+            Tensor value = vRaw.view(batchSize, seqlen, numKvHeads, headDim);
 
-            query = scope.add(qNorm.forward(query.reshape(batchSize * seqlen * numHeads, headDim))
-                    .view(batchSize, seqlen, numHeads, headDim));
-            key = scope.add(kNorm.forward(key.reshape(batchSize * seqlen * numKvHeads, headDim))
-                    .view(batchSize, seqlen, numKvHeads, headDim));
+            Tensor qFlat = query.reshape(batchSize * seqlen * numHeads, headDim);
+            Tensor qNormed = qNorm.forward(qFlat);
+            query = qNormed.view(batchSize, seqlen, numHeads, headDim);
+
+            Tensor kFlat = key.reshape(batchSize * seqlen * numKvHeads, headDim);
+            Tensor kNormed = kNorm.forward(kFlat);
+            key = kNormed.view(batchSize, seqlen, numKvHeads, headDim);
 
             var rope = PartialRotaryEncoding.apply(query, key, cis, rotaryDim);
-            query = scope.add(rope._1());
-            key = scope.add(rope._2());
+            query = rope._1();
+            key = rope._2();
 
             cachePool.put(kvLayerId, startPos, key, value);
             var cached = cachePool.get(kvLayerId, startPos + seqlen);
-            Tensor keys = scope.add(cached._1());
-            Tensor values = scope.add(cached._2());
+            Tensor keys = cached._1();
+            Tensor values = cached._2();
 
-            keys = scope.add(repeatKV(keys, numRep));
-            values = scope.add(repeatKV(values, numRep));
+            keys = repeatKV(keys, numRep);
+            values = repeatKV(values, numRep);
 
-            query = scope.add(query.transpose(1, 2));
-            keys = scope.add(keys.transpose(1, 2));
-            values = scope.add(values.transpose(1, 2));
+            query = query.transpose(1, 2);
+            keys = keys.transpose(1, 2);
+            values = values.transpose(1, 2);
 
             double scale = 1.0 / Math.sqrt(headDim);
-            Tensor attn = scope.add(apply(query, keys, values, mask, 0.0, false, scale));
-            attn = scope.add(attn.transpose(1, 2).contiguous().view(batchSize, seqlen, -1));
-            attn = scope.add(attn.mul(sigmoid.forward(gate)));
+            Tensor attn = apply(query, keys, values, mask, 0.0, false, scale);
+            Tensor attnT = attn.transpose(1, 2);
+            Tensor attnC = attnT.contiguous();
+            attn = attnC.view(batchSize, seqlen, -1);
+            Tensor gateSig = sigmoid.forward(gate);
+            attn = attn.mul(gateSig);
             Tensor out = oProj.forward(attn);
             if (tpGroup != null && tpGroup.tpSize() > 1) {
                 tpGroup.allReduceSumInPlace(tpRank, out);
             }
+            scope.remove(out);
             return out;
+        } finally {
+            Tensor.pop();
         }
     }
 }
