@@ -71,6 +71,14 @@ public class QwenModelArgsTest {
         assertEquals(16, args.numFullAttentionLayers());
         assertEquals(QwenModelArgs.FULL_ATTENTION, args.layerTypes()[3]);
         assertEquals(QwenModelArgs.LINEAR_ATTENTION, args.layerTypes()[0]);
+        assertEquals(4096, args.maxSeqLen());
+    }
+
+    @Test
+    public void testGivenMaxSeqLenAutoWhenLoadedThenUsesMaxPositionEmbeddings() throws IOException {
+        QwenModelArgs args = QwenModelArgs.fromHuggingFace(
+                "deep/src/test/resources/qwen/config_27b_text.json", 1, 0);
+        assertEquals(262144, args.maxSeqLen());
     }
 
     @Test

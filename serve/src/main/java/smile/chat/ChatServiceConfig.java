@@ -38,10 +38,15 @@ public interface ChatServiceConfig {
     String model();
 
     /**
-     * Maximum sequence length (context window) in tokens.
-     * Defaults to {@code 4096}.
+     * Maximum sequence length in tokens (prompt + output), analogous to vLLM
+     * {@code --max-model-len} / SGLang {@code --context-length}.
+     *
+     * <p>{@code <= 0} (the default) means auto: use
+     * {@code max_position_embeddings} from the model {@code config.json}.
+     * Set an explicit positive value to cap context below the model default
+     * (recommended for large-window models such as Qwen3.5).
      */
-    @WithDefault("4096")
+    @WithDefault("0")
     int maxSeqLen();
 
     /**
@@ -50,6 +55,16 @@ public interface ChatServiceConfig {
      */
     @WithDefault("1")
     int maxBatchSize();
+
+    /**
+     * Fraction of free GPU memory (after weights and DeltaNet state load)
+     * available for the KV cache pool. Same role as vLLM
+     * {@code --gpu-memory-utilization} / SGLang {@code --mem-fraction-static}.
+     * The pool is also capped at {@code maxBatchSize × maxSeqLen} slots.
+     * Defaults to {@code 0.85}.
+     */
+    @WithDefault("0.85")
+    double memFractionStatic();
 
     /**
      * CUDA device index or comma-separated TP device list

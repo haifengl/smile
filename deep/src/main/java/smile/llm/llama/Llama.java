@@ -136,7 +136,7 @@ public class Llama implements LanguageModel {
      *
      * <p>When {@code memFractionStatic > 0}, a {@link KvCachePool} is allocated
      * after weight loading using that fraction of the remaining free device
-     * memory (see {@code smile.mem.fraction.static} in smile-serve).
+     * memory (see {@code smile.chat.mem-fraction-static} in smile-serve).
      *
      * @param checkpointDir the directory path of checkpoint files.
      * @param tokenizerPath the path of tokenizer model file.
@@ -159,7 +159,7 @@ public class Llama implements LanguageModel {
      *
      * <p>When {@code memFractionStatic > 0}, a {@link KvCachePool} is allocated
      * after weight loading using that fraction of the remaining free device
-     * memory (see {@code smile.mem.fraction.static} in smile-serve).
+     * memory (see {@code smile.chat.mem-fraction-static} in smile-serve).
      *
      * @param checkpointDir the directory path of checkpoint files.
      * @param tokenizerPath the path of tokenizer model file.

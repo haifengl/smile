@@ -162,12 +162,12 @@ the corresponding profiles.
 | `smile.serve.model` | `../model` | Path to a `.sml` file or directory of `.sml` files |
 | `smile.onnx.model` | `../model` | Path to a `.onnx` file or directory of `.onnx` files |
 | `smile.chat.model` | `../model/Llama3.1-8B-Instruct` | Local HF-layout checkpoint directory, or Hugging Face repo id (`owner/name`). Tokenizer is resolved next to the checkpoint (`original/tokenizer.model` or `tokenizer.model`) |
-| `smile.chat.max_seq_len` | `4096` | Maximum sequence length in tokens |
-| `smile.chat.max_batch_size` | `1` | Maximum generation batch size |
+| `smile.chat.max-seq-len` | `0` (auto) | Max context (prompt+output), like vLLM `--max-model-len` / SGLang `--context-length`. `<=0` uses `max_position_embeddings` from the model config; set explicitly (e.g. `8192`) to cap large-window models |
+| `smile.chat.max-batch-size` | `1` | Maximum generation batch size |
+| `smile.chat.mem-fraction-static` | `0.85` | Fraction of free GPU memory (after weights) for the KV pool (also capped at `max-batch-size × max-seq-len`). Same role as SGLang `--mem-fraction-static` |
 | `smile.chat.devices` | `0` | CUDA device index, or comma-separated TP list (`0,7`). `%dev` default: `7` |
 | `smile.chat.tensor-parallel-size` | `1` | TP world size; with a single `devices` entry expands to consecutive GPUs |
 | `smile.chat.pipeline-parallel-size` | `1` | Must stay `1` until multi-node PP |
-| `smile.mem.fraction.static` | `0.85` | Fraction of free GPU memory (after weights load) reserved for the shared KV cache pool |
 | `smile.kv.cache.dtype` | _(unset)_ | KV-cache element dtype (`bfloat16`, `float16`, `float32`, `fp8_e4m3`, `fp8_e5m2`, …). When unset, uses `torch_dtype` from the model `config.json` |
 | `quarkus.datasource.db-kind` | `postgresql` | Database backend for chat history |
 | `quarkus.datasource.jdbc.url` | `jdbc:postgresql://localhost:5432/smile` | JDBC connection URL |
