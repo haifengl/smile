@@ -96,8 +96,10 @@ public final class PartialRotaryEncoding {
         outShape[outShape.length - 1] = ashape[ashape.length - 1] + bshape[bshape.length - 1];
         try (Tensor a2 = a.reshape(rows, ashape[ashape.length - 1]);
              Tensor b2 = b.reshape(rows, bshape[bshape.length - 1]);
-             Tensor cat = Tensor.hstack(a2, b2)) {
-            return cat.reshape(outShape);
+             Tensor cat = Tensor.hstack(a2, b2);
+             Tensor viewed = cat.reshape(outShape)) {
+            // Must copy: try-with closes cat/viewed; a reshape view would dangle.
+            return viewed.copy();
         }
     }
 

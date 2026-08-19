@@ -230,8 +230,10 @@ public class GatedDeltaNet {
         // x: [B, S, Hk, D] → [B, S, Hk*rep, D]
         long[] s = x.shape();
         try (Tensor u = x.unsqueeze(3);
-             Tensor e = u.expand(s[0], s[1], s[2], rep, s[3])) {
-            return e.reshape(s[0], s[1], s[2] * rep, s[3]);
+             Tensor e = u.expand(s[0], s[1], s[2], rep, s[3]);
+             Tensor viewed = e.reshape(s[0], s[1], s[2] * rep, s[3])) {
+            // Must copy: expand/reshape are views closed by try-with.
+            return viewed.copy();
         }
     }
 }
