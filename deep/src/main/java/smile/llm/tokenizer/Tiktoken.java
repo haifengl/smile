@@ -234,10 +234,29 @@ public class Tiktoken implements Tokenizer {
      * @param output the output buffer.
      */
     private void bytePairEncode(Bytes piece, ArrayList<IntPair> parts, IntArrayList output) {
+        int length = piece.length();
+        if (length == 0) {
+            return;
+        }
+        if (length == 1) {
+            int token = getRank(piece, 0, 1);
+            if (token == MAX) {
+                throw new IllegalArgumentException(
+                        "Byte not in vocabulary (id lookup failed for a single-byte piece). "
+                                + "HF vocabs must be loaded via GPT-2 byte mapping.");
+            }
+            output.add(token);
+            return;
+        }
+
         bytePairMerge(piece, parts);
         for (int i = 0; i < parts.size() - 1; i++) {
-            int token = getRank(piece, parts.get(i)._1(), parts.get(i+1)._1());
-            assert token != MAX : "Token should not be MAX";
+            int token = getRank(piece, parts.get(i)._1(), parts.get(i + 1)._1());
+            if (token == MAX) {
+                throw new IllegalArgumentException(
+                        "BPE produced an unknown token (rank=MAX). Check that the tokenizer "
+                                + "vocab was converted from HuggingFace GPT-2 unicode keys to raw bytes.");
+            }
             output.add(token);
         }
     }
@@ -245,7 +264,9 @@ public class Tiktoken implements Tokenizer {
     /** Byte pair merge. */
     private void bytePairMerge(Bytes piece, ArrayList<IntPair> parts) {
         int length = piece.length();
-        assert length > 1;
+        if (length <= 1) {
+            throw new IllegalArgumentException("bytePairMerge requires length > 1");
+        }
         parts.clear();
         parts.ensureCapacity(length + 1);
 
