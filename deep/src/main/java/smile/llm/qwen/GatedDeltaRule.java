@@ -65,8 +65,10 @@ final class GatedDeltaRule {
         long rows = as[0] * as[1];
         try (Tensor a2 = a.reshape(rows, as[2]);
              Tensor b2 = b.reshape(rows, bs[2]);
-             Tensor cat = Tensor.hstack(a2, b2)) {
-            return cat.reshape(as[0], as[1], as[2] + bs[2]);
+             Tensor cat = Tensor.hstack(a2, b2);
+             Tensor viewed = cat.reshape(as[0], as[1], as[2] + bs[2])) {
+            // Must copy: try-with closes cat/viewed; a reshape view would dangle.
+            return viewed.copy();
         }
     }
 

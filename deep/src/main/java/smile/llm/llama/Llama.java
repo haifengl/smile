@@ -597,7 +597,7 @@ public class Llama implements LanguageModel {
              Tensor reshaped = cont.reshape(dim1, dim2)) {
             // Clone so the returned tensor owns its storage independently of
             // the temporary views closed by this try-with-resources.
-            return new Tensor(smile_torch_h.smile_tensor_clone(reshaped.handle()));
+            return reshaped.copy();
         }
     }
 

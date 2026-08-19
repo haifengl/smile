@@ -348,6 +348,20 @@ public class Tensor implements AutoCloseable {
     }
 
     /**
+     * Returns a new tensor that owns a deep copy of this tensor's storage.
+     *
+     * <p>Use this when returning a {@code view}/{@code reshape}/{@code expand}
+     * result from a {@code try}-with-resources that closes the base tensor;
+     * otherwise the returned view dangles and later ops (e.g. {@code transpose})
+     * can SIGSEGV in LibTorch.
+     *
+     * @return an independently owned clone of this tensor.
+     */
+    public Tensor copy() {
+        return new Tensor(smile_tensor_clone(handle));
+    }
+
+    /**
      * Returns a new view of this tensor with singleton dimensions
      * expanded to a larger size.
      *
