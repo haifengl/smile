@@ -42,8 +42,9 @@ final class GatedDeltaRule {
     static Tensor softplus(Tensor x) {
         try (Tensor clamped = x.clamp(-20, 20);
              Tensor e = clamped.exp();
-             Tensor p = e.add(1.0)) {
-            return p.log();
+             Tensor p = e.add(1.0);
+             Tensor out = p.log()) {
+            return out.copy();
         }
     }
 
@@ -51,8 +52,9 @@ final class GatedDeltaRule {
     static Tensor l2norm(Tensor x) {
         try (Tensor x2 = x.mul(x);
              Tensor s = x2.sum(-1, true);
-             Tensor inv = s.add(1e-6).rsqrt_()) {
-            return x.mul(inv);
+             Tensor inv = s.add(1e-6).rsqrt_();
+             Tensor out = x.mul(inv)) {
+            return out.copy();
         }
     }
 

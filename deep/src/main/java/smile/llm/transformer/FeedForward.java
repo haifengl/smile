@@ -142,9 +142,11 @@ public class FeedForward {
      * @return the output tensor.
      */
     public Tensor forward(Tensor x) {
+        // SiLU may be in-place and return w1x; do not list it as a second
+        // try-with resource (would double-close the same handle).
         try (var w3x = w3.forward(x);
-             var w1x = w1.forward(x);
-             var siluOut = silu.forward(w1x)) {
+             var w1x = w1.forward(x)) {
+            Tensor siluOut = silu.forward(w1x);
             Tensor out = w2.forward(siluOut.mul_(w3x));
             if (tpGroup != null) {
                 tpGroup.allReduceSumInPlace(tpRank, out);

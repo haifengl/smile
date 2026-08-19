@@ -357,13 +357,14 @@ public class KvCachePool implements AutoCloseable {
         try (var idx = Tensor.of(indices);
              var layerIdx = Index.of(layer);
              var layerK = kCache.get(layerIdx);
-             var layerV = vCache.get(layerIdx)) {
-            // index_select materializes new storage; reshape is a view of that
-            // storage. Do not close the flat tensors here — the returned views
-            // keep the storage alive via LibTorch refcounting.
-            Tensor keys = layerK.get(idx).reshape(batch, length, numKvHeads, headDim);
-            Tensor values = layerV.get(idx).reshape(batch, length, numKvHeads, headDim);
-            return new Tuple2<>(keys, values);
+             var layerV = vCache.get(layerIdx);
+             Tensor flatK = layerK.get(idx);
+             Tensor flatV = layerV.get(idx);
+             Tensor keyView = flatK.reshape(batch, length, numKvHeads, headDim);
+             Tensor valueView = flatV.reshape(batch, length, numKvHeads, headDim)) {
+            // Owning copies: callers may close/scopes may pop views; do not return
+            // reshape views that share storage with try-with resources.
+            return new Tuple2<>(keyView.copy(), valueView.copy());
         }
     }
 
