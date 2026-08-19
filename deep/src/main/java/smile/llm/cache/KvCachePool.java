@@ -31,12 +31,14 @@ import smile.util.Tuple2;
  * Physical KV-cache memory pool backed by a {@link RadixCache} for
  * prefix-sharing across requests.
  *
- * <p>The pool pre-allocates two tensors (keys and values) sized to fit within
- * a fraction of the free GPU memory remaining after model weights are loaded:
+ * <p>The pool pre-allocates two tensors (keys and values) sized to the minimum of
+ * the free-memory budget and the configured working set:
  * <pre>
- *   budget = freeDeviceMemory × memFractionStatic
- *   numSlots = budget / (2 × numLayers × numKvHeads × headDim × dtypeBytes)
+ *   budgetSlots = (freeDeviceMemory × memFractionStatic) / bytesPerToken
+ *   numSlots    = min(budgetSlots, maxBatchSize × maxSeqLen)   // page-aligned
  * </pre>
+ * Capping at {@code maxBatchSize × maxSeqLen} matches vLLM/SGLang behavior
+ * (KV sized to {@code max_model_len}, not the entire mem-fraction capacity).
  *
  * <p>Slot indices are managed as fixed-size pages. The embedded
  * {@link RadixCache} maps token prefixes to those indices so that shared
@@ -159,17 +161,9 @@ public class KvCachePool implements AutoCloseable {
         if (device.isCUDA()) {
             device.emptyCache();
             long free = CUDA.freeMemory(device.index());
-            // Leave activation headroom: DeltaNet recurrent workspace, attention
-            // temps, and RoPE/FFN intermediates. Without this, fraction=0.85 can
-            // fill the device so a single mul OOM's with only ~16MiB free.
-            long headroom = Math.max(2L * 1024 * 1024 * 1024, (long) (free * 0.25));
-            if (headroom >= free) {
-                headroom = Math.max(free / 2, pageSize * bytesPerToken);
-            }
-            long capped = Math.max(0L, free - headroom);
-            budget = Math.min((long) (free * memFraction), capped);
-            logger.info("KV cache budget: {} / {} free bytes (fraction={}, headroom={})",
-                    budget, free, memFraction, headroom);
+            budget = (long) (free * memFraction);
+            logger.info("KV cache budget: {} / {} free bytes (fraction={})",
+                    budget, free, memFraction);
         } else {
             // CPU fallback: size to maxBatchSize × maxSeqLen (tests / CPU inference).
             budget = bytesPerToken * layout.maxBatchSize() * layout.maxSeqLen();
@@ -177,10 +171,22 @@ public class KvCachePool implements AutoCloseable {
 
         int numSlots = (int) Math.min(Integer.MAX_VALUE, Math.max(pageSize, budget / bytesPerToken));
         numSlots = (numSlots / pageSize) * pageSize;
-        int minSlots = ((layout.maxSeqLen() + pageSize - 1) / pageSize) * pageSize;
-        if (numSlots < minSlots) {
-            logger.warn("KV cache budget yields {} slots; raising to minimum {}", numSlots, minSlots);
-            numSlots = minSlots;
+
+        // Cap at the configured working set. Without this, a high mem-fraction on a
+        // large GPU allocates hundreds of thousands of unused slots (e.g. ~256K when
+        // maxSeqLen=4096), filling the device and leaving no room for DeltaNet /
+        // attention activations — unlike vLLM/SGLang which size KV to max_model_len.
+        long maxUsefulLong = (long) layout.maxBatchSize() * (long) layout.maxSeqLen();
+        int maxUsefulSlots = (int) Math.min(Integer.MAX_VALUE, Math.max(pageSize, maxUsefulLong));
+        maxUsefulSlots = ((maxUsefulSlots + pageSize - 1) / pageSize) * pageSize;
+        if (numSlots > maxUsefulSlots) {
+            logger.info("KV cache slots capped from {} to maxBatchSize*maxSeqLen={} ({} bytes unused budget)",
+                    numSlots, maxUsefulSlots, (numSlots - maxUsefulSlots) * bytesPerToken);
+            numSlots = maxUsefulSlots;
+        } else if (numSlots < maxUsefulSlots) {
+            logger.warn("KV cache budget yields {} slots < configured maxBatchSize*maxSeqLen={}; "
+                            + "long contexts may fail at bind. Lower max-seq-len or raise mem.fraction.static.",
+                    numSlots, maxUsefulSlots);
         }
 
         return new KvCachePool(layout.numLayers(), numSlots, layout.numKvHeads(),
