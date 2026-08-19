@@ -110,6 +110,8 @@ public final class PartialRotaryEncoding {
      * @return complex frequency tensor.
      */
     public static Tensor computeFreqCis(int rotaryDim, int end, double theta) {
-        return RotaryPositionalEncoding.computeFreqCis(rotaryDim, end, theta, false).to(ScalarType.Float);
+        try (Tensor complex = RotaryPositionalEncoding.computeFreqCis(rotaryDim, end, theta, false)) {
+            return complex.to(ScalarType.Float);
+        }
     }
 }
