@@ -107,9 +107,11 @@ public interface Attention {
             long seqlen = shape[1];
             long numKvHeads = shape[2];
             long headDim = shape[3];
+            // Prefer calling under a Tensor.push scope (e.g. attention forward)
+            // so expand/reshape intermediates are freed on pop.
             try (var x = input.get(Index.Colon, Index.Colon, Index.Colon, Index.None, Index.Colon)) {
-                return x.expand(batchSize, seqlen, numKvHeads, numRep, headDim)
-                        .reshape(batchSize, seqlen, numKvHeads * numRep, headDim);
+                Tensor expanded = x.expand(batchSize, seqlen, numKvHeads, numRep, headDim);
+                return expanded.reshape(batchSize, seqlen, numKvHeads * numRep, headDim);
             }
         }
     }

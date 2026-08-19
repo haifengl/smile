@@ -199,27 +199,48 @@ public class LlamaModel extends LayerBlock {
     public Tensor forward(Tensor tokens, int startPos) {
         long[] shape = tokens.shape();
         int seqlen = (int) shape[1];
-        try (var scope = new AutoScope();
-             var pos = Index.slice(startPos, startPos + seqlen)) {
-            Tensor h = scope.add(tokEmbeddings.forward(tokens));
-            Tensor freqs = scope.add(cis.get(pos));
+        AutoScope scope = new AutoScope();
+        Tensor.push(scope);
+        try (var pos = Index.slice(startPos, startPos + seqlen)) {
+            Tensor h = tokEmbeddings.forward(tokens);
+            Tensor freqs = cis.get(pos);
 
             Tensor mask = null;
             if (seqlen > 1) {
-                mask = scope.add(Tensor.full(Float.NEGATIVE_INFINITY, seqlen, seqlen));
+                var maskOpts = new Tensor.Options()
+                        .device(h.device())
+                        .dtype(ScalarType.Float)
+                        .requireGradients(false);
+                mask = Tensor.zeros(maskOpts, seqlen, seqlen).fill_(Float.NEGATIVE_INFINITY);
                 mask.triu_(1);
-                try (var zeros = Tensor.zeros(seqlen, startPos)) {
-                    mask = scope.add(Tensor.hstack(zeros, mask));
+                if (startPos > 0) {
+                    try (var zeros = Tensor.zeros(maskOpts, seqlen, startPos)) {
+                        Tensor prev = mask;
+                        mask = Tensor.hstack(zeros, prev);
+                        prev.close();
+                    }
                 }
-                mask = scope.add(mask.to(h.dtype()));
+                if (mask.dtype() != h.dtype()) {
+                    Tensor maskF = mask;
+                    mask = maskF.to(h.dtype());
+                    maskF.close();
+                }
             }
 
             for (var layer : layers) {
-                h = scope.add(layer.forward(h, startPos, freqs, mask));
+                Tensor next = layer.forward(h, startPos, freqs, mask);
+                h.close();
+                h = next;
             }
 
-            Tensor normalized = scope.add(norm.forward(h));
-            return output.forward(normalized).to(ScalarType.Float);
+            Tensor normalized = norm.forward(h);
+            h.close();
+            Tensor logitsF = output.forward(normalized);
+            Tensor logits = logitsF.to(ScalarType.Float);
+            scope.remove(logits);
+            return logits;
+        } finally {
+            Tensor.pop();
         }
     }
 

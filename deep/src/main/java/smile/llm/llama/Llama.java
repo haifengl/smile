@@ -645,16 +645,17 @@ public class Llama implements LanguageModel {
         try (var guard = Tensor.noGradGuard();
              var scope = new AutoScope()) {
             Tensor.push(scope);
+            try {
             int totalLen = Math.min(params.maxSeqLen(), maxGenLen + maxPromptLen);
             model.kvCachePool().bindRequests(batchSize, totalLen);
 
             int pad = tokenizer.pad();
-            Tensor tokens = Tensor.full(pad, batchSize, totalLen);
+            Tensor tokensCpu = Tensor.full(pad, batchSize, totalLen);
             for (int i = 0; i < batchSize; i++) {
                 try (var prompt = Tensor.of(prompts[i]);
                      var row = Index.of(i);
                      var span = Index.slice(0, prompts[i].length)) {
-                    tokens.put_(prompt, row, span);
+                    tokensCpu.put_(prompt, row, span);
                 }
             }
 
@@ -664,21 +665,27 @@ public class Llama implements LanguageModel {
                 tokenLogprobs = Tensor.zeros(opts, batchSize, totalLen);
             }
 
-            Tensor eosReached = Tensor.of(new boolean[batchSize]);
-            Tensor inputTextMask = tokens.ne(pad);
-            Tensor stopTokens = Tensor.of(tokenizer.stopTokens());
+            Tensor eosReachedCpu = Tensor.of(new boolean[batchSize]);
+            Tensor inputTextMaskCpu = tokensCpu.ne(pad);
+            Tensor stopTokensCpu = Tensor.of(tokenizer.stopTokens());
 
-            tokens = tokens.to(model.device());
-            eosReached = eosReached.to(model.device());
-            inputTextMask = inputTextMask.to(model.device());
-            stopTokens = stopTokens.to(model.device());
+            Tensor tokens = tokensCpu.to(model.device());
+            Tensor eosReached = eosReachedCpu.to(model.device());
+            Tensor inputTextMask = inputTextMaskCpu.to(model.device());
+            Tensor stopTokens = stopTokensCpu.to(model.device());
+            tokensCpu.close();
+            eosReachedCpu.close();
+            inputTextMaskCpu.close();
+            stopTokensCpu.close();
 
             int prevPos = 0;
             if (minPromptLen == totalLen) {
                 try (var logits = model.forward(tokens, prevPos)) {
                     if (logprobs) {
-                        try (var transposed = logits.transpose(1, 2)) {
-                            tokenLogprobs = Tensor.crossEntropy(transposed, tokens, "none", pad).neg_();
+                        try (var transposed = logits.transpose(1, 2);
+                             var entropy = Tensor.crossEntropy(transposed, tokens, "none", pad).neg_()) {
+                            tokenLogprobs.close();
+                            tokenLogprobs = entropy.detach();
                         }
                     }
                 }
@@ -686,19 +693,22 @@ public class Llama implements LanguageModel {
 
             int chunkPos = minPromptLen;
             for (int curPos = minPromptLen; curPos < totalLen; curPos++) {
-                try (var loopScope = new AutoScope()) {
-                    Tensor.push(loopScope);
+                AutoScope loopScope = new AutoScope();
+                Tensor.push(loopScope);
+                try {
                     Tensor logits;
                     try (var span = Index.slice(prevPos, curPos);
                          var window = tokens.get(Index.Colon, span)) {
                         logits = model.forward(window, prevPos);
                     }
+                    loopScope.add(logits);
 
                     Tensor nextToken;
                     try (var last = Index.of(-1);
                          var tail = logits.get(Index.Colon, last)) {
                         if (temperature > 0) {
-                            try (var probs = tail.div(temperature).softmax(-1)) {
+                            try (var scaled = tail.div(temperature);
+                                 var probs = scaled.softmax(-1)) {
                                 nextToken = probs.topp(topp);
                             }
                         } else {
@@ -707,7 +717,6 @@ public class Llama implements LanguageModel {
                     }
 
                     nextToken = nextToken.reshape(-1);
-                    // only replace token if prompt has already been generated
                     try (var cur = Index.of(curPos);
                          var textMask = inputTextMask.get(Index.Colon, cur);
                          var currentTokens = tokens.get(Index.Colon, cur);
@@ -734,10 +743,9 @@ public class Llama implements LanguageModel {
                         eosReached.or_(textAndStop);
                     }
 
-                    logits.close();
                     nextToken.close();
                     prevPos = curPos;
-                    // Free up memory at each iteration
+                } finally {
                     Tensor.pop();
                 }
 
@@ -815,10 +823,13 @@ public class Llama implements LanguageModel {
             }
 
             if (publisher != null) publisher.close();
-            Tensor.pop();
             return predictions;
+            } finally {
+                Tensor.pop();
+            }
         } finally {
             model.kvCachePool().unbindRequests();
+            model.device().emptyCache();
         }
     }
 
