@@ -112,9 +112,9 @@ final class QwenWeightShard {
 
         try (Tensor q = src.get(smile.deep.tensor.Index.slice(qStart, qEnd));
              Tensor k = src.get(smile.deep.tensor.Index.slice(kStart, kEnd));
-             Tensor v = src.get(smile.deep.tensor.Index.slice(vStart, vEnd));
-             Tensor stacked = Tensor.vstack(q, k, v)) {
-            return stacked.copy();
+             Tensor v = src.get(smile.deep.tensor.Index.slice(vStart, vEnd))) {
+            // vstack materializes new storage; safe after q/k/v close.
+            return Tensor.vstack(q, k, v);
         }
     }
 }

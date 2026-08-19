@@ -67,10 +67,8 @@ public interface RotaryPositionalEncoding {
                 Tensor xkM = xk_.mul_(pe);
                 Tensor xkReal = xkM.viewAsReal();
                 Tensor xk_out = xkReal.flatten(3);
-                // Clone so returned tensors never alias intermediates that pop()
-                // will free (to(same dtype) may share storage).
-                Tensor qOut = xq_out.to(xq.dtype()).copy();
-                Tensor kOut = xk_out.to(xk.dtype()).copy();
+                Tensor qOut = xq_out.to(xq.dtype());
+                Tensor kOut = xk_out.to(xk.dtype());
                 scope.remove(qOut);
                 scope.remove(kOut);
                 return new Tuple2<>(qOut, kOut);

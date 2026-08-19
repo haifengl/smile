@@ -164,10 +164,12 @@ public class GatedDeltaNet {
             Tensor a = inProjA.forward(x);
 
             Tensor convState = statePool != null ? statePool.conv(linearLayerId) : null;
-            Tensor mixedConv = decode && convState != null
+            Tensor mixedConvBase = decode && convState != null
                     ? GatedDeltaRule.causalConv1dUpdate(mixed, convState, conv1dWeight)
                     : GatedDeltaRule.causalConv1dPrefill(mixed, convState, conv1dWeight);
-            mixedConv = mixedConv.transpose(1, 2); // [B, S, C]
+            mixed.close();
+            mixedRaw.close();
+            Tensor mixedConv = mixedConvBase.transpose(1, 2); // [B, S, C]
 
             try (var qSpan = Index.slice(0, keyDim);
                  var kSpan = Index.slice(keyDim, 2 * keyDim);
@@ -186,14 +188,27 @@ public class GatedDeltaNet {
                 }
 
                 Tensor beta = sigmoid.forward(b);
+                b.close();
                 Tensor aLogF = aLog.to(ScalarType.Float);
                 Tensor dt = dtBias.to(ScalarType.Float);
                 Tensor aF = a.to(ScalarType.Float);
+                a.close();
                 Tensor aPlusDt = aF.add(dt);
                 Tensor soft = GatedDeltaRule.softplus(aPlusDt);
                 Tensor aExp = aLogF.exp();
                 Tensor aNeg = aExp.neg();
                 Tensor g = aNeg.mul(soft);
+                aF.close();
+                aPlusDt.close();
+                soft.close();
+                aExp.close();
+                aNeg.close();
+                if (aLogF != aLog) {
+                    aLogF.close();
+                }
+                if (dt != dtBias) {
+                    dt.close();
+                }
 
                 Tensor initState = null;
                 if (decode && statePool != null) {
@@ -202,6 +217,17 @@ public class GatedDeltaNet {
 
                 var result = GatedDeltaRule.recurrentGatedDeltaRule(
                         query, key, value, g, beta, initState, statePool != null, true);
+                query.close();
+                key.close();
+                value.close();
+                qSlice.close();
+                kSlice.close();
+                vSlice.close();
+                g.close();
+                beta.close();
+                mixedConv.close();
+                mixedConvBase.close();
+
                 Tensor core = result._1();
                 if (statePool != null && result._2() != null) {
                     Tensor dest = statePool.recurrent(linearLayerId);

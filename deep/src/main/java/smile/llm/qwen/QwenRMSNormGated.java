@@ -72,9 +72,8 @@ public class QwenRMSNormGated implements Layer {
              Tensor normalized = xNorm.mul(weight);
              Tensor gateF = gate.to(ScalarType.Float);
              Tensor gateAct = silu.forward(gateF);
-             Tensor gated = normalized.mul(gateAct);
-             Tensor cast = gated.to(input.dtype())) {
-            return cast.copy();
+             Tensor gated = normalized.mul(gateAct)) {
+            return gated.to(input.dtype());
         }
     }
 
