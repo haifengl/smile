@@ -51,22 +51,32 @@ public class AutoScope implements AutoCloseable {
     }
 
     /**
-     * Detaches resources from this scope.
-     * @param resource the resources to be detached from this scope.
+     * Detaches a resource from this scope by reference identity.
+     *
+     * <p>Must not use {@link Object#equals(Object)}: {@code Tensor.equals}
+     * compares native handle addresses, so after a closed tensor's address is
+     * reused by a new allocation, {@code List.remove(Object)} can detach the
+     * wrong entry and leave the live tensor on the scope to be freed by
+     * {@link #close()}.
+     *
+     * @param resource the resource to detach.
      */
     public void remove(AutoCloseable resource) {
-        this.resources.remove(resource);
+        resources.removeIf(r -> r == resource);
     }
 
     @Override
     public void close() {
-        for (var resource : resources) {
+        // Snapshot + clear first so resource.close() may safely detach itself.
+        AutoCloseable[] snapshot = resources.toArray(AutoCloseable[]::new);
+        resources.clear();
+        // Reverse order: dependents (views) before bases, matching try-with.
+        for (int i = snapshot.length - 1; i >= 0; i--) {
             try {
-                resource.close();
+                snapshot[i].close();
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
             }
         }
-        resources.clear();
     }
 }

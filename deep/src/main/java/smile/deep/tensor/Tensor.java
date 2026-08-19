@@ -154,6 +154,15 @@ public class Tensor implements AutoCloseable {
 
     @Override
     public void close() {
+        // Drop scope entries before freeing. try-with-resources often closes a
+        // tensor that Tensor.push still tracks; leaving a "zombie" with a dangling
+        // handle address makes AutoScope.remove(equals-by-address) detach the wrong
+        // tensor after the allocator reuses that address — pop then frees the live
+        // return value and the next op (e.g. transpose) SIGSEGVs in LibTorch.
+        Deque<AutoScope> stack = scopes.get();
+        for (AutoScope scope : stack) {
+            scope.remove(this);
+        }
         cleanable.clean();
     }
 
