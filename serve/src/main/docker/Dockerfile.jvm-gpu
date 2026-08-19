@@ -20,7 +20,7 @@
 #   -Dsmile.chat.devices=0 -Dsmile.chat.tensor-parallel-size=2
 #
 # docker run -i --rm --gpus all -p 8888:8080 \
-#   -e JAVA_OPTS_APPEND="-Dsmile.chat.model=Qwen/Qwen3.5-27B -Dsmile.chat.devices=0,7" \
+#   -e JAVA_OPTS_APPEND="-Dsmile.chat.model=Qwen/Qwen3.8-27B -Dsmile.chat.devices=0,7" \
 #   -u root -v "$(pwd)/model":/model quarkus/smile-serve-gpu
 #
 # Optional JVM flags:

@@ -155,17 +155,18 @@ public class Qwen implements LanguageModel {
         if (parallel == null) {
             parallel = ParallelConfig.single(deviceId);
         }
+        final ParallelConfig parallelConfig = parallel;
 
-        boolean cuda = deviceId >= 0 || (parallel.isTensorParallel() && parallel.devices()[0] >= 0);
+        boolean cuda = deviceId >= 0 || (parallelConfig.isTensorParallel() && parallelConfig.devices()[0] >= 0);
         ScalarType computeDtype = ScalarType.Float;
         if (cuda) {
             var startTime = System.currentTimeMillis();
-            Device.CUDA(parallel.devices()[0]); // touch primary device
+            Device.CUDA(parallelConfig.devices()[0]); // touch primary device
             computeDtype = Tensor.isBF16Supported() ? ScalarType.BFloat16 : ScalarType.Half;
             smile_torch_h.smile_set_default_dtype(computeDtype.code());
             var time = System.currentTimeMillis() - startTime;
             logger.info("Initialized CUDA (tpSize={}): {}.{} seconds",
-                    parallel.tpSize(), time / 1000, time % 1000);
+                    parallelConfig.tpSize(), time / 1000, time % 1000);
         }
 
         var startTime = System.currentTimeMillis();
@@ -183,77 +184,107 @@ public class Qwen implements LanguageModel {
             logger.warn("Tokenizer size {} != config vocab_size {}", tokenizer.size(), modelArgs.vocabSize());
         }
 
-        TensorParallelGroup tpGroup = new TensorParallelGroup(parallel);
-        QwenModel[] models = new QwenModel[parallel.tpSize()];
+        TensorParallelGroup tpGroup = new TensorParallelGroup(parallelConfig);
+        Map<String, String> weightMap = readWeightMap(dir);
+        QwenModel[] models = new QwenModel[parallelConfig.tpSize()];
 
-        for (int r = 0; r < parallel.tpSize(); r++) {
-            Device device = cuda ? Device.CUDA(parallel.devices()[r]) : Device.CPU();
-            TensorShardSpec shard = TensorShardSpec.forRank(
-                    parallel.tpSize(), r,
-                    modelArgs.numHeads(), modelArgs.numKvHeads(), modelArgs.intermediateSize(),
-                    modelArgs.linearNumKeyHeads(), modelArgs.linearNumValueHeads());
-
-            var options = new Tensor.Options().device(device).requireGradients(false);
-            Tensor.setDefaultOptions(options);
-
-            KvCachePool bootstrap = null;
-            if (modelArgs.numFullAttentionLayers() > 0) {
-                var layout = modelArgs.kvCacheLayout(shard);
-                bootstrap = memFractionStatic > 0
-                        ? KvCachePool.bootstrap(layout)
-                        : KvCachePool.forTesting(layout, device);
-            }
-            DeltaNetStatePool statePool = null;
-            if (modelArgs.numLinearAttentionLayers() > 0) {
-                statePool = new DeltaNetStatePool(
-                        modelArgs.numLinearAttentionLayers(),
-                        shard.linearNumValueHeads(),
-                        modelArgs.linearKeyHeadDim(),
-                        modelArgs.linearValueHeadDim(),
-                        modelArgs.linearConvDim(shard),
-                        modelArgs.linearConvKernelDim(),
-                        modelArgs.maxBatchSize(),
-                        memFractionStatic > 0 ? Device.CPU() : device,
-                        ScalarType.Float);
-            }
-
-            models[r] = new QwenModel(modelArgs, bootstrap, statePool, device, shard, tpGroup);
-            loadHuggingFaceWeights(models[r], dir, Device.CPU(), shard);
-            models[r].eval();
-
-            if (memFractionStatic > 0 && modelArgs.numFullAttentionLayers() > 0) {
-                models[r].kvCachePool().close();
-                device.emptyCache();
-                var pool = KvCachePool.allocate(
-                        modelArgs.kvCacheLayout(shard), device, cacheDtype, memFractionStatic);
-                models[r].setKvCachePool(pool, false);
-            }
-            if (memFractionStatic > 0 && modelArgs.numLinearAttentionLayers() > 0) {
-                var gpuState = new DeltaNetStatePool(
-                        modelArgs.numLinearAttentionLayers(),
-                        shard.linearNumValueHeads(),
-                        modelArgs.linearKeyHeadDim(),
-                        modelArgs.linearValueHeadDim(),
-                        modelArgs.linearConvDim(shard),
-                        modelArgs.linearConvKernelDim(),
-                        modelArgs.maxBatchSize(),
-                        device,
-                        cacheDtype);
-                var previous = models[r].deltaNetStatePool;
-                models[r].deltaNetStatePool = gpuState;
-                for (var layer : models[r].layers) {
-                    if (layer.linearAttn != null) {
-                        layer.linearAttn.setStatePool(gpuState);
-                    }
+        if (parallelConfig.tpSize() == 1) {
+            models[0] = buildRank(0, parallelConfig, modelArgs, cuda, memFractionStatic, cacheDtype,
+                    dir, weightMap, tpGroup);
+        } else {
+            // Each TP rank targets a different GPU; build + shard-load concurrently.
+            // Do not call Tensor.setDefaultOptions here — it is process-global and
+            // racy across threads. Layers allocate on CPU, then model.to(device).
+            ExecutorService pool = Executors.newFixedThreadPool(parallelConfig.tpSize());
+            try {
+                List<Future<QwenModel>> futures = new ArrayList<>(parallelConfig.tpSize());
+                for (int r = 0; r < parallelConfig.tpSize(); r++) {
+                    final int rank = r;
+                    futures.add(pool.submit(() -> buildRank(rank, parallelConfig, modelArgs, cuda,
+                            memFractionStatic, cacheDtype, dir, weightMap, tpGroup)));
                 }
-                if (previous != null) previous.close();
+                for (int r = 0; r < parallelConfig.tpSize(); r++) {
+                    models[r] = futures.get(r).get();
+                }
+            } catch (Exception e) {
+                throw new IOException("Parallel TP rank load failed", e);
+            } finally {
+                pool.shutdownNow();
             }
         }
 
         var time = System.currentTimeMillis() - startTime;
         logger.info("Model {}: loaded in {}.{} seconds (tpSize={})",
-                checkpointDir, time / 1000, time % 1000, parallel.tpSize());
+                checkpointDir, time / 1000, time % 1000, parallelConfig.tpSize());
         return new Qwen(dir.getName(), models, tpGroup, tokenizer, modelArgs);
+    }
+
+    /**
+     * Builds one TP rank: construct module tree, load/shard HF weights, size KV cache.
+     */
+    private static QwenModel buildRank(int rank, ParallelConfig parallel, QwenModelArgs modelArgs,
+                                       boolean cuda, double memFractionStatic, ScalarType cacheDtype,
+                                       File dir, Map<String, String> weightMap,
+                                       TensorParallelGroup tpGroup) throws IOException {
+        Device device = cuda ? Device.CUDA(parallel.devices()[rank]) : Device.CPU();
+        TensorShardSpec shard = TensorShardSpec.forRank(
+                parallel.tpSize(), rank,
+                modelArgs.numHeads(), modelArgs.numKvHeads(), modelArgs.intermediateSize(),
+                modelArgs.linearNumKeyHeads(), modelArgs.linearNumValueHeads());
+
+        KvCachePool bootstrap = null;
+        if (modelArgs.numFullAttentionLayers() > 0) {
+            var layout = modelArgs.kvCacheLayout(shard);
+            bootstrap = memFractionStatic > 0
+                    ? KvCachePool.bootstrap(layout)
+                    : KvCachePool.forTesting(layout, device);
+        }
+        DeltaNetStatePool statePool = null;
+        if (modelArgs.numLinearAttentionLayers() > 0) {
+            statePool = new DeltaNetStatePool(
+                    modelArgs.numLinearAttentionLayers(),
+                    shard.linearNumValueHeads(),
+                    modelArgs.linearKeyHeadDim(),
+                    modelArgs.linearValueHeadDim(),
+                    modelArgs.linearConvDim(shard),
+                    modelArgs.linearConvKernelDim(),
+                    modelArgs.maxBatchSize(),
+                    memFractionStatic > 0 ? Device.CPU() : device,
+                    ScalarType.Float);
+        }
+
+        QwenModel model = new QwenModel(modelArgs, bootstrap, statePool, device, shard, tpGroup);
+        loadHuggingFaceWeights(model, dir, Device.CPU(), shard, weightMap);
+        model.eval();
+
+        if (memFractionStatic > 0 && modelArgs.numFullAttentionLayers() > 0) {
+            model.kvCachePool().close();
+            device.emptyCache();
+            var pool = KvCachePool.allocate(
+                    modelArgs.kvCacheLayout(shard), device, cacheDtype, memFractionStatic);
+            model.setKvCachePool(pool, false);
+        }
+        if (memFractionStatic > 0 && modelArgs.numLinearAttentionLayers() > 0) {
+            var gpuState = new DeltaNetStatePool(
+                    modelArgs.numLinearAttentionLayers(),
+                    shard.linearNumValueHeads(),
+                    modelArgs.linearKeyHeadDim(),
+                    modelArgs.linearValueHeadDim(),
+                    modelArgs.linearConvDim(shard),
+                    modelArgs.linearConvKernelDim(),
+                    modelArgs.maxBatchSize(),
+                    device,
+                    cacheDtype);
+            var previous = model.deltaNetStatePool;
+            model.deltaNetStatePool = gpuState;
+            for (var layer : model.layers) {
+                if (layer.linearAttn != null) {
+                    layer.linearAttn.setStatePool(gpuState);
+                }
+            }
+            if (previous != null) previous.close();
+        }
+        return model;
     }
 
     static ScalarType resolveKvCacheDtype(String override, Path configJson, ScalarType fallback)
@@ -276,9 +307,9 @@ public class Qwen implements LanguageModel {
     }
 
     private static void loadHuggingFaceWeights(QwenModel model, File dir, Device loadDevice,
-                                               TensorShardSpec shard) throws IOException {
+                                               TensorShardSpec shard,
+                                               Map<String, String> weightMap) throws IOException {
         Device target = model.device();
-        Map<String, String> weightMap = readWeightMap(dir);
         Map<String, List<String>> shardToKeys = new LinkedHashMap<>();
         for (var entry : weightMap.entrySet()) {
             shardToKeys.computeIfAbsent(entry.getValue(), k -> new ArrayList<>()).add(entry.getKey());
