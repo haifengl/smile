@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import smile.util.Bytes;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -78,6 +79,19 @@ public class TokenizerSpecialTokenTest {
         assertEquals(11, tokenizer.specialToken("<|im_start|>"));
         assertEquals(12, tokenizer.specialToken("<|im_end|>"));
         assertEquals(13, tokenizer.size());
+        tokenizer.requireChatSpecialsInVocab(13);
+    }
+
+    @Test
+    public void testGivenSpecialOutOfVocabWhenRequireChatSpecialsThenThrows() {
+        Map<Bytes, Integer> ranks = new HashMap<>();
+        ranks.put(utf8("x"), 0);
+        // endoftext present; im_* missing → assigned past maxId
+        Tokenizer tokenizer = new Tokenizer(ranks,
+                "<|endoftext|>", "<|endoftext|>",
+                "<|endoftext|>", "<|im_start|>", "<|im_end|>");
+        assertThrows(IllegalStateException.class,
+                () -> tokenizer.requireChatSpecialsInVocab(1));
     }
 
     private static Bytes utf8(String s) {

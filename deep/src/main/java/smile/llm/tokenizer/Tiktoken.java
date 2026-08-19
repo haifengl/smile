@@ -86,17 +86,19 @@ public class Tiktoken implements Tokenizer {
 
         // Resolve specials against the vocab first. HF tokenizers (e.g. Qwen)
         // already place <|im_start|> etc. inside model.vocab / added_tokens;
-        // remapping them to ranks.size()+i produces embedding gather OOB.
+        // remapping them to maxId+1 produces embedding gather OOB.
         int nextId = maxId + 1;
         int[] specialIds = new int[specialTokens.length];
         Bytes[] specialBytes = new Bytes[specialTokens.length];
         for (int i = 0; i < specialTokens.length; i++) {
-            specialBytes[i] = new Bytes(specialTokens[i].getBytes(StandardCharsets.UTF_8));
-            Integer existing = ranks.get(specialBytes[i]);
+            specialBytes[i] = new Bytes(specialTokens[i]);
+            Integer existing = findRankId(ranks, specialTokens[i]);
             if (existing != null) {
                 specialIds[i] = existing;
             } else {
                 specialIds[i] = nextId++;
+                logger.warn("Special token '{}' not in vocab ranks; assigning id {} (maxRankId={})",
+                        specialTokens[i], specialIds[i], maxId);
             }
         }
 
@@ -117,6 +119,24 @@ public class Tiktoken implements Tokenizer {
         this.eos = Optional.ofNullable(this.specialTokens.get(eos))
                 .orElseThrow(() -> new IllegalArgumentException("EOS token not found in specialTokens: " + eos));
         logger.info("#words: {} | BOS ID: {} | EOS ID: {}", decoder.length, this.bos, this.eos);
+    }
+
+    /**
+     * Looks up a special-token string in {@code ranks}, trying UTF-8 bytes first
+     * and then a string equality scan (HF vocab keys are sometimes stored with
+     * a different {@link Bytes} representation than {@code new Bytes(token)}).
+     */
+    private static Integer findRankId(Map<Bytes, Integer> ranks, String token) {
+        Integer id = ranks.get(new Bytes(token));
+        if (id != null) {
+            return id;
+        }
+        for (var entry : ranks.entrySet()) {
+            if (token.equals(entry.getKey().toString())) {
+                return entry.getValue();
+            }
+        }
+        return null;
     }
 
     /**

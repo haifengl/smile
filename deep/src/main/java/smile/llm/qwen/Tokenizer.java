@@ -17,7 +17,6 @@
 package smile.llm.qwen;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -35,13 +34,15 @@ import smile.util.IntArrayList;
 /**
  * Qwen3.5 chat tokenizer (byte-level BPE via {@link Tiktoken}).
  *
- * <p>Loads from a checkpoint directory containing either a tiktoken
- * {@code *.tiktoken} / {@code tokenizer.model} rank file, {@code vocab.json}
- * + {@code merges.txt}, or a HuggingFace {@code tokenizer.json}.
+ * <p>Loads from a checkpoint directory. Prefers HuggingFace
+ * {@code tokenizer.json} (includes {@code added_tokens} with the real
+ * {@code <|im_start|>} / {@code <|im_end|>} ids) over {@code vocab.json} alone.
  *
  * @author Haifeng Li
  */
 public class Tokenizer extends Tiktoken {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Tokenizer.class);
+
     /** Token splitting regex (Qwen / GPT-4o style). */
     private static final Pattern REGEX = Pattern.compile(
             "(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\\r\\n\\p{L}\\p{N}]?\\p{L}+|\\p{N}| ?[^\\s\\p{L}\\p{N}]+[\\r\\n]*|\\s*[\\r\\n]+|\\s+(?!\\S)|\\s+");
@@ -126,27 +127,37 @@ public class Tokenizer extends Tiktoken {
     /**
      * Loads a tokenizer from a HuggingFace checkpoint directory.
      *
+     * <p>Order matters: {@code tokenizer.json} is preferred because it carries
+     * {@code added_tokens} with the true chat special ids. Loading
+     * {@code vocab.json} alone and then appending specials at {@code maxId+1}
+     * remaps {@code <|im_start|>} past {@code vocab_size} and crashes embedding
+     * gather on GPU.
+     *
      * @param checkpointDir model directory.
      * @return tokenizer instance.
      * @throws IOException if no supported tokenizer files are found.
      */
     public static Tokenizer of(String checkpointDir) throws IOException {
         Path dir = Path.of(checkpointDir);
-        Path tiktoken = firstExisting(dir,
-                "tokenizer.model", "qwen.tiktoken", "vocab.tiktoken");
-        if (tiktoken != null) {
-            return new Tokenizer(Tiktoken.load(tiktoken.toString()));
+
+        Path tokenizerJson = dir.resolve("tokenizer.json");
+        if (Files.exists(tokenizerJson)) {
+            logger.info("Loading Qwen tokenizer from {}", tokenizerJson.getFileName());
+            return new Tokenizer(loadTokenizerJson(tokenizerJson));
         }
 
         Path vocabJson = dir.resolve("vocab.json");
         Path mergesTxt = dir.resolve("merges.txt");
         if (Files.exists(vocabJson) && Files.exists(mergesTxt)) {
+            logger.info("Loading Qwen tokenizer from vocab.json (+ added_tokens if present)");
             return new Tokenizer(loadVocabAndMerges(vocabJson, mergesTxt));
         }
 
-        Path tokenizerJson = dir.resolve("tokenizer.json");
-        if (Files.exists(tokenizerJson)) {
-            return new Tokenizer(loadTokenizerJson(tokenizerJson));
+        Path tiktoken = firstExisting(dir,
+                "tokenizer.model", "qwen.tiktoken", "vocab.tiktoken");
+        if (tiktoken != null) {
+            logger.info("Loading Qwen tokenizer from {}", tiktoken.getFileName());
+            return new Tokenizer(Tiktoken.load(tiktoken.toString()));
         }
 
         throw new IOException("No Qwen tokenizer files found under " + checkpointDir);
@@ -162,9 +173,8 @@ public class Tokenizer extends Tiktoken {
 
     /**
      * Loads GPT-2 style {@code vocab.json} + {@code merges.txt} into byte ranks.
-     * Vocab values are used as ids; byte tokens are derived from vocab keys via
-     * the standard GPT-2 unicode ↔ byte mapping when keys look like unicode
-     * BPE, otherwise keys are UTF-8 bytes.
+     * Also merges {@code added_tokens} from a sibling {@code tokenizer.json}
+     * when present so chat specials keep their HF ids.
      */
     static Map<Bytes, Integer> loadVocabAndMerges(Path vocabJson, Path mergesTxt) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
@@ -173,11 +183,14 @@ public class Tokenizer extends Tiktoken {
         vocab.properties().forEach(e -> {
             String token = e.getKey();
             int id = e.getValue().asInt();
-            ranks.put(new Bytes(token.getBytes(StandardCharsets.UTF_8)), id);
+            ranks.put(new Bytes(token), id);
         });
-        // merges.txt is informational for our Tiktoken path (ranks already complete).
         if (!Files.exists(mergesTxt)) {
             throw new IOException("merges.txt missing next to vocab.json");
+        }
+        Path tokenizerJson = vocabJson.getParent().resolve("tokenizer.json");
+        if (Files.exists(tokenizerJson)) {
+            mergeAddedTokens(ranks, mapper.readTree(tokenizerJson.toFile()));
         }
         return ranks;
     }
@@ -195,21 +208,48 @@ public class Tokenizer extends Tiktoken {
         }
         Map<Bytes, Integer> ranks = new HashMap<>();
         vocab.properties().forEach(e -> {
-            ranks.put(new Bytes(e.getKey().getBytes(StandardCharsets.UTF_8)), e.getValue().asInt());
+            ranks.put(new Bytes(e.getKey()), e.getValue().asInt());
         });
-        // Specials often live only under added_tokens (Qwen3.5: <|im_start|> = 248045).
+        mergeAddedTokens(ranks, root);
+        return ranks;
+    }
+
+    /** Merges {@code added_tokens} entries into {@code ranks} (content → id). */
+    static void mergeAddedTokens(Map<Bytes, Integer> ranks, JsonNode root) {
         JsonNode added = root.get("added_tokens");
-        if (added != null && added.isArray()) {
-            for (JsonNode token : added) {
-                if (!token.has("content") || !token.has("id")) {
-                    continue;
-                }
-                String content = token.get("content").asString();
-                int id = token.get("id").asInt();
-                ranks.put(new Bytes(content.getBytes(StandardCharsets.UTF_8)), id);
+        if (added == null || !added.isArray()) {
+            return;
+        }
+        for (JsonNode token : added) {
+            if (!token.has("content") || !token.has("id")) {
+                continue;
+            }
+            String content = token.get("content").asString();
+            int id = token.get("id").asInt();
+            ranks.put(new Bytes(content), id);
+        }
+    }
+
+    /**
+     * Ensures chat control tokens lie in {@code [0, vocabSize)}.
+     * Call after construction against the model config vocab size.
+     */
+    public void requireChatSpecialsInVocab(int vocabSize) {
+        for (String name : List.of("<|endoftext|>", "<|im_start|>", "<|im_end|>")) {
+            Integer id = specialToken(name);
+            if (id == null || id < 0 || id >= vocabSize) {
+                throw new IllegalStateException(
+                        "Chat special '" + name + "' id=" + id
+                                + " is outside model vocab_size=" + vocabSize
+                                + ". Load tokenizer.json (with added_tokens), not a bare vocab "
+                                + "that remaps specials past the embedding table.");
             }
         }
-        return ranks;
+        logger.info("Chat specials OK: pad/eos={}, im_start={}, im_end={}, vocab_size={}",
+                specialToken("<|endoftext|>"),
+                specialToken("<|im_start|>"),
+                specialToken("<|im_end|>"),
+                vocabSize);
     }
 
     private static String[] defaultSpecialTokens() {
