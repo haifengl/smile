@@ -502,7 +502,11 @@ public class Qwen implements LanguageModel {
             }
 
             int pad = tokenizer.pad();
-            Tensor tokensCpu = Tensor.full(pad, batchSize, totalLen);
+            var cpuOpts = new Tensor.Options()
+                    .device(Device.CPU())
+                    .dtype(ScalarType.Int64)
+                    .requireGradients(false);
+            Tensor tokensCpu = Tensor.zeros(cpuOpts, batchSize, totalLen).fill_(pad);
             for (int i = 0; i < batchSize; i++) {
                 try (var prompt = Tensor.of(prompts[i]);
                      var row = Index.of(i);

@@ -192,10 +192,18 @@ public class QwenModel extends LayerBlock {
 
             Tensor mask = null;
             if (seqlen > 1) {
-                mask = scope.add(Tensor.full(Float.NEGATIVE_INFINITY, seqlen, seqlen));
+                // Allocate on h's device — global Tensor.setDefaultOptions is the
+                // last TP rank under multi-GPU, so default full/zeros would race.
+                var maskOpts = new Tensor.Options()
+                        .device(h.device())
+                        .dtype(ScalarType.Float)
+                        .requireGradients(false);
+                mask = scope.add(Tensor.zeros(maskOpts, seqlen, seqlen).fill_(Float.NEGATIVE_INFINITY));
                 mask.triu_(1);
-                try (var zeros = Tensor.zeros(seqlen, startPos)) {
-                    mask = scope.add(Tensor.hstack(zeros, mask));
+                if (startPos > 0) {
+                    try (var zeros = Tensor.zeros(maskOpts, seqlen, startPos)) {
+                        mask = scope.add(Tensor.hstack(zeros, mask));
+                    }
                 }
                 mask = scope.add(mask.to(h.dtype()));
             }

@@ -183,7 +183,8 @@ public class Tokenizer extends Tiktoken {
     }
 
     /**
-     * Extracts vocab from HuggingFace {@code tokenizer.json} ({@code model.vocab}).
+     * Extracts vocab from HuggingFace {@code tokenizer.json}
+     * ({@code model.vocab} plus {@code added_tokens}).
      */
     static Map<Bytes, Integer> loadTokenizerJson(Path tokenizerJson) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
@@ -196,8 +197,18 @@ public class Tokenizer extends Tiktoken {
         vocab.properties().forEach(e -> {
             ranks.put(new Bytes(e.getKey().getBytes(StandardCharsets.UTF_8)), e.getValue().asInt());
         });
-        // Some exports store ranks as base64 tiktoken lines under model.vocab — already handled.
-        // Also accept added_tokens as specials are registered separately by the constructor.
+        // Specials often live only under added_tokens (Qwen3.5: <|im_start|> = 248045).
+        JsonNode added = root.get("added_tokens");
+        if (added != null && added.isArray()) {
+            for (JsonNode token : added) {
+                if (!token.has("content") || !token.has("id")) {
+                    continue;
+                }
+                String content = token.get("content").asString();
+                int id = token.get("id").asInt();
+                ranks.put(new Bytes(content.getBytes(StandardCharsets.UTF_8)), id);
+            }
+        }
         return ranks;
     }
 
