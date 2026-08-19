@@ -265,13 +265,8 @@ public class Qwen implements LanguageModel {
         loadHuggingFaceWeights(model, dir, Device.CPU(), shard, weightMap);
         model.eval();
 
-        if (memFractionStatic > 0 && modelArgs.numFullAttentionLayers() > 0) {
-            model.kvCachePool().close();
-            device.emptyCache();
-            var pool = KvCachePool.allocate(
-                    modelArgs.kvCacheLayout(shard), device, cacheDtype, memFractionStatic);
-            model.setKvCachePool(pool, false);
-        }
+        // Allocate fixed DeltaNet state before the KV pool so memFractionStatic
+        // is measured against free memory after those buffers exist.
         if (memFractionStatic > 0 && modelArgs.numLinearAttentionLayers() > 0) {
             var gpuState = new DeltaNetStatePool(
                     modelArgs.numLinearAttentionLayers(),
@@ -291,6 +286,13 @@ public class Qwen implements LanguageModel {
                 }
             }
             if (previous != null) previous.close();
+        }
+        if (memFractionStatic > 0 && modelArgs.numFullAttentionLayers() > 0) {
+            model.kvCachePool().close();
+            device.emptyCache();
+            var pool = KvCachePool.allocate(
+                    modelArgs.kvCacheLayout(shard), device, cacheDtype, memFractionStatic);
+            model.setKvCachePool(pool, false);
         }
         return model;
     }
@@ -374,8 +376,12 @@ public class Qwen implements LanguageModel {
                                 "model.embed_tokens.weight",
                                 "language_model.model.embed_tokens.weight")) {
                             if (st.tensors().containsKey(embKey)) {
-                                Tensor emb = st.tensors().get(embKey).to(target).contiguous();
-                                owned.add(emb);
+                                Tensor onDevice = st.tensors().get(embKey).to(target);
+                                owned.add(onDevice);
+                                Tensor emb = onDevice.contiguous();
+                                if (emb != onDevice) {
+                                    owned.add(emb);
+                                }
                                 stateDict.put("lm_head.weight", emb);
                                 loaded.add("lm_head.weight");
                                 break;
@@ -534,6 +540,7 @@ public class Qwen implements LanguageModel {
         try (var guard = Tensor.noGradGuard();
              var scope = new AutoScope()) {
             Tensor.push(scope);
+            try {
             int totalLen = Math.min(params.maxSeqLen(), maxGenLen + maxPromptLen);
 
             if (model.kvCachePool() != null) {
@@ -598,9 +605,14 @@ public class Qwen implements LanguageModel {
                     : null;
             try {
             for (int curPos = minPromptLen; curPos < totalLen; curPos++) {
-                try (var loopScope = new AutoScope()) {
-                    Tensor.push(loopScope);
-                    Tensor[] logits = forwardAll(tokens, prevPos, curPos, pool);
+                AutoScope loopScope = new AutoScope();
+                Tensor.push(loopScope);
+                Tensor[] logits = null;
+                try {
+                    logits = forwardAll(tokens, prevPos, curPos, pool);
+                    for (Tensor l : logits) {
+                        loopScope.add(l);
+                    }
 
                     Tensor nextToken;
                     try (var last = Index.of(-1);
@@ -621,7 +633,6 @@ public class Qwen implements LanguageModel {
                          var merged = Tensor.where(textMask, currentTokens, nextToken)) {
                         nextToken.close();
                         nextToken = merged.detach();
-                        // Write sampled token onto every TP rank's token buffer.
                         for (int r = 0; r < models.length; r++) {
                             Tensor local = r == 0 ? nextToken : nextToken.to(models[r].device());
                             tokens[r].put_(local, Index.Colon, cur);
@@ -651,11 +662,9 @@ public class Qwen implements LanguageModel {
                         }
                     }
 
-                    for (Tensor l : logits) {
-                        l.close();
-                    }
                     nextToken.close();
                     prevPos = curPos;
+                } finally {
                     Tensor.pop();
                 }
 
@@ -732,13 +741,19 @@ public class Qwen implements LanguageModel {
             }
 
             if (publisher != null) publisher.close();
-            Tensor.pop();
             return predictions;
+            } finally {
+                Tensor.pop();
+            }
         } finally {
             for (QwenModel m : models) {
                 if (m.kvCachePool() != null) {
                     m.kvCachePool().unbindRequests();
                 }
+                if (m.deltaNetStatePool() != null) {
+                    m.deltaNetStatePool().unbind();
+                }
+                m.device().emptyCache();
             }
         }
     }
@@ -773,6 +788,11 @@ public class Qwen implements LanguageModel {
                 logits[r] = futures.get(r).get();
             }
         } catch (Exception e) {
+            for (Tensor l : logits) {
+                if (l != null) {
+                    l.close();
+                }
+            }
             throw new RuntimeException("TP forward failed", e);
         }
         return logits;

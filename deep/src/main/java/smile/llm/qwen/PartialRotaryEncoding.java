@@ -56,21 +56,23 @@ public final class PartialRotaryEncoding {
             return RotaryPositionalEncoding.apply(xq, xk, cis);
         }
 
-        try (var scope = new AutoScope();
-             var rot = Index.slice(0, rotaryDim);
+        AutoScope scope = new AutoScope();
+        Tensor.push(scope);
+        try (var rot = Index.slice(0, rotaryDim);
              var pass = Index.slice(rotaryDim, (int) headDim)) {
-            Tensor xqRot = scope.add(xq.get(Index.Ellipsis, rot));
-            Tensor xkRot = scope.add(xk.get(Index.Ellipsis, rot));
-            Tensor xqPass = scope.add(xq.get(Index.Ellipsis, pass));
-            Tensor xkPass = scope.add(xk.get(Index.Ellipsis, pass));
+            Tensor xqRot = xq.get(Index.Ellipsis, rot);
+            Tensor xkRot = xk.get(Index.Ellipsis, rot);
+            Tensor xqPass = xq.get(Index.Ellipsis, pass);
+            Tensor xkPass = xk.get(Index.Ellipsis, pass);
 
             var rotated = RotaryPositionalEncoding.apply(xqRot, xkRot, cis);
-            Tensor qOut = scope.add(rotated._1());
-            Tensor kOut = scope.add(rotated._2());
-
-            return new Tuple2<>(
-                    concatLast(qOut, xqPass),
-                    concatLast(kOut, xkPass));
+            Tensor qOut = concatLast(rotated._1(), xqPass);
+            Tensor kOut = concatLast(rotated._2(), xkPass);
+            scope.remove(qOut);
+            scope.remove(kOut);
+            return new Tuple2<>(qOut, kOut);
+        } finally {
+            Tensor.pop();
         }
     }
 

@@ -153,44 +153,47 @@ public class GatedDeltaNet {
         int seqLen = (int) shape[1];
         boolean decode = seqLen == 1 && statePool != null && statePool.boundBatch() > 0;
 
-        try (var scope = new AutoScope()) {
-            Tensor mixed = scope.add(inProjQkv.forward(x).transpose(1, 2)); // [B, C, S]
-            Tensor z = scope.add(inProjZ.forward(x).view(batch, seqLen, numVHeads, headVDim));
-            Tensor b = scope.add(inProjB.forward(x));
-            Tensor a = scope.add(inProjA.forward(x));
+        AutoScope scope = new AutoScope();
+        Tensor.push(scope);
+        try {
+            Tensor mixedRaw = inProjQkv.forward(x);
+            Tensor mixed = mixedRaw.transpose(1, 2); // [B, C, S]
+            Tensor zRaw = inProjZ.forward(x);
+            Tensor z = zRaw.view(batch, seqLen, numVHeads, headVDim);
+            Tensor b = inProjB.forward(x);
+            Tensor a = inProjA.forward(x);
 
             Tensor convState = statePool != null ? statePool.conv(linearLayerId) : null;
-            Tensor mixedConv;
-            if (decode && convState != null) {
-                mixedConv = scope.add(GatedDeltaRule.causalConv1dUpdate(mixed, convState, conv1dWeight));
-            } else {
-                mixedConv = scope.add(GatedDeltaRule.causalConv1dPrefill(mixed, convState, conv1dWeight));
-            }
-            mixedConv = scope.add(mixedConv.transpose(1, 2)); // [B, S, C]
+            Tensor mixedConv = decode && convState != null
+                    ? GatedDeltaRule.causalConv1dUpdate(mixed, convState, conv1dWeight)
+                    : GatedDeltaRule.causalConv1dPrefill(mixed, convState, conv1dWeight);
+            mixedConv = mixedConv.transpose(1, 2); // [B, S, C]
 
             try (var qSpan = Index.slice(0, keyDim);
                  var kSpan = Index.slice(keyDim, 2 * keyDim);
                  var vSpan = Index.slice(2 * keyDim, 2 * keyDim + valueDim)) {
-                Tensor query = scope.add(mixedConv.get(Index.Ellipsis, qSpan)
-                        .view(batch, seqLen, numKHeads, headKDim));
-                Tensor key = scope.add(mixedConv.get(Index.Ellipsis, kSpan)
-                        .view(batch, seqLen, numKHeads, headKDim));
-                Tensor value = scope.add(mixedConv.get(Index.Ellipsis, vSpan)
-                        .view(batch, seqLen, numVHeads, headVDim));
+                Tensor qSlice = mixedConv.get(Index.Ellipsis, qSpan);
+                Tensor query = qSlice.view(batch, seqLen, numKHeads, headKDim);
+                Tensor kSlice = mixedConv.get(Index.Ellipsis, kSpan);
+                Tensor key = kSlice.view(batch, seqLen, numKHeads, headKDim);
+                Tensor vSlice = mixedConv.get(Index.Ellipsis, vSpan);
+                Tensor value = vSlice.view(batch, seqLen, numVHeads, headVDim);
 
                 int rep = numVHeads / numKHeads;
                 if (rep > 1) {
-                    query = scope.add(repeatHeads(query, rep));
-                    key = scope.add(repeatHeads(key, rep));
+                    query = repeatHeads(query, rep);
+                    key = repeatHeads(key, rep);
                 }
 
-                Tensor beta = scope.add(sigmoid.forward(b));
-                // g = -exp(A_log) * softplus(a + dt_bias)
-                Tensor aLogF = scope.add(aLog.to(ScalarType.Float));
-                Tensor dt = scope.add(dtBias.to(ScalarType.Float));
-                Tensor aF = scope.add(a.to(ScalarType.Float));
-                Tensor soft = scope.add(GatedDeltaRule.softplus(aF.add(dt)));
-                Tensor g = scope.add(aLogF.exp().neg().mul(soft));
+                Tensor beta = sigmoid.forward(b);
+                Tensor aLogF = aLog.to(ScalarType.Float);
+                Tensor dt = dtBias.to(ScalarType.Float);
+                Tensor aF = a.to(ScalarType.Float);
+                Tensor aPlusDt = aF.add(dt);
+                Tensor soft = GatedDeltaRule.softplus(aPlusDt);
+                Tensor aExp = aLogF.exp();
+                Tensor aNeg = aExp.neg();
+                Tensor g = aNeg.mul(soft);
 
                 Tensor initState = null;
                 if (decode && statePool != null) {
@@ -199,24 +202,26 @@ public class GatedDeltaNet {
 
                 var result = GatedDeltaRule.recurrentGatedDeltaRule(
                         query, key, value, g, beta, initState, statePool != null, true);
-                Tensor core = scope.add(result._1());
+                Tensor core = result._1();
                 if (statePool != null && result._2() != null) {
                     Tensor dest = statePool.recurrent(linearLayerId);
                     dest.put_(result._2(), Index.Colon, Index.Colon, Index.Colon, Index.Colon);
                     result._2().close();
                 }
 
-                // Gated RMSNorm: weight * rms(y) * silu(z)
-                core = scope.add(core.reshape(batch * seqLen * numVHeads, headVDim));
-                Tensor zFlat = scope.add(z.reshape(batch * seqLen * numVHeads, headVDim));
-                Tensor gated = scope.add(norm.forward(core, zFlat));
-                gated = scope.add(gated.view(batch, seqLen, valueDim));
+                core = core.reshape(batch * seqLen * numVHeads, headVDim);
+                Tensor zFlat = z.reshape(batch * seqLen * numVHeads, headVDim);
+                Tensor gated = norm.forward(core, zFlat);
+                gated = gated.view(batch, seqLen, valueDim);
                 Tensor out = outProj.forward(gated);
                 if (tpGroup != null && tpGroup.tpSize() > 1) {
                     tpGroup.allReduceSumInPlace(tpRank, out);
                 }
+                scope.remove(out);
                 return out;
             }
+        } finally {
+            Tensor.pop();
         }
     }
 

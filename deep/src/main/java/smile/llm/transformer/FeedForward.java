@@ -143,8 +143,9 @@ public class FeedForward {
      */
     public Tensor forward(Tensor x) {
         try (var w3x = w3.forward(x);
-             var w1x = w1.forward(x)) {
-            Tensor out = w2.forward(silu.forward(w1x).mul_(w3x));
+             var w1x = w1.forward(x);
+             var siluOut = silu.forward(w1x)) {
+            Tensor out = w2.forward(siluOut.mul_(w3x));
             if (tpGroup != null) {
                 tpGroup.allReduceSumInPlace(tpRank, out);
             }
