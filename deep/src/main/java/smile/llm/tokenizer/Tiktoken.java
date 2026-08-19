@@ -77,8 +77,30 @@ public class Tiktoken implements Tokenizer {
         this.pattern = pattern;
         this.ranks = ranks;
 
-        int size = ranks.size();
-        this.decoder = new Bytes[size + specialTokens.length];
+        int maxId = -1;
+        for (int id : ranks.values()) {
+            if (id > maxId) {
+                maxId = id;
+            }
+        }
+
+        // Resolve specials against the vocab first. HF tokenizers (e.g. Qwen)
+        // already place <|im_start|> etc. inside model.vocab / added_tokens;
+        // remapping them to ranks.size()+i produces embedding gather OOB.
+        int nextId = maxId + 1;
+        int[] specialIds = new int[specialTokens.length];
+        Bytes[] specialBytes = new Bytes[specialTokens.length];
+        for (int i = 0; i < specialTokens.length; i++) {
+            specialBytes[i] = new Bytes(specialTokens[i].getBytes(StandardCharsets.UTF_8));
+            Integer existing = ranks.get(specialBytes[i]);
+            if (existing != null) {
+                specialIds[i] = existing;
+            } else {
+                specialIds[i] = nextId++;
+            }
+        }
+
+        this.decoder = new Bytes[Math.max(maxId + 1, nextId)];
         for (var entry : ranks.entrySet()) {
             this.decoder[entry.getValue()] = entry.getKey();
         }
@@ -86,9 +108,8 @@ public class Tiktoken implements Tokenizer {
         this.specialTokenPattern = specialTokenRegex(specialTokens);
         this.specialTokens = new HashMap<>();
         for (int i = 0; i < specialTokens.length; i++) {
-            int id = size + i;
-            this.specialTokens.put(specialTokens[i], id);
-            this.decoder[id] = new Bytes(specialTokens[i]);
+            this.specialTokens.put(specialTokens[i], specialIds[i]);
+            this.decoder[specialIds[i]] = specialBytes[i];
         }
 
         this.bos = Optional.ofNullable(this.specialTokens.get(bos))
