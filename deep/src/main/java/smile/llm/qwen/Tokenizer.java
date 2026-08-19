@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import smile.llm.Message;
+import smile.llm.tokenizer.Gpt2ByteMap;
 import smile.llm.tokenizer.Tiktoken;
 import smile.util.Bytes;
 import smile.util.IntArrayList;
@@ -181,9 +182,7 @@ public class Tokenizer extends Tiktoken {
         JsonNode vocab = mapper.readTree(vocabJson.toFile());
         Map<Bytes, Integer> ranks = new HashMap<>();
         vocab.properties().forEach(e -> {
-            String token = e.getKey();
-            int id = e.getValue().asInt();
-            ranks.put(new Bytes(token), id);
+            ranks.put(Gpt2ByteMap.vocabTokenToBytes(e.getKey()), e.getValue().asInt());
         });
         if (!Files.exists(mergesTxt)) {
             throw new IOException("merges.txt missing next to vocab.json");
@@ -208,7 +207,8 @@ public class Tokenizer extends Tiktoken {
         }
         Map<Bytes, Integer> ranks = new HashMap<>();
         vocab.properties().forEach(e -> {
-            ranks.put(new Bytes(e.getKey()), e.getValue().asInt());
+            // HF vocab keys are GPT-2 unicode-mapped; Tiktoken BPE needs raw bytes.
+            ranks.put(Gpt2ByteMap.vocabTokenToBytes(e.getKey()), e.getValue().asInt());
         });
         mergeAddedTokens(ranks, root);
         return ranks;
@@ -226,6 +226,8 @@ public class Tokenizer extends Tiktoken {
             }
             String content = token.get("content").asString();
             int id = token.get("id").asInt();
+            // Chat specials are literal strings; ASCII maps 1:1 through GPT-2.
+            ranks.put(Gpt2ByteMap.vocabTokenToBytes(content), id);
             ranks.put(new Bytes(content), id);
         }
     }
