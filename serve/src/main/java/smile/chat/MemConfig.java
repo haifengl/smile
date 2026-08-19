@@ -29,12 +29,15 @@ import io.smallrye.config.WithName;
 @ConfigMapping(prefix = "smile.mem")
 public interface MemConfig {
     /**
-     * Fraction of free GPU memory (after model weights and DeltaNet state are
-     * loaded) reserved for the shared KV cache pool. Defaults to {@code 0.70}.
-     * The allocator also keeps a separate activation headroom (at least 2 GiB
-     * or 25% of free), so the effective KV size may be lower than this fraction.
+     * Upper bound on the fraction of free GPU memory (after model weights and
+     * DeltaNet state are loaded) that may be used for the KV cache pool.
+     * Defaults to {@code 0.85} (same convention as vLLM / SGLang
+     * {@code --mem-fraction-static}).
+     *
+     * <p>The pool is also capped at {@code maxBatchSize × maxSeqLen} slots so
+     * unused context capacity is not allocated.
      */
     @WithName("fraction.static")
-    @WithDefault("0.70")
+    @WithDefault("0.85")
     double fractionStatic();
 }

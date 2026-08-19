@@ -62,12 +62,23 @@ public class KvCachePoolTest {
 
     @Test
     public void testGivenPoolWhenAllocateOnCpuThenSizedToMaxBatchTimesSeq() {
-        // Given / When – CPU path ignores memFraction and sizes to batch×seq
+        // Given / When – CPU path sizes to batch×seq and must not overshoot
         KvCacheLayout layout = tinyLayout(2, 2, 64);
         try (var pool = KvCachePool.allocate(layout, Device.CPU(), ScalarType.Float, 0.85)) {
-            // Then – at least maxBatchSize × maxSeqLen, page-aligned
-            assertTrue(pool.numSlots() >= 2 * 64);
+            // Then – exactly maxBatchSize × maxSeqLen, page-aligned
+            assertEquals(2 * 64, pool.numSlots());
             assertEquals(0, pool.numSlots() % pool.pageSize());
+        }
+    }
+
+    @Test
+    public void testGivenAllocateWhenMaxSeqThenNotRaisedAboveConfigured() {
+        // Given
+        KvCacheLayout layout = tinyLayout(1, 1, 128);
+        // When
+        try (var pool = KvCachePool.allocate(layout, Device.CPU(), ScalarType.Float, 1.0)) {
+            // Then – capped at maxBatchSize*maxSeqLen (never inflated past config)
+            assertEquals(128, pool.numSlots());
         }
     }
 
