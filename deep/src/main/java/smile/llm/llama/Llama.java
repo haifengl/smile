@@ -262,11 +262,12 @@ public class Llama implements LanguageModel {
         model.eval();
 
         // Size KV from the static region remaining after weights are on device.
+        // Allocate the GPU pool before closing the CPU bootstrap so a failed
+        // allocate does not leave the model pointing at a closed pool.
         if (memFractionStatic > 0) {
-            model.kvCachePool().close();
             device.emptyCache();
             var pool = KvCachePool.allocate(layout, device, cacheDtype, memFractionStatic);
-            model.setKvCachePool(pool, false);
+            model.setKvCachePool(pool, true);
         }
 
         var time = System.currentTimeMillis() - startTime;

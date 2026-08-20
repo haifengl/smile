@@ -289,11 +289,10 @@ public class Qwen implements LanguageModel {
             if (previous != null) previous.close();
         }
         if (memFractionStatic > 0 && modelArgs.numFullAttentionLayers() > 0) {
-            model.kvCachePool().close();
             device.emptyCache();
             var pool = KvCachePool.allocate(
                     modelArgs.kvCacheLayout(shard), device, cacheDtype, memFractionStatic);
-            model.setKvCachePool(pool, false);
+            model.setKvCachePool(pool, true);
         }
         return model;
     }
