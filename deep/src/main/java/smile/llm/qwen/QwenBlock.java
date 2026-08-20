@@ -120,13 +120,18 @@ public class QwenBlock {
             Tensor mixed = selfAttn != null
                     ? selfAttn.forward(h, startPos, cis, mask)
                     : linearAttn.forward(h);
-            h = residual.add(mixed);
+            h.close();
+            Tensor afterAttn = residual.add(mixed);
+            mixed.close();
 
-            residual = h;
-            Tensor ffIn = postNorm.forward(h);
+            residual = afterAttn;
+            Tensor ffIn = postNorm.forward(afterAttn);
             Tensor ffOut = feedForward.forward(ffIn);
+            ffIn.close();
             Tensor out = residual.add(ffOut);
-            scope.remove(out);
+            ffOut.close();
+            afterAttn.close();
+            out.promoteToParent();
             return out;
         } finally {
             Tensor.pop();

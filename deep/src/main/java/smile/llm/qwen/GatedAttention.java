@@ -188,33 +188,41 @@ public class GatedAttention implements Attention {
             key = kNormed.view(batchSize, seqlen, numKvHeads, headDim);
 
             var rope = PartialRotaryEncoding.apply(query, key, cis, rotaryDim);
-            query = rope._1();
-            key = rope._2();
+            Tensor qRope = rope._1();
+            Tensor kRope = rope._2();
 
-            cachePool.put(kvLayerId, startPos, key, value);
+            cachePool.put(kvLayerId, startPos, kRope, value);
+            kRope.close();
+
             var cached = cachePool.get(kvLayerId, startPos + seqlen);
             Tensor keys = cached._1();
             Tensor values = cached._2();
 
-            keys = repeatKV(keys, numRep);
-            values = repeatKV(values, numRep);
+            Tensor keysRep = repeatKV(keys, numRep);
+            Tensor valuesRep = repeatKV(values, numRep);
+            if (keysRep != keys) {
+                keys.close();
+            }
+            if (valuesRep != values) {
+                values.close();
+            }
 
-            query = query.transpose(1, 2);
-            keys = keys.transpose(1, 2);
-            values = values.transpose(1, 2);
+            Tensor qT = qRope.transpose(1, 2);
+            Tensor kT = keysRep.transpose(1, 2);
+            Tensor vT = valuesRep.transpose(1, 2);
 
             double scale = 1.0 / Math.sqrt(headDim);
-            Tensor attn = apply(query, keys, values, mask, 0.0, false, scale);
+            Tensor attn = apply(qT, kT, vT, mask, 0.0, false, scale);
             Tensor attnT = attn.transpose(1, 2);
             Tensor attnC = attnT.contiguous();
             attn = attnC.view(batchSize, seqlen, -1);
             Tensor gateSig = sigmoid.forward(gate);
-            attn = attn.mul(gateSig);
-            Tensor out = oProj.forward(attn);
+            Tensor gated = attn.mul(gateSig);
+            Tensor out = oProj.forward(gated);
             if (tpGroup != null && tpGroup.tpSize() > 1) {
                 tpGroup.allReduceSumInPlace(tpRank, out);
             }
-            scope.remove(out);
+            out.promoteToParent();
             return out;
         } finally {
             Tensor.pop();

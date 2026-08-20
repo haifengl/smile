@@ -69,8 +69,8 @@ public interface RotaryPositionalEncoding {
                 Tensor xk_out = xkReal.flatten(3);
                 Tensor qOut = xq_out.to(xq.dtype());
                 Tensor kOut = xk_out.to(xk.dtype());
-                scope.remove(qOut);
-                scope.remove(kOut);
+                qOut.promoteToParent();
+                kOut.promoteToParent();
                 return new Tuple2<>(qOut, kOut);
             } finally {
                 Tensor.pop();

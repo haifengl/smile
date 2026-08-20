@@ -117,7 +117,7 @@ final class GatedDeltaRule {
                 }
             }
             Tensor activated = SILU.forward(out);
-            scope.remove(activated);
+            activated.promoteToParent();
             return activated;
         } finally {
             Tensor.pop();
@@ -169,7 +169,7 @@ final class GatedDeltaRule {
                 }
             }
             Tensor activated = SILU.forward(out);
-            scope.remove(activated);
+            activated.promoteToParent();
             return activated;
         } finally {
             Tensor.pop();
@@ -270,9 +270,9 @@ final class GatedDeltaRule {
             Tensor finalState = null;
             if (outputState) {
                 finalState = state.to(query.dtype());
-                scope.remove(finalState);
+                finalState.promoteToParent();
             }
-            scope.remove(core);
+            core.promoteToParent();
             return new smile.util.Tuple2<>(core, finalState);
         } finally {
             Tensor.pop();
