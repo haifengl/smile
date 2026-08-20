@@ -278,7 +278,9 @@ public class Qwen implements LanguageModel {
                     ScalarType.Float);
         }
 
-        QwenModel model = new QwenModel(modelArgs, statePool, device, shard, tpGroup);
+        // Layers allocate on CPU; place module + cis, then load shards onto model.device().
+        QwenModel model = new QwenModel(modelArgs, statePool, shard, tpGroup);
+        model.to(device);
         loadHuggingFaceWeights(model, dir, Device.CPU(), shard, weightMap);
         model.eval();
 

@@ -23,6 +23,7 @@ import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
 import smile.llm.Message;
 import smile.llm.Role;
+import smile.llm.cache.KvCachePool;
 import smile.util.Bytes;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -41,10 +42,32 @@ public class QwenTest {
         return new Tokenizer(ranks);
     }
 
+    /** Tiny CPU model with test-sized DeltaNet + KV pools. */
+    private static QwenModel tinyModel(QwenModelArgs args) {
+        DeltaNetStatePool statePool = args.numLinearAttentionLayers() > 0
+                ? new DeltaNetStatePool(
+                args.numLinearAttentionLayers(),
+                args.linearNumValueHeads(),
+                args.linearKeyHeadDim(),
+                args.linearValueHeadDim(),
+                args.linearConvDim(),
+                args.linearConvKernelDim(),
+                args.maxBatchSize(),
+                Device.CPU(),
+                smile.deep.tensor.ScalarType.Float)
+                : null;
+        QwenModel model = new QwenModel(args, statePool);
+        model.to(Device.CPU());
+        if (args.numFullAttentionLayers() > 0) {
+            model.setKvCachePool(KvCachePool.forTesting(args.kvCacheLayout(), Device.CPU()), false);
+        }
+        return model;
+    }
+
     @Test
     public void testGivenTinyArgsWhenModelConstructedThenLayerCountsMatch() {
         QwenModelArgs args = new QwenModelArgs();
-        QwenModel model = new QwenModel(args, Device.CPU());
+        QwenModel model = tinyModel(args);
         assertEquals(4, model.numLayers);
         assertEquals(100, model.vocabSize);
         assertEquals(1, model.kvCachePool().numLayers());
@@ -55,7 +78,7 @@ public class QwenTest {
     @Test
     public void testGivenTinyModelWhenForwardCalledThenLogitsShapeIsCorrect() {
         QwenModelArgs args = new QwenModelArgs();
-        QwenModel model = new QwenModel(args, Device.CPU());
+        QwenModel model = tinyModel(args);
         model.eval();
         if (model.deltaNetStatePool() != null) {
             model.deltaNetStatePool().reset(1);
@@ -79,7 +102,7 @@ public class QwenTest {
     @Test
     public void testGivenGenerateWithTooManyPromptsThenThrows() {
         QwenModelArgs args = new QwenModelArgs(); // maxBatch=1
-        QwenModel model = new QwenModel(args, Device.CPU());
+        QwenModel model = tinyModel(args);
         Qwen qwen = new Qwen("tiny", model, tinyTokenizer(), args);
         int[][] prompts = {{1, 2}, {3, 4}};
         assertThrows(IllegalArgumentException.class,
@@ -89,7 +112,7 @@ public class QwenTest {
     @Test
     public void testGivenGreedyGenerateThenCompletionReturned() {
         QwenModelArgs args = new QwenModelArgs();
-        QwenModel model = new QwenModel(args, Device.CPU());
+        QwenModel model = tinyModel(args);
         model.eval();
         Qwen qwen = new Qwen("tiny", model, tinyTokenizer(), args);
         int[][] prompts = {{1, 2, 3}};

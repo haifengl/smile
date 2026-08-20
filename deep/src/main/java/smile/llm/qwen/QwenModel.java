@@ -44,6 +44,10 @@ import static smile.torch.smile_torch_h.smile_module_list_push_back;
  * projections are locally sized for that TP rank. Embeddings and the LM head
  * remain replicated (full vocab) on each rank in phase 1.
  *
+ * <p>Construct on CPU, load weights, then call {@link #to(Device)} to place
+ * parameters and the RoPE frequency table. Install the KV pool afterward via
+ * {@link #setKvCachePool} when full-attention layers are present.
+ *
  * @author Haifeng Li
  */
 public class QwenModel extends LayerBlock {
@@ -54,7 +58,8 @@ public class QwenModel extends LayerBlock {
     final List<QwenBlock> layers;
     final QwenRMSNorm norm;
     final LinearLayer lmHead;
-    final Tensor cis;
+    /** Partial RoPE frequencies (moved with {@link #to}). */
+    Tensor cis;
     final TensorShardSpec shard;
     final TensorParallelGroup tpGroup;
     final int tpRank;
@@ -62,22 +67,21 @@ public class QwenModel extends LayerBlock {
     DeltaNetStatePool deltaNetStatePool;
 
     /**
-     * Constructor without a KV pool. Call {@link #setKvCachePool} after weights
-     * are loaded when the model has full-attention layers.
+     * Constructs the module graph on CPU. Call {@link #to(Device)} after weight
+     * load; then {@link #setKvCachePool} when full-attention layers exist.
      *
      * @param args      hyperparameters.
      * @param statePool DeltaNet state pool (may be null when no linear layers).
-     * @param device    compute device.
      */
-    public QwenModel(QwenModelArgs args, DeltaNetStatePool statePool, Device device) {
-        this(args, statePool, device, null, null);
+    public QwenModel(QwenModelArgs args, DeltaNetStatePool statePool) {
+        this(args, statePool, null, null);
     }
 
     /**
-     * Tensor-parallel shard constructor.
+     * Tensor-parallel shard constructor (CPU). Call {@link #to(Device)} after load.
      */
     public QwenModel(QwenModelArgs args, DeltaNetStatePool statePool,
-                     Device device, TensorShardSpec shard, TensorParallelGroup tpGroup) {
+                     TensorShardSpec shard, TensorParallelGroup tpGroup) {
         if (statePool == null && args.numLinearAttentionLayers() > 0) {
             throw new IllegalArgumentException("statePool required when linear-attention layers exist");
         }
@@ -101,10 +105,9 @@ public class QwenModel extends LayerBlock {
         this.norm = new QwenRMSNorm(args.dim(), args.normEps());
         this.lmHead = new LinearLayer(args.dim(), args.vocabSize(), false);
 
-        try (Tensor hostCis = PartialRotaryEncoding.computeFreqCis(
-                args.rotaryDim(), args.maxSeqLen() * 2, args.ropeTheta())) {
-            this.cis = hostCis.to(device);
-        }
+        this.cis = PartialRotaryEncoding.computeFreqCis(
+                args.rotaryDim(), args.maxSeqLen() * 2, args.ropeTheta());
+        this.cis.detachFromScopes();
 
         MemorySegment listAsModule = smile_module_list_as_module(moduleList);
         add("layers", listAsModule);
@@ -113,30 +116,36 @@ public class QwenModel extends LayerBlock {
         add("embed_tokens", tokEmbeddings);
         add("norm", norm);
         add("lm_head", lmHead);
-        to(device);
     }
 
     /**
-     * Convenience constructor that allocates test-sized pools on the given device.
+     * Moves parameters and the RoPE frequency table to {@code device}.
      */
-    public QwenModel(QwenModelArgs args, Device device) {
-        this(args,
-                args.numLinearAttentionLayers() > 0
-                        ? new DeltaNetStatePool(
-                        args.numLinearAttentionLayers(),
-                        args.linearNumValueHeads(),
-                        args.linearKeyHeadDim(),
-                        args.linearValueHeadDim(),
-                        args.linearConvDim(),
-                        args.linearConvKernelDim(),
-                        args.maxBatchSize(),
-                        device,
-                        ScalarType.Float)
-                        : null,
-                device);
-        if (args.numFullAttentionLayers() > 0) {
-            setKvCachePool(KvCachePool.forTesting(args.kvCacheLayout(), device), false);
+    @Override
+    public QwenModel to(Device device) {
+        super.to(device);
+        Tensor moved = cis.to(device);
+        if (moved != cis) {
+            moved.detachFromScopes();
+            cis.close();
+            cis = moved;
         }
+        return this;
+    }
+
+    /**
+     * Moves parameters and the RoPE frequency table to {@code device} / {@code dtype}.
+     */
+    @Override
+    public QwenModel to(Device device, ScalarType dtype) {
+        super.to(device, dtype);
+        Tensor moved = cis.to(device, dtype);
+        if (moved != cis) {
+            moved.detachFromScopes();
+            cis.close();
+            cis = moved;
+        }
+        return this;
     }
 
     public QwenModelArgs params() {

@@ -253,7 +253,10 @@ public class Llama implements LanguageModel {
         }
 
         var layout = modelArgs.kvCacheLayout();
-        var model = newModel(modelArgs, device);
+        var model = newModel(modelArgs);
+        // Place empty module + cis before load so torch checkpoints land on device
+        // and HF loadStateDict targets match model.device(); cis moves with to().
+        model.to(device);
 
         if (huggingFace) {
             loadHuggingFaceWeights(model, modelArgs, dir, device);
@@ -285,9 +288,9 @@ public class Llama implements LanguageModel {
     }
 
     /**
-     * Builds a {@link LlamaModel} from Llama hyperparameters (KV pool installed later).
+     * Builds a {@link LlamaModel} on CPU (call {@link LlamaModel#to} then install KV).
      */
-    static LlamaModel newModel(LlamaModelArgs args, Device device) {
+    static LlamaModel newModel(LlamaModelArgs args) {
         return new LlamaModel(
                 args.dim(),
                 args.numLayers(),
@@ -300,8 +303,7 @@ public class Llama implements LanguageModel {
                 args.normEps(),
                 args.ropeTheta(),
                 args.scaledRope(),
-                args.maxSeqLen(),
-                device);
+                args.maxSeqLen());
     }
 
     /**

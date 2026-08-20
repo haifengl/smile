@@ -44,9 +44,11 @@ public class LlamaModelTest {
     }
 
     private static LlamaModel tinyModel(int layers, int batch, int seq) {
-        return new LlamaModel(DIM, layers, NUM_HEADS, NUM_KV_HEADS, VOCAB,
-                null, MULTIPLE_OF, null, NORM_EPS, ROPE_THETA, false, seq,
-                layout(layers, batch, seq), Device.CPU());
+        LlamaModel model = new LlamaModel(DIM, layers, NUM_HEADS, NUM_KV_HEADS, VOCAB,
+                null, MULTIPLE_OF, null, NORM_EPS, ROPE_THETA, false, seq);
+        model.to(Device.CPU());
+        model.setKvCachePool(KvCachePool.forTesting(layout(layers, batch, seq), Device.CPU()), false);
+        return model;
     }
 
     @Test

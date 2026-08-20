@@ -27,7 +27,6 @@ import smile.deep.tensor.Device;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
-import smile.llm.cache.KvCacheLayout;
 import smile.llm.cache.KvCachePool;
 import smile.llm.transformer.RotaryPositionalEncoding;
 import smile.util.AutoScope;
@@ -41,6 +40,10 @@ import static smile.torch.smile_torch_h.smile_module_list_push_back;
 /**
  * Llama dense decoder: token embeddings, stacked {@link LlamaBlock}s,
  * final RMSNorm, and the output projection.
+ *
+ * <p>Construct on CPU, load weights, then call {@link #to(Device)} to place
+ * parameters and the RoPE frequency table. Install the KV pool afterward
+ * via {@link #setKvCachePool}.
  *
  * @author Haifeng Li
  */
@@ -57,13 +60,14 @@ public class LlamaModel extends LayerBlock {
     final RMSNormLayer norm;
     /** The linear layer for final output. */
     final LinearLayer output;
-    /** The precomputed cosine and sine frequencies. */
-    final Tensor cis;
+    /** The precomputed cosine and sine frequencies (moved with {@link #to}). */
+    Tensor cis;
     /** Shared KV cache pool used by all attention layers; installed after weight load. */
     KvCachePool kvCachePool;
 
     /**
-     * Constructor that allocates a small test-sized KV cache pool.
+     * Constructs the module graph on CPU with a host-side RoPE table.
+     * Call {@link #to(Device)} after weight load; then {@link #setKvCachePool}.
      *
      * @param dim                token embedding dimension.
      * @param numLayers          number of transformer blocks.
@@ -77,40 +81,10 @@ public class LlamaModel extends LayerBlock {
      * @param ropeTheta          RoPE theta.
      * @param scaledRope         whether to use Llama-3 scaled RoPE.
      * @param maxSeqLen          maximum sequence length (RoPE table uses {@code 2 * maxSeqLen}).
-     * @param layout             cache layout for the private test pool.
-     * @param device             compute device.
      */
     public LlamaModel(int dim, int numLayers, int numHeads, int numKvHeads, int vocabSize,
                       Integer intermediateSize, int multipleOf, Double ffnDimMultiplier,
-                      double normEps, double ropeTheta, boolean scaledRope, int maxSeqLen,
-                      KvCacheLayout layout, Device device) {
-        this(dim, numLayers, numHeads, numKvHeads, vocabSize, intermediateSize, multipleOf,
-                ffnDimMultiplier, normEps, ropeTheta, scaledRope, maxSeqLen, device);
-        setKvCachePool(KvCachePool.forTesting(layout, device), false);
-    }
-
-    /**
-     * Constructor without a KV pool. Call {@link #setKvCachePool} after weights
-     * are loaded so the pool can be sized from residual device memory.
-     *
-     * @param dim                token embedding dimension.
-     * @param numLayers          number of transformer blocks.
-     * @param numHeads           number of query heads.
-     * @param numKvHeads         number of key/value heads.
-     * @param vocabSize          vocabulary size.
-     * @param intermediateSize   explicit FFN hidden size, or {@code null}.
-     * @param multipleOf         FFN rounding multiple when deriving size.
-     * @param ffnDimMultiplier   optional FFN dim multiplier.
-     * @param normEps            RMSNorm epsilon.
-     * @param ropeTheta          RoPE theta.
-     * @param scaledRope         whether to use Llama-3 scaled RoPE.
-     * @param maxSeqLen          maximum sequence length (RoPE table uses {@code 2 * maxSeqLen}).
-     * @param device             compute device.
-     */
-    public LlamaModel(int dim, int numLayers, int numHeads, int numKvHeads, int vocabSize,
-                      Integer intermediateSize, int multipleOf, Double ffnDimMultiplier,
-                      double normEps, double ropeTheta, boolean scaledRope, int maxSeqLen,
-                      Device device) {
+                      double normEps, double ropeTheta, boolean scaledRope, int maxSeqLen) {
         this.vocabSize = vocabSize;
         this.numLayers = numLayers;
         this.kvCachePool = null;
@@ -128,12 +102,13 @@ public class LlamaModel extends LayerBlock {
         this.norm = new RMSNormLayer(dim, normEps);
         this.output = new LinearLayer(dim, vocabSize, false);
 
-        // Note that max_seq_len is multiplied by 2.
+        // Note that max_seq_len is multiplied by 2. Keep on CPU until to(device).
         this.cis = RotaryPositionalEncoding.computeFreqCis(
                 dim / numHeads,
                 maxSeqLen * 2,
                 ropeTheta,
-                scaledRope).to(device);
+                scaledRope);
+        this.cis.detachFromScopes();
 
         MemorySegment listAsModule = smile_module_list_as_module(moduleList);
         add("layers", listAsModule);
@@ -142,7 +117,36 @@ public class LlamaModel extends LayerBlock {
         add("tok_embeddings", tokEmbeddings);
         add("norm", norm);
         add("output", output);
-        to(device);
+    }
+
+    /**
+     * Moves parameters and the RoPE frequency table to {@code device}.
+     */
+    @Override
+    public LlamaModel to(Device device) {
+        super.to(device);
+        Tensor moved = cis.to(device);
+        if (moved != cis) {
+            moved.detachFromScopes();
+            cis.close();
+            cis = moved;
+        }
+        return this;
+    }
+
+    /**
+     * Moves parameters and the RoPE frequency table to {@code device} / {@code dtype}.
+     */
+    @Override
+    public LlamaModel to(Device device, ScalarType dtype) {
+        super.to(device, dtype);
+        Tensor moved = cis.to(device, dtype);
+        if (moved != cis) {
+            moved.detachFromScopes();
+            cis.close();
+            cis = moved;
+        }
+        return this;
     }
 
     /**
