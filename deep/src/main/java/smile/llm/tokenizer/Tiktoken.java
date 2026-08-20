@@ -87,9 +87,13 @@ public class Tiktoken implements Tokenizer {
         // Resolve specials against the vocab first. HF tokenizers (e.g. Qwen)
         // already place <|im_start|> etc. inside model.vocab / added_tokens;
         // remapping them to maxId+1 produces embedding gather OOB.
+        // Llama / OpenAI tiktoken style leave specials out of the BPE ranks and
+        // assign them contiguously after maxRankId (e.g. 128000+) — that is
+        // expected, not a warning.
         int nextId = maxId + 1;
         int[] specialIds = new int[specialTokens.length];
         Bytes[] specialBytes = new Bytes[specialTokens.length];
+        int appended = 0;
         for (int i = 0; i < specialTokens.length; i++) {
             specialBytes[i] = new Bytes(specialTokens[i]);
             Integer existing = findRankId(ranks, specialTokens[i]);
@@ -97,9 +101,15 @@ public class Tiktoken implements Tokenizer {
                 specialIds[i] = existing;
             } else {
                 specialIds[i] = nextId++;
-                logger.warn("Special token '{}' not in vocab ranks; assigning id {} (maxRankId={})",
+                appended++;
+                logger.debug("Special token '{}' not in BPE ranks; assigning id {} (after maxRankId={})",
                         specialTokens[i], specialIds[i], maxId);
             }
+        }
+        if (appended > 0) {
+            logger.info("Registered {} special token(s) after BPE ranks (ids {}..{}); "
+                            + "{} special(s) reused vocab ids",
+                    appended, maxId + 1, nextId - 1, specialTokens.length - appended);
         }
 
         this.decoder = new Bytes[Math.max(maxId + 1, nextId)];
