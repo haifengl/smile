@@ -526,19 +526,21 @@ public class KvCachePool implements AutoCloseable {
         requestCapacity = alignedCapacity;
         matchedPrefixLen = prefixLen;
 
-        // Hit rate uses the real prompt length as denominator. Using
-        // page-floored length made short chat prompts (16–31 tokens) report
-        // 100% whenever the shared system/template filled one page.
+        // SGLang-style split: cached = matched prefix, new = still-to-prefill.
+        // Denominator is full prompt length (not page-floored).
         int promptLen = promptTokens.length;
+        int newTokens = Math.max(0, promptLen - prefixLen);
         prefixPromptTokens.addAndGet(promptLen);
         prefixMatchTokens.addAndGet(prefixLen);
         double hitRate = promptLen > 0 ? 100.0 * prefixLen / promptLen : 0.0;
         long cumMatch = prefixMatchTokens.get();
         long cumPrompt = prefixPromptTokens.get();
+        long cumNew = cumPrompt - cumMatch;
         double cumHit = cumPrompt > 0 ? 100.0 * cumMatch / cumPrompt : 0.0;
-        logger.info("KV prefix hit: matched={}/{} (hitRate={}) | cumulative={}/{} ({})",
-                prefixLen, promptLen, String.format("%.1f%%", hitRate),
-                cumMatch, cumPrompt, String.format("%.1f%%", cumHit));
+        logger.info(
+                "KV prefix hit: #cached-token: {}, #new-token: {}, hitRate={} | cumulative #cached-token: {}, #new-token: {}, hitRate={}",
+                prefixLen, newTokens, String.format("%.1f%%", hitRate),
+                cumMatch, cumNew, String.format("%.1f%%", cumHit));
         return prefixLen;
     }
 
