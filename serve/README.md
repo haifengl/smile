@@ -671,7 +671,7 @@ generation finishes.
 | `model` | `string` | loaded model | Must match the loaded model id when set (HF repo id or local directory name); omit/empty to use the loaded model |
 | `messages` | `Message[]` | *required* | Ordered dialog turns |
 | `conversation` | `string` | `null` | Existing conversation id (`conv_<n>`) to append to |
-| `max_tokens` | `int` | `2048` | Max new tokens (legacy OpenAI name) |
+| `max_tokens` | `int` | remaining context | Max new tokens (legacy OpenAI name). Default: `max-model-len − prompt_len` |
 | `max_completion_tokens` | `int` | — | Alias for `max_tokens`; takes precedence when set |
 | `temperature` | `double` | `0.6` | Sampling temperature (higher = more random) |
 | `top_p` | `double` | `0.9` | Nucleus-sampling threshold |
