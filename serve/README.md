@@ -168,7 +168,8 @@ the corresponding profiles.
 | `smile.chat.devices` | `0` | CUDA device index, or comma-separated TP list (`0,7`). `%dev` default: `7` |
 | `smile.chat.tensor-parallel-size` | `1` | TP world size; with a single `devices` entry expands to consecutive GPUs |
 | `smile.chat.pipeline-parallel-size` | `1` | Must stay `1` until multi-node PP |
-| `smile.kv.cache.dtype` | _(unset)_ | KV-cache element dtype (`bfloat16`, `float16`, `float32`, `fp8_e4m3`, `fp8_e5m2`, …). When unset, uses `torch_dtype` from the model `config.json` |
+| `smile.chat.kv-cache.dtype` | _(unset)_ | KV-cache element dtype (`bfloat16`, `float16`, `float32`, `fp8_e4m3`, `fp8_e5m2`, …). When unset, uses `torch_dtype` from the model `config.json` |
+| `smile.chat.kv-cache.page-size` | `16` | Tokens per radix / KV pool page (prefix match and insert are page-aligned) |
 | `quarkus.datasource.db-kind` | `postgresql` | Database backend for chat history |
 | `quarkus.datasource.jdbc.url` | `jdbc:postgresql://localhost:5432/smile` | JDBC connection URL |
 | `quarkus.hibernate-orm.active` | `false` | Enable ORM (set `true` when database is available) |

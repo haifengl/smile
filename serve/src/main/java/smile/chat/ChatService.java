@@ -99,14 +99,15 @@ public class ChatService {
         try {
             double memFraction = config.memFractionStatic();
             String kvDtype = kvCache.dtype().orElse(null);
+            int pageSize = kvCache.pageSize();
             Path localPath = Path.of(modelSpec);
             if (Files.isDirectory(localPath)) {
-                model = loadFromLocal(localPath, config, memFraction, kvDtype);
+                model = loadFromLocal(localPath, config, memFraction, kvDtype, pageSize);
                 ownedBy = ownerFromFamily(model.family());
                 source = "local";
                 createdAt = Instant.now().getEpochSecond();
             } else if (looksLikeHuggingFaceRepoId(modelSpec)) {
-                model = loadFromHuggingFace(config, memFraction, kvDtype);
+                model = loadFromHuggingFace(config, memFraction, kvDtype, pageSize);
                 ownedBy = ownerFromHuggingFaceId(modelSpec);
                 source = "huggingface";
                 createdAt = Instant.now().getEpochSecond();
@@ -127,7 +128,7 @@ public class ChatService {
     }
 
     /**
-     * Applies {@code smile.kv.cache.prefix-reuse} to the loaded chat model.
+     * Applies {@code smile.chat.kv-cache.prefix-reuse} to the loaded chat model.
      */
     static void applyPrefixReuse(LanguageModel model, boolean enabled) {
         switch (model) {
@@ -322,17 +323,18 @@ public class ChatService {
      * Dispatches on {@code config.json} {@code model_type} / {@code architectures}.
      */
     private LanguageModel loadFromLocal(Path localPath, ChatServiceConfig config,
-                                        double memFraction, String kvDtype) throws Exception {
+                                        double memFraction, String kvDtype, int pageSize)
+            throws Exception {
         if (isQwenCheckpoint(localPath)) {
             var parallel = parallelConfig(config);
             return Qwen.build(localPath.toString(),
                     config.maxBatchSize(), config.maxSeqLen(), parallel.devices()[0],
-                    memFraction, kvDtype, parallel);
+                    memFraction, kvDtype, pageSize, parallel);
         }
         String tokenizerPath = resolveLocalTokenizer(localPath);
         return Llama.build(localPath.toString(), tokenizerPath,
                 config.maxBatchSize(), config.maxSeqLen(), parallelConfig(config).devices()[0],
-                memFraction, kvDtype);
+                memFraction, kvDtype, pageSize);
     }
 
     /**
@@ -441,11 +443,12 @@ public class ChatService {
      * @param config the chat service configuration; {@code config.model()} is the HF repo ID.
      * @param memFractionStatic static-region fraction of total GPU memory (SGLang-style).
      * @param kvCacheDtype optional KV-cache dtype override ({@code null} = auto).
+     * @param pageSize tokens per radix / KV pool page.
      * @return the loaded language model.
      * @throws Exception if a required file cannot be downloaded or the model fails to load.
      */
     private LanguageModel loadFromHuggingFace(ChatServiceConfig config, double memFractionStatic,
-                                              String kvCacheDtype) throws Exception {
+                                              String kvCacheDtype, int pageSize) throws Exception {
         String repoId = config.model();
         logger.infof("Model directory '%s' not found locally. Downloading from Hugging Face Hub...", repoId);
 
@@ -465,13 +468,13 @@ public class ChatService {
             var parallel = parallelConfig(config);
             return Qwen.build(checkpointDir,
                     config.maxBatchSize(), config.maxSeqLen(), parallel.devices()[0],
-                    memFractionStatic, kvCacheDtype, parallel);
+                    memFractionStatic, kvCacheDtype, pageSize, parallel);
         }
 
         String tokenizerPath = resolveHuggingFaceTokenizer(repoId);
         return Llama.build(checkpointDir, tokenizerPath,
                 config.maxBatchSize(), config.maxSeqLen(), parallelConfig(config).devices()[0],
-                memFractionStatic, kvCacheDtype);
+                memFractionStatic, kvCacheDtype, pageSize);
     }
 
     /**

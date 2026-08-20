@@ -197,6 +197,36 @@ public class Llama implements LanguageModel {
     public static Llama build(String checkpointDir, String tokenizerPath, int maxBatchSize,
                               int maxSeqLen, byte deviceId, double memFractionStatic,
                               String kvCacheDtype) throws IOException {
+        return build(checkpointDir, tokenizerPath, maxBatchSize, maxSeqLen, deviceId,
+                memFractionStatic, kvCacheDtype, KvCachePool.DEFAULT_PAGE_SIZE);
+    }
+
+    /**
+     * Builds a Llama instance by initializing and loading a model checkpoint.
+     *
+     * <p>When {@code memFractionStatic > 0}, a {@link KvCachePool} is allocated
+     * after weight loading with SGLang {@code --mem-fraction-static} semantics:
+     * {@code y} is a fraction of <em>total</em> GPU memory for the static region
+     * (weights + KV); see {@code smile.chat.mem-fraction-static} in smile-serve.
+     *
+     * @param checkpointDir the directory path of checkpoint files.
+     * @param tokenizerPath the path of tokenizer model file.
+     * @param maxBatchSize the maximum batch size for inference.
+     * @param maxSeqLen the maximum sequence length for input text.
+     * @param deviceId the optional CUDA device ID. If negative, don't use CUDA.
+     * @param memFractionStatic static-region fraction of total GPU memory for
+     *                          weights + KV; {@code <= 0} keeps the default test-sized pool.
+     * @param kvCacheDtype optional KV-cache element dtype name
+     *                     (e.g. {@code bfloat16}, {@code float16});
+     *                     {@code null}/blank uses {@code torch_dtype} from
+     *                     {@code config.json}, then the CUDA compute dtype.
+     * @param pageSize tokens per radix / KV pool page ({@code >= 1}).
+     * @throws IOException if fail to open model checkpoint.
+     * @return an instance of Llama model.
+     */
+    public static Llama build(String checkpointDir, String tokenizerPath, int maxBatchSize,
+                              int maxSeqLen, byte deviceId, double memFractionStatic,
+                              String kvCacheDtype, int pageSize) throws IOException {
         File dir = new File(checkpointDir);
         if (!dir.exists() || !dir.isDirectory()) {
             throw new IllegalArgumentException("Checkpoint directory doesn't exist: " + checkpointDir);
@@ -278,7 +308,7 @@ public class Llama implements LanguageModel {
         // Size KV after weights are on device (staticBudget − used when mem-fraction set).
         device.emptyCache();
         KvCachePool pool = memFractionStatic > 0
-                ? KvCachePool.allocate(layout, device, cacheDtype, memFractionStatic)
+                ? KvCachePool.allocate(layout, device, cacheDtype, memFractionStatic, pageSize)
                 : KvCachePool.forTesting(layout, device);
         model.setKvCachePool(pool, false);
 
@@ -310,7 +340,7 @@ public class Llama implements LanguageModel {
      * Resolves the KV-cache element dtype.
      *
      * <ol>
-     *   <li>Explicit override from {@code smile.kv.cache.dtype} when non-blank</li>
+     *   <li>Explicit override from {@code smile.chat.kv-cache.dtype} when non-blank</li>
      *   <li>{@code torch_dtype} in HuggingFace {@code config.json} when present</li>
      *   <li>{@code fallback} (CUDA compute dtype or float32 on CPU)</li>
      * </ol>

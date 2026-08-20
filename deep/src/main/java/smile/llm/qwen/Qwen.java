@@ -161,7 +161,7 @@ public class Qwen implements LanguageModel {
     public static Qwen build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte deviceId,
                              double memFractionStatic, String kvCacheDtype) throws IOException {
         return build(checkpointDir, maxBatchSize, maxSeqLen, deviceId, memFractionStatic, kvCacheDtype,
-                ParallelConfig.single(deviceId));
+                KvCachePool.DEFAULT_PAGE_SIZE, ParallelConfig.single(deviceId));
     }
 
     /**
@@ -171,6 +171,19 @@ public class Qwen implements LanguageModel {
      */
     public static Qwen build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte deviceId,
                              double memFractionStatic, String kvCacheDtype,
+                             ParallelConfig parallel) throws IOException {
+        return build(checkpointDir, maxBatchSize, maxSeqLen, deviceId, memFractionStatic, kvCacheDtype,
+                KvCachePool.DEFAULT_PAGE_SIZE, parallel);
+    }
+
+    /**
+     * Builds a Qwen instance with optional tensor parallelism and KV page size.
+     *
+     * @param pageSize tokens per radix / KV pool page ({@code >= 1}).
+     * @param parallel {@link ParallelConfig#tensorParallel} for multi-GPU; {@code ppSize} must be 1.
+     */
+    public static Qwen build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte deviceId,
+                             double memFractionStatic, String kvCacheDtype, int pageSize,
                              ParallelConfig parallel) throws IOException {
         File dir = new File(checkpointDir);
         if (!dir.isDirectory()) {
@@ -222,7 +235,7 @@ public class Qwen implements LanguageModel {
 
         if (parallelConfig.tpSize() == 1) {
             models[0] = buildRank(0, parallelConfig, modelArgs, cuda, memFractionStatic, cacheDtype,
-                    dir, weightMap, tpGroup);
+                    pageSize, dir, weightMap, tpGroup);
         } else {
             // Each TP rank targets a different GPU; build + shard-load concurrently.
             // Do not call Tensor.setDefaultOptions here — it is process-global and
@@ -233,7 +246,7 @@ public class Qwen implements LanguageModel {
                 for (int r = 0; r < parallelConfig.tpSize(); r++) {
                     final int rank = r;
                     futures.add(pool.submit(() -> buildRank(rank, parallelConfig, modelArgs, cuda,
-                            memFractionStatic, cacheDtype, dir, weightMap, tpGroup)));
+                            memFractionStatic, cacheDtype, pageSize, dir, weightMap, tpGroup)));
                 }
                 for (int r = 0; r < parallelConfig.tpSize(); r++) {
                     models[r] = futures.get(r).get();
@@ -256,7 +269,7 @@ public class Qwen implements LanguageModel {
      */
     private static QwenModel buildRank(int rank, ParallelConfig parallel, QwenModelArgs modelArgs,
                                        boolean cuda, double memFractionStatic, ScalarType cacheDtype,
-                                       File dir, Map<String, String> weightMap,
+                                       int pageSize, File dir, Map<String, String> weightMap,
                                        TensorParallelGroup tpGroup) throws IOException {
         Device device = cuda ? Device.CUDA(parallel.devices()[rank]) : Device.CPU();
         TensorShardSpec shard = TensorShardSpec.forRank(
@@ -310,7 +323,8 @@ public class Qwen implements LanguageModel {
             device.emptyCache();
             KvCachePool pool = memFractionStatic > 0
                     ? KvCachePool.allocate(
-                            modelArgs.kvCacheLayout(shard), device, cacheDtype, memFractionStatic)
+                            modelArgs.kvCacheLayout(shard), device, cacheDtype, memFractionStatic,
+                            pageSize)
                     : KvCachePool.forTesting(modelArgs.kvCacheLayout(shard), device);
             model.setKvCachePool(pool, false);
         }
