@@ -63,25 +63,21 @@ public class GroupedQueryAttention implements Attention {
     final int headDim;
     /** Linear transformation for queries, keys, values, and output. */
     final LinearLayer wq, wk, wv, wo;
-    /** Shared KV cache pool owned by the inference engine. */
+    /** Shared KV cache pool owned by the inference engine; set after weight load. */
     KvCachePool cachePool;
     /** Index of this layer within the transformer stack. */
     final int layerId;
 
     /**
-     * Constructor.
+     * Constructor. Install a {@link KvCachePool} via {@link #setCachePool}
+     * before the first {@link #forward}.
      *
      * @param dim        token embedding dimension.
      * @param numHeads   number of query heads.
      * @param numKvHeads number of key/value heads.
-     * @param cachePool  the shared KV cache pool (must not be {@code null}).
      * @param layerId    zero-based layer index within the transformer.
      */
-    public GroupedQueryAttention(int dim, int numHeads, int numKvHeads,
-                                 KvCachePool cachePool, int layerId) {
-        if (cachePool == null) {
-            throw new IllegalArgumentException("cachePool must not be null");
-        }
+    public GroupedQueryAttention(int dim, int numHeads, int numKvHeads, int layerId) {
         if (numHeads < 1) {
             throw new IllegalArgumentException("numHeads must be >= 1");
         }
@@ -91,7 +87,7 @@ public class GroupedQueryAttention implements Attention {
         if (dim % numHeads != 0) {
             throw new IllegalArgumentException("dim must be divisible by numHeads");
         }
-        this.cachePool = cachePool;
+        this.cachePool = null;
         this.layerId = layerId;
         this.numKvHeads = numKvHeads;
         // Don't support torch.distributed yet
@@ -119,7 +115,7 @@ public class GroupedQueryAttention implements Attention {
 
     /**
      * Convenience constructor that allocates a small test pool sized from
-     * {@code layout}. Prefer the shared-pool overload in production.
+     * {@code layout}. Prefer installing a shared pool in production.
      *
      * @param dim        token embedding dimension.
      * @param numHeads   number of query heads.
@@ -127,7 +123,8 @@ public class GroupedQueryAttention implements Attention {
      * @param layout     cache layout used for the private test pool.
      */
     public GroupedQueryAttention(int dim, int numHeads, int numKvHeads, KvCacheLayout layout) {
-        this(dim, numHeads, numKvHeads, KvCachePool.forTesting(layout, Device.CPU()), 0);
+        this(dim, numHeads, numKvHeads, 0);
+        setCachePool(KvCachePool.forTesting(layout, Device.CPU()));
     }
 
     @Override
@@ -136,9 +133,10 @@ public class GroupedQueryAttention implements Attention {
     }
 
     /**
-     * Replaces the KV cache pool (used after model weights are loaded so the
-     * pool can be sized from residual GPU memory).
-     * @param cachePool the new shared pool.
+     * Installs the KV cache pool (after weights are loaded so the pool can be
+     * sized from residual GPU memory).
+     *
+     * @param cachePool the shared pool (must not be {@code null}).
      */
     void setCachePool(KvCachePool cachePool) {
         if (cachePool == null) throw new IllegalArgumentException("cachePool must not be null");
@@ -147,6 +145,9 @@ public class GroupedQueryAttention implements Attention {
 
     @Override
     public Tensor forward(Tensor x, int startPos, Tensor cis, Tensor mask) {
+        if (cachePool == null) {
+            throw new IllegalStateException("KV cache pool not installed; call setCachePool first");
+        }
         long[] shape = x.shape();
         int batchSize = (int) shape[0];
         int seqlen = (int) shape[1];

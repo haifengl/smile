@@ -59,7 +59,8 @@ public class LlamaBlock {
     final MemorySegment module;
 
     /**
-     * Constructor.
+     * Constructor. The attention module receives its {@link KvCachePool} later
+     * via {@link LlamaModel#setKvCachePool}.
      *
      * @param layerId            the identifier of the block.
      * @param dim                token embedding dimension.
@@ -69,16 +70,15 @@ public class LlamaBlock {
      * @param multipleOf         FFN rounding multiple when {@code intermediateSize} is null.
      * @param ffnDimMultiplier   optional FFN dim multiplier when deriving size.
      * @param normEps            RMSNorm epsilon.
-     * @param cachePool          the shared KV cache pool.
      */
     public LlamaBlock(int layerId, int dim, int numHeads, int numKvHeads,
                       Integer intermediateSize, int multipleOf, Double ffnDimMultiplier,
-                      double normEps, KvCachePool cachePool) {
+                      double normEps) {
         this.layerId = layerId;
         this.numHeads = numHeads;
         this.dim = dim;
         this.headDim = dim / numHeads;
-        this.attention = new GroupedQueryAttention(dim, numHeads, numKvHeads, cachePool, layerId);
+        this.attention = new GroupedQueryAttention(dim, numHeads, numKvHeads, layerId);
         this.feedForward = intermediateSize != null
                 ? new FeedForward(dim, intermediateSize)
                 : new FeedForward(dim, 4 * dim, multipleOf, ffnDimMultiplier);
@@ -113,7 +113,10 @@ public class LlamaBlock {
                       Integer intermediateSize, int multipleOf, Double ffnDimMultiplier,
                       double normEps, KvCacheLayout layout) {
         this(layerId, dim, numHeads, numKvHeads, intermediateSize, multipleOf, ffnDimMultiplier,
-                normEps, KvCachePool.forTesting(layout, Device.CPU()));
+                normEps);
+        if (attention instanceof GroupedQueryAttention gqa) {
+            gqa.setCachePool(KvCachePool.forTesting(layout, Device.CPU()));
+        }
     }
 
     /**

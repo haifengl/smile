@@ -67,7 +67,8 @@ public class GatedAttention implements Attention {
     final int tpRank;
 
     /**
-     * Constructor.
+     * Constructor. Install a {@link KvCachePool} via {@link #setCachePool}
+     * before the first {@link #forward}.
      *
      * @param dim        hidden size.
      * @param numHeads   query head count (local under TP).
@@ -75,21 +76,19 @@ public class GatedAttention implements Attention {
      * @param headDim    per-head dimension.
      * @param rotaryDim  partial RoPE dimension.
      * @param normEps    RMSNorm epsilon.
-     * @param cachePool  shared KV cache pool.
      * @param kvLayerId  layer index inside the KV pool.
      */
     public GatedAttention(int dim, int numHeads, int numKvHeads, int headDim, int rotaryDim,
-                          double normEps, KvCachePool cachePool, int kvLayerId) {
-        this(dim, numHeads, numKvHeads, headDim, rotaryDim, normEps, cachePool, kvLayerId, null, 0);
+                          double normEps, int kvLayerId) {
+        this(dim, numHeads, numKvHeads, headDim, rotaryDim, normEps, kvLayerId, null, 0);
     }
 
     /**
      * Tensor-parallel constructor.
      */
     public GatedAttention(int dim, int numHeads, int numKvHeads, int headDim, int rotaryDim,
-                          double normEps, KvCachePool cachePool, int kvLayerId,
+                          double normEps, int kvLayerId,
                           TensorParallelGroup tpGroup, int tpRank) {
-        if (cachePool == null) throw new IllegalArgumentException("cachePool must not be null");
         if (numHeads % numKvHeads != 0) {
             throw new IllegalArgumentException("numHeads must be divisible by numKvHeads");
         }
@@ -98,7 +97,7 @@ public class GatedAttention implements Attention {
         this.numRep = numHeads / numKvHeads;
         this.headDim = headDim;
         this.rotaryDim = rotaryDim;
-        this.cachePool = cachePool;
+        this.cachePool = null;
         this.kvLayerId = kvLayerId;
         this.tpGroup = tpGroup;
         this.tpRank = tpRank;
@@ -127,10 +126,10 @@ public class GatedAttention implements Attention {
      * Builds attention from a shard spec (local head counts).
      */
     public static GatedAttention forShard(int dim, int headDim, int rotaryDim, double normEps,
-                                          KvCachePool cachePool, int kvLayerId,
+                                          int kvLayerId,
                                           TensorShardSpec shard, TensorParallelGroup tpGroup) {
         return new GatedAttention(dim, shard.numHeads(), shard.numKvHeads(), headDim, rotaryDim,
-                normEps, cachePool, kvLayerId, tpGroup, shard.tpRank());
+                normEps, kvLayerId, tpGroup, shard.tpRank());
     }
 
     /**
@@ -138,8 +137,8 @@ public class GatedAttention implements Attention {
      */
     public GatedAttention(int dim, int numHeads, int numKvHeads, int headDim, int rotaryDim,
                           double normEps, KvCacheLayout layout) {
-        this(dim, numHeads, numKvHeads, headDim, rotaryDim, normEps,
-                KvCachePool.forTesting(layout, Device.CPU()), 0);
+        this(dim, numHeads, numKvHeads, headDim, rotaryDim, normEps, 0);
+        setCachePool(KvCachePool.forTesting(layout, Device.CPU()));
     }
 
     @Override
@@ -154,6 +153,9 @@ public class GatedAttention implements Attention {
 
     @Override
     public Tensor forward(Tensor x, int startPos, Tensor cis, Tensor mask) {
+        if (cachePool == null) {
+            throw new IllegalStateException("KV cache pool not installed; call setCachePool first");
+        }
         long[] shape = x.shape();
         int batchSize = (int) shape[0];
         int seqlen = (int) shape[1];

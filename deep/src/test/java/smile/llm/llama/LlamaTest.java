@@ -30,8 +30,9 @@ import static org.junit.jupiter.api.Assertions.*;
 public class LlamaTest {
 
     private static Llama tinyLlama(LlamaModelArgs args) {
-        LlamaModel model = Llama.newModel(
-                args, smile.llm.cache.KvCachePool.forTesting(args.kvCacheLayout(), Device.CPU()), Device.CPU());
+        LlamaModel model = Llama.newModel(args, Device.CPU());
+        model.setKvCachePool(
+                smile.llm.cache.KvCachePool.forTesting(args.kvCacheLayout(), Device.CPU()), false);
         return new Llama("test", model, createTinyTokenizer(), args);
     }
 
@@ -48,8 +49,9 @@ public class LlamaTest {
     @Test
     public void testGivenLlamaWhenToStringCalledThenFormatIsCorrect() {
         LlamaModelArgs args = new LlamaModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 1, 32);
-        LlamaModel model = Llama.newModel(
-                args, smile.llm.cache.KvCachePool.forTesting(args.kvCacheLayout(), Device.CPU()), Device.CPU());
+        LlamaModel model = Llama.newModel(args, Device.CPU());
+        model.setKvCachePool(
+                smile.llm.cache.KvCachePool.forTesting(args.kvCacheLayout(), Device.CPU()), false);
         Tokenizer tokenizer = createTinyTokenizer();
         Llama llama = new Llama("llama3-tiny", model, tokenizer, args);
         assertEquals("meta/llama3/llama3-tiny", llama.toString());

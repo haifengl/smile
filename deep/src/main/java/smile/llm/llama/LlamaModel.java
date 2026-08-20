@@ -59,7 +59,7 @@ public class LlamaModel extends LayerBlock {
     final LinearLayer output;
     /** The precomputed cosine and sine frequencies. */
     final Tensor cis;
-    /** Shared KV cache pool used by all attention layers. */
+    /** Shared KV cache pool used by all attention layers; installed after weight load. */
     KvCachePool kvCachePool;
 
     /**
@@ -85,12 +85,13 @@ public class LlamaModel extends LayerBlock {
                       double normEps, double ropeTheta, boolean scaledRope, int maxSeqLen,
                       KvCacheLayout layout, Device device) {
         this(dim, numLayers, numHeads, numKvHeads, vocabSize, intermediateSize, multipleOf,
-                ffnDimMultiplier, normEps, ropeTheta, scaledRope, maxSeqLen,
-                KvCachePool.forTesting(layout, device), device);
+                ffnDimMultiplier, normEps, ropeTheta, scaledRope, maxSeqLen, device);
+        setKvCachePool(KvCachePool.forTesting(layout, device), false);
     }
 
     /**
-     * Constructor.
+     * Constructor without a KV pool. Call {@link #setKvCachePool} after weights
+     * are loaded so the pool can be sized from residual device memory.
      *
      * @param dim                token embedding dimension.
      * @param numLayers          number of transformer blocks.
@@ -104,26 +105,22 @@ public class LlamaModel extends LayerBlock {
      * @param ropeTheta          RoPE theta.
      * @param scaledRope         whether to use Llama-3 scaled RoPE.
      * @param maxSeqLen          maximum sequence length (RoPE table uses {@code 2 * maxSeqLen}).
-     * @param kvCachePool        shared KV cache pool.
      * @param device             compute device.
      */
     public LlamaModel(int dim, int numLayers, int numHeads, int numKvHeads, int vocabSize,
                       Integer intermediateSize, int multipleOf, Double ffnDimMultiplier,
                       double normEps, double ropeTheta, boolean scaledRope, int maxSeqLen,
-                      KvCachePool kvCachePool, Device device) {
-        if (kvCachePool == null) {
-            throw new IllegalArgumentException("kvCachePool must not be null");
-        }
+                      Device device) {
         this.vocabSize = vocabSize;
         this.numLayers = numLayers;
-        this.kvCachePool = kvCachePool;
+        this.kvCachePool = null;
         this.tokEmbeddings = new EmbeddingLayer(vocabSize, dim);
 
         this.layers = new ArrayList<>();
         MemorySegment moduleList = smile_module_list_create();
         for (int layerId = 0; layerId < numLayers; layerId++) {
             var block = new LlamaBlock(layerId, dim, numHeads, numKvHeads,
-                    intermediateSize, multipleOf, ffnDimMultiplier, normEps, kvCachePool);
+                    intermediateSize, multipleOf, ffnDimMultiplier, normEps);
             this.layers.add(block);
             smile_module_list_push_back(moduleList, block.module);
         }

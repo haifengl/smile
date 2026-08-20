@@ -19,7 +19,6 @@ package smile.llm.qwen;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import smile.deep.tensor.Tensor;
-import smile.llm.cache.KvCachePool;
 import smile.llm.parallel.TensorParallelGroup;
 import smile.llm.parallel.TensorShardSpec;
 import smile.llm.transformer.FeedForward;
@@ -52,17 +51,16 @@ public class QwenBlock {
      *
      * @param layerId   stack layer index.
      * @param args      model args.
-     * @param cachePool KV pool (full-attn layers).
-     * @param statePool DeltaNet state pool (linear layers).
+     * @param statePool DeltaNet state pool (linear layers; may be null).
      */
-    public QwenBlock(int layerId, QwenModelArgs args, KvCachePool cachePool, DeltaNetStatePool statePool) {
-        this(layerId, args, cachePool, statePool, null, null);
+    public QwenBlock(int layerId, QwenModelArgs args, DeltaNetStatePool statePool) {
+        this(layerId, args, statePool, null, null);
     }
 
     /**
      * Tensor-parallel constructor.
      */
-    public QwenBlock(int layerId, QwenModelArgs args, KvCachePool cachePool, DeltaNetStatePool statePool,
+    public QwenBlock(int layerId, QwenModelArgs args, DeltaNetStatePool statePool,
                      TensorShardSpec shard, TensorParallelGroup tpGroup) {
         this.layerId = layerId;
         this.layerType = args.layerTypes()[layerId];
@@ -75,11 +73,11 @@ public class QwenBlock {
             if (shard != null && shard.tpSize() > 1) {
                 this.selfAttn = GatedAttention.forShard(
                         args.dim(), args.headDim(), args.rotaryDim(), args.normEps(),
-                        cachePool, kvId, shard, tpGroup);
+                        kvId, shard, tpGroup);
             } else {
                 this.selfAttn = new GatedAttention(
                         args.dim(), args.numHeads(), args.numKvHeads(), args.headDim(),
-                        args.rotaryDim(), args.normEps(), cachePool, kvId);
+                        args.rotaryDim(), args.normEps(), kvId);
             }
             this.linearAttn = null;
         } else if (QwenModelArgs.LINEAR_ATTENTION.equals(layerType)) {

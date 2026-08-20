@@ -62,32 +62,29 @@ public class QwenModel extends LayerBlock {
     DeltaNetStatePool deltaNetStatePool;
 
     /**
-     * Constructor.
+     * Constructor without a KV pool. Call {@link #setKvCachePool} after weights
+     * are loaded when the model has full-attention layers.
      *
-     * @param args        hyperparameters.
-     * @param kvCachePool KV pool for full-attention layers.
-     * @param statePool   DeltaNet state pool (may be null when no linear layers).
-     * @param device      compute device.
+     * @param args      hyperparameters.
+     * @param statePool DeltaNet state pool (may be null when no linear layers).
+     * @param device    compute device.
      */
-    public QwenModel(QwenModelArgs args, KvCachePool kvCachePool, DeltaNetStatePool statePool, Device device) {
-        this(args, kvCachePool, statePool, device, null, null);
+    public QwenModel(QwenModelArgs args, DeltaNetStatePool statePool, Device device) {
+        this(args, statePool, device, null, null);
     }
 
     /**
      * Tensor-parallel shard constructor.
      */
-    public QwenModel(QwenModelArgs args, KvCachePool kvCachePool, DeltaNetStatePool statePool,
+    public QwenModel(QwenModelArgs args, DeltaNetStatePool statePool,
                      Device device, TensorShardSpec shard, TensorParallelGroup tpGroup) {
-        if (kvCachePool == null && args.numFullAttentionLayers() > 0) {
-            throw new IllegalArgumentException("kvCachePool required when full-attention layers exist");
-        }
         if (statePool == null && args.numLinearAttentionLayers() > 0) {
             throw new IllegalArgumentException("statePool required when linear-attention layers exist");
         }
         this.params = args;
         this.vocabSize = args.vocabSize();
         this.numLayers = args.numLayers();
-        this.kvCachePool = kvCachePool;
+        this.kvCachePool = null;
         this.deltaNetStatePool = statePool;
         this.shard = shard;
         this.tpGroup = tpGroup;
@@ -97,7 +94,7 @@ public class QwenModel extends LayerBlock {
         this.layers = new ArrayList<>();
         MemorySegment moduleList = smile_module_list_create();
         for (int i = 0; i < args.numLayers(); i++) {
-            var block = new QwenBlock(i, args, kvCachePool, statePool, shard, tpGroup);
+            var block = new QwenBlock(i, args, statePool, shard, tpGroup);
             layers.add(block);
             smile_module_list_push_back(moduleList, block.module);
         }
@@ -124,8 +121,6 @@ public class QwenModel extends LayerBlock {
      */
     public QwenModel(QwenModelArgs args, Device device) {
         this(args,
-                args.numFullAttentionLayers() > 0
-                        ? KvCachePool.forTesting(args.kvCacheLayout(), device) : null,
                 args.numLinearAttentionLayers() > 0
                         ? new DeltaNetStatePool(
                         args.numLinearAttentionLayers(),
@@ -139,6 +134,9 @@ public class QwenModel extends LayerBlock {
                         ScalarType.Float)
                         : null,
                 device);
+        if (args.numFullAttentionLayers() > 0) {
+            setKvCachePool(KvCachePool.forTesting(args.kvCacheLayout(), device), false);
+        }
     }
 
     public QwenModelArgs params() {

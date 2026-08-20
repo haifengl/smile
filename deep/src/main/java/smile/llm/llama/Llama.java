@@ -253,13 +253,7 @@ public class Llama implements LanguageModel {
         }
 
         var layout = modelArgs.kvCacheLayout();
-        // When mem-fraction-static is configured, use a tiny CPU placeholder
-        // during weight load, then replace with a GPU pool sized as
-        // staticBudget=total×y minus memory already used by weights.
-        KvCachePool bootstrap = memFractionStatic > 0
-                ? KvCachePool.bootstrap(layout)
-                : KvCachePool.forTesting(layout, device);
-        var model = newModel(modelArgs, bootstrap, device);
+        var model = newModel(modelArgs, device);
 
         if (huggingFace) {
             loadHuggingFaceWeights(model, modelArgs, dir, device);
@@ -278,14 +272,12 @@ public class Llama implements LanguageModel {
         }
         model.eval();
 
-        // Size KV from the static region remaining after weights are on device.
-        // Allocate the GPU pool before closing the CPU bootstrap so a failed
-        // allocate does not leave the model pointing at a closed pool.
-        if (memFractionStatic > 0) {
-            device.emptyCache();
-            var pool = KvCachePool.allocate(layout, device, cacheDtype, memFractionStatic);
-            model.setKvCachePool(pool, true);
-        }
+        // Size KV after weights are on device (staticBudget − used when mem-fraction set).
+        device.emptyCache();
+        KvCachePool pool = memFractionStatic > 0
+                ? KvCachePool.allocate(layout, device, cacheDtype, memFractionStatic)
+                : KvCachePool.forTesting(layout, device);
+        model.setKvCachePool(pool, false);
 
         var time = System.currentTimeMillis() - startTime;
         logger.info("Model {}[{}]: loaded in {}.{} seconds", checkpointDir, rank, time/1000, time%1000);
@@ -293,9 +285,9 @@ public class Llama implements LanguageModel {
     }
 
     /**
-     * Builds a {@link LlamaModel} from Llama hyperparameters and a shared KV pool.
+     * Builds a {@link LlamaModel} from Llama hyperparameters (KV pool installed later).
      */
-    static LlamaModel newModel(LlamaModelArgs args, KvCachePool kvCachePool, Device device) {
+    static LlamaModel newModel(LlamaModelArgs args, Device device) {
         return new LlamaModel(
                 args.dim(),
                 args.numLayers(),
@@ -309,7 +301,6 @@ public class Llama implements LanguageModel {
                 args.ropeTheta(),
                 args.scaledRope(),
                 args.maxSeqLen(),
-                kvCachePool,
                 device);
     }
 
