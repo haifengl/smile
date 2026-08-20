@@ -109,7 +109,7 @@ public class KvCachePool implements AutoCloseable {
     /** When {@code false}, {@link #bindWithPrefix} falls back to contiguous bind. */
     private volatile boolean prefixReuseEnabled = true;
 
-    /** Cumulative page-aligned prompt tokens seen by {@link #bindWithPrefix}. */
+    /** Cumulative prompt tokens seen by {@link #bindWithPrefix} (full length). */
     private final AtomicLong prefixPromptTokens = new AtomicLong();
     /** Cumulative matched prefix tokens from {@link #bindWithPrefix}. */
     private final AtomicLong prefixMatchTokens = new AtomicLong();
@@ -424,7 +424,7 @@ public class KvCachePool implements AutoCloseable {
         return prefixReuseEnabled;
     }
 
-    /** Cumulative page-aligned prompt tokens seen by prefix bind. */
+    /** Cumulative prompt tokens seen by prefix bind (full length, not page-floored). */
     public long prefixPromptTokens() {
         return prefixPromptTokens.get();
     }
@@ -490,7 +490,6 @@ public class KvCachePool implements AutoCloseable {
         releaseBinding();
         int pagesNeeded = (totalCapacity + pageSize - 1) / pageSize;
         int alignedCapacity = pagesNeeded * pageSize;
-        int promptAligned = (promptTokens.length / pageSize) * pageSize;
 
         long[] matchedSlots;
         RadixTreeNode matchNode;
@@ -527,14 +526,18 @@ public class KvCachePool implements AutoCloseable {
         requestCapacity = alignedCapacity;
         matchedPrefixLen = prefixLen;
 
-        prefixPromptTokens.addAndGet(promptAligned);
+        // Hit rate uses the real prompt length as denominator. Using
+        // page-floored length made short chat prompts (16–31 tokens) report
+        // 100% whenever the shared system/template filled one page.
+        int promptLen = promptTokens.length;
+        prefixPromptTokens.addAndGet(promptLen);
         prefixMatchTokens.addAndGet(prefixLen);
-        double hitRate = promptAligned > 0 ? 100.0 * prefixLen / promptAligned : 0.0;
+        double hitRate = promptLen > 0 ? 100.0 * prefixLen / promptLen : 0.0;
         long cumMatch = prefixMatchTokens.get();
         long cumPrompt = prefixPromptTokens.get();
         double cumHit = cumPrompt > 0 ? 100.0 * cumMatch / cumPrompt : 0.0;
         logger.info("KV prefix hit: matched={}/{} (hitRate={}) | cumulative={}/{} ({})",
-                prefixLen, promptAligned, String.format("%.1f%%", hitRate),
+                prefixLen, promptLen, String.format("%.1f%%", hitRate),
                 cumMatch, cumPrompt, String.format("%.1f%%", cumHit));
         return prefixLen;
     }
