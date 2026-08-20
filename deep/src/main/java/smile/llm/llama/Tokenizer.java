@@ -103,7 +103,8 @@ public class Tokenizer extends Tiktoken {
         int base = specialTokens.length;
         specialTokens = Arrays.copyOf(specialTokens, numReservedSpecialTokens);
         for (int i = base; i < numReservedSpecialTokens; i++) {
-            specialTokens[i] = String.format("<|reserved_special_token_{%d}|>", i - base + 2);
+            // Meta Llama 3 names: <|reserved_special_token_2|>, _3|, ...
+            specialTokens[i] = String.format("<|reserved_special_token_%d|>", i - base + 2);
         }
 
         return specialTokens;
