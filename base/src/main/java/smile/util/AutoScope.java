@@ -46,6 +46,13 @@ public class AutoScope implements AutoCloseable {
      * @return the resource object.
      */
     public <T extends AutoCloseable> T add(T resource) {
+        // Idempotent by reference: promoteToParent + explicit add must not
+        // register the same tensor twice (double-close on scope teardown).
+        for (var existing : resources) {
+            if (existing == resource) {
+                return resource;
+            }
+        }
         this.resources.add(resource);
         return resource;
     }
