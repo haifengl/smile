@@ -249,7 +249,7 @@ public class KvCachePool implements AutoCloseable {
             StaticKvBudget budget = computeStaticKvBudget(
                     total, free, memFraction, bytesPerToken, pageSize,
                     layout.maxBatchSize(), layout.maxSeqLen());
-            logger.info("KV static budget (SGLang-style): total={}, used={}, staticBudget={} "
+            logger.info("KV static budget: total={}, used={}, staticBudget={} "
                             + "(fraction={}), kvBudget={}, dynamicReserve={}, slots={}, "
                             + "maxUsefulSlots={}",
                     budget.total(), budget.used(), budget.staticBudget(), memFraction,

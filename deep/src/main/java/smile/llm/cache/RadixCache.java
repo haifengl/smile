@@ -281,7 +281,7 @@ public class RadixCache {
             newNode.extraKey = extraKey;
             newNode.parent = node;
             newNode.key = Arrays.copyOfRange(tokenIds, offset, offset + remaining);
-            newNode.value = Tensor.of(Arrays.copyOfRange(allKvIndices, offset, offset + remaining));
+            newNode.value = ownedIndices(Arrays.copyOfRange(allKvIndices, offset, offset + remaining));
             newNode.hitCount = 1;
 
             node.children.put(childKey(extraKey, tokenIds, offset), newNode);
@@ -510,8 +510,8 @@ public class RadixCache {
 
         // Split the KV index tensor into two independent tensors, then close the original.
         var origIndices = child.value.longArray();
-        newNode.value = Tensor.of(Arrays.copyOf(origIndices, splitLen));
-        var childNewValue = Tensor.of(Arrays.copyOfRange(origIndices, splitLen, origIndices.length));
+        newNode.value = ownedIndices(Arrays.copyOf(origIndices, splitLen));
+        var childNewValue = ownedIndices(Arrays.copyOfRange(origIndices, splitLen, origIndices.length));
         child.value.close();
         child.value = childNewValue;
 
@@ -573,6 +573,8 @@ public class RadixCache {
     /**
      * Concatenates a list of {@code long[]} chunks into a single 1-D
      * {@code int64} {@link Tensor}. Returns an empty tensor when the list is empty.
+     * The result is owned by the caller ({@link MatchResult}) and may live on
+     * the current {@code AutoScope}.
      */
     private Tensor tensorOf(List<long[]> chunks) {
         if (chunks.isEmpty()) return emptyTensor();
@@ -586,14 +588,28 @@ public class RadixCache {
         return Tensor.of(result);
     }
 
+    /**
+     * Allocates a long-lived int64 index tensor for a radix node. Detaches from
+     * any active {@code AutoScope} so request-scoped generation does not free
+     * tree-owned storage when the scope closes (which previously caused
+     * SIGSEGV on the next prefix hit).
+     */
+    private static Tensor ownedIndices(long[] data) {
+        Tensor t = Tensor.of(data);
+        t.detachFromScopes();
+        return t;
+    }
+
     /** Returns a fresh empty 1-D {@code int64} tensor of length 0. */
     private static Tensor emptyTensor() {
         // Explicit CPU Int64 — must not inherit CUDA/Half default options set
         // during Llama.build, and must avoid empty from_blob paths.
-        return Tensor.empty(new Tensor.Options()
+        Tensor t = Tensor.empty(new Tensor.Options()
                 .dtype(ScalarType.Int64)
                 .device(Device.CPU())
                 .requireGradients(false), 0);
+        t.detachFromScopes();
+        return t;
     }
 
     /**
