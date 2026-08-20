@@ -83,6 +83,77 @@ public class KvCachePoolTest {
     }
 
     @Test
+    public void testGivenStaticBudgetWhenUsedSubtractedThenSlotsMatchFormula() {
+        // Given – 40 GiB total, 10 GiB used (weights), y=0.85 → static=34 GiB, kv=24 GiB
+        long total = 40L << 30;
+        long used = 10L << 30;
+        long free = total - used;
+        double y = 0.85;
+        long bytesPerToken = 1024L;
+        int pageSize = 16;
+        int maxBatch = 1;
+        int maxSeq = 8192;
+
+        // When
+        var budget = KvCachePool.computeStaticKvBudget(
+                total, free, y, bytesPerToken, pageSize, maxBatch, maxSeq);
+
+        // Then
+        long expectedStatic = (long) (total * y);
+        assertEquals(total, budget.total());
+        assertEquals(used, budget.used());
+        assertEquals(expectedStatic, budget.staticBudget());
+        assertEquals(expectedStatic - used, budget.kvBudget());
+        assertEquals(total - expectedStatic, budget.dynamicReserve());
+        assertEquals(maxBatch * maxSeq, budget.maxUsefulSlots());
+        // 24 GiB / 1024 ≫ 8192 → capped at context
+        assertEquals(8192, budget.numSlots());
+    }
+
+    @Test
+    public void testGivenTightKvBudgetWhenComputeThenSlotsBelowContextCap() {
+        // Given – static region barely larger than used → small KV budget
+        long total = 20L << 30;
+        long used = (long) (total * 0.85) - (512L << 20); // leave ~512 MiB for KV
+        long free = total - used;
+        double y = 0.85;
+        long bytesPerToken = 2L * 32 * 8 * 128 * 2; // layers×kvHeads×headDim×fp16 ×2 (K+V)
+        int pageSize = 16;
+        int maxSeq = 8192;
+
+        // When
+        var budget = KvCachePool.computeStaticKvBudget(
+                total, free, y, bytesPerToken, pageSize, 1, maxSeq);
+
+        // Then
+        assertTrue(budget.kvBudget() > 0);
+        assertTrue(budget.numSlots() < budget.maxUsefulSlots());
+        assertEquals(0, budget.numSlots() % pageSize);
+        assertEquals((long) (total * y) - used, budget.kvBudget());
+    }
+
+    @Test
+    public void testGivenKvBudgetTooSmallWhenComputeThenThrows() {
+        // Given – used already exceeds staticBudget
+        long total = 10L << 30;
+        long free = 1L << 30; // used = 9 GiB
+        double y = 0.5; // static = 5 GiB < used
+
+        // When / Then
+        assertThrows(IllegalStateException.class, () ->
+                KvCachePool.computeStaticKvBudget(total, free, y, 1024L, 16, 1, 128));
+    }
+
+    @Test
+    public void testGivenSlotsFromBudgetWhenPageAlignThenRespectsCap() {
+        // Given / When
+        var slots = KvCachePool.slotsFromBudget(100_000L, 100L, 16, 1, 64);
+        // Then – 1000 tokens from budget, capped and page-aligned to 64
+        assertEquals(64, slots.numSlots());
+        assertEquals(64, slots.maxUsefulSlots());
+    }
+
+    @Test
     public void testGivenBoundRequestsWhenUnboundThenPagesReturnToFreeList() {
         // Given
         try (var pool = new KvCachePool(1, 64, 2, 16, 16, Device.CPU(), ScalarType.Float)) {

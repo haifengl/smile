@@ -81,11 +81,13 @@ public class ChatService {
      * Loads the LLM upon application start.
      * The {@code @ApplicationScoped} scope ensures the model is loaded once and reused.
      *
-     * <p>After weights are loaded, a shared {@link smile.llm.cache.KvCachePool}
-     * is allocated using {@link ChatServiceConfig#memFractionStatic()} of the remaining
-     * free GPU memory. The pool element dtype comes from
-     * {@link KvCacheConfig#dtype()} when set, otherwise from the model's
-     * {@code config.json} {@code torch_dtype}.
+     * <p>After weights (and Qwen DeltaNet state) are loaded, a shared
+     * {@link smile.llm.cache.KvCachePool} is sized with SGLang
+     * {@code mem-fraction-static} semantics via
+     * {@link ChatServiceConfig#memFractionStatic()}: {@code y × total} for the
+     * static region, with KV getting the remainder inside that budget. The pool
+     * element dtype comes from {@link KvCacheConfig#dtype()} when set, otherwise
+     * from the model's {@code config.json} {@code torch_dtype}.
      *
      * @param config  the chat service configuration.
      * @param kvCache KV-cache storage configuration.
@@ -422,7 +424,7 @@ public class ChatService {
      * or {@code tokenizer.json} for Qwen).
      *
      * @param config the chat service configuration; {@code config.model()} is the HF repo ID.
-     * @param memFractionStatic fraction of free GPU memory for the KV cache pool.
+     * @param memFractionStatic static-region fraction of total GPU memory (SGLang-style).
      * @param kvCacheDtype optional KV-cache dtype override ({@code null} = auto).
      * @return the loaded language model.
      * @throws Exception if a required file cannot be downloaded or the model fails to load.

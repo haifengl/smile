@@ -31,14 +31,15 @@ import smile.util.Tuple2;
  * Physical KV-cache memory pool backed by a {@link RadixCache} for
  * prefix-sharing across requests.
  *
- * <p>The pool pre-allocates two tensors (keys and values) sized to the minimum of
- * the free-memory budget and the configured working set:
+ * <p>On CUDA, sizing follows SGLang {@code --mem-fraction-static} ({@code y}):
  * <pre>
- *   budgetSlots = (freeDeviceMemory × memFractionStatic) / bytesPerToken
- *   numSlots    = min(budgetSlots, maxBatchSize × maxSeqLen)   // page-aligned
+ *   staticBudget   = totalGpuMemory × y          // weights + static pools + KV
+ *   dynamicReserve = totalGpuMemory × (1 − y)    // activations / temps (left free)
+ *   kvBudget       = staticBudget − memoryAlreadyUsed
+ *   numSlots       = min(kvBudget / bytesPerToken, maxBatchSize × maxSeqLen)
  * </pre>
- * Capping at {@code maxBatchSize × maxSeqLen} matches vLLM/SGLang behavior
- * (KV sized to {@code max_model_len}, not the entire mem-fraction capacity).
+ * Call {@link #allocate} only after model weights (and any other static pools
+ * such as DeltaNet state) are on device so {@code memoryAlreadyUsed} is correct.
  *
  * <p>Slot indices are managed as fixed-size pages. The embedded
  * {@link RadixCache} maps token prefixes to those indices so that shared
@@ -91,6 +92,26 @@ public class KvCachePool implements AutoCloseable {
     private int requestCapacity;
 
     /**
+     * Result of SGLang-style static KV budget arithmetic (testable without CUDA).
+     *
+     * @param total          device total memory bytes.
+     * @param used           bytes already held (typically weights + DeltaNet).
+     * @param staticBudget   {@code total × memFraction}.
+     * @param kvBudget       bytes available for KV ({@code staticBudget − used}).
+     * @param dynamicReserve {@code total − staticBudget}.
+     * @param numSlots       page-aligned slot count after context cap.
+     * @param maxUsefulSlots {@code maxBatchSize × maxSeqLen} page-aligned.
+     */
+    public record StaticKvBudget(
+            long total,
+            long used,
+            long staticBudget,
+            long kvBudget,
+            long dynamicReserve,
+            int numSlots,
+            int maxUsefulSlots) {}
+
+    /**
      * Constructor.
      *
      * @param numLayers  number of transformer layers.
@@ -135,15 +156,16 @@ public class KvCachePool implements AutoCloseable {
     }
 
     /**
-     * Allocates a pool sized to {@code memFraction} of the free device memory.
+     * Allocates a pool using SGLang {@code mem-fraction-static} semantics.
      *
-     * <p>Call this <em>after</em> model weights have been loaded so that the
-     * free-memory reading reflects the residual capacity available for KV cache.
+     * <p>Call this <em>after</em> model weights (and other static buffers) are
+     * loaded. On CUDA, {@code memFraction} is applied to <em>total</em> device
+     * memory; KV receives whatever remains inside that static region.
      *
      * @param layout      family-agnostic cache layout.
      * @param device      compute device.
      * @param dtype       cache element dtype (typically the model weight dtype).
-     * @param memFraction fraction of free GPU memory to use ({@code (0, 1]}).
+     * @param memFraction static-region fraction of total GPU memory ({@code (0, 1]}).
      * @param pageSize    tokens per page.
      * @return the allocated pool.
      */
@@ -152,41 +174,55 @@ public class KvCachePool implements AutoCloseable {
         if (memFraction <= 0 || memFraction > 1) {
             throw new IllegalArgumentException("memFraction must be in (0, 1]: " + memFraction);
         }
+        if (pageSize < 1) {
+            throw new IllegalArgumentException("pageSize must be >= 1");
+        }
 
         int dtypeBytes = elementSize(dtype);
         long bytesPerToken = 2L * layout.numLayers() * layout.numKvHeads()
                 * layout.headDim() * dtypeBytes;
 
-        long budget;
+        final int numSlots;
         if (device.isCUDA()) {
             device.emptyCache();
-            long free = CUDA.freeMemory(device.index());
-            budget = (long) (free * memFraction);
-            logger.info("KV cache budget: {} / {} free bytes (fraction={})",
-                    budget, free, memFraction);
+            int index = device.index();
+            long total = CUDA.totalMemory(index);
+            long free = CUDA.freeMemory(index);
+            if (total <= 0) {
+                throw new IllegalStateException("CUDA totalMemory returned " + total
+                        + " for device " + index);
+            }
+            if (free < 0 || free > total) {
+                throw new IllegalStateException(String.format(
+                        "CUDA memory info inconsistent: free=%d total=%d device=%d",
+                        free, total, index));
+            }
+            StaticKvBudget budget = computeStaticKvBudget(
+                    total, free, memFraction, bytesPerToken, pageSize,
+                    layout.maxBatchSize(), layout.maxSeqLen());
+            logger.info("KV static budget (SGLang-style): total={}, used={}, staticBudget={} "
+                            + "(fraction={}), kvBudget={}, dynamicReserve={}, slots={}, "
+                            + "maxUsefulSlots={}",
+                    budget.total(), budget.used(), budget.staticBudget(), memFraction,
+                    budget.kvBudget(), budget.dynamicReserve(), budget.numSlots(),
+                    budget.maxUsefulSlots());
+            if (budget.numSlots() < budget.maxUsefulSlots()) {
+                logger.warn("KV cache budget yields {} slots < configured maxBatchSize*maxSeqLen={}; "
+                                + "long contexts may fail at bind. Lower smile.chat.max-seq-len "
+                                + "or raise smile.chat.mem-fraction-static.",
+                        budget.numSlots(), budget.maxUsefulSlots());
+            } else if (budget.kvBudget() > (long) budget.maxUsefulSlots() * bytesPerToken) {
+                logger.info("KV cache slots capped at maxBatchSize*maxSeqLen={} "
+                                + "({} bytes of static KV budget unused; reserved for dynamic region)",
+                        budget.maxUsefulSlots(),
+                        budget.kvBudget() - (long) budget.maxUsefulSlots() * bytesPerToken);
+            }
+            numSlots = budget.numSlots();
         } else {
             // CPU fallback: size to maxBatchSize × maxSeqLen (tests / CPU inference).
-            budget = bytesPerToken * layout.maxBatchSize() * layout.maxSeqLen();
-        }
-
-        int numSlots = (int) Math.min(Integer.MAX_VALUE, Math.max(pageSize, budget / bytesPerToken));
-        numSlots = (numSlots / pageSize) * pageSize;
-
-        // Cap at the configured working set. Without this, a high mem-fraction on a
-        // large GPU allocates hundreds of thousands of unused slots (e.g. ~256K when
-        // maxSeqLen=4096), filling the device and leaving no room for DeltaNet /
-        // attention activations — unlike vLLM/SGLang which size KV to max_model_len.
-        long maxUsefulLong = (long) layout.maxBatchSize() * (long) layout.maxSeqLen();
-        int maxUsefulSlots = (int) Math.min(Integer.MAX_VALUE, Math.max(pageSize, maxUsefulLong));
-        maxUsefulSlots = ((maxUsefulSlots + pageSize - 1) / pageSize) * pageSize;
-        if (numSlots > maxUsefulSlots) {
-            logger.info("KV cache slots capped from {} to maxBatchSize*maxSeqLen={} ({} bytes unused budget)",
-                    numSlots, maxUsefulSlots, (numSlots - maxUsefulSlots) * bytesPerToken);
-            numSlots = maxUsefulSlots;
-        } else if (numSlots < maxUsefulSlots) {
-            logger.warn("KV cache budget yields {} slots < configured maxBatchSize*maxSeqLen={}; "
-                            + "long contexts may fail at bind. Lower max-seq-len or raise mem.fraction.static.",
-                    numSlots, maxUsefulSlots);
+            long budget = bytesPerToken * layout.maxBatchSize() * layout.maxSeqLen();
+            numSlots = slotsFromBudget(budget, bytesPerToken, pageSize,
+                    layout.maxBatchSize(), layout.maxSeqLen()).numSlots();
         }
 
         return new KvCachePool(layout.numLayers(), numSlots, layout.numKvHeads(),
@@ -194,12 +230,89 @@ public class KvCachePool implements AutoCloseable {
     }
 
     /**
+     * Computes SGLang-style KV slot budget from device memory readings.
+     *
+     * @param total         total device memory bytes.
+     * @param free          free device memory bytes (after {@code emptyCache}).
+     * @param memFraction   static-region fraction {@code y}.
+     * @param bytesPerToken bytes for one token of K+V across all layers.
+     * @param pageSize      tokens per page.
+     * @param maxBatchSize  configured max batch.
+     * @param maxSeqLen     configured max sequence length.
+     * @return budget breakdown and slot count.
+     */
+    public static StaticKvBudget computeStaticKvBudget(
+            long total, long free, double memFraction, long bytesPerToken, int pageSize,
+            int maxBatchSize, int maxSeqLen) {
+        if (total <= 0) throw new IllegalArgumentException("total must be > 0");
+        if (free < 0 || free > total) {
+            throw new IllegalArgumentException("free must be in [0, total]");
+        }
+        if (memFraction <= 0 || memFraction > 1) {
+            throw new IllegalArgumentException("memFraction must be in (0, 1]");
+        }
+        if (bytesPerToken < 1) throw new IllegalArgumentException("bytesPerToken must be >= 1");
+        if (pageSize < 1) throw new IllegalArgumentException("pageSize must be >= 1");
+
+        long used = total - free;
+        long staticBudget = (long) (total * memFraction);
+        long dynamicReserve = total - staticBudget;
+        long kvBudget = staticBudget - used;
+        if (kvBudget < bytesPerToken * (long) pageSize) {
+            throw new IllegalStateException(String.format(
+                    "KV static budget too small: staticBudget=%d used=%d kvBudget=%d "
+                            + "(need at least one page = %d bytes). Lower weights/static pools "
+                            + "or raise smile.chat.mem-fraction-static.",
+                    staticBudget, used, kvBudget, bytesPerToken * pageSize));
+        }
+
+        var slots = slotsFromBudget(kvBudget, bytesPerToken, pageSize, maxBatchSize, maxSeqLen);
+        return new StaticKvBudget(total, used, staticBudget, kvBudget, dynamicReserve,
+                slots.numSlots(), slots.maxUsefulSlots());
+    }
+
+    /**
+     * Converts a byte budget into page-aligned slots, capped at
+     * {@code maxBatchSize × maxSeqLen}.
+     *
+     * @param kvBudgetBytes bytes available for KV buffers.
+     * @param bytesPerToken bytes for one token of K+V across all layers.
+     * @param pageSize      tokens per page.
+     * @param maxBatchSize  configured max batch.
+     * @param maxSeqLen     configured max sequence length.
+     * @return page-aligned slot count and the context cap.
+     */
+    static SlotCount slotsFromBudget(long kvBudgetBytes, long bytesPerToken, int pageSize,
+                                     int maxBatchSize, int maxSeqLen) {
+        int fromBudget = (int) Math.min(Integer.MAX_VALUE,
+                Math.max(pageSize, kvBudgetBytes / bytesPerToken));
+        fromBudget = (fromBudget / pageSize) * pageSize;
+        if (fromBudget < pageSize) {
+            fromBudget = pageSize;
+        }
+
+        long maxUsefulLong = (long) maxBatchSize * (long) maxSeqLen;
+        int maxUsefulSlots = (int) Math.min(Integer.MAX_VALUE, Math.max(pageSize, maxUsefulLong));
+        maxUsefulSlots = ((maxUsefulSlots + pageSize - 1) / pageSize) * pageSize;
+
+        return new SlotCount(Math.min(fromBudget, maxUsefulSlots), maxUsefulSlots);
+    }
+
+    /**
+     * Page-aligned slot count after applying the context cap.
+     *
+     * @param numSlots       slots to allocate.
+     * @param maxUsefulSlots {@code maxBatchSize × maxSeqLen} page-aligned.
+     */
+    record SlotCount(int numSlots, int maxUsefulSlots) {}
+
+    /**
      * Allocates a pool with {@link #DEFAULT_PAGE_SIZE}.
      *
      * @param layout      family-agnostic cache layout.
      * @param device      compute device.
      * @param dtype       cache element dtype.
-     * @param memFraction fraction of free GPU memory to use.
+     * @param memFraction static-region fraction of total GPU memory.
      * @return the allocated pool.
      */
     public static KvCachePool allocate(KvCacheLayout layout, Device device, ScalarType dtype,
