@@ -133,11 +133,16 @@ public class LlamaBlock {
         try {
             Tensor anorm = attentionNorm.forward(x);
             Tensor ax = attention.forward(anorm, startPos, cis, mask);
+            anorm.close();
             Tensor h = x.add(ax);
+            ax.close();
             Tensor fnorm = ffnNorm.forward(h);
             Tensor fx = feedForward.forward(fnorm);
+            fnorm.close();
             Tensor out = h.add(fx);
-            scope.remove(out);
+            fx.close();
+            h.close();
+            out.promoteToParent();
             return out;
         } finally {
             Tensor.pop();

@@ -66,10 +66,14 @@ public final class PartialRotaryEncoding {
             Tensor xkPass = xk.get(Index.Ellipsis, pass);
 
             var rotated = RotaryPositionalEncoding.apply(xqRot, xkRot, cis);
-            Tensor qOut = concatLast(rotated._1(), xqPass);
-            Tensor kOut = concatLast(rotated._2(), xkPass);
-            scope.remove(qOut);
-            scope.remove(kOut);
+            Tensor qRot = rotated._1();
+            Tensor kRot = rotated._2();
+            Tensor qOut = concatLast(qRot, xqPass);
+            Tensor kOut = concatLast(kRot, xkPass);
+            qRot.close();
+            kRot.close();
+            qOut.promoteToParent();
+            kOut.promoteToParent();
             return new Tuple2<>(qOut, kOut);
         } finally {
             Tensor.pop();

@@ -235,9 +235,12 @@ public class QwenModel extends LayerBlock {
             Tensor normalized = norm.forward(h);
             h.close();
             Tensor logitsF = lmHead.forward(normalized);
+            normalized.close();
             Tensor logits = logitsF.to(ScalarType.Float);
-            // Keep logits alive after pop(); everything else is freed.
-            scope.remove(logits);
+            if (logits != logitsF) {
+                logitsF.close();
+            }
+            logits.promoteToParent();
             return logits;
         } finally {
             Tensor.pop();

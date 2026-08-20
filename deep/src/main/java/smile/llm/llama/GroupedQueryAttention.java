@@ -163,26 +163,37 @@ public class GroupedQueryAttention implements Attention {
             Tensor xv = vRaw.view(batchSize, seqlen, numLocalKvHeads, headDim);
 
             var tuple = RotaryPositionalEncoding.apply(xq, xk, cis);
-            xq = tuple._1();
-            xk = tuple._2();
+            Tensor qRope = tuple._1();
+            Tensor kRope = tuple._2();
 
-            cachePool.put(layerId, startPos, xk, xv);
+            // put copies into the pool; RoPE keys are not needed afterward.
+            cachePool.put(layerId, startPos, kRope, xv);
+            kRope.close();
+
             var cached = cachePool.get(layerId, startPos + seqlen);
             Tensor keys = cached._1();
             Tensor values = cached._2();
 
-            keys = repeatKV(keys, numRep);
-            values = repeatKV(values, numRep);
+            Tensor keysRep = repeatKV(keys, numRep);
+            Tensor valuesRep = repeatKV(values, numRep);
+            if (keysRep != keys) {
+                keys.close();
+            }
+            if (valuesRep != values) {
+                values.close();
+            }
 
-            xq = xq.transpose(1, 2);
-            keys = keys.transpose(1, 2);
-            values = values.transpose(1, 2);
-            Tensor attn = apply(xq, keys, values, mask);
+            // transpose returns a view — leave qRope/keysRep/valuesRep on this
+            // scope so pop closes views before bases.
+            Tensor qT = qRope.transpose(1, 2);
+            Tensor kT = keysRep.transpose(1, 2);
+            Tensor vT = valuesRep.transpose(1, 2);
+            Tensor attn = apply(qT, kT, vT, mask);
             Tensor attnT = attn.transpose(1, 2);
             Tensor attnC = attnT.contiguous();
             Tensor flat = attnC.view(batchSize, seqlen, -1);
             Tensor out = wo.forward(flat);
-            scope.remove(out);
+            out.promoteToParent();
             return out;
         } finally {
             Tensor.pop();

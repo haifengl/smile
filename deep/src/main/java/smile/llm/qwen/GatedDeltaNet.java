@@ -243,7 +243,7 @@ public class GatedDeltaNet {
                 if (tpGroup != null && tpGroup.tpSize() > 1) {
                     tpGroup.allReduceSumInPlace(tpRank, out);
                 }
-                scope.remove(out);
+                out.promoteToParent();
                 return out;
             }
         } finally {

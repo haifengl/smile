@@ -237,8 +237,12 @@ public class LlamaModel extends LayerBlock {
             Tensor normalized = norm.forward(h);
             h.close();
             Tensor logitsF = output.forward(normalized);
+            normalized.close();
             Tensor logits = logitsF.to(ScalarType.Float);
-            scope.remove(logits);
+            if (logits != logitsF) {
+                logitsF.close();
+            }
+            logits.promoteToParent();
             return logits;
         } finally {
             Tensor.pop();

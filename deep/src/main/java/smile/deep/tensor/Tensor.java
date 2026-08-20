@@ -122,6 +122,34 @@ public class Tensor implements AutoCloseable {
     }
 
     /**
+     * Moves this tensor from the current (top) {@link AutoScope} to its parent
+     * so it survives {@link #pop()} of the child scope.
+     *
+     * <p>Use when returning a tensor to the caller: the child removes it from
+     * its own scope (so {@code pop} will not free it) and attaches it to the
+     * parent scope for deterministic cleanup. If there is no parent scope, the
+     * tensor is only detached from the current scope and the caller owns it.
+     *
+     * @return this tensor.
+     */
+    public Tensor promoteToParent() {
+        Deque<AutoScope> stack = scopes.get();
+        if (stack.isEmpty()) {
+            return this;
+        }
+        AutoScope current = stack.pop();
+        try {
+            current.remove(this);
+            if (!stack.isEmpty()) {
+                stack.peek().add(this);
+            }
+        } finally {
+            stack.push(current);
+        }
+        return this;
+    }
+
+    /**
      * Removes the scope at the top of the tensor stack. All tensors
      * added to this scope will be released.
      * @return the top level scope.
