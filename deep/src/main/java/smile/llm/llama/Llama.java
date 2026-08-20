@@ -135,16 +135,17 @@ public class Llama implements LanguageModel {
      * Builds a Llama instance by initializing and loading a model checkpoint.
      *
      * <p>When {@code memFractionStatic > 0}, a {@link KvCachePool} is allocated
-     * after weight loading using that fraction of the remaining free device
-     * memory (see {@code smile.chat.mem-fraction-static} in smile-serve).
+     * after weight loading with SGLang {@code --mem-fraction-static} semantics:
+     * {@code y} is a fraction of <em>total</em> GPU memory for the static region
+     * (weights + KV); see {@code smile.chat.mem-fraction-static} in smile-serve.
      *
      * @param checkpointDir the directory path of checkpoint files.
      * @param tokenizerPath the path of tokenizer model file.
      * @param maxBatchSize the maximum batch size for inference.
      * @param maxSeqLen the maximum sequence length for input text.
      * @param deviceId the optional CUDA device ID. If negative, don't use CUDA.
-     * @param memFractionStatic fraction of free GPU memory for the KV cache pool;
-     *                          {@code <= 0} keeps the default test-sized pool.
+     * @param memFractionStatic static-region fraction of total GPU memory for
+     *                          weights + KV; {@code <= 0} keeps the default test-sized pool.
      * @throws IOException if fail to open model checkpoint.
      * @return an instance of Llama model.
      */
@@ -158,16 +159,17 @@ public class Llama implements LanguageModel {
      * Builds a Llama instance by initializing and loading a model checkpoint.
      *
      * <p>When {@code memFractionStatic > 0}, a {@link KvCachePool} is allocated
-     * after weight loading using that fraction of the remaining free device
-     * memory (see {@code smile.chat.mem-fraction-static} in smile-serve).
+     * after weight loading with SGLang {@code --mem-fraction-static} semantics:
+     * {@code y} is a fraction of <em>total</em> GPU memory for the static region
+     * (weights + KV); see {@code smile.chat.mem-fraction-static} in smile-serve.
      *
      * @param checkpointDir the directory path of checkpoint files.
      * @param tokenizerPath the path of tokenizer model file.
      * @param maxBatchSize the maximum batch size for inference.
      * @param maxSeqLen the maximum sequence length for input text.
      * @param deviceId the optional CUDA device ID. If negative, don't use CUDA.
-     * @param memFractionStatic fraction of free GPU memory for the KV cache pool;
-     *                          {@code <= 0} keeps the default test-sized pool.
+     * @param memFractionStatic static-region fraction of total GPU memory for
+     *                          weights + KV; {@code <= 0} keeps the default test-sized pool.
      * @param kvCacheDtype optional KV-cache element dtype name
      *                     (e.g. {@code bfloat16}, {@code float16});
      *                     {@code null}/blank uses {@code torch_dtype} from
@@ -234,10 +236,9 @@ public class Llama implements LanguageModel {
         }
 
         var layout = modelArgs.kvCacheLayout();
-        // When a static memory fraction is configured, use a tiny CPU placeholder
-        // pool during weight load, then replace it with a GPU pool sized from
-        // residual free memory. Avoids allocating a full maxBatch×maxSeqLen CUDA
-        // bootstrap cache (and related empty-tensor pitfalls) before weights load.
+        // When mem-fraction-static is configured, use a tiny CPU placeholder
+        // during weight load, then replace with a GPU pool sized as
+        // staticBudget=total×y minus memory already used by weights.
         KvCachePool bootstrap = memFractionStatic > 0
                 ? KvCachePool.bootstrap(layout)
                 : KvCachePool.forTesting(layout, device);
@@ -260,7 +261,7 @@ public class Llama implements LanguageModel {
         }
         model.eval();
 
-        // Size the shared KV cache from residual free memory after weights load.
+        // Size KV from the static region remaining after weights are on device.
         if (memFractionStatic > 0) {
             model.kvCachePool().close();
             device.emptyCache();

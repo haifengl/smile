@@ -131,7 +131,8 @@ public class Qwen implements LanguageModel {
     /**
      * Builds a Qwen instance from a HuggingFace checkpoint directory.
      *
-     * @param memFractionStatic fraction of free GPU memory for the KV pool; {@code <=0} keeps test sizing.
+     * @param memFractionStatic static-region fraction of total GPU memory (SGLang-style);
+     *                          {@code <=0} keeps test sizing.
      * @param kvCacheDtype      optional KV dtype override.
      */
     public static Qwen build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte deviceId,
@@ -265,8 +266,8 @@ public class Qwen implements LanguageModel {
         loadHuggingFaceWeights(model, dir, Device.CPU(), shard, weightMap);
         model.eval();
 
-        // Allocate fixed DeltaNet state before the KV pool so memFractionStatic
-        // is measured against free memory after those buffers exist.
+        // Allocate fixed DeltaNet state before the KV pool so staticBudget−used
+        // accounts for both weights and DeltaNet GPU pools (SGLang-style).
         if (memFractionStatic > 0 && modelArgs.numLinearAttentionLayers() > 0) {
             var gpuState = new DeltaNetStatePool(
                     modelArgs.numLinearAttentionLayers(),

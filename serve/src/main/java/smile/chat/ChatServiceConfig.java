@@ -57,11 +57,11 @@ public interface ChatServiceConfig {
     int maxBatchSize();
 
     /**
-     * Fraction of free GPU memory (after weights and DeltaNet state load)
-     * available for the KV cache pool. Same role as vLLM
-     * {@code --gpu-memory-utilization} / SGLang {@code --mem-fraction-static}.
-     * The pool is also capped at {@code maxBatchSize × maxSeqLen} slots.
-     * Defaults to {@code 0.85}.
+     * SGLang {@code --mem-fraction-static}: fraction {@code y} of <em>total</em>
+     * GPU memory reserved for the static region (model weights, DeltaNet state
+     * pools, and KV cache). The remainder {@code (1 − y) × total} stays free for
+     * dynamic activations. KV slots are {@code staticBudget − used}, then capped
+     * at {@code maxBatchSize × maxSeqLen}. Defaults to {@code 0.85}.
      */
     @WithDefault("0.85")
     double memFractionStatic();
