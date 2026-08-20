@@ -177,4 +177,80 @@ public class KvCachePoolTest {
             assertThrows(IllegalStateException.class, () -> pool.bindRequests(2, 16));
         }
     }
+
+    @Test
+    public void testGivenBindWithPrefixWhenFirstRequestThenMissThenHitOnRepeat() {
+        // Given – pageSize=1 so every token is eligible for the radix tree
+        KvCacheLayout layout = tinyLayout(1, 1, 64);
+        try (var pool = KvCachePool.forTesting(layout, Device.CPU())) {
+            int[] prompt = {10, 20, 30, 40, 50, 60, 70, 80};
+
+            // When – first request: miss, write KV, insert
+            assertEquals(0, pool.bindWithPrefix(prompt, 32));
+            Tensor k = Tensor.ones(1, prompt.length, 2, 16);
+            Tensor v = Tensor.full(3.0f, 1, prompt.length, 2, 16);
+            pool.put(0, 0, k, v);
+            k.close();
+            v.close();
+            pool.finishRequest(prompt);
+
+            // Then – second request with same prompt hits
+            int hit = pool.bindWithPrefix(prompt, 32);
+            assertEquals(prompt.length, hit);
+            assertEquals(prompt.length, pool.prefixMatchTokens());
+            assertTrue(pool.prefixPromptTokens() >= prompt.length);
+
+            // Cached values still readable at prefix positions
+            var cached = pool.get(0, prompt.length);
+            assertEquals(3.0f, cached._2().getFloat(0, 0, 0, 0), 1e-5);
+            cached._1().close();
+            cached._2().close();
+            pool.unbindRequests();
+        }
+    }
+
+    @Test
+    public void testGivenBindWithPrefixWhenDisabledThenAlwaysMiss() {
+        // Given
+        KvCacheLayout layout = tinyLayout(1, 1, 32);
+        try (var pool = KvCachePool.forTesting(layout, Device.CPU())) {
+            pool.setPrefixReuseEnabled(false);
+            int[] prompt = {1, 2, 3, 4};
+
+            // When
+            assertEquals(0, pool.bindWithPrefix(prompt, 16));
+            Tensor k = Tensor.ones(1, 4, 2, 16);
+            Tensor v = Tensor.ones(1, 4, 2, 16);
+            pool.put(0, 0, k, v);
+            k.close();
+            v.close();
+            pool.finishRequest(prompt); // no-op path for insert when reuse was contiguous-only
+
+            // Then – still miss because reuse was disabled at bind time
+            assertEquals(0, pool.bindWithPrefix(prompt, 16));
+            pool.unbindRequests();
+        }
+    }
+
+    @Test
+    public void testGivenFinishRequestWhenPrefixRetainedThenFreePagesStayBelowFull() {
+        // Given
+        try (var pool = new KvCachePool(1, 64, 2, 16, 1, Device.CPU(), ScalarType.Float)) {
+            int freeFull = pool.freePages();
+            int[] prompt = {1, 2, 3, 4, 5, 6, 7, 8};
+            pool.bindWithPrefix(prompt, 16);
+            Tensor k = Tensor.ones(1, 8, 2, 16);
+            Tensor v = Tensor.ones(1, 8, 2, 16);
+            pool.put(0, 0, k, v);
+            k.close();
+            v.close();
+
+            // When
+            pool.finishRequest(prompt);
+
+            // Then – inserted pages remain allocated (not returned to free list)
+            assertTrue(pool.freePages() < freeFull);
+            assertTrue(pool.prefixInsertTokens() >= prompt.length);
+        }
+    }
 }
