@@ -128,6 +128,16 @@ public class Qwen implements LanguageModel {
         return name;
     }
 
+    @Override
+    public int maxSeqLen() {
+        return params.maxSeqLen();
+    }
+
+    @Override
+    public int[] encodeChat(Message... dialog) {
+        return tokenizer.encodeDialog(dialog);
+    }
+
     /** Hyperparameters from the checkpoint. */
     public QwenModelArgs params() {
         return params;

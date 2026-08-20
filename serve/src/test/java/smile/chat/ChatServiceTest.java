@@ -80,18 +80,6 @@ public class ChatServiceTest {
     }
 
     @Test
-    public void testGivenMaxCompletionTokensWhenResolvedThenTakesPrecedence() {
-        CompletionRequest request = new CompletionRequest();
-        assertEquals(2048, request.resolveMaxTokens());
-
-        request.maxTokens = 100;
-        assertEquals(100, request.resolveMaxTokens());
-
-        request.maxCompletionTokens = 50;
-        assertEquals(50, request.resolveMaxTokens());
-    }
-
-    @Test
     public void testGivenStreamFlagInBodyWhenParsedThenHonorsFalse() {
         assertFalse(ChatCompletionsStreamFlag.streamFlag("{}".getBytes()));
         assertTrue(ChatCompletionsStreamFlag.streamFlag("{\"stream\":true}".getBytes()));

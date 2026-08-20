@@ -311,8 +311,9 @@ public class ChatService {
      * @return the array of completion results, one per dialog in the batch.
      */
     public ChatCompletion[] complete(CompletionRequest request, SubmissionPublisher<String> publisher) {
-        Message[][] dialogs = { request.messages };
-        return model.chat(dialogs, request.resolveMaxTokens(), request.temperature,
+        int[] prompt = model.encodeChat(request.messages);
+        int maxGenLen = request.resolveMaxTokens(model.maxSeqLen(), prompt.length);
+        return model.generate(new int[][]{prompt}, maxGenLen, request.temperature,
                 request.topP, request.logprobs, request.seed, publisher);
     }
 

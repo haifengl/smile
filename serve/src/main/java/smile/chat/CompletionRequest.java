@@ -40,8 +40,9 @@ public class CompletionRequest {
     public Message[] messages;
     /**
      * Maximum number of new tokens to generate. Prefer
-     * {@link #maxCompletionTokens} when both are set. Default when neither is
-     * set: {@code 2048}.
+     * {@link #maxCompletionTokens} when both are set. When neither is set,
+     * {@link #resolveMaxTokens(int, int)} uses remaining context
+     * ({@code maxSeqLen - promptLen}).
      */
     public Integer maxTokens;
     /**
@@ -65,21 +66,31 @@ public class CompletionRequest {
     public Boolean stream = Boolean.FALSE;
 
     /**
-     * Resolves the generation length limit.
+     * Returns {@code true} when the client set {@code max_completion_tokens}
+     * or {@code max_tokens}.
+     */
+    public boolean hasExplicitMaxTokens() {
+        return maxCompletionTokens != null || maxTokens != null;
+    }
+
+    /**
+     * Resolves max new tokens to generate.
      *
      * <p>{@code max_completion_tokens} wins when set; otherwise {@code max_tokens};
-     * otherwise {@code 2048}.
+     * otherwise remaining context {@code max(1, maxSeqLen - promptLen)}.
      *
+     * @param maxSeqLen configured max model / context length.
+     * @param promptLen chat-templated prompt token count.
      * @return positive max new tokens.
      */
-    public int resolveMaxTokens() {
+    public int resolveMaxTokens(int maxSeqLen, int promptLen) {
         if (maxCompletionTokens != null) {
             return maxCompletionTokens;
         }
         if (maxTokens != null) {
             return maxTokens;
         }
-        return 2048;
+        return Math.max(1, maxSeqLen - promptLen);
     }
 
     /**

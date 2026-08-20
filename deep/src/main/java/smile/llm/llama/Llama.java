@@ -111,8 +111,19 @@ public class Llama implements LanguageModel {
      * Returns the model instance name.
      * @return the model instance name.
      */
+    @Override
     public String name() {
         return name;
+    }
+
+    @Override
+    public int maxSeqLen() {
+        return params.maxSeqLen();
+    }
+
+    @Override
+    public int[] encodeChat(Message... dialog) {
+        return tokenizer.encodeDialog(dialog);
     }
 
     /**
