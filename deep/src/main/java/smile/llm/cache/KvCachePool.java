@@ -142,17 +142,36 @@ public class KvCachePool implements AutoCloseable {
         this.dtype = dtype;
         this.radix = new RadixCache(pageSize);
 
+        // Allocate K/V directly on the target device (zeros have no content to copy).
         var options = new Tensor.Options().device(device).dtype(dtype).requireGradients(false);
-        this.kCache = Tensor.zeros(options, numLayers, numSlots, numKvHeads, headDim);
-        this.vCache = Tensor.zeros(options, numLayers, numSlots, numKvHeads, headDim);
+        Tensor k = Tensor.zeros(options, numLayers, numSlots, numKvHeads, headDim);
+        Tensor v = Tensor.zeros(options, numLayers, numSlots, numKvHeads, headDim);
+        // Long-lived pool buffers must not be owned by a transient AutoScope.
+        k.detachFromScopes();
+        v.detachFromScopes();
+
+        if (device.isCUDA() && (!k.device().isCUDA() || !v.device().isCUDA())) {
+            String msg = String.format(
+                    "KvCachePool failed to allocate on CUDA (requested=%s, k=%s, v=%s)",
+                    device, k.device(), v.device());
+            k.close();
+            v.close();
+            throw new IllegalStateException(msg);
+        }
+        this.kCache = k;
+        this.vCache = v;
 
         int numPages = numSlots / pageSize;
         for (int p = 0; p < numPages; p++) {
             freePages.addLast(p);
         }
 
-        logger.info("KvCachePool: layers={}, slots={}, kvHeads={}, headDim={}, pageSize={}, dtype={}, device={}",
-                numLayers, numSlots, numKvHeads, headDim, pageSize, dtype, device);
+        long kBytes = smile.torch.Native.nbytes(kCache);
+        long vBytes = smile.torch.Native.nbytes(vCache);
+        logger.info("KvCachePool: layers={}, slots={}, kvHeads={}, headDim={}, pageSize={}, "
+                        + "dtype={}, device={}, kCache.device={}, footprintMiB={}",
+                numLayers, numSlots, numKvHeads, headDim, pageSize, dtype, device,
+                kCache.device(), (kBytes + vBytes) / (1024 * 1024));
     }
 
     /**
@@ -186,8 +205,11 @@ public class KvCachePool implements AutoCloseable {
         if (device.isCUDA()) {
             device.emptyCache();
             int index = device.index();
-            long total = CUDA.totalMemory(index);
-            long free = CUDA.freeMemory(index);
+            // Use one cudaMemGetInfo snapshot for both free and total so the
+            // SGLang used = total - free arithmetic is internally consistent.
+            long[] mem = smile.torch.Native.cudaMemGetInfo(index);
+            long free = mem[0];
+            long total = mem[1] > 0 ? mem[1] : CUDA.totalMemory(index);
             if (total <= 0) {
                 throw new IllegalStateException("CUDA totalMemory returned " + total
                         + " for device " + index);
@@ -213,7 +235,7 @@ public class KvCachePool implements AutoCloseable {
                         budget.numSlots(), budget.maxUsefulSlots());
             } else if (budget.kvBudget() > (long) budget.maxUsefulSlots() * bytesPerToken) {
                 logger.info("KV cache slots capped at maxBatchSize*maxSeqLen={} "
-                                + "({} bytes of static KV budget unused; reserved for dynamic region)",
+                                + "({} bytes of static KV budget unused)",
                         budget.maxUsefulSlots(),
                         budget.kvBudget() - (long) budget.maxUsefulSlots() * bytesPerToken);
             }

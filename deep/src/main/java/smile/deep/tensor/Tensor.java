@@ -110,6 +110,18 @@ public class Tensor implements AutoCloseable {
     }
 
     /**
+     * Removes this tensor from every {@link AutoScope} on the current thread
+     * without freeing native storage. Use for long-lived buffers (e.g. KV
+     * cache pools) that must outlive a transient generation scope.
+     */
+    public void detachFromScopes() {
+        Deque<AutoScope> stack = scopes.get();
+        for (AutoScope scope : stack) {
+            scope.remove(this);
+        }
+    }
+
+    /**
      * Removes the scope at the top of the tensor stack. All tensors
      * added to this scope will be released.
      * @return the top level scope.
