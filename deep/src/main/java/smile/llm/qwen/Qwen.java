@@ -264,13 +264,6 @@ public class Qwen implements LanguageModel {
                 modelArgs.numHeads(), modelArgs.numKvHeads(), modelArgs.intermediateSize(),
                 modelArgs.linearNumKeyHeads(), modelArgs.linearNumValueHeads());
 
-        KvCachePool bootstrap = null;
-        if (modelArgs.numFullAttentionLayers() > 0) {
-            var layout = modelArgs.kvCacheLayout(shard);
-            bootstrap = memFractionStatic > 0
-                    ? KvCachePool.bootstrap(layout)
-                    : KvCachePool.forTesting(layout, device);
-        }
         DeltaNetStatePool statePool = null;
         if (modelArgs.numLinearAttentionLayers() > 0) {
             statePool = new DeltaNetStatePool(
@@ -285,7 +278,7 @@ public class Qwen implements LanguageModel {
                     ScalarType.Float);
         }
 
-        QwenModel model = new QwenModel(modelArgs, bootstrap, statePool, device, shard, tpGroup);
+        QwenModel model = new QwenModel(modelArgs, statePool, device, shard, tpGroup);
         loadHuggingFaceWeights(model, dir, Device.CPU(), shard, weightMap);
         model.eval();
 
@@ -311,11 +304,13 @@ public class Qwen implements LanguageModel {
             }
             if (previous != null) previous.close();
         }
-        if (memFractionStatic > 0 && modelArgs.numFullAttentionLayers() > 0) {
+        if (modelArgs.numFullAttentionLayers() > 0) {
             device.emptyCache();
-            var pool = KvCachePool.allocate(
-                    modelArgs.kvCacheLayout(shard), device, cacheDtype, memFractionStatic);
-            model.setKvCachePool(pool, true);
+            KvCachePool pool = memFractionStatic > 0
+                    ? KvCachePool.allocate(
+                            modelArgs.kvCacheLayout(shard), device, cacheDtype, memFractionStatic)
+                    : KvCachePool.forTesting(modelArgs.kvCacheLayout(shard), device);
+            model.setKvCachePool(pool, false);
         }
         return model;
     }

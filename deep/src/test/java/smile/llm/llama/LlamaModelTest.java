@@ -60,7 +60,8 @@ public class LlamaModelTest {
     public void testGivenAttentionWhenConstructedThenUsesSharedKvCachePool() {
         var layout = layout(1, 2, 32);
         var pool = KvCachePool.forTesting(layout, Device.CPU());
-        GroupedQueryAttention attn = new GroupedQueryAttention(DIM, NUM_HEADS, NUM_KV_HEADS, pool, 0);
+        GroupedQueryAttention attn = new GroupedQueryAttention(DIM, NUM_HEADS, NUM_KV_HEADS, 0);
+        attn.setCachePool(pool);
         assertEquals(2 * 32, pool.numSlots());
         assertEquals(0, attn.layerId);
         assertEquals(16, attn.headDim);

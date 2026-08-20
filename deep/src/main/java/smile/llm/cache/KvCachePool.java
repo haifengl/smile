@@ -383,20 +383,6 @@ public class KvCachePool implements AutoCloseable {
                 pageSize, device, ScalarType.Float);
     }
 
-    /**
-     * Creates a tiny CPU-side placeholder pool used while model weights are
-     * loaded. The inference engine replaces it with a sized GPU pool afterward
-     * (see {@code smile.chat.mem-fraction-static}).
-     *
-     * @param layout cache layout.
-     * @return a minimal CPU pool (one page).
-     */
-    public static KvCachePool bootstrap(KvCacheLayout layout) {
-        int pageSize = DEFAULT_PAGE_SIZE;
-        return new KvCachePool(layout.numLayers(), pageSize, layout.numKvHeads(), layout.headDim(),
-                pageSize, Device.CPU(), ScalarType.Float);
-    }
-
     /** Returns the embedded radix tree used for prefix sharing. */
     public RadixCache radix() {
         return radix;
