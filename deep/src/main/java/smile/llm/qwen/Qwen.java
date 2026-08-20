@@ -110,6 +110,19 @@ public class Qwen implements LanguageModel {
         return family;
     }
 
+    /**
+     * Enables or disables radix prefix reuse on every TP rank's KV pool.
+     *
+     * @param enabled {@code true} to match/insert prefixes across requests.
+     */
+    public void setPrefixReuseEnabled(boolean enabled) {
+        for (QwenModel m : models) {
+            if (m.kvCachePool() != null) {
+                m.kvCachePool().setPrefixReuseEnabled(enabled);
+            }
+        }
+    }
+
     @Override
     public String name() {
         return name;
@@ -542,8 +555,18 @@ public class Qwen implements LanguageModel {
             Tensor.push(scope);
             try {
             int totalLen = Math.min(params.maxSeqLen(), maxGenLen + maxPromptLen);
-
-            if (model.kvCachePool() != null) {
+            final boolean usePrefix = batchSize == 1 && model.kvCachePool() != null;
+            int prefixLen = 0;
+            if (usePrefix) {
+                for (QwenModel m : models) {
+                    if (m.kvCachePool() != null) {
+                        prefixLen = m.kvCachePool().bindWithPrefix(prompts[0], totalLen);
+                    }
+                }
+                if (prefixLen > 0 && minPromptLen < totalLen && minPromptLen > 0) {
+                    prefixLen = Math.min(prefixLen, minPromptLen - 1);
+                }
+            } else if (model.kvCachePool() != null) {
                 for (QwenModel m : models) {
                     if (m.kvCachePool() != null) {
                         m.kvCachePool().bindRequests(batchSize, totalLen);
@@ -598,7 +621,7 @@ public class Qwen implements LanguageModel {
             inputTextMask.close();
             stopTokens.close();
 
-            int prevPos = 0;
+            int prevPos = prefixLen;
             int chunkPos = minPromptLen;
             ExecutorService pool = models.length > 1
                     ? Executors.newFixedThreadPool(models.length)
@@ -708,6 +731,7 @@ public class Qwen implements LanguageModel {
                 }
             }
             ChatCompletion[] predictions = new ChatCompletion[batchSize];
+            int[] sequenceToInsert = null;
             for (int i = 0; i < batchSize; i++) {
                 int start = prompts[i].length;
                 var completion = Arrays.stream(longArray)
@@ -738,9 +762,21 @@ public class Qwen implements LanguageModel {
                 var reason = stop ? FinishReason.stop : FinishReason.length;
                 predictions[i] = new ChatCompletion(name, tokenizer.decode(completion),
                         prompts[i], completion, reason, probs);
+                if (usePrefix && i == 0) {
+                    sequenceToInsert = new int[prompts[0].length + completion.length];
+                    System.arraycopy(prompts[0], 0, sequenceToInsert, 0, prompts[0].length);
+                    System.arraycopy(completion, 0, sequenceToInsert, prompts[0].length, completion.length);
+                }
             }
 
             if (publisher != null) publisher.close();
+            if (usePrefix && sequenceToInsert != null) {
+                for (QwenModel m : models) {
+                    if (m.kvCachePool() != null) {
+                        m.kvCachePool().finishRequest(sequenceToInsert);
+                    }
+                }
+            }
             return predictions;
             } finally {
                 Tensor.pop();
@@ -762,6 +798,10 @@ public class Qwen implements LanguageModel {
      * Runs {@link QwenModel#forward} on every TP rank (in parallel when {@code tpSize > 1}).
      */
     private Tensor[] forwardAll(Tensor[] tokens, int prevPos, int curPos, ExecutorService pool) {
+        if (prevPos >= curPos) {
+            throw new IllegalArgumentException(
+                    "forwardAll requires prevPos < curPos, got " + prevPos + " >= " + curPos);
+        }
         Tensor[] logits = new Tensor[models.length];
         if (models.length == 1) {
             try (var span = Index.slice(prevPos, curPos);

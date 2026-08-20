@@ -114,12 +114,26 @@ public class ChatService {
                 logger.warnf("Chat model '%s' is neither a local directory nor a Hugging Face "
                         + "repository ID; chat completions will return HTTP 503", modelSpec);
             }
+            if (model != null) {
+                applyPrefixReuse(model, kvCache.prefixReuse());
+            }
         } catch (Exception ex) {
             // Keep the service up in an unavailable state so classic ML / ONNX
             // endpoints still work; chat requests return HTTP 503.
             logger.warnf(ex, "Failed to load chat model '%s'; chat completions will return HTTP 503",
                     modelSpec);
             model = null;
+        }
+    }
+
+    /**
+     * Applies {@code smile.kv.cache.prefix-reuse} to the loaded chat model.
+     */
+    static void applyPrefixReuse(LanguageModel model, boolean enabled) {
+        switch (model) {
+            case Llama llama -> llama.setPrefixReuseEnabled(enabled);
+            case Qwen qwen -> qwen.setPrefixReuseEnabled(enabled);
+            default -> { }
         }
     }
 

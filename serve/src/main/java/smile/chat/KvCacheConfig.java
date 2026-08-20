@@ -18,6 +18,7 @@ package smile.chat;
 
 import java.util.Optional;
 import io.smallrye.config.ConfigMapping;
+import io.smallrye.config.WithDefault;
 
 /**
  * KV-cache storage settings for the inference engine.
@@ -36,4 +37,12 @@ public interface KvCacheConfig {
      * ({@code bfloat16} when supported, otherwise {@code float16}).
      */
     Optional<String> dtype();
+
+    /**
+     * When {@code true}, batch-1 generate matches prompts against the radix KV
+     * tree and skips recomputing cached prefixes (SGLang-style). Defaults to
+     * {@code true}.
+     */
+    @WithDefault("true")
+    boolean prefixReuse();
 }

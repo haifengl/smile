@@ -84,12 +84,18 @@ public class Llama implements LanguageModel {
         return String.format("%s/%s", family, name);
     }
 
-    /**
-     * Returns the model family name.
-     * @return the model family name.
-     */
+    @Override
     public String family() {
         return family;
+    }
+
+    /**
+     * Enables or disables radix prefix reuse for all KV pools on this model.
+     *
+     * @param enabled {@code true} to match/insert prefixes across requests.
+     */
+    public void setPrefixReuseEnabled(boolean enabled) {
+        model.kvCachePool().setPrefixReuseEnabled(enabled);
     }
 
     /**
@@ -649,7 +655,18 @@ public class Llama implements LanguageModel {
             Tensor.push(scope);
             try {
             int totalLen = Math.min(params.maxSeqLen(), maxGenLen + maxPromptLen);
-            model.kvCachePool().bindRequests(batchSize, totalLen);
+            final boolean usePrefix = batchSize == 1;
+            int prefixLen = 0;
+            if (usePrefix) {
+                prefixLen = model.kvCachePool().bindWithPrefix(prompts[0], totalLen);
+                // Keep the last prompt token in the first forward so we obtain
+                // next-token logits when generation is needed.
+                if (prefixLen > 0 && minPromptLen < totalLen && minPromptLen > 0) {
+                    prefixLen = Math.min(prefixLen, minPromptLen - 1);
+                }
+            } else {
+                model.kvCachePool().bindRequests(batchSize, totalLen);
+            }
 
             int pad = tokenizer.pad();
             Tensor tokensCpu = Tensor.full(pad, batchSize, totalLen);
@@ -680,9 +697,11 @@ public class Llama implements LanguageModel {
             inputTextMaskCpu.close();
             stopTokensCpu.close();
 
-            int prevPos = 0;
-            if (minPromptLen == totalLen) {
-                try (var logits = model.forward(tokens, prevPos)) {
+            int prevPos = prefixLen;
+            if (minPromptLen == totalLen && prevPos < totalLen) {
+                try (var span = Index.slice(prevPos, totalLen);
+                     var window = tokens.get(Index.Colon, span);
+                     var logits = model.forward(window, prevPos)) {
                     if (logprobs) {
                         try (var transposed = logits.transpose(1, 2);
                              var entropy = Tensor.crossEntropy(transposed, tokens, "none", pad).neg_()) {
@@ -791,6 +810,7 @@ public class Llama implements LanguageModel {
                 }
             }
             ChatCompletion[] predictions = new ChatCompletion[batchSize];
+            int[] sequenceToInsert = null;
             for (int i = 0; i < batchSize; i++) {
                 // cut to max gen len
                 int start = prompts[i].length;
@@ -822,17 +842,32 @@ public class Llama implements LanguageModel {
 
                 var reason = stop ? FinishReason.stop : FinishReason.length;
                 predictions[i] = new ChatCompletion(name, tokenizer.decode(completion), prompts[i], completion, reason, probs);
+                if (usePrefix && i == 0) {
+                    sequenceToInsert = concatTokens(prompts[0], completion);
+                }
             }
 
             if (publisher != null) publisher.close();
+            if (usePrefix && sequenceToInsert != null) {
+                model.kvCachePool().finishRequest(sequenceToInsert);
+            }
             return predictions;
             } finally {
                 Tensor.pop();
             }
         } finally {
+            // finishRequest clears the binding; otherwise release private pages.
             model.kvCachePool().unbindRequests();
             model.device().emptyCache();
         }
+    }
+
+    /** Concatenates prompt and completion token ids for radix insert. */
+    private static int[] concatTokens(int[] prompt, int[] completion) {
+        int[] seq = new int[prompt.length + completion.length];
+        System.arraycopy(prompt, 0, seq, 0, prompt.length);
+        System.arraycopy(completion, 0, seq, prompt.length, completion.length);
+        return seq;
     }
 
     /**

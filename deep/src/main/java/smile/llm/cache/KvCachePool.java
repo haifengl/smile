@@ -18,6 +18,9 @@ package smile.llm.cache;
 
 import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.deep.CUDA;
@@ -45,8 +48,8 @@ import smile.util.Tuple2;
  * {@link RadixCache} maps token prefixes to those indices so that shared
  * system prompts and conversation history can be reused without recomputation.
  * Attention layers write and read activations through {@link #put} /
- * {@link #get} using request-scoped contiguous slot ranges established by
- * {@link #bindRequests}.
+ * {@link #get} using a per-request slot map established by
+ * {@link #bindRequests} or {@link #bindWithPrefix}.
  *
  * @author Haifeng Li
  * @see RadixCache
@@ -84,12 +87,36 @@ public class KvCachePool implements AutoCloseable {
     final RadixCache radix;
 
     /**
-     * Per-batch-item base slot for the currently bound request.
+     * Per-batch-item slot map (SGLang {@code req_to_token}):
+     * {@code requestSlots[b][pos]} is the pool slot for token position {@code pos}.
      * {@code null} when no request is bound.
      */
-    private int[] requestBases;
-    /** Contiguous capacity (slots) reserved for each bound request. */
+    private long[][] requestSlots;
+    /** Capacity (slots) reserved for each bound request. */
     private int requestCapacity;
+    /**
+     * Page-aligned matched prefix length for {@link #bindWithPrefix}.
+     * Zero for contiguous {@link #bindRequests}.
+     */
+    private int matchedPrefixLen;
+    /**
+     * Slots allocated privately for this request (suffix + decode headroom).
+     * Not owned by the radix tree until {@link #finishRequest} inserts them.
+     */
+    private long[] privateSlots;
+    /** Radix node locked for the in-flight prefix match; {@code null} if none. */
+    private RadixTreeNode lockedNode;
+    /** When {@code false}, {@link #bindWithPrefix} falls back to contiguous bind. */
+    private volatile boolean prefixReuseEnabled = true;
+
+    /** Cumulative page-aligned prompt tokens seen by {@link #bindWithPrefix}. */
+    private final AtomicLong prefixPromptTokens = new AtomicLong();
+    /** Cumulative matched prefix tokens from {@link #bindWithPrefix}. */
+    private final AtomicLong prefixMatchTokens = new AtomicLong();
+    /** Cumulative tokens inserted into the radix tree. */
+    private final AtomicLong prefixInsertTokens = new AtomicLong();
+    /** Cumulative tokens reclaimed by radix eviction. */
+    private final AtomicLong prefixEvictTokens = new AtomicLong();
 
     /**
      * Result of SGLang-style static KV budget arithmetic (testable without CUDA).
@@ -396,37 +423,184 @@ public class KvCachePool implements AutoCloseable {
     }
 
     /**
+     * Enables or disables SGLang-style prefix reuse via {@link #bindWithPrefix}.
+     * When disabled, {@link #bindWithPrefix} behaves like contiguous
+     * {@link #bindRequests}({@code 1}, {@code totalCapacity}).
+     *
+     * @param enabled {@code true} to match/insert against the radix tree.
+     */
+    public void setPrefixReuseEnabled(boolean enabled) {
+        this.prefixReuseEnabled = enabled;
+    }
+
+    /** Returns whether prefix reuse is enabled. */
+    public boolean isPrefixReuseEnabled() {
+        return prefixReuseEnabled;
+    }
+
+    /** Cumulative page-aligned prompt tokens seen by prefix bind. */
+    public long prefixPromptTokens() {
+        return prefixPromptTokens.get();
+    }
+
+    /** Cumulative matched prefix tokens. */
+    public long prefixMatchTokens() {
+        return prefixMatchTokens.get();
+    }
+
+    /** Cumulative tokens inserted into the radix tree. */
+    public long prefixInsertTokens() {
+        return prefixInsertTokens.get();
+    }
+
+    /**
      * Reserves a contiguous slot range of {@code capacity} tokens for each
      * item in a batch. Must be called before {@link #put}/{@link #get} for a
-     * request. Previously bound slots are released (not inserted into the
-     * radix tree).
+     * request. Previously bound slots are released without radix insert.
      *
      * @param batchSize number of parallel requests.
      * @param capacity  slots reserved per request (typically {@code maxSeqLen}).
      * @throws IllegalStateException if the pool lacks free pages.
      */
     public void bindRequests(int batchSize, int capacity) {
-        unbindRequests();
+        releaseBinding();
         int pagesNeeded = (capacity + pageSize - 1) / pageSize;
         int aligned = pagesNeeded * pageSize;
-        requestBases = new int[batchSize];
+        requestSlots = new long[batchSize][];
         requestCapacity = aligned;
+        matchedPrefixLen = 0;
+        lockedNode = null;
+        long[] allPrivate = new long[batchSize * aligned];
+        int privateOffset = 0;
         for (int b = 0; b < batchSize; b++) {
-            requestBases[b] = allocContiguous(aligned);
+            long[] slots = alloc(aligned);
+            requestSlots[b] = slots;
+            System.arraycopy(slots, 0, allPrivate, privateOffset, aligned);
+            privateOffset += aligned;
         }
+        privateSlots = allPrivate;
     }
 
     /**
-     * Releases slots reserved by {@link #bindRequests} back to the free list.
-     * Does not touch radix-tree entries.
+     * Match a prompt against the radix tree, lock the matched node, allocate
+     * suffix/decode slots, and bind a slot map for batch size 1.
+     *
+     * @param promptTokens  prompt token ids.
+     * @param totalCapacity total slots needed (prompt + generation headroom).
+     * @return page-aligned matched prefix length (0 if miss or reuse disabled).
+     */
+    public int bindWithPrefix(int[] promptTokens, int totalCapacity) {
+        if (promptTokens == null) {
+            throw new IllegalArgumentException("promptTokens must not be null");
+        }
+        if (totalCapacity < 1) {
+            throw new IllegalArgumentException("totalCapacity must be >= 1");
+        }
+        if (!prefixReuseEnabled) {
+            bindRequests(1, totalCapacity);
+            return 0;
+        }
+
+        releaseBinding();
+        int pagesNeeded = (totalCapacity + pageSize - 1) / pageSize;
+        int alignedCapacity = pagesNeeded * pageSize;
+        int promptAligned = (promptTokens.length / pageSize) * pageSize;
+
+        long[] matchedSlots;
+        RadixTreeNode matchNode;
+        try (MatchResult match = radix.matchPrefix(promptTokens)) {
+            // Empty int64 tensors have no data_ptr; avoid longArray() on miss.
+            matchedSlots = match.length() == 0 ? new long[0] : match.indices().longArray();
+            matchNode = match.lastNode();
+        }
+        int prefixLen = matchedSlots.length;
+        if (prefixLen > alignedCapacity) {
+            throw new IllegalStateException("matched prefix longer than totalCapacity");
+        }
+
+        if (matchNode != null && matchNode != radix.root) {
+            radix.incLockRef(matchNode);
+            lockedNode = matchNode;
+        } else {
+            lockedNode = null;
+        }
+
+        int suffixLen = alignedCapacity - prefixLen;
+        long[] suffix = suffixLen > 0 ? alloc(suffixLen) : new long[0];
+        privateSlots = suffix;
+
+        long[] map = new long[alignedCapacity];
+        if (prefixLen > 0) {
+            System.arraycopy(matchedSlots, 0, map, 0, prefixLen);
+        }
+        if (suffixLen > 0) {
+            System.arraycopy(suffix, 0, map, prefixLen, suffixLen);
+        }
+
+        requestSlots = new long[][]{map};
+        requestCapacity = alignedCapacity;
+        matchedPrefixLen = prefixLen;
+
+        prefixPromptTokens.addAndGet(promptAligned);
+        prefixMatchTokens.addAndGet(prefixLen);
+        double hitRate = promptAligned > 0 ? 100.0 * prefixLen / promptAligned : 0.0;
+        long cumMatch = prefixMatchTokens.get();
+        long cumPrompt = prefixPromptTokens.get();
+        double cumHit = cumPrompt > 0 ? 100.0 * cumMatch / cumPrompt : 0.0;
+        logger.info("KV prefix hit: matched={}/{} (hitRate={}) | cumulative={}/{} ({})",
+                prefixLen, promptAligned, String.format("%.1f%%", hitRate),
+                cumMatch, cumPrompt, String.format("%.1f%%", cumHit));
+        return prefixLen;
+    }
+
+    /**
+     * Inserts prompt+completion into the radix tree, frees duplicate/private
+     * pages not retained by the tree, and unlocks the matched node.
+     *
+     * @param sequenceTokens prompt and generated token ids (no pad).
+     */
+    public void finishRequest(int[] sequenceTokens) {
+        if (requestSlots == null) {
+            return;
+        }
+        if (!prefixReuseEnabled || sequenceTokens == null) {
+            releaseBinding();
+            return;
+        }
+
+        int aligned = (sequenceTokens.length / pageSize) * pageSize;
+        if (aligned > 0 && requestSlots.length == 1) {
+            if (aligned > requestCapacity) {
+                aligned = (requestCapacity / pageSize) * pageSize;
+            }
+            int[] tokens = Arrays.copyOf(sequenceTokens, aligned);
+            long[] slots = Arrays.copyOf(requestSlots[0], aligned);
+            try (Tensor kvIndices = Tensor.of(slots)) {
+                InsertResult inserted = radix.insert(tokens, kvIndices);
+                int keepFrom = inserted.prefixLen();
+                // Newly stored tokens are [keepFrom, aligned); retain those pages.
+                // Free private pages outside that retained range.
+                freePrivateOutside(keepFrom, aligned);
+                prefixInsertTokens.addAndGet(Math.max(0, aligned - keepFrom));
+            }
+        } else {
+            // Nothing page-aligned to insert; free all private pages.
+            freePrivateOutside(Integer.MAX_VALUE, 0);
+        }
+
+        unlockMatched();
+        requestSlots = null;
+        requestCapacity = 0;
+        matchedPrefixLen = 0;
+        privateSlots = null;
+    }
+
+    /**
+     * Releases slots reserved by {@link #bindRequests} / {@link #bindWithPrefix}
+     * without inserting into the radix tree. Tree-owned matched pages are not freed.
      */
     public void unbindRequests() {
-        if (requestBases == null) return;
-        for (int base : requestBases) {
-            freeContiguous(base, requestCapacity);
-        }
-        requestBases = null;
-        requestCapacity = 0;
+        releaseBinding();
     }
 
     /**
@@ -438,8 +612,8 @@ public class KvCachePool implements AutoCloseable {
      * @param endPos    exclusive end position that will be accessed.
      */
     public void ensureRequest(int batchSize, int endPos) {
-        if (requestBases != null
-                && requestBases.length == batchSize
+        if (requestSlots != null
+                && requestSlots.length == batchSize
                 && requestCapacity >= endPos) {
             return;
         }
@@ -463,9 +637,9 @@ public class KvCachePool implements AutoCloseable {
 
         long[] indices = new long[batch * seqlen];
         for (int b = 0; b < batch; b++) {
-            int base = requestBases[b];
+            long[] slots = requestSlots[b];
             for (int t = 0; t < seqlen; t++) {
-                indices[b * seqlen + t] = base + startPos + t;
+                indices[b * seqlen + t] = slots[startPos + t];
             }
         }
 
@@ -494,12 +668,12 @@ public class KvCachePool implements AutoCloseable {
         if (length > requestCapacity) {
             throw new IllegalArgumentException("KV read exceeds bound request capacity");
         }
-        int batch = requestBases.length;
+        int batch = requestSlots.length;
         long[] indices = new long[batch * length];
         for (int b = 0; b < batch; b++) {
-            int base = requestBases[b];
+            long[] slots = requestSlots[b];
             for (int t = 0; t < length; t++) {
-                indices[b * length + t] = base + t;
+                indices[b * length + t] = slots[t];
             }
         }
 
@@ -553,7 +727,7 @@ public class KvCachePool implements AutoCloseable {
 
     @Override
     public void close() {
-        unbindRequests();
+        releaseBinding();
         radix.reset();
         kCache.close();
         vCache.close();
@@ -563,9 +737,56 @@ public class KvCachePool implements AutoCloseable {
     // ===== Internal helpers =====
 
     private void ensureBound() {
-        if (requestBases == null) {
-            throw new IllegalStateException("No request bound; call bindRequests() first");
+        if (requestSlots == null) {
+            throw new IllegalStateException("No request bound; call bindRequests() or bindWithPrefix() first");
         }
+    }
+
+    /**
+     * Drops the current binding: frees all {@link #privateSlots} and unlocks
+     * without radix insert. Tree-owned matched slots are never freed here.
+     */
+    private void releaseBinding() {
+        if (requestSlots == null && privateSlots == null && lockedNode == null) {
+            return;
+        }
+        if (privateSlots != null && privateSlots.length > 0) {
+            free(privateSlots);
+        }
+        unlockMatched();
+        requestSlots = null;
+        requestCapacity = 0;
+        matchedPrefixLen = 0;
+        privateSlots = null;
+    }
+
+    private void unlockMatched() {
+        if (lockedNode != null) {
+            radix.decLockRef(lockedNode);
+            lockedNode = null;
+        }
+    }
+
+    /**
+     * Frees private slots whose request position is not in
+     * {@code [retainStart, retainEnd)}.
+     */
+    private void freePrivateOutside(int retainStart, int retainEnd) {
+        if (privateSlots == null || privateSlots.length == 0) {
+            return;
+        }
+        // privateSlots maps to request positions [matchedPrefixLen, capacity)
+        Set<Integer> pagesToFree = new HashSet<>();
+        for (int i = 0; i < privateSlots.length; i++) {
+            int pos = matchedPrefixLen + i;
+            if (pos < retainStart || pos >= retainEnd) {
+                pagesToFree.add((int) (privateSlots[i] / pageSize));
+            }
+        }
+        for (int page : pagesToFree) {
+            freePages.addLast(page);
+        }
+        privateSlots = null;
     }
 
     private int allocContiguous(int numSlotsNeeded) {
@@ -573,10 +794,15 @@ public class KvCachePool implements AutoCloseable {
         if (freePages.size() < pagesNeeded) {
             // Try to reclaim from the radix tree.
             int tokensNeeded = (pagesNeeded - freePages.size()) * pageSize;
-            radix.evict(tokensNeeded, value -> {
-                free(value.longArray());
+            int evicted = radix.evict(tokensNeeded, value -> {
+                long[] slots = value.longArray();
+                prefixEvictTokens.addAndGet(slots.length);
+                free(slots);
                 value.close();
             });
+            if (evicted > 0) {
+                logger.debug("KV radix evicted {} tokens", evicted);
+            }
             if (freePages.size() < pagesNeeded) {
                 throw new IllegalStateException(String.format(
                         "KV cache OOM: need %d pages, have %d free", pagesNeeded, freePages.size()));
@@ -634,14 +860,6 @@ public class KvCachePool implements AutoCloseable {
             }
         }
         return -1;
-    }
-
-    private void freeContiguous(int baseSlot, int length) {
-        int basePage = baseSlot / pageSize;
-        int pages = length / pageSize;
-        for (int i = 0; i < pages; i++) {
-            freePages.addLast(basePage + i);
-        }
     }
 
     /** Returns the element size in bytes for common floating dtypes. */
