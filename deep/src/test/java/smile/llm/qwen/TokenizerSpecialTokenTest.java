@@ -16,10 +16,15 @@
  */
 package smile.llm.qwen;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import org.junit.jupiter.api.Test;
 import smile.util.Bytes;
 
@@ -33,6 +38,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class TokenizerSpecialTokenTest {
 
+    /** Copies a classpath resource to a real file (works inside JARs). */
+    private static Path copyResource(String classpath) throws IOException {
+        try (InputStream in = Objects.requireNonNull(
+                TokenizerSpecialTokenTest.class.getResourceAsStream(classpath), classpath)) {
+            Path tmp = Files.createTempFile("qwen-tok-", ".json");
+            Files.copy(in, tmp, StandardCopyOption.REPLACE_EXISTING);
+            tmp.toFile().deleteOnExit();
+            return tmp;
+        }
+    }
+
     @Test
     public void testGivenSpecialsAlreadyInVocabWhenResolvingThenIdsReuseVocabEntries() {
         // Given: HF-style vocab where chat specials already have assigned ids
@@ -42,14 +58,18 @@ public class TokenizerSpecialTokenTest {
         ranks.put(utf8("<|im_start|>"), 101);
         ranks.put(utf8("<|im_end|>"), 102);
 
-        Tokenizer tokenizer = new Tokenizer(ranks);
+        // Limit specials so defaultSpecialTokens() does not inflate size()
+        Tokenizer tokenizer = new Tokenizer(ranks,
+                "<|endoftext|>", "<|endoftext|>",
+                "<|endoftext|>", "<|im_start|>", "<|im_end|>");
 
         // Then: specials keep vocab ids (not ranks.size()+i past the embedding table)
-        assertEquals(101, tokenizer.specialToken("<|im_start|>"));
-        assertEquals(102, tokenizer.specialToken("<|im_end|>"));
+        assertEquals(101, tokenizer.specialToken("<|im_start|>").intValue());
+        assertEquals(102, tokenizer.specialToken("<|im_end|>").intValue());
         assertEquals(100, tokenizer.pad());
         assertTrue(tokenizer.specialToken("<|im_start|>") < tokenizer.size());
         assertTrue(tokenizer.specialToken("<|im_end|>") < tokenizer.size());
+        assertEquals(103, tokenizer.size());
     }
 
     @Test
@@ -62,22 +82,23 @@ public class TokenizerSpecialTokenTest {
                 "<|endoftext|>", "<|endoftext|>",
                 "<|endoftext|>", "<|im_start|>", "<|im_end|>");
 
-        assertEquals(5, tokenizer.specialToken("<|endoftext|>"));
-        assertEquals(6, tokenizer.specialToken("<|im_start|>"));
-        assertEquals(7, tokenizer.specialToken("<|im_end|>"));
+        assertEquals(5, tokenizer.specialToken("<|endoftext|>").intValue());
+        assertEquals(6, tokenizer.specialToken("<|im_start|>").intValue());
+        assertEquals(7, tokenizer.specialToken("<|im_end|>").intValue());
         assertEquals(8, tokenizer.size());
     }
 
     @Test
     public void testGivenTokenizerJsonWithAddedTokensWhenLoadingThenSpecialsResolve() throws Exception {
-        Path json = Path.of(getClass().getResource("/qwen/tokenizer_added_tokens.json").toURI());
+        Path json = copyResource("/qwen/tokenizer_added_tokens.json");
         var ranks = Tokenizer.loadTokenizerJson(json);
         Tokenizer tokenizer = new Tokenizer(ranks,
                 "<|endoftext|>", "<|endoftext|>",
                 "<|endoftext|>", "<|im_start|>", "<|im_end|>");
-        assertEquals(10, tokenizer.specialToken("<|endoftext|>"));
-        assertEquals(11, tokenizer.specialToken("<|im_start|>"));
-        assertEquals(12, tokenizer.specialToken("<|im_end|>"));
+        assertEquals(10, tokenizer.specialToken("<|endoftext|>").intValue());
+        assertEquals(11, tokenizer.specialToken("<|im_start|>").intValue());
+        assertEquals(12, tokenizer.specialToken("<|im_end|>").intValue());
+        // max added id is 12 → decoder length 13 when specials reuse vocab ids
         assertEquals(13, tokenizer.size());
         tokenizer.requireChatSpecialsInVocab(13);
     }
