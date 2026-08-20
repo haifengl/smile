@@ -16,11 +16,14 @@
  */
 package smile.llm.tokenizer;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import org.junit.jupiter.api.Test;
 import smile.llm.Message;
 import smile.llm.Role;
@@ -35,6 +38,21 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
  * GPT-2 byte map + HF vocab loading so BPE never emits {@link Integer#MAX_VALUE}.
  */
 public class Gpt2ByteMapTest {
+
+    /**
+     * Copies a classpath resource to a real file. {@code Path.of(url.toURI())}
+     * fails with {@code FileSystemNotFoundException} when the resource lives
+     * inside a JAR (sbt / packaged test runs).
+     */
+    private static Path copyResource(String classpath) throws IOException {
+        try (InputStream in = Objects.requireNonNull(
+                Gpt2ByteMapTest.class.getResourceAsStream(classpath), classpath)) {
+            Path tmp = Files.createTempFile("qwen-tok-", ".json");
+            Files.copy(in, tmp, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            tmp.toFile().deleteOnExit();
+            return tmp;
+        }
+    }
 
     @Test
     public void testGivenAsciiWhenMappedThenIdentity() {
@@ -68,21 +86,24 @@ public class Gpt2ByteMapTest {
         ranks.put(Gpt2ByteMap.vocabTokenToBytes("t"), (int) 't');
         ranks.put(Gpt2ByteMap.vocabTokenToBytes("n"), (int) 'n');
 
-        Tokenizer tokenizer = new Tokenizer(ranks);
+        Tokenizer tokenizer = new Tokenizer(ranks,
+                "<|endoftext|>", "<|endoftext|>",
+                "<|endoftext|>", "<|im_start|>", "<|im_end|>");
         int[] ids = tokenizer.encode("user", false, false);
         assertTrue(ids.length >= 1);
         for (int id : ids) {
             assertFalse(id == Integer.MAX_VALUE, "BPE must not emit MAX");
             assertTrue(id >= 0 && id < tokenizer.size());
         }
-        assertEquals(42, ids[0]); // whole-word hit
+        assertEquals(42, ids[0]); // whole-word hit (ranks.get before BPE)
     }
 
     @Test
     public void testGivenTokenizerJsonResourceWhenEncodingDialogThenIdsInRange() throws Exception {
-        Path json = Path.of(getClass().getResource("/qwen/tokenizer_bpe_sample.json").toURI());
+        Path json = copyResource("/qwen/tokenizer_bpe_sample.json");
         Path dir = Files.createTempDirectory("qwen-tok-");
         Files.copy(json, dir.resolve("tokenizer.json"));
+        // Tokenizer.of loads model.vocab + added_tokens (production path).
         Tokenizer tokenizer = Tokenizer.of(dir.toString());
         tokenizer.requireChatSpecialsInVocab(tokenizer.size());
         int[] ids = tokenizer.encodeDialog(new Message(Role.user, "hi"));
@@ -90,5 +111,20 @@ public class Gpt2ByteMapTest {
             assertTrue(id >= 0 && id < tokenizer.size(), "id=" + id);
             assertFalse(id == Integer.MAX_VALUE);
         }
+        assertEquals(101, tokenizer.specialToken("<|im_start|>").intValue());
+        assertEquals(102, tokenizer.specialToken("<|im_end|>").intValue());
+    }
+
+    @Test
+    public void testGivenLoadTokenizerJsonWhenSpecialsPresentThenIdsReuseVocab() throws Exception {
+        Path json = copyResource("/qwen/tokenizer_bpe_sample.json");
+        var ranks = Tokenizer.loadTokenizerJson(json);
+        Tokenizer tokenizer = new Tokenizer(ranks,
+                "<|endoftext|>", "<|endoftext|>",
+                "<|endoftext|>", "<|im_start|>", "<|im_end|>");
+        assertEquals(100, tokenizer.specialToken("<|endoftext|>").intValue());
+        assertEquals(101, tokenizer.specialToken("<|im_start|>").intValue());
+        assertEquals(102, tokenizer.specialToken("<|im_end|>").intValue());
+        tokenizer.requireChatSpecialsInVocab(tokenizer.size());
     }
 }

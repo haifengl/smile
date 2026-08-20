@@ -197,8 +197,12 @@ public class Tokenizer extends Tiktoken {
     /**
      * Extracts vocab from HuggingFace {@code tokenizer.json}
      * ({@code model.vocab} plus {@code added_tokens}).
+     *
+     * @param tokenizerJson path to {@code tokenizer.json}.
+     * @return token byte sequence → id map (GPT-2 keys converted to raw bytes).
+     * @throws IOException if the file is missing or not a valid tokenizer.json.
      */
-    static Map<Bytes, Integer> loadTokenizerJson(Path tokenizerJson) throws IOException {
+    public static Map<Bytes, Integer> loadTokenizerJson(Path tokenizerJson) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode root = mapper.readTree(tokenizerJson.toFile());
         JsonNode vocab = root.path("model").path("vocab");

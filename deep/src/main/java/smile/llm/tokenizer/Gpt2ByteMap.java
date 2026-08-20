@@ -92,8 +92,11 @@ public final class Gpt2ByteMap {
 
     /**
      * Maps a raw byte to its GPT-2 vocab character (for tests / debugging).
+     *
+     * @param unsignedByte byte value in {@code [0, 255]}.
+     * @return the GPT-2 unicode code unit for that byte.
      */
-    static char byteToUnicode(int unsignedByte) {
+    public static char byteToUnicode(int unsignedByte) {
         return BYTE_TO_UNICODE[unsignedByte & 0xff];
     }
 }
