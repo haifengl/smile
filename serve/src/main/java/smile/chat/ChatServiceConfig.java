@@ -141,10 +141,11 @@ public interface ChatServiceConfig {
     boolean flashinferDownload();
 
     /**
-     * CUDA tag for jit-cache wheels (must match the LibTorch / image CUDA
-     * build, e.g. {@code cu132} for CUDA 13.2).
+     * CUDA tag for jit-cache wheels. FlashInfer 0.6.6 publishes
+     * {@code cu128}/{@code cu129}/{@code cu130} only (no {@code cu132}); LibTorch
+     * may still be built against CUDA 13.2.
      */
-    @WithDefault("cu132")
+    @WithDefault("cu130")
     String flashinferCudaTag();
 
     /**
