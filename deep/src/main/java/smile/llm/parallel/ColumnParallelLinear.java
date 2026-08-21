@@ -33,6 +33,8 @@ public final class ColumnParallelLinear {
     private final int globalOutFeatures;
 
     /**
+     * Creates a column-parallel linear layer for the given TP rank.
+     *
      * @param inFeatures        shared input size.
      * @param globalOutFeatures full (unsharded) output size; must divide by tpSize.
      * @param bias              whether to use bias.
@@ -51,26 +53,52 @@ public final class ColumnParallelLinear {
         this.linear = new LinearLayer(inFeatures, globalOutFeatures / tpSize, bias);
     }
 
+    /**
+     * Returns the underlying local linear layer.
+     * @return local {@link LinearLayer}.
+     */
     public LinearLayer linear() {
         return linear;
     }
 
+    /**
+     * Returns the native module handle for weight registration.
+     * @return module handle.
+     */
     public MemorySegment module() {
         return linear.module();
     }
 
+    /**
+     * Returns the local (sharded) output feature count.
+     * @return {@code globalOutFeatures / tpSize}.
+     */
     public int localOutFeatures() {
         return globalOutFeatures / tpSize;
     }
 
+    /**
+     * Returns this rank's tensor-parallel index.
+     * @return TP rank.
+     */
     public int tpRank() {
         return tpRank;
     }
 
+    /**
+     * Returns the tensor-parallel world size.
+     * @return TP size.
+     */
     public int tpSize() {
         return tpSize;
     }
 
+    /**
+     * Local matmul on the column shard (no gather).
+     *
+     * @param input replicated input activations.
+     * @return local output shard.
+     */
     public Tensor forward(Tensor input) {
         return linear.forward(input);
     }

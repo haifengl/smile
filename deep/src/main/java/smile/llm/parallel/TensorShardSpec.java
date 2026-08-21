@@ -38,6 +38,16 @@ public record TensorShardSpec(
         int linearNumKeyHeads,
         int linearNumValueHeads) {
 
+    /**
+     * Single-device shard (no tensor parallelism).
+     *
+     * @param numHeads            query head count.
+     * @param numKvHeads          key/value head count.
+     * @param intermediateSize    FFN intermediate size.
+     * @param linearNumKeyHeads   DeltaNet key head count.
+     * @param linearNumValueHeads DeltaNet value head count.
+     * @return shard with {@code tpSize=1}.
+     */
     public static TensorShardSpec single(int numHeads, int numKvHeads, int intermediateSize,
                                          int linearNumKeyHeads, int linearNumValueHeads) {
         return new TensorShardSpec(1, 0, numHeads, numKvHeads, intermediateSize,
@@ -48,6 +58,15 @@ public record TensorShardSpec(
      * Builds a per-rank shard spec. Requires {@code numHeads}, {@code numKvHeads},
      * and {@code intermediateSize} to be divisible by {@code tpSize}. Linear-attn
      * head counts must also divide when {@code > 0}.
+     *
+     * @param tpSize              tensor-parallel size.
+     * @param tpRank              this rank.
+     * @param numHeads            global query head count.
+     * @param numKvHeads          global key/value head count.
+     * @param intermediateSize    global FFN intermediate size.
+     * @param linearNumKeyHeads   global DeltaNet key heads ({@code 0} if unused).
+     * @param linearNumValueHeads global DeltaNet value heads ({@code 0} if unused).
+     * @return local shard sizes for {@code tpRank}.
      */
     public static TensorShardSpec forRank(int tpSize, int tpRank,
                                           int numHeads, int numKvHeads, int intermediateSize,

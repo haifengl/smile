@@ -83,12 +83,18 @@ public class Tokenizer extends Tiktoken {
         }
     }
 
-    /** Padding token id ({@code <|endoftext|>}). */
+    /**
+     * Padding token id ({@code <|endoftext|>}).
+     * @return pad token id.
+     */
     public int pad() {
         return specialToken("<|endoftext|>");
     }
 
-    /** Stop token ids used during generation. */
+    /**
+     * Stop token ids used during generation.
+     * @return stop token id array.
+     */
     public int[] stopTokens() {
         return stopTokens;
     }
@@ -239,6 +245,8 @@ public class Tokenizer extends Tiktoken {
     /**
      * Ensures chat control tokens lie in {@code [0, vocabSize)}.
      * Call after construction against the model config vocab size.
+     *
+     * @param vocabSize embedding / lm_head vocabulary size from model config.
      */
     public void requireChatSpecialsInVocab(int vocabSize) {
         for (String name : List.of("<|endoftext|>", "<|im_start|>", "<|im_end|>")) {

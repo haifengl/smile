@@ -27,20 +27,39 @@ import smile.deep.tensor.Device;
 public final class DeviceMesh {
     private final ParallelConfig config;
 
+    /**
+     * Creates a device mesh for the given parallel configuration.
+     *
+     * @param config process-mesh configuration.
+     */
     public DeviceMesh(ParallelConfig config) {
         this.config = config;
     }
 
+    /**
+     * Returns the underlying parallel configuration.
+     * @return mesh config.
+     */
     public ParallelConfig config() {
         return config;
     }
 
-    /** Device for a TP rank within the local (pp=0) stage. */
+    /**
+     * Device for a TP rank within the local (pp=0) stage.
+     *
+     * @param tpRank tensor-parallel rank.
+     * @return CUDA device for that rank.
+     */
     public Device device(int tpRank) {
         return Device.CUDA(config.devices()[tpRank]);
     }
 
-    /** Device for this parallel state. */
+    /**
+     * Device for this parallel state.
+     *
+     * @param state per-rank parallel state.
+     * @return CUDA device for {@code state}.
+     */
     public Device device(ParallelState state) {
         return Device.CUDA(state.deviceIndex());
     }

@@ -33,6 +33,7 @@ import java.util.Objects;
  * @author Haifeng Li
  */
 public record ParallelConfig(int tpSize, int ppSize, int dpSize, byte[] devices) {
+    /** Validates mesh sizes and defensively copies {@code devices}. */
     public ParallelConfig {
         if (tpSize < 1) throw new IllegalArgumentException("tpSize must be >= 1");
         if (ppSize < 1) throw new IllegalArgumentException("ppSize must be >= 1");
@@ -51,12 +52,22 @@ public record ParallelConfig(int tpSize, int ppSize, int dpSize, byte[] devices)
         devices = Arrays.copyOf(devices, devices.length);
     }
 
-    /** Single-device (no parallelism). */
+    /**
+     * Single-device (no parallelism).
+     *
+     * @param device CUDA device index.
+     * @return config with {@code tpSize=1}.
+     */
     public static ParallelConfig single(byte device) {
         return new ParallelConfig(1, 1, 1, new byte[]{device});
     }
 
-    /** Tensor-parallel group on the given CUDA devices. */
+    /**
+     * Tensor-parallel group on the given CUDA devices.
+     *
+     * @param devices CUDA device indices ({@code length} becomes {@code tpSize}).
+     * @return tensor-parallel config.
+     */
     public static ParallelConfig tensorParallel(byte... devices) {
         if (devices == null || devices.length < 1) {
             throw new IllegalArgumentException("devices required");
@@ -64,10 +75,18 @@ public record ParallelConfig(int tpSize, int ppSize, int dpSize, byte[] devices)
         return new ParallelConfig(devices.length, 1, 1, devices);
     }
 
+    /**
+     * Returns {@code tpSize * ppSize * dpSize}.
+     * @return world size.
+     */
     public int worldSize() {
         return tpSize * ppSize * dpSize;
     }
 
+    /**
+     * Returns whether tensor parallelism is enabled.
+     * @return {@code true} if {@code tpSize > 1}.
+     */
     public boolean isTensorParallel() {
         return tpSize > 1;
     }

@@ -83,6 +83,12 @@ public class GatedDeltaNet {
 
     /**
      * Tensor-parallel constructor using local head counts from {@code shard}.
+     *
+     * @param args           model hyperparameters.
+     * @param linearLayerId  ordinal among linear-attention layers.
+     * @param statePool      shared DeltaNet state pool.
+     * @param shard          local head / rank shard description, or {@code null} for full width.
+     * @param tpGroup        tensor-parallel group, or {@code null} for single-device.
      */
     public GatedDeltaNet(QwenModelArgs args, int linearLayerId, DeltaNetStatePool statePool,
                          TensorShardSpec shard, TensorParallelGroup tpGroup) {
@@ -134,6 +140,10 @@ public class GatedDeltaNet {
         Native.CLEANER.register(this, () -> smile_module_free(m));
     }
 
+    /**
+     * Returns the native module handle for weight registration.
+     * @return module handle.
+     */
     public MemorySegment module() {
         return module;
     }

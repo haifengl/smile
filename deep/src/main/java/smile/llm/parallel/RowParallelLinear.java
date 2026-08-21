@@ -34,6 +34,8 @@ public final class RowParallelLinear {
     private final int globalInFeatures;
 
     /**
+     * Creates a row-parallel linear layer for the given TP rank.
+     *
      * @param globalInFeatures full (unsharded) input size; must divide by tpSize.
      * @param outFeatures      shared output size.
      * @param bias             whether to use bias (typically false for TP row layers).
@@ -52,22 +54,42 @@ public final class RowParallelLinear {
         this.linear = new LinearLayer(globalInFeatures / tpSize, outFeatures, bias);
     }
 
+    /**
+     * Returns the underlying local linear layer.
+     * @return local {@link LinearLayer}.
+     */
     public LinearLayer linear() {
         return linear;
     }
 
+    /**
+     * Returns the native module handle for weight registration.
+     * @return module handle.
+     */
     public MemorySegment module() {
         return linear.module();
     }
 
+    /**
+     * Returns the local (sharded) input feature count.
+     * @return {@code globalInFeatures / tpSize}.
+     */
     public int localInFeatures() {
         return globalInFeatures / tpSize;
     }
 
+    /**
+     * Returns this rank's tensor-parallel index.
+     * @return TP rank.
+     */
     public int tpRank() {
         return tpRank;
     }
 
+    /**
+     * Returns the tensor-parallel world size.
+     * @return TP size.
+     */
     public int tpSize() {
         return tpSize;
     }
@@ -75,6 +97,9 @@ public final class RowParallelLinear {
     /**
      * Local matmul only. When {@code tpSize > 1}, the orchestrator must
      * all-reduce the returned tensors across ranks.
+     *
+     * @param input local input shard (or full input when {@code tpSize == 1}).
+     * @return local output before all-reduce.
      */
     public Tensor forward(Tensor input) {
         return linear.forward(input);

@@ -165,6 +165,9 @@ public record QwenModelArgs(
 
     /**
      * KV layout for a tensor-parallel shard (local KV head count).
+     *
+     * @param shard TP shard description, or {@code null} for the full layout.
+     * @return cache layout for {@link smile.llm.cache.KvCachePool}.
      */
     public KvCacheLayout kvCacheLayout(smile.llm.parallel.TensorShardSpec shard) {
         int kvHeads = shard != null && shard.tpSize() > 1 ? shard.numKvHeads() : numKvHeads;
@@ -173,6 +176,9 @@ public record QwenModelArgs(
 
     /**
      * Local DeltaNet conv channel count for a TP shard.
+     *
+     * @param shard TP shard description, or {@code null} for the full width.
+     * @return conv channel count.
      */
     public int linearConvDim(smile.llm.parallel.TensorShardSpec shard) {
         if (shard == null || shard.tpSize() <= 1) {

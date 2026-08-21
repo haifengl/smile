@@ -18,20 +18,20 @@
 /**
  * A Transformer is a deep learning architecture, serves as the foundational
  * engine for modern Large Language Models (LLMs).
- * <p>
- * <h3>1. Tokenization and Embeddings</h3>
+ *
+ * <h2>1. Tokenization and Embeddings</h2>
  * Raw text is first broken down into "tokens" (often subwords), which are
  * then translated into high-dimensional embedding vectors.
- * <h3>2. Positional Encoding</h3>
+ * <h2>2. Positional Encoding</h2>
  * Because the transformer processes all tokens in parallel, it needs a way
  * to know the sequence of the words. Positional encoding solves this by
  * adding unique, position-dependent signals to token embeddings.
- * <h3>3. Self-Attention Mechanism</h3>
+ * <h2>3. Self-Attention Mechanism</h2>
  * This is the heart of the Transformer, which dynamically weighs the
  * importance of different elements in a sequence. By computing how every
  * token relates to all other tokens, it assigns context-aware representations
  * for every token.
- * <h3>4. Feed-Forward Networks and Stacking</h3>
+ * <h2>4. Feed-Forward Networks and Stacking</h2>
  * After passing through self-attention layers, the vector representations go
  * through a Feed-Forward Neural Network (MLP).
  * <p>

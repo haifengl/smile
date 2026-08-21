@@ -83,6 +83,11 @@ public class QwenModel extends LayerBlock {
 
     /**
      * Tensor-parallel shard constructor (CPU). Call {@link #to(Device)} after load.
+     *
+     * @param args      hyperparameters.
+     * @param statePool DeltaNet state pool (may be null when no linear layers).
+     * @param shard     local head / FFN shard description, or {@code null} for full width.
+     * @param tpGroup   tensor-parallel group, or {@code null} for single-device.
      */
     public QwenModel(QwenModelArgs args, DeltaNetStatePool statePool,
                      TensorShardSpec shard, TensorParallelGroup tpGroup) {
@@ -160,28 +165,51 @@ public class QwenModel extends LayerBlock {
         return this;
     }
 
+    /**
+     * Returns model hyperparameters.
+     * @return model args.
+     */
     public QwenModelArgs params() {
         return params;
     }
 
+    /**
+     * Returns the KV cache pool for full-attention layers, if installed.
+     * @return KV pool, or {@code null} if unset.
+     */
     public KvCachePool kvCachePool() {
         return kvCachePool;
     }
 
+    /**
+     * Returns the DeltaNet recurrent/conv state pool.
+     * @return DeltaNet state pool, or {@code null} when unused.
+     */
     public DeltaNetStatePool deltaNetStatePool() {
         return deltaNetStatePool;
     }
 
+    /**
+     * Returns the tensor-parallel shard description for this rank.
+     * @return shard spec, or {@code null} for unsharded models.
+     */
     public TensorShardSpec shard() {
         return shard;
     }
 
+    /**
+     * Returns this rank's tensor-parallel index.
+     * @return TP rank ({@code 0} when unsharded).
+     */
     public int tpRank() {
         return tpRank;
     }
 
     /**
      * Replaces the KV cache pool on every full-attention layer.
+     *
+     * @param pool           new KV pool (must not be {@code null}).
+     * @param closePrevious  {@code true} to close the previous pool when replaced.
      */
     public void setKvCachePool(KvCachePool pool, boolean closePrevious) {
         if (pool == null) throw new IllegalArgumentException("pool must not be null");
