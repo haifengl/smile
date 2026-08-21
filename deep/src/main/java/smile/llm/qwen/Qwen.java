@@ -33,7 +33,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.SubmissionPublisher;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import tools.jackson.databind.JsonNode;
@@ -768,23 +767,13 @@ public class Qwen implements LanguageModel {
         };
     }
 
-    public ChatCompletion[] generate(int[][] prompts, int maxGenLen, double temperature,
-                                     double topp, boolean logprobs, long seed,
-                                     SubmissionPublisher<String> publisher) {
-        return generate(prompts, maxGenLen, temperature, topp, logprobs, seed, publisher, null);
-    }
-
     @Override
     public ChatCompletion[] generate(int[][] prompts, int maxGenLen, double temperature,
                                      double topp, boolean logprobs, long seed,
-                                     SubmissionPublisher<String> publisher,
-                                     GenerationListener progress) {
+                                     GenerationListener listener) {
         int batchSize = prompts.length;
         if (batchSize > params.maxBatchSize()) {
             throw new IllegalArgumentException("The number of prompts is greater than max_batch_size");
-        }
-        if (publisher != null && batchSize > 1) {
-            throw new IllegalArgumentException("The batch size is > 1 while publisher is provided");
         }
 
         int minPromptLen = Integer.MAX_VALUE;
@@ -848,6 +837,7 @@ public class Qwen implements LanguageModel {
                         "Prompt length %d exceeds free KV capacity %d",
                         maxPromptLen, totalLen));
             }
+            final int cachedPrefixTokens = prefixLen;
             if (prefixLen > 0 && minPromptLen < totalLen && minPromptLen > 0) {
                 prefixLen = Math.min(prefixLen, minPromptLen - 1);
             }
@@ -856,6 +846,15 @@ public class Qwen implements LanguageModel {
                     if (m.deltaNetStatePool() != null) {
                         m.deltaNetStatePool().reset(batchSize);
                     }
+                }
+            }
+            if (listener != null) {
+                for (int i = 0; i < batchSize; i++) {
+                    listener.onInputTokens(i, prompts[i].length);
+                    int cached = (usePrefix && i == 0)
+                            ? Math.min(cachedPrefixTokens, prompts[0].length)
+                            : 0;
+                    listener.onCachedInputTokens(i, cached);
                 }
             }
 
@@ -965,8 +964,10 @@ public class Qwen implements LanguageModel {
 
                     nextToken.close();
                     prevPos = curPos;
-                    if (progress != null) {
-                        progress.onGeneratedTokens(batchSize);
+                    if (listener != null) {
+                        for (int i = 0; i < batchSize; i++) {
+                            listener.onGeneratedTokens(i, 1);
+                        }
                     }
                 } finally {
                     Tensor.pop();
@@ -980,7 +981,8 @@ public class Qwen implements LanguageModel {
                 }
 
                 boolean done = eos[0].all();
-                if (publisher != null && (curPos - chunkPos >= 20 || curPos == totalLen - 1 || done)) {
+                if (listener != null && batchSize == 1
+                        && (curPos - chunkPos >= 20 || curPos == totalLen - 1 || done)) {
                     int end = done ? curPos : curPos + 1;
                     if (end > chunkPos) {
                         long[] longArray;
@@ -995,7 +997,7 @@ public class Qwen implements LanguageModel {
                             var chunk = tokenizer.tryDecode(completion, true);
                             chunkPos = end;
                             if (!chunk.isEmpty()) {
-                                publisher.submit(chunk);
+                                listener.onText(0, chunk);
                             }
                         } catch (java.nio.charset.CharacterCodingException ex) {
                             logger.debug("Cannot decode a chunk", ex);
@@ -1057,7 +1059,6 @@ public class Qwen implements LanguageModel {
                 }
             }
 
-            if (publisher != null) publisher.close();
             if (usePrefix && sequenceToInsert != null) {
                 for (QwenModel m : models) {
                     if (m.kvCachePool() != null) {
@@ -1145,28 +1146,27 @@ public class Qwen implements LanguageModel {
      * @param topp        top-p probability threshold for nucleus sampling.
      * @param logprobs    flag indicating whether to compute token log probabilities.
      * @param seed        optional RNG seed to sample deterministically.
-     * @param publisher   optional flow publisher that asynchronously issues generated chunks;
-     *                    batch size must be 1 when non-null.
+     * @param listener    optional generation progress callback.
      * @return the generated text completions.
      */
     public ChatCompletion[] complete(String[] prompts, int maxGenLen, double temperature, double topp,
-                                     boolean logprobs, long seed, SubmissionPublisher<String> publisher) {
+                                     boolean logprobs, long seed, GenerationListener listener) {
         int batchSize = prompts.length;
         int[][] tokens = new int[batchSize][];
         for (int i = 0; i < batchSize; i++) {
             tokens[i] = tokenizer.encode(prompts[i], false, false);
         }
-        return generate(tokens, maxGenLen, temperature, topp, logprobs, seed, publisher);
+        return generate(tokens, maxGenLen, temperature, topp, logprobs, seed, listener);
     }
 
     @Override
     public ChatCompletion[] chat(Message[][] dialogs, int maxGenLen, double temperature, double topp,
-                                 boolean logprobs, long seed, SubmissionPublisher<String> publisher) {
+                                 boolean logprobs, long seed, GenerationListener listener) {
         int batchSize = dialogs.length;
         int[][] tokens = new int[batchSize][];
         for (int i = 0; i < batchSize; i++) {
             tokens[i] = tokenizer.encodeDialog(dialogs[i]);
         }
-        return generate(tokens, maxGenLen, temperature, topp, logprobs, seed, publisher);
+        return generate(tokens, maxGenLen, temperature, topp, logprobs, seed, listener);
     }
 }

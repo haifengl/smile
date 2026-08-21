@@ -88,7 +88,7 @@ public final class TokenThroughputLogger implements GenerationListener {
     }
 
     @Override
-    public synchronized void onGeneratedTokens(int count) {
+    public synchronized void onGeneratedTokens(int promptIndex, int count) {
         if (count <= 0) {
             return;
         }

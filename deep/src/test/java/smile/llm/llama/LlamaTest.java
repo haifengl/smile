@@ -17,6 +17,7 @@
 package smile.llm.llama;
 
 import smile.deep.tensor.Device;
+import smile.llm.GenerationListener;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -93,14 +94,22 @@ public class LlamaTest {
     }
 
     @Test
-    public void testGivenGenerateWithPublisherAndBatchSizeGtOneThenThrowsIllegalArgument() {
+    public void testGivenGenerateWithListenerAndBatchSizeGtOneThenSucceedsWithoutTextStream() {
+        // Token metrics are fine for batch>1; onText is only emitted for batch==1.
         LlamaModelArgs args = new LlamaModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 2, 32);
         Llama llama = tinyLlama(args);
+        llama.model.eval();
         int[][] prompts = {{1}, {2}};
-        var publisher = new java.util.concurrent.SubmissionPublisher<String>();
-        assertThrows(IllegalArgumentException.class,
-                () -> llama.generate(prompts, 5, 0.0, 0.9, false, 0, publisher));
-        publisher.close();
+        int[] tokenEvents = {0};
+        GenerationListener listener = new GenerationListener() {
+            @Override
+            public void onGeneratedTokens(int promptIndex, int count) {
+                tokenEvents[0] += count;
+            }
+        };
+        var results = llama.generate(prompts, 2, 0.0, 0.9, false, 0, listener);
+        assertEquals(2, results.length);
+        assertTrue(tokenEvents[0] > 0);
     }
 
     @Test
