@@ -41,10 +41,12 @@ public interface ChatServiceConfig {
      * Maximum sequence length in tokens (prompt + output), analogous to vLLM
      * {@code --max-model-len} / SGLang {@code --context-length}.
      *
-     * <p>{@code <= 0} (the default) means auto: use
-     * {@code max_position_embeddings} from the model {@code config.json}.
-     * Set an explicit positive value to cap context below the model default
-     * (recommended for large-window models such as Qwen3.5).
+     * <p>{@code <= 0} (the default) means auto: at model load, replace with
+     * {@code max_position_embeddings} from the model {@code config.json} before
+     * any request is served. {@link smile.llm.LanguageModel#maxSeqLen()} always
+     * returns that positive resolved value. Set an explicit positive value to
+     * cap context below the model default (recommended for large-window models
+     * such as Qwen3.5).
      */
     @WithDefault("0")
     int maxSeqLen();
