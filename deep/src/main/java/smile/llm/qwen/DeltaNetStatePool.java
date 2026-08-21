@@ -75,8 +75,11 @@ public class DeltaNetStatePool implements AutoCloseable {
         var opts = new Tensor.Options().device(device).dtype(dtype).requireGradients(false);
         for (int i = 0; i < numLinearLayers; i++) {
             recurrent[i] = Tensor.zeros(opts, maxBatchSize, numVHeads, keyHeadDim, valueHeadDim);
+            // Long-lived pool buffers must not be owned by a transient AutoScope.
+            recurrent[i].detachFromScopes();
             if (convStateLen > 0) {
                 conv[i] = Tensor.zeros(opts, maxBatchSize, convDim, convStateLen);
+                conv[i].detachFromScopes();
             } else {
                 conv[i] = null;
             }

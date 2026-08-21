@@ -329,9 +329,13 @@ public class QwenModel extends LayerBlock {
             Tensor.pop();
             long freeAfter = cudaFreeBytes(device);
             if (freeBefore >= 0 && freeAfter >= 0) {
+                // Driver free delta after pop: usually caching-allocator HWM, not
+                // live tensors (those should be closed). emptyCache at end of
+                // generate returns unused blocks to the driver.
                 long retainedMiB = (freeBefore - freeAfter) / (1024 * 1024);
                 if (retainedMiB > 256 || logger.isDebugEnabled()) {
-                    logger.info("tpRank={}: forward seqlen={} freeMiB {} -> {} after pop (retained={} MiB)",
+                    logger.info("tpRank={}: forward seqlen={} freeMiB {} -> {} after pop "
+                                    + "(allocatorHwmDelta={} MiB; not necessarily a leak)",
                             tpRank, seqlen,
                             freeBefore / (1024 * 1024),
                             freeAfter / (1024 * 1024),

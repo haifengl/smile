@@ -1086,6 +1086,10 @@ public class Qwen implements LanguageModel {
                 Tensor.pop();
             }
         } finally {
+            int leakedScopes = Tensor.clearScopes();
+            if (leakedScopes > 0) {
+                logger.warn("Drained {} leftover Tensor AutoScope(s) after generate", leakedScopes);
+            }
             for (QwenModel m : models) {
                 if (m.kvCachePool() != null) {
                     m.kvCachePool().unbindRequests();
@@ -1093,8 +1097,31 @@ public class Qwen implements LanguageModel {
                 if (m.deltaNetStatePool() != null) {
                     m.deltaNetStatePool().unbind();
                 }
+                logCudaMemory(m, "before emptyCache");
                 m.device().emptyCache();
+                logCudaMemory(m, "after emptyCache");
             }
+        }
+    }
+
+    /** Best-effort CUDA free/allocator log for leak diagnosis. */
+    private static void logCudaMemory(QwenModel m, String when) {
+        Device device = m.device();
+        if (device == null || !device.isCUDA()) {
+            return;
+        }
+        try {
+            int idx = device.index();
+            long[] mem = smile.torch.Native.cudaMemGetInfo(idx);
+            long[] alloc = smile.torch.Native.cudaAllocatorStats(idx);
+            logger.info("tpRank={}: {} freeMiB={} allocatedMiB={} reservedMiB={}",
+                    m.tpRank(), when,
+                    mem[0] / (1024 * 1024),
+                    alloc[0] / (1024 * 1024),
+                    alloc[1] / (1024 * 1024));
+        } catch (RuntimeException e) {
+            logger.debug("tpRank={}: cuda memory log failed at {}: {}",
+                    m.tpRank(), when, e.toString());
         }
     }
 
@@ -1133,6 +1160,12 @@ public class Qwen implements LanguageModel {
                      var window = tokens[rank].get(Index.Colon, span)) {
                     return models[rank].forward(window, prevPos, allTokenLogits);
                 } finally {
+                    int depth = Tensor.scopeDepth();
+                    if (depth > 0) {
+                        logger.warn("tpRank={}: {} AutoScope(s) still pushed after forward "
+                                        + "(possible activation leak)",
+                                rank, depth);
+                    }
                     ParallelState.clearCurrent();
                 }
             }));

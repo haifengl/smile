@@ -200,8 +200,21 @@ SMILE_API int64_t smile_cuda_total_memory(int device_index);
  */
 SMILE_API int smile_cuda_mem_get_info(int device_index, int64_t *free_bytes, int64_t *total_bytes);
 
-/** Frees cached CUDA memory held by the allocator. */
+/**
+ * Releases unused CUDACachingAllocator blocks (and cuBLAS workspaces that pin
+ * those blocks) so nvidia-smi free memory can recover after inference.
+ */
 SMILE_API void smile_cuda_empty_cache(void);
+
+/**
+ * Writes CUDACachingAllocator live/reserved bytes for {@code device_index}.
+ * {@code allocated_bytes} is storage held by live tensors; {@code reserved_bytes}
+ * is the cudaMalloc footprint (includes free cached blocks). Returns 0 on
+ * success, -1 on error.
+ */
+SMILE_API int smile_cuda_allocator_stats(int device_index,
+                                         int64_t *allocated_bytes,
+                                         int64_t *reserved_bytes);
 
 /** Returns 1 if BF16 is supported on current CUDA device. */
 SMILE_API int smile_cuda_is_bf16_supported(void);

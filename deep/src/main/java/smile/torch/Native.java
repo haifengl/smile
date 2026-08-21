@@ -66,6 +66,10 @@ public final class Native {
                 smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_cuda_mem_get_info"),
                 FunctionDescriptor.of(ValueLayout.JAVA_INT,
                         ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+        static final MethodHandle CUDA_ALLOCATOR_STATS = LINKER.downcallHandle(
+                smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_cuda_allocator_stats"),
+                FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
         static final MethodHandle TENSOR_NBYTES = LINKER.downcallHandle(
                 smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_tensor_nbytes"),
                 FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
@@ -195,6 +199,39 @@ public final class Native {
                         ? "smile_cuda_mem_get_info failed" : msg);
             }
             return new long[]{free.get(ValueLayout.JAVA_LONG, 0), total.get(ValueLayout.JAVA_LONG, 0)};
+        }
+    }
+
+    /**
+     * Queries CUDACachingAllocator live vs reserved bytes for a device.
+     *
+     * <p>{@code allocated} is storage owned by live tensors; {@code reserved} is
+     * the cudaMalloc footprint (includes free cached blocks that
+     * {@link smile.deep.tensor.Device#emptyCache()} can return to the driver).
+     *
+     * @param deviceIndex the CUDA device index.
+     * @return {@code long[2]} of {@code {allocatedBytes, reservedBytes}}.
+     * @throws RuntimeException if the query fails.
+     */
+    public static long[] cudaAllocatorStats(int deviceIndex) {
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment allocated = arena.allocate(ValueLayout.JAVA_LONG);
+            MemorySegment reserved = arena.allocate(ValueLayout.JAVA_LONG);
+            int rc;
+            try {
+                rc = (int) Bindings.CUDA_ALLOCATOR_STATS.invokeExact(
+                        deviceIndex, allocated, reserved);
+            } catch (Throwable t) {
+                throw new RuntimeException("smile_cuda_allocator_stats failed", t);
+            }
+            if (rc != 0) {
+                String msg = lastError();
+                throw new RuntimeException(msg.isEmpty()
+                        ? "smile_cuda_allocator_stats failed" : msg);
+            }
+            return new long[]{
+                    allocated.get(ValueLayout.JAVA_LONG, 0),
+                    reserved.get(ValueLayout.JAVA_LONG, 0)};
         }
     }
 
