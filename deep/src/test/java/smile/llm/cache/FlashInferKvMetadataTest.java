@@ -38,6 +38,9 @@ public class FlashInferKvMetadataTest {
                 assertEquals(2, meta.pagedKvIndptr().intArray()[1]); // ceil(20/16)=2 pages
                 assertEquals(2, meta.pagedKvIndices().length());
                 assertEquals(4, meta.pagedKvLastPageLen().intArray()[0]); // 20 % 16
+                // Contiguous bind: physical pages are consecutive from page 0.
+                assertEquals(0, meta.pagedKvIndices().intArray()[0]);
+                assertEquals(1, meta.pagedKvIndices().intArray()[1]);
             }
         }
     }

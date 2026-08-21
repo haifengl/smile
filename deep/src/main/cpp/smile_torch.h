@@ -1014,6 +1014,15 @@ typedef struct ST_FlashInferWorkspace_ *ST_FlashInferWorkspace;
 SMILE_API int smile_flashinfer_is_available(void);
 
 /**
+ * Sets the FlashInfer AOT / jit-cache directory (may be null/empty to clear).
+ * Also honored: env {@code FLASHINFER_AOT_DIR} / {@code SMILE_FLASHINFER_AOT_DIR}.
+ */
+SMILE_API void smile_flashinfer_set_aot_dir(const char *path);
+
+/** @return current AOT dir string (never null; may be empty). */
+SMILE_API const char *smile_flashinfer_aot_dir(void);
+
+/**
  * Creates a per-device workspace.
  * @param device_index CUDA device ordinal.
  * @param workspace_bytes scratch hint (0 = default).
