@@ -61,6 +61,41 @@ public class LayerTest {
         input.close(); output.close();
     }
 
+    @Test
+    public void testGivenUninitializedLinearWhenForwardThenOutputShapeIsCorrect() throws Exception {
+        // Given — empty weights (no Kaiming); still a valid linear for shape checks
+        LinearLayer layer;
+        try (var ignored = ParameterInit.uninitialized()) {
+            assertTrue(ParameterInit.skip());
+            layer = new LinearLayer(IN, OUT, false);
+        }
+        assertFalse(ParameterInit.skip());
+        Tensor input = randn(BATCH, IN);
+
+        // When
+        Tensor output = layer.forward(input);
+
+        // Then
+        assertEquals(BATCH, output.size(0));
+        assertEquals(OUT, output.size(1));
+        input.close();
+        output.close();
+    }
+
+    @Test
+    public void testGivenUninitializedEmbeddingWhenForwardThenOutputShapeIsCorrect() throws Exception {
+        EmbeddingLayer layer;
+        try (var ignored = ParameterInit.uninitialized()) {
+            layer = new EmbeddingLayer(16, OUT);
+        }
+        Tensor input = Tensor.of(new long[]{0, 1, 2, 3});
+        Tensor output = layer.forward(input);
+        assertEquals(4, output.size(0));
+        assertEquals(OUT, output.size(1));
+        input.close();
+        output.close();
+    }
+
     // -----------------------------------------------------------------------
     // Activation shortcuts
     // -----------------------------------------------------------------------

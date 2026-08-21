@@ -37,6 +37,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import smile.deep.layer.ParameterInit;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.SafeTensors;
@@ -312,7 +313,10 @@ public class Qwen implements LanguageModel {
 
         // Layers allocate on CPU; place module + cis, then load shards onto model.device().
         long tConstruct = System.currentTimeMillis();
-        QwenModel model = new QwenModel(modelArgs, statePool, shard, tpGroup);
+        QwenModel model;
+        try (var ignored = ParameterInit.uninitialized()) {
+            model = new QwenModel(modelArgs, statePool, shard, tpGroup);
+        }
         logger.info("tpRank={}: QwenModel construct in {} ms",
                 rank, System.currentTimeMillis() - tConstruct);
 

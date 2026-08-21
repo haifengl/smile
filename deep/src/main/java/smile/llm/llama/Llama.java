@@ -26,6 +26,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import smile.deep.layer.ParameterInit;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.SafeTensors;
@@ -290,7 +291,10 @@ public class Llama implements LanguageModel {
 
         var layout = modelArgs.kvCacheLayout();
         long tConstruct = System.currentTimeMillis();
-        var model = newModel(modelArgs);
+        LlamaModel model;
+        try (var ignored = ParameterInit.uninitialized()) {
+            model = newModel(modelArgs);
+        }
         logger.info("LlamaModel construct in {} ms (layers={}, maxSeqLen={})",
                 System.currentTimeMillis() - tConstruct, modelArgs.numLayers(), modelArgs.maxSeqLen());
         // Place empty module + cis before load so torch checkpoints land on device

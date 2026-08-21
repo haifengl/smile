@@ -48,7 +48,9 @@ public class LinearLayer extends ModuleLayer {
     }
 
     private static Handles create(int in, int out, boolean bias) {
-        MemorySegment h = check(smile_linear_create(in, out, bias ? 1 : 0));
+        MemorySegment h = ParameterInit.skip()
+                ? check(smile_linear_create_uninitialized(in, out, bias ? 1 : 0))
+                : check(smile_linear_create(in, out, bias ? 1 : 0));
         MemorySegment m = check(smile_linear_as_module(h));
         return new Handles(h, m, () -> {
             smile_module_free(m);
