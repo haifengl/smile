@@ -33,6 +33,8 @@ import org.jboss.logging.Logger;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import smile.llm.*;
+import smile.llm.attention.AttentionBackend;
+import smile.llm.attention.AttentionBackends;
 import smile.llm.llama.*;
 import smile.llm.qwen.Qwen;
 import smile.util.HuggingFaceHub;
@@ -97,6 +99,7 @@ public class ChatService {
         String modelSpec = config.model();
         this.modelId = publicModelId(modelSpec);
         try {
+            AttentionBackends.install(AttentionBackend.parse(config.attentionBackend()));
             double memFraction = config.memFractionStatic();
             String kvDtype = kvCache.dtype().orElse(null);
             int pageSize = kvCache.pageSize();

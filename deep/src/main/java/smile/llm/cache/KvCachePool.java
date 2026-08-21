@@ -115,6 +115,9 @@ public class KvCachePool implements AutoCloseable {
     /** When {@code false}, {@link #bindWithPrefix} falls back to contiguous bind. */
     private volatile boolean prefixReuseEnabled = true;
 
+    /** Lazily allocated FlashInfer workspace for this pool's device. */
+    private smile.llm.attention.FlashInferWorkspace flashInferWorkspace;
+
     /** Cumulative prompt tokens seen by {@link #bindWithPrefix} (full length). */
     private final AtomicLong prefixPromptTokens = new AtomicLong();
     /** Cumulative matched prefix tokens from {@link #bindWithPrefix}. */
@@ -808,6 +811,124 @@ public class KvCachePool implements AutoCloseable {
     }
 
     /**
+     * Builds FlashInfer CSR page-table metadata for positions {@code [0, length)}.
+     *
+     * <p>Assumes tokens pack densely into pages (vLLM-style): virtual page
+     * {@code p} starts at request position {@code p * pageSize}, and the
+     * physical page id is taken from {@code requestSlots[b][p * pageSize]}.
+     *
+     * @param length number of cached positions (inclusive of the current step).
+     * @return CSR metadata; caller owns and must close.
+     */
+    public FlashInferKvMetadata buildFlashInferMetadata(int length) {
+        ensureBound();
+        if (length < 0 || length > requestCapacity) {
+            throw new IllegalArgumentException("KV FlashInfer length out of range: " + length);
+        }
+        int batch = requestSlots.length;
+        if (length == 0) {
+            Tensor indptr = Tensor.of(new int[batch + 1]);
+            Tensor indices = Tensor.of(new int[0]);
+            Tensor last = Tensor.of(new int[batch]);
+            indptr.detachFromScopes();
+            indices.detachFromScopes();
+            last.detachFromScopes();
+            return new FlashInferKvMetadata(indptr, indices, last, pageSize);
+        }
+
+        int[] indptrArr = new int[batch + 1];
+        int totalPages = 0;
+        int[] lastPageLen = new int[batch];
+        int[] pagesPerBatch = new int[batch];
+        for (int b = 0; b < batch; b++) {
+            int nPages = (length + pageSize - 1) / pageSize;
+            pagesPerBatch[b] = nPages;
+            int rem = length % pageSize;
+            lastPageLen[b] = (rem == 0) ? pageSize : rem;
+            indptrArr[b] = totalPages;
+            totalPages += nPages;
+        }
+        indptrArr[batch] = totalPages;
+
+        int[] flatIndices = new int[totalPages];
+        int cursor = 0;
+        for (int b = 0; b < batch; b++) {
+            long[] slots = requestSlots[b];
+            int nPages = pagesPerBatch[b];
+            for (int p = 0; p < nPages; p++) {
+                int pos = p * pageSize;
+                flatIndices[cursor++] = (int) (slots[pos] / pageSize);
+            }
+        }
+
+        Tensor indptrT;
+        Tensor indicesT;
+        Tensor lastT;
+        if (device.isCUDA()) {
+            try (Tensor iCpu = Tensor.of(indptrArr);
+                 Tensor nCpu = Tensor.of(flatIndices);
+                 Tensor lCpu = Tensor.of(lastPageLen)) {
+                indptrT = iCpu.to(device);
+                indicesT = nCpu.to(device);
+                lastT = lCpu.to(device);
+            }
+        } else {
+            indptrT = Tensor.of(indptrArr);
+            indicesT = Tensor.of(flatIndices);
+            lastT = Tensor.of(lastPageLen);
+        }
+        indptrT.detachFromScopes();
+        indicesT.detachFromScopes();
+        lastT.detachFromScopes();
+        return new FlashInferKvMetadata(indptrT, indicesT, lastT, pageSize);
+    }
+
+    /**
+     * Returns the key cache buffer {@code [numLayers, numSlots, numKvHeads, headDim]}.
+     * @return key cache.
+     */
+    public Tensor keyCache() {
+        return kCache;
+    }
+
+    /**
+     * Returns the value cache buffer {@code [numLayers, numSlots, numKvHeads, headDim]}.
+     * @return value cache.
+     */
+    public Tensor valueCache() {
+        return vCache;
+    }
+
+    /** @return number of KV heads stored in the pool. */
+    public int numKvHeads() {
+        return numKvHeads;
+    }
+
+    /** @return head dimension. */
+    public int headDim() {
+        return headDim;
+    }
+
+    /** @return hosting device. */
+    public Device device() {
+        return device;
+    }
+
+    /**
+     * Returns (and lazily creates) the FlashInfer workspace for this pool.
+     * @return workspace, or {@code null} when FlashInfer is unavailable.
+     */
+    public synchronized smile.llm.attention.FlashInferWorkspace flashInferWorkspace() {
+        if (flashInferWorkspace == null
+                && smile.llm.attention.AttentionBackends.current()
+                    == smile.llm.attention.AttentionBackend.FLASHINFER) {
+            flashInferWorkspace = smile.llm.attention.FlashInferWorkspace.create(
+                    device.isCUDA() ? Byte.toUnsignedInt(device.index()) : 0, 0L);
+        }
+        return flashInferWorkspace;
+    }
+
+    /**
      * Allocates {@code numTokens} slots (page-aligned) and returns their indices.
      * Used by the inference engine when inserting into the radix tree.
      *
@@ -846,6 +967,10 @@ public class KvCachePool implements AutoCloseable {
     public void close() {
         releaseBinding();
         radix.reset();
+        if (flashInferWorkspace != null) {
+            flashInferWorkspace.close();
+            flashInferWorkspace = null;
+        }
         kCache.close();
         vCache.close();
         freePages.clear();

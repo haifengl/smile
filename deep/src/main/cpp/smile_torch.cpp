@@ -79,6 +79,9 @@ static void clear_error() {
     g_last_error.clear();
 }
 
+extern "C" void smile_torch_set_error(const char *msg) { set_error(msg); }
+extern "C" void smile_torch_clear_error(void) { clear_error(); }
+
 #ifndef USE_CUDA
 static void set_error_no_cuda_build() {
     set_error("smile_torch was built without CUDA (USE_CUDA not enabled at compile time)");
@@ -2134,6 +2137,81 @@ ST_Tensor smile_recurrent_gated_delta_rule(
         return new ST_Tensor_{ out };
     ST_TRY_END
     return nullptr;
+}
+
+#ifdef USE_CUDA
+#  ifdef USE_FLASHINFER
+int smile_flashinfer_paged_attention_cuda(
+        const torch::Tensor &query,
+        const torch::Tensor &k_cache,
+        const torch::Tensor &v_cache,
+        const torch::Tensor &paged_kv_indptr,
+        const torch::Tensor &paged_kv_indices,
+        const torch::Tensor &paged_kv_last_page_len,
+        int page_size,
+        int num_kv_heads,
+        int head_dim,
+        int cache_len,
+        float scale,
+        int is_causal,
+        torch::Tensor &out,
+        std::string &err);
+#  endif
+#endif
+
+ST_Tensor smile_flashinfer_paged_attention(
+        ST_Tensor query,
+        ST_Tensor k_cache,
+        ST_Tensor v_cache,
+        ST_Tensor paged_kv_indptr,
+        ST_Tensor paged_kv_indices,
+        ST_Tensor paged_kv_last_page_len,
+        int page_size,
+        int num_kv_heads,
+        int head_dim,
+        int cache_len,
+        double scale,
+        int is_causal,
+        ST_FlashInferWorkspace workspace) {
+#if defined(USE_CUDA) && defined(USE_FLASHINFER)
+    if (!query || !k_cache || !v_cache || !paged_kv_indptr
+            || !paged_kv_indices || !paged_kv_last_page_len || !workspace) {
+        set_error("smile_flashinfer_paged_attention: null argument");
+        return nullptr;
+    }
+    ST_TRY_BEGIN
+        int dev = smile_flashinfer_workspace_device_index(workspace);
+        c10::cuda::CUDAGuard guard(dev);
+        auto q = query->t;
+        float sc = scale > 0
+                ? static_cast<float>(scale)
+                : (1.0f / std::sqrt(static_cast<float>(head_dim > 0 ? head_dim : 1)));
+        torch::Tensor out = torch::empty_like(q);
+        std::string err;
+        int rc = smile_flashinfer_paged_attention_cuda(
+                q, k_cache->t, v_cache->t,
+                paged_kv_indptr->t, paged_kv_indices->t, paged_kv_last_page_len->t,
+                page_size, num_kv_heads, head_dim, cache_len,
+                sc, is_causal, out, err);
+        if (rc != 0) {
+            set_error(err.empty() ? "flashinfer paged attention failed" : err);
+            return nullptr;
+        }
+        return new ST_Tensor_{ out };
+    ST_TRY_END
+    return nullptr;
+#else
+    (void)query; (void)k_cache; (void)v_cache;
+    (void)paged_kv_indptr; (void)paged_kv_indices; (void)paged_kv_last_page_len;
+    (void)page_size; (void)num_kv_heads; (void)head_dim; (void)cache_len;
+    (void)scale; (void)is_causal; (void)workspace;
+#  ifdef USE_CUDA
+    set_error("smile_torch built without USE_FLASHINFER");
+#  else
+    set_error_no_cuda_build();
+#  endif
+    return nullptr;
+#endif
 }
 
 } // extern "C"
