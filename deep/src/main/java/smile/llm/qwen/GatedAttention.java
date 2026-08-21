@@ -180,6 +180,21 @@ public class GatedAttention implements Attention {
 
     @Override
     public Tensor forward(Tensor x, int startPos, Tensor cis, Tensor mask) {
+        throw new UnsupportedOperationException(
+                "Qwen gated attention requires HF cos/sin RoPE; use forward(x, startPos, cos, sin, mask)");
+    }
+
+    /**
+     * Forward with HuggingFace-style partial RoPE cos/sin tables.
+     *
+     * @param x        hidden states {@code [B, S, D]}.
+     * @param startPos KV cache write position.
+     * @param cos      cosines for this window {@code [S, rotaryDim]}.
+     * @param sin      sines for this window {@code [S, rotaryDim]}.
+     * @param mask     causal attention mask, or {@code null} when {@code S == 1}.
+     * @return attention output {@code [B, S, D]}.
+     */
+    public Tensor forward(Tensor x, int startPos, Tensor cos, Tensor sin, Tensor mask) {
         if (cachePool == null) {
             throw new IllegalStateException("KV cache pool not installed; call setCachePool first");
         }
@@ -214,7 +229,7 @@ public class GatedAttention implements Attention {
             Tensor kNormed = kNorm.forward(kFlat);
             key = kNormed.view(batchSize, seqlen, numKvHeads, headDim);
 
-            var rope = PartialRotaryEncoding.apply(query, key, cis, rotaryDim);
+            var rope = PartialRotaryEncoding.apply(query, key, cos, sin, rotaryDim);
             Tensor qRope = rope._1();
             Tensor kRope = rope._2();
 

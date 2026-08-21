@@ -113,18 +113,19 @@ public class QwenBlock {
      * Forward pass.
      * @param x        hidden states.
      * @param startPos cache start position (full-attn).
-     * @param cis      partial RoPE frequencies (full-attn).
+     * @param cos      partial RoPE cosines for this window (full-attn).
+     * @param sin      partial RoPE sines for this window (full-attn).
      * @param mask     causal attention mask (full-attn).
      * @return block output.
      */
-    public Tensor forward(Tensor x, int startPos, Tensor cis, Tensor mask) {
+    public Tensor forward(Tensor x, int startPos, Tensor cos, Tensor sin, Tensor mask) {
         AutoScope scope = new AutoScope();
         Tensor.push(scope);
         try {
             Tensor residual = x;
             Tensor h = inputNorm.forward(x);
             Tensor mixed = selfAttn != null
-                    ? selfAttn.forward(h, startPos, cis, mask)
+                    ? selfAttn.forward(h, startPos, cos, sin, mask)
                     : linearAttn.forward(h);
             h.close();
             Tensor afterAttn = residual.add(mixed);
