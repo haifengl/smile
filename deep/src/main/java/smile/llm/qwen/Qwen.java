@@ -69,7 +69,7 @@ public class Qwen implements LanguageModel {
     static final String family = "alibaba/qwen3.5";
 
     private static final Pattern HF_LAYER_WEIGHT = Pattern.compile(
-            "^(?:language_model\\.)?model\\.layers\\.(\\d+)\\.(self_attn|linear_attn|mlp|input_layernorm|post_attention_layernorm)\\.(.+)$");
+            "^model\\.layers\\.(\\d+)\\.(self_attn|linear_attn|mlp|input_layernorm|post_attention_layernorm)\\.(.+)$");
 
     final String name;
     /** Rank-0 model (also {@code models[0]}). */
@@ -521,7 +521,9 @@ public class Qwen implements LanguageModel {
         }
         Set<String> loaded = ConcurrentHashMap.newKeySet();
         boolean needTiedLmHead = !weightMap.containsKey("lm_head.weight")
-                && !weightMap.containsKey("language_model.lm_head.weight");
+                && !weightMap.containsKey("model.lm_head.weight")
+                && !weightMap.containsKey("language_model.lm_head.weight")
+                && !weightMap.containsKey("model.language_model.lm_head.weight");
 
         Device loadDevice = Device.CPU();
         ExecutorService pool = Executors.newFixedThreadPool(Math.max(1, threads));
@@ -556,6 +558,14 @@ public class Qwen implements LanguageModel {
         }
         logger.info("Loaded {} parameter names from HuggingFace safetensors (×{} ranks)",
                 loaded.size(), tpSize);
+        int minExpected = Math.max(32, models[0].params().numLayers() * 8);
+        if (loaded.size() < minExpected) {
+            throw new IOException(String.format(
+                    "Only loaded %d text parameters (expected at least %d for %d layers). "
+                            + "Checkpoint keys are likely using an unsupported prefix; "
+                            + "check remapHuggingFaceName for model.language_model.*",
+                    loaded.size(), minExpected, models[0].params().numLayers()));
+        }
     }
 
     private static void loadOneShardFanOut(QwenModel[] models, File dir, Device loadDevice,
@@ -646,6 +656,7 @@ public class Qwen implements LanguageModel {
                 if (needTiedLmHead && !stateDict.containsKey("lm_head.weight")) {
                     for (String embKey : List.of(
                             "model.embed_tokens.weight",
+                            "model.language_model.embed_tokens.weight",
                             "language_model.model.embed_tokens.weight")) {
                         if (st.tensors().containsKey(embKey)) {
                             Tensor onDevice = st.tensors().get(embKey).to(target);
@@ -710,6 +721,13 @@ public class Qwen implements LanguageModel {
     /**
      * Maps a HuggingFace parameter name onto the registered SMILE module path.
      * Returns {@code null} for vision / MTP / unrecognized tensors.
+     *
+     * <p>Normalizes common text-tower prefixes used by Qwen3.5 checkpoints:
+     * <ul>
+     *   <li>{@code model.language_model.*} (multimodal {@code ForConditionalGeneration})</li>
+     *   <li>{@code language_model.model.*} / {@code language_model.*}</li>
+     *   <li>{@code model.*} (text-only)</li>
+     * </ul>
      */
     static String remapHuggingFaceName(String hfName) {
         if (hfName.startsWith("visual.") || hfName.startsWith("mtp.")
@@ -718,7 +736,10 @@ public class Qwen implements LanguageModel {
         }
 
         String name = hfName;
-        if (name.startsWith("language_model.")) {
+        // Multimodal Qwen3.5: text weights live under model.language_model.*
+        if (name.startsWith("model.language_model.")) {
+            name = "model." + name.substring("model.language_model.".length());
+        } else if (name.startsWith("language_model.")) {
             name = name.substring("language_model.".length());
         }
 
@@ -728,19 +749,13 @@ public class Qwen implements LanguageModel {
         if (name.equals("model.norm.weight")) {
             return "norm.weight";
         }
-        if (name.equals("lm_head.weight")) {
+        if (name.equals("lm_head.weight") || name.equals("model.lm_head.weight")) {
             return "lm_head.weight";
         }
 
-        Matcher m = HF_LAYER_WEIGHT.matcher(hfName);
+        Matcher m = HF_LAYER_WEIGHT.matcher(name);
         if (!m.matches()) {
-            // Try without language_model prefix already stripped above
-            m = Pattern.compile(
-                    "^model\\.layers\\.(\\d+)\\.(self_attn|linear_attn|mlp|input_layernorm|post_attention_layernorm)\\.(.+)$")
-                    .matcher(name);
-            if (!m.matches()) {
-                return null;
-            }
+            return null;
         }
         String layer = m.group(1);
         String component = m.group(2);
