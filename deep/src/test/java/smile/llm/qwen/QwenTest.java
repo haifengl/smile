@@ -88,7 +88,7 @@ public class QwenTest {
         }
         try {
             Tensor tokens = Tensor.of(new long[]{1L, 2L, 3L, 4L}, 1, 4);
-            Tensor out = model.forward(tokens, 0);
+            Tensor out = model.forward(tokens, 0, true);
             assertArrayEquals(new long[]{1, 4, 100}, out.shape());
             tokens.close();
             out.close();

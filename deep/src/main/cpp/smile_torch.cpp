@@ -47,12 +47,20 @@
 #include <unordered_set>
 #include <optional>
 #include <limits>
+#include <cmath>
+#include <cstring>
 
 // ── CUDA introspection (compiled only when CUDA is present) ───────────────────
 #ifdef USE_CUDA
 #  include <cuda_runtime.h>
 #  include <c10/cuda/CUDACachingAllocator.h>
+#  include <c10/cuda/CUDAGuard.h>
 #  include <ATen/cuda/CUDAContext.h>
+#  include "smile_gated_delta.cuh"
+#endif
+
+#ifdef USE_NCCL
+#  include <nccl.h>
 #endif
 
 // =============================================================================
@@ -1799,8 +1807,149 @@ void smile_manual_seed(int64_t seed) {
 }
 
 // =============================================================================
-// Tensor parallelism collectives (peer-copy; NCCL-ready API)
+// Tensor parallelism collectives (NCCL primary, peer-copy fallback)
 // =============================================================================
+
+#ifdef USE_NCCL
+struct ST_NcclComm_ {
+    int nRanks = 0;
+    ncclComm_t *comms = nullptr; // length nRanks
+};
+#endif
+
+ST_NcclComm smile_nccl_comm_create(int n, const int *device_indices) {
+#ifndef USE_NCCL
+    (void)n; (void)device_indices;
+    set_error("smile_torch was built without NCCL (USE_NCCL not enabled)");
+    return nullptr;
+#else
+    if (n < 1 || !device_indices) {
+        set_error("smile_nccl_comm_create: invalid args");
+        return nullptr;
+    }
+    ST_TRY_BEGIN
+        auto *c = new ST_NcclComm_();
+        c->nRanks = n;
+        c->comms = new ncclComm_t[static_cast<size_t>(n)];
+        ncclResult_t rc = ncclCommInitAll(c->comms, n, device_indices);
+        if (rc != ncclSuccess) {
+            delete[] c->comms;
+            delete c;
+            set_error(std::string("ncclCommInitAll: ") + ncclGetErrorString(rc));
+            return nullptr;
+        }
+        return c;
+    ST_TRY_END
+    return nullptr;
+#endif
+}
+
+void smile_nccl_comm_free(ST_NcclComm comm) {
+#ifdef USE_NCCL
+    if (!comm) return;
+    for (int i = 0; i < comm->nRanks; i++) {
+        if (comm->comms[i]) {
+            ncclCommDestroy(comm->comms[i]);
+        }
+    }
+    delete[] comm->comms;
+    delete comm;
+#else
+    (void)comm;
+#endif
+}
+
+#ifdef USE_NCCL
+static ncclDataType_t to_nccl_dtype(c10::ScalarType dt) {
+    switch (dt) {
+        case c10::ScalarType::Float: return ncclFloat32;
+        case c10::ScalarType::Half: return ncclFloat16;
+        case c10::ScalarType::BFloat16: return ncclBfloat16;
+        case c10::ScalarType::Double: return ncclFloat64;
+        case c10::ScalarType::Int: return ncclInt32;
+        case c10::ScalarType::Long: return ncclInt64;
+        default: return ncclFloat32;
+    }
+}
+#endif
+
+int smile_nccl_all_reduce_sum(ST_NcclComm comm, int rank, ST_Tensor local) {
+#ifndef USE_NCCL
+    (void)comm; (void)rank; (void)local;
+    set_error("smile_torch was built without NCCL");
+    return -1;
+#else
+    if (!comm || !local || !local->t.defined()) {
+        set_error("smile_nccl_all_reduce_sum: null args");
+        return -1;
+    }
+    if (rank < 0 || rank >= comm->nRanks) {
+        set_error("smile_nccl_all_reduce_sum: rank out of range");
+        return -1;
+    }
+    ST_TRY_BEGIN
+        auto t = local->t;
+        if (!t.is_cuda()) {
+            set_error("smile_nccl_all_reduce_sum: tensor must be CUDA");
+            return -1;
+        }
+        if (!t.is_contiguous()) {
+            set_error("smile_nccl_all_reduce_sum: tensor must be contiguous");
+            return -1;
+        }
+        c10::cuda::CUDAGuard guard(t.device());
+        cudaStream_t stream = at::cuda::getCurrentCUDAStream(t.device().index()).stream();
+        ncclDataType_t dt = to_nccl_dtype(t.scalar_type());
+        size_t count = static_cast<size_t>(t.numel());
+        ncclResult_t rc = ncclAllReduce(
+                t.data_ptr(), t.data_ptr(), count, dt, ncclSum,
+                comm->comms[rank], stream);
+        if (rc != ncclSuccess) {
+            set_error(std::string("ncclAllReduce: ") + ncclGetErrorString(rc));
+            return -1;
+        }
+        return 0;
+    ST_TRY_END
+    return -1;
+#endif
+}
+
+int smile_nccl_broadcast(ST_NcclComm comm, int rank, int root, ST_Tensor local) {
+#ifndef USE_NCCL
+    (void)comm; (void)rank; (void)root; (void)local;
+    set_error("smile_torch was built without NCCL");
+    return -1;
+#else
+    if (!comm || !local || !local->t.defined()) {
+        set_error("smile_nccl_broadcast: null args");
+        return -1;
+    }
+    if (rank < 0 || rank >= comm->nRanks || root < 0 || root >= comm->nRanks) {
+        set_error("smile_nccl_broadcast: rank/root out of range");
+        return -1;
+    }
+    ST_TRY_BEGIN
+        auto t = local->t;
+        if (!t.is_cuda() || !t.is_contiguous()) {
+            set_error("smile_nccl_broadcast: tensor must be contiguous CUDA");
+            return -1;
+        }
+        c10::cuda::CUDAGuard guard(t.device());
+        cudaStream_t stream = at::cuda::getCurrentCUDAStream(t.device().index()).stream();
+        ncclDataType_t dt = to_nccl_dtype(t.scalar_type());
+        size_t count = static_cast<size_t>(t.numel());
+        ncclResult_t rc = ncclBroadcast(
+                t.data_ptr(), t.data_ptr(), count, dt, root,
+                comm->comms[rank], stream);
+        if (rc != ncclSuccess) {
+            set_error(std::string("ncclBroadcast: ") + ncclGetErrorString(rc));
+            return -1;
+        }
+        return 0;
+    ST_TRY_END
+    return -1;
+#endif
+}
 
 int smile_tp_all_reduce_sum(ST_Tensor *tensors, int n) {
     if (n <= 1) return 0;
@@ -1822,15 +1971,21 @@ int smile_tp_all_reduce_sum(ST_Tensor *tensors, int n) {
                 return -1;
             }
         }
-        // Accumulate into tensors[0] in place (no extra clone of rank-0), then
-        // broadcast the sum. Peer .to() temps are still needed until NCCL.
+        // Peer-copy fallback (used when NCCL path is not taken from Java).
         auto& acc = tensors[0]->t;
         for (int i = 1; i < n; i++) {
-            acc.add_(tensors[i]->t.to(acc.device(), /*non_blocking=*/false));
+            acc.add_(tensors[i]->t.to(acc.device(), /*non_blocking=*/true));
         }
         for (int i = 1; i < n; i++) {
-            tensors[i]->t.copy_(acc.to(tensors[i]->t.device(), /*non_blocking=*/false));
+            tensors[i]->t.copy_(acc.to(tensors[i]->t.device(), /*non_blocking=*/true));
         }
+#ifdef USE_CUDA
+        if (acc.is_cuda()) {
+            c10::cuda::CUDAGuard guard(acc.device());
+            AT_CUDA_CHECK(cudaStreamSynchronize(
+                    at::cuda::getCurrentCUDAStream(acc.device().index()).stream()));
+        }
+#endif
         return 0;
     ST_TRY_END
     return -1;
@@ -1858,11 +2013,127 @@ int smile_tp_broadcast(ST_Tensor *tensors, int n, int root) {
                 set_error("smile_tp_broadcast: null/undefined tensor");
                 return -1;
             }
-            tensors[i]->t.copy_(src.to(tensors[i]->t.device(), /*non_blocking=*/false));
+            tensors[i]->t.copy_(src.to(tensors[i]->t.device(), /*non_blocking=*/true));
         }
+#ifdef USE_CUDA
+        if (src.is_cuda()) {
+            c10::cuda::CUDAGuard guard(src.device());
+            AT_CUDA_CHECK(cudaStreamSynchronize(
+                    at::cuda::getCurrentCUDAStream(src.device().index()).stream()));
+        }
+#endif
         return 0;
     ST_TRY_END
     return -1;
+}
+
+// =============================================================================
+// Gated DeltaNet fused recurrent rule
+// =============================================================================
+
+static torch::Tensor l2norm_last(const torch::Tensor &x) {
+    auto s = x.mul(x).sum(-1, /*keepdim=*/true).add(1e-6).rsqrt();
+    return x.mul(s);
+}
+
+static torch::Tensor gated_delta_recurrent_libtorch(
+        torch::Tensor q, torch::Tensor k, torch::Tensor v,
+        torch::Tensor g, torch::Tensor beta, torch::Tensor state,
+        float scale) {
+    // q/k/v/g/beta/state/out all float contiguous; layouts [B,H,S,*] / [B,H,K,V]
+    q = q.mul(scale);
+    auto B = q.size(0), H = q.size(1), S = q.size(2), V = v.size(3);
+    auto out = torch::zeros({B, H, S, V}, q.options());
+    for (int64_t t = 0; t < S; ++t) {
+        auto q_t = q.select(2, t); // [B,H,K]
+        auto k_t = k.select(2, t);
+        auto v_t = v.select(2, t);
+        auto g_t = g.select(2, t).exp().view({B, H, 1, 1});
+        auto beta_t = beta.select(2, t).unsqueeze(-1); // [B,H,1]
+        state.mul_(g_t);
+        auto kv = at::matmul(k_t.unsqueeze(-2), state).squeeze(-2); // [B,H,V]
+        auto delta = v_t.sub(kv).mul(beta_t);
+        state.add_(k_t.unsqueeze(-1).mul(delta.unsqueeze(-2)));
+        auto y = at::matmul(q_t.unsqueeze(-2), state).squeeze(-2);
+        out.select(2, t).copy_(y);
+    }
+    return out;
+}
+
+ST_Tensor smile_recurrent_gated_delta_rule(
+        ST_Tensor query, ST_Tensor key, ST_Tensor value,
+        ST_Tensor g, ST_Tensor beta, ST_Tensor state,
+        int qk_l2norm) {
+    if (!query || !key || !value || !g || !beta || !state) {
+        set_error("smile_recurrent_gated_delta_rule: null tensor");
+        return nullptr;
+    }
+    ST_TRY_BEGIN
+        auto q0 = query->t;
+        auto k0 = key->t;
+        auto v0 = value->t;
+        auto g0 = g->t;
+        auto beta0 = beta->t;
+        auto st = state->t;
+        if (q0.dim() != 4 || k0.dim() != 4 || v0.dim() != 4
+                || g0.dim() != 3 || beta0.dim() != 3 || st.dim() != 4) {
+            set_error("smile_recurrent_gated_delta_rule: unexpected ranks");
+            return nullptr;
+        }
+        if (st.scalar_type() != c10::ScalarType::Float) {
+            set_error("smile_recurrent_gated_delta_rule: state must be float32");
+            return nullptr;
+        }
+
+        // [B,S,H,D] → [B,H,S,D] float contiguous
+        auto q = q0.transpose(1, 2).contiguous().to(c10::ScalarType::Float);
+        auto k = k0.transpose(1, 2).contiguous().to(c10::ScalarType::Float);
+        auto v = v0.transpose(1, 2).contiguous().to(c10::ScalarType::Float);
+        auto gf = g0.transpose(1, 2).contiguous().to(c10::ScalarType::Float);
+        auto bf = beta0.transpose(1, 2).contiguous().to(c10::ScalarType::Float);
+        if (qk_l2norm) {
+            q = l2norm_last(q);
+            k = l2norm_last(k);
+        }
+        const float scale = 1.0f / std::sqrt(static_cast<float>(k.size(3)));
+        auto B = k.size(0), H = k.size(1), S = k.size(2), Vdim = v.size(3);
+        auto out_f = torch::empty({B, H, S, Vdim}, q.options());
+
+#ifdef USE_CUDA
+        if (q.is_cuda()) {
+            // Kernel expects g already exponentiated.
+            auto g_exp = gf.exp();
+            // Apply scale into q for the kernel.
+            auto q_scaled = q.mul(scale);
+            c10::cuda::CUDAGuard guard(q.device());
+            cudaStream_t stream = at::cuda::getCurrentCUDAStream(q.device().index()).stream();
+            int64_t K = k.size(3);
+            int rc = smile_gated_delta_recurrent_cuda(
+                    q_scaled.data_ptr<float>(),
+                    k.data_ptr<float>(),
+                    v.data_ptr<float>(),
+                    g_exp.data_ptr<float>(),
+                    bf.data_ptr<float>(),
+                    st.data_ptr<float>(),
+                    out_f.data_ptr<float>(),
+                    B, H, S, K, Vdim,
+                    /*scale already applied*/ 1.0f,
+                    stream);
+            if (rc != 0) {
+                const char *msg = smile_gated_delta_last_error();
+                set_error(msg && msg[0] ? msg : "gated_delta CUDA kernel failed");
+                return nullptr;
+            }
+        } else
+#endif
+        {
+            out_f = gated_delta_recurrent_libtorch(q, k, v, gf, bf, st, scale);
+        }
+
+        auto out = out_f.transpose(1, 2).contiguous().to(q0.scalar_type());
+        return new ST_Tensor_{ out };
+    ST_TRY_END
+    return nullptr;
 }
 
 } // extern "C"

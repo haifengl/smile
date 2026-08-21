@@ -63,6 +63,9 @@ public class GatedDeltaNet {
     final Tensor aLog;
     /** Discretization bias per value head. */
     final Tensor dtBias;
+    /** Cached float views of A_log / dt_bias (filled lazily after device move). */
+    private Tensor aLogF;
+    private Tensor dtBiasF;
     final QwenRMSNormGated norm;
     final Sigmoid sigmoid = new Sigmoid(false);
     final TensorParallelGroup tpGroup;
@@ -152,6 +155,24 @@ public class GatedDeltaNet {
         this.statePool = pool;
     }
 
+    /** Lazily materializes float A_log / dt_bias caches on the parameter device. */
+    private void ensureFloatCaches() {
+        if (aLogF == null || dtBiasF == null
+                || !aLogF.device().equals(aLog.device())
+                || !dtBiasF.device().equals(dtBias.device())) {
+            if (aLogF != null && aLogF != aLog) {
+                aLogF.close();
+            }
+            if (dtBiasF != null && dtBiasF != dtBias) {
+                dtBiasF.close();
+            }
+            aLogF = aLog.to(ScalarType.Float);
+            dtBiasF = dtBias.to(ScalarType.Float);
+            aLogF.detachFromScopes();
+            dtBiasF.detachFromScopes();
+        }
+    }
+
     /**
      * Forward pass.
      * @param x hidden states {@code [B, S, D]}.
@@ -203,11 +224,10 @@ public class GatedDeltaNet {
 
                 Tensor beta = sigmoid.forward(b);
                 b.close();
-                Tensor aLogF = aLog.to(ScalarType.Float);
-                Tensor dt = dtBias.to(ScalarType.Float);
+                ensureFloatCaches();
                 Tensor aF = a.to(ScalarType.Float);
                 a.close();
-                Tensor aPlusDt = aF.add(dt);
+                Tensor aPlusDt = aF.add(dtBiasF);
                 Tensor soft = GatedDeltaRule.softplus(aPlusDt);
                 Tensor aExp = aLogF.exp();
                 Tensor aNeg = aExp.neg();
@@ -217,12 +237,6 @@ public class GatedDeltaNet {
                 soft.close();
                 aExp.close();
                 aNeg.close();
-                if (aLogF != aLog) {
-                    aLogF.close();
-                }
-                if (dt != dtBias) {
-                    dt.close();
-                }
 
                 // Prefill and decode both reuse the pool buffer (reset() zeros it).
                 Tensor initState = statePool != null ? statePool.recurrent(linearLayerId) : null;

@@ -937,10 +937,41 @@ SMILE_API void smile_manual_seed(int64_t seed);
  * ========================================================================= */
 
 /**
+ * Opaque NCCL communicator for a local TP (or future PP) device group.
+ * Null when NCCL is unavailable; peer-copy collectives remain usable.
+ */
+typedef struct ST_NcclComm_ *ST_NcclComm;
+
+/**
+ * Creates an NCCL communicator for {@code n} local CUDA devices
+ * ({@code ncclCommInitAll}). Returns null on failure / when built without NCCL.
+ *
+ * @param n              number of ranks (== device count).
+ * @param device_indices CUDA device indices length {@code n}.
+ */
+SMILE_API ST_NcclComm smile_nccl_comm_create(int n, const int *device_indices);
+
+/** Destroys a communicator created by {@link #smile_nccl_comm_create}. */
+SMILE_API void smile_nccl_comm_free(ST_NcclComm comm);
+
+/**
+ * In-place sum all-reduce of {@code local} on {@code rank} using NCCL.
+ * Every rank must call concurrently with its own tensor (same shape/dtype).
+ *
+ * @return 0 on success, non-zero on failure.
+ */
+SMILE_API int smile_nccl_all_reduce_sum(ST_NcclComm comm, int rank, ST_Tensor local);
+
+/**
+ * Broadcasts {@code local} from {@code root} to every rank. Each rank passes
+ * its own tensor buffer (same shape); root's data is copied to the others.
+ */
+SMILE_API int smile_nccl_broadcast(ST_NcclComm comm, int rank, int root, ST_Tensor local);
+
+/**
  * In-place sum all-reduce across {@code n} tensors that already live on
  * distinct CUDA devices (same shape and dtype). When {@code n <= 1} this is a
- * no-op. Phase-1 implementation uses peer copies; NCCL can replace it later
- * without changing the Java API.
+ * no-op. Peer-copy fallback when NCCL is not used by the caller.
  *
  * @param tensors array of {@code n} tensor handles.
  * @param n       number of ranks / tensors.
@@ -953,6 +984,24 @@ SMILE_API int smile_tp_all_reduce_sum(ST_Tensor *tensors, int n);
  * each on its own device). No-op when {@code n <= 1}.
  */
 SMILE_API int smile_tp_broadcast(ST_Tensor *tensors, int n, int root);
+
+/* =========================================================================
+ * Gated DeltaNet fused recurrent rule
+ * ========================================================================= */
+
+/**
+ * Fused recurrent gated delta rule. Mutates {@code state} in place (float
+ * {@code [B,H,Dk,Dv]}). Returns output {@code [B,S,H,Dv]} in {@code query}'s dtype.
+ *
+ * Layouts: query/key/value {@code [B,S,H,D]}, g/beta {@code [B,S,H]}.
+ *
+ * @param qk_l2norm non-zero to L2-normalize Q/K along the last dim.
+ * @return newly allocated output tensor, or null on error.
+ */
+SMILE_API ST_Tensor smile_recurrent_gated_delta_rule(
+        ST_Tensor query, ST_Tensor key, ST_Tensor value,
+        ST_Tensor g, ST_Tensor beta, ST_Tensor state,
+        int qk_l2norm);
 
 #ifdef __cplusplus
 } /* extern "C" */

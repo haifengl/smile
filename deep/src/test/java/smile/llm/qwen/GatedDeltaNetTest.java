@@ -21,6 +21,7 @@ import smile.deep.tensor.Device;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.*;
 
 /**
  * Unit tests for Gated DeltaNet recurrence helpers.
@@ -83,6 +84,35 @@ public class GatedDeltaNetTest {
         result._1().close();
         q.close(); k.close(); v.close(); g.close(); beta.close();
         pool.close();
+    }
+
+    @Test
+    public void testGivenNativeAndJavaWhenSameInputsThenOutputsClose() {
+        int batch = 1, seq = 2, heads = 2, kDim = 4, vDim = 4;
+        Tensor q = Tensor.randn(batch, seq, heads, kDim);
+        Tensor k = Tensor.randn(batch, seq, heads, kDim);
+        Tensor v = Tensor.randn(batch, seq, heads, vDim);
+        Tensor g = Tensor.randn(batch, seq, heads);
+        Tensor beta = Tensor.full(0.5, batch, seq, heads);
+        Tensor poolNative = Tensor.zeros(batch, heads, kDim, vDim);
+        Tensor poolJava = Tensor.zeros(batch, heads, kDim, vDim);
+
+        var nativeOut = smile.torch.Native.recurrentGatedDeltaRule(
+                q, k, v, g, beta, poolNative, true);
+        Assumptions.assumeTrue(nativeOut != null, "native gated-delta unavailable");
+
+        var javaOut = GatedDeltaRule.recurrentGatedDeltaRuleJava(
+                q, k, v, g, beta, poolJava, true, true);
+        try (Tensor diff = nativeOut.sub(javaOut._1()).abs();
+             Tensor total = diff.sum()) {
+            double mae = total.doubleValue() / nativeOut.length();
+            assertTrue(mae < 1e-4, "native vs java MAE=" + mae);
+        }
+        nativeOut.close();
+        javaOut._1().close();
+        q.close(); k.close(); v.close(); g.close(); beta.close();
+        poolNative.close();
+        poolJava.close();
     }
 
     @Test

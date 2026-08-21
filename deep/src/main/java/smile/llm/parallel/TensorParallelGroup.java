@@ -16,26 +16,34 @@
  */
 package smile.llm.parallel;
 
+import java.lang.foreign.MemorySegment;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
 import smile.torch.Native;
 
 /**
  * Single-process tensor-parallel group: one {@link ParallelState} and CUDA
- * device per TP rank, plus barrier-synchronized collectives.
+ * device per TP rank, plus NCCL (or peer-copy fallback) collectives.
  *
- * <p>Phase-2 multi-process PP will replace the barrier backend with true
- * process-group send/recv while keeping {@link #allReduceSumInPlace} for TP.
+ * <p>When NCCL is available, each rank calls {@link #allReduceSumInPlace} on its
+ * own tensor without a host barrier gather. The communicator is retained for
+ * future pipeline-parallel send/recv on the same process group.
  *
  * @author Haifeng Li
  */
 public final class TensorParallelGroup implements AutoCloseable {
+    private static final Logger logger = LoggerFactory.getLogger(TensorParallelGroup.class);
+
     private final ParallelConfig config;
     private final DeviceMesh mesh;
     private final ParallelState[] states;
     private final Device[] devices;
+    /** NCCL communicator handle, or null when using peer-copy fallback. */
+    private final MemorySegment ncclComm;
     private final Tensor[] allReduceSlots;
     private final CyclicBarrier allReduceBarrier;
     private final AtomicReference<RuntimeException> allReduceError = new AtomicReference<>();
@@ -57,6 +65,23 @@ public final class TensorParallelGroup implements AutoCloseable {
         }
         this.allReduceSlots = new Tensor[config.tpSize()];
         this.allReduceBarrier = new CyclicBarrier(config.tpSize(), this::runAllReduce);
+
+        MemorySegment comm = MemorySegment.NULL;
+        if (config.tpSize() > 1 && devices[0].isCUDA()) {
+            int[] idxs = new int[config.tpSize()];
+            for (int r = 0; r < config.tpSize(); r++) {
+                idxs[r] = devices[r].index();
+            }
+            comm = Native.ncclCommCreate(idxs);
+            if (comm.address() != 0) {
+                logger.info("NCCL communicator created for tpSize={} devices={}",
+                        config.tpSize(), idxs);
+            } else {
+                logger.warn("NCCL unavailable — using peer-copy TP all-reduce (tpSize={})",
+                        config.tpSize());
+            }
+        }
+        this.ncclComm = (comm.address() == 0) ? null : comm;
     }
 
     /**
@@ -81,6 +106,14 @@ public final class TensorParallelGroup implements AutoCloseable {
      */
     public int tpSize() {
         return config.tpSize();
+    }
+
+    /**
+     * Returns whether NCCL backs collectives for this group.
+     * @return {@code true} when an NCCL communicator was created.
+     */
+    public boolean hasNccl() {
+        return ncclComm != null;
     }
 
     /**
@@ -114,6 +147,10 @@ public final class TensorParallelGroup implements AutoCloseable {
         if (config.tpSize() <= 1) {
             return;
         }
+        if (ncclComm != null) {
+            Native.ncclAllReduceSum(ncclComm, tpRank, local);
+            return;
+        }
         allReduceSlots[tpRank] = local;
         try {
             allReduceBarrier.await();
@@ -124,7 +161,6 @@ public final class TensorParallelGroup implements AutoCloseable {
             }
             throw new RuntimeException("TP all-reduce barrier failed", e);
         } finally {
-            // Drop refs so closed activation tensors are not pinned by the group.
             allReduceSlots[tpRank] = null;
         }
         RuntimeException err = allReduceError.getAndSet(null);
@@ -153,12 +189,24 @@ public final class TensorParallelGroup implements AutoCloseable {
         if (config.tpSize() <= 1) {
             return;
         }
+        if (ncclComm != null) {
+            // Each rank must participate; this helper is single-threaded today,
+            // so fall back to peer broadcast when called from one thread.
+            Native.tpBroadcast(locals, root);
+            return;
+        }
         Native.tpBroadcast(locals, root);
     }
 
     @Override
     public void close() {
+        if (closed) {
+            return;
+        }
         closed = true;
+        if (ncclComm != null) {
+            Native.ncclCommFree(ncclComm);
+        }
     }
 
     /**

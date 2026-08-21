@@ -90,9 +90,13 @@ find_library(SMILE_C10_CUDA_LIBRARY c10_cuda
 find_package(CUDAToolkit QUIET)
 
 set(SMILE_TORCH_CUDA_ENABLED OFF)
+set(SMILE_TORCH_NCCL_ENABLED OFF)
 if(SMILE_TORCH_USE_CUDA AND SMILE_C10_CUDA_LIBRARY AND CUDAToolkit_FOUND)
     set(SMILE_TORCH_CUDA_ENABLED ON)
     message(STATUS "CUDA enabled: toolkit ${CUDAToolkit_VERSION}, c10_cuda=${SMILE_C10_CUDA_LIBRARY}")
+    enable_language(CUDA)
+    set(CMAKE_CUDA_STANDARD 20)
+    set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 elseif(SMILE_TORCH_USE_CUDA AND SMILE_C10_CUDA_LIBRARY AND NOT CUDAToolkit_FOUND)
     message(WARNING
         "LibTorch has c10_cuda but CUDAToolkit was not found — "
@@ -106,12 +110,30 @@ else()
     message(STATUS "CUDA not enabled — building CPU-only smile_torch")
 endif()
 
+# Optional NCCL (TP / future PP collectives)
+if(SMILE_TORCH_CUDA_ENABLED)
+    find_path(NCCL_INCLUDE_DIR nccl.h
+        HINTS ${CUDAToolkit_INCLUDE_DIRS} /usr/include /usr/local/include
+        PATH_SUFFIXES nccl)
+    find_library(NCCL_LIBRARY nccl
+        HINTS ${CUDAToolkit_LIBRARY_DIR} /usr/lib /usr/local/lib /usr/lib/x86_64-linux-gnu)
+    if(NCCL_INCLUDE_DIR AND NCCL_LIBRARY)
+        set(SMILE_TORCH_NCCL_ENABLED ON)
+        message(STATUS "NCCL enabled: include=${NCCL_INCLUDE_DIR}, lib=${NCCL_LIBRARY}")
+    else()
+        message(WARNING "CUDA enabled but NCCL not found — peer-copy TP collectives only")
+    endif()
+endif()
+
 # --------------------------------------------------------------------------
 # smile_torch shared library target
 # --------------------------------------------------------------------------
-add_library(smile_torch SHARED
-    smile_torch.cpp
-)
+set(SMILE_TORCH_SOURCES smile_torch.cpp)
+if(SMILE_TORCH_CUDA_ENABLED)
+    list(APPEND SMILE_TORCH_SOURCES smile_gated_delta.cu)
+endif()
+
+add_library(smile_torch SHARED ${SMILE_TORCH_SOURCES})
 
 target_include_directories(smile_torch
     # Public: callers only need the C header
@@ -129,6 +151,16 @@ target_link_libraries(smile_torch PRIVATE ${TORCH_LIBRARIES})
 if(SMILE_TORCH_CUDA_ENABLED)
     target_compile_definitions(smile_torch PRIVATE USE_CUDA)
     target_link_libraries(smile_torch PRIVATE CUDA::cudart)
+    set_target_properties(smile_torch PROPERTIES
+        CUDA_SEPARABLE_COMPILATION ON
+        CUDA_ARCHITECTURES "70;80;90"
+    )
+endif()
+
+if(SMILE_TORCH_NCCL_ENABLED)
+    target_compile_definitions(smile_torch PRIVATE USE_NCCL)
+    target_include_directories(smile_torch PRIVATE ${NCCL_INCLUDE_DIR})
+    target_link_libraries(smile_torch PRIVATE ${NCCL_LIBRARY})
 endif()
 
 # Hide all symbols by default; only SMILE_API-annotated functions are exported.
