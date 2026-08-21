@@ -63,6 +63,19 @@ message(STATUS "LIBTORCH_ROOT = ${LIBTORCH_ROOT}")
 
 list(APPEND CMAKE_PREFIX_PATH "${LIBTORCH_ROOT}/share/cmake/Torch")
 
+# Minimum supported GPU is Ampere sm_80 (A100). Also emit Hopper (90) and
+# Blackwell (100) for H100 / B200 (native FP4). Pin Torchs NVCC arch list
+# BEFORE find_package(Torch) or cuda.cmake may inject -gencode arch=compute_50.
+# Override with -DTORCH_CUDA_ARCH_LIST=... or ENV TORCH_CUDA_ARCH_LIST.
+if(DEFINED ENV{TORCH_CUDA_ARCH_LIST} AND NOT DEFINED TORCH_CUDA_ARCH_LIST)
+    set(TORCH_CUDA_ARCH_LIST "$ENV{TORCH_CUDA_ARCH_LIST}" CACHE STRING
+        "CUDA arches for LibTorch / smile_torch (min sm_80)")
+elseif(NOT DEFINED TORCH_CUDA_ARCH_LIST OR TORCH_CUDA_ARCH_LIST STREQUAL "")
+    set(TORCH_CUDA_ARCH_LIST "8.0;9.0;10.0" CACHE STRING
+        "CUDA arches for LibTorch / smile_torch (sm_80+; includes Blackwell FP4)")
+endif()
+message(STATUS "TORCH_CUDA_ARCH_LIST = ${TORCH_CUDA_ARCH_LIST}")
+
 find_package(Torch REQUIRED)
 
 message(STATUS "Torch version  : ${Torch_VERSION}")
@@ -94,9 +107,23 @@ set(SMILE_TORCH_NCCL_ENABLED OFF)
 if(SMILE_TORCH_USE_CUDA AND SMILE_C10_CUDA_LIBRARY AND CUDAToolkit_FOUND)
     set(SMILE_TORCH_CUDA_ENABLED ON)
     message(STATUS "CUDA enabled: toolkit ${CUDAToolkit_VERSION}, c10_cuda=${SMILE_C10_CUDA_LIBRARY}")
+    # Minimum sm_80 (A100); also Hopper (90) and Blackwell (100, native FP4).
+    set(CMAKE_CUDA_ARCHITECTURES "80;90;100" CACHE STRING
+        "NVCC GPU arches (minimum sm_80)" FORCE)
     enable_language(CUDA)
     set(CMAKE_CUDA_STANDARD 20)
     set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+    # Torch may still inject -gencode below sm_80; strip those so nvcc succeeds
+    # (CUDA 13 rejects sm_50; we require Ampere+).
+    foreach(_cuda_flag_var CMAKE_CUDA_FLAGS CMAKE_CUDA_FLAGS_RELEASE
+                           CMAKE_CUDA_FLAGS_DEBUG CMAKE_CUDA_FLAGS_RELWITHDEBINFO)
+        if(DEFINED ${_cuda_flag_var} AND NOT "${${_cuda_flag_var}}" STREQUAL "")
+            set(_f "${${_cuda_flag_var}}")
+            string(REGEX REPLACE "[-]gencode[= ]arch=compute_[5-7][0-9]a?,code=[^, ]+" "" _f "${_f}")
+            string(REGEX REPLACE "  +" " " _f "${_f}")
+            set(${_cuda_flag_var} "${_f}" CACHE STRING "" FORCE)
+        endif()
+    endforeach()
 elseif(SMILE_TORCH_USE_CUDA AND SMILE_C10_CUDA_LIBRARY AND NOT CUDAToolkit_FOUND)
     message(WARNING
         "LibTorch has c10_cuda but CUDAToolkit was not found — "
@@ -113,10 +140,19 @@ endif()
 # Optional NCCL (TP / future PP collectives)
 if(SMILE_TORCH_CUDA_ENABLED)
     find_path(NCCL_INCLUDE_DIR nccl.h
-        HINTS ${CUDAToolkit_INCLUDE_DIRS} /usr/include /usr/local/include
+        HINTS
+            ${CUDAToolkit_INCLUDE_DIRS}
+            /usr/include
+            /usr/local/include
+            /usr/include/x86_64-linux-gnu
         PATH_SUFFIXES nccl)
-    find_library(NCCL_LIBRARY nccl
-        HINTS ${CUDAToolkit_LIBRARY_DIR} /usr/lib /usr/local/lib /usr/lib/x86_64-linux-gnu)
+    find_library(NCCL_LIBRARY NAMES nccl libnccl.so.2
+        HINTS
+            ${CUDAToolkit_LIBRARY_DIR}
+            /usr/lib
+            /usr/local/lib
+            /usr/lib/x86_64-linux-gnu
+            /usr/local/cuda/lib64)
     if(NCCL_INCLUDE_DIR AND NCCL_LIBRARY)
         set(SMILE_TORCH_NCCL_ENABLED ON)
         message(STATUS "NCCL enabled: include=${NCCL_INCLUDE_DIR}, lib=${NCCL_LIBRARY}")
@@ -151,9 +187,10 @@ target_link_libraries(smile_torch PRIVATE ${TORCH_LIBRARIES})
 if(SMILE_TORCH_CUDA_ENABLED)
     target_compile_definitions(smile_torch PRIVATE USE_CUDA)
     target_link_libraries(smile_torch PRIVATE CUDA::cudart)
+    # Minimum sm_80 (A100); also Hopper (90) and Blackwell (100, native FP4).
     set_target_properties(smile_torch PROPERTIES
-        CUDA_SEPARABLE_COMPILATION ON
-        CUDA_ARCHITECTURES "70;80;90"
+        CUDA_SEPARABLE_COMPILATION OFF
+        CUDA_ARCHITECTURES "80;90;100"
     )
 endif()
 
@@ -189,13 +226,24 @@ endif()
 # Compiler warnings & hardening
 # --------------------------------------------------------------------------
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
+    # Scope warning flags to CXX only so nvcc does not see them.
     target_compile_options(smile_torch PRIVATE
-        -Wall -Wextra -Wpedantic
-        -Wno-unused-parameter       # libtorch headers trigger this
-        -Wno-deprecated-declarations
+        $<$<COMPILE_LANGUAGE:CXX>:-Wall>
+        $<$<COMPILE_LANGUAGE:CXX>:-Wextra>
+        $<$<COMPILE_LANGUAGE:CXX>:-Wpedantic>
+        $<$<COMPILE_LANGUAGE:CXX>:-Wno-unused-parameter>
+        $<$<COMPILE_LANGUAGE:CXX>:-Wno-deprecated-declarations>
+        # Macro-style one-liners (MAKE_TENSOR / BORROW_MODULE) trigger this.
+        $<$<COMPILE_LANGUAGE:CXX>:-Wno-misleading-indentation>
     )
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_compile_options(smile_torch PRIVATE
+            $<$<COMPILE_LANGUAGE:CXX>:-Wno-maybe-uninitialized>)
+    endif()
     if(CMAKE_BUILD_TYPE STREQUAL "Release")
-        target_compile_options(smile_torch PRIVATE -O3 -DNDEBUG)
+        target_compile_options(smile_torch PRIVATE
+            $<$<COMPILE_LANGUAGE:CXX>:-O3>
+            $<$<COMPILE_LANGUAGE:CXX>:-DNDEBUG>)
     endif()
 endif()
 
