@@ -76,12 +76,47 @@ elseif(NOT DEFINED TORCH_CUDA_ARCH_LIST OR TORCH_CUDA_ARCH_LIST STREQUAL "")
 endif()
 message(STATUS "TORCH_CUDA_ARCH_LIST = ${TORCH_CUDA_ARCH_LIST}")
 
-# Torch's cuda.cmake warns (and forces OFF) if CMAKE_CUDA_ARCHITECTURES is
-# defined. Clear it for find_package; we re-apply arches for smile_torch after.
+# LibTorch's cuda.cmake has three known-benign consumer warnings:
+#  1) nvrtc shorthash — uses Python::Interpreter incorrectly; pre-seed the hash
+#  2) CMAKE_CUDA_ARCHITECTURES — Torch enables CUDA then always warns; we use
+#     TORCH_CUDA_ARCH_LIST + per-target CUDA_ARCHITECTURES instead
+#  3) kineto — profiler lib not shipped in the libtorch zip (inference OK)
+#
+# Precompute CUDA_NVRTC_SHORTHASH so Torch skips its broken execute_process.
+if(NOT CUDA_NVRTC_SHORTHASH)
+    set(_smile_nvrtc_lib "")
+    foreach(_cand
+            "$ENV{CUDA_HOME}/lib64/libnvrtc.so"
+            "$ENV{CUDA_PATH}/lib64/libnvrtc.so"
+            "/usr/local/cuda/lib64/libnvrtc.so"
+            "/usr/local/cuda/targets/x86_64-linux/lib/libnvrtc.so")
+        if(_cand AND EXISTS "${_cand}")
+            set(_smile_nvrtc_lib "${_cand}")
+            break()
+        endif()
+    endforeach()
+    if(_smile_nvrtc_lib)
+        file(SHA256 "${_smile_nvrtc_lib}" _smile_nvrtc_sha)
+        string(SUBSTRING "${_smile_nvrtc_sha}" 0 8 CUDA_NVRTC_SHORTHASH)
+        set(CUDA_NVRTC_SHORTHASH "${CUDA_NVRTC_SHORTHASH}" CACHE STRING
+            "SHA256 prefix of libnvrtc.so (seeded for LibTorch)" FORCE)
+        message(STATUS "CUDA_NVRTC_SHORTHASH=${CUDA_NVRTC_SHORTHASH} (${_smile_nvrtc_lib})")
+    endif()
+endif()
+
+# Torch enables CUDA inside find_package and then warns that CMAKE_CUDA_ARCHITECTURES
+# is defined (CMake always defines it after enable_language(CUDA)). Unset is not
+# enough; temporarily raise the log level to hide that + missing kineto.
 unset(CMAKE_CUDA_ARCHITECTURES CACHE)
 unset(CMAKE_CUDA_ARCHITECTURES)
-
+set(_smile_cmake_log_level "${CMAKE_MESSAGE_LOG_LEVEL}")
+set(CMAKE_MESSAGE_LOG_LEVEL ERROR)
 find_package(Torch REQUIRED)
+if(_smile_cmake_log_level)
+    set(CMAKE_MESSAGE_LOG_LEVEL "${_smile_cmake_log_level}")
+else()
+    unset(CMAKE_MESSAGE_LOG_LEVEL)
+endif()
 
 message(STATUS "Torch version  : ${Torch_VERSION}")
 message(STATUS "Torch libraries: ${TORCH_LIBRARIES}")
