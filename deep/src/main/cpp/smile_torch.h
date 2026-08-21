@@ -696,6 +696,12 @@ SMILE_API ST_TensorVec smile_module_parameters(ST_Module m);
 
 SMILE_API void smile_module_train(ST_Module m, int mode);
 SMILE_API void smile_module_eval (ST_Module m);
+
+/**
+ * Sets {@code requires_grad} on every parameter of {@code m} (recursive).
+ * Use {@code 0} for inference to avoid autograd graphs / SavedVariable leaks.
+ */
+SMILE_API void smile_module_set_requires_grad(ST_Module m, int requires_grad);
 SMILE_API int  smile_module_is_training(ST_Module m);
 
 SMILE_API void smile_module_to_device(ST_Module m, ST_Device device, int non_blocking);

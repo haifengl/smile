@@ -1280,6 +1280,16 @@ int smile_module_is_training(ST_Module m) {
     return m ? (m->m->is_training() ? 1 : 0) : 0;
 }
 
+void smile_module_set_requires_grad(ST_Module m, int requires_grad) {
+    if (!m) return;
+    ST_TRY_BEGIN
+        const bool rg = requires_grad != 0;
+        for (auto &p : m->m->parameters(/*recurse=*/true)) {
+            p.set_requires_grad(rg);
+        }
+    ST_TRY_END
+}
+
 void smile_module_to_device(ST_Module m, ST_Device device, int non_blocking) {
     if (m && device) {
         ST_TRY_BEGIN m->m->to(device->d, static_cast<bool>(non_blocking)); ST_TRY_END

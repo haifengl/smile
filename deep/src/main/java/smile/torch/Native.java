@@ -70,6 +70,9 @@ public final class Native {
                 smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_cuda_allocator_stats"),
                 FunctionDescriptor.of(ValueLayout.JAVA_INT,
                         ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+        static final MethodHandle MODULE_SET_REQUIRES_GRAD = LINKER.downcallHandle(
+                smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_module_set_requires_grad"),
+                FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
         static final MethodHandle TENSOR_NBYTES = LINKER.downcallHandle(
                 smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_tensor_nbytes"),
                 FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
@@ -232,6 +235,24 @@ public final class Native {
             return new long[]{
                     allocated.get(ValueLayout.JAVA_LONG, 0),
                     reserved.get(ValueLayout.JAVA_LONG, 0)};
+        }
+    }
+
+    /**
+     * Sets {@code requires_grad} on every parameter of {@code module} (recursive).
+     *
+     * @param module        native {@code ST_Module} handle.
+     * @param requiresGrad  {@code true} to enable autograd on parameters.
+     */
+    public static void moduleSetRequiresGrad(MemorySegment module, boolean requiresGrad) {
+        try {
+            Bindings.MODULE_SET_REQUIRES_GRAD.invokeExact(module, requiresGrad ? 1 : 0);
+        } catch (Throwable t) {
+            throw new RuntimeException(lastError().isEmpty() ? t.getMessage() : lastError(), t);
+        }
+        String err = lastError();
+        if (!err.isEmpty()) {
+            throw new RuntimeException(err);
         }
     }
 

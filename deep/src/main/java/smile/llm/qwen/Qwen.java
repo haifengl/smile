@@ -373,6 +373,13 @@ public class Qwen implements LanguageModel {
         logger.info("TP rank finalize finished in {} ms",
                 System.currentTimeMillis() - tFinalize);
 
+        // Inference: drop requires_grad on all params so TP worker threads cannot
+        // build autograd graphs if a NoGradGuard is missing (guard is thread-local).
+        for (QwenModel m : models) {
+            m.eval();
+            m.setRequiresGrad(false);
+        }
+
         var time = System.currentTimeMillis() - startTime;
         logger.info("Model {}: loaded in {}.{} seconds (tpSize={})",
                 checkpointDir, time / 1000, time % 1000, parallelConfig.tpSize());
@@ -423,6 +430,7 @@ public class Qwen implements LanguageModel {
         logger.info("tpRank={}: model.to({}) in {} ms",
                 rank, device, System.currentTimeMillis() - tTo);
         model.eval();
+        model.setRequiresGrad(false);
         return model;
     }
 
@@ -1156,7 +1164,11 @@ public class Qwen implements LanguageModel {
             final int rank = r;
             futures.add(pool.submit(() -> {
                 ParallelState.setCurrent(tpGroup.state(rank));
-                try (var span = Index.slice(prevPos, curPos);
+                // NoGradGuard is thread-local; the generate-thread guard does not
+                // cover TP workers. Without this, requires_grad params build
+                // autograd graphs (~1GiB+/request SavedVariable leak).
+                try (var guard = Tensor.noGradGuard();
+                     var span = Index.slice(prevPos, curPos);
                      var window = tokens[rank].get(Index.Colon, span)) {
                     return models[rank].forward(window, prevPos, allTokenLogits);
                 } finally {
