@@ -81,9 +81,36 @@ public interface LanguageModel {
      *                  When non-null, batch size must be {@code 1}.
      * @return one {@link ChatCompletion} per prompt in the batch.
      */
+    default ChatCompletion[] generate(int[][] prompts, int maxGenLen, double temperature,
+                                      double topp, boolean logprobs, long seed,
+                                      SubmissionPublisher<String> publisher) {
+        return generate(prompts, maxGenLen, temperature, topp, logprobs, seed, publisher, null);
+    }
+
+    /**
+     * Generates completions from already-tokenized prompts.
+     *
+     * @param prompts   batch of prompt token id sequences; batch size is
+     *                  typically {@code 1} for serve.
+     * @param maxGenLen maximum number of <em>new</em> tokens to generate per
+     *                  prompt (not including the prompt itself).
+     * @param temperature sampling temperature; higher values increase randomness.
+     * @param topp      nucleus-sampling top-p threshold in {@code (0, 1]}.
+     * @param logprobs  {@code true} to include per-token log-probabilities in
+     *                  the result.
+     * @param seed      optional RNG seed for deterministic sampling;
+     *                  {@code 0} means non-deterministic.
+     * @param publisher optional flow publisher that receives streamed text
+     *                  chunks; may be {@code null} for non-streaming calls.
+     *                  When non-null, batch size must be {@code 1}.
+     * @param progress  optional listener notified once per newly generated token;
+     *                  may be {@code null}.
+     * @return one {@link ChatCompletion} per prompt in the batch.
+     */
     ChatCompletion[] generate(int[][] prompts, int maxGenLen, double temperature,
                               double topp, boolean logprobs, long seed,
-                              SubmissionPublisher<String> publisher);
+                              SubmissionPublisher<String> publisher,
+                              GenerationListener progress);
 
     /**
      * Generates assistant replies for dialogs.

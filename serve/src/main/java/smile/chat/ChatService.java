@@ -316,8 +316,13 @@ public class ChatService {
     public ChatCompletion[] complete(CompletionRequest request, SubmissionPublisher<String> publisher) {
         int[] prompt = model.encodeChat(request.messages);
         int maxGenLen = request.resolveMaxTokens(model.maxSeqLen(), prompt.length);
-        return model.generate(new int[][]{prompt}, maxGenLen, request.temperature,
-                request.topP, request.logprobs, request.seed, publisher);
+        var throughput = new TokenThroughputLogger();
+        try {
+            return model.generate(new int[][]{prompt}, maxGenLen, request.temperature,
+                    request.topP, request.logprobs, request.seed, publisher, throughput);
+        } finally {
+            throughput.finish();
+        }
     }
 
     /**
