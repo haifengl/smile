@@ -33,6 +33,24 @@ public class QwenRemapTest {
         assertEquals("lm_head.weight", Qwen.remapHuggingFaceName("lm_head.weight"));
         assertEquals("embed_tokens.weight",
                 Qwen.remapHuggingFaceName("language_model.model.embed_tokens.weight"));
+        assertEquals("embed_tokens.weight",
+                Qwen.remapHuggingFaceName("model.language_model.embed_tokens.weight"));
+        assertEquals("norm.weight",
+                Qwen.remapHuggingFaceName("model.language_model.norm.weight"));
+        assertEquals("lm_head.weight",
+                Qwen.remapHuggingFaceName("model.language_model.lm_head.weight"));
+    }
+
+    @Test
+    public void testGivenMultimodalLanguageModelPrefixWhenRemappedThenMatchesTextTower() {
+        assertEquals("layers.3.self_attn.q_proj.weight",
+                Qwen.remapHuggingFaceName("model.language_model.layers.3.self_attn.q_proj.weight"));
+        assertEquals("layers.0.linear_attn.in_proj_qkv.weight",
+                Qwen.remapHuggingFaceName("model.language_model.layers.0.linear_attn.in_proj_qkv.weight"));
+        assertEquals("layers.0.linear_attn.A_log",
+                Qwen.remapHuggingFaceName("model.language_model.layers.0.linear_attn.A_log"));
+        assertEquals("layers.1.mlp.w1.weight",
+                Qwen.remapHuggingFaceName("model.language_model.layers.1.mlp.gate_proj.weight"));
     }
 
     @Test
