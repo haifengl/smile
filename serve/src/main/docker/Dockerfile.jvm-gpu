@@ -75,7 +75,8 @@ RUN cmake -S . -B /build/cpp \
         -DTORCH_CUDA_ARCH_LIST="8.0;9.0;10.0" \
         -DBUILD_TESTING=OFF \
     && cmake --build /build/cpp --config Release --parallel "$(nproc)" \
-    && test -f /build/cpp/libsmile_torch.so
+    && test -f /build/cpp/libsmile_torch.so \
+    && nm -D /build/cpp/libsmile_torch.so | grep -q smile_flashinfer_is_available
 
 # -----------------------------------------------------------------------------
 # Stage 2: runtime image

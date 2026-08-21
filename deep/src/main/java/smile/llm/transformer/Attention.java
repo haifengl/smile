@@ -19,7 +19,8 @@ package smile.llm.transformer;
 import java.lang.foreign.MemorySegment;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.Tensor;
-import static smile.torch.smile_torch_h.smile_torch_scaled_dot_product_attention;
+import smile.llm.attention.AttentionBackends;
+import smile.llm.attention.AttentionContext;
 
 /**
  * Multi-head attention. Multi-head attention is a core component of
@@ -32,6 +33,10 @@ import static smile.torch.smile_torch_h.smile_torch_scaled_dot_product_attention
  * linearly projects queries, keys, and values into multiple smaller
  * dimensions. These projections are processed in parallel by distinct
  * attention heads.
+ *
+ * <p>{@link #apply} dispatches to the process-wide
+ * {@link smile.llm.attention.AttentionBackends} kernel ({@code torch_native}
+ * SDPA by default, or {@code flashinfer} when installed).
  *
  * @author Haifeng Li
  */
@@ -86,10 +91,9 @@ public interface Attention {
      */
     default Tensor apply(Tensor query, Tensor key, Tensor value, Tensor mask,
                          double dropout, boolean isCausal, double scale) {
-        var handle = smile_torch_scaled_dot_product_attention(query.handle(), key.handle(), value.handle(),
-                mask == null ? MemorySegment.NULL : mask.handle(),
-                dropout, isCausal ? 1 : 0, scale > 0 ? 1 : 0, scale);
-        return new Tensor(handle);
+        return AttentionBackends.kernel().forward(
+                query, key, value, mask,
+                AttentionContext.contiguous(scale, dropout, isCausal));
     }
 
     /**

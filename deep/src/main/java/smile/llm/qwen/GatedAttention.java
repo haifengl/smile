@@ -22,6 +22,10 @@ import smile.deep.activation.Sigmoid;
 import smile.deep.layer.LinearLayer;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
+import smile.llm.attention.AttentionBackend;
+import smile.llm.attention.AttentionBackends;
+import smile.llm.attention.AttentionContext;
+import smile.llm.cache.FlashInferKvMetadata;
 import smile.llm.cache.KvCacheLayout;
 import smile.llm.cache.KvCachePool;
 import smile.llm.parallel.TensorParallelGroup;
@@ -236,25 +240,37 @@ public class GatedAttention implements Attention {
             cachePool.put(kvLayerId, startPos, kRope, value);
             kRope.close();
 
-            var cached = cachePool.get(kvLayerId, startPos + seqlen);
-            Tensor keys = cached._1();
-            Tensor values = cached._2();
-
-            Tensor keysRep = repeatKV(keys, numRep);
-            Tensor valuesRep = repeatKV(values, numRep);
-            if (keysRep != keys) {
-                keys.close();
-            }
-            if (valuesRep != values) {
-                values.close();
-            }
-
-            Tensor qT = qRope.transpose(1, 2);
-            Tensor kT = keysRep.transpose(1, 2);
-            Tensor vT = valuesRep.transpose(1, 2);
-
+            int cacheLen = startPos + seqlen;
             double scale = 1.0 / Math.sqrt(headDim);
-            Tensor attn = apply(qT, kT, vT, mask, 0.0, false, scale);
+            Tensor qT = qRope.transpose(1, 2);
+            Tensor attn;
+            if (AttentionBackends.current() == AttentionBackend.FLASHINFER) {
+                try (FlashInferKvMetadata meta = cachePool.buildFlashInferMetadata(cacheLen)) {
+                    var ctx = AttentionContext.paged(
+                            scale, seqlen > 1,
+                            numHeads, numKvHeads, headDim,
+                            kvLayerId, startPos, seqlen, cacheLen,
+                            cachePool, meta, cachePool.flashInferWorkspace());
+                    attn = AttentionBackends.kernel().forward(qT, null, null, null, ctx);
+                }
+            } else {
+                var cached = cachePool.get(kvLayerId, cacheLen);
+                Tensor keys = cached._1();
+                Tensor values = cached._2();
+
+                Tensor keysRep = repeatKV(keys, numRep);
+                Tensor valuesRep = repeatKV(values, numRep);
+                if (keysRep != keys) {
+                    keys.close();
+                }
+                if (valuesRep != values) {
+                    values.close();
+                }
+
+                Tensor kT = keysRep.transpose(1, 2);
+                Tensor vT = valuesRep.transpose(1, 2);
+                attn = apply(qT, kT, vT, mask, 0.0, false, scale);
+            }
             Tensor attnT = attn.transpose(1, 2);
             Tensor attnC = attnT.contiguous();
             attn = attnC.view(batchSize, seqlen, -1);

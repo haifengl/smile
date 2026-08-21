@@ -109,6 +109,29 @@ public final class Native {
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
                         ValueLayout.JAVA_INT));
+        static final java.util.Optional<MemorySegment> FLASHINFER_AVAILABLE_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_flashinfer_is_available");
+        static final MethodHandle FLASHINFER_AVAILABLE = FLASHINFER_AVAILABLE_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT)))
+                .orElse(null);
+        static final MethodHandle FLASHINFER_WS_CREATE = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_flashinfer_workspace_create")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG)))
+                .orElse(null);
+        static final MethodHandle FLASHINFER_WS_FREE = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_flashinfer_workspace_free")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle FLASHINFER_PAGED = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_flashinfer_paged_attention")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
+                        ValueLayout.JAVA_INT, ValueLayout.JAVA_DOUBLE, ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS)))
+                .orElse(null);
     }
 
     /**
@@ -470,6 +493,93 @@ public final class Native {
             return null;
         }
         return new Tensor(out);
+    }
+
+    /** @return {@code true} when paged FlashInfer attention is compiled in. */
+    public static boolean flashInferAvailable() {
+        if (Bindings.FLASHINFER_AVAILABLE == null) {
+            return false;
+        }
+        try {
+            return ((int) Bindings.FLASHINFER_AVAILABLE.invokeExact()) != 0;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    /**
+     * Creates a FlashInfer workspace on {@code deviceIndex}.
+     * @return native handle, or null when unavailable.
+     */
+    public static MemorySegment flashInferWorkspaceCreate(int deviceIndex, long workspaceBytes) {
+        if (Bindings.FLASHINFER_WS_CREATE == null) {
+            return null;
+        }
+        try {
+            MemorySegment h = (MemorySegment) Bindings.FLASHINFER_WS_CREATE.invokeExact(
+                    deviceIndex, workspaceBytes);
+            if (h == null || h.address() == 0) {
+                return null;
+            }
+            return h;
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    /** Frees a FlashInfer workspace handle. */
+    public static void flashInferWorkspaceFree(MemorySegment handle) {
+        if (handle == null || handle.address() == 0 || Bindings.FLASHINFER_WS_FREE == null) {
+            return;
+        }
+        try {
+            Bindings.FLASHINFER_WS_FREE.invokeExact(handle);
+        } catch (Throwable ignored) {
+            // best-effort
+        }
+    }
+
+    /**
+     * Runs paged attention using {@link smile.llm.attention.AttentionContext}.
+     *
+     * @param query query {@code [B, Hq, S, D]}
+     * @param ctx   paged context with pool + CSR + workspace
+     * @return output {@code [B, Hq, S, D]}
+     */
+    public static Tensor flashInferAttention(Tensor query, smile.llm.attention.AttentionContext ctx) {
+        if (Bindings.FLASHINFER_PAGED == null) {
+            throw new IllegalStateException("smile_flashinfer_paged_attention not in libsmile_torch");
+        }
+        var meta = ctx.kvMetadata();
+        var pool = ctx.kvPool();
+        var ws = ctx.workspace();
+        if (meta == null || pool == null || ws == null) {
+            throw new IllegalArgumentException("FlashInfer context incomplete");
+        }
+        try (var layerIdx = smile.deep.tensor.Index.of(ctx.layerId());
+             Tensor layerK = pool.keyCache().get(layerIdx);
+             Tensor layerV = pool.valueCache().get(layerIdx)) {
+            MemorySegment out;
+            try {
+                out = (MemorySegment) Bindings.FLASHINFER_PAGED.invokeExact(
+                        query.handle(),
+                        layerK.handle(),
+                        layerV.handle(),
+                        meta.pagedKvIndptr().handle(),
+                        meta.pagedKvIndices().handle(),
+                        meta.pagedKvLastPageLen().handle(),
+                        meta.pageSize(),
+                        ctx.numKvHeads(),
+                        ctx.headDim(),
+                        ctx.cacheLen(),
+                        ctx.scale(),
+                        ctx.isCausal() ? 1 : 0,
+                        ws.handle());
+            } catch (Throwable t) {
+                throw new RuntimeException(lastError().isEmpty() ? t.getMessage() : lastError(), t);
+            }
+            return new Tensor(check(out));
+        }
     }
 
     /** Frees an {@code ST_Tensor} handle exactly once. Used as a cleaning action. */

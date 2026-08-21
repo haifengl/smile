@@ -205,9 +205,18 @@ endif()
 # --------------------------------------------------------------------------
 # smile_torch shared library target
 # --------------------------------------------------------------------------
-set(SMILE_TORCH_SOURCES smile_torch.cpp)
+# Optional FlashInfer-compatible paged attention (CUDA builds only).
+option(USE_FLASHINFER "Build paged attention backend (CSR / FlashInfer ABI)" ON)
+
+set(SMILE_TORCH_SOURCES smile_torch.cpp smile_flashinfer.cpp)
 if(SMILE_TORCH_CUDA_ENABLED)
     list(APPEND SMILE_TORCH_SOURCES smile_gated_delta.cu)
+    if(USE_FLASHINFER)
+        list(APPEND SMILE_TORCH_SOURCES smile_flashinfer_kernels.cu)
+        message(STATUS "FlashInfer-compatible paged attention: ON")
+    else()
+        message(STATUS "FlashInfer-compatible paged attention: OFF")
+    endif()
 endif()
 
 add_library(smile_torch SHARED ${SMILE_TORCH_SOURCES})
@@ -228,6 +237,9 @@ target_link_libraries(smile_torch PRIVATE ${TORCH_LIBRARIES})
 if(SMILE_TORCH_CUDA_ENABLED)
     target_compile_definitions(smile_torch PRIVATE USE_CUDA)
     target_link_libraries(smile_torch PRIVATE CUDA::cudart)
+    if(USE_FLASHINFER)
+        target_compile_definitions(smile_torch PRIVATE USE_FLASHINFER)
+    endif()
     # Minimum sm_80 (A100); also Hopper (90) and Blackwell (100, native FP4).
     set_target_properties(smile_torch PROPERTIES
         CUDA_SEPARABLE_COMPILATION OFF

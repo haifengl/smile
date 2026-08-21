@@ -1003,6 +1003,62 @@ SMILE_API ST_Tensor smile_recurrent_gated_delta_rule(
         ST_Tensor g, ST_Tensor beta, ST_Tensor state,
         int qk_l2norm);
 
+/* =========================================================================
+ * FlashInfer / paged attention backend
+ * ========================================================================= */
+
+/** Opaque workspace for FlashInfer-style paged attention. */
+typedef struct ST_FlashInferWorkspace_ *ST_FlashInferWorkspace;
+
+/** Non-zero when paged attention was compiled into this library (CUDA). */
+SMILE_API int smile_flashinfer_is_available(void);
+
+/**
+ * Creates a per-device workspace.
+ * @param device_index CUDA device ordinal.
+ * @param workspace_bytes scratch hint (0 = default).
+ */
+SMILE_API ST_FlashInferWorkspace smile_flashinfer_workspace_create(
+        int device_index, int64_t workspace_bytes);
+
+SMILE_API void smile_flashinfer_workspace_free(ST_FlashInferWorkspace ws);
+
+/** @return CUDA device index stored in the workspace, or -1. */
+SMILE_API int smile_flashinfer_workspace_device_index(ST_FlashInferWorkspace ws);
+
+/**
+ * Paged attention over KvCachePool storage.
+ *
+ * @param query            {@code [B, Hq, S, D]}
+ * @param k_cache          {@code [numSlots, Hkv, D]} (one layer slice)
+ * @param v_cache          {@code [numSlots, Hkv, D]}
+ * @param paged_kv_indptr  int32 {@code [B+1]}
+ * @param paged_kv_indices int32 {@code [num_pages]}
+ * @param paged_kv_last_page_len int32 {@code [B]}
+ * @param page_size        tokens per page
+ * @param num_kv_heads     Hkv
+ * @param head_dim         D
+ * @param cache_len        total sequence length (for causal prefill)
+ * @param scale            attention scale (&le;0 → 1/sqrt(D))
+ * @param is_causal        non-zero for causal masking when S&gt;1
+ * @param workspace        from {@link smile_flashinfer_workspace_create}
+ * @return output {@code [B, Hq, S, D]}, or null on error
+ */
+SMILE_API ST_Tensor smile_flashinfer_paged_attention(
+        ST_Tensor query,
+        ST_Tensor k_cache,
+        ST_Tensor v_cache,
+        ST_Tensor paged_kv_indptr,
+        ST_Tensor paged_kv_indices,
+        ST_Tensor paged_kv_last_page_len,
+        int page_size,
+        int num_kv_heads,
+        int head_dim,
+        int cache_len,
+        double scale,
+        int is_causal,
+        ST_FlashInferWorkspace workspace);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
