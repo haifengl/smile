@@ -54,6 +54,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         g++ \
         make \
         unzip \
+        libnccl2 \
+        libnccl-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /tmp
@@ -64,9 +66,12 @@ RUN curl -fsSL --retry 5 --retry-delay 10 -o /tmp/libtorch.zip \
 
 COPY deep/src/main/cpp /src/smile_torch
 WORKDIR /src/smile_torch
+# Minimum CUDA arch is sm_80 (A100); also sm_90 (H100) and sm_100 (Blackwell FP4).
+ENV TORCH_CUDA_ARCH_LIST="8.0 9.0 10.0"
 RUN cmake -S . -B /build/cpp \
         -DCMAKE_BUILD_TYPE=Release \
         -DLIBTORCH_ROOT=/usr/local/libtorch \
+        -DTORCH_CUDA_ARCH_LIST="8.0;9.0;10.0" \
         -DBUILD_TESTING=OFF \
     && cmake --build /build/cpp --config Release --parallel "$(nproc)" \
     && test -f /build/cpp/libsmile_torch.so
