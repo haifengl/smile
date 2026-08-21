@@ -18,6 +18,8 @@ package smile.llm.llama;
 
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
+import smile.llm.attention.AttentionBackend;
+import smile.llm.attention.AttentionBackends;
 import smile.llm.cache.KvCacheLayout;
 import smile.llm.cache.KvCachePool;
 import smile.llm.transformer.RotaryPositionalEncoding;
@@ -49,6 +51,12 @@ public class LlamaModelTest {
         model.to(Device.CPU());
         model.setKvCachePool(KvCachePool.forTesting(layout(layers, batch, seq), Device.CPU()), false);
         return model;
+    }
+
+    @BeforeEach
+    public void installTorchNativeAttention() {
+        // Other suites may leave FLASHINFER installed; unit tests use contiguous SDPA.
+        AttentionBackends.install(AttentionBackend.TORCH_NATIVE);
     }
 
     @Test
@@ -101,12 +109,18 @@ public class LlamaModelTest {
     public void testGivenLlamaBlockWhenForwardCalledThenOutputShapeMatchesInput() {
         LlamaBlock block = new LlamaBlock(
                 0, DIM, NUM_HEADS, NUM_KV_HEADS, null, MULTIPLE_OF, null, NORM_EPS, layout(1, 1, 32));
-        Tensor cis = RotaryPositionalEncoding.computeFreqCis(16, 32 * 2);
-        Tensor freqs = cis.get(smile.deep.tensor.Index.slice(0, 4));
-        Tensor x = Tensor.randn(1, 4, 64);
-        Tensor out = block.forward(x, 0, freqs, null);
-        assertArrayEquals(new long[]{1, 4, 64}, out.shape());
-        x.close(); out.close(); cis.close(); freqs.close();
+        KvCachePool pool = ((GroupedQueryAttention) block.attention).cachePool;
+        pool.bindRequests(1, 32);
+        try {
+            Tensor cis = RotaryPositionalEncoding.computeFreqCis(16, 32 * 2);
+            Tensor freqs = cis.get(smile.deep.tensor.Index.slice(0, 4));
+            Tensor x = Tensor.randn(1, 4, 64);
+            Tensor out = block.forward(x, 0, freqs, null);
+            assertArrayEquals(new long[]{1, 4, 64}, out.shape());
+            x.close(); out.close(); cis.close(); freqs.close();
+        } finally {
+            pool.unbindRequests();
+        }
     }
 
     @Test
@@ -121,32 +135,47 @@ public class LlamaModelTest {
     public void testGivenLlamaModelWhenForwardCalledThenOutputShapeIsCorrect() {
         LlamaModel model = tinyModel(1, 1, 32);
         model.eval();
-        Tensor tokens = Tensor.of(new long[]{1L, 2L, 3L, 4L}, 1, 4);
-        Tensor out = model.forward(tokens);
-        assertArrayEquals(new long[]{1, 4, 100}, out.shape(),
-                "Output shape should be [batch, seqLen, vocabSize]");
-        tokens.close(); out.close();
+        model.kvCachePool().bindRequests(1, 32);
+        try {
+            Tensor tokens = Tensor.of(new long[]{1L, 2L, 3L, 4L}, 1, 4);
+            Tensor out = model.forward(tokens);
+            assertArrayEquals(new long[]{1, 4, 100}, out.shape(),
+                    "Output shape should be [batch, seqLen, vocabSize]");
+            tokens.close(); out.close();
+        } finally {
+            model.kvCachePool().unbindRequests();
+        }
     }
 
     @Test
     public void testGivenLlamaModelWhenForwardCalledWithSingleTokenThenNoMaskApplied() {
         LlamaModel model = tinyModel(1, 1, 32);
         model.eval();
-        Tensor tokens = Tensor.of(new long[]{5L}, 1, 1);
-        Tensor out = model.forward(tokens, 0);
-        assertArrayEquals(new long[]{1, 1, 100}, out.shape());
-        tokens.close(); out.close();
+        model.kvCachePool().bindRequests(1, 32);
+        try {
+            Tensor tokens = Tensor.of(new long[]{5L}, 1, 1);
+            Tensor out = model.forward(tokens, 0);
+            assertArrayEquals(new long[]{1, 1, 100}, out.shape());
+            tokens.close(); out.close();
+        } finally {
+            model.kvCachePool().unbindRequests();
+        }
     }
 
     @Test
     public void testGivenLlamaModelWhenForwardCalledWithMultipleTokensThenMaskIsBuilt() {
         LlamaModel model = tinyModel(1, 1, 32);
         model.eval();
-        Tensor tokens = Tensor.of(new long[]{1L, 2L, 3L}, 1, 3);
-        assertDoesNotThrow(() -> {
-            Tensor out = model.forward(tokens, 0);
-            out.close();
-        });
-        tokens.close();
+        model.kvCachePool().bindRequests(1, 32);
+        try {
+            Tensor tokens = Tensor.of(new long[]{1L, 2L, 3L}, 1, 3);
+            assertDoesNotThrow(() -> {
+                Tensor out = model.forward(tokens, 0);
+                out.close();
+            });
+            tokens.close();
+        } finally {
+            model.kvCachePool().unbindRequests();
+        }
     }
 }
