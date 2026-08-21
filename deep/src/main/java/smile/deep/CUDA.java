@@ -63,6 +63,16 @@ public interface CUDA {
     }
 
     /**
+     * Returns CUDACachingAllocator live and reserved bytes for a device.
+     *
+     * @param deviceIndex the CUDA device index.
+     * @return {@code long[2]} of {@code {allocatedBytes, reservedBytes}}.
+     */
+    static long[] allocatorStats(int deviceIndex) {
+        return Native.cudaAllocatorStats(deviceIndex);
+    }
+
+    /**
      * Returns the default CUDA device.
      *
      * @return the default CUDA device.

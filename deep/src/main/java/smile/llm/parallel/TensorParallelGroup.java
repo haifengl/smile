@@ -123,6 +123,9 @@ public final class TensorParallelGroup implements AutoCloseable {
                 throw err;
             }
             throw new RuntimeException("TP all-reduce barrier failed", e);
+        } finally {
+            // Drop refs so closed activation tensors are not pinned by the group.
+            allReduceSlots[tpRank] = null;
         }
         RuntimeException err = allReduceError.getAndSet(null);
         if (err != null) {

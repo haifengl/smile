@@ -122,6 +122,31 @@ public class Tensor implements AutoCloseable {
     }
 
     /**
+     * Pops and closes every {@link AutoScope} on the current thread.
+     * Defensive cleanup after generate / TP workers so a push/pop mismatch
+     * cannot pin activations across requests.
+     *
+     * @return number of scopes drained.
+     */
+    public static int clearScopes() {
+        Deque<AutoScope> stack = scopes.get();
+        int n = 0;
+        while (!stack.isEmpty()) {
+            stack.pop().close();
+            n++;
+        }
+        return n;
+    }
+
+    /**
+     * Returns how many {@link AutoScope}s are currently pushed on this thread.
+     * @return scope stack depth.
+     */
+    public static int scopeDepth() {
+        return scopes.get().size();
+    }
+
+    /**
      * Moves this tensor from the current (top) {@link AutoScope} to its parent
      * so it survives {@link #pop()} of the child scope.
      *

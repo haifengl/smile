@@ -100,6 +100,8 @@ final class GatedDeltaRule {
             Tensor cat = stateLen > 0 ? concatLast3(convState, hidden) : hidden;
 
             if (stateLen > 0) {
+                // Long-lived pool buffer must survive this AutoScope pop.
+                convState.detachFromScopes();
                 long total = cat.shape()[2];
                 try (var span = Index.slice(total - stateLen, total);
                      Tensor tail = cat.get(Index.Colon, Index.Colon, span)) {
@@ -167,6 +169,8 @@ final class GatedDeltaRule {
             }
 
             if (convState != null && stateLen > 0) {
+                // Long-lived pool buffer must survive this AutoScope pop.
+                convState.detachFromScopes();
                 long total = padded.shape()[2];
                 try (var span = Index.slice(total - stateLen, total);
                      Tensor tail = padded.get(Index.Colon, Index.Colon, span)) {

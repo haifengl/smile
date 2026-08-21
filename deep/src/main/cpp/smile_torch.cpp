@@ -429,9 +429,33 @@ int smile_cuda_mem_get_info(int device_index, int64_t *free_bytes, int64_t *tota
 void smile_cuda_empty_cache(void) {
 #ifdef USE_CUDA
     ST_TRY_BEGIN
+        // cuBLAS workspaces are DataPtrs in the caching allocator; clear them
+        // first or emptyCache cannot return that memory to the driver.
+        at::cuda::clearCublasWorkspaces();
         c10::cuda::CUDACachingAllocator::emptyCache();
     ST_TRY_END
 #endif
+}
+
+int smile_cuda_allocator_stats(int device_index, int64_t *allocated_bytes,
+                               int64_t *reserved_bytes) {
+    if (!allocated_bytes || !reserved_bytes) {
+        set_error("smile_cuda_allocator_stats: null output pointer");
+        return -1;
+    }
+#ifdef USE_CUDA
+    ST_TRY_BEGIN
+        auto stats = c10::cuda::CUDACachingAllocator::getDeviceStats(
+                static_cast<c10::DeviceIndex>(device_index));
+        // StatType::AGGREGATE == 0
+        *allocated_bytes = stats.allocated_bytes[0].current;
+        *reserved_bytes = stats.reserved_bytes[0].current;
+        return 0;
+    ST_TRY_END
+#else
+    set_error_no_cuda_build();
+#endif
+    return -1;
 }
 
 int smile_cuda_is_bf16_supported(void) {
@@ -1788,12 +1812,13 @@ int smile_tp_all_reduce_sum(ST_Tensor *tensors, int n) {
                 return -1;
             }
         }
-        // Accumulate on the first tensor's device, then broadcast.
-        torch::Tensor acc = ref.clone();
+        // Accumulate into tensors[0] in place (no extra clone of rank-0), then
+        // broadcast the sum. Peer .to() temps are still needed until NCCL.
+        auto& acc = tensors[0]->t;
         for (int i = 1; i < n; i++) {
             acc.add_(tensors[i]->t.to(acc.device(), /*non_blocking=*/false));
         }
-        for (int i = 0; i < n; i++) {
+        for (int i = 1; i < n; i++) {
             tensors[i]->t.copy_(acc.to(tensors[i]->t.device(), /*non_blocking=*/false));
         }
         return 0;
