@@ -317,11 +317,17 @@ public class ChatService {
         int[] prompt = model.encodeChat(request.messages);
         int maxGenLen = request.resolveMaxTokens(model.maxSeqLen(), prompt.length);
         var throughput = new TokenThroughputLogger();
+        var listener = GenerationListeners.compose(
+                throughput,
+                publisher != null ? GenerationListeners.toPublisher(publisher) : null);
         try {
             return model.generate(new int[][]{prompt}, maxGenLen, request.temperature,
-                    request.topP, request.logprobs, request.seed, publisher, throughput);
+                    request.topP, request.logprobs, request.seed, listener);
         } finally {
             throughput.finish();
+            if (publisher != null) {
+                publisher.close();
+            }
         }
     }
 

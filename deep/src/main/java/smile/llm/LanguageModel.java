@@ -16,14 +16,16 @@
  */
 package smile.llm;
 
-import java.util.concurrent.SubmissionPublisher;
-
 /**
  * Common façade for chat-capable decoder LLMs (Llama, Qwen, …).
  *
  * <p>Implementations load a checkpoint, expose chat-template encoding, and
  * run autoregressive generation. Serve and other clients should prefer this
  * interface over concrete model types when only inference is required.
+ *
+ * <p>Streaming and metrics use a single optional {@link GenerationListener}.
+ * Transport-specific types such as {@link java.util.concurrent.SubmissionPublisher}
+ * belong at the serve boundary (see {@link GenerationListeners#toPublisher}).
  *
  * @author Haifeng Li
  */
@@ -66,51 +68,25 @@ public interface LanguageModel {
     /**
      * Generates completions from already-tokenized prompts.
      *
-     * @param prompts   batch of prompt token id sequences; batch size is
-     *                  typically {@code 1} for serve.
-     * @param maxGenLen maximum number of <em>new</em> tokens to generate per
-     *                  prompt (not including the prompt itself).
+     * @param prompts     batch of prompt token id sequences; batch size is
+     *                    typically {@code 1} for serve.
+     * @param maxGenLen   maximum number of <em>new</em> tokens to generate per
+     *                    prompt (not including the prompt itself).
      * @param temperature sampling temperature; higher values increase randomness.
-     * @param topp      nucleus-sampling top-p threshold in {@code (0, 1]}.
-     * @param logprobs  {@code true} to include per-token log-probabilities in
-     *                  the result.
-     * @param seed      optional RNG seed for deterministic sampling;
-     *                  {@code 0} means non-deterministic.
-     * @param publisher optional flow publisher that receives streamed text
-     *                  chunks; may be {@code null} for non-streaming calls.
-     *                  When non-null, batch size must be {@code 1}.
-     * @return one {@link ChatCompletion} per prompt in the batch.
-     */
-    default ChatCompletion[] generate(int[][] prompts, int maxGenLen, double temperature,
-                                      double topp, boolean logprobs, long seed,
-                                      SubmissionPublisher<String> publisher) {
-        return generate(prompts, maxGenLen, temperature, topp, logprobs, seed, publisher, null);
-    }
-
-    /**
-     * Generates completions from already-tokenized prompts.
-     *
-     * @param prompts   batch of prompt token id sequences; batch size is
-     *                  typically {@code 1} for serve.
-     * @param maxGenLen maximum number of <em>new</em> tokens to generate per
-     *                  prompt (not including the prompt itself).
-     * @param temperature sampling temperature; higher values increase randomness.
-     * @param topp      nucleus-sampling top-p threshold in {@code (0, 1]}.
-     * @param logprobs  {@code true} to include per-token log-probabilities in
-     *                  the result.
-     * @param seed      optional RNG seed for deterministic sampling;
-     *                  {@code 0} means non-deterministic.
-     * @param publisher optional flow publisher that receives streamed text
-     *                  chunks; may be {@code null} for non-streaming calls.
-     *                  When non-null, batch size must be {@code 1}.
-     * @param progress  optional listener notified once per newly generated token;
-     *                  may be {@code null}.
+     * @param topp        nucleus-sampling top-p threshold in {@code (0, 1]}.
+     * @param logprobs    {@code true} to include per-token log-probabilities in
+     *                    the result.
+     * @param seed        optional RNG seed for deterministic sampling;
+     *                    {@code 0} means non-deterministic.
+     * @param listener    optional progress callback (token counts and/or text
+     *                    chunks); may be {@code null}. Listener methods receive
+     *                    a per-prompt batch index. {@link GenerationListener#onText}
+     *                    is only emitted when {@code prompts.length == 1}.
      * @return one {@link ChatCompletion} per prompt in the batch.
      */
     ChatCompletion[] generate(int[][] prompts, int maxGenLen, double temperature,
                               double topp, boolean logprobs, long seed,
-                              SubmissionPublisher<String> publisher,
-                              GenerationListener progress);
+                              GenerationListener listener);
 
     /**
      * Generates assistant replies for dialogs.
@@ -118,22 +94,21 @@ public interface LanguageModel {
      * <p>Equivalent to {@link #encodeChat} on each dialog followed by
      * {@link #generate}.
      *
-     * @param dialogs   batch of dialogs; each dialog is an ordered array of
-     *                  {@link Message} turns.
-     * @param maxGenLen maximum number of <em>new</em> tokens to generate per
-     *                  dialog.
+     * @param dialogs     batch of dialogs; each dialog is an ordered array of
+     *                    {@link Message} turns.
+     * @param maxGenLen   maximum number of <em>new</em> tokens to generate per
+     *                    dialog.
      * @param temperature sampling temperature; higher values increase randomness.
-     * @param topp      nucleus-sampling top-p threshold in {@code (0, 1]}.
-     * @param logprobs  {@code true} to include per-token log-probabilities in
-     *                  the result.
-     * @param seed      optional RNG seed for deterministic sampling;
-     *                  {@code 0} means non-deterministic.
-     * @param publisher optional flow publisher that receives streamed text
-     *                  chunks; may be {@code null} for non-streaming calls.
-     *                  When non-null, batch size must be {@code 1}.
+     * @param topp        nucleus-sampling top-p threshold in {@code (0, 1]}.
+     * @param logprobs    {@code true} to include per-token log-probabilities in
+     *                    the result.
+     * @param seed        optional RNG seed for deterministic sampling;
+     *                    {@code 0} means non-deterministic.
+     * @param listener    optional progress callback; may be {@code null}.
+     *                    Same batch-index and streaming rules as {@link #generate}.
      * @return one {@link ChatCompletion} per dialog in the batch.
      */
     ChatCompletion[] chat(Message[][] dialogs, int maxGenLen, double temperature,
                           double topp, boolean logprobs, long seed,
-                          SubmissionPublisher<String> publisher);
+                          GenerationListener listener);
 }
