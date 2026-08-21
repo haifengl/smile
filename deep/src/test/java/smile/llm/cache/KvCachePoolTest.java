@@ -100,10 +100,11 @@ public class KvCachePoolTest {
 
         // Then
         long expectedStatic = (long) (total * y);
+        long softMargin = Math.min(1L << 30, Math.max(512L << 20, total / 40));
         assertEquals(total, budget.total());
         assertEquals(used, budget.used());
         assertEquals(expectedStatic, budget.staticBudget());
-        assertEquals(expectedStatic - used, budget.kvBudget());
+        assertEquals(expectedStatic - used - softMargin, budget.kvBudget());
         assertEquals(total - expectedStatic, budget.dynamicReserve());
         assertEquals(maxBatch * maxSeq, budget.maxUsefulSlots());
         // 24 GiB / 1024 ≫ 8192 → capped at context
@@ -129,6 +130,7 @@ public class KvCachePoolTest {
         assertTrue(budget.kvBudget() > 0);
         assertTrue(budget.numSlots() < budget.maxUsefulSlots());
         assertEquals(0, budget.numSlots() % pageSize);
+        // Soft margin does not fit in the ~512 MiB KV window → fall back to raw SGLang budget.
         assertEquals((long) (total * y) - used, budget.kvBudget());
     }
 

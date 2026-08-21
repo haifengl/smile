@@ -280,8 +280,18 @@ public class KvCachePool implements AutoCloseable {
                     layout.maxBatchSize(), layout.maxSeqLen()).numSlots();
         }
 
-        return new KvCachePool(layout.numLayers(), numSlots, layout.numKvHeads(),
+        KvCachePool pool = new KvCachePool(layout.numLayers(), numSlots, layout.numKvHeads(),
                 layout.headDim(), pageSize, device, dtype);
+        if (device.isCUDA()) {
+            try {
+                long[] mem = smile.torch.Native.cudaMemGetInfo(device.index());
+                logger.info("KV allocate done on {}: freeMiB={}, totalMiB={}",
+                        device, mem[0] / (1024 * 1024), mem[1] / (1024 * 1024));
+            } catch (RuntimeException e) {
+                logger.debug("Post-KV cudaMemGetInfo failed: {}", e.toString());
+            }
+        }
+        return pool;
     }
 
     /**
@@ -312,7 +322,14 @@ public class KvCachePool implements AutoCloseable {
         long used = total - free;
         long staticBudget = (long) (total * memFraction);
         long dynamicReserve = total - staticBudget;
-        long kvBudget = staticBudget - used;
+        // Soft margin beyond (1−y): keep a little extra free for activation spikes
+        // (Qwen DeltaNet / logits). Idle ~6GiB on 40GB/y=0.85 stays the main reserve.
+        long softMargin = Math.min(1L << 30, Math.max(512L << 20, total / 40));
+        long kvBudget = staticBudget - used - softMargin;
+        if (kvBudget < bytesPerToken * (long) pageSize) {
+            // Fall back to pure SGLang budget if soft margin does not fit.
+            kvBudget = staticBudget - used;
+        }
         if (kvBudget < bytesPerToken * (long) pageSize) {
             throw new IllegalStateException(String.format(
                     "KV static budget too small: staticBudget=%d used=%d kvBudget=%d "
