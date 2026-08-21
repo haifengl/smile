@@ -105,13 +105,12 @@ public class ChatService {
         String modelSpec = config.model();
         this.modelId = publicModelId(modelSpec);
         try {
-            String cacheDir = config.flashinferCacheDir();
-            if (cacheDir == null || cacheDir.isBlank()) {
-                cacheDir = Path.of(System.getProperty("user.home"), ".cache", "smile", "flashinfer")
-                        .toString();
-            }
+            String cacheDir = config.flashinferCacheDir()
+                    .filter(s -> !s.isBlank())
+                    .orElseGet(() -> Path.of(System.getProperty("user.home"),
+                            ".cache", "smile", "flashinfer").toString());
             FlashInferArtifacts.resolveAndInstall(
-                    config.flashinferAotDir(),
+                    config.flashinferAotDir().orElse(null),
                     cacheDir,
                     config.flashinferDownload(),
                     config.flashinferCudaTag());

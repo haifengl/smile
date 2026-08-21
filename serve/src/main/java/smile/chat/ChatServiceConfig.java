@@ -16,6 +16,7 @@
  */
 package smile.chat;
 
+import java.util.Optional;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
 
@@ -121,17 +122,16 @@ public interface ChatServiceConfig {
     String attentionBackend();
 
     /**
-     * Explicit FlashInfer AOT / jit-cache directory. Empty means auto-resolve
+     * Explicit FlashInfer AOT / jit-cache directory. Unset means auto-resolve
      * (bundled {@code /opt/flashinfer/aot}, env, then cache-dir).
      */
-    @WithDefault("")
-    String flashinferAotDir();
+    Optional<String> flashinferAotDir();
 
     /**
      * Directory for downloaded / extracted {@code flashinfer-jit-cache} modules.
+     * Unset uses {@code ~/.cache/smile/flashinfer}.
      */
-    @WithDefault("")
-    String flashinferCacheDir();
+    Optional<String> flashinferCacheDir();
 
     /**
      * When true and no AOT dir is present, download a pinned jit-cache wheel
