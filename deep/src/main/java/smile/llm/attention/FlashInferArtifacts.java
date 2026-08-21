@@ -26,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -60,7 +61,8 @@ public final class FlashInferArtifacts {
      * @param aotDir        explicit config path (may be blank).
      * @param cacheDir      download / extract cache (may be blank).
      * @param allowDownload when true, fetch jit-cache into {@code cacheDir} if missing.
-     * @param cudaTag       wheel CUDA tag such as {@code cu132} (SMILE default).
+     * @param cudaTag       wheel CUDA tag such as {@code cu130} (FlashInfer
+     *                      jit-cache max for 0.6.6; LibTorch may still be cu132).
      * @return resolved directory, or empty when none available.
      */
     public static Optional<Path> resolveAndInstall(
@@ -102,7 +104,7 @@ public final class FlashInferArtifacts {
             }
             if (allowDownload) {
                 try {
-                    downloadAndExtract(cache, cudaTag == null || cudaTag.isBlank() ? "cu132" : cudaTag);
+                    downloadAndExtract(cache, cudaTag == null || cudaTag.isBlank() ? "cu130" : cudaTag);
                     if (isUsableAot(extracted)) {
                         return Optional.of(extracted);
                     }
@@ -127,29 +129,42 @@ public final class FlashInferArtifacts {
 
     static void downloadAndExtract(Path cacheDir, String cudaTag) throws IOException, InterruptedException {
         Files.createDirectories(cacheDir);
-        // Prefer the FlashInfer CUDA-specific wheel index (matches SMILE cu132 builds).
+        // FlashInfer v0.6.6 publishes jit-cache for cu128/cu129/cu130 only (no cu132).
+        // Prefer GitHub release assets; the flashinfer.ai index may 404 for the same file.
         String ver = DEFAULT_JIT_CACHE_VERSION;
         String tag = cudaTag;
         String wheelFile = "flashinfer_jit_cache-" + ver + "+" + tag
                 + "-cp39-abi3-manylinux_2_28_x86_64.whl";
-        URI uri = URI.create("https://flashinfer.ai/whl/" + tag + "/" + wheelFile);
         Path wheel = cacheDir.resolve(wheelFile);
         if (!Files.isRegularFile(wheel)) {
-            logger.info("Downloading FlashInfer jit-cache from {}", uri);
-            HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(30)).build();
-            HttpRequest req = HttpRequest.newBuilder(uri).GET().timeout(Duration.ofMinutes(10)).build();
-            HttpResponse<InputStream> resp = client.send(req, HttpResponse.BodyHandlers.ofInputStream());
-            if (resp.statusCode() / 100 != 2) {
-                // Fallback: GitHub release asset naming (URL-encoded '+').
-                URI gh = URI.create("https://github.com/flashinfer-ai/flashinfer/releases/download/v"
-                        + ver + "/flashinfer_jit_cache-" + ver + "%2B" + tag
-                        + "-cp39-abi3-manylinux_2_28_x86_64.whl");
-                logger.info("Primary index failed (HTTP {}); trying {}", resp.statusCode(), gh);
-                req = HttpRequest.newBuilder(gh).GET().timeout(Duration.ofMinutes(10)).build();
-                resp = client.send(req, HttpResponse.BodyHandlers.ofInputStream());
-                if (resp.statusCode() / 100 != 2) {
-                    throw new IOException("HTTP " + resp.statusCode() + " for " + uri + " and " + gh);
+            URI gh = URI.create("https://github.com/flashinfer-ai/flashinfer/releases/download/v"
+                    + ver + "/flashinfer_jit_cache-" + ver + "%2B" + tag
+                    + "-cp39-abi3-manylinux_2_28_x86_64.whl");
+            URI index = URI.create("https://flashinfer.ai/whl/" + tag + "/"
+                    + "flashinfer_jit_cache-" + ver + "%2B" + tag
+                    + "-cp39-abi3-manylinux_2_28_x86_64.whl");
+            HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(30))
+                    .followRedirects(HttpClient.Redirect.NORMAL)
+                    .build();
+            HttpResponse<InputStream> resp = null;
+            IOException last = null;
+            for (URI uri : List.of(gh, index)) {
+                logger.info("Downloading FlashInfer jit-cache from {}", uri);
+                try {
+                    HttpRequest req = HttpRequest.newBuilder(uri).GET()
+                            .timeout(Duration.ofMinutes(30)).build();
+                    resp = client.send(req, HttpResponse.BodyHandlers.ofInputStream());
+                    if (resp.statusCode() / 100 == 2) {
+                        break;
+                    }
+                    last = new IOException("HTTP " + resp.statusCode() + " for " + uri);
+                    resp = null;
+                } catch (IOException e) {
+                    last = e;
                 }
+            }
+            if (resp == null) {
+                throw last != null ? last : new IOException("FlashInfer jit-cache download failed");
             }
             Files.copy(resp.body(), wheel);
         }

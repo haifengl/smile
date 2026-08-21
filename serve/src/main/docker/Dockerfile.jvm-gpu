@@ -87,13 +87,14 @@ RUN test -d /src/smile_torch/third_party/flashinfer/include/flashinfer \
 # Note: do not use shell heredocs in RUN — classic Dockerfile parsers end the
 # instruction at <<'PY' and then treat the following "&&" as an unknown opcode.
 ARG FLASHINFER_JIT_CACHE_VERSION=0.6.6
-# Match LibTorch / SMILE CUDA tag (CU_VERSION=132 → cu132).
-ARG FLASHINFER_JIT_CACHE_CU=cu${CU_VERSION}
+# LibTorch may be cu132, but FlashInfer only publishes jit-cache through cu130
+# for v0.6.6 (cu128/cu129/cu130). Do not derive this from CU_VERSION.
+ARG FLASHINFER_JIT_CACHE_CU=cu130
 RUN mkdir -p /opt/flashinfer/aot \
     && (curl -fsSL --retry 5 --retry-delay 10 -o /tmp/fi_jit.whl \
-        "https://flashinfer.ai/whl/${FLASHINFER_JIT_CACHE_CU}/flashinfer_jit_cache-${FLASHINFER_JIT_CACHE_VERSION}%2B${FLASHINFER_JIT_CACHE_CU}-cp39-abi3-manylinux_2_28_x86_64.whl" \
+        "https://github.com/flashinfer-ai/flashinfer/releases/download/v${FLASHINFER_JIT_CACHE_VERSION}/flashinfer_jit_cache-${FLASHINFER_JIT_CACHE_VERSION}%2B${FLASHINFER_JIT_CACHE_CU}-cp39-abi3-manylinux_2_28_x86_64.whl" \
         || curl -fsSL --retry 5 --retry-delay 10 -o /tmp/fi_jit.whl \
-        "https://github.com/flashinfer-ai/flashinfer/releases/download/v${FLASHINFER_JIT_CACHE_VERSION}/flashinfer_jit_cache-${FLASHINFER_JIT_CACHE_VERSION}%2B${FLASHINFER_JIT_CACHE_CU}-cp39-abi3-manylinux_2_28_x86_64.whl") \
+        "https://flashinfer.ai/whl/${FLASHINFER_JIT_CACHE_CU}/flashinfer_jit_cache-${FLASHINFER_JIT_CACHE_VERSION}%2B${FLASHINFER_JIT_CACHE_CU}-cp39-abi3-manylinux_2_28_x86_64.whl") \
     && printf '%s\n' \
         'import zipfile, pathlib, sys' \
         'root = pathlib.Path("/opt/flashinfer/aot")' \
