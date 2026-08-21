@@ -57,7 +57,9 @@ public class EmbeddingLayer extends ModuleLayer {
     }
 
     private static Handles create(int numTokens, int dim) {
-        MemorySegment h = check(smile_embedding_create(numTokens, dim));
+        MemorySegment h = ParameterInit.skip()
+                ? check(smile_embedding_create_uninitialized(numTokens, dim))
+                : check(smile_embedding_create(numTokens, dim));
         MemorySegment m = check(smile_embedding_as_module(h));
         return new Handles(h, m, () -> {
             smile_module_free(m);

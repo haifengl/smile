@@ -742,6 +742,8 @@ SMILE_API int               smile_output_archive_save_to(ST_OutputArchive a, con
 /* ---- Linear ---- */
 
 SMILE_API ST_Linear smile_linear_create(int64_t in_features, int64_t out_features, int bias);
+/** Like {@code smile_linear_create} but skips Kaiming init (empty weights only). */
+SMILE_API ST_Linear smile_linear_create_uninitialized(int64_t in_features, int64_t out_features, int bias);
 SMILE_API void      smile_linear_free  (ST_Linear l);
 SMILE_API ST_Tensor smile_linear_forward(ST_Linear l, ST_Tensor input);
 /** Returns a borrowed (non-owning) ST_Module view. */
@@ -798,6 +800,8 @@ SMILE_API ST_Module  smile_dropout_as_module(ST_Dropout d);
 /* ---- Embedding ---- */
 
 SMILE_API ST_Embedding smile_embedding_create (int64_t num_embeddings, int64_t embedding_dim);
+/** Like {@code smile_embedding_create} but skips normal init (empty weights only). */
+SMILE_API ST_Embedding smile_embedding_create_uninitialized(int64_t num_embeddings, int64_t embedding_dim);
 SMILE_API void          smile_embedding_free   (ST_Embedding e);
 SMILE_API ST_Tensor     smile_embedding_forward(ST_Embedding e, ST_Tensor input);
 SMILE_API ST_Module     smile_embedding_as_module(ST_Embedding e);

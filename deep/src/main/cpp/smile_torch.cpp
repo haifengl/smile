@@ -159,12 +159,10 @@ struct ST_Scalar_        { at::Scalar s; };
 struct ST_Device_        { c10::Device d; };
 struct ST_Module_        { std::shared_ptr<torch::nn::Module> m; };
 struct ST_ModuleList_    { std::shared_ptr<torch::nn::ModuleListImpl> ml; };
-struct ST_Linear_        { torch::nn::Linear mod; };
 struct ST_Conv2d_        { torch::nn::Conv2d mod; };
 struct ST_BatchNorm1d_   { torch::nn::BatchNorm1d mod; };
 struct ST_BatchNorm2d_   { torch::nn::BatchNorm2d mod; };
 struct ST_Dropout_       { torch::nn::Dropout mod; };
-struct ST_Embedding_     { torch::nn::Embedding mod; };
 struct ST_GroupNorm_     { torch::nn::GroupNorm mod; };
 struct ST_MaxPool2d_     { torch::nn::MaxPool2d mod; };
 struct ST_AvgPool2d_     { torch::nn::AvgPool2d mod; };
@@ -177,6 +175,77 @@ struct ST_TensorIndex_   { torch::indexing::TensorIndex idx; };
 struct ST_TensorIndexVec_{ std::vector<torch::indexing::TensorIndex> vec; };
 struct ST_TensorVec_     { std::vector<at::Tensor> vec; };
 struct ST_Slice_         { torch::indexing::Slice slice; };
+
+// Linear / Embedding shells that allocate with torch::empty and optionally skip
+// reset_parameters (Kaiming / normal). Used for inference weight load.
+struct EmptyLinearImpl : torch::nn::Cloneable<EmptyLinearImpl> {
+    torch::Tensor weight{nullptr};
+    torch::Tensor bias{nullptr};
+    int64_t in_features;
+    int64_t out_features;
+    bool with_bias;
+
+    EmptyLinearImpl(int64_t in_features_, int64_t out_features_, bool bias_)
+        : in_features(in_features_),
+          out_features(out_features_),
+          with_bias(bias_) {
+        reset();
+    }
+
+    void reset() override {
+        weight = register_parameter(
+            "weight", torch::empty({out_features, in_features}));
+        if (with_bias) {
+            bias = register_parameter("bias", torch::empty({out_features}));
+        } else {
+            bias = register_parameter("bias", {}, /*requires_grad=*/false);
+        }
+    }
+
+    void reset_parameters() {
+        torch::nn::init::kaiming_uniform_(
+            weight, std::sqrt(5)); // NOLINT(cppcoreguidelines-avoid-magic-numbers)
+        if (bias.defined()) {
+            auto [fan_in, fan_out] =
+                torch::nn::init::_calculate_fan_in_and_fan_out(weight);
+            const auto bound = 1.0 / std::sqrt(static_cast<double>(fan_in));
+            torch::nn::init::uniform_(bias, -bound, bound);
+        }
+    }
+
+    torch::Tensor forward(const torch::Tensor& input) {
+        return torch::linear(input, weight, bias);
+    }
+};
+TORCH_MODULE(EmptyLinear);
+
+struct EmptyEmbeddingImpl : torch::nn::Cloneable<EmptyEmbeddingImpl> {
+    torch::Tensor weight{nullptr};
+    int64_t num_embeddings;
+    int64_t embedding_dim;
+
+    EmptyEmbeddingImpl(int64_t num_embeddings_, int64_t embedding_dim_)
+        : num_embeddings(num_embeddings_), embedding_dim(embedding_dim_) {
+        reset();
+    }
+
+    void reset() override {
+        weight = register_parameter(
+            "weight", torch::empty({num_embeddings, embedding_dim}));
+    }
+
+    void reset_parameters() {
+        torch::nn::init::normal_(weight);
+    }
+
+    torch::Tensor forward(const torch::Tensor& input) {
+        return torch::embedding(weight, input);
+    }
+};
+TORCH_MODULE(EmptyEmbedding);
+
+struct ST_Linear_    { EmptyLinear mod; };
+struct ST_Embedding_ { EmptyEmbedding mod; };
 
 // =============================================================================
 // Helpers: build TensorOptions from handle (NULL → default)
@@ -1337,11 +1406,21 @@ int smile_output_archive_save_to(ST_OutputArchive a, const char *path) {
 
 ST_Linear smile_linear_create(int64_t in, int64_t out, int bias) {
     ST_TRY_BEGIN
-        auto opts = torch::nn::LinearOptions(in, out).bias(static_cast<bool>(bias));
-        return new ST_Linear_{ torch::nn::Linear(opts) };
+        EmptyLinear linear(in, out, static_cast<bool>(bias));
+        linear->reset_parameters();
+        return new ST_Linear_{ std::move(linear) };
     ST_TRY_END
     return nullptr;
 }
+
+ST_Linear smile_linear_create_uninitialized(int64_t in, int64_t out, int bias) {
+    ST_TRY_BEGIN
+        // torch::empty only — no Kaiming fill (weights overwritten on load).
+        return new ST_Linear_{ EmptyLinear(in, out, static_cast<bool>(bias)) };
+    ST_TRY_END
+    return nullptr;
+}
+
 void      smile_linear_free  (ST_Linear l) { delete l; }
 ST_Tensor smile_linear_forward(ST_Linear l, ST_Tensor input) {
     if (!l || !input) return nullptr;
@@ -1454,8 +1533,21 @@ ST_Module smile_dropout_as_module(ST_Dropout d) {
 // =============================================================================
 
 ST_Embedding smile_embedding_create(int64_t num, int64_t dim) {
-    ST_TRY_BEGIN return new ST_Embedding_{ torch::nn::Embedding(num, dim) }; ST_TRY_END return nullptr;
+    ST_TRY_BEGIN
+        EmptyEmbedding emb(num, dim);
+        emb->reset_parameters();
+        return new ST_Embedding_{ std::move(emb) };
+    ST_TRY_END
+    return nullptr;
 }
+
+ST_Embedding smile_embedding_create_uninitialized(int64_t num, int64_t dim) {
+    ST_TRY_BEGIN
+        return new ST_Embedding_{ EmptyEmbedding(num, dim) };
+    ST_TRY_END
+    return nullptr;
+}
+
 void      smile_embedding_free   (ST_Embedding e) { delete e; }
 ST_Tensor smile_embedding_forward(ST_Embedding e, ST_Tensor i) {
     if (!e||!i) return nullptr; MAKE_TENSOR(e->mod->forward(i->t));

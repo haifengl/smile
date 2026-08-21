@@ -59,6 +59,20 @@ int main(void) {
     CHECK(smile_tensor_size(out, 0) == 2, "linear out batch");
     CHECK(smile_tensor_size(out, 1) == 8, "linear out features");
 
+    /* ---- Uninitialized linear (empty weights, no Kaiming) ---- */
+    ST_Linear lin_u = smile_linear_create_uninitialized(4, 8, 0);
+    CHECK(lin_u != NULL, "linear_create_uninitialized");
+    ST_Tensor out_u = smile_linear_forward(lin_u, in);
+    CHECK(out_u != NULL, "uninit linear_forward");
+    CHECK(smile_tensor_size(out_u, 0) == 2, "uninit linear out batch");
+    CHECK(smile_tensor_size(out_u, 1) == 8, "uninit linear out features");
+    smile_tensor_free(out_u);
+    smile_linear_free(lin_u);
+
+    ST_Embedding emb_u = smile_embedding_create_uninitialized(16, 8);
+    CHECK(emb_u != NULL, "embedding_create_uninitialized");
+    smile_embedding_free(emb_u);
+
     /* ---- NoGradGuard ---- */
     ST_NoGradGuard ng = smile_no_grad_guard_create();
     CHECK(ng != NULL, "no_grad_guard");
