@@ -246,12 +246,13 @@ public class GatedAttention implements Attention {
             Tensor attn;
             if (AttentionBackends.current() == AttentionBackend.FLASHINFER) {
                 try (FlashInferKvMetadata meta = cachePool.buildFlashInferMetadata(cacheLen)) {
+                    // Match torch_native: causality comes from {@code mask}, not is_causal.
                     var ctx = AttentionContext.paged(
-                            scale, seqlen > 1,
+                            scale, false,
                             numHeads, numKvHeads, headDim,
                             kvLayerId, startPos, seqlen, cacheLen,
                             cachePool, meta, cachePool.flashInferWorkspace());
-                    attn = AttentionBackends.kernel().forward(qT, null, null, null, ctx);
+                    attn = AttentionBackends.kernel().forward(qT, null, null, mask, ctx);
                 }
             } else {
                 var cached = cachePool.get(kvLayerId, cacheLen);

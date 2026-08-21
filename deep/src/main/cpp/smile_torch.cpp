@@ -2155,6 +2155,7 @@ ST_Tensor smile_flashinfer_paged_attention(
         int cache_len,
         double scale,
         int is_causal,
+        ST_Tensor attn_mask,
         ST_FlashInferWorkspace workspace) {
 #if defined(USE_CUDA) && defined(USE_FLASHINFER)
     if (!query || !k_cache || !v_cache || !paged_kv_indptr
@@ -2171,11 +2172,14 @@ ST_Tensor smile_flashinfer_paged_attention(
                 : (1.0f / std::sqrt(static_cast<float>(head_dim > 0 ? head_dim : 1)));
         torch::Tensor out = torch::empty_like(q);
         std::string err;
+        const torch::Tensor *mask_ptr = (attn_mask && attn_mask->t.defined())
+                ? &attn_mask->t
+                : nullptr;
         int rc = smile_flashinfer_paged_attention_cuda(
                 q, k_cache->t, v_cache->t,
                 paged_kv_indptr->t, paged_kv_indices->t, paged_kv_last_page_len->t,
                 page_size, num_kv_heads, head_dim, cache_len,
-                sc, is_causal, out, err);
+                sc, is_causal, mask_ptr, out, err);
         if (rc != 0) {
             set_error(err.empty() ? "flashinfer paged attention failed" : err);
             return nullptr;
@@ -2187,7 +2191,7 @@ ST_Tensor smile_flashinfer_paged_attention(
     (void)query; (void)k_cache; (void)v_cache;
     (void)paged_kv_indptr; (void)paged_kv_indices; (void)paged_kv_last_page_len;
     (void)page_size; (void)num_kv_heads; (void)head_dim; (void)cache_len;
-    (void)scale; (void)is_causal; (void)workspace;
+    (void)scale; (void)is_causal; (void)attn_mask; (void)workspace;
 #  ifdef USE_CUDA
     set_error("smile_torch built without USE_FLASHINFER");
 #  else

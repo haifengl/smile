@@ -36,8 +36,8 @@ public final class FlashInferAttentionKernel implements AttentionKernel {
         if (ctx.workspace() == null) {
             throw new IllegalStateException("FlashInfer workspace not installed");
         }
-        // key/value are unused — KV lives in the pool; mask unused (causal flag).
-        return Native.flashInferAttention(query, ctx);
+        // key/value are unused — KV lives in the pool.
+        return Native.flashInferAttention(query, mask, ctx);
     }
 
     @Override

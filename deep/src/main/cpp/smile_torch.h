@@ -1038,9 +1038,10 @@ SMILE_API int smile_flashinfer_workspace_device_index(ST_FlashInferWorkspace ws)
  * @param page_size        tokens per page
  * @param num_kv_heads     Hkv
  * @param head_dim         D
- * @param cache_len        total sequence length (for causal prefill)
+ * @param cache_len        total sequence length (for CSR validation)
  * @param scale            attention scale (&le;0 → 1/sqrt(D))
- * @param is_causal        non-zero for causal masking when S&gt;1
+ * @param is_causal        used only when {@code attn_mask} is null
+ * @param attn_mask        optional additive mask (same as torch_native); nullable
  * @param workspace        from {@link smile_flashinfer_workspace_create}
  * @return output {@code [B, Hq, S, D]}, or null on error
  */
@@ -1057,6 +1058,7 @@ SMILE_API ST_Tensor smile_flashinfer_paged_attention(
         int cache_len,
         double scale,
         int is_causal,
+        ST_Tensor attn_mask,
         ST_FlashInferWorkspace workspace);
 
 #ifdef __cplusplus
