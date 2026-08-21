@@ -136,11 +136,13 @@ public class LlamaModel extends LayerBlock {
 
     /**
      * Moves parameters and the RoPE frequency table to {@code device} / {@code dtype}.
+     * RoPE {@code cis} stays complex64 (device move only); casting it to a real
+     * dtype would drop the imaginary part and break rotary embeddings.
      */
     @Override
     public LlamaModel to(Device device, ScalarType dtype) {
         super.to(device, dtype);
-        Tensor moved = cis.to(device, dtype);
+        Tensor moved = cis.to(device);
         if (moved != cis) {
             moved.detachFromScopes();
             cis.close();

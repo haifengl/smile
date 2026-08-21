@@ -18,7 +18,6 @@ package smile.llm.qwen;
 
 import java.util.Arrays;
 import smile.deep.tensor.Index;
-import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.transformer.RotaryPositionalEncoding;
 import smile.util.AutoScope;
@@ -113,11 +112,11 @@ public final class PartialRotaryEncoding {
      * @param rotaryDim rotary feature count (even).
      * @param end       table length (typically {@code 2 * maxSeqLen}).
      * @param theta     RoPE theta.
-     * @return complex frequency tensor.
+     * @return complex64 frequency tensor ({@code cos + i·sin}), same layout as
+     *         {@link RotaryPositionalEncoding#computeFreqCis(int, int, double, boolean)}.
      */
     public static Tensor computeFreqCis(int rotaryDim, int end, double theta) {
-        try (Tensor complex = RotaryPositionalEncoding.computeFreqCis(rotaryDim, end, theta, false)) {
-            return complex.to(ScalarType.Float);
-        }
+        // Keep complex64: casting to float discards sin (imag) and breaks RoPE.
+        return RotaryPositionalEncoding.computeFreqCis(rotaryDim, end, theta, false);
     }
 }
