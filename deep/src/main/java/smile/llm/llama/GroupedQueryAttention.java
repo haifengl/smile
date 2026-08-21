@@ -179,12 +179,13 @@ public class GroupedQueryAttention implements Attention {
             Tensor attn;
             if (AttentionBackends.current() == AttentionBackend.FLASHINFER) {
                 try (FlashInferKvMetadata meta = cachePool.buildFlashInferMetadata(cacheLen)) {
+                    // Match torch_native: causality comes from {@code mask}, not is_causal.
                     var ctx = AttentionContext.paged(
-                            0.0, seqlen > 1,
+                            0.0, false,
                             numLocalHeads, numLocalKvHeads, headDim,
                             layerId, startPos, seqlen, cacheLen,
                             cachePool, meta, cachePool.flashInferWorkspace());
-                    attn = AttentionBackends.kernel().forward(qT, null, null, null, ctx);
+                    attn = AttentionBackends.kernel().forward(qT, null, null, mask, ctx);
                 }
             } else {
                 var cached = cachePool.get(layerId, cacheLen);

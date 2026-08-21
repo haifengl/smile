@@ -130,7 +130,7 @@ public final class Native {
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
                         ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
                         ValueLayout.JAVA_INT, ValueLayout.JAVA_DOUBLE, ValueLayout.JAVA_INT,
-                        ValueLayout.ADDRESS)))
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
                 .orElse(null);
     }
 
@@ -543,10 +543,12 @@ public final class Native {
      * Runs paged attention using {@link smile.llm.attention.AttentionContext}.
      *
      * @param query query {@code [B, Hq, S, D]}
+     * @param mask  optional additive attention mask (same as torch_native); may be null
      * @param ctx   paged context with pool + CSR + workspace
      * @return output {@code [B, Hq, S, D]}
      */
-    public static Tensor flashInferAttention(Tensor query, smile.llm.attention.AttentionContext ctx) {
+    public static Tensor flashInferAttention(Tensor query, Tensor mask,
+                                             smile.llm.attention.AttentionContext ctx) {
         if (Bindings.FLASHINFER_PAGED == null) {
             throw new IllegalStateException("smile_flashinfer_paged_attention not in libsmile_torch");
         }
@@ -574,6 +576,7 @@ public final class Native {
                         ctx.cacheLen(),
                         ctx.scale(),
                         ctx.isCausal() ? 1 : 0,
+                        mask == null ? MemorySegment.NULL : mask.handle(),
                         ws.handle());
             } catch (Throwable t) {
                 throw new RuntimeException(lastError().isEmpty() ? t.getMessage() : lastError(), t);
