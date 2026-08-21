@@ -50,7 +50,15 @@ public final class AttentionBackends {
         switch (selected) {
             case TORCH_NATIVE -> next = new TorchNativeAttentionKernel();
             case FLASHINFER -> {
-                if (Native.flashInferAvailable()) {
+                boolean available;
+                try {
+                    available = Native.flashInferAvailable();
+                } catch (Throwable t) {
+                    logger.warn("FlashInfer availability check failed — falling back to torch_native: {}",
+                            t.toString());
+                    available = false;
+                }
+                if (available) {
                     next = new FlashInferAttentionKernel();
                 } else {
                     logger.warn(
