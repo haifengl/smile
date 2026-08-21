@@ -37,27 +37,38 @@ public final class AttentionBackends {
     /**
      * Installs the attention backend for this process.
      *
-     * <p>{@link AttentionBackend#FLASHINFER} fails fast when the native library
-     * was built without FlashInfer support.
+     * <p>When {@link AttentionBackend#FLASHINFER} is requested but the native
+     * library lacks FlashInfer support, falls back to
+     * {@link AttentionBackend#TORCH_NATIVE} and logs a warning.
      *
      * @param selected backend from config.
      */
     public static synchronized void install(AttentionBackend selected) {
         Objects.requireNonNull(selected, "selected");
-        AttentionKernel next = switch (selected) {
-            case TORCH_NATIVE -> new TorchNativeAttentionKernel();
+        AttentionBackend effective = selected;
+        AttentionKernel next;
+        switch (selected) {
+            case TORCH_NATIVE -> next = new TorchNativeAttentionKernel();
             case FLASHINFER -> {
-                if (!Native.flashInferAvailable()) {
-                    throw new IllegalStateException(
-                            "smile.chat.attention-backend=flashinfer but libsmile_torch was built "
-                                    + "without USE_FLASHINFER (CUDA FlashInfer AOT)");
+                if (Native.flashInferAvailable()) {
+                    next = new FlashInferAttentionKernel();
+                } else {
+                    logger.warn(
+                            "smile.chat.attention-backend=flashinfer but libsmile_torch has no "
+                                    + "USE_FLASHINFER CUDA support — falling back to torch_native");
+                    effective = AttentionBackend.TORCH_NATIVE;
+                    next = new TorchNativeAttentionKernel();
                 }
-                yield new FlashInferAttentionKernel();
             }
-        };
-        backend = selected;
+            default -> throw new IllegalArgumentException("Unsupported backend: " + selected);
+        }
+        backend = effective;
         kernel = next;
-        logger.info("Attention backend: {}", selected.id());
+        if (effective == selected) {
+            logger.info("Attention backend: {}", effective.id());
+        } else {
+            logger.info("Attention backend: {} (requested {})", effective.id(), selected.id());
+        }
     }
 
     /** @return currently installed backend. */
