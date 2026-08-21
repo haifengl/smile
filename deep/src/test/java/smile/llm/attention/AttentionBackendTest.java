@@ -28,8 +28,8 @@ public class AttentionBackendTest {
         assertEquals(AttentionBackend.TORCH_NATIVE, AttentionBackend.parse("torch_native"));
         assertEquals(AttentionBackend.FLASHINFER, AttentionBackend.parse("flashinfer"));
         assertEquals(AttentionBackend.TORCH_NATIVE, AttentionBackend.parse("TORCH_NATIVE"));
-        assertEquals(AttentionBackend.TORCH_NATIVE, AttentionBackend.parse(""));
-        assertEquals(AttentionBackend.TORCH_NATIVE, AttentionBackend.parse(null));
+        assertEquals(AttentionBackend.FLASHINFER, AttentionBackend.parse(""));
+        assertEquals(AttentionBackend.FLASHINFER, AttentionBackend.parse(null));
     }
 
     @Test
@@ -45,16 +45,14 @@ public class AttentionBackendTest {
     }
 
     @Test
-    public void testGivenFlashInferUnavailableWhenInstallThenFailsFast() {
+    public void testGivenFlashInferUnavailableWhenInstallThenFallsBackToTorchNative() {
+        AttentionBackends.install(AttentionBackend.FLASHINFER);
         if (AttentionBackends.flashInferAvailable()) {
-            AttentionBackends.install(AttentionBackend.FLASHINFER);
             assertEquals(AttentionBackend.FLASHINFER, AttentionBackends.current());
             AttentionBackends.install(AttentionBackend.TORCH_NATIVE);
-            return;
+        } else {
+            assertEquals(AttentionBackend.TORCH_NATIVE, AttentionBackends.current());
+            assertEquals(AttentionBackend.TORCH_NATIVE, AttentionBackends.kernel().backend());
         }
-        assertThrows(IllegalStateException.class,
-                () -> AttentionBackends.install(AttentionBackend.FLASHINFER));
-        // Restore default after failed install attempt (install is atomic on failure).
-        assertEquals(AttentionBackend.TORCH_NATIVE, AttentionBackends.current());
     }
 }

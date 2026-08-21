@@ -111,11 +111,11 @@ public interface ChatServiceConfig {
     int modelLoaderThreads();
 
     /**
-     * Attention kernel backend: {@code torch_native} (LibTorch SDPA) or
-     * {@code flashinfer} (paged CSR attention). Defaults to {@code torch_native}.
-     * Selecting {@code flashinfer} fails at startup if {@code libsmile_torch}
-     * was built without CUDA paged-attention support.
+     * Attention kernel backend: {@code flashinfer} (paged CSR attention) or
+     * {@code torch_native} (LibTorch SDPA). Defaults to {@code flashinfer};
+     * if FlashInfer is unavailable in {@code libsmile_torch}, the service
+     * falls back to {@code torch_native} at startup.
      */
-    @WithDefault("torch_native")
+    @WithDefault("flashinfer")
     String attentionBackend();
 }

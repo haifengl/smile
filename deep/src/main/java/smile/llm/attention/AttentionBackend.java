@@ -50,7 +50,7 @@ public enum AttentionBackend {
      */
     public static AttentionBackend parse(String value) {
         if (value == null || value.isBlank()) {
-            return TORCH_NATIVE;
+            return FLASHINFER;
         }
         String v = value.trim().toLowerCase();
         for (AttentionBackend b : values()) {
