@@ -323,6 +323,9 @@ extern "C" int smile_flashinfer_paged_attention_cuda(
         if (S == 1 && (head_dim == 64 || head_dim == 128)) {
             int rc = -1;
             torch::Tensor o3;
+            // FlashInfer BatchDecode merge kernels use DISPATCH_HEAD_DIM including
+            // 512; with DType=float that requests 512-bit cp.async loads, which
+            // FlashInfer does not support. Only bf16 / fp16 are compiled.
             if (query.scalar_type() == at::kBFloat16) {
                 rc = run_batch_decode<nv_bfloat16>(
                         query, k_pages, v_pages, indptr, indices, last, page_size,
@@ -333,18 +336,17 @@ extern "C" int smile_flashinfer_paged_attention_cuda(
                         query, k_pages, v_pages, indptr, indices, last, page_size,
                         static_cast<int>(Hq), num_kv_heads, head_dim, scale,
                         float_ws, int_ws, pinned_int, o3, err);
-            } else if (query.scalar_type() == at::kFloat) {
-                rc = run_batch_decode<float>(
-                        query, k_pages, v_pages, indptr, indices, last, page_size,
-                        static_cast<int>(Hq), num_kv_heads, head_dim, scale,
-                        float_ws, int_ws, pinned_int, o3, err);
             } else {
-                err = "unsupported dtype for FlashInfer decode";
-                return -1;
+                // fp32 (and other) decode → gather + SDPA below
+                rc = -2;
             }
-            if (rc != 0) return rc;
-            out = o3.unsqueeze(2); // [B,Hq,1,D]
-            return 0;
+            if (rc == 0) {
+                out = o3.unsqueeze(2); // [B,Hq,1,D]
+                return 0;
+            }
+            if (rc == -1) {
+                return rc;
+            }
         }
 
         return run_batch_prefill_sdpa(
