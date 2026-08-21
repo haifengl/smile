@@ -21,6 +21,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.SubmissionPublisher;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -37,6 +41,7 @@ import smile.llm.FinishReason;
 import smile.llm.LanguageModel;
 import smile.llm.Message;
 import smile.llm.cache.KvCachePool;
+import smile.llm.checkpoint.SafeTensorsLoaderThreads;
 import smile.torch.smile_torch_h;
 import smile.util.AutoScope;
 
@@ -228,6 +233,20 @@ public class Llama implements LanguageModel {
     public static Llama build(String checkpointDir, String tokenizerPath, int maxBatchSize,
                               int maxSeqLen, byte deviceId, double memFractionStatic,
                               String kvCacheDtype, int pageSize) throws IOException {
+        return build(checkpointDir, tokenizerPath, maxBatchSize, maxSeqLen, deviceId,
+                memFractionStatic, kvCacheDtype, pageSize, 0);
+    }
+
+    /**
+     * Builds a Llama instance by initializing and loading a model checkpoint.
+     *
+     * @param modelLoaderThreads safetensors loader threads; {@code 0} = auto
+     *                           ({@link smile.llm.checkpoint.SafeTensorsLoaderThreads#resolve}).
+     */
+    public static Llama build(String checkpointDir, String tokenizerPath, int maxBatchSize,
+                              int maxSeqLen, byte deviceId, double memFractionStatic,
+                              String kvCacheDtype, int pageSize, int modelLoaderThreads)
+            throws IOException {
         File dir = new File(checkpointDir);
         if (!dir.exists() || !dir.isDirectory()) {
             throw new IllegalArgumentException("Checkpoint directory doesn't exist: " + checkpointDir);
@@ -305,7 +324,7 @@ public class Llama implements LanguageModel {
 
         long tLoad = System.currentTimeMillis();
         if (huggingFace) {
-            loadHuggingFaceWeights(model, modelArgs, dir, device);
+            loadHuggingFaceWeights(model, modelArgs, dir, modelLoaderThreads);
         } else {
             List<String> checkpoints = getCheckpoints(dir);
             if (checkpoints.isEmpty()) {
@@ -471,42 +490,80 @@ public class Llama implements LanguageModel {
     /**
      * Loads HuggingFace safetensors weights into {@code model}.
      *
-     * <p>Weight names are remapped from the HuggingFace convention
-     * ({@code model.layers.N.self_attn.q_proj.weight}, …) to the Meta / SMILE
-     * convention ({@code layers.N.attention.wq.weight}, …). Query and key
-     * projection weights are reverse-permuted so they match SMILE's Meta-style
-     * RoPE layout.
-     *
-     * @param model the Llama model to load into.
-     * @param dir the HuggingFace model directory.
-     * @param device the device on which tensors are materialised.
-     * @throws IOException if a weight file cannot be read.
+     * <p>Each shard file is read once onto CPU; loader concurrency is
+     * {@link SafeTensorsLoaderThreads#resolve}. Weight names are remapped from
+     * the HuggingFace convention to the Meta / SMILE convention. Query and key
+     * projection weights are reverse-permuted for Meta-style RoPE.
      */
     private static void loadHuggingFaceWeights(LlamaModel model, LlamaModelArgs args,
-                                               File dir, Device device) throws IOException {
+                                               File dir, int modelLoaderThreads) throws IOException {
         Map<String, String> weightMap = readWeightMap(dir);
-        // Group tensor names by shard file for memory-efficient loading.
         Map<String, List<String>> shardToKeys = new LinkedHashMap<>();
         for (var entry : weightMap.entrySet()) {
             shardToKeys.computeIfAbsent(entry.getValue(), k -> new ArrayList<>()).add(entry.getKey());
         }
+        List<String> shardFiles = new ArrayList<>(shardToKeys.keySet());
+        Collections.sort(shardFiles);
+
+        int threads = SafeTensorsLoaderThreads.resolve(modelLoaderThreads, shardFiles.size());
+        logger.info("Safetensors loader threads={} (configured={}, shards={})",
+                threads, modelLoaderThreads, shardFiles.size());
 
         int numHeads = args.numHeads();
         int numKvHeads = args.resolvedNumKvHeads();
-        Set<String> loaded = new HashSet<>();
+        Set<String> loaded = ConcurrentHashMap.newKeySet();
+        Object modelLock = new Object();
+        Device loadDevice = Device.CPU();
+        Device target = model.device();
+        boolean needTiedOutput = !weightMap.containsKey("lm_head.weight");
 
-        for (var shardEntry : shardToKeys.entrySet()) {
-            String shardFile = shardEntry.getKey();
-            Path shardPath = Path.of(dir.getPath(), shardFile);
-            logger.info("Loading safetensors shard: {}", shardFile);
-            // Load only the tensors declared for this shard — avoids mapping
-            // multi-gigabyte files that exceed MappedByteBuffer's 2 GiB limit.
-            SafeTensors st = SafeTensors.read(shardPath.toString(), device, shardEntry.getValue());
-            try {
+        ExecutorService pool = Executors.newFixedThreadPool(Math.max(1, threads));
+        try {
+            List<Future<?>> futures = new ArrayList<>(shardFiles.size());
+            for (String shardFile : shardFiles) {
+                List<String> keys = shardToKeys.get(shardFile);
+                futures.add(pool.submit(() -> {
+                    try {
+                        loadOneLlamaShard(model, dir, loadDevice, target, shardFile, keys,
+                                numHeads, numKvHeads, modelLock, loaded, needTiedOutput, weightMap);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }));
+            }
+            for (Future<?> f : futures) {
+                try {
+                    f.get();
+                } catch (Exception e) {
+                    Throwable c = e.getCause() != null ? e.getCause() : e;
+                    if (c instanceof RuntimeException re && re.getCause() instanceof IOException ioe) {
+                        throw ioe;
+                    }
+                    throw new IOException("Safetensors shard load failed", e);
+                }
+            }
+        } finally {
+            pool.shutdownNow();
+        }
+
+        logger.info("Loaded {} parameters from HuggingFace safetensors", loaded.size());
+    }
+
+    private static void loadOneLlamaShard(LlamaModel model, File dir, Device loadDevice, Device target,
+                                          String shardFile, List<String> keys,
+                                          int numHeads, int numKvHeads, Object modelLock,
+                                          Set<String> loaded, boolean needTiedOutput,
+                                          Map<String, String> weightMap) throws IOException {
+        Path shardPath = Path.of(dir.getPath(), shardFile);
+        logger.info("Loading safetensors shard: {}", shardFile);
+        long t0 = System.currentTimeMillis();
+        SafeTensors st = SafeTensors.read(shardPath.toString(), loadDevice, keys);
+        try {
+            synchronized (modelLock) {
                 Map<String, Tensor> stateDict = new HashMap<>();
                 List<Tensor> owned = new ArrayList<>();
                 try {
-                    for (String hfName : shardEntry.getValue()) {
+                    for (String hfName : keys) {
                         Tensor src = st.tensors().get(hfName);
                         if (src == null) {
                             throw new IOException("Tensor '" + hfName + "' missing from " + shardFile);
@@ -525,32 +582,47 @@ public class Llama implements LanguageModel {
                             value = reversePermute(src, numKvHeads);
                             owned.add(value);
                         }
-                        stateDict.put(smileName, value);
+                        Tensor onDevice = value.to(target);
+                        if (onDevice != value) {
+                            owned.add(onDevice);
+                        }
+                        Tensor contiguous = onDevice.contiguous();
+                        if (contiguous != onDevice) {
+                            owned.add(contiguous);
+                        }
+                        stateDict.put(smileName, contiguous);
                         loaded.add(smileName);
                     }
 
-                    // Tied embeddings: some checkpoints omit lm_head.weight.
-                    if (st.tensors().containsKey("model.embed_tokens.weight")
-                            && !weightMap.containsKey("lm_head.weight")
-                            && !loaded.contains("output.weight")) {
-                        stateDict.put("output.weight", st.tensors().get("model.embed_tokens.weight"));
+                    if (needTiedOutput && !stateDict.containsKey("output.weight")
+                            && st.tensors().containsKey("model.embed_tokens.weight")
+                            && !weightMap.containsKey("lm_head.weight")) {
+                        Tensor onDevice = st.tensors().get("model.embed_tokens.weight").to(target);
+                        owned.add(onDevice);
+                        Tensor emb = onDevice.contiguous();
+                        if (emb != onDevice) {
+                            owned.add(emb);
+                        }
+                        stateDict.put("output.weight", emb);
                         loaded.add("output.weight");
                     }
 
-                    model.loadStateDict(stateDict, false);
+                    if (!stateDict.isEmpty()) {
+                        model.loadStateDict(stateDict, false);
+                    }
                 } finally {
                     for (Tensor t : owned) {
                         t.close();
                     }
                 }
-            } finally {
-                for (Tensor t : st.tensors().values()) {
-                    t.close();
-                }
+            }
+        } finally {
+            for (Tensor t : st.tensors().values()) {
+                t.close();
             }
         }
-
-        logger.info("Loaded {} parameters from HuggingFace safetensors", loaded.size());
+        logger.info("Loaded safetensors shard: {} in {} ms",
+                shardFile, System.currentTimeMillis() - t0);
     }
 
     /**

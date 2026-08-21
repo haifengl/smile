@@ -331,12 +331,12 @@ public class ChatService {
             var parallel = parallelConfig(config);
             return Qwen.build(localPath.toString(),
                     config.maxBatchSize(), config.maxSeqLen(), parallel.devices()[0],
-                    memFraction, kvDtype, pageSize, parallel);
+                    memFraction, kvDtype, pageSize, parallel, config.modelLoaderThreads());
         }
         String tokenizerPath = resolveLocalTokenizer(localPath);
         return Llama.build(localPath.toString(), tokenizerPath,
                 config.maxBatchSize(), config.maxSeqLen(), parallelConfig(config).devices()[0],
-                memFraction, kvDtype, pageSize);
+                memFraction, kvDtype, pageSize, config.modelLoaderThreads());
     }
 
     /**
@@ -470,13 +470,14 @@ public class ChatService {
             var parallel = parallelConfig(config);
             return Qwen.build(checkpointDir,
                     config.maxBatchSize(), config.maxSeqLen(), parallel.devices()[0],
-                    memFractionStatic, kvCacheDtype, pageSize, parallel);
+                    memFractionStatic, kvCacheDtype, pageSize, parallel,
+                    config.modelLoaderThreads());
         }
 
         String tokenizerPath = resolveHuggingFaceTokenizer(repoId);
         return Llama.build(checkpointDir, tokenizerPath,
                 config.maxBatchSize(), config.maxSeqLen(), parallelConfig(config).devices()[0],
-                memFractionStatic, kvCacheDtype, pageSize);
+                memFractionStatic, kvCacheDtype, pageSize, config.modelLoaderThreads());
     }
 
     /**
