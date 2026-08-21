@@ -63,8 +63,10 @@ import smile.util.AutoScope;
  *
  * @author Haifeng Li
  */
-public class Qwen implements LanguageModel {
+public class Qwen implements LanguageModel, AutoCloseable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Qwen.class);
+    /** Host-sync EOS check every N decode steps (always on last position). */
+    private static final int EOS_CHECK_INTERVAL = 8;
 
     static final String family = "alibaba/qwen3.5";
 
@@ -79,6 +81,8 @@ public class Qwen implements LanguageModel {
     final TensorParallelGroup tpGroup;
     final Tokenizer tokenizer;
     final QwenModelArgs params;
+    /** Long-lived TP worker pool; null when {@code models.length == 1}. */
+    private final ExecutorService tpExecutor;
 
     /**
      * Constructor.
@@ -112,6 +116,19 @@ public class Qwen implements LanguageModel {
         this.tpGroup = tpGroup;
         this.tokenizer = tokenizer;
         this.params = params;
+        this.tpExecutor = models.length > 1
+                ? Executors.newFixedThreadPool(models.length)
+                : null;
+    }
+
+    @Override
+    public void close() {
+        if (tpExecutor != null) {
+            tpExecutor.shutdownNow();
+        }
+        if (tpGroup != null) {
+            tpGroup.close();
+        }
     }
 
     @Override
@@ -923,10 +940,7 @@ public class Qwen implements LanguageModel {
 
             int prevPos = prefixLen;
             int chunkPos = minPromptLen;
-            ExecutorService pool = models.length > 1
-                    ? Executors.newFixedThreadPool(models.length)
-                    : null;
-            try {
+            ExecutorService pool = tpExecutor;
             for (int curPos = minPromptLen; curPos < totalLen; curPos++) {
                 AutoScope loopScope = new AutoScope();
                 Tensor.push(loopScope);
@@ -1003,7 +1017,10 @@ public class Qwen implements LanguageModel {
                     }
                 }
 
-                boolean done = eos[0].all();
+                // Defer GPU→CPU EOS sync: every N tokens and always on the last slot.
+                boolean checkEos = (curPos - minPromptLen + 1) % EOS_CHECK_INTERVAL == 0
+                        || curPos == totalLen - 1;
+                boolean done = checkEos && eos[0].all();
                 if (listener != null && batchSize == 1
                         && (curPos - chunkPos >= 20 || curPos == totalLen - 1 || done)) {
                     int end = done ? curPos : curPos + 1;
@@ -1028,9 +1045,6 @@ public class Qwen implements LanguageModel {
                     }
                 }
                 if (done) break;
-            }
-            } finally {
-                if (pool != null) pool.shutdownNow();
             }
 
             long[] longArray;

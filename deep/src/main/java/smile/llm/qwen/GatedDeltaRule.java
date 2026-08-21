@@ -94,6 +94,11 @@ final class GatedDeltaRule {
             throw new IllegalArgumentException("convState length must be kernel-1");
         }
 
+        // Decode S=1: roll state + one weighted sum (no per-k AutoScope loop).
+        if (seqLen == 1 && stateLen > 0) {
+            return causalConv1dUpdateDecode(hidden, convState, weight, batch, channels, kernel, stateLen);
+        }
+
         AutoScope scope = new AutoScope();
         Tensor.push(scope);
         try {
@@ -124,6 +129,35 @@ final class GatedDeltaRule {
                 }
             }
             Tensor activated = SILU.forward(out);
+            activated.promoteToParent();
+            return activated;
+        } finally {
+            Tensor.pop();
+        }
+    }
+
+    /**
+     * Decode-only causal conv: {@code out = SiLU(sum_k w[c,k] * window[c,k])}
+     * where window is {@code concat(state, x)} of length {@code K}, then roll state.
+     */
+    private static Tensor causalConv1dUpdateDecode(
+            Tensor hidden, Tensor convState, Tensor weight,
+            long batch, long channels, long kernel, long stateLen) {
+        AutoScope scope = new AutoScope();
+        Tensor.push(scope);
+        try {
+            convState.detachFromScopes();
+            Tensor cat = concatLast3(convState, hidden); // [B,C,K]
+            Tensor w = weight.dim() == 3 ? weight.reshape(channels, kernel) : weight;
+            // out[b,c,0] = sum_k cat[b,c,k] * w[c,k]
+            Tensor wUnsq = w.unsqueeze(0); // [1,C,K]
+            Tensor prod = cat.mul(wUnsq);
+            Tensor summed = prod.sum(-1, true); // [B,C,1]
+            Tensor activated = SILU.forward(summed);
+            try (var span = Index.slice(1, (int) kernel);
+                 Tensor tail = cat.get(Index.Colon, Index.Colon, span)) {
+                convState.put_(tail, Index.Colon, Index.Colon, Index.Colon);
+            }
             activated.promoteToParent();
             return activated;
         } finally {
@@ -193,6 +227,10 @@ final class GatedDeltaRule {
      * Prefer passing the {@link DeltaNetStatePool} recurrent buffer for both
      * prefill and decode so each layer does not allocate a fresh state tensor.
      *
+     * <p>On CUDA (or any build with the native op), prefers the fused
+     * {@code smile_recurrent_gated_delta_rule} path; falls back to the Java
+     * reference implementation otherwise.
+     *
      * @param query         {@code [B, S, H, Dk]}
      * @param key           {@code [B, S, H, Dk]}
      * @param value         {@code [B, S, H, Dv]}
@@ -206,6 +244,25 @@ final class GatedDeltaRule {
      * @return (output {@code [B,S,H,Dv]}, finalState or null)
      */
     static smile.util.Tuple2<Tensor, Tensor> recurrentGatedDeltaRule(
+            Tensor query, Tensor key, Tensor value, Tensor g, Tensor beta,
+            Tensor initialState, boolean outputState, boolean qkL2norm) {
+
+        // Fast path: fused native kernel when we have a float pool state.
+        if (initialState != null && initialState.dtype() == ScalarType.Float && outputState) {
+            initialState.detachFromScopes();
+            Tensor nativeOut = smile.torch.Native.recurrentGatedDeltaRule(
+                    query, key, value, g, beta, initialState, qkL2norm);
+            if (nativeOut != null) {
+                return new smile.util.Tuple2<>(nativeOut, null);
+            }
+        }
+
+        return recurrentGatedDeltaRuleJava(
+                query, key, value, g, beta, initialState, outputState, qkL2norm);
+    }
+
+    /** Java reference implementation (CPU tests / native fallback). */
+    static smile.util.Tuple2<Tensor, Tensor> recurrentGatedDeltaRuleJava(
             Tensor query, Tensor key, Tensor value, Tensor g, Tensor beta,
             Tensor initialState, boolean outputState, boolean qkL2norm) {
 
@@ -252,15 +309,12 @@ final class GatedDeltaRule {
                     .dtype(ScalarType.Float)
                     .requireGradients(false);
 
-            // Prefer mutating the pool buffer (or a float workspace written back)
-            // instead of allocating a fresh zeros state on every prefill layer.
             final boolean writeBackToInitial;
             Tensor state;
             if (initialState == null) {
                 state = Tensor.zeros(opts, batch, heads, kDim, vDim);
                 writeBackToInitial = false;
             } else if (initialState.dtype() == ScalarType.Float) {
-                // Long-lived pool must not be closed when this AutoScope pops.
                 initialState.detachFromScopes();
                 state = initialState;
                 writeBackToInitial = false;
@@ -271,41 +325,35 @@ final class GatedDeltaRule {
 
             Tensor out = Tensor.zeros(opts, batch, heads, seqLen, vDim);
 
-            // Reuse one state buffer in place; free per-step workspace immediately.
-            // Never use state.mul_(broadcast/expand): PyTorch TensorIterator clones
-            // the LHS under zero-stride expand, which OOMs when free memory is tight.
             for (int t = 0; t < seqLen; t++) {
                 AutoScope stepScope = new AutoScope();
                 Tensor.push(stepScope);
                 try (var tIdx = Index.of(t)) {
-                    Tensor qStep = q.get(Index.Colon, Index.Colon, tIdx);   // [B,H,K]
+                    Tensor qStep = q.get(Index.Colon, Index.Colon, tIdx);
                     Tensor kStep = k.get(Index.Colon, Index.Colon, tIdx);
-                    Tensor vStep = v.get(Index.Colon, Index.Colon, tIdx);   // [B,H,V]
+                    Tensor vStep = v.get(Index.Colon, Index.Colon, tIdx);
                     Tensor gTok = gF.get(Index.Colon, Index.Colon, tIdx).exp();
                     Tensor betaStep = betaF.get(Index.Colon, Index.Colon, tIdx).unsqueeze(-1);
 
-                    // Decay: allocate one same-shaped temp, then copy_ back.
                     try (Tensor gView = gTok.view(batch, heads, 1, 1);
                          Tensor decayed = state.mul(gView)) {
                         smile.torch.Native.copy_(state, decayed);
                     }
 
-                    // kvMem[b,h,v] = sum_k state[b,h,k,v] * k[b,h,k]
-                    // via [B,H,1,K] @ [B,H,K,V] → [B,H,1,V] (no full-state temp).
                     Tensor kRow = kStep.unsqueeze(-2);
                     Tensor kv = kRow.matmul(state);
                     Tensor kvMem = kv.reshape(batch, heads, vDim);
 
-                    Tensor delta = vStep.sub(kvMem).mul(betaStep);         // [B,H,V]
-                    Tensor kUnsq = kStep.unsqueeze(-1);                    // [B,H,K,1]
-                    Tensor deltaUnsq = delta.unsqueeze(-2);                // [B,H,1,V]
-                    try (Tensor kDelta = kUnsq.mul(deltaUnsq)) {           // [B,H,K,V]
+                    Tensor delta = vStep.sub(kvMem).mul(betaStep);
+                    Tensor kUnsq = kStep.unsqueeze(-1);
+                    Tensor deltaUnsq = delta.unsqueeze(-2);
+                    try (Tensor kDelta = kUnsq.mul(deltaUnsq)) {
                         state.add_(kDelta);
                     }
 
                     Tensor qRow = qStep.unsqueeze(-2);
                     Tensor yFull = qRow.matmul(state);
-                    Tensor y = yFull.reshape(batch, heads, vDim);          // [B,H,V]
+                    Tensor y = yFull.reshape(batch, heads, vDim);
                     out.put_(y, Index.Colon, Index.Colon, tIdx);
                 } finally {
                     Tensor.pop();
@@ -325,7 +373,6 @@ final class GatedDeltaRule {
                     finalState = state.to(query.dtype());
                     finalState.promoteToParent();
                 }
-                // else: floated pool mutated in place — nothing to return
             }
             core.promoteToParent();
             return new smile.util.Tuple2<>(core, finalState);

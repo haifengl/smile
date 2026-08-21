@@ -87,6 +87,28 @@ public final class Native {
                 smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_tp_broadcast"),
                 FunctionDescriptor.of(ValueLayout.JAVA_INT,
                         ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT));
+        static final MethodHandle NCCL_COMM_CREATE = LINKER.downcallHandle(
+                smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_nccl_comm_create"),
+                FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+        static final MethodHandle NCCL_COMM_FREE = LINKER.downcallHandle(
+                smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_nccl_comm_free"),
+                FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
+        static final MethodHandle NCCL_ALL_REDUCE_SUM = LINKER.downcallHandle(
+                smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_nccl_all_reduce_sum"),
+                FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+        static final MethodHandle NCCL_BROADCAST = LINKER.downcallHandle(
+                smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_nccl_broadcast"),
+                FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS));
+        static final MethodHandle RECURRENT_GATED_DELTA = LINKER.downcallHandle(
+                smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_recurrent_gated_delta_rule"),
+                FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_INT));
     }
 
     /**
@@ -345,6 +367,109 @@ public final class Native {
                 throw new RuntimeException(msg.isEmpty() ? "smile_tp_broadcast failed" : msg);
             }
         }
+    }
+
+    /**
+     * Creates a local NCCL communicator for {@code deviceIndices}, or returns
+     * {@link MemorySegment#NULL} when NCCL is unavailable.
+     */
+    public static MemorySegment ncclCommCreate(int[] deviceIndices) {
+        if (deviceIndices == null || deviceIndices.length < 1) {
+            return MemorySegment.NULL;
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment devices = arena.allocate(ValueLayout.JAVA_INT, deviceIndices.length);
+            for (int i = 0; i < deviceIndices.length; i++) {
+                devices.setAtIndex(ValueLayout.JAVA_INT, i, deviceIndices[i]);
+            }
+            MemorySegment comm;
+            try {
+                comm = (MemorySegment) Bindings.NCCL_COMM_CREATE.invokeExact(
+                        deviceIndices.length, devices);
+            } catch (Throwable t) {
+                return MemorySegment.NULL;
+            }
+            if (comm == null || comm.address() == 0) {
+                return MemorySegment.NULL;
+            }
+            return comm;
+        }
+    }
+
+    /** Destroys an NCCL communicator from {@link #ncclCommCreate}. */
+    public static void ncclCommFree(MemorySegment comm) {
+        if (comm == null || comm.address() == 0) {
+            return;
+        }
+        try {
+            Bindings.NCCL_COMM_FREE.invokeExact(comm);
+        } catch (Throwable ignored) {
+            // best-effort
+        }
+    }
+
+    /**
+     * In-place NCCL sum all-reduce on {@code local} for {@code rank}.
+     * Every TP rank must call concurrently.
+     */
+    public static void ncclAllReduceSum(MemorySegment comm, int rank, Tensor local) {
+        if (comm == null || comm.address() == 0) {
+            throw new IllegalStateException("NCCL communicator is null");
+        }
+        int rc;
+        try {
+            rc = (int) Bindings.NCCL_ALL_REDUCE_SUM.invokeExact(comm, rank, local.handle());
+        } catch (Throwable t) {
+            throw new RuntimeException(lastError().isEmpty() ? t.getMessage() : lastError(), t);
+        }
+        if (rc != 0) {
+            String msg = lastError();
+            throw new RuntimeException(msg.isEmpty() ? "smile_nccl_all_reduce_sum failed" : msg);
+        }
+    }
+
+    /**
+     * NCCL broadcast of {@code local} from {@code root}. Every rank must call
+     * concurrently with its buffer.
+     */
+    public static void ncclBroadcast(MemorySegment comm, int rank, int root, Tensor local) {
+        if (comm == null || comm.address() == 0) {
+            throw new IllegalStateException("NCCL communicator is null");
+        }
+        int rc;
+        try {
+            rc = (int) Bindings.NCCL_BROADCAST.invokeExact(comm, rank, root, local.handle());
+        } catch (Throwable t) {
+            throw new RuntimeException(lastError().isEmpty() ? t.getMessage() : lastError(), t);
+        }
+        if (rc != 0) {
+            String msg = lastError();
+            throw new RuntimeException(msg.isEmpty() ? "smile_nccl_broadcast failed" : msg);
+        }
+    }
+
+    /**
+     * Fused recurrent gated delta rule. Mutates float {@code state} in place.
+     * Returns output {@code [B,S,H,Dv]} (caller owns).
+     *
+     * @return output tensor, or {@code null} if the native path is unavailable.
+     */
+    public static Tensor recurrentGatedDeltaRule(
+            Tensor query, Tensor key, Tensor value,
+            Tensor g, Tensor beta, Tensor state, boolean qkL2norm) {
+        MemorySegment out;
+        try {
+            out = (MemorySegment) Bindings.RECURRENT_GATED_DELTA.invokeExact(
+                    query.handle(), key.handle(), value.handle(),
+                    g.handle(), beta.handle(), state.handle(),
+                    qkL2norm ? 1 : 0);
+        } catch (Throwable t) {
+            return null;
+        }
+        if (out == null || out.address() == 0) {
+            return null;
+        }
+        return new Tensor(out);
     }
 
     /** Frees an {@code ST_Tensor} handle exactly once. Used as a cleaning action. */
