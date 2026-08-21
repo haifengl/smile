@@ -22,6 +22,10 @@ import smile.torch.Native;
 /**
  * FlashInfer paged BatchPrefill / BatchDecode backend.
  *
+ * <p>Decode ({@code S==1}) uses FlashInfer {@code BatchDecodeWithPagedKVCache}
+ * (vendored headers). Prefill uses GPU page gather + LibTorch SDPA with the
+ * same mask semantics as {@code torch_native}.
+ *
  * <p>Expects {@link AttentionContext#isPaged()} with CSR metadata and a
  * {@link FlashInferWorkspace}. Query layout {@code [B, H, S, D]}.
  *

@@ -123,6 +123,10 @@ public final class Native {
                 .find("smile_flashinfer_workspace_free")
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)))
                 .orElse(null);
+        static final MethodHandle FLASHINFER_SET_AOT = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_flashinfer_set_aot_dir")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)))
+                .orElse(null);
         static final MethodHandle FLASHINFER_PAGED = smile_torch_h.SYMBOL_LOOKUP
                 .find("smile_flashinfer_paged_attention")
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
@@ -495,7 +499,29 @@ public final class Native {
         return new Tensor(out);
     }
 
-    /** @return {@code true} when paged FlashInfer attention is compiled in. */
+    /**
+     * Sets the FlashInfer AOT / jit-cache directory for the native loader.
+     *
+     * @param path absolute directory, or {@code null}/empty to clear.
+     */
+    public static void flashInferSetAotDir(String path) {
+        if (Bindings.FLASHINFER_SET_AOT == null) {
+            return;
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment cstr = (path == null || path.isEmpty())
+                    ? MemorySegment.NULL
+                    : arena.allocateFrom(path);
+            Bindings.FLASHINFER_SET_AOT.invokeExact(cstr);
+        } catch (Throwable t) {
+            throw new RuntimeException("smile_flashinfer_set_aot_dir failed", t);
+        }
+    }
+
+    /**
+     * @return {@code true} when FlashInfer paged attention is compiled into
+     * {@code libsmile_torch}.
+     */
     public static boolean flashInferAvailable() {
         if (Bindings.FLASHINFER_AVAILABLE == null) {
             return false;

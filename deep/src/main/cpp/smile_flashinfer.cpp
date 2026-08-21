@@ -1,13 +1,15 @@
 /*
  * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
  *
- * FlashInfer-compatible paged attention C ABI (workspace helpers).
- * Tensor ops live in smile_torch.cpp to share ST_Tensor_ / set_error.
+ * FlashInfer paged attention C ABI (workspace + availability + AOT dir).
  */
 
 #include "smile_torch.h"
 
 #include <cstdint>
+#include <cstdlib>
+#include <mutex>
+#include <string>
 
 #ifdef USE_CUDA
 #  include <ATen/ATen.h>
@@ -19,9 +21,14 @@ struct ST_FlashInferWorkspace_ {
     int device_index = 0;
     int64_t workspace_bytes = 0;
 #ifdef USE_CUDA
-    at::Tensor scratch;
+    at::Tensor float_workspace;   // uint8
+    at::Tensor int_workspace;     // uint8 device
+    at::Tensor pinned_int_workspace; // uint8 pinned
 #endif
 };
+
+static std::mutex g_aot_mu;
+static std::string g_aot_dir;
 
 /* provided by smile_torch.cpp */
 extern "C" void smile_torch_set_error(const char *msg);
@@ -29,8 +36,39 @@ extern "C" void smile_torch_clear_error(void);
 
 extern "C" {
 
+void smile_flashinfer_set_aot_dir(const char *path) {
+    std::lock_guard<std::mutex> lock(g_aot_mu);
+    if (path == nullptr || path[0] == '\0') {
+        g_aot_dir.clear();
+    } else {
+        g_aot_dir = path;
+    }
+}
+
+const char *smile_flashinfer_aot_dir(void) {
+    std::lock_guard<std::mutex> lock(g_aot_mu);
+    if (g_aot_dir.empty()) {
+        const char *env = std::getenv("FLASHINFER_AOT_DIR");
+        if (env && env[0]) {
+            return env;
+        }
+        const char *smile = std::getenv("SMILE_FLASHINFER_AOT_DIR");
+        if (smile && smile[0]) {
+            return smile;
+        }
+        return "";
+    }
+    // Return stable pointer into static string under lock — callers must not
+    // free; value may change on next set. For probes this is fine.
+    static thread_local std::string tls;
+    tls = g_aot_dir;
+    return tls.c_str();
+}
+
 int smile_flashinfer_is_available(void) {
 #if defined(USE_CUDA) && defined(USE_FLASHINFER)
+    // Real FlashInfer decode kernels are compiled into libsmile_torch when
+    // USE_FLASHINFER is on. AOT dir is optional (jit-cache for future TVM load).
     return 1;
 #else
     return 0;
@@ -43,11 +81,17 @@ ST_FlashInferWorkspace smile_flashinfer_workspace_create(
     try {
         auto *ws = new ST_FlashInferWorkspace_();
         ws->device_index = device_index;
-        ws->workspace_bytes = workspace_bytes > 0 ? workspace_bytes : (32LL << 20);
+        // FlashInfer decode plans need sizable float + int workspaces.
+        int64_t float_bytes = workspace_bytes > 0 ? workspace_bytes : (128LL << 20);
+        int64_t int_bytes = 16LL << 20;
+        ws->workspace_bytes = float_bytes;
         c10::cuda::CUDAGuard guard(device_index);
-        ws->scratch = at::empty(
-                {ws->workspace_bytes / 4},
-                at::TensorOptions().dtype(at::kFloat).device(at::kCUDA, device_index));
+        auto opts = at::TensorOptions().dtype(at::kByte).device(at::kCUDA, device_index);
+        ws->float_workspace = at::empty({float_bytes}, opts);
+        ws->int_workspace = at::empty({int_bytes}, opts);
+        ws->pinned_int_workspace = at::empty(
+                {int_bytes},
+                at::TensorOptions().dtype(at::kByte).pinned_memory(true));
         return ws;
     } catch (const std::exception &ex) {
         smile_torch_set_error(ex.what());

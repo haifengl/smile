@@ -35,6 +35,7 @@ import tools.jackson.databind.ObjectMapper;
 import smile.llm.*;
 import smile.llm.attention.AttentionBackend;
 import smile.llm.attention.AttentionBackends;
+import smile.llm.attention.FlashInferArtifacts;
 import smile.llm.llama.*;
 import smile.llm.qwen.Qwen;
 import smile.util.HuggingFaceHub;
@@ -99,7 +100,24 @@ public class ChatService {
         String modelSpec = config.model();
         this.modelId = publicModelId(modelSpec);
         try {
-            AttentionBackends.install(AttentionBackend.parse(config.attentionBackend()));
+            String cacheDir = config.flashinferCacheDir();
+            if (cacheDir == null || cacheDir.isBlank()) {
+                cacheDir = Path.of(System.getProperty("user.home"), ".cache", "smile", "flashinfer")
+                        .toString();
+            }
+            FlashInferArtifacts.resolveAndInstall(
+                    config.flashinferAotDir(),
+                    cacheDir,
+                    config.flashinferDownload(),
+                    config.flashinferCudaTag());
+            AttentionBackend requested = AttentionBackend.parse(config.attentionBackend());
+            AttentionBackends.install(requested);
+            if (requested == AttentionBackend.FLASHINFER
+                    && AttentionBackends.current() != AttentionBackend.FLASHINFER
+                    && !config.flashinferAllowTorchFallback()) {
+                throw new IllegalStateException(
+                        "FlashInfer requested but unavailable and flashinfer-allow-torch-fallback=false");
+            }
             double memFraction = config.memFractionStatic();
             String kvDtype = kvCache.dtype().orElse(null);
             int pageSize = kvCache.pageSize();

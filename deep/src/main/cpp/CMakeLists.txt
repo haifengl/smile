@@ -239,6 +239,8 @@ if(SMILE_TORCH_CUDA_ENABLED)
     target_link_libraries(smile_torch PRIVATE CUDA::cudart)
     if(USE_FLASHINFER)
         target_compile_definitions(smile_torch PRIVATE USE_FLASHINFER)
+        target_include_directories(smile_torch PRIVATE
+            "${CMAKE_CURRENT_SOURCE_DIR}/third_party/flashinfer/include")
     endif()
     # Minimum sm_80 (A100); also Hopper (90) and Blackwell (100, native FP4).
     set_target_properties(smile_torch PROPERTIES

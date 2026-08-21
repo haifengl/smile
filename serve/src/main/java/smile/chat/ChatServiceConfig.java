@@ -118,4 +118,37 @@ public interface ChatServiceConfig {
      */
     @WithDefault("flashinfer")
     String attentionBackend();
+
+    /**
+     * Explicit FlashInfer AOT / jit-cache directory. Empty means auto-resolve
+     * (bundled {@code /opt/flashinfer/aot}, env, then cache-dir).
+     */
+    @WithDefault("")
+    String flashinferAotDir();
+
+    /**
+     * Directory for downloaded / extracted {@code flashinfer-jit-cache} modules.
+     */
+    @WithDefault("")
+    String flashinferCacheDir();
+
+    /**
+     * When true and no AOT dir is present, download a pinned jit-cache wheel
+     * into {@link #flashinferCacheDir()} (download-only; no nvcc).
+     */
+    @WithDefault("false")
+    boolean flashinferDownload();
+
+    /**
+     * CUDA tag for jit-cache wheels (must match the LibTorch / image CUDA
+     * build, e.g. {@code cu132} for CUDA 13.2).
+     */
+    @WithDefault("cu132")
+    String flashinferCudaTag();
+
+    /**
+     * When FlashInfer cannot be installed, fall back to {@code torch_native}.
+     */
+    @WithDefault("true")
+    boolean flashinferAllowTorchFallback();
 }
