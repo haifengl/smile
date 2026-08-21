@@ -57,6 +57,9 @@
 #  include <c10/cuda/CUDAGuard.h>
 #  include <ATen/cuda/CUDAContext.h>
 #  include "smile_gated_delta.cuh"
+#  ifdef USE_FLASHINFER
+#    include "smile_flashinfer_cuda.h"
+#  endif
 #endif
 
 #ifdef USE_NCCL
@@ -2138,26 +2141,6 @@ ST_Tensor smile_recurrent_gated_delta_rule(
     ST_TRY_END
     return nullptr;
 }
-
-#ifdef USE_CUDA
-#  ifdef USE_FLASHINFER
-int smile_flashinfer_paged_attention_cuda(
-        const torch::Tensor &query,
-        const torch::Tensor &k_cache,
-        const torch::Tensor &v_cache,
-        const torch::Tensor &paged_kv_indptr,
-        const torch::Tensor &paged_kv_indices,
-        const torch::Tensor &paged_kv_last_page_len,
-        int page_size,
-        int num_kv_heads,
-        int head_dim,
-        int cache_len,
-        float scale,
-        int is_causal,
-        torch::Tensor &out,
-        std::string &err);
-#  endif
-#endif
 
 ST_Tensor smile_flashinfer_paged_attention(
         ST_Tensor query,

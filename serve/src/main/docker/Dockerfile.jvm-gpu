@@ -76,7 +76,10 @@ RUN cmake -S . -B /build/cpp \
         -DBUILD_TESTING=OFF \
     && cmake --build /build/cpp --config Release --parallel "$(nproc)" \
     && test -f /build/cpp/libsmile_torch.so \
-    && nm -D /build/cpp/libsmile_torch.so | grep -q smile_flashinfer_is_available
+    && nm -D /build/cpp/libsmile_torch.so | grep -q smile_flashinfer_is_available \
+    && nm -D /build/cpp/libsmile_torch.so | grep -q smile_flashinfer_paged_attention \
+    && ! nm -u /build/cpp/libsmile_torch.so | grep -q smile_flashinfer_paged_attention_cuda \
+    && nm /build/cpp/libsmile_torch.so | grep -E ' [Tt] smile_flashinfer_paged_attention_cuda$'
 
 # -----------------------------------------------------------------------------
 # Stage 2: runtime image
