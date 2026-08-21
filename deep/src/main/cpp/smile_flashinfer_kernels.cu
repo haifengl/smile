@@ -18,6 +18,8 @@
 #include <ATen/cuda/CUDAContext.h>
 #include <torch/torch.h>
 
+#include "smile_flashinfer_cuda.h"
+
 namespace {
 
 __device__ inline float load_f(nv_bfloat16 x) { return __bfloat162float(x); }
@@ -104,7 +106,7 @@ __global__ void paged_decode_kernel(
 
 } // namespace
 
-int smile_flashinfer_paged_attention_cuda(
+extern "C" int smile_flashinfer_paged_attention_cuda(
         const torch::Tensor &query,
         const torch::Tensor &k_cache,
         const torch::Tensor &v_cache,
