@@ -159,6 +159,11 @@ public class ChatService {
             return "unknown";
         }
         String spec = modelSpec.trim();
+        // Prefer Hub repo ids over Files.isDirectory — a relative path such as
+        // "meta-llama/Llama-3.1-8B-Instruct" may accidentally exist on disk.
+        if (looksLikeHuggingFaceRepoId(spec)) {
+            return spec;
+        }
         Path path = Path.of(spec);
         if (Files.isDirectory(path)) {
             Path fileName = path.getFileName();

@@ -119,13 +119,19 @@ public class ChatServiceTest {
     }
 
     @Test
-    public void testGivenModelSpecWhenPublicIdDerivedThenUsesRepoOrDirectoryName() {
+    public void testGivenModelSpecWhenPublicIdDerivedThenUsesRepoOrDirectoryName() throws Exception {
         assertEquals("meta-llama/Llama-3.1-8B-Instruct",
                 ChatService.publicModelId("meta-llama/Llama-3.1-8B-Instruct"));
         assertEquals("Qwen/Qwen2.5-7B-Instruct",
                 ChatService.publicModelId("Qwen/Qwen2.5-7B-Instruct"));
         assertEquals("unknown", ChatService.publicModelId(null));
         assertEquals("unknown", ChatService.publicModelId("  "));
+        Path dir = Files.createTempDirectory("smile-chat-model-id");
+        try {
+            assertEquals(dir.getFileName().toString(), ChatService.publicModelId(dir.toString()));
+        } finally {
+            Files.deleteIfExists(dir);
+        }
     }
 
     @Test
