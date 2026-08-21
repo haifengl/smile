@@ -359,6 +359,7 @@ public class Llama implements LanguageModel {
         }
         logger.info("Weight load in {} ms", System.currentTimeMillis() - tLoad);
         model.eval();
+        model.setRequiresGrad(false);
 
         // Size KV after weights are on device (staticBudget − used when mem-fraction set).
         long tKv = System.currentTimeMillis();

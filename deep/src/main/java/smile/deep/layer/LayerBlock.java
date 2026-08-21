@@ -126,6 +126,20 @@ public abstract class LayerBlock implements Layer {
     }
 
     /**
+     * Enables or disables {@code requires_grad} on every parameter (recursive).
+     * Call with {@code false} after loading an inference checkpoint so TP worker
+     * threads cannot accidentally build autograd graphs (NoGradGuard is
+     * thread-local and must also wrap each worker).
+     *
+     * @param required {@code true} to record gradients on parameters.
+     * @return this block.
+     */
+    public LayerBlock setRequiresGrad(boolean required) {
+        Native.moduleSetRequiresGrad(module, required);
+        return this;
+    }
+
+    /**
      * Returns the compute device of module.
      * @return the compute device of module.
      */
