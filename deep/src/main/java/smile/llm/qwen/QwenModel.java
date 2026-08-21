@@ -19,6 +19,8 @@ package smile.llm.qwen;
 import java.lang.foreign.MemorySegment;
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.deep.layer.EmbeddingLayer;
 import smile.deep.layer.LayerBlock;
 import smile.deep.layer.LinearLayer;
@@ -51,6 +53,8 @@ import static smile.torch.smile_torch_h.smile_module_list_push_back;
  * @author Haifeng Li
  */
 public class QwenModel extends LayerBlock {
+    private static final Logger logger = LoggerFactory.getLogger(QwenModel.class);
+
     final QwenModelArgs params;
     final int vocabSize;
     final int numLayers;
@@ -94,6 +98,7 @@ public class QwenModel extends LayerBlock {
         this.tpGroup = tpGroup;
         this.tpRank = shard != null ? shard.tpRank() : 0;
 
+        long t0 = System.currentTimeMillis();
         this.tokEmbeddings = new EmbeddingLayer(args.vocabSize(), args.dim());
         this.layers = new ArrayList<>();
         MemorySegment moduleList = smile_module_list_create();
@@ -104,10 +109,15 @@ public class QwenModel extends LayerBlock {
         }
         this.norm = new QwenRMSNorm(args.dim(), args.normEps());
         this.lmHead = new LinearLayer(args.dim(), args.vocabSize(), false);
+        logger.info("tpRank={}: allocate layers ({}) in {} ms",
+                tpRank, args.numLayers(), System.currentTimeMillis() - t0);
 
+        long tCis = System.currentTimeMillis();
         this.cis = PartialRotaryEncoding.computeFreqCis(
                 args.rotaryDim(), args.maxSeqLen() * 2, args.ropeTheta());
         this.cis.detachFromScopes();
+        logger.info("tpRank={}: RoPE cis (rotaryDim={}, end={}) in {} ms",
+                tpRank, args.rotaryDim(), args.maxSeqLen() * 2, System.currentTimeMillis() - tCis);
 
         MemorySegment listAsModule = smile_module_list_as_module(moduleList);
         add("layers", listAsModule);

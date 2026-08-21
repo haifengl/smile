@@ -289,11 +289,17 @@ public class Llama implements LanguageModel {
         }
 
         var layout = modelArgs.kvCacheLayout();
+        long tConstruct = System.currentTimeMillis();
         var model = newModel(modelArgs);
+        logger.info("LlamaModel construct in {} ms (layers={}, maxSeqLen={})",
+                System.currentTimeMillis() - tConstruct, modelArgs.numLayers(), modelArgs.maxSeqLen());
         // Place empty module + cis before load so torch checkpoints land on device
         // and HF loadStateDict targets match model.device(); cis moves with to().
+        long tTo = System.currentTimeMillis();
         model.to(device);
+        logger.info("model.to({}) in {} ms", device, System.currentTimeMillis() - tTo);
 
+        long tLoad = System.currentTimeMillis();
         if (huggingFace) {
             loadHuggingFaceWeights(model, modelArgs, dir, device);
         } else {
@@ -309,14 +315,17 @@ public class Llama implements LanguageModel {
             Collections.sort(checkpoints);
             model.load(checkpoints.get(rank));
         }
+        logger.info("Weight load in {} ms", System.currentTimeMillis() - tLoad);
         model.eval();
 
         // Size KV after weights are on device (staticBudget − used when mem-fraction set).
+        long tKv = System.currentTimeMillis();
         device.emptyCache();
         KvCachePool pool = memFractionStatic > 0
                 ? KvCachePool.allocate(layout, device, cacheDtype, memFractionStatic, pageSize)
                 : KvCachePool.forTesting(layout, device);
         model.setKvCachePool(pool, false);
+        logger.info("KvCachePool allocate in {} ms", System.currentTimeMillis() - tKv);
 
         var time = System.currentTimeMillis() - startTime;
         logger.info("Model {}[{}]: loaded in {}.{} seconds", checkpointDir, rank, time/1000, time%1000);
