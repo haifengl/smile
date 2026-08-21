@@ -438,6 +438,8 @@ public class Qwen implements LanguageModel {
 
         if (memFractionStatic > 0 && modelArgs.numLinearAttentionLayers() > 0) {
             long t0 = System.currentTimeMillis();
+            // Float pool: recurrentGatedDeltaRule mutates state in place without a
+            // bf16→float workspace (and avoids write-back clones). Size is small vs KV.
             var gpuState = new DeltaNetStatePool(
                     modelArgs.numLinearAttentionLayers(),
                     shard.linearNumValueHeads(),
@@ -447,7 +449,7 @@ public class Qwen implements LanguageModel {
                     modelArgs.linearConvKernelDim(),
                     modelArgs.maxBatchSize(),
                     device,
-                    cacheDtype);
+                    ScalarType.Float);
             var previous = model.deltaNetStatePool;
             model.deltaNetStatePool = gpuState;
             for (var layer : model.layers) {
@@ -900,7 +902,7 @@ public class Qwen implements LanguageModel {
                 Tensor.push(loopScope);
                 Tensor[] logits = null;
                 try {
-                    logits = forwardAll(tokens, prevPos, curPos, pool);
+                    logits = forwardAll(tokens, prevPos, curPos, pool, logprobs);
                     for (Tensor l : logits) {
                         loopScope.add(l);
                     }
@@ -957,6 +959,13 @@ public class Qwen implements LanguageModel {
                     prevPos = curPos;
                 } finally {
                     Tensor.pop();
+                }
+
+                // Prefill is the activation peak; return cached blocks before decode.
+                if (curPos == minPromptLen) {
+                    for (QwenModel m : models) {
+                        m.device().emptyCache();
+                    }
                 }
 
                 boolean done = eos[0].all();
@@ -1066,6 +1075,16 @@ public class Qwen implements LanguageModel {
      * Runs {@link QwenModel#forward} on every TP rank (in parallel when {@code tpSize > 1}).
      */
     private Tensor[] forwardAll(Tensor[] tokens, int prevPos, int curPos, ExecutorService pool) {
+        return forwardAll(tokens, prevPos, curPos, pool, false);
+    }
+
+    /**
+     * Runs {@link QwenModel#forward} on every TP rank (in parallel when {@code tpSize > 1}).
+     *
+     * @param allTokenLogits when {@code true}, score every position (needed for logprobs).
+     */
+    private Tensor[] forwardAll(Tensor[] tokens, int prevPos, int curPos, ExecutorService pool,
+                                boolean allTokenLogits) {
         if (prevPos >= curPos) {
             throw new IllegalArgumentException(
                     "forwardAll requires prevPos < curPos, got " + prevPos + " >= " + curPos);
@@ -1074,7 +1093,7 @@ public class Qwen implements LanguageModel {
         if (models.length == 1) {
             try (var span = Index.slice(prevPos, curPos);
                  var window = tokens[0].get(Index.Colon, span)) {
-                logits[0] = models[0].forward(window, prevPos);
+                logits[0] = models[0].forward(window, prevPos, allTokenLogits);
             }
             return logits;
         }
@@ -1085,7 +1104,7 @@ public class Qwen implements LanguageModel {
                 ParallelState.setCurrent(tpGroup.state(rank));
                 try (var span = Index.slice(prevPos, curPos);
                      var window = tokens[rank].get(Index.Colon, span)) {
-                    return models[rank].forward(window, prevPos);
+                    return models[rank].forward(window, prevPos, allTokenLogits);
                 } finally {
                     ParallelState.clearCurrent();
                 }
