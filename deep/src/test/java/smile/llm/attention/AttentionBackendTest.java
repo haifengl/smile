@@ -16,6 +16,7 @@
  */
 package smile.llm.attention;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -49,10 +50,14 @@ public class AttentionBackendTest {
         AttentionBackends.install(AttentionBackend.FLASHINFER);
         if (AttentionBackends.flashInferAvailable()) {
             assertEquals(AttentionBackend.FLASHINFER, AttentionBackends.current());
-            AttentionBackends.install(AttentionBackend.TORCH_NATIVE);
         } else {
             assertEquals(AttentionBackend.TORCH_NATIVE, AttentionBackends.current());
             assertEquals(AttentionBackend.TORCH_NATIVE, AttentionBackends.kernel().backend());
         }
+    }
+
+    @AfterEach
+    public void restoreTorchNative() {
+        AttentionBackends.install(AttentionBackend.TORCH_NATIVE);
     }
 }
