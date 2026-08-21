@@ -23,6 +23,11 @@ import smile.deep.tensor.Tensor;
 /**
  * Per-request DeltaNet recurrent and causal-conv state for linear-attention layers.
  *
+ * <p>Recurrent state is typically float32 (fused CUDA kernel / stable in-place updates).
+ * Conv left-context must match the compute dtype (bf16/fp16) so decode
+ * {@code concat(convState, hidden)} does not promote activations to float and
+ * break later bf16 linear layers.
+ *
  * @author Haifeng Li
  */
 public class DeltaNetStatePool implements AutoCloseable {
@@ -34,7 +39,8 @@ public class DeltaNetStatePool implements AutoCloseable {
     final int convStateLen;
     final int maxBatchSize;
     final Device device;
-    final ScalarType dtype;
+    final ScalarType recurrentDtype;
+    final ScalarType convDtype;
 
     /** Recurrent states {@code [B, V, Kdim, Vdim]} per linear layer. */
     final Tensor[] recurrent;
@@ -44,7 +50,7 @@ public class DeltaNetStatePool implements AutoCloseable {
     private int boundBatch;
 
     /**
-     * Constructor.
+     * Constructor using the same dtype for recurrent and conv buffers (tests).
      *
      * @param numLinearLayers number of linear-attention layers.
      * @param numVHeads       DeltaNet value head count.
@@ -54,11 +60,32 @@ public class DeltaNetStatePool implements AutoCloseable {
      * @param convKernel      causal conv kernel size.
      * @param maxBatchSize    maximum batch size.
      * @param device          compute device.
-     * @param dtype           element dtype.
+     * @param dtype           element dtype for both buffers.
      */
     public DeltaNetStatePool(int numLinearLayers, int numVHeads, int keyHeadDim, int valueHeadDim,
                              int convDim, int convKernel, int maxBatchSize,
                              Device device, ScalarType dtype) {
+        this(numLinearLayers, numVHeads, keyHeadDim, valueHeadDim, convDim, convKernel,
+                maxBatchSize, device, dtype, dtype);
+    }
+
+    /**
+     * Constructor with separate recurrent / conv dtypes.
+     *
+     * @param numLinearLayers number of linear-attention layers.
+     * @param numVHeads       DeltaNet value head count.
+     * @param keyHeadDim      key head dim.
+     * @param valueHeadDim    value head dim.
+     * @param convDim         fused QKV channel count.
+     * @param convKernel      causal conv kernel size.
+     * @param maxBatchSize    maximum batch size.
+     * @param device          compute device.
+     * @param recurrentDtype  dtype for recurrent state (usually float32).
+     * @param convDtype       dtype for conv left-context (usually compute bf16/fp16).
+     */
+    public DeltaNetStatePool(int numLinearLayers, int numVHeads, int keyHeadDim, int valueHeadDim,
+                             int convDim, int convKernel, int maxBatchSize,
+                             Device device, ScalarType recurrentDtype, ScalarType convDtype) {
         if (numLinearLayers < 1) throw new IllegalArgumentException("numLinearLayers must be >= 1");
         if (convKernel < 1) throw new IllegalArgumentException("convKernel must be >= 1");
         this.numLinearLayers = numLinearLayers;
@@ -69,16 +96,20 @@ public class DeltaNetStatePool implements AutoCloseable {
         this.convStateLen = Math.max(0, convKernel - 1);
         this.maxBatchSize = maxBatchSize;
         this.device = device;
-        this.dtype = dtype;
+        this.recurrentDtype = recurrentDtype;
+        this.convDtype = convDtype;
         this.recurrent = new Tensor[numLinearLayers];
         this.conv = new Tensor[numLinearLayers];
-        var opts = new Tensor.Options().device(device).dtype(dtype).requireGradients(false);
+        var recurrentOpts = new Tensor.Options()
+                .device(device).dtype(recurrentDtype).requireGradients(false);
+        var convOpts = new Tensor.Options()
+                .device(device).dtype(convDtype).requireGradients(false);
         for (int i = 0; i < numLinearLayers; i++) {
-            recurrent[i] = Tensor.zeros(opts, maxBatchSize, numVHeads, keyHeadDim, valueHeadDim);
+            recurrent[i] = Tensor.zeros(recurrentOpts, maxBatchSize, numVHeads, keyHeadDim, valueHeadDim);
             // Long-lived pool buffers must not be owned by a transient AutoScope.
             recurrent[i].detachFromScopes();
             if (convStateLen > 0) {
-                conv[i] = Tensor.zeros(opts, maxBatchSize, convDim, convStateLen);
+                conv[i] = Tensor.zeros(convOpts, maxBatchSize, convDim, convStateLen);
                 conv[i].detachFromScopes();
             } else {
                 conv[i] = null;

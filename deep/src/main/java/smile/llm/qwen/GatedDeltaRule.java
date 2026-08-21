@@ -253,6 +253,12 @@ final class GatedDeltaRule {
             Tensor nativeOut = smile.torch.Native.recurrentGatedDeltaRule(
                     query, key, value, g, beta, initialState, qkL2norm);
             if (nativeOut != null) {
+                // Belt-and-suspenders: keep activations in the compute dtype.
+                if (nativeOut.dtype() != query.dtype()) {
+                    Tensor cast = nativeOut.to(query.dtype());
+                    nativeOut.close();
+                    nativeOut = cast;
+                }
                 return new smile.util.Tuple2<>(nativeOut, null);
             }
         }
