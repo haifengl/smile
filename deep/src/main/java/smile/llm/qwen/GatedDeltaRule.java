@@ -225,7 +225,11 @@ final class GatedDeltaRule {
             long kDim = k.shape()[3];
             long vDim = v.shape()[3];
             double scale = 1.0 / Math.sqrt(kDim);
-            q = q.mul(scale);
+            Tensor qScaled = q.mul(scale);
+            if (qScaled != q) {
+                q.close();
+                q = qScaled;
+            }
 
             var opts = new Tensor.Options()
                     .device(query.device())
@@ -238,26 +242,37 @@ final class GatedDeltaRule {
             Tensor out = Tensor.zeros(opts, batch, heads, seqLen, vDim);
 
             // Reuse one state buffer in place; free per-step workspace immediately.
+            // Prefer matmul contractions over state.mul(k) broadcasts — the latter
+            // materializes a full [B,H,K,V] temporary (~state-sized) every step.
             for (int t = 0; t < seqLen; t++) {
                 AutoScope stepScope = new AutoScope();
                 Tensor.push(stepScope);
                 try (var tIdx = Index.of(t)) {
-                    Tensor qStep = q.get(Index.Colon, Index.Colon, tIdx);
+                    Tensor qStep = q.get(Index.Colon, Index.Colon, tIdx);   // [B,H,K]
                     Tensor kStep = k.get(Index.Colon, Index.Colon, tIdx);
-                    Tensor vStep = v.get(Index.Colon, Index.Colon, tIdx);
+                    Tensor vStep = v.get(Index.Colon, Index.Colon, tIdx);   // [B,H,V]
                     Tensor gStep = gF.get(Index.Colon, Index.Colon, tIdx).exp()
-                            .unsqueeze(-1).unsqueeze(-1);
+                            .unsqueeze(-1).unsqueeze(-1);                  // [B,H,1,1]
                     Tensor betaStep = betaF.get(Index.Colon, Index.Colon, tIdx).unsqueeze(-1);
-                    // Decay and write-back in place to avoid a second full state buffer.
+
                     state.mul_(gStep);
-                    Tensor kUnsq = kStep.unsqueeze(-1);
-                    Tensor kvMem = state.mul(kUnsq).sum(-2, false);
-                    Tensor delta = vStep.sub(kvMem).mul(betaStep);
-                    Tensor deltaUnsq = delta.unsqueeze(-2);
-                    try (Tensor kDelta = kUnsq.mul(deltaUnsq)) {
+
+                    // kvMem[b,h,v] = sum_k state[b,h,k,v] * k[b,h,k]
+                    // via [B,H,1,K] @ [B,H,K,V] → [B,H,1,V] (no full-state temp).
+                    Tensor kRow = kStep.unsqueeze(-2);
+                    Tensor kv = kRow.matmul(state);
+                    Tensor kvMem = kv.reshape(batch, heads, vDim);
+
+                    Tensor delta = vStep.sub(kvMem).mul(betaStep);         // [B,H,V]
+                    Tensor kUnsq = kStep.unsqueeze(-1);                    // [B,H,K,1]
+                    Tensor deltaUnsq = delta.unsqueeze(-2);                // [B,H,1,V]
+                    try (Tensor kDelta = kUnsq.mul(deltaUnsq)) {           // [B,H,K,V]
                         state.add_(kDelta);
                     }
-                    Tensor y = state.mul(qStep.unsqueeze(-1)).sum(-2, false);
+
+                    Tensor qRow = qStep.unsqueeze(-2);
+                    Tensor yFull = qRow.matmul(state);
+                    Tensor y = yFull.reshape(batch, heads, vDim);          // [B,H,V]
                     out.put_(y, Index.Colon, Index.Colon, tIdx);
                 } finally {
                     Tensor.pop();
