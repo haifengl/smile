@@ -53,8 +53,8 @@ __global__ void gated_delta_recurrent_kernel(
     const int tid = threadIdx.x;
     const int nthreads = blockDim.x;
 
-    // Load initial state into shared memory.
-    const float *state_bh = state + ((b * H + h) * K) * V;
+    // Load initial state into shared memory (mutable: written back after the scan).
+    float *state_bh = state + ((b * H + h) * K) * V;
     for (int64_t i = tid; i < K * V; i += nthreads) {
         s_state[i] = state_bh[i];
     }
