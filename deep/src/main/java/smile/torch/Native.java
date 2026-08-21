@@ -563,6 +563,9 @@ public final class Native {
              Tensor layerV = pool.valueCache().get(layerIdx)) {
             MemorySegment out;
             try {
+                // invokeExact requires an exact MemorySegment type; a ternary in the
+                // argument list is typed as Object and fails the call-site check.
+                MemorySegment maskHandle = mask == null ? MemorySegment.NULL : mask.handle();
                 out = (MemorySegment) Bindings.FLASHINFER_PAGED.invokeExact(
                         query.handle(),
                         layerK.handle(),
@@ -576,7 +579,7 @@ public final class Native {
                         ctx.cacheLen(),
                         ctx.scale(),
                         ctx.isCausal() ? 1 : 0,
-                        mask == null ? MemorySegment.NULL : mask.handle(),
+                        maskHandle,
                         ws.handle());
             } catch (Throwable t) {
                 throw new RuntimeException(lastError().isEmpty() ? t.getMessage() : lastError(), t);
