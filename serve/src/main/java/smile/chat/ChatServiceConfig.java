@@ -99,4 +99,14 @@ public interface ChatServiceConfig {
      */
     @WithDefault("1")
     int pipelineParallelSize();
+
+    /**
+     * Concurrent safetensors shard loader threads. Each worker reads one shard
+     * file onto CPU then fans weights out to TP ranks (peak host RAM scales
+     * roughly as {@code threads × shard size}). {@code 0} (default) means auto:
+     * {@code min(8, availableProcessors)}, then capped by the number of shard
+     * files.
+     */
+    @WithDefault("0")
+    int modelLoaderThreads();
 }

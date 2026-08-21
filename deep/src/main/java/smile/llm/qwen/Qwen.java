@@ -24,11 +24,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -48,6 +49,7 @@ import smile.llm.FinishReason;
 import smile.llm.LanguageModel;
 import smile.llm.Message;
 import smile.llm.cache.KvCachePool;
+import smile.llm.checkpoint.SafeTensorsLoaderThreads;
 import smile.llm.llama.Llama;
 import smile.llm.parallel.ParallelConfig;
 import smile.llm.parallel.ParallelState;
@@ -149,7 +151,8 @@ public class Qwen implements LanguageModel {
      */
     public static Qwen build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte deviceId)
             throws IOException {
-        return build(checkpointDir, maxBatchSize, maxSeqLen, deviceId, 0, null, ParallelConfig.single(deviceId));
+        return build(checkpointDir, maxBatchSize, maxSeqLen, deviceId, 0, null,
+                KvCachePool.DEFAULT_PAGE_SIZE, ParallelConfig.single(deviceId), 0);
     }
 
     /**
@@ -162,7 +165,7 @@ public class Qwen implements LanguageModel {
     public static Qwen build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte deviceId,
                              double memFractionStatic, String kvCacheDtype) throws IOException {
         return build(checkpointDir, maxBatchSize, maxSeqLen, deviceId, memFractionStatic, kvCacheDtype,
-                KvCachePool.DEFAULT_PAGE_SIZE, ParallelConfig.single(deviceId));
+                KvCachePool.DEFAULT_PAGE_SIZE, ParallelConfig.single(deviceId), 0);
     }
 
     /**
@@ -174,7 +177,7 @@ public class Qwen implements LanguageModel {
                              double memFractionStatic, String kvCacheDtype,
                              ParallelConfig parallel) throws IOException {
         return build(checkpointDir, maxBatchSize, maxSeqLen, deviceId, memFractionStatic, kvCacheDtype,
-                KvCachePool.DEFAULT_PAGE_SIZE, parallel);
+                KvCachePool.DEFAULT_PAGE_SIZE, parallel, 0);
     }
 
     /**
@@ -186,6 +189,22 @@ public class Qwen implements LanguageModel {
     public static Qwen build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte deviceId,
                              double memFractionStatic, String kvCacheDtype, int pageSize,
                              ParallelConfig parallel) throws IOException {
+        return build(checkpointDir, maxBatchSize, maxSeqLen, deviceId, memFractionStatic, kvCacheDtype,
+                pageSize, parallel, 0);
+    }
+
+    /**
+     * Builds a Qwen instance with optional tensor parallelism, KV page size, and
+     * safetensors loader concurrency.
+     *
+     * @param pageSize            tokens per radix / KV pool page ({@code >= 1}).
+     * @param parallel            {@link ParallelConfig#tensorParallel} for multi-GPU; {@code ppSize} must be 1.
+     * @param modelLoaderThreads  safetensors loader threads; {@code 0} = auto
+     *                            ({@link SafeTensorsLoaderThreads#resolve}).
+     */
+    public static Qwen build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte deviceId,
+                             double memFractionStatic, String kvCacheDtype, int pageSize,
+                             ParallelConfig parallel, int modelLoaderThreads) throws IOException {
         File dir = new File(checkpointDir);
         if (!dir.isDirectory()) {
             throw new IllegalArgumentException("Checkpoint directory not found: " + checkpointDir);
@@ -241,36 +260,64 @@ public class Qwen implements LanguageModel {
         Map<String, String> weightMap = readWeightMap(dir);
         logger.info("Read weight map ({} tensors) in {} ms",
                 weightMap.size(), System.currentTimeMillis() - tMap);
-        QwenModel[] models = new QwenModel[parallelConfig.tpSize()];
 
+        // Phase A: construct empty shells on each rank's device (parallel by TP).
+        QwenModel[] models = new QwenModel[parallelConfig.tpSize()];
+        logger.info("Starting parallel TP rank construct (tpSize={})", parallelConfig.tpSize());
+        long tConstruct = System.currentTimeMillis();
         if (parallelConfig.tpSize() == 1) {
-            models[0] = buildRank(0, parallelConfig, modelArgs, cuda, memFractionStatic, cacheDtype,
-                    pageSize, dir, weightMap, tpGroup);
+            models[0] = constructRank(0, parallelConfig, modelArgs, cuda, memFractionStatic, tpGroup);
         } else {
-            // Each TP rank targets a different GPU; build + shard-load concurrently.
-            // Do not call Tensor.setDefaultOptions here — it is process-global and
-            // racy across threads. Layers allocate on CPU, then model.to(device).
-            logger.info("Starting parallel TP rank load (tpSize={})", parallelConfig.tpSize());
-            long tParallel = System.currentTimeMillis();
             ExecutorService pool = Executors.newFixedThreadPool(parallelConfig.tpSize());
             try {
                 List<Future<QwenModel>> futures = new ArrayList<>(parallelConfig.tpSize());
                 for (int r = 0; r < parallelConfig.tpSize(); r++) {
                     final int rank = r;
-                    futures.add(pool.submit(() -> buildRank(rank, parallelConfig, modelArgs, cuda,
-                            memFractionStatic, cacheDtype, pageSize, dir, weightMap, tpGroup)));
+                    futures.add(pool.submit(() -> constructRank(
+                            rank, parallelConfig, modelArgs, cuda, memFractionStatic, tpGroup)));
                 }
                 for (int r = 0; r < parallelConfig.tpSize(); r++) {
                     models[r] = futures.get(r).get();
                 }
             } catch (Exception e) {
-                throw new IOException("Parallel TP rank load failed", e);
+                throw new IOException("Parallel TP rank construct failed", e);
             } finally {
                 pool.shutdownNow();
             }
-            logger.info("Parallel TP rank load finished in {} ms",
-                    System.currentTimeMillis() - tParallel);
         }
+        logger.info("Parallel TP rank construct finished in {} ms",
+                System.currentTimeMillis() - tConstruct);
+
+        // Phase B: each safetensors file once on CPU, fan-out to all ranks.
+        long tLoad = System.currentTimeMillis();
+        loadHuggingFaceWeightsShared(models, dir, weightMap, modelLoaderThreads);
+        logger.info("Shared safetensors load finished in {} ms",
+                System.currentTimeMillis() - tLoad);
+
+        // Phase C: DeltaNet GPU swap + KV pool (after weights for mem-fraction).
+        long tFinalize = System.currentTimeMillis();
+        if (parallelConfig.tpSize() == 1) {
+            finalizeRank(models[0], memFractionStatic, cacheDtype, pageSize);
+        } else {
+            ExecutorService pool = Executors.newFixedThreadPool(parallelConfig.tpSize());
+            try {
+                List<Future<?>> futures = new ArrayList<>(parallelConfig.tpSize());
+                for (int r = 0; r < parallelConfig.tpSize(); r++) {
+                    final int rank = r;
+                    futures.add(pool.submit(() -> finalizeRank(
+                            models[rank], memFractionStatic, cacheDtype, pageSize)));
+                }
+                for (Future<?> f : futures) {
+                    f.get();
+                }
+            } catch (Exception e) {
+                throw new IOException("Parallel TP rank finalize failed", e);
+            } finally {
+                pool.shutdownNow();
+            }
+        }
+        logger.info("TP rank finalize finished in {} ms",
+                System.currentTimeMillis() - tFinalize);
 
         var time = System.currentTimeMillis() - startTime;
         logger.info("Model {}: loaded in {}.{} seconds (tpSize={})",
@@ -279,19 +326,17 @@ public class Qwen implements LanguageModel {
     }
 
     /**
-     * Builds one TP rank: construct module tree, load/shard HF weights, size KV cache.
+     * Constructs one TP rank: empty module on the target device (no weight load / KV).
      */
-    private static QwenModel buildRank(int rank, ParallelConfig parallel, QwenModelArgs modelArgs,
-                                       boolean cuda, double memFractionStatic, ScalarType cacheDtype,
-                                       int pageSize, File dir, Map<String, String> weightMap,
-                                       TensorParallelGroup tpGroup) throws IOException {
-        long rankStart = System.currentTimeMillis();
+    private static QwenModel constructRank(int rank, ParallelConfig parallel, QwenModelArgs modelArgs,
+                                           boolean cuda, double memFractionStatic,
+                                           TensorParallelGroup tpGroup) {
         Device device = cuda ? Device.CUDA(parallel.devices()[rank]) : Device.CPU();
         TensorShardSpec shard = TensorShardSpec.forRank(
                 parallel.tpSize(), rank,
                 modelArgs.numHeads(), modelArgs.numKvHeads(), modelArgs.intermediateSize(),
                 modelArgs.linearNumKeyHeads(), modelArgs.linearNumValueHeads());
-        logger.info("tpRank={}: building on {} (layers={}, maxSeqLen={})",
+        logger.info("tpRank={}: constructing on {} (layers={}, maxSeqLen={})",
                 rank, device, modelArgs.numLayers(), modelArgs.maxSeqLen());
 
         DeltaNetStatePool statePool = null;
@@ -311,7 +356,6 @@ public class Qwen implements LanguageModel {
                     rank, System.currentTimeMillis() - t0);
         }
 
-        // Layers allocate on CPU; place module + cis, then load shards onto model.device().
         long tConstruct = System.currentTimeMillis();
         QwenModel model;
         try (var ignored = ParameterInit.uninitialized(device)) {
@@ -324,15 +368,20 @@ public class Qwen implements LanguageModel {
         model.to(device);
         logger.info("tpRank={}: model.to({}) in {} ms",
                 rank, device, System.currentTimeMillis() - tTo);
-
-        long tLoad = System.currentTimeMillis();
-        loadHuggingFaceWeights(model, dir, Device.CPU(), shard, weightMap);
-        logger.info("tpRank={}: loadHuggingFaceWeights in {} ms",
-                rank, System.currentTimeMillis() - tLoad);
         model.eval();
+        return model;
+    }
 
-        // Allocate fixed DeltaNet state before the KV pool so staticBudget−used
-        // accounts for both weights and DeltaNet GPU pools (SGLang-style).
+    /**
+     * After weights: move DeltaNet state to GPU (when using mem-fraction) and allocate KV.
+     */
+    private static void finalizeRank(QwenModel model, double memFractionStatic,
+                                     ScalarType cacheDtype, int pageSize) {
+        int rank = model.shard() != null ? model.shard().tpRank() : 0;
+        Device device = model.device();
+        QwenModelArgs modelArgs = model.params();
+        TensorShardSpec shard = model.shard();
+
         if (memFractionStatic > 0 && modelArgs.numLinearAttentionLayers() > 0) {
             long t0 = System.currentTimeMillis();
             var gpuState = new DeltaNetStatePool(
@@ -368,9 +417,6 @@ public class Qwen implements LanguageModel {
             logger.info("tpRank={}: KvCachePool allocate in {} ms",
                     rank, System.currentTimeMillis() - t0);
         }
-        logger.info("tpRank={}: buildRank total {} ms",
-                rank, System.currentTimeMillis() - rankStart);
-        return model;
     }
 
     static ScalarType resolveKvCacheDtype(String override, Path configJson, ScalarType fallback)
@@ -392,97 +438,182 @@ public class Qwen implements LanguageModel {
         return fallback;
     }
 
-    private static void loadHuggingFaceWeights(QwenModel model, File dir, Device loadDevice,
-                                               TensorShardSpec shard,
-                                               Map<String, String> weightMap) throws IOException {
-        Device target = model.device();
+    /**
+     * Reads each safetensors shard once on CPU and fans weights out to every TP rank.
+     * Loader concurrency is {@link SafeTensorsLoaderThreads#resolve}; per-rank
+     * {@code loadStateDict} is serialized with a lock. Fan-out across ranks for one
+     * shard runs in parallel with a deterministic stagger start index.
+     */
+    private static void loadHuggingFaceWeightsShared(QwenModel[] models, File dir,
+                                                     Map<String, String> weightMap,
+                                                     int modelLoaderThreads) throws IOException {
         Map<String, List<String>> shardToKeys = new LinkedHashMap<>();
         for (var entry : weightMap.entrySet()) {
             shardToKeys.computeIfAbsent(entry.getValue(), k -> new ArrayList<>()).add(entry.getKey());
         }
+        List<String> shardFiles = new ArrayList<>(shardToKeys.keySet());
+        Collections.sort(shardFiles);
 
-        Set<String> loaded = new HashSet<>();
-        for (var shardEntry : shardToKeys.entrySet()) {
-            String shardFile = shardEntry.getKey();
-            Path shardPath = Path.of(dir.getPath(), shardFile);
-            logger.info("Loading safetensors shard: {} (tpRank={})", shardFile,
-                    shard != null ? shard.tpRank() : 0);
-            long tShard = System.currentTimeMillis();
-            // Load onto CPU first so large tensors can be sliced before hitting GPU memory.
-            SafeTensors st = SafeTensors.read(shardPath.toString(), loadDevice, shardEntry.getValue());
-            try {
-                Map<String, Tensor> stateDict = new HashMap<>();
-                List<Tensor> owned = new ArrayList<>();
+        int tpSize = models.length;
+        int threads = SafeTensorsLoaderThreads.resolve(modelLoaderThreads, shardFiles.size());
+        logger.info("Safetensors loader threads={} (configured={}, shards={}, tpSize={})",
+                threads, modelLoaderThreads, shardFiles.size(), tpSize);
+
+        Object[] rankLocks = new Object[tpSize];
+        for (int i = 0; i < tpSize; i++) {
+            rankLocks[i] = new Object();
+        }
+        Set<String> loaded = ConcurrentHashMap.newKeySet();
+        boolean needTiedLmHead = !weightMap.containsKey("lm_head.weight")
+                && !weightMap.containsKey("language_model.lm_head.weight");
+
+        Device loadDevice = Device.CPU();
+        ExecutorService pool = Executors.newFixedThreadPool(Math.max(1, threads));
+        try {
+            List<Future<?>> futures = new ArrayList<>(shardFiles.size());
+            for (int si = 0; si < shardFiles.size(); si++) {
+                final int shardIndex = si;
+                final String shardFile = shardFiles.get(si);
+                final List<String> keys = shardToKeys.get(shardFile);
+                futures.add(pool.submit(() -> {
+                    try {
+                        loadOneShardFanOut(models, dir, loadDevice, shardFile, keys, shardIndex,
+                                rankLocks, loaded, needTiedLmHead);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }));
+            }
+            for (Future<?> f : futures) {
                 try {
-                    for (String hfName : shardEntry.getValue()) {
-                        Tensor src = st.tensors().get(hfName);
-                        if (src == null) {
-                            throw new IOException("Tensor '" + hfName + "' missing from " + shardFile);
-                        }
-                        String smileName = remapHuggingFaceName(hfName);
-                        if (smileName == null) {
-                            logger.debug("Skipping unrecognized HF weight: {}", hfName);
-                            continue;
-                        }
-                        Tensor value = src;
-                        if (smileName.contains("linear_attn.conv1d.weight") && src.dim() == 3) {
-                            value = src.reshape(src.shape()[0], src.shape()[2]);
-                            owned.add(value);
-                        }
-                        Tensor sliced = QwenWeightShard.shard(smileName, value, model.params(), shard);
-                        if (sliced != value && sliced != src) {
-                            owned.add(sliced);
-                        }
-                        Tensor onDevice = sliced.to(target);
-                        if (onDevice != sliced) {
+                    f.get();
+                } catch (Exception e) {
+                    Throwable c = e.getCause() != null ? e.getCause() : e;
+                    if (c instanceof RuntimeException re && re.getCause() instanceof IOException ioe) {
+                        throw ioe;
+                    }
+                    throw new IOException("Safetensors shard load failed", e);
+                }
+            }
+        } finally {
+            pool.shutdownNow();
+        }
+        logger.info("Loaded {} parameter names from HuggingFace safetensors (×{} ranks)",
+                loaded.size(), tpSize);
+    }
+
+    private static void loadOneShardFanOut(QwenModel[] models, File dir, Device loadDevice,
+                                           String shardFile, List<String> keys, int shardIndex,
+                                           Object[] rankLocks, Set<String> loaded,
+                                           boolean needTiedLmHead)
+            throws IOException {
+        Path shardPath = Path.of(dir.getPath(), shardFile);
+        logger.info("Loading safetensors shard: {} (index={})", shardFile, shardIndex);
+        long tShard = System.currentTimeMillis();
+        SafeTensors st = SafeTensors.read(shardPath.toString(), loadDevice, keys);
+        long tRead = System.currentTimeMillis() - tShard;
+        try {
+            long tFan = System.currentTimeMillis();
+            int tpSize = models.length;
+            @SuppressWarnings("unchecked")
+            CompletableFuture<Void>[] fanouts = new CompletableFuture[tpSize];
+            for (int k = 0; k < tpSize; k++) {
+                final int rank = (shardIndex + k) % tpSize;
+                fanouts[k] = CompletableFuture.runAsync(() -> {
+                    try {
+                        applyShardToRank(models[rank], st, keys, rankLocks[rank], loaded,
+                                needTiedLmHead);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
+            try {
+                CompletableFuture.allOf(fanouts).join();
+            } catch (Exception e) {
+                Throwable c = e.getCause() != null ? e.getCause() : e;
+                if (c instanceof RuntimeException re && re.getCause() instanceof IOException ioe) {
+                    throw ioe;
+                }
+                throw new IOException("Fan-out failed for shard " + shardFile, e);
+            }
+            logger.info("Loaded safetensors shard: {} read={} ms fan-out={} ms",
+                    shardFile, tRead, System.currentTimeMillis() - tFan);
+        } finally {
+            for (Tensor t : st.tensors().values()) {
+                t.close();
+            }
+        }
+    }
+
+    private static void applyShardToRank(QwenModel model, SafeTensors st, List<String> keys,
+                                         Object rankLock, Set<String> loaded,
+                                         boolean needTiedLmHead)
+            throws IOException {
+        Device target = model.device();
+        TensorShardSpec shard = model.shard();
+        synchronized (rankLock) {
+            Map<String, Tensor> stateDict = new HashMap<>();
+            List<Tensor> owned = new ArrayList<>();
+            try {
+                for (String hfName : keys) {
+                    Tensor src = st.tensors().get(hfName);
+                    if (src == null) {
+                        throw new IOException("Tensor '" + hfName + "' missing from safetensors");
+                    }
+                    String smileName = remapHuggingFaceName(hfName);
+                    if (smileName == null) {
+                        logger.debug("Skipping unrecognized HF weight: {}", hfName);
+                        continue;
+                    }
+                    Tensor value = src;
+                    if (smileName.contains("linear_attn.conv1d.weight") && src.dim() == 3) {
+                        value = src.reshape(src.shape()[0], src.shape()[2]);
+                        owned.add(value);
+                    }
+                    Tensor sliced = QwenWeightShard.shard(smileName, value, model.params(), shard);
+                    if (sliced != value && sliced != src) {
+                        owned.add(sliced);
+                    }
+                    Tensor onDevice = sliced.to(target);
+                    if (onDevice != sliced) {
+                        owned.add(onDevice);
+                    }
+                    Tensor contiguous = onDevice.contiguous();
+                    if (contiguous != onDevice) {
+                        owned.add(contiguous);
+                    }
+                    stateDict.put(smileName, contiguous);
+                    loaded.add(smileName);
+                }
+
+                if (needTiedLmHead && !stateDict.containsKey("lm_head.weight")) {
+                    for (String embKey : List.of(
+                            "model.embed_tokens.weight",
+                            "language_model.model.embed_tokens.weight")) {
+                        if (st.tensors().containsKey(embKey)) {
+                            Tensor onDevice = st.tensors().get(embKey).to(target);
                             owned.add(onDevice);
-                        }
-                        // Materialize a contiguous clone so state-dict storage outlives views.
-                        Tensor contiguous = onDevice.contiguous();
-                        if (contiguous != onDevice) {
-                            owned.add(contiguous);
-                        }
-                        stateDict.put(smileName, contiguous);
-                        loaded.add(smileName);
-                    }
-
-                    if (!weightMap.containsKey("lm_head.weight")
-                            && !weightMap.containsKey("language_model.lm_head.weight")
-                            && !loaded.contains("lm_head.weight")) {
-                        for (String embKey : List.of(
-                                "model.embed_tokens.weight",
-                                "language_model.model.embed_tokens.weight")) {
-                            if (st.tensors().containsKey(embKey)) {
-                                Tensor onDevice = st.tensors().get(embKey).to(target);
-                                owned.add(onDevice);
-                                Tensor emb = onDevice.contiguous();
-                                if (emb != onDevice) {
-                                    owned.add(emb);
-                                }
-                                stateDict.put("lm_head.weight", emb);
-                                loaded.add("lm_head.weight");
-                                break;
+                            Tensor emb = onDevice.contiguous();
+                            if (emb != onDevice) {
+                                owned.add(emb);
                             }
+                            stateDict.put("lm_head.weight", emb);
+                            loaded.add("lm_head.weight");
+                            break;
                         }
-                    }
-
-                    model.loadStateDict(stateDict, false);
-                } finally {
-                    for (Tensor t : owned) {
-                        t.close();
                     }
                 }
+
+                if (!stateDict.isEmpty()) {
+                    model.loadStateDict(stateDict, false);
+                }
             } finally {
-                for (Tensor t : st.tensors().values()) {
+                for (Tensor t : owned) {
                     t.close();
                 }
             }
-            logger.info("Loaded safetensors shard: {} (tpRank={}) in {} ms",
-                    shardFile, shard != null ? shard.tpRank() : 0,
-                    System.currentTimeMillis() - tShard);
         }
-        logger.info("Loaded {} parameters from HuggingFace safetensors (tpRank={})",
-                loaded.size(), shard != null ? shard.tpRank() : 0);
     }
 
     static Map<String, String> readWeightMap(File dir) throws IOException {

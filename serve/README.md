@@ -165,6 +165,7 @@ the corresponding profiles.
 | `smile.chat.max-seq-len` | `0` (auto) | Max context (prompt+output), like vLLM `--max-model-len` / SGLang `--context-length`. `<=0` uses `max_position_embeddings` from the model config; set explicitly (e.g. `8192`) to cap large-window models |
 | `smile.chat.max-batch-size` | `1` | Maximum generation batch size |
 | `smile.chat.mem-fraction-static` | `0.85` | SGLang `--mem-fraction-static`: fraction `y` of **total** GPU memory for the static region (weights + DeltaNet + KV). Leaves `(1−y)×total` free for activations. KV gets `y×total − used`, capped at `max-batch-size × max-seq-len`. Pool is static (no per-request growth); when free KV is exhausted, generation stops early with partial output (`finish_reason=length`) |
+| `smile.chat.model-loader-threads` | `0` (auto) | Concurrent safetensors shard readers. Each worker loads one shard to CPU then fans out to TP ranks. Peak host RAM ≈ `threads × shard size`. `0` = `min(8, CPUs)`, capped by number of shard files. Use `1`–`2` on RAM-tight desktops |
 | `smile.chat.devices` | `0` | CUDA device index, or comma-separated TP list (`0,7`). `%dev` default: `7` |
 | `smile.chat.tensor-parallel-size` | `1` | TP world size; with a single `devices` entry expands to consecutive GPUs |
 | `smile.chat.pipeline-parallel-size` | `1` | Must stay `1` until multi-node PP |
