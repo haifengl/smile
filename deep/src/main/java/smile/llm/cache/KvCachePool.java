@@ -51,6 +51,12 @@ import smile.util.Tuple2;
  * {@link #get} using a per-request slot map established by
  * {@link #bindRequests} or {@link #bindWithPrefix}.
  *
+ * <p>The pool is static: bind claims free pages only and never grows the
+ * underlying buffers. When the requested capacity exceeds free pages (after
+ * radix eviction), bind clamps to what is available. Generation should stop
+ * at {@link #requestCapacity()} and return partial results rather than
+ * allocating more KV.
+ *
  * @author Haifeng Li
  * @see RadixCache
  */
@@ -403,9 +409,22 @@ public class KvCachePool implements AutoCloseable {
         return freePages.size();
     }
 
+    /** Returns the number of free token slots ({@code freePages × pageSize}). */
+    public int freeSlots() {
+        return freePages.size() * pageSize;
+    }
+
     /** Returns the page size in tokens. */
     public int pageSize() {
         return pageSize;
+    }
+
+    /**
+     * Capacity reserved for the currently bound request, or {@code 0} if none.
+     * Generation must not access positions {@code >=} this value.
+     */
+    public int requestCapacity() {
+        return requestCapacity;
     }
 
     /**
@@ -440,18 +459,39 @@ public class KvCachePool implements AutoCloseable {
     }
 
     /**
-     * Reserves a contiguous slot range of {@code capacity} tokens for each
-     * item in a batch. Must be called before {@link #put}/{@link #get} for a
-     * request. Previously bound slots are released without radix insert.
+     * Reserves a contiguous slot range for each item in a batch. Must be called
+     * before {@link #put}/{@link #get} for a request. Previously bound slots are
+     * released without radix insert.
+     *
+     * <p>Capacity is page-aligned and <em>clamped</em> to free pages in the
+     * static pool (after radix eviction). The pool never grows. Callers should
+     * read {@link #requestCapacity()} and stop generation at that limit.
      *
      * @param batchSize number of parallel requests.
-     * @param capacity  slots reserved per request (typically {@code maxSeqLen}).
-     * @throws IllegalStateException if the pool lacks free pages.
+     * @param capacity  desired slots reserved per request (prompt + generation).
+     * @throws IllegalStateException if no page can be reserved per request.
      */
     public void bindRequests(int batchSize, int capacity) {
+        if (batchSize < 1) {
+            throw new IllegalArgumentException("batchSize must be >= 1");
+        }
+        if (capacity < 1) {
+            throw new IllegalArgumentException("capacity must be >= 1");
+        }
         releaseBinding();
-        int pagesNeeded = (capacity + pageSize - 1) / pageSize;
-        int aligned = pagesNeeded * pageSize;
+        int desired = pageAlignUp(capacity);
+        tryEvictFor(batchSize * (long) desired);
+        int maxPerRequest = (freeSlots() / batchSize / pageSize) * pageSize;
+        int aligned = Math.min(desired, maxPerRequest);
+        if (aligned < pageSize) {
+            throw new IllegalStateException(String.format(
+                    "KV cache exhausted: need at least %d slots per request for batch %d, have %d free",
+                    pageSize, batchSize, freeSlots()));
+        }
+        if (aligned < desired) {
+            logger.info("KV bind clamped: requested={}, bound={} (free slots before alloc={})",
+                    desired, aligned, freeSlots());
+        }
         requestSlots = new long[batchSize][];
         requestCapacity = aligned;
         matchedPrefixLen = 0;
@@ -471,9 +511,14 @@ public class KvCachePool implements AutoCloseable {
      * Match a prompt against the radix tree, lock the matched node, allocate
      * suffix/decode slots, and bind a slot map for batch size 1.
      *
+     * <p>Desired {@code totalCapacity} is clamped to matched prefix plus free
+     * private pages. The static pool never grows. If the prompt itself cannot
+     * fit after clamping, this method throws.
+     *
      * @param promptTokens  prompt token ids.
-     * @param totalCapacity total slots needed (prompt + generation headroom).
+     * @param totalCapacity desired slots (prompt + generation headroom).
      * @return page-aligned matched prefix length (0 if miss or reuse disabled).
+     * @throws IllegalArgumentException if the prompt cannot fit in free KV slots.
      */
     public int bindWithPrefix(int[] promptTokens, int totalCapacity) {
         if (promptTokens == null) {
@@ -484,12 +529,18 @@ public class KvCachePool implements AutoCloseable {
         }
         if (!prefixReuseEnabled) {
             bindRequests(1, totalCapacity);
+            if (requestCapacity < promptTokens.length) {
+                int bound = requestCapacity;
+                releaseBinding();
+                throw new IllegalArgumentException(String.format(
+                        "Prompt length %d exceeds free KV capacity %d",
+                        promptTokens.length, bound));
+            }
             return 0;
         }
 
         releaseBinding();
-        int pagesNeeded = (totalCapacity + pageSize - 1) / pageSize;
-        int alignedCapacity = pagesNeeded * pageSize;
+        int desired = pageAlignUp(totalCapacity);
 
         long[] matchedSlots;
         RadixTreeNode matchNode;
@@ -499,7 +550,9 @@ public class KvCachePool implements AutoCloseable {
             matchNode = match.lastNode();
         }
         int prefixLen = matchedSlots.length;
-        if (prefixLen > alignedCapacity) {
+        if (prefixLen > desired) {
+            // Matched prefix longer than desired window — keep only the prefix
+            // that fits the request (should not happen when desired >= prompt).
             throw new IllegalStateException("matched prefix longer than totalCapacity");
         }
 
@@ -508,6 +561,24 @@ public class KvCachePool implements AutoCloseable {
             lockedNode = matchNode;
         } else {
             lockedNode = null;
+        }
+
+        int suffixDesired = desired - prefixLen;
+        tryEvictFor(suffixDesired);
+        int suffixAvail = freeSlots();
+        int alignedCapacity = prefixLen + Math.min(suffixDesired, suffixAvail);
+        if (alignedCapacity < desired) {
+            logger.info("KV bind clamped: requested={}, bound={} (prefix={}, free suffix slots={})",
+                    desired, alignedCapacity, prefixLen, suffixAvail);
+        }
+
+        int promptLen = promptTokens.length;
+        if (alignedCapacity < promptLen) {
+            unlockMatched();
+            lockedNode = null;
+            throw new IllegalArgumentException(String.format(
+                    "Prompt length %d exceeds free KV capacity %d (prefix=%d)",
+                    promptLen, alignedCapacity, prefixLen));
         }
 
         int suffixLen = alignedCapacity - prefixLen;
@@ -528,7 +599,6 @@ public class KvCachePool implements AutoCloseable {
 
         // SGLang-style split: cached = matched prefix, new = still-to-prefill.
         // Denominator is full prompt length (not page-floored).
-        int promptLen = promptTokens.length;
         int newTokens = Math.max(0, promptLen - prefixLen);
         prefixPromptTokens.addAndGet(promptLen);
         prefixMatchTokens.addAndGet(prefixLen);
@@ -595,12 +665,14 @@ public class KvCachePool implements AutoCloseable {
     }
 
     /**
-     * Ensures a request binding large enough for {@code endPos} tokens exists.
-     * Lazily binds when none is active (convenient for unit tests); grows by
-     * rebinding when the current capacity is insufficient.
+     * Ensures a request binding exists and is large enough for {@code endPos}.
+     * Never grows the static pool: if capacity is insufficient, throws
+     * {@link KvCacheExhaustedException}. Callers must bind up front and stop
+     * generation at {@link #requestCapacity()}.
      *
      * @param batchSize number of parallel requests.
      * @param endPos    exclusive end position that will be accessed.
+     * @throws KvCacheExhaustedException if unbound or {@code endPos} exceeds capacity.
      */
     public void ensureRequest(int batchSize, int endPos) {
         if (requestSlots != null
@@ -608,7 +680,13 @@ public class KvCachePool implements AutoCloseable {
                 && requestCapacity >= endPos) {
             return;
         }
-        bindRequests(batchSize, Math.max(endPos, pageSize));
+        if (requestSlots == null) {
+            throw new KvCacheExhaustedException(
+                    "No request bound; call bindRequests() or bindWithPrefix() first");
+        }
+        throw new KvCacheExhaustedException(String.format(
+                "KV cache exhausted: need endPos=%d, bound capacity=%d (pool does not grow)",
+                endPos, requestCapacity));
     }
 
     /**
@@ -755,6 +833,36 @@ public class KvCachePool implements AutoCloseable {
         if (lockedNode != null) {
             radix.decLockRef(lockedNode);
             lockedNode = null;
+        }
+    }
+
+    private int pageAlignUp(int tokens) {
+        int pages = (tokens + pageSize - 1) / pageSize;
+        return pages * pageSize;
+    }
+
+    /**
+     * Evicts radix entries until at least {@code slotsNeeded} free slots exist,
+     * or no further eviction is possible.
+     */
+    private void tryEvictFor(long slotsNeeded) {
+        if (slotsNeeded <= 0) {
+            return;
+        }
+        long pagesNeeded = (slotsNeeded + pageSize - 1) / pageSize;
+        if (freePages.size() >= pagesNeeded) {
+            return;
+        }
+        int tokensNeeded = (int) Math.min(Integer.MAX_VALUE,
+                (pagesNeeded - freePages.size()) * (long) pageSize);
+        int evicted = radix.evict(tokensNeeded, value -> {
+            long[] slots = value.longArray();
+            prefixEvictTokens.addAndGet(slots.length);
+            free(slots);
+            value.close();
+        });
+        if (evicted > 0) {
+            logger.debug("KV radix evicted {} tokens", evicted);
         }
     }
 

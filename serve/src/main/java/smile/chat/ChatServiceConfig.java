@@ -62,6 +62,11 @@ public interface ChatServiceConfig {
      * pools, and KV cache). The remainder {@code (1 − y) × total} stays free for
      * dynamic activations. KV slots are {@code staticBudget − used}, then capped
      * at {@code maxBatchSize × maxSeqLen}. Defaults to {@code 0.85}.
+     *
+     * <p>The KV pool is allocated once and never grows per request. When free
+     * slots are insufficient for the requested prompt+generation length,
+     * generation stops early and returns partial output with
+     * {@code finish_reason=length}.
      */
     @WithDefault("0.85")
     double memFractionStatic();

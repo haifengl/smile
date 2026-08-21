@@ -170,11 +170,77 @@ public class KvCachePoolTest {
     }
 
     @Test
-    public void testGivenInsufficientPagesWhenBindThenThrows() {
-        // Given – tiny pool of 16 slots (1 page)
+    public void testGivenInsufficientPagesWhenBindBatchThenThrows() {
+        // Given – tiny pool of 16 slots (1 page); batch of 2 cannot each get a page
         try (var pool = new KvCachePool(1, 16, 2, 16, 16, Device.CPU(), ScalarType.Float)) {
-            // When / Then – request more than available
+            // When / Then
             assertThrows(IllegalStateException.class, () -> pool.bindRequests(2, 16));
+        }
+    }
+
+    @Test
+    public void testGivenOversizedCapacityWhenBindThenClampsWithoutThrow() {
+        // Given – 16-slot pool, request far more than available
+        try (var pool = new KvCachePool(1, 16, 2, 16, 16, Device.CPU(), ScalarType.Float)) {
+            // When
+            pool.bindRequests(1, 64);
+
+            // Then – bound to free pool size, no OOM throw
+            assertEquals(16, pool.requestCapacity());
+            assertEquals(0, pool.freePages());
+        }
+    }
+
+    @Test
+    public void testGivenBoundCapacityWhenPutBeyondThenDoesNotGrow() {
+        // Given
+        try (var pool = new KvCachePool(1, 32, 2, 16, 16, Device.CPU(), ScalarType.Float)) {
+            pool.bindRequests(1, 16);
+            assertEquals(16, pool.requestCapacity());
+            int freeAfterBind = pool.freePages();
+
+            Tensor k = Tensor.ones(1, 1, 2, 16);
+            Tensor v = Tensor.ones(1, 1, 2, 16);
+            try {
+                // When – write past bound capacity
+                assertThrows(KvCacheExhaustedException.class, () -> pool.put(0, 16, k, v));
+                // Then – free pages unchanged (no growth)
+                assertEquals(freeAfterBind, pool.freePages());
+                assertEquals(16, pool.requestCapacity());
+            } finally {
+                k.close();
+                v.close();
+            }
+        }
+    }
+
+    @Test
+    public void testGivenBindWithPrefixWhenCapacityClampedThenPromptStillFits() {
+        // Given – pool of 32 slots; prompt length 8; request huge generation headroom
+        try (var pool = new KvCachePool(1, 32, 2, 16, 16, Device.CPU(), ScalarType.Float)) {
+            int[] prompt = {1, 2, 3, 4, 5, 6, 7, 8};
+
+            // When
+            assertEquals(0, pool.bindWithPrefix(prompt, 256));
+
+            // Then
+            assertEquals(32, pool.requestCapacity());
+            assertTrue(pool.requestCapacity() >= prompt.length);
+            pool.unbindRequests();
+        }
+    }
+
+    @Test
+    public void testGivenBindWithPrefixWhenPromptExceedsPoolThenThrows() {
+        // Given – 16-slot pool cannot hold a 20-token prompt
+        try (var pool = new KvCachePool(1, 16, 2, 16, 16, Device.CPU(), ScalarType.Float)) {
+            int[] prompt = new int[20];
+            for (int i = 0; i < prompt.length; i++) {
+                prompt[i] = i + 1;
+            }
+
+            // When / Then
+            assertThrows(IllegalArgumentException.class, () -> pool.bindWithPrefix(prompt, 64));
         }
     }
 

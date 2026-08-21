@@ -688,18 +688,24 @@ public class Llama implements LanguageModel {
              var scope = new AutoScope()) {
             Tensor.push(scope);
             try {
-            int totalLen = Math.min(params.maxSeqLen(), maxGenLen + maxPromptLen);
+            int desiredTotalLen = Math.min(params.maxSeqLen(), maxGenLen + maxPromptLen);
             final boolean usePrefix = batchSize == 1;
             int prefixLen = 0;
             if (usePrefix) {
-                prefixLen = model.kvCachePool().bindWithPrefix(prompts[0], totalLen);
-                // Keep the last prompt token in the first forward so we obtain
-                // next-token logits when generation is needed.
-                if (prefixLen > 0 && minPromptLen < totalLen && minPromptLen > 0) {
-                    prefixLen = Math.min(prefixLen, minPromptLen - 1);
-                }
+                prefixLen = model.kvCachePool().bindWithPrefix(prompts[0], desiredTotalLen);
             } else {
-                model.kvCachePool().bindRequests(batchSize, totalLen);
+                model.kvCachePool().bindRequests(batchSize, desiredTotalLen);
+            }
+            int totalLen = Math.min(desiredTotalLen, model.kvCachePool().requestCapacity());
+            if (totalLen < maxPromptLen) {
+                throw new IllegalArgumentException(String.format(
+                        "Prompt length %d exceeds free KV capacity %d",
+                        maxPromptLen, totalLen));
+            }
+            // Keep the last prompt token in the first forward so we obtain
+            // next-token logits when generation is needed.
+            if (prefixLen > 0 && minPromptLen < totalLen && minPromptLen > 0) {
+                prefixLen = Math.min(prefixLen, minPromptLen - 1);
             }
 
             int pad = tokenizer.pad();
