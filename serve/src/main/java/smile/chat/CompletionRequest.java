@@ -42,7 +42,8 @@ public class CompletionRequest {
      * Maximum number of new tokens to generate. Prefer
      * {@link #maxCompletionTokens} when both are set. When neither is set,
      * {@link #resolveMaxTokens(int, int)} uses remaining context
-     * ({@code maxSeqLen - promptLen}).
+     * ({@code maxSeqLen - promptLen}). Explicit values are still capped so
+     * {@code promptLen + max_tokens <= maxSeqLen}.
      */
     public Integer maxTokens;
     /**
@@ -77,20 +78,30 @@ public class CompletionRequest {
      * Resolves max new tokens to generate.
      *
      * <p>{@code max_completion_tokens} wins when set; otherwise {@code max_tokens};
-     * otherwise remaining context {@code max(1, maxSeqLen - promptLen)}.
+     * otherwise remaining context {@code max(0, maxSeqLen - promptLen)}.
+     * In all cases the result is capped so
+     * {@code promptLen + result <= maxSeqLen}.
      *
-     * @param maxSeqLen configured max model / context length.
+     * @param maxSeqLen configured max model / context length (already resolved;
+     *                  never {@code 0} after model load).
      * @param promptLen chat-templated prompt token count.
-     * @return positive max new tokens.
+     * @return non-negative max new tokens ({@code 0} when the prompt already
+     *         fills the context window).
      */
     public int resolveMaxTokens(int maxSeqLen, int promptLen) {
+        int remaining = Math.max(0, maxSeqLen - promptLen);
+        int requested;
         if (maxCompletionTokens != null) {
-            return maxCompletionTokens;
+            requested = maxCompletionTokens;
+        } else if (maxTokens != null) {
+            requested = maxTokens;
+        } else {
+            requested = remaining;
         }
-        if (maxTokens != null) {
-            return maxTokens;
+        if (requested < 0) {
+            requested = 0;
         }
-        return Math.max(1, maxSeqLen - promptLen);
+        return Math.min(requested, remaining);
     }
 
     /**

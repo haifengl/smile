@@ -42,8 +42,19 @@ public class CompletionRequestTest {
     public void testGivenNoMaxTokensWhenResolvedThenUsesRemainingContext() {
         CompletionRequest request = new CompletionRequest();
         assertFalse(request.hasExplicitMaxTokens());
-        assertEquals(1, request.resolveMaxTokens(100, 100));
-        assertEquals(1, request.resolveMaxTokens(100, 150));
+        assertEquals(0, request.resolveMaxTokens(100, 100));
+        assertEquals(0, request.resolveMaxTokens(100, 150));
         assertEquals(4096, request.resolveMaxTokens(8192, 4096));
+    }
+
+    @Test
+    public void testGivenExplicitMaxTokensWhenExceedsContextThenCapped() {
+        CompletionRequest request = new CompletionRequest();
+        request.maxTokens = 10_000;
+        // prompt(100) + max_tokens must be <= maxSeqLen(1000)
+        assertEquals(900, request.resolveMaxTokens(1000, 100));
+
+        request.maxCompletionTokens = 5_000;
+        assertEquals(900, request.resolveMaxTokens(1000, 100));
     }
 }

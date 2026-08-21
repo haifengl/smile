@@ -213,6 +213,12 @@ public class Qwen implements LanguageModel {
         }
 
         QwenModelArgs modelArgs = QwenModelArgs.fromHuggingFace(configJson.toString(), maxBatchSize, maxSeqLen);
+        if (maxSeqLen <= 0) {
+            logger.info("max-seq-len auto-resolved to {} from model config (request override was {})",
+                    modelArgs.maxSeqLen(), maxSeqLen);
+        } else {
+            logger.info("max-seq-len={} (explicit)", modelArgs.maxSeqLen());
+        }
         ScalarType cacheDtype = resolveKvCacheDtype(kvCacheDtype, configJson, computeDtype);
         logger.info("KV cache dtype: {} (override={}, compute={})", cacheDtype, kvCacheDtype, computeDtype);
 
@@ -565,6 +571,14 @@ public class Qwen implements LanguageModel {
         }
         if (maxPromptLen > params.maxSeqLen()) {
             throw new IllegalArgumentException("The prompt length is greater than max_seq_len");
+        }
+        // Cap prompt + max_tokens by max-seq-len for every request.
+        int maxAllowedGen = Math.max(0, params.maxSeqLen() - maxPromptLen);
+        if (maxGenLen > maxAllowedGen) {
+            maxGenLen = maxAllowedGen;
+        }
+        if (maxGenLen < 0) {
+            maxGenLen = 0;
         }
 
         if (seed != 0) {

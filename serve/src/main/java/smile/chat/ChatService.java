@@ -117,6 +117,8 @@ public class ChatService {
             }
             if (model != null) {
                 applyPrefixReuse(model, kvCache.prefixReuse());
+                logger.infof("Chat model ready: id=%s family=%s maxSeqLen=%d (config max-seq-len=%d)",
+                        modelId, model.family(), model.maxSeqLen(), config.maxSeqLen());
             }
         } catch (Exception ex) {
             // Keep the service up in an unavailable state so classic ML / ONNX
