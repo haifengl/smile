@@ -60,7 +60,7 @@ int main(void) {
     CHECK(smile_tensor_size(out, 1) == 8, "linear out features");
 
     /* ---- Uninitialized linear (empty weights, no Kaiming) ---- */
-    ST_Linear lin_u = smile_linear_create_uninitialized(4, 8, 0);
+    ST_Linear lin_u = smile_linear_create_uninitialized(4, 8, 0, ST_DEVICE_CPU, 0);
     CHECK(lin_u != NULL, "linear_create_uninitialized");
     ST_Tensor out_u = smile_linear_forward(lin_u, in);
     CHECK(out_u != NULL, "uninit linear_forward");
@@ -69,7 +69,7 @@ int main(void) {
     smile_tensor_free(out_u);
     smile_linear_free(lin_u);
 
-    ST_Embedding emb_u = smile_embedding_create_uninitialized(16, 8);
+    ST_Embedding emb_u = smile_embedding_create_uninitialized(16, 8, ST_DEVICE_CPU, 0);
     CHECK(emb_u != NULL, "embedding_create_uninitialized");
     smile_embedding_free(emb_u);
 
