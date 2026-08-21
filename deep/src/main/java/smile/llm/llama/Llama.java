@@ -292,7 +292,7 @@ public class Llama implements LanguageModel {
         var layout = modelArgs.kvCacheLayout();
         long tConstruct = System.currentTimeMillis();
         LlamaModel model;
-        try (var ignored = ParameterInit.uninitialized()) {
+        try (var ignored = ParameterInit.uninitialized(device)) {
             model = newModel(modelArgs);
         }
         logger.info("LlamaModel construct in {} ms (layers={}, maxSeqLen={})",

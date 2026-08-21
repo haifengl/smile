@@ -17,6 +17,7 @@
 package smile.deep.layer;
 
 import java.lang.foreign.MemorySegment;
+import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
 
 import static smile.torch.Native.check;
@@ -48,9 +49,14 @@ public class LinearLayer extends ModuleLayer {
     }
 
     private static Handles create(int in, int out, boolean bias) {
-        MemorySegment h = ParameterInit.skip()
-                ? check(smile_linear_create_uninitialized(in, out, bias ? 1 : 0))
-                : check(smile_linear_create(in, out, bias ? 1 : 0));
+        MemorySegment h;
+        if (ParameterInit.skip()) {
+            Device device = ParameterInit.device();
+            h = check(smile_linear_create_uninitialized(
+                    in, out, bias ? 1 : 0, device.type().value(), device.index()));
+        } else {
+            h = check(smile_linear_create(in, out, bias ? 1 : 0));
+        }
         MemorySegment m = check(smile_linear_as_module(h));
         return new Handles(h, m, () -> {
             smile_module_free(m);

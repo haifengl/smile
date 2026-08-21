@@ -17,6 +17,7 @@
 package smile.deep.layer;
 
 import java.lang.foreign.MemorySegment;
+import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
 
 import static smile.torch.Native.check;
@@ -57,9 +58,14 @@ public class EmbeddingLayer extends ModuleLayer {
     }
 
     private static Handles create(int numTokens, int dim) {
-        MemorySegment h = ParameterInit.skip()
-                ? check(smile_embedding_create_uninitialized(numTokens, dim))
-                : check(smile_embedding_create(numTokens, dim));
+        MemorySegment h;
+        if (ParameterInit.skip()) {
+            Device device = ParameterInit.device();
+            h = check(smile_embedding_create_uninitialized(
+                    numTokens, dim, device.type().value(), device.index()));
+        } else {
+            h = check(smile_embedding_create(numTokens, dim));
+        }
         MemorySegment m = check(smile_embedding_as_module(h));
         return new Handles(h, m, () -> {
             smile_module_free(m);

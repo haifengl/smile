@@ -314,7 +314,7 @@ public class Qwen implements LanguageModel {
         // Layers allocate on CPU; place module + cis, then load shards onto model.device().
         long tConstruct = System.currentTimeMillis();
         QwenModel model;
-        try (var ignored = ParameterInit.uninitialized()) {
+        try (var ignored = ParameterInit.uninitialized(device)) {
             model = new QwenModel(modelArgs, statePool, shard, tpGroup);
         }
         logger.info("tpRank={}: QwenModel construct in {} ms",

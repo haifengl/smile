@@ -184,19 +184,23 @@ struct EmptyLinearImpl : torch::nn::Cloneable<EmptyLinearImpl> {
     int64_t in_features;
     int64_t out_features;
     bool with_bias;
+    c10::Device device;
 
-    EmptyLinearImpl(int64_t in_features_, int64_t out_features_, bool bias_)
+    EmptyLinearImpl(int64_t in_features_, int64_t out_features_, bool bias_,
+                    c10::Device device_ = c10::Device(c10::kCPU))
         : in_features(in_features_),
           out_features(out_features_),
-          with_bias(bias_) {
+          with_bias(bias_),
+          device(device_) {
         reset();
     }
 
     void reset() override {
+        auto opts = torch::TensorOptions().device(device);
         weight = register_parameter(
-            "weight", torch::empty({out_features, in_features}));
+            "weight", torch::empty({out_features, in_features}, opts));
         if (with_bias) {
-            bias = register_parameter("bias", torch::empty({out_features}));
+            bias = register_parameter("bias", torch::empty({out_features}, opts));
         } else {
             bias = register_parameter("bias", {}, /*requires_grad=*/false);
         }
@@ -223,15 +227,20 @@ struct EmptyEmbeddingImpl : torch::nn::Cloneable<EmptyEmbeddingImpl> {
     torch::Tensor weight{nullptr};
     int64_t num_embeddings;
     int64_t embedding_dim;
+    c10::Device device;
 
-    EmptyEmbeddingImpl(int64_t num_embeddings_, int64_t embedding_dim_)
-        : num_embeddings(num_embeddings_), embedding_dim(embedding_dim_) {
+    EmptyEmbeddingImpl(int64_t num_embeddings_, int64_t embedding_dim_,
+                       c10::Device device_ = c10::Device(c10::kCPU))
+        : num_embeddings(num_embeddings_),
+          embedding_dim(embedding_dim_),
+          device(device_) {
         reset();
     }
 
     void reset() override {
+        auto opts = torch::TensorOptions().device(device);
         weight = register_parameter(
-            "weight", torch::empty({num_embeddings, embedding_dim}));
+            "weight", torch::empty({num_embeddings, embedding_dim}, opts));
     }
 
     void reset_parameters() {
@@ -1406,17 +1415,19 @@ int smile_output_archive_save_to(ST_OutputArchive a, const char *path) {
 
 ST_Linear smile_linear_create(int64_t in, int64_t out, int bias) {
     ST_TRY_BEGIN
-        EmptyLinear linear(in, out, static_cast<bool>(bias));
+        EmptyLinear linear(in, out, static_cast<bool>(bias), c10::Device(c10::kCPU));
         linear->reset_parameters();
         return new ST_Linear_{ std::move(linear) };
     ST_TRY_END
     return nullptr;
 }
 
-ST_Linear smile_linear_create_uninitialized(int64_t in, int64_t out, int bias) {
+ST_Linear smile_linear_create_uninitialized(int64_t in, int64_t out, int bias,
+                                            int device_type, int8_t device_index) {
     ST_TRY_BEGIN
         // torch::empty only — no Kaiming fill (weights overwritten on load).
-        return new ST_Linear_{ EmptyLinear(in, out, static_cast<bool>(bias)) };
+        c10::Device device(to_device_type(device_type), device_index);
+        return new ST_Linear_{ EmptyLinear(in, out, static_cast<bool>(bias), device) };
     ST_TRY_END
     return nullptr;
 }
@@ -1534,16 +1545,18 @@ ST_Module smile_dropout_as_module(ST_Dropout d) {
 
 ST_Embedding smile_embedding_create(int64_t num, int64_t dim) {
     ST_TRY_BEGIN
-        EmptyEmbedding emb(num, dim);
+        EmptyEmbedding emb(num, dim, c10::Device(c10::kCPU));
         emb->reset_parameters();
         return new ST_Embedding_{ std::move(emb) };
     ST_TRY_END
     return nullptr;
 }
 
-ST_Embedding smile_embedding_create_uninitialized(int64_t num, int64_t dim) {
+ST_Embedding smile_embedding_create_uninitialized(int64_t num, int64_t dim,
+                                                  int device_type, int8_t device_index) {
     ST_TRY_BEGIN
-        return new ST_Embedding_{ EmptyEmbedding(num, dim) };
+        c10::Device device(to_device_type(device_type), device_index);
+        return new ST_Embedding_{ EmptyEmbedding(num, dim, device) };
     ST_TRY_END
     return nullptr;
 }
