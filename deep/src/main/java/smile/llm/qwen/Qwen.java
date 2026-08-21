@@ -575,24 +575,32 @@ public class Qwen implements LanguageModel {
              var scope = new AutoScope()) {
             Tensor.push(scope);
             try {
-            int totalLen = Math.min(params.maxSeqLen(), maxGenLen + maxPromptLen);
+            int desiredTotalLen = Math.min(params.maxSeqLen(), maxGenLen + maxPromptLen);
             final boolean usePrefix = batchSize == 1 && model.kvCachePool() != null;
             int prefixLen = 0;
+            int totalLen = desiredTotalLen;
             if (usePrefix) {
                 for (QwenModel m : models) {
                     if (m.kvCachePool() != null) {
-                        prefixLen = m.kvCachePool().bindWithPrefix(prompts[0], totalLen);
+                        prefixLen = m.kvCachePool().bindWithPrefix(prompts[0], desiredTotalLen);
+                        totalLen = Math.min(totalLen, m.kvCachePool().requestCapacity());
                     }
-                }
-                if (prefixLen > 0 && minPromptLen < totalLen && minPromptLen > 0) {
-                    prefixLen = Math.min(prefixLen, minPromptLen - 1);
                 }
             } else if (model.kvCachePool() != null) {
                 for (QwenModel m : models) {
                     if (m.kvCachePool() != null) {
-                        m.kvCachePool().bindRequests(batchSize, totalLen);
+                        m.kvCachePool().bindRequests(batchSize, desiredTotalLen);
+                        totalLen = Math.min(totalLen, m.kvCachePool().requestCapacity());
                     }
                 }
+            }
+            if (model.kvCachePool() != null && totalLen < maxPromptLen) {
+                throw new IllegalArgumentException(String.format(
+                        "Prompt length %d exceeds free KV capacity %d",
+                        maxPromptLen, totalLen));
+            }
+            if (prefixLen > 0 && minPromptLen < totalLen && minPromptLen > 0) {
+                prefixLen = Math.min(prefixLen, minPromptLen - 1);
             }
             if (model.deltaNetStatePool() != null) {
                 for (QwenModel m : models) {

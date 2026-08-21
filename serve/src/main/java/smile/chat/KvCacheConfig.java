@@ -24,6 +24,11 @@ import io.smallrye.config.WithDefault;
  * KV-cache storage settings for the chat inference engine.
  * Properties are prefixed with {@code smile.chat.kv-cache}.
  *
+ * <p>Pool size is fixed at load time from
+ * {@link ChatServiceConfig#memFractionStatic()}; requests never allocate more
+ * KV than free pages in that static pool. Exhaustion truncates generation
+ * with partial results ({@code finish_reason=length}).
+ *
  * @author Haifeng Li
  */
 @ConfigMapping(prefix = "smile.chat.kv-cache")
