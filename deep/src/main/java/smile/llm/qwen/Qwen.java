@@ -420,6 +420,12 @@ public class Qwen implements LanguageModel, AutoCloseable {
         DeltaNetStatePool statePool = null;
         if (modelArgs.numLinearAttentionLayers() > 0) {
             long t0 = System.currentTimeMillis();
+            // Recurrent: float32 for fused CUDA kernel. Conv: compute dtype so
+            // decode concat(convState, hidden) does not promote to float.
+            ScalarType convDtype = Tensor.isBF16Supported() ? ScalarType.BFloat16 : ScalarType.Half;
+            if (!cuda) {
+                convDtype = ScalarType.Float;
+            }
             statePool = new DeltaNetStatePool(
                     modelArgs.numLinearAttentionLayers(),
                     shard.linearNumValueHeads(),
@@ -429,7 +435,8 @@ public class Qwen implements LanguageModel, AutoCloseable {
                     modelArgs.linearConvKernelDim(),
                     modelArgs.maxBatchSize(),
                     memFractionStatic > 0 ? Device.CPU() : device,
-                    ScalarType.Float);
+                    ScalarType.Float,
+                    convDtype);
             logger.info("tpRank={}: DeltaNetStatePool (staging) in {} ms",
                     rank, System.currentTimeMillis() - t0);
         }
@@ -463,8 +470,9 @@ public class Qwen implements LanguageModel, AutoCloseable {
 
         if (memFractionStatic > 0 && modelArgs.numLinearAttentionLayers() > 0) {
             long t0 = System.currentTimeMillis();
-            // Float pool: recurrentGatedDeltaRule mutates state in place without a
-            // bf16→float workspace (and avoids write-back clones). Size is small vs KV.
+            // Recurrent stays float32 (in-place fused kernel). Conv matches model
+            // compute dtype (bf16/fp16) so decode does not promote to float.
+            ScalarType convDtype = Tensor.isBF16Supported() ? ScalarType.BFloat16 : ScalarType.Half;
             var gpuState = new DeltaNetStatePool(
                     modelArgs.numLinearAttentionLayers(),
                     shard.linearNumValueHeads(),
@@ -474,7 +482,8 @@ public class Qwen implements LanguageModel, AutoCloseable {
                     modelArgs.linearConvKernelDim(),
                     modelArgs.maxBatchSize(),
                     device,
-                    ScalarType.Float);
+                    ScalarType.Float,
+                    convDtype);
             var previous = model.deltaNetStatePool;
             model.deltaNetStatePool = gpuState;
             for (var layer : model.layers) {
