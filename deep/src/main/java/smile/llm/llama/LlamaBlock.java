@@ -23,7 +23,7 @@ import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
 import smile.llm.cache.KvCacheLayout;
 import smile.llm.cache.KvCachePool;
-import smile.llm.transformer.Attention;
+import smile.llm.attention.Attention;
 import smile.llm.transformer.FeedForward;
 import smile.torch.Native;
 import smile.util.AutoScope;

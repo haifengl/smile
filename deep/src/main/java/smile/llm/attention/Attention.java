@@ -14,13 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.llm.transformer;
+package smile.llm.attention;
 
 import java.lang.foreign.MemorySegment;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.Tensor;
-import smile.llm.attention.AttentionBackends;
-import smile.llm.attention.AttentionContext;
 
 /**
  * Multi-head attention. Multi-head attention is a core component of
@@ -34,9 +32,8 @@ import smile.llm.attention.AttentionContext;
  * dimensions. These projections are processed in parallel by distinct
  * attention heads.
  *
- * <p>{@link #apply} dispatches to the process-wide
- * {@link smile.llm.attention.AttentionBackends} kernel ({@code torch_native}
- * SDPA by default, or {@code flashinfer} when installed).
+ * <p>{@link #apply} dispatches to the process-wide {@link AttentionBackends}
+ * kernel ({@code flashinfer} by default when available, else {@code torch_native}).
  *
  * @author Haifeng Li
  */

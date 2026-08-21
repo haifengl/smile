@@ -28,7 +28,7 @@ import smile.llm.attention.AttentionContext;
 import smile.llm.cache.FlashInferKvMetadata;
 import smile.llm.cache.KvCacheLayout;
 import smile.llm.cache.KvCachePool;
-import smile.llm.transformer.Attention;
+import smile.llm.attention.Attention;
 import smile.llm.transformer.RotaryPositionalEncoding;
 import smile.util.AutoScope;
 

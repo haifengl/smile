@@ -30,7 +30,7 @@ import smile.llm.cache.KvCacheLayout;
 import smile.llm.cache.KvCachePool;
 import smile.llm.parallel.TensorParallelGroup;
 import smile.llm.parallel.TensorShardSpec;
-import smile.llm.transformer.Attention;
+import smile.llm.attention.Attention;
 import smile.torch.Native;
 import smile.util.AutoScope;
 
