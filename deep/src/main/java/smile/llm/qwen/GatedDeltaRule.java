@@ -37,12 +37,17 @@ final class GatedDeltaRule {
 
     private GatedDeltaRule() {}
 
-    /** Softplus via {@code log(1 + exp(x))} with a clamp for stability. */
+    /**
+     * Softplus matching PyTorch {@code F.softplus}: {@code x} when {@code x > 20},
+     * otherwise {@code log(1 + exp(clamp(x, -20, 20)))}.
+     */
     static Tensor softplus(Tensor x) {
         try (Tensor clamped = x.clamp(-20, 20);
              Tensor e = clamped.exp();
-             Tensor p = e.add(1.0)) {
-            return p.log();
+             Tensor p = e.add(1.0);
+             Tensor sp = p.log();
+             Tensor over = x.gt(20.0)) {
+            return Tensor.where(over, x, sp);
         }
     }
 

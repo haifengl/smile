@@ -62,8 +62,8 @@ public class QwenModel extends LayerBlock {
     final List<QwenBlock> layers;
     final QwenRMSNorm norm;
     final LinearLayer lmHead;
-    /** Partial RoPE frequencies (moved with {@link #to}). */
-    Tensor cis;
+    /** HF-style partial RoPE cos/sin tables (moved with {@link #to}). */
+    PartialRotaryEncoding.CosSin rope;
     final TensorShardSpec shard;
     final TensorParallelGroup tpGroup;
     final int tpRank;
@@ -117,12 +117,11 @@ public class QwenModel extends LayerBlock {
         logger.info("tpRank={}: allocate layers ({}) in {} ms",
                 tpRank, args.numLayers(), System.currentTimeMillis() - t0);
 
-        long tCis = System.currentTimeMillis();
-        this.cis = PartialRotaryEncoding.computeFreqCis(
+        long tRope = System.currentTimeMillis();
+        this.rope = PartialRotaryEncoding.computeCosSin(
                 args.rotaryDim(), args.maxSeqLen() * 2, args.ropeTheta());
-        this.cis.detachFromScopes();
-        logger.info("tpRank={}: RoPE cis (rotaryDim={}, end={}) in {} ms",
-                tpRank, args.rotaryDim(), args.maxSeqLen() * 2, System.currentTimeMillis() - tCis);
+        logger.info("tpRank={}: RoPE cos/sin (rotaryDim={}, end={}) in {} ms",
+                tpRank, args.rotaryDim(), args.maxSeqLen() * 2, System.currentTimeMillis() - tRope);
 
         MemorySegment listAsModule = smile_module_list_as_module(moduleList);
         add("layers", listAsModule);
@@ -134,35 +133,35 @@ public class QwenModel extends LayerBlock {
     }
 
     /**
-     * Moves parameters and the RoPE frequency table to {@code device}.
+     * Moves parameters and the RoPE cos/sin tables to {@code device}.
      */
     @Override
     public QwenModel to(Device device) {
         super.to(device);
-        Tensor moved = cis.to(device);
-        if (moved != cis) {
-            moved.detachFromScopes();
-            cis.close();
-            cis = moved;
-        }
+        moveRope(device);
         return this;
     }
 
     /**
-     * Moves parameters and the RoPE frequency table to {@code device} / {@code dtype}.
-     * RoPE {@code cis} stays complex64 (device move only); casting it to a real
-     * dtype would drop the imaginary part and break rotary embeddings.
+     * Moves parameters and the RoPE cos/sin tables to {@code device} / {@code dtype}.
+     * RoPE tables stay float32 (device move only).
      */
     @Override
     public QwenModel to(Device device, ScalarType dtype) {
         super.to(device, dtype);
-        Tensor moved = cis.to(device);
-        if (moved != cis) {
-            moved.detachFromScopes();
-            cis.close();
-            cis = moved;
-        }
+        moveRope(device);
         return this;
+    }
+
+    private void moveRope(Device device) {
+        Tensor cos = rope.cos().to(device);
+        Tensor sin = rope.sin().to(device);
+        if (cos != rope.cos() || sin != rope.sin()) {
+            cos.detachFromScopes();
+            sin.detachFromScopes();
+            rope.close();
+            rope = new PartialRotaryEncoding.CosSin(cos, sin);
+        }
     }
 
     /**
@@ -260,7 +259,8 @@ public class QwenModel extends LayerBlock {
         }
         try (var pos = Index.slice(startPos, startPos + seqlen)) {
             Tensor h = tokEmbeddings.forward(tokens);
-            Tensor freqs = cis.get(pos);
+            Tensor cos = rope.cos().get(pos);
+            Tensor sin = rope.sin().get(pos);
 
             Tensor mask = null;
             if (seqlen > 1) {
@@ -287,7 +287,7 @@ public class QwenModel extends LayerBlock {
             }
 
             for (int i = 0; i < layers.size(); i++) {
-                Tensor next = layers.get(i).forward(h, startPos, freqs, mask);
+                Tensor next = layers.get(i).forward(h, startPos, cos, sin, mask);
                 h.close();
                 h = next;
                 if (logger.isDebugEnabled() && device.isCUDA() && (i + 1) % 8 == 0) {
@@ -306,7 +306,7 @@ public class QwenModel extends LayerBlock {
                 mask.close();
                 mask = null;
             }
-            // freqs is a slice of long-lived cis — leave to AutoScope pop (do not close).
+            // cos/sin are slices of long-lived tables — leave to AutoScope pop.
             Tensor logitsF;
             if (!allTokenLogits && seqlen > 1) {
                 try (var last = Index.of(-1);
