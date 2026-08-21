@@ -76,6 +76,11 @@ elseif(NOT DEFINED TORCH_CUDA_ARCH_LIST OR TORCH_CUDA_ARCH_LIST STREQUAL "")
 endif()
 message(STATUS "TORCH_CUDA_ARCH_LIST = ${TORCH_CUDA_ARCH_LIST}")
 
+# Torch's cuda.cmake warns (and forces OFF) if CMAKE_CUDA_ARCHITECTURES is
+# defined. Clear it for find_package; we re-apply arches for smile_torch after.
+unset(CMAKE_CUDA_ARCHITECTURES CACHE)
+unset(CMAKE_CUDA_ARCHITECTURES)
+
 find_package(Torch REQUIRED)
 
 message(STATUS "Torch version  : ${Torch_VERSION}")
@@ -107,6 +112,7 @@ set(SMILE_TORCH_NCCL_ENABLED OFF)
 if(SMILE_TORCH_USE_CUDA AND SMILE_C10_CUDA_LIBRARY AND CUDAToolkit_FOUND)
     set(SMILE_TORCH_CUDA_ENABLED ON)
     message(STATUS "CUDA enabled: toolkit ${CUDAToolkit_VERSION}, c10_cuda=${SMILE_C10_CUDA_LIBRARY}")
+    # Restore arches for our .cu sources (Torch may have set this OFF).
     # Minimum sm_80 (A100); also Hopper (90) and Blackwell (100, native FP4).
     set(CMAKE_CUDA_ARCHITECTURES "80;90;100" CACHE STRING
         "NVCC GPU arches (minimum sm_80)" FORCE)
