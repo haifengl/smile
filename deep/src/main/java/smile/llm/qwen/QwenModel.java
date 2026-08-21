@@ -229,9 +229,23 @@ public class QwenModel extends LayerBlock {
      * Forward pass.
      * @param tokens   token ids {@code [B, S]}.
      * @param startPos cache start position.
-     * @return logits {@code [B, S, V]} in float32.
+     * @return logits {@code [B, S, V]} in float32 (or {@code [B, 1, V]} when
+     *         only the last position is scored — see {@link #forward(Tensor, int, boolean)}).
      */
     public Tensor forward(Tensor tokens, int startPos) {
+        return forward(tokens, startPos, false);
+    }
+
+    /**
+     * Forward pass.
+     * @param tokens          token ids {@code [B, S]}.
+     * @param startPos        cache start position.
+     * @param allTokenLogits  when {@code false} and {@code S > 1}, run {@code lm_head}
+     *                        only on the last hidden state (sampling / decode).
+     *                        When {@code true}, score every position (logprobs).
+     * @return logits in float32.
+     */
+    public Tensor forward(Tensor tokens, int startPos, boolean allTokenLogits) {
         long[] shape = tokens.shape();
         int seqlen = (int) shape[1];
         // Push a forward-local scope so intermediates are not retained by the
@@ -293,27 +307,37 @@ public class QwenModel extends LayerBlock {
                 mask = null;
             }
             // freqs is a slice of long-lived cis — leave to AutoScope pop (do not close).
-            Tensor logitsF = lmHead.forward(normalized);
-            normalized.close();
+            Tensor logitsF;
+            if (!allTokenLogits && seqlen > 1) {
+                try (var last = Index.of(-1);
+                     Tensor lastH = normalized.get(Index.Colon, last);
+                     Tensor lastRow = lastH.unsqueeze(1)) {
+                    logitsF = lmHead.forward(lastRow);
+                }
+                normalized.close();
+            } else {
+                logitsF = lmHead.forward(normalized);
+                normalized.close();
+            }
             Tensor logits = logitsF.to(ScalarType.Float);
             if (logits != logitsF) {
                 logitsF.close();
             }
             logits.promoteToParent();
-            long freeAfter = cudaFreeBytes(device);
-            if (freeBefore >= 0 && freeAfter >= 0) {
-                long deltaMiB = (freeBefore - freeAfter) / (1024 * 1024);
-                if (deltaMiB > 256 || logger.isDebugEnabled()) {
-                    logger.info("tpRank={}: forward seqlen={} freeMiB {} -> {} (delta={} MiB)",
-                            tpRank, seqlen,
-                            freeBefore / (1024 * 1024),
-                            freeAfter / (1024 * 1024),
-                            deltaMiB);
-                }
-            }
             return logits;
         } finally {
             Tensor.pop();
+            long freeAfter = cudaFreeBytes(device);
+            if (freeBefore >= 0 && freeAfter >= 0) {
+                long retainedMiB = (freeBefore - freeAfter) / (1024 * 1024);
+                if (retainedMiB > 256 || logger.isDebugEnabled()) {
+                    logger.info("tpRank={}: forward seqlen={} freeMiB {} -> {} after pop (retained={} MiB)",
+                            tpRank, seqlen,
+                            freeBefore / (1024 * 1024),
+                            freeAfter / (1024 * 1024),
+                            retainedMiB);
+                }
+            }
         }
     }
 

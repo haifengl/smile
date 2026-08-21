@@ -263,8 +263,8 @@ final class GatedDeltaRule {
             Tensor out = Tensor.zeros(opts, batch, heads, seqLen, vDim);
 
             // Reuse one state buffer in place; free per-step workspace immediately.
-            // Expand the decay gate to state's shape so mul_ is same-shaped and
-            // does not clone state under broadcast.
+            // Never use state.mul_(broadcast/expand): PyTorch TensorIterator clones
+            // the LHS under zero-stride expand, which OOMs when free memory is tight.
             for (int t = 0; t < seqLen; t++) {
                 AutoScope stepScope = new AutoScope();
                 Tensor.push(stepScope);
@@ -273,11 +273,13 @@ final class GatedDeltaRule {
                     Tensor kStep = k.get(Index.Colon, Index.Colon, tIdx);
                     Tensor vStep = v.get(Index.Colon, Index.Colon, tIdx);   // [B,H,V]
                     Tensor gTok = gF.get(Index.Colon, Index.Colon, tIdx).exp();
-                    Tensor gB = gTok.unsqueeze(-1).unsqueeze(-1)
-                            .expand(batch, heads, kDim, vDim);             // [B,H,K,V] view
                     Tensor betaStep = betaF.get(Index.Colon, Index.Colon, tIdx).unsqueeze(-1);
 
-                    state.mul_(gB);
+                    // Decay: allocate one same-shaped temp, then copy_ back.
+                    try (Tensor gView = gTok.view(batch, heads, 1, 1);
+                         Tensor decayed = state.mul(gView)) {
+                        smile.torch.Native.copy_(state, decayed);
+                    }
 
                     // kvMem[b,h,v] = sum_k state[b,h,k,v] * k[b,h,k]
                     // via [B,H,1,K] @ [B,H,K,V] → [B,H,1,V] (no full-state temp).

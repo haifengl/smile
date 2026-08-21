@@ -63,6 +63,29 @@ public class GatedDeltaNetTest {
     }
 
     @Test
+    public void testGivenFloatPoolStateWhenRecurrentThenMutatesInPlace() {
+        int batch = 1, seq = 2, heads = 2, kDim = 4, vDim = 4;
+        Tensor q = Tensor.ones(batch, seq, heads, kDim);
+        Tensor k = Tensor.ones(batch, seq, heads, kDim);
+        Tensor v = Tensor.ones(batch, seq, heads, vDim);
+        Tensor g = Tensor.full(-1.0, batch, seq, heads);
+        Tensor beta = Tensor.full(0.5, batch, seq, heads);
+        Tensor pool = Tensor.zeros(batch, heads, kDim, vDim);
+
+        var result = GatedDeltaRule.recurrentGatedDeltaRule(
+                q, k, v, g, beta, pool, true, true);
+        assertArrayEquals(new long[]{batch, seq, heads, vDim}, result._1().shape());
+        assertNull(result._2());
+        // Pool was mutated (not left at zeros after a non-trivial step).
+        try (Tensor s = pool.abs().sum()) {
+            assertTrue(s.doubleValue() > 0.0);
+        }
+        result._1().close();
+        q.close(); k.close(); v.close(); g.close(); beta.close();
+        pool.close();
+    }
+
+    @Test
     public void testGivenDeltaNetStatePoolWhenResetThenBoundBatchSet() {
         try (var pool = new DeltaNetStatePool(2, 4, 8, 8, 32, 4, 2, Device.CPU(), ScalarType.Float)) {
             pool.reset(1);
