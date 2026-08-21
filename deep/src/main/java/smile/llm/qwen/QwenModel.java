@@ -238,6 +238,12 @@ public class QwenModel extends LayerBlock {
         // caller's Tensor.push(loopScope) until the whole generate step ends.
         AutoScope scope = new AutoScope();
         Tensor.push(scope);
+        Device device = tokens.device();
+        long freeBefore = cudaFreeBytes(device);
+        if (freeBefore >= 0 && logger.isDebugEnabled()) {
+            logger.debug("tpRank={}: forward start seqlen={} freeMiB={}",
+                    tpRank, seqlen, freeBefore / (1024 * 1024));
+        }
         try (var pos = Index.slice(startPos, startPos + seqlen)) {
             Tensor h = tokEmbeddings.forward(tokens);
             Tensor freqs = cis.get(pos);
@@ -266,14 +272,27 @@ public class QwenModel extends LayerBlock {
                 }
             }
 
-            for (var layer : layers) {
-                Tensor next = layer.forward(h, startPos, freqs, mask);
+            for (int i = 0; i < layers.size(); i++) {
+                Tensor next = layers.get(i).forward(h, startPos, freqs, mask);
                 h.close();
                 h = next;
+                if (logger.isDebugEnabled() && device.isCUDA() && (i + 1) % 8 == 0) {
+                    long free = cudaFreeBytes(device);
+                    if (free >= 0) {
+                        logger.debug("tpRank={}: after layer {}/{} freeMiB={}",
+                                tpRank, i + 1, layers.size(), free / (1024 * 1024));
+                    }
+                }
             }
 
             Tensor normalized = norm.forward(h);
             h.close();
+            // mask is independently allocated; free before the vocab-sized lm_head.
+            if (mask != null) {
+                mask.close();
+                mask = null;
+            }
+            // freqs is a slice of long-lived cis — leave to AutoScope pop (do not close).
             Tensor logitsF = lmHead.forward(normalized);
             normalized.close();
             Tensor logits = logitsF.to(ScalarType.Float);
@@ -281,9 +300,32 @@ public class QwenModel extends LayerBlock {
                 logitsF.close();
             }
             logits.promoteToParent();
+            long freeAfter = cudaFreeBytes(device);
+            if (freeBefore >= 0 && freeAfter >= 0) {
+                long deltaMiB = (freeBefore - freeAfter) / (1024 * 1024);
+                if (deltaMiB > 256 || logger.isDebugEnabled()) {
+                    logger.info("tpRank={}: forward seqlen={} freeMiB {} -> {} (delta={} MiB)",
+                            tpRank, seqlen,
+                            freeBefore / (1024 * 1024),
+                            freeAfter / (1024 * 1024),
+                            deltaMiB);
+                }
+            }
             return logits;
         } finally {
             Tensor.pop();
+        }
+    }
+
+    /** Best-effort CUDA free bytes for diagnostics; {@code -1} when unavailable. */
+    private static long cudaFreeBytes(Device device) {
+        if (device == null || !device.isCUDA()) {
+            return -1;
+        }
+        try {
+            return smile.torch.Native.cudaMemGetInfo(device.index())[0];
+        } catch (RuntimeException e) {
+            return -1;
         }
     }
 

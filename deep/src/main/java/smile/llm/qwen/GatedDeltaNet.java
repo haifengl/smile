@@ -193,8 +193,12 @@ public class GatedDeltaNet {
 
                 int rep = numVHeads / numKHeads;
                 if (rep > 1) {
-                    query = repeatHeads(query, rep);
-                    key = repeatHeads(key, rep);
+                    Tensor qRep = repeatHeads(query, rep);
+                    Tensor kRep = repeatHeads(key, rep);
+                    query.close();
+                    key.close();
+                    query = qRep;
+                    key = kRep;
                 }
 
                 Tensor beta = sigmoid.forward(b);
@@ -220,10 +224,8 @@ public class GatedDeltaNet {
                     dt.close();
                 }
 
-                Tensor initState = null;
-                if (decode && statePool != null) {
-                    initState = statePool.recurrent(linearLayerId);
-                }
+                // Prefill and decode both reuse the pool buffer (reset() zeros it).
+                Tensor initState = statePool != null ? statePool.recurrent(linearLayerId) : null;
 
                 var result = GatedDeltaRule.recurrentGatedDeltaRule(
                         query, key, value, g, beta, initState, statePool != null, true);
@@ -239,6 +241,7 @@ public class GatedDeltaNet {
                 mixedConvBase.close();
 
                 Tensor core = result._1();
+                // Non-null only when the kernel allocated a fresh state (no pool).
                 if (statePool != null && result._2() != null) {
                     Tensor dest = statePool.recurrent(linearLayerId);
                     dest.put_(result._2(), Index.Colon, Index.Colon, Index.Colon, Index.Colon);
