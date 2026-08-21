@@ -46,6 +46,7 @@ import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.ChatCompletion;
 import smile.llm.FinishReason;
+import smile.llm.GenerationListener;
 import smile.llm.LanguageModel;
 import smile.llm.Message;
 import smile.llm.cache.KvCachePool;
@@ -767,10 +768,17 @@ public class Qwen implements LanguageModel {
         };
     }
 
-    @Override
     public ChatCompletion[] generate(int[][] prompts, int maxGenLen, double temperature,
                                      double topp, boolean logprobs, long seed,
                                      SubmissionPublisher<String> publisher) {
+        return generate(prompts, maxGenLen, temperature, topp, logprobs, seed, publisher, null);
+    }
+
+    @Override
+    public ChatCompletion[] generate(int[][] prompts, int maxGenLen, double temperature,
+                                     double topp, boolean logprobs, long seed,
+                                     SubmissionPublisher<String> publisher,
+                                     GenerationListener progress) {
         int batchSize = prompts.length;
         if (batchSize > params.maxBatchSize()) {
             throw new IllegalArgumentException("The number of prompts is greater than max_batch_size");
@@ -957,6 +965,9 @@ public class Qwen implements LanguageModel {
 
                     nextToken.close();
                     prevPos = curPos;
+                    if (progress != null) {
+                        progress.onGeneratedTokens(batchSize);
+                    }
                 } finally {
                     Tensor.pop();
                 }
