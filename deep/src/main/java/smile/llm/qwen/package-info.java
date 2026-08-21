@@ -27,7 +27,7 @@
  * strategically retaining full attention layers (e.g., a 3:1 ratio) to
  * preserve broad context recall.
  * 
- * Dense & Sparse MoE Options: Ships with both dense parameter setups and
+ * Dense &amp; Sparse MoE Options: Ships with both dense parameter setups and
  * ultra-sparse Mixture-of-Experts variants where only a small active
  * fraction of total parameters fire per token.
  * 

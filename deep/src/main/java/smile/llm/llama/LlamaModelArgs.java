@@ -68,6 +68,19 @@ public record LlamaModelArgs(int dim,
      * Constructor without an explicit FFN intermediate size (Meta-format layout).
      * The feed-forward hidden dimension is derived from {@code multipleOf} /
      * {@code ffnDimMultiplier}.
+     *
+     * @param dim the dimension of token embedding.
+     * @param numLayers the number of transformer blocks.
+     * @param numHeads the number of attention heads.
+     * @param numKvHeads the number of key and value heads.
+     * @param vocabSize the size of the vocabulary.
+     * @param multipleOf make SwiGLU hidden layer size multiple of large power of 2.
+     * @param ffnDimMultiplier the multiplier for the hidden dimension of the feedforward layers.
+     * @param normEps the epsilon value used for numerical stability in normalization layers.
+     * @param ropeTheta the theta parameter in rotary positional encoding.
+     * @param scaledRope scale RoPE positional encoding if true.
+     * @param maxBatchSize the maximum batch size.
+     * @param maxSeqLen the maximum sequence length for input data.
      */
     public LlamaModelArgs(int dim, int numLayers, int numHeads, Integer numKvHeads,
                           int vocabSize, int multipleOf, Double ffnDimMultiplier,

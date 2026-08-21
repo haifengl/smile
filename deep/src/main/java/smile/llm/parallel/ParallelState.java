@@ -34,10 +34,24 @@ public final class ParallelState {
     private final int globalRank;
     private final byte deviceIndex;
 
+    /**
+     * Phase-1 constructor ({@code ppRank=0}, {@code dpRank=0}).
+     *
+     * @param config process-mesh configuration.
+     * @param tpRank tensor-parallel rank.
+     */
     public ParallelState(ParallelConfig config, int tpRank) {
         this(config, tpRank, 0, 0);
     }
 
+    /**
+     * Full mesh-coordinate constructor.
+     *
+     * @param config process-mesh configuration.
+     * @param tpRank tensor-parallel rank.
+     * @param ppRank pipeline-parallel rank.
+     * @param dpRank data-parallel rank.
+     */
     public ParallelState(ParallelConfig config, int tpRank, int ppRank, int dpRank) {
         if (tpRank < 0 || tpRank >= config.tpSize()) {
             throw new IllegalArgumentException("tpRank out of range: " + tpRank);
@@ -56,55 +70,104 @@ public final class ParallelState {
         this.deviceIndex = config.devices()[tpRank];
     }
 
+    /**
+     * Returns the process-mesh configuration.
+     * @return parallel config.
+     */
     public ParallelConfig config() {
         return config;
     }
 
+    /**
+     * Returns the tensor-parallel size.
+     * @return TP size.
+     */
     public int tpSize() {
         return config.tpSize();
     }
 
+    /**
+     * Returns this rank's tensor-parallel index.
+     * @return TP rank.
+     */
     public int tpRank() {
         return tpRank;
     }
 
+    /**
+     * Returns this rank's pipeline-parallel index.
+     * @return PP rank.
+     */
     public int ppRank() {
         return ppRank;
     }
 
+    /**
+     * Returns this rank's data-parallel index.
+     * @return DP rank.
+     */
     public int dpRank() {
         return dpRank;
     }
 
+    /**
+     * Returns the global rank in the process mesh.
+     * @return global rank.
+     */
     public int globalRank() {
         return globalRank;
     }
 
+    /**
+     * Returns the CUDA device index for this rank.
+     * @return device index.
+     */
     public byte deviceIndex() {
         return deviceIndex;
     }
 
+    /**
+     * Returns whether this rank is the TP root ({@code tpRank == 0}).
+     * @return {@code true} if TP root.
+     */
     public boolean isTpRoot() {
         return tpRank == 0;
     }
 
+    /**
+     * Returns whether this rank is the first pipeline stage.
+     * @return {@code true} if {@code ppRank == 0}.
+     */
     public boolean isFirstStage() {
         return ppRank == 0;
     }
 
+    /**
+     * Returns whether this rank is the last pipeline stage.
+     * @return {@code true} if last PP stage.
+     */
     public boolean isLastStage() {
         return ppRank == config.ppSize() - 1;
     }
 
-    /** Binds this state to the calling thread for collective helpers. */
+    /**
+     * Binds this state to the calling thread for collective helpers.
+     *
+     * @param state state to bind, or {@code null} to clear.
+     */
     public static void setCurrent(ParallelState state) {
         CURRENT.set(state);
     }
 
+    /**
+     * Returns the state bound to the calling thread, if any.
+     * @return current state, or {@code null} if unset.
+     */
     public static ParallelState current() {
         return CURRENT.get();
     }
 
+    /** Clears the thread-local parallel state. */
     public static void clearCurrent() {
         CURRENT.remove();
     }

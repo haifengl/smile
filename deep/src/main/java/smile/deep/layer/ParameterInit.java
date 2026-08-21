@@ -36,6 +36,7 @@ public final class ParameterInit {
     /**
      * Returns {@code true} when the current thread is inside an
      * {@link #uninitialized()} / {@link #uninitialized(Device)} scope.
+     * @return {@code true} if parameter init should be skipped.
      */
     public static boolean skip() {
         return SKIP_DEPTH.get() > 0;
@@ -44,6 +45,7 @@ public final class ParameterInit {
     /**
      * Target device for empty Linear/Embedding shells in the current scope.
      * Defaults to CPU when not inside a device-aware uninitialized scope.
+     * @return target device for empty parameter storage.
      */
     public static Device device() {
         Device d = DEVICE.get();
@@ -83,6 +85,7 @@ public final class ParameterInit {
      * Decrements the skip depth when closed. {@code close()} does not throw.
      */
     public enum Scope implements AutoCloseable {
+        /** Singleton scope handle returned by {@link #uninitialized()}. */
         INSTANCE;
 
         @Override

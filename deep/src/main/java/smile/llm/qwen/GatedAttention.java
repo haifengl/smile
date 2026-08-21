@@ -85,6 +85,16 @@ public class GatedAttention implements Attention {
 
     /**
      * Tensor-parallel constructor.
+     *
+     * @param dim        hidden size.
+     * @param numHeads   query head count (local under TP).
+     * @param numKvHeads key/value head count (local under TP).
+     * @param headDim    per-head dimension.
+     * @param rotaryDim  partial RoPE dimension.
+     * @param normEps    RMSNorm epsilon.
+     * @param kvLayerId  layer index inside the KV pool.
+     * @param tpGroup    tensor-parallel group, or {@code null} for single-device.
+     * @param tpRank     this rank's TP index.
      */
     public GatedAttention(int dim, int numHeads, int numKvHeads, int headDim, int rotaryDim,
                           double normEps, int kvLayerId,
@@ -124,6 +134,15 @@ public class GatedAttention implements Attention {
 
     /**
      * Builds attention from a shard spec (local head counts).
+     *
+     * @param dim        hidden size.
+     * @param headDim    per-head dimension.
+     * @param rotaryDim  partial RoPE dimension.
+     * @param normEps    RMSNorm epsilon.
+     * @param kvLayerId  layer index inside the KV pool.
+     * @param shard      local head / rank shard description.
+     * @param tpGroup    tensor-parallel group.
+     * @return gated attention for the shard.
      */
     public static GatedAttention forShard(int dim, int headDim, int rotaryDim, double normEps,
                                           int kvLayerId,
@@ -134,6 +153,14 @@ public class GatedAttention implements Attention {
 
     /**
      * Test helper that allocates a private KV pool.
+     *
+     * @param dim        hidden size.
+     * @param numHeads   query head count.
+     * @param numKvHeads key/value head count.
+     * @param headDim    per-head dimension.
+     * @param rotaryDim  partial RoPE dimension.
+     * @param normEps    RMSNorm epsilon.
+     * @param layout     KV cache layout used to size the private pool.
      */
     public GatedAttention(int dim, int numHeads, int numKvHeads, int headDim, int rotaryDim,
                           double normEps, KvCacheLayout layout) {

@@ -56,6 +56,11 @@ public final class WeightSharding {
 
     /**
      * Column-parallel bias {@code [globalOut]}.
+     *
+     * @param bias   full bias vector.
+     * @param tpSize TP size.
+     * @param tpRank this rank.
+     * @return local bias shard.
      */
     public static Tensor columnParallelBias(Tensor bias, int tpSize, int tpRank) {
         if (tpSize <= 1) {
@@ -71,6 +76,9 @@ public final class WeightSharding {
      * Row-parallel slice along dim 1 (input features).
      *
      * @param weight full weight {@code [out, globalIn]}.
+     * @param tpSize TP size.
+     * @param tpRank this rank.
+     * @return local in-feature columns.
      */
     public static Tensor rowParallel(Tensor weight, int tpSize, int tpRank) {
         if (tpSize <= 1) {
@@ -89,6 +97,13 @@ public final class WeightSharding {
     /**
      * Head-wise column shard for fused QKV / gate projections packed as
      * {@code [numHeads * headDim * pack, dim]} where {@code pack} is 1 or 2.
+     *
+     * @param weight    full projection weight.
+     * @param numHeads  global head count.
+     * @param headWidth channels per head ({@code headDim} or {@code headDim * pack}).
+     * @param tpSize    TP size.
+     * @param tpRank    this rank.
+     * @return local head rows.
      */
     public static Tensor columnParallelHeads(Tensor weight, int numHeads, int headWidth,
                                              int tpSize, int tpRank) {
@@ -106,6 +121,13 @@ public final class WeightSharding {
 
     /**
      * Head-wise row shard for output projections {@code [dim, numHeads * headDim]}.
+     *
+     * @param weight   full output-projection weight.
+     * @param numHeads global head count.
+     * @param headDim  per-head dimension.
+     * @param tpSize   TP size.
+     * @param tpRank   this rank.
+     * @return local head columns.
      */
     public static Tensor rowParallelHeads(Tensor weight, int numHeads, int headDim,
                                           int tpSize, int tpRank) {

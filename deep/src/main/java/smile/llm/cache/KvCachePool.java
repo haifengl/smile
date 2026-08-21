@@ -389,32 +389,50 @@ public class KvCachePool implements AutoCloseable {
                 pageSize, device, ScalarType.Float);
     }
 
-    /** Returns the embedded radix tree used for prefix sharing. */
+    /**
+     * Returns the embedded radix tree used for prefix sharing.
+     * @return the radix tree.
+     */
     public RadixCache radix() {
         return radix;
     }
 
-    /** Returns the number of transformer layers covered by this pool. */
+    /**
+     * Returns the number of transformer layers covered by this pool.
+     * @return layer count.
+     */
     public int numLayers() {
         return numLayers;
     }
 
-    /** Returns the total number of token slots. */
+    /**
+     * Returns the total number of token slots.
+     * @return slot count.
+     */
     public int numSlots() {
         return numSlots;
     }
 
-    /** Returns the number of free pages. */
+    /**
+     * Returns the number of free pages.
+     * @return free page count.
+     */
     public int freePages() {
         return freePages.size();
     }
 
-    /** Returns the number of free token slots ({@code freePages × pageSize}). */
+    /**
+     * Returns the number of free token slots ({@code freePages × pageSize}).
+     * @return free slot count.
+     */
     public int freeSlots() {
         return freePages.size() * pageSize;
     }
 
-    /** Returns the page size in tokens. */
+    /**
+     * Returns the page size in tokens.
+     * @return tokens per page.
+     */
     public int pageSize() {
         return pageSize;
     }
@@ -422,6 +440,7 @@ public class KvCachePool implements AutoCloseable {
     /**
      * Capacity reserved for the currently bound request, or {@code 0} if none.
      * Generation must not access positions {@code >=} this value.
+     * @return bound request capacity in tokens.
      */
     public int requestCapacity() {
         return requestCapacity;
@@ -438,22 +457,34 @@ public class KvCachePool implements AutoCloseable {
         this.prefixReuseEnabled = enabled;
     }
 
-    /** Returns whether prefix reuse is enabled. */
+    /**
+     * Returns whether prefix reuse is enabled.
+     * @return {@code true} if prefix reuse is enabled.
+     */
     public boolean isPrefixReuseEnabled() {
         return prefixReuseEnabled;
     }
 
-    /** Cumulative prompt tokens seen by prefix bind (full length, not page-floored). */
+    /**
+     * Cumulative prompt tokens seen by prefix bind (full length, not page-floored).
+     * @return cumulative prompt token count.
+     */
     public long prefixPromptTokens() {
         return prefixPromptTokens.get();
     }
 
-    /** Cumulative matched prefix tokens. */
+    /**
+     * Cumulative matched prefix tokens.
+     * @return cumulative matched token count.
+     */
     public long prefixMatchTokens() {
         return prefixMatchTokens.get();
     }
 
-    /** Cumulative tokens inserted into the radix tree. */
+    /**
+     * Cumulative tokens inserted into the radix tree.
+     * @return cumulative inserted token count.
+     */
     public long prefixInsertTokens() {
         return prefixInsertTokens.get();
     }

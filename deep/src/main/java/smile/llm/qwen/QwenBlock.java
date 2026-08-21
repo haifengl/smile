@@ -59,6 +59,12 @@ public class QwenBlock {
 
     /**
      * Tensor-parallel constructor.
+     *
+     * @param layerId   stack layer index.
+     * @param args      model args.
+     * @param statePool DeltaNet state pool (linear layers; may be null).
+     * @param shard     local head / FFN shard description, or {@code null} for full width.
+     * @param tpGroup   tensor-parallel group, or {@code null} for single-device.
      */
     public QwenBlock(int layerId, QwenModelArgs args, DeltaNetStatePool statePool,
                      TensorShardSpec shard, TensorParallelGroup tpGroup) {

@@ -82,6 +82,11 @@ public class Qwen implements LanguageModel {
 
     /**
      * Constructor.
+     *
+     * @param name      model instance / checkpoint name.
+     * @param model     decoder module (single-device).
+     * @param tokenizer chat / completion tokenizer.
+     * @param params    hyperparameters from the checkpoint.
      */
     public Qwen(String name, QwenModel model, Tokenizer tokenizer, QwenModelArgs params) {
         this(name, new QwenModel[]{model}, null, tokenizer, params);
@@ -89,6 +94,12 @@ public class Qwen implements LanguageModel {
 
     /**
      * Tensor-parallel constructor.
+     *
+     * @param name      model instance / checkpoint name.
+     * @param models    one decoder shard per TP rank.
+     * @param tpGroup   tensor-parallel group, or {@code null} when {@code models.length == 1}.
+     * @param tokenizer chat / completion tokenizer.
+     * @param params    hyperparameters from the checkpoint.
      */
     public Qwen(String name, QwenModel[] models, TensorParallelGroup tpGroup,
                 Tokenizer tokenizer, QwenModelArgs params) {
@@ -141,13 +152,23 @@ public class Qwen implements LanguageModel {
         return tokenizer.encodeDialog(dialog);
     }
 
-    /** Hyperparameters from the checkpoint. */
+    /**
+     * Hyperparameters from the checkpoint.
+     * @return model args.
+     */
     public QwenModelArgs params() {
         return params;
     }
 
     /**
      * Builds a Qwen instance from a HuggingFace checkpoint directory.
+     *
+     * @param checkpointDir directory containing {@code config.json} and weights.
+     * @param maxBatchSize  maximum batch size for inference.
+     * @param maxSeqLen     maximum sequence length; {@code <= 0} uses the config value.
+     * @param deviceId      CUDA device id, or negative for CPU.
+     * @throws IOException if the checkpoint cannot be read.
+     * @return a loaded Qwen model.
      */
     public static Qwen build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte deviceId)
             throws IOException {
@@ -158,9 +179,15 @@ public class Qwen implements LanguageModel {
     /**
      * Builds a Qwen instance from a HuggingFace checkpoint directory.
      *
+     * @param checkpointDir     directory containing {@code config.json} and weights.
+     * @param maxBatchSize      maximum batch size for inference.
+     * @param maxSeqLen         maximum sequence length; {@code <= 0} uses the config value.
+     * @param deviceId          CUDA device id, or negative for CPU.
      * @param memFractionStatic static-region fraction of total GPU memory (SGLang-style);
      *                          {@code <=0} keeps test sizing.
      * @param kvCacheDtype      optional KV dtype override.
+     * @throws IOException if the checkpoint cannot be read.
+     * @return a loaded Qwen model.
      */
     public static Qwen build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte deviceId,
                              double memFractionStatic, String kvCacheDtype) throws IOException {
@@ -171,7 +198,16 @@ public class Qwen implements LanguageModel {
     /**
      * Builds a Qwen instance with optional tensor parallelism.
      *
-     * @param parallel {@link ParallelConfig#tensorParallel} for multi-GPU; {@code ppSize} must be 1.
+     * @param checkpointDir     directory containing {@code config.json} and weights.
+     * @param maxBatchSize      maximum batch size for inference.
+     * @param maxSeqLen         maximum sequence length; {@code <= 0} uses the config value.
+     * @param deviceId          CUDA device id, or negative for CPU.
+     * @param memFractionStatic static-region fraction of total GPU memory (SGLang-style);
+     *                          {@code <=0} keeps test sizing.
+     * @param kvCacheDtype      optional KV dtype override.
+     * @param parallel          {@link ParallelConfig#tensorParallel} for multi-GPU; {@code ppSize} must be 1.
+     * @throws IOException if the checkpoint cannot be read.
+     * @return a loaded Qwen model.
      */
     public static Qwen build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte deviceId,
                              double memFractionStatic, String kvCacheDtype,
@@ -183,8 +219,17 @@ public class Qwen implements LanguageModel {
     /**
      * Builds a Qwen instance with optional tensor parallelism and KV page size.
      *
-     * @param pageSize tokens per radix / KV pool page ({@code >= 1}).
-     * @param parallel {@link ParallelConfig#tensorParallel} for multi-GPU; {@code ppSize} must be 1.
+     * @param checkpointDir     directory containing {@code config.json} and weights.
+     * @param maxBatchSize      maximum batch size for inference.
+     * @param maxSeqLen         maximum sequence length; {@code <= 0} uses the config value.
+     * @param deviceId          CUDA device id, or negative for CPU.
+     * @param memFractionStatic static-region fraction of total GPU memory (SGLang-style);
+     *                          {@code <=0} keeps test sizing.
+     * @param kvCacheDtype      optional KV dtype override.
+     * @param pageSize          tokens per radix / KV pool page ({@code >= 1}).
+     * @param parallel          {@link ParallelConfig#tensorParallel} for multi-GPU; {@code ppSize} must be 1.
+     * @throws IOException if the checkpoint cannot be read.
+     * @return a loaded Qwen model.
      */
     public static Qwen build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte deviceId,
                              double memFractionStatic, String kvCacheDtype, int pageSize,
@@ -197,10 +242,19 @@ public class Qwen implements LanguageModel {
      * Builds a Qwen instance with optional tensor parallelism, KV page size, and
      * safetensors loader concurrency.
      *
-     * @param pageSize            tokens per radix / KV pool page ({@code >= 1}).
-     * @param parallel            {@link ParallelConfig#tensorParallel} for multi-GPU; {@code ppSize} must be 1.
-     * @param modelLoaderThreads  safetensors loader threads; {@code 0} = auto
-     *                            ({@link SafeTensorsLoaderThreads#resolve}).
+     * @param checkpointDir      directory containing {@code config.json} and weights.
+     * @param maxBatchSize       maximum batch size for inference.
+     * @param maxSeqLen          maximum sequence length; {@code <= 0} uses the config value.
+     * @param deviceId           CUDA device id, or negative for CPU.
+     * @param memFractionStatic  static-region fraction of total GPU memory (SGLang-style);
+     *                           {@code <=0} keeps test sizing.
+     * @param kvCacheDtype       optional KV dtype override.
+     * @param pageSize           tokens per radix / KV pool page ({@code >= 1}).
+     * @param parallel           {@link ParallelConfig#tensorParallel} for multi-GPU; {@code ppSize} must be 1.
+     * @param modelLoaderThreads safetensors loader threads; {@code 0} = auto
+     *                           ({@link SafeTensorsLoaderThreads#resolve}).
+     * @throws IOException if the checkpoint cannot be read.
+     * @return a loaded Qwen model.
      */
     public static Qwen build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte deviceId,
                              double memFractionStatic, String kvCacheDtype, int pageSize,
@@ -1053,7 +1107,17 @@ public class Qwen implements LanguageModel {
     }
 
     /**
-     * Text completion from string prompts.
+     * Performs text completion for a list of prompts.
+     *
+     * @param prompts     list of text prompts.
+     * @param maxGenLen   maximum length of the generated text sequence.
+     * @param temperature temperature value for controlling randomness in sampling.
+     * @param topp        top-p probability threshold for nucleus sampling.
+     * @param logprobs    flag indicating whether to compute token log probabilities.
+     * @param seed        optional RNG seed to sample deterministically.
+     * @param publisher   optional flow publisher that asynchronously issues generated chunks;
+     *                    batch size must be 1 when non-null.
+     * @return the generated text completions.
      */
     public ChatCompletion[] complete(String[] prompts, int maxGenLen, double temperature, double topp,
                                      boolean logprobs, long seed, SubmissionPublisher<String> publisher) {

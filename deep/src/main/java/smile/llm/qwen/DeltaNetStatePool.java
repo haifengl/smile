@@ -109,19 +109,38 @@ public class DeltaNetStatePool implements AutoCloseable {
         this.boundBatch = 0;
     }
 
-    /** Active batch size from the last {@link #reset}. */
+    /**
+     * Active batch size from the last {@link #reset}.
+     * @return bound batch size, or {@code 0} if unbound.
+     */
     public int boundBatch() {
         return boundBatch;
     }
 
+    /**
+     * Returns the recurrent state tensor for a linear-attention layer.
+     *
+     * @param linearLayerId ordinal among linear-attention layers.
+     * @return recurrent state {@code [B, V, Kdim, Vdim]}.
+     */
     public Tensor recurrent(int linearLayerId) {
         return recurrent[linearLayerId];
     }
 
+    /**
+     * Returns the causal-conv left-context tensor for a linear-attention layer.
+     *
+     * @param linearLayerId ordinal among linear-attention layers.
+     * @return conv state {@code [B, C, K-1]}, or {@code null} if unused.
+     */
     public Tensor conv(int linearLayerId) {
         return conv[linearLayerId];
     }
 
+    /**
+     * Returns the number of linear-attention layers covered by this pool.
+     * @return linear layer count.
+     */
     public int numLinearLayers() {
         return numLinearLayers;
     }
