@@ -21,10 +21,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.SubmissionPublisher;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -36,6 +40,7 @@ import smile.llm.*;
 import smile.llm.attention.AttentionBackend;
 import smile.llm.attention.AttentionBackends;
 import smile.llm.attention.FlashInferArtifacts;
+import smile.llm.checkpoint.SafeTensorsLoaderThreads;
 import smile.llm.llama.*;
 import smile.llm.qwen.Qwen;
 import smile.util.HuggingFaceHub;
@@ -496,10 +501,7 @@ public class ChatService {
         logger.infof("Downloaded config.json to %s", checkpointDir);
 
         Set<String> shards = resolveSafeTensorShards(repoId);
-        for (String shard : shards) {
-            logger.infof("Downloading safetensors shard: %s", shard);
-            HuggingFaceHub.download(repoId, shard);
-        }
+        downloadSafeTensorShards(repoId, shards, config.modelLoaderThreads());
 
         Path checkpoint = Path.of(checkpointDir);
         if (isQwenCheckpoint(checkpoint)) {
@@ -535,6 +537,58 @@ public class ChatService {
         }
         if (!any) {
             throw new IOException("No Qwen tokenizer files found in Hugging Face repository: " + repoId);
+        }
+    }
+
+    /**
+     * Downloads safetensors shards concurrently. Thread count matches
+     * {@link ChatServiceConfig#modelLoaderThreads()} via
+     * {@link SafeTensorsLoaderThreads#resolve(int, int)}.
+     */
+    private void downloadSafeTensorShards(String repoId, Set<String> shards, int modelLoaderThreads)
+            throws IOException {
+        if (shards == null || shards.isEmpty()) {
+            return;
+        }
+        List<String> shardList = new ArrayList<>(shards);
+        int threads = SafeTensorsLoaderThreads.resolve(modelLoaderThreads, shardList.size());
+        logger.infof("Downloading %d safetensors shard(s) with threads=%d (configured=%d)",
+                shardList.size(), threads, modelLoaderThreads);
+
+        if (threads <= 1 || shardList.size() == 1) {
+            for (String shard : shardList) {
+                logger.infof("Downloading safetensors shard: %s", shard);
+                HuggingFaceHub.download(repoId, shard);
+            }
+            return;
+        }
+
+        ExecutorService pool = Executors.newFixedThreadPool(threads);
+        try {
+            List<Future<?>> futures = new ArrayList<>(shardList.size());
+            for (String shard : shardList) {
+                futures.add(pool.submit(() -> {
+                    try {
+                        logger.infof("Downloading safetensors shard: %s", shard);
+                        HuggingFaceHub.download(repoId, shard);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }));
+            }
+            for (Future<?> f : futures) {
+                try {
+                    f.get();
+                } catch (Exception e) {
+                    Throwable c = e.getCause() != null ? e.getCause() : e;
+                    if (c instanceof RuntimeException re && re.getCause() instanceof IOException ioe) {
+                        throw ioe;
+                    }
+                    throw new IOException("Safetensors shard download failed", e);
+                }
+            }
+        } finally {
+            pool.shutdownNow();
         }
     }
 
