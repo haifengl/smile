@@ -236,7 +236,10 @@ public class Qwen implements LanguageModel {
         }
 
         TensorParallelGroup tpGroup = new TensorParallelGroup(parallelConfig);
+        long tMap = System.currentTimeMillis();
         Map<String, String> weightMap = readWeightMap(dir);
+        logger.info("Read weight map ({} tensors) in {} ms",
+                weightMap.size(), System.currentTimeMillis() - tMap);
         QwenModel[] models = new QwenModel[parallelConfig.tpSize()];
 
         if (parallelConfig.tpSize() == 1) {
@@ -246,6 +249,8 @@ public class Qwen implements LanguageModel {
             // Each TP rank targets a different GPU; build + shard-load concurrently.
             // Do not call Tensor.setDefaultOptions here — it is process-global and
             // racy across threads. Layers allocate on CPU, then model.to(device).
+            logger.info("Starting parallel TP rank load (tpSize={})", parallelConfig.tpSize());
+            long tParallel = System.currentTimeMillis();
             ExecutorService pool = Executors.newFixedThreadPool(parallelConfig.tpSize());
             try {
                 List<Future<QwenModel>> futures = new ArrayList<>(parallelConfig.tpSize());
@@ -262,6 +267,8 @@ public class Qwen implements LanguageModel {
             } finally {
                 pool.shutdownNow();
             }
+            logger.info("Parallel TP rank load finished in {} ms",
+                    System.currentTimeMillis() - tParallel);
         }
 
         var time = System.currentTimeMillis() - startTime;
@@ -277,14 +284,18 @@ public class Qwen implements LanguageModel {
                                        boolean cuda, double memFractionStatic, ScalarType cacheDtype,
                                        int pageSize, File dir, Map<String, String> weightMap,
                                        TensorParallelGroup tpGroup) throws IOException {
+        long rankStart = System.currentTimeMillis();
         Device device = cuda ? Device.CUDA(parallel.devices()[rank]) : Device.CPU();
         TensorShardSpec shard = TensorShardSpec.forRank(
                 parallel.tpSize(), rank,
                 modelArgs.numHeads(), modelArgs.numKvHeads(), modelArgs.intermediateSize(),
                 modelArgs.linearNumKeyHeads(), modelArgs.linearNumValueHeads());
+        logger.info("tpRank={}: building on {} (layers={}, maxSeqLen={})",
+                rank, device, modelArgs.numLayers(), modelArgs.maxSeqLen());
 
         DeltaNetStatePool statePool = null;
         if (modelArgs.numLinearAttentionLayers() > 0) {
+            long t0 = System.currentTimeMillis();
             statePool = new DeltaNetStatePool(
                     modelArgs.numLinearAttentionLayers(),
                     shard.linearNumValueHeads(),
@@ -295,17 +306,31 @@ public class Qwen implements LanguageModel {
                     modelArgs.maxBatchSize(),
                     memFractionStatic > 0 ? Device.CPU() : device,
                     ScalarType.Float);
+            logger.info("tpRank={}: DeltaNetStatePool (staging) in {} ms",
+                    rank, System.currentTimeMillis() - t0);
         }
 
         // Layers allocate on CPU; place module + cis, then load shards onto model.device().
+        long tConstruct = System.currentTimeMillis();
         QwenModel model = new QwenModel(modelArgs, statePool, shard, tpGroup);
+        logger.info("tpRank={}: QwenModel construct in {} ms",
+                rank, System.currentTimeMillis() - tConstruct);
+
+        long tTo = System.currentTimeMillis();
         model.to(device);
+        logger.info("tpRank={}: model.to({}) in {} ms",
+                rank, device, System.currentTimeMillis() - tTo);
+
+        long tLoad = System.currentTimeMillis();
         loadHuggingFaceWeights(model, dir, Device.CPU(), shard, weightMap);
+        logger.info("tpRank={}: loadHuggingFaceWeights in {} ms",
+                rank, System.currentTimeMillis() - tLoad);
         model.eval();
 
         // Allocate fixed DeltaNet state before the KV pool so staticBudget−used
         // accounts for both weights and DeltaNet GPU pools (SGLang-style).
         if (memFractionStatic > 0 && modelArgs.numLinearAttentionLayers() > 0) {
+            long t0 = System.currentTimeMillis();
             var gpuState = new DeltaNetStatePool(
                     modelArgs.numLinearAttentionLayers(),
                     shard.linearNumValueHeads(),
@@ -324,8 +349,11 @@ public class Qwen implements LanguageModel {
                 }
             }
             if (previous != null) previous.close();
+            logger.info("tpRank={}: DeltaNetStatePool (GPU) in {} ms",
+                    rank, System.currentTimeMillis() - t0);
         }
         if (modelArgs.numFullAttentionLayers() > 0) {
+            long t0 = System.currentTimeMillis();
             device.emptyCache();
             KvCachePool pool = memFractionStatic > 0
                     ? KvCachePool.allocate(
@@ -333,7 +361,11 @@ public class Qwen implements LanguageModel {
                             pageSize)
                     : KvCachePool.forTesting(modelArgs.kvCacheLayout(shard), device);
             model.setKvCachePool(pool, false);
+            logger.info("tpRank={}: KvCachePool allocate in {} ms",
+                    rank, System.currentTimeMillis() - t0);
         }
+        logger.info("tpRank={}: buildRank total {} ms",
+                rank, System.currentTimeMillis() - rankStart);
         return model;
     }
 
@@ -371,6 +403,7 @@ public class Qwen implements LanguageModel {
             Path shardPath = Path.of(dir.getPath(), shardFile);
             logger.info("Loading safetensors shard: {} (tpRank={})", shardFile,
                     shard != null ? shard.tpRank() : 0);
+            long tShard = System.currentTimeMillis();
             // Load onto CPU first so large tensors can be sliced before hitting GPU memory.
             SafeTensors st = SafeTensors.read(shardPath.toString(), loadDevice, shardEntry.getValue());
             try {
@@ -440,6 +473,9 @@ public class Qwen implements LanguageModel {
                     t.close();
                 }
             }
+            logger.info("Loaded safetensors shard: {} (tpRank={}) in {} ms",
+                    shardFile, shard != null ? shard.tpRank() : 0,
+                    System.currentTimeMillis() - tShard);
         }
         logger.info("Loaded {} parameters from HuggingFace safetensors (tpRank={})",
                 loaded.size(), shard != null ? shard.tpRank() : 0);
