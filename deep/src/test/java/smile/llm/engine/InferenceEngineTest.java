@@ -137,6 +137,22 @@ public class InferenceEngineTest {
         }
     }
 
+    @Test
+    public void testGivenFairBindWhenMaxInFlightThenCapsPerRequestShare() {
+        // numSlots=1000, maxInFlight=4 → soft share page-aligned 240; desired 8000 → 240
+        assertEquals(240, InferenceEngine.fairBindCapacity(
+                100, 8000, 1000, 1000, 16, 4, 0));
+        // After one admit, free=750, remaining admits=3 → fair=240
+        assertEquals(240, InferenceEngine.fairBindCapacity(
+                100, 8000, 750, 1000, 16, 4, 1));
+        // Explicit small max_tokens wins
+        assertEquals(164, InferenceEngine.fairBindCapacity(
+                100, 164, 1000, 1000, 16, 4, 0));
+        // maxInFlight=1 keeps full desired
+        assertEquals(8000, InferenceEngine.fairBindCapacity(
+                100, 8000, 1000, 1000, 16, 1, 0));
+    }
+
     /**
      * CPU step-API stub that returns peaked logits so greedy sampling is deterministic.
      */
