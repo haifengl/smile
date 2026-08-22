@@ -27,6 +27,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.deep.tensor.Index;
@@ -192,13 +193,30 @@ public final class InferenceEngine implements AutoCloseable {
      * @return handle with future + abort.
      */
     public GenerationHandle submit(GenerationRequest request) {
+        return submit(request, h -> {});
+    }
+
+    /**
+     * Enqueues a generation request.
+     *
+     * <p>{@code onCreated} runs after the handle exists and <em>before</em> the
+     * job is visible to the worker (so listeners can bind {@code requestId}
+     * without racing the first decode tokens).
+     *
+     * @param request   generation parameters.
+     * @param onCreated callback with the new handle; must not block.
+     * @return handle with future + abort.
+     */
+    public GenerationHandle submit(GenerationRequest request, Consumer<GenerationHandle> onCreated) {
         Objects.requireNonNull(request, "request");
+        Objects.requireNonNull(onCreated, "onCreated");
         if (!running) {
             throw new IllegalStateException("InferenceEngine is closed");
         }
         long id = nextId.getAndIncrement();
         CompletableFuture<ChatCompletion> future = new CompletableFuture<>();
         GenerationHandle handle = new GenerationHandle(id, future);
+        onCreated.accept(handle);
         Queued q = new Queued(handle, request, System.nanoTime());
         waiting.add(q);
         queuedCount.incrementAndGet();
@@ -471,13 +489,8 @@ public final class InferenceEngine implements AutoCloseable {
                 prefills++;
             }
         }
-        if (b > 1) {
-            logger.info("Decode step: batch={} inFlight={} prefilling={} queued={} kvFree={}",
-                    b, active.size(), prefills, queuedCount.get(), kvFreeSlots());
-        } else if (logger.isDebugEnabled()) {
-            logger.debug("Decode step: batch=1 inFlight={} queued={} kvFree={}",
-                    active.size(), queuedCount.get(), kvFreeSlots());
-        }
+        logger.debug("Decode step: batch={} inFlight={} prefilling={} queued={} kvFree={}",
+                b, active.size(), prefills, queuedCount.get(), kvFreeSlots());
         int[] ids = new int[b];
         int[] toks = new int[b];
         int[] positions = new int[b];

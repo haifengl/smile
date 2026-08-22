@@ -29,13 +29,16 @@ public class TokenThroughputLoggerTest {
     @Test
     public void testGivenTokensSpanningIntervalWhenReportedThenEmitsWindowRate() throws Exception {
         List<String> lines = new ArrayList<>();
-        var meter = new TokenThroughputLogger(40, (rate, tokens, seconds) ->
-                lines.add(String.format("%.1f tok/s (%d in %.2fs)", rate, tokens, seconds)));
+        var meter = new TokenThroughputLogger(40, (requestId, rate, tokens, seconds) ->
+                lines.add(String.format("id=%d %.1f tok/s (%d in %.2fs)",
+                        requestId, rate, tokens, seconds)));
+        meter.setRequestId(7);
 
         meter.onGeneratedTokens(2);
         Thread.sleep(50);
         meter.onGeneratedTokens(2); // closes first window
         assertEquals(1, lines.size());
+        assertTrue(lines.getFirst().contains("id=7"));
         assertTrue(lines.getFirst().contains("tok/s"));
 
         meter.onGeneratedTokens(1);
@@ -46,8 +49,29 @@ public class TokenThroughputLoggerTest {
     @Test
     public void testGivenNoTokensWhenFinishThenSilent() {
         List<String> lines = new ArrayList<>();
-        var meter = new TokenThroughputLogger(40, (rate, tokens, seconds) -> lines.add("x"));
+        var meter = new TokenThroughputLogger(40, (requestId, rate, tokens, seconds) -> lines.add("x"));
         meter.finish();
         assertTrue(lines.isEmpty());
+    }
+
+    @Test
+    public void testGivenAggregateWhenTokensThenFeedsSharedMeter() {
+        List<String> aggregateLines = new ArrayList<>();
+        var aggregate = new AggregateTokenThroughput(10_000,
+                (rate, tokens, seconds, active) ->
+                        aggregateLines.add(String.format("%d toks active=%d", tokens, active)));
+        var a = new TokenThroughputLogger(10_000, aggregate, (id, rate, tokens, seconds) -> {});
+        var b = new TokenThroughputLogger(10_000, aggregate, (id, rate, tokens, seconds) -> {});
+        a.setRequestId(1);
+        b.setRequestId(2);
+        a.onGeneratedTokens(3);
+        b.onGeneratedTokens(5);
+        assertEquals(8, aggregate.currentWindowTokens());
+        a.finish();
+        assertEquals(8, aggregate.currentWindowTokens()); // still one active
+        b.finish();
+        assertEquals(0, aggregate.currentWindowTokens());
+        assertEquals(1, aggregateLines.size());
+        assertTrue(aggregateLines.getFirst().contains("8 toks"));
     }
 }
