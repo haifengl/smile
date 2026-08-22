@@ -17,16 +17,19 @@
 package smile.chat;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import org.jboss.logging.Logger;
 import smile.llm.GenerationListener;
 
 /**
- * Logs rolling generation throughput ({@code tok/s}) about every
+ * Logs rolling per-request generation throughput ({@code tok/s}) about every
  * {@link #DEFAULT_INTERVAL_MS} milliseconds while tokens are being produced.
  *
  * <p>Logging is driven by token events (no background timer): a line is emitted
  * only when at least one token arrived in the current window and the window
- * duration has reached the interval.
+ * duration has reached the interval. When an
+ * {@link AggregateTokenThroughput} is supplied, the same tokens also feed the
+ * process-wide aggregate meter.
  *
  * @author Haifeng Li
  */
@@ -40,34 +43,52 @@ public final class TokenThroughputLogger implements GenerationListener {
     @FunctionalInterface
     public interface Reporter {
         /**
+         * @param requestId     engine request id ({@code <= 0} if not yet bound).
          * @param rateTokPerSec tokens per second over the window.
          * @param tokens        tokens counted in the window.
          * @param seconds       window duration in seconds.
          */
-        void report(double rateTokPerSec, int tokens, double seconds);
+        void report(long requestId, double rateTokPerSec, int tokens, double seconds);
     }
 
     private final long intervalNanos;
     private final Reporter reporter;
+    private final AggregateTokenThroughput aggregate;
+    private final AtomicLong requestId = new AtomicLong(-1L);
     private long windowStartNanos;
     private int windowTokens;
+    private boolean started;
 
     /**
-     * Creates a logger with {@link #DEFAULT_INTERVAL_MS}.
+     * Creates a logger with {@link #DEFAULT_INTERVAL_MS} and no aggregate meter.
      */
     public TokenThroughputLogger() {
-        this(DEFAULT_INTERVAL_MS);
+        this(null);
     }
 
     /**
-     * Creates a logger with a custom interval.
+     * Creates a logger that also feeds {@code aggregate} (may be {@code null}).
      *
-     * @param intervalMs minimum window length before a throughput line may be logged.
+     * @param aggregate process-wide meter, or {@code null}.
      */
-    public TokenThroughputLogger(long intervalMs) {
-        this(intervalMs, (rate, tokens, seconds) ->
+    public TokenThroughputLogger(AggregateTokenThroughput aggregate) {
+        this(DEFAULT_INTERVAL_MS, aggregate);
+    }
+
+    /**
+     * @param intervalMs minimum window length before a throughput line may be logged.
+     * @param aggregate  process-wide meter, or {@code null}.
+     */
+    public TokenThroughputLogger(long intervalMs, AggregateTokenThroughput aggregate) {
+        this(intervalMs, aggregate, (id, rate, tokens, seconds) -> {
+            if (id > 0) {
+                logger.infof("Generation throughput requestId=%d: %.1f tok/s (%d tokens in %.2fs)",
+                        id, rate, tokens, seconds);
+            } else {
                 logger.infof("Generation throughput: %.1f tok/s (%d tokens in %.2fs)",
-                        rate, tokens, seconds));
+                        rate, tokens, seconds);
+            }
+        });
     }
 
     /**
@@ -77,6 +98,16 @@ public final class TokenThroughputLogger implements GenerationListener {
      * @param reporter   sink for throughput samples.
      */
     public TokenThroughputLogger(long intervalMs, Reporter reporter) {
+        this(intervalMs, null, reporter);
+    }
+
+    /**
+     * @param intervalMs minimum window length before a sample may be reported.
+     * @param aggregate  process-wide meter, or {@code null}.
+     * @param reporter   sink for per-request throughput samples.
+     */
+    public TokenThroughputLogger(long intervalMs, AggregateTokenThroughput aggregate,
+                                 Reporter reporter) {
         if (intervalMs < 1) {
             throw new IllegalArgumentException("intervalMs must be >= 1");
         }
@@ -84,13 +115,39 @@ public final class TokenThroughputLogger implements GenerationListener {
             throw new IllegalArgumentException("reporter must not be null");
         }
         this.intervalNanos = TimeUnit.MILLISECONDS.toNanos(intervalMs);
+        this.aggregate = aggregate;
         this.reporter = reporter;
+    }
+
+    /**
+     * Binds the engine request id used in log lines. Prefer setting this from
+     * {@link smile.llm.engine.InferenceEngine#submit}'s {@code onCreated}
+     * callback so the id is visible before the first decode tokens.
+     *
+     * @param id request id ({@code > 0} to include in log lines).
+     */
+    public void setRequestId(long id) {
+        requestId.set(id);
+    }
+
+    /** @return bound request id, or {@code -1} if unset. */
+    public long requestId() {
+        return requestId.get();
     }
 
     @Override
     public synchronized void onGeneratedTokens(int count) {
         if (count <= 0) {
             return;
+        }
+        if (!started) {
+            started = true;
+            if (aggregate != null) {
+                aggregate.requestStarted();
+            }
+        }
+        if (aggregate != null) {
+            aggregate.onGeneratedTokens(count);
         }
         long now = System.nanoTime();
         if (windowStartNanos == 0L) {
@@ -118,11 +175,17 @@ public final class TokenThroughputLogger implements GenerationListener {
             }
             windowTokens = 0;
         }
+        if (started) {
+            started = false;
+            if (aggregate != null) {
+                aggregate.requestFinished();
+            }
+        }
     }
 
     private void reportWindow(int tokens, long elapsedNanos) {
         double seconds = elapsedNanos / 1_000_000_000.0;
         double rate = tokens / seconds;
-        reporter.report(rate, tokens, seconds);
+        reporter.report(requestId.get(), rate, tokens, seconds);
     }
 }

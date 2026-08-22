@@ -76,6 +76,8 @@ public class ChatService {
     private LanguageModel model;
     /** Request-oriented runtime; {@code null} when no model is loaded. */
     private smile.llm.engine.InferenceEngine engine;
+    /** Process-wide tok/s across all in-flight chat generations. */
+    private final AggregateTokenThroughput aggregateThroughput = new AggregateTokenThroughput();
     /**
      * Public model id exposed by the chat API (HF repo id or local directory
      * name). Independent of family-prefixed {@code toString()} labels.
@@ -407,14 +409,16 @@ public class ChatService {
             CompletionRequest request, SubmissionPublisher<String> publisher) {
         int[] prompt = model.encodeChat(request.messages);
         int maxGenLen = request.resolveMaxTokens(model.maxSeqLen(), prompt.length);
-        var throughput = new TokenThroughputLogger();
+        var throughput = new TokenThroughputLogger(aggregateThroughput);
         var listener = GenerationListeners.compose(
                 throughput,
                 publisher != null ? GenerationListeners.toPublisher(publisher) : null);
         if (engine != null) {
-            var handle = engine.submit(smile.llm.engine.GenerationRequest.ofTokens(
-                    prompt, maxGenLen, request.temperature, request.topP,
-                    request.logprobs, request.seed, listener));
+            var handle = engine.submit(
+                    smile.llm.engine.GenerationRequest.ofTokens(
+                            prompt, maxGenLen, request.temperature, request.topP,
+                            request.logprobs, request.seed, listener),
+                    h -> throughput.setRequestId(h.requestId()));
             logger.infof("Submitted chat requestId=%d promptLen=%d maxGenLen=%d "
                             + "inFlight=%d queueSize=%d maxInFlight=%d kvFreeSlots=%d",
                     handle.requestId(), prompt.length, maxGenLen,
@@ -433,6 +437,7 @@ public class ChatService {
         }
         var future = new java.util.concurrent.CompletableFuture<ChatCompletion>();
         var handle = smile.llm.engine.GenerationHandle.of(0L, future);
+        throughput.setRequestId(handle.requestId());
         try {
             ChatCompletion result = model.generate(prompt, maxGenLen, request.temperature,
                     request.topP, request.logprobs, request.seed, listener, handle::isAborted);
