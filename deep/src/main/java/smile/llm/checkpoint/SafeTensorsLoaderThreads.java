@@ -25,12 +25,9 @@ package smile.llm.checkpoint;
  *
  * @author Haifeng Li
  */
-public final class SafeTensorsLoaderThreads {
+public interface SafeTensorsLoaderThreads {
     /** Default auto cap when {@code configured == 0}. */
-    public static final int AUTO_CAP = 8;
-
-    private SafeTensorsLoaderThreads() {
-    }
+    int AUTO_CAP = 8;
 
     /**
      * Resolves loader concurrency.
@@ -45,7 +42,7 @@ public final class SafeTensorsLoaderThreads {
      * @param numShards  number of safetensors shard files ({@code >= 0}).
      * @return pool size; {@code 0} when there are no shards.
      */
-    public static int resolve(int configured, int numShards) {
+    static int resolve(int configured, int numShards) {
         if (configured < 0) {
             throw new IllegalArgumentException(
                     "model-loader-threads must be >= 0 (0 = auto), got " + configured);
