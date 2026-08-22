@@ -16,6 +16,9 @@
  */
 package smile.llm.model.qwen;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.deep.activation.SiLU;
 import smile.deep.activation.Sigmoid;
 import smile.deep.tensor.Index;
@@ -32,10 +35,23 @@ import smile.util.AutoScope;
  * @author Haifeng Li
  */
 final class GatedDeltaRule {
+    private static final Logger logger = LoggerFactory.getLogger(GatedDeltaRule.class);
+    /** Avoid spamming once per linear layer / forward step. */
+    private static final AtomicBoolean javaFallbackWarned = new AtomicBoolean(false);
+
     private static final SiLU SILU = new SiLU(false);
     private static final Sigmoid SIGMOID = new Sigmoid(false);
 
     private GatedDeltaRule() {}
+
+    /** Logs the first Java recurrent fallback at WARN; later ones at DEBUG only. */
+    private static void logJavaFallbackOnce(String reason) {
+        if (javaFallbackWarned.compareAndSet(false, true)) {
+            logger.warn("GatedDeltaNet recurrent using Java reference implementation ({})", reason);
+        } else if (logger.isDebugEnabled()) {
+            logger.debug("GatedDeltaNet recurrent Java fallback: {}", reason);
+        }
+    }
 
     /**
      * Softplus matching PyTorch {@code F.softplus}: {@code x} when {@code x > 20},
@@ -261,6 +277,7 @@ final class GatedDeltaRule {
                         query, key, value, g, beta, initialState, qkL2norm);
             } catch (RuntimeException ex) {
                 // Older libsmile_torch without GPU libtorch fallback, etc.
+                logJavaFallbackOnce(ex.getMessage() != null ? ex.getMessage() : ex.toString());
                 return recurrentGatedDeltaRuleJava(
                         query, key, value, g, beta, initialState, outputState, qkL2norm);
             }
@@ -273,6 +290,7 @@ final class GatedDeltaRule {
                 }
                 return new smile.util.Tuple2<>(nativeOut, null);
             }
+            logJavaFallbackOnce("native recurrentGatedDeltaRule returned null");
         }
 
         return recurrentGatedDeltaRuleJava(
