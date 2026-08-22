@@ -27,7 +27,7 @@ import java.util.Objects;
 import org.junit.jupiter.api.Test;
 import smile.llm.Message;
 import smile.llm.Role;
-import smile.llm.qwen.Tokenizer;
+import smile.llm.model.qwen.Tokenizer;
 import smile.util.Bytes;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

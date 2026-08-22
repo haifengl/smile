@@ -20,10 +20,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import smile.llm.LanguageModel;
-import smile.llm.llama.Llama;
-import smile.llm.llama.LlamaModelArgs;
-import smile.llm.qwen.Qwen;
-import smile.llm.qwen.QwenModelArgs;
+import smile.llm.model.llama.Llama;
+import smile.llm.model.llama.LlamaModelArgs;
+import smile.llm.model.qwen.Qwen;
+import smile.llm.model.qwen.QwenModelArgs;
 
 /**
  * Chat LLM details returned by {@code GET /models/{id}}.

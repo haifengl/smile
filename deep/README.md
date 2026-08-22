@@ -36,7 +36,7 @@ out of the box.
     - [Core Types](#core-types)
     - [Tokenizer (`smile.llm.tokenizer`)](#tokenizer-smilellmtokenizer)
     - [Positional Encodings](#positional-encodings)
-    - [LLaMA (`smile.llm.llama`)](#llama-smilellmllama)
+    - [LLaMA (`smile.llm.model.llama`)](#llama-smilellmmodelllama)
 13. [Computer Vision (`smile.vision`)](#computer-vision-smilevision)
     - [Image Transforms (`smile.vision.transform`)](#image-transforms-smilevisiontransform)
     - [Image Dataset](#image-dataset)
@@ -627,7 +627,7 @@ Tensor out = pe.forward(embeddingTensor);   // adds positional signal
 RotaryPositionalEncoding rope = new RotaryPositionalEncoding(headDim, maxSeqLen);
 ```
 
-### LLaMA (`smile.llm.llama`)
+### LLaMA (`smile.llm.model.llama`)
 
 A full LLaMA-3 inference implementation:
 
@@ -644,7 +644,7 @@ A full LLaMA-3 inference implementation:
 **Loading a checkpoint:**
 
 ```java
-import smile.llm.llama.Llama;
+import smile.llm.model.llama.Llama;
 
 // Loads params.json + *.pt checkpoint(s) from the directory
 Llama llama = Llama.build(
