@@ -341,28 +341,21 @@ public final class InferenceEngine implements AutoCloseable {
             }
             int promptLen = prompt.length;
             int maxGen = clampMaxGen(promptLen, next.request.maxGenLen(), lm.maxSeqLen());
+            // Honor max_tokens and max-seq-len: reserve the full window. If KV cannot
+            // fit it, leave the request queued (Fluid Injection waits for Instant Eviction).
             int desired = Math.min(lm.maxSeqLen(), promptLen + maxGen);
-            int bindCapacity = fairBindCapacity(promptLen, desired, executor.kvCachePool(),
-                    maxInFlight, active.size());
-            if (bindCapacity < promptLen) {
-                logger.info("Deferring admission: need promptLen={} but fair KV share={} "
-                                + "(freeSlots={} inFlight={}/{} queued={}). "
-                                + "First request may have reserved most of the pool — "
-                                + "set max_tokens or lower smile.chat.max-seq-len.",
-                        promptLen, bindCapacity,
-                        kvFreeSlots(), active.size(), maxInFlight, queuedCount.get());
-                break;
-            }
             int kvId;
             try {
-                kvId = executor.bind(prompt, bindCapacity);
+                kvId = executor.bind(prompt, desired);
             } catch (KvCacheExhaustedException ex) {
-                logger.info("KV full; deferring admission: {}", ex.getMessage());
+                logger.info("KV full; deferring admission (inFlight={}/{} queued={} freeSlots={}): {}",
+                        active.size(), maxInFlight, queuedCount.get(), kvFreeSlots(), ex.getMessage());
                 break;
             } catch (IllegalStateException | IllegalArgumentException ex) {
                 String msg = ex.getMessage() == null ? "" : ex.getMessage();
                 if (msg.contains("KV") || msg.contains("capacity") || msg.contains("exhausted")) {
-                    logger.info("KV admission deferred: {}", msg);
+                    logger.info("KV admission deferred (inFlight={}/{} queued={} freeSlots={}): {}",
+                            active.size(), maxInFlight, queuedCount.get(), kvFreeSlots(), msg);
                     break;
                 }
                 waiting.remove(next);
@@ -385,7 +378,7 @@ public final class InferenceEngine implements AutoCloseable {
             int matched = executor.prefixLen(kvId);
             int from = matched;
             // Keep last prompt token for next-token logits when generating.
-            if (from > 0 && promptLen < bindCapacity && promptLen > 0) {
+            if (from > 0 && promptLen < desired && promptLen > 0) {
                 from = Math.min(from, promptLen - 1);
             }
             GenerationListener listener = next.request.listener();
@@ -394,51 +387,15 @@ public final class InferenceEngine implements AutoCloseable {
                 listener.onCachedInputTokens(Math.min(matched, promptLen));
             }
             Active a = new Active(next.handle, next.request, prompt, kvId, from, promptLen,
-                    maxGen, bindCapacity, next.request.temperature(), next.request.topp(),
+                    maxGen, desired, next.request.temperature(), next.request.topp(),
                     next.request.seed(), listener);
             active.add(a);
             inFlight.incrementAndGet();
-            logger.info("Admitted requestId={} kvId={} promptLen={} bindCapacity={} maxGen={} "
-                            + "(desired={}) inFlight={}/{} queued={} kvFree={}",
-                    next.handle.requestId(), kvId, promptLen, bindCapacity, maxGen, desired,
+            logger.info("Admitted requestId={} kvId={} promptLen={} capacity={} maxGen={} "
+                            + "inFlight={}/{} queued={} kvFree={}",
+                    next.handle.requestId(), kvId, promptLen, desired, maxGen,
                     active.size(), maxInFlight, queuedCount.get(), kvFreeSlots());
         }
-    }
-
-    /**
-     * Caps KV reservation so up to {@code maxInFlight} requests can coexist.
-     *
-     * <p>Without this, the OpenAI default {@code max_tokens = maxSeqLen - prompt}
-     * makes the first admit claim nearly the entire pool and continuous batching
-     * degrades to serial Fluid Injection.
-     *
-     * @return bind capacity ({@code >= promptLen}), or {@code < promptLen} to defer.
-     */
-    static int fairBindCapacity(int promptLen, int desired, KvCachePool pool,
-                                int maxInFlight, int activeCount) {
-        if (pool == null) {
-            return Math.max(desired, promptLen);
-        }
-        return fairBindCapacity(promptLen, desired, pool.freeSlots(), pool.numSlots(),
-                pool.pageSize(), maxInFlight, activeCount);
-    }
-
-    /**
-     * @see #fairBindCapacity(int, int, KvCachePool, int, int)
-     */
-    static int fairBindCapacity(int promptLen, int desired, int freeSlots, int numSlots,
-                                int pageSize, int maxInFlight, int activeCount) {
-        if (desired < promptLen) {
-            desired = promptLen;
-        }
-        if (maxInFlight <= 1 || numSlots <= 0) {
-            return desired;
-        }
-        int page = Math.max(1, pageSize);
-        int soft = Math.max(page, (numSlots / maxInFlight / page) * page);
-        int remainingAdmits = Math.max(1, maxInFlight - activeCount);
-        int fair = Math.max(page, (Math.max(0, freeSlots) / remainingAdmits / page) * page);
-        return Math.min(desired, Math.min(soft, fair));
     }
 
     private void runPrefills() {
