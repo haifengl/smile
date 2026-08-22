@@ -157,6 +157,30 @@ int smile_gated_delta_recurrent_cuda(
             ? static_cast<cudaStream_t>(cuda_stream)
             : static_cast<cudaStream_t>(0);
 
+    int dev = 0;
+    cudaGetDevice(&dev);
+    int default_smem = 0;
+    int optin_smem = 0;
+    cudaDeviceGetAttribute(&default_smem, cudaDevAttrMaxSharedMemoryPerBlock, dev);
+    cudaDeviceGetAttribute(&optin_smem, cudaDevAttrMaxSharedMemoryPerBlockOptin, dev);
+    if (optin_smem <= 0) {
+        optin_smem = default_smem;
+    }
+    if (smem > static_cast<size_t>(optin_smem)) {
+        g_gated_delta_error = "gated_delta: shared memory exceeds device opt-in limit";
+        return -1;
+    }
+    if (smem > static_cast<size_t>(default_smem)) {
+        cudaError_t attr_err = cudaFuncSetAttribute(
+                gated_delta_recurrent_kernel,
+                cudaFuncAttributeMaxDynamicSharedMemorySize,
+                static_cast<int>(smem));
+        if (attr_err != cudaSuccess) {
+            g_gated_delta_error = cudaGetErrorString(attr_err);
+            return -1;
+        }
+    }
+
     gated_delta_recurrent_kernel<<<static_cast<unsigned>(blocks), threads, smem, stream>>>(
             q, k, v, g, beta, state, out, B, H, S, K, V, scale);
     cudaError_t err = cudaGetLastError();
