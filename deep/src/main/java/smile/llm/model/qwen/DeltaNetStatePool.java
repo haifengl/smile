@@ -282,6 +282,56 @@ public class DeltaNetStatePool implements AutoCloseable {
     }
 
     /**
+     * Recurrent rows packed by {@link #activateStep} into {@code [0, boundBatch)}.
+     *
+     * <p>Mixer forwards must use this (not {@link #recurrent}) so batch matmul
+     * sees {@code state.shape()[0] == query.shape()[0]}.
+     *
+     * @param linearLayerId ordinal among linear-attention layers.
+     * @return view {@code [boundBatch, V, Kdim, Vdim]} into the pool buffer.
+     */
+    public Tensor activeRecurrent(int linearLayerId) {
+        if (boundBatch <= 0) {
+            throw new IllegalStateException("DeltaNetStatePool not activated");
+        }
+        Tensor full = recurrent[linearLayerId];
+        long rows = full.shape()[0];
+        if (boundBatch == rows) {
+            return full;
+        }
+        try (var span = Index.slice(0, boundBatch)) {
+            Tensor active = full.get(span);
+            active.detachFromScopes();
+            return active;
+        }
+    }
+
+    /**
+     * Conv rows packed by {@link #activateStep} into {@code [0, boundBatch)}.
+     *
+     * @param linearLayerId ordinal among linear-attention layers.
+     * @return view {@code [boundBatch, C, K-1]}, or {@code null} if unused.
+     */
+    public Tensor activeConv(int linearLayerId) {
+        if (conv[linearLayerId] == null) {
+            return null;
+        }
+        if (boundBatch <= 0) {
+            throw new IllegalStateException("DeltaNetStatePool not activated");
+        }
+        Tensor full = conv[linearLayerId];
+        long rows = full.shape()[0];
+        if (boundBatch == rows) {
+            return full;
+        }
+        try (var span = Index.slice(0, boundBatch)) {
+            Tensor active = full.get(span);
+            active.detachFromScopes();
+            return active;
+        }
+    }
+
+    /**
      * @param linearLayerId ordinal among linear-attention layers.
      * @return conv state {@code [maxBatch, C, K-1]}, or {@code null} if unused.
      */

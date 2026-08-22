@@ -249,6 +249,11 @@ final class GatedDeltaRule {
 
         // Fast path: fused native kernel when we have a float pool state.
         if (initialState != null && initialState.dtype() == ScalarType.Float && outputState) {
+            if (initialState.shape()[0] != query.shape()[0]) {
+                throw new IllegalArgumentException(String.format(
+                        "DeltaNet state batch=%d != query batch=%d (use activeRecurrent, not full pool)",
+                        initialState.shape()[0], query.shape()[0]));
+            }
             initialState.detachFromScopes();
             Tensor nativeOut = smile.torch.Native.recurrentGatedDeltaRule(
                     query, key, value, g, beta, initialState, qkL2norm);

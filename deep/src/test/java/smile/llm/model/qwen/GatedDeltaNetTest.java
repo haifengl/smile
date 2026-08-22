@@ -123,4 +123,43 @@ public class GatedDeltaNetTest {
             assertEquals(2, pool.numLinearLayers());
         }
     }
+
+    @Test
+    public void testGivenMaxBatchPoolWhenActivateOneThenActiveRecurrentIsBatchOne() {
+        try (var pool = new DeltaNetStatePool(1, 4, 8, 8, 32, 4, 16, Device.CPU(), ScalarType.Float)) {
+            pool.bindRequest(1);
+            pool.activateStep(1);
+            assertEquals(1, pool.boundBatch());
+            assertArrayEquals(new long[]{16, 4, 8, 8}, pool.recurrent(0).shape());
+            assertArrayEquals(new long[]{1, 4, 8, 8}, pool.activeRecurrent(0).shape());
+            assertArrayEquals(new long[]{1, 32, 3}, pool.activeConv(0).shape());
+        }
+    }
+
+    @Test
+    public void testGivenPooledStateWhenPrefillSeq16ThenJavaRecurrentSucceeds() {
+        int batch = 1, seq = 16, heads = 24, kDim = 128, vDim = 128;
+        int maxBatch = 16;
+        try (var statePool = new DeltaNetStatePool(
+                1, heads, kDim, vDim, 32, 4, maxBatch, Device.CPU(), ScalarType.Float)) {
+            statePool.bindRequest(42);
+            statePool.activateStep(42);
+            Tensor q = Tensor.randn(batch, seq, heads, kDim);
+            Tensor k = Tensor.randn(batch, seq, heads, kDim);
+            Tensor v = Tensor.randn(batch, seq, heads, vDim);
+            Tensor g = Tensor.randn(batch, seq, heads);
+            Tensor beta = Tensor.full(0.5, batch, seq, heads);
+            Tensor state = statePool.activeRecurrent(0);
+            var result = GatedDeltaRule.recurrentGatedDeltaRuleJava(
+                    q, k, v, g, beta, state, true, true);
+            assertArrayEquals(new long[]{batch, seq, heads, vDim}, result._1().shape());
+            assertNull(result._2());
+            result._1().close();
+            q.close();
+            k.close();
+            v.close();
+            g.close();
+            beta.close();
+        }
+    }
 }
