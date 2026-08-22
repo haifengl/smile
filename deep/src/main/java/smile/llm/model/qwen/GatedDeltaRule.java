@@ -255,8 +255,15 @@ final class GatedDeltaRule {
                         initialState.shape()[0], query.shape()[0]));
             }
             initialState.detachFromScopes();
-            Tensor nativeOut = smile.torch.Native.recurrentGatedDeltaRule(
-                    query, key, value, g, beta, initialState, qkL2norm);
+            Tensor nativeOut;
+            try {
+                nativeOut = smile.torch.Native.recurrentGatedDeltaRule(
+                        query, key, value, g, beta, initialState, qkL2norm);
+            } catch (RuntimeException ex) {
+                // Older libsmile_torch without GPU libtorch fallback, etc.
+                return recurrentGatedDeltaRuleJava(
+                        query, key, value, g, beta, initialState, outputState, qkL2norm);
+            }
             if (nativeOut != null) {
                 // Belt-and-suspenders: keep activations in the compute dtype.
                 if (nativeOut.dtype() != query.dtype()) {

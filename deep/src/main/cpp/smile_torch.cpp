@@ -2107,28 +2107,39 @@ ST_Tensor smile_recurrent_gated_delta_rule(
 
 #ifdef USE_CUDA
         if (q.is_cuda()) {
-            // Kernel expects g already exponentiated.
-            auto g_exp = gf.exp();
-            // Apply scale into q for the kernel.
-            auto q_scaled = q.mul(scale);
             c10::cuda::CUDAGuard guard(q.device());
             cudaStream_t stream = at::cuda::getCurrentCUDAStream(q.device().index()).stream();
             int64_t K = k.size(3);
-            int rc = smile_gated_delta_recurrent_cuda(
-                    q_scaled.data_ptr<float>(),
-                    k.data_ptr<float>(),
-                    v.data_ptr<float>(),
-                    g_exp.data_ptr<float>(),
-                    bf.data_ptr<float>(),
-                    st.data_ptr<float>(),
-                    out_f.data_ptr<float>(),
-                    B, H, S, K, Vdim,
-                    /*scale already applied*/ 1.0f,
-                    stream);
-            if (rc != 0) {
-                const char *msg = smile_gated_delta_last_error();
-                set_error(msg && msg[0] ? msg : "gated_delta CUDA kernel failed");
-                return nullptr;
+            int64_t Vdim = v.size(3);
+            // Fused kernel keeps full [K,V] state in shared mem (see smile_gated_delta.cu).
+            const size_t smem = static_cast<size_t>(
+                    (K * Vdim + K + K + Vdim + Vdim + Vdim + Vdim) * sizeof(float));
+            int dev = q.device().index();
+            int smem_limit = 0;
+            cudaDeviceGetAttribute(&smem_limit, cudaDevAttrMaxSharedMemoryPerBlockOptin, dev);
+            if (smem_limit <= 0) {
+                cudaDeviceGetAttribute(&smem_limit, cudaDevAttrMaxSharedMemoryPerBlock, dev);
+            }
+            bool fused_ok = false;
+            if (smem <= static_cast<size_t>(smem_limit)) {
+                // Kernel expects g already exponentiated; scale is folded into q.
+                auto g_exp = gf.exp();
+                auto q_scaled = q.mul(scale);
+                int rc = smile_gated_delta_recurrent_cuda(
+                        q_scaled.data_ptr<float>(),
+                        k.data_ptr<float>(),
+                        v.data_ptr<float>(),
+                        g_exp.data_ptr<float>(),
+                        bf.data_ptr<float>(),
+                        st.data_ptr<float>(),
+                        out_f.data_ptr<float>(),
+                        B, H, S, K, Vdim,
+                        /*scale already applied*/ 1.0f,
+                        stream);
+                fused_ok = (rc == 0);
+            }
+            if (!fused_ok) {
+                out_f = gated_delta_recurrent_libtorch(q, k, v, gf, bf, st, scale);
             }
         } else
 #endif
