@@ -20,8 +20,9 @@ package smile.llm;
  * Common façade for chat-capable decoder LLMs (Llama, Qwen, …).
  *
  * <p>Implementations load a checkpoint, expose chat-template encoding, and
- * run autoregressive generation. Serve and other clients should prefer this
- * interface over concrete model types when only inference is required.
+ * run autoregressive generation for a <em>single</em> prompt. Concurrent
+ * multi-request scheduling belongs in {@link smile.llm.engine.InferenceEngine},
+ * not on this interface.
  *
  * <p>Streaming and metrics use a single optional {@link GenerationListener}.
  * Transport-specific types such as {@link java.util.concurrent.SubmissionPublisher}
@@ -66,38 +67,11 @@ public interface LanguageModel {
     int[] encodeChat(Message... dialog);
 
     /**
-     * Generates completions from already-tokenized prompts.
+     * Generates a completion from an already-tokenized prompt.
      *
-     * @param prompts     batch of prompt token id sequences; batch size is
-     *                    typically {@code 1} for serve.
-     * @param maxGenLen   maximum number of <em>new</em> tokens to generate per
-     *                    prompt (not including the prompt itself).
-     * @param temperature sampling temperature; higher values increase randomness.
-     * @param topp        nucleus-sampling top-p threshold in {@code (0, 1]}.
-     * @param logprobs    {@code true} to include per-token log-probabilities in
-     *                    the result.
-     * @param seed        optional RNG seed for deterministic sampling;
-     *                    {@code 0} means non-deterministic.
-     * @param listener    optional progress callback (token counts and/or text
-     *                    chunks); may be {@code null}. Listener methods receive
-     *                    a per-prompt batch index. {@link GenerationListener#onText}
-     *                    is only emitted when {@code prompts.length == 1}.
-     * @return one {@link ChatCompletion} per prompt in the batch.
-     */
-    ChatCompletion[] generate(int[][] prompts, int maxGenLen, double temperature,
-                              double topp, boolean logprobs, long seed,
-                              GenerationListener listener);
-
-    /**
-     * Generates assistant replies for dialogs.
-     *
-     * <p>Equivalent to {@link #encodeChat} on each dialog followed by
-     * {@link #generate}.
-     *
-     * @param dialogs     batch of dialogs; each dialog is an ordered array of
-     *                    {@link Message} turns.
-     * @param maxGenLen   maximum number of <em>new</em> tokens to generate per
-     *                    dialog.
+     * @param prompt      prompt token id sequence.
+     * @param maxGenLen   maximum number of <em>new</em> tokens to generate
+     *                    (not including the prompt itself).
      * @param temperature sampling temperature; higher values increase randomness.
      * @param topp        nucleus-sampling top-p threshold in {@code (0, 1]}.
      * @param logprobs    {@code true} to include per-token log-probabilities in
@@ -105,10 +79,29 @@ public interface LanguageModel {
      * @param seed        optional RNG seed for deterministic sampling;
      *                    {@code 0} means non-deterministic.
      * @param listener    optional progress callback; may be {@code null}.
-     *                    Same batch-index and streaming rules as {@link #generate}.
-     * @return one {@link ChatCompletion} per dialog in the batch.
+     * @return the completion for {@code prompt}.
      */
-    ChatCompletion[] chat(Message[][] dialogs, int maxGenLen, double temperature,
-                          double topp, boolean logprobs, long seed,
-                          GenerationListener listener);
+    ChatCompletion generate(int[] prompt, int maxGenLen, double temperature,
+                            double topp, boolean logprobs, long seed,
+                            GenerationListener listener);
+
+    /**
+     * Generates an assistant reply for a dialog.
+     *
+     * <p>Equivalent to {@link #encodeChat} followed by {@link #generate}.
+     *
+     * @param dialog      ordered conversation turns.
+     * @param maxGenLen   maximum number of <em>new</em> tokens to generate.
+     * @param temperature sampling temperature; higher values increase randomness.
+     * @param topp        nucleus-sampling top-p threshold in {@code (0, 1]}.
+     * @param logprobs    {@code true} to include per-token log-probabilities in
+     *                    the result.
+     * @param seed        optional RNG seed for deterministic sampling;
+     *                    {@code 0} means non-deterministic.
+     * @param listener    optional progress callback; may be {@code null}.
+     * @return the completion for {@code dialog}.
+     */
+    ChatCompletion chat(Message[] dialog, int maxGenLen, double temperature,
+                        double topp, boolean logprobs, long seed,
+                        GenerationListener listener);
 }

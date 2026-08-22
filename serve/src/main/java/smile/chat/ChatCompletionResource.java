@@ -91,11 +91,11 @@ public class ChatCompletionResource {
         long created = Instant.now().getEpochSecond();
         String modelName = service.modelName();
 
-        ChatCompletion[] completions = service.complete(request, null);
-        if (completions != null) {
-            saveConversation(conversation, request, completions);
+        ChatCompletion completion = service.complete(request, null);
+        if (completion != null) {
+            saveConversation(conversation, request, completion);
         }
-        return ChatCompletionObject.of(id, created, modelName, completions);
+        return ChatCompletionObject.of(id, created, modelName, completion);
     }
 
     /**
@@ -121,7 +121,7 @@ public class ChatCompletionResource {
 
         return Multi.createFrom().emitter(emitter -> {
             AtomicBoolean isFirst = new AtomicBoolean(true);
-            CompletableFuture<ChatCompletion[]> resultFuture = new CompletableFuture<>();
+            CompletableFuture<ChatCompletion> resultFuture = new CompletableFuture<>();
             SubmissionPublisher<String> publisher =
                     new SubmissionPublisher<>(Runnable::run, Flow.defaultBufferSize());
 
@@ -156,7 +156,7 @@ public class ChatCompletionResource {
 
                 @Override
                 public void onComplete() {
-                    resultFuture.whenComplete((completions, error) -> {
+                    resultFuture.whenComplete((completion, error) -> {
                         if (emitter.isCancelled()) {
                             return;
                         }
@@ -164,8 +164,8 @@ public class ChatCompletionResource {
                             emitter.fail(error);
                             return;
                         }
-                        FinishReason reason = (completions != null && completions.length > 0)
-                                ? completions[0].reason()
+                        FinishReason reason = completion != null
+                                ? completion.reason()
                                 : FinishReason.stop;
                         var delta = new ChatCompletionChunk.Delta(null, null);
                         var choice = new ChatCompletionChunk.Choice(0, delta, null, reason);
@@ -187,12 +187,12 @@ public class ChatCompletionResource {
 
             executor.supplyAsync(() -> {
                 try {
-                    var completions = service.complete(request, publisher);
-                    resultFuture.complete(completions);
-                    if (completions != null) {
-                        saveConversation(conversation, request, completions);
+                    var completion = service.complete(request, publisher);
+                    resultFuture.complete(completion);
+                    if (completion != null) {
+                        saveConversation(conversation, request, completion);
                     }
-                    return completions;
+                    return completion;
                 } catch (Throwable t) {
                     resultFuture.completeExceptionally(t);
                     if (!publisher.isClosed()) {
@@ -226,16 +226,16 @@ public class ChatCompletionResource {
     }
 
     /**
-     * Persists the user message and assistant reply(ies) for this turn.
+     * Persists the user message and assistant reply for this turn.
      *
      * @param conversation the conversation context captured from the request.
      * @param request      the original completion request.
-     * @param completions  the generated completions returned by the model.
+     * @param completion   the generated completion returned by the model.
      */
     @Transactional
     public void saveConversation(Conversation conversation,
                                   CompletionRequest request,
-                                  ChatCompletion[] completions) {
+                                  ChatCompletion completion) {
         Long conversationId = ConversationIds.parseOptional(request.conversation);
         if (conversationId == null) {
             conversation.persist();
@@ -254,7 +254,7 @@ public class ChatCompletionResource {
             }
         }
 
-        for (var completion : completions) {
+        if (completion != null) {
             ConversationItem item = new ConversationItem();
             item.conversationId = conversationId;
             item.role = Role.assistant.toString();

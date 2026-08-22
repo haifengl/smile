@@ -17,18 +17,16 @@
 package smile.llm;
 
 /**
- * Callback for autoregressive generation progress on a batch of prompts.
- *
- * <p>Every method takes {@code promptIndex} first: the index of the prompt in
- * the batch passed to {@link LanguageModel#generate} /
- * {@link LanguageModel#chat} ({@code 0 .. batchSize-1}).
+ * Callback for autoregressive generation progress on a single request.
  *
  * <p>Serve and other clients implement this (or compose helpers) instead of
  * passing a {@link java.util.concurrent.SubmissionPublisher} into the model.
  * A streaming adapter can forward {@link #onText} to a publisher; a metrics
- * sink can override only the counters it cares about.
+ * sink can override only the counters it cares about. When many requests run
+ * concurrently, the {@link smile.llm.engine.InferenceEngine} binds one listener
+ * per request.
  *
- * <p>Typical order for one prompt in the batch:
+ * <p>Typical order for one request:
  * <ol>
  *   <li>{@link #onInputTokens} / {@link #onCachedInputTokens} once after prompt bind</li>
  *   <li>repeated {@link #onGeneratedTokens} (and optional {@link #onText})</li>
@@ -40,35 +38,30 @@ package smile.llm;
  */
 public interface GenerationListener {
     /**
-     * Reports the number of prompt / input tokens for one sequence in the batch.
+     * Reports the number of prompt / input tokens.
      *
-     * @param promptIndex index of the prompt in the batch ({@code 0 .. batchSize-1}).
-     * @param count       prompt token count for that sequence; {@code >= 0}.
+     * @param count prompt token count; {@code >= 0}.
      */
-    default void onInputTokens(int promptIndex, int count) {}
+    default void onInputTokens(int count) {}
 
     /**
-     * Reports how many of that sequence's input tokens were served from the KV
-     * prefix cache (radix hit), so they need not be recomputed in prefill.
+     * Reports how many input tokens were served from the KV prefix cache
+     * (radix hit), so they need not be recomputed in prefill.
      *
-     * <p>Always {@code <=} the value passed to {@link #onInputTokens} for the
-     * same {@code promptIndex}. When prefix reuse is disabled or there is no
-     * match, {@code count} is {@code 0}.
+     * <p>Always {@code <=} the value passed to {@link #onInputTokens}. When
+     * prefix reuse is disabled or there is no match, {@code count} is {@code 0}.
      *
-     * @param promptIndex index of the prompt in the batch ({@code 0 .. batchSize-1}).
-     * @param count       cached input token count; {@code >= 0}.
+     * @param count cached input token count; {@code >= 0}.
      */
-    default void onCachedInputTokens(int promptIndex, int count) {}
+    default void onCachedInputTokens(int count) {}
 
     /**
-     * Reports newly generated completion tokens (not prompt tokens) for one
-     * sequence in the batch.
+     * Reports newly generated completion tokens (not prompt tokens).
      *
-     * @param promptIndex index of the prompt in the batch ({@code 0 .. batchSize-1}).
-     * @param count       number of tokens produced since the previous call for
-     *                    this index; typically {@code 1}.
+     * @param count number of tokens produced since the previous call;
+     *              typically {@code 1}.
      */
-    default void onGeneratedTokens(int promptIndex, int count) {}
+    default void onGeneratedTokens(int count) {}
 
     /**
      * Reports tokens attributed to a model “thinking” / reasoning span
@@ -77,21 +70,18 @@ public interface GenerationListener {
      * <p><b>Reserved:</b> the engine does not emit this yet. Implementations
      * may override it for forward compatibility; the default is a no-op.
      *
-     * @param promptIndex index of the prompt in the batch ({@code 0 .. batchSize-1}).
-     * @param count       thinking tokens since the previous call; {@code >= 0}.
+     * @param count thinking tokens since the previous call; {@code >= 0}.
      */
-    default void onThinkingTokens(int promptIndex, int count) {}
+    default void onThinkingTokens(int count) {}
 
     /**
      * Reports a decoded UTF-8 text chunk suitable for streaming to a client.
      *
      * <p>May be called less often than {@link #onGeneratedTokens} (implementations
      * commonly coalesce ~20 tokens, or flush on EOS). Empty strings are not
-     * delivered. Only emitted when {@code batchSize == 1} (so {@code promptIndex}
-     * is {@code 0}).
+     * delivered.
      *
-     * @param promptIndex index of the prompt in the batch ({@code 0 .. batchSize-1}).
-     * @param chunk       decoded text (special tokens already skipped when applicable).
+     * @param chunk decoded text (special tokens already skipped when applicable).
      */
-    default void onText(int promptIndex, String chunk) {}
+    default void onText(String chunk) {}
 }

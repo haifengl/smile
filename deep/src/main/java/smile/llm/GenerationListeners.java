@@ -40,7 +40,7 @@ public final class GenerationListeners {
         Objects.requireNonNull(publisher, "publisher");
         return new GenerationListener() {
             @Override
-            public void onText(int promptIndex, String chunk) {
+            public void onText(String chunk) {
                 publisher.submit(chunk);
             }
         };
@@ -71,37 +71,37 @@ public final class GenerationListeners {
         GenerationListener[] copy = active.toArray(GenerationListener[]::new);
         return new GenerationListener() {
             @Override
-            public void onInputTokens(int promptIndex, int count) {
+            public void onInputTokens(int count) {
                 for (GenerationListener listener : copy) {
-                    listener.onInputTokens(promptIndex, count);
+                    listener.onInputTokens(count);
                 }
             }
 
             @Override
-            public void onCachedInputTokens(int promptIndex, int count) {
+            public void onCachedInputTokens(int count) {
                 for (GenerationListener listener : copy) {
-                    listener.onCachedInputTokens(promptIndex, count);
+                    listener.onCachedInputTokens(count);
                 }
             }
 
             @Override
-            public void onGeneratedTokens(int promptIndex, int count) {
+            public void onGeneratedTokens(int count) {
                 for (GenerationListener listener : copy) {
-                    listener.onGeneratedTokens(promptIndex, count);
+                    listener.onGeneratedTokens(count);
                 }
             }
 
             @Override
-            public void onThinkingTokens(int promptIndex, int count) {
+            public void onThinkingTokens(int count) {
                 for (GenerationListener listener : copy) {
-                    listener.onThinkingTokens(promptIndex, count);
+                    listener.onThinkingTokens(count);
                 }
             }
 
             @Override
-            public void onText(int promptIndex, String chunk) {
+            public void onText(String chunk) {
                 for (GenerationListener listener : copy) {
-                    listener.onText(promptIndex, chunk);
+                    listener.onText(chunk);
                 }
             }
         };

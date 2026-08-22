@@ -100,26 +100,14 @@ public class QwenTest {
     }
 
     @Test
-    public void testGivenGenerateWithTooManyPromptsThenThrows() {
-        QwenModelArgs args = new QwenModelArgs(); // maxBatch=1
-        QwenModel model = tinyModel(args);
-        Qwen qwen = new Qwen("tiny", model, tinyTokenizer(), args);
-        int[][] prompts = {{1, 2}, {3, 4}};
-        assertThrows(IllegalArgumentException.class,
-                () -> qwen.generate(prompts, 4, 0.0, 0.9, false, 0, null));
-    }
-
-    @Test
     public void testGivenGreedyGenerateThenCompletionReturned() {
         QwenModelArgs args = new QwenModelArgs();
         QwenModel model = tinyModel(args);
         model.eval();
         Qwen qwen = new Qwen("tiny", model, tinyTokenizer(), args);
-        int[][] prompts = {{1, 2, 3}};
-        var results = qwen.generate(prompts, 4, 0.0, 0.9, false, 42, null);
-        assertNotNull(results);
-        assertEquals(1, results.length);
-        assertNotNull(results[0]);
+        int[] prompt = {1, 2, 3};
+        var result = qwen.generate(prompt, 4, 0.0, 0.9, false, 42, null);
+        assertNotNull(result);
     }
 
     @Test

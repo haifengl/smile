@@ -32,13 +32,13 @@ public class TokenThroughputLoggerTest {
         var meter = new TokenThroughputLogger(40, (rate, tokens, seconds) ->
                 lines.add(String.format("%.1f tok/s (%d in %.2fs)", rate, tokens, seconds)));
 
-        meter.onGeneratedTokens(0, 2);
+        meter.onGeneratedTokens(2);
         Thread.sleep(50);
-        meter.onGeneratedTokens(0, 2); // closes first window
+        meter.onGeneratedTokens(2); // closes first window
         assertEquals(1, lines.size());
         assertTrue(lines.getFirst().contains("tok/s"));
 
-        meter.onGeneratedTokens(0, 1);
+        meter.onGeneratedTokens(1);
         meter.finish(); // flushes remaining token
         assertEquals(2, lines.size());
     }

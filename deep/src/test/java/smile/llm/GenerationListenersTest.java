@@ -31,27 +31,27 @@ public class GenerationListenersTest {
     public void testGivenComposeWhenEventsThenFansOut() {
         List<String> events = new ArrayList<>();
         GenerationListener a = new GenerationListener() {
-            @Override public void onInputTokens(int i, int count) { events.add("in:" + i + ":" + count); }
-            @Override public void onCachedInputTokens(int i, int count) { events.add("cache:" + i + ":" + count); }
-            @Override public void onGeneratedTokens(int i, int count) { events.add("gen:" + i + ":" + count); }
+            @Override public void onInputTokens(int count) { events.add("in:" + count); }
+            @Override public void onCachedInputTokens(int count) { events.add("cache:" + count); }
+            @Override public void onGeneratedTokens(int count) { events.add("gen:" + count); }
         };
         GenerationListener b = new GenerationListener() {
-            @Override public void onThinkingTokens(int i, int count) { events.add("think:" + i + ":" + count); }
-            @Override public void onText(int i, String chunk) { events.add("text:" + i + ":" + chunk); }
+            @Override public void onThinkingTokens(int count) { events.add("think:" + count); }
+            @Override public void onText(String chunk) { events.add("text:" + chunk); }
         };
         GenerationListener composed = GenerationListeners.compose(a, null, b);
         assertNotNull(composed);
-        composed.onInputTokens(1, 10);
-        composed.onCachedInputTokens(1, 4);
-        composed.onGeneratedTokens(0, 3);
-        composed.onThinkingTokens(0, 2);
-        composed.onText(0, "hi");
+        composed.onInputTokens(10);
+        composed.onCachedInputTokens(4);
+        composed.onGeneratedTokens(3);
+        composed.onThinkingTokens(2);
+        composed.onText("hi");
         assertEquals(List.of(
-                "in:1:10",
-                "cache:1:4",
-                "gen:0:3",
-                "think:0:2",
-                "text:0:hi"), events);
+                "in:10",
+                "cache:4",
+                "gen:3",
+                "think:2",
+                "text:hi"), events);
     }
 
     @Test
@@ -66,7 +66,7 @@ public class GenerationListenersTest {
                 @Override public void onError(Throwable t) {}
                 @Override public void onComplete() {}
             });
-            GenerationListeners.toPublisher(publisher).onText(0, "chunk");
+            GenerationListeners.toPublisher(publisher).onText("chunk");
             Thread.sleep(50);
             assertEquals(List.of("chunk"), received);
         }
