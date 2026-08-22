@@ -63,7 +63,7 @@ import smile.util.AutoScope;
  *
  * @author Haifeng Li
  */
-public class Qwen implements LanguageModel, AutoCloseable {
+public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.ModelExecutor {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Qwen.class);
     /** Host-sync EOS check every N decode steps (always on last position). */
     private static final int EOS_CHECK_INTERVAL = 8;
@@ -817,36 +817,30 @@ public class Qwen implements LanguageModel, AutoCloseable {
     }
 
     @Override
-    public ChatCompletion[] generate(int[][] prompts, int maxGenLen, double temperature,
-                                     double topp, boolean logprobs, long seed,
-                                     GenerationListener listener) {
-        int batchSize = prompts.length;
-        if (batchSize > params.maxBatchSize()) {
-            throw new IllegalArgumentException("The number of prompts is greater than max_batch_size");
+    public ChatCompletion generate(int[] prompt, int maxGenLen, double temperature,
+                                   double topp, boolean logprobs, long seed,
+                                   GenerationListener listener) {
+        if (prompt == null) {
+            throw new IllegalArgumentException("prompt must not be null");
         }
 
-        int minPromptLen = Integer.MAX_VALUE;
-        int maxPromptLen = Integer.MIN_VALUE;
+        int promptLen = prompt.length;
         int vocabSize = params.vocabSize();
-        for (var prompt : prompts) {
-            minPromptLen = Math.min(minPromptLen, prompt.length);
-            maxPromptLen = Math.max(maxPromptLen, prompt.length);
-            for (int token : prompt) {
-                if (token < 0 || token >= vocabSize) {
-                    throw new IllegalArgumentException(
-                            "Prompt token id " + token + " out of range for vocab_size "
-                                    + vocabSize + " (im_start="
-                                    + tokenizer.specialToken("<|im_start|>")
-                                    + ", im_end=" + tokenizer.specialToken("<|im_end|>")
-                                    + "). This causes CUDA embedding gather OOB.");
-                }
+        for (int token : prompt) {
+            if (token < 0 || token >= vocabSize) {
+                throw new IllegalArgumentException(
+                        "Prompt token id " + token + " out of range for vocab_size "
+                                + vocabSize + " (im_start="
+                                + tokenizer.specialToken("<|im_start|>")
+                                + ", im_end=" + tokenizer.specialToken("<|im_end|>")
+                                + "). This causes CUDA embedding gather OOB.");
             }
         }
-        if (maxPromptLen > params.maxSeqLen()) {
+        if (promptLen > params.maxSeqLen()) {
             throw new IllegalArgumentException("The prompt length is greater than max_seq_len");
         }
-        // Cap prompt + max_tokens by max-seq-len for every request.
-        int maxAllowedGen = Math.max(0, params.maxSeqLen() - maxPromptLen);
+        // Cap prompt + max_tokens by max-seq-len.
+        int maxAllowedGen = Math.max(0, params.maxSeqLen() - promptLen);
         if (maxGenLen > maxAllowedGen) {
             maxGenLen = maxAllowedGen;
         }
@@ -862,49 +856,39 @@ public class Qwen implements LanguageModel, AutoCloseable {
              var scope = new AutoScope()) {
             Tensor.push(scope);
             try {
-            int desiredTotalLen = Math.min(params.maxSeqLen(), maxGenLen + maxPromptLen);
-            final boolean usePrefix = batchSize == 1 && model.kvCachePool() != null;
+            int desiredTotalLen = Math.min(params.maxSeqLen(), maxGenLen + promptLen);
             int prefixLen = 0;
             int totalLen = desiredTotalLen;
+            final boolean usePrefix = model.kvCachePool() != null;
             if (usePrefix) {
                 for (QwenModel m : models) {
                     if (m.kvCachePool() != null) {
-                        prefixLen = m.kvCachePool().bindWithPrefix(prompts[0], desiredTotalLen);
-                        totalLen = Math.min(totalLen, m.kvCachePool().requestCapacity());
-                    }
-                }
-            } else if (model.kvCachePool() != null) {
-                for (QwenModel m : models) {
-                    if (m.kvCachePool() != null) {
-                        m.kvCachePool().bindRequests(batchSize, desiredTotalLen);
+                        prefixLen = m.kvCachePool().bindWithPrefix(prompt, desiredTotalLen);
                         totalLen = Math.min(totalLen, m.kvCachePool().requestCapacity());
                     }
                 }
             }
-            if (model.kvCachePool() != null && totalLen < maxPromptLen) {
+            if (usePrefix && totalLen < promptLen) {
                 throw new IllegalArgumentException(String.format(
                         "Prompt length %d exceeds free KV capacity %d",
-                        maxPromptLen, totalLen));
+                        promptLen, totalLen));
             }
             final int cachedPrefixTokens = prefixLen;
-            if (prefixLen > 0 && minPromptLen < totalLen && minPromptLen > 0) {
-                prefixLen = Math.min(prefixLen, minPromptLen - 1);
+            if (prefixLen > 0 && promptLen < totalLen && promptLen > 0) {
+                prefixLen = Math.min(prefixLen, promptLen - 1);
             }
             if (model.deltaNetStatePool() != null) {
                 for (QwenModel m : models) {
                     if (m.deltaNetStatePool() != null) {
-                        m.deltaNetStatePool().reset(batchSize);
+                        m.deltaNetStatePool().reset(1);
                     }
                 }
             }
             if (listener != null) {
-                for (int i = 0; i < batchSize; i++) {
-                    listener.onInputTokens(i, prompts[i].length);
-                    int cached = (usePrefix && i == 0)
-                            ? Math.min(cachedPrefixTokens, prompts[0].length)
-                            : 0;
-                    listener.onCachedInputTokens(i, cached);
-                }
+                listener.onInputTokens(promptLen);
+                listener.onCachedInputTokens(usePrefix
+                        ? Math.min(cachedPrefixTokens, promptLen)
+                        : 0);
             }
 
             int pad = tokenizer.pad();
@@ -912,22 +896,20 @@ public class Qwen implements LanguageModel, AutoCloseable {
                     .device(Device.CPU())
                     .dtype(ScalarType.Int64)
                     .requireGradients(false);
-            Tensor tokensCpu = Tensor.zeros(cpuOpts, batchSize, totalLen).fill_(pad);
-            for (int i = 0; i < batchSize; i++) {
-                try (var prompt = Tensor.of(prompts[i]);
-                     var row = Index.of(i);
-                     var span = Index.slice(0, prompts[i].length)) {
-                    tokensCpu.put_(prompt, row, span);
-                }
+            Tensor tokensCpu = Tensor.zeros(cpuOpts, 1, totalLen).fill_(pad);
+            try (var promptTensor = Tensor.of(prompt);
+                 var row = Index.of(0);
+                 var span = Index.slice(0, promptLen)) {
+                tokensCpu.put_(promptTensor, row, span);
             }
 
             Tensor tokenLogprobs = null;
             if (logprobs) {
                 var opts = new Tensor.Options().device(model.device()).requireGradients(false).dtype(ScalarType.Float);
-                tokenLogprobs = Tensor.zeros(opts, batchSize, totalLen);
+                tokenLogprobs = Tensor.zeros(opts, 1, totalLen);
             }
 
-            Tensor eosReached = Tensor.of(new boolean[batchSize]);
+            Tensor eosReached = Tensor.of(new boolean[1]);
             Tensor inputTextMask = tokensCpu.ne(pad);
             Tensor stopTokens = Tensor.of(tokenizer.stopTokens());
 
@@ -948,9 +930,9 @@ public class Qwen implements LanguageModel, AutoCloseable {
             stopTokens.close();
 
             int prevPos = prefixLen;
-            int chunkPos = minPromptLen;
+            int chunkPos = promptLen;
             ExecutorService pool = tpExecutor;
-            for (int curPos = minPromptLen; curPos < totalLen; curPos++) {
+            for (int curPos = promptLen; curPos < totalLen; curPos++) {
                 AutoScope loopScope = new AutoScope();
                 Tensor.push(loopScope);
                 Tensor[] logits = null;
@@ -963,20 +945,14 @@ public class Qwen implements LanguageModel, AutoCloseable {
                     Tensor nextToken;
                     try (var last = Index.of(-1);
                          var tail = logits[0].get(Index.Colon, last)) {
-                        if (temperature > 0) {
-                            try (var probs = tail.div(temperature).softmax(-1)) {
-                                nextToken = probs.topp(topp);
-                            }
-                        } else {
-                            nextToken = tail.argmax(-1, false);
-                        }
+                        nextToken = smile.llm.engine.Sampling.sampleNext(tail, temperature, topp);
                     }
 
-                    nextToken = nextToken.reshape(-1);
                     try (var cur = Index.of(curPos);
                          var textMask = masks[0].get(Index.Colon, cur);
                          var currentTokens = tokens[0].get(Index.Colon, cur);
-                         var merged = Tensor.where(textMask, currentTokens, nextToken)) {
+                         var merged = smile.llm.engine.Sampling.mergeWithPromptMask(
+                                 textMask, currentTokens, nextToken)) {
                         nextToken.close();
                         nextToken = merged.detach();
                         for (int r = 0; r < models.length; r++) {
@@ -1011,26 +987,24 @@ public class Qwen implements LanguageModel, AutoCloseable {
                     nextToken.close();
                     prevPos = curPos;
                     if (listener != null) {
-                        for (int i = 0; i < batchSize; i++) {
-                            listener.onGeneratedTokens(i, 1);
-                        }
+                        listener.onGeneratedTokens(1);
                     }
                 } finally {
                     Tensor.pop();
                 }
 
                 // Prefill is the activation peak; return cached blocks before decode.
-                if (curPos == minPromptLen) {
+                if (curPos == promptLen) {
                     for (QwenModel m : models) {
                         m.device().emptyCache();
                     }
                 }
 
                 // Defer GPU→CPU EOS sync: every N tokens and always on the last slot.
-                boolean checkEos = (curPos - minPromptLen + 1) % EOS_CHECK_INTERVAL == 0
+                boolean checkEos = (curPos - promptLen + 1) % EOS_CHECK_INTERVAL == 0
                         || curPos == totalLen - 1;
                 boolean done = checkEos && eos[0].all();
-                if (listener != null && batchSize == 1
+                if (listener != null
                         && (curPos - chunkPos >= 20 || curPos == totalLen - 1 || done)) {
                     int end = done ? curPos : curPos + 1;
                     if (end > chunkPos) {
@@ -1046,7 +1020,7 @@ public class Qwen implements LanguageModel, AutoCloseable {
                             var chunk = tokenizer.tryDecode(completion, true);
                             chunkPos = end;
                             if (!chunk.isEmpty()) {
-                                listener.onText(0, chunk);
+                                listener.onText(chunk);
                             }
                         } catch (java.nio.charset.CharacterCodingException ex) {
                             logger.debug("Cannot decode a chunk", ex);
@@ -1066,53 +1040,47 @@ public class Qwen implements LanguageModel, AutoCloseable {
                     logprobArray = cpuLogprobs.floatArray();
                 }
             }
-            ChatCompletion[] predictions = new ChatCompletion[batchSize];
-            int[] sequenceToInsert = null;
-            for (int i = 0; i < batchSize; i++) {
-                int start = prompts[i].length;
-                var completion = Arrays.stream(longArray)
-                        .skip((long) i * totalLen + start)
-                        .mapToInt(x -> (int) x)
-                        .limit(prompts[i].length + maxGenLen - start)
-                        .toArray();
 
-                float[] probs = null;
-                if (logprobs) {
-                    probs = Arrays.copyOfRange(logprobArray, i * totalLen + start,
-                            i * totalLen + prompts[i].length + maxGenLen);
-                }
+            int start = promptLen;
+            var completion = Arrays.stream(longArray)
+                    .skip(start)
+                    .mapToInt(x -> (int) x)
+                    .limit(maxGenLen)
+                    .toArray();
 
-                boolean stop = false;
-                for (var stopToken : tokenizer.stopTokens()) {
-                    for (int eosIdx = 0; eosIdx < completion.length; eosIdx++) {
-                        if (completion[eosIdx] == stopToken) {
-                            stop = true;
-                            completion = Arrays.copyOf(completion, eosIdx);
-                            if (logprobs) {
-                                probs = Arrays.copyOf(probs, eosIdx);
-                            }
-                            break;
-                        }
-                    }
-                }
-                var reason = stop ? FinishReason.stop : FinishReason.length;
-                predictions[i] = new ChatCompletion(name, tokenizer.decode(completion),
-                        prompts[i], completion, reason, probs);
-                if (usePrefix && i == 0) {
-                    sequenceToInsert = new int[prompts[0].length + completion.length];
-                    System.arraycopy(prompts[0], 0, sequenceToInsert, 0, prompts[0].length);
-                    System.arraycopy(completion, 0, sequenceToInsert, prompts[0].length, completion.length);
-                }
+            float[] probs = null;
+            if (logprobs) {
+                probs = Arrays.copyOfRange(logprobArray, start, start + maxGenLen);
             }
 
-            if (usePrefix && sequenceToInsert != null) {
+            boolean stop = false;
+            for (var stopToken : tokenizer.stopTokens()) {
+                for (int eosIdx = 0; eosIdx < completion.length; eosIdx++) {
+                    if (completion[eosIdx] == stopToken) {
+                        stop = true;
+                        completion = Arrays.copyOf(completion, eosIdx);
+                        if (logprobs) {
+                            probs = Arrays.copyOf(probs, eosIdx);
+                        }
+                        break;
+                    }
+                }
+            }
+            var reason = stop ? FinishReason.stop : FinishReason.length;
+            ChatCompletion prediction = new ChatCompletion(name, tokenizer.decode(completion),
+                    prompt, completion, reason, probs);
+
+            if (usePrefix) {
+                int[] sequenceToInsert = new int[promptLen + completion.length];
+                System.arraycopy(prompt, 0, sequenceToInsert, 0, promptLen);
+                System.arraycopy(completion, 0, sequenceToInsert, promptLen, completion.length);
                 for (QwenModel m : models) {
                     if (m.kvCachePool() != null) {
                         m.kvCachePool().finishRequest(sequenceToInsert);
                     }
                 }
             }
-            return predictions;
+            return prediction;
             } finally {
                 Tensor.pop();
             }
@@ -1221,35 +1189,64 @@ public class Qwen implements LanguageModel, AutoCloseable {
     }
 
     /**
-     * Performs text completion for a list of prompts.
+     * Performs text completion for a prompt.
      *
-     * @param prompts     list of text prompts.
-     * @param maxGenLen   maximum length of the generated text sequence.
+     * @param prompt      text prompt.
+     * @param maxGenLen   maximum number of new tokens to generate.
      * @param temperature temperature value for controlling randomness in sampling.
      * @param topp        top-p probability threshold for nucleus sampling.
      * @param logprobs    flag indicating whether to compute token log probabilities.
      * @param seed        optional RNG seed to sample deterministically.
      * @param listener    optional generation progress callback.
-     * @return the generated text completions.
+     * @return the generated text completion.
      */
-    public ChatCompletion[] complete(String[] prompts, int maxGenLen, double temperature, double topp,
-                                     boolean logprobs, long seed, GenerationListener listener) {
-        int batchSize = prompts.length;
-        int[][] tokens = new int[batchSize][];
-        for (int i = 0; i < batchSize; i++) {
-            tokens[i] = tokenizer.encode(prompts[i], false, false);
+    public ChatCompletion complete(String prompt, int maxGenLen, double temperature, double topp,
+                                   boolean logprobs, long seed, GenerationListener listener) {
+        if (prompt == null) {
+            throw new IllegalArgumentException("prompt must not be null");
         }
-        return generate(tokens, maxGenLen, temperature, topp, logprobs, seed, listener);
+        return generate(tokenizer.encode(prompt, false, false),
+                maxGenLen, temperature, topp, logprobs, seed, listener);
     }
 
     @Override
-    public ChatCompletion[] chat(Message[][] dialogs, int maxGenLen, double temperature, double topp,
-                                 boolean logprobs, long seed, GenerationListener listener) {
-        int batchSize = dialogs.length;
-        int[][] tokens = new int[batchSize][];
-        for (int i = 0; i < batchSize; i++) {
-            tokens[i] = tokenizer.encodeDialog(dialogs[i]);
+    public ChatCompletion chat(Message[] dialog, int maxGenLen, double temperature, double topp,
+                               boolean logprobs, long seed, GenerationListener listener) {
+        if (dialog == null) {
+            throw new IllegalArgumentException("dialog must not be null");
         }
-        return generate(tokens, maxGenLen, temperature, topp, logprobs, seed, listener);
+        return generate(tokenizer.encodeDialog(dialog),
+                maxGenLen, temperature, topp, logprobs, seed, listener);
+    }
+
+    @Override
+    public LanguageModel model() {
+        return this;
+    }
+
+    @Override
+    public smile.llm.cache.KvCachePool kvCachePool() {
+        return model.kvCachePool();
+    }
+
+    @Override
+    public int padToken() {
+        return tokenizer.pad();
+    }
+
+    @Override
+    public int[] stopTokens() {
+        return tokenizer.stopTokens();
+    }
+
+    @Override
+    public String decode(int[] tokens) {
+        return tokenizer.decode(tokens);
+    }
+
+    @Override
+    public String tryDecode(int[] tokens, boolean skipSpecial)
+            throws java.nio.charset.CharacterCodingException {
+        return tokenizer.tryDecode(tokens, skipSpecial);
     }
 }

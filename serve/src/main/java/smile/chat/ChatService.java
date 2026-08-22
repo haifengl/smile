@@ -30,6 +30,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.SubmissionPublisher;
+import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import io.quarkus.runtime.Startup;
@@ -73,6 +74,8 @@ public class ChatService {
 
     /** The loaded LLM; {@code null} when the model failed to load. */
     private LanguageModel model;
+    /** Request-oriented runtime; {@code null} when no model is loaded. */
+    private smile.llm.engine.InferenceEngine engine;
     /**
      * Public model id exposed by the chat API (HF repo id or local directory
      * name). Independent of family-prefixed {@code toString()} labels.
@@ -142,8 +145,12 @@ public class ChatService {
             }
             if (model != null) {
                 applyPrefixReuse(model, kvCache.prefixReuse());
-                logger.infof("Chat model ready: id=%s family=%s maxSeqLen=%d (config max-seq-len=%d)",
-                        modelId, model.family(), model.maxSeqLen(), config.maxSeqLen());
+                if (model instanceof smile.llm.engine.ModelExecutor exec) {
+                    engine = new smile.llm.engine.InferenceEngine(exec, Math.max(1, config.maxBatchSize()));
+                }
+                logger.infof("Chat model ready: id=%s family=%s maxSeqLen=%d (config max-seq-len=%d) maxInFlight=%d",
+                        modelId, model.family(), model.maxSeqLen(), config.maxSeqLen(),
+                        engine != null ? engine.maxInFlight() : 1);
             }
         } catch (Exception ex) {
             // Keep the service up in an unavailable state so classic ML / ONNX
@@ -151,6 +158,15 @@ public class ChatService {
             logger.warnf(ex, "Failed to load chat model '%s'; chat completions will return HTTP 503",
                     modelSpec);
             model = null;
+            engine = null;
+        }
+    }
+
+    @PreDestroy
+    void shutdown() {
+        if (engine != null) {
+            engine.close();
+            engine = null;
         }
     }
 
@@ -337,13 +353,13 @@ public class ChatService {
     }
 
     /**
-     * Completes a chat dialog.
+     * Completes a chat dialog via {@link smile.llm.engine.InferenceEngine}.
      *
      * @param request   the chat completion request.
      * @param publisher the flow publisher that receives streamed token chunks.
-     * @return the array of completion results, one per dialog in the batch.
+     * @return the completion result for the request.
      */
-    public ChatCompletion[] complete(CompletionRequest request, SubmissionPublisher<String> publisher) {
+    public ChatCompletion complete(CompletionRequest request, SubmissionPublisher<String> publisher) {
         int[] prompt = model.encodeChat(request.messages);
         int maxGenLen = request.resolveMaxTokens(model.maxSeqLen(), prompt.length);
         var throughput = new TokenThroughputLogger();
@@ -351,7 +367,13 @@ public class ChatService {
                 throughput,
                 publisher != null ? GenerationListeners.toPublisher(publisher) : null);
         try {
-            return model.generate(new int[][]{prompt}, maxGenLen, request.temperature,
+            if (engine != null) {
+                var handle = engine.submit(smile.llm.engine.GenerationRequest.ofTokens(
+                        prompt, maxGenLen, request.temperature, request.topP,
+                        request.logprobs, request.seed, listener));
+                return handle.future().join();
+            }
+            return model.generate(prompt, maxGenLen, request.temperature,
                     request.topP, request.logprobs, request.seed, listener);
         } finally {
             throughput.finish();

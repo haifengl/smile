@@ -321,4 +321,61 @@ public class KvCachePoolTest {
             assertTrue(pool.prefixInsertTokens() >= prompt.length);
         }
     }
+
+    @Test
+    public void testGivenTwoBoundRequestsWhenActivateAndUnbindOneThenOtherRemains() {
+        // Given – pageSize=1 pool large enough for two concurrent requests
+        try (var pool = new KvCachePool(1, 64, 2, 16, 1, Device.CPU(), ScalarType.Float)) {
+            pool.setPrefixReuseEnabled(false);
+            int id1 = pool.bindRequest(new int[]{1, 2, 3, 4}, 16);
+            int id2 = pool.bindRequest(new int[]{5, 6, 7, 8}, 16);
+            assertTrue(id1 > 0);
+            assertTrue(id2 > 0);
+            assertEquals(2, pool.boundRequestCount());
+
+            // When – activate both and write a batch-2 step
+            pool.activateStep(id1, id2);
+            Tensor k = Tensor.ones(2, 2, 2, 16);
+            Tensor v = Tensor.full(4.0f, 2, 2, 2, 16);
+            try {
+                pool.put(0, 0, k, v);
+            } finally {
+                k.close();
+                v.close();
+            }
+
+            // Instant Eviction of one request
+            pool.unbindRequest(id1);
+
+            // Then – other request still bound; activation cleared for the step
+            assertEquals(1, pool.boundRequestCount());
+            pool.activateStep(id2);
+            var cached = pool.get(0, 2);
+            assertEquals(4.0f, cached._2().getFloat(0, 0, 0, 0), 1e-5);
+            cached._1().close();
+            cached._2().close();
+            pool.unbindRequest(id2);
+            assertEquals(0, pool.boundRequestCount());
+        }
+    }
+
+    @Test
+    public void testGivenBindRequestWhenUnbindRequestThenFreeSlotsIncrease() {
+        // Given
+        try (var pool = new KvCachePool(1, 64, 2, 16, 16, Device.CPU(), ScalarType.Float)) {
+            pool.setPrefixReuseEnabled(false);
+            int freeBefore = pool.freeSlots();
+            int id = pool.bindRequest(new int[]{1, 2, 3, 4}, 32);
+            assertTrue(id > 0);
+            assertTrue(pool.freeSlots() < freeBefore);
+            assertEquals(1, pool.boundRequestCount());
+
+            // When
+            pool.unbindRequest(id);
+
+            // Then
+            assertEquals(freeBefore, pool.freeSlots());
+            assertEquals(0, pool.boundRequestCount());
+        }
+    }
 }

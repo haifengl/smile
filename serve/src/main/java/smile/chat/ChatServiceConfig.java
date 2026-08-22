@@ -53,8 +53,9 @@ public interface ChatServiceConfig {
     int maxSeqLen();
 
     /**
-     * Maximum batch size for parallel generation.
-     * Defaults to {@code 1}.
+     * Maximum in-flight chat generations for {@link smile.llm.engine.InferenceEngine}
+     * (Fluid Injection cap). Each HTTP chat completion is one request; this is
+     * not a static multi-prompt batch size. Defaults to {@code 1}.
      */
     @WithDefault("1")
     int maxBatchSize();

@@ -74,41 +74,30 @@ public class LlamaTest {
     // -----------------------------------------------------------------------
 
     @Test
-    public void testGivenGenerateWithTooManyPromptsThenThrowsIllegalArgument() {
-        LlamaModelArgs args = new LlamaModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 1, 32);
-        Llama llama = tinyLlama(args);
-        // maxBatchSize=1, but we pass 2 prompts
-        int[][] prompts = {{1, 2}, {3, 4}};
-        assertThrows(IllegalArgumentException.class,
-                () -> llama.generate(prompts, 5, 0.0, 0.9, false, 0, null));
-    }
-
-    @Test
     public void testGivenGenerateWithPromptTooLongThenThrowsIllegalArgument() {
         // maxSeqLen=8, prompt length=10
         LlamaModelArgs args = new LlamaModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 1, 8);
         Llama llama = tinyLlama(args);
-        int[][] prompts = {new int[10]};  // prompt length 10 > maxSeqLen 8
+        int[] prompt = new int[10];  // prompt length 10 > maxSeqLen 8
         assertThrows(IllegalArgumentException.class,
-                () -> llama.generate(prompts, 5, 0.0, 0.9, false, 0, null));
+                () -> llama.generate(prompt, 5, 0.0, 0.9, false, 0, null));
     }
 
     @Test
-    public void testGivenGenerateWithListenerAndBatchSizeGtOneThenSucceedsWithoutTextStream() {
-        // Token metrics are fine for batch>1; onText is only emitted for batch==1.
-        LlamaModelArgs args = new LlamaModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 2, 32);
+    public void testGivenGenerateWithListenerThenReceivesGeneratedTokens() {
+        LlamaModelArgs args = new LlamaModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 1, 32);
         Llama llama = tinyLlama(args);
         llama.model.eval();
-        int[][] prompts = {{1}, {2}};
+        int[] prompt = {1};
         int[] tokenEvents = {0};
         GenerationListener listener = new GenerationListener() {
             @Override
-            public void onGeneratedTokens(int promptIndex, int count) {
+            public void onGeneratedTokens(int count) {
                 tokenEvents[0] += count;
             }
         };
-        var results = llama.generate(prompts, 2, 0.0, 0.9, false, 0, listener);
-        assertEquals(2, results.length);
+        var result = llama.generate(prompt, 2, 0.0, 0.9, false, 0, listener);
+        assertNotNull(result);
         assertTrue(tokenEvents[0] > 0);
     }
 
@@ -118,11 +107,9 @@ public class LlamaTest {
         LlamaModelArgs args = new LlamaModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 1, 16);
         Llama llama = tinyLlama(args);
         llama.model.eval();
-        int[][] prompts = {{1, 2, 3}};  // prompt of 3 tokens
-        var results = llama.generate(prompts, 4, 0.0, 0.9, false, 42, null);
-        assertNotNull(results);
-        assertEquals(1, results.length);
-        assertNotNull(results[0]);
+        int[] prompt = {1, 2, 3};  // prompt of 3 tokens
+        var result = llama.generate(prompt, 4, 0.0, 0.9, false, 42, null);
+        assertNotNull(result);
     }
 
     // -----------------------------------------------------------------------

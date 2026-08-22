@@ -50,7 +50,7 @@ import smile.util.AutoScope;
  *
  * @author Haifeng Li
  */
-public class Llama implements LanguageModel {
+public class Llama implements LanguageModel, smile.llm.engine.ModelExecutor {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Llama.class);
     /**
      * Architecture family label for this implementation.
@@ -755,38 +755,31 @@ public class Llama implements LanguageModel {
     }
 
     /**
-     * Generates text sequences based on provided prompts. This method uses
-     * the provided prompts as a basis for generating text. It employs nucleus
-     * sampling to produce text with controlled randomness.
-     * @param prompts List of tokenized prompts, where each prompt is represented as a list of integers.
-     * @param maxGenLen Maximum length of the generated text sequence.
-     * @param temperature Temperature value for controlling randomness in sampling.
-     * @param topp Top-p probability threshold for nucleus sampling.
-     * @param logprobs Flag indicating whether to compute token log probabilities.
-     * @param seed the optional random number generation seed to sample deterministically.
-     * @param listener optional generation progress callback.
-     * @return The generated text completion.
+     * Generates a text completion from a tokenized prompt using nucleus sampling.
+     *
+     * @param prompt      tokenized prompt.
+     * @param maxGenLen   maximum number of new tokens to generate.
+     * @param temperature temperature value for controlling randomness in sampling.
+     * @param topp        top-p probability threshold for nucleus sampling.
+     * @param logprobs    flag indicating whether to compute token log probabilities.
+     * @param seed        optional RNG seed to sample deterministically; {@code 0} is non-deterministic.
+     * @param listener    optional generation progress callback.
+     * @return the generated text completion.
      */
     @Override
-    public ChatCompletion[] generate(int[][] prompts, int maxGenLen, double temperature,
-                                     double topp, boolean logprobs, long seed,
-                                     GenerationListener listener) {
-        int batchSize = prompts.length;
-        if (batchSize > params.maxBatchSize()) {
-            throw new IllegalArgumentException("The number of prompts is greater than max_batch_size");
+    public ChatCompletion generate(int[] prompt, int maxGenLen, double temperature,
+                                   double topp, boolean logprobs, long seed,
+                                   GenerationListener listener) {
+        if (prompt == null) {
+            throw new IllegalArgumentException("prompt must not be null");
         }
 
-        int minPromptLen = Integer.MAX_VALUE;
-        int maxPromptLen = Integer.MIN_VALUE;
-        for (var prompt : prompts) {
-            minPromptLen = Math.min(minPromptLen, prompt.length);
-            maxPromptLen = Math.max(maxPromptLen, prompt.length);
-        }
-        if (maxPromptLen > params.maxSeqLen()) {
+        int promptLen = prompt.length;
+        if (promptLen > params.maxSeqLen()) {
             throw new IllegalArgumentException("The prompt length is greater than max_seq_len");
         }
-        // Cap prompt + max_tokens by max-seq-len for every request.
-        int maxAllowedGen = Math.max(0, params.maxSeqLen() - maxPromptLen);
+        // Cap prompt + max_tokens by max-seq-len.
+        int maxAllowedGen = Math.max(0, params.maxSeqLen() - promptLen);
         if (maxGenLen > maxAllowedGen) {
             maxGenLen = maxAllowedGen;
         }
@@ -803,53 +796,40 @@ public class Llama implements LanguageModel {
              var scope = new AutoScope()) {
             Tensor.push(scope);
             try {
-            int desiredTotalLen = Math.min(params.maxSeqLen(), maxGenLen + maxPromptLen);
-            final boolean usePrefix = batchSize == 1;
-            int prefixLen = 0;
-            if (usePrefix) {
-                prefixLen = model.kvCachePool().bindWithPrefix(prompts[0], desiredTotalLen);
-            } else {
-                model.kvCachePool().bindRequests(batchSize, desiredTotalLen);
-            }
+            int desiredTotalLen = Math.min(params.maxSeqLen(), maxGenLen + promptLen);
+            int prefixLen = model.kvCachePool().bindWithPrefix(prompt, desiredTotalLen);
             int totalLen = Math.min(desiredTotalLen, model.kvCachePool().requestCapacity());
-            if (totalLen < maxPromptLen) {
+            if (totalLen < promptLen) {
                 throw new IllegalArgumentException(String.format(
                         "Prompt length %d exceeds free KV capacity %d",
-                        maxPromptLen, totalLen));
+                        promptLen, totalLen));
             }
             final int cachedPrefixTokens = prefixLen;
             // Keep the last prompt token in the first forward so we obtain
             // next-token logits when generation is needed.
-            if (prefixLen > 0 && minPromptLen < totalLen && minPromptLen > 0) {
-                prefixLen = Math.min(prefixLen, minPromptLen - 1);
+            if (prefixLen > 0 && promptLen < totalLen && promptLen > 0) {
+                prefixLen = Math.min(prefixLen, promptLen - 1);
             }
             if (listener != null) {
-                for (int i = 0; i < batchSize; i++) {
-                    listener.onInputTokens(i, prompts[i].length);
-                    int cached = (usePrefix && i == 0)
-                            ? Math.min(cachedPrefixTokens, prompts[0].length)
-                            : 0;
-                    listener.onCachedInputTokens(i, cached);
-                }
+                listener.onInputTokens(promptLen);
+                listener.onCachedInputTokens(Math.min(cachedPrefixTokens, promptLen));
             }
 
             int pad = tokenizer.pad();
-            Tensor tokensCpu = Tensor.full(pad, batchSize, totalLen);
-            for (int i = 0; i < batchSize; i++) {
-                try (var prompt = Tensor.of(prompts[i]);
-                     var row = Index.of(i);
-                     var span = Index.slice(0, prompts[i].length)) {
-                    tokensCpu.put_(prompt, row, span);
-                }
+            Tensor tokensCpu = Tensor.full(pad, 1, totalLen);
+            try (var promptTensor = Tensor.of(prompt);
+                 var row = Index.of(0);
+                 var span = Index.slice(0, promptLen)) {
+                tokensCpu.put_(promptTensor, row, span);
             }
 
             Tensor tokenLogprobs = null;
             if (logprobs) {
                 var opts = new Tensor.Options().device(model.device()).requireGradients(false).dtype(ScalarType.Float);
-                tokenLogprobs = Tensor.zeros(opts, batchSize, totalLen);
+                tokenLogprobs = Tensor.zeros(opts, 1, totalLen);
             }
 
-            Tensor eosReachedCpu = Tensor.of(new boolean[batchSize]);
+            Tensor eosReachedCpu = Tensor.of(new boolean[1]);
             Tensor inputTextMaskCpu = tokensCpu.ne(pad);
             Tensor stopTokensCpu = Tensor.of(tokenizer.stopTokens());
 
@@ -863,7 +843,7 @@ public class Llama implements LanguageModel {
             stopTokensCpu.close();
 
             int prevPos = prefixLen;
-            if (minPromptLen == totalLen && prevPos < totalLen) {
+            if (promptLen == totalLen && prevPos < totalLen) {
                 try (var span = Index.slice(prevPos, totalLen);
                      var window = tokens.get(Index.Colon, span);
                      var logits = model.forward(window, prevPos)) {
@@ -877,8 +857,8 @@ public class Llama implements LanguageModel {
                 }
             }
 
-            int chunkPos = minPromptLen;
-            for (int curPos = minPromptLen; curPos < totalLen; curPos++) {
+            int chunkPos = promptLen;
+            for (int curPos = promptLen; curPos < totalLen; curPos++) {
                 AutoScope loopScope = new AutoScope();
                 Tensor.push(loopScope);
                 try {
@@ -892,21 +872,14 @@ public class Llama implements LanguageModel {
                     Tensor nextToken;
                     try (var last = Index.of(-1);
                          var tail = logits.get(Index.Colon, last)) {
-                        if (temperature > 0) {
-                            try (var scaled = tail.div(temperature);
-                                 var probs = scaled.softmax(-1)) {
-                                nextToken = probs.topp(topp);
-                            }
-                        } else {
-                            nextToken = tail.argmax(-1, false);
-                        }
+                        nextToken = smile.llm.engine.Sampling.sampleNext(tail, temperature, topp);
                     }
 
-                    nextToken = nextToken.reshape(-1);
                     try (var cur = Index.of(curPos);
                          var textMask = inputTextMask.get(Index.Colon, cur);
                          var currentTokens = tokens.get(Index.Colon, cur);
-                         var merged = Tensor.where(textMask, currentTokens, nextToken)) {
+                         var merged = smile.llm.engine.Sampling.mergeWithPromptMask(
+                                 textMask, currentTokens, nextToken)) {
                         nextToken.close();
                         nextToken = merged.detach();
                         tokens.put_(nextToken, Index.Colon, cur);
@@ -932,17 +905,15 @@ public class Llama implements LanguageModel {
                     nextToken.close();
                     prevPos = curPos;
                     if (listener != null) {
-                        for (int i = 0; i < batchSize; i++) {
-                            listener.onGeneratedTokens(i, 1);
-                        }
+                        listener.onGeneratedTokens(1);
                     }
                 } finally {
                     Tensor.pop();
                 }
 
                 boolean eos = eosReached.all();
-                if (listener != null && batchSize == 1
-                        && (curPos - chunkPos >= 20 || curPos == totalLen-1 || eos)) {
+                if (listener != null
+                        && (curPos - chunkPos >= 20 || curPos == totalLen - 1 || eos)) {
                     int end = eos ? curPos : curPos + 1;
                     if (end > chunkPos) {
                         long[] longArray;
@@ -958,7 +929,7 @@ public class Llama implements LanguageModel {
                             var chunk = tokenizer.tryDecode(completion, true);
                             chunkPos = end; // advance only after a successful UTF-8 decode
                             if (!chunk.isEmpty()) {
-                                listener.onText(0, chunk);
+                                listener.onText(chunk);
                             }
                         } catch (java.nio.charset.CharacterCodingException ex) {
                             // Incomplete multibyte sequence at chunk boundary — wait for more tokens.
@@ -980,48 +951,40 @@ public class Llama implements LanguageModel {
                     logprobArray = cpuLogprobs.floatArray();
                 }
             }
-            ChatCompletion[] predictions = new ChatCompletion[batchSize];
-            int[] sequenceToInsert = null;
-            for (int i = 0; i < batchSize; i++) {
-                // cut to max gen len
-                int start = prompts[i].length;
-                var completion = Arrays.stream(longArray)
-                        .skip((long) i * totalLen + start)
-                        .mapToInt(x -> (int) x)
-                        .limit(prompts[i].length + maxGenLen - start)
-                        .toArray();
 
-                float[] probs = null;
-                if (logprobs) {
-                    probs = Arrays.copyOfRange(logprobArray, i * totalLen + start, i * totalLen + prompts[i].length + maxGenLen);
-                }
+            // Cut to max gen len.
+            int start = promptLen;
+            var completion = Arrays.stream(longArray)
+                    .skip(start)
+                    .mapToInt(x -> (int) x)
+                    .limit(maxGenLen)
+                    .toArray();
 
-                // cut to after eos tok if any
-                boolean stop = false;
-                for (var stopToken : tokenizer.stopTokens()) {
-                    for (int eosIdx = 0; eosIdx < completion.length; eosIdx++) {
-                        if (completion[eosIdx] == stopToken) {
-                            stop = true;
-                            completion = Arrays.copyOf(completion, eosIdx);
-                            if (logprobs) {
-                                probs = Arrays.copyOf(probs, eosIdx);
-                            }
-                            break;
+            float[] probs = null;
+            if (logprobs) {
+                probs = Arrays.copyOfRange(logprobArray, start, start + maxGenLen);
+            }
+
+            // Cut to after eos tok if any.
+            boolean stop = false;
+            for (var stopToken : tokenizer.stopTokens()) {
+                for (int eosIdx = 0; eosIdx < completion.length; eosIdx++) {
+                    if (completion[eosIdx] == stopToken) {
+                        stop = true;
+                        completion = Arrays.copyOf(completion, eosIdx);
+                        if (logprobs) {
+                            probs = Arrays.copyOf(probs, eosIdx);
                         }
+                        break;
                     }
                 }
-
-                var reason = stop ? FinishReason.stop : FinishReason.length;
-                predictions[i] = new ChatCompletion(name, tokenizer.decode(completion), prompts[i], completion, reason, probs);
-                if (usePrefix && i == 0) {
-                    sequenceToInsert = concatTokens(prompts[0], completion);
-                }
             }
 
-            if (usePrefix && sequenceToInsert != null) {
-                model.kvCachePool().finishRequest(sequenceToInsert);
-            }
-            return predictions;
+            var reason = stop ? FinishReason.stop : FinishReason.length;
+            ChatCompletion prediction = new ChatCompletion(
+                    name, tokenizer.decode(completion), prompt, completion, reason, probs);
+            model.kvCachePool().finishRequest(concatTokens(prompt, completion));
+            return prediction;
             } finally {
                 Tensor.pop();
             }
@@ -1041,45 +1004,76 @@ public class Llama implements LanguageModel {
     }
 
     /**
-     * Performs text completion for a list of prompts
-     * @param prompts List of text prompts.
-     * @param maxGenLen Maximum length of the generated text sequence.
-     * @param temperature Temperature value for controlling randomness in sampling.
-     * @param topp Top-p probability threshold for nucleus sampling.
-     * @param logprobs Flag indicating whether to compute token log probabilities.
-     * @param seed the optional random number generation seed to sample deterministically.
-     * @param listener optional generation progress callback.
-     * @return The generated text completion.
+     * Performs text completion for a prompt.
+     *
+     * @param prompt      text prompt.
+     * @param maxGenLen   maximum number of new tokens to generate.
+     * @param temperature temperature value for controlling randomness in sampling.
+     * @param topp        top-p probability threshold for nucleus sampling.
+     * @param logprobs    flag indicating whether to compute token log probabilities.
+     * @param seed        optional RNG seed to sample deterministically.
+     * @param listener    optional generation progress callback.
+     * @return the generated text completion.
      */
-    public ChatCompletion[] complete(String[] prompts, int maxGenLen, double temperature, double topp, boolean logprobs, long seed, GenerationListener listener) {
-        int batchSize = prompts.length;
-        int[][] tokens = new int[batchSize][];
-        for (int i = 0; i < batchSize; i++) {
-            tokens[i] = tokenizer.encode(prompts[i], true, false);
+    public ChatCompletion complete(String prompt, int maxGenLen, double temperature, double topp,
+                                   boolean logprobs, long seed, GenerationListener listener) {
+        if (prompt == null) {
+            throw new IllegalArgumentException("prompt must not be null");
         }
-
-        return generate(tokens, maxGenLen, temperature, topp, logprobs, seed, listener);
+        return generate(tokenizer.encode(prompt, true, false),
+                maxGenLen, temperature, topp, logprobs, seed, listener);
     }
 
     /**
-     * Generates assistant responses for a list of conversational dialogs.
-     * @param dialogs List of conversational dialogs, where each dialog is a list of messages.
-     * @param maxGenLen Maximum length of the generated text sequence.
-     * @param temperature Temperature value for controlling randomness in sampling.
-     * @param topp Top-p probability threshold for nucleus sampling.
-     * @param logprobs Flag indicating whether to compute token log probabilities.
-     * @param seed the optional random number generation seed to sample deterministically.
-     * @param listener optional generation progress callback.
-     * @return The generated chat responses.
+     * Generates an assistant response for a conversational dialog.
+     *
+     * @param dialog      ordered conversation turns.
+     * @param maxGenLen   maximum number of new tokens to generate.
+     * @param temperature temperature value for controlling randomness in sampling.
+     * @param topp        top-p probability threshold for nucleus sampling.
+     * @param logprobs    flag indicating whether to compute token log probabilities.
+     * @param seed        optional RNG seed to sample deterministically.
+     * @param listener    optional generation progress callback.
+     * @return the generated chat response.
      */
     @Override
-    public ChatCompletion[] chat(Message[][] dialogs, int maxGenLen, double temperature, double topp, boolean logprobs, long seed, GenerationListener listener) {
-        int batchSize = dialogs.length;
-        int[][] tokens = new int[batchSize][];
-        for (int i = 0; i < batchSize; i++) {
-            tokens[i] = tokenizer.encodeDialog(dialogs[i]);
+    public ChatCompletion chat(Message[] dialog, int maxGenLen, double temperature, double topp,
+                               boolean logprobs, long seed, GenerationListener listener) {
+        if (dialog == null) {
+            throw new IllegalArgumentException("dialog must not be null");
         }
+        return generate(tokenizer.encodeDialog(dialog),
+                maxGenLen, temperature, topp, logprobs, seed, listener);
+    }
 
-        return generate(tokens, maxGenLen, temperature, topp, logprobs, seed, listener);
+    @Override
+    public LanguageModel model() {
+        return this;
+    }
+
+    @Override
+    public smile.llm.cache.KvCachePool kvCachePool() {
+        return model.kvCachePool();
+    }
+
+    @Override
+    public int padToken() {
+        return tokenizer.pad();
+    }
+
+    @Override
+    public int[] stopTokens() {
+        return tokenizer.stopTokens();
+    }
+
+    @Override
+    public String decode(int[] tokens) {
+        return tokenizer.decode(tokens);
+    }
+
+    @Override
+    public String tryDecode(int[] tokens, boolean skipSpecial)
+            throws java.nio.charset.CharacterCodingException {
+        return tokenizer.tryDecode(tokens, skipSpecial);
     }
 }

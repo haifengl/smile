@@ -638,7 +638,8 @@ A full LLaMA-3 inference implementation:
 | `LlamaBlock` | Single decoder block: `GroupedQueryAttention` + `FeedForward` + RMS norms |
 | `GroupedQueryAttention` | Grouped-query attention with KV-cache and RoPE |
 | `Tokenizer` (llama) | Thin wrapper around `smile.llm.tokenizer.Tokenizer` |
-| `Llama` | High-level entry point — `build()`, `generate()`, `chat()` |
+| `Llama` | High-level entry point — `build()`, single-prompt `generate()` / `chat()` |
+| `InferenceEngine` (`smile.llm.engine`) | Request queue + Fluid Injection / Instant Eviction for serve |
 
 **Loading a checkpoint:**
 
@@ -658,17 +659,17 @@ Llama llama = Llama.build(
 **Text generation (raw token IDs):**
 
 ```java
-int[][] prompts = { llama.tokenizer.encode("Once upon a time", true, false) };
-ChatCompletion[] results = llama.generate(
-        prompts,
+int[] prompt = llama.tokenizer.encode("Once upon a time", true, false);
+ChatCompletion result = llama.generate(
+        prompt,
         /*maxGenLen=*/   200,
         /*temperature=*/ 0.6,
         /*topp=*/        0.9,
         /*logprobs=*/    false,
         /*seed=*/        42L,
-        /*publisher=*/   null   // or a SubmissionPublisher<String> for streaming
+        /*listener=*/    null
 );
-System.out.println(results[0].content());
+System.out.println(result.content());
 ```
 
 **Chat completion (dialog format):**
@@ -686,26 +687,25 @@ ChatCompletion reply = llama.chat(
         /*topp=*/        0.9,
         /*logprobs=*/    false,
         /*seed=*/        0L,
-        /*publisher=*/   null
+        /*listener=*/    null
 );
 System.out.println(reply.content());
 ```
 
-**Streaming output** (single prompt only):
+**Streaming** via {@code GenerationListener} (serve uses {@code GenerationListeners.toPublisher}):
 
 ```java
-import java.util.concurrent.SubmissionPublisher;
+import smile.llm.GenerationListener;
 
-var publisher = new SubmissionPublisher<String>();
-publisher.subscribe(new Flow.Subscriber<>() {
-    public void onNext(String token) { System.out.print(token); }
-    // ... other methods
-});
-
-int[][] prompt = { llama.tokenizer.encode("Tell me a joke", true, false) };
-llama.generate(prompt, 200, 0.8, 0.95, false, 0L, publisher);
-publisher.close();
+GenerationListener listener = new GenerationListener() {
+    @Override public void onText(String chunk) { System.out.print(chunk); }
+};
+int[] prompt = llama.tokenizer.encode("Tell me a joke", true, false);
+llama.generate(prompt, 200, 0.8, 0.95, false, 0L, listener);
 ```
+
+**Serve / multi-request:** prefer {@code smile.llm.engine.InferenceEngine} — one prompt per
+{@code GenerationRequest}, with {@code smile.chat.max-batch-size} as the in-flight cap.
 
 > **Note:** GPU inference requires the CUDA-enabled LibTorch libraries to be
 > discoverable on the platform loader path (`PATH`, `LD_LIBRARY_PATH`, or
