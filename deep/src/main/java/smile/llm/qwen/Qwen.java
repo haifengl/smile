@@ -819,7 +819,8 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     @Override
     public ChatCompletion generate(int[] prompt, int maxGenLen, double temperature,
                                    double topp, boolean logprobs, long seed,
-                                   GenerationListener listener) {
+                                   GenerationListener listener,
+                                   java.util.function.BooleanSupplier cancelRequested) {
         if (prompt == null) {
             throw new IllegalArgumentException("prompt must not be null");
         }
@@ -868,6 +869,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                     }
                 }
             }
+            throwIfCancelled(cancelRequested);
             if (usePrefix && totalLen < promptLen) {
                 throw new IllegalArgumentException(String.format(
                         "Prompt length %d exceeds free KV capacity %d",
@@ -933,6 +935,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             int chunkPos = promptLen;
             ExecutorService pool = tpExecutor;
             for (int curPos = promptLen; curPos < totalLen; curPos++) {
+                throwIfCancelled(cancelRequested);
                 AutoScope loopScope = new AutoScope();
                 Tensor.push(loopScope);
                 Tensor[] logits = null;
@@ -1211,12 +1214,19 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
     @Override
     public ChatCompletion chat(Message[] dialog, int maxGenLen, double temperature, double topp,
-                               boolean logprobs, long seed, GenerationListener listener) {
+                               boolean logprobs, long seed, GenerationListener listener,
+                               java.util.function.BooleanSupplier cancelRequested) {
         if (dialog == null) {
             throw new IllegalArgumentException("dialog must not be null");
         }
         return generate(tokenizer.encodeDialog(dialog),
-                maxGenLen, temperature, topp, logprobs, seed, listener);
+                maxGenLen, temperature, topp, logprobs, seed, listener, cancelRequested);
+    }
+
+    private static void throwIfCancelled(java.util.function.BooleanSupplier cancelRequested) {
+        if (cancelRequested != null && cancelRequested.getAsBoolean()) {
+            throw new java.util.concurrent.CancellationException("aborted");
+        }
     }
 
     @Override

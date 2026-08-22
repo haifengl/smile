@@ -706,6 +706,8 @@ llama.generate(prompt, 200, 0.8, 0.95, false, 0L, listener);
 
 **Serve / multi-request:** prefer {@code smile.llm.engine.InferenceEngine} — one prompt per
 {@code GenerationRequest}, with {@code smile.chat.max-batch-size} as the in-flight cap.
+Streaming disconnect calls {@code GenerationHandle.abort()}, which cooperatively stops
+decode between steps and frees KV.
 
 > **Note:** GPU inference requires the CUDA-enabled LibTorch libraries to be
 > discoverable on the platform loader path (`PATH`, `LD_LIBRARY_PATH`, or

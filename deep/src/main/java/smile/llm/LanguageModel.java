@@ -16,6 +16,8 @@
  */
 package smile.llm;
 
+import java.util.function.BooleanSupplier;
+
 /**
  * Common façade for chat-capable decoder LLMs (Llama, Qwen, …).
  *
@@ -27,6 +29,11 @@ package smile.llm;
  * <p>Streaming and metrics use a single optional {@link GenerationListener}.
  * Transport-specific types such as {@link java.util.concurrent.SubmissionPublisher}
  * belong at the serve boundary (see {@link GenerationListeners#toPublisher}).
+ *
+ * <p>Cooperative cancel: pass a non-null {@code cancelRequested} supplier; the
+ * implementation checks it between decode steps and throws
+ * {@link java.util.concurrent.CancellationException} when true (KV is still
+ * unbound in {@code finally}).
  *
  * @author Haifeng Li
  */
@@ -67,41 +74,69 @@ public interface LanguageModel {
     int[] encodeChat(Message... dialog);
 
     /**
+     * Generates a completion from an already-tokenized prompt (no cancel).
+     *
+     * @see #generate(int[], int, double, double, boolean, long, GenerationListener, BooleanSupplier)
+     */
+    default ChatCompletion generate(int[] prompt, int maxGenLen, double temperature,
+                                    double topp, boolean logprobs, long seed,
+                                    GenerationListener listener) {
+        return generate(prompt, maxGenLen, temperature, topp, logprobs, seed, listener, null);
+    }
+
+    /**
      * Generates a completion from an already-tokenized prompt.
      *
-     * @param prompt      prompt token id sequence.
-     * @param maxGenLen   maximum number of <em>new</em> tokens to generate
-     *                    (not including the prompt itself).
-     * @param temperature sampling temperature; higher values increase randomness.
-     * @param topp        nucleus-sampling top-p threshold in {@code (0, 1]}.
-     * @param logprobs    {@code true} to include per-token log-probabilities in
-     *                    the result.
-     * @param seed        optional RNG seed for deterministic sampling;
-     *                    {@code 0} means non-deterministic.
-     * @param listener    optional progress callback; may be {@code null}.
+     * @param prompt           prompt token id sequence.
+     * @param maxGenLen        maximum number of <em>new</em> tokens to generate
+     *                         (not including the prompt itself).
+     * @param temperature      sampling temperature; higher values increase randomness.
+     * @param topp             nucleus-sampling top-p threshold in {@code (0, 1]}.
+     * @param logprobs         {@code true} to include per-token log-probabilities in
+     *                         the result.
+     * @param seed             optional RNG seed for deterministic sampling;
+     *                         {@code 0} means non-deterministic.
+     * @param listener         optional progress callback; may be {@code null}.
+     * @param cancelRequested  when non-null and returns {@code true}, generation
+     *                         stops between decode steps with
+     *                         {@link java.util.concurrent.CancellationException}.
      * @return the completion for {@code prompt}.
      */
     ChatCompletion generate(int[] prompt, int maxGenLen, double temperature,
                             double topp, boolean logprobs, long seed,
-                            GenerationListener listener);
+                            GenerationListener listener,
+                            BooleanSupplier cancelRequested);
+
+    /**
+     * Generates an assistant reply for a dialog (no cancel).
+     *
+     * @see #chat(Message[], int, double, double, boolean, long, GenerationListener, BooleanSupplier)
+     */
+    default ChatCompletion chat(Message[] dialog, int maxGenLen, double temperature,
+                                double topp, boolean logprobs, long seed,
+                                GenerationListener listener) {
+        return chat(dialog, maxGenLen, temperature, topp, logprobs, seed, listener, null);
+    }
 
     /**
      * Generates an assistant reply for a dialog.
      *
      * <p>Equivalent to {@link #encodeChat} followed by {@link #generate}.
      *
-     * @param dialog      ordered conversation turns.
-     * @param maxGenLen   maximum number of <em>new</em> tokens to generate.
-     * @param temperature sampling temperature; higher values increase randomness.
-     * @param topp        nucleus-sampling top-p threshold in {@code (0, 1]}.
-     * @param logprobs    {@code true} to include per-token log-probabilities in
-     *                    the result.
-     * @param seed        optional RNG seed for deterministic sampling;
-     *                    {@code 0} means non-deterministic.
-     * @param listener    optional progress callback; may be {@code null}.
+     * @param dialog           ordered conversation turns.
+     * @param maxGenLen        maximum number of <em>new</em> tokens to generate.
+     * @param temperature      sampling temperature; higher values increase randomness.
+     * @param topp             nucleus-sampling top-p threshold in {@code (0, 1]}.
+     * @param logprobs         {@code true} to include per-token log-probabilities in
+     *                         the result.
+     * @param seed             optional RNG seed for deterministic sampling;
+     *                         {@code 0} means non-deterministic.
+     * @param listener         optional progress callback; may be {@code null}.
+     * @param cancelRequested  cooperative cancel flag; may be {@code null}.
      * @return the completion for {@code dialog}.
      */
     ChatCompletion chat(Message[] dialog, int maxGenLen, double temperature,
                         double topp, boolean logprobs, long seed,
-                        GenerationListener listener);
+                        GenerationListener listener,
+                        BooleanSupplier cancelRequested);
 }
