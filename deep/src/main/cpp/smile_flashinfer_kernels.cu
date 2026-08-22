@@ -195,7 +195,7 @@ int run_batch_decode(
     return 0;
 }
 
-/** Prefill: gather pages on GPU then SDPA (causal). */
+/** Prefill / fp32 decode: gather pages on GPU then SDPA (causal when {@code S > 1}). */
 int run_batch_prefill_sdpa(
         const torch::Tensor &query,
         const torch::Tensor &k_pages,
@@ -215,56 +215,113 @@ int run_batch_prefill_sdpa(
     try {
         const auto B = query.size(0);
         const auto Hq = query.size(1);
+        const auto S = query.size(2);
         auto q = query.contiguous();
-        // Build slot index list on CPU once (CSR is tiny); gather stays on GPU.
         auto indptr_cpu = indptr.cpu();
         auto indices_cpu = indices.cpu();
         auto last_cpu = last_page_len.cpu();
         auto *ip = indptr_cpu.data_ptr<int32_t>();
         auto *ix = indices_cpu.data_ptr<int32_t>();
         auto *lp = last_cpu.data_ptr<int32_t>();
-        std::vector<int64_t> slots;
-        slots.reserve(static_cast<size_t>(B * cache_len));
+
+        std::vector<int> seqlens(static_cast<size_t>(B));
+        bool uniform = true;
         for (int64_t b = 0; b < B; ++b) {
             int ps = ip[b], pe = ip[b + 1];
             int n_pages = pe - ps;
-            int seqlen = page_size * (n_pages - 1) + lp[b];
-            TORCH_CHECK(seqlen == cache_len, "cache_len mismatch with CSR");
-            for (int t = 0; t < seqlen; ++t) {
+            int sl = n_pages > 0 ? page_size * (n_pages - 1) + lp[b] : 0;
+            seqlens[static_cast<size_t>(b)] = sl;
+            if (b > 0 && sl != seqlens[0]) {
+                uniform = false;
+            }
+        }
+        if (cache_len > 0 && uniform) {
+            TORCH_CHECK(seqlens[0] == cache_len, "cache_len mismatch with CSR");
+        }
+
+        auto kc = k_pages.reshape({k_pages.size(0) * k_pages.size(1), k_pages.size(2), k_pages.size(3)});
+        auto vc = v_pages.reshape({v_pages.size(0) * v_pages.size(1), v_pages.size(2), v_pages.size(3)});
+
+        auto gather_row = [&](int64_t b, int sl, torch::Tensor &k_out, torch::Tensor &v_out) {
+            int ps = ip[b], pe = ip[b + 1];
+            std::vector<int64_t> slots;
+            slots.reserve(static_cast<size_t>(sl));
+            for (int t = 0; t < sl; ++t) {
                 int page = t / page_size;
                 int offs = t - page * page_size;
                 int phys = ix[ps + page];
-                // Flatten page-major [P,page,H,D] index as slot = phys*page_size+offs
                 slots.push_back(static_cast<int64_t>(phys) * page_size + offs);
             }
-        }
-        // k_pages is [maxPages,pageSize,H,D] — flatten to [numSlots,H,D] for index_select
-        auto kc = k_pages.reshape({k_pages.size(0) * k_pages.size(1), k_pages.size(2), k_pages.size(3)});
-        auto vc = v_pages.reshape({v_pages.size(0) * v_pages.size(1), v_pages.size(2), v_pages.size(3)});
-        auto slot_t = torch::tensor(slots, torch::TensorOptions().dtype(torch::kLong).device(q.device()));
-        auto k_flat = kc.index_select(0, slot_t);
-        auto v_flat = vc.index_select(0, slot_t);
-        auto k = k_flat.view({B, cache_len, num_kv_heads, head_dim}).transpose(1, 2).contiguous();
-        auto v = v_flat.view({B, cache_len, num_kv_heads, head_dim}).transpose(1, 2).contiguous();
-        if (Hq != num_kv_heads) {
-            int rep = static_cast<int>(Hq / num_kv_heads);
-            k = k.unsqueeze(2)
-                        .expand({B, num_kv_heads, rep, cache_len, head_dim})
-                        .reshape({B, Hq, cache_len, head_dim})
-                        .contiguous();
-            v = v.unsqueeze(2)
-                        .expand({B, num_kv_heads, rep, cache_len, head_dim})
-                        .reshape({B, Hq, cache_len, head_dim})
-                        .contiguous();
-        }
+            auto slot_t = torch::tensor(slots, torch::TensorOptions().dtype(torch::kLong).device(q.device()));
+            auto k_flat = kc.index_select(0, slot_t);
+            auto v_flat = vc.index_select(0, slot_t);
+            k_out = k_flat.view({1, sl, num_kv_heads, head_dim}).transpose(1, 2).contiguous();
+            v_out = v_flat.view({1, sl, num_kv_heads, head_dim}).transpose(1, 2).contiguous();
+            if (Hq != num_kv_heads) {
+                int rep = static_cast<int>(Hq / num_kv_heads);
+                k_out = k_out.unsqueeze(2)
+                              .expand({1, num_kv_heads, rep, sl, head_dim})
+                              .reshape({1, Hq, sl, head_dim})
+                              .contiguous();
+                v_out = v_out.unsqueeze(2)
+                              .expand({1, num_kv_heads, rep, sl, head_dim})
+                              .reshape({1, Hq, sl, head_dim})
+                              .contiguous();
+            }
+        };
+
         std::optional<at::Tensor> mask;
         bool causal = false;
         if (attn_mask != nullptr && attn_mask->defined()) {
             mask = *attn_mask;
         } else {
-            causal = is_causal != 0 && q.size(2) > 1;
+            causal = is_causal != 0 && S > 1;
         }
         std::optional<double> scale_opt = static_cast<double>(scale);
+
+        // Ragged CSR (mixed cache lengths) or fp32 decode fallback: SDPA per row.
+        if (!uniform) {
+            out = torch::empty_like(q);
+            for (int64_t b = 0; b < B; ++b) {
+                int sl = seqlens[static_cast<size_t>(b)];
+                torch::Tensor k_b, v_b;
+                gather_row(b, sl, k_b, v_b);
+                auto q_b = q.index({b}).unsqueeze(0);
+                auto o_b = at::scaled_dot_product_attention(
+                        q_b, k_b, v_b, mask, 0.0, causal, scale_opt);
+                out.index({b}).copy_(o_b.squeeze(0));
+            }
+            return 0;
+        }
+
+        const int sl = seqlens[0];
+        std::vector<int64_t> slots;
+        slots.reserve(static_cast<size_t>(B * sl));
+        for (int64_t b = 0; b < B; ++b) {
+            int ps = ip[b], pe = ip[b + 1];
+            for (int t = 0; t < sl; ++t) {
+                int page = t / page_size;
+                int offs = t - page * page_size;
+                int phys = ix[ps + page];
+                slots.push_back(static_cast<int64_t>(phys) * page_size + offs);
+            }
+        }
+        auto slot_t = torch::tensor(slots, torch::TensorOptions().dtype(torch::kLong).device(q.device()));
+        auto k_flat = kc.index_select(0, slot_t);
+        auto v_flat = vc.index_select(0, slot_t);
+        auto k = k_flat.view({B, sl, num_kv_heads, head_dim}).transpose(1, 2).contiguous();
+        auto v = v_flat.view({B, sl, num_kv_heads, head_dim}).transpose(1, 2).contiguous();
+        if (Hq != num_kv_heads) {
+            int rep = static_cast<int>(Hq / num_kv_heads);
+            k = k.unsqueeze(2)
+                        .expand({B, num_kv_heads, rep, sl, head_dim})
+                        .reshape({B, Hq, sl, head_dim})
+                        .contiguous();
+            v = v.unsqueeze(2)
+                        .expand({B, num_kv_heads, rep, sl, head_dim})
+                        .reshape({B, Hq, sl, head_dim})
+                        .contiguous();
+        }
         out = at::scaled_dot_product_attention(q, k, v, mask, 0.0, causal, scale_opt);
         return 0;
     } catch (const std::exception &ex) {
@@ -300,7 +357,11 @@ extern "C" int smile_flashinfer_paged_attention_cuda(
         const auto D = query.size(3);
         TORCH_CHECK(D == head_dim, "head_dim mismatch");
         TORCH_CHECK(num_kv_heads > 0 && Hq % num_kv_heads == 0, "invalid GQA heads");
-        TORCH_CHECK(page_size > 0 && cache_len > 0, "page_size/cache_len");
+        TORCH_CHECK(page_size > 0, "page_size must be > 0");
+        if (cache_len < 0) {
+            err = "cache_len must be >= 0";
+            return -1;
+        }
 
         auto indptr = paged_kv_indptr.to(at::kInt).contiguous();
         auto indices = paged_kv_indices.to(at::kInt).contiguous();

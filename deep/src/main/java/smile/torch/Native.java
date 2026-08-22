@@ -592,6 +592,8 @@ public final class Native {
         if (meta == null || pool == null || ws == null) {
             throw new IllegalArgumentException("FlashInfer context incomplete");
         }
+        // Ragged decode passes per-row lengths in CSR; cacheLen is row 0 only.
+        int cacheLenArg = ctx.isRagged() ? 0 : ctx.cacheLen();
         try (var layerIdx = smile.deep.tensor.Index.of(ctx.layerId());
              Tensor layerK = pool.keyCache().get(layerIdx);
              Tensor layerV = pool.valueCache().get(layerIdx)) {
@@ -610,7 +612,7 @@ public final class Native {
                         meta.pageSize(),
                         ctx.numKvHeads(),
                         ctx.headDim(),
-                        ctx.cacheLen(),
+                        cacheLenArg,
                         ctx.scale(),
                         ctx.isCausal() ? 1 : 0,
                         maskHandle,
