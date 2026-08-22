@@ -18,6 +18,8 @@ package smile.llm.engine;
 
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BooleanSupplier;
 import org.junit.jupiter.api.Test;
 import smile.llm.ChatCompletion;
 import smile.llm.FinishReason;
@@ -53,7 +55,6 @@ public class InferenceEngineTest {
                     new int[]{1}, 2, 0.0, 0.9, false, 0, null));
             var second = engine.submit(GenerationRequest.ofTokens(
                     new int[]{2}, 2, 0.0, 0.9, false, 0, null));
-            // Wait until first is running, then abort the queued second.
             stub.awaitStarted(2, TimeUnit.SECONDS);
             second.abort();
             stub.release();
@@ -64,9 +65,29 @@ public class InferenceEngineTest {
                 fail("expected cancellation");
             } catch (Exception e) {
                 assertTrue(e.getCause() instanceof CancellationException
-                        || e instanceof CancellationException
-                        || e.getCause() instanceof java.util.concurrent.CancellationException);
+                        || e instanceof CancellationException);
             }
+        }
+    }
+
+    @Test
+    public void testGivenRunningAbortWhenCancelRequestedThenStopsCooperatively() throws Exception {
+        StubExecutor stub = new StubExecutor();
+        stub.loopUntilCancel = true;
+        try (var engine = new InferenceEngine(stub, 1)) {
+            var handle = engine.submit(GenerationRequest.ofTokens(
+                    new int[]{1}, 100, 0.0, 0.9, false, 0, null));
+            stub.awaitStarted(2, TimeUnit.SECONDS);
+            handle.abort();
+            try {
+                handle.future().get(5, TimeUnit.SECONDS);
+                fail("expected cancellation");
+            } catch (Exception e) {
+                Throwable c = e.getCause() != null ? e.getCause() : e;
+                assertTrue(c instanceof CancellationException, "got " + c);
+            }
+            assertTrue(stub.steps.get() < 50,
+                    "cooperative cancel should stop well before 50 steps, got " + stub.steps.get());
         }
     }
 
@@ -80,6 +101,8 @@ public class InferenceEngineTest {
     /** Minimal ModelExecutor that does not touch CUDA. */
     static final class StubExecutor implements ModelExecutor {
         volatile boolean blockFirst;
+        volatile boolean loopUntilCancel;
+        final AtomicInteger steps = new AtomicInteger();
         private final Object lock = new Object();
         private boolean started;
         private boolean released;
@@ -111,14 +134,33 @@ public class InferenceEngineTest {
                 @Override public String name() { return "stub"; }
                 @Override public int maxSeqLen() { return 128; }
                 @Override public int[] encodeChat(Message... dialog) { return new int[]{1}; }
+
                 @Override
                 public ChatCompletion generate(int[] prompt, int maxGenLen, double temperature,
                                                double topp, boolean logprobs, long seed,
-                                               GenerationListener listener) {
+                                               GenerationListener listener,
+                                               BooleanSupplier cancelRequested) {
+                    synchronized (lock) {
+                        started = true;
+                        lock.notifyAll();
+                    }
+                    if (loopUntilCancel) {
+                        for (int i = 0; i < 10_000; i++) {
+                            if (cancelRequested != null && cancelRequested.getAsBoolean()) {
+                                throw new CancellationException("aborted");
+                            }
+                            steps.incrementAndGet();
+                            try {
+                                Thread.sleep(5);
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                                throw new CancellationException("aborted");
+                            }
+                        }
+                        fail("cancel never observed");
+                    }
                     if (blockFirst) {
                         synchronized (lock) {
-                            started = true;
-                            lock.notifyAll();
                             while (!released) {
                                 try {
                                     lock.wait(100);
@@ -137,12 +179,14 @@ public class InferenceEngineTest {
                     return new ChatCompletion("stub", "ok", prompt, new int[]{9},
                             FinishReason.stop, null);
                 }
+
                 @Override
                 public ChatCompletion chat(Message[] dialog, int maxGenLen, double temperature,
                                            double topp, boolean logprobs, long seed,
-                                           GenerationListener listener) {
+                                           GenerationListener listener,
+                                           BooleanSupplier cancelRequested) {
                     return generate(encodeChat(dialog), maxGenLen, temperature, topp,
-                            logprobs, seed, listener);
+                            logprobs, seed, listener, cancelRequested);
                 }
             };
         }

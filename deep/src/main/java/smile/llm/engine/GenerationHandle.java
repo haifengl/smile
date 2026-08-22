@@ -16,6 +16,7 @@
  */
 package smile.llm.engine;
 
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import smile.llm.ChatCompletion;
@@ -35,6 +36,14 @@ public final class GenerationHandle {
         this.future = future;
     }
 
+    /**
+     * Creates a handle for a future owned outside {@link InferenceEngine}
+     * (e.g. serve fallback when no engine is present).
+     */
+    public static GenerationHandle of(long requestId, CompletableFuture<ChatCompletion> future) {
+        return new GenerationHandle(requestId, Objects.requireNonNull(future, "future"));
+    }
+
     /** Engine-assigned request id. */
     public long requestId() {
         return requestId;
@@ -47,8 +56,8 @@ public final class GenerationHandle {
 
     /**
      * Requests cancellation. Queued jobs are dropped (Instant Eviction from the
-     * wait queue). A job already running on the GPU completes normally; the
-     * future is still cancelled so callers stop waiting.
+     * wait queue). Running jobs stop cooperatively between decode steps when
+     * the model sees {@link #isAborted()} (at most one forward after abort).
      */
     public void abort() {
         if (aborted.compareAndSet(false, true)) {

@@ -360,27 +360,57 @@ public class ChatService {
      * @return the completion result for the request.
      */
     public ChatCompletion complete(CompletionRequest request, SubmissionPublisher<String> publisher) {
+        var handle = submitCompletion(request, publisher);
+        try {
+            return handle.future().join();
+        } finally {
+            if (publisher != null) {
+                publisher.close();
+            }
+        }
+    }
+
+    /**
+     * Submits a chat completion and returns the handle so streaming callers can
+     * {@link smile.llm.engine.GenerationHandle#abort()} on client disconnect.
+     * Does not close {@code publisher}; the caller owns that lifecycle.
+     *
+     * @param request   the chat completion request.
+     * @param publisher optional streaming publisher; may be {@code null}.
+     * @return generation handle whose future completes with the reply.
+     */
+    public smile.llm.engine.GenerationHandle submitCompletion(
+            CompletionRequest request, SubmissionPublisher<String> publisher) {
         int[] prompt = model.encodeChat(request.messages);
         int maxGenLen = request.resolveMaxTokens(model.maxSeqLen(), prompt.length);
         var throughput = new TokenThroughputLogger();
         var listener = GenerationListeners.compose(
                 throughput,
                 publisher != null ? GenerationListeners.toPublisher(publisher) : null);
+        if (engine != null) {
+            var handle = engine.submit(smile.llm.engine.GenerationRequest.ofTokens(
+                    prompt, maxGenLen, request.temperature, request.topP,
+                    request.logprobs, request.seed, listener));
+            handle.future().whenComplete((r, t) -> throughput.finish());
+            return handle;
+        }
+        var future = new java.util.concurrent.CompletableFuture<ChatCompletion>();
+        var handle = smile.llm.engine.GenerationHandle.of(0L, future);
         try {
-            if (engine != null) {
-                var handle = engine.submit(smile.llm.engine.GenerationRequest.ofTokens(
-                        prompt, maxGenLen, request.temperature, request.topP,
-                        request.logprobs, request.seed, listener));
-                return handle.future().join();
+            ChatCompletion result = model.generate(prompt, maxGenLen, request.temperature,
+                    request.topP, request.logprobs, request.seed, listener, handle::isAborted);
+            if (!handle.isAborted()) {
+                future.complete(result);
+            } else {
+                future.completeExceptionally(
+                        new java.util.concurrent.CancellationException("aborted"));
             }
-            return model.generate(prompt, maxGenLen, request.temperature,
-                    request.topP, request.logprobs, request.seed, listener);
+        } catch (Throwable t) {
+            future.completeExceptionally(t);
         } finally {
             throughput.finish();
-            if (publisher != null) {
-                publisher.close();
-            }
         }
+        return handle;
     }
 
     /**

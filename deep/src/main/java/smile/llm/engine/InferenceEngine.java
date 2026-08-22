@@ -158,9 +158,16 @@ public final class InferenceEngine implements AutoCloseable {
                     }
                     inFlight.incrementAndGet();
                     try {
-                        ChatCompletion result = runOne(job.request);
+                        ChatCompletion result = runOne(job);
                         if (!job.handle.isAborted()) {
                             job.handle.future().complete(result);
+                        } else if (!job.handle.future().isDone()) {
+                            job.handle.future().completeExceptionally(
+                                    new java.util.concurrent.CancellationException("aborted"));
+                        }
+                    } catch (java.util.concurrent.CancellationException cancel) {
+                        if (!job.handle.future().isDone()) {
+                            job.handle.future().completeExceptionally(cancel);
                         }
                     } catch (Throwable t) {
                         if (!job.handle.future().isDone()) {
@@ -193,14 +200,16 @@ public final class InferenceEngine implements AutoCloseable {
         }
     }
 
-    private ChatCompletion runOne(GenerationRequest request) {
+    private ChatCompletion runOne(Queued job) {
         LanguageModel lm = executor.model();
+        GenerationRequest request = job.request;
         int[] tokens = request.promptTokens();
         if (tokens == null) {
             tokens = lm.encodeChat(request.dialog());
         }
         return lm.generate(tokens, request.maxGenLen(), request.temperature(),
-                request.topp(), request.logprobs(), request.seed(), request.listener());
+                request.topp(), request.logprobs(), request.seed(), request.listener(),
+                job.handle::isAborted);
     }
 
     @Override

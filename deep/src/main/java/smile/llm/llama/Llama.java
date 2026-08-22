@@ -769,7 +769,8 @@ public class Llama implements LanguageModel, smile.llm.engine.ModelExecutor {
     @Override
     public ChatCompletion generate(int[] prompt, int maxGenLen, double temperature,
                                    double topp, boolean logprobs, long seed,
-                                   GenerationListener listener) {
+                                   GenerationListener listener,
+                                   java.util.function.BooleanSupplier cancelRequested) {
         if (prompt == null) {
             throw new IllegalArgumentException("prompt must not be null");
         }
@@ -798,6 +799,7 @@ public class Llama implements LanguageModel, smile.llm.engine.ModelExecutor {
             try {
             int desiredTotalLen = Math.min(params.maxSeqLen(), maxGenLen + promptLen);
             int prefixLen = model.kvCachePool().bindWithPrefix(prompt, desiredTotalLen);
+            throwIfCancelled(cancelRequested);
             int totalLen = Math.min(desiredTotalLen, model.kvCachePool().requestCapacity());
             if (totalLen < promptLen) {
                 throw new IllegalArgumentException(String.format(
@@ -859,6 +861,7 @@ public class Llama implements LanguageModel, smile.llm.engine.ModelExecutor {
 
             int chunkPos = promptLen;
             for (int curPos = promptLen; curPos < totalLen; curPos++) {
+                throwIfCancelled(cancelRequested);
                 AutoScope loopScope = new AutoScope();
                 Tensor.push(loopScope);
                 try {
@@ -1038,12 +1041,19 @@ public class Llama implements LanguageModel, smile.llm.engine.ModelExecutor {
      */
     @Override
     public ChatCompletion chat(Message[] dialog, int maxGenLen, double temperature, double topp,
-                               boolean logprobs, long seed, GenerationListener listener) {
+                               boolean logprobs, long seed, GenerationListener listener,
+                               java.util.function.BooleanSupplier cancelRequested) {
         if (dialog == null) {
             throw new IllegalArgumentException("dialog must not be null");
         }
         return generate(tokenizer.encodeDialog(dialog),
-                maxGenLen, temperature, topp, logprobs, seed, listener);
+                maxGenLen, temperature, topp, logprobs, seed, listener, cancelRequested);
+    }
+
+    private static void throwIfCancelled(java.util.function.BooleanSupplier cancelRequested) {
+        if (cancelRequested != null && cancelRequested.getAsBoolean()) {
+            throw new java.util.concurrent.CancellationException("aborted");
+        }
     }
 
     @Override

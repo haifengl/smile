@@ -124,6 +124,9 @@ public class ChatCompletionResource {
             CompletableFuture<ChatCompletion> resultFuture = new CompletableFuture<>();
             SubmissionPublisher<String> publisher =
                     new SubmissionPublisher<>(Runnable::run, Flow.defaultBufferSize());
+            // Set once submitCompletion returns; abort on disconnect.
+            java.util.concurrent.atomic.AtomicReference<smile.llm.engine.GenerationHandle> handleRef =
+                    new java.util.concurrent.atomic.AtomicReference<>();
 
             publisher.subscribe(new Flow.Subscriber<>() {
                 @Override
@@ -178,6 +181,10 @@ public class ChatCompletionResource {
             });
 
             emitter.onTermination(() -> {
+                smile.llm.engine.GenerationHandle h = handleRef.get();
+                if (h != null) {
+                    h.abort();
+                }
                 try {
                     publisher.close();
                 } catch (Exception ignored) {
@@ -187,10 +194,18 @@ public class ChatCompletionResource {
 
             executor.supplyAsync(() -> {
                 try {
-                    var completion = service.complete(request, publisher);
+                    var handle = service.submitCompletion(request, publisher);
+                    handleRef.set(handle);
+                    if (emitter.isCancelled()) {
+                        handle.abort();
+                    }
+                    var completion = handle.future().join();
                     resultFuture.complete(completion);
                     if (completion != null) {
                         saveConversation(conversation, request, completion);
+                    }
+                    if (!publisher.isClosed()) {
+                        publisher.close();
                     }
                     return completion;
                 } catch (Throwable t) {
