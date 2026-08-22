@@ -49,6 +49,7 @@
 #include <limits>
 #include <cmath>
 #include <cstring>
+#include <atomic>
 
 // ── CUDA introspection (compiled only when CUDA is present) ───────────────────
 #ifdef USE_CUDA
@@ -2037,6 +2038,22 @@ int smile_tp_broadcast(ST_Tensor *tensors, int n, int root) {
 // Gated DeltaNet fused recurrent rule
 // =============================================================================
 
+#ifdef USE_CUDA
+namespace {
+std::atomic<bool> g_gated_delta_libtorch_warned{false};
+
+void warn_gated_delta_libtorch_once(const char *reason) {
+    if (!g_gated_delta_libtorch_warned.exchange(true)) {
+        fprintf(stderr,
+                "WARN smile: GatedDeltaNet recurrent falling back from fused CUDA to "
+                "libtorch GPU (%s); subsequent fallbacks suppressed\n",
+                reason ? reason : "unknown");
+        fflush(stderr);
+    }
+}
+} // namespace
+#endif
+
 static torch::Tensor l2norm_last(const torch::Tensor &x) {
     auto s = x.mul(x).sum(-1, /*keepdim=*/true).add(1e-6).rsqrt();
     return x.mul(s);
@@ -2139,6 +2156,17 @@ ST_Tensor smile_recurrent_gated_delta_rule(
                 fused_ok = (rc == 0);
             }
             if (!fused_ok) {
+                char reason[256];
+                if (smem > static_cast<size_t>(smem_limit)) {
+                    snprintf(reason, sizeof(reason),
+                             "fused kernel shared mem %zu bytes exceeds device limit %d",
+                             smem, smem_limit);
+                } else {
+                    const char *err = smile_gated_delta_last_error();
+                    snprintf(reason, sizeof(reason), "%s",
+                             (err && err[0]) ? err : "fused kernel launch failed");
+                }
+                warn_gated_delta_libtorch_once(reason);
                 out_f = gated_delta_recurrent_libtorch(q, k, v, gf, bf, st, scale);
             }
         } else
