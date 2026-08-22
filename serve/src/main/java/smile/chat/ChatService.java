@@ -155,12 +155,17 @@ public class ChatService {
                             maxDecode,
                             Math.max(1, config.prefillTokenBudget()),
                             config.admissionTimeoutMs());
+                    logger.infof("Chat continuous batching: model=%s family=%s maxSeqLen=%d "
+                                    + "maxInFlight=%d maxDecodeBatch=%d prefillTokenBudget=%d "
+                                    + "admissionTimeoutMs=%d",
+                            modelId, model.family(), model.maxSeqLen(),
+                            engine.maxInFlight(), engine.maxDecodeBatch(),
+                            Math.max(1, config.prefillTokenBudget()),
+                            config.admissionTimeoutMs());
+                } else {
+                    logger.warnf("Chat model %s does not implement ModelExecutor; "
+                            + "continuous batching unavailable", modelId);
                 }
-                logger.infof("Chat model ready: id=%s family=%s maxSeqLen=%d (config max-seq-len=%d) "
-                                + "maxInFlight=%d maxDecodeBatch=%d",
-                        modelId, model.family(), model.maxSeqLen(), config.maxSeqLen(),
-                        engine != null ? engine.maxInFlight() : 1,
-                        engine != null ? engine.maxDecodeBatch() : 1);
             }
         } catch (Exception ex) {
             // Keep the service up in an unavailable state so classic ML / ONNX

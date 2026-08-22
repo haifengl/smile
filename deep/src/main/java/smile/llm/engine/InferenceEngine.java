@@ -111,6 +111,13 @@ public final class InferenceEngine implements AutoCloseable {
         this.worker = new Thread(this::loop, "smile-inference-engine");
         this.worker.setDaemon(true);
         this.worker.start();
+        KvCachePool pool = executor.kvCachePool();
+        logger.info("Continuous batching enabled: stepApi={} maxInFlight={} maxDecodeBatch={} "
+                        + "prefillTokenBudget={} admissionTimeoutMs={} kvSlots={} kvFree={}",
+                executor.supportsStepApi(), this.maxInFlight, this.maxDecodeBatch,
+                this.prefillTokenBudget, this.admissionTimeoutMs,
+                pool == null ? -1 : pool.numSlots(),
+                pool == null ? -1 : pool.freeSlots());
     }
 
     /** Underlying language model. */
@@ -200,6 +207,8 @@ public final class InferenceEngine implements AutoCloseable {
 
     private void loop() {
         if (!executor.supportsStepApi()) {
+            logger.warn("ModelExecutor does not support step APIs; falling back to serial "
+                    + "LanguageModel.generate (no continuous batching)");
             loopLegacyGenerate();
             return;
         }
@@ -333,16 +342,27 @@ public final class InferenceEngine implements AutoCloseable {
             int promptLen = prompt.length;
             int maxGen = clampMaxGen(promptLen, next.request.maxGenLen(), lm.maxSeqLen());
             int desired = Math.min(lm.maxSeqLen(), promptLen + maxGen);
+            int bindCapacity = fairBindCapacity(promptLen, desired, executor.kvCachePool(),
+                    maxInFlight, active.size());
+            if (bindCapacity < promptLen) {
+                logger.info("Deferring admission: need promptLen={} but fair KV share={} "
+                                + "(freeSlots={} inFlight={}/{} queued={}). "
+                                + "First request may have reserved most of the pool — "
+                                + "set max_tokens or lower smile.chat.max-seq-len.",
+                        promptLen, bindCapacity,
+                        kvFreeSlots(), active.size(), maxInFlight, queuedCount.get());
+                break;
+            }
             int kvId;
             try {
-                kvId = executor.bind(prompt, desired);
+                kvId = executor.bind(prompt, bindCapacity);
             } catch (KvCacheExhaustedException ex) {
-                logger.debug("KV full; deferring admission: {}", ex.getMessage());
+                logger.info("KV full; deferring admission: {}", ex.getMessage());
                 break;
             } catch (IllegalStateException | IllegalArgumentException ex) {
                 String msg = ex.getMessage() == null ? "" : ex.getMessage();
                 if (msg.contains("KV") || msg.contains("capacity") || msg.contains("exhausted")) {
-                    logger.debug("KV admission deferred: {}", msg);
+                    logger.info("KV admission deferred: {}", msg);
                     break;
                 }
                 waiting.remove(next);
@@ -365,7 +385,7 @@ public final class InferenceEngine implements AutoCloseable {
             int matched = executor.prefixLen(kvId);
             int from = matched;
             // Keep last prompt token for next-token logits when generating.
-            if (from > 0 && promptLen < desired && promptLen > 0) {
+            if (from > 0 && promptLen < bindCapacity && promptLen > 0) {
                 from = Math.min(from, promptLen - 1);
             }
             GenerationListener listener = next.request.listener();
@@ -374,11 +394,51 @@ public final class InferenceEngine implements AutoCloseable {
                 listener.onCachedInputTokens(Math.min(matched, promptLen));
             }
             Active a = new Active(next.handle, next.request, prompt, kvId, from, promptLen,
-                    maxGen, desired, next.request.temperature(), next.request.topp(),
+                    maxGen, bindCapacity, next.request.temperature(), next.request.topp(),
                     next.request.seed(), listener);
             active.add(a);
             inFlight.incrementAndGet();
+            logger.info("Admitted requestId={} kvId={} promptLen={} bindCapacity={} maxGen={} "
+                            + "(desired={}) inFlight={}/{} queued={} kvFree={}",
+                    next.handle.requestId(), kvId, promptLen, bindCapacity, maxGen, desired,
+                    active.size(), maxInFlight, queuedCount.get(), kvFreeSlots());
         }
+    }
+
+    /**
+     * Caps KV reservation so up to {@code maxInFlight} requests can coexist.
+     *
+     * <p>Without this, the OpenAI default {@code max_tokens = maxSeqLen - prompt}
+     * makes the first admit claim nearly the entire pool and continuous batching
+     * degrades to serial Fluid Injection.
+     *
+     * @return bind capacity ({@code >= promptLen}), or {@code < promptLen} to defer.
+     */
+    static int fairBindCapacity(int promptLen, int desired, KvCachePool pool,
+                                int maxInFlight, int activeCount) {
+        if (pool == null) {
+            return Math.max(desired, promptLen);
+        }
+        return fairBindCapacity(promptLen, desired, pool.freeSlots(), pool.numSlots(),
+                pool.pageSize(), maxInFlight, activeCount);
+    }
+
+    /**
+     * @see #fairBindCapacity(int, int, KvCachePool, int, int)
+     */
+    static int fairBindCapacity(int promptLen, int desired, int freeSlots, int numSlots,
+                                int pageSize, int maxInFlight, int activeCount) {
+        if (desired < promptLen) {
+            desired = promptLen;
+        }
+        if (maxInFlight <= 1 || numSlots <= 0) {
+            return desired;
+        }
+        int page = Math.max(1, pageSize);
+        int soft = Math.max(page, (numSlots / maxInFlight / page) * page);
+        int remainingAdmits = Math.max(1, maxInFlight - activeCount);
+        int fair = Math.max(page, (Math.max(0, freeSlots) / remainingAdmits / page) * page);
+        return Math.min(desired, Math.min(soft, fair));
     }
 
     private void runPrefills() {
@@ -448,6 +508,19 @@ public final class InferenceEngine implements AutoCloseable {
             return;
         }
         int b = decoding.size();
+        int prefills = 0;
+        for (Active a : active) {
+            if (a.phase == Phase.PREFILL) {
+                prefills++;
+            }
+        }
+        if (b > 1) {
+            logger.info("Decode step: batch={} inFlight={} prefilling={} queued={} kvFree={}",
+                    b, active.size(), prefills, queuedCount.get(), kvFreeSlots());
+        } else if (logger.isDebugEnabled()) {
+            logger.debug("Decode step: batch=1 inFlight={} queued={} kvFree={}",
+                    active.size(), queuedCount.get(), kvFreeSlots());
+        }
         int[] ids = new int[b];
         int[] toks = new int[b];
         int[] positions = new int[b];
