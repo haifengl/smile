@@ -128,11 +128,27 @@ public class LlamaBlock {
      * @return the output tensor.
      */
     public Tensor forward(Tensor x, int startPos, Tensor cis, Tensor mask) {
+        int batch = (int) x.shape()[0];
+        int[] positions = new int[batch];
+        java.util.Arrays.fill(positions, startPos);
+        return forward(x, positions, cis, mask);
+    }
+
+    /**
+     * Decode / prefill forward with per-row cache write positions.
+     *
+     * @param x         input hidden states.
+     * @param positions absolute write position per batch row.
+     * @param cis       RoPE frequency tensor (uniform {@code [S,…]} or gathered {@code [B,…]}).
+     * @param mask      attention mask, or {@code null}.
+     * @return block output.
+     */
+    public Tensor forward(Tensor x, int[] positions, Tensor cis, Tensor mask) {
         AutoScope scope = new AutoScope();
         Tensor.push(scope);
         try {
             Tensor anorm = attentionNorm.forward(x);
-            Tensor ax = attention.forward(anorm, startPos, cis, mask);
+            Tensor ax = attention.forward(anorm, positions, cis, mask);
             anorm.close();
             Tensor h = x.add(ax);
             ax.close();

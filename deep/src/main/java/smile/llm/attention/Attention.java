@@ -49,6 +49,22 @@ public interface Attention {
     Tensor forward(Tensor x, int startPos, Tensor cis, Tensor mask);
 
     /**
+     * Decode forward with per-row cache write positions (FlashInfer ragged path).
+     *
+     * <p>Default implementation rejects mixed positions; backends that support
+     * ragged decode override this.
+     *
+     * @param x         input {@code [B, 1, D]}.
+     * @param positions absolute write position per batch row.
+     * @param cis       RoPE freqs {@code [B, headDim/2]} (gathered) or uniform.
+     * @param mask      attention mask, or {@code null} for decode.
+     * @return attention output.
+     */
+    default Tensor forward(Tensor x, int[] positions, Tensor cis, Tensor mask) {
+        throw new UnsupportedOperationException("ragged decode positions not supported");
+    }
+
+    /**
      * Returns pytorch module.
      * @return pytorch module.
      */
