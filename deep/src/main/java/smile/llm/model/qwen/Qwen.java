@@ -1,0 +1,1262 @@
+/*
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
+ *
+ * SMILE is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * SMILE is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
+ */
+package smile.llm.model.qwen;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import smile.deep.layer.ParameterInit;
+import smile.deep.tensor.Device;
+import smile.deep.tensor.Index;
+import smile.deep.tensor.SafeTensors;
+import smile.deep.tensor.ScalarType;
+import smile.deep.tensor.Tensor;
+import smile.llm.ChatCompletion;
+import smile.llm.FinishReason;
+import smile.llm.GenerationListener;
+import smile.llm.LanguageModel;
+import smile.llm.Message;
+import smile.llm.cache.KvCachePool;
+import smile.llm.checkpoint.SafeTensorsLoaderThreads;
+import smile.llm.model.llama.Llama;
+import smile.llm.parallel.ParallelConfig;
+import smile.llm.parallel.ParallelState;
+import smile.llm.parallel.TensorParallelGroup;
+import smile.llm.parallel.TensorShardSpec;
+import smile.torch.smile_torch_h;
+import smile.util.AutoScope;
+
+/**
+ * Qwen3.5 hybrid text model (Gated DeltaNet + gated full attention).
+ *
+ * @author Haifeng Li
+ */
+public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.ModelExecutor {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Qwen.class);
+    /** Host-sync EOS check every N decode steps (always on last position). */
+    private static final int EOS_CHECK_INTERVAL = 8;
+
+    static final String family = "alibaba/qwen3.5";
+
+    private static final Pattern HF_LAYER_WEIGHT = Pattern.compile(
+            "^model\\.layers\\.(\\d+)\\.(self_attn|linear_attn|mlp|input_layernorm|post_attention_layernorm)\\.(.+)$");
+
+    final String name;
+    /** Rank-0 model (also {@code models[0]}). */
+    final QwenModel model;
+    /** One shard per TP rank; length 1 when tensor-parallel size is 1. */
+    final QwenModel[] models;
+    final TensorParallelGroup tpGroup;
+    final Tokenizer tokenizer;
+    final QwenModelArgs params;
+    /** Long-lived TP worker pool; null when {@code models.length == 1}. */
+    private final ExecutorService tpExecutor;
+
+    /**
+     * Constructor.
+     *
+     * @param name      model instance / checkpoint name.
+     * @param model     decoder module (single-device).
+     * @param tokenizer chat / completion tokenizer.
+     * @param params    hyperparameters from the checkpoint.
+     */
+    public Qwen(String name, QwenModel model, Tokenizer tokenizer, QwenModelArgs params) {
+        this(name, new QwenModel[]{model}, null, tokenizer, params);
+    }
+
+    /**
+     * Tensor-parallel constructor.
+     *
+     * @param name      model instance / checkpoint name.
+     * @param models    one decoder shard per TP rank.
+     * @param tpGroup   tensor-parallel group, or {@code null} when {@code models.length == 1}.
+     * @param tokenizer chat / completion tokenizer.
+     * @param params    hyperparameters from the checkpoint.
+     */
+    public Qwen(String name, QwenModel[] models, TensorParallelGroup tpGroup,
+                Tokenizer tokenizer, QwenModelArgs params) {
+        if (models == null || models.length < 1) {
+            throw new IllegalArgumentException("models required");
+        }
+        this.name = name;
+        this.models = models;
+        this.model = models[0];
+        this.tpGroup = tpGroup;
+        this.tokenizer = tokenizer;
+        this.params = params;
+        this.tpExecutor = models.length > 1
+                ? Executors.newFixedThreadPool(models.length)
+                : null;
+    }
+
+    @Override
+    public void close() {
+        if (tpExecutor != null) {
+            tpExecutor.shutdownNow();
+        }
+        if (tpGroup != null) {
+            tpGroup.close();
+        }
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s/%s", family, name);
+    }
+
+    @Override
+    public String family() {
+        return family;
+    }
+
+    /**
+     * Enables or disables radix prefix reuse on every TP rank's KV pool.
+     *
+     * @param enabled {@code true} to match/insert prefixes across requests.
+     */
+    public void setPrefixReuseEnabled(boolean enabled) {
+        for (QwenModel m : models) {
+            if (m.kvCachePool() != null) {
+                m.kvCachePool().setPrefixReuseEnabled(enabled);
+            }
+        }
+    }
+
+    @Override
+    public String name() {
+        return name;
+    }
+
+    @Override
+    public int maxSeqLen() {
+        return params.maxSeqLen();
+    }
+
+    @Override
+    public int[] encodeChat(Message... dialog) {
+        return tokenizer.encodeDialog(dialog);
+    }
+
+    /**
+     * Hyperparameters from the checkpoint.
+     * @return model args.
+     */
+    public QwenModelArgs params() {
+        return params;
+    }
+
+    /**
+     * Builds a Qwen instance from a HuggingFace checkpoint directory.
+     *
+     * @param checkpointDir directory containing {@code config.json} and weights.
+     * @param maxBatchSize  maximum batch size for inference.
+     * @param maxSeqLen     maximum sequence length; {@code <= 0} uses the config value.
+     * @param deviceId      CUDA device id, or negative for CPU.
+     * @throws IOException if the checkpoint cannot be read.
+     * @return a loaded Qwen model.
+     */
+    public static Qwen build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte deviceId)
+            throws IOException {
+        return build(checkpointDir, maxBatchSize, maxSeqLen, deviceId, 0, null,
+                KvCachePool.DEFAULT_PAGE_SIZE, ParallelConfig.single(deviceId), 0);
+    }
+
+    /**
+     * Builds a Qwen instance from a HuggingFace checkpoint directory.
+     *
+     * @param checkpointDir     directory containing {@code config.json} and weights.
+     * @param maxBatchSize      maximum batch size for inference.
+     * @param maxSeqLen         maximum sequence length; {@code <= 0} uses the config value.
+     * @param deviceId          CUDA device id, or negative for CPU.
+     * @param memFractionStatic static-region fraction of total GPU memory (SGLang-style);
+     *                          {@code <=0} keeps test sizing.
+     * @param kvCacheDtype      optional KV dtype override.
+     * @throws IOException if the checkpoint cannot be read.
+     * @return a loaded Qwen model.
+     */
+    public static Qwen build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte deviceId,
+                             double memFractionStatic, String kvCacheDtype) throws IOException {
+        return build(checkpointDir, maxBatchSize, maxSeqLen, deviceId, memFractionStatic, kvCacheDtype,
+                KvCachePool.DEFAULT_PAGE_SIZE, ParallelConfig.single(deviceId), 0);
+    }
+
+    /**
+     * Builds a Qwen instance with optional tensor parallelism.
+     *
+     * @param checkpointDir     directory containing {@code config.json} and weights.
+     * @param maxBatchSize      maximum batch size for inference.
+     * @param maxSeqLen         maximum sequence length; {@code <= 0} uses the config value.
+     * @param deviceId          CUDA device id, or negative for CPU.
+     * @param memFractionStatic static-region fraction of total GPU memory (SGLang-style);
+     *                          {@code <=0} keeps test sizing.
+     * @param kvCacheDtype      optional KV dtype override.
+     * @param parallel          {@link ParallelConfig#tensorParallel} for multi-GPU; {@code ppSize} must be 1.
+     * @throws IOException if the checkpoint cannot be read.
+     * @return a loaded Qwen model.
+     */
+    public static Qwen build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte deviceId,
+                             double memFractionStatic, String kvCacheDtype,
+                             ParallelConfig parallel) throws IOException {
+        return build(checkpointDir, maxBatchSize, maxSeqLen, deviceId, memFractionStatic, kvCacheDtype,
+                KvCachePool.DEFAULT_PAGE_SIZE, parallel, 0);
+    }
+
+    /**
+     * Builds a Qwen instance with optional tensor parallelism and KV page size.
+     *
+     * @param checkpointDir     directory containing {@code config.json} and weights.
+     * @param maxBatchSize      maximum batch size for inference.
+     * @param maxSeqLen         maximum sequence length; {@code <= 0} uses the config value.
+     * @param deviceId          CUDA device id, or negative for CPU.
+     * @param memFractionStatic static-region fraction of total GPU memory (SGLang-style);
+     *                          {@code <=0} keeps test sizing.
+     * @param kvCacheDtype      optional KV dtype override.
+     * @param pageSize          tokens per radix / KV pool page ({@code >= 1}).
+     * @param parallel          {@link ParallelConfig#tensorParallel} for multi-GPU; {@code ppSize} must be 1.
+     * @throws IOException if the checkpoint cannot be read.
+     * @return a loaded Qwen model.
+     */
+    public static Qwen build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte deviceId,
+                             double memFractionStatic, String kvCacheDtype, int pageSize,
+                             ParallelConfig parallel) throws IOException {
+        return build(checkpointDir, maxBatchSize, maxSeqLen, deviceId, memFractionStatic, kvCacheDtype,
+                pageSize, parallel, 0);
+    }
+
+    /**
+     * Builds a Qwen instance with optional tensor parallelism, KV page size, and
+     * safetensors loader concurrency.
+     *
+     * @param checkpointDir      directory containing {@code config.json} and weights.
+     * @param maxBatchSize       maximum batch size for inference.
+     * @param maxSeqLen          maximum sequence length; {@code <= 0} uses the config value.
+     * @param deviceId           CUDA device id, or negative for CPU.
+     * @param memFractionStatic  static-region fraction of total GPU memory (SGLang-style);
+     *                           {@code <=0} keeps test sizing.
+     * @param kvCacheDtype       optional KV dtype override.
+     * @param pageSize           tokens per radix / KV pool page ({@code >= 1}).
+     * @param parallel           {@link ParallelConfig#tensorParallel} for multi-GPU; {@code ppSize} must be 1.
+     * @param modelLoaderThreads safetensors loader threads; {@code 0} = auto
+     *                           ({@link SafeTensorsLoaderThreads#resolve}).
+     * @throws IOException if the checkpoint cannot be read.
+     * @return a loaded Qwen model.
+     */
+    public static Qwen build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte deviceId,
+                             double memFractionStatic, String kvCacheDtype, int pageSize,
+                             ParallelConfig parallel, int modelLoaderThreads) throws IOException {
+        File dir = new File(checkpointDir);
+        if (!dir.isDirectory()) {
+            throw new IllegalArgumentException("Checkpoint directory not found: " + checkpointDir);
+        }
+        if (parallel == null) {
+            parallel = ParallelConfig.single(deviceId);
+        }
+        final ParallelConfig parallelConfig = parallel;
+
+        boolean cuda = deviceId >= 0 || (parallelConfig.isTensorParallel() && parallelConfig.devices()[0] >= 0);
+        ScalarType computeDtype = ScalarType.Float;
+        if (cuda) {
+            var startTime = System.currentTimeMillis();
+            Device.CUDA(parallelConfig.devices()[0]); // touch primary device
+            computeDtype = Tensor.isBF16Supported() ? ScalarType.BFloat16 : ScalarType.Half;
+            smile_torch_h.smile_set_default_dtype(computeDtype.code());
+            var time = System.currentTimeMillis() - startTime;
+            logger.info("Initialized CUDA (tpSize={}): {}.{} seconds",
+                    parallelConfig.tpSize(), time / 1000, time % 1000);
+        }
+
+        var startTime = System.currentTimeMillis();
+        Path configJson = Path.of(checkpointDir, "config.json");
+        if (!Files.exists(configJson)) {
+            throw new IllegalArgumentException("config.json not found in " + checkpointDir);
+        }
+
+        QwenModelArgs modelArgs = QwenModelArgs.fromHuggingFace(configJson.toString(), maxBatchSize, maxSeqLen);
+        if (maxSeqLen <= 0) {
+            logger.info("max-seq-len auto-resolved to {} from model config (request override was {})",
+                    modelArgs.maxSeqLen(), maxSeqLen);
+        } else {
+            logger.info("max-seq-len={} (explicit)", modelArgs.maxSeqLen());
+        }
+        ScalarType cacheDtype = resolveKvCacheDtype(kvCacheDtype, configJson, computeDtype);
+        logger.info("KV cache dtype: {} (override={}, compute={})", cacheDtype, kvCacheDtype, computeDtype);
+
+        Tokenizer tokenizer = Tokenizer.of(checkpointDir);
+        tokenizer.requireChatSpecialsInVocab(modelArgs.vocabSize());
+        // HF often pads embedding/lm_head (e.g. Qwen3.5: 248320 padded) above the
+        // highest tokenizer id; that is expected. Warn only if the tokenizer can
+        // emit ids the embedding table cannot hold.
+        if (tokenizer.size() > modelArgs.vocabSize()) {
+            logger.warn("Tokenizer size {} exceeds config vocab_size {}; embedding gather may OOB",
+                    tokenizer.size(), modelArgs.vocabSize());
+        } else if (tokenizer.size() > 0 && tokenizer.size() < modelArgs.vocabSize()) {
+            logger.info("Tokenizer size {} < config vocab_size {} (HF padded embedding)",
+                    tokenizer.size(), modelArgs.vocabSize());
+        }
+
+        TensorParallelGroup tpGroup = new TensorParallelGroup(parallelConfig);
+        long tMap = System.currentTimeMillis();
+        Map<String, String> weightMap = readWeightMap(dir);
+        logger.info("Read weight map ({} tensors) in {} ms",
+                weightMap.size(), System.currentTimeMillis() - tMap);
+
+        // Phase A: construct empty shells on each rank's device (parallel by TP).
+        QwenModel[] models = new QwenModel[parallelConfig.tpSize()];
+        logger.info("Starting parallel TP rank construct (tpSize={})", parallelConfig.tpSize());
+        long tConstruct = System.currentTimeMillis();
+        if (parallelConfig.tpSize() == 1) {
+            models[0] = constructRank(0, parallelConfig, modelArgs, cuda, memFractionStatic, tpGroup);
+        } else {
+            ExecutorService pool = Executors.newFixedThreadPool(parallelConfig.tpSize());
+            try {
+                List<Future<QwenModel>> futures = new ArrayList<>(parallelConfig.tpSize());
+                for (int r = 0; r < parallelConfig.tpSize(); r++) {
+                    final int rank = r;
+                    futures.add(pool.submit(() -> constructRank(
+                            rank, parallelConfig, modelArgs, cuda, memFractionStatic, tpGroup)));
+                }
+                for (int r = 0; r < parallelConfig.tpSize(); r++) {
+                    models[r] = futures.get(r).get();
+                }
+            } catch (Exception e) {
+                throw new IOException("Parallel TP rank construct failed", e);
+            } finally {
+                pool.shutdownNow();
+            }
+        }
+        logger.info("Parallel TP rank construct finished in {} ms",
+                System.currentTimeMillis() - tConstruct);
+
+        // Phase B: each safetensors file once on CPU, fan-out to all ranks.
+        long tLoad = System.currentTimeMillis();
+        loadHuggingFaceWeightsShared(models, dir, weightMap, modelLoaderThreads);
+        logger.info("Shared safetensors load finished in {} ms",
+                System.currentTimeMillis() - tLoad);
+
+        // Phase C: DeltaNet GPU swap + KV pool (after weights for mem-fraction).
+        long tFinalize = System.currentTimeMillis();
+        if (parallelConfig.tpSize() == 1) {
+            finalizeRank(models[0], memFractionStatic, cacheDtype, pageSize);
+        } else {
+            ExecutorService pool = Executors.newFixedThreadPool(parallelConfig.tpSize());
+            try {
+                List<Future<?>> futures = new ArrayList<>(parallelConfig.tpSize());
+                for (int r = 0; r < parallelConfig.tpSize(); r++) {
+                    final int rank = r;
+                    futures.add(pool.submit(() -> finalizeRank(
+                            models[rank], memFractionStatic, cacheDtype, pageSize)));
+                }
+                for (Future<?> f : futures) {
+                    f.get();
+                }
+            } catch (Exception e) {
+                throw new IOException("Parallel TP rank finalize failed", e);
+            } finally {
+                pool.shutdownNow();
+            }
+        }
+        logger.info("TP rank finalize finished in {} ms",
+                System.currentTimeMillis() - tFinalize);
+
+        // Inference: drop requires_grad on all params so TP worker threads cannot
+        // build autograd graphs if a NoGradGuard is missing (guard is thread-local).
+        for (QwenModel m : models) {
+            m.eval();
+            m.setRequiresGrad(false);
+        }
+
+        var time = System.currentTimeMillis() - startTime;
+        logger.info("Model {}: loaded in {}.{} seconds (tpSize={})",
+                checkpointDir, time / 1000, time % 1000, parallelConfig.tpSize());
+        return new Qwen(dir.getName(), models, tpGroup, tokenizer, modelArgs);
+    }
+
+    /**
+     * Constructs one TP rank: empty module on the target device (no weight load / KV).
+     */
+    private static QwenModel constructRank(int rank, ParallelConfig parallel, QwenModelArgs modelArgs,
+                                           boolean cuda, double memFractionStatic,
+                                           TensorParallelGroup tpGroup) {
+        Device device = cuda ? Device.CUDA(parallel.devices()[rank]) : Device.CPU();
+        TensorShardSpec shard = TensorShardSpec.forRank(
+                parallel.tpSize(), rank,
+                modelArgs.numHeads(), modelArgs.numKvHeads(), modelArgs.intermediateSize(),
+                modelArgs.linearNumKeyHeads(), modelArgs.linearNumValueHeads());
+        logger.info("tpRank={}: constructing on {} (layers={}, maxSeqLen={})",
+                rank, device, modelArgs.numLayers(), modelArgs.maxSeqLen());
+
+        DeltaNetStatePool statePool = null;
+        if (modelArgs.numLinearAttentionLayers() > 0) {
+            long t0 = System.currentTimeMillis();
+            // Recurrent: float32 for fused CUDA kernel. Conv: compute dtype so
+            // decode concat(convState, hidden) does not promote to float.
+            ScalarType convDtype = Tensor.isBF16Supported() ? ScalarType.BFloat16 : ScalarType.Half;
+            if (!cuda) {
+                convDtype = ScalarType.Float;
+            }
+            statePool = new DeltaNetStatePool(
+                    modelArgs.numLinearAttentionLayers(),
+                    shard.linearNumValueHeads(),
+                    modelArgs.linearKeyHeadDim(),
+                    modelArgs.linearValueHeadDim(),
+                    modelArgs.linearConvDim(shard),
+                    modelArgs.linearConvKernelDim(),
+                    modelArgs.maxBatchSize(),
+                    memFractionStatic > 0 ? Device.CPU() : device,
+                    ScalarType.Float,
+                    convDtype);
+            logger.info("tpRank={}: DeltaNetStatePool (staging) in {} ms",
+                    rank, System.currentTimeMillis() - t0);
+        }
+
+        long tConstruct = System.currentTimeMillis();
+        QwenModel model;
+        try (var ignored = ParameterInit.uninitialized(device)) {
+            model = new QwenModel(modelArgs, statePool, shard, tpGroup);
+        }
+        logger.info("tpRank={}: QwenModel construct in {} ms",
+                rank, System.currentTimeMillis() - tConstruct);
+
+        long tTo = System.currentTimeMillis();
+        model.to(device);
+        logger.info("tpRank={}: model.to({}) in {} ms",
+                rank, device, System.currentTimeMillis() - tTo);
+        model.eval();
+        model.setRequiresGrad(false);
+        return model;
+    }
+
+    /**
+     * After weights: move DeltaNet state to GPU (when using mem-fraction) and allocate KV.
+     */
+    private static void finalizeRank(QwenModel model, double memFractionStatic,
+                                     ScalarType cacheDtype, int pageSize) {
+        int rank = model.shard() != null ? model.shard().tpRank() : 0;
+        Device device = model.device();
+        QwenModelArgs modelArgs = model.params();
+        TensorShardSpec shard = model.shard();
+
+        if (memFractionStatic > 0 && modelArgs.numLinearAttentionLayers() > 0) {
+            long t0 = System.currentTimeMillis();
+            // Recurrent stays float32 (in-place fused kernel). Conv matches model
+            // compute dtype (bf16/fp16) so decode does not promote to float.
+            ScalarType convDtype = Tensor.isBF16Supported() ? ScalarType.BFloat16 : ScalarType.Half;
+            var gpuState = new DeltaNetStatePool(
+                    modelArgs.numLinearAttentionLayers(),
+                    shard.linearNumValueHeads(),
+                    modelArgs.linearKeyHeadDim(),
+                    modelArgs.linearValueHeadDim(),
+                    modelArgs.linearConvDim(shard),
+                    modelArgs.linearConvKernelDim(),
+                    modelArgs.maxBatchSize(),
+                    device,
+                    ScalarType.Float,
+                    convDtype);
+            var previous = model.deltaNetStatePool;
+            model.deltaNetStatePool = gpuState;
+            for (var layer : model.layers) {
+                if (layer.linearAttn != null) {
+                    layer.linearAttn.setStatePool(gpuState);
+                }
+            }
+            if (previous != null) previous.close();
+            logger.info("tpRank={}: DeltaNetStatePool (GPU) in {} ms",
+                    rank, System.currentTimeMillis() - t0);
+        }
+        if (modelArgs.numFullAttentionLayers() > 0) {
+            long t0 = System.currentTimeMillis();
+            device.emptyCache();
+            KvCachePool pool = memFractionStatic > 0
+                    ? KvCachePool.allocate(
+                            modelArgs.kvCacheLayout(shard), device, cacheDtype, memFractionStatic,
+                            pageSize)
+                    : KvCachePool.forTesting(modelArgs.kvCacheLayout(shard), device);
+            model.setKvCachePool(pool, false);
+            logger.info("tpRank={}: KvCachePool allocate in {} ms",
+                    rank, System.currentTimeMillis() - t0);
+        }
+    }
+
+    static ScalarType resolveKvCacheDtype(String override, Path configJson, ScalarType fallback)
+            throws IOException {
+        if (override != null && !override.isBlank()) {
+            return Llama.parseDtypeName(override);
+        }
+        if (Files.exists(configJson)) {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(configJson.toFile());
+            JsonNode text = root.has("text_config") ? root.get("text_config") : root;
+            if (text.has("torch_dtype") && !text.get("torch_dtype").asString().isBlank()) {
+                return Llama.parseDtypeName(text.get("torch_dtype").asString());
+            }
+            if (root.has("torch_dtype") && !root.get("torch_dtype").asString().isBlank()) {
+                return Llama.parseDtypeName(root.get("torch_dtype").asString());
+            }
+        }
+        return fallback;
+    }
+
+    /**
+     * Reads each safetensors shard once on CPU and fans weights out to every TP rank.
+     * Loader concurrency is {@link SafeTensorsLoaderThreads#resolve}; per-rank
+     * {@code loadStateDict} is serialized with a lock. Fan-out across ranks for one
+     * shard runs in parallel with a deterministic stagger start index.
+     */
+    private static void loadHuggingFaceWeightsShared(QwenModel[] models, File dir,
+                                                     Map<String, String> weightMap,
+                                                     int modelLoaderThreads) throws IOException {
+        Map<String, List<String>> shardToKeys = new LinkedHashMap<>();
+        for (var entry : weightMap.entrySet()) {
+            shardToKeys.computeIfAbsent(entry.getValue(), k -> new ArrayList<>()).add(entry.getKey());
+        }
+        List<String> shardFiles = new ArrayList<>(shardToKeys.keySet());
+        Collections.sort(shardFiles);
+
+        int tpSize = models.length;
+        int threads = SafeTensorsLoaderThreads.resolve(modelLoaderThreads, shardFiles.size());
+        logger.info("Safetensors loader threads={} (configured={}, shards={}, tpSize={})",
+                threads, modelLoaderThreads, shardFiles.size(), tpSize);
+
+        Object[] rankLocks = new Object[tpSize];
+        for (int i = 0; i < tpSize; i++) {
+            rankLocks[i] = new Object();
+        }
+        Set<String> loaded = ConcurrentHashMap.newKeySet();
+        boolean needTiedLmHead = !weightMap.containsKey("lm_head.weight")
+                && !weightMap.containsKey("model.lm_head.weight")
+                && !weightMap.containsKey("language_model.lm_head.weight")
+                && !weightMap.containsKey("model.language_model.lm_head.weight");
+
+        Device loadDevice = Device.CPU();
+        ExecutorService pool = Executors.newFixedThreadPool(Math.max(1, threads));
+        try {
+            List<Future<?>> futures = new ArrayList<>(shardFiles.size());
+            for (int si = 0; si < shardFiles.size(); si++) {
+                final int shardIndex = si;
+                final String shardFile = shardFiles.get(si);
+                final List<String> keys = shardToKeys.get(shardFile);
+                futures.add(pool.submit(() -> {
+                    try {
+                        loadOneShardFanOut(models, dir, loadDevice, shardFile, keys, shardIndex,
+                                rankLocks, loaded, needTiedLmHead);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }));
+            }
+            for (Future<?> f : futures) {
+                try {
+                    f.get();
+                } catch (Exception e) {
+                    Throwable c = e.getCause() != null ? e.getCause() : e;
+                    if (c instanceof RuntimeException re && re.getCause() instanceof IOException ioe) {
+                        throw ioe;
+                    }
+                    throw new IOException("Safetensors shard load failed", e);
+                }
+            }
+        } finally {
+            pool.shutdownNow();
+        }
+        logger.info("Loaded {} parameter names from HuggingFace safetensors (×{} ranks)",
+                loaded.size(), tpSize);
+        int minExpected = Math.max(32, models[0].params().numLayers() * 8);
+        if (loaded.size() < minExpected) {
+            throw new IOException(String.format(
+                    "Only loaded %d text parameters (expected at least %d for %d layers). "
+                            + "Checkpoint keys are likely using an unsupported prefix; "
+                            + "check remapHuggingFaceName for model.language_model.*",
+                    loaded.size(), minExpected, models[0].params().numLayers()));
+        }
+    }
+
+    private static void loadOneShardFanOut(QwenModel[] models, File dir, Device loadDevice,
+                                           String shardFile, List<String> keys, int shardIndex,
+                                           Object[] rankLocks, Set<String> loaded,
+                                           boolean needTiedLmHead)
+            throws IOException {
+        Path shardPath = Path.of(dir.getPath(), shardFile);
+        logger.info("Loading safetensors shard: {} (index={})", shardFile, shardIndex);
+        long tShard = System.currentTimeMillis();
+        SafeTensors st = SafeTensors.read(shardPath.toString(), loadDevice, keys);
+        long tRead = System.currentTimeMillis() - tShard;
+        try {
+            long tFan = System.currentTimeMillis();
+            int tpSize = models.length;
+            @SuppressWarnings("unchecked")
+            CompletableFuture<Void>[] fanouts = new CompletableFuture[tpSize];
+            for (int k = 0; k < tpSize; k++) {
+                final int rank = (shardIndex + k) % tpSize;
+                fanouts[k] = CompletableFuture.runAsync(() -> {
+                    try {
+                        applyShardToRank(models[rank], st, keys, rankLocks[rank], loaded,
+                                needTiedLmHead);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
+            try {
+                CompletableFuture.allOf(fanouts).join();
+            } catch (Exception e) {
+                Throwable c = e.getCause() != null ? e.getCause() : e;
+                if (c instanceof RuntimeException re && re.getCause() instanceof IOException ioe) {
+                    throw ioe;
+                }
+                throw new IOException("Fan-out failed for shard " + shardFile, e);
+            }
+            logger.info("Loaded safetensors shard: {} read={} ms fan-out={} ms",
+                    shardFile, tRead, System.currentTimeMillis() - tFan);
+        } finally {
+            for (Tensor t : st.tensors().values()) {
+                t.close();
+            }
+        }
+    }
+
+    private static void applyShardToRank(QwenModel model, SafeTensors st, List<String> keys,
+                                         Object rankLock, Set<String> loaded,
+                                         boolean needTiedLmHead)
+            throws IOException {
+        Device target = model.device();
+        TensorShardSpec shard = model.shard();
+        synchronized (rankLock) {
+            Map<String, Tensor> stateDict = new HashMap<>();
+            List<Tensor> owned = new ArrayList<>();
+            try {
+                for (String hfName : keys) {
+                    Tensor src = st.tensors().get(hfName);
+                    if (src == null) {
+                        throw new IOException("Tensor '" + hfName + "' missing from safetensors");
+                    }
+                    String smileName = remapHuggingFaceName(hfName);
+                    if (smileName == null) {
+                        logger.debug("Skipping unrecognized HF weight: {}", hfName);
+                        continue;
+                    }
+                    Tensor value = src;
+                    if (smileName.contains("linear_attn.conv1d.weight") && src.dim() == 3) {
+                        value = src.reshape(src.shape()[0], src.shape()[2]);
+                        owned.add(value);
+                    }
+                    Tensor sliced = QwenWeightShard.shard(smileName, value, model.params(), shard);
+                    if (sliced != value && sliced != src) {
+                        owned.add(sliced);
+                    }
+                    Tensor onDevice = sliced.to(target);
+                    if (onDevice != sliced) {
+                        owned.add(onDevice);
+                    }
+                    Tensor contiguous = onDevice.contiguous();
+                    if (contiguous != onDevice) {
+                        owned.add(contiguous);
+                    }
+                    stateDict.put(smileName, contiguous);
+                    loaded.add(smileName);
+                }
+
+                if (needTiedLmHead && !stateDict.containsKey("lm_head.weight")) {
+                    for (String embKey : List.of(
+                            "model.embed_tokens.weight",
+                            "model.language_model.embed_tokens.weight",
+                            "language_model.model.embed_tokens.weight")) {
+                        if (st.tensors().containsKey(embKey)) {
+                            Tensor onDevice = st.tensors().get(embKey).to(target);
+                            owned.add(onDevice);
+                            Tensor emb = onDevice.contiguous();
+                            if (emb != onDevice) {
+                                owned.add(emb);
+                            }
+                            stateDict.put("lm_head.weight", emb);
+                            loaded.add("lm_head.weight");
+                            break;
+                        }
+                    }
+                }
+
+                if (!stateDict.isEmpty()) {
+                    model.loadStateDict(stateDict, false);
+                }
+            } finally {
+                for (Tensor t : owned) {
+                    t.close();
+                }
+            }
+        }
+    }
+
+    static Map<String, String> readWeightMap(File dir) throws IOException {
+        Path indexPath = Path.of(dir.getPath(), "model.safetensors.index.json");
+        Map<String, String> map = new LinkedHashMap<>();
+        if (Files.exists(indexPath)) {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(indexPath.toFile());
+            JsonNode weightMap = root.get("weight_map");
+            weightMap.properties().forEach(e -> map.put(e.getKey(), e.getValue().asString()));
+            return map;
+        }
+        List<String> shards = getSafeTensorFiles(dir);
+        if (shards.isEmpty()) {
+            throw new IOException("No safetensors files found in " + dir);
+        }
+        for (String shard : shards) {
+            for (String name : SafeTensors.listTensors(Path.of(dir.getPath(), shard).toString())) {
+                map.put(name, shard);
+            }
+        }
+        return map;
+    }
+
+    private static List<String> getSafeTensorFiles(File dir) {
+        List<String> files = new ArrayList<>();
+        File[] listed = dir.listFiles();
+        if (listed == null) return files;
+        for (var file : listed) {
+            if (file.isFile() && file.getName().endsWith(".safetensors")) {
+                files.add(file.getName());
+            }
+        }
+        Collections.sort(files);
+        return files;
+    }
+
+    /**
+     * Maps a HuggingFace parameter name onto the registered SMILE module path.
+     * Returns {@code null} for vision / MTP / unrecognized tensors.
+     *
+     * <p>Normalizes common text-tower prefixes used by Qwen3.5 checkpoints:
+     * <ul>
+     *   <li>{@code model.language_model.*} (multimodal {@code ForConditionalGeneration})</li>
+     *   <li>{@code language_model.model.*} / {@code language_model.*}</li>
+     *   <li>{@code model.*} (text-only)</li>
+     * </ul>
+     */
+    static String remapHuggingFaceName(String hfName) {
+        if (hfName.startsWith("visual.") || hfName.startsWith("mtp.")
+                || hfName.startsWith("vision_")) {
+            return null;
+        }
+
+        String name = hfName;
+        // Multimodal Qwen3.5: text weights live under model.language_model.*
+        if (name.startsWith("model.language_model.")) {
+            name = "model." + name.substring("model.language_model.".length());
+        } else if (name.startsWith("language_model.")) {
+            name = name.substring("language_model.".length());
+        }
+
+        if (name.equals("model.embed_tokens.weight")) {
+            return "embed_tokens.weight";
+        }
+        if (name.equals("model.norm.weight")) {
+            return "norm.weight";
+        }
+        if (name.equals("lm_head.weight") || name.equals("model.lm_head.weight")) {
+            return "lm_head.weight";
+        }
+
+        Matcher m = HF_LAYER_WEIGHT.matcher(name);
+        if (!m.matches()) {
+            return null;
+        }
+        String layer = m.group(1);
+        String component = m.group(2);
+        String rest = m.group(3);
+        String prefix = "layers." + layer + ".";
+
+        return switch (component) {
+            case "self_attn" -> prefix + "self_attn." + rest;
+            case "linear_attn" -> {
+                if (rest.equals("conv1d.weight")) {
+                    yield prefix + "linear_attn.conv1d.weight";
+                }
+                yield prefix + "linear_attn." + rest;
+            }
+            case "mlp" -> switch (rest) {
+                case "gate_proj.weight" -> prefix + "mlp.w1.weight";
+                case "down_proj.weight" -> prefix + "mlp.w2.weight";
+                case "up_proj.weight" -> prefix + "mlp.w3.weight";
+                default -> null;
+            };
+            case "input_layernorm" -> prefix + "input_layernorm." + rest;
+            case "post_attention_layernorm" -> prefix + "post_attention_layernorm." + rest;
+            default -> null;
+        };
+    }
+
+    @Override
+    public ChatCompletion generate(int[] prompt, int maxGenLen, double temperature,
+                                   double topp, boolean logprobs, long seed,
+                                   GenerationListener listener,
+                                   java.util.function.BooleanSupplier cancelRequested) {
+        if (prompt == null) {
+            throw new IllegalArgumentException("prompt must not be null");
+        }
+
+        int promptLen = prompt.length;
+        int vocabSize = params.vocabSize();
+        for (int token : prompt) {
+            if (token < 0 || token >= vocabSize) {
+                throw new IllegalArgumentException(
+                        "Prompt token id " + token + " out of range for vocab_size "
+                                + vocabSize + " (im_start="
+                                + tokenizer.specialToken("<|im_start|>")
+                                + ", im_end=" + tokenizer.specialToken("<|im_end|>")
+                                + "). This causes CUDA embedding gather OOB.");
+            }
+        }
+        if (promptLen > params.maxSeqLen()) {
+            throw new IllegalArgumentException("The prompt length is greater than max_seq_len");
+        }
+        // Cap prompt + max_tokens by max-seq-len.
+        int maxAllowedGen = Math.max(0, params.maxSeqLen() - promptLen);
+        if (maxGenLen > maxAllowedGen) {
+            maxGenLen = maxAllowedGen;
+        }
+        if (maxGenLen < 0) {
+            maxGenLen = 0;
+        }
+
+        if (seed != 0) {
+            smile_torch_h.smile_manual_seed(seed);
+        }
+
+        try (var guard = Tensor.noGradGuard();
+             var scope = new AutoScope()) {
+            Tensor.push(scope);
+            try {
+            int desiredTotalLen = Math.min(params.maxSeqLen(), maxGenLen + promptLen);
+            int prefixLen = 0;
+            int totalLen = desiredTotalLen;
+            final boolean usePrefix = model.kvCachePool() != null;
+            if (usePrefix) {
+                for (QwenModel m : models) {
+                    if (m.kvCachePool() != null) {
+                        prefixLen = m.kvCachePool().bindWithPrefix(prompt, desiredTotalLen);
+                        totalLen = Math.min(totalLen, m.kvCachePool().requestCapacity());
+                    }
+                }
+            }
+            throwIfCancelled(cancelRequested);
+            if (usePrefix && totalLen < promptLen) {
+                throw new IllegalArgumentException(String.format(
+                        "Prompt length %d exceeds free KV capacity %d",
+                        promptLen, totalLen));
+            }
+            final int cachedPrefixTokens = prefixLen;
+            if (prefixLen > 0 && promptLen < totalLen && promptLen > 0) {
+                prefixLen = Math.min(prefixLen, promptLen - 1);
+            }
+            if (model.deltaNetStatePool() != null) {
+                for (QwenModel m : models) {
+                    if (m.deltaNetStatePool() != null) {
+                        m.deltaNetStatePool().reset(1);
+                    }
+                }
+            }
+            if (listener != null) {
+                listener.onInputTokens(promptLen);
+                listener.onCachedInputTokens(usePrefix
+                        ? Math.min(cachedPrefixTokens, promptLen)
+                        : 0);
+            }
+
+            int pad = tokenizer.pad();
+            var cpuOpts = new Tensor.Options()
+                    .device(Device.CPU())
+                    .dtype(ScalarType.Int64)
+                    .requireGradients(false);
+            Tensor tokensCpu = Tensor.zeros(cpuOpts, 1, totalLen).fill_(pad);
+            try (var promptTensor = Tensor.of(prompt);
+                 var row = Index.of(0);
+                 var span = Index.slice(0, promptLen)) {
+                tokensCpu.put_(promptTensor, row, span);
+            }
+
+            Tensor tokenLogprobs = null;
+            if (logprobs) {
+                var opts = new Tensor.Options().device(model.device()).requireGradients(false).dtype(ScalarType.Float);
+                tokenLogprobs = Tensor.zeros(opts, 1, totalLen);
+            }
+
+            Tensor eosReached = Tensor.of(new boolean[1]);
+            Tensor inputTextMask = tokensCpu.ne(pad);
+            Tensor stopTokens = Tensor.of(tokenizer.stopTokens());
+
+            Tensor[] tokens = new Tensor[models.length];
+            Tensor[] eos = new Tensor[models.length];
+            Tensor[] masks = new Tensor[models.length];
+            Tensor[] stops = new Tensor[models.length];
+            for (int r = 0; r < models.length; r++) {
+                Device d = models[r].device();
+                tokens[r] = tokensCpu.to(d);
+                eos[r] = eosReached.to(d);
+                masks[r] = inputTextMask.to(d);
+                stops[r] = stopTokens.to(d);
+            }
+            tokensCpu.close();
+            eosReached.close();
+            inputTextMask.close();
+            stopTokens.close();
+
+            int prevPos = prefixLen;
+            int chunkPos = promptLen;
+            ExecutorService pool = tpExecutor;
+            for (int curPos = promptLen; curPos < totalLen; curPos++) {
+                throwIfCancelled(cancelRequested);
+                AutoScope loopScope = new AutoScope();
+                Tensor.push(loopScope);
+                Tensor[] logits = null;
+                try {
+                    logits = forwardAll(tokens, prevPos, curPos, pool, logprobs);
+                    for (Tensor l : logits) {
+                        loopScope.add(l);
+                    }
+
+                    Tensor nextToken;
+                    try (var last = Index.of(-1);
+                         var tail = logits[0].get(Index.Colon, last)) {
+                        nextToken = smile.llm.engine.Sampling.sampleNext(tail, temperature, topp);
+                    }
+
+                    try (var cur = Index.of(curPos);
+                         var textMask = masks[0].get(Index.Colon, cur);
+                         var currentTokens = tokens[0].get(Index.Colon, cur);
+                         var merged = smile.llm.engine.Sampling.mergeWithPromptMask(
+                                 textMask, currentTokens, nextToken)) {
+                        nextToken.close();
+                        nextToken = merged.detach();
+                        for (int r = 0; r < models.length; r++) {
+                            Tensor local = r == 0 ? nextToken : nextToken.to(models[r].device());
+                            tokens[r].put_(local, Index.Colon, cur);
+                            if (r != 0) local.close();
+                        }
+                    }
+
+                    if (logprobs) {
+                        try (var targetSpan = Index.slice(prevPos + 1, curPos + 1);
+                             var targets = tokens[0].get(Index.Colon, targetSpan);
+                             var transposed = logits[0].transpose(1, 2);
+                             var entropy = Tensor.crossEntropy(transposed, targets, "none", pad).neg_();
+                             var outSpan = Index.slice(prevPos + 1, curPos + 1)) {
+                            tokenLogprobs.put_(entropy, Index.Colon, outSpan);
+                        }
+                    }
+
+                    try (var cur = Index.of(curPos);
+                         var text = masks[0].get(Index.Colon, cur).not();
+                         var stop = nextToken.isin(stops[0]);
+                         var textAndStop = text.and(stop)) {
+                        eos[0].or_(textAndStop);
+                        for (int r = 1; r < models.length; r++) {
+                            try (Tensor e = eos[0].to(models[r].device())) {
+                                smile.torch.Native.copy_(eos[r], e);
+                            }
+                        }
+                    }
+
+                    nextToken.close();
+                    prevPos = curPos;
+                    if (listener != null) {
+                        listener.onGeneratedTokens(1);
+                    }
+                } finally {
+                    Tensor.pop();
+                }
+
+                // Prefill is the activation peak; return cached blocks before decode.
+                if (curPos == promptLen) {
+                    for (QwenModel m : models) {
+                        m.device().emptyCache();
+                    }
+                }
+
+                // Defer GPU→CPU EOS sync: every N tokens and always on the last slot.
+                boolean checkEos = (curPos - promptLen + 1) % EOS_CHECK_INTERVAL == 0
+                        || curPos == totalLen - 1;
+                boolean done = checkEos && eos[0].all();
+                if (listener != null
+                        && (curPos - chunkPos >= 20 || curPos == totalLen - 1 || done)) {
+                    int end = done ? curPos : curPos + 1;
+                    if (end > chunkPos) {
+                        long[] longArray;
+                        try (var row = Index.of(0);
+                             var span = Index.slice(chunkPos, end);
+                             var chunkTokens = tokens[0].get(row, span);
+                             var cpuTokens = chunkTokens.to(Device.CPU())) {
+                            longArray = cpuTokens.longArray();
+                        }
+                        var completion = Arrays.stream(longArray).mapToInt(x -> (int) x).toArray();
+                        try {
+                            var chunk = tokenizer.tryDecode(completion, true);
+                            chunkPos = end;
+                            if (!chunk.isEmpty()) {
+                                listener.onText(chunk);
+                            }
+                        } catch (java.nio.charset.CharacterCodingException ex) {
+                            logger.debug("Cannot decode a chunk", ex);
+                        }
+                    }
+                }
+                if (done) break;
+            }
+
+            long[] longArray;
+            try (var cpuTokens = tokens[0].to(Device.CPU())) {
+                longArray = cpuTokens.longArray();
+            }
+            float[] logprobArray = null;
+            if (logprobs) {
+                try (var cpuLogprobs = tokenLogprobs.to(Device.CPU())) {
+                    logprobArray = cpuLogprobs.floatArray();
+                }
+            }
+
+            int start = promptLen;
+            var completion = Arrays.stream(longArray)
+                    .skip(start)
+                    .mapToInt(x -> (int) x)
+                    .limit(maxGenLen)
+                    .toArray();
+
+            float[] probs = null;
+            if (logprobs) {
+                probs = Arrays.copyOfRange(logprobArray, start, start + maxGenLen);
+            }
+
+            boolean stop = false;
+            for (var stopToken : tokenizer.stopTokens()) {
+                for (int eosIdx = 0; eosIdx < completion.length; eosIdx++) {
+                    if (completion[eosIdx] == stopToken) {
+                        stop = true;
+                        completion = Arrays.copyOf(completion, eosIdx);
+                        if (logprobs) {
+                            probs = Arrays.copyOf(probs, eosIdx);
+                        }
+                        break;
+                    }
+                }
+            }
+            var reason = stop ? FinishReason.stop : FinishReason.length;
+            ChatCompletion prediction = new ChatCompletion(name, tokenizer.decode(completion),
+                    prompt, completion, reason, probs);
+
+            if (usePrefix) {
+                int[] sequenceToInsert = new int[promptLen + completion.length];
+                System.arraycopy(prompt, 0, sequenceToInsert, 0, promptLen);
+                System.arraycopy(completion, 0, sequenceToInsert, promptLen, completion.length);
+                for (QwenModel m : models) {
+                    if (m.kvCachePool() != null) {
+                        m.kvCachePool().finishRequest(sequenceToInsert);
+                    }
+                }
+            }
+            return prediction;
+            } finally {
+                Tensor.pop();
+            }
+        } finally {
+            int leakedScopes = Tensor.clearScopes();
+            if (leakedScopes > 0) {
+                logger.warn("Drained {} leftover Tensor AutoScope(s) after generate", leakedScopes);
+            }
+            for (QwenModel m : models) {
+                if (m.kvCachePool() != null) {
+                    m.kvCachePool().unbindRequests();
+                }
+                if (m.deltaNetStatePool() != null) {
+                    m.deltaNetStatePool().unbind();
+                }
+                logCudaMemory(m, "before emptyCache");
+                m.device().emptyCache();
+                logCudaMemory(m, "after emptyCache");
+            }
+        }
+    }
+
+    /** Best-effort CUDA free/allocator log for leak diagnosis. */
+    private static void logCudaMemory(QwenModel m, String when) {
+        Device device = m.device();
+        if (device == null || !device.isCUDA()) {
+            return;
+        }
+        try {
+            int idx = device.index();
+            long[] mem = smile.torch.Native.cudaMemGetInfo(idx);
+            long[] alloc = smile.torch.Native.cudaAllocatorStats(idx);
+            logger.info("tpRank={}: {} freeMiB={} allocatedMiB={} reservedMiB={}",
+                    m.tpRank(), when,
+                    mem[0] / (1024 * 1024),
+                    alloc[0] / (1024 * 1024),
+                    alloc[1] / (1024 * 1024));
+        } catch (RuntimeException e) {
+            logger.debug("tpRank={}: cuda memory log failed at {}: {}",
+                    m.tpRank(), when, e.toString());
+        }
+    }
+
+    /**
+     * Runs {@link QwenModel#forward} on every TP rank (in parallel when {@code tpSize > 1}).
+     */
+    private Tensor[] forwardAll(Tensor[] tokens, int prevPos, int curPos, ExecutorService pool) {
+        return forwardAll(tokens, prevPos, curPos, pool, false);
+    }
+
+    /**
+     * Runs {@link QwenModel#forward} on every TP rank (in parallel when {@code tpSize > 1}).
+     *
+     * @param allTokenLogits when {@code true}, score every position (needed for logprobs).
+     */
+    private Tensor[] forwardAll(Tensor[] tokens, int prevPos, int curPos, ExecutorService pool,
+                                boolean allTokenLogits) {
+        if (prevPos >= curPos) {
+            throw new IllegalArgumentException(
+                    "forwardAll requires prevPos < curPos, got " + prevPos + " >= " + curPos);
+        }
+        Tensor[] logits = new Tensor[models.length];
+        if (models.length == 1) {
+            try (var span = Index.slice(prevPos, curPos);
+                 var window = tokens[0].get(Index.Colon, span)) {
+                logits[0] = models[0].forward(window, prevPos, allTokenLogits);
+            }
+            return logits;
+        }
+        List<Future<Tensor>> futures = new ArrayList<>(models.length);
+        for (int r = 0; r < models.length; r++) {
+            final int rank = r;
+            futures.add(pool.submit(() -> {
+                ParallelState.setCurrent(tpGroup.state(rank));
+                // NoGradGuard is thread-local; the generate-thread guard does not
+                // cover TP workers. Without this, requires_grad params build
+                // autograd graphs (~1GiB+/request SavedVariable leak).
+                try (var guard = Tensor.noGradGuard();
+                     var span = Index.slice(prevPos, curPos);
+                     var window = tokens[rank].get(Index.Colon, span)) {
+                    return models[rank].forward(window, prevPos, allTokenLogits);
+                } finally {
+                    int depth = Tensor.scopeDepth();
+                    if (depth > 0) {
+                        logger.warn("tpRank={}: {} AutoScope(s) still pushed after forward "
+                                        + "(possible activation leak)",
+                                rank, depth);
+                    }
+                    ParallelState.clearCurrent();
+                }
+            }));
+        }
+        try {
+            for (int r = 0; r < models.length; r++) {
+                logits[r] = futures.get(r).get();
+            }
+        } catch (Exception e) {
+            for (Tensor l : logits) {
+                if (l != null) {
+                    l.close();
+                }
+            }
+            throw new RuntimeException("TP forward failed", e);
+        }
+        return logits;
+    }
+
+    /**
+     * Performs text completion for a prompt.
+     *
+     * @param prompt      text prompt.
+     * @param maxGenLen   maximum number of new tokens to generate.
+     * @param temperature temperature value for controlling randomness in sampling.
+     * @param topp        top-p probability threshold for nucleus sampling.
+     * @param logprobs    flag indicating whether to compute token log probabilities.
+     * @param seed        optional RNG seed to sample deterministically.
+     * @param listener    optional generation progress callback.
+     * @return the generated text completion.
+     */
+    public ChatCompletion complete(String prompt, int maxGenLen, double temperature, double topp,
+                                   boolean logprobs, long seed, GenerationListener listener) {
+        if (prompt == null) {
+            throw new IllegalArgumentException("prompt must not be null");
+        }
+        return generate(tokenizer.encode(prompt, false, false),
+                maxGenLen, temperature, topp, logprobs, seed, listener);
+    }
+
+    @Override
+    public ChatCompletion chat(Message[] dialog, int maxGenLen, double temperature, double topp,
+                               boolean logprobs, long seed, GenerationListener listener,
+                               java.util.function.BooleanSupplier cancelRequested) {
+        if (dialog == null) {
+            throw new IllegalArgumentException("dialog must not be null");
+        }
+        return generate(tokenizer.encodeDialog(dialog),
+                maxGenLen, temperature, topp, logprobs, seed, listener, cancelRequested);
+    }
+
+    private static void throwIfCancelled(java.util.function.BooleanSupplier cancelRequested) {
+        if (cancelRequested != null && cancelRequested.getAsBoolean()) {
+            throw new java.util.concurrent.CancellationException("aborted");
+        }
+    }
+
+    @Override
+    public LanguageModel model() {
+        return this;
+    }
+
+    @Override
+    public smile.llm.cache.KvCachePool kvCachePool() {
+        return model.kvCachePool();
+    }
+
+    @Override
+    public int padToken() {
+        return tokenizer.pad();
+    }
+
+    @Override
+    public int[] stopTokens() {
+        return tokenizer.stopTokens();
+    }
+
+    @Override
+    public String decode(int[] tokens) {
+        return tokenizer.decode(tokens);
+    }
+
+    @Override
+    public String tryDecode(int[] tokens, boolean skipSpecial)
+            throws java.nio.charset.CharacterCodingException {
+        return tokenizer.tryDecode(tokens, skipSpecial);
+    }
+}

@@ -130,7 +130,7 @@ The `deep/README.md` covers:
 - **`smile.deep.metric`** — Accuracy, Precision, Recall, F1Score with macro/micro/weighted averaging
 - **`smile.llm`** — `Message`, `Role`, `FinishReason`, `ChatCompletion` records; sinusoidal & RoPE positional encodings
 - **`smile.llm.tokenizer`** — `Tokenizer` interface, `Tiktoken` BPE implementation (LLaMA-3 compatible)
-- **`smile.llm.llama`** — Full LLaMA-3 stack: `Llama.build()`, `generate()`, `chat()`, streaming via `SubmissionPublisher`
+- **`smile.llm.model.llama`** — Full LLaMA-3 stack: `Llama.build()`, `generate()`, `chat()`, streaming via `SubmissionPublisher`
 - **`smile.vision`** — `VisionModel`, `ImageDataset`, `EfficientNet.V2S/M/L()` pretrained models, ImageNet labels
 - **`smile.vision.transform`** — `Transform` interface, `ImageClassification` pipeline, resize/crop/toTensor helpers
 

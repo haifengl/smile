@@ -1,0 +1,131 @@
+/*
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
+ *
+ * SMILE is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * SMILE is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
+ */
+package smile.llm.model.llama;
+
+import smile.deep.tensor.Device;
+import smile.llm.GenerationListener;
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * Unit tests for the {@code smile.llm.model.llama} package.
+ * Use small architectures (tiny dim/layers) so they run quickly on CPU
+ * without requiring a checkpoint file or the Llama tokenizer model.
+ *
+ * @author Haifeng Li
+ */
+public class LlamaTest {
+
+    private static Llama tinyLlama(LlamaModelArgs args) {
+        LlamaModel model = Llama.newModel(args);
+        model.to(Device.CPU());
+        model.setKvCachePool(
+                smile.llm.cache.KvCachePool.forTesting(args.kvCacheLayout(), Device.CPU()), false);
+        return new Llama("test", model, createTinyTokenizer(), args);
+    }
+
+    // -----------------------------------------------------------------------
+    // Llama — toString, family, name
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testGivenLlamaFamilyConstantThenIsStaticFinalString() {
+        // Confirm the field is accessible statically and has expected value
+        assertEquals("meta/llama3", Llama.family);
+    }
+
+    @Test
+    public void testGivenLlamaWhenToStringCalledThenFormatIsCorrect() {
+        LlamaModelArgs args = new LlamaModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 1, 32);
+        LlamaModel model = Llama.newModel(args);
+        model.to(Device.CPU());
+        model.setKvCachePool(
+                smile.llm.cache.KvCachePool.forTesting(args.kvCacheLayout(), Device.CPU()), false);
+        Tokenizer tokenizer = createTinyTokenizer();
+        Llama llama = new Llama("llama3-tiny", model, tokenizer, args);
+        assertEquals("meta/llama3/llama3-tiny", llama.toString());
+        assertEquals("meta/llama3", llama.family());
+        assertEquals("llama3-tiny", llama.name());
+        assertSame(args, llama.params());
+    }
+
+    @Test
+    public void testGivenLlamaBuildWithNonexistentDirThenThrowsIllegalArgument() {
+        assertThrows(IllegalArgumentException.class,
+                () -> Llama.build("nonexistent/dir", "tokenizer.model", 1, 128, (byte) -1));
+    }
+
+    // -----------------------------------------------------------------------
+    // Llama.generate — validation
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testGivenGenerateWithPromptTooLongThenThrowsIllegalArgument() {
+        // maxSeqLen=8, prompt length=10
+        LlamaModelArgs args = new LlamaModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 1, 8);
+        Llama llama = tinyLlama(args);
+        int[] prompt = new int[10];  // prompt length 10 > maxSeqLen 8
+        assertThrows(IllegalArgumentException.class,
+                () -> llama.generate(prompt, 5, 0.0, 0.9, false, 0, null));
+    }
+
+    @Test
+    public void testGivenGenerateWithListenerThenReceivesGeneratedTokens() {
+        LlamaModelArgs args = new LlamaModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 1, 32);
+        Llama llama = tinyLlama(args);
+        llama.model.eval();
+        int[] prompt = {1};
+        int[] tokenEvents = {0};
+        GenerationListener listener = new GenerationListener() {
+            @Override
+            public void onGeneratedTokens(int count) {
+                tokenEvents[0] += count;
+            }
+        };
+        var result = llama.generate(prompt, 2, 0.0, 0.9, false, 0, listener);
+        assertNotNull(result);
+        assertTrue(tokenEvents[0] > 0);
+    }
+
+    @Test
+    public void testGivenGenerateWithGreedyDecodingThenCompletionIsReturned() {
+        // Small enough to run on CPU quickly: dim=64, 1 layer, vocab=100, maxSeqLen=16
+        LlamaModelArgs args = new LlamaModelArgs(64, 1, 4, null, 100, 256, null, 1e-5, 10000.0, false, 1, 16);
+        Llama llama = tinyLlama(args);
+        llama.model.eval();
+        int[] prompt = {1, 2, 3};  // prompt of 3 tokens
+        var result = llama.generate(prompt, 4, 0.0, 0.9, false, 42, null);
+        assertNotNull(result);
+    }
+
+    // -----------------------------------------------------------------------
+    // Helper — create a tiny tokenizer with ranks for IDs 0..99
+    // -----------------------------------------------------------------------
+
+    /**
+     * Builds a tiny Llama-compatible tokenizer for unit tests.
+     * The tokenizer has vocab IDs 0–99 as single bytes, plus all required
+     * Llama 3 special tokens.
+     */
+    private static Tokenizer createTinyTokenizer() {
+        java.util.Map<smile.util.Bytes, Integer> ranks = new java.util.HashMap<>();
+        for (int i = 0; i < 100; i++) {
+            ranks.put(new smile.util.Bytes(new byte[]{(byte) i}), i);
+        }
+        return new Tokenizer(ranks);
+    }
+}

@@ -42,8 +42,8 @@ import smile.llm.attention.AttentionBackend;
 import smile.llm.attention.AttentionBackends;
 import smile.llm.attention.FlashInferArtifacts;
 import smile.llm.checkpoint.SafeTensorsLoaderThreads;
-import smile.llm.llama.*;
-import smile.llm.qwen.Qwen;
+import smile.llm.model.llama.*;
+import smile.llm.model.qwen.Qwen;
 import smile.util.HuggingFaceHub;
 
 /**
