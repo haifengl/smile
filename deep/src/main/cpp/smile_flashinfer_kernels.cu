@@ -227,8 +227,8 @@ int run_batch_prefill_sdpa(
         std::vector<int> seqlens(static_cast<size_t>(B));
         bool uniform = true;
         for (int64_t b = 0; b < B; ++b) {
-            int ps = ip[b], pe = ip[b + 1];
-            int n_pages = pe - ps;
+            int ps = ip[b];
+            int n_pages = ip[b + 1] - ps;
             int sl = n_pages > 0 ? page_size * (n_pages - 1) + lp[b] : 0;
             seqlens[static_cast<size_t>(b)] = sl;
             if (b > 0 && sl != seqlens[0]) {
@@ -243,7 +243,7 @@ int run_batch_prefill_sdpa(
         auto vc = v_pages.reshape({v_pages.size(0) * v_pages.size(1), v_pages.size(2), v_pages.size(3)});
 
         auto gather_row = [&](int64_t b, int sl, torch::Tensor &k_out, torch::Tensor &v_out) {
-            int ps = ip[b], pe = ip[b + 1];
+            int ps = ip[b];
             std::vector<int64_t> slots;
             slots.reserve(static_cast<size_t>(sl));
             for (int t = 0; t < sl; ++t) {
@@ -298,7 +298,7 @@ int run_batch_prefill_sdpa(
         std::vector<int64_t> slots;
         slots.reserve(static_cast<size_t>(B * sl));
         for (int64_t b = 0; b < B; ++b) {
-            int ps = ip[b], pe = ip[b + 1];
+            int ps = ip[b];
             for (int t = 0; t < sl; ++t) {
                 int page = t / page_size;
                 int offs = t - page * page_size;
