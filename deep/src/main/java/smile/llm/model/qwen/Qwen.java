@@ -1351,7 +1351,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 for (int r = 0; r < models.length; r++) {
                     tokenShards[r] = Tensor.of(window).reshape(1, window.length).to(models[r].device());
                 }
-                Tensor[] logits = forwardAll(tokenShards, from, to, tpExecutor, false);
+                Tensor[] logits = forwardWindow(tokenShards, from, tpExecutor, false);
                 for (Tensor t : tokenShards) {
                     t.close();
                 }
@@ -1381,6 +1381,47 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 Tensor.pop();
             }
         }
+    }
+
+    /**
+     * Runs {@link QwenModel#forward(Tensor, int, boolean)} on every TP rank for
+     * a prefill window tensor that already holds shape {@code [1, chunkLen]}.
+     *
+     * <p>Unlike {@link #forwardAll}, does not re-slice by absolute prompt offsets
+     * (the chunk tensor is already {@code prompt[from,to)}).
+     */
+    private Tensor[] forwardWindow(Tensor[] tokenShards, int startPos, ExecutorService pool,
+                                   boolean allTokenLogits) {
+        Tensor[] logits = new Tensor[models.length];
+        if (models.length == 1) {
+            logits[0] = models[0].forward(tokenShards[0], startPos, allTokenLogits);
+            return logits;
+        }
+        List<Future<Tensor>> futures = new ArrayList<>(models.length);
+        for (int r = 0; r < models.length; r++) {
+            final int rank = r;
+            futures.add(pool.submit(() -> {
+                ParallelState.setCurrent(tpGroup.state(rank));
+                try (var guard = Tensor.noGradGuard()) {
+                    return models[rank].forward(tokenShards[rank], startPos, allTokenLogits);
+                } finally {
+                    ParallelState.clearCurrent();
+                }
+            }));
+        }
+        try {
+            for (int r = 0; r < models.length; r++) {
+                logits[r] = futures.get(r).get();
+            }
+        } catch (Exception e) {
+            for (Tensor l : logits) {
+                if (l != null) {
+                    l.close();
+                }
+            }
+            throw new RuntimeException("TP prefill forward failed", e);
+        }
+        return logits;
     }
 
     /**

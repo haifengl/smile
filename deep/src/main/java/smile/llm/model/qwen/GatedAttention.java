@@ -199,14 +199,12 @@ public class GatedAttention implements Attention {
      * @return attention output {@code [B, S, D]}.
      */
     public Tensor forward(Tensor x, int startPos, Tensor cos, Tensor sin, Tensor mask) {
-        int batch = (int) x.shape()[0];
-        int[] positions = new int[batch];
-        java.util.Arrays.fill(positions, startPos);
-        return forward(x, positions, cos, sin, mask);
+        return forwardUniform(x, startPos, cos, sin, mask);
     }
 
     /**
-     * Decode / prefill with per-row cache write positions.
+     * Decode with per-row cache write positions ({@code seqLen == 1}), or uniform
+     * prefill when every row shares the same {@code positions[0]}.
      *
      * @param x         hidden states {@code [B, S, D]}.
      * @param positions absolute write position per batch row.
@@ -222,9 +220,7 @@ public class GatedAttention implements Attention {
         if (positions == null || positions.length != (int) x.shape()[0]) {
             throw new IllegalArgumentException("positions length must equal batch size");
         }
-        long[] shape = x.shape();
-        int batchSize = (int) shape[0];
-        int seqlen = (int) shape[1];
+        int seqlen = (int) x.shape()[1];
         if (seqlen != 1) {
             for (int i = 1; i < positions.length; i++) {
                 if (positions[i] != positions[0]) {
@@ -232,7 +228,104 @@ public class GatedAttention implements Attention {
                             "ragged positions only supported for decode seqLen==1");
                 }
             }
+            return forwardUniform(x, positions[0], cos, sin, mask);
         }
+        return forwardDecodeRagged(x, positions, cos, sin);
+    }
+
+    /**
+     * Uniform prefill / multi-token window ({@code S > 1} or equal positions).
+     */
+    private Tensor forwardUniform(Tensor x, int startPos, Tensor cos, Tensor sin, Tensor mask) {
+        long[] shape = x.shape();
+        int batchSize = (int) shape[0];
+        int seqlen = (int) shape[1];
+
+        AutoScope scope = new AutoScope();
+        Tensor.push(scope);
+        try {
+            Tensor qRaw = qProj.forward(x);
+            Tensor qFull = qRaw.view(batchSize, seqlen, numHeads, headDim * 2);
+            Tensor query;
+            Tensor gate;
+            try (var qSlice = smile.deep.tensor.Index.slice(0, headDim);
+                 var gSlice = smile.deep.tensor.Index.slice(headDim, headDim * 2)) {
+                query = qFull.get(smile.deep.tensor.Index.Ellipsis, qSlice);
+                Tensor gateSlice = qFull.get(smile.deep.tensor.Index.Ellipsis, gSlice);
+                gate = gateSlice.reshape(batchSize, seqlen, numHeads * headDim);
+            }
+
+            Tensor kRaw = kProj.forward(x);
+            Tensor key = kRaw.view(batchSize, seqlen, numKvHeads, headDim);
+            Tensor vRaw = vProj.forward(x);
+            Tensor value = vRaw.view(batchSize, seqlen, numKvHeads, headDim);
+
+            Tensor qFlat = query.reshape(batchSize * seqlen * numHeads, headDim);
+            Tensor qNormed = qNorm.forward(qFlat);
+            query = qNormed.view(batchSize, seqlen, numHeads, headDim);
+
+            Tensor kFlat = key.reshape(batchSize * seqlen * numKvHeads, headDim);
+            Tensor kNormed = kNorm.forward(kFlat);
+            key = kNormed.view(batchSize, seqlen, numKvHeads, headDim);
+
+            var rope = PartialRotaryEncoding.apply(query, key, cos, sin, rotaryDim);
+            Tensor qRope = rope._1();
+            Tensor kRope = rope._2();
+
+            cachePool.put(kvLayerId, startPos, kRope, value);
+            kRope.close();
+
+            int cacheLen = startPos + seqlen;
+            double scale = 1.0 / Math.sqrt(headDim);
+            Tensor qT = qRope.transpose(1, 2);
+            Tensor attn;
+            if (AttentionBackends.current() == AttentionBackend.FLASHINFER) {
+                try (FlashInferKvMetadata meta = cachePool.buildFlashInferMetadata(cacheLen)) {
+                    var ctx = AttentionContext.paged(
+                            scale, false,
+                            numHeads, numKvHeads, headDim,
+                            kvLayerId, startPos, seqlen, cacheLen,
+                            cachePool, meta, cachePool.flashInferWorkspace());
+                    attn = AttentionBackends.kernel().forward(qT, null, null, mask, ctx);
+                }
+            } else {
+                var cached = cachePool.get(kvLayerId, cacheLen);
+                Tensor keys = cached._1();
+                Tensor values = cached._2();
+
+                Tensor keysRep = repeatKV(keys, numRep);
+                Tensor valuesRep = repeatKV(values, numRep);
+                if (keysRep != keys) {
+                    keys.close();
+                }
+                if (valuesRep != values) {
+                    values.close();
+                }
+
+                Tensor kT = keysRep.transpose(1, 2);
+                Tensor vT = valuesRep.transpose(1, 2);
+                attn = apply(qT, kT, vT, mask, 0.0, false, scale);
+            }
+            Tensor attnT = attn.transpose(1, 2);
+            Tensor attnC = attnT.contiguous();
+            attn = attnC.view(batchSize, seqlen, -1);
+            Tensor gateSig = sigmoid.forward(gate);
+            Tensor gated = attn.mul(gateSig);
+            Tensor out = oProj.forward(gated);
+            if (tpGroup != null && tpGroup.tpSize() > 1) {
+                tpGroup.allReduceSumInPlace(tpRank, out);
+            }
+            out.promoteToParent();
+            return out;
+        } finally {
+            Tensor.pop();
+        }
+    }
+
+    /** Single-token decode with optional ragged positions across the batch. */
+    private Tensor forwardDecodeRagged(Tensor x, int[] positions, Tensor cos, Tensor sin) {
+        int batchSize = (int) x.shape()[0];
+        int seqlen = 1;
 
         AutoScope scope = new AutoScope();
         Tensor.push(scope);
@@ -295,7 +388,7 @@ public class GatedAttention implements Attention {
                                     numHeads, numKvHeads, headDim,
                                     kvLayerId, seqlen, positions, cacheLens,
                                     cachePool, meta, cachePool.flashInferWorkspace());
-                    attn = AttentionBackends.kernel().forward(qT, null, null, mask, ctx);
+                    attn = AttentionBackends.kernel().forward(qT, null, null, null, ctx);
                 }
             } else {
                 if (!uniform) {
@@ -318,7 +411,7 @@ public class GatedAttention implements Attention {
 
                 Tensor kT = keysRep.transpose(1, 2);
                 Tensor vT = valuesRep.transpose(1, 2);
-                attn = apply(qT, kT, vT, mask, 0.0, false, scale);
+                attn = apply(qT, kT, vT, null, 0.0, false, scale);
             }
             Tensor attnT = attn.transpose(1, 2);
             Tensor attnC = attnT.contiguous();

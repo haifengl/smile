@@ -84,6 +84,23 @@ public class PartialRotaryEncodingTest {
     }
 
     @Test
+    public void testGiven3DTableWhenBatchOneThenBroadcastMatchesPrefill() {
+        int rotaryDim = 8;
+        int seq = 4;
+        var table = PartialRotaryEncoding.computeCosSin(rotaryDim, 16, 10000.0);
+        try (var pos = smile.deep.tensor.Index.slice(0, seq);
+             Tensor cos3 = table.cos().get(pos).unsqueeze(0)) {
+            assertArrayEquals(new long[]{1, seq, rotaryDim}, cos3.shape());
+            Tensor xq = Tensor.ones(1, seq, 2, 16);
+            Tensor cosB = PartialRotaryEncoding.broadcastCosSin(cos3, xq);
+            assertArrayEquals(new long[]{1, seq, 1, rotaryDim}, cosB.shape());
+            cosB.close();
+            xq.close();
+        }
+        table.close();
+    }
+
+    @Test
     public void testGivenGatherWhenTwoPositionsThenShapeIsBatchSeqRot() {
         int rotaryDim = 8;
         var table = PartialRotaryEncoding.computeCosSin(rotaryDim, 64, 10000.0);

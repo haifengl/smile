@@ -187,42 +187,42 @@ public final class PartialRotaryEncoding {
         if (shape.length == 2) {
             seq = shape[0];
             rot = shape[1];
-            if (seq != xSeq) {
-                throw new IllegalArgumentException(
-                        "cos/sin seqLen=" + seq + " != query seqLen=" + xSeq);
-            }
-            return table.view(1, seq, 1, rot);
-        }
-        if (shape.length == 1) {
+        } else if (shape.length == 1) {
             // Single position decode: [R] → treat as S=1.
             seq = 1;
             rot = shape[0];
-            if (seq != xSeq) {
-                throw new IllegalArgumentException(
-                        "cos/sin seqLen=" + seq + " != query seqLen=" + xSeq);
+            try (Tensor row = table.view(1, rot)) {
+                return broadcastCosSin(row, xq);
             }
-            return table.view(1, 1, 1, rot);
-        }
-        if (shape.length == 3) {
-            // [B, S, R] per-row decode, or [1, S, R].
+        } else if (shape.length == 3) {
+            // [1, S, R] prefill slice or [B, 1, R] per-row decode gather.
+            seq = shape[shape.length - 2];
+            rot = shape[shape.length - 1];
             long b = shape[0];
-            seq = shape[1];
-            rot = shape[2];
-            if (seq != xSeq) {
-                throw new IllegalArgumentException(
-                        "cos/sin seqLen=" + seq + " != query seqLen=" + xSeq);
+            if (b == batch && seq == xSeq && batch > 1) {
+                try (Tensor viewed = table.contiguous().view(batch, seq, 1, rot)) {
+                    Tensor copy = viewed.copy();
+                    copy.promoteToParent();
+                    return copy;
+                }
             }
-            if (b == batch) {
-                return table.view(batch, seq, 1, rot);
+            // Collapse leading batch dim (matches pre-ragged reshape) so CUDA views stay contiguous.
+            try (Tensor flat = table.reshape(seq, rot)) {
+                return broadcastCosSin(flat, xq);
             }
-            if (b == 1) {
-                return table.view(1, seq, 1, rot);
-            }
+        } else {
             throw new IllegalArgumentException(
-                    "cos/sin batch=" + b + " incompatible with query batch=" + batch);
+                    "cos/sin must be [S,R], [B,S,R], or [R], got " + Arrays.toString(shape));
         }
-        throw new IllegalArgumentException(
-                "cos/sin must be [S,R], [B,S,R], or [R], got " + Arrays.toString(shape));
+        if (seq != xSeq) {
+            throw new IllegalArgumentException(
+                    "cos/sin seqLen=" + seq + " != query seqLen=" + xSeq);
+        }
+        try (Tensor viewed = table.contiguous().view(1, seq, 1, rot)) {
+            Tensor copy = viewed.copy();
+            copy.promoteToParent();
+            return copy;
+        }
     }
 
     /**
