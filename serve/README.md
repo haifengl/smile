@@ -163,7 +163,7 @@ the corresponding profiles.
 | `smile.onnx.model` | `../model` | Path to a `.onnx` file or directory of `.onnx` files |
 | `smile.chat.model` | `../model/Llama3.1-8B-Instruct` | Local HF-layout checkpoint directory, or Hugging Face repo id (`owner/name`). Tokenizer is resolved next to the checkpoint (`original/tokenizer.model` or `tokenizer.model`) |
 | `smile.chat.max-seq-len` | `0` (auto) | Max context (prompt+output), like vLLM `--max-model-len` / SGLang `--context-length`. `<=0` uses `max_position_embeddings` from the model config; set explicitly (e.g. `8192`) to cap large-window models such as Qwen3.5 |
-| `smile.chat.max-batch-size` | `1` | Max in-flight chat generations (`InferenceEngine` Fluid Injection cap). Values `>1` enable continuous batching. Prefer setting `max_tokens` on requests (or a modest `max-seq-len`); the default `max_tokens = remaining context` otherwise reserves most of the KV pool for the first job and looks serial. |
+| `smile.chat.max-batch-size` | `1` | Max in-flight chat generations (`InferenceEngine` Fluid Injection cap). Values `>1` enable continuous batching. A waiting request is admitted only when free KV can reserve its full `prompt + max_tokens` window (capped by `max-seq-len`); otherwise it stays queued. |
 | `smile.chat.max-decode-batch` | `0` (same as max-batch-size) | Cap on requests per GPU `decodeStep`; `0` means use `max-batch-size` |
 | `smile.chat.prefill-token-budget` | `2048` | Max prompt tokens prefilled per scheduler tick (chunked prefill so long prompts do not stall decode) |
 | `smile.chat.admission-timeout-ms` | `120000` | Fail a waiting job if KV cannot admit it within this many ms (`0` = wait until Instant Eviction frees capacity) |

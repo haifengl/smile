@@ -635,7 +635,7 @@ public class KvCachePool implements AutoCloseable {
         }
 
         releaseAllBindings();
-        RequestBinding binding = allocatePrefixBinding(promptTokens, totalCapacity);
+        RequestBinding binding = allocatePrefixBinding(promptTokens, totalCapacity, false);
         requestSlots = new long[][]{binding.slots()};
         requestCapacity = binding.capacity();
         matchedPrefixLen = binding.matchedPrefixLen();
@@ -648,9 +648,14 @@ public class KvCachePool implements AutoCloseable {
      * Allocates slots for one request without clearing other multi-request
      * bindings. If the multi-request map was empty, activates this request.
      *
+     * <p>Requires the full {@code totalCapacity} (page-aligned). When free KV
+     * is insufficient, throws {@link KvCacheExhaustedException} so the caller
+     * can leave the job queued until Instant Eviction frees pages.
+     *
      * @param promptTokens  prompt token ids.
      * @param totalCapacity desired slots (prompt + generation headroom).
      * @return request id ({@code > 0}).
+     * @throws KvCacheExhaustedException if the pool cannot reserve {@code totalCapacity}.
      */
     public int bindRequest(int[] promptTokens, int totalCapacity) {
         if (promptTokens == null) {
@@ -668,9 +673,9 @@ public class KvCachePool implements AutoCloseable {
 
         RequestBinding binding;
         if (!prefixReuseEnabled) {
-            binding = allocateContiguousBinding(totalCapacity, promptTokens.length);
+            binding = allocateContiguousBinding(totalCapacity, promptTokens.length, true);
         } else {
-            binding = allocatePrefixBinding(promptTokens, totalCapacity);
+            binding = allocatePrefixBinding(promptTokens, totalCapacity, true);
         }
 
         int id = nextRequestId.getAndIncrement();
@@ -1248,18 +1253,27 @@ public class KvCachePool implements AutoCloseable {
     /**
      * Contiguous bind for one multi-request entry (like {@link #bindRequests}(1, …)
      * without releasing other bindings).
+     *
+     * @param requireFull when {@code true}, fail instead of clamping below
+     *                    {@code totalCapacity} (continuous-batching admission).
      */
-    private RequestBinding allocateContiguousBinding(int totalCapacity, int promptLen) {
+    private RequestBinding allocateContiguousBinding(int totalCapacity, int promptLen,
+                                                     boolean requireFull) {
         int desired = pageAlignUp(totalCapacity);
         tryEvictFor(desired);
         int maxPerRequest = (freeSlots() / pageSize) * pageSize;
         int aligned = Math.min(desired, maxPerRequest);
         if (aligned < pageSize) {
-            throw new IllegalStateException(String.format(
+            throw new KvCacheExhaustedException(String.format(
                     "KV cache exhausted: need at least %d slots, have %d free",
                     pageSize, freeSlots()));
         }
         if (aligned < desired) {
+            if (requireFull) {
+                throw new KvCacheExhaustedException(String.format(
+                        "KV cache exhausted: need %d slots, have %d free",
+                        desired, freeSlots()));
+            }
             logger.info("KV bind clamped: requested={}, bound={} (free slots before alloc={})",
                     desired, aligned, freeSlots());
         }
@@ -1274,8 +1288,12 @@ public class KvCachePool implements AutoCloseable {
     /**
      * Prefix-match bind for one request without releasing other bindings.
      * Also used by exclusive {@link #bindWithPrefix} after {@link #releaseAllBindings}.
+     *
+     * @param requireFull when {@code true}, fail instead of clamping below
+     *                    {@code totalCapacity} (continuous-batching admission).
      */
-    private RequestBinding allocatePrefixBinding(int[] promptTokens, int totalCapacity) {
+    private RequestBinding allocatePrefixBinding(int[] promptTokens, int totalCapacity,
+                                                 boolean requireFull) {
         int desired = pageAlignUp(totalCapacity);
 
         long[] matchedSlots;
@@ -1301,6 +1319,14 @@ public class KvCachePool implements AutoCloseable {
         int suffixAvail = freeSlots();
         int alignedCapacity = prefixLen + Math.min(suffixDesired, suffixAvail);
         if (alignedCapacity < desired) {
+            if (requireFull) {
+                if (locked != null) {
+                    radix.decLockRef(locked);
+                }
+                throw new KvCacheExhaustedException(String.format(
+                        "KV cache exhausted: need %d slots (prefix=%d), have %d free suffix",
+                        desired, prefixLen, suffixAvail));
+            }
             logger.info("KV bind clamped: requested={}, bound={} (prefix={}, free suffix slots={})",
                     desired, alignedCapacity, prefixLen, suffixAvail);
         }

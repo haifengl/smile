@@ -155,13 +155,22 @@ public class ChatService {
                             maxDecode,
                             Math.max(1, config.prefillTokenBudget()),
                             config.admissionTimeoutMs());
+                    String sysProp = System.getProperty("smile.chat.max-batch-size");
                     logger.infof("Chat continuous batching: model=%s family=%s maxSeqLen=%d "
                                     + "maxInFlight=%d maxDecodeBatch=%d prefillTokenBudget=%d "
-                                    + "admissionTimeoutMs=%d",
+                                    + "admissionTimeoutMs=%d "
+                                    + "(config.maxBatchSize=%d, -Dsmile.chat.max-batch-size=%s)",
                             modelId, model.family(), model.maxSeqLen(),
                             engine.maxInFlight(), engine.maxDecodeBatch(),
                             Math.max(1, config.prefillTokenBudget()),
-                            config.admissionTimeoutMs());
+                            config.admissionTimeoutMs(),
+                            config.maxBatchSize(),
+                            sysProp == null ? "<unset>" : sysProp);
+                    if (engine.maxInFlight() <= 1) {
+                        logger.warnf("maxInFlight=1 — parallel requests run one at a time. "
+                                        + "Raise smile.chat.max-batch-size (e.g. JAVA_OPTS_APPEND "
+                                        + "-Dsmile.chat.max-batch-size=4 in Docker).");
+                    }
                 } else {
                     logger.warnf("Chat model %s does not implement ModelExecutor; "
                             + "continuous batching unavailable", modelId);
@@ -406,11 +415,17 @@ public class ChatService {
             var handle = engine.submit(smile.llm.engine.GenerationRequest.ofTokens(
                     prompt, maxGenLen, request.temperature, request.topP,
                     request.logprobs, request.seed, listener));
+            logger.infof("Submitted chat requestId=%d promptLen=%d maxGenLen=%d "
+                            + "inFlight=%d queueSize=%d maxInFlight=%d kvFreeSlots=%d",
+                    handle.requestId(), prompt.length, maxGenLen,
+                    engine.inFlight(), engine.queueSize(), engine.maxInFlight(),
+                    engine.kvFreeSlots());
             handle.future().whenComplete((r, t) -> {
                 throughput.finish();
                 logger.infof(
-                        "Engine stats: queueWaitMsTotal=%d prefillMsTotal=%d decodeMsTotal=%d "
-                                + "kvFreePages=%d inFlight=%d queueSize=%d",
+                        "Engine stats: requestId=%d queueWaitMsTotal=%d prefillMsTotal=%d "
+                                + "decodeMsTotal=%d kvFreePages=%d inFlight=%d queueSize=%d",
+                        handle.requestId(),
                         engine.queueWaitMsTotal(), engine.prefillMsTotal(), engine.decodeMsTotal(),
                         engine.kvFreePages(), engine.inFlight(), engine.queueSize());
             });
