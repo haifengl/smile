@@ -16,15 +16,16 @@
  */
 package smile.llm.engine;
 
+import smile.deep.tensor.Tensor;
 import smile.llm.LanguageModel;
 import smile.llm.cache.KvCachePool;
 
 /**
  * Low-level execution surface used by {@link InferenceEngine}.
  *
- * <p>Implementations wrap a concrete checkpoint (Llama, Qwen, …) and expose
- * the KV pool / stop tokens needed for continuous batching. Single-request
- * {@link LanguageModel#generate} remains available for offline use.
+ * <p>Continuous batching uses {@link #bind}/{@link #prefill}/{@link #decodeStep}
+ * instead of monolithic {@link LanguageModel#generate}. Offline callers may
+ * still use {@link LanguageModel#generate}.
  *
  * @author Haifeng Li
  */
@@ -54,4 +55,94 @@ public interface ModelExecutor {
      */
     String tryDecode(int[] tokens, boolean skipSpecial)
             throws java.nio.charset.CharacterCodingException;
+
+    /**
+     * When {@code false}, {@link InferenceEngine} uses serial
+     * {@link LanguageModel#generate} (test stubs without tensors / KV).
+     */
+    default boolean supportsStepApi() {
+        return true;
+    }
+
+    /**
+     * Binds one request into the KV pool (multi-request safe).
+     *
+     * @param prompt        prompt token ids.
+     * @param totalCapacity desired slots (prompt + generation).
+     * @return request id ({@code > 0}).
+     */
+    int bind(int[] prompt, int totalCapacity);
+
+    /**
+     * Page-aligned matched prefix length for a bound request.
+     *
+     * @param requestId id from {@link #bind}.
+     * @return prefix length ({@code >= 0}).
+     */
+    int prefixLen(int requestId);
+
+    /**
+     * Prefills the unbound suffix of a prompt (activates this request alone).
+     *
+     * @param requestId request id.
+     * @param prompt    full prompt tokens.
+     * @param prefixLen cached prefix to skip (from {@link #prefixLen}).
+     * @return last-position logits shaped {@code [1, vocab]} (caller owns).
+     */
+    Tensor prefill(int requestId, int[] prompt, int prefixLen);
+
+    /**
+     * Prefills {@code prompt[from, to)} (chunked Continuous Batching).
+     * Returns last-token logits only when {@code to == prompt.length}.
+     *
+     * @param requestId request id.
+     * @param prompt    full prompt tokens.
+     * @param from      inclusive start position in the prompt.
+     * @param to        exclusive end position.
+     * @return logits {@code [1, vocab]} when the prompt is fully prefilled;
+     *         otherwise {@code null}.
+     */
+    default Tensor prefillChunk(int requestId, int[] prompt, int from, int to) {
+        if (to < prompt.length) {
+            throw new UnsupportedOperationException(
+                    "chunked prefill not supported; override prefillChunk");
+        }
+        return prefill(requestId, prompt, from);
+    }
+
+    /**
+     * One decode step for an active set (same or mixed positions; engine may
+     * cohort by position). Tokens are {@code [B]} last tokens; positions are
+     * the write index for each row.
+     *
+     * @param requestIds active KV request ids (order = batch).
+     * @param lastTokens token id per request.
+     * @param positions  absolute position per request.
+     * @return logits {@code [B, vocab]} (caller owns).
+     */
+    Tensor decodeStep(int[] requestIds, int[] lastTokens, int[] positions);
+
+    /**
+     * Inserts into the radix tree (when enabled) and unbinds the request.
+     *
+     * @param requestId      request id.
+     * @param sequenceTokens prompt + completion (no pad).
+     */
+    void finish(int requestId, int[] sequenceTokens);
+
+    /**
+     * Instant Eviction without radix insert.
+     *
+     * @param requestId request id.
+     */
+    void evict(int requestId);
+
+    /**
+     * Max sequence length for this model (prompt + completion).
+     *
+     * @return max seq len.
+     */
+    default int maxSeqLen() {
+        return model().maxSeqLen();
+    }
 }

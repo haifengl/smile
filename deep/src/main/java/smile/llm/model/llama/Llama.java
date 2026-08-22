@@ -1086,4 +1086,156 @@ public class Llama implements LanguageModel, smile.llm.engine.ModelExecutor {
             throws java.nio.charset.CharacterCodingException {
         return tokenizer.tryDecode(tokens, skipSpecial);
     }
+
+    @Override
+    public int bind(int[] prompt, int totalCapacity) {
+        return model.kvCachePool().bindRequest(prompt, totalCapacity);
+    }
+
+    @Override
+    public int prefixLen(int requestId) {
+        return model.kvCachePool().matchedPrefixLen(requestId);
+    }
+
+    @Override
+    public Tensor prefill(int requestId, int[] prompt, int prefixLen) {
+        return prefillChunk(requestId, prompt, prefixLen, prompt.length);
+    }
+
+    /**
+     * Prefills {@code prompt[from, to)} into the KV cache (exclusive activate).
+     * Returns last-token logits only when {@code to == prompt.length}; otherwise
+     * {@code null} (intermediate chunk).
+     *
+     * @param requestId KV request id.
+     * @param prompt    full prompt tokens.
+     * @param from      start position (usually matched prefix, possibly trimmed).
+     * @param to        exclusive end ({@code <= prompt.length}).
+     * @return logits {@code [1, vocab]} or {@code null}.
+     */
+    public Tensor prefillChunk(int requestId, int[] prompt, int from, int to) {
+        if (prompt == null) {
+            throw new IllegalArgumentException("prompt must not be null");
+        }
+        if (from < 0 || to < from || to > prompt.length) {
+            throw new IllegalArgumentException(
+                    "invalid prefill range [" + from + ", " + to + ") for len " + prompt.length);
+        }
+        if (from == to) {
+            return null;
+        }
+        model.kvCachePool().activateStep(requestId);
+        try (var guard = Tensor.noGradGuard();
+             var scope = new AutoScope()) {
+            Tensor.push(scope);
+            try {
+                int[] window = Arrays.copyOfRange(prompt, from, to);
+                try (Tensor tok = Tensor.of(window).reshape(1, window.length).to(model.device());
+                     Tensor logits = model.forward(tok, from)) {
+                    if (to < prompt.length) {
+                        return null;
+                    }
+                    try (var last = Index.of(-1)) {
+                        Tensor out = logits.get(Index.Colon, last).reshape(1, -1);
+                        out.promoteToParent();
+                        return out;
+                    }
+                }
+            } finally {
+                Tensor.pop();
+            }
+        }
+    }
+
+    @Override
+    public Tensor decodeStep(int[] requestIds, int[] lastTokens, int[] positions) {
+        if (requestIds == null || lastTokens == null || positions == null) {
+            throw new IllegalArgumentException("decodeStep args must not be null");
+        }
+        int b = requestIds.length;
+        if (lastTokens.length != b || positions.length != b) {
+            throw new IllegalArgumentException("decodeStep batch sizes must match");
+        }
+        if (b == 0) {
+            throw new IllegalArgumentException("decodeStep batch must be non-empty");
+        }
+
+        // Cohort by position so existing uniform RoPE / put paths apply.
+        int[] order = new int[b];
+        for (int i = 0; i < b; i++) {
+            order[i] = i;
+        }
+        // Stable sort by position.
+        for (int i = 1; i < b; i++) {
+            int oi = order[i];
+            int pi = positions[oi];
+            int j = i;
+            while (j > 0 && positions[order[j - 1]] > pi) {
+                order[j] = order[j - 1];
+                j--;
+            }
+            order[j] = oi;
+        }
+
+        Tensor[] parts = new Tensor[b];
+        try (var guard = Tensor.noGradGuard()) {
+            int i = 0;
+            while (i < b) {
+                int pos = positions[order[i]];
+                int j = i + 1;
+                while (j < b && positions[order[j]] == pos) {
+                    j++;
+                }
+                int cohort = j - i;
+                int[] ids = new int[cohort];
+                long[] toks = new long[cohort];
+                for (int k = 0; k < cohort; k++) {
+                    int src = order[i + k];
+                    ids[k] = requestIds[src];
+                    toks[k] = lastTokens[src];
+                }
+                model.kvCachePool().activateStep(ids);
+                try (var scope = new AutoScope()) {
+                    Tensor.push(scope);
+                    try {
+                        try (Tensor tok = Tensor.of(toks).reshape(cohort, 1).to(model.device());
+                             Tensor logits = model.forward(tok, pos);
+                             var last = Index.of(-1)) {
+                            Tensor row = logits.get(Index.Colon, last).reshape(cohort, -1);
+                            // Split cohort rows back to original order slots.
+                            for (int k = 0; k < cohort; k++) {
+                                try (var rowIdx = Index.of(k)) {
+                                    Tensor one = row.get(rowIdx).unsqueeze(0);
+                                    one.promoteToParent();
+                                    parts[order[i + k]] = one;
+                                }
+                            }
+                        }
+                    } finally {
+                        Tensor.pop();
+                    }
+                }
+                i = j;
+            }
+        }
+
+        if (b == 1) {
+            return parts[0];
+        }
+        Tensor cat = Tensor.vstack(parts);
+        for (Tensor p : parts) {
+            p.close();
+        }
+        return cat;
+    }
+
+    @Override
+    public void finish(int requestId, int[] sequenceTokens) {
+        model.kvCachePool().finishRequest(requestId, sequenceTokens);
+    }
+
+    @Override
+    public void evict(int requestId) {
+        model.kvCachePool().unbindRequest(requestId);
+    }
 }

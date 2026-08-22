@@ -16,7 +16,12 @@
  */
 package smile.llm.model.qwen;
 
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.HashMap;
+import java.util.Map;
 import smile.deep.tensor.Device;
+import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 
@@ -27,6 +32,10 @@ import smile.deep.tensor.Tensor;
  * Conv left-context must match the compute dtype (bf16/fp16) so decode
  * {@code concat(convState, hidden)} does not promote activations to float and
  * break later bf16 linear layers.
+ *
+ * <p>Multi-request continuous batching assigns each {@code requestId} a stable
+ * home row. {@link #activateStep} packs those rows into {@code [0, B)} for the
+ * mixer; {@link #scatterActive} writes them back after the forward.
  *
  * @author Haifeng Li
  */
@@ -48,19 +57,14 @@ public class DeltaNetStatePool implements AutoCloseable {
     final Tensor[] conv;
 
     private int boundBatch;
+    /** requestId → home row. */
+    private final Map<Integer, Integer> requestRows = new HashMap<>();
+    private final BitSet freeRows;
+    /** Compact working rows for the current {@link #activateStep}. */
+    private int[] activeHomeRows = new int[0];
 
     /**
      * Constructor using the same dtype for recurrent and conv buffers (tests).
-     *
-     * @param numLinearLayers number of linear-attention layers.
-     * @param numVHeads       DeltaNet value head count.
-     * @param keyHeadDim      key head dim.
-     * @param valueHeadDim    value head dim.
-     * @param convDim         fused QKV channel count.
-     * @param convKernel      causal conv kernel size.
-     * @param maxBatchSize    maximum batch size.
-     * @param device          compute device.
-     * @param dtype           element dtype for both buffers.
      */
     public DeltaNetStatePool(int numLinearLayers, int numVHeads, int keyHeadDim, int valueHeadDim,
                              int convDim, int convKernel, int maxBatchSize,
@@ -71,17 +75,6 @@ public class DeltaNetStatePool implements AutoCloseable {
 
     /**
      * Constructor with separate recurrent / conv dtypes.
-     *
-     * @param numLinearLayers number of linear-attention layers.
-     * @param numVHeads       DeltaNet value head count.
-     * @param keyHeadDim      key head dim.
-     * @param valueHeadDim    value head dim.
-     * @param convDim         fused QKV channel count.
-     * @param convKernel      causal conv kernel size.
-     * @param maxBatchSize    maximum batch size.
-     * @param device          compute device.
-     * @param recurrentDtype  dtype for recurrent state (usually float32).
-     * @param convDtype       dtype for conv left-context (usually compute bf16/fp16).
      */
     public DeltaNetStatePool(int numLinearLayers, int numVHeads, int keyHeadDim, int valueHeadDim,
                              int convDim, int convKernel, int maxBatchSize,
@@ -100,13 +93,14 @@ public class DeltaNetStatePool implements AutoCloseable {
         this.convDtype = convDtype;
         this.recurrent = new Tensor[numLinearLayers];
         this.conv = new Tensor[numLinearLayers];
+        this.freeRows = new BitSet(maxBatchSize);
+        freeRows.set(0, maxBatchSize);
         var recurrentOpts = new Tensor.Options()
                 .device(device).dtype(recurrentDtype).requireGradients(false);
         var convOpts = new Tensor.Options()
                 .device(device).dtype(convDtype).requireGradients(false);
         for (int i = 0; i < numLinearLayers; i++) {
             recurrent[i] = Tensor.zeros(recurrentOpts, maxBatchSize, numVHeads, keyHeadDim, valueHeadDim);
-            // Long-lived pool buffers must not be owned by a transient AutoScope.
             recurrent[i].detachFromScopes();
             if (convStateLen > 0) {
                 conv[i] = Tensor.zeros(convOpts, maxBatchSize, convDim, convStateLen);
@@ -119,7 +113,8 @@ public class DeltaNetStatePool implements AutoCloseable {
     }
 
     /**
-     * Zeros all states and records the active batch size for this request.
+     * Zeros all states and records the active batch size (legacy exclusive generate).
+     *
      * @param batchSize active batch size.
      */
     public void reset(int batchSize) {
@@ -127,6 +122,10 @@ public class DeltaNetStatePool implements AutoCloseable {
             throw new IllegalArgumentException("batchSize out of range: " + batchSize);
         }
         this.boundBatch = batchSize;
+        this.activeHomeRows = new int[batchSize];
+        for (int i = 0; i < batchSize; i++) {
+            activeHomeRows[i] = i;
+        }
         for (int i = 0; i < numLinearLayers; i++) {
             recurrent[i].fill_(0.0);
             if (conv[i] != null) {
@@ -136,51 +135,169 @@ public class DeltaNetStatePool implements AutoCloseable {
     }
 
     /**
-     * Clears the active-request binding after generate finishes.
-     * Does not free the underlying GPU buffers (they are reused).
+     * Binds a stable home row for {@code requestId} and zeros it.
+     *
+     * @param requestId id aligned with {@link smile.llm.cache.KvCachePool#bindRequest}.
+     * @return home row index.
      */
-    public void unbind() {
-        this.boundBatch = 0;
+    public int bindRequest(int requestId) {
+        if (requestRows.containsKey(requestId)) {
+            return requestRows.get(requestId);
+        }
+        int row = freeRows.nextSetBit(0);
+        if (row < 0 || row >= maxBatchSize) {
+            throw new IllegalStateException("DeltaNetStatePool exhausted (maxBatchSize=" + maxBatchSize + ")");
+        }
+        freeRows.clear(row);
+        requestRows.put(requestId, row);
+        zeroRow(row);
+        return row;
     }
 
     /**
-     * Active batch size from the last {@link #reset}.
-     * @return bound batch size, or {@code 0} if unbound.
+     * Releases the home row for {@code requestId}.
+     *
+     * @param requestId previously bound id.
      */
+    public void unbindRequest(int requestId) {
+        Integer row = requestRows.remove(requestId);
+        if (row == null) {
+            return;
+        }
+        zeroRow(row);
+        freeRows.set(row);
+        if (requestRows.isEmpty()) {
+            boundBatch = 0;
+            activeHomeRows = new int[0];
+        }
+    }
+
+    /**
+     * Packs bound request rows into working slots {@code [0, B)} for a forward.
+     *
+     * @param requestIds bound request ids (order = batch).
+     */
+    public void activateStep(int... requestIds) {
+        if (requestIds == null || requestIds.length == 0) {
+            throw new IllegalArgumentException("requestIds must be non-empty");
+        }
+        if (requestIds.length > maxBatchSize) {
+            throw new IllegalArgumentException("activate batch exceeds maxBatchSize");
+        }
+        int[] homes = new int[requestIds.length];
+        for (int i = 0; i < requestIds.length; i++) {
+            Integer row = requestRows.get(requestIds[i]);
+            if (row == null) {
+                throw new IllegalArgumentException("Unknown DeltaNet request id: " + requestIds[i]);
+            }
+            homes[i] = row;
+        }
+        // Gather home → working [0, B).
+        for (int i = 0; i < homes.length; i++) {
+            if (homes[i] != i) {
+                copyRow(homes[i], i);
+            }
+        }
+        this.activeHomeRows = homes;
+        this.boundBatch = homes.length;
+    }
+
+    /**
+     * Writes working slots {@code [0, B)} back to each request's home row.
+     * Call after every forward that used {@link #activateStep}.
+     */
+    public void scatterActive() {
+        if (activeHomeRows == null || activeHomeRows.length == 0) {
+            return;
+        }
+        for (int i = 0; i < activeHomeRows.length; i++) {
+            int home = activeHomeRows[i];
+            if (home != i) {
+                copyRow(i, home);
+            }
+        }
+    }
+
+    private void zeroRow(int row) {
+        try (var r = Index.of(row)) {
+            for (int i = 0; i < numLinearLayers; i++) {
+                try (Tensor view = recurrent[i].get(r)) {
+                    view.fill_(0.0);
+                }
+                if (conv[i] != null) {
+                    try (Tensor view = conv[i].get(r)) {
+                        view.fill_(0.0);
+                    }
+                }
+            }
+        }
+    }
+
+    private void copyRow(int from, int to) {
+        if (from == to) {
+            return;
+        }
+        try (var src = Index.of(from);
+             var dst = Index.of(to)) {
+            for (int i = 0; i < numLinearLayers; i++) {
+                try (Tensor s = recurrent[i].get(src)) {
+                    recurrent[i].put_(s, dst);
+                }
+                if (conv[i] != null) {
+                    try (Tensor s = conv[i].get(src)) {
+                        conv[i].put_(s, dst);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Clears the active-request binding after exclusive generate finishes.
+     */
+    public void unbind() {
+        this.boundBatch = 0;
+        this.activeHomeRows = new int[0];
+        requestRows.clear();
+        freeRows.clear();
+        freeRows.set(0, maxBatchSize);
+    }
+
+    /** @return bound batch size, or {@code 0} if unbound. */
     public int boundBatch() {
         return boundBatch;
     }
 
+    /** @return number of multi-request bindings. */
+    public int boundRequestCount() {
+        return requestRows.size();
+    }
+
     /**
-     * Returns the recurrent state tensor for a linear-attention layer.
-     *
      * @param linearLayerId ordinal among linear-attention layers.
-     * @return recurrent state {@code [B, V, Kdim, Vdim]}.
+     * @return recurrent state {@code [maxBatch, V, Kdim, Vdim]} (first {@link #boundBatch} rows active).
      */
     public Tensor recurrent(int linearLayerId) {
         return recurrent[linearLayerId];
     }
 
     /**
-     * Returns the causal-conv left-context tensor for a linear-attention layer.
-     *
      * @param linearLayerId ordinal among linear-attention layers.
-     * @return conv state {@code [B, C, K-1]}, or {@code null} if unused.
+     * @return conv state {@code [maxBatch, C, K-1]}, or {@code null} if unused.
      */
     public Tensor conv(int linearLayerId) {
         return conv[linearLayerId];
     }
 
-    /**
-     * Returns the number of linear-attention layers covered by this pool.
-     * @return linear layer count.
-     */
+    /** @return linear layer count. */
     public int numLinearLayers() {
         return numLinearLayers;
     }
 
     @Override
     public void close() {
+        requestRows.clear();
+        freeRows.clear();
         for (int i = 0; i < numLinearLayers; i++) {
             if (recurrent[i] != null) {
                 recurrent[i].close();

@@ -178,7 +178,15 @@ public class GroupedQueryAttention implements Attention {
             Tensor qT = qRope.transpose(1, 2);
             Tensor attn;
             if (AttentionBackends.current() == AttentionBackend.FLASHINFER) {
-                try (FlashInferKvMetadata meta = cachePool.buildFlashInferMetadata(cacheLen)) {
+                FlashInferKvMetadata meta;
+                if (seqlen == 1 && batchSize > 1) {
+                    int[] lengths = new int[batchSize];
+                    java.util.Arrays.fill(lengths, cacheLen);
+                    meta = cachePool.buildFlashInferMetadata(lengths);
+                } else {
+                    meta = cachePool.buildFlashInferMetadata(cacheLen);
+                }
+                try (meta) {
                     // Match torch_native: causality comes from {@code mask}, not is_causal.
                     var ctx = AttentionContext.paged(
                             0.0, false,

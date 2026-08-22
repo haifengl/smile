@@ -164,6 +164,9 @@ the corresponding profiles.
 | `smile.chat.model` | `../model/Llama3.1-8B-Instruct` | Local HF-layout checkpoint directory, or Hugging Face repo id (`owner/name`). Tokenizer is resolved next to the checkpoint (`original/tokenizer.model` or `tokenizer.model`) |
 | `smile.chat.max-seq-len` | `0` (auto) | Max context (prompt+output), like vLLM `--max-model-len` / SGLang `--context-length`. `<=0` uses `max_position_embeddings` from the model config; set explicitly (e.g. `8192`) to cap large-window models such as Qwen3.5 |
 | `smile.chat.max-batch-size` | `1` | Max in-flight chat generations (`InferenceEngine` Fluid Injection cap) |
+| `smile.chat.max-decode-batch` | `0` (same as max-batch-size) | Cap on requests per GPU `decodeStep`; `0` means use `max-batch-size` |
+| `smile.chat.prefill-token-budget` | `2048` | Max prompt tokens prefilled per scheduler tick (chunked prefill so long prompts do not stall decode) |
+| `smile.chat.admission-timeout-ms` | `120000` | Fail a waiting job if KV cannot admit it within this many ms (`0` = wait until Instant Eviction frees capacity) |
 | `smile.chat.mem-fraction-static` | `0.85` | SGLang `--mem-fraction-static`: fraction `y` of **total** GPU memory for the static region (weights + DeltaNet + KV). Leaves ~(1−y)×total free for activations (plus a small soft margin). Idle use near `y×total` is expected. Short-prompt OOM usually means activation peak/leak during forward — try `0.75` and/or a lower `max-seq-len` on 40GB TP=2 Qwen desktops. Pool is static (no per-request growth); when free KV is exhausted, generation stops early with partial output (`finish_reason=length`) |
 | `smile.chat.model-loader-threads` | `0` (auto) | Concurrent safetensors shard readers. Each worker loads one shard to CPU then fans out to TP ranks. Peak host RAM ≈ `threads × shard size`. `0` = `min(8, CPUs)`, capped by number of shard files. Use `1`–`2` on RAM-tight desktops |
 | `smile.chat.devices` | `0` | CUDA device index, or comma-separated TP list (`0,7`). `%dev` default: `7` |
@@ -665,6 +668,13 @@ or returned as a single OpenAI `chat.completion` JSON object when `stream`
 is false or omitted (OpenAI default). The conversation (user message +
 assistant reply) is automatically persisted to the configured database after
 generation finishes.
+
+Serve runs an {@code InferenceEngine} continuous-batching loop (Fluid Injection
+admission, chunked prefill, batched decode, Instant Eviction on abort). Offline
+library callers may still use {@code LanguageModel.generate}; HTTP chat always
+goes through the engine. Client disconnect on an SSE stream aborts the
+{@code GenerationHandle}, which Instant-Evicts that request's KV pages without
+stopping peer in-flight generations.
 
 **Request body fields (`snake_case`):**
 

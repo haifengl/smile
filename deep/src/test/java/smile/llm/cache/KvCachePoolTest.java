@@ -378,4 +378,27 @@ public class KvCachePoolTest {
             assertEquals(0, pool.boundRequestCount());
         }
     }
+
+    @Test
+    public void testGivenRaggedLengthsWhenBuildFlashInferMetadataThenIndptrMatches() {
+        // Given – two multi-request bindings with different capacities
+        try (var pool = new KvCachePool(1, 128, 2, 16, 16, Device.CPU(), ScalarType.Float)) {
+            pool.setPrefixReuseEnabled(false);
+            int id1 = pool.bindRequest(new int[]{1, 2, 3, 4}, 32);
+            int id2 = pool.bindRequest(new int[]{5, 6, 7, 8}, 48);
+            pool.activateStep(id1, id2);
+
+            // When
+            try (var meta = pool.buildFlashInferMetadata(new int[]{10, 25})) {
+                // Then – indptr[0]=0, pages for len 10 → 1 page (pageSize=16),
+                // len 25 → 2 pages; indptr = [0, 1, 3]
+                int[] indptr = meta.pagedKvIndptr().intArray();
+                assertArrayEquals(new int[]{0, 1, 3}, indptr);
+                assertEquals(2, meta.pagedKvLastPageLen().shape()[0]);
+            }
+
+            pool.unbindRequest(id1);
+            pool.unbindRequest(id2);
+        }
+    }
 }

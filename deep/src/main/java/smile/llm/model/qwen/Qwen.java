@@ -147,6 +147,13 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
      * @param enabled {@code true} to match/insert prefixes across requests.
      */
     public void setPrefixReuseEnabled(boolean enabled) {
+        // Hybrid DeltaNet + KV: prefix reuse without restoring DeltaNet state is
+        // numerically unsafe — force off until a restore/recompute path exists.
+        if (enabled && model.deltaNetStatePool() != null) {
+            logger.warn("Disabling radix prefix reuse for hybrid Qwen (DeltaNet state "
+                    + "is not restored on prefix hit)");
+            enabled = false;
+        }
         for (QwenModel m : models) {
             if (m.kvCachePool() != null) {
                 m.kvCachePool().setPrefixReuseEnabled(enabled);
@@ -1258,5 +1265,234 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     public String tryDecode(int[] tokens, boolean skipSpecial)
             throws java.nio.charset.CharacterCodingException {
         return tokenizer.tryDecode(tokens, skipSpecial);
+    }
+
+    /**
+     * Hybrid models must not reuse radix KV prefixes until DeltaNet state can
+     * be restored; otherwise answers are numerically wrong.
+     */
+    private void disablePrefixReuseForHybrid() {
+        if (model.deltaNetStatePool() == null) {
+            return;
+        }
+        for (QwenModel m : models) {
+            if (m.kvCachePool() != null) {
+                m.kvCachePool().setPrefixReuseEnabled(false);
+            }
+        }
+    }
+
+    @Override
+    public int bind(int[] prompt, int totalCapacity) {
+        disablePrefixReuseForHybrid();
+        int id = -1;
+        for (QwenModel m : models) {
+            if (m.kvCachePool() != null) {
+                int local = m.kvCachePool().bindRequest(prompt, totalCapacity);
+                if (id < 0) {
+                    id = local;
+                } else if (local != id) {
+                    throw new IllegalStateException(String.format(
+                            "TP KV request id mismatch: rank0=%d other=%d (ranks must bind in lockstep)",
+                            id, local));
+                }
+            }
+        }
+        if (id < 0) {
+            throw new IllegalStateException("Qwen bind requires a KV cache pool");
+        }
+        for (QwenModel m : models) {
+            if (m.deltaNetStatePool() != null) {
+                m.deltaNetStatePool().bindRequest(id);
+            }
+        }
+        return id;
+    }
+
+    @Override
+    public int prefixLen(int requestId) {
+        KvCachePool pool = model.kvCachePool();
+        return pool == null ? 0 : pool.matchedPrefixLen(requestId);
+    }
+
+    @Override
+    public Tensor prefill(int requestId, int[] prompt, int prefixLen) {
+        return prefillChunk(requestId, prompt, prefixLen, prompt.length);
+    }
+
+    @Override
+    public Tensor prefillChunk(int requestId, int[] prompt, int from, int to) {
+        if (prompt == null) {
+            throw new IllegalArgumentException("prompt must not be null");
+        }
+        if (from < 0 || to < from || to > prompt.length) {
+            throw new IllegalArgumentException(
+                    "invalid prefill range [" + from + ", " + to + ") for len " + prompt.length);
+        }
+        if (from == to) {
+            return null;
+        }
+        for (QwenModel m : models) {
+            if (m.kvCachePool() != null) {
+                m.kvCachePool().activateStep(requestId);
+            }
+            if (m.deltaNetStatePool() != null) {
+                m.deltaNetStatePool().activateStep(requestId);
+            }
+        }
+        try (var guard = Tensor.noGradGuard();
+             var scope = new AutoScope()) {
+            Tensor.push(scope);
+            try {
+                int[] window = Arrays.copyOfRange(prompt, from, to);
+                Tensor[] tokenShards = new Tensor[models.length];
+                for (int r = 0; r < models.length; r++) {
+                    tokenShards[r] = Tensor.of(window).reshape(1, window.length).to(models[r].device());
+                }
+                Tensor[] logits = forwardAll(tokenShards, from, to, tpExecutor, false);
+                for (Tensor t : tokenShards) {
+                    t.close();
+                }
+                for (QwenModel m : models) {
+                    if (m.deltaNetStatePool() != null) {
+                        m.deltaNetStatePool().scatterActive();
+                    }
+                }
+                if (to < prompt.length) {
+                    for (Tensor l : logits) {
+                        if (l != null) {
+                            l.close();
+                        }
+                    }
+                    return null;
+                }
+                try (var last = Index.of(-1)) {
+                    Tensor out = logits[0].get(Index.Colon, last).reshape(1, -1);
+                    out.promoteToParent();
+                    for (int r = 1; r < logits.length; r++) {
+                        logits[r].close();
+                    }
+                    logits[0].close();
+                    return out;
+                }
+            } finally {
+                Tensor.pop();
+            }
+        }
+    }
+
+    @Override
+    public Tensor decodeStep(int[] requestIds, int[] lastTokens, int[] positions) {
+        if (requestIds == null || lastTokens == null || positions == null) {
+            throw new IllegalArgumentException("decodeStep args must not be null");
+        }
+        int b = requestIds.length;
+        if (lastTokens.length != b || positions.length != b || b == 0) {
+            throw new IllegalArgumentException("decodeStep batch sizes must match and be non-empty");
+        }
+
+        // Cohort by position (same as Llama); DeltaNet rows packed per cohort.
+        int[] order = new int[b];
+        for (int i = 0; i < b; i++) {
+            order[i] = i;
+        }
+        for (int i = 1; i < b; i++) {
+            int oi = order[i];
+            int pi = positions[oi];
+            int j = i;
+            while (j > 0 && positions[order[j - 1]] > pi) {
+                order[j] = order[j - 1];
+                j--;
+            }
+            order[j] = oi;
+        }
+
+        Tensor[] parts = new Tensor[b];
+        try (var guard = Tensor.noGradGuard()) {
+            int i = 0;
+            while (i < b) {
+                int pos = positions[order[i]];
+                int j = i + 1;
+                while (j < b && positions[order[j]] == pos) {
+                    j++;
+                }
+                int cohort = j - i;
+                int[] ids = new int[cohort];
+                long[] toks = new long[cohort];
+                for (int k = 0; k < cohort; k++) {
+                    int src = order[i + k];
+                    ids[k] = requestIds[src];
+                    toks[k] = lastTokens[src];
+                }
+                for (QwenModel m : models) {
+                    if (m.kvCachePool() != null) {
+                        m.kvCachePool().activateStep(ids);
+                    }
+                    if (m.deltaNetStatePool() != null) {
+                        m.deltaNetStatePool().activateStep(ids);
+                    }
+                }
+                Tensor[] tokenShards = new Tensor[models.length];
+                for (int r = 0; r < models.length; r++) {
+                    tokenShards[r] = Tensor.of(toks).reshape(cohort, 1).to(models[r].device());
+                }
+                Tensor[] logits = forwardAll(tokenShards, pos, pos + 1, tpExecutor, false);
+                for (Tensor t : tokenShards) {
+                    t.close();
+                }
+                for (QwenModel m : models) {
+                    if (m.deltaNetStatePool() != null) {
+                        m.deltaNetStatePool().scatterActive();
+                    }
+                }
+                try (var last = Index.of(-1)) {
+                    Tensor row = logits[0].get(Index.Colon, last).reshape(cohort, -1);
+                    for (int k = 0; k < cohort; k++) {
+                        try (var rowIdx = Index.of(k)) {
+                            Tensor one = row.get(rowIdx).unsqueeze(0);
+                            one.promoteToParent();
+                            parts[order[i + k]] = one;
+                        }
+                    }
+                    row.close();
+                }
+                for (Tensor l : logits) {
+                    l.close();
+                }
+                i = j;
+            }
+        }
+        if (b == 1) {
+            return parts[0];
+        }
+        Tensor cat = Tensor.vstack(parts);
+        for (Tensor p : parts) {
+            p.close();
+        }
+        return cat;
+    }
+
+    @Override
+    public void finish(int requestId, int[] sequenceTokens) {
+        for (QwenModel m : models) {
+            if (m.kvCachePool() != null) {
+                m.kvCachePool().finishRequest(requestId, sequenceTokens);
+            }
+            if (m.deltaNetStatePool() != null) {
+                m.deltaNetStatePool().unbindRequest(requestId);
+            }
+        }
+    }
+
+    @Override
+    public void evict(int requestId) {
+        for (QwenModel m : models) {
+            if (m.kvCachePool() != null) {
+                m.kvCachePool().unbindRequest(requestId);
+            }
+            if (m.deltaNetStatePool() != null) {
+                m.deltaNetStatePool().unbindRequest(requestId);
+            }
+        }
     }
 }
