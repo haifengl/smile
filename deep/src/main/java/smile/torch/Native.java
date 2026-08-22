@@ -491,9 +491,17 @@ public final class Native {
                     g.handle(), beta.handle(), state.handle(),
                     qkL2norm ? 1 : 0);
         } catch (Throwable t) {
+            String err = lastError();
+            if (err != null && !err.isEmpty()) {
+                throw new RuntimeException(err, t);
+            }
             return null;
         }
         if (out == null || out.address() == 0) {
+            String err = lastError();
+            if (err != null && !err.isEmpty()) {
+                throw new RuntimeException(err);
+            }
             return null;
         }
         return new Tensor(out);
