@@ -401,4 +401,35 @@ public class KvCachePoolTest {
             pool.unbindRequest(id2);
         }
     }
+
+    @Test
+    public void testGivenRaggedPutWhenBuildMetadataThenLastPageLensMatchPositions() {
+        // Given
+        try (var pool = new KvCachePool(1, 128, 2, 16, 16, Device.CPU(), ScalarType.Float)) {
+            pool.setPrefixReuseEnabled(false);
+            int id1 = pool.bindRequest(new int[]{1, 2, 3, 4}, 64);
+            int id2 = pool.bindRequest(new int[]{5, 6, 7, 8}, 64);
+            pool.activateStep(id1, id2);
+
+            int[] startPos = {9, 24};
+            Tensor k = Tensor.ones(2, 1, 2, 16);
+            Tensor v = Tensor.full(2.0f, 2, 1, 2, 16);
+            pool.put(0, startPos, k, v);
+            k.close();
+            v.close();
+
+            int[] cacheLens = {startPos[0] + 1, startPos[1] + 1}; // 10, 25
+            try (var meta = pool.buildFlashInferMetadata(cacheLens)) {
+                int[] indptr = meta.pagedKvIndptr().intArray();
+                assertArrayEquals(new int[]{0, 1, 3}, indptr);
+                int[] last = meta.pagedKvLastPageLen().intArray();
+                // len 10 → last page 10; len 25 → last page 9 (25 % 16)
+                assertEquals(10, last[0]);
+                assertEquals(9, last[1]);
+            }
+
+            pool.unbindRequest(id1);
+            pool.unbindRequest(id2);
+        }
+    }
 }

@@ -357,6 +357,69 @@ public class QwenModel extends LayerBlock {
         }
     }
 
+    /**
+     * Decode forward with per-row absolute positions ({@code seqLen} must be 1).
+     *
+     * @param tokens    token ids {@code [B, 1]}.
+     * @param positions write position per batch row.
+     * @return logits {@code [B, 1, V]}.
+     */
+    public Tensor forward(Tensor tokens, int[] positions) {
+        return forward(tokens, positions, false);
+    }
+
+    /**
+     * Decode forward with per-row absolute positions.
+     *
+     * @param tokens         token ids {@code [B, 1]}.
+     * @param positions      write position per batch row.
+     * @param allTokenLogits unused for {@code S == 1} (kept for API symmetry).
+     * @return logits in float32.
+     */
+    public Tensor forward(Tensor tokens, int[] positions, boolean allTokenLogits) {
+        if (positions == null || positions.length != (int) tokens.shape()[0]) {
+            throw new IllegalArgumentException("positions length must equal batch size");
+        }
+        if (tokens.shape()[1] != 1) {
+            throw new IllegalArgumentException("ragged forward requires seqLen == 1");
+        }
+        AutoScope scope = new AutoScope();
+        Tensor.push(scope);
+        Device device = tokens.device();
+        long freeBefore = cudaFreeBytes(device);
+        try {
+            Tensor h = tokEmbeddings.forward(tokens);
+            Tensor cos = PartialRotaryEncoding.gather(rope.cos(), positions);
+            Tensor sin = PartialRotaryEncoding.gather(rope.sin(), positions);
+
+            for (int i = 0; i < layers.size(); i++) {
+                Tensor next = layers.get(i).forward(h, positions, cos, sin, null);
+                h.close();
+                h = next;
+            }
+
+            Tensor normalized = norm.forward(h);
+            h.close();
+            Tensor logitsF = lmHead.forward(normalized);
+            normalized.close();
+            Tensor logits = logitsF.to(ScalarType.Float);
+            if (logits != logitsF) {
+                logitsF.close();
+            }
+            logits.promoteToParent();
+            return logits;
+        } finally {
+            Tensor.pop();
+            long freeAfter = cudaFreeBytes(device);
+            if (freeBefore >= 0 && freeAfter >= 0 && logger.isDebugEnabled()) {
+                logger.debug("tpRank={}: ragged forward freeMiB {} -> {}",
+                        tpRank,
+                        freeBefore / (1024 * 1024),
+                        freeAfter / (1024 * 1024));
+            }
+        }
+    }
+
     @Override
     public Tensor forward(Tensor tokens) {
         return forward(tokens, 0);

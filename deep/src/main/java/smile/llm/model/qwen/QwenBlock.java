@@ -119,13 +119,30 @@ public class QwenBlock {
      * @return block output.
      */
     public Tensor forward(Tensor x, int startPos, Tensor cos, Tensor sin, Tensor mask) {
+        int batch = (int) x.shape()[0];
+        int[] positions = new int[batch];
+        java.util.Arrays.fill(positions, startPos);
+        return forward(x, positions, cos, sin, mask);
+    }
+
+    /**
+     * Forward with per-row cache write positions (full-attn layers).
+     *
+     * @param x         hidden states.
+     * @param positions absolute write position per batch row.
+     * @param cos       partial RoPE cosines.
+     * @param sin       partial RoPE sines.
+     * @param mask      causal mask, or {@code null}.
+     * @return block output.
+     */
+    public Tensor forward(Tensor x, int[] positions, Tensor cos, Tensor sin, Tensor mask) {
         AutoScope scope = new AutoScope();
         Tensor.push(scope);
         try {
             Tensor residual = x;
             Tensor h = inputNorm.forward(x);
             Tensor mixed = selfAttn != null
-                    ? selfAttn.forward(h, startPos, cos, sin, mask)
+                    ? selfAttn.forward(h, positions, cos, sin, mask)
                     : linearAttn.forward(h);
             h.close();
             Tensor afterAttn = residual.add(mixed);

@@ -61,8 +61,8 @@ public final class PartialRotaryEncoding {
      *
      * @param xq        query {@code [B, S, H, D]}.
      * @param xk        key {@code [B, S, Hkv, D]}.
-     * @param cos       cosines for the current positions {@code [S, rotaryDim]}
-     *                  (or broadcastable to {@code [1, S, 1, rotaryDim]}).
+     * @param cos       cosines for the current positions {@code [S, rotaryDim]},
+     *                  {@code [B, S, rotaryDim]} (per-row decode), or broadcastable.
      * @param sin       sines with the same layout as {@code cos}.
      * @param rotaryDim number of leading head dims to rotate (even).
      * @return rotated (query, key).
@@ -155,36 +155,74 @@ public final class PartialRotaryEncoding {
     }
 
     /**
-     * Reshapes {@code [S, R]} (or {@code [1, S, R]}) cos/sin to
-     * {@code [1, S, 1, R]} for {@code [B, S, H, D]} query/key.
+     * Gathers cos/sin rows for per-request decode positions.
+     *
+     * @param table     {@code [maxPos, rotaryDim]} table.
+     * @param positions absolute positions, one per batch row.
+     * @return {@code [B, 1, rotaryDim]} (caller owns).
+     */
+    public static Tensor gather(Tensor table, int[] positions) {
+        if (positions == null || positions.length == 0) {
+            throw new IllegalArgumentException("positions must be non-empty");
+        }
+        try (var idx = Index.of(positions);
+             Tensor rows = table.get(idx); // [B, R]
+             Tensor unsqueezed = rows.unsqueeze(1)) { // [B, 1, R]
+            Tensor copy = unsqueezed.copy();
+            copy.promoteToParent();
+            return copy;
+        }
+    }
+
+    /**
+     * Reshapes {@code [S, R]}, {@code [B, S, R]}, or {@code [R]} cos/sin for
+     * {@code [B, S, H, D]} query/key broadcast.
      */
     static Tensor broadcastCosSin(Tensor table, Tensor xq) {
         long[] shape = table.shape();
+        long batch = xq.shape()[0];
+        long xSeq = xq.shape()[1];
         long seq;
         long rot;
         if (shape.length == 2) {
             seq = shape[0];
             rot = shape[1];
-        } else if (shape.length == 1) {
+            if (seq != xSeq) {
+                throw new IllegalArgumentException(
+                        "cos/sin seqLen=" + seq + " != query seqLen=" + xSeq);
+            }
+            return table.view(1, seq, 1, rot);
+        }
+        if (shape.length == 1) {
             // Single position decode: [R] → treat as S=1.
             seq = 1;
             rot = shape[0];
-            table = table.view(1, rot);
-        } else if (shape.length == 3) {
-            // [1, S, R] or [B, S, R]
-            seq = shape[shape.length - 2];
-            rot = shape[shape.length - 1];
-            table = table.reshape(seq, rot);
-        } else {
-            throw new IllegalArgumentException(
-                    "cos/sin must be [S,R] or [R], got " + Arrays.toString(shape));
+            if (seq != xSeq) {
+                throw new IllegalArgumentException(
+                        "cos/sin seqLen=" + seq + " != query seqLen=" + xSeq);
+            }
+            return table.view(1, 1, 1, rot);
         }
-        long xSeq = xq.shape()[1];
-        if (seq != xSeq) {
+        if (shape.length == 3) {
+            // [B, S, R] per-row decode, or [1, S, R].
+            long b = shape[0];
+            seq = shape[1];
+            rot = shape[2];
+            if (seq != xSeq) {
+                throw new IllegalArgumentException(
+                        "cos/sin seqLen=" + seq + " != query seqLen=" + xSeq);
+            }
+            if (b == batch) {
+                return table.view(batch, seq, 1, rot);
+            }
+            if (b == 1) {
+                return table.view(1, seq, 1, rot);
+            }
             throw new IllegalArgumentException(
-                    "cos/sin seqLen=" + seq + " != query seqLen=" + xSeq);
+                    "cos/sin batch=" + b + " incompatible with query batch=" + batch);
         }
-        return table.view(1, seq, 1, rot);
+        throw new IllegalArgumentException(
+                "cos/sin must be [S,R], [B,S,R], or [R], got " + Arrays.toString(shape));
     }
 
     /**

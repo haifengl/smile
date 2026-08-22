@@ -29,6 +29,7 @@ import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.cache.KvCachePool;
 import smile.llm.transformer.RotaryPositionalEncoding;
+import smile.llm.transformer.RotaryPositionalEncoding;
 import smile.util.AutoScope;
 
 import static smile.torch.smile_torch_h.smile_module_free;
@@ -201,10 +202,15 @@ public class LlamaModel extends LayerBlock {
      */
     public Tensor forward(Tensor tokens, int startPos) {
         long[] shape = tokens.shape();
-        int seqlen = (int) shape[1];
+        int batch = (int) shape[0];
+        int[] positions = new int[batch];
+        java.util.Arrays.fill(positions, startPos);
+        // Prefill may use seqLen > 1 with a uniform start; gather only for decode S=1
+        // when callers pass int[]. Keep scalar path's contiguous cis slice here.
+        long seqlen = shape[1];
         AutoScope scope = new AutoScope();
         Tensor.push(scope);
-        try (var pos = Index.slice(startPos, startPos + seqlen)) {
+        try (var pos = Index.slice(startPos, startPos + (int) seqlen)) {
             Tensor h = tokEmbeddings.forward(tokens);
             Tensor freqs = cis.get(pos);
 
@@ -231,7 +237,48 @@ public class LlamaModel extends LayerBlock {
             }
 
             for (var layer : layers) {
-                Tensor next = layer.forward(h, startPos, freqs, mask);
+                Tensor next = layer.forward(h, positions, freqs, mask);
+                h.close();
+                h = next;
+            }
+
+            Tensor normalized = norm.forward(h);
+            h.close();
+            Tensor logitsF = output.forward(normalized);
+            normalized.close();
+            Tensor logits = logitsF.to(ScalarType.Float);
+            if (logits != logitsF) {
+                logitsF.close();
+            }
+            logits.promoteToParent();
+            return logits;
+        } finally {
+            Tensor.pop();
+        }
+    }
+
+    /**
+     * Decode forward with per-row absolute positions ({@code seqLen} must be 1).
+     *
+     * @param tokens    token ids {@code [B, 1]}.
+     * @param positions write position per batch row.
+     * @return logits {@code [B, 1, V]}.
+     */
+    public Tensor forward(Tensor tokens, int[] positions) {
+        if (positions == null || positions.length != (int) tokens.shape()[0]) {
+            throw new IllegalArgumentException("positions length must equal batch size");
+        }
+        if (tokens.shape()[1] != 1) {
+            throw new IllegalArgumentException("ragged forward requires seqLen == 1");
+        }
+        AutoScope scope = new AutoScope();
+        Tensor.push(scope);
+        try {
+            Tensor h = tokEmbeddings.forward(tokens);
+            Tensor freqs = RotaryPositionalEncoding.gather(cis, positions);
+
+            for (var layer : layers) {
+                Tensor next = layer.forward(h, positions, freqs, null);
                 h.close();
                 h = next;
             }

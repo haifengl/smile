@@ -149,12 +149,32 @@ public class GroupedQueryAttention implements Attention {
 
     @Override
     public Tensor forward(Tensor x, int startPos, Tensor cis, Tensor mask) {
+        int batch = (int) x.shape()[0];
+        int[] positions = new int[batch];
+        java.util.Arrays.fill(positions, startPos);
+        return forward(x, positions, cis, mask);
+    }
+
+    @Override
+    public Tensor forward(Tensor x, int[] positions, Tensor cis, Tensor mask) {
         if (cachePool == null) {
             throw new IllegalStateException("KV cache pool not installed; call setCachePool first");
+        }
+        if (positions == null || positions.length != (int) x.shape()[0]) {
+            throw new IllegalArgumentException("positions length must equal batch size");
         }
         long[] shape = x.shape();
         int batchSize = (int) shape[0];
         int seqlen = (int) shape[1];
+        if (seqlen != 1) {
+            // Prefill / multi-token windows require a uniform start position.
+            for (int i = 1; i < positions.length; i++) {
+                if (positions[i] != positions[0]) {
+                    throw new IllegalArgumentException(
+                            "ragged positions only supported for decode seqLen==1");
+                }
+            }
+        }
 
         AutoScope scope = new AutoScope();
         Tensor.push(scope);
@@ -171,31 +191,44 @@ public class GroupedQueryAttention implements Attention {
             Tensor kRope = tuple._2();
 
             // put copies into the pool; RoPE keys are not needed afterward.
-            cachePool.put(layerId, startPos, kRope, xv);
+            cachePool.put(layerId, positions, kRope, xv);
             kRope.close();
 
-            int cacheLen = startPos + seqlen;
+            int[] cacheLens = new int[batchSize];
+            for (int b = 0; b < batchSize; b++) {
+                cacheLens[b] = positions[b] + seqlen;
+            }
+            boolean uniform = true;
+            for (int b = 1; b < batchSize; b++) {
+                if (cacheLens[b] != cacheLens[0]) {
+                    uniform = false;
+                    break;
+                }
+            }
             Tensor qT = qRope.transpose(1, 2);
             Tensor attn;
             if (AttentionBackends.current() == AttentionBackend.FLASHINFER) {
-                FlashInferKvMetadata meta;
-                if (seqlen == 1 && batchSize > 1) {
-                    int[] lengths = new int[batchSize];
-                    java.util.Arrays.fill(lengths, cacheLen);
-                    meta = cachePool.buildFlashInferMetadata(lengths);
-                } else {
-                    meta = cachePool.buildFlashInferMetadata(cacheLen);
-                }
+                FlashInferKvMetadata meta = cachePool.buildFlashInferMetadata(cacheLens);
                 try (meta) {
-                    // Match torch_native: causality comes from {@code mask}, not is_causal.
-                    var ctx = AttentionContext.paged(
-                            0.0, false,
-                            numLocalHeads, numLocalKvHeads, headDim,
-                            layerId, startPos, seqlen, cacheLen,
-                            cachePool, meta, cachePool.flashInferWorkspace());
+                    var ctx = uniform
+                            ? AttentionContext.paged(
+                                    0.0, false,
+                                    numLocalHeads, numLocalKvHeads, headDim,
+                                    layerId, positions[0], seqlen, cacheLens[0],
+                                    cachePool, meta, cachePool.flashInferWorkspace())
+                            : AttentionContext.pagedRagged(
+                                    0.0, false,
+                                    numLocalHeads, numLocalKvHeads, headDim,
+                                    layerId, seqlen, positions, cacheLens,
+                                    cachePool, meta, cachePool.flashInferWorkspace());
                     attn = AttentionBackends.kernel().forward(qT, null, null, mask, ctx);
                 }
             } else {
+                if (!uniform) {
+                    throw new IllegalStateException(
+                            "ragged decode requires FlashInfer; torch_native needs equal positions");
+                }
+                int cacheLen = cacheLens[0];
                 var cached = cachePool.get(layerId, cacheLen);
                 Tensor keys = cached._1();
                 Tensor values = cached._2();

@@ -82,4 +82,24 @@ public class PartialRotaryEncodingTest {
         xk.close();
         table.close();
     }
+
+    @Test
+    public void testGivenGatherWhenTwoPositionsThenShapeIsBatchSeqRot() {
+        int rotaryDim = 8;
+        var table = PartialRotaryEncoding.computeCosSin(rotaryDim, 64, 10000.0);
+        int[] positions = {2, 11};
+        Tensor cos = PartialRotaryEncoding.gather(table.cos(), positions);
+        Tensor sin = PartialRotaryEncoding.gather(table.sin(), positions);
+        assertArrayEquals(new long[]{2, 1, rotaryDim}, cos.shape());
+        assertArrayEquals(new long[]{2, 1, rotaryDim}, sin.shape());
+
+        Tensor xq = Tensor.ones(2, 1, 2, 8);
+        Tensor cosB = PartialRotaryEncoding.broadcastCosSin(cos, xq);
+        assertArrayEquals(new long[]{2, 1, 1, rotaryDim}, cosB.shape());
+
+        cos.close();
+        sin.close();
+        xq.close();
+        table.close();
+    }
 }

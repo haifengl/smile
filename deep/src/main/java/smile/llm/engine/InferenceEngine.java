@@ -489,18 +489,22 @@ public final class InferenceEngine implements AutoCloseable {
                 prefills++;
             }
         }
-        logger.debug("Decode step: batch={} inFlight={} prefilling={} queued={} kvFree={}",
-                b, active.size(), prefills, queuedCount.get(), kvFreeSlots());
         int[] ids = new int[b];
         int[] toks = new int[b];
         int[] positions = new int[b];
+        int minPos = Integer.MAX_VALUE;
+        int maxPos = Integer.MIN_VALUE;
         for (int i = 0; i < b; i++) {
             Active a = decoding.get(i);
             ids[i] = a.kvRequestId;
             toks[i] = a.lastToken;
             // Write position of the last generated (or first sampled) token.
             positions[i] = a.promptLen + a.completion.size() - 1;
+            minPos = Math.min(minPos, positions[i]);
+            maxPos = Math.max(maxPos, positions[i]);
         }
+        logger.debug("Decode step: batch={} positions=[{}..{}] inFlight={} prefilling={} queued={} kvFree={}",
+                b, minPos, maxPos, active.size(), prefills, queuedCount.get(), kvFreeSlots());
         long t0 = System.nanoTime();
         try (Tensor logits = executor.decodeStep(ids, toks, positions)) {
             decodeMsTotal.addAndGet((System.nanoTime() - t0) / 1_000_000L);

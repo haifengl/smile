@@ -42,6 +42,8 @@ import smile.llm.LanguageModel;
 import smile.llm.Message;
 import smile.llm.cache.KvCachePool;
 import smile.llm.checkpoint.SafeTensorsLoaderThreads;
+import smile.llm.attention.AttentionBackend;
+import smile.llm.attention.AttentionBackends;
 import smile.torch.smile_torch_h;
 import smile.util.AutoScope;
 
@@ -1160,12 +1162,35 @@ public class Llama implements LanguageModel, smile.llm.engine.ModelExecutor {
             throw new IllegalArgumentException("decodeStep batch must be non-empty");
         }
 
-        // Cohort by position so existing uniform RoPE / put paths apply.
+        // FlashInfer: one forward over mixed positions (ragged CSR + per-row RoPE).
+        if (AttentionBackends.current() == AttentionBackend.FLASHINFER) {
+            long[] toks = new long[b];
+            for (int i = 0; i < b; i++) {
+                toks[i] = lastTokens[i];
+            }
+            model.kvCachePool().activateStep(requestIds);
+            try (var guard = Tensor.noGradGuard();
+                 var scope = new AutoScope()) {
+                Tensor.push(scope);
+                try {
+                    try (Tensor tok = Tensor.of(toks).reshape(b, 1).to(model.device());
+                         Tensor logits = model.forward(tok, positions);
+                         var last = Index.of(-1)) {
+                        Tensor out = logits.get(Index.Colon, last).reshape(b, -1);
+                        out.promoteToParent();
+                        return out;
+                    }
+                } finally {
+                    Tensor.pop();
+                }
+            }
+        }
+
+        // torch_native: cohort by position (uniform cache length / RoPE slice).
         int[] order = new int[b];
         for (int i = 0; i < b; i++) {
             order[i] = i;
         }
-        // Stable sort by position.
         for (int i = 1; i < b; i++) {
             int oi = order[i];
             int pi = positions[oi];
@@ -1202,7 +1227,6 @@ public class Llama implements LanguageModel, smile.llm.engine.ModelExecutor {
                              Tensor logits = model.forward(tok, pos);
                              var last = Index.of(-1)) {
                             Tensor row = logits.get(Index.Colon, last).reshape(cohort, -1);
-                            // Split cohort rows back to original order slots.
                             for (int k = 0; k < cohort; k++) {
                                 try (var rowIdx = Index.of(k)) {
                                     Tensor one = row.get(rowIdx).unsqueeze(0);

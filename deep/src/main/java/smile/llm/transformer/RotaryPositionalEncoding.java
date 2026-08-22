@@ -17,6 +17,7 @@
 package smile.llm.transformer;
 
 import java.util.Arrays;
+import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.util.AutoScope;
@@ -116,9 +117,32 @@ public interface RotaryPositionalEncoding {
     }
 
     /**
+     * Gathers frequency rows for per-request decode positions.
+     *
+     * @param cis       full table {@code [maxPos, headDim/2]} (complex).
+     * @param positions absolute positions, one per batch row.
+     * @return complex freqs {@code [B, headDim/2]} (caller owns).
+     */
+    public static Tensor gather(Tensor cis, int[] positions) {
+        if (positions == null || positions.length == 0) {
+            throw new IllegalArgumentException("positions must be non-empty");
+        }
+        try (var idx = Index.of(positions)) {
+            Tensor gathered = cis.get(idx);
+            gathered.promoteToParent();
+            return gathered;
+        }
+    }
+
+    /**
      * Reshapes the cis tensor to match the shape of the target tensor x for
      * broadcasting purposes, allowing for element-wise operations between
      * tensors of compatible shapes.
+     *
+     * <p>Uniform prefill uses {@code cis} shaped {@code [S, D]} → broadcast
+     * {@code [1, S, 1, D]}. Per-row decode uses gathered {@code [B, D]} with
+     * {@code S == 1} → {@code [B, 1, 1, D]}.
+     *
      * @param cis the frequency tensor for complex exponentials.
      * @param x the target tensor for broadcasting.
      * @return the reshaped cis tensor view.
@@ -126,10 +150,18 @@ public interface RotaryPositionalEncoding {
     static Tensor reshapeForBroadcast(Tensor cis, Tensor x) {
         int dim = x.dim();
         long[] xs = x.shape();
+        long[] cs = cis.shape();
         long[] shape = new long[dim];
         Arrays.fill(shape, 1);
+        shape[dim - 1] = xs[dim - 1];
+        // Per-row decode freqs: [B, D] with query seqLen == 1.
+        if (cs.length == 2 && cs[0] == xs[0] && xs[1] == 1) {
+            shape[0] = xs[0];
+            shape[1] = 1;
+            return cis.view(shape);
+        }
+        // Uniform: [S, D] → [1, S, …, D]
         shape[1] = xs[1];
-        shape[dim-1] = xs[dim-1];
         return cis.view(shape);
     }
 
