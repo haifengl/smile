@@ -146,11 +146,21 @@ public class ChatService {
             if (model != null) {
                 applyPrefixReuse(model, kvCache.prefixReuse());
                 if (model instanceof smile.llm.engine.ModelExecutor exec) {
-                    engine = new smile.llm.engine.InferenceEngine(exec, Math.max(1, config.maxBatchSize()));
+                    int maxInFlight = Math.max(1, config.maxBatchSize());
+                    int maxDecode = config.maxDecodeBatch() > 0
+                            ? config.maxDecodeBatch() : maxInFlight;
+                    engine = new smile.llm.engine.InferenceEngine(
+                            exec,
+                            maxInFlight,
+                            maxDecode,
+                            Math.max(1, config.prefillTokenBudget()),
+                            config.admissionTimeoutMs());
                 }
-                logger.infof("Chat model ready: id=%s family=%s maxSeqLen=%d (config max-seq-len=%d) maxInFlight=%d",
+                logger.infof("Chat model ready: id=%s family=%s maxSeqLen=%d (config max-seq-len=%d) "
+                                + "maxInFlight=%d maxDecodeBatch=%d",
                         modelId, model.family(), model.maxSeqLen(), config.maxSeqLen(),
-                        engine != null ? engine.maxInFlight() : 1);
+                        engine != null ? engine.maxInFlight() : 1,
+                        engine != null ? engine.maxDecodeBatch() : 1);
             }
         } catch (Exception ex) {
             // Keep the service up in an unavailable state so classic ML / ONNX
@@ -391,7 +401,14 @@ public class ChatService {
             var handle = engine.submit(smile.llm.engine.GenerationRequest.ofTokens(
                     prompt, maxGenLen, request.temperature, request.topP,
                     request.logprobs, request.seed, listener));
-            handle.future().whenComplete((r, t) -> throughput.finish());
+            handle.future().whenComplete((r, t) -> {
+                throughput.finish();
+                logger.infof(
+                        "Engine stats: queueWaitMsTotal=%d prefillMsTotal=%d decodeMsTotal=%d "
+                                + "kvFreePages=%d inFlight=%d queueSize=%d",
+                        engine.queueWaitMsTotal(), engine.prefillMsTotal(), engine.decodeMsTotal(),
+                        engine.kvFreePages(), engine.inFlight(), engine.queueSize());
+            });
             return handle;
         }
         var future = new java.util.concurrent.CompletableFuture<ChatCompletion>();

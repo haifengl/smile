@@ -31,7 +31,7 @@ import smile.llm.cache.KvCachePool;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Unit tests for {@link InferenceEngine} queue / abort behavior (no GPU).
+ * Unit tests for {@link InferenceEngine} queue / abort / continuous-batching behavior.
  */
 public class InferenceEngineTest {
 
@@ -98,7 +98,156 @@ public class InferenceEngineTest {
         }
     }
 
-    /** Minimal ModelExecutor that does not touch CUDA. */
+    @Test
+    public void testGivenStepApiWhenTwoRequestsThenBothComplete() throws Exception {
+        StepStub stub = new StepStub();
+        try (var engine = new InferenceEngine(stub, 2, 2, 64, 5_000)) {
+            var a = engine.submit(GenerationRequest.ofTokens(
+                    new int[]{1, 2}, 3, 0.0, 0.9, false, 0, null));
+            var b = engine.submit(GenerationRequest.ofTokens(
+                    new int[]{3, 4}, 3, 0.0, 0.9, false, 0, null));
+            ChatCompletion ca = a.future().get(10, TimeUnit.SECONDS);
+            ChatCompletion cb = b.future().get(10, TimeUnit.SECONDS);
+            assertEquals(FinishReason.stop, ca.reason());
+            assertEquals(FinishReason.stop, cb.reason());
+            assertTrue(stub.maxConcurrentBound.get() >= 2,
+                    "expected overlapping binds, got " + stub.maxConcurrentBound.get());
+            assertTrue(stub.decodeCalls.get() >= 1);
+        }
+    }
+
+    @Test
+    public void testGivenStepApiWhenAbortRunningThenEvicts() throws Exception {
+        StepStub stub = new StepStub();
+        stub.blockDecode = true;
+        try (var engine = new InferenceEngine(stub, 2, 2, 64, 5_000)) {
+            var handle = engine.submit(GenerationRequest.ofTokens(
+                    new int[]{1, 2}, 50, 0.0, 0.9, false, 0, null));
+            stub.awaitDecode(2, TimeUnit.SECONDS);
+            handle.abort();
+            stub.releaseDecode();
+            try {
+                handle.future().get(5, TimeUnit.SECONDS);
+                fail("expected cancellation");
+            } catch (Exception e) {
+                Throwable c = e.getCause() != null ? e.getCause() : e;
+                assertTrue(c instanceof CancellationException, "got " + c);
+            }
+            assertTrue(stub.evicted.get() >= 1);
+        }
+    }
+
+    /**
+     * CPU step-API stub that returns peaked logits so greedy sampling is deterministic.
+     */
+    static final class StepStub implements ModelExecutor {
+        final AtomicInteger nextId = new AtomicInteger(1);
+        final AtomicInteger bound = new AtomicInteger();
+        final AtomicInteger maxConcurrentBound = new AtomicInteger();
+        final AtomicInteger decodeCalls = new AtomicInteger();
+        final AtomicInteger evicted = new AtomicInteger();
+        volatile boolean blockDecode;
+        private final Object decodeLock = new Object();
+        private boolean decodeStarted;
+        private boolean decodeReleased;
+
+        void awaitDecode(long timeout, TimeUnit unit) throws InterruptedException {
+            long deadline = System.nanoTime() + unit.toNanos(timeout);
+            synchronized (decodeLock) {
+                while (!decodeStarted) {
+                    long rem = deadline - System.nanoTime();
+                    if (rem <= 0) {
+                        throw new InterruptedException("timeout waiting for decode");
+                    }
+                    decodeLock.wait(rem / 1_000_000L, (int) (rem % 1_000_000L));
+                }
+            }
+        }
+
+        void releaseDecode() {
+            synchronized (decodeLock) {
+                decodeReleased = true;
+                decodeLock.notifyAll();
+            }
+        }
+
+        private smile.deep.tensor.Tensor peakedLogits(int batch, int tokenId) {
+            float[] data = new float[batch * 16];
+            for (int b = 0; b < batch; b++) {
+                data[b * 16 + tokenId] = 10f;
+            }
+            return smile.deep.tensor.Tensor.of(data, batch, 16);
+        }
+
+        @Override public boolean supportsStepApi() { return true; }
+        @Override public LanguageModel model() {
+            return new LanguageModel() {
+                @Override public String family() { return "test/step"; }
+                @Override public String name() { return "step"; }
+                @Override public int maxSeqLen() { return 64; }
+                @Override public int[] encodeChat(Message... dialog) { return new int[]{1}; }
+                @Override
+                public ChatCompletion generate(int[] prompt, int maxGenLen, double temperature,
+                                               double topp, boolean logprobs, long seed,
+                                               GenerationListener listener,
+                                               BooleanSupplier cancelRequested) {
+                    throw new UnsupportedOperationException();
+                }
+                @Override
+                public ChatCompletion chat(Message[] dialog, int maxGenLen, double temperature,
+                                           double topp, boolean logprobs, long seed,
+                                           GenerationListener listener,
+                                           BooleanSupplier cancelRequested) {
+                    throw new UnsupportedOperationException();
+                }
+            };
+        }
+        @Override public KvCachePool kvCachePool() { return null; }
+        @Override public int padToken() { return 0; }
+        @Override public int[] stopTokens() { return new int[]{2}; }
+        @Override public String decode(int[] tokens) { return "ok"; }
+        @Override public String tryDecode(int[] tokens, boolean skipSpecial) { return "ok"; }
+        @Override public int bind(int[] prompt, int totalCapacity) {
+            int n = bound.incrementAndGet();
+            maxConcurrentBound.updateAndGet(m -> Math.max(m, n));
+            return nextId.getAndIncrement();
+        }
+        @Override public int prefixLen(int requestId) { return 0; }
+        @Override public smile.deep.tensor.Tensor prefill(int requestId, int[] prompt, int prefixLen) {
+            return peakedLogits(1, 9);
+        }
+        @Override public smile.deep.tensor.Tensor prefillChunk(int requestId, int[] prompt, int from, int to) {
+            if (to < prompt.length) {
+                return null;
+            }
+            return peakedLogits(1, 9);
+        }
+        @Override public smile.deep.tensor.Tensor decodeStep(int[] requestIds, int[] lastTokens, int[] positions) {
+            decodeCalls.incrementAndGet();
+            synchronized (decodeLock) {
+                decodeStarted = true;
+                decodeLock.notifyAll();
+                while (blockDecode && !decodeReleased) {
+                    try {
+                        decodeLock.wait(50);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+            }
+            return peakedLogits(requestIds.length, 2);
+        }
+        @Override public void finish(int requestId, int[] sequenceTokens) {
+            bound.decrementAndGet();
+        }
+        @Override public void evict(int requestId) {
+            evicted.incrementAndGet();
+            bound.decrementAndGet();
+        }
+    }
+
+    /** Minimal ModelExecutor that does not touch CUDA (generate fallback). */
     static final class StubExecutor implements ModelExecutor {
         volatile boolean blockFirst;
         volatile boolean loopUntilCancel;
@@ -196,5 +345,19 @@ public class InferenceEngineTest {
         @Override public int[] stopTokens() { return new int[]{2}; }
         @Override public String decode(int[] tokens) { return ""; }
         @Override public String tryDecode(int[] tokens, boolean skipSpecial) { return ""; }
+
+        @Override public boolean supportsStepApi() { return false; }
+        @Override public int bind(int[] prompt, int totalCapacity) {
+            throw new UnsupportedOperationException();
+        }
+        @Override public int prefixLen(int requestId) { return 0; }
+        @Override public smile.deep.tensor.Tensor prefill(int requestId, int[] prompt, int prefixLen) {
+            throw new UnsupportedOperationException();
+        }
+        @Override public smile.deep.tensor.Tensor decodeStep(int[] requestIds, int[] lastTokens, int[] positions) {
+            throw new UnsupportedOperationException();
+        }
+        @Override public void finish(int requestId, int[] sequenceTokens) {}
+        @Override public void evict(int requestId) {}
     }
 }

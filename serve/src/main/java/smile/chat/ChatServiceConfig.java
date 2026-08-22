@@ -61,6 +61,28 @@ public interface ChatServiceConfig {
     int maxBatchSize();
 
     /**
+     * Max requests in one GPU {@code decodeStep}. Defaults to {@code 0} meaning
+     * the same as {@link #maxBatchSize()}. Set lower to cap decode batching
+     * independently of Fluid Injection admission.
+     */
+    @WithDefault("0")
+    int maxDecodeBatch();
+
+    /**
+     * Max prompt tokens prefilled per scheduler tick (chunked prefill budget).
+     * Long prompts yield to decode so short requests are not stalled.
+     */
+    @WithDefault("2048")
+    int prefillTokenBudget();
+
+    /**
+     * Max milliseconds a job may wait for KV admission before the future fails.
+     * {@code 0} waits indefinitely (until Instant Eviction frees capacity).
+     */
+    @WithDefault("120000")
+    long admissionTimeoutMs();
+
+    /**
      * SGLang {@code --mem-fraction-static}: fraction {@code y} of <em>total</em>
      * GPU memory reserved for the static region (model weights, DeltaNet state
      * pools, and KV cache). The remainder {@code (1 − y) × total} stays free for

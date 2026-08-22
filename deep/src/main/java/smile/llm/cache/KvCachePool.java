@@ -682,6 +682,17 @@ public class KvCachePool implements AutoCloseable {
     }
 
     /**
+     * Page-aligned matched prefix length for a multi-request binding.
+     *
+     * @param requestId id returned by {@link #bindRequest}.
+     * @return matched prefix length, or {@code 0} if unknown.
+     */
+    public int matchedPrefixLen(int requestId) {
+        RequestBinding binding = bindings.get(requestId);
+        return binding == null ? 0 : binding.matchedPrefixLen();
+    }
+
+    /**
      * Instant Eviction: free this request's private pages; unlock its radix node.
      *
      * @param requestId id returned by {@link #bindRequest}.
@@ -862,6 +873,18 @@ public class KvCachePool implements AutoCloseable {
                 endPos, requestCapacity));
     }
 
+    private void ensureRequestRow(int row, int endPos) {
+        ensureBound();
+        if (row < 0 || row >= requestSlots.length) {
+            throw new IllegalArgumentException("KV row out of range: " + row);
+        }
+        if (endPos > requestSlots[row].length) {
+            throw new KvCacheExhaustedException(String.format(
+                    "KV cache exhausted: need endPos=%d, bound capacity=%d (pool does not grow)",
+                    endPos, requestSlots[row].length));
+        }
+    }
+
     /**
      * Writes key/value activations for the bound batch at positions
      * {@code [startPos, startPos + seqlen)}.
@@ -875,13 +898,37 @@ public class KvCachePool implements AutoCloseable {
         long[] shape = k.shape();
         int batch = (int) shape[0];
         int seqlen = (int) shape[1];
-        ensureRequest(batch, startPos + seqlen);
+        int[] starts = new int[batch];
+        Arrays.fill(starts, startPos);
+        put(layer, starts, k, v);
+    }
+
+    /**
+     * Writes key/value activations at a per-row start position (typically
+     * decode {@code seqlen == 1} with unequal positions across the batch).
+     *
+     * @param layer     layer index.
+     * @param startPos  write start position per batch row ({@code length == batch}).
+     * @param k         keys shaped {@code [batch, seqlen, numKvHeads, headDim]}.
+     * @param v         values shaped {@code [batch, seqlen, numKvHeads, headDim]}.
+     */
+    public void put(int layer, int[] startPos, Tensor k, Tensor v) {
+        long[] shape = k.shape();
+        int batch = (int) shape[0];
+        int seqlen = (int) shape[1];
+        if (startPos == null || startPos.length != batch) {
+            throw new IllegalArgumentException("startPos length must equal batch size");
+        }
+        for (int b = 0; b < batch; b++) {
+            ensureRequestRow(b, startPos[b] + seqlen);
+        }
 
         long[] indices = new long[batch * seqlen];
         for (int b = 0; b < batch; b++) {
             long[] slots = requestSlots[b];
+            int start = startPos[b];
             for (int t = 0; t < seqlen; t++) {
-                indices[b * seqlen + t] = slots[startPos + t];
+                indices[b * seqlen + t] = slots[start + t];
             }
         }
 
@@ -976,6 +1023,91 @@ public class KvCachePool implements AutoCloseable {
             lastPageLen[b] = (rem == 0) ? pageSize : rem;
             indptrArr[b] = totalPages;
             totalPages += nPages;
+        }
+        indptrArr[batch] = totalPages;
+
+        int[] flatIndices = new int[totalPages];
+        int cursor = 0;
+        for (int b = 0; b < batch; b++) {
+            long[] slots = requestSlots[b];
+            int nPages = pagesPerBatch[b];
+            for (int p = 0; p < nPages; p++) {
+                int pos = p * pageSize;
+                flatIndices[cursor++] = (int) (slots[pos] / pageSize);
+            }
+        }
+
+        Tensor indptrT;
+        Tensor indicesT;
+        Tensor lastT;
+        if (device.isCUDA()) {
+            try (Tensor iCpu = Tensor.of(indptrArr);
+                 Tensor nCpu = Tensor.of(flatIndices);
+                 Tensor lCpu = Tensor.of(lastPageLen)) {
+                indptrT = iCpu.to(device);
+                indicesT = nCpu.to(device);
+                lastT = lCpu.to(device);
+            }
+        } else {
+            indptrT = Tensor.of(indptrArr);
+            indicesT = Tensor.of(flatIndices);
+            lastT = Tensor.of(lastPageLen);
+        }
+        indptrT.detachFromScopes();
+        indicesT.detachFromScopes();
+        lastT.detachFromScopes();
+        return new FlashInferKvMetadata(indptrT, indicesT, lastT, pageSize);
+    }
+
+    /**
+     * Builds FlashInfer CSR page-table metadata with a per-row cached length
+     * (ragged decode batches).
+     *
+     * @param lengths cached length per active request ({@code length[b] == cacheLen}).
+     * @return CSR metadata; caller owns and must close.
+     */
+    public FlashInferKvMetadata buildFlashInferMetadata(int[] lengths) {
+        ensureBound();
+        if (lengths == null || lengths.length != requestSlots.length) {
+            throw new IllegalArgumentException("lengths length must equal active batch size");
+        }
+        int batch = requestSlots.length;
+        for (int b = 0; b < batch; b++) {
+            if (lengths[b] < 0) {
+                throw new IllegalArgumentException("KV FlashInfer length out of range: " + lengths[b]);
+            }
+            if (lengths[b] > requestSlots[b].length) {
+                throw new IllegalArgumentException("KV FlashInfer length out of range: " + lengths[b]);
+            }
+        }
+        boolean uniform = true;
+        for (int b = 1; b < batch; b++) {
+            if (lengths[b] != lengths[0]) {
+                uniform = false;
+                break;
+            }
+        }
+        if (uniform) {
+            return buildFlashInferMetadata(lengths[0]);
+        }
+
+        int[] indptrArr = new int[batch + 1];
+        int totalPages = 0;
+        int[] lastPageLen = new int[batch];
+        int[] pagesPerBatch = new int[batch];
+        for (int b = 0; b < batch; b++) {
+            int length = lengths[b];
+            if (length == 0) {
+                pagesPerBatch[b] = 0;
+                lastPageLen[b] = 0;
+            } else {
+                int nPages = (length + pageSize - 1) / pageSize;
+                pagesPerBatch[b] = nPages;
+                int rem = length % pageSize;
+                lastPageLen[b] = (rem == 0) ? pageSize : rem;
+            }
+            indptrArr[b] = totalPages;
+            totalPages += pagesPerBatch[b];
         }
         indptrArr[batch] = totalPages;
 
