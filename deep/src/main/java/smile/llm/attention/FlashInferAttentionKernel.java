@@ -41,7 +41,14 @@ public final class FlashInferAttentionKernel implements AttentionKernel {
     @Override
     public Tensor forward(Tensor query, Tensor key, Tensor value, Tensor mask, AttentionContext ctx) {
         if (ctx != null && ctx.isRaggedContiguous()) {
-            return Native.flashInferRaggedAttention(query, key, value, mask, ctx);
+            try {
+                return Native.flashInferRaggedAttention(query, key, value, mask, ctx);
+            } catch (IllegalStateException ex) {
+                if (!ex.getMessage().contains("smile_flashinfer_ragged_attention")) {
+                    throw ex;
+                }
+                return RaggedContiguousAttention.forward(query, key, value, ctx);
+            }
         }
         if (ctx == null || !ctx.isPaged()) {
             throw new IllegalStateException(
