@@ -21,5 +21,5 @@ package smile.llm;
  *
  * @author Haifeng Li
  */
-public sealed interface ContentPart permits TextPart, ImageUrlPart, VideoUrlPart {
+public sealed interface ContentPart permits TextPart, ImageUrlPart, VideoUrlPart, AudioUrlPart {
 }

@@ -23,6 +23,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
+import smile.llm.AudioUrlPart;
 import smile.llm.ContentPart;
 import smile.llm.ImageUrlPart;
 import smile.llm.Message;
@@ -85,6 +86,16 @@ public class MessageDeserializer extends JsonDeserializer<Message> {
                         fps = part.path("video_url").path("fps").asDouble();
                     }
                     parts.add(new VideoUrlPart(url, fps));
+                }
+                case "audio_url" -> {
+                    String url = part.path("audio_url").path("url").asText(null);
+                    if (url == null || url.isBlank()) {
+                        url = part.path("url").asText(null);
+                    }
+                    if (url == null || url.isBlank()) {
+                        throw new IOException("audio_url.url required");
+                    }
+                    parts.add(new AudioUrlPart(url));
                 }
                 default -> {
                     if (part.has("text")) {

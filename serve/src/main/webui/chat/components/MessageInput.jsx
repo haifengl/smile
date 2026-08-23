@@ -15,16 +15,30 @@
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
 import React, { useEffect, useRef, useState } from 'react'
+import {
+  classifyFile,
+  sizeLimitFor,
+  uploadMedia,
+} from '../mediaUtils'
 import './MessageInput.css'
+
+const ACCEPT = 'image/*,video/*,audio/*,.txt,.md,.csv,.json,text/plain'
 
 export default function MessageInput({
     onSendMessage,
+    conversationId,
+    disabled = false,
     placeholder = 'Send a message...',
     theme = '#8dd4e8'
 }) {
     const [text, setText] = useState('')
     const [submit, setSubmit] = useState(false)
+    const [attachments, setAttachments] = useState([])
+    const [error, setError] = useState('')
+    const [uploading, setUploading] = useState(false)
+    const [dragOver, setDragOver] = useState(false)
     const textareaRef = useRef(null)
+    const fileInputRef = useRef(null)
 
     const resizeTextarea = () => {
         const el = textareaRef.current
@@ -43,14 +57,104 @@ export default function MessageInput({
         resizeTextarea()
     }, [text])
 
-    const handleSubmit = () => {
-        if (!submit && text.trim().length > 0) {
-            onSendMessage && onSendMessage(text.trim())
+    useEffect(() => {
+        return () => {
+            attachments.forEach((att) => {
+                if (att.previewUrl) {
+                    URL.revokeObjectURL(att.previewUrl)
+                }
+            })
+        }
+    }, [attachments])
+
+    const canSend = !disabled && !uploading
+        && (text.trim().length > 0 || attachments.length > 0)
+
+    const addFiles = async (fileList) => {
+        if (!fileList?.length || disabled) return
+        setError('')
+        const next = [...attachments]
+
+        for (const file of fileList) {
+            const kind = classifyFile(file)
+            const limit = sizeLimitFor(kind)
+            if (file.size > limit) {
+                setError(`${file.name} exceeds ${Math.round(limit / (1024 * 1024))} MiB limit`)
+                continue
+            }
+
+            if (kind === 'text') {
+                try {
+                    const body = await file.text()
+                    setText((prev) => (prev ? `${prev}\n${body}` : body))
+                } catch {
+                    setError(`Failed to read ${file.name}`)
+                }
+                continue
+            }
+
+            const previewUrl = (kind === 'image' || kind === 'video' || kind === 'audio')
+                ? URL.createObjectURL(file)
+                : null
+            next.push({
+                id: `${Date.now()}-${file.name}`,
+                file,
+                kind,
+                name: file.name,
+                mime: file.type || 'application/octet-stream',
+                size: file.size,
+                previewUrl,
+                uploading: false,
+            })
+        }
+        setAttachments(next)
+    }
+
+    const removeAttachment = (id) => {
+        setAttachments((prev) => {
+            const target = prev.find((a) => a.id === id)
+            if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl)
+            return prev.filter((a) => a.id !== id)
+        })
+    }
+
+    const handleSubmit = async () => {
+        if (!canSend || submit) return
+        if (!conversationId) {
+            setError('Conversation not ready yet')
+            return
+        }
+
+        setSubmit(true)
+        setUploading(true)
+        setError('')
+
+        try {
+            const uploaded = []
+            for (const att of attachments) {
+                const result = await uploadMedia(conversationId, att.file)
+                uploaded.push({
+                    type: att.kind,
+                    contentId: result.content_id,
+                    url: result.url,
+                    mime: result.mime_type || att.mime,
+                    name: result.filename || att.name,
+                    size: result.size_bytes ?? att.size,
+                })
+                if (att.previewUrl) URL.revokeObjectURL(att.previewUrl)
+            }
+
+            onSendMessage?.({
+                text: text.trim(),
+                attachments: uploaded,
+            })
             setText('')
-            setSubmit(true)
-            setTimeout(() => {
-                setSubmit(false)
-            }, 500)
+            setAttachments([])
+        } catch (err) {
+            setError(err.message || 'Upload failed')
+        } finally {
+            setUploading(false)
+            setTimeout(() => setSubmit(false), 500)
         }
     }
 
@@ -74,14 +178,66 @@ export default function MessageInput({
 
     return (
         <div className="message-input">
-            <form className="input-form"
+            {attachments.length > 0 && (
+                <div className="attachment-chips">
+                    {attachments.map((att) => (
+                        <div key={att.id} className="attachment-chip">
+                            {att.kind === 'image' && att.previewUrl ? (
+                                <img src={att.previewUrl} alt="" className="chip-thumb" />
+                            ) : (
+                                <span className="chip-icon">{att.kind}</span>
+                            )}
+                            <span className="chip-name">{att.name}</span>
+                            <button
+                                type="button"
+                                className="chip-remove"
+                                onClick={() => removeAttachment(att.id)}
+                                aria-label="Remove attachment"
+                            >
+                                ×
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            )}
+            {error && <div className="input-error">{error}</div>}
+            <form className={`input-form${dragOver ? ' drag-over' : ''}`}
                 data-testid="message-form"
                 onSubmit={(e) => {
                     e.preventDefault()
                     handleSubmit()
                 }}
+                onDragOver={(e) => {
+                    e.preventDefault()
+                    setDragOver(true)
+                }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={(e) => {
+                    e.preventDefault()
+                    setDragOver(false)
+                    addFiles(e.dataTransfer.files)
+                }}
             >
-                <div className="attach-placeholder" />
+                <div
+                    className="attach-button"
+                    onClick={() => !disabled && fileInputRef.current?.click()}
+                    title="Attach files"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" width="18" height="18" fill={theme}>
+                        <path d="M64 0C28.7 0 0 28.7 0 64v288c0 35.3 28.7 64 64 64h176c8.8 0 16-7.2 16-16s-7.2-16-16-16H64c-17.7 0-32-14.3-32-32V64c0-17.7 14.3-32 32-32h192c17.7 0 32 14.3 32 32v272c0 8.8 7.2 16 16 16s16-7.2 16-16V64c0-35.3-28.7-64-64-64H64zM320 336c0-53-43-96-96-96s-96 43-96 96 7.2 16 16 16s16-7.2 16-16c0-35.3 28.7-64 64-64s64 28.7 64 64v128c0 35.3-28.7 64-64 64H160c-35.3 0-64-28.7-64-64V336c0-8.8-7.2-16-16-16s-16 7.2-16 16v128c0 53 43 96 96 96h192c53 0 96-43 96-96V336z"/>
+                    </svg>
+                </div>
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept={ACCEPT}
+                    hidden
+                    onChange={(e) => {
+                        addFiles(e.target.files)
+                        e.target.value = ''
+                    }}
+                />
                 <div className="input-container">
                     <div className="input-background" style={{ backgroundColor: theme }}/>
                     <div className="input-element-container">
@@ -91,7 +247,8 @@ export default function MessageInput({
                             data-testid="message-input"
                             rows={1}
                             value={text}
-                            placeholder={placeholder}
+                            disabled={disabled || uploading}
+                            placeholder={uploading ? 'Uploading…' : placeholder}
                             onChange={(e) => setText(e.target.value)}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -103,7 +260,10 @@ export default function MessageInput({
                     </div>
                 </div>
 
-                <div className="send-container" onClick={handleSubmit}>
+                <div
+                    className={`send-container${canSend ? ' active' : ''}`}
+                    onClick={canSend ? handleSubmit : undefined}
+                >
                     {button}
                 </div>
             </form>

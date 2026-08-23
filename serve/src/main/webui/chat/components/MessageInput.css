@@ -98,6 +98,86 @@
   align-self: flex-end;
 }
 
+.attach-button {
+  position: relative;
+  padding: 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+  align-self: flex-end;
+  opacity: 0.7;
+}
+
+.attach-button:hover {
+  opacity: 1;
+}
+
+.input-form.drag-over {
+  outline: 2px dashed #8dd4e8;
+  outline-offset: -2px;
+}
+
+.attachment-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 12px 0;
+  background: #f3f4f6;
+}
+
+.attachment-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 12px;
+  max-width: 220px;
+}
+
+.chip-thumb {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.chip-icon {
+  text-transform: uppercase;
+  font-size: 10px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.chip-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.chip-remove {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  color: #9ca3af;
+  padding: 0 2px;
+}
+
+.input-error {
+  color: #b91c1c;
+  font-size: 12px;
+  padding: 4px 16px 0;
+  background: #f3f4f6;
+}
+
+.send-container.active {
+  opacity: 1;
+}
+
 .attach-placeholder {
   position: relative;
   padding: 12px;

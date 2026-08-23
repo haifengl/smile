@@ -23,6 +23,7 @@ import { a11yDark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 import rehypeKatex from 'rehype-katex'
 import remarkMath from 'remark-math'
 import CopyButton from './CopyButton';
+import { MarkdownImage, MarkdownLink } from './MediaContent';
 import 'katex/dist/katex.min.css' // rehype-katex does not import the CSS
 import './TextContent.css'
 
@@ -41,6 +42,8 @@ export default function TextContent({
                 rehypePlugins={[rehypeKatex]}
                 components={{
                   pre: Pre,
+                  img: MarkdownImage,
+                  a: MarkdownLink,
                   code(props) {
                     const {children, className, node, ...rest} = props
                     const language = /language-(\w+)/.exec(className || '');
