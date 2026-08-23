@@ -310,6 +310,14 @@ public class TiktokenTest {
         assertEquals(original, tokenizer.tryDecode(tokens));
     }
 
+    @Test
+    public void testGivenInVocabSpecialsWhenTryDecodeSkipSpecialThenOmitted() throws CharacterCodingException {
+        // Specials reuse vocab ranks (HF Qwen style); skip must not rely on id >= ranks.size().
+        int[] tokens = {100, 72, 101}; // <bos>, 'h', <eos>
+        assertEquals("<bos>h<eos>", tokenizer.tryDecode(tokens, false));
+        assertEquals("h", tokenizer.tryDecode(tokens, true));
+    }
+
     // -----------------------------------------------------------------------
     // encode/decode for various text cases
     // -----------------------------------------------------------------------

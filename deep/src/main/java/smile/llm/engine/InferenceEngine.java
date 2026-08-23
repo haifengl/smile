@@ -580,6 +580,12 @@ public final class InferenceEngine implements AutoCloseable {
         try (Tensor next = Sampling.sampleNext(logitsRow, a.temperature, a.topp);
              Tensor cpu = next.to(smile.deep.tensor.Device.CPU())) {
             int token = (int) cpu.longArray()[0];
+            boolean stop = isStop(token);
+            if (stop) {
+                // Do not stream or keep stop specials (e.g. <|im_end|>) in completion text.
+                finishActive(a, FinishReason.stop);
+                return;
+            }
             a.completion.add(token);
             a.lastToken = token;
             if (a.listener != null) {
@@ -587,10 +593,9 @@ public final class InferenceEngine implements AutoCloseable {
             }
             a.streamer.accept(token);
             a.streamer.maybeEmit(a.listener, false);
-            boolean stop = isStop(token);
-            if (stop || a.completion.size() >= a.maxGenLen
+            if (a.completion.size() >= a.maxGenLen
                     || a.promptLen + a.completion.size() >= a.totalCapacity) {
-                finishActive(a, stop ? FinishReason.stop : FinishReason.length);
+                finishActive(a, FinishReason.length);
             }
         }
     }
@@ -606,10 +611,6 @@ public final class InferenceEngine implements AutoCloseable {
 
     private void finishActive(Active a, FinishReason reason) {
         int[] completion = a.completion.stream().mapToInt(Integer::intValue).toArray();
-        // Trim stop token from completion text (match LanguageModel.generate).
-        if (reason == FinishReason.stop && completion.length > 0) {
-            completion = Arrays.copyOf(completion, completion.length - 1);
-        }
         a.streamer.maybeEmit(a.listener, true);
         String text = executor.decode(completion);
         // Prefer streamed text if non-empty decode of specials skipped differently.
