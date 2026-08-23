@@ -72,7 +72,7 @@ public final class S3BlobStore implements BlobStore, AutoCloseable {
             builder.credentialsProvider(StaticCredentialsProvider.create(
                     AwsBasicCredentials.create(accessKey.get(), secretKey.get())));
         } else {
-            builder.credentialsProvider(DefaultCredentialsProvider.create());
+            builder.credentialsProvider(DefaultCredentialsProvider.builder().build());
         }
         config.s3Endpoint().filter(s -> !s.isBlank()).ifPresent(endpoint -> {
             builder.endpointOverride(URI.create(endpoint));
