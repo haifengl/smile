@@ -25,6 +25,7 @@ export default function IncomingMessage({
     parts,
     text,
     timestamp,
+    streaming = false,
 }) {
     const [avatar, setAvatar] = React.useState(ProfileIcon)
 
@@ -54,6 +55,7 @@ export default function IncomingMessage({
                         parts={parts}
                         text={text}
                         downloadable
+                        streaming={streaming}
                     />
                 </div>
             </div>

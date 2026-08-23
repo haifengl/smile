@@ -27,19 +27,38 @@ function ensureMermaid() {
     securityLevel: 'strict',
     theme: 'neutral',
     fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+    // Avoid injecting "Syntax error in text" SVGs into the document.
+    suppressErrorRendering: true,
   })
   mermaidReady = true
 }
 
 /**
- * Renders a {@code ```mermaid} fenced code block as an SVG diagram.
- *
- * @param {{ chart: string }} props
+ * @param {string} source
+ * @returns {Promise<boolean>}
  */
-export default function MermaidDiagram({ chart }) {
+async function canParse(source) {
+  try {
+    // mermaid.parse may return a boolean or throw, depending on version.
+    const result = await mermaid.parse(source, { suppressErrors: true })
+    return result !== false
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Renders a {@code ```mermaid} fenced code block as an SVG diagram.
+ * While the parent message is still streaming, incomplete fences are shown
+ * as source until Mermaid can parse them (closing fence / valid chart).
+ *
+ * @param {{ chart: string, streaming?: boolean }} props
+ */
+export default function MermaidDiagram({ chart, streaming = false }) {
   const reactId = useId().replace(/:/g, '')
   const [svg, setSvg] = useState('')
   const [error, setError] = useState('')
+  const [pending, setPending] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -47,31 +66,60 @@ export default function MermaidDiagram({ chart }) {
     if (!source) {
       setSvg('')
       setError('')
+      setPending(false)
       return undefined
     }
 
     ensureMermaid()
-    const renderId = `mermaid-${reactId}-${Math.random().toString(36).slice(2, 8)}`
 
-    mermaid
-      .render(renderId, source)
-      .then(({ svg: rendered }) => {
+    ;(async () => {
+      if (streaming) {
+        const ok = await canParse(source)
+        if (cancelled) return
+        if (!ok) {
+          setSvg('')
+          setError('')
+          setPending(true)
+          return
+        }
+      }
+
+      const renderId = `mermaid-${reactId}-${Math.random().toString(36).slice(2, 8)}`
+      try {
+        const { svg: rendered } = await mermaid.render(renderId, source)
         if (!cancelled) {
           setSvg(rendered)
           setError('')
+          setPending(false)
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         if (!cancelled) {
           setSvg('')
-          setError(err?.message || 'Failed to render Mermaid diagram')
+          setPending(false)
+          // Incomplete stream: keep waiting; finished message: show error.
+          if (streaming) {
+            setError('')
+            setPending(true)
+          } else {
+            setError(err?.message || 'Failed to render Mermaid diagram')
+          }
         }
-      })
+      }
+    })()
 
     return () => {
       cancelled = true
     }
-  }, [chart, reactId])
+  }, [chart, reactId, streaming])
+
+  if (pending || (streaming && !svg && !error)) {
+    return (
+      <div className="mermaid-block mermaid-block--pending" data-mermaid="">
+        <div className="mermaid-loading">Waiting for complete diagram…</div>
+        <pre className="mermaid-fallback">{chart}</pre>
+      </div>
+    )
+  }
 
   if (error) {
     return (
