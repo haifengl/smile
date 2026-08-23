@@ -42,8 +42,6 @@ import smile.llm.LanguageModel;
 import smile.llm.Message;
 import smile.llm.cache.KvCachePool;
 import smile.llm.checkpoint.SafeTensorsLoaderThreads;
-import smile.llm.attention.AttentionBackend;
-import smile.llm.attention.AttentionBackends;
 import smile.torch.smile_torch_h;
 import smile.util.AutoScope;
 
@@ -1162,31 +1160,9 @@ public class Llama implements LanguageModel, smile.llm.engine.ModelExecutor {
             throw new IllegalArgumentException("decodeStep batch must be non-empty");
         }
 
-        // FlashInfer: one forward over mixed positions (ragged CSR + per-row RoPE).
-        if (AttentionBackends.current() == AttentionBackend.FLASHINFER) {
-            long[] toks = new long[b];
-            for (int i = 0; i < b; i++) {
-                toks[i] = lastTokens[i];
-            }
-            model.kvCachePool().activateStep(requestIds);
-            try (var guard = Tensor.noGradGuard();
-                 var scope = new AutoScope()) {
-                Tensor.push(scope);
-                try {
-                    try (Tensor tok = Tensor.of(toks).reshape(b, 1).to(model.device());
-                         Tensor logits = model.forward(tok, positions);
-                         var last = Index.of(-1)) {
-                        Tensor out = logits.get(Index.Colon, last).reshape(b, -1);
-                        out.promoteToParent();
-                        return out;
-                    }
-                } finally {
-                    Tensor.pop();
-                }
-            }
-        }
-
-        // torch_native: cohort by position (uniform cache length / RoPE slice).
+        // Cohort by equal write position for both FlashInfer and torch_native so
+        // each forward uses a uniform cache length (batched decode). Mixed
+        // positions after prefix-cache hits become several smaller uniform cohorts.
         int[] order = new int[b];
         for (int i = 0; i < b; i++) {
             order[i] = i;
