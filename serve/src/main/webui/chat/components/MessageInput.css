@@ -3,6 +3,7 @@
   position: relative;
   width: 100%;
   display: flex;
+  flex-direction: column;
 }
 
 .input-form {
@@ -15,7 +16,7 @@
   position: relative;
   width: 100%;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   box-sizing: border-box;
 }
 
@@ -95,7 +96,6 @@
   flex-shrink: 0;
   padding-top: 8px;
   padding-bottom: 8px;
-  align-self: flex-end;
 }
 
 .attach-button {
@@ -103,7 +103,9 @@
   padding: 12px;
   cursor: pointer;
   flex-shrink: 0;
-  align-self: flex-end;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   opacity: 0.7;
 }
 
@@ -119,6 +121,7 @@
 .attachment-chips {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
   padding: 8px 12px 0;
   background: #f3f4f6;

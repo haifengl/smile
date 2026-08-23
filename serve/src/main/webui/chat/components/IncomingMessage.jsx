@@ -86,13 +86,13 @@ export default function IncomingMessage({
 
                 <div className="incoming-message-container">
                     <div className="incoming-background"/>
-                        <MessageParts
-                            parts={processedParts}
-                            text={processedText}
-                            streaming={streaming}
-                        />
-                    </div>
+                    <MessageParts
+                        parts={processedParts}
+                        text={processedText}
+                        streaming={streaming}
+                    />
                 </div>
+            </div>
         </div>
     )
 }
