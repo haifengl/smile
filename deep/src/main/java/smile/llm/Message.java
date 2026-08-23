@@ -86,11 +86,24 @@ public record Message(Role role, List<ContentPart> parts) {
     }
 
     /**
-     * @return {@code true} when any part is an image or video.
+     * @return {@code true} when any part is an image, video, or audio.
      */
     public boolean hasMedia() {
         for (ContentPart part : parts) {
-            if (part instanceof ImageUrlPart || part instanceof VideoUrlPart) {
+            if (part instanceof ImageUrlPart || part instanceof VideoUrlPart
+                    || part instanceof AudioUrlPart) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @return {@code true} when any part is audio.
+     */
+    public boolean hasAudio() {
+        for (ContentPart part : parts) {
+            if (part instanceof AudioUrlPart) {
                 return true;
             }
         }

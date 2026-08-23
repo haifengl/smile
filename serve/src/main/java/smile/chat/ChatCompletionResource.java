@@ -27,6 +27,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.POST;
@@ -223,6 +224,14 @@ public class ChatCompletionResource {
     }
 
     private void validate(CompletionRequest request) {
+        if (request.messages != null) {
+            for (var message : request.messages) {
+                if (message != null && message.hasAudio()) {
+                    throw new BadRequestException(
+                            "Audio input is not supported by this model");
+                }
+            }
+        }
         if (!service.isAvailable()) {
             throw new ServiceUnavailableException();
         }

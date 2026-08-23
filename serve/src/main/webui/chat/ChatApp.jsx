@@ -19,6 +19,12 @@ import OpenAI from 'openai'
 import Chat from './components/Chat'
 import InternetIcon from './assets/internet.svg'
 import LlamaIcon from './assets/llama.svg'
+import {
+  buildApiContent,
+  buildChatHistory,
+  messageText,
+  partsFromAssistantText,
+} from './mediaUtils'
 import './App.css'
 
 const user = {
@@ -44,9 +50,41 @@ const client = new OpenAI({
   dangerouslyAllowBrowser: true,
 })
 
+const WELCOME_TEXT =
+  'Hello! How are you today? As a helpful, respectful and honest assistant, I am happy to serve you.'
+
 const WELCOME = {
-  text: 'Hello! How are you today? As a helpful, respectful and honest assistant, I am happy to serve you.',
+  parts: [{ type: 'text', text: WELCOME_TEXT }],
   user: bot,
+}
+
+function buildUserParts(text, attachments) {
+  const parts = []
+  if (text?.trim()) {
+    parts.push({ type: 'text', text: text.trim() })
+  }
+  for (const att of attachments ?? []) {
+    parts.push({
+      type: att.type,
+      contentId: att.contentId,
+      url: att.url,
+      mime: att.mime,
+      name: att.name,
+      size: att.size,
+    })
+  }
+  return parts
+}
+
+function errorMessage(error) {
+  const msg = error?.error?.message || error?.message || String(error)
+  if (msg.includes('Audio input is not supported')) {
+    return 'Audio attachments are not supported by this model yet.'
+  }
+  if (msg.includes('Multimodal content requires')) {
+    return 'Image and video require a vision-capable model (Qwen VL).'
+  }
+  return "Sorry, the service isn't available right now. Please try again later."
 }
 
 /**
@@ -58,16 +96,15 @@ const WELCOME = {
  * @param {boolean} [props.embedded] When true, fills the parent pane (infer); otherwise standalone layout.
  */
 export default function ChatApp({ model, title, embedded = false }) {
-  const [messages, setMessages] = useState([WELCOME])
+  const [messages, setMessages] = useState([{ ...WELCOME, createdAt: new Date() }])
   const [showTypingIndicator, setShowTypingIndicator] = useState(false)
   const [conversationId, setConversationId] = useState(null)
+  const [sending, setSending] = useState(false)
   const sendingRef = useRef(false)
   const sentSystemPromptRef = useRef(false)
 
-  // Create a conversation once on mount. In /infer, each model keeps its own
-  // ChatApp instance mounted, so switching models does not remount or reset.
   useEffect(() => {
-    setMessages([WELCOME])
+    setMessages([{ ...WELCOME, createdAt: new Date() }])
     setShowTypingIndicator(false)
     setConversationId(null)
     sendingRef.current = false
@@ -101,22 +138,31 @@ export default function ChatApp({ model, title, embedded = false }) {
     }
   }, [])
 
-  const sendMessage = useCallback(async (text) => {
-    if (sendingRef.current || !text?.trim()) {
+  const sendMessage = useCallback(async ({ text, attachments }) => {
+    const trimmed = text?.trim() ?? ''
+    const hasAttachments = attachments?.length > 0
+    if (sendingRef.current || (!trimmed && !hasAttachments)) {
       return
     }
     sendingRef.current = true
+    setSending(true)
 
+    const userParts = buildUserParts(trimmed, attachments)
     const userMessage = {
       user,
-      text: text.trim(),
+      parts: userParts,
       createdAt: new Date(),
     }
 
     setMessages((prev) => [
       ...prev,
       userMessage,
-      { text: '', user: bot, createdAt: new Date(), streaming: true },
+      {
+        parts: [{ type: 'text', text: '' }],
+        user: bot,
+        createdAt: new Date(),
+        streaming: true,
+      },
     ])
     setShowTypingIndicator(true)
 
@@ -128,9 +174,12 @@ export default function ChatApp({ model, title, embedded = false }) {
         content: 'You are a helpful, respectful and honest assistant.',
       })
     }
+
+    const history = buildChatHistory(messages, user.id, bot.id)
+    chatMessages.push(...history)
     chatMessages.push({
       role: 'user',
-      content: userMessage.text,
+      content: buildApiContent(userMessage),
     })
 
     try {
@@ -159,7 +208,14 @@ export default function ChatApp({ model, title, embedded = false }) {
           const next = prev.slice()
           const last = next[next.length - 1]
           if (last?.streaming && last.user?.id === bot.id) {
-            next[next.length - 1] = { ...last, text: last.text + delta }
+            const parts = last.parts?.length
+              ? last.parts.map((p, i) =>
+                  p.type === 'text' && i === 0
+                    ? { ...p, text: (p.text ?? '') + delta }
+                    : p
+                )
+              : [{ type: 'text', text: delta }]
+            next[next.length - 1] = { ...last, parts }
           }
           return next
         })
@@ -169,35 +225,36 @@ export default function ChatApp({ model, title, embedded = false }) {
         const next = prev.slice()
         const last = next[next.length - 1]
         if (last?.streaming) {
-          next[next.length - 1] = { ...last, streaming: false }
+          const finalText = messageText(last)
+          const parts = partsFromAssistantText(finalText)
+          next[next.length - 1] = { ...last, parts, streaming: false }
         }
         return next
       })
     } catch (error) {
       console.error('SSE error:', error)
+      const display = errorMessage(error)
       setMessages((prev) => {
         const next = prev.slice()
         const last = next[next.length - 1]
+        const errorMsg = {
+          parts: [{ type: 'text', text: display }],
+          user: server,
+          createdAt: new Date(),
+        }
         if (last?.streaming && last.user?.id === bot.id) {
-          next[next.length - 1] = {
-            text: "Sorry, the service isn't available right now. Please try again later.",
-            user: server,
-            createdAt: new Date(),
-          }
+          next[next.length - 1] = errorMsg
         } else {
-          next.push({
-            text: "Sorry, the service isn't available right now. Please try again later.",
-            user: server,
-            createdAt: new Date(),
-          })
+          next.push(errorMsg)
         }
         return next
       })
     } finally {
       setShowTypingIndicator(false)
       sendingRef.current = false
+      setSending(false)
     }
-  }, [conversationId, model])
+  }, [conversationId, model, messages])
 
   const headerTitle = title || model || 'Smile Assistant'
   const className = embedded
@@ -211,6 +268,8 @@ export default function ChatApp({ model, title, embedded = false }) {
         messages={messages}
         onSendMessage={sendMessage}
         showTypingIndicator={showTypingIndicator}
+        conversationId={conversationId}
+        disabled={sending}
         title={headerTitle}
         placeholder="Type prompt here"
         theme="#8dd4e8"

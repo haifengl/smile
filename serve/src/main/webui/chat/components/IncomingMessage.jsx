@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
  *
  * SMILE is free software: you can redistribute it and/or modify it
- * it under the terms of the GNU General Public License as published by
+ * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
@@ -16,14 +16,16 @@
  */
 import React, { useEffect } from 'react'
 import ProfileIcon from '../assets/profile.svg'
-import TextContent from './TextContent'
+import MessageParts from './MessageParts'
 import Timestamp from './Timestamp'
 import './Message.css'
 
 export default function IncomingMessage({
     user,
+    parts,
     text,
     timestamp,
+    streaming,
 }) {
     const [avatar, setAvatar] = React.useState(ProfileIcon)
 
@@ -33,30 +35,39 @@ export default function IncomingMessage({
         }
     }, [user])
 
-
-    let start = text.indexOf('<think>');
-    let end = text.indexOf('</think>');
+    let processedParts = parts
+    let processedText = text
+    const rawText = parts?.find((p) => p.type === 'text')?.text ?? text ?? ''
+    const thinkOpen = '<think>'
+    const thinkClose = '</think>'
+    let start = rawText.indexOf(thinkOpen)
+    let end = rawText.indexOf(thinkClose)
     if (start !== -1) {
-        let think = "";
-        let answer = "";
+        let think = ""
+        let answer = ""
         if (end !== -1) {
-            think = text.substring(start + 7, end).trimEnd();
-            answer = text.substring(end + 8);
+            think = rawText.substring(start + thinkOpen.length, end).trimEnd()
+            answer = rawText.substring(end + thinkClose.length)
         } else {
-            think = text.substring(start + 7);
+            think = rawText.substring(start + thinkOpen.length)
         }
 
-        // think is not empty
         if (think) {
-            // block quote
-            think = think.replaceAll('\n', '\n> ');
+            think = think.replaceAll('\n', '\n> ')
             if (!think.startsWith('\n> ')) {
-                think = '> ' + think;
+                think = '> ' + think
             }
-            think += '\n';
+            think += '\n'
         }
 
-        text = think + answer;
+        const merged = think + answer
+        if (parts?.length) {
+            processedParts = parts.map((p) =>
+                p.type === 'text' ? { ...p, text: merged } : p
+            )
+        } else {
+            processedText = merged
+        }
     }
 
     return (
@@ -75,9 +86,11 @@ export default function IncomingMessage({
 
                 <div className="incoming-message-container">
                     <div className="incoming-background"/>
-                        <TextContent>
-                            {text}
-                        </TextContent>
+                        <MessageParts
+                            parts={processedParts}
+                            text={processedText}
+                            streaming={streaming}
+                        />
                     </div>
                 </div>
         </div>

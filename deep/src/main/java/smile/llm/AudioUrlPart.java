@@ -17,9 +17,18 @@
 package smile.llm;
 
 /**
- * One piece of multimodal chat content (OpenAI-style).
+ * Audio content referencing an HTTP(S) or {@code data:} URL.
  *
+ * @param url audio URL (http(s) or data:audio/...;base64,...).
  * @author Haifeng Li
  */
-public sealed interface ContentPart permits TextPart, ImageUrlPart, VideoUrlPart, AudioUrlPart {
+public record AudioUrlPart(String url) implements ContentPart {
+    /**
+     * @param url audio URL — must not be null or blank.
+     */
+    public AudioUrlPart {
+        if (url == null || url.isBlank()) {
+            throw new IllegalArgumentException("audio url must not be blank");
+        }
+    }
 }
