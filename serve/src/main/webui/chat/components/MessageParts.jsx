@@ -22,7 +22,6 @@ import { messageText } from '../mediaUtils'
 export default function MessageParts({
   parts,
   text,
-  streaming,
   downloadable = false,
 }) {
   const resolved = parts?.length
@@ -32,7 +31,7 @@ export default function MessageParts({
       : []
 
   if (!resolved.length) {
-    return streaming ? <span className="streaming-cursor" aria-hidden="true" /> : null
+    return null
   }
 
   return (
@@ -40,15 +39,13 @@ export default function MessageParts({
       {resolved.map((part, index) => {
         if (part.type === 'text') {
           const body = part.text ?? ''
-          const showCursor = streaming && index === resolved.length - 1
-          if (!body && !showCursor) {
+          if (!body) {
             return null
           }
           return (
             <TextContent
               key={`text-${index}`}
               downloadable={downloadable}
-              streaming={showCursor}
             >
               {body}
             </TextContent>
