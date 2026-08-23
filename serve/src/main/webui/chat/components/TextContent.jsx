@@ -24,9 +24,15 @@ import rehypeKatex from 'rehype-katex'
 import remarkMath from 'remark-math'
 import CopyButton from './CopyButton';
 import { MarkdownImage, MarkdownLink } from './MediaContent';
+import MermaidDiagram from './MermaidDiagram'
 import { formatThinkingAsMarkdown } from '../thinkingUtils'
 import 'katex/dist/katex.min.css' // rehype-katex does not import the CSS
 import './TextContent.css'
+
+function isMermaidChild(children) {
+    const child = React.Children.toArray(children)[0]
+    return React.isValidElement(child) && child.props?.['data-mermaid'] != null
+}
 
 export default function TextContent({
     children,
@@ -41,10 +47,18 @@ export default function TextContent({
     // thinking text as a plain <p>. Convert to blockquotes first.
     const markdown = formatThinkingAsMarkdown(raw)
 
-    const Pre = ({ children }) => <pre className="code-pre">
-        <CopyButton>{children}</CopyButton>
-        {children}
-    </pre>
+    const Pre = ({ children: preChildren }) => {
+        // Mermaid renders its own frame; avoid wrapping in <pre>.
+        if (isMermaidChild(preChildren)) {
+            return <>{preChildren}</>
+        }
+        return (
+            <pre className="code-pre">
+                <CopyButton>{preChildren}</CopyButton>
+                {preChildren}
+            </pre>
+        )
+    }
 
     const Img = (props) => <MarkdownImage {...props} downloadable={downloadable} />
     const Link = (props) => <MarkdownLink {...props} downloadable={downloadable} />
@@ -59,17 +73,21 @@ export default function TextContent({
                   img: Img,
                   a: Link,
                   code(props) {
-                    const {children, className, node, ...rest} = props
+                    const {children: codeChildren, className, node, ...rest} = props
                     const language = /language-(\w+)/.exec(className || '');
-                    const code = String(children)
+                    const lang = language ? language[1] : null
+                    const code = String(codeChildren).replace(/\n$/, '')
+                    if (lang === 'mermaid') {
+                      return <MermaidDiagram chart={code} />
+                    }
                     const multiline = /[\r\n]/.exec(code);
                     return multiline ?
                     (
                         <SyntaxHighlighter
                             {...rest}
                             PreTag="div"
-                            children={code.replace(/\n$/, '')}
-                            language={language ? language[1] : null}
+                            children={code}
+                            language={lang}
                             style={atomOneLight}
                             showLineNumbers={true}
                             wrapLongLines={true}
@@ -78,7 +96,7 @@ export default function TextContent({
                     (
                         <div className='inlineCode' variant='outlined'>
                             <code {...rest} className={className}>
-                                {children}
+                                {codeChildren}
                             </code>
                         </div>
                     )

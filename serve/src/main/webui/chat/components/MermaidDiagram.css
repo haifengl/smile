@@ -1,0 +1,43 @@
+.mermaid-block {
+  margin: 0.75em 0;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow-x: auto;
+  text-align: center;
+  line-height: normal;
+}
+
+.mermaid-block svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.mermaid-block--loading,
+.mermaid-block--error {
+  text-align: left;
+}
+
+.mermaid-loading {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.mermaid-error {
+  color: #b91c1c;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.mermaid-fallback {
+  margin: 0;
+  padding: 8px 0 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #374151;
+  background: transparent;
+  border: none;
+}
