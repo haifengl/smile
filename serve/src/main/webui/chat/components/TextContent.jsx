@@ -24,6 +24,7 @@ import rehypeKatex from 'rehype-katex'
 import remarkMath from 'remark-math'
 import CopyButton from './CopyButton';
 import { MarkdownImage, MarkdownLink } from './MediaContent';
+import { formatThinkingAsMarkdown } from '../thinkingUtils'
 import 'katex/dist/katex.min.css' // rehype-katex does not import the CSS
 import './TextContent.css'
 
@@ -33,9 +34,12 @@ export default function TextContent({
     compact = false,
 }) {
     // react-markdown only accepts a string; join if callers pass multiple children.
-    const markdown = typeof children === 'string'
+    const raw = typeof children === 'string'
         ? children
         : React.Children.toArray(children).join('')
+    // react-markdown strips unknown HTML such as <think>, which would leave
+    // thinking text as a plain <p>. Convert to blockquotes first.
+    const markdown = formatThinkingAsMarkdown(raw)
 
     const Pre = ({ children }) => <pre className="code-pre">
         <CopyButton>{children}</CopyButton>

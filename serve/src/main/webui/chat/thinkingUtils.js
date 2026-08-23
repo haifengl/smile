@@ -31,15 +31,46 @@ export function splitThinking(rawText) {
     return { thinking: '', answer: text }
   }
 
-  const end = text.indexOf(THINK_CLOSE)
+  const end = text.indexOf(THINK_CLOSE, start + THINK_OPEN.length)
   let thinking = ''
   let answer = ''
   if (end !== -1) {
-    thinking = text.substring(start + THINK_OPEN.length, end).trimEnd()
+    thinking = text.substring(start + THINK_OPEN.length, end)
     answer = text.substring(end + THINK_CLOSE.length)
   } else {
+    // Still streaming the thinking span.
     thinking = text.substring(start + THINK_OPEN.length)
   }
 
+  // Preserve any text that appeared before the opening tag.
+  const prefix = text.substring(0, start)
+  if (prefix) {
+    answer = prefix + answer
+  }
+
   return { thinking, answer }
+}
+
+/**
+ * Converts {@code <think>...</think>} spans into markdown blockquotes so
+ * react-markdown renders the notebook-style {@code <blockquote>} chrome.
+ *
+ * @param {string} rawText
+ * @returns {string}
+ */
+export function formatThinkingAsMarkdown(rawText) {
+  const { thinking, answer } = splitThinking(rawText)
+  if (!thinking) {
+    return rawText ?? ''
+  }
+
+  // Same quoting rules as the pre-multimedia IncomingMessage path:
+  // every line becomes a markdown blockquote line.
+  let quoted = thinking.replaceAll('\n', '\n> ')
+  if (!quoted.startsWith('\n> ')) {
+    quoted = '> ' + quoted
+  }
+  quoted += '\n'
+
+  return quoted + (answer ?? '')
 }
