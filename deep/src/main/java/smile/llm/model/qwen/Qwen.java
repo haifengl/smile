@@ -50,8 +50,6 @@ import smile.llm.LanguageModel;
 import smile.llm.Message;
 import smile.llm.cache.KvCachePool;
 import smile.llm.checkpoint.SafeTensorsLoaderThreads;
-import smile.llm.attention.AttentionBackend;
-import smile.llm.attention.AttentionBackends;
 import smile.llm.model.llama.Llama;
 import smile.llm.parallel.ParallelConfig;
 import smile.llm.parallel.ParallelState;
@@ -1424,43 +1422,6 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         return logits;
     }
 
-    /**
-     * Runs {@link QwenModel#forward(Tensor, int[])} on every TP rank for a
-     * decode batch that already holds shape {@code [B, 1]} tokens.
-     */
-    private Tensor[] forwardAllDecode(Tensor[] tokens, int[] positions, ExecutorService pool) {
-        Tensor[] logits = new Tensor[models.length];
-        if (models.length == 1) {
-            logits[0] = models[0].forward(tokens[0], positions, false);
-            return logits;
-        }
-        List<Future<Tensor>> futures = new ArrayList<>(models.length);
-        for (int r = 0; r < models.length; r++) {
-            final int rank = r;
-            futures.add(pool.submit(() -> {
-                ParallelState.setCurrent(tpGroup.state(rank));
-                try (var guard = Tensor.noGradGuard()) {
-                    return models[rank].forward(tokens[rank], positions, false);
-                } finally {
-                    ParallelState.clearCurrent();
-                }
-            }));
-        }
-        try {
-            for (int r = 0; r < models.length; r++) {
-                logits[r] = futures.get(r).get();
-            }
-        } catch (Exception e) {
-            for (Tensor l : logits) {
-                if (l != null) {
-                    l.close();
-                }
-            }
-            throw new RuntimeException("TP ragged decode forward failed", e);
-        }
-        return logits;
-    }
-
     @Override
     public Tensor decodeStep(int[] requestIds, int[] lastTokens, int[] positions) {
         if (requestIds == null || lastTokens == null || positions == null) {
@@ -1471,46 +1432,10 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             throw new IllegalArgumentException("decodeStep batch sizes must match and be non-empty");
         }
 
-        // FlashInfer: one forward over mixed positions (ragged CSR + per-row RoPE).
-        if (AttentionBackends.current() == AttentionBackend.FLASHINFER) {
-            long[] toks = new long[b];
-            for (int i = 0; i < b; i++) {
-                toks[i] = lastTokens[i];
-            }
-            for (QwenModel m : models) {
-                if (m.kvCachePool() != null) {
-                    m.kvCachePool().activateStep(requestIds);
-                }
-                if (m.deltaNetStatePool() != null) {
-                    m.deltaNetStatePool().activateStep(requestIds);
-                }
-            }
-            Tensor[] tokenShards = new Tensor[models.length];
-            try (var guard = Tensor.noGradGuard()) {
-                for (int r = 0; r < models.length; r++) {
-                    tokenShards[r] = Tensor.of(toks).reshape(b, 1).to(models[r].device());
-                }
-                Tensor[] logits = forwardAllDecode(tokenShards, positions, tpExecutor);
-                for (Tensor t : tokenShards) {
-                    t.close();
-                }
-                for (QwenModel m : models) {
-                    if (m.deltaNetStatePool() != null) {
-                        m.deltaNetStatePool().scatterActive();
-                    }
-                }
-                try (var last = Index.of(-1)) {
-                    Tensor out = logits[0].get(Index.Colon, last).reshape(b, -1);
-                    out.promoteToParent();
-                    for (Tensor l : logits) {
-                        l.close();
-                    }
-                    return out;
-                }
-            }
-        }
-
-        // torch_native: cohort by position (uniform cache length / RoPE slice).
+        // Cohort by equal write position so FlashInfer / torch_native both run
+        // uniform cache-length decode (batched BatchDecode or SDPA). Mixed
+        // positions after prefix-cache hits become several smaller uniform cohorts
+        // instead of one ragged forward (avoids fp32 per-row SDPA fallback).
         int[] order = new int[b];
         for (int i = 0; i < b; i++) {
             order[i] = i;
