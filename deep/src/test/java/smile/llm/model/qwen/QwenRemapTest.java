@@ -82,8 +82,14 @@ public class QwenRemapTest {
     }
 
     @Test
-    public void testGivenVisionOrMtpWhenRemappedThenNull() {
-        assertNull(Qwen.remapHuggingFaceName("visual.blocks.0.attn.qkv.weight"));
+    public void testGivenVisionOrMtpWhenRemappedThenVisionMapsAndMtpNull() {
+        assertEquals("visual.patch_embed.proj.weight",
+                Qwen.remapHuggingFaceName("model.visual.patch_embed.proj.weight"));
+        assertEquals("visual.blocks.0.attn.qkv.weight",
+                Qwen.remapHuggingFaceName("model.visual.blocks.0.attn.qkv.weight"));
+        assertEquals("visual.merger.linear_fc2.weight",
+                Qwen.remapHuggingFaceName("visual.merger.linear_fc2.weight"));
         assertNull(Qwen.remapHuggingFaceName("mtp.layers.0.weight"));
+        assertNull(Qwen.remapHuggingFaceName("vision_tower.foo"));
     }
 }

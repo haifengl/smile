@@ -421,21 +421,49 @@ public class ChatService {
      */
     public smile.llm.engine.GenerationHandle submitCompletion(
             CompletionRequest request, SubmissionPublisher<String> publisher) {
-        int[] prompt = model.encodeChat(request.messages);
-        int maxGenLen = request.resolveMaxTokens(model.maxSeqLen(), prompt.length);
+        boolean hasMedia = false;
+        if (request.messages != null) {
+            for (var m : request.messages) {
+                if (m != null && m.hasMedia()) {
+                    hasMedia = true;
+                    break;
+                }
+            }
+        }
+        smile.llm.engine.GenerationRequest genReq;
+        int promptLen;
         var throughput = new TokenThroughputLogger(aggregateThroughput);
         var listener = GenerationListeners.compose(
                 throughput,
                 publisher != null ? GenerationListeners.toPublisher(publisher) : null);
+        try {
+            if (hasMedia) {
+                if (!(model instanceof Qwen qwen) || !qwen.isMultimodal()) {
+                    throw new IllegalArgumentException(
+                            "Multimodal content requires a Qwen3.8 vision checkpoint");
+                }
+                var mm = qwen.processMultimodal(request.messages);
+                int maxGenLen = request.resolveMaxTokens(model.maxSeqLen(), mm.inputIds().length);
+                promptLen = mm.inputIds().length;
+                genReq = smile.llm.engine.GenerationRequest.ofMultimodal(
+                        mm, maxGenLen, request.temperature, request.topP,
+                        request.logprobs, request.seed, listener);
+            } else {
+                int[] prompt = model.encodeChat(request.messages);
+                int maxGenLen = request.resolveMaxTokens(model.maxSeqLen(), prompt.length);
+                promptLen = prompt.length;
+                genReq = smile.llm.engine.GenerationRequest.ofTokens(
+                        prompt, maxGenLen, request.temperature, request.topP,
+                        request.logprobs, request.seed, listener);
+            }
+        } catch (java.io.IOException e) {
+            throw new IllegalArgumentException("Failed to process multimodal request", e);
+        }
         if (engine != null) {
-            var handle = engine.submit(
-                    smile.llm.engine.GenerationRequest.ofTokens(
-                            prompt, maxGenLen, request.temperature, request.topP,
-                            request.logprobs, request.seed, listener),
-                    h -> throughput.setRequestId(h.requestId()));
+            var handle = engine.submit(genReq, h -> throughput.setRequestId(h.requestId()));
             logger.infof("Submitted chat requestId=%d promptLen=%d maxGenLen=%d "
-                            + "inFlight=%d queueSize=%d maxInFlight=%d kvFreeSlots=%d",
-                    handle.requestId(), prompt.length, maxGenLen,
+                            + "multimodal=%s inFlight=%d queueSize=%d maxInFlight=%d kvFreeSlots=%d",
+                    handle.requestId(), promptLen, genReq.maxGenLen(), hasMedia,
                     engine.inFlight(), engine.queueSize(), engine.maxInFlight(),
                     engine.kvFreeSlots());
             handle.future().whenComplete((r, t) -> {
@@ -453,8 +481,13 @@ public class ChatService {
         var handle = smile.llm.engine.GenerationHandle.of(0L, future);
         throughput.setRequestId(handle.requestId());
         try {
-            ChatCompletion result = model.generate(prompt, maxGenLen, request.temperature,
-                    request.topP, request.logprobs, request.seed, listener, handle::isAborted);
+            if (hasMedia) {
+                throw new UnsupportedOperationException(
+                        "Multimodal chat requires InferenceEngine (continuous batching)");
+            }
+            ChatCompletion result = model.generate(genReq.promptTokens(), genReq.maxGenLen(),
+                    request.temperature, request.topP, request.logprobs, request.seed,
+                    listener, handle::isAborted);
             if (!handle.isAborted()) {
                 future.complete(result);
             } else {

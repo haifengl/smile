@@ -394,6 +394,10 @@ public final class InferenceEngine implements AutoCloseable {
             recordQueueWait(next.enqueuedAtNanos);
 
             int matched = executor.prefixLen(kvId);
+            // Multimodal prompts must not reuse KV prefixes (vision embeds + mRoPE).
+            if (next.request.hasMultimodal()) {
+                matched = 0;
+            }
             if (matched > 0) {
                 try {
                     long tw = System.nanoTime();
@@ -444,9 +448,20 @@ public final class InferenceEngine implements AutoCloseable {
             }
             int chunk = Math.min(remaining, budget);
             int to = a.prefillFrom + chunk;
+            // Multimodal: require full-prompt prefill in one shot (mRoPE + vision splice).
+            if (a.request.hasMultimodal()) {
+                to = a.promptLen;
+                chunk = to - a.prefillFrom;
+            }
             long t0 = System.nanoTime();
             try {
-                Tensor logits = executor.prefillChunk(a.kvRequestId, a.prompt, a.prefillFrom, to);
+                Tensor logits;
+                if (a.request.hasMultimodal()) {
+                    logits = executor.prefillMultimodal(
+                            a.kvRequestId, a.request.multimodal(), a.prefillFrom, to);
+                } else {
+                    logits = executor.prefillChunk(a.kvRequestId, a.prompt, a.prefillFrom, to);
+                }
                 prefillMsTotal.addAndGet((System.nanoTime() - t0) / 1_000_000L);
                 budget -= chunk;
                 a.prefillFrom = to;

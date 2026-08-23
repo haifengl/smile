@@ -127,6 +127,22 @@ public interface ModelExecutor {
     }
 
     /**
+     * Prefills a multimodal prompt using vision embeds + interleaved mRoPE.
+     * Default throws; Qwen overrides.
+     *
+     * @param requestId request id.
+     * @param multimodal preprocess result.
+     * @param from      inclusive start (normally 0; prefix reuse disabled for VL).
+     * @param to        exclusive end.
+     * @return logits when {@code to == inputIds.length}, else null.
+     */
+    default Tensor prefillMultimodal(int requestId,
+                                     smile.llm.model.qwen.QwenVlProcessor.ProcessedMultimodal multimodal,
+                                     int from, int to) {
+        throw new UnsupportedOperationException("multimodal prefill not supported");
+    }
+
+    /**
      * One decode step for an active set (same or mixed positions; engine may
      * cohort by position). Tokens are {@code [B]} last tokens; positions are
      * the write index for each row.

@@ -64,6 +64,9 @@ public class QwenModel extends LayerBlock {
     final LinearLayer lmHead;
     /** HF-style partial RoPE cos/sin tables (moved with {@link #to}). */
     PartialRotaryEncoding.CosSin rope;
+    /** Optional native vision tower (Qwen3.8); null for text-only. */
+    final QwenVisionTower visual;
+    final QwenVisionArgs visionArgs;
     final TensorShardSpec shard;
     final TensorParallelGroup tpGroup;
     final int tpRank;
@@ -78,7 +81,7 @@ public class QwenModel extends LayerBlock {
      * @param statePool DeltaNet state pool (may be null when no linear layers).
      */
     public QwenModel(QwenModelArgs args, DeltaNetStatePool statePool) {
-        this(args, statePool, null, null);
+        this(args, statePool, null, null, null);
     }
 
     /**
@@ -91,6 +94,21 @@ public class QwenModel extends LayerBlock {
      */
     public QwenModel(QwenModelArgs args, DeltaNetStatePool statePool,
                      TensorShardSpec shard, TensorParallelGroup tpGroup) {
+        this(args, statePool, shard, tpGroup, null);
+    }
+
+    /**
+     * Multimodal constructor with optional vision tower.
+     *
+     * @param args       text hyperparameters.
+     * @param statePool  DeltaNet state pool.
+     * @param shard      TP shard, or null.
+     * @param tpGroup    TP group, or null.
+     * @param visionArgs vision hyperparameters, or {@code null} for text-only.
+     */
+    public QwenModel(QwenModelArgs args, DeltaNetStatePool statePool,
+                     TensorShardSpec shard, TensorParallelGroup tpGroup,
+                     QwenVisionArgs visionArgs) {
         if (statePool == null && args.numLinearAttentionLayers() > 0) {
             throw new IllegalArgumentException("statePool required when linear-attention layers exist");
         }
@@ -102,6 +120,7 @@ public class QwenModel extends LayerBlock {
         this.shard = shard;
         this.tpGroup = tpGroup;
         this.tpRank = shard != null ? shard.tpRank() : 0;
+        this.visionArgs = visionArgs;
 
         long t0 = System.currentTimeMillis();
         this.tokEmbeddings = new EmbeddingLayer(args.vocabSize(), args.dim());
@@ -122,6 +141,16 @@ public class QwenModel extends LayerBlock {
                 args.rotaryDim(), args.maxSeqLen() * 2, args.ropeTheta());
         logger.info("tpRank={}: RoPE cos/sin (rotaryDim={}, end={}) in {} ms",
                 tpRank, args.rotaryDim(), args.maxSeqLen() * 2, System.currentTimeMillis() - tRope);
+
+        if (visionArgs != null) {
+            long tVis = System.currentTimeMillis();
+            this.visual = new QwenVisionTower(visionArgs);
+            add("visual", visual);
+            logger.info("tpRank={}: vision tower (depth={}) in {} ms",
+                    tpRank, visionArgs.depth(), System.currentTimeMillis() - tVis);
+        } else {
+            this.visual = null;
+        }
 
         MemorySegment listAsModule = smile_module_list_as_module(moduleList);
         add("layers", listAsModule);
@@ -170,6 +199,30 @@ public class QwenModel extends LayerBlock {
      */
     public QwenModelArgs params() {
         return params;
+    }
+
+    /**
+     * @return vision tower, or {@code null} when text-only.
+     */
+    public QwenVisionTower visual() {
+        return visual;
+    }
+
+    /**
+     * @return vision args, or {@code null} when text-only.
+     */
+    public QwenVisionArgs visionArgs() {
+        return visionArgs;
+    }
+
+    /**
+     * Token embedding lookup (for multimodal splice).
+     *
+     * @param tokens token ids.
+     * @return embeddings.
+     */
+    public Tensor embedTokens(Tensor tokens) {
+        return tokEmbeddings.forward(tokens);
     }
 
     /**
@@ -345,6 +398,136 @@ public class QwenModel extends LayerBlock {
         }
     }
 
+    /**
+     * Prefill from precomputed embeddings (multimodal splice) with optional
+     * interleaved mRoPE cos/sin. When {@code cos}/{@code sin} are null, uses
+     * the standard 1D RoPE table slice for {@code [startPos, startPos+S)}.
+     *
+     * @param inputsEmbeds   {@code [B, S, D]} hidden states.
+     * @param startPos       cache start position.
+     * @param cos            optional {@code [S, rotaryDim]} (or null).
+     * @param sin            optional {@code [S, rotaryDim]} (or null).
+     * @param allTokenLogits whether to score every position.
+     * @return logits in float32.
+     */
+    public Tensor forwardEmbeds(Tensor inputsEmbeds, int startPos,
+                                Tensor cos, Tensor sin, boolean allTokenLogits) {
+        long[] shape = inputsEmbeds.shape();
+        int seqlen = (int) shape[1];
+        AutoScope scope = new AutoScope();
+        Tensor.push(scope);
+        Device device = inputsEmbeds.device();
+        try {
+            Tensor h = inputsEmbeds;
+            Tensor cosUse = cos;
+            Tensor sinUse = sin;
+            boolean ownRoPE = false;
+            if (cosUse == null || sinUse == null) {
+                try (var pos = Index.slice(startPos, startPos + seqlen)) {
+                    cosUse = rope.cos().get(pos);
+                    sinUse = rope.sin().get(pos);
+                    ownRoPE = false; // slices of long-lived tables
+                }
+            }
+
+            Tensor mask = null;
+            if (seqlen > 1) {
+                var maskOpts = new Tensor.Options()
+                        .device(h.device())
+                        .dtype(ScalarType.Float)
+                        .requireGradients(false);
+                mask = Tensor.zeros(maskOpts, seqlen, seqlen).fill_(Float.NEGATIVE_INFINITY);
+                mask.triu_(1);
+                if (startPos > 0) {
+                    try (var zeros = Tensor.zeros(maskOpts, seqlen, startPos)) {
+                        Tensor prev = mask;
+                        mask = Tensor.hstack(zeros, prev);
+                        prev.close();
+                    }
+                }
+                if (mask.dtype() != h.dtype()) {
+                    Tensor maskF = mask;
+                    mask = maskF.to(h.dtype());
+                    maskF.close();
+                }
+            }
+
+            // Clone embeds so we can close intermediates without freeing caller tensor.
+            h = inputsEmbeds.copy();
+            for (int i = 0; i < layers.size(); i++) {
+                Tensor next = layers.get(i).forward(h, startPos, cosUse, sinUse, mask);
+                h.close();
+                h = next;
+            }
+
+            Tensor normalized = norm.forward(h);
+            h.close();
+            if (mask != null) {
+                mask.close();
+            }
+            Tensor logitsF;
+            if (!allTokenLogits && seqlen > 1) {
+                try (var last = Index.of(-1);
+                     Tensor lastH = normalized.get(Index.Colon, last);
+                     Tensor lastRow = lastH.unsqueeze(1)) {
+                    logitsF = lmHead.forward(lastRow);
+                }
+                normalized.close();
+            } else {
+                logitsF = lmHead.forward(normalized);
+                normalized.close();
+            }
+            Tensor logits = logitsF.to(ScalarType.Float);
+            if (logits != logitsF) {
+                logitsF.close();
+            }
+            logits.promoteToParent();
+            return logits;
+        } finally {
+            Tensor.pop();
+        }
+    }
+
+    /**
+     * Replaces image/video pad rows in text embeddings with vision features.
+     *
+     * @param embeds        {@code [1, S, D]} text embeddings (mutated copy returned).
+     * @param inputIds      length {@code S} token ids.
+     * @param visionEmbeds  {@code [N, D]} vision tokens in pad order.
+     * @param imageTokenId  image pad id.
+     * @param videoTokenId  video pad id.
+     * @return spliced embeddings {@code [1, S, D]} (caller owns).
+     */
+    public static Tensor spliceVisionEmbeds(Tensor embeds, int[] inputIds, Tensor visionEmbeds,
+                                            int imageTokenId, int videoTokenId) {
+        if (embeds == null || inputIds == null || visionEmbeds == null) {
+            throw new IllegalArgumentException("embeds, inputIds, visionEmbeds required");
+        }
+        List<Integer> padIdx = new ArrayList<>();
+        for (int i = 0; i < inputIds.length; i++) {
+            if (inputIds[i] == imageTokenId || inputIds[i] == videoTokenId) {
+                padIdx.add(i);
+            }
+        }
+        long nVis = visionEmbeds.shape()[0];
+        if (padIdx.size() != nVis) {
+            throw new IllegalArgumentException(
+                    "pad count " + padIdx.size() + " != vision tokens " + nVis);
+        }
+        Tensor out = embeds.copy();
+        for (int i = 0; i < padIdx.size(); i++) {
+            int pos = padIdx.get(i);
+            try (var row = Index.of(0);
+                 var col = Index.of(pos);
+                 var visRow = Index.of(i);
+                 Tensor src = visionEmbeds.get(visRow)) {
+                out.put_(src, row, col);
+            }
+        }
+        out.promoteToParent();
+        return out;
+    }
+
     /** Best-effort CUDA free bytes for diagnostics; {@code -1} when unavailable. */
     private static long cudaFreeBytes(Device device) {
         if (device == null || !device.isCUDA()) {
@@ -377,8 +560,26 @@ public class QwenModel extends LayerBlock {
      * @return logits in float32.
      */
     public Tensor forward(Tensor tokens, int[] positions, boolean allTokenLogits) {
-        if (positions == null || positions.length != (int) tokens.shape()[0]) {
-            throw new IllegalArgumentException("positions length must equal batch size");
+        return forward(tokens, positions, positions, allTokenLogits);
+    }
+
+    /**
+     * Decode forward with separate KV write positions and RoPE gather positions
+     * (needed for multimodal {@code rope_delta}).
+     *
+     * @param tokens         token ids {@code [B, 1]}.
+     * @param cachePositions KV write positions.
+     * @param ropePositions  RoPE table gather positions.
+     * @param allTokenLogits unused for {@code S == 1}.
+     * @return logits in float32.
+     */
+    public Tensor forward(Tensor tokens, int[] cachePositions, int[] ropePositions,
+                          boolean allTokenLogits) {
+        if (cachePositions == null || cachePositions.length != (int) tokens.shape()[0]) {
+            throw new IllegalArgumentException("cachePositions length must equal batch size");
+        }
+        if (ropePositions == null || ropePositions.length != cachePositions.length) {
+            throw new IllegalArgumentException("ropePositions length must equal batch size");
         }
         if (tokens.shape()[1] != 1) {
             throw new IllegalArgumentException("ragged forward requires seqLen == 1");
@@ -389,11 +590,11 @@ public class QwenModel extends LayerBlock {
         long freeBefore = cudaFreeBytes(device);
         try {
             Tensor h = tokEmbeddings.forward(tokens);
-            Tensor cos = PartialRotaryEncoding.gather(rope.cos(), positions);
-            Tensor sin = PartialRotaryEncoding.gather(rope.sin(), positions);
+            Tensor cos = PartialRotaryEncoding.gather(rope.cos(), ropePositions);
+            Tensor sin = PartialRotaryEncoding.gather(rope.sin(), ropePositions);
 
             for (int i = 0; i < layers.size(); i++) {
-                Tensor next = layers.get(i).forward(h, positions, cos, sin, null);
+                Tensor next = layers.get(i).forward(h, cachePositions, cos, sin, null);
                 h.close();
                 h = next;
             }

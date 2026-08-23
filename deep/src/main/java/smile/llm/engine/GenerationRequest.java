@@ -18,6 +18,7 @@ package smile.llm.engine;
 
 import smile.llm.GenerationListener;
 import smile.llm.Message;
+import smile.llm.model.qwen.QwenVlProcessor;
 
 /**
  * One generation job submitted to {@link InferenceEngine}.
@@ -25,6 +26,8 @@ import smile.llm.Message;
  * @param promptTokens token ids (required unless {@code dialog} is set).
  * @param dialog       optional chat turns; encoded by the engine when
  *                     {@code promptTokens} is {@code null}.
+ * @param multimodal   optional Qwen VL preprocess result (images/video); when
+ *                     set, {@code promptTokens} should match {@code multimodal.inputIds()}.
  * @param maxGenLen    max new tokens.
  * @param temperature  sampling temperature.
  * @param topp         nucleus top-p.
@@ -37,6 +40,7 @@ import smile.llm.Message;
 public record GenerationRequest(
         int[] promptTokens,
         Message[] dialog,
+        QwenVlProcessor.ProcessedMultimodal multimodal,
         int maxGenLen,
         double temperature,
         double topp,
@@ -54,8 +58,22 @@ public record GenerationRequest(
         if (promptTokens == null) {
             throw new IllegalArgumentException("promptTokens must not be null");
         }
-        return new GenerationRequest(promptTokens, null, maxGenLen, temperature, topp,
+        return new GenerationRequest(promptTokens, null, null, maxGenLen, temperature, topp,
                 logprobs, seed, listener);
+    }
+
+    /**
+     * Builds a multimodal request (vision embeds spliced during prefill).
+     */
+    public static GenerationRequest ofMultimodal(QwenVlProcessor.ProcessedMultimodal multimodal,
+                                                 int maxGenLen, double temperature, double topp,
+                                                 boolean logprobs, long seed,
+                                                 GenerationListener listener) {
+        if (multimodal == null) {
+            throw new IllegalArgumentException("multimodal must not be null");
+        }
+        return new GenerationRequest(multimodal.inputIds(), null, multimodal, maxGenLen,
+                temperature, topp, logprobs, seed, listener);
     }
 
     /**
@@ -68,7 +86,12 @@ public record GenerationRequest(
         if (dialog == null) {
             throw new IllegalArgumentException("dialog must not be null");
         }
-        return new GenerationRequest(null, dialog, maxGenLen, temperature, topp,
+        return new GenerationRequest(null, dialog, null, maxGenLen, temperature, topp,
                 logprobs, seed, listener);
+    }
+
+    /** @return {@code true} when vision prefill is required. */
+    public boolean hasMultimodal() {
+        return multimodal != null && multimodal.hasVision();
     }
 }
