@@ -52,6 +52,13 @@
   border-radius: 8px;
 }
 
+.media-file-icon,
+.file-type-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: #4b5563;
+}
+
 .media-filename {
   flex: 1;
   font-size: 13px;

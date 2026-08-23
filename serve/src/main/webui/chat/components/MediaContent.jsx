@@ -17,6 +17,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { downloadMedia, isInternalMediaUrl } from '../mediaUtils'
+import FileTypeIcon from './FileTypeIcon'
 import './MediaContent.css'
 
 function DownloadIcon() {
@@ -145,10 +146,12 @@ export default function MediaContent({
     )
   }
 
-  if (type === 'file') {
+  if (type === 'file' || type === 'text') {
+    const fileKind = type === 'text' ? 'text' : 'file'
     return (
       <div className={`media-block media-file${downloadable ? ' media-block--hoverable' : ''}`}>
         <div className="media-frame media-frame--file">
+          <FileTypeIcon kind={fileKind} name={downloadName} mime={mime || ''} className="media-file-icon" />
           <span className="media-filename">{downloadName}</span>
           {downloadBtn}
         </div>

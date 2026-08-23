@@ -34,41 +34,6 @@ export default function IncomingMessage({
         }
     }, [user])
 
-    let processedParts = parts
-    let processedText = text
-    const rawText = parts?.find((p) => p.type === 'text')?.text ?? text ?? ''
-    const thinkOpen = '<think>'
-    const thinkClose = '</think>'
-    let start = rawText.indexOf(thinkOpen)
-    let end = rawText.indexOf(thinkClose)
-    if (start !== -1) {
-        let think = ""
-        let answer = ""
-        if (end !== -1) {
-            think = rawText.substring(start + thinkOpen.length, end).trimEnd()
-            answer = rawText.substring(end + thinkClose.length)
-        } else {
-            think = rawText.substring(start + thinkOpen.length)
-        }
-
-        if (think) {
-            think = think.replaceAll('\n', '\n> ')
-            if (!think.startsWith('\n> ')) {
-                think = '> ' + think
-            }
-            think += '\n'
-        }
-
-        const merged = think + answer
-        if (parts?.length) {
-            processedParts = parts.map((p) =>
-                p.type === 'text' ? { ...p, text: merged } : p
-            )
-        } else {
-            processedText = merged
-        }
-    }
-
     return (
         <div data-testid="incoming-message" className="incoming-wrapper">
             <div className="text-wrapper">
@@ -86,8 +51,8 @@ export default function IncomingMessage({
                 <div className="incoming-message-container">
                     <div className="incoming-background"/>
                     <MessageParts
-                        parts={processedParts}
-                        text={processedText}
+                        parts={parts}
+                        text={text}
                         downloadable
                     />
                 </div>

@@ -20,6 +20,7 @@ import {
   sizeLimitFor,
   uploadMedia,
 } from '../mediaUtils'
+import FileTypeIcon from './FileTypeIcon'
 import './MessageInput.css'
 
 const ACCEPT = 'image/*,video/*,audio/*,.txt,.md,.csv,.json,text/plain'
@@ -100,16 +101,6 @@ export default function MessageInput({
             const limit = sizeLimitFor(kind)
             if (file.size > limit) {
                 setError(`${file.name} exceeds ${Math.round(limit / (1024 * 1024))} MiB limit`)
-                continue
-            }
-
-            if (kind === 'text') {
-                try {
-                    const body = await file.text()
-                    setText((prev) => (prev ? `${prev}\n${body}` : body))
-                } catch {
-                    setError(`Failed to read ${file.name}`)
-                }
                 continue
             }
 
@@ -204,7 +195,7 @@ export default function MessageInput({
                             {att.kind === 'image' && att.previewUrl ? (
                                 <img src={att.previewUrl} alt="" className="chip-thumb" />
                             ) : (
-                                <span className="chip-icon">{att.kind}</span>
+                                <FileTypeIcon kind={att.kind} name={att.name} mime={att.mime} className="chip-file-icon" />
                             )}
                             <span className="chip-name" title={att.name}>{att.name}</span>
                             <button
