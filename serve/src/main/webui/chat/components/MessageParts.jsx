@@ -35,13 +35,14 @@ export default function MessageParts({ parts, text, streaming }) {
       {resolved.map((part, index) => {
         if (part.type === 'text') {
           const body = part.text ?? ''
-          if (!body && !(streaming && index === resolved.length - 1)) {
+          const cursor = streaming && index === resolved.length - 1 ? '▍' : ''
+          if (!body && !cursor) {
             return null
           }
+          // react-markdown requires a single string child (not a React children array).
           return (
             <TextContent key={`text-${index}`}>
-              {body}
-              {streaming && index === resolved.length - 1 ? '▍' : ''}
+              {body + cursor}
             </TextContent>
           )
         }

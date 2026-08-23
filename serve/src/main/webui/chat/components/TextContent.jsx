@@ -30,6 +30,11 @@ import './TextContent.css'
 export default function TextContent({
     children
 }) {
+    // react-markdown only accepts a string; join if callers pass multiple children.
+    const markdown = typeof children === 'string'
+        ? children
+        : React.Children.toArray(children).join('')
+
     const Pre = ({ children }) => <pre className="code-pre">
         <CopyButton>{children}</CopyButton>
         {children}
@@ -71,7 +76,7 @@ export default function TextContent({
                   }
                 }}
             >
-                {children}
+                {markdown}
             </Markdown>
         </div>
     )
