@@ -394,6 +394,17 @@ public final class InferenceEngine implements AutoCloseable {
             recordQueueWait(next.enqueuedAtNanos);
 
             int matched = executor.prefixLen(kvId);
+            if (matched > 0) {
+                try {
+                    long tw = System.nanoTime();
+                    executor.warmPrefix(kvId, prompt, matched);
+                    prefillMsTotal.addAndGet((System.nanoTime() - tw) / 1_000_000L);
+                } catch (RuntimeException ex) {
+                    executor.evict(kvId);
+                    next.handle.future().completeExceptionally(ex);
+                    continue;
+                }
+            }
             int from = matched;
             // Keep last prompt token for next-token logits when generating.
             if (from > 0 && promptLen < desired && promptLen > 0) {

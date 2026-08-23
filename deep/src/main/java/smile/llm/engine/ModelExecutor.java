@@ -111,6 +111,22 @@ public interface ModelExecutor {
     }
 
     /**
+     * After a radix KV prefix hit of length {@code prefixLen}, restores any
+     * non-KV state required before suffix prefill may start at {@code prefixLen}.
+     *
+     * <p>Default is a no-op (pure Transformer KV reuse). Hybrid models that
+     * keep DeltaNet (or similar) state must replay or restore that state here
+     * when prefix reuse is enabled.
+     *
+     * @param requestId request id from {@link #bind}.
+     * @param prompt    full prompt tokens.
+     * @param prefixLen page-aligned matched prefix ({@code >= 0}).
+     */
+    default void warmPrefix(int requestId, int[] prompt, int prefixLen) {
+        // no-op
+    }
+
+    /**
      * One decode step for an active set (same or mixed positions; engine may
      * cohort by position). Tokens are {@code [B]} last tokens; positions are
      * the write index for each row.
