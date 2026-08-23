@@ -47,7 +47,7 @@ public class ConversationItem extends PanacheEntityBase {
     @Column(nullable = false, length = 32)
     public String role;
 
-    /** The raw message text. */
+    /** The message body: plain text, or OpenAI-style content-parts JSON. */
     @Column(nullable = false, columnDefinition = "TEXT")
     public String content;
 }

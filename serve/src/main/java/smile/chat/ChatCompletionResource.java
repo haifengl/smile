@@ -73,6 +73,9 @@ public class ChatCompletionResource {
     @Inject
     ObjectMapper objectMapper;
 
+    @Inject
+    MediaService mediaService;
+
     /**
      * Non-streaming chat completion ({@code stream: false} or omitted).
      *
@@ -263,8 +266,10 @@ public class ChatCompletionResource {
                 ConversationItem item = new ConversationItem();
                 item.conversationId = conversationId;
                 item.role = message.role().toString();
-                item.content = message.content();
+                item.content = MessageContentCodec.toStoredContent(message);
                 item.persist();
+                mediaService.linkToMessage(
+                        conversationId, item.id, MessageContentCodec.mediaContentIds(message));
                 break;
             }
         }
