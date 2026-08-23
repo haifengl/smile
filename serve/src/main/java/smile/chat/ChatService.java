@@ -89,6 +89,8 @@ public class ChatService {
     private long createdAt;
     /** {@code "huggingface"} or {@code "local"} when a model is loaded. */
     private String source;
+    /** Resolves internal media URLs to data URLs for VL inference. */
+    private final MediaService mediaService;
 
     /**
      * Loads the LLM upon application start.
@@ -106,7 +108,8 @@ public class ChatService {
      * @param kvCache KV-cache storage configuration.
      */
     @Inject
-    public ChatService(ChatServiceConfig config, KvCacheConfig kvCache) {
+    public ChatService(ChatServiceConfig config, KvCacheConfig kvCache, MediaService mediaService) {
+        this.mediaService = mediaService;
         String modelSpec = config.model();
         this.modelId = publicModelId(modelSpec);
         try {
@@ -421,9 +424,12 @@ public class ChatService {
      */
     public smile.llm.engine.GenerationHandle submitCompletion(
             CompletionRequest request, SubmissionPublisher<String> publisher) {
+        Message[] messages = mediaService != null
+                ? mediaService.resolveInternalMedia(request.messages)
+                : request.messages;
         boolean hasMedia = false;
-        if (request.messages != null) {
-            for (var m : request.messages) {
+        if (messages != null) {
+            for (var m : messages) {
                 if (m != null && m.hasMedia()) {
                     hasMedia = true;
                     break;
@@ -442,14 +448,14 @@ public class ChatService {
                     throw new IllegalArgumentException(
                             "Multimodal content requires a Qwen3.8 vision checkpoint");
                 }
-                var mm = qwen.processMultimodal(request.messages);
+                var mm = qwen.processMultimodal(messages);
                 int maxGenLen = request.resolveMaxTokens(model.maxSeqLen(), mm.inputIds().length);
                 promptLen = mm.inputIds().length;
                 genReq = smile.llm.engine.GenerationRequest.ofMultimodal(
                         mm, maxGenLen, request.temperature, request.topP,
                         request.logprobs, request.seed, listener);
             } else {
-                int[] prompt = model.encodeChat(request.messages);
+                int[] prompt = model.encodeChat(messages);
                 int maxGenLen = request.resolveMaxTokens(model.maxSeqLen(), prompt.length);
                 promptLen = prompt.length;
                 genReq = smile.llm.engine.GenerationRequest.ofTokens(
