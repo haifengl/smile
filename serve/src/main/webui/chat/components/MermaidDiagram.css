@@ -15,7 +15,8 @@
 }
 
 .mermaid-block--loading,
-.mermaid-block--error {
+.mermaid-block--error,
+.mermaid-block--pending {
   text-align: left;
 }
 

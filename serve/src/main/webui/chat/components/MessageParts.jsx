@@ -60,6 +60,7 @@ export default function MessageParts({
   parts,
   text,
   downloadable = false,
+  streaming = false,
 }) {
   const resolved = parts?.length
     ? parts
@@ -92,7 +93,7 @@ export default function MessageParts({
       ) : null}
 
       {answer ? (
-        <TextContent downloadable={downloadable}>
+        <TextContent downloadable={downloadable} streaming={streaming}>
           {answer}
         </TextContent>
       ) : null}
