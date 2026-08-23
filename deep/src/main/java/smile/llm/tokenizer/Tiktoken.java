@@ -50,6 +50,11 @@ public class Tiktoken implements Tokenizer {
     protected final Map<String, Integer> specialTokens;
     /** Special-token ids for {@link #tryDecode(int[], boolean)} skip filtering. */
     private final Set<Integer> specialTokenIds;
+    /**
+     * Specials that remain in streamed text even when {@code skipSpecial} is
+     * true (e.g. model thinking markers the UI needs to style).
+     */
+    private final Set<Integer> visibleSpecialTokenIds;
     /** ID -> Token */
     private final Bytes[] decoder;
     /** BOS (beginning of sequence) token id. */
@@ -126,12 +131,33 @@ public class Tiktoken implements Tokenizer {
             this.decoder[specialIds[i]] = specialBytes[i];
         }
         this.specialTokenIds = Set.copyOf(this.specialTokens.values());
+        this.visibleSpecialTokenIds = visibleSpecialTokenIds(this.specialTokens);
 
         this.bos = Optional.ofNullable(this.specialTokens.get(bos))
                 .orElseThrow(() -> new IllegalArgumentException("BOS token not found in specialTokens: " + bos));
         this.eos = Optional.ofNullable(this.specialTokens.get(eos))
                 .orElseThrow(() -> new IllegalArgumentException("EOS token not found in specialTokens: " + eos));
         logger.info("#words: {} | BOS ID: {} | EOS ID: {}", decoder.length, this.bos, this.eos);
+    }
+
+    /**
+     * Specials the UI relies on (thinking span markers). Built without
+     * embedding the literal tag spelling in one piece so tooling that
+     * strips HTML-like tokens cannot corrupt the constants.
+     */
+    private static Set<Integer> visibleSpecialTokenIds(Map<String, Integer> specials) {
+        String open = "<" + "think>";
+        String close = "</" + "think>";
+        Set<Integer> visible = new HashSet<>();
+        Integer openId = specials.get(open);
+        Integer closeId = specials.get(close);
+        if (openId != null) {
+            visible.add(openId);
+        }
+        if (closeId != null) {
+            visible.add(closeId);
+        }
+        return Set.copyOf(visible);
     }
 
     /**
@@ -364,7 +390,7 @@ public class Tiktoken implements Tokenizer {
     public String tryDecode(int[] tokens, boolean skipSpecial) throws CharacterCodingException {
         int totalBytes = 0;
         for (var token : tokens) {
-            if (skipSpecial && isSpecialTokenId(token)) {
+            if (skipSpecial && shouldSkipSpecial(token)) {
                 continue;
             }
             totalBytes += decoder[token].length();
@@ -372,7 +398,7 @@ public class Tiktoken implements Tokenizer {
         byte[] buffer = new byte[totalBytes];
         int offset = 0;
         for (var token : tokens) {
-            if (skipSpecial && isSpecialTokenId(token)) {
+            if (skipSpecial && shouldSkipSpecial(token)) {
                 continue;
             }
             var array = decoder[token].array();
@@ -385,6 +411,15 @@ public class Tiktoken implements Tokenizer {
     /** @return {@code true} when {@code tokenId} is a registered special token. */
     private boolean isSpecialTokenId(int tokenId) {
         return specialTokenIds.contains(tokenId);
+    }
+
+    /**
+     * Whether a special should be omitted from streamed decode. Control
+     * specials ({@code <|im_end|>}, pads, …) are skipped; thinking markers
+     * stay so clients can style reasoning spans.
+     */
+    private boolean shouldSkipSpecial(int tokenId) {
+        return isSpecialTokenId(tokenId) && !visibleSpecialTokenIds.contains(tokenId);
     }
 
     @Override

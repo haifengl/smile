@@ -14,3 +14,19 @@
 .message-attachments .media-block {
   margin: 0;
 }
+
+/* Notebook-style thinking span (left binding line). */
+.thinking-block {
+  display: block;
+  background: #f9f9f9;
+  border-left: 10px solid #ccc;
+  margin: 12px 16px 8px;
+  padding: 8px 12px;
+  border-radius: 0 6px 6px 0;
+  box-sizing: border-box;
+  color: rgba(0, 0, 0, 0.68);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
