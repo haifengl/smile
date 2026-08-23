@@ -38,6 +38,7 @@ export default function TextContent({
     children,
     downloadable = false,
     compact = false,
+    streaming = false,
 }) {
     // react-markdown only accepts a string; join if callers pass multiple children.
     const raw = typeof children === 'string'
@@ -78,7 +79,7 @@ export default function TextContent({
                     const lang = language ? language[1] : null
                     const code = String(codeChildren).replace(/\n$/, '')
                     if (lang === 'mermaid') {
-                      return <MermaidDiagram chart={code} />
+                      return <MermaidDiagram chart={code} streaming={streaming} />
                     }
                     const multiline = /[\r\n]/.exec(code);
                     return multiline ?
