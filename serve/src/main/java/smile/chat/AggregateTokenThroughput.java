@@ -25,6 +25,10 @@ import org.jboss.logging.Logger;
  * requests. Useful for comparing continuous-batching aggregate tok/s to a
  * single-request baseline.
  *
+ * <p>Each reported window includes token-weighted mean cache length
+ * ({@code prompt + generated so far}) and mean generated-token count so
+ * short-context peaks are not confused with long-context steady state.
+ *
  * @author Haifeng Li
  */
 public final class AggregateTokenThroughput {
@@ -41,8 +45,11 @@ public final class AggregateTokenThroughput {
          * @param tokens          tokens counted in the window.
          * @param seconds         window duration in seconds.
          * @param activeRequests  requests currently contributing tokens.
+         * @param meanCacheLen    token-weighted mean {@code promptLen + generatedSoFar}.
+         * @param meanGenerated   token-weighted mean generated tokens so far.
          */
-        void report(double rateTokPerSec, int tokens, double seconds, int activeRequests);
+        void report(double rateTokPerSec, int tokens, double seconds, int activeRequests,
+                    double meanCacheLen, double meanGenerated);
     }
 
     private final long intervalNanos;
@@ -50,6 +57,8 @@ public final class AggregateTokenThroughput {
     private final AtomicInteger activeRequests = new AtomicInteger();
     private long windowStartNanos;
     private int windowTokens;
+    private long windowCacheLenWeighted;
+    private long windowGeneratedWeighted;
 
     /** Creates an aggregator with {@link #DEFAULT_INTERVAL_MS}. */
     public AggregateTokenThroughput() {
@@ -60,10 +69,11 @@ public final class AggregateTokenThroughput {
      * @param intervalMs minimum window length before a throughput line may be logged.
      */
     public AggregateTokenThroughput(long intervalMs) {
-        this(intervalMs, (rate, tokens, seconds, active) ->
+        this(intervalMs, (rate, tokens, seconds, active, meanCache, meanGen) ->
                 logger.infof("Aggregate generation throughput: %.1f tok/s "
-                                + "(%d tokens in %.2fs, %d active requests)",
-                        rate, tokens, seconds, active));
+                                + "(%d tokens in %.2fs, %d active, meanCacheLen=%.0f, "
+                                + "meanGenerated=%.0f)",
+                        rate, tokens, seconds, active, meanCache, meanGen));
     }
 
     /**
@@ -99,7 +109,18 @@ public final class AggregateTokenThroughput {
      *
      * @param count newly generated tokens ({@code > 0}).
      */
-    public synchronized void onGeneratedTokens(int count) {
+    public void onGeneratedTokens(int count) {
+        onGeneratedTokens(count, 0, 0);
+    }
+
+    /**
+     * Records generated tokens with context length for the contributing request.
+     *
+     * @param count          newly generated tokens ({@code > 0}).
+     * @param cacheLen       {@code promptLen + generatedSoFar} after this update.
+     * @param generatedSoFar total generated tokens for that request so far.
+     */
+    public synchronized void onGeneratedTokens(int count, int cacheLen, int generatedSoFar) {
         if (count <= 0) {
             return;
         }
@@ -108,11 +129,15 @@ public final class AggregateTokenThroughput {
             windowStartNanos = now;
         }
         windowTokens += count;
+        windowCacheLenWeighted += (long) Math.max(0, cacheLen) * count;
+        windowGeneratedWeighted += (long) Math.max(0, generatedSoFar) * count;
         long elapsed = now - windowStartNanos;
         if (elapsed >= intervalNanos && windowTokens > 0) {
             reportWindow(windowTokens, elapsed);
             windowStartNanos = now;
             windowTokens = 0;
+            windowCacheLenWeighted = 0L;
+            windowGeneratedWeighted = 0L;
         }
     }
 
@@ -124,6 +149,8 @@ public final class AggregateTokenThroughput {
                 reportWindow(windowTokens, elapsed);
             }
             windowTokens = 0;
+            windowCacheLenWeighted = 0L;
+            windowGeneratedWeighted = 0L;
             windowStartNanos = 0L;
         }
     }
@@ -136,6 +163,9 @@ public final class AggregateTokenThroughput {
     private void reportWindow(int tokens, long elapsedNanos) {
         double seconds = elapsedNanos / 1_000_000_000.0;
         double rate = tokens / seconds;
-        reporter.report(rate, tokens, seconds, Math.max(0, activeRequests.get()));
+        double meanCache = tokens > 0 ? (double) windowCacheLenWeighted / tokens : 0.0;
+        double meanGen = tokens > 0 ? (double) windowGeneratedWeighted / tokens : 0.0;
+        reporter.report(rate, tokens, seconds, Math.max(0, activeRequests.get()),
+                meanCache, meanGen);
     }
 }

@@ -58,12 +58,15 @@ public class TokenThroughputLoggerTest {
     public void testGivenAggregateWhenTokensThenFeedsSharedMeter() {
         List<String> aggregateLines = new ArrayList<>();
         var aggregate = new AggregateTokenThroughput(10_000,
-                (rate, tokens, seconds, active) ->
-                        aggregateLines.add(String.format("%d toks active=%d", tokens, active)));
+                (rate, tokens, seconds, active, meanCache, meanGen) ->
+                        aggregateLines.add(String.format("%d toks active=%d cache=%.0f gen=%.0f",
+                                tokens, active, meanCache, meanGen)));
         var a = new TokenThroughputLogger(10_000, aggregate, (id, rate, tokens, seconds) -> {});
         var b = new TokenThroughputLogger(10_000, aggregate, (id, rate, tokens, seconds) -> {});
         a.setRequestId(1);
         b.setRequestId(2);
+        a.onInputTokens(26);
+        b.onInputTokens(26);
         a.onGeneratedTokens(3);
         b.onGeneratedTokens(5);
         assertEquals(8, aggregate.currentWindowTokens());
@@ -73,5 +76,8 @@ public class TokenThroughputLoggerTest {
         assertEquals(0, aggregate.currentWindowTokens());
         assertEquals(1, aggregateLines.size());
         assertTrue(aggregateLines.getFirst().contains("8 toks"));
+        // Token-weighted: (29*3 + 31*5) / 8 = 30.25 → "cache=30"
+        assertTrue(aggregateLines.getFirst().contains("cache=30"));
+        assertTrue(aggregateLines.getFirst().contains("gen=4")); // (3*3 + 5*5) / 8 = 4.25
     }
 }
