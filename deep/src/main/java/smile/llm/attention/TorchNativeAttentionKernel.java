@@ -32,6 +32,9 @@ public final class TorchNativeAttentionKernel implements AttentionKernel {
         if (query == null || key == null || value == null) {
             throw new IllegalArgumentException("torch_native requires contiguous query, key, and value");
         }
+        if (ctx != null && ctx.isRaggedContiguous()) {
+            return RaggedContiguousAttention.forward(query, key, value, ctx);
+        }
         double scale = ctx != null ? ctx.scale() : 0.0;
         double dropout = ctx != null ? ctx.dropout() : 0.0;
         boolean isCausal = ctx != null && ctx.isCausal();

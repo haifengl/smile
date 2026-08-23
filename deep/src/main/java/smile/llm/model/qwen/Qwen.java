@@ -1506,6 +1506,9 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             }
         }
 
+        logger.info("Multimodal prefill requestId={} range=[{}, {}) promptLen={} tpSize={} hasVision={}",
+                requestId, from, to, prompt.length, models.length, multimodal.hasVision());
+
         try (var guard = Tensor.noGradGuard();
              var scope = new AutoScope()) {
             Tensor.push(scope);
@@ -1518,9 +1521,14 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 QwenVlProcessor.ProcessedMultimodal mm = multimodal.to(device, dtype);
                 Tensor visionOut = null;
                 if (mm.hasVision()) {
-                    // Concatenate image+video grids for the tower.
                     int[][] grids = concatGrids(mm.imageGridThw(), mm.videoGridThw());
+                    long tVis = System.nanoTime();
+                    logger.info("Vision tower forward requestId={} pixelRows={} media={}",
+                            requestId, mm.pixelValues().shape()[0], grids.length);
                     visionOut = model.visual().forward(mm.pixelValues(), grids);
+                    logger.info("Vision tower forward requestId={} done in {} ms tokens={}",
+                            requestId, (System.nanoTime() - tVis) / 1_000_000L,
+                            visionOut.shape()[0]);
                 }
                 try (Tensor tokenIds = Tensor.of(Arrays.copyOfRange(prompt, from, to))
                         .reshape(1, to - from).to(device);
@@ -1541,7 +1549,34 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                                          visionArgs.mropeSection(), posT, posH, posW)) {
                         Tensor cos = mrope.cos().to(device);
                         Tensor sin = mrope.sin().to(device);
-                        Tensor logits = model.forwardEmbeds(embeds, from, cos, sin, false);
+                        Tensor[] embedShards = new Tensor[models.length];
+                        Tensor[] cosShards = new Tensor[models.length];
+                        Tensor[] sinShards = new Tensor[models.length];
+                        for (int r = 0; r < models.length; r++) {
+                            Device dev = models[r].device();
+                            embedShards[r] = r == 0 && embeds.device().equals(dev)
+                                    ? embeds : embeds.to(dev);
+                            cosShards[r] = r == 0 && cos.device().equals(dev) ? cos : cos.to(dev);
+                            sinShards[r] = r == 0 && sin.device().equals(dev) ? sin : sin.to(dev);
+                        }
+                        long tLlm = System.nanoTime();
+                        logger.info("LLM embed prefill requestId={} tokens={} tpSize={}",
+                                requestId, to - from, models.length);
+                        Tensor[] logitsArr = forwardEmbedsWindow(
+                                embedShards, from, cosShards, sinShards, tpExecutor, false);
+                        logger.info("LLM embed prefill requestId={} done in {} ms",
+                                requestId, (System.nanoTime() - tLlm) / 1_000_000L);
+                        for (int r = 0; r < models.length; r++) {
+                            if (embedShards[r] != embeds) {
+                                embedShards[r].close();
+                            }
+                            if (cosShards[r] != cos) {
+                                cosShards[r].close();
+                            }
+                            if (sinShards[r] != sin) {
+                                sinShards[r].close();
+                            }
+                        }
                         if (embeds != textEmb) {
                             embeds.close();
                         }
@@ -1551,13 +1586,21 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                             }
                         }
                         if (to < prompt.length) {
-                            logits.close();
+                            for (Tensor l : logitsArr) {
+                                if (l != null) {
+                                    l.close();
+                                }
+                            }
                             return null;
                         }
                         try (var last = Index.of(-1)) {
-                            Tensor out = logits.get(Index.Colon, last).reshape(1, -1);
+                            Tensor out = logitsArr[0].get(Index.Colon, last).reshape(1, -1);
                             out.promoteToParent();
-                            logits.close();
+                            for (Tensor l : logitsArr) {
+                                if (l != null) {
+                                    l.close();
+                                }
+                            }
                             return out;
                         }
                     }
@@ -1677,6 +1720,48 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 Tensor.pop();
             }
         }
+    }
+
+    /**
+     * Runs {@link QwenModel#forwardEmbeds} on every TP rank for the same
+     * spliced embedding window (replicated per device).
+     */
+    private Tensor[] forwardEmbedsWindow(Tensor[] embedShards, int startPos,
+                                           Tensor[] cosShards, Tensor[] sinShards,
+                                           ExecutorService pool, boolean allTokenLogits) {
+        Tensor[] logits = new Tensor[models.length];
+        if (models.length == 1) {
+            logits[0] = models[0].forwardEmbeds(
+                    embedShards[0], startPos, cosShards[0], sinShards[0], allTokenLogits);
+            return logits;
+        }
+        List<Future<Tensor>> futures = new ArrayList<>(models.length);
+        for (int r = 0; r < models.length; r++) {
+            final int rank = r;
+            futures.add(pool.submit(() -> {
+                ParallelState.setCurrent(tpGroup.state(rank));
+                try (var guard = Tensor.noGradGuard()) {
+                    return models[rank].forwardEmbeds(
+                            embedShards[rank], startPos, cosShards[rank], sinShards[rank],
+                            allTokenLogits);
+                } finally {
+                    ParallelState.clearCurrent();
+                }
+            }));
+        }
+        try {
+            for (int r = 0; r < models.length; r++) {
+                logits[r] = futures.get(r).get();
+            }
+        } catch (Exception e) {
+            for (Tensor l : logits) {
+                if (l != null) {
+                    l.close();
+                }
+            }
+            throw new RuntimeException("TP multimodal embed prefill failed", e);
+        }
+        return logits;
     }
 
     /**

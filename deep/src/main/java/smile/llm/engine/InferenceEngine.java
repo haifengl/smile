@@ -457,12 +457,20 @@ public final class InferenceEngine implements AutoCloseable {
             try {
                 Tensor logits;
                 if (a.request.hasMultimodal()) {
+                    logger.info("Prefill multimodal requestId={} tokens={}..{} (budget={})",
+                            a.handle.requestId(), a.prefillFrom, to, prefillTokenBudget);
                     logits = executor.prefillMultimodal(
                             a.kvRequestId, a.request.multimodal(), a.prefillFrom, to);
                 } else {
                     logits = executor.prefillChunk(a.kvRequestId, a.prompt, a.prefillFrom, to);
                 }
-                prefillMsTotal.addAndGet((System.nanoTime() - t0) / 1_000_000L);
+                long prefillMs = (System.nanoTime() - t0) / 1_000_000L;
+                prefillMsTotal.addAndGet(prefillMs);
+                if (a.request.hasMultimodal()) {
+                    logger.info("Prefill multimodal requestId={} finished in {} ms phase={}",
+                            a.handle.requestId(), prefillMs,
+                            to >= a.promptLen ? "decode-ready" : "partial");
+                }
                 budget -= chunk;
                 a.prefillFrom = to;
                 if (to < a.promptLen) {
