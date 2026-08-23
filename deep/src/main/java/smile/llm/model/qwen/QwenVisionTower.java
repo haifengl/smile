@@ -392,48 +392,14 @@ public class QwenVisionTower extends LayerBlock {
                  Tensor kRaw = r.get(Index.Colon, kSlice, Index.Colon);
                  Tensor vRaw = r.get(Index.Colon, vSlice, Index.Colon);
                  Tensor q = applyVisionRoPE(qRaw, cos, sin);
-                 Tensor k = applyVisionRoPE(kRaw, cos, sin)) {
-
-                List<Tensor> outs = new ArrayList<>();
-                try {
-                    for (int s = 0; s < cu.length - 1; s++) {
-                        int start = cu[s];
-                        int end = cu[s + 1];
-                        int len = end - start;
-                        try (var span = Index.slice(start, end);
-                             Tensor qs = q.get(span).transpose(0, 1).unsqueeze(0);
-                             Tensor ks = k.get(span).transpose(0, 1).unsqueeze(0);
-                             Tensor vs = vRaw.get(span).transpose(0, 1).unsqueeze(0);
-                             Tensor attn = AttentionBackends.kernel().forward(
-                                     qs, ks, vs, null,
-                                     AttentionContext.contiguous(scale, 0.0, false));
-                             // attn: [1, H, L, D] → [L, H*D]
-                             Tensor bhld = attn.reshape(numHeads, len, headDim);
-                             Tensor transposed = bhld.transpose(0, 1).contiguous();
-                             Tensor flat = transposed.reshape(len, (long) numHeads * headDim)) {
-                            outs.add(flat.copy());
-                        }
-                    }
-                    Tensor cat = outs.size() == 1
-                            ? outs.get(0)
-                            : Tensor.vstack(outs.toArray(Tensor[]::new));
-                    try (Tensor projected = proj.forward(cat)) {
-                        Tensor copy = projected.copy();
-                        copy.promoteToParent();
-                        for (Tensor t : outs) {
-                            t.close();
-                        }
-                        if (outs.size() > 1) {
-                            cat.close();
-                        }
-                        return copy;
-                    }
-                } catch (RuntimeException e) {
-                    for (Tensor t : outs) {
-                        t.close();
-                    }
-                    throw e;
-                }
+                 Tensor k = applyVisionRoPE(kRaw, cos, sin);
+                 Tensor attn = AttentionBackends.kernel().forward(
+                         q, k, vRaw, null,
+                         AttentionContext.ragged(scale, false, numHeads, numHeads, headDim, cu));
+                 Tensor projected = proj.forward(attn.reshape(seq, (long) numHeads * headDim))) {
+                Tensor copy = projected.copy();
+                copy.promoteToParent();
+                return copy;
             }
         }
 

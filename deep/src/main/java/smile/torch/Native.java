@@ -136,6 +136,13 @@ public final class Native {
                         ValueLayout.JAVA_INT, ValueLayout.JAVA_DOUBLE, ValueLayout.JAVA_INT,
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
                 .orElse(null);
+        static final MethodHandle FLASHINFER_RAGGED = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_flashinfer_ragged_attention")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
+                        ValueLayout.JAVA_DOUBLE, ValueLayout.JAVA_INT, ValueLayout.ADDRESS)))
+                .orElse(null);
     }
 
     /**
@@ -617,6 +624,47 @@ public final class Native {
                         ctx.isCausal() ? 1 : 0,
                         maskHandle,
                         ws.handle());
+            } catch (Throwable t) {
+                throw new RuntimeException(lastError().isEmpty() ? t.getMessage() : lastError(), t);
+            }
+            return new Tensor(check(out));
+        }
+    }
+
+    /**
+     * Runs ragged contiguous self-attention ({@code BatchPrefillWithRaggedKVCache} or SDPA fallback).
+     *
+     * @param query {@code [N, H, D]} NHD
+     * @param key   {@code [N, H, D]}
+     * @param value {@code [N, H, D]}
+     * @param mask  optional additive mask; may be null
+     * @param ctx   ragged context with {@link smile.llm.attention.AttentionContext#raggedIndptr()}
+     * @return output {@code [N, H, D]}
+     */
+    public static Tensor flashInferRaggedAttention(Tensor query, Tensor key, Tensor value,
+                                                   Tensor mask,
+                                                   smile.llm.attention.AttentionContext ctx) {
+        if (Bindings.FLASHINFER_RAGGED == null) {
+            throw new IllegalStateException("smile_flashinfer_ragged_attention not in libsmile_torch");
+        }
+        int[] indptr = ctx.raggedIndptr();
+        if (indptr == null || indptr.length < 2) {
+            throw new IllegalArgumentException("FlashInfer ragged context requires indptr [B+1]");
+        }
+        try (Tensor indptrT = Tensor.of(indptr).to(query.device()).to(smile.deep.tensor.ScalarType.Int32)) {
+            MemorySegment out;
+            try {
+                MemorySegment maskHandle = mask == null ? MemorySegment.NULL : mask.handle();
+                out = (MemorySegment) Bindings.FLASHINFER_RAGGED.invokeExact(
+                        query.handle(),
+                        key.handle(),
+                        value.handle(),
+                        indptrT.handle(),
+                        ctx.numKvHeads(),
+                        ctx.headDim(),
+                        ctx.scale(),
+                        ctx.isCausal() ? 1 : 0,
+                        maskHandle);
             } catch (Throwable t) {
                 throw new RuntimeException(lastError().isEmpty() ? t.getMessage() : lastError(), t);
             }

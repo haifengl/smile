@@ -56,6 +56,31 @@ public class AttentionBackendTest {
         }
     }
 
+    @Test
+    public void testGivenFlashInferWhenContiguousContextThenThrows() {
+        if (!AttentionBackends.flashInferAvailable()) {
+            return;
+        }
+        FlashInferAttentionKernel kernel = new FlashInferAttentionKernel();
+        var ctx = AttentionContext.contiguous(1.0, 0.0, false);
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> kernel.forward(null, null, null, null, ctx));
+        assertTrue(ex.getMessage().contains("paged or ragged"),
+                "expected FlashInfer to reject plain contiguous context, got: " + ex.getMessage());
+    }
+
+    @Test
+    public void testGivenFlashInferWhenRaggedContextWithoutTensorsThenNativeError() {
+        if (!AttentionBackends.flashInferAvailable()) {
+            return;
+        }
+        FlashInferAttentionKernel kernel = new FlashInferAttentionKernel();
+        var ctx = AttentionContext.ragged(1.0, false, 8, 8, 64, new int[]{0, 4, 10});
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> kernel.forward(null, null, null, null, ctx));
+        assertNotNull(ex.getMessage());
+    }
+
     @AfterEach
     public void restoreTorchNative() {
         AttentionBackends.install(AttentionBackend.TORCH_NATIVE);

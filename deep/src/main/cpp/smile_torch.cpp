@@ -2240,5 +2240,52 @@ ST_Tensor smile_flashinfer_paged_attention(
 #endif
 }
 
+ST_Tensor smile_flashinfer_ragged_attention(
+        ST_Tensor query,
+        ST_Tensor key,
+        ST_Tensor value,
+        ST_Tensor indptr,
+        int num_kv_heads,
+        int head_dim,
+        double scale,
+        int is_causal,
+        ST_Tensor attn_mask) {
+#if defined(USE_CUDA) && defined(USE_FLASHINFER)
+    if (!query || !key || !value || !indptr) {
+        set_error("smile_flashinfer_ragged_attention: null argument");
+        return nullptr;
+    }
+    ST_TRY_BEGIN
+        auto q = query->t;
+        float sc = scale > 0
+                ? static_cast<float>(scale)
+                : (1.0f / std::sqrt(static_cast<float>(head_dim > 0 ? head_dim : 1)));
+        torch::Tensor out = torch::empty_like(q);
+        std::string err;
+        const torch::Tensor *mask_ptr = (attn_mask && attn_mask->t.defined())
+                ? &attn_mask->t
+                : nullptr;
+        int rc = smile_flashinfer_ragged_attention_cuda(
+                q, key->t, value->t, indptr->t, num_kv_heads, head_dim,
+                sc, is_causal, mask_ptr, out, err);
+        if (rc != 0) {
+            set_error(err.empty() ? "flashinfer ragged attention failed" : err);
+            return nullptr;
+        }
+        return new ST_Tensor_{ out };
+    ST_TRY_END
+    return nullptr;
+#else
+    (void)query; (void)key; (void)value; (void)indptr;
+    (void)num_kv_heads; (void)head_dim; (void)scale; (void)is_causal; (void)attn_mask;
+#  ifdef USE_CUDA
+    set_error("smile_torch built without USE_FLASHINFER");
+#  else
+    set_error_no_cuda_build();
+#  endif
+    return nullptr;
+#endif
+}
+
 } // extern "C"
 

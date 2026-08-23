@@ -1070,6 +1070,31 @@ SMILE_API ST_Tensor smile_flashinfer_paged_attention(
         ST_Tensor attn_mask,
         ST_FlashInferWorkspace workspace);
 
+/**
+ * Ragged contiguous self-attention (vision tower / varlen prefill).
+ *
+ * @param query   {@code [N, H, D]} NHD layout
+ * @param key     {@code [N, H, D]}
+ * @param value   {@code [N, H, D]}
+ * @param indptr  int32 {@code [B+1]} cumulative segment lengths
+ * @param num_kv_heads H (MHA: equals query heads)
+ * @param head_dim D
+ * @param scale   attention scale ({@code <=0} → {@code 1/sqrt(D)})
+ * @param is_causal causal mask when no explicit {@code attn_mask}
+ * @param attn_mask optional additive mask; nullable
+ * @return output {@code [N, H, D]}, or null on error
+ */
+SMILE_API ST_Tensor smile_flashinfer_ragged_attention(
+        ST_Tensor query,
+        ST_Tensor key,
+        ST_Tensor value,
+        ST_Tensor indptr,
+        int num_kv_heads,
+        int head_dim,
+        double scale,
+        int is_causal,
+        ST_Tensor attn_mask);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

@@ -26,16 +26,26 @@ import smile.torch.Native;
  * (vendored headers). Prefill uses GPU page gather + LibTorch SDPA with the
  * same mask semantics as {@code torch_native}.
  *
+ * <p>Ragged contiguous prefill (vision tower) uses
+ * {@code BatchPrefillWithRaggedKVCache} when supported, otherwise batched SDPA
+ * inside the FlashInfer module.
+ *
  * <p>Expects {@link AttentionContext#isPaged()} with CSR metadata and a
- * {@link FlashInferWorkspace}. Query layout {@code [B, H, S, D]}.
+ * {@link FlashInferWorkspace}, or {@link AttentionContext#isRaggedContiguous()}
+ * with cumulative segment indptr. Query layout {@code [B, H, S, D]} for paged;
+ * {@code [N, H, D]} NHD for ragged.
  *
  * @author Haifeng Li
  */
 public final class FlashInferAttentionKernel implements AttentionKernel {
     @Override
     public Tensor forward(Tensor query, Tensor key, Tensor value, Tensor mask, AttentionContext ctx) {
+        if (ctx != null && ctx.isRaggedContiguous()) {
+            return Native.flashInferRaggedAttention(query, key, value, mask, ctx);
+        }
         if (ctx == null || !ctx.isPaged()) {
-            throw new IllegalArgumentException("FlashInfer requires paged AttentionContext");
+            throw new IllegalStateException(
+                    "FlashInfer requires paged or ragged contiguous AttentionContext");
         }
         if (ctx.workspace() == null) {
             throw new IllegalStateException("FlashInfer workspace not installed");
