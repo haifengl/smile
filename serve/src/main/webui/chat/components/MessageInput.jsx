@@ -24,6 +24,19 @@ import './MessageInput.css'
 
 const ACCEPT = 'image/*,video/*,audio/*,.txt,.md,.csv,.json,text/plain'
 
+function PlusIcon({ color }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
+      <path
+        d="M12 5v14M5 12h14"
+        stroke={color}
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
 export default function MessageInput({
     onSendMessage,
     conversationId,
@@ -69,6 +82,13 @@ export default function MessageInput({
 
     const canSend = !disabled && !uploading
         && (text.trim().length > 0 || attachments.length > 0)
+    const canAttach = !disabled && !uploading
+
+    const openFileChooser = () => {
+        if (canAttach) {
+            fileInputRef.current?.click()
+        }
+    }
 
     const addFiles = async (fileList) => {
         if (!fileList?.length || disabled) return
@@ -97,14 +117,13 @@ export default function MessageInput({
                 ? URL.createObjectURL(file)
                 : null
             next.push({
-                id: `${Date.now()}-${file.name}`,
+                id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${file.name}`,
                 file,
                 kind,
                 name: file.name,
                 mime: file.type || 'application/octet-stream',
                 size: file.size,
                 previewUrl,
-                uploading: false,
             })
         }
         setAttachments(next)
@@ -179,7 +198,7 @@ export default function MessageInput({
     return (
         <div className="message-input">
             {attachments.length > 0 && (
-                <div className="attachment-chips">
+                <div className="attachment-chips" aria-label="Selected files">
                     {attachments.map((att) => (
                         <div key={att.id} className="attachment-chip">
                             {att.kind === 'image' && att.previewUrl ? (
@@ -187,12 +206,14 @@ export default function MessageInput({
                             ) : (
                                 <span className="chip-icon">{att.kind}</span>
                             )}
-                            <span className="chip-name">{att.name}</span>
+                            <span className="chip-name" title={att.name}>{att.name}</span>
                             <button
                                 type="button"
                                 className="chip-remove"
                                 onClick={() => removeAttachment(att.id)}
-                                aria-label="Remove attachment"
+                                disabled={uploading}
+                                title="Remove file"
+                                aria-label={`Remove ${att.name}`}
                             >
                                 ×
                             </button>
@@ -200,7 +221,7 @@ export default function MessageInput({
                     ))}
                 </div>
             )}
-            {error && <div className="input-error">{error}</div>}
+            {error && <div className="input-error" role="alert">{error}</div>}
             <form className={`input-form${dragOver ? ' drag-over' : ''}`}
                 data-testid="message-form"
                 onSubmit={(e) => {
@@ -209,24 +230,15 @@ export default function MessageInput({
                 }}
                 onDragOver={(e) => {
                     e.preventDefault()
-                    setDragOver(true)
+                    if (canAttach) setDragOver(true)
                 }}
                 onDragLeave={() => setDragOver(false)}
                 onDrop={(e) => {
                     e.preventDefault()
                     setDragOver(false)
-                    addFiles(e.dataTransfer.files)
+                    if (canAttach) addFiles(e.dataTransfer.files)
                 }}
             >
-                <div
-                    className="attach-button"
-                    onClick={() => !disabled && fileInputRef.current?.click()}
-                    title="Attach files"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" width="18" height="18" fill={theme}>
-                        <path d="M64 0C28.7 0 0 28.7 0 64v288c0 35.3 28.7 64 64 64h176c8.8 0 16-7.2 16-16s-7.2-16-16-16H64c-17.7 0-32-14.3-32-32V64c0-17.7 14.3-32 32-32h192c17.7 0 32 14.3 32 32v272c0 8.8 7.2 16 16 16s16-7.2 16-16V64c0-35.3-28.7-64-64-64H64zM320 336c0-53-43-96-96-96s-96 43-96 96 7.2 16 16 16s16-7.2 16-16c0-35.3 28.7-64 64-64s64 28.7 64 64v128c0 35.3-28.7 64-64 64H160c-35.3 0-64-28.7-64-64V336c0-8.8-7.2-16-16-16s-16 7.2-16 16v128c0 53 43 96 96 96h192c53 0 96-43 96-96V336z"/>
-                    </svg>
-                </div>
                 <input
                     ref={fileInputRef}
                     type="file"
@@ -240,6 +252,16 @@ export default function MessageInput({
                 />
                 <div className="input-container">
                     <div className="input-background" style={{ backgroundColor: theme }}/>
+                    <button
+                        type="button"
+                        className="upload-button"
+                        onClick={openFileChooser}
+                        disabled={!canAttach}
+                        title="Upload files"
+                        aria-label="Upload files"
+                    >
+                        <PlusIcon color={canAttach ? '#374151' : '#9ca3af'} />
+                    </button>
                     <div className="input-element-container">
                         <textarea
                             ref={textareaRef}
