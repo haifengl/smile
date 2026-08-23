@@ -21,8 +21,18 @@ import { messageText } from '../mediaUtils'
 import { splitThinking } from '../thinkingUtils'
 import './MessageParts.css'
 
-function isFileAttachment(type) {
-  return type === 'file' || type === 'text'
+function isMessageTextPart(part) {
+  return part?.type === 'text'
+    && typeof part.text === 'string'
+    && !part.url
+    && !part.contentId
+}
+
+function isFileAttachment(part) {
+  if (!part) return false
+  if (part.type === 'file') return true
+  // Text-file attachments reuse type "text" but carry a media url / content id.
+  return part.type === 'text' && !!(part.url || part.contentId)
 }
 
 function isInlineMedia(type) {
@@ -32,7 +42,7 @@ function isInlineMedia(type) {
 function FileAttachment({ part, downloadable }) {
   const mediaType = part.type === 'text' ? 'text' : 'file'
   const url = part.previewUrl || part.url
-  if (!url) return null
+  if (!url && part.textContent == null) return null
 
   return (
     <MediaContent
@@ -40,6 +50,7 @@ function FileAttachment({ part, downloadable }) {
       url={url}
       name={part.name}
       mime={part.mime}
+      textContent={part.textContent}
       downloadable={downloadable}
     />
   )
@@ -60,9 +71,9 @@ export default function MessageParts({
     return null
   }
 
-  const textParts = resolved.filter((p) => p.type === 'text')
+  const textParts = resolved.filter((p) => isMessageTextPart(p))
   const inlineMedia = resolved.filter((p) => isInlineMedia(p.type))
-  const fileAttachments = resolved.filter((p) => isFileAttachment(p.type))
+  const fileAttachments = resolved.filter((p) => isFileAttachment(p))
 
   const combinedText = textParts.map((p) => p.text ?? '').join('')
   const { thinking, answer } = splitThinking(combinedText)

@@ -87,29 +87,111 @@ function ImageLightbox({ url, name, onClose }) {
   )
 }
 
+function TextLightbox({ name, body, loading, error, onClose }) {
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKey)
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prev
+    }
+  }, [onClose])
+
+  return createPortal(
+    <div
+      className="media-lightbox"
+      role="dialog"
+      aria-modal="true"
+      aria-label={name || 'Attached file'}
+      onClick={onClose}
+    >
+      <div
+        className="media-lightbox-dialog media-lightbox-dialog--text"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          className="media-lightbox-close"
+          onClick={onClose}
+          aria-label="Close"
+        >
+          <CloseIcon />
+        </button>
+        <div className="media-lightbox-text-header">{name || 'Attached file'}</div>
+        <div className="media-lightbox-text-body">
+          {loading ? (
+            <div className="media-lightbox-text-status">Loading…</div>
+          ) : error ? (
+            <div className="media-lightbox-text-status media-lightbox-text-status--error">{error}</div>
+          ) : (
+            <pre className="media-lightbox-text-pre">{body ?? ''}</pre>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body
+  )
+}
+
 /**
  * @param {object} props
  * @param {string} props.type
- * @param {string} props.url
+ * @param {string} [props.url]
  * @param {string} [props.name]
  * @param {string} [props.mime]
+ * @param {string} [props.textContent] Cached text body for text-file attachments.
  * @param {boolean} [props.downloadable] Show hover download control (assistant media only).
- * @param {boolean} [props.expandable] Click image for fullscreen (default true for images).
+ * @param {boolean} [props.expandable] Click image/text for fullscreen (default true).
  */
 export default function MediaContent({
   type,
   url,
   name,
   mime,
+  textContent,
   downloadable = false,
   expandable = true,
 }) {
   const displayUrl = url
   const downloadName = name || 'download'
   const [lightbox, setLightbox] = useState(false)
+  const [fetchedText, setFetchedText] = useState(null)
+  const [textLoading, setTextLoading] = useState(false)
+  const [textError, setTextError] = useState('')
   const closeLightbox = useCallback(() => setLightbox(false), [])
 
-  const downloadBtn = downloadable ? (
+  const openTextLightbox = useCallback(async () => {
+    if (!expandable) return
+    setLightbox(true)
+    setTextError('')
+    if (textContent != null) {
+      setFetchedText(textContent)
+      return
+    }
+    if (!displayUrl) {
+      setTextError('File content unavailable')
+      return
+    }
+    if (fetchedText != null) return
+    setTextLoading(true)
+    try {
+      const response = await fetch(displayUrl)
+      if (!response.ok) {
+        throw new Error(response.statusText || 'Failed to load file')
+      }
+      setFetchedText(await response.text())
+    } catch (err) {
+      setTextError(err.message || 'Failed to load file')
+    } finally {
+      setTextLoading(false)
+    }
+  }, [expandable, textContent, displayUrl, fetchedText])
+
+  const downloadBtn = downloadable && displayUrl ? (
     <button
       type="button"
       className="media-download-icon"
@@ -148,14 +230,42 @@ export default function MediaContent({
 
   if (type === 'file' || type === 'text') {
     const fileKind = type === 'text' ? 'text' : 'file'
+    const canPreview = expandable && (type === 'text' || textContent != null
+      || /\.(txt|md|csv|json)$/i.test(downloadName)
+      || (mime || '').startsWith('text/')
+      || (mime || '').includes('json'))
+
     return (
-      <div className={`media-block media-file${downloadable ? ' media-block--hoverable' : ''}`}>
-        <div className="media-frame media-frame--file">
-          <FileTypeIcon kind={fileKind} name={downloadName} mime={mime || ''} className="media-file-icon" />
-          <span className="media-filename">{downloadName}</span>
-          {downloadBtn}
+      <>
+        <div className={`media-block media-file${downloadable ? ' media-block--hoverable' : ''}`}>
+          <div
+            className={`media-frame media-frame--file${canPreview ? ' media-frame--file-clickable' : ''}`}
+            role={canPreview ? 'button' : undefined}
+            tabIndex={canPreview ? 0 : undefined}
+            title={canPreview ? 'Click to view file' : undefined}
+            onClick={() => canPreview && openTextLightbox()}
+            onKeyDown={(e) => {
+              if (canPreview && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault()
+                openTextLightbox()
+              }
+            }}
+          >
+            <FileTypeIcon kind={fileKind} name={downloadName} mime={mime || ''} className="media-file-icon" />
+            <span className="media-filename">{downloadName}</span>
+            {downloadBtn}
+          </div>
         </div>
-      </div>
+        {lightbox && (
+          <TextLightbox
+            name={downloadName}
+            body={textContent != null ? textContent : fetchedText}
+            loading={textLoading}
+            error={textError}
+            onClose={closeLightbox}
+          />
+        )}
+      </>
     )
   }
 

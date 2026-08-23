@@ -104,6 +104,16 @@ export default function MessageInput({
                 continue
             }
 
+            let textContent
+            if (kind === 'text') {
+                try {
+                    textContent = await file.text()
+                } catch {
+                    setError(`Failed to read ${file.name}`)
+                    continue
+                }
+            }
+
             const previewUrl = (kind === 'image' || kind === 'video' || kind === 'audio')
                 ? URL.createObjectURL(file)
                 : null
@@ -115,6 +125,7 @@ export default function MessageInput({
                 mime: file.type || 'application/octet-stream',
                 size: file.size,
                 previewUrl,
+                ...(textContent != null ? { textContent } : {}),
             })
         }
         setAttachments(next)
@@ -150,6 +161,7 @@ export default function MessageInput({
                     mime: result.mime_type || att.mime,
                     name: result.filename || att.name,
                     size: result.size_bytes ?? att.size,
+                    ...(att.textContent != null ? { textContent: att.textContent } : {}),
                 })
                 if (att.previewUrl) URL.revokeObjectURL(att.previewUrl)
             }
