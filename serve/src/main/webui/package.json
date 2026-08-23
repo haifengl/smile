@@ -10,6 +10,10 @@
     "test": "node --test infer/imagenetTopK.test.js"
   },
   "dependencies": {
+    "@rjsf/core": "^6.7.1",
+    "@rjsf/validator-ajv8": "^6.7.1",
+    "mermaid": "^11.17.0",
+    "openai": "^7.4.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-markdown": "^10.1.0",
@@ -17,10 +21,7 @@
     "rehype-katex": "^7.0.1",
     "remark-gemoji": "^8.0.0",
     "remark-gfm": "^4.0.1",
-    "remark-math": "^6.0.0",
-    "openai": "^7.4.0",
-    "@rjsf/core": "^6.7.1",
-    "@rjsf/validator-ajv8": "^6.7.1"
+    "remark-math": "^6.0.0"
   },
   "devDependencies": {
     "@types/react": "^19.2.18",
