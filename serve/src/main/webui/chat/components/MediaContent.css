@@ -137,6 +137,64 @@
   line-height: 0;
 }
 
+.media-lightbox-dialog--text {
+  display: flex;
+  flex-direction: column;
+  width: min(92vw, 880px);
+  max-height: 88vh;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.45);
+  line-height: normal;
+  overflow: hidden;
+}
+
+.media-lightbox-text-header {
+  flex-shrink: 0;
+  padding: 14px 52px 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  border-bottom: 1px solid #e5e7eb;
+  word-break: break-all;
+}
+
+.media-lightbox-text-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: #f8fafc;
+}
+
+.media-lightbox-text-pre {
+  margin: 0;
+  padding: 16px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #111827;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.media-lightbox-text-status {
+  padding: 24px 16px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.media-lightbox-text-status--error {
+  color: #b91c1c;
+}
+
+.media-frame--file-clickable {
+  cursor: pointer;
+}
+
+.media-frame--file-clickable:hover {
+  background: rgba(0, 0, 0, 0.07);
+}
+
 .media-lightbox-image {
   display: block;
   max-width: min(96vw, 1400px);

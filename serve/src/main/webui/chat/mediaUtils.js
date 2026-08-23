@@ -136,15 +136,15 @@ export function isInternalMediaUrl(url) {
 }
 
 /**
- * Concatenates text parts from a UI message.
+ * Concatenates typed message text parts from a UI message (excludes file attachments).
  *
- * @param {{parts?: Array<{type: string, text?: string}>, text?: string}} message
+ * @param {{parts?: Array<{type: string, text?: string, url?: string, contentId?: string}>, text?: string}} message
  * @returns {string}
  */
 export function messageText(message) {
   if (message?.parts?.length) {
     return message.parts
-      .filter((p) => p.type === 'text')
+      .filter((p) => p.type === 'text' && typeof p.text === 'string' && !p.url && !p.contentId)
       .map((p) => p.text ?? '')
       .join('')
   }
@@ -152,28 +152,84 @@ export function messageText(message) {
 }
 
 /**
+ * Message body text parts (typed by the user), not text-file attachments.
+ *
+ * @param {object} part
+ * @returns {boolean}
+ */
+function isMessageTextPart(part) {
+  return part?.type === 'text'
+    && typeof part.text === 'string'
+    && !part.url
+    && !part.contentId
+}
+
+/**
+ * Attached text files whose body should be inlined into the prompt.
+ *
+ * @param {object} part
+ * @returns {boolean}
+ */
+function isTextFileAttachment(part) {
+  if (!part || isMessageTextPart(part)) return false
+  if (part.type === 'text') return true
+  if (part.type !== 'file') return false
+  const mime = part.mime || ''
+  const name = part.name || ''
+  return mime.startsWith('text/')
+    || mime.includes('json')
+    || /\.(txt|md|csv|json)$/i.test(name)
+}
+
+/**
+ * Formats an attached text file for the model prompt.
+ *
+ * @param {string} name
+ * @param {string} body
+ * @returns {string}
+ */
+function formatAttachedText(name, body) {
+  const label = name || 'file'
+  return `\n\n--- Attached file: ${label} ---\n${body ?? ''}`
+}
+
+/**
  * Builds OpenAI-style content for the completions API from a UI message.
+ *
+ * Text-file attachments are inlined as additional {@code text} parts so models
+ * without file-tooling can still read them. Image/video/audio stay multimodal.
  *
  * @param {{parts?: Array<object>}} message
  * @returns {string|Array<object>}
  */
 export function buildApiContent(message) {
   const parts = message.parts ?? []
-  const textParts = parts.filter((p) => p.type === 'text' && p.text?.trim())
-  const mediaParts = parts.filter((p) => p.type !== 'text')
-  if (mediaParts.length === 0) {
+  const textParts = parts.filter((p) => isMessageTextPart(p) && p.text.trim())
+  const textFiles = parts.filter((p) => isTextFileAttachment(p) && p.textContent != null)
+  const mediaParts = parts.filter((p) =>
+    (p.type === 'image' || p.type === 'video' || p.type === 'audio') && p.url
+  )
+
+  if (mediaParts.length === 0 && textFiles.length === 0) {
     return textParts.map((p) => p.text).join('') || ''
   }
+
   const content = []
   for (const part of textParts) {
     content.push({ type: 'text', text: part.text })
   }
+  for (const part of textFiles) {
+    content.push({
+      type: 'text',
+      text: formatAttachedText(part.name, part.textContent),
+    })
+  }
   for (const part of mediaParts) {
-    if (part.type === 'image' && part.url) {
+    if (part.type === 'image') {
       content.push({ type: 'image_url', image_url: { url: part.url } })
-    } else if (part.type === 'video' && part.url) {
+    } else if (part.type === 'video') {
       content.push({ type: 'video_url', video_url: { url: part.url } })
-    } else if (part.type === 'audio' && part.url) {
+    } else if (part.type === 'audio') {
       content.push({ type: 'audio_url', audio_url: { url: part.url } })
     }
   }

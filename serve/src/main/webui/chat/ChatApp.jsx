@@ -76,6 +76,8 @@ function buildUserParts(text, attachments) {
       mime: att.mime,
       name: att.name,
       size: att.size,
+      // Keep inlined text so buildApiContent can include it in the prompt.
+      ...(att.textContent != null ? { textContent: att.textContent } : {}),
     })
   }
   return parts
