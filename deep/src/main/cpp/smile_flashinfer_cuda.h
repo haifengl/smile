@@ -29,6 +29,19 @@ int smile_flashinfer_paged_attention_cuda(
         int cache_len,
         float scale,
         int is_causal,
+        const torch::Tensor *attn_mask,
+        torch::Tensor &out,
+        std::string &err);
+
+int smile_flashinfer_ragged_attention_cuda(
+        const torch::Tensor &query,
+        const torch::Tensor &key,
+        const torch::Tensor &value,
+        const torch::Tensor &indptr,
+        int num_kv_heads,
+        int head_dim,
+        float scale,
+        int is_causal,
         const torch::Tensor *attn_mask, /* nullable */
         torch::Tensor &out,
         std::string &err);

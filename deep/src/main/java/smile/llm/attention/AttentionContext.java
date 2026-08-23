@@ -40,6 +40,7 @@ import smile.llm.cache.KvCachePool;
  * @param workspace    FlashInfer workspace, or {@code null}.
  * @param startPositions optional per-row write positions (decode); {@code null} = uniform.
  * @param cacheLens      optional per-row cache lengths (decode); {@code null} = uniform.
+ * @param raggedIndptr   cumulative segment lengths for ragged contiguous prefill; {@code null} otherwise.
  *
  * @author Haifeng Li
  */
@@ -58,14 +59,29 @@ public record AttentionContext(
         FlashInferKvMetadata kvMetadata,
         FlashInferWorkspace workspace,
         int[] startPositions,
-        int[] cacheLens) {
+        int[] cacheLens,
+        int[] raggedIndptr) {
 
     /**
      * Contiguous SDPA context (gather path).
      */
     public static AttentionContext contiguous(double scale, double dropout, boolean isCausal) {
         return new AttentionContext(scale, dropout, isCausal,
-                0, 0, 0, -1, 0, 0, 0, null, null, null, null, null);
+                0, 0, 0, -1, 0, 0, 0, null, null, null, null, null, null);
+    }
+
+    /**
+     * Ragged contiguous prefill (vision tower / varlen self-attention).
+     *
+     * @param indptr cumulative segment lengths {@code [B+1]} (CPU array; copied to device at call time).
+     */
+    public static AttentionContext ragged(
+            double scale, boolean isCausal,
+            int numQoHeads, int numKvHeads, int headDim,
+            int[] indptr) {
+        return new AttentionContext(scale, 0.0, isCausal,
+                numQoHeads, numKvHeads, headDim,
+                -1, 0, 0, 0, null, null, null, null, null, indptr);
     }
 
     /**
@@ -80,7 +96,7 @@ public record AttentionContext(
         return new AttentionContext(scale, 0.0, isCausal,
                 numQoHeads, numKvHeads, headDim,
                 layerId, startPos, seqLen, cacheLen,
-                kvPool, kvMetadata, workspace, null, null);
+                kvPool, kvMetadata, workspace, null, null, null);
     }
 
     /**
@@ -97,7 +113,7 @@ public record AttentionContext(
         return new AttentionContext(scale, 0.0, isCausal,
                 numQoHeads, numKvHeads, headDim,
                 layerId, start, seqLen, cache,
-                kvPool, kvMetadata, workspace, startPositions, cacheLens);
+                kvPool, kvMetadata, workspace, startPositions, cacheLens, null);
     }
 
     /** @return {@code true} when this call carries paged-KV metadata. */
@@ -108,5 +124,10 @@ public record AttentionContext(
     /** @return {@code true} when per-row cache lengths are set. */
     public boolean isRagged() {
         return cacheLens != null && cacheLens.length > 0;
+    }
+
+    /** @return {@code true} for FlashInfer ragged contiguous Q/K/V (non-paged). */
+    public boolean isRaggedContiguous() {
+        return raggedIndptr != null && raggedIndptr.length > 1 && !isPaged();
     }
 }
