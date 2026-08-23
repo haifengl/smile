@@ -17,6 +17,7 @@
 package smile.chat;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import smile.llm.Message;
 
@@ -37,6 +38,7 @@ public class CompletionRequest {
     /** Optional ID of an existing conversation to append to ({@code conv_<id>}). */
     public String conversation;
     /** The ordered list of dialog messages. Must not be {@code null}. */
+    @JsonDeserialize(contentUsing = MessageDeserializer.class)
     public Message[] messages;
     /**
      * Maximum number of new tokens to generate. Prefer

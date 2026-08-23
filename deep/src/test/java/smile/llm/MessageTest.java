@@ -41,7 +41,7 @@ public class MessageTest {
     @Test
     public void testGivenMessageWithNullContentWhenCreatedThenThrows() {
         assertThrows(IllegalArgumentException.class,
-                () -> new Message(Role.user, null));
+                () -> new Message(Role.user, (String) null));
     }
 
     @Test

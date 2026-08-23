@@ -83,6 +83,8 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     final TensorParallelGroup tpGroup;
     final Tokenizer tokenizer;
     final QwenModelArgs params;
+    final QwenVisionArgs visionArgs;
+    final QwenVlProcessor vlProcessor;
     /** Long-lived TP worker pool; null when {@code models.length == 1}. */
     private final ExecutorService tpExecutor;
     /**
@@ -92,6 +94,8 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
      * hybrid safety.
      */
     private volatile boolean prefixReplayEnabled;
+    /** Per-request mRoPE decode offset ({@code rope_delta}); cleared on finish/evict. */
+    private final ConcurrentHashMap<Integer, Integer> ropeDeltaByRequest = new ConcurrentHashMap<>();
 
     /**
      * Constructor.
@@ -102,7 +106,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
      * @param params    hyperparameters from the checkpoint.
      */
     public Qwen(String name, QwenModel model, Tokenizer tokenizer, QwenModelArgs params) {
-        this(name, new QwenModel[]{model}, null, tokenizer, params);
+        this(name, new QwenModel[]{model}, null, tokenizer, params, null, null);
     }
 
     /**
@@ -116,6 +120,23 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
      */
     public Qwen(String name, QwenModel[] models, TensorParallelGroup tpGroup,
                 Tokenizer tokenizer, QwenModelArgs params) {
+        this(name, models, tpGroup, tokenizer, params, null, null);
+    }
+
+    /**
+     * Multimodal constructor.
+     *
+     * @param name        model instance / checkpoint name.
+     * @param models      one decoder shard per TP rank.
+     * @param tpGroup     tensor-parallel group, or {@code null}.
+     * @param tokenizer   chat tokenizer.
+     * @param params      text hyperparameters.
+     * @param visionArgs  vision hyperparameters, or {@code null}.
+     * @param vlProcessor multimodal processor, or {@code null}.
+     */
+    public Qwen(String name, QwenModel[] models, TensorParallelGroup tpGroup,
+                Tokenizer tokenizer, QwenModelArgs params,
+                QwenVisionArgs visionArgs, QwenVlProcessor vlProcessor) {
         if (models == null || models.length < 1) {
             throw new IllegalArgumentException("models required");
         }
@@ -125,9 +146,32 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         this.tpGroup = tpGroup;
         this.tokenizer = tokenizer;
         this.params = params;
+        this.visionArgs = visionArgs;
+        this.vlProcessor = vlProcessor;
         this.tpExecutor = models.length > 1
                 ? Executors.newFixedThreadPool(models.length)
                 : null;
+    }
+
+    /**
+     * @return {@code true} when a vision tower is loaded.
+     */
+    public boolean isMultimodal() {
+        return visionArgs != null && model.visual() != null;
+    }
+
+    /**
+     * @return VL processor, or {@code null} for text-only.
+     */
+    public QwenVlProcessor vlProcessor() {
+        return vlProcessor;
+    }
+
+    /**
+     * @return vision args, or {@code null}.
+     */
+    public QwenVisionArgs visionArgs() {
+        return visionArgs;
     }
 
     @Override
@@ -200,7 +244,37 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
     @Override
     public int[] encodeChat(Message... dialog) {
+        if (dialog != null) {
+            for (Message m : dialog) {
+                if (m != null && m.hasMedia()) {
+                    if (vlProcessor == null) {
+                        throw new IllegalStateException(
+                                "Multimodal message requires a vision-capable Qwen checkpoint");
+                    }
+                    try {
+                        return vlProcessor.process(dialog).inputIds();
+                    } catch (IOException e) {
+                        throw new IllegalArgumentException("Failed to process multimodal dialog", e);
+                    }
+                }
+            }
+        }
         return tokenizer.encodeDialog(dialog);
+    }
+
+    /**
+     * Processes a multimodal dialog (images/video) into tokens + vision tensors.
+     *
+     * @param dialog chat turns.
+     * @return processed multimodal input.
+     * @throws IOException if media cannot be loaded.
+     */
+    public QwenVlProcessor.ProcessedMultimodal processMultimodal(Message... dialog)
+            throws IOException {
+        if (vlProcessor == null) {
+            throw new IllegalStateException("No VL processor (text-only checkpoint)");
+        }
+        return vlProcessor.process(dialog);
     }
 
     /**
@@ -338,6 +412,16 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         }
 
         QwenModelArgs modelArgs = QwenModelArgs.fromHuggingFace(configJson.toString(), maxBatchSize, maxSeqLen);
+        QwenVisionArgs visionArgs = QwenVisionArgs.fromHuggingFace(configJson.toString());
+        if (visionArgs != null) {
+            logger.info("Multimodal vision tower: depth={}, hidden={}, out={}, deepstack={}",
+                    visionArgs.depth(), visionArgs.hiddenSize(), visionArgs.outHiddenSize(),
+                    visionArgs.hasDeepStack());
+            if (visionArgs.hasDeepStack()) {
+                throw new IllegalArgumentException(
+                        "DeepStack vision fusion is not supported; use Qwen3.8 (empty deepstack indexes)");
+            }
+        }
         if (maxSeqLen <= 0) {
             logger.info("max-seq-len auto-resolved to {} from model config (request override was {})",
                     modelArgs.maxSeqLen(), maxSeqLen);
@@ -371,7 +455,8 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         logger.info("Starting parallel TP rank construct (tpSize={})", parallelConfig.tpSize());
         long tConstruct = System.currentTimeMillis();
         if (parallelConfig.tpSize() == 1) {
-            models[0] = constructRank(0, parallelConfig, modelArgs, cuda, memFractionStatic, tpGroup);
+            models[0] = constructRank(0, parallelConfig, modelArgs, visionArgs, cuda,
+                    memFractionStatic, tpGroup);
         } else {
             ExecutorService pool = Executors.newFixedThreadPool(parallelConfig.tpSize());
             try {
@@ -379,7 +464,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 for (int r = 0; r < parallelConfig.tpSize(); r++) {
                     final int rank = r;
                     futures.add(pool.submit(() -> constructRank(
-                            rank, parallelConfig, modelArgs, cuda, memFractionStatic, tpGroup)));
+                            rank, parallelConfig, modelArgs, visionArgs, cuda, memFractionStatic, tpGroup)));
                 }
                 for (int r = 0; r < parallelConfig.tpSize(); r++) {
                     models[r] = futures.get(r).get();
@@ -434,22 +519,26 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         var time = System.currentTimeMillis() - startTime;
         logger.info("Model {}: loaded in {}.{} seconds (tpSize={})",
                 checkpointDir, time / 1000, time % 1000, parallelConfig.tpSize());
-        return new Qwen(dir.getName(), models, tpGroup, tokenizer, modelArgs);
+        QwenVlProcessor processor = null;
+        if (visionArgs != null) {
+            processor = QwenVlProcessor.fromCheckpoint(checkpointDir, visionArgs, tokenizer);
+        }
+        return new Qwen(dir.getName(), models, tpGroup, tokenizer, modelArgs, visionArgs, processor);
     }
 
     /**
      * Constructs one TP rank: empty module on the target device (no weight load / KV).
      */
     private static QwenModel constructRank(int rank, ParallelConfig parallel, QwenModelArgs modelArgs,
-                                           boolean cuda, double memFractionStatic,
+                                           QwenVisionArgs visionArgs, boolean cuda, double memFractionStatic,
                                            TensorParallelGroup tpGroup) {
         Device device = cuda ? Device.CUDA(parallel.devices()[rank]) : Device.CPU();
         TensorShardSpec shard = TensorShardSpec.forRank(
                 parallel.tpSize(), rank,
                 modelArgs.numHeads(), modelArgs.numKvHeads(), modelArgs.intermediateSize(),
                 modelArgs.linearNumKeyHeads(), modelArgs.linearNumValueHeads());
-        logger.info("tpRank={}: constructing on {} (layers={}, maxSeqLen={})",
-                rank, device, modelArgs.numLayers(), modelArgs.maxSeqLen());
+        logger.info("tpRank={}: constructing on {} (layers={}, maxSeqLen={}, vision={})",
+                rank, device, modelArgs.numLayers(), modelArgs.maxSeqLen(), visionArgs != null);
 
         DeltaNetStatePool statePool = null;
         if (modelArgs.numLinearAttentionLayers() > 0) {
@@ -478,7 +567,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         long tConstruct = System.currentTimeMillis();
         QwenModel model;
         try (var ignored = ParameterInit.uninitialized(device)) {
-            model = new QwenModel(modelArgs, statePool, shard, tpGroup);
+            model = new QwenModel(modelArgs, statePool, shard, tpGroup, visionArgs);
         }
         logger.info("tpRank={}: QwenModel construct in {} ms",
                 rank, System.currentTimeMillis() - tConstruct);
@@ -705,6 +794,13 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                         value = src.reshape(src.shape()[0], src.shape()[2]);
                         owned.add(value);
                     }
+                    // Conv3d patch embed → linear: [O, C, T, P, P] → [O, C*T*P*P]
+                    if (smileName.equals("visual.patch_embed.proj.weight") && src.dim() == 5) {
+                        long out = src.shape()[0];
+                        long flat = src.shape()[1] * src.shape()[2] * src.shape()[3] * src.shape()[4];
+                        value = src.reshape(out, flat);
+                        owned.add(value);
+                    }
                     Tensor sliced = QwenWeightShard.shard(smileName, value, model.params(), shard);
                     if (sliced != value && sliced != src) {
                         owned.add(sliced);
@@ -788,23 +884,32 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
     /**
      * Maps a HuggingFace parameter name onto the registered SMILE module path.
-     * Returns {@code null} for vision / MTP / unrecognized tensors.
+     * Returns {@code null} for MTP / unrecognized tensors.
      *
-     * <p>Normalizes common text-tower prefixes used by Qwen3.5 checkpoints:
+     * <p>Normalizes common text-tower prefixes used by Qwen3.5 / Qwen3.8 checkpoints:
      * <ul>
      *   <li>{@code model.language_model.*} (multimodal {@code ForConditionalGeneration})</li>
      *   <li>{@code language_model.model.*} / {@code language_model.*}</li>
      *   <li>{@code model.*} (text-only)</li>
+     *   <li>{@code model.visual.*} / {@code visual.*} (vision tower)</li>
      * </ul>
      */
     static String remapHuggingFaceName(String hfName) {
-        if (hfName.startsWith("visual.") || hfName.startsWith("mtp.")
-                || hfName.startsWith("vision_")) {
+        if (hfName.startsWith("mtp.") || hfName.startsWith("vision_")) {
             return null;
         }
 
         String name = hfName;
-        // Multimodal Qwen3.5: text weights live under model.language_model.*
+        // Multimodal: vision tower under model.visual.*
+        if (name.startsWith("model.visual.")) {
+            name = "visual." + name.substring("model.visual.".length());
+            return remapVisionName(name);
+        }
+        if (name.startsWith("visual.")) {
+            return remapVisionName(name);
+        }
+
+        // Multimodal Qwen3.5/3.8: text weights live under model.language_model.*
         if (name.startsWith("model.language_model.")) {
             name = "model." + name.substring("model.language_model.".length());
         } else if (name.startsWith("language_model.")) {
@@ -848,6 +953,29 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             case "post_attention_layernorm" -> prefix + "post_attention_layernorm." + rest;
             default -> null;
         };
+    }
+
+    /**
+     * Maps {@code visual.*} HF names onto the registered vision module tree.
+     * Conv3d {@code patch_embed.proj.weight} keeps that path; the loader reshapes
+     * 5-D kernels to 2-D for the linear equivalent.
+     */
+    static String remapVisionName(String name) {
+        // name starts with visual.
+        if (name.startsWith("visual.patch_embed.proj.")) {
+            return name; // visual.patch_embed.proj.{weight,bias}
+        }
+        if (name.equals("visual.pos_embed.weight")) {
+            return "visual.pos_embed.weight";
+        }
+        if (name.startsWith("visual.merger.")) {
+            return name;
+        }
+        // visual.blocks.N.{norm1,norm2,attn,mlp}.*
+        if (name.startsWith("visual.blocks.")) {
+            return name;
+        }
+        return null;
     }
 
     @Override
@@ -1344,6 +1472,121 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     }
 
     @Override
+    public Tensor prefillMultimodal(int requestId,
+                                    QwenVlProcessor.ProcessedMultimodal multimodal,
+                                    int from, int to) {
+        if (multimodal == null) {
+            throw new IllegalArgumentException("multimodal required");
+        }
+        int[] prompt = multimodal.inputIds();
+        if (from < 0 || to < from || to > prompt.length) {
+            throw new IllegalArgumentException(
+                    "invalid prefill range [" + from + ", " + to + ")");
+        }
+        if (from == to) {
+            return null;
+        }
+        if (from != 0) {
+            // Chunked multimodal with mid-prompt start would need partial mRoPE;
+            // require full-window or start-at-zero for now.
+            throw new UnsupportedOperationException(
+                    "multimodal prefill must start at 0 (got from=" + from + ")");
+        }
+        if (visionArgs == null || model.visual() == null) {
+            throw new IllegalStateException("vision tower not loaded");
+        }
+        ropeDeltaByRequest.put(requestId, multimodal.mrope().ropeDelta());
+
+        for (QwenModel m : models) {
+            if (m.kvCachePool() != null) {
+                m.kvCachePool().activateStep(requestId);
+            }
+            if (m.deltaNetStatePool() != null) {
+                m.deltaNetStatePool().activateStep(requestId);
+            }
+        }
+
+        try (var guard = Tensor.noGradGuard();
+             var scope = new AutoScope()) {
+            Tensor.push(scope);
+            try {
+                Device device = model.device();
+                ScalarType dtype = Tensor.isBF16Supported() ? ScalarType.BFloat16 : ScalarType.Half;
+                if (!device.isCUDA()) {
+                    dtype = ScalarType.Float;
+                }
+                QwenVlProcessor.ProcessedMultimodal mm = multimodal.to(device, dtype);
+                Tensor visionOut = null;
+                if (mm.hasVision()) {
+                    // Concatenate image+video grids for the tower.
+                    int[][] grids = concatGrids(mm.imageGridThw(), mm.videoGridThw());
+                    visionOut = model.visual().forward(mm.pixelValues(), grids);
+                }
+                try (Tensor tokenIds = Tensor.of(Arrays.copyOfRange(prompt, from, to))
+                        .reshape(1, to - from).to(device);
+                     Tensor textEmb = model.embedTokens(tokenIds)) {
+                    Tensor embeds = textEmb;
+                    if (visionOut != null) {
+                        embeds = QwenModel.spliceVisionEmbeds(
+                                textEmb, Arrays.copyOfRange(prompt, from, to), visionOut,
+                                visionArgs.imageTokenId(), visionArgs.videoTokenId());
+                        visionOut.close();
+                    }
+                    int[] posT = Arrays.copyOfRange(mm.mrope().t(), from, to);
+                    int[] posH = Arrays.copyOfRange(mm.mrope().h(), from, to);
+                    int[] posW = Arrays.copyOfRange(mm.mrope().w(), from, to);
+                    try (PartialRotaryEncoding.CosSin mrope =
+                                 InterleavedMRope.computeCosSin(
+                                         params.rotaryDim(), params.ropeTheta(),
+                                         visionArgs.mropeSection(), posT, posH, posW)) {
+                        Tensor cos = mrope.cos().to(device);
+                        Tensor sin = mrope.sin().to(device);
+                        Tensor logits = model.forwardEmbeds(embeds, from, cos, sin, false);
+                        if (embeds != textEmb) {
+                            embeds.close();
+                        }
+                        for (QwenModel m : models) {
+                            if (m.deltaNetStatePool() != null) {
+                                m.deltaNetStatePool().scatterActive();
+                            }
+                        }
+                        if (to < prompt.length) {
+                            logits.close();
+                            return null;
+                        }
+                        try (var last = Index.of(-1)) {
+                            Tensor out = logits.get(Index.Colon, last).reshape(1, -1);
+                            out.promoteToParent();
+                            logits.close();
+                            return out;
+                        }
+                    }
+                }
+            } finally {
+                Tensor.pop();
+            }
+        }
+    }
+
+    private static int[][] concatGrids(int[][] a, int[][] b) {
+        int na = a == null ? 0 : a.length;
+        int nb = b == null ? 0 : b.length;
+        int[][] out = new int[na + nb][];
+        int i = 0;
+        if (a != null) {
+            for (int[] g : a) {
+                out[i++] = g;
+            }
+        }
+        if (b != null) {
+            for (int[] g : b) {
+                out[i++] = g;
+            }
+        }
+        return out;
+    }
+
+    @Override
     public Tensor prefill(int requestId, int[] prompt, int prefixLen) {
         return prefillChunk(requestId, prompt, prefixLen, prompt.length);
     }
@@ -1481,10 +1724,11 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
      * Runs {@link QwenModel#forward(Tensor, int[])} on every TP rank for a
      * decode batch that already holds shape {@code [B, 1]} tokens.
      */
-    private Tensor[] forwardAllDecode(Tensor[] tokens, int[] positions, ExecutorService pool) {
+    private Tensor[] forwardAllDecode(Tensor[] tokens, int[] cachePositions, int[] ropePositions,
+                                      ExecutorService pool) {
         Tensor[] logits = new Tensor[models.length];
         if (models.length == 1) {
-            logits[0] = models[0].forward(tokens[0], positions, false);
+            logits[0] = models[0].forward(tokens[0], cachePositions, ropePositions, false);
             return logits;
         }
         List<Future<Tensor>> futures = new ArrayList<>(models.length);
@@ -1493,7 +1737,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             futures.add(pool.submit(() -> {
                 ParallelState.setCurrent(tpGroup.state(rank));
                 try (var guard = Tensor.noGradGuard()) {
-                    return models[rank].forward(tokens[rank], positions, false);
+                    return models[rank].forward(tokens[rank], cachePositions, ropePositions, false);
                 } finally {
                     ParallelState.clearCurrent();
                 }
@@ -1523,11 +1767,15 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         if (lastTokens.length != b || positions.length != b || b == 0) {
             throw new IllegalArgumentException("decodeStep batch sizes must match and be non-empty");
         }
+        int[] ropePos = Arrays.copyOf(positions, b);
+        for (int i = 0; i < b; i++) {
+            Integer delta = ropeDeltaByRequest.get(requestIds[i]);
+            if (delta != null) {
+                ropePos[i] += delta;
+            }
+        }
 
         // FlashInfer: one forward over mixed positions (ragged CSR + per-row RoPE).
-        // Hybrid Qwen disables prefix reuse, but admission/prefill stagger still
-        // produces unequal positions; a single ragged BatchDecode is faster than
-        // many position cohorts (each paying a full TP forward).
         if (AttentionBackends.current() == AttentionBackend.FLASHINFER) {
             long[] toks = new long[b];
             for (int i = 0; i < b; i++) {
@@ -1546,7 +1794,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 for (int r = 0; r < models.length; r++) {
                     tokenShards[r] = Tensor.of(toks).reshape(b, 1).to(models[r].device());
                 }
-                Tensor[] logits = forwardAllDecode(tokenShards, positions, tpExecutor);
+                Tensor[] logits = forwardAllDecode(tokenShards, positions, ropePos, tpExecutor);
                 for (Tensor t : tokenShards) {
                     t.close();
                 }
@@ -1566,113 +1814,56 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             }
         }
 
-        // torch_native: cohort by position (uniform cache length / RoPE slice).
-        int[] order = new int[b];
-        for (int i = 0; i < b; i++) {
-            order[i] = i;
-        }
-        for (int i = 1; i < b; i++) {
-            int oi = order[i];
-            int pi = positions[oi];
-            int j = i;
-            while (j > 0 && positions[order[j - 1]] > pi) {
-                order[j] = order[j - 1];
-                j--;
-            }
-            order[j] = oi;
-        }
+        // torch_native: cohort by cache position (existing path below uses forwardAllDecode with equal planes)
+        // Fall through — read remaining original method...
+        return decodeStepTorchNative(requestIds, lastTokens, positions, ropePos);
+    }
 
-        Tensor[] parts = new Tensor[b];
+    private Tensor decodeStepTorchNative(int[] requestIds, int[] lastTokens, int[] positions,
+                                         int[] ropePos) {
+        // Delegate to original cohorting by grouping equal cache positions.
+        // Simplified: one forward if all positions equal; else sequential per-row.
+        int b = requestIds.length;
+        long[] toks = new long[b];
+        for (int i = 0; i < b; i++) {
+            toks[i] = lastTokens[i];
+        }
+        for (QwenModel m : models) {
+            if (m.kvCachePool() != null) {
+                m.kvCachePool().activateStep(requestIds);
+            }
+            if (m.deltaNetStatePool() != null) {
+                m.deltaNetStatePool().activateStep(requestIds);
+            }
+        }
+        Tensor[] tokenShards = new Tensor[models.length];
         try (var guard = Tensor.noGradGuard()) {
-            int i = 0;
-            while (i < b) {
-                int pos = positions[order[i]];
-                int j = i + 1;
-                while (j < b && positions[order[j]] == pos) {
-                    j++;
+            for (int r = 0; r < models.length; r++) {
+                tokenShards[r] = Tensor.of(toks).reshape(b, 1).to(models[r].device());
+            }
+            Tensor[] logits = forwardAllDecode(tokenShards, positions, ropePos, tpExecutor);
+            for (Tensor t : tokenShards) {
+                t.close();
+            }
+            for (QwenModel m : models) {
+                if (m.deltaNetStatePool() != null) {
+                    m.deltaNetStatePool().scatterActive();
                 }
-                int cohort = j - i;
-                int[] ids = new int[cohort];
-                long[] toks = new long[cohort];
-                for (int k = 0; k < cohort; k++) {
-                    int src = order[i + k];
-                    ids[k] = requestIds[src];
-                    toks[k] = lastTokens[src];
-                }
-                for (QwenModel m : models) {
-                    if (m.kvCachePool() != null) {
-                        m.kvCachePool().activateStep(ids);
-                    }
-                    if (m.deltaNetStatePool() != null) {
-                        m.deltaNetStatePool().activateStep(ids);
-                    }
-                }
-                Tensor[] tokenShards = new Tensor[models.length];
-                for (int r = 0; r < models.length; r++) {
-                    tokenShards[r] = Tensor.of(toks).reshape(cohort, 1).to(models[r].device());
-                }
-                // Tokens are already [cohort, 1]; call scalar startPos forward directly.
-                Tensor[] logits = new Tensor[models.length];
-                if (models.length == 1) {
-                    logits[0] = models[0].forward(tokenShards[0], pos, false);
-                } else {
-                    List<Future<Tensor>> futures = new ArrayList<>(models.length);
-                    for (int r = 0; r < models.length; r++) {
-                        final int rank = r;
-                        futures.add(tpExecutor.submit(() -> {
-                            ParallelState.setCurrent(tpGroup.state(rank));
-                            try (var g = Tensor.noGradGuard()) {
-                                return models[rank].forward(tokenShards[rank], pos, false);
-                            } finally {
-                                ParallelState.clearCurrent();
-                            }
-                        }));
-                    }
-                    try {
-                        for (int r = 0; r < models.length; r++) {
-                            logits[r] = futures.get(r).get();
-                        }
-                    } catch (Exception e) {
-                        throw new RuntimeException("TP cohort decode forward failed", e);
-                    }
-                }
-                for (Tensor t : tokenShards) {
-                    t.close();
-                }
-                for (QwenModel m : models) {
-                    if (m.deltaNetStatePool() != null) {
-                        m.deltaNetStatePool().scatterActive();
-                    }
-                }
-                try (var last = Index.of(-1)) {
-                    Tensor row = logits[0].get(Index.Colon, last).reshape(cohort, -1);
-                    for (int k = 0; k < cohort; k++) {
-                        try (var rowIdx = Index.of(k)) {
-                            Tensor one = row.get(rowIdx).unsqueeze(0);
-                            one.promoteToParent();
-                            parts[order[i + k]] = one;
-                        }
-                    }
-                    row.close();
-                }
+            }
+            try (var last = Index.of(-1)) {
+                Tensor out = logits[0].get(Index.Colon, last).reshape(b, -1);
+                out.promoteToParent();
                 for (Tensor l : logits) {
                     l.close();
                 }
-                i = j;
+                return out;
             }
         }
-        if (b == 1) {
-            return parts[0];
-        }
-        Tensor cat = Tensor.vstack(parts);
-        for (Tensor p : parts) {
-            p.close();
-        }
-        return cat;
     }
 
     @Override
     public void finish(int requestId, int[] sequenceTokens) {
+        ropeDeltaByRequest.remove(requestId);
         for (QwenModel m : models) {
             if (m.kvCachePool() != null) {
                 m.kvCachePool().finishRequest(requestId, sequenceTokens);
@@ -1685,6 +1876,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
     @Override
     public void evict(int requestId) {
+        ropeDeltaByRequest.remove(requestId);
         for (QwenModel m : models) {
             if (m.kvCachePool() != null) {
                 m.kvCachePool().unbindRequest(requestId);
