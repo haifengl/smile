@@ -58,6 +58,11 @@ const WELCOME = {
   user: bot,
 }
 
+/** Max wait for the first stream chunk after the request is accepted. */
+const STREAM_FIRST_TOKEN_TIMEOUT_MS = 180_000
+/** Max idle gap between successive stream chunks. */
+const STREAM_IDLE_TIMEOUT_MS = 90_000
+
 function buildUserParts(text, attachments) {
   const parts = []
   if (text?.trim()) {
@@ -84,7 +89,55 @@ function errorMessage(error) {
   if (msg.includes('Multimodal content requires')) {
     return 'Image and video require a vision-capable model (Qwen VL).'
   }
+  if (msg.includes('stream timed out') || msg.includes('The operation was aborted')) {
+    return 'The server took too long to respond. Please try again.'
+  }
   return "Sorry, the service isn't available right now. Please try again later."
+}
+
+/**
+ * Iterates an async stream, aborting if no chunk arrives within the idle window.
+ *
+ * @template T
+ * @param {AsyncIterable<T>} stream
+ * @param {AbortController} controller
+ * @param {{ firstMs: number, idleMs: number }} timeouts
+ * @returns {AsyncGenerator<T>}
+ */
+async function* withStreamIdleTimeout(stream, controller, timeouts) {
+  const iterator = stream[Symbol.asyncIterator]()
+  let first = true
+  while (true) {
+    const timeoutMs = first ? timeouts.firstMs : timeouts.idleMs
+    let timer
+    const timeoutPromise = new Promise((_, reject) => {
+      timer = setTimeout(() => {
+        const err = new Error(
+          first
+            ? `stream timed out waiting for first token (${timeoutMs} ms)`
+            : `stream timed out waiting for next token (${timeoutMs} ms)`
+        )
+        err.name = 'TimeoutError'
+        try {
+          controller.abort(err)
+        } catch {
+          controller.abort()
+        }
+        reject(err)
+      }, timeoutMs)
+    })
+    let result
+    try {
+      result = await Promise.race([iterator.next(), timeoutPromise])
+    } finally {
+      clearTimeout(timer)
+    }
+    if (result.done) {
+      return
+    }
+    first = false
+    yield result.value
+  }
 }
 
 /**
@@ -193,9 +246,16 @@ export default function ChatApp({ model, title, embedded = false }) {
         request.model = model
       }
 
-      const stream = await client.chat.completions.create(request)
+      const controller = new AbortController()
+      const stream = await client.chat.completions.create(request, {
+        signal: controller.signal,
+      })
 
-      for await (const chunk of stream) {
+      let receivedToken = false
+      for await (const chunk of withStreamIdleTimeout(stream, controller, {
+        firstMs: STREAM_FIRST_TOKEN_TIMEOUT_MS,
+        idleMs: STREAM_IDLE_TIMEOUT_MS,
+      })) {
         const choice = chunk.choices?.[0]
         if (choice?.finish_reason) {
           break
@@ -203,6 +263,10 @@ export default function ChatApp({ model, title, embedded = false }) {
         const delta = choice?.delta?.content
         if (!delta) {
           continue
+        }
+        if (!receivedToken) {
+          receivedToken = true
+          setShowTypingIndicator(false)
         }
         setMessages((prev) => {
           const next = prev.slice()

@@ -19,7 +19,12 @@ import TextContent from './TextContent'
 import MediaContent from './MediaContent'
 import { messageText } from '../mediaUtils'
 
-export default function MessageParts({ parts, text, streaming }) {
+export default function MessageParts({
+  parts,
+  text,
+  streaming,
+  downloadable = false,
+}) {
   const resolved = parts?.length
     ? parts
     : text != null
@@ -27,7 +32,7 @@ export default function MessageParts({ parts, text, streaming }) {
       : []
 
   if (!resolved.length) {
-    return streaming ? <span className="streaming-cursor">▍</span> : null
+    return streaming ? <span className="streaming-cursor" aria-hidden="true" /> : null
   }
 
   return (
@@ -35,14 +40,17 @@ export default function MessageParts({ parts, text, streaming }) {
       {resolved.map((part, index) => {
         if (part.type === 'text') {
           const body = part.text ?? ''
-          const cursor = streaming && index === resolved.length - 1 ? '▍' : ''
-          if (!body && !cursor) {
+          const showCursor = streaming && index === resolved.length - 1
+          if (!body && !showCursor) {
             return null
           }
-          // react-markdown requires a single string child (not a React children array).
           return (
-            <TextContent key={`text-${index}`}>
-              {body + cursor}
+            <TextContent
+              key={`text-${index}`}
+              downloadable={downloadable}
+              streaming={showCursor}
+            >
+              {body}
             </TextContent>
           )
         }
@@ -56,6 +64,7 @@ export default function MessageParts({ parts, text, streaming }) {
             url={url}
             name={part.name}
             mime={part.mime}
+            downloadable={downloadable}
           />
         )
       })}

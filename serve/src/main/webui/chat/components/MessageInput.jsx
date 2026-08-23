@@ -244,7 +244,9 @@ export default function MessageInput({
                     type="file"
                     multiple
                     accept={ACCEPT}
-                    hidden
+                    className="file-input-hidden"
+                    tabIndex={-1}
+                    aria-hidden="true"
                     onChange={(e) => {
                         addFiles(e.target.files)
                         e.target.value = ''

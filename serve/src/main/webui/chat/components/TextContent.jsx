@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
  *
  * SMILE is free software: you can redistribute it and/or modify it
- * it under the terms of the GNU General Public License as published by
+ * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
@@ -28,7 +28,9 @@ import 'katex/dist/katex.min.css' // rehype-katex does not import the CSS
 import './TextContent.css'
 
 export default function TextContent({
-    children
+    children,
+    downloadable = false,
+    streaming = false,
 }) {
     // react-markdown only accepts a string; join if callers pass multiple children.
     const markdown = typeof children === 'string'
@@ -40,6 +42,9 @@ export default function TextContent({
         {children}
     </pre>
 
+    const Img = (props) => <MarkdownImage {...props} downloadable={downloadable} />
+    const Link = (props) => <MarkdownLink {...props} downloadable={downloadable} />
+
     return (
         <div className="text-content line-break">
             <Markdown
@@ -47,8 +52,8 @@ export default function TextContent({
                 rehypePlugins={[rehypeKatex]}
                 components={{
                   pre: Pre,
-                  img: MarkdownImage,
-                  a: MarkdownLink,
+                  img: Img,
+                  a: Link,
                   code(props) {
                     const {children, className, node, ...rest} = props
                     const language = /language-(\w+)/.exec(className || '');
@@ -78,6 +83,7 @@ export default function TextContent({
             >
                 {markdown}
             </Markdown>
+            {streaming ? <span className="streaming-cursor" aria-hidden="true" /> : null}
         </div>
     )
 }
