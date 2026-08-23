@@ -15,8 +15,9 @@
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
 
-const THINK_OPEN = '<think>'
-const THINK_CLOSE = '</think>'
+// Built without a single HTML-like literal so editors/tooling cannot strip them.
+const THINK_OPEN = '<' + 'think>'
+const THINK_CLOSE = '</' + 'think>'
 
 /**
  * Splits assistant text into optional thinking and answer spans.
@@ -52,8 +53,9 @@ export function splitThinking(rawText) {
 }
 
 /**
- * Converts {@code <think>...</think>} spans into markdown blockquotes so
- * react-markdown renders the notebook-style {@code <blockquote>} chrome.
+ * Converts thinking spans into markdown blockquotes so react-markdown
+ * renders notebook-style {@code <blockquote>} chrome. Prefer
+ * {@link splitThinking} + an explicit blockquote when possible.
  *
  * @param {string} rawText
  * @returns {string}
@@ -64,13 +66,7 @@ export function formatThinkingAsMarkdown(rawText) {
     return rawText ?? ''
   }
 
-  // Same quoting rules as the pre-multimedia IncomingMessage path:
-  // every line becomes a markdown blockquote line.
-  let quoted = thinking.replaceAll('\n', '\n> ')
-  if (!quoted.startsWith('\n> ')) {
-    quoted = '> ' + quoted
-  }
-  quoted += '\n'
-
+  const lines = thinking.replace(/^\n+/, '').replace(/\n+$/, '').split('\n')
+  const quoted = lines.map((line) => `> ${line}`).join('\n') + '\n\n'
   return quoted + (answer ?? '')
 }
