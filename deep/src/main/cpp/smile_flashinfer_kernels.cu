@@ -129,8 +129,12 @@ int run_batch_decode(
         dispatch_plan(std::integral_constant<uint32_t, 64>{});
     } else if (head_dim == 128) {
         dispatch_plan(std::integral_constant<uint32_t, 128>{});
+    } else if (head_dim == 256) {
+        dispatch_plan(std::integral_constant<uint32_t, 256>{});
+    } else if (head_dim == 512) {
+        dispatch_plan(std::integral_constant<uint32_t, 512>{});
     } else {
-        err = "FlashInfer decode supports head_dim 64 or 128 only";
+        err = "FlashInfer decode supports head_dim 64, 128, 256, or 512 only";
         return -1;
     }
     if (status != cudaSuccess) {
@@ -199,8 +203,12 @@ int run_batch_decode(
     };
     if (head_dim == 64) {
         dispatch_run(std::integral_constant<uint32_t, 64>{});
-    } else {
+    } else if (head_dim == 128) {
         dispatch_run(std::integral_constant<uint32_t, 128>{});
+    } else if (head_dim == 256) {
+        dispatch_run(std::integral_constant<uint32_t, 256>{});
+    } else {
+        dispatch_run(std::integral_constant<uint32_t, 512>{});
     }
     if (status != cudaSuccess) {
         err = std::string("BatchDecode failed: ") + cudaGetErrorString(status);
@@ -396,7 +404,7 @@ extern "C" int smile_flashinfer_paged_attention_cuda(
                 torch::TensorOptions().dtype(torch::kUInt8).pinned_memory(true));
 
         if (S == 1) {
-            if (head_dim == 64 || head_dim == 128) {
+            if (head_dim == 64 || head_dim == 128 || head_dim == 256 || head_dim == 512) {
                 int rc = -1;
                 torch::Tensor o3;
                 // FlashInfer BatchDecode merge kernels use DISPATCH_HEAD_DIM including
@@ -425,7 +433,10 @@ extern "C" int smile_flashinfer_paged_attention_cuda(
                 }
                 warn_flashinfer_sdpa_decode_once("query dtype is not bf16/fp16");
             } else {
-                warn_flashinfer_sdpa_decode_once("head_dim is not 64 or 128");
+                char reason[96];
+                snprintf(reason, sizeof(reason),
+                         "unsupported head_dim=%d (need 64/128/256/512)", head_dim);
+                warn_flashinfer_sdpa_decode_once(reason);
             }
         }
 
