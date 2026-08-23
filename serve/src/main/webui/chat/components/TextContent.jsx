@@ -19,7 +19,7 @@ import Markdown from 'react-markdown'
 import remarkGemoji from 'remark-gemoji'
 import remarkGfm from 'remark-gfm'
 import SyntaxHighlighter from 'react-syntax-highlighter';
-import { a11yDark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import { atomOneLight } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 import rehypeKatex from 'rehype-katex'
 import remarkMath from 'remark-math'
 import CopyButton from './CopyButton';
@@ -30,6 +30,7 @@ import './TextContent.css'
 export default function TextContent({
     children,
     downloadable = false,
+    compact = false,
 }) {
     // react-markdown only accepts a string; join if callers pass multiple children.
     const markdown = typeof children === 'string'
@@ -45,7 +46,7 @@ export default function TextContent({
     const Link = (props) => <MarkdownLink {...props} downloadable={downloadable} />
 
     return (
-        <div className="text-content line-break">
+        <div className={`text-content line-break${compact ? ' text-content--compact' : ''}`}>
             <Markdown
                 remarkPlugins={[remarkGfm, remarkGemoji, remarkMath]}
                 rehypePlugins={[rehypeKatex]}
@@ -65,7 +66,7 @@ export default function TextContent({
                             PreTag="div"
                             children={code.replace(/\n$/, '')}
                             language={language ? language[1] : null}
-                            style={a11yDark}
+                            style={atomOneLight}
                             showLineNumbers={true}
                             wrapLongLines={true}
                         />

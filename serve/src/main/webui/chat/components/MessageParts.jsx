@@ -18,6 +18,32 @@ import React from 'react'
 import TextContent from './TextContent'
 import MediaContent from './MediaContent'
 import { messageText } from '../mediaUtils'
+import { splitThinking } from '../thinkingUtils'
+import './MessageParts.css'
+
+function isFileAttachment(type) {
+  return type === 'file' || type === 'text'
+}
+
+function isInlineMedia(type) {
+  return type === 'image' || type === 'video' || type === 'audio'
+}
+
+function FileAttachment({ part, downloadable }) {
+  const mediaType = part.type === 'text' ? 'text' : 'file'
+  const url = part.previewUrl || part.url
+  if (!url) return null
+
+  return (
+    <MediaContent
+      type={mediaType}
+      url={url}
+      name={part.name}
+      mime={part.mime}
+      downloadable={downloadable}
+    />
+  )
+}
 
 export default function MessageParts({
   parts,
@@ -34,30 +60,38 @@ export default function MessageParts({
     return null
   }
 
+  const textParts = resolved.filter((p) => p.type === 'text')
+  const inlineMedia = resolved.filter((p) => isInlineMedia(p.type))
+  const fileAttachments = resolved.filter((p) => isFileAttachment(p.type))
+
+  const combinedText = textParts.map((p) => p.text ?? '').join('')
+  const { thinking, answer } = splitThinking(combinedText)
+
+  if (!thinking && !answer && inlineMedia.length === 0 && fileAttachments.length === 0) {
+    return null
+  }
+
   return (
     <div className="message-parts">
-      {resolved.map((part, index) => {
-        if (part.type === 'text') {
-          const body = part.text ?? ''
-          if (!body) {
-            return null
-          }
-          return (
-            <TextContent
-              key={`text-${index}`}
-              downloadable={downloadable}
-            >
-              {body}
-            </TextContent>
-          )
-        }
-        const mediaType = part.type === 'file' ? 'file' : part.type
+      {thinking ? (
+        <div className="thinking-block">
+          <TextContent compact>{thinking}</TextContent>
+        </div>
+      ) : null}
+
+      {answer ? (
+        <TextContent downloadable={downloadable}>
+          {answer}
+        </TextContent>
+      ) : null}
+
+      {inlineMedia.map((part, index) => {
         const url = part.previewUrl || part.url
         if (!url) return null
         return (
           <MediaContent
             key={`media-${index}-${part.contentId || url}`}
-            type={mediaType}
+            type={part.type}
             url={url}
             name={part.name}
             mime={part.mime}
@@ -65,6 +99,18 @@ export default function MessageParts({
           />
         )
       })}
+
+      {fileAttachments.length > 0 ? (
+        <div className="message-attachments">
+          {fileAttachments.map((part, index) => (
+            <FileAttachment
+              key={`file-${index}-${part.contentId || part.name}`}
+              part={part}
+              downloadable={downloadable}
+            />
+          ))}
+        </div>
+      ) : null}
     </div>
   )
 }

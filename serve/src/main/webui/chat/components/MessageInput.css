@@ -178,6 +178,11 @@
   border-radius: 4px;
 }
 
+.chip-file-icon {
+  flex-shrink: 0;
+  color: #6b7280;
+}
+
 .chip-icon {
   text-transform: uppercase;
   font-size: 10px;
