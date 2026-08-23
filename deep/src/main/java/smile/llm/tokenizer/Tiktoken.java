@@ -48,6 +48,8 @@ public class Tiktoken implements Tokenizer {
     protected final Map<Bytes, Integer> ranks;
     /** Special Token -> Rank */
     protected final Map<String, Integer> specialTokens;
+    /** Special-token ids for {@link #tryDecode(int[], boolean)} skip filtering. */
+    private final Set<Integer> specialTokenIds;
     /** ID -> Token */
     private final Bytes[] decoder;
     /** BOS (beginning of sequence) token id. */
@@ -123,6 +125,7 @@ public class Tiktoken implements Tokenizer {
             this.specialTokens.put(specialTokens[i], specialIds[i]);
             this.decoder[specialIds[i]] = specialBytes[i];
         }
+        this.specialTokenIds = Set.copyOf(this.specialTokens.values());
 
         this.bos = Optional.ofNullable(this.specialTokens.get(bos))
                 .orElseThrow(() -> new IllegalArgumentException("BOS token not found in specialTokens: " + bos));
@@ -359,10 +362,9 @@ public class Tiktoken implements Tokenizer {
 
     @Override
     public String tryDecode(int[] tokens, boolean skipSpecial) throws CharacterCodingException {
-        int vocabSize = ranks.size();
         int totalBytes = 0;
         for (var token : tokens) {
-            if (skipSpecial && token >= vocabSize) {
+            if (skipSpecial && isSpecialTokenId(token)) {
                 continue;
             }
             totalBytes += decoder[token].length();
@@ -370,7 +372,7 @@ public class Tiktoken implements Tokenizer {
         byte[] buffer = new byte[totalBytes];
         int offset = 0;
         for (var token : tokens) {
-            if (skipSpecial && token >= vocabSize) {
+            if (skipSpecial && isSpecialTokenId(token)) {
                 continue;
             }
             var array = decoder[token].array();
@@ -378,6 +380,11 @@ public class Tiktoken implements Tokenizer {
             offset += array.length;
         }
         return charsetDecoder.decode(ByteBuffer.wrap(buffer, 0, offset)).toString();
+    }
+
+    /** @return {@code true} when {@code tokenId} is a registered special token. */
+    private boolean isSpecialTokenId(int tokenId) {
+        return specialTokenIds.contains(tokenId);
     }
 
     @Override
