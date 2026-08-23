@@ -58,6 +58,10 @@ public final class TokenThroughputLogger implements GenerationListener {
     private long windowStartNanos;
     private int windowTokens;
     private boolean started;
+    /** Prompt length from {@link #onInputTokens}; {@code 0} until reported. */
+    private int promptLen;
+    /** Completion tokens counted so far for this request. */
+    private int generatedSoFar;
 
     /**
      * Creates a logger with {@link #DEFAULT_INTERVAL_MS} and no aggregate meter.
@@ -136,6 +140,13 @@ public final class TokenThroughputLogger implements GenerationListener {
     }
 
     @Override
+    public synchronized void onInputTokens(int count) {
+        if (count >= 0) {
+            promptLen = count;
+        }
+    }
+
+    @Override
     public synchronized void onGeneratedTokens(int count) {
         if (count <= 0) {
             return;
@@ -146,8 +157,10 @@ public final class TokenThroughputLogger implements GenerationListener {
                 aggregate.requestStarted();
             }
         }
+        generatedSoFar += count;
+        int cacheLen = promptLen + generatedSoFar;
         if (aggregate != null) {
-            aggregate.onGeneratedTokens(count);
+            aggregate.onGeneratedTokens(count, cacheLen, generatedSoFar);
         }
         long now = System.nanoTime();
         if (windowStartNanos == 0L) {
@@ -181,6 +194,8 @@ public final class TokenThroughputLogger implements GenerationListener {
                 aggregate.requestFinished();
             }
         }
+        generatedSoFar = 0;
+        // Keep promptLen: finish may be followed by reuse in tests; admit resets via onInputTokens.
     }
 
     private void reportWindow(int tokens, long elapsedNanos) {
