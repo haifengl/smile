@@ -85,6 +85,13 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     final QwenModelArgs params;
     /** Long-lived TP worker pool; null when {@code models.length == 1}. */
     private final ExecutorService tpExecutor;
+    /**
+     * When {@code true}, hybrid models may enable radix KV prefix reuse and
+     * restore DeltaNet state via {@link #warmPrefix} on a hit. When {@code false}
+     * (default until explicitly enabled), prefix reuse stays forced off for
+     * hybrid safety.
+     */
+    private volatile boolean prefixReplayEnabled;
 
     /**
      * Constructor.
@@ -144,17 +151,35 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     }
 
     /**
+     * Enables Phase-1 hybrid prefix replay: radix KV hits are allowed and
+     * {@link #warmPrefix} rebuilds DeltaNet state over the matched prefix.
+     *
+     * @param enabled {@code true} to allow safe hybrid prefix reuse.
+     */
+    public void setPrefixReplayEnabled(boolean enabled) {
+        this.prefixReplayEnabled = enabled;
+    }
+
+    /** @return whether hybrid DeltaNet warm-prefix replay is enabled. */
+    public boolean isPrefixReplayEnabled() {
+        return prefixReplayEnabled;
+    }
+
+    /**
      * Enables or disables radix prefix reuse on every TP rank's KV pool.
      *
      * @param enabled {@code true} to match/insert prefixes across requests.
      */
     public void setPrefixReuseEnabled(boolean enabled) {
-        // Hybrid DeltaNet + KV: prefix reuse without restoring DeltaNet state is
-        // numerically unsafe — force off until a restore/recompute path exists.
-        if (enabled && model.deltaNetStatePool() != null) {
+        // Hybrid DeltaNet + KV: reuse without restoring DeltaNet state is unsafe.
+        // Phase 1: allow reuse when prefixReplayEnabled (warmPrefix restores state).
+        if (enabled && model.deltaNetStatePool() != null && !prefixReplayEnabled) {
             logger.warn("Disabling radix prefix reuse for hybrid Qwen (DeltaNet state "
-                    + "is not restored on prefix hit)");
+                    + "is not restored on prefix hit; enable smile.chat.kv-cache.hybrid-prefix-replay)");
             enabled = false;
+        } else if (enabled && model.deltaNetStatePool() != null && prefixReplayEnabled) {
+            logger.info("Hybrid Qwen prefix reuse enabled "
+                    + "(KV pages shared; DeltaNet restored via warm-prefix replay)");
         }
         for (QwenModel m : models) {
             if (m.kvCachePool() != null) {
@@ -1271,10 +1296,11 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
     /**
      * Hybrid models must not reuse radix KV prefixes until DeltaNet state can
-     * be restored; otherwise answers are numerically wrong.
+     * be restored; otherwise answers are numerically wrong. No-op when
+     * {@link #prefixReplayEnabled} (Phase-1 warm-prefix path).
      */
     private void disablePrefixReuseForHybrid() {
-        if (model.deltaNetStatePool() == null) {
+        if (prefixReplayEnabled || model.deltaNetStatePool() == null) {
             return;
         }
         for (QwenModel m : models) {
@@ -1320,6 +1346,33 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     @Override
     public Tensor prefill(int requestId, int[] prompt, int prefixLen) {
         return prefillChunk(requestId, prompt, prefixLen, prompt.length);
+    }
+
+    /**
+     * Phase-1 hybrid prefix hit: run a full hybrid forward over
+     * {@code prompt[0, prefixLen)} so DeltaNet recurrent/conv state matches a
+     * cold prefill. Shared radix KV pages are rewritten with equivalent values.
+     *
+     * <p>Skipping full-attention residuals here would be incorrect — DeltaNet
+     * inputs depend on the residual stream after attention blocks.
+     */
+    @Override
+    public void warmPrefix(int requestId, int[] prompt, int prefixLen) {
+        if (prefixLen <= 0 || prompt == null) {
+            return;
+        }
+        if (model.deltaNetStatePool() == null) {
+            return;
+        }
+        if (prefixLen > prompt.length) {
+            throw new IllegalArgumentException(
+                    "prefixLen " + prefixLen + " exceeds prompt length " + prompt.length);
+        }
+        logger.debug("warmPrefix requestId={} prefixLen={} (DeltaNet replay)", requestId, prefixLen);
+        Tensor logits = prefillChunk(requestId, prompt, 0, prefixLen);
+        if (logits != null) {
+            logits.close();
+        }
     }
 
     @Override

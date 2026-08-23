@@ -146,7 +146,7 @@ public class ChatService {
                         + "repository ID; chat completions will return HTTP 503", modelSpec);
             }
             if (model != null) {
-                applyPrefixReuse(model, kvCache.prefixReuse());
+                applyPrefixReuse(model, kvCache.prefixReuse(), kvCache.hybridPrefixReplay());
                 if (model instanceof smile.llm.engine.ModelExecutor exec) {
                     int maxInFlight = Math.max(1, config.maxBatchSize());
                     int maxDecode = config.maxDecodeBatch() > 0
@@ -197,12 +197,26 @@ public class ChatService {
     }
 
     /**
-     * Applies {@code smile.chat.kv-cache.prefix-reuse} to the loaded chat model.
+     * Applies {@code smile.chat.kv-cache.prefix-reuse} (and hybrid replay) to
+     * the loaded chat model.
      */
     static void applyPrefixReuse(LanguageModel model, boolean enabled) {
+        applyPrefixReuse(model, enabled, true);
+    }
+
+    /**
+     * @param enabled            radix KV prefix reuse.
+     * @param hybridPrefixReplay when {@code true}, hybrid Qwen restores DeltaNet
+     *                           via warm-prefix replay so reuse is safe.
+     */
+    static void applyPrefixReuse(LanguageModel model, boolean enabled,
+                                 boolean hybridPrefixReplay) {
         switch (model) {
             case Llama llama -> llama.setPrefixReuseEnabled(enabled);
-            case Qwen qwen -> qwen.setPrefixReuseEnabled(enabled);
+            case Qwen qwen -> {
+                qwen.setPrefixReplayEnabled(hybridPrefixReplay);
+                qwen.setPrefixReuseEnabled(enabled);
+            }
             default -> { }
         }
     }

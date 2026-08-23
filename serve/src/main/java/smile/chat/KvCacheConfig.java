@@ -55,7 +55,19 @@ public interface KvCacheConfig {
      * When {@code true}, batch-1 generate matches prompts against the radix KV
      * tree and skips recomputing cached prefixes (SGLang-style). Defaults to
      * {@code true}. Intended mainly for debugging when set to {@code false}.
+     *
+     * <p>Hybrid Qwen also requires {@link #hybridPrefixReplay()} so DeltaNet
+     * state is restored on a hit; otherwise prefix reuse is forced off.
      */
     @WithDefault("true")
     boolean prefixReuse();
+
+    /**
+     * When {@code true}, hybrid Qwen may use radix KV prefix hits and rebuilds
+     * DeltaNet state by replaying the matched prefix ({@code warmPrefix}).
+     * Defaults to {@code true}. Set {@code false} to force-disable hybrid
+     * prefix reuse (legacy safe mode).
+     */
+    @WithDefault("true")
+    boolean hybridPrefixReplay();
 }
