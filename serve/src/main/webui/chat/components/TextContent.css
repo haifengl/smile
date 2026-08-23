@@ -60,8 +60,23 @@
   background: #f9f9f9;
   border-left: 10px solid #ccc;
   margin: 0.75em 0;
-  padding: 4px 10px;
+  padding: 8px 12px;
   border-radius: 0 4px 4px 0;
+  color: rgba(0, 0, 0, 0.68);
+  white-space: pre-wrap;
+}
+
+.text-content blockquote p {
+  margin: 0.35em 0;
+  color: rgba(0, 0, 0, 0.68);
+}
+
+.text-content blockquote > :first-child {
+  margin-top: 0;
+}
+
+.text-content blockquote > :last-child {
+  margin-bottom: 0;
 }
 
 .inlineCode {

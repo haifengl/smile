@@ -18,7 +18,7 @@ import React from 'react'
 import TextContent from './TextContent'
 import MediaContent from './MediaContent'
 import { messageText } from '../mediaUtils'
-import { splitThinking } from '../thinkingUtils'
+import { formatThinkingAsMarkdown } from '../thinkingUtils'
 import './MessageParts.css'
 
 function isMessageTextPart(part) {
@@ -76,23 +76,18 @@ export default function MessageParts({
   const fileAttachments = resolved.filter((p) => isFileAttachment(p))
 
   const combinedText = textParts.map((p) => p.text ?? '').join('')
-  const { thinking, answer } = splitThinking(combinedText)
+  // Turn <think>...</think> into markdown blockquotes → <blockquote> notebook chrome.
+  const displayText = formatThinkingAsMarkdown(combinedText)
 
-  if (!thinking && !answer && inlineMedia.length === 0 && fileAttachments.length === 0) {
+  if (!displayText && inlineMedia.length === 0 && fileAttachments.length === 0) {
     return null
   }
 
   return (
     <div className="message-parts">
-      {thinking ? (
-        <div className="thinking-block">
-          <TextContent compact>{thinking}</TextContent>
-        </div>
-      ) : null}
-
-      {answer ? (
+      {displayText ? (
         <TextContent downloadable={downloadable}>
-          {answer}
+          {displayText}
         </TextContent>
       ) : null}
 
