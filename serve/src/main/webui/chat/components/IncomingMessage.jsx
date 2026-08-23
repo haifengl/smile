@@ -90,6 +90,7 @@ export default function IncomingMessage({
                         parts={processedParts}
                         text={processedText}
                         streaming={streaming}
+                        downloadable
                     />
                 </div>
             </div>

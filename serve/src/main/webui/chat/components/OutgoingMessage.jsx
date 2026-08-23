@@ -50,7 +50,7 @@ export default function OutgoingMessage({
 
                 <div className="outgoing-message-container">
                     <div className="outgoing-background"/>
-                    <MessageParts parts={parts} text={text} />
+                    <MessageParts parts={parts} text={text} downloadable={false} />
                 </div>
             </div>
         </div>
