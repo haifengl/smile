@@ -30,7 +30,6 @@ import './TextContent.css'
 export default function TextContent({
     children,
     downloadable = false,
-    streaming = false,
 }) {
     // react-markdown only accepts a string; join if callers pass multiple children.
     const markdown = typeof children === 'string'
@@ -83,7 +82,6 @@ export default function TextContent({
             >
                 {markdown}
             </Markdown>
-            {streaming ? <span className="streaming-cursor" aria-hidden="true" /> : null}
         </div>
     )
 }

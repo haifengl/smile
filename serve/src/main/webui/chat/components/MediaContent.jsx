@@ -15,6 +15,7 @@
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
 import React, { useCallback, useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { downloadMedia, isInternalMediaUrl } from '../mediaUtils'
 import './MediaContent.css'
 
@@ -24,6 +25,17 @@ function DownloadIcon() {
       <path
         fill="currentColor"
         d="M12 3a1 1 0 0 1 1 1v9.59l2.3-2.3a1 1 0 1 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.42L11 13.59V4a1 1 0 0 1 1-1zm-7 14a1 1 0 0 1 1 1v1h12v-1a1 1 0 1 1 2 0v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1z"
+      />
+    </svg>
+  )
+}
+
+function CloseIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M6.225 4.811a1 1 0 0 0-1.414 1.414L10.586 12l-5.775 5.775a1 1 0 1 0 1.414 1.414L12 13.414l5.775 5.775a1 1 0 0 0 1.414-1.414L13.414 12l5.775-5.775a1 1 0 0 0-1.414-1.414L12 10.586 6.225 4.811z"
       />
     </svg>
   )
@@ -43,7 +55,7 @@ function ImageLightbox({ url, name, onClose }) {
     }
   }, [onClose])
 
-  return (
+  return createPortal(
     <div
       className="media-lightbox"
       role="dialog"
@@ -51,21 +63,26 @@ function ImageLightbox({ url, name, onClose }) {
       aria-label={name || 'Full size image'}
       onClick={onClose}
     >
-      <button
-        type="button"
-        className="media-lightbox-close"
-        onClick={onClose}
-        aria-label="Close"
-      >
-        ×
-      </button>
-      <img
-        className="media-lightbox-image"
-        src={url}
-        alt={name || ''}
+      <div
+        className="media-lightbox-dialog"
         onClick={(e) => e.stopPropagation()}
-      />
-    </div>
+      >
+        <button
+          type="button"
+          className="media-lightbox-close"
+          onClick={onClose}
+          aria-label="Close"
+        >
+          <CloseIcon />
+        </button>
+        <img
+          className="media-lightbox-image"
+          src={url}
+          alt={name || ''}
+        />
+      </div>
+    </div>,
+    document.body
   )
 }
 
