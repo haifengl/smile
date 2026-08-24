@@ -12,6 +12,7 @@
   "dependencies": {
     "@rjsf/core": "^6.8.0",
     "@rjsf/validator-ajv8": "^6.8.0",
+    "canvg": "^4.0.3",
     "mermaid": "^11.17.0",
     "openai": "^7.5.0",
     "react": "^19.2.8",
