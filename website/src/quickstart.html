@@ -6,7 +6,7 @@ version: "6.3.0"
 ---
 {% include "toc.njk" %}
 
-<div class="col-md-9 col-md-pull-3">
+<div class="col-md-9 order-md-first">
     <h1 id="quickstart-top" class="title">Quick Start</h1>
 
     <p>SMILE is a comprehensive, high-performance machine learning engine for the JVM.
@@ -22,14 +22,14 @@ version: "6.3.0"
     <p>Add the relevant artifact(s) to your build tool. All artifacts are published to
         <a href="https://central.sonatype.com/artifact/com.github.haifengl/smile-core">Maven Central</a>.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#dep_maven" data-toggle="tab">Maven</a></li>
-        <li><a href="#dep_gradle" data-toggle="tab">Gradle (Kotlin DSL)</a></li>
-        <li><a href="#dep_sbt" data-toggle="tab">SBT (Scala)</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#dep_maven" type="button" role="tab">Maven</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#dep_gradle" type="button" role="tab">Gradle (Kotlin DSL)</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#dep_sbt" type="button" role="tab">SBT (Scala)</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="dep_maven">
-            <pre class="prettyprint lang-xml"><code>
+        <div class="tab-pane fade show active" role="tabpanel" id="dep_maven">
+            <pre class="language-markup"><code class="language-markup">
 &lt;!-- Core ML algorithms (classification, regression, clustering, …) --&gt;
 &lt;dependency&gt;
   &lt;groupId&gt;com.github.haifengl&lt;/groupId&gt;
@@ -59,8 +59,8 @@ version: "6.3.0"
 &lt;/dependency&gt;
             </code></pre>
         </div>
-        <div class="tab-pane" id="dep_gradle">
-            <pre class="prettyprint lang-kotlin"><code>
+        <div class="tab-pane fade" role="tabpanel" id="dep_gradle">
+            <pre class="language-kotlin"><code class="language-kotlin">
 dependencies {
     // Core ML algorithms
     implementation("com.github.haifengl:smile-core:{{ version }}")
@@ -79,8 +79,8 @@ dependencies {
 }
             </code></pre>
         </div>
-        <div class="tab-pane" id="dep_sbt">
-            <pre class="prettyprint lang-scala"><code>
+        <div class="tab-pane fade" role="tabpanel" id="dep_sbt">
+            <pre class="language-scala"><code class="language-scala">
 // Idiomatic Scala API (pulls in smile-core transitively)
 libraryDependencies += "com.github.haifengl" %% "smile-scala" % "{{ version }}"
 
@@ -94,26 +94,26 @@ libraryDependencies += "com.github.haifengl" % "smile-deep" % "{{ version }}"
     <p>Several algorithms (manifold learning, Gaussian Process, MLP) benefit significantly
        from native BLAS/LAPACK. Install the system libraries:</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#blas_linux" data-toggle="tab">Linux</a></li>
-        <li><a href="#blas_mac" data-toggle="tab">macOS</a></li>
-        <li><a href="#blas_win" data-toggle="tab">Windows</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#blas_linux" type="button" role="tab">Linux</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#blas_mac" type="button" role="tab">macOS</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#blas_win" type="button" role="tab">Windows</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="blas_linux">
-            <pre class="prettyprint lang-sh"><code>
+        <div class="tab-pane fade show active" role="tabpanel" id="blas_linux">
+            <pre class="language-bash"><code class="language-bash">
 sudo apt update
 sudo apt install libopenblas-dev libarpack2
             </code></pre>
         </div>
-        <div class="tab-pane" id="blas_mac">
-            <pre class="prettyprint lang-sh"><code>
+        <div class="tab-pane fade" role="tabpanel" id="blas_mac">
+            <pre class="language-bash"><code class="language-bash">
 brew install arpack
 # If macOS SIP strips DYLD_LIBRARY_PATH, copy the dylib to your working directory:
 cp /opt/homebrew/lib/libarpack.dylib .
             </code></pre>
         </div>
-        <div class="tab-pane" id="blas_win">
+        <div class="tab-pane fade" role="tabpanel" id="blas_win">
             <p>Pre-built DLLs are included in the <code>bin/</code> directory of the
                <a href="https://github.com/haifengl/smile/releases">release package</a>.
                Add that directory to your <code>PATH</code>.</p>
@@ -132,7 +132,7 @@ cp /opt/homebrew/lib/libarpack.dylib .
         <a href="https://github.com/haifengl/smile/releases">releases page</a>.
         It works on macOS, Linux, and Windows.</p>
 
-    <pre class="prettyprint lang-sh"><code>
+    <pre class="language-bash"><code class="language-bash">
 # Extract and set up native dependencies
 cd bin
 ./setup        # installs required native libraries
@@ -143,7 +143,7 @@ cd bin
 
     <p>Clone the repository and build with the Gradle wrapper (requires Java 25):</p>
 
-    <pre class="prettyprint lang-sh"><code>
+    <pre class="language-bash"><code class="language-bash">
 git clone https://github.com/haifengl/smile.git
 cd smile
 ./gradlew build -x test        # build all modules, skip tests
@@ -151,36 +151,36 @@ cd smile
     </code></pre>
 
     <p>To run the tests (requires LibTorch on the library path for <code>smile-deep</code>):</p>
-    <pre class="prettyprint lang-sh"><code>
+    <pre class="language-bash"><code class="language-bash">
 ./gradlew :core:test
 ./gradlew :deep:test -DexcludeTags=integration
     </code></pre>
 
     <h2 id="shell">Interactive Shell</h2>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_1" data-toggle="tab">Java (JShell)</a></li>
-        <li><a href="#scala_1" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_shell" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_1" type="button" role="tab">Java (JShell)</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_1" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_shell" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_1">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_1">
             <p>SMILE integrates with <strong>JShell</strong> (available since Java 9).
                In the home directory of the release package, run:</p>
 
-            <pre class="prettyprint lang-sh"><code>
+            <pre class="language-bash"><code class="language-bash">
 $ ./smile shell
             </code></pre>
 
             <p>All SMILE classes are pre-imported. To pass more heap memory:</p>
 
-            <pre class="prettyprint lang-sh"><code>
+            <pre class="language-bash"><code class="language-bash">
 $ ./smile shell -R-Xmx30G
             </code></pre>
 
             <p>When the shell starts you will see the SMILE banner followed by the JShell prompt:</p>
 
-            <pre class="prettyprint lang-java"><code>
+            <pre class="language-java"><code class="language-java">
 |  Welcome to Smile  -- Version  {{ version }}
 ===============================================================================
 |  Welcome to JShell -- Version 25
@@ -192,7 +192,7 @@ smile>
             <p>All SMILE definitions are pre-imported. Type <code>/exit</code> to leave.
                You can run any valid Java expression:</p>
 
-            <pre class="prettyprint lang-java"><code>
+            <pre class="language-java"><code class="language-java">
 smile> 2 + 3
 $1 ==> 5
 
@@ -204,7 +204,7 @@ smile> System.out.println(rf.metrics())
             </code></pre>
 
             <h4>Running a Script</h4>
-            <pre class="prettyprint lang-java"><code>
+            <pre class="language-java"><code class="language-java">
 // examples/iris.jsh
 import smile.classification.RandomForest;
 import smile.data.formula.Formula;
@@ -215,20 +215,20 @@ var formula = Formula.lhs("class");
 var rf      = RandomForest.fit(formula, data);
 System.out.println(rf.metrics());
             </code></pre>
-            <pre class="prettyprint lang-sh"><code>
+            <pre class="language-bash"><code class="language-bash">
 $ ./smile shell examples/iris.jsh
             </code></pre>
         </div>
 
-        <div class="tab-pane" id="scala_1">
+        <div class="tab-pane fade" role="tabpanel" id="scala_1">
             <p>The Scala REPL has all high-level SMILE operators pre-imported:</p>
 
-            <pre class="prettyprint lang-sh"><code>
+            <pre class="language-bash"><code class="language-bash">
 $ ./smile scala
 $ ./smile scala -J-Xmx30G   # with extra heap
             </code></pre>
 
-            <pre class="prettyprint lang-scala"><code>
+            <pre class="language-scala"><code class="language-scala">
 smile> val iris = read.arff("data/weka/iris.arff")
 smile> val rf   = randomForest("class" ~, iris)
 smile> println(rf.metrics)
@@ -239,24 +239,24 @@ randomForest   rbfnet   rda
             </code></pre>
 
             <h4>Running a Script</h4>
-            <pre class="prettyprint lang-scala"><code>
+            <pre class="language-scala"><code class="language-scala">
 // examples/iris.sc
 val data    = read.arff("data/weka/iris.arff")
 val formula = "class" ~ "."
 val rf      = smile.classification.randomForest(formula, data)
 println(s"OOB error = %.2f%%" format 100 * rf.error)
             </code></pre>
-            <pre class="prettyprint lang-sh"><code>
+            <pre class="language-bash"><code class="language-bash">
 $ ./smile scala examples/iris.sc
             </code></pre>
         </div>
 
-        <div class="tab-pane" id="kotlin_shell">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_shell">
             <p>A Kotlin REPL is also available:</p>
-            <pre class="prettyprint lang-sh"><code>
+            <pre class="language-bash"><code class="language-bash">
 $ ./smile kotlin
             </code></pre>
-            <pre class="prettyprint lang-kotlin"><code>
+            <pre class="language-kotlin"><code class="language-kotlin">
 smile> val iris = read.arff("data/weka/iris.arff")
 smile> val rf   = randomForest(Formula.lhs("class"), iris)
 smile> println(rf.metrics())
@@ -269,16 +269,16 @@ smile> println(rf.metrics())
     <p>The SMILE shell also exposes a command-line interface for training models,
        batch prediction, and real-time serving — no code required.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#training_1" data-toggle="tab">Train</a></li>
-        <li><a href="#predict_1" data-toggle="tab">Batch Predict</a></li>
-        <li><a href="#serve_1" data-toggle="tab">Serve</a></li>
-        <li><a href="#stream_1" data-toggle="tab">Streaming</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#training_1" type="button" role="tab">Train</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#predict_1" type="button" role="tab">Batch Predict</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#serve_1" type="button" role="tab">Serve</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#stream_1" type="button" role="tab">Streaming</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="training_1">
+        <div class="tab-pane fade show active" role="tabpanel" id="training_1">
             <p>Train a Random Forest on the Iris dataset and save the model:</p>
-            <pre class="prettyprint lang-sh"><code>
+            <pre class="language-bash"><code class="language-bash">
 $ ./smile train \
     --data  data/weka/iris.arff \
     --formula "class ~ ." \
@@ -299,9 +299,9 @@ Training metrics: {
                random-forest, rbf, rda, ridge, svm, …) and
                <code>./smile train random-forest -h</code> for algorithm-specific options.</p>
         </div>
-        <div class="tab-pane" id="predict_1">
+        <div class="tab-pane fade" role="tabpanel" id="predict_1">
             <p>Run batch inference on a file using a saved model:</p>
-            <pre class="prettyprint lang-sh"><code>
+            <pre class="language-bash"><code class="language-bash">
 $ ./smile predict \
     --model iris_rf.sml \
     --probability \
@@ -314,9 +314,9 @@ $ ./smile predict \
             <p>The optional <code>--probability</code> flag outputs posterior class probabilities
                alongside the predicted label.</p>
         </div>
-        <div class="tab-pane" id="serve_1">
+        <div class="tab-pane fade" role="tabpanel" id="serve_1">
             <p>Start an HTTP inference server (powered by Quarkus):</p>
-            <pre class="prettyprint lang-sh"><code>
+            <pre class="language-bash"><code class="language-bash">
 $ ./smile serve --model iris_rf.sml
 INFO  Listening on: http://0.0.0.0:8080
 
@@ -331,11 +331,11 @@ $ curl -X POST http://localhost:8080/api/v1/models/iris_rf-1 \
                loaded automatically.  Discover available endpoints with
                <code>GET /api/v1/models</code>.</p>
         </div>
-        <div class="tab-pane" id="stream_1">
+        <div class="tab-pane fade" role="tabpanel" id="stream_1">
             <p>The <code>/stream</code> endpoint processes a JSON-lines or CSV request body
                element-by-element with full back-pressure, making it safe to send very large
                payloads (multi-GB):</p>
-            <pre class="prettyprint lang-sh"><code>
+            <pre class="language-bash"><code class="language-bash">
 # Generate 150,000 rows (iris × 1000) and stream them through the server
 $ for i in {1..1000}; do
     tail -n 153 data/weka/iris.arff | head -n 150
@@ -355,7 +355,7 @@ $ for i in {1..1000}; do
        and a kernel explorer in a single window.
        Launch it from the release package:</p>
 
-    <pre class="prettyprint lang-sh"><code>
+    <pre class="language-bash"><code class="language-bash">
 cd bin
 ./setup    # first-time: installs native libraries
 ./smile    # launches SMILE Studio
@@ -431,7 +431,7 @@ cd bin
        <kbd>Enter</kbd> to have the AI generate code directly into the editor.
        The Java kernel also supports Maven dependency magic commands:</p>
 
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
 //!mvn org.apache.commons:commons-math3:3.6.1
 // ↑ resolves the artifact transitively and adds it to the JShell classpath
     </code></pre>
@@ -469,14 +469,14 @@ cd bin
        All parsers return a <a href="api/java/smile/data/DataFrame.html">DataFrame</a>.
     </p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_2" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_2" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_2" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_2" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_2">
-            <pre class="prettyprint lang-java"><code>
+        <div class="tab-pane fade show active" role="tabpanel" id="java_2">
+            <pre class="language-java"><code class="language-java">
 import smile.io.*;
 import org.apache.commons.csv.CSVFormat;
 
@@ -489,8 +489,8 @@ var zipTrain = Read.csv("data/usps/zip.train", format);
 var zipTest  = Read.csv("data/usps/zip.test",  format);
             </code></pre>
         </div>
-        <div class="tab-pane" id="scala_2">
-            <pre class="prettyprint lang-scala"><code>
+        <div class="tab-pane fade" role="tabpanel" id="scala_2">
+            <pre class="language-scala"><code class="language-scala">
 import smile.io._
 
 val weather  = read.arff("data/weka/weather.nominal.arff")
@@ -498,8 +498,8 @@ val zipTrain = read.csv("data/usps/zip.train", delimiter = " ", header = false)
 val zipTest  = read.csv("data/usps/zip.test",  delimiter = " ", header = false)
             </code></pre>
         </div>
-        <div class="tab-pane" id="kotlin_2">
-            <pre class="prettyprint lang-kotlin"><code>
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_2">
+            <pre class="language-kotlin"><code class="language-kotlin">
 import smile.io.*
 
 val weather  = Read.arff("data/weka/weather.nominal.arff")
@@ -518,13 +518,13 @@ val zipTrain = Read.csv("data/usps/zip.train")
        the right-hand side (RHS) lists predictors.  When the RHS is omitted, all remaining
        columns are used.  Terms can also include functions and interaction terms.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_formula" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_formula" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_formula" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_formula" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_formula">
-            <pre class="prettyprint lang-java"><code>
+        <div class="tab-pane fade show active" role="tabpanel" id="java_formula">
+            <pre class="language-java"><code class="language-java">
 import smile.data.formula.Formula;
 
 // Predict "V1" from all other columns
@@ -535,8 +535,8 @@ var x = formula.x(zipTrain).toArray();
 var y = formula.y(zipTrain).toIntArray();
             </code></pre>
         </div>
-        <div class="tab-pane" id="scala_formula">
-            <pre class="prettyprint lang-scala"><code>
+        <div class="tab-pane fade" role="tabpanel" id="scala_formula">
+            <pre class="language-scala"><code class="language-scala">
 val formula: Formula = "V1" ~ "."
 
 val x = formula.x(zipTrain).toArray()
@@ -551,13 +551,13 @@ val y = formula.y(zipTrain).toIntArray()
        It estimates accuracy via out-of-bag (OOB) samples, so a separate validation set is
        not strictly required.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_4" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_4" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_4" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_4" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_4">
-            <pre class="prettyprint lang-java"><code>
+        <div class="tab-pane fade show active" role="tabpanel" id="java_4">
+            <pre class="language-java"><code class="language-java">
 import smile.classification.*;
 import smile.data.formula.Formula;
 
@@ -571,8 +571,8 @@ System.out.println(forest.metrics());
 // Training metrics: {accuracy: 97.28%, ...}
             </code></pre>
         </div>
-        <div class="tab-pane" id="scala_4">
-            <pre class="prettyprint lang-scala"><code>
+        <div class="tab-pane fade" role="tabpanel" id="scala_4">
+            <pre class="language-scala"><code class="language-scala">
 val formula: Formula = "V1" ~ "."
 val forest = randomForest(formula, zipTrain, ntrees = 200)
 println(forest.metrics)
@@ -586,13 +586,13 @@ println(forest.metrics)
        so we extract arrays from the formula first.  For multi-class problems, use one-vs-one
        or one-vs-rest strategies.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_6" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_6" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_6" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_6" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_6">
-            <pre class="prettyprint lang-java"><code>
+        <div class="tab-pane fade show active" role="tabpanel" id="java_6">
+            <pre class="language-java"><code class="language-java">
 import smile.math.kernel.GaussianKernel;
 import smile.validation.*;
 
@@ -610,8 +610,8 @@ System.out.format("Confusion Matrix:%n%s%n",
     ConfusionMatrix.of(testy, pred));
             </code></pre>
         </div>
-        <div class="tab-pane" id="scala_6">
-            <pre class="prettyprint lang-scala"><code>
+        <div class="tab-pane fade" role="tabpanel" id="scala_6">
+            <pre class="language-scala"><code class="language-scala">
 val testx  = formula.x(zipTest).toArray()
 val testy  = formula.y(zipTest).toIntArray()
 val kernel = new GaussianKernel(8.0)
@@ -631,13 +631,13 @@ println("Accuracy = %.2f%%" format (100.0 * Accuracy.of(testy, pred)))
     <p>The classic SMILE MLP is a lightweight CPU-only network suitable for
        tabular data.  Always standardize features before training a neural network.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_7" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_7" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_7" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_7" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_7">
-            <pre class="prettyprint lang-java"><code>
+        <div class="tab-pane fade show active" role="tabpanel" id="java_7">
+            <pre class="language-java"><code class="language-java">
 import smile.base.mlp.*;
 import smile.classification.MLP;
 import smile.math.MathEx;
@@ -668,8 +668,8 @@ for (int epoch = 0; epoch < 10; epoch++) {
 }
             </code></pre>
         </div>
-        <div class="tab-pane" id="scala_7">
-            <pre class="prettyprint lang-scala"><code>
+        <div class="tab-pane fade" role="tabpanel" id="scala_7">
+            <pre class="language-scala"><code class="language-scala">
 import smile.base.mlp._
 import smile.math.TimeFunction
 
@@ -702,13 +702,13 @@ net.setLearningRate(TimeFunction.linear(0.01, 20000, 0.001))
        Soft classifiers (neural networks, random forest, logistic regression)
        can also return posterior class probabilities.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_8" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_8" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_8" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_8" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_8">
-            <pre class="prettyprint lang-java"><code>
+        <div class="tab-pane fade show active" role="tabpanel" id="java_8">
+            <pre class="language-java"><code class="language-java">
 // Hard prediction (class label only)
 int label = forest.predict(zipTest.get(0));
 int svmLabel = svm.predict(testx[0]);
@@ -719,8 +719,8 @@ forest.predict(zipTest.get(0), proba);
 net.predict(testxn[0], proba);
             </code></pre>
         </div>
-        <div class="tab-pane" id="scala_8">
-            <pre class="prettyprint lang-scala"><code>
+        <div class="tab-pane fade" role="tabpanel" id="scala_8">
+            <pre class="language-scala"><code class="language-scala">
 val label    = forest.predict(zipTest.get(0))
 val svmLabel = svm.predict(testx(0))
 
@@ -736,13 +736,13 @@ net.predict(testxn(0), proba)
     <p>Most SMILE models implement <code>java.io.Serializable</code>.
        Serialize them to disk for production deployment or Spark scoring.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_ser" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_ser" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_ser" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_ser" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_ser">
-            <pre class="prettyprint lang-java"><code>
+        <div class="tab-pane fade show active" role="tabpanel" id="java_ser">
+            <pre class="language-java"><code class="language-java">
 import java.io.*;
 
 // Save
@@ -759,8 +759,8 @@ try (var in = new ObjectInputStream(
 }
             </code></pre>
         </div>
-        <div class="tab-pane" id="scala_ser">
-            <pre class="prettyprint lang-scala"><code>
+        <div class="tab-pane fade" role="tabpanel" id="scala_ser">
+            <pre class="language-scala"><code class="language-scala">
 import java.io._
 
 // Save
@@ -785,7 +785,7 @@ in.close()
 
     <h3 id="dl-image">Image Classification with EfficientNet-V2</h3>
 
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
 import smile.vision.EfficientNet;
 import smile.vision.ImageNet;
 import javax.imageio.ImageIO;
@@ -806,7 +806,7 @@ try (var logits = model.forward(img)) {          // shape [1, 1000]
 
     <h3 id="dl-train">Training a Custom MLP with LibTorch</h3>
 
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
 import smile.deep.*;
 import smile.deep.layer.*;
 import smile.deep.tensor.Tensor;
@@ -826,7 +826,7 @@ mlp.train(10, trainDataset, criterion, optimizer,
 
     <h3 id="llm-chat">LLaMA-3 Chat Completion</h3>
 
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
 import smile.llm.llama.Llama;
 import smile.llm.Message;
 
@@ -862,7 +862,3 @@ System.out.println(reply.content());
         <span class="btn-arrow-right">&nbsp;&rarr;</span>
     </div>
 </div>
-
-<script type="text/javascript">
-    $('#toc').toc({ exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false });
-</script>

@@ -5,21 +5,21 @@ title: Smile - Linear Algebra
 ---
 {% include "toc.njk" %}
 
-<div class="col-md-9 col-md-pull-3">
+<div class="col-md-9 order-md-first">
 
     <h1 id="linear-algebra-top" class="title">Linear Algebra</h1>
 
     <p>Smile Shell provides an MATLAB like environment.
         In the simplest case, you can use it as a calculator.</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_1" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_1" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_1" type="button" role="tab">Scala</button></li>
     </ul>
 
     <div class="tab-content">
-        <div class="tab-pane" id="scala_1">
+        <div class="tab-pane fade" role="tabpanel" id="scala_1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile&gt; "Hello, World"
     res0: String = Hello, World
 
@@ -31,9 +31,9 @@ title: Smile - Linear Algebra
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_1">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_1">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     smile> "Hello, World"
     $9 ==> "Hello, World"
 
@@ -53,22 +53,22 @@ title: Smile - Linear Algebra
         provides many other important mathematical functions such as
         <code>factorial</code>, <code>choose</code>, etc.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_2" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_2" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_2">
+        <div class="tab-pane fade" role="tabpanel" id="scala_2">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile&gt; choose(10, 3)
     res8: Double = 120.0
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_2">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_2">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     smile> import static smile.math.MathEx.*
 
     smile> choose(10, 3)
@@ -94,14 +94,14 @@ title: Smile - Linear Algebra
         The error function and complementary error function are special cases of the
         incomplete gamma function.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_3" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_3" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_3" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_3">
+        <div class="tab-pane fade" role="tabpanel" id="scala_3">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile&gt; erf(1.0)
     res0: Double = 0.8427007929497149
 
@@ -110,9 +110,9 @@ title: Smile - Linear Algebra
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_3">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_3">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     smile> import smile.math.special.*
 
     smile> Erf.erf(1.0)
@@ -128,14 +128,14 @@ title: Smile - Linear Algebra
     <h2 id="vector" class="title">Vector Operations</h2>
 
     <p>Common arithmetic operations on vectors and scalars are similar as in R and Matlab.</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_4" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_4" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_4" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_4" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_4">
+        <div class="tab-pane fade" role="tabpanel" id="scala_4">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile&gt; val x = c(1.0, 2.0, 3.0, 4.0)
     smile&gt; val y = c(4.0, 3.0, 2.0, 1.0)
 
@@ -147,9 +147,9 @@ title: Smile - Linear Algebra
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_4">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_4">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     smile> double[] x = {1.0, 2.0, 3.0, 4.0}
     x ==> double[4] { 1.0, 2.0, 3.0, 4.0 }
 
@@ -173,14 +173,14 @@ title: Smile - Linear Algebra
         <code>unitize</code> it so that L2 norm be 1,
         or <code>unitize1</code> it so that L1 norm be 1.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_5" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_5" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_5" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_5">
+        <div class="tab-pane fade" role="tabpanel" id="scala_5">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile&gt; norm(x)
     res13: Double = 5.477225575051661
 
@@ -190,9 +190,9 @@ title: Smile - Linear Algebra
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_5">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_5">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     smile> norm(x)
     $20 ==> 5.477225575051661
 
@@ -209,14 +209,14 @@ title: Smile - Linear Algebra
         and correlations with <code>dot</code>, <code>distance</code>, <code>kld</code> (Kullback-Leibler Divergence),
         <code>jsd</code> (Jensen-Shannon Divergence), <code>cov</code>, <code>cor</code> (Pearson Correlation),
         <code>spearman</code> (Spearman Rank Correlation Coefficient), <code>kendall</code> (Kendall Tau Rank Correlation Coefficient).</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_6" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_6" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_6" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_6" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_6">
+        <div class="tab-pane fade" role="tabpanel" id="scala_6">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile> dot(x, y)
     res16: Double = 3.651483716701107
 
@@ -225,9 +225,9 @@ title: Smile - Linear Algebra
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_6">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_6">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     smile> dot(x, y)
     res5: Double = 3.651483716701107
 
@@ -247,14 +247,14 @@ title: Smile - Linear Algebra
         The <code>~</code> operator can be applied to 1-dimensional array too, which creates
         a single column matrix.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_7" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_7" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_7" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_7" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_7">
+        <div class="tab-pane fade" role="tabpanel" id="scala_7">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val a = matrix(
         c(0.7220180, 0.07121225, 0.6881997),
         c(-0.2648886, -0.89044952, 0.3700456),
@@ -275,9 +275,9 @@ title: Smile - Linear Algebra
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_7">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_7">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     import smile.math.matrix.*;
 
     double[][] A = {
@@ -304,14 +304,14 @@ title: Smile - Linear Algebra
     </div>
 
     <p>In Scala, matrix-vector operations are just like in math formula.</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_8" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_8" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_8" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_8" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_8">
+        <div class="tab-pane fade" role="tabpanel" id="scala_8">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile> val x = c(1.0, 2.0, 3.0)
     x: Array[Double] = Array(1.0, 2.0, 3.0)
 
@@ -323,9 +323,9 @@ title: Smile - Linear Algebra
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_8">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_8">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     smile> double[] x = {1.0, 2.0, 3.0}
     x ==> double[3] { 1.0, 2.0, 3.0 }
 
@@ -340,14 +340,14 @@ title: Smile - Linear Algebra
     </div>
 
     <p>Similarly, for matrix-matrix operations:</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_9" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_9" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_9" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_9" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_9">
+        <div class="tab-pane fade" role="tabpanel" id="scala_9">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile&gt; a + b // returns a lazy expression of a + b
     res27: smile.math.MatrixAddMatrix =
         1.4102    0.0000    1.4102
@@ -356,9 +356,9 @@ title: Smile - Linear Algebra
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_9">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_9">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     smile> a.add(b) // a = a + b
     $44 ==> 3 x 3
       1.4102    0.0000    1.4102
@@ -370,14 +370,14 @@ title: Smile - Linear Algebra
     </div>
 
     <p>Note that <code>a * b</code> are element-wise:</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_10" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_10" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_10" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_10" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_10">
+        <div class="tab-pane fade" role="tabpanel" id="scala_10">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile&gt; a * b // returns a lazy expression of a * b
     res28: smile.math.MatrixMulMatrix =
         0.4969   -0.0051    0.4969
@@ -386,9 +386,9 @@ title: Smile - Linear Algebra
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_10">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_10">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     smile> a.mul(b) // a *= b
     $45 ==> 3 x 3
       0.4969   -0.0051    0.4969
@@ -400,14 +400,14 @@ title: Smile - Linear Algebra
     </div>
 
     <p>For matrix multiplication, the operator is <code>%*%</code>, same as in R</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_11" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_11" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_11" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_11" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_11">
+        <div class="tab-pane fade" role="tabpanel" id="scala_11">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile&gt; a %*% b %*% c
     [main] INFO smile.math.MatrixOrderOptimization - The minimum cost of matrix multiplication chain: 54
     res29: smile.math.MatrixExpression =
@@ -417,9 +417,9 @@ title: Smile - Linear Algebra
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_11">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_11">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     smile> a.mm(b).mm(c)
     $49 ==> 3 x 3
       0.9984    0.0067    0.0554
@@ -434,14 +434,14 @@ title: Smile - Linear Algebra
         which executes immediately. However, the method <code>t</code> is preferred
         on <code>MatrixExpression</code> as it is lazy.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_12" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_12" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_12" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_12" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_12">
+        <div class="tab-pane fade" role="tabpanel" id="scala_12">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile&gt; a %*% b.t %*% c
     [main] INFO smile.math.MatrixOrderOptimization - The minimum cost of matrix multiplication chain: 54
     res30: smile.math.MatrixExpression =
@@ -451,9 +451,9 @@ title: Smile - Linear Algebra
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_12">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_12">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     smile> a.mt(b).mm(c)
     $50 ==> 3 x 3
       0.8978   -0.4369    0.0543
@@ -468,14 +468,14 @@ title: Smile - Linear Algebra
         improve the performance. Note that this optimization is only available in Scala API.
         In the below we generate several random matrices and multiply them together.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_13" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_13" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_13" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_13" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_13">
+        <div class="tab-pane fade" role="tabpanel" id="scala_13">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val a = randn( 300,  900)
     val b = randn( 900,  150)
     val c = randn( 150, 1800)
@@ -485,9 +485,9 @@ title: Smile - Linear Algebra
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_13">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_13">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     smile> var a = Matrix.randn( 300,  900)
     [main] INFO smile.math.MathEx - Set RNG seed 19650218 for thread main
     a ==> 300 x 900
@@ -546,14 +546,14 @@ title: Smile - Linear Algebra
         <code>rank</code>, <code>inv</code> and operator <code>\</code>
         for these common computation.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_14" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_14" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_14" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_14" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_14">
+        <div class="tab-pane fade" role="tabpanel" id="scala_14">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile&gt; val x = Array(1.0, 2.0, 3.0)
     x: Array[Double] = Array(1.0, 2.0, 3.0)
 
@@ -574,9 +574,9 @@ title: Smile - Linear Algebra
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_14">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_14">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     smile> double[] x = {1.0, 2.0, 3.0}
     x ==> double[3] { 1.0, 2.0, 3.0 }
 
@@ -609,7 +609,3 @@ title: Smile - Linear Algebra
         <span class="btn-arrow-right">&nbsp;&rarr;</span>
     </div>
 </div>
-
-<script type="text/javascript">
-    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
-</script>

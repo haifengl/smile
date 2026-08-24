@@ -5,7 +5,7 @@ title: Smile - Data Processing
 ---
 {% include "toc.njk" %}
 
-<div class="col-md-9 col-md-pull-3">
+<div class="col-md-9 order-md-first">
     <h1 id="data-top" class="title">Data Processing</h1>
 
     <p>Machine learning is all about building models from data. However, data scientists
@@ -81,15 +81,15 @@ title: Smile - Data Processing
         Columns in a DataFrame may have different data types. There are concrete subclasses of ValueVector
         for each primitive data type and generic object types. Creating a ValueVector by passing a list of values.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_0" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_0" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_0" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_0" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_0" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_0" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_0">
+        <div class="tab-pane fade" role="tabpanel" id="scala_0">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile> import java.time._
            import smile.data._
            import smile.data.vector._
@@ -113,9 +113,9 @@ title: Smile - Data Processing
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_0">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_0">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     smile> import java.time.*
            import smile.data.*
            import smile.data.vector.*
@@ -139,9 +139,9 @@ title: Smile - Data Processing
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_0">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_0">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     >>> import java.time.*
         import smile.data.*
         import smile.data.vector.*
@@ -182,13 +182,13 @@ title: Smile - Data Processing
         columns. The columns of the second DataFrame have different data types.
         The method <code>schema()</code> will describe the column names,
         data types, whether they can be null.</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_0.1" data-toggle="tab">Java</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_0.1" type="button" role="tab">Java</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_0.1">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_0.1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     smile> var df = DataFrame.of(MathEx.randn(6, 4))
     df ==>
     +---+---------+---------+---------+---------+
@@ -230,13 +230,13 @@ title: Smile - Data Processing
     </div>
 
     <p>We can create a DataFrame with a collection of records or beans.</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_0.2" data-toggle="tab">Java</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_0.2" type="button" role="tab">Java</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_0.2">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_0.2">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
+    <pre class="language-java"><code class="language-java">
     smile> enum Gender {Male, Female}
            record Person(String name, Gender gender, String state, LocalDate birthday, int age, Double salary) { }
            List&lt;Person&gt; persons = new ArrayList<>();
@@ -261,13 +261,13 @@ title: Smile - Data Processing
 
     <p>In above example, the column 'state' is of string type. Apparently, it is a categorical variable.
         We can factorize such string columns to categorical values:</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_0.3" data-toggle="tab">Java</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_0.3" type="button" role="tab">Java</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_0.3">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_0.3">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     smile> var df2 = df.factorize("state");
     df2 ==>
     +---+----+------+-----+----------+---+------+
@@ -293,15 +293,15 @@ title: Smile - Data Processing
     <p>Smile provides many parsers for popular data formats. In fact, the output of most Smile
         data parsers is a DataFrame.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_1" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_1" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_1" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_1" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_1" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_1">
+        <div class="tab-pane fade" role="tabpanel" id="scala_1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile> val iris = read.arff("data/weka/iris.arff")
     [main] INFO smile.io.Arff - Read ARFF relation iris
     iris: DataFrame =
@@ -323,9 +323,9 @@ title: Smile - Data Processing
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_1">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     smile> import smile.data.*
            import smile.datasets.*
            import smile.io.*
@@ -350,9 +350,9 @@ title: Smile - Data Processing
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_1">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     >>> import smile.*
         import smile.data.*
         import smile.io.*
@@ -381,13 +381,13 @@ title: Smile - Data Processing
     </div>
 
     <p>The <code>smile.datasets</code> package also provide many public datasets.</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_1.1" data-toggle="tab">Java</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_1.1" type="button" role="tab">Java</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_1.1">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_1.1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
 
     smile> var iris = new Iris().data() // use built-in dataset object
     [main] INFO smile.io.Arff - Read ARFF relation iris
@@ -419,13 +419,13 @@ title: Smile - Data Processing
         rows efficiently with the <code>loc()</code> method. Compared with the normal
         ordinal index, the object-based row index often contains certain semantic
         meaning.</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_2.1" data-toggle="tab">Java</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2.1" type="button" role="tab">Java</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_2.1">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_2.1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     smile> var df = DataFrame.of(MathEx.randn(6, 4))
            var dates = Dates.range(LocalDate.of(2025,2,1), 6)
            df = df.setIndex(dates)
@@ -462,13 +462,13 @@ title: Smile - Data Processing
 
     <p>The row index may be an existing column, which will be removed in the
         resulting data frame.</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_2.2" data-toggle="tab">Java</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2.2" type="button" role="tab">Java</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_2.2">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_2.2">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     smile> var df = new DataFrame(
                    ValueVector.of("A", 1.0),
                    ValueVector.of("B", LocalDate.parse("2013-01-02")),
@@ -493,13 +493,13 @@ title: Smile - Data Processing
         top 10 rows. You may also use <code>DataFrame.head()</code> and
         <code>DataFrame.tail()</code> with a specified number to view the top
         and bottom rows of the frame respectively.</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_0.4" data-toggle="tab">Java</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_0.4" type="button" role="tab">Java</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_0.4">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_0.4">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     smile> println(df.head(3))
     +----------+---------+---------+---------+---------+
     |          |       V1|       V2|       V3|       V4|
@@ -524,13 +524,13 @@ title: Smile - Data Processing
     </div>
 
     <p>The method <code>describe()</code> shows the data structure and statistic summary:</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_0.5" data-toggle="tab">Java</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_0.5" type="button" role="tab">Java</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_0.5">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_0.5">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     smile> iris.describe()
     +---+-----------+-----+--------------------+-----+--------+--------+---+---+---+---+---+
     |   |     column| type|             measure|count|    mean|     std|min|25%|50%|75%|max|
@@ -548,15 +548,15 @@ title: Smile - Data Processing
 
     <h3 id="DataFrame_Selection">Selection</h3>
     <p>We can get a row with the array syntax or slice a subset of rows.</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_2" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_2" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_2" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_2" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_2">
+        <div class="tab-pane fade" role="tabpanel" id="scala_2">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile> iris(0)
     res5: Tuple = {
       sepallength: 5.1,
@@ -585,9 +585,9 @@ title: Smile - Data Processing
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_2">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_2">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     smile> iris.get(0)
     $7 ==> {
       sepallength: 5.1,
@@ -616,9 +616,9 @@ title: Smile - Data Processing
           </code></pre>
             </div>
         </div>
-            <div class="tab-pane" id="kotlin_2">
+            <div class="tab-pane fade" role="tabpanel" id="kotlin_2">
     <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     >>> iris[0]
     res6: smile.data.Tuple! = {
       sepallength: 5.1,
@@ -650,15 +650,15 @@ title: Smile - Data Processing
     </div>
 
     <p>Similarly, we can refer a column by its name or select a few columns to create a new data frame.</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_3" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_3" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_3" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_3" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_3" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_3">
+        <div class="tab-pane fade" role="tabpanel" id="scala_3">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile> iris("sepallength")
     res6: vector.ValueVector = sepallength[5.1, 4.9, 4.7, 4.6, 5, 5.4, 4.6, 5, 4.4, 4.9, ..., 140 more]
 
@@ -682,9 +682,9 @@ title: Smile - Data Processing
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_3">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_3">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     smile> iris.column("sepallength")
     $8 ==> sepallength[5.1, 4.9, 4.7, 4.6, 5, 5.4, 4.6, 5, 4.4, 4.9, ..., 140 more]
 
@@ -708,9 +708,9 @@ title: Smile - Data Processing
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_3">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_3">
     <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     >>> iris.column("sepallength")
     res7: smile.data.vector.ValueVecotr! = sepallength[5.1, 4.9, 4.7, 4.6, 5, 5.4, 4.6, 5, 4.4, 4.9, ..., 140 more]
 
@@ -738,13 +738,13 @@ title: Smile - Data Processing
 
     <p>We can also select rows with boolean indexing. The below example uses
         <code>isin()</code> method for filtering:</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_2.3" data-toggle="tab">Java</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2.3" type="button" role="tab">Java</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_2.3">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_2.3">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     smile> iris.get(iris.column("class").isin("Iris-setosa", "Iris-virginica"))
     $10 ==>
     +---+-----------+----------+-----------+----------+-----------+
@@ -769,13 +769,13 @@ title: Smile - Data Processing
 
     <h3 id="DataFrame_Setting">Setting</h3>
     <p>Setting values by position:</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_2.4" data-toggle="tab">Java</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2.4" type="button" role="tab">Java</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_2.4">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_2.4">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     smile> iris.set(0, 0, 1.5)
     </code></pre>
             </div>
@@ -783,13 +783,13 @@ title: Smile - Data Processing
     </div>
 
     <p>Adding columns:</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_2.5" data-toggle="tab">Java</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2.5" type="button" role="tab">Java</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_2.5">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_2.5">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     smile> var df = DataFrame.of(MathEx.randn(150, 3))
            iris.add(df.column("V1"), df.column("V3"))
     </code></pre>
@@ -798,13 +798,13 @@ title: Smile - Data Processing
     </div>
 
     <p>Setting a column:</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_2.6" data-toggle="tab">Java</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2.6" type="button" role="tab">Java</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_2.6">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_2.6">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     smile> iris.set("V1", df.column("V3"))
     </code></pre>
             </div>
@@ -813,13 +813,13 @@ title: Smile - Data Processing
 
     <h3 id="DataFrame_Merge">Merge</h3>
     <p>The <code>merge()</code> method can combine data frames horizontally:</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_2.7" data-toggle="tab">Java</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2.7" type="button" role="tab">Java</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_2.7">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_2.7">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     smile> var df3 = iris.merge(df)
     </code></pre>
             </div>
@@ -827,13 +827,13 @@ title: Smile - Data Processing
     </div>
 
     <p>To concatenate data frames vertically, use <code>concat()</code>:</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_2.8" data-toggle="tab">Java</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2.8" type="button" role="tab">Java</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_2.8">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_2.8">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     smile> var iris2 = iris.concat(iris)
     </code></pre>
             </div>
@@ -841,13 +841,13 @@ title: Smile - Data Processing
     </div>
 
     <p>To join two data frames on their index:</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_2.9" data-toggle="tab">Java</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2.9" type="button" role="tab">Java</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_2.9">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_2.9">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     var dates = Dates.range(LocalDate.of(2025,2,1), 6);
     var df1 = DataFrame.of(MathEx.randn(6, 4)).setIndex(dates);
     var df2 = DataFrame.of(MathEx.randn(6, 4)).setIndex(dates);
@@ -865,13 +865,13 @@ title: Smile - Data Processing
         to check if a cell is null or NaN.</p>
 
     <p><code>DataFrame.dropna()</code> drops any rows that have null or missing value:</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_2.11" data-toggle="tab">Java</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2.11" type="button" role="tab">Java</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_2.11">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_2.11">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     smile> var df = DataFrame.of(MathEx.randn(6, 4))
            df.set(0, 0, Double.NaN)
            df.set(1, 3, Double.NaN)
@@ -889,13 +889,13 @@ title: Smile - Data Processing
         </div>
     </div>
     <p><code>DataFrame.fillna()</code> fills missing data in numeric columns:</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_2.10" data-toggle="tab">Java</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2.10" type="button" role="tab">Java</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_2.10">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_2.10">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     smile> df.fillna(100)
     +---+---------+---------+---------+---------+
     |   |       V1|       V2|       V3|       V4|
@@ -920,15 +920,15 @@ title: Smile - Data Processing
         and <code>filter</code>.
         The <code>predicate</code> of these functions expect a <code>Tuple</code></p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_4" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_4" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_4" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_4" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_4" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_4" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_4">
+        <div class="tab-pane fade" role="tabpanel" id="scala_4">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile&gt; iris.exists(_.getDouble(0) > 4.5)
     res16: Boolean = true
 
@@ -973,9 +973,9 @@ title: Smile - Data Processing
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_4">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_4">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     smile> iris.stream().anyMatch(row -> row.getDouble(0) > 4.5)
     $14 ==> true
 
@@ -1020,9 +1020,9 @@ title: Smile - Data Processing
           </code></pre>
             </div>
         </div>
-            <div class="tab-pane" id="kotlin_4">
+            <div class="tab-pane fade" role="tabpanel" id="kotlin_4">
     <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     >>> iris.stream().anyMatch({row -> row.getDouble(0) > 4.5})
     res10: kotlin.Boolean = true
     >>> iris.stream().allMatch({row -> row.getDouble(0) < 10})
@@ -1068,15 +1068,15 @@ title: Smile - Data Processing
     <p>For data wrangling, the most important functions of <code>DataFrame</code>
         are <code>map</code> and <code>groupBy</code>.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_6" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_6" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_6" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_6" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_6" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_6" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_6">
+        <div class="tab-pane fade" role="tabpanel" id="scala_6">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile&gt; iris.map { row =>
                     val x = new Array[Double](6)
                     for (i <- 0 until 4) x(i) = row.getDouble(i)
@@ -1113,9 +1113,9 @@ title: Smile - Data Processing
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_6">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_6">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
+          <pre class="language-java"><code class="language-java">
     smile> var x6 = iris.stream().map(row -> {
                var x = new double[6];
                for (int i = 0; i < 4; i++) x[i] = row.getDouble(i);
@@ -1157,9 +1157,9 @@ title: Smile - Data Processing
           </code></pre>
             </div>
         </div>
-            <div class="tab-pane" id="kotlin_6">
+            <div class="tab-pane fade" role="tabpanel" id="kotlin_6">
     <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code style="white-space: preserve nowrap;">
+    <pre class="language-kotlin"><code class="language-kotlin">
     >>>  val x6 = iris.stream().map({row ->
     ...            val x = DoubleArray(6)
     ...            for (i in 0..3) x[i] = row.getDouble(i)
@@ -1214,15 +1214,15 @@ title: Smile - Data Processing
         containing the input elements which map to the associated key under the
         classification function.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_7" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_7" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_7" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_7" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_7" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_7" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_7">
+        <div class="tab-pane fade" role="tabpanel" id="scala_7">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile> iris.groupBy(row => row.getString("class"))
     res23: Map[String, DataFrame] = Map(
       "Iris-virginica" ->
@@ -1253,9 +1253,9 @@ title: Smile - Data Processing
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_7">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_7">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     smile> iris.stream().collect(java.util.stream.Collectors.groupingBy(row -> row.getString("class")))
     $24 ==> {Iris-versicolor=[{
       sepallength: 7,
@@ -1316,9 +1316,9 @@ title: Smile - Data Processing
           </code></pre>
             </div>
         </div>
-            <div class="tab-pane" id="kotlin_7">
+            <div class="tab-pane fade" role="tabpanel" id="kotlin_7">
     <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     >>> iris.stream().collect(java.util.stream.Collectors.groupingBy({row: Tuple -> row.getString("class")}))
     res98: kotlin.collections.(Mutable)Map&lt;kotlin.String!, kotlin.collections.(Mutable)List&lt;smile.data.Tuple!&gt;!&gt;! = {Iris-versicolor=[{
       sepallength: 7,
@@ -1380,13 +1380,13 @@ title: Smile - Data Processing
     <p>While Smile provides many imperative way to manipulate DataFrames as showned above, it is probably
         easier to do so with SQL.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_26" data-toggle="tab">Java</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_26" type="button" role="tab">Java</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_26">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_26">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     smile> SQL sql = new SQL();
            sql.parquet("user", "data/kylo/userdata1.parquet");
            sql.json("books", "data/kylo/books_array.json");
@@ -1430,13 +1430,13 @@ title: Smile - Data Processing
         We also use the <code>describe</code> function to obtain the schema of the table user. With SQL,
         it is easy to filter data and the result is a DataFrame.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_27" data-toggle="tab">Java</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_27" type="button" role="tab">Java</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_27">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_27">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
+    <pre class="language-java"><code class="language-java">
 smile> var user = sql.query("SELECT * FROM user WHERE country = 'China'");
 [main] INFO smile.data.SQL - SELECT * FROM user WHERE country = 'China'
 user ==>
@@ -1463,13 +1463,13 @@ user ==>
     <p>Of course, join is very useful to prepare data from multiple sources. The result DataFrame
         may be feed to downstream machine learning algorithms.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_28" data-toggle="tab">Java</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_28" type="button" role="tab">Java</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_28">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_28">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
+    <pre class="language-java"><code class="language-java">
 smile> var gdp = sql.query("SELECT * FROM user LEFT JOIN gdp ON user.country = gdp.Country");
 [main] INFO smile.data.SQL - SELECT * FROM user LEFT JOIN gdp ON user.country = gdp.Country
 gdp ==>
@@ -1520,15 +1520,15 @@ gdp ==>
         is a columnar storage format that supports
         nested data structures. It uses the record shredding and
         assembly algorithm described in the Dremel paper.</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_8" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_8" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_8" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_8" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_8" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_8" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_8">
+        <div class="tab-pane fade" role="tabpanel" id="scala_8">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code style="white-space: preserve nowrap;">
+    <pre class="language-scala"><code class="language-scala">
     smile> val df = read.parquet("data/kylo/userdata1.parquet")
     df: DataFrame =
     +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
@@ -1547,9 +1547,9 @@ gdp ==>
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_8">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_8">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
+          <pre class="language-java"><code class="language-java">
     smile> var df = Read.parquet("data/kylo/userdata1.parquet")
     df ==>
     +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
@@ -1568,9 +1568,9 @@ gdp ==>
           </code></pre>
             </div>
         </div>
-            <div class="tab-pane" id="kotlin_8">
+            <div class="tab-pane fade" role="tabpanel" id="kotlin_8">
     <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code style="white-space: preserve nowrap;">
+    <pre class="language-kotlin"><code class="language-kotlin">
     >>> val df = read.parquet("data/kylo/userdata1.parquet")
     >>> df
     res100: smile.data.DataFrame =
@@ -1602,15 +1602,15 @@ gdp ==>
         Avro relies on schemas. When Avro data is stored in a file, its schema
         is stored with it. Avro schemas are defined with JSON.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_9" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_9" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_9" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_9" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_9" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_9" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_9">
+        <div class="tab-pane fade" role="tabpanel" id="scala_9">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code style="white-space: preserve nowrap;">
+    <pre class="language-scala"><code class="language-scala">
     smile> val df = read.avro(Paths.getTestData("kylo/userdata1.avro"), Paths.getTestData("avro/userdata.avsc"))
     df: DataFrame =
     +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
@@ -1629,9 +1629,9 @@ gdp ==>
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_9">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_9">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
+          <pre class="language-java"><code class="language-java">
     smile> var avrodf = Read.avro(smile.util.Paths.getTestData("kylo/userdata1.avro"), smile.util.Paths.getTestData("kylo/userdata.avsc"))
     avrodf ==>
     +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
@@ -1650,9 +1650,9 @@ gdp ==>
           </code></pre>
             </div>
         </div>
-            <div class="tab-pane" id="kotlin_9">
+            <div class="tab-pane fade" role="tabpanel" id="kotlin_9">
     <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code style="white-space: preserve nowrap;">
+    <pre class="language-kotlin"><code class="language-kotlin">
     >>> val avrodf = read.avro(smile.util.Paths.getTestData("kylo/userdata1.avro"), smile.util.Paths.getTestData("kylo/userdata.avsc"))
     >>> avrodf
     res104: smile.data.DataFrame =
@@ -1692,15 +1692,15 @@ gdp ==>
     <p>In the below example, we write a DataFrame into Feather
         file and then read it back.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_10" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_10" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_10" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_10" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_10" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_10" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_10">
+        <div class="tab-pane fade" role="tabpanel" id="scala_10">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code style="white-space: preserve nowrap;">
+    <pre class="language-scala"><code class="language-scala">
     smile> val temp = java.io.File.createTempFile("chinook", "arrow")
     temp: java.io.File = /var/folders/cb/577dvd4n2db0ghdn3gn7ss0h0000gn/T/chinook5413820941564790310arrow
 
@@ -1728,9 +1728,9 @@ gdp ==>
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_10">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_10">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
+          <pre class="language-java"><code class="language-java">
     smile> var temp = java.io.File.createTempFile("chinook", "arrow")
     temp ==> /var/folders/cb/577dvd4n2db0ghdn3gn7ss0h0000gn/T/chinook5430879887643149276arrow
 
@@ -1759,9 +1759,9 @@ gdp ==>
           </code></pre>
             </div>
         </div>
-            <div class="tab-pane" id="kotlin_10">
+            <div class="tab-pane fade" role="tabpanel" id="kotlin_10">
     <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code style="white-space: preserve nowrap;">
+    <pre class="language-kotlin"><code class="language-kotlin">
     >>> val temp = java.io.File.createTempFile("chinook", "arrow")
     >>> val path = temp.toPath()
     >>> write.arrow(df, path)
@@ -1794,15 +1794,15 @@ gdp ==>
     <p>SAS7BDAT is currently the main format
         used for storing SAS datasets across all platforms.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_11" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_11" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_11" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_11" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_11" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_11" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_11">
+        <div class="tab-pane fade" role="tabpanel" id="scala_11">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile> val df = read.sas(Paths.getTestData("sas/airline.sas7bdat"))
     df: DataFrame =
     +----+-----+-----+------+-----+-----+
@@ -1823,9 +1823,9 @@ gdp ==>
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_11">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_11">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     smile> var sasdf = Read.sas("data/sas/airline.sas7bdat")
     sasdf ==>
     +----+-----+-----+------+-----+-----+
@@ -1846,9 +1846,9 @@ gdp ==>
           </code></pre>
             </div>
         </div>
-            <div class="tab-pane" id="kotlin_11">
+            <div class="tab-pane fade" role="tabpanel" id="kotlin_11">
     <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     >>> val df = read.sas("data/sas/airline.sas7bdat")
     >>> df
     res112: smile.data.DataFrame =
@@ -1875,14 +1875,14 @@ gdp ==>
     <h3 id="read.jdbc">Relational Database</h3>
     <p>It is also easy to load data from relation databases through JDBC.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_12" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_12" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_12" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_12" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_12">
+        <div class="tab-pane fade" role="tabpanel" id="scala_12">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code style="white-space: preserve nowrap;">
+    <pre class="language-scala"><code class="language-scala">
     smile> import $ivy.`org.xerial:sqlite-jdbc:3.28.0`
     import $ivy.$
 
@@ -1931,9 +1931,9 @@ gdp ==>
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_12">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_12">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
+          <pre class="language-java"><code class="language-java">
     smile> Class.forName("org.sqlite.JDBC")
     $1 ==> class org.sqlite.JDBC
 
@@ -2000,15 +2000,15 @@ gdp ==>
         we have many sample ARFF files. We can also read data from remote servers
         by HTTP, FTP, etc.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_13" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_13" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_13" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_13" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_13" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_13" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_13">
+        <div class="tab-pane fade" role="tabpanel" id="scala_13">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile> val df = read.arff("https://github.com/haifengl/smile/blob/master/shell/src/universal/data/weka/cpu.arff?raw=true")
     [main] INFO smile.io.Arff - Read ARFF relation cpu
     df: DataFrame =
@@ -2030,9 +2030,9 @@ gdp ==>
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_13">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_13">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     smile> var cpu = Read.arff("https://github.com/haifengl/smile/blob/master/shell/src/universal/data/weka/cpu.arff?raw=true")
     [main] INFO smile.io.Arff - Read ARFF relation cpu
     cpu ==>
@@ -2054,9 +2054,9 @@ gdp ==>
           </code></pre>
             </div>
         </div>
-            <div class="tab-pane" id="kotlin_13">
+            <div class="tab-pane fade" role="tabpanel" id="kotlin_13">
     <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     >>> val df = read.arff("https://github.com/haifengl/smile/blob/master/shell/src/universal/data/weka/cpu.arff?raw=true")
     [main] INFO smile.io.Arff - Read ARFF relation cpu
     >>> df
@@ -2087,25 +2087,25 @@ gdp ==>
         parser for them based on
         <a href="https://commons.apache.org/proper/commons-csv/">Apache Commons CSV</a> library.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_14" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_14" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_14" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_14" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_14" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_14" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_14">
+        <div class="tab-pane fade" role="tabpanel" id="scala_14">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def csv(file: String, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType = null): DataFrame
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_14">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_14">
             <p>In Java API, the user may provide a
                 <a href="https://javadoc.io/doc/org.apache.commons/commons-csv/latest/index.html">CSVFormat</a>
                 argument to specify the format of a CSV file.</p>
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public interface Read {
         /** Reads a CSV file. */
         static DataFrame csv(String path) throws IOException, URISyntaxException
@@ -2128,9 +2128,9 @@ gdp ==>
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_14">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_14">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     fun csv(file: String, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType? = null): DataFrame
     </code></pre>
             </div>
@@ -2139,31 +2139,31 @@ gdp ==>
 
     <p>The parser tries it best to infer the schema of data from the top rows.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_15" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_15" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_15" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_15" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_15" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_15" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_15">
+        <div class="tab-pane fade" role="tabpanel" id="scala_15">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val zip = read.csv("data/usps/zip.train", delimiter = ' ', header = false)
                 </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_15">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_15">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     import org.apache.commons.csv.CSVFormat
     var format = CSVFormat.DEFAULT.withDelimiter(' ')
     var zip = Read.csv("data/usps/zip.train", format)
           </code></pre>
             </div>
         </div>
-            <div class="tab-pane" id="kotlin_15">
+            <div class="tab-pane fade" role="tabpanel" id="kotlin_15">
     <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     val zip = read.csv("data/usps/zip.train", delimiter = ' ', header = false)
     </code></pre>
     </div>
@@ -2172,14 +2172,14 @@ gdp ==>
 
     <p>In case that the parser fails to infer the schema, the user may provide a predefined schema.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_16" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_16" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_16" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_16" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_16">
+        <div class="tab-pane fade" role="tabpanel" id="scala_16">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code style="white-space: preserve nowrap;">
+    <pre class="language-scala"><code class="language-scala">
 smile> val airport = new NominalScale("ABE", "ABI", "ABQ", "ABY", "ACK", "ACT",
          "ACV", "ACY", "ADK", "ADQ", "AEX", "AGS", "AKN", "ALB", "ALO", "AMA", "ANC",
          "APF", "ASE", "ATL", "ATW", "AUS", "AVL", "AVP", "AZO", "BDL", "BET", "BFL",
@@ -2238,9 +2238,9 @@ airline: DataFrame = [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6, c-7, c-8
                 </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_16">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_16">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
+          <pre class="language-java"><code class="language-java">
 smile> import smile.data.type.*
        import smile.data.measure.*
        var airport = new NominalScale("ABE", "ABI", "ABQ", "ABY", "ACK", "ACT",
@@ -2327,31 +2327,31 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
         Therefore, Smile also provides helper functions to convert
         it to dense arrays.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_17" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_17" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_17" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_17" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_17" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_17" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_17">
+        <div class="tab-pane fade" role="tabpanel" id="scala_17">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile> val glass = read.libsvm("data/libsvm/glass.txt")
     glass: Dataset[Instance[SparseArray]] = smile.data.DatasetImpl@5611bba
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_17">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_17">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     smile> var glass = Read.libsvm("data/libsvm/glass.txt")
     glass ==> smile.data.DatasetImpl@524f3b3a
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_17">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_17">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     >>> read.libsvm("data/libsvm/glass.txt")
     res118: smile.data.Dataset&lt;smile.data.SampleInstance&lt;smile.util.SparseArray&gt;&gt; = smile.data.DatasetImpl@50d667c3
     </code></pre>
@@ -2362,23 +2362,23 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
     <p>In case of truly sparse libsvm data, we can convert it to <code>SparseMatrix</code>
         for more efficient matrix computation.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_18" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_18" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_18" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_18" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_18" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_18" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_18">
+        <div class="tab-pane fade" role="tabpanel" id="scala_18">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile> SparseDataset.of(glass).toMatrix
     res2: SparseMatrix = smile.math.matrix.SparseMatrix@290807e5
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_18">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_18">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     smile> var glass = Read.libsvm("data/libsvm/glass.txt")
     glass ==> smile.data.DatasetImpl@17baae6e
 
@@ -2387,9 +2387,9 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
           </code></pre>
             </div>
         </div>
-            <div class="tab-pane" id="kotlin_18">
+            <div class="tab-pane fade" role="tabpanel" id="kotlin_18">
     <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     >>> SparseDataset.of(glass).toMatrix()
     res120: smile.math.matrix.SparseMatrix! = smile.math.matrix.SparseMatrix@45db84b0
     </code></pre>
@@ -2445,31 +2445,31 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
 
     <p>The sample data <code>data/sparse/kos.txt</code> is in the coordinate format.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_19" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_19" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_19" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_19" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_19" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_19" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_19">
+        <div class="tab-pane fade" role="tabpanel" id="scala_19">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile> val kos = SparseDataset.from(java.nio.file.Paths.get("data/sparse/kos.txt"), 1)
     kos: SparseDataset = smile.data.SparseDatasetImpl@4da602fc
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_19">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_19">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     smile> var kos = SparseDataset.from(java.nio.file.Paths.get("data/sparse/kos.txt"), 1)
     kos ==> smile.data.SparseDatasetImpl@4d826d77
           </code></pre>
             </div>
         </div>
-            <div class="tab-pane" id="kotlin_19">
+            <div class="tab-pane fade" role="tabpanel" id="kotlin_19">
     <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     >>> SparseDataset.from(java.nio.file.Paths.get("data/sparse/kos.txt"), 1)
     res123: smile.data.SparseDataset! = smile.data.SparseDatasetImpl@485b4fd0
     </code></pre>
@@ -2498,23 +2498,23 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
         format. In the directory <code>data/matrix</code>, there are several sample files in
         the Harwell-Boeing format.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_20" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_20" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_20" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_20" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_20" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_20" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_20">
+        <div class="tab-pane fade" role="tabpanel" id="scala_20">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile> val blocks = SparseMatrix.text(java.nio.file.Paths.get("data/matrix/08blocks.txt"))
     blocks: SparseMatrix = smile.math.matrix.SparseMatrix@4263b080
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_20">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_20">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     smile> import smile.math.matrix.*;
 
     smile> var blocks = SparseMatrix.text(java.nio.file.Paths.get("data/matrix/08blocks.txt"))
@@ -2522,9 +2522,9 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
           </code></pre>
             </div>
         </div>
-            <div class="tab-pane" id="kotlin_20">
+            <div class="tab-pane fade" role="tabpanel" id="kotlin_20">
     <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     >>> import smile.math.matrix.*
     >>> SparseMatrix.text(java.nio.file.Paths.get("data/matrix/08blocks.txt"))
     res126: smile.math.matrix.SparseMatrix! = smile.math.matrix.SparseMatrix@1a479168
@@ -2539,15 +2539,15 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
         the optional right hand side vectors. This format is supported by the function
         <code>SparseMatrix.harwell(Path path)</code>. </p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_21" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_21" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_21" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_21" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_21" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_21" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_21">
+        <div class="tab-pane fade" role="tabpanel" id="scala_21">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code style="white-space: preserve nowrap;">
+    <pre class="language-scala"><code class="language-scala">
 smile> val five = SparseMatrix.harwell(java.nio.file.Paths.get("data/matrix/5by5_rua.hb"))
 [main] INFO smile.math.matrix.SparseMatrix - Reads sparse matrix file '/Users/hli/github/smile/shell/target/universal/stage/data/matrix/5by5_rua.hb'
 [main] INFO smile.math.matrix.SparseMatrix - Title                                                                   Key
@@ -2558,9 +2558,9 @@ five: SparseMatrix = smile.math.matrix.SparseMatrix@1761de10
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_21">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_21">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
+          <pre class="language-java"><code class="language-java">
 smile> var five = SparseMatrix.harwell(java.nio.file.Paths.get("data/matrix/5by5_rua.hb"))
 [main] INFO smile.math.matrix.SparseMatrix - Reads sparse matrix file '/Users/hli/github/smile/shell/target/universal/stage/data/matrix/5by5_rua.hb'
 [main] INFO smile.math.matrix.SparseMatrix - Title                                                                   Key
@@ -2571,9 +2571,9 @@ five ==> smile.math.matrix.SparseMatrix@6b4a4e18
           </code></pre>
             </div>
         </div>
-            <div class="tab-pane" id="kotlin_21">
+            <div class="tab-pane fade" role="tabpanel" id="kotlin_21">
     <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code style="white-space: preserve nowrap;">
+    <pre class="language-kotlin"><code class="language-kotlin">
 >>> SparseMatrix.harwell(java.nio.file.Paths.get("data/matrix/5by5_rua.hb"))
 [main] INFO smile.math.matrix.SparseMatrix - Reads sparse matrix file '/Users/hli/github/smile/shell/target/universal/stage/data/matrix/5by5_rua.hb'
 [main] INFO smile.math.matrix.SparseMatrix - Title                                                                   Key
@@ -2589,13 +2589,13 @@ res127: smile.math.matrix.SparseMatrix! = smile.math.matrix.SparseMatrix@3767276
     <h3 id="wireframe">Wireframe</h3>
     <p>Smile can parse 3D wireframe models in Wavefront OBJ files.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_23" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#scala_23" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_23">
+        <div class="tab-pane fade show active" role="tabpanel" id="scala_23">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def read.wavefront(file: String): (Array[Array[Double]], Array[Array[Int]])
     </code></pre>
             </div>
@@ -2605,13 +2605,13 @@ res127: smile.math.matrix.SparseMatrix! = smile.math.matrix.SparseMatrix@3767276
     <p>In the directory <code>data/wireframe</code>, there is a teapot wireframe model. In the
         next section, we will learn how to visualize the 3D wireframe models.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_24" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#scala_24" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_24">
+        <div class="tab-pane fade show active" role="tabpanel" id="scala_24">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile> val (vertices, edges) = read.wavefront("data/wavefront/teapot.obj")
     vertices: Array[Array[Double]] = Array(
       Array(40.6266, 28.3457, -1.10804),
@@ -2673,22 +2673,22 @@ res127: smile.math.matrix.SparseMatrix! = smile.math.matrix.SparseMatrix@3767276
     <h2 id="export">Export Data and Models</h2>
 
     <p>To serialize a model, you may use</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_25" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_25" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_25" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_25" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_25">
+        <div class="tab-pane fade" role="tabpanel" id="scala_25">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     import smile._
     write(model, file)
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_25">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_25">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     import smile.io.Write;
     Write.object(model, file)
     </code></pre>
@@ -2713,7 +2713,3 @@ res127: smile.math.matrix.SparseMatrix! = smile.math.matrix.SparseMatrix@3767276
         <span class="btn-arrow-right">&nbsp;&rarr;</span>
     </div>
 </div>
-
-<script type="text/javascript">
-    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
-</script>

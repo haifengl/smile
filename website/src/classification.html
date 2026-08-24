@@ -5,7 +5,7 @@ title: SMILE - Classification
 ---
 {% include "toc.njk" %}
 
-<div class="col-md-9 col-md-pull-3">
+<div class="col-md-9 order-md-first">
     <h1 id="classification-top" class="title">Classification</h1>
 
     <p>The <a href="api/java/smile/classification/package-summary.html"><code>smile.classification</code></a>
@@ -25,7 +25,7 @@ title: SMILE - Classification
         in strongly typed approach. Meanwhile, the <code>Properties</code>-based configuration
         is convenient for reproducible, configuration-file-driven workflows.</p>
 
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     Properties params = new Properties();
     params.setProperty("smile.random.forest.trees", "200");
     params.setProperty("smile.random.forest.max.depth", "10");
@@ -37,7 +37,7 @@ title: SMILE - Classification
         and optional online updates. Before using a classifier, it is useful to check whether
         the model supports soft prediction or online updates.</p>
 
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     // Works for any smile.classification.Classifier&lt;T&gt;
     int label = model.predict(sample);
 
@@ -56,7 +56,7 @@ title: SMILE - Classification
     <p>Many models (e.g., tree-based ones) operate on <code>DataFrame</code> inputs with
         a <code>Formula</code> and implement <code>DataFrameClassifier</code>.</p>
 
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     Formula formula = Formula.lhs("species");
     DecisionTree tree = DecisionTree.fit(formula, data);
     int[] labels = tree.predict(data);
@@ -66,7 +66,7 @@ title: SMILE - Classification
 
     <p>SMILE internally remaps labels to contiguous indices and returns original labels at prediction time.</p>
 
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     int[] y = {-1, +1, -1, +1};
     LogisticRegression model = LogisticRegression.fit(x, y);
     int label = model.predict(sample);   // returns -1 or +1
@@ -196,7 +196,7 @@ title: SMILE - Classification
         <li>Persist trained models with <code>smile.io.Write</code> / <code>smile.io.Read</code>.</li>
     </ul>
 
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     smile.math.MathEx.setSeed(12345);
 
     Write.object(model, Path.of("classifier.sml"));
@@ -329,31 +329,31 @@ title: SMILE - Classification
         function is only approximated locally and all computation
         is deferred until classification.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_1" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_1" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_1" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_1" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_1" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_1">
+        <div class="tab-pane fade" role="tabpanel" id="scala_1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def knn(x: Array[Array[Double]], y: Array[Int], k: Int): KNN[Array[Double]]
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_1">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_1">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class KNN {
         public static KNN&lt;double[]&gt; fit(double[][] x, int[] y, int k);
     }
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_1">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     fun knn(x: Array&lt;DoubleArray&gt;, y: IntArray, k: Int): KNN&lt;DoubleArray&gt;
     </code></pre>
             </div>
@@ -364,15 +364,15 @@ title: SMILE - Classification
         with Euclidean distance as the similarity measure. When applied to the
         Iris dataset, the accuracy of 10-fold cross validation is 96% for <code>k = 3</code>.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_2" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_2" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_2" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_2" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_2">
+        <div class="tab-pane fade" role="tabpanel" id="scala_2">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val iris = read.arff("data/weka/iris.arff")
     val x = iris.drop("class").toArray()
     val y = iris("class").toIntArray()
@@ -380,9 +380,9 @@ title: SMILE - Classification
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_2">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_2">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var iris = Read.arff("data/weka/iris.arff");
     var x = iris.drop("class").toArray();
     var y = iris.column("class").toIntArray();
@@ -390,9 +390,9 @@ title: SMILE - Classification
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_2">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_2">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-kotlin"><code>
+          <pre class="language-kotlin"><code class="language-kotlin">
     val iris = read.arff("data/weka/iris.arff")
     val x = iris.drop("class").toArray()
     val y = iris.column("class").toIntArray()
@@ -417,31 +417,31 @@ title: SMILE - Classification
 
     <p>The user can also provide a customized distance function.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_3" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_3" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_3" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_3" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_3" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_3">
+        <div class="tab-pane fade" role="tabpanel" id="scala_3">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def knn[T](x: Array[T], y: Array[Int], k: Int, distance: Distance[T]): KNN[T]
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_3">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_3">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class KNN {
         public static KNN&lt;T&gt; fit(T[] x, int[] y, int k, Distance&lt;T&gt; distance);
     }
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_3">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_3">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-kotlin"><code>
+          <pre class="language-kotlin"><code class="language-kotlin">
    fun &lt;T&gt; knn(x: Array&lt;T&gt;, y: IntArray, k: Int, distance: Distance&lt;T&gt;): KNN&lt;T&gt;
           </code></pre>
             </div>
@@ -456,31 +456,31 @@ title: SMILE - Classification
         Cover Tree, and LSH (Locality-Sensitive Hashing) for efficient
         k-nearest neighbor search.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_4" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_4" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_4" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_4" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_4" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_4" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_4">
+        <div class="tab-pane fade" role="tabpanel" id="scala_4">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def knn[T](x: KNNSearch[T, T], y: Array[Int], k: Int): KNN[T]
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_4">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_4">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class KNN {
         public KNN(KNNSearch&lt;T, T&gt; knn, int[] y, int k);
     }
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_4">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_4">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-kotlin"><code>
+          <pre class="language-kotlin"><code class="language-kotlin">
     fun &lt;T&gt; knn(x: KNNSearch&lt;T, T&gt;, y: IntArray, k: Int): KNN&lt;T&gt;
           </code></pre>
             </div>
@@ -502,15 +502,15 @@ title: SMILE - Classification
         and you will observe the change of decision boundary. In general, the larger
         <code>k</code>, the smoother the boundary.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_5" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_5" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_5" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_5" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_5" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_5">
+        <div class="tab-pane fade" role="tabpanel" id="scala_5">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val toy = read.csv("data/classification/toy200.txt", delimiter="\t", header=false)
     val x = toy.select(1, 2).toArray()
     val y = toy.column(0).toIntArray()
@@ -518,9 +518,9 @@ title: SMILE - Classification
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_5">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_5">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var toy = Read.csv("data/classification/toy200.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
     var x = toy.select(1, 2).toArray();
     var y = toy.column(0).toIntArray();
@@ -528,9 +528,9 @@ title: SMILE - Classification
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_5">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_5">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-kotlin"><code>
+          <pre class="language-kotlin"><code class="language-kotlin">
     import smile.*;
     import smile.classification.*;
     val toy = read.csv("data/classification/toy200.txt", delimiter='\t', header=false)
@@ -562,31 +562,31 @@ title: SMILE - Classification
         in a class is purely a function of this linear combination of independent
         variables.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_6" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_6" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_6" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_6" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_6" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_6" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_6">
+        <div class="tab-pane fade" role="tabpanel" id="scala_6">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def lda(x: Array[Array[Double]], y: Array[Int], priori: Array[Double] = null, tol: Double = 0.0001):LDA
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_6">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_6">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class LDA {
         public static LDA fit(double[][] x, int[] y, double[] priori, double tol);
     }
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_6">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_6">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     fun lda(x: Array&lt;DoubleArray&gt;, y: IntArray, priori: DoubleArray? = null, tol: Double = 0.0001): LDA
     </code></pre>
             </div>
@@ -598,29 +598,29 @@ title: SMILE - Classification
         if a covariance matrix is singular. The function will reject variables whose variance is
         less than tol<sup>2</sup>.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_7" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_7" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_7" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_7" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_7" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_7" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_7">
+        <div class="tab-pane fade" role="tabpanel" id="scala_7">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     lda(x, y)
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_7">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_7">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     LDA.fit(x, y);
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_7">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_7">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-kotlin"><code>
+          <pre class="language-kotlin"><code class="language-kotlin">
     lda(x, y)
           </code></pre>
             </div>
@@ -663,31 +663,31 @@ title: SMILE - Classification
         The resulting combination may be used for dimensionality reduction
         before later classification.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_8" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_8" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_8" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_8" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_8" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_8" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_8">
+        <div class="tab-pane fade" role="tabpanel" id="scala_8">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def fisher(x: Array[Array[Double]], y: Array[Int], L: Int = -1, tol: Double = 0.0001): FLD
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_8">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_8">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class FLD {
         public static FLD fit(double[][] x, int[] y, int L, double tol);
     }
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_8">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_8">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-kotlin"><code>
+          <pre class="language-kotlin"><code class="language-kotlin">
     fun fisher(x: Array&lt;DoubleArray&gt;, y: IntArray, L: Int = -1, tol: Double = 0.0001): FLD
           </code></pre>
             </div>
@@ -710,29 +710,29 @@ title: SMILE - Classification
         as normally distributed classes or equal class covariances.
         When the assumptions of LDA are satisfied, FLD is equivalent to LDA.</p>
 
-    <ul class="nav nav-tabs">
-        <li><a href="#java_9" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_9" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_9" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#java_9" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_9" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_9" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_9">
+        <div class="tab-pane fade" role="tabpanel" id="scala_9">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     fisher(x, y)
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_9">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_9">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     FLD.fit(x, y);
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_9">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_9">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-kotlin"><code>
+          <pre class="language-kotlin"><code class="language-kotlin">
     fisher(x, y)
           </code></pre>
             </div>
@@ -761,31 +761,31 @@ title: SMILE - Classification
         functions as a Gaussian distribution, then uses the posterior distributions
         to estimate the class for a given test data.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_10" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_10" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_10" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_10" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_10" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_10" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_10">
+        <div class="tab-pane fade" role="tabpanel" id="scala_10">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def qda(x: Array[Array[Double]], y: Array[Int], priori: Array[Double] = null, tol: Double = 0.0001):QDA
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_10">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_10">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class QDA {
         public static QDA fit(double[][] x, int[] y, double[] priori, double tol);
     }
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_10">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_10">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-kotlin"><code>
+          <pre class="language-kotlin"><code class="language-kotlin">
     fun qda(x: Array&lt;DoubleArray&gt;, y: IntArray, priori: DoubleArray? = null, tol: Double = 0.0001): QDA
           </code></pre>
             </div>
@@ -796,29 +796,29 @@ title: SMILE - Classification
         is identical. Therefore, the resulting separating surface between
         the classes is quadratic.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_11" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_11" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_11" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_11" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_11" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_11" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_11">
+        <div class="tab-pane fade" role="tabpanel" id="scala_11">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     qda(x, y)
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_11">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_11">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     QDA.fit(x, y);
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_11">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_11">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-kotlin"><code>
+          <pre class="language-kotlin"><code class="language-kotlin">
     qda(x, y)
           </code></pre>
             </div>
@@ -843,31 +843,31 @@ title: SMILE - Classification
         the regularized covariance matrices of each class is
         &Sigma;<sub>k</sub>(&alpha;) = &alpha; &Sigma;<sub>k</sub> + (1 - &alpha;) &Sigma;.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_12" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_12" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_12" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_12" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_12" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_12" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_12">
+        <div class="tab-pane fade" role="tabpanel" id="scala_12">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def rda(x: Array[Array[Double]], y: Array[Int], alpha: Double, priori: Array[Double] = null, tol: Double = 0.0001): RDA
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_12">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_12">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class RDA {
         public static RDA fit(double[][] x, int[] y, double alpha, double[] priori, double tol);
     }
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_12">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_12">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-kotlin"><code>
+          <pre class="language-kotlin"><code class="language-kotlin">
     fun rda(x: Array&lt;DoubleArray&gt;, y: IntArray, alpha: Double, priori: DoubleArray? = null, tol: Double = 0.0001): RDA
           </code></pre>
             </div>
@@ -884,29 +884,29 @@ title: SMILE - Classification
         While &alpha; is zero, RDA is equivalent to LDA. Therefore, the
         regularization factor &alpha; allows a continuum of models between LDA and QDA.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_13" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_13" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_13" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_13" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_13" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_13" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_13">
+        <div class="tab-pane fade" role="tabpanel" id="scala_13">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     rda(x, y, 0.1)
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_13">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_13">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     RDA.fit(x, y, 0.1);
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_13">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_13">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-kotlin"><code>
+          <pre class="language-kotlin"><code class="language-kotlin">
     rda(x, y, 0.1)
           </code></pre>
             </div>
@@ -926,15 +926,15 @@ title: SMILE - Classification
         the highest value in multinomial models). In this way, logistic regression
         estimates the odds of a certain event (value) occurring.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_14" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_14" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_14" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_14" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_14" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_14" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_14">
+        <div class="tab-pane fade" role="tabpanel" id="scala_14">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def logit(x: Array[Array[Double]],
               y: Array[Int],
               lambda: Double = 0.0,
@@ -943,18 +943,18 @@ title: SMILE - Classification
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_14">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_14">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
+          <pre class="language-java"><code class="language-java">
     public class LogisticRegression {
         public static LogisticRegression fit(double[][] x, int[] y, Options options);
     }
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_14">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_14">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-kotlin"><code>
+          <pre class="language-kotlin"><code class="language-kotlin">
     fun logit(x: Array&lt;DoubleArray&gt;,
               y: IntArray,
               lambda: Double = 0.0,
@@ -969,29 +969,29 @@ title: SMILE - Classification
         weights which often has superior generalization performance, especially
         when the dimensionality is high.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_15" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_15" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_15" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_15" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_15" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_15" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_15">
+        <div class="tab-pane fade" role="tabpanel" id="scala_15">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     logit(x, y)
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_15">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_15">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     LogisticRegression.fit(x, y);
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_15">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_15">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-kotlin"><code>
+          <pre class="language-kotlin"><code class="language-kotlin">
     logit(x, y)
           </code></pre>
             </div>
@@ -1043,15 +1043,15 @@ title: SMILE - Classification
         other than what have been observed and always choose the most uniform
         distribution subject to the observed constraints.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_16" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_16" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_16" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_16" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_16" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_16" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_16">
+        <div class="tab-pane fade" role="tabpanel" id="scala_16">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def maxent(x: Array[Array[Int]],
                y: Array[Int],
                p: Int,
@@ -1061,18 +1061,18 @@ title: SMILE - Classification
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_16">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_16">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class Maxent {
         public static Maxent fit(int[][] x, int[] y, Options options);
     }
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_16">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_16">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-kotlin"><code>
+          <pre class="language-kotlin"><code class="language-kotlin">
     fun maxent(x: Array&lt;IntArray&gt;,
                y: IntArray,
                p: Int,
@@ -1115,15 +1115,15 @@ title: SMILE - Classification
         Commonly, each input variable is scaled into interval [0, 1] or to have
         mean 0 and standard deviation 1.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_17" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_17" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_17" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_17" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_17" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_17" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_17">
+        <div class="tab-pane fade" role="tabpanel" id="scala_17">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def mlp(x: Array[Array[Double]],
             y: Array[Int],
             builders: Array[LayerBuilder],
@@ -1136,18 +1136,18 @@ title: SMILE - Classification
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_17">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_17">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class MLP {
         public MLP(int p, LayerBuilder... builders);
     }
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_17">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_17">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-kotlin"><code>
+          <pre class="language-kotlin"><code class="language-kotlin">
     fun mlp(x: Array&lt;DoubleArray&gt;,
             y: IntArray,
             builders: Array&lt;LayerBuilder&gt;,
@@ -1187,23 +1187,23 @@ title: SMILE - Classification
         the neural network for categorical target variables, the outputs
         can be interpreted as posterior probabilities, which are very useful.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_18" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_18" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_18" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_18" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_18" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_18" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_18">
+        <div class="tab-pane fade" role="tabpanel" id="scala_18">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val net = mlp(x, y, Array(Layer.input(2), Layer.sigmoid(10), Layer.mle(1, OutputFunction.SIGMOID)),
         learningRate = TimeFunction.constant(0.1), momentum = TimeFunction.constant(0.1))
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_18">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_18">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     import smile.base.mlp.*;
     var net = new MLP(Layer.input(2),
                 Layer.sigmoid(10),
@@ -1221,9 +1221,9 @@ title: SMILE - Classification
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_18">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_18">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     import smile.base.mlp.*
     import smile.math.*;
     mlp(x, y, arrayOf(Layer.input(2), Layer.sigmoid(10), Layer.mle(1, OutputFunction.SIGMOID)),
@@ -1298,7 +1298,7 @@ title: SMILE - Classification
 
     <p>In its basic form, radial basis function network is in the form</p>
 
-    <pre class="prettyprint lang-html"><code>
+    <pre class="language-markup"><code class="language-markup">
     y(x) = &Sigma; w<sub>i</sub> &phi;(||x-c<sub>i</sub>||)
     </code></pre>
 
@@ -1324,31 +1324,31 @@ title: SMILE - Classification
     <p>An optional third backpropagation step can be performed to fine-tune all the RBF
         network's parameters.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_19" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_19" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_19" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_19" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_19" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_19" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_19">
+        <div class="tab-pane fade" role="tabpanel" id="scala_19">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def rbfnet[T](x: Array[T], y: Array[Int], neurons: Array[RBF[T]], normalized: Boolean): RBFNetwork[T]
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_19">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_19">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class RBFNetwork {
         public static RBFNetwork&lt;T&gt; fit(T[] x, int[] y, RBF&lt;T&gt;[] rbf, boolean normalized);
     }
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_19">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_19">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-kotlin"><code>
+          <pre class="language-kotlin"><code class="language-kotlin">
     fun &lt;T&gt; rbfnet(x: Array&lt;T&gt;, y: IntArray, neurons: Array&lt;RBF&lt;T&gt;&gt;, normalized: Boolean = false): RBFNetwork&lt;T&gt;
           </code></pre>
             </div>
@@ -1366,30 +1366,30 @@ title: SMILE - Classification
         effect of better conditioning (the separation distance of the scaled points
         increases).</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_20" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_20" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_20" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_20" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_20" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_20" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_20">
+        <div class="tab-pane fade" role="tabpanel" id="scala_20">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val rbf = rbfnet(x, y, RBF.fit(x, 50), false)
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_20">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_20">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     import smile.base.rbf.*;
     RBFNetwork.fit(x, y, RBF.fit(x, 50), false);
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_20">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_20">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-kotlin"><code>
+          <pre class="language-kotlin"><code class="language-kotlin">
     import smile.base.rbf.*
     rbfnet(x, y, RBF.fit(x, 50), false)
           </code></pre>
@@ -1439,22 +1439,22 @@ title: SMILE - Classification
         classifiers are well regularized, so the infinite dimension does not spoil
         the results.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_21" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_21" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_21" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_21" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_21" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_21" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_21">
+        <div class="tab-pane fade" role="tabpanel" id="scala_21">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def svm[T <](x: Array[T], y: Array[Int], kernel: MercerKernel[T], C: Double, tol: Double = 1E-3): SVM[T]
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_21">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_21">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class SVM {
         // Fits a binary-class linear SVM
         public static Classifier&lt;double[]&gt; fit(double[][] x, int[] y, Options options);
@@ -1468,9 +1468,9 @@ title: SMILE - Classification
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_21">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_21">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     fun &lt;T&gt; svm(x: Array&lt;T&gt;, y: IntArray, kernel: MercerKernel&lt;T&gt;, C: Double, tol: Double = 1E-3): SVM&lt;T&gt;
     </code></pre>
             </div>
@@ -1495,15 +1495,15 @@ title: SMILE - Classification
         class is increased by one vote, and finally the class with most votes
         determines the instance classification.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_22" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_22" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_22" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_22" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_22" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_22" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_22">
+        <div class="tab-pane fade" role="tabpanel" id="scala_22">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     // One-vs-one strategy
     def ovo[T](x: Array[T], y: Array[Int])(trainer: (Array[T], Array[Int]) => Classifier[T]): OneVersusOne[T]
 
@@ -1512,9 +1512,9 @@ title: SMILE - Classification
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_22">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_22">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class OneVersusOne {
          public static OneVersusOne&lt;T&gt; fit(T[] x, int[] y, BiFunction&lt;T[], int[], Classifier&lt;T&gt;&gt; trainer);
     }
@@ -1525,9 +1525,9 @@ title: SMILE - Classification
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_22">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_22">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     // One-vs-one strategy
     fun &lt;T&gt; ovo(x: Array&lt;T&gt;, y: IntArray, trainer: (Array&lt;T&gt;, IntArray) -> Classifier&lt;T&gt;): OneVersusOne&lt;T&gt;
 
@@ -1538,15 +1538,15 @@ title: SMILE - Classification
         </div>
     </div>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_23" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_23" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_23" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_23" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_23" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_23" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_23">
+        <div class="tab-pane fade" role="tabpanel" id="scala_23">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val zip = read.csv("data/usps/zip.train", delimiter = ' ' , header = false)
     val x = zip.drop(0).toArray()
     val y = zip.column(0).toIntArray()
@@ -1555,9 +1555,9 @@ title: SMILE - Classification
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_23">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_23">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var zip = Read.csv("data/usps/zip.train", CSVFormat.DEFAULT.withDelimiter(' '));
     var x = zip.drop(0).toArray();
     var y = zip.column(0).toIntArray();
@@ -1566,9 +1566,9 @@ title: SMILE - Classification
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_23">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_23">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-kotlin"><code>
+          <pre class="language-kotlin"><code class="language-kotlin">
     val zip = read.csv("data/usps/zip.train", delimiter = ' ' , header = false)
     val x = zip.drop(0).toArray()
     val y = zip.column(0).toIntArray()
@@ -1624,15 +1624,15 @@ title: SMILE - Classification
         Instead, one may employ the information gain ratio, which solves the drawback
         of information gain.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_24" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_24" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_24" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_24" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_24" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_24" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_24">
+        <div class="tab-pane fade" role="tabpanel" id="scala_24">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def cart(formula: Formula,
              data: DataFrame,
              splitRule: SplitRule = SplitRule.GINI,
@@ -1642,18 +1642,18 @@ title: SMILE - Classification
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_24">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_24">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
+          <pre class="language-java"><code class="language-java">
     public class DecisionTree {
          public static DecisionTree fit(Formula formula, DataFrame data, Options options);
     }
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_24">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_24">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-kotlin"><code>
+          <pre class="language-kotlin"><code class="language-kotlin">
     fun cart(formula: Formula,
              data: DataFrame,
              splitRule: SplitRule = SplitRule.GINI,
@@ -1678,15 +1678,15 @@ title: SMILE - Classification
         <img src="images/decision-tree.png" class="enlarge" style="width: 480px;" />
     </div>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_25" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_25" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_25" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_25" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_25" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_25" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_25">
+        <div class="tab-pane fade" role="tabpanel" id="scala_25">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code style="white-space: preserve nowrap;">
+    <pre class="language-scala"><code class="language-scala">
     smile> cart("V1" ~, zip)
     [main] INFO smile.util.package$ - Decision Tree runtime: 0:00:00.754375
     res22: DecisionTree = n=7291
@@ -1718,9 +1718,9 @@ title: SMILE - Classification
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_25">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_25">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
+          <pre class="language-java"><code class="language-java">
     smile> import smile.data.formula.*
     smile> DecisionTree.fit(Formula.lhs("V1"), zip)
     $232 ==> n=7291
@@ -1752,9 +1752,9 @@ title: SMILE - Classification
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_25">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_25">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-kotlin"><code style="white-space: preserve nowrap;">
+          <pre class="language-kotlin"><code class="language-kotlin">
     >>> import smile.data.formula.*
     >>> cart(Formula.lhs("V1"), zip)
     res160: smile.classification.DecisionTree = n=7291
@@ -1846,15 +1846,15 @@ title: SMILE - Classification
         <li>Each tree is grown to the largest extent possible. There is no pruning.</li>
     </ol>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_26" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_26" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_26" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_26" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_26" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_26" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_26">
+        <div class="tab-pane fade" role="tabpanel" id="scala_26">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def randomForest(formula: Formula,
                      data: DataFrame,
                      ntrees: Int = 500,
@@ -1869,9 +1869,9 @@ title: SMILE - Classification
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_26">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_26">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class RandomForest {
         public static RandomForest fit(Formula formula,
                                        DataFrame data,
@@ -1880,9 +1880,9 @@ title: SMILE - Classification
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_26">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_26">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     fun randomForest(formula: Formula,
                      data: DataFrame,
                      ntrees: Int = 500,
@@ -1981,15 +1981,15 @@ title: SMILE - Classification
         the price of increasing computational time both during training and
         prediction: lower learning rate requires more iterations.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_28" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_28" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_28" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_28" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_28" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_28" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_28">
+        <div class="tab-pane fade" role="tabpanel" id="scala_28">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def gbm(formula: Formula,
             data: DataFrame,
             ntrees: Int = 500,
@@ -2001,9 +2001,9 @@ title: SMILE - Classification
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_28">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_28">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class GradientTreeBoost {
          public static GradientTreeBoost fit(Formula formula,
                                              DataFrame data,
@@ -2012,9 +2012,9 @@ title: SMILE - Classification
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_28">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_28">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     fun gbm(formula: Formula,
             data: DataFrame,
             ntrees: Int = 500,
@@ -2078,15 +2078,15 @@ title: SMILE - Classification
         classified example are decreased), so that the new classifier focuses more
         on those examples.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_30" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_30" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_30" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_30" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_30" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_30" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_30">
+        <div class="tab-pane fade" role="tabpanel" id="scala_30">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def adaboost(formula: Formula,
                  data: DataFrame,
                  ntrees: Int = 500,
@@ -2096,9 +2096,9 @@ title: SMILE - Classification
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_30">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_30">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class AdaBoost {
          public static AdaBoost fit(Formula formula,
                                     DataFrame data,
@@ -2107,9 +2107,9 @@ title: SMILE - Classification
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_30">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_30">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     fun adaboost(formula: Formula,
                  data: DataFrame,
                  ntrees: Int = 500,
@@ -2139,7 +2139,3 @@ title: SMILE - Classification
         <span class="btn-arrow-right">&nbsp;&rarr;</span>
     </div>
 </div>
-
-<script type="text/javascript">
-    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
-</script>
