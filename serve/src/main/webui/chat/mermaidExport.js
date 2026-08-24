@@ -50,74 +50,14 @@ export function downloadBlob(blob, filename) {
 }
 
 /**
- * @param {string} svg
- * @returns {{ width: number, height: number }}
- */
-function svgSize(svg) {
-  const doc = new DOMParser().parseFromString(svg, 'image/svg+xml')
-  const el = doc.documentElement
-  const viewBox = el.getAttribute('viewBox')
-  if (viewBox) {
-    const parts = viewBox.trim().split(/[\s,]+/).map(Number)
-    if (parts.length === 4 && parts.every((n) => Number.isFinite(n))) {
-      return { width: parts[2], height: parts[3] }
-    }
-  }
-  const w = parseFloat(el.getAttribute('width') || '')
-  const h = parseFloat(el.getAttribute('height') || '')
-  return {
-    width: Number.isFinite(w) && w > 0 ? w : 800,
-    height: Number.isFinite(h) && h > 0 ? h : 600,
-  }
-}
-
-/**
- * Rasterizes SVG to a canvas (white background).
- * Uses Canvg instead of {@code Image}+{@code drawImage} so Mermaid SVGs
- * with {@code foreignObject} do not taint the canvas.
- *
- * @param {string} svg
- * @param {number} [scale]
- * @returns {Promise<HTMLCanvasElement>}
- */
-export async function svgToCanvas(svg, scale = 2) {
-  const { Canvg } = await import('canvg')
-  // Canvg expects raw SVG markup (no XML prologue).
-  const markup = (svg ?? '').trim().replace(/^<\?xml[^>]*>\s*/i, '')
-  const normalized = /\sxmlns=/.test(markup)
-    ? markup
-    : markup.replace(/<svg\b/, '<svg xmlns="http://www.w3.org/2000/svg"')
-  const { width, height } = svgSize(normalized)
-
-  const canvas = document.createElement('canvas')
-  canvas.width = Math.max(1, Math.round(width * scale))
-  canvas.height = Math.max(1, Math.round(height * scale))
-  const ctx = canvas.getContext('2d')
-  ctx.fillStyle = '#ffffff'
-  ctx.fillRect(0, 0, canvas.width, canvas.height)
-  ctx.save()
-  ctx.scale(scale, scale)
-
-  const renderer = await Canvg.from(ctx, normalized, {
-    ignoreMouse: true,
-    ignoreAnimation: true,
-    // Ignore external resources that would otherwise force CORS/taint paths.
-    ignoreClear: true,
-  })
-  await renderer.render()
-  ctx.restore()
-  return canvas
-}
-
-/**
- * @param {HTMLCanvasElement} canvas
+ * @param {HTMLCanvasElement} source
  * @param {string} type
  * @param {number} [quality]
  * @returns {Promise<Blob>}
  */
-function canvasToBlob(canvas, type, quality) {
+function canvasElementToBlob(source, type, quality) {
   return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => {
+    source.toBlob((blob) => {
       if (blob) resolve(blob)
       else reject(new Error('Canvas export failed'))
     }, type, quality)
@@ -185,27 +125,44 @@ function jpegToPdf(jpeg, widthPx, heightPx) {
 }
 
 /**
- * @param {string} svg
+ * @param {string} svgMarkup
  * @param {'svg'|'png'|'pdf'} format
  * @param {string} [basename]
+ * @param {HTMLElement|null} [diagramElement] Live DOM node for PNG/PDF (preserves labels).
  */
-export async function downloadMermaidDiagram(svg, format, basename = 'diagram') {
+export async function downloadMermaidDiagram(
+  svgMarkup,
+  format,
+  basename = 'diagram',
+  diagramElement = null,
+) {
   const name = basename.replace(/[^\w.-]+/g, '_') || 'diagram'
   if (format === 'svg') {
-    const blob = new Blob([normalizeSvg(svg)], { type: 'image/svg+xml;charset=utf-8' })
+    const blob = new Blob([normalizeSvg(svgMarkup)], { type: 'image/svg+xml;charset=utf-8' })
     downloadBlob(blob, `${name}.svg`)
     return
   }
 
-  const canvas = await svgToCanvas(svg, 2)
+  if (!diagramElement) {
+    throw new Error('Diagram element is required for PNG/PDF export')
+  }
+
+  const { toCanvas } = await import('html-to-image')
+  const options = {
+    backgroundColor: '#ffffff',
+    pixelRatio: 2,
+    cacheBust: true,
+  }
+  const canvas = await toCanvas(diagramElement, options)
+
   if (format === 'png') {
-    const blob = await canvasToBlob(canvas, 'image/png')
+    const blob = await canvasElementToBlob(canvas, 'image/png')
     downloadBlob(blob, `${name}.png`)
     return
   }
 
   if (format === 'pdf') {
-    const jpegBlob = await canvasToBlob(canvas, 'image/jpeg', 0.92)
+    const jpegBlob = await canvasElementToBlob(canvas, 'image/jpeg', 0.92)
     const jpeg = new Uint8Array(await jpegBlob.arrayBuffer())
     const pdf = jpegToPdf(jpeg, canvas.width, canvas.height)
     downloadBlob(new Blob([pdf], { type: 'application/pdf' }), `${name}.pdf`)

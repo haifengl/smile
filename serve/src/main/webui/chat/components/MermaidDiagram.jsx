@@ -16,7 +16,7 @@
  */
 import React, { memo, useCallback, useEffect, useId, useRef, useState } from 'react'
 import mermaid from 'mermaid'
-import { downloadMermaidDiagram } from '../mermaidExport'
+import { downloadMermaidDiagram } from '../mermaidExport.js'
 import './MermaidDiagram.css'
 
 let mermaidReady = false
@@ -67,7 +67,7 @@ function DownloadIcon() {
   )
 }
 
-function MermaidDownloadMenu({ svg, onClose }) {
+function MermaidDownloadMenu({ svg, diagramElement, onClose }) {
   const menuRef = useRef(null)
   const [busy, setBusy] = useState(false)
   const [exportError, setExportError] = useState('')
@@ -94,7 +94,7 @@ function MermaidDownloadMenu({ svg, onClose }) {
     setBusy(true)
     setExportError('')
     try {
-      await downloadMermaidDiagram(svg, format, 'mermaid-diagram')
+      await downloadMermaidDiagram(svg, format, 'mermaid-diagram', diagramElement)
       onClose()
     } catch (err) {
       setExportError(err?.message || 'Download failed')
@@ -138,6 +138,7 @@ function MermaidDiagram({ chart, streaming = false }) {
   const [pending, setPending] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const renderGen = useRef(0)
+  const diagramRef = useRef(null)
   const closeMenu = useCallback(() => setMenuOpen(false), [])
 
   useEffect(() => {
@@ -247,9 +248,16 @@ function MermaidDiagram({ chart, streaming = false }) {
         >
           <DownloadIcon />
         </button>
-        {menuOpen ? <MermaidDownloadMenu svg={svg} onClose={closeMenu} /> : null}
+        {menuOpen ? (
+          <MermaidDownloadMenu
+            svg={svg}
+            diagramElement={diagramRef.current}
+            onClose={closeMenu}
+          />
+        ) : null}
       </div>
       <div
+        ref={diagramRef}
         className="mermaid-svg"
         dangerouslySetInnerHTML={{ __html: svg }}
       />
