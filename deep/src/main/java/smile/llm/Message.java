@@ -16,26 +16,103 @@
  */
 package smile.llm;
 
+import java.util.List;
+
 /**
- * Dialog messages.
- * @param role the role of message speaker.
- * @param content the message content.
+ * Dialog message with OpenAI-style multimodal content parts.
  *
+ * <p>Text-only messages use a single {@link TextPart}. Multimodal turns may
+ * interleave text with {@link ImageUrlPart} / {@link VideoUrlPart}.
+ *
+ * @param role  speaker role.
+ * @param parts ordered content parts (non-empty).
  * @author Haifeng Li
  */
-public record Message(Role role, String content) {
+public record Message(Role role, List<ContentPart> parts) {
     /**
      * Compact canonical constructor that validates inputs.
-     * @param role the role of the message speaker — must not be null.
-     * @param content the message content — must not be null.
+     *
+     * @param role  speaker role — must not be null.
+     * @param parts content parts — must be non-null and non-empty.
      */
     public Message {
-        if (role == null) throw new IllegalArgumentException("Message role must not be null");
-        if (content == null) throw new IllegalArgumentException("Message content must not be null");
+        if (role == null) {
+            throw new IllegalArgumentException("Message role must not be null");
+        }
+        if (parts == null || parts.isEmpty()) {
+            throw new IllegalArgumentException("Message parts must not be null or empty");
+        }
+        for (ContentPart part : parts) {
+            if (part == null) {
+                throw new IllegalArgumentException("Message parts must not contain null");
+            }
+        }
+        parts = List.copyOf(parts);
+    }
+
+    /**
+     * Text-only convenience constructor.
+     *
+     * @param role    speaker role.
+     * @param content plain text body.
+     */
+    public Message(Role role, String content) {
+        this(role, List.of(new TextPart(content)));
+    }
+
+    /**
+     * Varargs content parts constructor.
+     *
+     * @param role  speaker role.
+     * @param parts content parts.
+     */
+    public Message(Role role, ContentPart... parts) {
+        this(role, parts == null ? null : List.of(parts));
+    }
+
+    /**
+     * Concatenates all {@link TextPart} text (ignores media parts).
+     *
+     * @return combined text, possibly empty.
+     */
+    public String content() {
+        StringBuilder sb = new StringBuilder();
+        for (ContentPart part : parts) {
+            if (part instanceof TextPart text) {
+                sb.append(text.text());
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * @return {@code true} when any part is an image, video, or audio.
+     */
+    public boolean hasMedia() {
+        for (ContentPart part : parts) {
+            if (part instanceof ImageUrlPart || part instanceof VideoUrlPart
+                    || part instanceof AudioUrlPart) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @return {@code true} when any part is audio.
+     */
+    public boolean hasAudio() {
+        for (ContentPart part : parts) {
+            if (part instanceof AudioUrlPart) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
      * Factory method for a system message.
+     *
      * @param content the message content.
      * @return a system message.
      */
@@ -45,6 +122,7 @@ public record Message(Role role, String content) {
 
     /**
      * Factory method for a user message.
+     *
      * @param content the message content.
      * @return a user message.
      */
@@ -53,7 +131,18 @@ public record Message(Role role, String content) {
     }
 
     /**
+     * Multimodal user message.
+     *
+     * @param parts ordered content parts.
+     * @return a user message.
+     */
+    public static Message user(ContentPart... parts) {
+        return new Message(Role.user, parts);
+    }
+
+    /**
      * Factory method for an assistant message.
+     *
      * @param content the message content.
      * @return an assistant message.
      */

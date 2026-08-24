@@ -5,7 +5,7 @@ title: Smile - Clustering
 ---
 {% include "toc.njk" %}
 
-<div class="col-md-9 col-md-pull-3">
+<div class="col-md-9 order-md-first">
     <h1 id="clustering-top" class="title">Clustering</h1>
 
     <p>Clustering is the assignment of a set of observations
@@ -59,33 +59,33 @@ title: Smile - Clustering
         distances of observations in the sets. Hierarchical clustering has the
         distinct advantage that any valid measure of distance can be used.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_1" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_1" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_1" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_1" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_1" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_1">
+        <div class="tab-pane fade" role="tabpanel" id="scala_1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def hclust(data: Array[Array[Double]], method: String): HierarchicalClustering
 
     def hclust[T](data: Array[T], distance: Distance[T], method: String): HierarchicalClustering
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_1">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_1">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class HierarchicalClustering {
         public static HierarchicalClustering fit(Linkage linkage);
     }
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_1">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     fun hclust(data: Array&lt;DoubleArray&gt;, method: String): HierarchicalClustering
 
     fun &lt;T&gt; hclust(data: Array&lt;T&gt;, distance: Distance&lt;T&gt;, method: String): HierarchicalClustering
@@ -160,24 +160,24 @@ title: Smile - Clustering
         to 2d data in the following. The data is generated from six Gaussian
         distributions, each 300 samples.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_2" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_2" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_2" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_2" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_2">
+        <div class="tab-pane fade" role="tabpanel" id="scala_2">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val x = read.csv("data/clustering/rem.txt", header=false, delimiter=" ").toArray()
     val clusters = hclust(x, "complete")
     show(dendrogram(clusters))
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_2">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_2">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     import smile.clustering.*;
     import smile.clustering.linkage.*;
 
@@ -188,9 +188,9 @@ title: Smile - Clustering
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_2">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_2">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     import smile.*;
     import smile.clustering.*;
     import smile.plot.swing.*;
@@ -216,31 +216,31 @@ title: Smile - Clustering
     <p>If a hard partition is need, we can cut a hierarchical clustering tree
         into several groups by specifying the desired number or the cut height.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_3" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_3" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_3" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_3" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_3" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_3">
+        <div class="tab-pane fade" role="tabpanel" id="scala_3">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val y = clusters.partition(6)
     show(plot(x, y, '.'))
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_3">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_3">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var y = clusters.partition(6);
     ScatterPlot.of(x, y, '.').canvas().window();
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_3">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_3">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     val y = clusters.partition(6)
     ScatterPlot.of(x, y, '.').canvas().window();
     </code></pre>
@@ -287,31 +287,31 @@ title: Smile - Clustering
     <p>We also use K-D trees to speed up each K-Means step as described in the filter
         algorithm by Kanungo, et al.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_4" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_4" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_4" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_4" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_4" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_4" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_4">
+        <div class="tab-pane fade" role="tabpanel" id="scala_4">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def kmeans(data: Array[Array[Double]], k: Int, maxIter: Int = 100, tol: Double = 1E-4, runs: Int = 10): KMeans
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_4">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_4">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class KMeans {
         public static KMeans fit(double[][] data, Options options);
     }
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_4">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_4">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     fun kmeans(data: Array&lt;DoubleArray&gt;, k: Int, maxIter: Int = 100, tol: Double = 1E-4, runs: Int = 10): KMeans
     </code></pre>
             </div>
@@ -324,32 +324,32 @@ title: Smile - Clustering
         and choose the best one. To do that, set the parameter <code>runs &gt; 1</code>
         (e.g. 10 ~ 20).</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_5" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_5" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_5" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_5" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_5" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_5">
+        <div class="tab-pane fade" role="tabpanel" id="scala_5">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val clusters = kmeans(x, 6, runs = 20)
     show(plot(x, clusters.y, '.'))
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_5">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_5">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var clusters = Clustering.run(20, () -> KMeans.fit(x, 6, 100));
     var figure = ScatterPlot.of(x, clusters.group(), '.').figure();
     show(figure);
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_5">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_5">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     val clusters = kmeans(x, 6, runs = 20)
     ScatterPlot.of(x, clusters.y, '.').canvas().window()
     </code></pre>
@@ -366,24 +366,24 @@ title: Smile - Clustering
 
     <p>If the clusters are elongated, however, the results may be far from optimal.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_6" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_6" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_6" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_6" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_6" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_6" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_6">
+        <div class="tab-pane fade" role="tabpanel" id="scala_6">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val x = read.csv("data/clustering/elongate.txt", header=false, delimiter="\t").toArray()
     val clusters = kmeans(x, 2, runs = 20)
     show(plot(x, clusters.y, '.'))
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_6">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_6">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var x = Read.csv("data/clustering/elongate.txt", CSVFormat.DEFAULT.withDelimiter('\t')).toArray();
     var clusters = Clustering.run(20, () -> KMeans.fit(elongate, 2, 100));
     var figure = ScatterPlot.of(elongate, clusters.group(), '.').figure();
@@ -391,9 +391,9 @@ title: Smile - Clustering
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_6">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_6">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     val x = read.csv("data/clustering/elongate.txt", header=false, delimiter='\t').toArray()
     val clusters = kmeans(x, 2, runs = 20)
     ScatterPlot.of(x, clusters.y, '.').canvas().window()
@@ -422,31 +422,31 @@ title: Smile - Clustering
         The splitting decision is done by computing the Bayesian Information
         Criterion (BIC).</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_7" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_7" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_7" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_7" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_7" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_7" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_7">
+        <div class="tab-pane fade" role="tabpanel" id="scala_7">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def xmeans(data: Array[Array[Double]], k: Int = 100): XMeans
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_7">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_7">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class XMeans {
         public static XMeans fit(double[][] data, Options options);
     }
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_7">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_7">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     fun xmeans(data: Array&lt;DoubleArray&gt;, k: Int = 100): XMeans
     </code></pre>
             </div>
@@ -455,24 +455,24 @@ title: Smile - Clustering
 
     <p>where the parameter <code>k</code> is the maximum number of clusters</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_8" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_8" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_8" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_8" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_8" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_8" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_8">
+        <div class="tab-pane fade" role="tabpanel" id="scala_8">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val x = read.csv("data/clustering/rem.txt", header=false, delimiter=" ").toArray()
     val clusters = xmeans(x, 50)
     show(plot(x, clusters.y, '.'))
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_8">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_8">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var x = Read.csv("data/clustering/rem.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
     var clusters = XMeans.fit(x, 50, 100);
     var figure = ScatterPlot.of(x, clusters.group(), '.').figure();
@@ -480,9 +480,9 @@ title: Smile - Clustering
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_8">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_8">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     val x = read.csv("data/clustering/rem.txt", header=false, delimiter=' ').toArray()
     val clusters = xmeans(x, 50)
     ScatterPlot.of(x, clusters.y, '.').canvas().window()
@@ -505,31 +505,31 @@ title: Smile - Clustering
         K-Means with increasing k in a hierarchical fashion until the test accepts
         the hypothesis that the data assigned to each K-Means center are Gaussian.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_9" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_9" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_9" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_9" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_9" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_9" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_9">
+        <div class="tab-pane fade" role="tabpanel" id="scala_9">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def gmeans(data: Array[Array[Double]], k: Int = 100): GMeans
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_9">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_9">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class GMeans {
         public static GMeans fit(double[][] data, Options options);
     }
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_9">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_9">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     fun gmeans(data: Array&lt;DoubleArray&gt;, k: Int = 100): GMeans
     </code></pre>
             </div>
@@ -543,32 +543,32 @@ title: Smile - Clustering
         <div class="caption" style="min-width: 480px;">G-Means</div>
     </div>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_10" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_10" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_10" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_10" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_10" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_10" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_10">
+        <div class="tab-pane fade" role="tabpanel" id="scala_10">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val clusters = gmeans(x, 50)
     show(plot(x, clusters.y, '.'))
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_10">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_10">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var clusters = GMeans.fit(x, 50, 100);
     var figure = ScatterPlot.of(x, clusters.group(), '.').figure();
     show(figure);
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_10">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_10">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     val clusters = gmeans(x, 50)
     ScatterPlot.of(x, clusters.y, '.').canvas().window()
     </code></pre>
@@ -640,31 +640,31 @@ title: Smile - Clustering
         to local minima. If a limitation on the number of clusters is imposed,
         then at zero temperature a hard clustering solution is obtained.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_11" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_11" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_11" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_11" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_11" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_11" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_11">
+        <div class="tab-pane fade" role="tabpanel" id="scala_11">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def dac(data: Array[Array[Double]], k: Int, alpha: Double): DeterministicAnnealing
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_11">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_11">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class DeterministicAnnealing {
         public static DeterministicAnnealing fit(double[][] data, Options options);
     }
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_11">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_11">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     fun dac(data: Array&lt;DoubleArray&gt;, k: Int, alpha: Double): DeterministicAnnealing
     </code></pre>
             </div>
@@ -675,15 +675,15 @@ title: Smile - Clustering
         is the annealing control parameter in (0, 1). The temperature <code>T</code>
         is decreasing as <code>T<sub>i+1</sub> = alpha * T<sub>i</sub></code>.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_12" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_12" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_12" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_12" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_12" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_12" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_12">
+        <div class="tab-pane fade" role="tabpanel" id="scala_12">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile> dac(x, 12, 0.9)
     res58: DeterministicAnnealing = Cluster distortion: 17904.72351
     Cluster size of 300 data points:
@@ -702,9 +702,9 @@ title: Smile - Clustering
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_12">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_12">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     smile> DeterministicAnnealing.fit(x, 12, 0.9, 100)
     $126 ==> Cluster distortion: 2862.52100
     Cluster size of 1800 data points:
@@ -723,9 +723,9 @@ title: Smile - Clustering
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_12">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_12">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     >>> dac(x, 12, 0.9)
     res22: smile.clustering.DeterministicAnnealing = Cluster distortion: 2862.52100
     Cluster size of 1800 data points:
@@ -786,31 +786,31 @@ title: Smile - Clustering
         is much larger than a single sample. In this implementation, we instead
         use the regular/unweighted Jensen-Shannon divergence.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_13" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_13" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_13" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_13" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_13" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_13" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_13">
+        <div class="tab-pane fade" role="tabpanel" id="scala_13">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def sib(data: Array[SparseArray], k: Int, maxIter: Int = 100, runs: Int = 1): SIB
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_13">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_13">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class SIB {
         public static SIB fit(SparseArray[] data, Options options);
     }
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_13">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_13">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     fun sib(data: Array&lt;SparseArray&gt;, k: Int, maxIter: Int = 100, runs: Int = 1): SIB
     </code></pre>
             </div>
@@ -821,33 +821,33 @@ title: Smile - Clustering
         of dimension 62061. The data contains 15935 samples. The below example
         clusters it into 20 clusters.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_14" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_14" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_14" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_14" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_14" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_14" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_14">
+        <div class="tab-pane fade" role="tabpanel" id="scala_14">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val data = read.libsvm("data/libsvm/news20.dat")
     val sparse = (0 until data.size).map(i => data(i).x).toSeq
     val clusters = sib(sparse.toArray, 20, 100)
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_14">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_14">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var data = Read.libsvm("data/libsvm/news20.dat");
     var sparse = data.stream().map(i -> i.x()).toArray(SparseArray[]::new);
     var clusters = SIB.fit(sparse, 20, 100);
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_14">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_14">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     val data = read.libsvm("data/libsvm/news20.dat")
     val sparse = data.map { it.x }
     val clusters = sib(sparse, 20, 100)
@@ -883,31 +883,31 @@ title: Smile - Clustering
         is a better choice for medoids. Otherwise, a local optima is discovered. The
         entire process is repeated multiple time to find better.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_15" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_15" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_15" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_15" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_15" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_15" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_15">
+        <div class="tab-pane fade" role="tabpanel" id="scala_15">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def clarans[T](data: Array[T], distance: Distance[T], k: Int, maxNeighbor: Int, numLocal: Int): CLARANS[T]
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_15">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_15">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class KMedoids {
         public static KMedoids&lt;T&gt; fit(T[] data, Distance&lt;T&gt; distance, Options options);
     }
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_15">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_15">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     fun &lt;T&gt; clarans(data: Array&lt;T&gt;, distance: Distance&lt;T&gt;, k: Int, maxNeighbor: Int, numLocal: Int): CLARANS&lt;T&gt;
     </code></pre>
             </div>
@@ -920,32 +920,32 @@ title: Smile - Clustering
         the quality of such a local minima is higher and fewer local minima
         needs to be obtained.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_16" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_16" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_16" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_16" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_16" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_16" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_16">
+        <div class="tab-pane fade" role="tabpanel" id="scala_16">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val clusters = clarans(x, new EuclideanDistance(), 6, 10, 20)
     show(plot(x, clusters.y, '.'))
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_16">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_16">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var clusters = Clustering.run(20, () -> KMedoids.fit(x, new EuclideanDistance(), 10));
     var figure = ScatterPlot.of(x, clusters.group(), '.').figure();
     show(figure);
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_16">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_16">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     import smile.math.distance.*;
     val clusters = clarans(x, EuclideanDistance(), 6, 10, 20)
     ScatterPlot.of(x, clusters.y, '.').canvas().window()
@@ -967,15 +967,15 @@ title: Smile - Clustering
         finds a number of clusters starting from the estimated density
         distribution of corresponding nodes.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_17" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_17" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_17" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_17" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_17" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_17" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_17">
+        <div class="tab-pane fade" role="tabpanel" id="scala_17">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     // DBSCAN with a customized data structure for neighborhood search
     def dbscan[T](data: Array[T], nns: RNNSearch[T, T], minPts: Int, radius: Double): DBSCAN[T]
 
@@ -986,9 +986,9 @@ title: Smile - Clustering
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_17">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_17">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class DBSCAN {
         public static DBSCAN&lt;double[]&gt; fit(double[][] data, int minPts, double radius);
         public static DBSCAN&lt;T&gt; fit(T[] data, Distance&lt;T&gt; distance, int minPts, double radius);
@@ -997,9 +997,9 @@ title: Smile - Clustering
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_17">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_17">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     // DBSCAN with a customized data structure for neighborhood search
     fun &lt;T&gt; dbscan(data: Array&lt;T&gt;, nns: RNNSearch&lt;T, T&gt;, minPts: Int, radius: Double): DBSCAN&lt;T&gt;
 
@@ -1034,24 +1034,24 @@ title: Smile - Clustering
         an indexing structure is used that executes such a neighborhood query
         in <code>O(log n)</code>, an overall runtime complexity of <code>O(n log n)</code> is obtained.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_18" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_18" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_18" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_18" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_18" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_18" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_18">
+        <div class="tab-pane fade" role="tabpanel" id="scala_18">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val x = read.csv("data/clustering/chameleon/t4.8k.txt", header=false, delimiter=" ").toArray()
     val clusters = dbscan(x, 20, 10)
     plot(x, clusters.y, '.')
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_18">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_18">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     CSVFormat format = CSVFormat.Builder.create().setDelimiter('\t').get();
     var d4 = Read.csv("data/clustering/d4.txt", format).toArray();
     var clusters = DBSCAN.fit(d4, 20, 10);
@@ -1060,9 +1060,9 @@ title: Smile - Clustering
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_18">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_18">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     val x = read.csv("data/clustering/chameleon/t4.8k.txt", header=false, delimiter=' ').toArray()
     val clusters = dbscan(x, 20, 10.0)
     ScatterPlot.of(x, clusters.y, '.').canvas().window()
@@ -1120,31 +1120,31 @@ title: Smile - Clustering
         DENCLUE works efficiently for high-dimensional data sets and allows arbitrary
         noise levels while still guaranteeing to find the clustering.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_19" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_19" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_19" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_19" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_19" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_19" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_19">
+        <div class="tab-pane fade" role="tabpanel" id="scala_19">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def denclue(data: Array[Array[Double]], sigma: Double, m: Int): DENCLUE
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_19">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_19">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class DENCLUE {
         public static DENCLUE fit(double[][] data, Options options);
     }
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_19">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_19">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     fun denclue(data: Array&lt;DoubleArray&gt;, sigma: Double, m: Int): DENCLUE
     </code></pre>
             </div>
@@ -1164,24 +1164,24 @@ title: Smile - Clustering
         of the curse of dimensionality. Therefore, DENCLUDE doesn't work well on
         high-dimensional data in general.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_20" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_20" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_20" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_20" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_20" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_20" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_20">
+        <div class="tab-pane fade" role="tabpanel" id="scala_20">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val x = read.csv("data/clustering/rem.txt", header=false, delimiter=" ").toArray()
     val clusters = denclue(x, 1.0, 50)
     show(plot(x, clusters.y, '.'))
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_20">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_20">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var x = Read.csv("data/clustering/rem.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
     var clusters = DENCLUE.fit(x, 1.0, 50);
     var figure = ScatterPlot.of(x, clusters.group(), '.').figure();
@@ -1189,9 +1189,9 @@ title: Smile - Clustering
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_20">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_20">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     val x = read.csv("data/clustering/rem.txt", header=false, delimiter=' ').toArray()
     val clusters = denclue(x, 1.0, 50)
     ScatterPlot.of(x, clusters.y, '.').canvas().window()
@@ -1221,15 +1221,15 @@ title: Smile - Clustering
         spectral clustering methods and kernel PCA, which has been empirically
         observed to perform clustering.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_21" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_21" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_21" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_21" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_21" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_21" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_21">
+        <div class="tab-pane fade" role="tabpanel" id="scala_21">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def specc(W: Array[Array[Double]], k: Int): SpectralClustering
 
     def specc(data: Array[Array[Double]], k: Int, sigma: Double): SpectralClustering
@@ -1239,9 +1239,9 @@ title: Smile - Clustering
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_21">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_21">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class SpectralClustering {
         public static SpectralClustering fit(DenseMatrix W, Options options);
         public static SpectralClustering fit(double[][] data, Options options);
@@ -1251,9 +1251,9 @@ title: Smile - Clustering
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_21">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_21">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     fun specc(W: Array&lt;DoubleArray&gt;, k: Int): SpectralClustering
 
     fun specc(data: Array&lt;DoubleArray&gt;, k: Int, sigma: Double): SpectralClustering
@@ -1275,24 +1275,24 @@ title: Smile - Clustering
         random samples. The parameter <code>l</code> specifies the number of
         random samples.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_22" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_22" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_22" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_22" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_22" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_22" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_22">
+        <div class="tab-pane fade" role="tabpanel" id="scala_22">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val x = read.csv("data/clustering/sincos.txt", header=false, delimiter="\t").toArray()
     val clusters = specc(x, 2, 0.2)
     show(plot(x, clusters.y, 'o'))
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_22">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_22">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     CSVFormat format = CSVFormat.Builder.create().setDelimiter('\t').get();
     var sincos = Read.csv("data/clustering/sincos.txt", format).toArray();
     var clusters = SpectralClustering.fit(sincos, new SpectralClustering.Options(2, 0.2, 100));
@@ -1301,9 +1301,9 @@ title: Smile - Clustering
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_22">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_22">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     val x = read.csv("data/clustering/sincos.txt", header=false, delimiter='\t').toArray()
     val clusters = specc(x, 2, 0.2)
     ScatterPlot.of(x, clusters.y, 'o').canvas().window()
@@ -1339,24 +1339,24 @@ title: Smile - Clustering
         The method can also correctly reveal the structure of data and effectively
         identify outliers simultaneously.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_23" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_23" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_23" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_23" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_23" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_23" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_23">
+        <div class="tab-pane fade" role="tabpanel" id="scala_23">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def mec[T](data: Array[T], distance: Distance[T], k: Int, radius: Double): MEC[T]
     def mec[T](data: Array[T], nns: RNNSearch[T, T], k: Int, radius: Double, y: Array[Int]): MEC[T]
     def mec(data: Array[Array[Double]], k: Int, radius: Double): MEC[Array[Double]]
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_23">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_23">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class MEC {
         public static MEC&lt;T&gt; fit(T[] data, Distance&lt;T&gt; distance, Options options);
         public static MEC&lt;T&gt; fit(T[] data, RNNSearch&lt;T, T&gt; nns, Options options);
@@ -1364,9 +1364,9 @@ title: Smile - Clustering
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_23">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_23">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     fun mec&lt;T&gt;(data: Array&lt;T&gt;, distance: Distance&lt;T&gt;, k: Int, radius: Double): MEC&lt;T&gt;
     fun mec&lt;T&gt;(data: Array&lt;T&gt;, nns: RNNSearch&lt;T, T&gt;, k: Int, radius: Double, y: Array[Int]): MEC&lt;T&gt;
     fun mec(data: Array&lt;DoubleArray&gt;, k: Int, radius: Double): MEC&lt;DoubleArray&gt;
@@ -1379,24 +1379,24 @@ title: Smile - Clustering
         any other clustering methods, e.g. K-Means, CLARNAS, hierarchical clustering,
         etc. Note that a random initialization is NOT appropriate.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_24" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_24" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_24" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_24" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_24" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_24" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_24">
+        <div class="tab-pane fade" role="tabpanel" id="scala_24">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val x = read.csv("data/clustering/rem.txt", header=false, delimiter=" ").toArray()
     val clusters = mec(x, 20, 2.0)
     show(plot(x, clusters.y, '.'))
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_24">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_24">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var x = Read.csv("data/clustering/rem.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
     var clusters = MEC.fit(x, new EuclideanDistance(), 20, 2.0);
     var figure = ScatterPlot.of(x, clusters.group(), '.').figure();
@@ -1404,9 +1404,9 @@ title: Smile - Clustering
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_24">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_24">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     val x = read.csv("data/clustering/rem.txt", header=false, delimiter=' ').toArray()
     val clusters = mec(x, 20, 2.0)
     ScatterPlot.of(x, clusters.y, '.').canvas().window()
@@ -1432,7 +1432,3 @@ title: Smile - Clustering
         <span class="btn-arrow-right">&nbsp;&rarr;</span>
     </div>
 </div>
-
-<script type="text/javascript">
-    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
-</script>

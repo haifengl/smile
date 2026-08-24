@@ -5,7 +5,7 @@ title: Smile - Data Visualization
 ---
 {% include "toc.njk" %}
 
-<div class="col-md-9 col-md-pull-3">
+<div class="col-md-9 order-md-first">
 
     <h1 id="visualization-top" class="title">Data Visualization</h1>
 
@@ -21,14 +21,14 @@ title: Smile - Data Visualization
         which is very useful for classification tasks.
         The user can use <code>plot</code> functions to draw scatter plot easily.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_1" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_1" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_1" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_1">
+        <div class="tab-pane fade" role="tabpanel" id="scala_1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def plot(x: Array[Array[Double]], mark: Char = '*', color: Color = Color.BLACK): Canvas
 
     def plot(x: Array[Array[Double]], y: Array[String], mark: Char): Canvas
@@ -37,9 +37,9 @@ title: Smile - Data Visualization
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_1">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_1">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class ScatterPlot {
         public static ScatterPlot of(double[][] points, char mark, Color color);
 
@@ -82,14 +82,14 @@ title: Smile - Data Visualization
         user can also select an area by mouse for detailed view. For 3D plot, the user
         can rotate the view by dragging mouse.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_2" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_2" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_2">
+        <div class="tab-pane fade" role="tabpanel" id="scala_2">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val iris = read.arff("data/weka/iris.arff")
     val canvas = plot(iris, "sepallength", "sepalwidth", "class", '*')
     canvas.figure.setAxisLabels("sepallength", "sepalwidth")
@@ -97,9 +97,9 @@ title: Smile - Data Visualization
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_2">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_2">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     import java.awt.Color;
     import smile.io.*;
     import smile.plot.swing.*;
@@ -129,23 +129,23 @@ title: Smile - Data Visualization
 
     <p>It is also easy to draw a 3D plot.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_3" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_3" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_3" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_3">
+        <div class="tab-pane fade" role="tabpanel" id="scala_3">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val canvas = plot(iris, "sepallength", "sepalwidth", "petallength", "class", '*')
     canvas.figure.setAxisLabels("sepallength", "sepalwidth", "petallength")
     show(canvas)
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_3">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_3">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var figure = ScatterPlot.of(iris, "sepallength", "sepalwidth", "petallength", "class", '*').figure();
     figure.setAxisLabels("sepallength", "sepalwidth", "petallength");
     show(figure);
@@ -162,21 +162,21 @@ title: Smile - Data Visualization
     <p>However, the Iris data has four attributes. So even 3D plot is not sufficient to see the
         whole picture. A general practice is plot all the attribute pairs. For example,</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_4" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_4" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_4" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_4" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_4">
+        <div class="tab-pane fade" role="tabpanel" id="scala_4">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     show(splom(iris, '*', "class"))
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_4">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_4">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var pane = MultiFigurePane.splom(iris, '*', "class");
     pane.window();
           </code></pre>
@@ -193,21 +193,21 @@ title: Smile - Data Visualization
 
     <p>A line chart connects points by straight lines.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_5" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_5" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_5" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_5">
+        <div class="tab-pane fade" role="tabpanel" id="scala_5">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def line(data: Array[Array[Double]], style: Line.Style = Line.Style.SOLID, color: Color = Color.BLACK, mark: Char = ' ', label: String = null): Canvas
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_5">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_5">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class LinePlot {
         public static LinePlot of(double[][] data, Line.Style style, Color color);
 
@@ -219,14 +219,14 @@ title: Smile - Data Visualization
     </div>
 
     <p>Let's draw a heart with it!</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_6" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_6" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_6" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_6" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_6">
+        <div class="tab-pane fade" role="tabpanel" id="scala_6">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val heart = -314 to 314 map { i =>
       val t = i / 100.0
       val x = 16 * pow(sin(t), 3)
@@ -237,9 +237,9 @@ title: Smile - Data Visualization
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_6">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_6">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     import static java.lang.Math.*;
     double[][] heart = new double[200][2];
     for (int i = 0; i < 200; i++) {
@@ -270,23 +270,23 @@ title: Smile - Data Visualization
         indicate the degree of dispersion (spread) and skewness in the data, and
         identify outliers.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_7" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_7" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_7" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_7" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_7">
+        <div class="tab-pane fade" role="tabpanel" id="scala_7">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def boxplot(data: Array[Double]*): Canvas
 
     def boxplot(data: Array[Array[Double]], labels: Array[String]): Canvas
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_7">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_7">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class BoxPlot {
         public BoxPlot(double[][] data, String[] labels);
 
@@ -300,14 +300,14 @@ title: Smile - Data Visualization
     <p>Note that the parameter <code>data</code> is a matrix of which each row to
         create a box plot.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_8" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_8" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_8" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_8" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_8">
+        <div class="tab-pane fade" role="tabpanel" id="scala_8">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val groups = (iris("sepallength").toDoubleArray zip iris("class").toStringArray).groupBy(_._2)
     val labels = groups.keys.toArray
     val data = groups.values.map { a => a.map(_._1) }.toArray
@@ -317,9 +317,9 @@ title: Smile - Data Visualization
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_8">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_8">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     String[] labels = ((smile.data.measure.NominalScale) iris.schema().field("class").measure()).levels();
     double[][] data = new double[labels.length][];
     for (int i = 0; i < data.length; i++) {
@@ -347,23 +347,23 @@ title: Smile - Data Visualization
         The range of values is divided into a series of consecutive, non-overlapping intervals/bins.
         The bins must be adjacent, and are usually equal size.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_9" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_9" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_9" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_9" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_9">
+        <div class="tab-pane fade" role="tabpanel" id="scala_9">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def hist(data: Array[Double], k: Int = 10, prob: Boolean = false, color: Color = Color.BLUE): Canvas
 
     def hist(data: Array[Double], breaks: Array[Double], prob: Boolean, color: Color): Canvas
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_9">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_9">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class Histogram {
         public static BarPlot of(double[] data);
         public static BarPlot of(double[] data, int k, boolean prob);
@@ -388,14 +388,14 @@ title: Smile - Data Visualization
         (named Penelope) and asked people to guess her weight. They got over 17,000 responses. The average
         of guesses was 1,287 pounds, which is pretty close to Penelope's weight 1,355 pounds. </p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_10" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_10" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_10" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_10" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_10">
+        <div class="tab-pane fade" role="tabpanel" id="scala_10">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val cow = read.csv("data/stat/cow.txt", header=false)("V1").toDoubleArray
     val canvas = hist(cow, 50)
     canvas.figure.setAxisLabels("Weight", "Probability")
@@ -403,9 +403,9 @@ title: Smile - Data Visualization
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_10">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_10">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var cow = Read.csv("data/stat/cow.txt").column("V1").toDoubleArray();
     var figure = Histogram.of(cow, 50, true).figure();
     figure.setAxisLabels("Weight", "Probability");
@@ -422,23 +422,23 @@ title: Smile - Data Visualization
     <p>The histogram gives a rough sense of the distribution of crowd guess, which has a long tail.
         Filter out the weights over 3500 pounds, the histogram shows more details.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_11" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_11" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_11" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_11" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_11">
+        <div class="tab-pane fade" role="tabpanel" id="scala_11">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val canvas = hist(cow.filter(_ <= 3500), 50)
     canvas.figure.setAxisLabels("Weight", "Probability")
     show(canvas)
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_11">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_11">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var figure = Histogram.of(Arrays.stream(cow).filter(w -> w <= 3500).toArray(), 50, true).figure();
     figure.setAxisLabels("Weight", "Probability");
     show(figure);
@@ -453,21 +453,21 @@ title: Smile - Data Visualization
 
     <p>Smile also supports histograms that display the distribution of 2-dimensional data.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_12" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_12" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_12" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_12" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_12">
+        <div class="tab-pane fade" role="tabpanel" id="scala_12">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def hist3(data: Array[Array[Double]], xbins: Int = 10, ybins: Int = 10, prob: Boolean = false, palette: Array[Color] = Palette.jet(16)): Canvas
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_12">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_12">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class Histogram3D {
         public static Histogram3D of(double[][] data);
         public static Histogram3D of(double[][] data, int nbins, Color[] palette);
@@ -481,23 +481,23 @@ title: Smile - Data Visualization
 
     <p>Here we generate a data set from a 2-dimensional Gaussian distribution.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_13" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_13" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_13" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_13" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_13">
+        <div class="tab-pane fade" role="tabpanel" id="scala_13">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val gauss = new MultivariateGaussianDistribution(Array(0.0, 0.0), Matrix.of(Array(Array(1.0, 0.6), Array(0.6, 2.0))))
     val data = (0 until 10000) map { i: Int => gauss.rand }
     show(hist3(data.toArray, 50, 50))
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_13">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_13">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     double[] mu = {0.0, 0.0};
     double[][] v = { {1.0, 0.6}, {0.6, 2.0} };
     var gauss = new MultivariateGaussianDistribution(mu, DenseMatrix.of(v));
@@ -522,14 +522,14 @@ title: Smile - Data Visualization
         the quantiles of the second distribution (y-coordinate) plotted against the same quantile of
         the first distribution (x-coordinate).</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_14" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_14" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_14" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_14" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_14">
+        <div class="tab-pane fade" role="tabpanel" id="scala_14">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def qqplot(x: Array[Double]): Canvas
 
     def qqplot(x: Array[Double], d: Distribution): Canvas
@@ -540,9 +540,9 @@ title: Smile - Data Visualization
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_14">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_14">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class QQPlot {
         public static QQPlot of(double[] x);
         public static QQPlot of(double[] x, Distribution d);
@@ -560,23 +560,23 @@ title: Smile - Data Visualization
 
     <p>In what follows, we generate a random sample set from standard Gaussian distribution and draw its Q-Q plot.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_15" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_15" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_15" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_15" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_15">
+        <div class="tab-pane fade" role="tabpanel" id="scala_15">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val gauss = new GaussianDistribution(0.0, 1.0)
     val data = (0 until 1000) map { i: Int => gauss.rand }
     show(qqplot(data.toArray))
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_15">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_15">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var gauss = new GaussianDistribution(0.0, 1.0);
     var data = DoubleStream.generate(gauss::rand).limit(1000).toArray();
     var figure = QQPlot.of(data).figure();
@@ -598,14 +598,14 @@ title: Smile - Data Visualization
         In cluster analysis, researchers often employs the heat map by permuting the rows and the columns
         of a matrix to place similar values near each other according to the clustering.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_16" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_16" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_16" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_16" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_16">
+        <div class="tab-pane fade" role="tabpanel" id="scala_16">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def heatmap(z: Array[Array[Double]], palette: Array[Color] = Palette.jet(16)): Canvas
 
     def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): Canvas
@@ -614,9 +614,9 @@ title: Smile - Data Visualization
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_16">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_16">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class Heatmap {
         public static Heatmap of(double[][] z);
         public static Heatmap of(double[][] z, int k);
@@ -638,14 +638,14 @@ title: Smile - Data Visualization
         enlarge it with bicubic interpolation. We also use the helper class <code>Palette</code> to generate the color
         scheme. This class provides many other color schemes.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_17" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_17" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_17" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_17" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_17">
+        <div class="tab-pane fade" role="tabpanel" id="scala_17">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     // the matrix to display
     val z = Array(
       Array(1.0, 2.0, 4.0, 1.0),
@@ -668,9 +668,9 @@ title: Smile - Data Visualization
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_17">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_17">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     // the matrix to display
     double[][] z = {
       {1.0, 2.0, 4.0, 1.0},
@@ -702,21 +702,21 @@ title: Smile - Data Visualization
 
     <p>A special case of heat map is to draw the sparsity pattern of a matrix.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_18" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_18" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_18" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_18" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_18">
+        <div class="tab-pane fade" role="tabpanel" id="scala_18">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def spy(matrix: SparseMatrix, k: Int = 1): Canvas
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_18">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_18">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class SparseMatrixPlot {
         public static SparseMatrixPlot of(SparseMatrix sparse);
 
@@ -729,14 +729,14 @@ title: Smile - Data Visualization
 
     <p>The structure of sparse matrix is critical in solving linear systems.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_19" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_19" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_19" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_19" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_19">
+        <div class="tab-pane fade" role="tabpanel" id="scala_19">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val sparse = SparseMatrix.text(java.nio.file.Paths.get("data/matrix/mesh2em5.txt"))
     val canvas = spy(sparse)
     canvas.figure.setTitle("mesh2em5")
@@ -744,9 +744,9 @@ title: Smile - Data Visualization
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_19">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_19">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var sparse = SparseMatrix.text(java.nio.file.Paths.get("data/matrix/mesh2em5.txt"));
     var figure = SparseMatrixPlot.of(sparse).figure();
     figure.setTitle("mesh2em5");
@@ -762,21 +762,21 @@ title: Smile - Data Visualization
 
     <p>Another variant is the hex map where hexagon cells replace rectangle cells.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_20" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_20" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_20" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_20" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_20">
+        <div class="tab-pane fade" role="tabpanel" id="scala_20">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def hexmap(z: Array[Array[Double]], palette: Array[Color] = Palette.jet(16)): Canvas
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_20">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_20">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class Hexmap {
         public static Hexmap of(double[][] z);
         public static Hexmap of(double[][] z, int k);
@@ -798,14 +798,14 @@ title: Smile - Data Visualization
     <p>In the following example, we train and visualize a SOM on the USPS training data set with <code>30 x 30</code>
         nodes.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_21" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_21" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_21" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_21" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_21">
+        <div class="tab-pane fade" role="tabpanel" id="scala_21">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     import smile.util.function._
     val zip = read.csv("data/usps/zip.train", delimiter = " ", header = false)
     val x = zip.drop(0).toArray()
@@ -824,9 +824,9 @@ title: Smile - Data Visualization
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_21">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_21">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var zip = Read.csv("data/usps/zip.train", CSVFormat.DEFAULT.withDelimiter(' '));
     var x = zip.drop(0).toArray();
     var lattice = SOM.lattice(30, 30, x);
@@ -862,14 +862,14 @@ title: Smile - Data Visualization
         on a 2-dimensional format. That is, given a value for <code>z</code>, lines are drawn for connecting the
         <code>(x, y)</code> coordinates where that z value occurs.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_22" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_22" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_22" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_22" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_22">
+        <div class="tab-pane fade" role="tabpanel" id="scala_22">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def contour(z: Array[Array[Double]]): Canvas
     def contour(z: Array[Array[Double]], levels: Array[Double]): Canvas
     def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): Canvas
@@ -877,9 +877,9 @@ title: Smile - Data Visualization
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_22">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_22">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class Contour {
         public static Contour of(double[][] z);
         public static Contour of(double[][] z, int numLevels);
@@ -899,23 +899,23 @@ title: Smile - Data Visualization
     <p>Contours are often jointly used with the heat map. In the following example, we add the contour lines to
         the previous heat map exampl.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_23" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_23" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_23" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_23" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_23">
+        <div class="tab-pane fade" role="tabpanel" id="scala_23">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val canvas = heatmap(Z, Palette.jet(256))
     canvas.figure.add(Contour.of(Z))
     show(canvas)
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_23">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_23">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var figure = Heatmap.of(Z, 256).figure();
     figure.add(Contour.of(Z));
     show(figure);
@@ -935,23 +935,23 @@ title: Smile - Data Visualization
 
     <p>Besides heat map and contour, we can also visualize a matrix with the three-dimensional shaded surface.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_24" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_24" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_24" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_24" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_24">
+        <div class="tab-pane fade" role="tabpanel" id="scala_24">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def surface(z: Array[Array[Double]], palette: Array[Color] = Palette.jet(16)): Canvas
 
     def surface(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): Canvas
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_24">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_24">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class Surface {
         public static Surface of(double[][] z);
         public static Surface of(double[][] z, Color[] palette);
@@ -965,21 +965,21 @@ title: Smile - Data Visualization
 
     <p>The usage is similar with <code>heatmap</code> and <code>contour</code> functions.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_25" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_25" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_25" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_25" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_25">
+        <div class="tab-pane fade" role="tabpanel" id="scala_25">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     show(surface(Z, Palette.jet(256, 1.0f)))
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_25">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_25">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var figure = Surface.of(Z, Palette.jet(256, 1.0f)).figure();
     var pane = new FigurePane(figure);
     pane.window();
@@ -1001,21 +1001,21 @@ title: Smile - Data Visualization
         the vertex table and the edge table. Each entry of the vertex table records a vertex and its coordinate values,
         while each entry of the edge table has two components giving the two incident vertices of that edge.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_26" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_26" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_26" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_26" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_26">
+        <div class="tab-pane fade" role="tabpanel" id="scala_26">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def wireframe(vertices: Array[Array[Double]], edges: Array[Array[Int]]): Canvas
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_26">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_26">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class Wireframe {
         public static Wireframe of(double[][] vertices, int[][] edges);
     }
@@ -1028,13 +1028,13 @@ title: Smile - Data Visualization
         <code>n</code> vertices, and <code>edges</code> is an <code>m x 2</code> array of which each row is the
         vertex indices of two end points of each edge.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_27" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#scala_27" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_27">
+        <div class="tab-pane fade show active" role="tabpanel" id="scala_27">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val (vertices, edges) = read.wavefront("data/wavefront/teapot.obj")
     show(wireframe(vertices, edges))
     </code></pre>
@@ -1055,7 +1055,3 @@ title: Smile - Data Visualization
         <span class="btn-arrow-right">&nbsp;&rarr;</span>
     </div>
 </div>
-
-<script type="text/javascript">
-    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
-</script>

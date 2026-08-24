@@ -6,7 +6,7 @@ version: "6.3.0"
 ---
 {% include "toc.njk" %}
 
-<div class="col-md-9 col-md-pull-3">
+<div class="col-md-9 order-md-first">
     <h1 id="faq-top" class="title">FAQ</h1>
 
     <h2 class="question" id="cite">How should I cite Smile?</h2>
@@ -25,15 +25,15 @@ version: "6.3.0"
         Smile artifacts are hosted in <a href="https://oss.sonatype.org/#nexus-search;quick~smile-core">Sonatype Nexus</a>.
         You can add the following dependency into your pom.xml:</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#maven_1" data-toggle="tab">Maven</a></li>
-        <li><a href="#gradle_1" data-toggle="tab">Gradle (Kotlin)</a></li>
-        <li><a href="#sbt_1" data-toggle="tab">SBT</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#maven_1" type="button" role="tab">Maven</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#gradle_1" type="button" role="tab">Gradle (Kotlin)</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#sbt_1" type="button" role="tab">SBT</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="maven_1">
+        <div class="tab-pane fade show active" role="tabpanel" id="maven_1">
             <div class="code" style="text-align: left;">
-                <pre class="prettyprint"><code>
+                <pre class="language-markup"><code class="language-markup">
     &lt;dependency&gt;
         &lt;groupId&gt;com.github.haifengl&lt;/groupId&gt;
         &lt;artifactId&gt;smile-core&lt;/artifactId&gt;
@@ -42,16 +42,16 @@ version: "6.3.0"
                 </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="gradle_1">
+        <div class="tab-pane fade" role="tabpanel" id="gradle_1">
             <div class="code" style="text-align: left;">
-            <pre class="prettyprint"><code>
+            <pre class="language-markup"><code class="language-markup">
     implementation("com.github.haifengl:smile-core:{{ version }}")
             </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="sbt_1">
+        <div class="tab-pane fade" role="tabpanel" id="sbt_1">
             <div class="code" style="text-align: left;">
-            <pre class="prettyprint"><code>
+            <pre class="language-markup"><code class="language-markup">
     libraryDependencies += "com.github.haifengl" % "smile-core" % "{{ version }}"
             </code></pre>
             </div>
@@ -59,15 +59,15 @@ version: "6.3.0"
     </div>
 
     <p>To leverage GPU and deep learning, add</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#maven_2" data-toggle="tab">Maven</a></li>
-        <li><a href="#gradle_2" data-toggle="tab">Gradle (Kotlin)</a></li>
-        <li><a href="#sbt_2" data-toggle="tab">SBT</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#maven_2" type="button" role="tab">Maven</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#gradle_2" type="button" role="tab">Gradle (Kotlin)</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#sbt_2" type="button" role="tab">SBT</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="maven_2">
+        <div class="tab-pane fade show active" role="tabpanel" id="maven_2">
             <div class="code" style="text-align: left;">
-                <pre class="prettyprint"><code>
+                <pre class="language-markup"><code class="language-markup">
     &lt;dependency&gt;
         &lt;groupId&gt;com.github.haifengl&lt;/groupId&gt;
         &lt;artifactId&gt;smile-deep&lt;/artifactId&gt;
@@ -76,16 +76,16 @@ version: "6.3.0"
                 </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="gradle_2">
+        <div class="tab-pane fade" role="tabpanel" id="gradle_2">
             <div class="code" style="text-align: left;">
-            <pre class="prettyprint"><code>
+            <pre class="language-markup"><code class="language-markup">
     implementation("com.github.haifengl:smile-deep:{{ version }}")
             </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="sbt_2">
+        <div class="tab-pane fade" role="tabpanel" id="sbt_2">
             <div class="code" style="text-align: left;">
-            <pre class="prettyprint"><code>
+            <pre class="language-markup"><code class="language-markup">
     libraryDependencies += "com.github.haifengl" %% "smile-deep" % "{{ version }}"
             </code></pre>
             </div>
@@ -94,7 +94,7 @@ version: "6.3.0"
 
     <p>For Scala API, add</p>
     <div class="code" style="text-align: left;">
-    <pre class="prettyprint"><code>
+    <pre class="language-markup"><code class="language-markup">
     libraryDependencies += "com.github.haifengl" %% "smile-scala" % "{{ version }}"
     </code></pre>
     </div>
@@ -103,7 +103,7 @@ version: "6.3.0"
         some clustering algorithms, Gaussian Process regression, MLP, etc.).
         By default, Smile includes OpenBLAS for macOS, Windows, and Linux:</p>
     <div class="code" style="text-align: left;">
-    <pre class="prettyprint"><code style="white-space: preserve nowrap;">
+    <pre class="language-markup"><code class="language-markup" style="white-space: preserve nowrap;">
     libraryDependencies ++= Seq(
       "org.bytedeco" % "javacpp"   % "1.5.11"        classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
       "org.bytedeco" % "openblas"  % "0.3.28-1.5.11" classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
@@ -125,15 +125,15 @@ version: "6.3.0"
     <p>For a default installation of MKL that would be `-Dorg.bytedeco.openblas.load=mkl_rt`.
         Or you may add the following dependencies to your project, which
         includes MKL binaries. Smile will automatically switch to MKL.</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#maven_3" data-toggle="tab">Maven</a></li>
-        <li><a href="#gradle_3" data-toggle="tab">Gradle (Kotlin)</a></li>
-        <li><a href="#sbt_3" data-toggle="tab">SBT</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#maven_3" type="button" role="tab">Maven</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#gradle_3" type="button" role="tab">Gradle (Kotlin)</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#sbt_3" type="button" role="tab">SBT</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="maven_3">
+        <div class="tab-pane fade show active" role="tabpanel" id="maven_3">
             <div class="code" style="text-align: left;">
-                <pre class="prettyprint"><code>
+                <pre class="language-markup"><code class="language-markup">
     &lt;dependency&gt;
         &lt;groupId&gt;org.bytedeco&lt;/groupId&gt;
         &lt;artifactId&gt;mkl-platform&lt;/artifactId&gt;
@@ -147,17 +147,17 @@ version: "6.3.0"
                 </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="gradle_3">
+        <div class="tab-pane fade" role="tabpanel" id="gradle_3">
             <div class="code" style="text-align: left;">
-            <pre class="prettyprint"><code>
+            <pre class="language-markup"><code class="language-markup">
     implementation("org.bytedeco:mkl-platform:2024.0-1.5.10")
     implementation("org.bytedeco:mkl-platform-redist:2024.0-1.5.10")
             </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="sbt_3">
+        <div class="tab-pane fade" role="tabpanel" id="sbt_3">
             <div class="code" style="text-align: left;">
-            <pre class="prettyprint"><code>
+            <pre class="language-markup"><code class="language-markup">
     libraryDependencies ++= {
       val version = "2024.0-1.5.10"
       Seq(
@@ -172,22 +172,22 @@ version: "6.3.0"
 
     <h2 class="question" id="model-serialization">Model serialization</h2>
     <p class="answer">To serialize a model, you may use</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_3" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_3" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_3" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_3">
+        <div class="tab-pane fade" role="tabpanel" id="scala_3">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     import smile._
     write(model, file)
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_3">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_3">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     import smile.io.Write;
     Write.object(model, file)
     </code></pre>
@@ -219,21 +219,21 @@ version: "6.3.0"
         a lot of plots without showing them on the screen, you may run Smile in headless model.
     </p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_1" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_1" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_1" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_1">
+        <div class="tab-pane fade" role="tabpanel" id="scala_1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-sh"><code>
+    <pre class="language-bash"><code class="language-bash">
     bin/smile -Djava.awt.headless=true
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_1">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-sh"><code>
+    <pre class="language-bash"><code class="language-bash">
     bin/jshell.sh -R-Djava.awt.headless=true
     </code></pre>
             </div>
@@ -242,14 +242,14 @@ version: "6.3.0"
 
     <p>The following example shows how to save a plot in the headless mode.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_2" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_2" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_2">
+        <div class="tab-pane fade" role="tabpanel" id="scala_2">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val toy = read.csv("data/classification/toy200.txt", delimiter="\t", header=false)
     val canvas = plot(toy, "V2", "V3", "V1", '.')
     val image = canvas.toBufferedImage(400, 400)
@@ -257,9 +257,9 @@ version: "6.3.0"
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_2">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_2">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     import java.awt.Color;
     import smile.io.*;
     import smile.plot.swing.*;
@@ -303,7 +303,3 @@ version: "6.3.0"
     </p>
 
 </div>
-
-<script type="text/javascript">
-    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
-</script>

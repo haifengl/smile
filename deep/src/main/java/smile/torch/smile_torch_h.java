@@ -16902,6 +16902,43 @@ public class smile_torch_h extends smile_torch_h$shared {
         }
     }
 
+    private static class smile_linear_create_uninitialized {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            smile_torch_h.C_POINTER,
+            smile_torch_h.C_LONG_LONG,
+            smile_torch_h.C_LONG_LONG,
+            smile_torch_h.C_INT,
+            smile_torch_h.C_INT,
+            smile_torch_h.C_CHAR
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("smile_linear_create_uninitialized");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * {@snippet lang=c :
+     * ST_Linear smile_linear_create_uninitialized(int64_t in_features, int64_t out_features, int bias,
+     *                                             int device_type, int8_t device_index)
+     * }
+     */
+    public static MemorySegment smile_linear_create_uninitialized(long in_features, long out_features, int bias,
+                                                                  int device_type, byte device_index) {
+        var mh$ = smile_linear_create_uninitialized.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("smile_linear_create_uninitialized", in_features, out_features, bias,
+                        device_type, device_index);
+            }
+            return (MemorySegment)mh$.invokeExact(in_features, out_features, bias, device_type, device_index);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
     private static class smile_linear_free {
         public static final FunctionDescriptor DESC = FunctionDescriptor.ofVoid(
             smile_torch_h.C_POINTER
@@ -18171,6 +18208,42 @@ public class smile_torch_h extends smile_torch_h$shared {
                 traceDowncall("smile_embedding_create", num_embeddings, embedding_dim);
             }
             return (MemorySegment)mh$.invokeExact(num_embeddings, embedding_dim);
+        } catch (Error | RuntimeException ex) {
+           throw ex;
+        } catch (Throwable ex$) {
+           throw new AssertionError("should not reach here", ex$);
+        }
+    }
+
+    private static class smile_embedding_create_uninitialized {
+        public static final FunctionDescriptor DESC = FunctionDescriptor.of(
+            smile_torch_h.C_POINTER,
+            smile_torch_h.C_LONG_LONG,
+            smile_torch_h.C_LONG_LONG,
+            smile_torch_h.C_INT,
+            smile_torch_h.C_CHAR
+        );
+
+        public static final MemorySegment ADDR = SYMBOL_LOOKUP.findOrThrow("smile_embedding_create_uninitialized");
+
+        public static final MethodHandle HANDLE = Linker.nativeLinker().downcallHandle(ADDR, DESC);
+    }
+
+    /**
+     * {@snippet lang=c :
+     * ST_Embedding smile_embedding_create_uninitialized(int64_t num_embeddings, int64_t embedding_dim,
+     *                                                   int device_type, int8_t device_index)
+     * }
+     */
+    public static MemorySegment smile_embedding_create_uninitialized(long num_embeddings, long embedding_dim,
+                                                                     int device_type, byte device_index) {
+        var mh$ = smile_embedding_create_uninitialized.HANDLE;
+        try {
+            if (TRACE_DOWNCALLS) {
+                traceDowncall("smile_embedding_create_uninitialized", num_embeddings, embedding_dim,
+                        device_type, device_index);
+            }
+            return (MemorySegment)mh$.invokeExact(num_embeddings, embedding_dim, device_type, device_index);
         } catch (Error | RuntimeException ex) {
            throw ex;
         } catch (Throwable ex$) {

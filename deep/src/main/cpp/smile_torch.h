@@ -200,8 +200,21 @@ SMILE_API int64_t smile_cuda_total_memory(int device_index);
  */
 SMILE_API int smile_cuda_mem_get_info(int device_index, int64_t *free_bytes, int64_t *total_bytes);
 
-/** Frees cached CUDA memory held by the allocator. */
+/**
+ * Releases unused CUDACachingAllocator blocks (and cuBLAS workspaces that pin
+ * those blocks) so nvidia-smi free memory can recover after inference.
+ */
 SMILE_API void smile_cuda_empty_cache(void);
+
+/**
+ * Writes CUDACachingAllocator live/reserved bytes for {@code device_index}.
+ * {@code allocated_bytes} is storage held by live tensors; {@code reserved_bytes}
+ * is the cudaMalloc footprint (includes free cached blocks). Returns 0 on
+ * success, -1 on error.
+ */
+SMILE_API int smile_cuda_allocator_stats(int device_index,
+                                         int64_t *allocated_bytes,
+                                         int64_t *reserved_bytes);
 
 /** Returns 1 if BF16 is supported on current CUDA device. */
 SMILE_API int smile_cuda_is_bf16_supported(void);
@@ -329,6 +342,15 @@ SMILE_API int32_t  *smile_tensor_data_ptr_int   (ST_Tensor t);
 SMILE_API int64_t  *smile_tensor_data_ptr_long  (ST_Tensor t);
 SMILE_API float    *smile_tensor_data_ptr_float (ST_Tensor t);
 SMILE_API double   *smile_tensor_data_ptr_double(ST_Tensor t);
+
+/** Storage size in bytes ({@code tensor.nbytes()}). */
+SMILE_API int64_t smile_tensor_nbytes(ST_Tensor t);
+/**
+ * Untyped pointer to the contiguous storage of {@code t}.
+ * Suitable for bulk memcpy of little-endian safetensors payloads
+ * (including Half / BFloat16) without going through a Java array.
+ */
+SMILE_API void *smile_tensor_data_ptr(ST_Tensor t);
 
 /* =========================================================================
  * Tensor — Item (scalar extraction)
@@ -674,6 +696,12 @@ SMILE_API ST_TensorVec smile_module_parameters(ST_Module m);
 
 SMILE_API void smile_module_train(ST_Module m, int mode);
 SMILE_API void smile_module_eval (ST_Module m);
+
+/**
+ * Sets {@code requires_grad} on every parameter of {@code m} (recursive).
+ * Use {@code 0} for inference to avoid autograd graphs / SavedVariable leaks.
+ */
+SMILE_API void smile_module_set_requires_grad(ST_Module m, int requires_grad);
 SMILE_API int  smile_module_is_training(ST_Module m);
 
 SMILE_API void smile_module_to_device(ST_Module m, ST_Device device, int non_blocking);
@@ -733,6 +761,13 @@ SMILE_API int               smile_output_archive_save_to(ST_OutputArchive a, con
 /* ---- Linear ---- */
 
 SMILE_API ST_Linear smile_linear_create(int64_t in_features, int64_t out_features, int bias);
+/**
+ * Like {@code smile_linear_create} but skips Kaiming init (empty weights only).
+ * {@code device_type}/{@code device_index} select where empty storage is allocated
+ * ({@code ST_DEVICE_CPU}/{@code ST_DEVICE_CUDA}/…).
+ */
+SMILE_API ST_Linear smile_linear_create_uninitialized(int64_t in_features, int64_t out_features,
+                                                      int bias, int device_type, int8_t device_index);
 SMILE_API void      smile_linear_free  (ST_Linear l);
 SMILE_API ST_Tensor smile_linear_forward(ST_Linear l, ST_Tensor input);
 /** Returns a borrowed (non-owning) ST_Module view. */
@@ -789,6 +824,12 @@ SMILE_API ST_Module  smile_dropout_as_module(ST_Dropout d);
 /* ---- Embedding ---- */
 
 SMILE_API ST_Embedding smile_embedding_create (int64_t num_embeddings, int64_t embedding_dim);
+/**
+ * Like {@code smile_embedding_create} but skips normal init (empty weights only).
+ * {@code device_type}/{@code device_index} select where empty storage is allocated.
+ */
+SMILE_API ST_Embedding smile_embedding_create_uninitialized(int64_t num_embeddings, int64_t embedding_dim,
+                                                            int device_type, int8_t device_index);
 SMILE_API void          smile_embedding_free   (ST_Embedding e);
 SMILE_API ST_Tensor     smile_embedding_forward(ST_Embedding e, ST_Tensor input);
 SMILE_API ST_Module     smile_embedding_as_module(ST_Embedding e);
@@ -890,6 +931,169 @@ SMILE_API void smile_set_default_dtype(ST_DType dtype);
 
 /** Seeds the global RNG for reproducible sampling. */
 SMILE_API void smile_manual_seed(int64_t seed);
+
+/* =========================================================================
+ * Tensor parallelism (single-process multi-GPU collectives)
+ * ========================================================================= */
+
+/**
+ * Opaque NCCL communicator for a local TP (or future PP) device group.
+ * Null when NCCL is unavailable; peer-copy collectives remain usable.
+ */
+typedef struct ST_NcclComm_ *ST_NcclComm;
+
+/**
+ * Creates an NCCL communicator for {@code n} local CUDA devices
+ * ({@code ncclCommInitAll}). Returns null on failure / when built without NCCL.
+ *
+ * @param n              number of ranks (== device count).
+ * @param device_indices CUDA device indices length {@code n}.
+ */
+SMILE_API ST_NcclComm smile_nccl_comm_create(int n, const int *device_indices);
+
+/** Destroys a communicator created by {@link #smile_nccl_comm_create}. */
+SMILE_API void smile_nccl_comm_free(ST_NcclComm comm);
+
+/**
+ * In-place sum all-reduce of {@code local} on {@code rank} using NCCL.
+ * Every rank must call concurrently with its own tensor (same shape/dtype).
+ *
+ * @return 0 on success, non-zero on failure.
+ */
+SMILE_API int smile_nccl_all_reduce_sum(ST_NcclComm comm, int rank, ST_Tensor local);
+
+/**
+ * Broadcasts {@code local} from {@code root} to every rank. Each rank passes
+ * its own tensor buffer (same shape); root's data is copied to the others.
+ */
+SMILE_API int smile_nccl_broadcast(ST_NcclComm comm, int rank, int root, ST_Tensor local);
+
+/**
+ * In-place sum all-reduce across {@code n} tensors that already live on
+ * distinct CUDA devices (same shape and dtype). When {@code n <= 1} this is a
+ * no-op. Peer-copy fallback when NCCL is not used by the caller.
+ *
+ * @param tensors array of {@code n} tensor handles.
+ * @param n       number of ranks / tensors.
+ * @return 0 on success, non-zero on failure (see {@link #smile_last_error}).
+ */
+SMILE_API int smile_tp_all_reduce_sum(ST_Tensor *tensors, int n);
+
+/**
+ * Copies {@code tensors[root]} onto every other tensor (same shape/dtype,
+ * each on its own device). No-op when {@code n <= 1}.
+ */
+SMILE_API int smile_tp_broadcast(ST_Tensor *tensors, int n, int root);
+
+/* =========================================================================
+ * Gated DeltaNet fused recurrent rule
+ * ========================================================================= */
+
+/**
+ * Fused recurrent gated delta rule. Mutates {@code state} in place (float
+ * {@code [B,H,Dk,Dv]}). Returns output {@code [B,S,H,Dv]} in {@code query}'s dtype.
+ *
+ * Layouts: query/key/value {@code [B,S,H,D]}, g/beta {@code [B,S,H]}.
+ *
+ * @param qk_l2norm non-zero to L2-normalize Q/K along the last dim.
+ * @return newly allocated output tensor, or null on error.
+ */
+SMILE_API ST_Tensor smile_recurrent_gated_delta_rule(
+        ST_Tensor query, ST_Tensor key, ST_Tensor value,
+        ST_Tensor g, ST_Tensor beta, ST_Tensor state,
+        int qk_l2norm);
+
+/* =========================================================================
+ * FlashInfer / paged attention backend
+ * ========================================================================= */
+
+/** Opaque workspace for FlashInfer-style paged attention. */
+typedef struct ST_FlashInferWorkspace_ *ST_FlashInferWorkspace;
+
+/** Non-zero when paged attention was compiled into this library (CUDA). */
+SMILE_API int smile_flashinfer_is_available(void);
+
+/**
+ * Sets the FlashInfer AOT / jit-cache directory (may be null/empty to clear).
+ * Also honored: env {@code FLASHINFER_AOT_DIR} / {@code SMILE_FLASHINFER_AOT_DIR}.
+ */
+SMILE_API void smile_flashinfer_set_aot_dir(const char *path);
+
+/** @return current AOT dir string (never null; may be empty). */
+SMILE_API const char *smile_flashinfer_aot_dir(void);
+
+/**
+ * Creates a per-device workspace.
+ * @param device_index CUDA device ordinal.
+ * @param workspace_bytes scratch hint (0 = default).
+ */
+SMILE_API ST_FlashInferWorkspace smile_flashinfer_workspace_create(
+        int device_index, int64_t workspace_bytes);
+
+SMILE_API void smile_flashinfer_workspace_free(ST_FlashInferWorkspace ws);
+
+/** @return CUDA device index stored in the workspace, or -1. */
+SMILE_API int smile_flashinfer_workspace_device_index(ST_FlashInferWorkspace ws);
+
+/**
+ * Paged attention over KvCachePool storage.
+ *
+ * @param query            {@code [B, Hq, S, D]}
+ * @param k_cache          {@code [numSlots, Hkv, D]} (one layer slice)
+ * @param v_cache          {@code [numSlots, Hkv, D]}
+ * @param paged_kv_indptr  int32 {@code [B+1]}
+ * @param paged_kv_indices int32 {@code [num_pages]}
+ * @param paged_kv_last_page_len int32 {@code [B]}
+ * @param page_size        tokens per page
+ * @param num_kv_heads     Hkv
+ * @param head_dim         D
+ * @param cache_len        total sequence length (for CSR validation)
+ * @param scale            attention scale (&le;0 → 1/sqrt(D))
+ * @param is_causal        used only when {@code attn_mask} is null
+ * @param attn_mask        optional additive mask (same as torch_native); nullable
+ * @param workspace        from {@link smile_flashinfer_workspace_create}
+ * @return output {@code [B, Hq, S, D]}, or null on error
+ */
+SMILE_API ST_Tensor smile_flashinfer_paged_attention(
+        ST_Tensor query,
+        ST_Tensor k_cache,
+        ST_Tensor v_cache,
+        ST_Tensor paged_kv_indptr,
+        ST_Tensor paged_kv_indices,
+        ST_Tensor paged_kv_last_page_len,
+        int page_size,
+        int num_kv_heads,
+        int head_dim,
+        int cache_len,
+        double scale,
+        int is_causal,
+        ST_Tensor attn_mask,
+        ST_FlashInferWorkspace workspace);
+
+/**
+ * Ragged contiguous self-attention (vision tower / varlen prefill).
+ *
+ * @param query   {@code [N, H, D]} NHD layout
+ * @param key     {@code [N, H, D]}
+ * @param value   {@code [N, H, D]}
+ * @param indptr  int32 {@code [B+1]} cumulative segment lengths
+ * @param num_kv_heads H (MHA: equals query heads)
+ * @param head_dim D
+ * @param scale   attention scale ({@code <=0} → {@code 1/sqrt(D)})
+ * @param is_causal causal mask when no explicit {@code attn_mask}
+ * @param attn_mask optional additive mask; nullable
+ * @return output {@code [N, H, D]}, or null on error
+ */
+SMILE_API ST_Tensor smile_flashinfer_ragged_attention(
+        ST_Tensor query,
+        ST_Tensor key,
+        ST_Tensor value,
+        ST_Tensor indptr,
+        int num_kv_heads,
+        int head_dim,
+        double scale,
+        int is_causal,
+        ST_Tensor attn_mask);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -5,7 +5,7 @@ title: SMILE - Association Rule Mining
 ---
 {% include "toc.njk" %}
 
-<div class="col-md-9 col-md-pull-3">
+<div class="col-md-9 order-md-first">
     <h1 id="association-rule-top" class="title">Association Rule Mining</h1>
 
     <p>Association rule mining is a popular method for discovering
@@ -104,22 +104,22 @@ title: SMILE - Association Rule Mining
         The parameter <code>minSupport</code> is the required minimum support of item sets in terms
         of frequency. The output is a lazy <code>Stream&lt;ItemSet&gt;</code>.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_1" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_1" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_1" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_1" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_1" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_1">
+        <div class="tab-pane fade" role="tabpanel" id="scala_1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def fpgrowth(minSupport: Int, itemsets: Array[Array[Int]]): Stream[ItemSet]
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_1">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_1">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class FPTree {
         public static FPTree of(int minSupport, int[][] itemsets);
         public static FPTree of(double minSupport, int[][] itemsets);
@@ -135,9 +135,9 @@ title: SMILE - Association Rule Mining
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_1">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     fun fpgrowth(minSupport: Int, itemsets: Array&lt;IntArray&gt;): Stream&lt;ItemSet&gt;
     </code></pre>
             </div>
@@ -149,24 +149,24 @@ title: SMILE - Association Rule Mining
         The supplier is invoked twice internally: once for item frequency counting,
         and once to build the FP-Tree.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_2" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_2" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_2" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_2" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_2">
+        <div class="tab-pane fade" role="tabpanel" id="scala_2">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def fptree(minSupport: Int, supplier: Supplier[Stream[Array[Int]]]): FPTree
 
     def fpgrowth(tree: FPTree): Stream[ItemSet]
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_2">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_2">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     import java.nio.file.Files;
     import java.nio.file.Path;
     import java.util.Arrays;
@@ -189,9 +189,9 @@ title: SMILE - Association Rule Mining
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_2">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_2">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-kotlin"><code>
+          <pre class="language-kotlin"><code class="language-kotlin">
     fun fptree(minSupport: Int, supplier: Supplier&lt;Stream&lt;IntArray&gt;&gt;): FPTree
 
     fun fpgrowth(tree: FPTree): Stream&lt;ItemSet&gt;
@@ -201,15 +201,15 @@ title: SMILE - Association Rule Mining
     </div>
 
     <p>Below is a complete Java example on an in-memory toy dataset.</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_3" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_3" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_3" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_3" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_3" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_3">
+        <div class="tab-pane fade" role="tabpanel" id="scala_3">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile> val itemsets = Array(
         Array(1, 3),
         Array(2),
@@ -235,9 +235,9 @@ title: SMILE - Association Rule Mining
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_3">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_3">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     smile> import smile.association.*;
     smile> import java.util.Arrays;
 
@@ -275,9 +275,9 @@ title: SMILE - Association Rule Mining
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_3">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_3">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     >>> import smile.association.*
     >>> val itemsets = arrayOf(
         intArrayOf(1, 3),
@@ -309,15 +309,15 @@ title: SMILE - Association Rule Mining
     <p>Each row above is a frequent item set with its raw support count.
         For larger datasets, stream transactions from a file and consume the output lazily.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_4" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_4" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_4" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_4" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_4" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_4" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_4">
+        <div class="tab-pane fade" role="tabpanel" id="scala_4">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile> val tree = fptree(1000, () => {
       smile.util.Paths.getTestDataLines("transaction/kosarak.dat").map { line =>
           line.split(" ").map(_.toInt).toArray
@@ -338,9 +338,9 @@ title: SMILE - Association Rule Mining
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_4">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_4">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     smile> var data = (java.util.function.Supplier&lt;java.util.stream.Stream&lt;int[]&gt;&gt;) () ->
                 java.nio.file.Files.lines(java.nio.file.Path.of("transactions.dat"))
                     .map(line -> java.util.Arrays.stream(line.split("\\s+"))
@@ -358,9 +358,9 @@ title: SMILE - Association Rule Mining
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_4">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_4">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     >>> import smile.util.*;
         import java.util.function.*;
         import java.util.stream.*;
@@ -397,24 +397,24 @@ title: SMILE - Association Rule Mining
     <p>After mining frequent itemsets, generate association rules with a confidence threshold.
         SMILE computes support, confidence, lift, and leverage for each rule.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_5" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_5" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_5" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_5" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_5" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_5">
+        <div class="tab-pane fade" role="tabpanel" id="scala_5">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def arm(minSupport: Int, confidence: Double, itemsets: Array[Array[Int]]): Stream[AssociationRule]
 
     def arm(confidence: Double, tree: FPTree): Stream[AssociationRule]
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_5">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_5">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class ARM {
         public static Stream&lt;AssociationRule&gt; apply(double confidence, FPTree tree);
     }
@@ -426,9 +426,9 @@ title: SMILE - Association Rule Mining
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_5">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_5">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     def arm(minSupport: Int, confidence: Double, itemsets: Array&lt;IntArray&gt;): Stream&lt;AssociationRule&gt;
 
     def arm(confidence: Double, tree: FPTree): Stream&lt;AssociationRule&gt;
@@ -440,15 +440,15 @@ title: SMILE - Association Rule Mining
     <p>The API is similar to <code>fpgrowth</code> with an additional
         <code>confidence</code> parameter in [0, 1].</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_6" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_6" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_6" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_6" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_6" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_6" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_6">
+        <div class="tab-pane fade" role="tabpanel" id="scala_6">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile> arm(0.6, tree).limit(10).forEach { rule => println(rule) }
     (11) => (6) support = 32.73% confidence = 89.00% lift = 1.47 leverage = 0.1039
     (3, 11) => (6) support = 14.51% confidence = 89.09% lift = 1.47 leverage = 0.0462
@@ -463,9 +463,9 @@ title: SMILE - Association Rule Mining
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_6">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_6">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     smile> ARM.apply(0.5, tree).limit(10).forEach(System.out::println)
     AssociationRule([3] => [1], support=50.0%, confidence=62.5%, lift=1.25, leverage=0.100)
     AssociationRule([1] => [3], support=50.0%, confidence=100.0%, lift=1.25, leverage=0.100)
@@ -474,9 +474,9 @@ title: SMILE - Association Rule Mining
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_6">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_6">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     >>> arm(0.6, tree).limit(10).forEach { println(it) }
     (11) => (6) support = 32.73% confidence = 89.00% lift = 1.47 leverage = 0.1039
     (3, 11) => (6) support = 14.51% confidence = 89.09% lift = 1.47 leverage = 0.0462
@@ -500,7 +500,3 @@ title: SMILE - Association Rule Mining
         <span class="btn-arrow-right">&nbsp;&rarr;</span>
     </div>
 </div>
-
-<script type="text/javascript">
-    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
-</script>

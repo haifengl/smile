@@ -17,6 +17,7 @@
 package smile.deep.layer;
 
 import org.junit.jupiter.api.*;
+import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
 import static org.junit.jupiter.api.Assertions.*;
 import static smile.torch.smile_torch_h.smile_module_eval;
@@ -59,6 +60,61 @@ public class LayerTest {
         assertEquals(BATCH, output.size(0));
         assertEquals(OUT,   output.size(1));
         input.close(); output.close();
+    }
+
+    @Test
+    public void testGivenUninitializedLinearWhenForwardThenOutputShapeIsCorrect() throws Exception {
+        // Given — empty weights on CPU (no Kaiming); still a valid linear for shape checks
+        LinearLayer layer;
+        try (var ignored = ParameterInit.uninitialized(Device.CPU())) {
+            assertTrue(ParameterInit.skip());
+            assertEquals(Device.CPU(), ParameterInit.device());
+            layer = new LinearLayer(IN, OUT, false);
+        }
+        assertFalse(ParameterInit.skip());
+        Tensor input = randn(BATCH, IN);
+
+        // When
+        Tensor output = layer.forward(input);
+
+        // Then
+        assertEquals(BATCH, output.size(0));
+        assertEquals(OUT, output.size(1));
+        input.close();
+        output.close();
+    }
+
+    @Test
+    public void testGivenUninitializedLinearOnCudaWhenAvailableThenForwardWorks() {
+        org.junit.jupiter.api.Assumptions.assumeTrue(
+                smile.deep.CUDA.isAvailable() && smile.deep.CUDA.deviceCount() > 0);
+
+        Device cuda = Device.CUDA((byte) 0);
+        LinearLayer layer;
+        try (var ignored = ParameterInit.uninitialized(cuda)) {
+            layer = new LinearLayer(IN, OUT, false);
+        }
+        Tensor input = Tensor.rand(new Tensor.Options().device(cuda), BATCH, IN);
+        Tensor output = layer.forward(input);
+        assertEquals(BATCH, output.size(0));
+        assertEquals(OUT, output.size(1));
+        assertTrue(output.device().isCUDA());
+        input.close();
+        output.close();
+    }
+
+    @Test
+    public void testGivenUninitializedEmbeddingWhenForwardThenOutputShapeIsCorrect() throws Exception {
+        EmbeddingLayer layer;
+        try (var ignored = ParameterInit.uninitialized(Device.CPU())) {
+            layer = new EmbeddingLayer(16, OUT);
+        }
+        Tensor input = Tensor.of(new long[]{0, 1, 2, 3});
+        Tensor output = layer.forward(input);
+        assertEquals(4, output.size(0));
+        assertEquals(OUT, output.size(1));
+        input.close();
+        output.close();
     }
 
     // -----------------------------------------------------------------------

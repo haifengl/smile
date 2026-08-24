@@ -50,19 +50,16 @@ public record ChatCompletionObject(
         Usage usage) {
 
     /**
-     * Builds a completion object from model results.
+     * Builds a completion object from a model result.
      *
-     * @param id          completion id.
-     * @param created     creation timestamp (Unix seconds).
-     * @param modelName   public model id.
-     * @param completions generated completions (first is used for the choice).
+     * @param id         completion id.
+     * @param created    creation timestamp (Unix seconds).
+     * @param modelName  public model id.
+     * @param completion generated completion; may be {@code null}.
      * @return the OpenAI-shaped response.
      */
     public static ChatCompletionObject of(String id, long created, String modelName,
-                                          ChatCompletion[] completions) {
-        ChatCompletion completion = (completions != null && completions.length > 0)
-                ? completions[0]
-                : null;
+                                          ChatCompletion completion) {
         String content = completion != null ? completion.content() : "";
         FinishReason reason = completion != null ? completion.reason() : FinishReason.stop;
         int promptTokens = completion != null && completion.promptTokens() != null
@@ -77,6 +74,23 @@ public record ChatCompletionObject(
                 reason);
         Usage usage = new Usage(promptTokens, completionTokens, promptTokens + completionTokens);
         return new ChatCompletionObject(id, "chat.completion", created, modelName, List.of(choice), usage);
+    }
+
+    /**
+     * Builds a completion object from model results (first element is used).
+     *
+     * @param id          completion id.
+     * @param created     creation timestamp (Unix seconds).
+     * @param modelName   public model id.
+     * @param completions generated completions; first is used for the choice.
+     * @return the OpenAI-shaped response.
+     */
+    public static ChatCompletionObject of(String id, long created, String modelName,
+                                          ChatCompletion[] completions) {
+        ChatCompletion completion = (completions != null && completions.length > 0)
+                ? completions[0]
+                : null;
+        return of(id, created, modelName, completion);
     }
 
     /**

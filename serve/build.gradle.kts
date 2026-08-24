@@ -20,6 +20,8 @@ dependencies {
     implementation("io.quarkus:quarkus-jdbc-postgresql")
     implementation("io.quarkus:quarkus-jdbc-h2")
     implementation("io.quarkiverse.quinoa:quarkus-quinoa:2.8.4")
+    implementation(platform("software.amazon.awssdk:bom:2.54.2"))
+    implementation("software.amazon.awssdk:s3")
     testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.quarkus:quarkus-test-h2")
     testImplementation("io.rest-assured:rest-assured:6.0.1")

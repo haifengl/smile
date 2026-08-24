@@ -18,14 +18,20 @@ package smile.chat;
 
 import java.util.Optional;
 import io.smallrye.config.ConfigMapping;
+import io.smallrye.config.WithDefault;
 
 /**
- * KV-cache storage settings for the inference engine.
- * Properties are prefixed with {@code smile.kv.cache}.
+ * KV-cache storage settings for the chat inference engine.
+ * Properties are prefixed with {@code smile.chat.kv-cache}.
+ *
+ * <p>Pool size is fixed at load time from
+ * {@link ChatServiceConfig#memFractionStatic()}; requests never allocate more
+ * KV than free pages in that static pool. Exhaustion truncates generation
+ * with partial results ({@code finish_reason=length}).
  *
  * @author Haifeng Li
  */
-@ConfigMapping(prefix = "smile.kv.cache")
+@ConfigMapping(prefix = "smile.chat.kv-cache")
 public interface KvCacheConfig {
     /**
      * Element dtype for key/value activations in the shared KV cache pool
@@ -36,4 +42,32 @@ public interface KvCacheConfig {
      * ({@code bfloat16} when supported, otherwise {@code float16}).
      */
     Optional<String> dtype();
+
+    /**
+     * Tokens per radix / KV pool page (SGLang-style page granularity).
+     * Matching and insert round down to multiples of this size. Defaults to
+     * {@link smile.llm.cache.KvCachePool#DEFAULT_PAGE_SIZE} ({@code 16}).
+     */
+    @WithDefault("16")
+    int pageSize();
+
+    /**
+     * When {@code true}, batch-1 generate matches prompts against the radix KV
+     * tree and skips recomputing cached prefixes (SGLang-style). Defaults to
+     * {@code true}. Intended mainly for debugging when set to {@code false}.
+     *
+     * <p>Hybrid Qwen also requires {@link #hybridPrefixReplay()} so DeltaNet
+     * state is restored on a hit; otherwise prefix reuse is forced off.
+     */
+    @WithDefault("true")
+    boolean prefixReuse();
+
+    /**
+     * When {@code true}, hybrid Qwen may use radix KV prefix hits and rebuilds
+     * DeltaNet state by replaying the matched prefix ({@code warmPrefix}).
+     * Defaults to {@code true}. Set {@code false} to force-disable hybrid
+     * prefix reuse (legacy safe mode).
+     */
+    @WithDefault("true")
+    boolean hybridPrefixReplay();
 }

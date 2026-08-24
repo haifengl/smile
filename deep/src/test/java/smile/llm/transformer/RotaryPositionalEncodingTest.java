@@ -212,4 +212,87 @@ public class RotaryPositionalEncodingTest {
         assertArrayEquals(new long[]{1, 6, 4}, out.shape());
         cis.close(); x.close();
     }
+
+    @Test
+    public void testGivenGatherWhenTwoPositionsThenRowsMatchTable() {
+        // Given
+        int headDim = 8;
+        Tensor cis = RotaryPositionalEncoding.computeFreqCis(headDim, 64, 10000.0, false);
+        int[] positions = {3, 17};
+
+        // When
+        Tensor gathered = RotaryPositionalEncoding.gather(cis, positions);
+
+        // Then
+        assertArrayEquals(new long[]{2, headDim / 2}, gathered.shape());
+        try (var i3 = smile.deep.tensor.Index.of(3);
+             var i17 = smile.deep.tensor.Index.of(17);
+             var r0 = smile.deep.tensor.Index.of(0);
+             var r1 = smile.deep.tensor.Index.of(1);
+             Tensor expect0 = cis.get(i3).viewAsReal().copy();
+             Tensor expect1 = cis.get(i17).viewAsReal().copy();
+             Tensor got0 = gathered.get(r0).viewAsReal().copy();
+             Tensor got1 = gathered.get(r1).viewAsReal().copy()) {
+            assertArrayEquals(expect0.floatArray(), got0.floatArray(), 1e-5f);
+            assertArrayEquals(expect1.floatArray(), got1.floatArray(), 1e-5f);
+        }
+        gathered.close();
+        cis.close();
+    }
+
+    @Test
+    public void testGivenApplyWithGatheredPositionsWhenComparedToScalarThenRowsMatch() {
+        // Given – batch of two decode rows at different positions
+        int batch = 2, seqLen = 1, numHeads = 2, headDim = 8;
+        int[] positions = {5, 12};
+        Tensor xq = Tensor.randn(batch, seqLen, numHeads, headDim);
+        Tensor xk = Tensor.randn(batch, seqLen, numHeads, headDim);
+        Tensor cis = RotaryPositionalEncoding.computeFreqCis(headDim, 64, 10000.0, false);
+
+        // When – one ragged apply vs per-row scalar baseline
+        Tensor freqs = RotaryPositionalEncoding.gather(cis, positions);
+        var ragged = RotaryPositionalEncoding.apply(xq, xk, freqs);
+
+        try (var i0 = smile.deep.tensor.Index.of(0);
+             var i1 = smile.deep.tensor.Index.of(1);
+             Tensor xq0 = xq.get(i0).unsqueeze(0);
+             Tensor xk0 = xk.get(i0).unsqueeze(0);
+             Tensor xq1 = xq.get(i1).unsqueeze(0);
+             Tensor xk1 = xk.get(i1).unsqueeze(0);
+             var pos0 = smile.deep.tensor.Index.slice(positions[0], positions[0] + 1);
+             var pos1 = smile.deep.tensor.Index.slice(positions[1], positions[1] + 1);
+             Tensor f0 = cis.get(pos0);
+             Tensor f1 = cis.get(pos1)) {
+            var base0 = RotaryPositionalEncoding.apply(xq0, xk0, f0);
+            var base1 = RotaryPositionalEncoding.apply(xq1, xk1, f1);
+            try (Tensor rq0 = ragged._1().get(i0).copy();
+                 Tensor rq1 = ragged._1().get(i1).copy();
+                 Tensor bq0 = base0._1().get(i0).copy();
+                 Tensor bq1 = base1._1().get(i0).copy()) {
+                assertArrayEquals(bq0.floatArray(), rq0.floatArray(), 1e-5f);
+                assertArrayEquals(bq1.floatArray(), rq1.floatArray(), 1e-5f);
+            }
+            base0._1().close();
+            base0._2().close();
+            base1._1().close();
+            base1._2().close();
+        }
+
+        xq.close();
+        xk.close();
+        cis.close();
+        freqs.close();
+        ragged._1().close();
+        ragged._2().close();
+    }
+
+    @Test
+    public void testGivenReshapeForBroadcastWhenPerRowDecodeThenBatchPreserved() {
+        Tensor cis = Tensor.rand(4, 8); // [B, D] stand-in
+        Tensor x = Tensor.rand(4, 1, 2, 8); // [B, S=1, H, D]
+        Tensor out = RotaryPositionalEncoding.reshapeForBroadcast(cis, x);
+        assertArrayEquals(new long[]{4, 1, 1, 8}, out.shape());
+        cis.close();
+        x.close();
+    }
 }
