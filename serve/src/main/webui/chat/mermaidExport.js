@@ -73,41 +73,40 @@ function svgSize(svg) {
 
 /**
  * Rasterizes SVG to a canvas (white background).
+ * Uses Canvg instead of {@code Image}+{@code drawImage} so Mermaid SVGs
+ * with {@code foreignObject} do not taint the canvas.
  *
  * @param {string} svg
  * @param {number} [scale]
  * @returns {Promise<HTMLCanvasElement>}
  */
-export function svgToCanvas(svg, scale = 2) {
-  const normalized = normalizeSvg(svg)
+export async function svgToCanvas(svg, scale = 2) {
+  const { Canvg } = await import('canvg')
+  // Canvg expects raw SVG markup (no XML prologue).
+  const markup = (svg ?? '').trim().replace(/^<\?xml[^>]*>\s*/i, '')
+  const normalized = /\sxmlns=/.test(markup)
+    ? markup
+    : markup.replace(/<svg\b/, '<svg xmlns="http://www.w3.org/2000/svg"')
   const { width, height } = svgSize(normalized)
-  const blob = new Blob([normalized], { type: 'image/svg+xml;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
 
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    img.onload = () => {
-      try {
-        const canvas = document.createElement('canvas')
-        canvas.width = Math.max(1, Math.round(width * scale))
-        canvas.height = Math.max(1, Math.round(height * scale))
-        const ctx = canvas.getContext('2d')
-        ctx.fillStyle = '#ffffff'
-        ctx.fillRect(0, 0, canvas.width, canvas.height)
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-        URL.revokeObjectURL(url)
-        resolve(canvas)
-      } catch (err) {
-        URL.revokeObjectURL(url)
-        reject(err)
-      }
-    }
-    img.onerror = () => {
-      URL.revokeObjectURL(url)
-      reject(new Error('Failed to rasterize SVG'))
-    }
-    img.src = url
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.max(1, Math.round(width * scale))
+  canvas.height = Math.max(1, Math.round(height * scale))
+  const ctx = canvas.getContext('2d')
+  ctx.fillStyle = '#ffffff'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.save()
+  ctx.scale(scale, scale)
+
+  const renderer = await Canvg.from(ctx, normalized, {
+    ignoreMouse: true,
+    ignoreAnimation: true,
+    // Ignore external resources that would otherwise force CORS/taint paths.
+    ignoreClear: true,
   })
+  await renderer.render()
+  ctx.restore()
+  return canvas
 }
 
 /**
