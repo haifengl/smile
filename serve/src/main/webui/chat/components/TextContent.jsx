@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-import React from 'react'
+import React, { useMemo } from 'react'
 import Markdown from 'react-markdown'
 import remarkGemoji from 'remark-gemoji'
 import remarkGfm from 'remark-gfm'
@@ -48,61 +48,63 @@ export default function TextContent({
     // thinking text as a plain <p>. Convert to blockquotes first.
     const markdown = formatThinkingAsMarkdown(raw)
 
-    const Pre = ({ children: preChildren }) => {
-        // Mermaid renders its own frame; avoid wrapping in <pre>.
-        if (isMermaidChild(preChildren)) {
-            return <>{preChildren}</>
+    const components = useMemo(() => {
+        const Pre = ({ children: preChildren }) => {
+            // Mermaid renders its own frame; avoid wrapping in <pre>.
+            if (isMermaidChild(preChildren)) {
+                return <>{preChildren}</>
+            }
+            return (
+                <pre className="code-pre">
+                    <CopyButton>{preChildren}</CopyButton>
+                    {preChildren}
+                </pre>
+            )
         }
-        return (
-            <pre className="code-pre">
-                <CopyButton>{preChildren}</CopyButton>
-                {preChildren}
-            </pre>
-        )
-    }
 
-    const Img = (props) => <MarkdownImage {...props} downloadable={downloadable} />
-    const Link = (props) => <MarkdownLink {...props} downloadable={downloadable} />
+        const Img = (props) => <MarkdownImage {...props} downloadable={downloadable} />
+        const Link = (props) => <MarkdownLink {...props} downloadable={downloadable} />
+
+        return {
+            pre: Pre,
+            img: Img,
+            a: Link,
+            code(props) {
+                const { children: codeChildren, className, node, ...rest } = props
+                const language = /language-(\w+)/.exec(className || '')
+                const lang = language ? language[1] : null
+                const code = String(codeChildren).replace(/\n$/, '')
+                if (lang === 'mermaid') {
+                    return <MermaidDiagram chart={code} streaming={streaming} />
+                }
+                const multiline = /[\r\n]/.exec(code)
+                return multiline ? (
+                    <SyntaxHighlighter
+                        {...rest}
+                        PreTag="div"
+                        children={code}
+                        language={lang}
+                        style={atomOneLight}
+                        showLineNumbers={true}
+                        wrapLongLines={true}
+                    />
+                ) : (
+                    <div className="inlineCode" variant="outlined">
+                        <code {...rest} className={className}>
+                            {codeChildren}
+                        </code>
+                    </div>
+                )
+            },
+        }
+    }, [downloadable, streaming])
 
     return (
         <div className={`text-content line-break${compact ? ' text-content--compact' : ''}`}>
             <Markdown
                 remarkPlugins={[remarkGfm, remarkGemoji, remarkMath]}
                 rehypePlugins={[rehypeKatex]}
-                components={{
-                  pre: Pre,
-                  img: Img,
-                  a: Link,
-                  code(props) {
-                    const {children: codeChildren, className, node, ...rest} = props
-                    const language = /language-(\w+)/.exec(className || '');
-                    const lang = language ? language[1] : null
-                    const code = String(codeChildren).replace(/\n$/, '')
-                    if (lang === 'mermaid') {
-                      return <MermaidDiagram chart={code} streaming={streaming} />
-                    }
-                    const multiline = /[\r\n]/.exec(code);
-                    return multiline ?
-                    (
-                        <SyntaxHighlighter
-                            {...rest}
-                            PreTag="div"
-                            children={code}
-                            language={lang}
-                            style={atomOneLight}
-                            showLineNumbers={true}
-                            wrapLongLines={true}
-                        />
-                    ) :
-                    (
-                        <div className='inlineCode' variant='outlined'>
-                            <code {...rest} className={className}>
-                                {codeChildren}
-                            </code>
-                        </div>
-                    )
-                  }
-                }}
+                components={components}
             >
                 {markdown}
             </Markdown>
