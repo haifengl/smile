@@ -14,14 +14,21 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-import React, { memo, useEffect, useId, useRef, useState } from 'react'
+import React, { memo, useCallback, useEffect, useId, useRef, useState } from 'react'
 import mermaid from 'mermaid'
+import { downloadMermaidDiagram } from '../mermaidExport'
 import './MermaidDiagram.css'
 
 let mermaidReady = false
 
 /** Completed diagrams keyed by chart source — survives remounts while streaming. */
 const svgCache = new Map()
+
+const DOWNLOAD_FORMATS = [
+  { id: 'svg', label: 'SVG' },
+  { id: 'png', label: 'PNG' },
+  { id: 'pdf', label: 'PDF' },
+]
 
 function ensureMermaid() {
   if (mermaidReady) return
@@ -49,6 +56,72 @@ async function canParse(source) {
   }
 }
 
+function DownloadIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M12 3a1 1 0 0 1 1 1v9.59l2.3-2.3a1 1 0 1 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.42L11 13.59V4a1 1 0 0 1 1-1zm-7 14a1 1 0 0 1 1 1v1h12v-1a1 1 0 1 1 2 0v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1z"
+      />
+    </svg>
+  )
+}
+
+function MermaidDownloadMenu({ svg, onClose }) {
+  const menuRef = useRef(null)
+  const [busy, setBusy] = useState(false)
+  const [exportError, setExportError] = useState('')
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose()
+    }
+    const onPointer = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        onClose()
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    document.addEventListener('mousedown', onPointer)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.removeEventListener('mousedown', onPointer)
+    }
+  }, [onClose])
+
+  const onDownload = async (format) => {
+    if (busy) return
+    setBusy(true)
+    setExportError('')
+    try {
+      await downloadMermaidDiagram(svg, format, 'mermaid-diagram')
+      onClose()
+    } catch (err) {
+      setExportError(err?.message || 'Download failed')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="mermaid-download-menu" ref={menuRef} role="menu" aria-label="Download diagram">
+      {DOWNLOAD_FORMATS.map((fmt) => (
+        <button
+          key={fmt.id}
+          type="button"
+          className="mermaid-download-item"
+          role="menuitem"
+          disabled={busy}
+          onClick={() => onDownload(fmt.id)}
+        >
+          Download {fmt.label}
+        </button>
+      ))}
+      {exportError ? <div className="mermaid-download-error">{exportError}</div> : null}
+    </div>
+  )
+}
+
 /**
  * Renders a {@code ```mermaid} fenced code block as an SVG diagram.
  * Once a chart source has been rendered successfully it is locked/cached so
@@ -63,7 +136,9 @@ function MermaidDiagram({ chart, streaming = false }) {
   const [svg, setSvg] = useState(() => (source ? svgCache.get(source) ?? '' : ''))
   const [error, setError] = useState('')
   const [pending, setPending] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const renderGen = useRef(0)
+  const closeMenu = useCallback(() => setMenuOpen(false), [])
 
   useEffect(() => {
     if (!source) {
@@ -159,11 +234,26 @@ function MermaidDiagram({ chart, streaming = false }) {
   }
 
   return (
-    <div
-      className="mermaid-block"
-      data-mermaid=""
-      dangerouslySetInnerHTML={{ __html: svg }}
-    />
+    <div className="mermaid-block mermaid-block--ready" data-mermaid="">
+      <div className="mermaid-toolbar">
+        <button
+          type="button"
+          className="mermaid-download-btn"
+          title="Download diagram"
+          aria-label="Download diagram"
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen((open) => !open)}
+        >
+          <DownloadIcon />
+        </button>
+        {menuOpen ? <MermaidDownloadMenu svg={svg} onClose={closeMenu} /> : null}
+      </div>
+      <div
+        className="mermaid-svg"
+        dangerouslySetInnerHTML={{ __html: svg }}
+      />
+    </div>
   )
 }
 
