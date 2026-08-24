@@ -14,11 +14,14 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-import React, { useEffect, useId, useState } from 'react'
+import React, { memo, useEffect, useId, useRef, useState } from 'react'
 import mermaid from 'mermaid'
 import './MermaidDiagram.css'
 
 let mermaidReady = false
+
+/** Completed diagrams keyed by chart source — survives remounts while streaming. */
+const svgCache = new Map()
 
 function ensureMermaid() {
   if (mermaidReady) return
@@ -39,7 +42,6 @@ function ensureMermaid() {
  */
 async function canParse(source) {
   try {
-    // mermaid.parse may return a boolean or throw, depending on version.
     const result = await mermaid.parse(source, { suppressErrors: true })
     return result !== false
   } catch {
@@ -49,33 +51,50 @@ async function canParse(source) {
 
 /**
  * Renders a {@code ```mermaid} fenced code block as an SVG diagram.
- * While the parent message is still streaming, incomplete fences are shown
- * as source until Mermaid can parse them (closing fence / valid chart).
+ * Once a chart source has been rendered successfully it is locked/cached so
+ * later stream tokens (outside the fence) do not re-trigger Mermaid.
  *
  * @param {{ chart: string, streaming?: boolean }} props
  */
-export default function MermaidDiagram({ chart, streaming = false }) {
+function MermaidDiagram({ chart, streaming = false }) {
   const reactId = useId().replace(/:/g, '')
-  const [svg, setSvg] = useState('')
+  const source = (chart ?? '').trim()
+  const lockedSourceRef = useRef('')
+  const [svg, setSvg] = useState(() => (source ? svgCache.get(source) ?? '' : ''))
   const [error, setError] = useState('')
   const [pending, setPending] = useState(false)
+  const renderGen = useRef(0)
 
   useEffect(() => {
-    let cancelled = false
-    const source = (chart ?? '').trim()
     if (!source) {
+      lockedSourceRef.current = ''
       setSvg('')
       setError('')
       setPending(false)
       return undefined
     }
 
+    // Already rendered this exact chart — reuse cache / lock; skip Mermaid.
+    const cached = svgCache.get(source)
+    if (cached) {
+      lockedSourceRef.current = source
+      setSvg(cached)
+      setError('')
+      setPending(false)
+      return undefined
+    }
+    if (lockedSourceRef.current === source) {
+      return undefined
+    }
+
     ensureMermaid()
+    const gen = ++renderGen.current
+    let cancelled = false
 
     ;(async () => {
       if (streaming) {
         const ok = await canParse(source)
-        if (cancelled) return
+        if (cancelled || gen !== renderGen.current) return
         if (!ok) {
           setSvg('')
           setError('')
@@ -84,25 +103,24 @@ export default function MermaidDiagram({ chart, streaming = false }) {
         }
       }
 
-      const renderId = `mermaid-${reactId}-${Math.random().toString(36).slice(2, 8)}`
+      const renderId = `mermaid-${reactId}-${gen}`
       try {
         const { svg: rendered } = await mermaid.render(renderId, source)
-        if (!cancelled) {
-          setSvg(rendered)
-          setError('')
-          setPending(false)
-        }
+        if (cancelled || gen !== renderGen.current) return
+        svgCache.set(source, rendered)
+        lockedSourceRef.current = source
+        setSvg(rendered)
+        setError('')
+        setPending(false)
       } catch (err) {
-        if (!cancelled) {
-          setSvg('')
-          setPending(false)
-          // Incomplete stream: keep waiting; finished message: show error.
-          if (streaming) {
-            setError('')
-            setPending(true)
-          } else {
-            setError(err?.message || 'Failed to render Mermaid diagram')
-          }
+        if (cancelled || gen !== renderGen.current) return
+        setSvg('')
+        setPending(false)
+        if (streaming) {
+          setError('')
+          setPending(true)
+        } else {
+          setError(err?.message || 'Failed to render Mermaid diagram')
         }
       }
     })()
@@ -110,7 +128,7 @@ export default function MermaidDiagram({ chart, streaming = false }) {
     return () => {
       cancelled = true
     }
-  }, [chart, reactId, streaming])
+  }, [source, reactId, streaming])
 
   if (pending || (streaming && !svg && !error)) {
     return (
@@ -148,3 +166,5 @@ export default function MermaidDiagram({ chart, streaming = false }) {
     />
   )
 }
+
+export default memo(MermaidDiagram)
