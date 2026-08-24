@@ -110,6 +110,71 @@ public class Tensor implements AutoCloseable {
     }
 
     /**
+     * Removes this tensor from every {@link AutoScope} on the current thread
+     * without freeing native storage. Use for long-lived buffers (e.g. KV
+     * cache pools) that must outlive a transient generation scope.
+     */
+    public void detachFromScopes() {
+        Deque<AutoScope> stack = scopes.get();
+        for (AutoScope scope : stack) {
+            scope.remove(this);
+        }
+    }
+
+    /**
+     * Pops and closes every {@link AutoScope} on the current thread.
+     * Defensive cleanup after generate / TP workers so a push/pop mismatch
+     * cannot pin activations across requests.
+     *
+     * @return number of scopes drained.
+     */
+    public static int clearScopes() {
+        Deque<AutoScope> stack = scopes.get();
+        int n = 0;
+        while (!stack.isEmpty()) {
+            stack.pop().close();
+            n++;
+        }
+        return n;
+    }
+
+    /**
+     * Returns how many {@link AutoScope}s are currently pushed on this thread.
+     * @return scope stack depth.
+     */
+    public static int scopeDepth() {
+        return scopes.get().size();
+    }
+
+    /**
+     * Moves this tensor from the current (top) {@link AutoScope} to its parent
+     * so it survives {@link #pop()} of the child scope.
+     *
+     * <p>Use when returning a tensor to the caller: the child removes it from
+     * its own scope (so {@code pop} will not free it) and attaches it to the
+     * parent scope for deterministic cleanup. If there is no parent scope, the
+     * tensor is only detached from the current scope and the caller owns it.
+     *
+     * @return this tensor.
+     */
+    public Tensor promoteToParent() {
+        Deque<AutoScope> stack = scopes.get();
+        if (stack.isEmpty()) {
+            return this;
+        }
+        AutoScope current = stack.pop();
+        try {
+            current.remove(this);
+            if (!stack.isEmpty()) {
+                stack.peek().add(this);
+            }
+        } finally {
+            stack.push(current);
+        }
+        return this;
+    }
+
+    /**
      * Removes the scope at the top of the tensor stack. All tensors
      * added to this scope will be released.
      * @return the top level scope.
@@ -154,6 +219,15 @@ public class Tensor implements AutoCloseable {
 
     @Override
     public void close() {
+        // Drop scope entries before freeing. try-with-resources often closes a
+        // tensor that Tensor.push still tracks; leaving a "zombie" with a dangling
+        // handle address makes AutoScope.remove(equals-by-address) detach the wrong
+        // tensor after the allocator reuses that address — pop then frees the live
+        // return value and the next op (e.g. transpose) SIGSEGVs in LibTorch.
+        Deque<AutoScope> stack = scopes.get();
+        for (AutoScope scope : stack) {
+            scope.remove(this);
+        }
         cleanable.clean();
     }
 
@@ -345,6 +419,20 @@ public class Tensor implements AutoCloseable {
      */
     public Tensor contiguous() {
         return new Tensor(smile_tensor_contiguous(handle));
+    }
+
+    /**
+     * Returns a new tensor that owns a deep copy of this tensor's storage.
+     *
+     * <p>Use this when returning a {@code view}/{@code reshape}/{@code expand}
+     * result from a {@code try}-with-resources that closes the base tensor;
+     * otherwise the returned view dangles and later ops (e.g. {@code transpose})
+     * can SIGSEGV in LibTorch.
+     *
+     * @return an independently owned clone of this tensor.
+     */
+    public Tensor copy() {
+        return new Tensor(smile_tensor_clone(handle));
     }
 
     /**

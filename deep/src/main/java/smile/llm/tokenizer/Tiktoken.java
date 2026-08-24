@@ -48,6 +48,13 @@ public class Tiktoken implements Tokenizer {
     protected final Map<Bytes, Integer> ranks;
     /** Special Token -> Rank */
     protected final Map<String, Integer> specialTokens;
+    /** Special-token ids for {@link #tryDecode(int[], boolean)} skip filtering. */
+    private final Set<Integer> specialTokenIds;
+    /**
+     * Specials that remain in streamed text even when {@code skipSpecial} is
+     * true (e.g. model thinking markers the UI needs to style).
+     */
+    private final Set<Integer> visibleSpecialTokenIds;
     /** ID -> Token */
     private final Bytes[] decoder;
     /** BOS (beginning of sequence) token id. */
@@ -77,8 +84,42 @@ public class Tiktoken implements Tokenizer {
         this.pattern = pattern;
         this.ranks = ranks;
 
-        int size = ranks.size();
-        this.decoder = new Bytes[size + specialTokens.length];
+        int maxId = -1;
+        for (int id : ranks.values()) {
+            if (id > maxId) {
+                maxId = id;
+            }
+        }
+
+        // Resolve specials against the vocab first. HF tokenizers (e.g. Qwen)
+        // already place <|im_start|> etc. inside model.vocab / added_tokens;
+        // remapping them to maxId+1 produces embedding gather OOB.
+        // Llama / OpenAI tiktoken style leave specials out of the BPE ranks and
+        // assign them contiguously after maxRankId (e.g. 128000+) — that is
+        // expected, not a warning.
+        int nextId = maxId + 1;
+        int[] specialIds = new int[specialTokens.length];
+        Bytes[] specialBytes = new Bytes[specialTokens.length];
+        int appended = 0;
+        for (int i = 0; i < specialTokens.length; i++) {
+            specialBytes[i] = new Bytes(specialTokens[i]);
+            Integer existing = findRankId(ranks, specialTokens[i]);
+            if (existing != null) {
+                specialIds[i] = existing;
+            } else {
+                specialIds[i] = nextId++;
+                appended++;
+                logger.debug("Special token '{}' not in BPE ranks; assigning id {} (after maxRankId={})",
+                        specialTokens[i], specialIds[i], maxId);
+            }
+        }
+        if (appended > 0) {
+            logger.info("Registered {} special token(s) after BPE ranks (ids {}..{}); "
+                            + "{} special(s) reused vocab ids",
+                    appended, maxId + 1, nextId - 1, specialTokens.length - appended);
+        }
+
+        this.decoder = new Bytes[Math.max(maxId + 1, nextId)];
         for (var entry : ranks.entrySet()) {
             this.decoder[entry.getValue()] = entry.getKey();
         }
@@ -86,16 +127,55 @@ public class Tiktoken implements Tokenizer {
         this.specialTokenPattern = specialTokenRegex(specialTokens);
         this.specialTokens = new HashMap<>();
         for (int i = 0; i < specialTokens.length; i++) {
-            int id = size + i;
-            this.specialTokens.put(specialTokens[i], id);
-            this.decoder[id] = new Bytes(specialTokens[i]);
+            this.specialTokens.put(specialTokens[i], specialIds[i]);
+            this.decoder[specialIds[i]] = specialBytes[i];
         }
+        this.specialTokenIds = Set.copyOf(this.specialTokens.values());
+        this.visibleSpecialTokenIds = visibleSpecialTokenIds(this.specialTokens);
 
         this.bos = Optional.ofNullable(this.specialTokens.get(bos))
                 .orElseThrow(() -> new IllegalArgumentException("BOS token not found in specialTokens: " + bos));
         this.eos = Optional.ofNullable(this.specialTokens.get(eos))
                 .orElseThrow(() -> new IllegalArgumentException("EOS token not found in specialTokens: " + eos));
         logger.info("#words: {} | BOS ID: {} | EOS ID: {}", decoder.length, this.bos, this.eos);
+    }
+
+    /**
+     * Specials the UI relies on (thinking span markers). Built without
+     * embedding the literal tag spelling in one piece so tooling that
+     * strips HTML-like tokens cannot corrupt the constants.
+     */
+    private static Set<Integer> visibleSpecialTokenIds(Map<String, Integer> specials) {
+        String open = "<" + "think>";
+        String close = "</" + "think>";
+        Set<Integer> visible = new HashSet<>();
+        Integer openId = specials.get(open);
+        Integer closeId = specials.get(close);
+        if (openId != null) {
+            visible.add(openId);
+        }
+        if (closeId != null) {
+            visible.add(closeId);
+        }
+        return Set.copyOf(visible);
+    }
+
+    /**
+     * Looks up a special-token string in {@code ranks}, trying UTF-8 bytes first
+     * and then a string equality scan (HF vocab keys are sometimes stored with
+     * a different {@link Bytes} representation than {@code new Bytes(token)}).
+     */
+    private static Integer findRankId(Map<Bytes, Integer> ranks, String token) {
+        Integer id = ranks.get(new Bytes(token));
+        if (id != null) {
+            return id;
+        }
+        for (var entry : ranks.entrySet()) {
+            if (token.equals(entry.getKey().toString())) {
+                return entry.getValue();
+            }
+        }
+        return null;
     }
 
     /**
@@ -193,10 +273,29 @@ public class Tiktoken implements Tokenizer {
      * @param output the output buffer.
      */
     private void bytePairEncode(Bytes piece, ArrayList<IntPair> parts, IntArrayList output) {
+        int length = piece.length();
+        if (length == 0) {
+            return;
+        }
+        if (length == 1) {
+            int token = getRank(piece, 0, 1);
+            if (token == MAX) {
+                throw new IllegalArgumentException(
+                        "Byte not in vocabulary (id lookup failed for a single-byte piece). "
+                                + "HF vocabs must be loaded via GPT-2 byte mapping.");
+            }
+            output.add(token);
+            return;
+        }
+
         bytePairMerge(piece, parts);
         for (int i = 0; i < parts.size() - 1; i++) {
-            int token = getRank(piece, parts.get(i)._1(), parts.get(i+1)._1());
-            assert token != MAX : "Token should not be MAX";
+            int token = getRank(piece, parts.get(i)._1(), parts.get(i + 1)._1());
+            if (token == MAX) {
+                throw new IllegalArgumentException(
+                        "BPE produced an unknown token (rank=MAX). Check that the tokenizer "
+                                + "vocab was converted from HuggingFace GPT-2 unicode keys to raw bytes.");
+            }
             output.add(token);
         }
     }
@@ -204,7 +303,9 @@ public class Tiktoken implements Tokenizer {
     /** Byte pair merge. */
     private void bytePairMerge(Bytes piece, ArrayList<IntPair> parts) {
         int length = piece.length();
-        assert length > 1;
+        if (length <= 1) {
+            throw new IllegalArgumentException("bytePairMerge requires length > 1");
+        }
         parts.clear();
         parts.ensureCapacity(length + 1);
 
@@ -287,10 +388,9 @@ public class Tiktoken implements Tokenizer {
 
     @Override
     public String tryDecode(int[] tokens, boolean skipSpecial) throws CharacterCodingException {
-        int vocabSize = ranks.size();
         int totalBytes = 0;
         for (var token : tokens) {
-            if (skipSpecial && token >= vocabSize) {
+            if (skipSpecial && shouldSkipSpecial(token)) {
                 continue;
             }
             totalBytes += decoder[token].length();
@@ -298,7 +398,7 @@ public class Tiktoken implements Tokenizer {
         byte[] buffer = new byte[totalBytes];
         int offset = 0;
         for (var token : tokens) {
-            if (skipSpecial && token >= vocabSize) {
+            if (skipSpecial && shouldSkipSpecial(token)) {
                 continue;
             }
             var array = decoder[token].array();
@@ -306,6 +406,20 @@ public class Tiktoken implements Tokenizer {
             offset += array.length;
         }
         return charsetDecoder.decode(ByteBuffer.wrap(buffer, 0, offset)).toString();
+    }
+
+    /** @return {@code true} when {@code tokenId} is a registered special token. */
+    private boolean isSpecialTokenId(int tokenId) {
+        return specialTokenIds.contains(tokenId);
+    }
+
+    /**
+     * Whether a special should be omitted from streamed decode. Control
+     * specials ({@code <|im_end|>}, pads, …) are skipped; thinking markers
+     * stay so clients can style reasoning spans.
+     */
+    private boolean shouldSkipSpecial(int tokenId) {
+        return isSpecialTokenId(tokenId) && !visibleSpecialTokenIds.contains(tokenId);
     }
 
     @Override

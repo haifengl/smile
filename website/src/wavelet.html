@@ -5,7 +5,7 @@ title: Smile - Wavelet
 ---
 {% include "toc.njk" %}
 
-<div class="col-md-9 col-md-pull-3">
+<div class="col-md-9 order-md-first">
 
     <h1 id="wavelet-top" class="title">Wavelet</h1>
 
@@ -67,29 +67,29 @@ title: Smile - Wavelet
         simplest and most localized wavelet, uses a different centering method
         from other Daubechies wavelet.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_1" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_1" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_1" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_1" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_1" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_1">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     public Wavelet(double[] coefficients)
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="scala_1">
+        <div class="tab-pane fade" role="tabpanel" id="scala_1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def wavelet(filter: String): Wavelet
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_1">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     fun wavelet(filter: String): Wavelet
     </code></pre>
             </div>
@@ -103,15 +103,15 @@ title: Smile - Wavelet
         array should be a power of 2. For time series of size no power of 2,
         0 padding can be applied.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_2" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_2" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_2" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_2" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_2">
+        <div class="tab-pane fade" role="tabpanel" id="scala_2">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val sp500 = Array(
         1103.96, 1107.84, 1114.11, 1108.61, 1106.36, 1097.86, 1105.31,
         1114.51, 1118.84, 1121.08, 1127.53, 1128.55, 1125.53, 1126.60,
@@ -157,9 +157,9 @@ title: Smile - Wavelet
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_2">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_2">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     double[] sp500 = {
         1103.96, 1107.84, 1114.11, 1108.61, 1106.36, 1097.86, 1105.31,
         1114.51, 1118.84, 1121.08, 1127.53, 1128.55, 1125.53, 1126.60,
@@ -205,9 +205,9 @@ title: Smile - Wavelet
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_2">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_2">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     import smile.wavelet.*;
     val sp500 = doubleArrayOf(
         1103.96, 1107.84, 1114.11, 1108.61, 1106.36, 1097.86, 1105.31,
@@ -260,29 +260,29 @@ title: Smile - Wavelet
         wavelet. The result is stored in the input array. To transform
         it back, the method <code>inverse</code> can be applied.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_3" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_3" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_3" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_3" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_3" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_3">
+        <div class="tab-pane fade" role="tabpanel" id="scala_3">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     smile&gt; haar.inverse(sp500)
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_3">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_3">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     smile&gt; haar.inverse(sp500)
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_3">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_3">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     >>> haar.inverse(sp500)
     </code></pre>
             </div>
@@ -293,14 +293,14 @@ title: Smile - Wavelet
         explicitly or prefer functional APIs, the methods <code>dwt</code> and <code>idwt</code>
         can be used in Scala and Kotlin.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_4" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#scala_4" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_4" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_4">
+        <div class="tab-pane fade show active" role="tabpanel" id="scala_4">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     // Discrete wavelet transform.
     def dwt(t: Array[Double], filter: String): Unit
 
@@ -309,9 +309,9 @@ title: Smile - Wavelet
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_4">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_4">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     // Discrete wavelet transform.
     fun dwt(t: DoubleArray, filter: String): Unit
 
@@ -350,15 +350,15 @@ title: Smile - Wavelet
 
     <p>The class <code>WaveletShrinkage</code> implements this process.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_5" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_5" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_5" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_5" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_5" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_5">
+        <div class="tab-pane fade" role="tabpanel" id="scala_5">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val d4 = wavelet("d4")
     val smooth = sp500.clone()
     WaveletShrinkage.denoise(smooth, d4)
@@ -368,9 +368,9 @@ title: Smile - Wavelet
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_5">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_5">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var d4 = new D4Wavelet();
     var smooth = sp500.clone();
     WaveletShrinkage.denoise(smooth, d4);
@@ -381,9 +381,9 @@ title: Smile - Wavelet
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_5">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_5">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     import java.awt.Color;
     import smile.plot.swing.*;
     val d4 = wavelet("d4");
@@ -404,22 +404,22 @@ title: Smile - Wavelet
     <p>Similar to <code>dwt</code> method, <code>wsdenoise</code> is
         a function for wavelet shrinkage if you don't want to
         create the wavelet object explicitly.</p>
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_6" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#scala_6" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_6" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="scala_6">
+        <div class="tab-pane fade show active" role="tabpanel" id="scala_6">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     // If the parameter soft is true, apply soft thresholding.
     def wsdenoise(t: Array[Double], filter: String, soft: Boolean = false): Unit
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_6">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_6">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     // If the parameter soft is true, apply soft thresholding.
     fun wsdenoise(t: DoubleArray, filter: String, soft: Boolean = false): Unit
     </code></pre>
@@ -434,7 +434,3 @@ title: Smile - Wavelet
         <span class="btn-arrow-right">&nbsp;&rarr;</span>
     </div>
 </div>
-
-<script type="text/javascript">
-    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
-</script>

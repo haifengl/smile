@@ -4,17 +4,23 @@
 #
 # Base image: nvidia/cuda:13.2.0-*-ubuntu24.04 (Ubuntu 24.04 + CUDA 13.2)
 #
-# IMPORTANT: build context must be the repository root (not serve/), so the
-# image can compile a CUDA-enabled libsmile_torch against LibTorch cu132:
+# IMPORTANT: build context must be the repository root (not serve/).
+# Docker rebuilds only libsmile_torch.so. The Quarkus JVM app (including
+# SafeTensors.java) is copied from serve/build/quarkus-app — so you MUST
+# rebuild Java on the host before docker build, or you will ship stale jars:
 #
 #   ./gradlew :serve:build
 #   docker build -f serve/src/main/docker/Dockerfile.jvm-gpu \
 #     -t quarkus/smile-serve-gpu .
 #
-# Then run the container using (requires NVIDIA Container Toolkit):
+# Then run the container using (requires NVIDIA Container Toolkit).
+# For Qwen 27B BF16 on 2x 40GB GPUs:
+#   -Dsmile.chat.devices=0,7
+# Or consecutive devices from a base index:
+#   -Dsmile.chat.devices=0 -Dsmile.chat.tensor-parallel-size=2
 #
 # docker run -i --rm --gpus all -p 8888:8080 \
-#   -e JAVA_OPTS_APPEND="-Dsmile.chat.model=meta-llama/Llama-3.1-8B-Instruct" \
+#   -e JAVA_OPTS_APPEND="-Dsmile.chat.model=Qwen/Qwen3.8-27B -Dsmile.chat.devices=0,7 -Dsmile.chat.max-seq-len=8192 -XX:ErrorFile=/model/hs_err_pid%p.log" \
 #   -u root -v "$(pwd)/model":/model quarkus/smile-serve-gpu
 #
 # Optional JVM flags:
@@ -48,6 +54,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         g++ \
         make \
         unzip \
+        libnccl2 \
+        libnccl-dev \
+        python3 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /tmp
@@ -58,12 +67,58 @@ RUN curl -fsSL --retry 5 --retry-delay 10 -o /tmp/libtorch.zip \
 
 COPY deep/src/main/cpp /src/smile_torch
 WORKDIR /src/smile_torch
-RUN cmake -S . -B /build/cpp \
+# Minimum CUDA arch is sm_80 (A100); also sm_90 (H100) and sm_100 (Blackwell FP4).
+ENV TORCH_CUDA_ARCH_LIST="8.0 9.0 10.0"
+RUN test -d /src/smile_torch/third_party/flashinfer/include/flashinfer \
+    && cmake -S . -B /build/cpp \
         -DCMAKE_BUILD_TYPE=Release \
         -DLIBTORCH_ROOT=/usr/local/libtorch \
+        -DTORCH_CUDA_ARCH_LIST="8.0;9.0;10.0" \
         -DBUILD_TESTING=OFF \
     && cmake --build /build/cpp --config Release --parallel "$(nproc)" \
-    && test -f /build/cpp/libsmile_torch.so
+    && test -f /build/cpp/libsmile_torch.so \
+    && nm -D /build/cpp/libsmile_torch.so | grep -q smile_flashinfer_is_available \
+    && nm -D /build/cpp/libsmile_torch.so | grep -q smile_flashinfer_paged_attention \
+    && nm -D /build/cpp/libsmile_torch.so | grep -q smile_flashinfer_set_aot_dir \
+    && ! nm -u /build/cpp/libsmile_torch.so | grep -q smile_flashinfer_paged_attention_cuda \
+    && nm /build/cpp/libsmile_torch.so | grep -E ' [Tt] smile_flashinfer_paged_attention_cuda$'
+
+# Bundle flashinfer-jit-cache AOT modules (open attention kernels; not cubin).
+# Note: do not use shell heredocs in RUN — classic Dockerfile parsers end the
+# instruction at <<'PY' and then treat the following "&&" as an unknown opcode.
+ARG FLASHINFER_JIT_CACHE_VERSION=0.6.6
+# LibTorch may be cu132, but FlashInfer only publishes jit-cache through cu130
+# for v0.6.6 (cu128/cu129/cu130). Do not derive this from CU_VERSION.
+ARG FLASHINFER_JIT_CACHE_CU=cu130
+RUN mkdir -p /opt/flashinfer/aot \
+    && (curl -fsSL --retry 5 --retry-delay 10 -o /tmp/fi_jit.whl \
+        "https://github.com/flashinfer-ai/flashinfer/releases/download/v${FLASHINFER_JIT_CACHE_VERSION}/flashinfer_jit_cache-${FLASHINFER_JIT_CACHE_VERSION}%2B${FLASHINFER_JIT_CACHE_CU}-cp39-abi3-manylinux_2_28_x86_64.whl" \
+        || curl -fsSL --retry 5 --retry-delay 10 -o /tmp/fi_jit.whl \
+        "https://flashinfer.ai/whl/${FLASHINFER_JIT_CACHE_CU}/flashinfer_jit_cache-${FLASHINFER_JIT_CACHE_VERSION}%2B${FLASHINFER_JIT_CACHE_CU}-cp39-abi3-manylinux_2_28_x86_64.whl") \
+    && printf '%s\n' \
+        'import zipfile, pathlib, sys' \
+        'root = pathlib.Path("/opt/flashinfer/aot")' \
+        'root.mkdir(parents=True, exist_ok=True)' \
+        'count = 0' \
+        'with zipfile.ZipFile("/tmp/fi_jit.whl") as z:' \
+        '    for name in z.namelist():' \
+        '        if not name.endswith(".so"):' \
+        '            continue' \
+        '        parts = name.strip("/").split("/")' \
+        '        if len(parts) >= 2:' \
+        '            dest = root / parts[-2] / parts[-1]' \
+        '        else:' \
+        '            dest = root / parts[-1]' \
+        '        dest.parent.mkdir(parents=True, exist_ok=True)' \
+        '        dest.write_bytes(z.read(name))' \
+        '        count += 1' \
+        'print(f"extracted {count} AOT .so modules", file=sys.stderr)' \
+        'if count < 1:' \
+        '    raise SystemExit("no .so in flashinfer-jit-cache wheel")' \
+        > /tmp/extract_fi_aot.py \
+    && python3 /tmp/extract_fi_aot.py \
+    && rm -f /tmp/fi_jit.whl /tmp/extract_fi_aot.py \
+    && find /opt/flashinfer/aot -name '*.so' | head -5
 
 # -----------------------------------------------------------------------------
 # Stage 2: runtime image
@@ -121,6 +176,8 @@ RUN curl -fsSL --retry 5 --retry-delay 10 -o /tmp/libtorch.zip \
 ENV LD_LIBRARY_PATH="/usr/local/onnxruntime/lib:/usr/local/libtorch/lib:/usr/lib/x86_64-linux-gnu/nvshmem/13${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 
 # We make four distinct layers so if there are application changes the library layers can be re-used
+# IMPORTANT: serve/build/quarkus-app must be rebuilt on the host after Java changes:
+#   ./gradlew :serve:build
 COPY --chown=185:185 serve/build/quarkus-app/lib/ /deployments/lib/
 COPY --chown=185:185 serve/build/quarkus-app/*.jar /deployments/
 COPY --chown=185:185 serve/build/quarkus-app/app/ /deployments/app/
@@ -128,8 +185,11 @@ COPY --chown=185:185 serve/build/quarkus-app/quarkus/ /deployments/quarkus/
 
 # Replace any host-copied CPU stub with the CUDA-enabled library from stage 1
 COPY --from=smile-torch-builder --chown=185:185 /build/cpp/libsmile_torch.so /deployments/lib/libsmile_torch.so
+COPY --from=smile-torch-builder --chown=185:185 /opt/flashinfer/aot /opt/flashinfer/aot
 
 ENV LD_LIBRARY_PATH="/deployments/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+ENV FLASHINFER_AOT_DIR="/opt/flashinfer/aot"
+ENV SMILE_FLASHINFER_AOT_DIR="/opt/flashinfer/aot"
 
 # Minimal launcher (Ubuntu base has no UBI run-java.sh)
 RUN printf '%s\n' \

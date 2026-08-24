@@ -5,7 +5,7 @@ title: Smile - Manifold Learning
 ---
 {% include "toc.njk" %}
 
-<div class="col-md-9 col-md-pull-3">
+<div class="col-md-9 order-md-first">
     <h1 id="manifold-top" class="title">Manifold Learning</h1>
 
     <p>Manifold learning finds a low-dimensional basis for describing
@@ -59,22 +59,22 @@ title: Smile - Manifold Learning
         The top <code>n</code> eigenvectors of the geodesic distance matrix, represent the
         coordinates in the new <code>n</code>-dimensional Euclidean space.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_1" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_1" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_1" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_1" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_1" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_1">
+        <div class="tab-pane fade" role="tabpanel" id="scala_1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def isomap(data: Array[Array[Double]], k: Int, d: Int = 2, CIsomap: Boolean = true): Array[Array[Double]]
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_1">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_1">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class IsoMap {
         public static double[][] fit(double[][] data, Options options);
         public static double[][] fit(NearestNeighborGraph nng, Options options);
@@ -82,9 +82,9 @@ title: Smile - Manifold Learning
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_1">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     fun isomap(data: Array&lt;DoubleArray&gt;, k: Int, d: Int = 2, CIsomap: Boolean = true): Array&lt;DoubleArray&gt;
     </code></pre>
             </div>
@@ -120,15 +120,15 @@ title: Smile - Manifold Learning
         The data contains 20,000 samples. Because it is computational intensive to calculate
         the shortest path for all samples, the example uses only the first 2,000 samples.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_2" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_2" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_2" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_2" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_2">
+        <div class="tab-pane fade" role="tabpanel" id="scala_2">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val swissroll = read.csv("data/manifold/swissroll.txt", header=false, delimiter="\t").toArray()
     show(plot(swissroll, '.', BLUE))
 
@@ -138,9 +138,9 @@ title: Smile - Manifold Learning
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_2">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_2">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var swissroll = Read.csv("data/manifold/swissroll.txt", CSVFormat.DEFAULT.withDelimiter('\t')).toArray();
     ScatterPlot.of(swissroll, '.', Color.BLUE).canvas().window();
 
@@ -159,9 +159,9 @@ title: Smile - Manifold Learning
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_2">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_2">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     import java.awt.Color;
     import smile.*;
     import smile.manifold.*;
@@ -203,22 +203,22 @@ title: Smile - Manifold Learning
         because there is no fixed unit to prevent the weights from drifting as
         various regions differ in sample densities.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_3" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_3" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_3" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_3" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_3" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_3">
+        <div class="tab-pane fade" role="tabpanel" id="scala_3">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def lle(data: Array[Array[Double]], k: Int, d: Int = 2): Array[Array[Double]]
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_3">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_3">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class LLE {
         public static double[][] fit(double[][] data, Options options);
         public static double[][] fit(double[][] data, NearestNeighborGraph nng, Options options);
@@ -226,9 +226,9 @@ title: Smile - Manifold Learning
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_3">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_3">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     fun lle(data: Array&lt;DoubleArray&gt;, k: Int, d: Int = 2): Array&lt;DoubleArray&gt;
     </code></pre>
             </div>
@@ -237,29 +237,29 @@ title: Smile - Manifold Learning
 
     <p>The LLE using 8 neighbors on the swiss roll data is as follows.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_4" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_4" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_4" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_4" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_4" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_4" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_4">
+        <div class="tab-pane fade" role="tabpanel" id="scala_4">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val map = lle(data, 2)
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_4">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_4">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var map = LLE.fit(data, nng, 2);
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_4">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_4">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     val map = lle(data, 8)
     </code></pre>
             </div>
@@ -280,22 +280,22 @@ title: Smile - Manifold Learning
         algorithm may be viewed as a discrete approximation to a continuous map
         that naturally arises from the geometry of the manifold.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_5" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_5" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_5" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_5" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_5" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_5">
+        <div class="tab-pane fade" role="tabpanel" id="scala_5">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def laplacian(data: Array[Array[Double]], k: Int, d: Int = 2, t: Double = -1): Array[Array[Double]]
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_5">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_5">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     public class LaplacianEigenmap {
         public static double[][] fit(double[][] data, Options options);
         public static double[][] fit(NearestNeighborGraph nng, Options options);
@@ -303,9 +303,9 @@ title: Smile - Manifold Learning
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_5">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_5">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     fun laplacian(data: Array&lt;DoubleArray&gt;, k: Int, d: Int = 2, t: Double = -1): Array&lt;DoubleArray&gt;
     </code></pre>
             </div>
@@ -322,29 +322,29 @@ title: Smile - Manifold Learning
 
     <p>The Laplacian Eigenmap on the swiss roll data is as follows.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_6" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_6" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_6" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_6" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_6" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_6" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_6">
+        <div class="tab-pane fade" role="tabpanel" id="scala_6">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val map = laplacian(swissroll.slice(0, 1000), 10, 2, 25.0)
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_6">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_6">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var map = LaplacianEigenmap.fit(nng, 2, 25.0);
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_6">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_6">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kolin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     val map = laplacian(swissroll.slice(0..1000).toTypedArray(), 10, 2, 25.0)
     </code></pre>
             </div>
@@ -366,15 +366,15 @@ title: Smile - Manifold Learning
         point in such a way that similar objects are modeled by nearby points
         and dissimilar objects are modeled by distant points.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_7" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_7" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_7" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_7" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_7" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_7" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_7">
+        <div class="tab-pane fade" role="tabpanel" id="scala_7">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def tsne(X: Array[Array[Double]],
              d: Int = 2,
              perplexity: Double = 20.0,
@@ -383,18 +383,18 @@ title: Smile - Manifold Learning
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_7">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_7">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     public class TSNE {
         public static TSNE fit(double[][] X, Options options);
     }
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_7">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_7">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     fun tsne(X: Array&lt;DoubleArray&gt;,
              d: Int = 2,
              perplexity: Double = 20.0,
@@ -413,15 +413,15 @@ title: Smile - Manifold Learning
     <p>The t-SNE on the MNIST data is as follows. Note that the input data is preprocessed
         using PCA to reduce the dimensionality to 50 before t-SNE is performed.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_8" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_8" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_8" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_8" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_8" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_8" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_8">
+        <div class="tab-pane fade" role="tabpanel" id="scala_8">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val mnist = read.csv("data/mnist/mnist2500_X.txt", header=false, delimiter=" ")
     val label = read.csv("data/mnist/mnist2500_labels.txt", header=false, delimiter=" ").column(0).toIntArray()
     val pc = pca(mnist).getProjection(50)
@@ -431,9 +431,9 @@ title: Smile - Manifold Learning
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_8">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_8">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var format = CSVFormat.DEFAULT.withDelimiter(' ');
     var mnist = Read.csv("data/mnist/mnist2500_X.txt", format).toArray();
     var label = Read.csv("data/mnist/mnist2500_labels.txt", format).column(0).toIntArray();
@@ -448,9 +448,9 @@ title: Smile - Manifold Learning
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_8">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_8">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     import smile.feature.extraction.*;
     val mnist = read.csv("data/mnist/mnist2500_X.txt", header=false, delimiter=' ').toArray();
     val label = read.csv("data/mnist/mnist2500_labels.txt", header=false, delimiter=' ').column(0).toIntArray();
@@ -489,15 +489,15 @@ title: Smile - Manifold Learning
         dimensional projection of the data that has the closest possible
         equivalent fuzzy topological structure.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_9" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_9" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_9" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_9" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_9" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_9" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_9">
+        <div class="tab-pane fade" role="tabpanel" id="scala_9">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def umap(data: Array[Array[Double]],
              k: Int = 15,
              d: Int = 2,
@@ -511,9 +511,9 @@ title: Smile - Manifold Learning
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_9">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_9">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     public class UAMP {
         public double[][] fit(double[][] data, Options options);
 
@@ -524,9 +524,9 @@ title: Smile - Manifold Learning
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_9">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_9">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     fun umap(data: Array&lt;DoubleArray&gt;,
              k: Int = 15,
              d: Int = 2,
@@ -573,31 +573,31 @@ title: Smile - Manifold Learning
 
     <p>UMAP on the MNIST data is as follows.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_10" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_10" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_10" data-toggle="tab">Kotlin</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_10" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_10" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_10" type="button" role="tab">Kotlin</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_10">
+        <div class="tab-pane fade" role="tabpanel" id="scala_10">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val map = umap(mnist.toArray())
     show(plot(map, label, 'o'))
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_10">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_10">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var map = UMAP.fit(mnist, 15);
     ScatterPlot.of(map, label, '@').canvas().window();
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane" id="kotlin_10">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_10">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-kotlin"><code>
+    <pre class="language-kotlin"><code class="language-kotlin">
     val map = umap(mnist);
     ScatterPlot.of(map, label, '@').canvas().window();
     </code></pre>
@@ -617,7 +617,3 @@ title: Smile - Manifold Learning
         <span class="btn-arrow-right">&nbsp;&rarr;</span>
     </div>
 </div>
-
-<script type="text/javascript">
-    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
-</script>

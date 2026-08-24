@@ -20,8 +20,12 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import smile.deep.activation.SiLU;
 import smile.deep.layer.LinearLayer;
-import smile.torch.Native;
 import smile.deep.tensor.Tensor;
+import smile.llm.parallel.ColumnParallelLinear;
+import smile.llm.parallel.RowParallelLinear;
+import smile.llm.parallel.TensorParallelGroup;
+import smile.llm.parallel.TensorShardSpec;
+import smile.torch.Native;
 
 import static smile.torch.Native.check;
 import static smile.torch.smile_torch_h.smile_module_create;
@@ -32,12 +36,17 @@ import static smile.torch.smile_torch_h.smile_module_register_module;
  * Feedforward layer in Transformer. It has two linear transformations and
  * an intermediate SiLU activation function.
  *
+ * <p>Under tensor parallelism, {@code w1}/{@code w3} are column-parallel and
+ * {@code w2} is row-parallel (all-reduce after the down-projection).
+ *
  * @author Haifeng Li
  */
 public class FeedForward {
     final LinearLayer w1, w2, w3;
     final SiLU silu;
     final MemorySegment module;
+    final TensorParallelGroup tpGroup;
+    final int tpRank;
 
     /**
      * Constructor with an explicit intermediate size, as provided by HuggingFace {@code config.json}.
@@ -45,10 +54,36 @@ public class FeedForward {
      * @param intermediateSize the FFN hidden dimension size, used directly without further computation.
      */
     public FeedForward(int dim, int intermediateSize) {
-        this.w1 = new LinearLayer(dim, intermediateSize, false);
-        this.w2 = new LinearLayer(intermediateSize, dim, false);
-        this.w3 = new LinearLayer(dim, intermediateSize, false);
+        this(dim, intermediateSize, null, null);
+    }
+
+    /**
+     * Tensor-parallel constructor.
+     *
+     * @param dim                model dimension.
+     * @param globalIntermediate full (unsharded) intermediate size.
+     * @param shard              local shard sizes ({@code intermediateSize} already divided).
+     * @param tpGroup            TP group for row-parallel all-reduce; {@code null} when tp=1.
+     */
+    public FeedForward(int dim, int globalIntermediate, TensorShardSpec shard, TensorParallelGroup tpGroup) {
         this.silu = new SiLU(true);
+        if (shard == null || shard.tpSize() <= 1) {
+            this.tpGroup = null;
+            this.tpRank = 0;
+            int hidden = shard != null ? shard.intermediateSize() : globalIntermediate;
+            this.w1 = new LinearLayer(dim, hidden, false);
+            this.w2 = new LinearLayer(hidden, dim, false);
+            this.w3 = new LinearLayer(dim, hidden, false);
+        } else {
+            this.tpGroup = tpGroup;
+            this.tpRank = shard.tpRank();
+            var col1 = new ColumnParallelLinear(dim, globalIntermediate, false, shard.tpSize(), shard.tpRank());
+            var col3 = new ColumnParallelLinear(dim, globalIntermediate, false, shard.tpSize(), shard.tpRank());
+            var row2 = new RowParallelLinear(globalIntermediate, dim, false, shard.tpSize(), shard.tpRank());
+            this.w1 = col1.linear();
+            this.w3 = col3.linear();
+            this.w2 = row2.linear();
+        }
 
         try (Arena arena = Arena.ofConfined()) {
             this.module = check(smile_module_create(MemorySegment.NULL));
@@ -72,11 +107,12 @@ public class FeedForward {
      */
     public FeedForward(int dim, int hiddenDim, int multipleOf, Double ffnDimMultiplier) {
         hiddenDim = (int) (2 * hiddenDim / 3.0);
-        // custom dim factor multiplier
         if (ffnDimMultiplier != null) {
             hiddenDim = (int) (ffnDimMultiplier * hiddenDim);
         }
         hiddenDim = multipleOf * ((hiddenDim + multipleOf - 1) / multipleOf);
+        this.tpGroup = null;
+        this.tpRank = 0;
         this.w1 = new LinearLayer(dim, hiddenDim, false);
         this.w2 = new LinearLayer(hiddenDim, dim, false);
         this.w3 = new LinearLayer(dim, hiddenDim, false);
@@ -93,14 +129,29 @@ public class FeedForward {
     }
 
     /**
+     * Returns the PyTorch module handle.
+     * @return module handle.
+     */
+    public MemorySegment module() {
+        return module;
+    }
+
+    /**
      * Feed forward.
      * @param x the input tensor.
      * @return the output tensor.
      */
     public Tensor forward(Tensor x) {
+        // SiLU may be in-place and return w1x; do not list it as a second
+        // try-with resource (would double-close the same handle).
         try (var w3x = w3.forward(x);
              var w1x = w1.forward(x)) {
-            return w2.forward(silu.forward(w1x).mul_(w3x));
+            Tensor siluOut = silu.forward(w1x);
+            Tensor out = w2.forward(siluOut.mul_(w3x));
+            if (tpGroup != null) {
+                tpGroup.allReduceSumInPlace(tpRank, out);
+            }
+            return out;
         }
     }
 }

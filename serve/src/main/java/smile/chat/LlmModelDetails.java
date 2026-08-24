@@ -19,8 +19,11 @@ package smile.chat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
-import smile.llm.llama.Llama;
-import smile.llm.transformer.ModelArgs;
+import smile.llm.LanguageModel;
+import smile.llm.model.llama.Llama;
+import smile.llm.model.llama.LlamaModelArgs;
+import smile.llm.model.qwen.Qwen;
+import smile.llm.model.qwen.QwenModelArgs;
 
 /**
  * Chat LLM details returned by {@code GET /models/{id}}.
@@ -28,7 +31,7 @@ import smile.llm.transformer.ModelArgs;
  * <p>Values come from the loaded checkpoint ({@code config.json} /
  * {@code params.json}), not from Hugging Face model-card APIs.
  *
- * @param family           architecture family label from {@link Llama#family()}.
+ * @param family           architecture family label from {@link LanguageModel#family()}.
  * @param source           {@code "huggingface"} or {@code "local"}.
  * @param dim              token embedding dimension.
  * @param numLayers        transformer block count.
@@ -56,16 +59,47 @@ public record LlmModelDetails(
         Integer maxSeqLen) {
 
     /**
-     * Builds details from a loaded {@link Llama} instance.
+     * Builds details from a loaded language model.
      *
-     * @param llama  the loaded model.
+     * @param model  the loaded model.
      * @param source {@code "huggingface"} or {@code "local"}.
      * @return llm details for retrieve responses.
      */
+    public static LlmModelDetails of(LanguageModel model, String source) {
+        if (model instanceof Llama llama) {
+            return of(llama, source);
+        }
+        if (model instanceof Qwen qwen) {
+            return of(qwen, source);
+        }
+        throw new IllegalArgumentException("Unsupported model type: " + model.getClass().getName());
+    }
+
+    /**
+     * Builds details from a loaded {@link Llama} instance.
+     */
     public static LlmModelDetails of(Llama llama, String source) {
-        ModelArgs args = llama.params();
+        LlamaModelArgs args = llama.params();
         return new LlmModelDetails(
                 llama.family(),
+                source,
+                args.dim(),
+                args.numLayers(),
+                args.numHeads(),
+                args.numKvHeads(),
+                args.vocabSize(),
+                args.intermediateSize(),
+                args.maxBatchSize(),
+                args.maxSeqLen());
+    }
+
+    /**
+     * Builds details from a loaded {@link Qwen} instance.
+     */
+    public static LlmModelDetails of(Qwen qwen, String source) {
+        QwenModelArgs args = qwen.params();
+        return new LlmModelDetails(
+                qwen.family(),
                 source,
                 args.dim(),
                 args.numLayers(),

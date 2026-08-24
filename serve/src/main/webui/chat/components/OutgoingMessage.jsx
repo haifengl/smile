@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
  *
  * SMILE is free software: you can redistribute it and/or modify it
- * it under the terms of the GNU General Public License as published by
+ * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
@@ -16,12 +16,13 @@
  */
 import React, { useEffect } from 'react'
 import ProfileIcon from '../assets/profile.svg'
-import TextContent from './TextContent'
+import MessageParts from './MessageParts'
 import Timestamp from './Timestamp'
 import './Message.css'
 
 export default function OutgoingMessage({
     user,
+    parts,
     text,
     timestamp,
 }) {
@@ -49,9 +50,7 @@ export default function OutgoingMessage({
 
                 <div className="outgoing-message-container">
                     <div className="outgoing-background"/>
-                    <TextContent>
-                        {text}
-                    </TextContent>
+                    <MessageParts parts={parts} text={text} downloadable={false} />
                 </div>
             </div>
         </div>

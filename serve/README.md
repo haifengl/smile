@@ -162,11 +162,20 @@ the corresponding profiles.
 | `smile.serve.model` | `../model` | Path to a `.sml` file or directory of `.sml` files |
 | `smile.onnx.model` | `../model` | Path to a `.onnx` file or directory of `.onnx` files |
 | `smile.chat.model` | `../model/Llama3.1-8B-Instruct` | Local HF-layout checkpoint directory, or Hugging Face repo id (`owner/name`). Tokenizer is resolved next to the checkpoint (`original/tokenizer.model` or `tokenizer.model`) |
-| `smile.chat.max_seq_len` | `4096` | Maximum sequence length in tokens |
-| `smile.chat.max_batch_size` | `1` | Maximum generation batch size |
-| `smile.chat.device` | `0` | GPU device index (`%dev` default: `7`) |
-| `smile.mem.fraction.static` | `0.85` | Fraction of free GPU memory (after weights load) reserved for the shared KV cache pool |
-| `smile.kv.cache.dtype` | _(unset)_ | KV-cache element dtype (`bfloat16`, `float16`, `float32`, `fp8_e4m3`, `fp8_e5m2`, …). When unset, uses `torch_dtype` from the model `config.json` |
+| `smile.chat.max-seq-len` | `0` (auto) | Max context (prompt+output), like vLLM `--max-model-len` / SGLang `--context-length`. `<=0` uses `max_position_embeddings` from the model config; set explicitly (e.g. `8192`) to cap large-window models such as Qwen3.5 |
+| `smile.chat.max-batch-size` | `1` | Max in-flight chat generations (`InferenceEngine` Fluid Injection cap). Values `>1` enable continuous batching. A waiting request is admitted only when free KV can reserve its full `prompt + max_tokens` window (capped by `max-seq-len`); otherwise it stays queued. |
+| `smile.chat.max-decode-batch` | `0` (same as max-batch-size) | Cap on requests per GPU `decodeStep`; `0` means use `max-batch-size` |
+| `smile.chat.prefill-token-budget` | `2048` | Max prompt tokens prefilled per scheduler tick (chunked prefill so long prompts do not stall decode) |
+| `smile.chat.admission-timeout-ms` | `120000` | Fail a waiting job if KV cannot admit it within this many ms (`0` = wait until Instant Eviction frees capacity) |
+| `smile.chat.mem-fraction-static` | `0.85` | SGLang `--mem-fraction-static`: fraction `y` of **total** GPU memory for the static region (weights + DeltaNet + KV). Leaves ~(1−y)×total free for activations (plus a small soft margin). Idle use near `y×total` is expected. Short-prompt OOM usually means activation peak/leak during forward — try `0.75` and/or a lower `max-seq-len` on 40GB TP=2 Qwen desktops. Pool is static (no per-request growth); when free KV is exhausted, generation stops early with partial output (`finish_reason=length`) |
+| `smile.chat.model-loader-threads` | `0` (auto) | Concurrent safetensors shard readers. Each worker loads one shard to CPU then fans out to TP ranks. Peak host RAM ≈ `threads × shard size`. `0` = `min(8, CPUs)`, capped by number of shard files. Use `1`–`2` on RAM-tight desktops |
+| `smile.chat.devices` | `0` | CUDA device index, or comma-separated TP list (`0,7`). `%dev` default: `7` |
+| `smile.chat.tensor-parallel-size` | `1` | TP world size; with a single `devices` entry expands to consecutive GPUs |
+| `smile.chat.pipeline-parallel-size` | `1` | Must stay `1` until multi-node PP |
+| `smile.chat.kv-cache.dtype` | _(unset)_ | KV-cache element dtype (`bfloat16`, `float16`, `float32`, `fp8_e4m3`, `fp8_e5m2`, …). When unset, uses `torch_dtype` from the model `config.json` |
+| `smile.chat.kv-cache.page-size` | `16` | Tokens per radix / KV pool page (prefix match and insert are page-aligned) |
+| `smile.chat.kv-cache.prefix-reuse` | `true` | Match/insert prompts in the radix KV tree (SGLang-style). Hybrid Qwen also needs `hybrid-prefix-replay` |
+| `smile.chat.kv-cache.hybrid-prefix-replay` | `true` | On a hybrid Qwen prefix hit, replay the matched prefix to restore DeltaNet state while sharing KV pages. Set `false` to force-disable hybrid prefix reuse |
 | `quarkus.datasource.db-kind` | `postgresql` | Database backend for chat history |
 | `quarkus.datasource.jdbc.url` | `jdbc:postgresql://localhost:5432/smile` | JDBC connection URL |
 | `quarkus.hibernate-orm.active` | `false` | Enable ORM (set `true` when database is available) |
@@ -662,6 +671,13 @@ is false or omitted (OpenAI default). The conversation (user message +
 assistant reply) is automatically persisted to the configured database after
 generation finishes.
 
+Serve runs an {@code InferenceEngine} continuous-batching loop (Fluid Injection
+admission, chunked prefill, batched decode, Instant Eviction on abort). Offline
+library callers may still use {@code LanguageModel.generate}; HTTP chat always
+goes through the engine. Client disconnect on an SSE stream aborts the
+{@code GenerationHandle}, which Instant-Evicts that request's KV pages without
+stopping peer in-flight generations.
+
 **Request body fields (`snake_case`):**
 
 | Field | Type | Default | Description |
@@ -669,7 +685,7 @@ generation finishes.
 | `model` | `string` | loaded model | Must match the loaded model id when set (HF repo id or local directory name); omit/empty to use the loaded model |
 | `messages` | `Message[]` | *required* | Ordered dialog turns |
 | `conversation` | `string` | `null` | Existing conversation id (`conv_<n>`) to append to |
-| `max_tokens` | `int` | `2048` | Max new tokens (legacy OpenAI name) |
+| `max_tokens` | `int` | remaining context | Max new tokens (legacy OpenAI name). Default: `max-model-len − prompt_len` |
 | `max_completion_tokens` | `int` | — | Alias for `max_tokens`; takes precedence when set |
 | `temperature` | `double` | `0.6` | Sampling temperature (higher = more random) |
 | `top_p` | `double` | `0.9` | Nucleus-sampling threshold |

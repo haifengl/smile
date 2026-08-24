@@ -66,6 +66,83 @@ public final class Native {
                 smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_cuda_mem_get_info"),
                 FunctionDescriptor.of(ValueLayout.JAVA_INT,
                         ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+        static final MethodHandle CUDA_ALLOCATOR_STATS = LINKER.downcallHandle(
+                smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_cuda_allocator_stats"),
+                FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+        static final MethodHandle MODULE_SET_REQUIRES_GRAD = LINKER.downcallHandle(
+                smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_module_set_requires_grad"),
+                FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+        static final MethodHandle TENSOR_NBYTES = LINKER.downcallHandle(
+                smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_tensor_nbytes"),
+                FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
+        static final MethodHandle TENSOR_DATA_PTR = LINKER.downcallHandle(
+                smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_tensor_data_ptr"),
+                FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+        static final MethodHandle TP_ALL_REDUCE_SUM = LINKER.downcallHandle(
+                smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_tp_all_reduce_sum"),
+                FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+        static final MethodHandle TP_BROADCAST = LINKER.downcallHandle(
+                smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_tp_broadcast"),
+                FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT));
+        static final MethodHandle NCCL_COMM_CREATE = LINKER.downcallHandle(
+                smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_nccl_comm_create"),
+                FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+        static final MethodHandle NCCL_COMM_FREE = LINKER.downcallHandle(
+                smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_nccl_comm_free"),
+                FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
+        static final MethodHandle NCCL_ALL_REDUCE_SUM = LINKER.downcallHandle(
+                smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_nccl_all_reduce_sum"),
+                FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
+        static final MethodHandle NCCL_BROADCAST = LINKER.downcallHandle(
+                smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_nccl_broadcast"),
+                FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS));
+        static final MethodHandle RECURRENT_GATED_DELTA = LINKER.downcallHandle(
+                smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_recurrent_gated_delta_rule"),
+                FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_INT));
+        static final java.util.Optional<MemorySegment> FLASHINFER_AVAILABLE_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_flashinfer_is_available");
+        static final MethodHandle FLASHINFER_AVAILABLE = FLASHINFER_AVAILABLE_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT)))
+                .orElse(null);
+        static final MethodHandle FLASHINFER_WS_CREATE = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_flashinfer_workspace_create")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG)))
+                .orElse(null);
+        static final MethodHandle FLASHINFER_WS_FREE = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_flashinfer_workspace_free")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle FLASHINFER_SET_AOT = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_flashinfer_set_aot_dir")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle FLASHINFER_PAGED = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_flashinfer_paged_attention")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
+                        ValueLayout.JAVA_INT, ValueLayout.JAVA_DOUBLE, ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle FLASHINFER_RAGGED = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_flashinfer_ragged_attention")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
+                        ValueLayout.JAVA_DOUBLE, ValueLayout.JAVA_INT, ValueLayout.ADDRESS)))
+                .orElse(null);
     }
 
     /**
@@ -181,6 +258,417 @@ public final class Native {
                         ? "smile_cuda_mem_get_info failed" : msg);
             }
             return new long[]{free.get(ValueLayout.JAVA_LONG, 0), total.get(ValueLayout.JAVA_LONG, 0)};
+        }
+    }
+
+    /**
+     * Queries CUDACachingAllocator live vs reserved bytes for a device.
+     *
+     * <p>{@code allocated} is storage owned by live tensors; {@code reserved} is
+     * the cudaMalloc footprint (includes free cached blocks that
+     * {@link smile.deep.tensor.Device#emptyCache()} can return to the driver).
+     *
+     * @param deviceIndex the CUDA device index.
+     * @return {@code long[2]} of {@code {allocatedBytes, reservedBytes}}.
+     * @throws RuntimeException if the query fails.
+     */
+    public static long[] cudaAllocatorStats(int deviceIndex) {
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment allocated = arena.allocate(ValueLayout.JAVA_LONG);
+            MemorySegment reserved = arena.allocate(ValueLayout.JAVA_LONG);
+            int rc;
+            try {
+                rc = (int) Bindings.CUDA_ALLOCATOR_STATS.invokeExact(
+                        deviceIndex, allocated, reserved);
+            } catch (Throwable t) {
+                throw new RuntimeException("smile_cuda_allocator_stats failed", t);
+            }
+            if (rc != 0) {
+                String msg = lastError();
+                throw new RuntimeException(msg.isEmpty()
+                        ? "smile_cuda_allocator_stats failed" : msg);
+            }
+            return new long[]{
+                    allocated.get(ValueLayout.JAVA_LONG, 0),
+                    reserved.get(ValueLayout.JAVA_LONG, 0)};
+        }
+    }
+
+    /**
+     * Sets {@code requires_grad} on every parameter of {@code module} (recursive).
+     *
+     * @param module        native {@code ST_Module} handle.
+     * @param requiresGrad  {@code true} to enable autograd on parameters.
+     */
+    public static void moduleSetRequiresGrad(MemorySegment module, boolean requiresGrad) {
+        try {
+            Bindings.MODULE_SET_REQUIRES_GRAD.invokeExact(module, requiresGrad ? 1 : 0);
+        } catch (Throwable t) {
+            throw new RuntimeException(lastError().isEmpty() ? t.getMessage() : lastError(), t);
+        }
+        String err = lastError();
+        if (!err.isEmpty()) {
+            throw new RuntimeException(err);
+        }
+    }
+
+    /**
+     * Returns the storage size of {@code tensor} in bytes.
+     *
+     * @param tensor the tensor.
+     * @return {@code tensor.nbytes()}.
+     */
+    public static long nbytes(Tensor tensor) {
+        try {
+            return (long) Bindings.TENSOR_NBYTES.invokeExact(tensor.handle());
+        } catch (Throwable t) {
+            throw new RuntimeException("smile_tensor_nbytes failed", t);
+        }
+    }
+
+    /**
+     * Returns a writable {@link MemorySegment} covering the contiguous storage
+     * of {@code tensor} ({@code nbytes} bytes). The tensor must be contiguous
+     * and remain reachable for the lifetime of the segment.
+     *
+     * @param tensor the contiguous tensor.
+     * @return the storage segment.
+     */
+    public static MemorySegment dataPtr(Tensor tensor) {
+        long nbytes = nbytes(tensor);
+        MemorySegment ptr;
+        try {
+            ptr = (MemorySegment) Bindings.TENSOR_DATA_PTR.invokeExact(tensor.handle());
+        } catch (Throwable t) {
+            throw new RuntimeException("smile_tensor_data_ptr failed", t);
+        }
+        if (ptr == null || ptr.address() == 0) {
+            if (nbytes == 0) {
+                return MemorySegment.NULL;
+            }
+            throw new RuntimeException("smile_tensor_data_ptr returned null");
+        }
+        return ptr.reinterpret(nbytes);
+    }
+
+    /**
+     * In-place sum all-reduce across tensors that already reside on distinct devices.
+     *
+     * @param tensors one tensor per TP rank (same shape/dtype).
+     */
+    public static void tpAllReduceSum(Tensor[] tensors) {
+        if (tensors == null || tensors.length <= 1) {
+            return;
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment arr = arena.allocate(ValueLayout.ADDRESS, tensors.length);
+            for (int i = 0; i < tensors.length; i++) {
+                arr.setAtIndex(ValueLayout.ADDRESS, i, tensors[i].handle());
+            }
+            int rc;
+            try {
+                rc = (int) Bindings.TP_ALL_REDUCE_SUM.invokeExact(arr, tensors.length);
+            } catch (Throwable t) {
+                throw new RuntimeException("smile_tp_all_reduce_sum failed", t);
+            }
+            if (rc != 0) {
+                String msg = lastError();
+                throw new RuntimeException(msg.isEmpty() ? "smile_tp_all_reduce_sum failed" : msg);
+            }
+        }
+    }
+
+    /**
+     * Broadcasts {@code tensors[root]} onto every other entry.
+     */
+    public static void tpBroadcast(Tensor[] tensors, int root) {
+        if (tensors == null || tensors.length <= 1) {
+            return;
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment arr = arena.allocate(ValueLayout.ADDRESS, tensors.length);
+            for (int i = 0; i < tensors.length; i++) {
+                arr.setAtIndex(ValueLayout.ADDRESS, i, tensors[i].handle());
+            }
+            int rc;
+            try {
+                rc = (int) Bindings.TP_BROADCAST.invokeExact(arr, tensors.length, root);
+            } catch (Throwable t) {
+                throw new RuntimeException("smile_tp_broadcast failed", t);
+            }
+            if (rc != 0) {
+                String msg = lastError();
+                throw new RuntimeException(msg.isEmpty() ? "smile_tp_broadcast failed" : msg);
+            }
+        }
+    }
+
+    /**
+     * Creates a local NCCL communicator for {@code deviceIndices}, or returns
+     * {@link MemorySegment#NULL} when NCCL is unavailable.
+     */
+    public static MemorySegment ncclCommCreate(int[] deviceIndices) {
+        if (deviceIndices == null || deviceIndices.length < 1) {
+            return MemorySegment.NULL;
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment devices = arena.allocate(ValueLayout.JAVA_INT, deviceIndices.length);
+            for (int i = 0; i < deviceIndices.length; i++) {
+                devices.setAtIndex(ValueLayout.JAVA_INT, i, deviceIndices[i]);
+            }
+            MemorySegment comm;
+            try {
+                comm = (MemorySegment) Bindings.NCCL_COMM_CREATE.invokeExact(
+                        deviceIndices.length, devices);
+            } catch (Throwable t) {
+                return MemorySegment.NULL;
+            }
+            if (comm == null || comm.address() == 0) {
+                return MemorySegment.NULL;
+            }
+            return comm;
+        }
+    }
+
+    /** Destroys an NCCL communicator from {@link #ncclCommCreate}. */
+    public static void ncclCommFree(MemorySegment comm) {
+        if (comm == null || comm.address() == 0) {
+            return;
+        }
+        try {
+            Bindings.NCCL_COMM_FREE.invokeExact(comm);
+        } catch (Throwable ignored) {
+            // best-effort
+        }
+    }
+
+    /**
+     * In-place NCCL sum all-reduce on {@code local} for {@code rank}.
+     * Every TP rank must call concurrently.
+     */
+    public static void ncclAllReduceSum(MemorySegment comm, int rank, Tensor local) {
+        if (comm == null || comm.address() == 0) {
+            throw new IllegalStateException("NCCL communicator is null");
+        }
+        int rc;
+        try {
+            rc = (int) Bindings.NCCL_ALL_REDUCE_SUM.invokeExact(comm, rank, local.handle());
+        } catch (Throwable t) {
+            throw new RuntimeException(lastError().isEmpty() ? t.getMessage() : lastError(), t);
+        }
+        if (rc != 0) {
+            String msg = lastError();
+            throw new RuntimeException(msg.isEmpty() ? "smile_nccl_all_reduce_sum failed" : msg);
+        }
+    }
+
+    /**
+     * NCCL broadcast of {@code local} from {@code root}. Every rank must call
+     * concurrently with its buffer.
+     */
+    public static void ncclBroadcast(MemorySegment comm, int rank, int root, Tensor local) {
+        if (comm == null || comm.address() == 0) {
+            throw new IllegalStateException("NCCL communicator is null");
+        }
+        int rc;
+        try {
+            rc = (int) Bindings.NCCL_BROADCAST.invokeExact(comm, rank, root, local.handle());
+        } catch (Throwable t) {
+            throw new RuntimeException(lastError().isEmpty() ? t.getMessage() : lastError(), t);
+        }
+        if (rc != 0) {
+            String msg = lastError();
+            throw new RuntimeException(msg.isEmpty() ? "smile_nccl_broadcast failed" : msg);
+        }
+    }
+
+    /**
+     * Fused recurrent gated delta rule. Mutates float {@code state} in place.
+     * Returns output {@code [B,S,H,Dv]} (caller owns).
+     *
+     * @return output tensor, or {@code null} if the native path is unavailable.
+     */
+    public static Tensor recurrentGatedDeltaRule(
+            Tensor query, Tensor key, Tensor value,
+            Tensor g, Tensor beta, Tensor state, boolean qkL2norm) {
+        MemorySegment out;
+        try {
+            out = (MemorySegment) Bindings.RECURRENT_GATED_DELTA.invokeExact(
+                    query.handle(), key.handle(), value.handle(),
+                    g.handle(), beta.handle(), state.handle(),
+                    qkL2norm ? 1 : 0);
+        } catch (Throwable t) {
+            String err = lastError();
+            if (err != null && !err.isEmpty()) {
+                throw new RuntimeException(err, t);
+            }
+            return null;
+        }
+        if (out == null || out.address() == 0) {
+            String err = lastError();
+            if (err != null && !err.isEmpty()) {
+                throw new RuntimeException(err);
+            }
+            return null;
+        }
+        return new Tensor(out);
+    }
+
+    /**
+     * Sets the FlashInfer AOT / jit-cache directory for the native loader.
+     *
+     * @param path absolute directory, or {@code null}/empty to clear.
+     */
+    public static void flashInferSetAotDir(String path) {
+        if (Bindings.FLASHINFER_SET_AOT == null) {
+            return;
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment cstr = (path == null || path.isEmpty())
+                    ? MemorySegment.NULL
+                    : arena.allocateFrom(path);
+            Bindings.FLASHINFER_SET_AOT.invokeExact(cstr);
+        } catch (Throwable t) {
+            throw new RuntimeException("smile_flashinfer_set_aot_dir failed", t);
+        }
+    }
+
+    /**
+     * @return {@code true} when FlashInfer paged attention is compiled into
+     * {@code libsmile_torch}.
+     */
+    public static boolean flashInferAvailable() {
+        if (Bindings.FLASHINFER_AVAILABLE == null) {
+            return false;
+        }
+        try {
+            return ((int) Bindings.FLASHINFER_AVAILABLE.invokeExact()) != 0;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    /**
+     * Creates a FlashInfer workspace on {@code deviceIndex}.
+     * @return native handle, or null when unavailable.
+     */
+    public static MemorySegment flashInferWorkspaceCreate(int deviceIndex, long workspaceBytes) {
+        if (Bindings.FLASHINFER_WS_CREATE == null) {
+            return null;
+        }
+        try {
+            MemorySegment h = (MemorySegment) Bindings.FLASHINFER_WS_CREATE.invokeExact(
+                    deviceIndex, workspaceBytes);
+            if (h == null || h.address() == 0) {
+                return null;
+            }
+            return h;
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    /** Frees a FlashInfer workspace handle. */
+    public static void flashInferWorkspaceFree(MemorySegment handle) {
+        if (handle == null || handle.address() == 0 || Bindings.FLASHINFER_WS_FREE == null) {
+            return;
+        }
+        try {
+            Bindings.FLASHINFER_WS_FREE.invokeExact(handle);
+        } catch (Throwable ignored) {
+            // best-effort
+        }
+    }
+
+    /**
+     * Runs paged attention using {@link smile.llm.attention.AttentionContext}.
+     *
+     * @param query query {@code [B, Hq, S, D]}
+     * @param mask  optional additive attention mask (same as torch_native); may be null
+     * @param ctx   paged context with pool + CSR + workspace
+     * @return output {@code [B, Hq, S, D]}
+     */
+    public static Tensor flashInferAttention(Tensor query, Tensor mask,
+                                             smile.llm.attention.AttentionContext ctx) {
+        if (Bindings.FLASHINFER_PAGED == null) {
+            throw new IllegalStateException("smile_flashinfer_paged_attention not in libsmile_torch");
+        }
+        var meta = ctx.kvMetadata();
+        var pool = ctx.kvPool();
+        var ws = ctx.workspace();
+        if (meta == null || pool == null || ws == null) {
+            throw new IllegalArgumentException("FlashInfer context incomplete");
+        }
+        // Ragged decode passes per-row lengths in CSR; cacheLen is row 0 only.
+        int cacheLenArg = ctx.isRagged() ? 0 : ctx.cacheLen();
+        try (var layerIdx = smile.deep.tensor.Index.of(ctx.layerId());
+             Tensor layerK = pool.keyCache().get(layerIdx);
+             Tensor layerV = pool.valueCache().get(layerIdx)) {
+            MemorySegment out;
+            try {
+                // invokeExact requires an exact MemorySegment type; a ternary in the
+                // argument list is typed as Object and fails the call-site check.
+                MemorySegment maskHandle = mask == null ? MemorySegment.NULL : mask.handle();
+                out = (MemorySegment) Bindings.FLASHINFER_PAGED.invokeExact(
+                        query.handle(),
+                        layerK.handle(),
+                        layerV.handle(),
+                        meta.pagedKvIndptr().handle(),
+                        meta.pagedKvIndices().handle(),
+                        meta.pagedKvLastPageLen().handle(),
+                        meta.pageSize(),
+                        ctx.numKvHeads(),
+                        ctx.headDim(),
+                        cacheLenArg,
+                        ctx.scale(),
+                        ctx.isCausal() ? 1 : 0,
+                        maskHandle,
+                        ws.handle());
+            } catch (Throwable t) {
+                throw new RuntimeException(lastError().isEmpty() ? t.getMessage() : lastError(), t);
+            }
+            return new Tensor(check(out));
+        }
+    }
+
+    /**
+     * Runs ragged contiguous self-attention ({@code BatchPrefillWithRaggedKVCache} or SDPA fallback).
+     *
+     * @param query {@code [N, H, D]} NHD
+     * @param key   {@code [N, H, D]}
+     * @param value {@code [N, H, D]}
+     * @param mask  optional additive mask; may be null
+     * @param ctx   ragged context with {@link smile.llm.attention.AttentionContext#raggedIndptr()}
+     * @return output {@code [N, H, D]}
+     */
+    public static Tensor flashInferRaggedAttention(Tensor query, Tensor key, Tensor value,
+                                                   Tensor mask,
+                                                   smile.llm.attention.AttentionContext ctx) {
+        if (Bindings.FLASHINFER_RAGGED == null) {
+            throw new IllegalStateException("smile_flashinfer_ragged_attention not in libsmile_torch");
+        }
+        int[] indptr = ctx.raggedIndptr();
+        if (indptr == null || indptr.length < 2) {
+            throw new IllegalArgumentException("FlashInfer ragged context requires indptr [B+1]");
+        }
+        try (Tensor indptrT = Tensor.of(indptr).to(query.device()).to(smile.deep.tensor.ScalarType.Int32)) {
+            MemorySegment out;
+            try {
+                MemorySegment maskHandle = mask == null ? MemorySegment.NULL : mask.handle();
+                out = (MemorySegment) Bindings.FLASHINFER_RAGGED.invokeExact(
+                        query.handle(),
+                        key.handle(),
+                        value.handle(),
+                        indptrT.handle(),
+                        ctx.numKvHeads(),
+                        ctx.headDim(),
+                        ctx.scale(),
+                        ctx.isCausal() ? 1 : 0,
+                        maskHandle);
+            } catch (Throwable t) {
+                throw new RuntimeException(lastError().isEmpty() ? t.getMessage() : lastError(), t);
+            }
+            return new Tensor(check(out));
         }
     }
 

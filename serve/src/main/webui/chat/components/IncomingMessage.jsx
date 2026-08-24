@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
  *
  * SMILE is free software: you can redistribute it and/or modify it
- * it under the terms of the GNU General Public License as published by
+ * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
@@ -16,14 +16,16 @@
  */
 import React, { useEffect } from 'react'
 import ProfileIcon from '../assets/profile.svg'
-import TextContent from './TextContent'
+import MessageParts from './MessageParts'
 import Timestamp from './Timestamp'
 import './Message.css'
 
 export default function IncomingMessage({
     user,
+    parts,
     text,
     timestamp,
+    streaming = false,
 }) {
     const [avatar, setAvatar] = React.useState(ProfileIcon)
 
@@ -32,32 +34,6 @@ export default function IncomingMessage({
             setAvatar(user.avatar)
         }
     }, [user])
-
-
-    let start = text.indexOf('<think>');
-    let end = text.indexOf('</think>');
-    if (start !== -1) {
-        let think = "";
-        let answer = "";
-        if (end !== -1) {
-            think = text.substring(start + 7, end).trimEnd();
-            answer = text.substring(end + 8);
-        } else {
-            think = text.substring(start + 7);
-        }
-
-        // think is not empty
-        if (think) {
-            // block quote
-            think = think.replaceAll('\n', '\n> ');
-            if (!think.startsWith('\n> ')) {
-                think = '> ' + think;
-            }
-            think += '\n';
-        }
-
-        text = think + answer;
-    }
 
     return (
         <div data-testid="incoming-message" className="incoming-wrapper">
@@ -75,11 +51,14 @@ export default function IncomingMessage({
 
                 <div className="incoming-message-container">
                     <div className="incoming-background"/>
-                        <TextContent>
-                            {text}
-                        </TextContent>
-                    </div>
+                    <MessageParts
+                        parts={parts}
+                        text={text}
+                        downloadable
+                        streaming={streaming}
+                    />
                 </div>
+            </div>
         </div>
     )
 }

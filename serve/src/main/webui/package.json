@@ -10,6 +10,11 @@
     "test": "node --test infer/imagenetTopK.test.js"
   },
   "dependencies": {
+    "@rjsf/core": "^6.8.0",
+    "@rjsf/validator-ajv8": "^6.8.0",
+    "html-to-image": "^1.11.13",
+    "mermaid": "^11.17.0",
+    "openai": "^7.5.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-markdown": "^10.1.0",
@@ -17,15 +22,12 @@
     "rehype-katex": "^7.0.1",
     "remark-gemoji": "^8.0.0",
     "remark-gfm": "^4.0.1",
-    "remark-math": "^6.0.0",
-    "openai": "^7.4.0",
-    "@rjsf/core": "^6.7.1",
-    "@rjsf/validator-ajv8": "^6.7.1"
+    "remark-math": "^6.0.0"
   },
   "devDependencies": {
     "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.4",
-    "@vitejs/plugin-react": "^6.0.5",
-    "vite": "8.2.1"
+    "@types/react-dom": "^19.2.5",
+    "@vitejs/plugin-react": "^6.1.0",
+    "vite": "8.2.2"
   }
 }

@@ -15,16 +15,44 @@
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
 import React, { useEffect, useRef, useState } from 'react'
+import {
+  classifyFile,
+  sizeLimitFor,
+  uploadMedia,
+} from '../mediaUtils'
+import FileTypeIcon from './FileTypeIcon'
 import './MessageInput.css'
+
+const ACCEPT = 'image/*,video/*,audio/*,.txt,.md,.csv,.json,text/plain'
+
+function PlusIcon({ color }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
+      <path
+        d="M12 5v14M5 12h14"
+        stroke={color}
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
 
 export default function MessageInput({
     onSendMessage,
+    conversationId,
+    disabled = false,
     placeholder = 'Send a message...',
     theme = '#8dd4e8'
 }) {
     const [text, setText] = useState('')
     const [submit, setSubmit] = useState(false)
+    const [attachments, setAttachments] = useState([])
+    const [error, setError] = useState('')
+    const [uploading, setUploading] = useState(false)
+    const [dragOver, setDragOver] = useState(false)
     const textareaRef = useRef(null)
+    const fileInputRef = useRef(null)
 
     const resizeTextarea = () => {
         const el = textareaRef.current
@@ -43,14 +71,112 @@ export default function MessageInput({
         resizeTextarea()
     }, [text])
 
-    const handleSubmit = () => {
-        if (!submit && text.trim().length > 0) {
-            onSendMessage && onSendMessage(text.trim())
+    useEffect(() => {
+        return () => {
+            attachments.forEach((att) => {
+                if (att.previewUrl) {
+                    URL.revokeObjectURL(att.previewUrl)
+                }
+            })
+        }
+    }, [attachments])
+
+    const canSend = !disabled && !uploading
+        && (text.trim().length > 0 || attachments.length > 0)
+    const canAttach = !disabled && !uploading
+
+    const openFileChooser = () => {
+        if (canAttach) {
+            fileInputRef.current?.click()
+        }
+    }
+
+    const addFiles = async (fileList) => {
+        if (!fileList?.length || disabled) return
+        setError('')
+        const next = [...attachments]
+
+        for (const file of fileList) {
+            const kind = classifyFile(file)
+            const limit = sizeLimitFor(kind)
+            if (file.size > limit) {
+                setError(`${file.name} exceeds ${Math.round(limit / (1024 * 1024))} MiB limit`)
+                continue
+            }
+
+            let textContent
+            if (kind === 'text') {
+                try {
+                    textContent = await file.text()
+                } catch {
+                    setError(`Failed to read ${file.name}`)
+                    continue
+                }
+            }
+
+            const previewUrl = (kind === 'image' || kind === 'video' || kind === 'audio')
+                ? URL.createObjectURL(file)
+                : null
+            next.push({
+                id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${file.name}`,
+                file,
+                kind,
+                name: file.name,
+                mime: file.type || 'application/octet-stream',
+                size: file.size,
+                previewUrl,
+                ...(textContent != null ? { textContent } : {}),
+            })
+        }
+        setAttachments(next)
+    }
+
+    const removeAttachment = (id) => {
+        setAttachments((prev) => {
+            const target = prev.find((a) => a.id === id)
+            if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl)
+            return prev.filter((a) => a.id !== id)
+        })
+    }
+
+    const handleSubmit = async () => {
+        if (!canSend || submit) return
+        if (!conversationId) {
+            setError('Conversation not ready yet')
+            return
+        }
+
+        setSubmit(true)
+        setUploading(true)
+        setError('')
+
+        try {
+            const uploaded = []
+            for (const att of attachments) {
+                const result = await uploadMedia(conversationId, att.file)
+                uploaded.push({
+                    type: att.kind,
+                    contentId: result.content_id,
+                    url: result.url,
+                    mime: result.mime_type || att.mime,
+                    name: result.filename || att.name,
+                    size: result.size_bytes ?? att.size,
+                    ...(att.textContent != null ? { textContent: att.textContent } : {}),
+                })
+                if (att.previewUrl) URL.revokeObjectURL(att.previewUrl)
+            }
+
+            onSendMessage?.({
+                text: text.trim(),
+                attachments: uploaded,
+            })
             setText('')
-            setSubmit(true)
-            setTimeout(() => {
-                setSubmit(false)
-            }, 500)
+            setAttachments([])
+        } catch (err) {
+            setError(err.message || 'Upload failed')
+        } finally {
+            setUploading(false)
+            setTimeout(() => setSubmit(false), 500)
         }
     }
 
@@ -74,16 +200,73 @@ export default function MessageInput({
 
     return (
         <div className="message-input">
-            <form className="input-form"
+            {attachments.length > 0 && (
+                <div className="attachment-chips" aria-label="Selected files">
+                    {attachments.map((att) => (
+                        <div key={att.id} className="attachment-chip">
+                            {att.kind === 'image' && att.previewUrl ? (
+                                <img src={att.previewUrl} alt="" className="chip-thumb" />
+                            ) : (
+                                <FileTypeIcon kind={att.kind} name={att.name} mime={att.mime} className="chip-file-icon" />
+                            )}
+                            <span className="chip-name" title={att.name}>{att.name}</span>
+                            <button
+                                type="button"
+                                className="chip-remove"
+                                onClick={() => removeAttachment(att.id)}
+                                disabled={uploading}
+                                title="Remove file"
+                                aria-label={`Remove ${att.name}`}
+                            >
+                                ×
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            )}
+            {error && <div className="input-error" role="alert">{error}</div>}
+            <form className={`input-form${dragOver ? ' drag-over' : ''}`}
                 data-testid="message-form"
                 onSubmit={(e) => {
                     e.preventDefault()
                     handleSubmit()
                 }}
+                onDragOver={(e) => {
+                    e.preventDefault()
+                    if (canAttach) setDragOver(true)
+                }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={(e) => {
+                    e.preventDefault()
+                    setDragOver(false)
+                    if (canAttach) addFiles(e.dataTransfer.files)
+                }}
             >
-                <div className="attach-placeholder" />
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept={ACCEPT}
+                    className="file-input-hidden"
+                    tabIndex={-1}
+                    aria-hidden="true"
+                    onChange={(e) => {
+                        addFiles(e.target.files)
+                        e.target.value = ''
+                    }}
+                />
                 <div className="input-container">
                     <div className="input-background" style={{ backgroundColor: theme }}/>
+                    <button
+                        type="button"
+                        className="upload-button"
+                        onClick={openFileChooser}
+                        disabled={!canAttach}
+                        title="Upload files"
+                        aria-label="Upload files"
+                    >
+                        <PlusIcon color={canAttach ? '#374151' : '#9ca3af'} />
+                    </button>
                     <div className="input-element-container">
                         <textarea
                             ref={textareaRef}
@@ -91,7 +274,8 @@ export default function MessageInput({
                             data-testid="message-input"
                             rows={1}
                             value={text}
-                            placeholder={placeholder}
+                            disabled={disabled || uploading}
+                            placeholder={uploading ? 'Uploading…' : placeholder}
                             onChange={(e) => setText(e.target.value)}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -103,7 +287,10 @@ export default function MessageInput({
                     </div>
                 </div>
 
-                <div className="send-container" onClick={handleSubmit}>
+                <div
+                    className={`send-container${canSend ? ' active' : ''}`}
+                    onClick={canSend ? handleSubmit : undefined}
+                >
                     {button}
                 </div>
             </form>

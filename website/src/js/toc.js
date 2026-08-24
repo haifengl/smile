@@ -1,134 +1,134 @@
 /*!
- * samaxesJS JavaScript Library
- * jQuery TOC Plugin v1.1.3
- * http://code.google.com/p/samaxesjs/
- *
- * Copyright (c) 2011 samaxes.com
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Vanilla TOC builder (replaces jQuery samaxesJS plugin).
  */
+(function (global) {
+  'use strict';
 
-(function($) {
-    /*
-     * The TOC plugin dynamically builds a table of contents from the headings in
-     * a document and prepends legal-style section numbers to each of the headings.
-     */
-    $.fn.toc = function(options) {
-        var opts = $.extend({}, $.fn.toc.defaults, options);
-        var toc = this.append('<ul></ul>').children('ul');
-        var headers = {h1: 0, h2: 0, h3: 0, h4: 0, h5: 0, h6: 0};
-        var index = 0;
-        var indexes = {h1: 0, h2: 0, h3: 0, h4: 0, h5: 0, h6: 0};
-        for (var i = 1; i <= 6; i++) {
-            indexes['h' + i] = (opts.exclude.match(new RegExp('h' + i, 'i')) === null && $('h' + i).length > 0) ? ++index : 0;
+  const DEFAULTS = {
+    exclude: 'h1, h5, h6',
+    context: '',
+    autoId: false,
+    numerate: true,
+  };
+
+  function generateId(text) {
+    return text.replace(/[ <#\/\\?&]/g, '_');
+  }
+
+  function parseExclude(exclude) {
+    return exclude.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+  }
+
+  function isExcluded(tag, excluded) {
+    return excluded.includes(tag.toLowerCase());
+  }
+
+  function headerLevel(tag) {
+    return parseInt(tag.slice(1), 10);
+  }
+
+  function buildToc(root, options) {
+    const opts = { ...DEFAULTS, ...options };
+    const excluded = parseExclude(opts.exclude);
+    const scope = opts.context ? document.querySelector(opts.context) : document;
+    if (!scope) return;
+
+    root.innerHTML = '';
+    const topUl = document.createElement('ul');
+    root.appendChild(topUl);
+
+    const headers = { h1: 0, h2: 0, h3: 0, h4: 0, h5: 0, h6: 0 };
+    const indexes = { h1: 0, h2: 0, h3: 0, h4: 0, h5: 0, h6: 0 };
+    let index = 0;
+    for (let i = 1; i <= 6; i++) {
+      const tag = `h${i}`;
+      indexes[tag] = !isExcluded(tag, excluded) && scope.querySelectorAll(tag).length > 0 ? ++index : 0;
+    }
+
+    const headingNodes = scope.querySelectorAll('h1, h2, h3, h4, h5, h6');
+    headingNodes.forEach((el) => {
+      const tag = el.tagName.toLowerCase();
+      if (isExcluded(tag, excluded)) return;
+
+      const level = headerLevel(tag);
+      if (opts.numerate) {
+        checkContainer(headers[level], topUl);
+        updateNumeration(headers, tag);
+        if (opts.autoId && !el.id) {
+          el.id = generateId(el.textContent.trim());
         }
+        el.textContent = addNumeration(headers, tag, el.textContent);
+      } else if (opts.autoId && !el.id) {
+        el.id = generateId(el.textContent.trim());
+      }
 
-        return this.each(function() {
-            $($.find(opts.context + ' :header')).not(opts.exclude).each(function() {
-                var $this = $(this);
-                for (var i = 6; i >= 1; i--) {
-                    if ($this.is('h' + i)) {
-                        if (opts.numerate) {
-                            checkContainer(headers['h' + i], toc);
-                            updateNumeration(headers, 'h' + i);
-                            if (opts.autoId && !$this.attr('id')) {
-                                $this.attr('id', generateId($this.text()));
-                            }
-                            $this.text(addNumeration(headers, 'h' + i, $this.text()));
-                        }
-                        appendToTOC(toc, indexes['h' + i], $this.attr('id'), $this.text());
-                    }
-                }
-            });
-        });
-    };
+      appendToToc(topUl, indexes[tag], el.id, el.textContent.trim());
+    });
+  }
 
-    /*
-     * Checks if the last node is an 'ul' element.
-     * If not, a new one is created.
-     */
-    function checkContainer(header, toc) {
-        if (header === 0 && toc.find(':last').length !== 0 && !toc.find(':last').is('ul')) {
-            toc.find('li:last').append('<ul></ul>');
-        }
+  function checkContainer(headerCount, toc) {
+    const last = toc.lastElementChild;
+    if (headerCount === 0 && last && last.tagName !== 'UL') {
+      const li = toc.querySelector('li:last-child');
+      if (li && !li.querySelector('ul')) {
+        li.insertAdjacentHTML('beforeend', '<ul></ul>');
+      }
+    }
+  }
+
+  function updateNumeration(headers, header) {
+    Object.keys(headers).forEach((key) => {
+      if (key === header) {
+        headers[key] += 1;
+      } else if (headerLevel(key) > headerLevel(header)) {
+        headers[key] = 0;
+      }
+    });
+  }
+
+  function addNumeration(headers, header, text) {
+    let numeration = '';
+    Object.keys(headers).forEach((key) => {
+      if (headerLevel(key) <= headerLevel(header) && headers[key] > 0) {
+        numeration += `${headers[key]}.`;
+      }
+    });
+    return `${numeration} ${text}`.trim();
+  }
+
+  function appendToToc(toc, depthIndex, id, text) {
+    let parent = toc;
+    for (let i = 1; i < depthIndex; i++) {
+      let lastLi = parent.querySelector(':scope > li:last-child');
+      if (!lastLi) {
+        lastLi = document.createElement('li');
+        parent.appendChild(lastLi);
+      }
+      let childUl = lastLi.querySelector(':scope > ul');
+      if (!childUl) {
+        childUl = document.createElement('ul');
+        lastLi.appendChild(childUl);
+      }
+      parent = childUl;
     }
 
-    /*
-     * Updates headers numeration.
-     */
-    function updateNumeration(headers, header) {
-        $.each(headers, function(i, val) {
-            if (i === header)  {
-                ++headers[i];
-            } else if (i > header) {
-                headers[i] = 0;
-            }
-        });
+    const li = document.createElement('li');
+    if (!id) {
+      li.textContent = text;
+    } else {
+      const a = document.createElement('a');
+      a.href = `#${id}`;
+      a.className = 'scroll';
+      a.textContent = text;
+      li.appendChild(a);
     }
+    parent.appendChild(li);
+  }
 
-    /*
-     * Generate an anchor id from a string by replacing unwanted characters.
-     */
-    function generateId(text) {
-        return text.replace(/[ <#\/\\?&]/g, '_');
-    }
-
-    /*
-     * Prepends the numeration to a heading.
-     */
-    function addNumeration(headers, header, text) {
-        var numeration = '';
-
-        $.each(headers, function(i, val) {
-            if (i <= header && headers[i] > 0)  {
-                numeration += headers[i] + '.';
-            }
-        });
-
-        return numeration + ' ' + text;
-    }
-
-    /*
-     * Appends a new node to the TOC.
-     */
-    function appendToTOC(toc, index, id, text) {
-        var parent = toc;
-
-        for (var i = 1; i < index; i++) {
-            if (parent.find('> li:last > ul').length === 0) {
-                parent.append('<li><ul></ul></li>');
-            }
-            parent = parent.find('> li:last > ul:first');
-        }
-
-        var $li = $('<li></li>');
-        if (id === '') {
-            $li.text(text);
-        } else {
-            var $a = $('<a></a>');
-            $a.attr('href', '#' + id);
-            $a.attr('class', 'scroll');
-            $a.text(text);
-            $li.append($a);
-        }
-        parent.append($li);
-    }
-
-    $.fn.toc.defaults = {
-        exclude: 'h1, h5, h6',
-        context: '',
-        autoId: false,
-        numerate: true
-    };
-})(jQuery);
-
+  global.SmileTOC = {
+    build(selector, options) {
+      const root = typeof selector === 'string' ? document.querySelector(selector) : selector;
+      if (root) buildToc(root, options);
+    },
+  };
+})(window);

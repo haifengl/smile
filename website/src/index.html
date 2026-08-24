@@ -3,7 +3,7 @@ layout: layout.njk
 permalink: "{{ page.filePathStem }}.html"
 title: SMILE - Statistical Machine Intelligence &amp; Learning Engine
 ---
-<div class="col-md-3 col-md-push-9 hidden-xs hidden-sm">
+<div class="col-md-3 order-md-last d-none d-md-block">
   <div class="news" style="margin-bottom: 20px;">
     <h5>Latest News</h5>
     <ul class="list-unstyled">
@@ -62,7 +62,7 @@ title: SMILE - Statistical Machine Intelligence &amp; Learning Engine
     </form>
     </div>
     -->
-    <a href="https://github.com/haifengl/smile/releases" class="btn btn-primary btn-lg btn-block" style="margin-bottom: 30px;">
+    <a href="https://github.com/haifengl/smile/releases" class="btn btn-primary btn-lg w-100" style="margin-bottom: 30px;">
       Download
     </a>
   </div>
@@ -89,6 +89,40 @@ title: SMILE - Statistical Machine Intelligence &amp; Learning Engine
       Built-in Algorithms:
     </p>
     <dl>
+      <dt><a href="api/java/smile/llm/package-summary.html">Large Language Models</a></dt>
+      <dd><p>
+        <a href="api/java/smile/llm/LanguageModel.html">Language Model</a>,
+        <a href="api/java/smile/llm/ChatCompletion.html">Chat Completion</a>,
+        <a href="api/java/smile/llm/Message.html">Message</a>,
+        <a href="api/java/smile/llm/model/llama/Llama.html">Llama</a>,
+        <a href="api/java/smile/llm/model/qwen/Qwen.html">Qwen</a>,
+        <a href="api/java/smile/llm/engine/InferenceEngine.html">Inference Engine</a>,
+        <a href="api/java/smile/llm/tokenizer/Tiktoken.html">Tiktoken</a>,
+        <a href="api/java/smile/llm/model/llama/GroupedQueryAttention.html">Grouped-Query Attention</a>,
+        <a href="api/java/smile/llm/transformer/RotaryPositionalEncoding.html">RoPE</a>,
+        <a href="api/java/smile/llm/transformer/FeedForward.html">SwiGLU Feed-Forward</a>,
+        <a href="api/java/smile/llm/cache/KvCachePool.html">KV Cache</a>
+      </p></dd>
+
+      <dt><a href="api/java/smile/deep/package-summary.html">Deep Learning</a></dt>
+      <dd><p>
+        <a href="api/java/smile/deep/Model.html">Model</a>,
+        <a href="api/java/smile/deep/layer/Layer.html">Layers</a>,
+        <a href="api/java/smile/deep/layer/SequentialBlock.html">Sequential Block</a>,
+        <a href="api/java/smile/deep/layer/LinearLayer.html">Linear</a>,
+        <a href="api/java/smile/deep/layer/Conv2dLayer.html">Conv2d</a>,
+        <a href="api/java/smile/deep/layer/EmbeddingLayer.html">Embedding</a>,
+        <a href="api/java/smile/deep/layer/BatchNorm2dLayer.html">Batch Norm</a>,
+        <a href="api/java/smile/deep/layer/RMSNormLayer.html">RMS Norm</a>,
+        <a href="api/java/smile/deep/layer/DropoutLayer.html">Dropout</a>,
+        <a href="api/java/smile/deep/tensor/Tensor.html">Tensor</a>,
+        <a href="api/java/smile/deep/tensor/Device.html">Device</a>,
+        <a href="api/java/smile/deep/Optimizer.html">Optimizer</a>,
+        <a href="api/java/smile/deep/Loss.html">Loss</a>,
+        <a href="api/java/smile/deep/Dataset.html">Dataset</a>,
+        <a href="api/java/smile/vision/EfficientNet.html">EfficientNet</a>
+      </p></dd>
+
       <dt><a href="api/java/smile/classification/package-summary.html">Classification</a></dt>
       <dd><p>
         <a href="api/java/smile/classification/DecisionTree.html">Decision Trees</a>,
@@ -125,7 +159,8 @@ title: SMILE - Statistical Machine Intelligence &amp; Learning Engine
         <a href="api/java/smile/regression/MLP.html">Neural Networks</a>,
         <a href="api/java/smile/regression/SVR.html">Support Vector Regression</a>,
         <a href="api/java/smile/regression/GaussianProcessRegression.html">Gaussian Process</a>,
-        <a href="api/java/smile/glm/GLM.html">Generalized Linear Model</a>
+        <a href="api/java/smile/regression/glm/GLM.html">Generalized Linear Models</a>,
+        <a href="api/java/smile/regression/gam/package-summary.html">Generalized Additive Models</a>
       </p></dd>
 
       <dt><a href="api/java/smile/feature/package-summary.html">Feature Engineering and Selection</a></dt>
@@ -303,15 +338,26 @@ title: SMILE - Statistical Machine Intelligence &amp; Learning Engine
   </div>
 </div>
 
-<div class="col-md-9 col-md-pull-3">
-  <div class="jumbotron">
+<div class="col-md-9 order-md-first">
+  <div class="hero-panel">
     <p class="lead">
       <strong>SMILE</strong> is a comprehensive, high-performance machine learning engine for the JVM.
       From classic algorithms to GPU-accelerated deep learning and LLM inference —
       all in pure Java, Scala, or Kotlin.
       <a href="quickstart.html">Get started in 5 minutes &rarr;</a>
     </p>
-    <div id="testimonial-slider" class="owl-carousel owl-theme">
+    <div id="testimonialCarousel" class="carousel slide testimonial-carousel" data-bs-ride="carousel">
+      <div class="carousel-indicators">
+        <button type="button" data-bs-target="#testimonialCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Testimonial 1"></button>
+        <button type="button" data-bs-target="#testimonialCarousel" data-bs-slide-to="1" aria-label="Testimonial 2"></button>
+        <button type="button" data-bs-target="#testimonialCarousel" data-bs-slide-to="2" aria-label="Testimonial 3"></button>
+        <button type="button" data-bs-target="#testimonialCarousel" data-bs-slide-to="3" aria-label="Testimonial 4"></button>
+        <button type="button" data-bs-target="#testimonialCarousel" data-bs-slide-to="4" aria-label="Testimonial 5"></button>
+        <button type="button" data-bs-target="#testimonialCarousel" data-bs-slide-to="5" aria-label="Testimonial 6"></button>
+        <button type="button" data-bs-target="#testimonialCarousel" data-bs-slide-to="6" aria-label="Testimonial 7"></button>
+      </div>
+      <div class="carousel-inner">
+      <div class="carousel-item active">
       <div class="testimonial">
         <div class="testimonial-content">
           <p class="testimonial-description">
@@ -327,7 +373,9 @@ title: SMILE - Statistical Machine Intelligence &amp; Learning Engine
           </div>
         </div>
       </div>
+      </div>
 
+      <div class="carousel-item">
       <div class="testimonial">
         <div class="testimonial-content">
           <p class="testimonial-description">
@@ -342,7 +390,9 @@ title: SMILE - Statistical Machine Intelligence &amp; Learning Engine
           </div>
         </div>
       </div>
+      </div>
 
+      <div class="carousel-item">
       <div class="testimonial">
         <div class="testimonial-content">
           <p class="testimonial-description">
@@ -357,7 +407,9 @@ title: SMILE - Statistical Machine Intelligence &amp; Learning Engine
           </div>
         </div>
       </div>
+      </div>
 
+      <div class="carousel-item">
       <div class="testimonial">
         <div class="testimonial-content">
           <p class="testimonial-description">
@@ -372,7 +424,9 @@ title: SMILE - Statistical Machine Intelligence &amp; Learning Engine
           </div>
         </div>
       </div>
+      </div>
 
+      <div class="carousel-item">
       <div class="testimonial">
         <div class="testimonial-content">
           <p class="testimonial-description">
@@ -387,7 +441,9 @@ title: SMILE - Statistical Machine Intelligence &amp; Learning Engine
           </div>
         </div>
       </div>
+      </div>
 
+      <div class="carousel-item">
       <div class="testimonial">
         <div class="testimonial-content">
           <p class="testimonial-description">
@@ -404,7 +460,9 @@ title: SMILE - Statistical Machine Intelligence &amp; Learning Engine
           </div>
         </div>
       </div>
+      </div>
 
+      <div class="carousel-item">
       <div class="testimonial">
         <div class="testimonial-content">
           <p class="testimonial-description">
@@ -420,14 +478,24 @@ title: SMILE - Statistical Machine Intelligence &amp; Learning Engine
           </div>
         </div>
       </div>
+      </div>
+      </div>
+      <button class="carousel-control-prev" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+      </button>
     </div>
 
-    <div id="github-buttons-wrapper" style="margin-top: 30px;">
-      <a class="github-button" href="https://github.com/haifengl/smile" data-icon="octicon-star" data-size="large" data-show-count="true" aria-label="Star haifengl/smile on GitHub">Star</a>
-      <a class="github-button" href="https://github.com/haifengl" data-size="large" aria-label="Follow @haifengl on GitHub">Follow @haifengl</a>
-      <a class="github-button" href="https://github.com/haifengl/smile/fork" data-icon="octicon-repo-forked" data-size="large" data-show-count="true" aria-label="Fork haifengl/smile on GitHub">Fork</a>
+    <div id="github-buttons-wrapper" class="github-actions" style="margin-top: 30px;">
+      <a class="btn btn-outline-dark btn-sm" href="https://github.com/haifengl/smile" target="_blank" rel="noopener">&#9733; Star on GitHub</a>
+      <a class="btn btn-outline-dark btn-sm" href="https://github.com/haifengl" target="_blank" rel="noopener">Follow @haifengl</a>
+      <a class="btn btn-outline-dark btn-sm" href="https://github.com/haifengl/smile/fork" target="_blank" rel="noopener">Fork</a>
     </div>
-  </div><!-- /.jumbotron -->
+  </div><!-- /.hero-panel -->
 
   <!-- ── Feature row: Speed ─────────────────────────────────────────── -->
   <div class="row row-padded">
@@ -466,17 +534,17 @@ title: SMILE - Statistical Machine Intelligence &amp; Learning Engine
       </p>
     </div>
     <div class="col-md-5 col-sm-5 col-padded-top col-center">
-      <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_1" data-toggle="tab">Scala</a></li>
-        <li><a href="#kotlin_1" data-toggle="tab">Kotlin</a></li>
-        <li><a href="#clojure_1" data-toggle="tab">Clojure</a></li>
-        <li><a href="#groovy_1" data-toggle="tab">Groovy</a></li>
+      <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_1" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_1" type="button" role="tab">Scala</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_1" type="button" role="tab">Kotlin</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#clojure_1" type="button" role="tab">Clojure</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#groovy_1" type="button" role="tab">Groovy</button></li>
       </ul>
       <div class="tab-content">
-        <div class="tab-pane active" id="java_1">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_1">
           <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
 var iris = Read.arff("iris.arff");
 
 var model = RandomForest.fit(Formula.lhs("class"), iris);
@@ -486,9 +554,9 @@ println(model.metrics());
           </div>
           <div class="caption">DataFrame, Model Fitting, and Metrics</div>
         </div>
-        <div class="tab-pane" id="scala_1">
+        <div class="tab-pane fade" role="tabpanel" id="scala_1">
           <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-scala"><code>
+          <pre class="language-scala"><code class="language-scala">
 val iris = read.arff("iris.arff")
 
 val model = randomForest("class" ~, iris)
@@ -498,9 +566,9 @@ println(model.metrics)
           </div>
           <div class="caption">DataFrame, Model Fitting, and Metrics</div>
         </div>
-        <div class="tab-pane" id="kotlin_1">
+        <div class="tab-pane fade" role="tabpanel" id="kotlin_1">
           <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-kotlin"><code>
+          <pre class="language-kotlin"><code class="language-kotlin">
 val iris = read.arff("iris.arff")
 
 val model = randomForest(Formula.lhs("class"), iris)
@@ -510,9 +578,9 @@ println(model.metrics())
           </div>
           <div class="caption">DataFrame, Model Fitting, and Metrics</div>
         </div>
-        <div class="tab-pane" id="clojure_1">
+        <div class="tab-pane fade" role="tabpanel" id="clojure_1">
           <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-clj"><code>
+          <pre class="language-clojure"><code class="language-clojure">
 (let [iris (read-arff
             "data/weka/iris.arff")
       model (random-forest
@@ -522,9 +590,9 @@ println(model.metrics())
           </div>
           <div class="caption">DataFrame, Model Fitting, and Metrics</div>
         </div>
-        <div class="tab-pane" id="groovy_1">
+        <div class="tab-pane fade" role="tabpanel" id="groovy_1">
           <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-groovy"><code>
+          <pre class="language-groovy"><code class="language-groovy">
 var iris = Read.arff("iris.arff")
 
 var model = RandomForest.fit(Formula.lhs("class"), iris)
@@ -555,14 +623,14 @@ println model.metrics()
       </p>
     </div>
     <div class="col-md-5 col-sm-5 col-padded-top col-center">
-      <ul class="nav nav-tabs">
-        <li class="active"><a href="#llm_gen" data-toggle="tab">Generate</a></li>
-        <li><a href="#llm_chat" data-toggle="tab">Chat</a></li>
+      <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#llm_gen" type="button" role="tab">Generate</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#llm_chat" type="button" role="tab">Chat</button></li>
       </ul>
       <div class="tab-content">
-        <div class="tab-pane active" id="llm_gen">
+        <div class="tab-pane fade show active" role="tabpanel" id="llm_gen">
           <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
 var llama = Llama.build(
     "model/Meta-Llama-3-8B-Instruct",
     "model/.../tokenizer.model",
@@ -577,9 +645,9 @@ var result = llama.generate(prompts, 200,
           </div>
           <div class="caption">Text Generation</div>
         </div>
-        <div class="tab-pane" id="llm_chat">
+        <div class="tab-pane fade" role="tabpanel" id="llm_chat">
           <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
 var reply = llama.chat(
     new Message[]{
         Message.system("Be concise."),
@@ -614,14 +682,14 @@ System.out.println(reply.content());
       </p>
     </div>
     <div class="col-md-5 col-sm-5 col-padded-top col-center">
-      <ul class="nav nav-tabs">
-        <li class="active"><a href="#dl_vision" data-toggle="tab">Vision</a></li>
-        <li><a href="#dl_train" data-toggle="tab">Training</a></li>
+      <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#dl_vision" type="button" role="tab">Vision</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#dl_train" type="button" role="tab">Training</button></li>
       </ul>
       <div class="tab-content">
-        <div class="tab-pane active" id="dl_vision">
+        <div class="tab-pane fade show active" role="tabpanel" id="dl_vision">
           <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
 // Pretrained EfficientNet-V2-S
 var model = EfficientNet.V2S();
 var img = ImageIO.read(
@@ -637,9 +705,9 @@ try (var logits = model.forward(img)) {
           </div>
           <div class="caption">ImageNet Classification</div>
         </div>
-        <div class="tab-pane" id="dl_train">
+        <div class="tab-pane fade" role="tabpanel" id="dl_train">
           <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
 var mlp = new SequentialBlock(
     Layer.relu(784, 256),
     Layer.relu(256, 128),
@@ -718,15 +786,15 @@ mlp.train(10, dataset,
       </p>
     </div>
     <div class="col-md-5 col-sm-5 col-padded-top col-center">
-      <ul class="nav nav-tabs">
-        <li class="active"><a href="#scala_2" data-toggle="tab">Matrix</a></li>
-        <li><a href="#scala_3" data-toggle="tab">Statistics</a></li>
-        <li><a href="#scala_4" data-toggle="tab">CAS</a></li>
+      <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#scala_2" type="button" role="tab">Matrix</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_3" type="button" role="tab">Statistics</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_4" type="button" role="tab">CAS</button></li>
       </ul>
       <div class="tab-content">
-        <div class="tab-pane active" id="scala_2">
+        <div class="tab-pane fade show active" role="tabpanel" id="scala_2">
           <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
 var A = Matrix.randn(3, 3);
 double[] x = {1.0, 2.0, 3.0};
 var lu = A.lu();
@@ -736,9 +804,9 @@ lu.inverse().mm(A);
           </div>
           <div class="caption">Linear Algebra</div>
         </div>
-        <div class="tab-pane" id="scala_3">
+        <div class="tab-pane fade" role="tabpanel" id="scala_3">
           <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
 int[] bins1 = {8, 13, 16, 10, 3};
 
 int[] bins2 = {4,  9, 14, 16, 7};
@@ -748,9 +816,9 @@ Hypothesis.chisq.test(bins1, bins2);
           </div>
           <div class="caption">Statistics</div>
         </div>
-        <div class="tab-pane" id="scala_4">
+        <div class="tab-pane fade" role="tabpanel" id="scala_4">
           <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-scala"><code>
+          <pre class="language-scala"><code class="language-scala">
 val x = Var("x")
 val y = Var("y")
 val e = x**2 + y**3 + x**2 * cot(y**3)

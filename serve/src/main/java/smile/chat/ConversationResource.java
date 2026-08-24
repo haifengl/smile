@@ -37,6 +37,8 @@ import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;
 import io.smallrye.common.annotation.RunOnVirtualThread;
 import io.vertx.ext.web.RoutingContext;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 /**
  * REST resource for conversations at {@code /api/v1/conversations}.
@@ -56,6 +58,9 @@ public class ConversationResource {
 
     @Inject
     RoutingContext routingContext;
+
+    @Inject
+    MediaService mediaService;
 
     /**
      * Lists conversations in reverse chronological order (smile extension).
@@ -155,9 +160,35 @@ public class ConversationResource {
     public ConversationDeleted delete(@PathParam("conversation_id") String conversationId) {
         Conversation conversation = ConversationIds.findRequired(conversationId);
         String externalId = ConversationIds.toExternalId(conversation.id);
+        mediaService.deleteConversationMedia(conversation.id);
         ConversationItem.delete("conversationId", conversation.id);
         conversation.delete();
         return ConversationDeleted.of(externalId);
+    }
+
+    /**
+     * Uploads a multimedia attachment for a conversation
+     * ({@code POST /conversations/{conversation_id}/content}).
+     *
+     * <p>Bytes are stored in blob storage; the response URL should be referenced
+     * from chat completion {@code image_url} / {@code video_url} parts.
+     *
+     * @param conversationId external conversation id.
+     * @param headers        HTTP headers (client IP hashing).
+     * @param file           multipart file field named {@code file}.
+     * @param role           optional role ({@code user} default).
+     * @return content metadata including {@code url}.
+     */
+    @POST
+    @Path("/{conversation_id}/content")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Transactional
+    public ContentObject uploadContent(@PathParam("conversation_id") String conversationId,
+                                       @Context HttpHeaders headers,
+                                       @RestForm("file") FileUpload file,
+                                       @RestForm("role") String role) {
+        Conversation conversation = ConversationIds.findRequired(conversationId);
+        return mediaService.upload(conversation, file, role, routingContext, headers);
     }
 
     /**

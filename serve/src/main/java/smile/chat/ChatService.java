@@ -21,11 +21,16 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.SubmissionPublisher;
+import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import io.quarkus.runtime.Startup;
@@ -33,7 +38,12 @@ import org.jboss.logging.Logger;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import smile.llm.*;
-import smile.llm.llama.*;
+import smile.llm.attention.AttentionBackend;
+import smile.llm.attention.AttentionBackends;
+import smile.llm.attention.FlashInferArtifacts;
+import smile.llm.checkpoint.SafeTensorsLoaderThreads;
+import smile.llm.model.llama.*;
+import smile.llm.model.qwen.Qwen;
 import smile.util.HuggingFaceHub;
 
 /**
@@ -63,11 +73,14 @@ public class ChatService {
     private static final Logger logger = Logger.getLogger(ChatService.class);
 
     /** The loaded LLM; {@code null} when the model failed to load. */
-    private Llama model;
+    private LanguageModel model;
+    /** Request-oriented runtime; {@code null} when no model is loaded. */
+    private smile.llm.engine.InferenceEngine engine;
+    /** Process-wide tok/s across all in-flight chat generations. */
+    private final AggregateTokenThroughput aggregateThroughput = new AggregateTokenThroughput();
     /**
      * Public model id exposed by the chat API (HF repo id or local directory
-     * name). Independent of {@link Llama#toString()}, which still embeds a
-     * Llama-family prefix for historical reasons.
+     * name). Independent of family-prefixed {@code toString()} labels.
      */
     private final String modelId;
     /** OpenAI {@code owned_by} value for the loaded model. */
@@ -76,39 +89,58 @@ public class ChatService {
     private long createdAt;
     /** {@code "huggingface"} or {@code "local"} when a model is loaded. */
     private String source;
+    /** Resolves internal media URLs to data URLs for VL inference. */
+    private final MediaService mediaService;
 
     /**
      * Loads the LLM upon application start.
      * The {@code @ApplicationScoped} scope ensures the model is loaded once and reused.
      *
-     * <p>After weights are loaded, a shared {@link smile.llm.cache.KvCachePool}
-     * is allocated using {@link MemConfig#fractionStatic()} of the remaining
-     * free GPU memory. The pool element dtype comes from
-     * {@link KvCacheConfig#dtype()} when set, otherwise from the model's
-     * {@code config.json} {@code torch_dtype}.
+     * <p>After weights (and Qwen DeltaNet state) are loaded, a shared
+     * {@link smile.llm.cache.KvCachePool} is sized with SGLang
+     * {@code mem-fraction-static} semantics via
+     * {@link ChatServiceConfig#memFractionStatic()}: {@code y × total} for the
+     * static region, with KV getting the remainder inside that budget. The pool
+     * element dtype comes from {@link KvCacheConfig#dtype()} when set, otherwise
+     * from the model's {@code config.json} {@code torch_dtype}.
      *
      * @param config  the chat service configuration.
-     * @param mem     GPU memory budgeting configuration.
      * @param kvCache KV-cache storage configuration.
      */
     @Inject
-    public ChatService(ChatServiceConfig config, MemConfig mem, KvCacheConfig kvCache) {
+    public ChatService(ChatServiceConfig config, KvCacheConfig kvCache, MediaService mediaService) {
+        this.mediaService = mediaService;
         String modelSpec = config.model();
         this.modelId = publicModelId(modelSpec);
         try {
-            double memFraction = mem.fractionStatic();
+            String cacheDir = config.flashinferCacheDir()
+                    .filter(s -> !s.isBlank())
+                    .orElseGet(() -> Path.of(System.getProperty("user.home"),
+                            ".cache", "smile", "flashinfer").toString());
+            FlashInferArtifacts.resolveAndInstall(
+                    config.flashinferAotDir().orElse(null),
+                    cacheDir,
+                    config.flashinferDownload(),
+                    config.flashinferCudaTag());
+            AttentionBackend requested = AttentionBackend.parse(config.attentionBackend());
+            AttentionBackends.install(requested);
+            if (requested == AttentionBackend.FLASHINFER
+                    && AttentionBackends.current() != AttentionBackend.FLASHINFER
+                    && !config.flashinferAllowTorchFallback()) {
+                throw new IllegalStateException(
+                        "FlashInfer requested but unavailable and flashinfer-allow-torch-fallback=false");
+            }
+            double memFraction = config.memFractionStatic();
             String kvDtype = kvCache.dtype().orElse(null);
+            int pageSize = kvCache.pageSize();
             Path localPath = Path.of(modelSpec);
             if (Files.isDirectory(localPath)) {
-                String tokenizerPath = resolveLocalTokenizer(localPath);
-                model = Llama.build(modelSpec, tokenizerPath,
-                        config.maxBatchSize(), config.maxSeqLen(), config.device(),
-                        memFraction, kvDtype);
+                model = loadFromLocal(localPath, config, memFraction, kvDtype, pageSize);
                 ownedBy = ownerFromFamily(model.family());
                 source = "local";
                 createdAt = Instant.now().getEpochSecond();
             } else if (looksLikeHuggingFaceRepoId(modelSpec)) {
-                model = loadFromHuggingFace(config, memFraction, kvDtype);
+                model = loadFromHuggingFace(config, memFraction, kvDtype, pageSize);
                 ownedBy = ownerFromHuggingFaceId(modelSpec);
                 source = "huggingface";
                 createdAt = Instant.now().getEpochSecond();
@@ -116,12 +148,79 @@ public class ChatService {
                 logger.warnf("Chat model '%s' is neither a local directory nor a Hugging Face "
                         + "repository ID; chat completions will return HTTP 503", modelSpec);
             }
+            if (model != null) {
+                applyPrefixReuse(model, kvCache.prefixReuse(), kvCache.hybridPrefixReplay());
+                if (model instanceof smile.llm.engine.ModelExecutor exec) {
+                    int maxInFlight = Math.max(1, config.maxBatchSize());
+                    int maxDecode = config.maxDecodeBatch() > 0
+                            ? config.maxDecodeBatch() : maxInFlight;
+                    engine = new smile.llm.engine.InferenceEngine(
+                            exec,
+                            maxInFlight,
+                            maxDecode,
+                            Math.max(1, config.prefillTokenBudget()),
+                            config.admissionTimeoutMs());
+                    String sysProp = System.getProperty("smile.chat.max-batch-size");
+                    logger.infof("Chat continuous batching: model=%s family=%s maxSeqLen=%d "
+                                    + "maxInFlight=%d maxDecodeBatch=%d prefillTokenBudget=%d "
+                                    + "admissionTimeoutMs=%d "
+                                    + "(config.maxBatchSize=%d, -Dsmile.chat.max-batch-size=%s)",
+                            modelId, model.family(), model.maxSeqLen(),
+                            engine.maxInFlight(), engine.maxDecodeBatch(),
+                            Math.max(1, config.prefillTokenBudget()),
+                            config.admissionTimeoutMs(),
+                            config.maxBatchSize(),
+                            sysProp == null ? "<unset>" : sysProp);
+                    if (engine.maxInFlight() <= 1) {
+                        logger.warnf("maxInFlight=1 — parallel requests run one at a time. "
+                                        + "Raise smile.chat.max-batch-size (e.g. JAVA_OPTS_APPEND "
+                                        + "-Dsmile.chat.max-batch-size=4 in Docker).");
+                    }
+                } else {
+                    logger.warnf("Chat model %s does not implement ModelExecutor; "
+                            + "continuous batching unavailable", modelId);
+                }
+            }
         } catch (Exception ex) {
             // Keep the service up in an unavailable state so classic ML / ONNX
             // endpoints still work; chat requests return HTTP 503.
             logger.warnf(ex, "Failed to load chat model '%s'; chat completions will return HTTP 503",
                     modelSpec);
             model = null;
+            engine = null;
+        }
+    }
+
+    @PreDestroy
+    void shutdown() {
+        if (engine != null) {
+            engine.close();
+            engine = null;
+        }
+    }
+
+    /**
+     * Applies {@code smile.chat.kv-cache.prefix-reuse} (and hybrid replay) to
+     * the loaded chat model.
+     */
+    static void applyPrefixReuse(LanguageModel model, boolean enabled) {
+        applyPrefixReuse(model, enabled, true);
+    }
+
+    /**
+     * @param enabled            radix KV prefix reuse.
+     * @param hybridPrefixReplay when {@code true}, hybrid Qwen restores DeltaNet
+     *                           via warm-prefix replay so reuse is safe.
+     */
+    static void applyPrefixReuse(LanguageModel model, boolean enabled,
+                                 boolean hybridPrefixReplay) {
+        switch (model) {
+            case Llama llama -> llama.setPrefixReuseEnabled(enabled);
+            case Qwen qwen -> {
+                qwen.setPrefixReplayEnabled(hybridPrefixReplay);
+                qwen.setPrefixReuseEnabled(enabled);
+            }
+            default -> { }
         }
     }
 
@@ -141,6 +240,11 @@ public class ChatService {
             return "unknown";
         }
         String spec = modelSpec.trim();
+        // Prefer Hub repo ids over Files.isDirectory — a relative path such as
+        // "meta-llama/Llama-3.1-8B-Instruct" may accidentally exist on disk.
+        if (looksLikeHuggingFaceRepoId(spec)) {
+            return spec;
+        }
         Path path = Path.of(spec);
         if (Files.isDirectory(path)) {
             Path fileName = path.getFileName();
@@ -292,33 +396,249 @@ public class ChatService {
     }
 
     /**
-     * Completes a chat dialog.
+     * Completes a chat dialog via {@link smile.llm.engine.InferenceEngine}.
      *
      * @param request   the chat completion request.
      * @param publisher the flow publisher that receives streamed token chunks.
-     * @return the array of completion results, one per dialog in the batch.
+     * @return the completion result for the request.
      */
-    public ChatCompletion[] complete(CompletionRequest request, SubmissionPublisher<String> publisher) {
-        Message[][] dialogs = { request.messages };
-        return model.chat(dialogs, request.resolveMaxTokens(), request.temperature,
-                request.topP, request.logprobs, request.seed, publisher);
+    public ChatCompletion complete(CompletionRequest request, SubmissionPublisher<String> publisher) {
+        var handle = submitCompletion(request, publisher);
+        try {
+            return handle.future().join();
+        } finally {
+            if (publisher != null) {
+                publisher.close();
+            }
+        }
     }
 
     /**
-     * Downloads HuggingFace-format model files and returns a loaded Llama model.
+     * Submits a chat completion and returns the handle so streaming callers can
+     * {@link smile.llm.engine.GenerationHandle#abort()} on client disconnect.
+     * Does not close {@code publisher}; the caller owns that lifecycle.
+     *
+     * @param request   the chat completion request.
+     * @param publisher optional streaming publisher; may be {@code null}.
+     * @return generation handle whose future completes with the reply.
+     */
+    public smile.llm.engine.GenerationHandle submitCompletion(
+            CompletionRequest request, SubmissionPublisher<String> publisher) {
+        Message[] messages = mediaService != null
+                ? mediaService.resolveInternalMedia(request.messages)
+                : request.messages;
+        boolean hasMedia = false;
+        if (messages != null) {
+            for (var m : messages) {
+                if (m != null && m.hasMedia()) {
+                    hasMedia = true;
+                    break;
+                }
+            }
+        }
+        smile.llm.engine.GenerationRequest genReq;
+        int promptLen;
+        var throughput = new TokenThroughputLogger(aggregateThroughput);
+        var listener = GenerationListeners.compose(
+                throughput,
+                publisher != null ? GenerationListeners.toPublisher(publisher) : null);
+        try {
+            if (hasMedia) {
+                if (!(model instanceof Qwen qwen) || !qwen.isMultimodal()) {
+                    throw new IllegalArgumentException(
+                            "Multimodal content requires a Qwen3.8 vision checkpoint");
+                }
+                var mm = qwen.processMultimodal(messages);
+                int maxGenLen = request.resolveMaxTokens(model.maxSeqLen(), mm.inputIds().length);
+                promptLen = mm.inputIds().length;
+                genReq = smile.llm.engine.GenerationRequest.ofMultimodal(
+                        mm, maxGenLen, request.temperature, request.topP,
+                        request.logprobs, request.seed, listener);
+            } else {
+                int[] prompt = model.encodeChat(messages);
+                int maxGenLen = request.resolveMaxTokens(model.maxSeqLen(), prompt.length);
+                promptLen = prompt.length;
+                genReq = smile.llm.engine.GenerationRequest.ofTokens(
+                        prompt, maxGenLen, request.temperature, request.topP,
+                        request.logprobs, request.seed, listener);
+            }
+        } catch (java.io.IOException e) {
+            throw new IllegalArgumentException("Failed to process multimodal request", e);
+        }
+        if (engine != null) {
+            var handle = engine.submit(genReq, h -> throughput.setRequestId(h.requestId()));
+            logger.infof("Submitted chat requestId=%d promptLen=%d maxGenLen=%d "
+                            + "multimodal=%s inFlight=%d queueSize=%d maxInFlight=%d kvFreeSlots=%d",
+                    handle.requestId(), promptLen, genReq.maxGenLen(), hasMedia,
+                    engine.inFlight(), engine.queueSize(), engine.maxInFlight(),
+                    engine.kvFreeSlots());
+            handle.future().whenComplete((r, t) -> {
+                throughput.finish();
+                logger.infof(
+                        "Engine stats: requestId=%d queueWaitMsTotal=%d prefillMsTotal=%d "
+                                + "decodeMsTotal=%d kvFreePages=%d inFlight=%d queueSize=%d",
+                        handle.requestId(),
+                        engine.queueWaitMsTotal(), engine.prefillMsTotal(), engine.decodeMsTotal(),
+                        engine.kvFreePages(), engine.inFlight(), engine.queueSize());
+            });
+            return handle;
+        }
+        var future = new java.util.concurrent.CompletableFuture<ChatCompletion>();
+        var handle = smile.llm.engine.GenerationHandle.of(0L, future);
+        throughput.setRequestId(handle.requestId());
+        try {
+            if (hasMedia) {
+                throw new UnsupportedOperationException(
+                        "Multimodal chat requires InferenceEngine (continuous batching)");
+            }
+            ChatCompletion result = model.generate(genReq.promptTokens(), genReq.maxGenLen(),
+                    request.temperature, request.topP, request.logprobs, request.seed,
+                    listener, handle::isAborted);
+            if (!handle.isAborted()) {
+                future.complete(result);
+            } else {
+                future.completeExceptionally(
+                        new java.util.concurrent.CancellationException("aborted"));
+            }
+        } catch (Throwable t) {
+            future.completeExceptionally(t);
+        } finally {
+            throughput.finish();
+        }
+        return handle;
+    }
+
+    /**
+     * Loads a chat model from a local checkpoint directory.
+     * Dispatches on {@code config.json} {@code model_type} / {@code architectures}.
+     */
+    private LanguageModel loadFromLocal(Path localPath, ChatServiceConfig config,
+                                        double memFraction, String kvDtype, int pageSize)
+            throws Exception {
+        if (isQwenCheckpoint(localPath)) {
+            var parallel = parallelConfig(config);
+            return Qwen.build(localPath.toString(),
+                    config.maxBatchSize(), config.maxSeqLen(), parallel.devices()[0],
+                    memFraction, kvDtype, pageSize, parallel, config.modelLoaderThreads());
+        }
+        String tokenizerPath = resolveLocalTokenizer(localPath);
+        return Llama.build(localPath.toString(), tokenizerPath,
+                config.maxBatchSize(), config.maxSeqLen(), parallelConfig(config).devices()[0],
+                memFraction, kvDtype, pageSize, config.modelLoaderThreads());
+    }
+
+    /**
+     * Builds a {@link smile.llm.parallel.ParallelConfig} from chat settings.
+     *
+     * <p>{@code smile.chat.devices} is either a single index ({@code 0}) or a
+     * comma-separated TP list ({@code 0,7}). With one device and
+     * {@code tensor-parallel-size=N>1}, consecutive devices
+     * {@code d .. d+N-1} are used.
+     */
+    static smile.llm.parallel.ParallelConfig parallelConfig(ChatServiceConfig config) {
+        int pp = config.pipelineParallelSize();
+        if (pp != 1) {
+            throw new IllegalArgumentException(
+                    "smile.chat.pipeline-parallel-size must be 1 until PP is implemented");
+        }
+
+        byte[] devices = parseDevices(config);
+        if (devices.length <= 1) {
+            return smile.llm.parallel.ParallelConfig.single(devices[0]);
+        }
+        int tp = config.tensorParallelSize();
+        if (tp > 1 && tp != devices.length) {
+            throw new IllegalArgumentException(
+                    "smile.chat.devices length (" + devices.length
+                            + ") must equal smile.chat.tensor-parallel-size (" + tp + ")");
+        }
+        return smile.llm.parallel.ParallelConfig.tensorParallel(devices);
+    }
+
+    /**
+     * Parses {@code smile.chat.devices}. A single value is the base device;
+     * with {@code tensor-parallel-size > 1} it expands to consecutive indices.
+     * Multiple comma-separated values are the explicit TP device list.
+     */
+    static byte[] parseDevices(ChatServiceConfig config) {
+        String raw = config.devices();
+        if (raw == null || raw.isBlank()) {
+            throw new IllegalArgumentException("smile.chat.devices must not be blank");
+        }
+        String[] parts = raw.split(",");
+        byte[] parsed = new byte[parts.length];
+        for (int i = 0; i < parts.length; i++) {
+            String part = parts[i].trim();
+            try {
+                int idx = Integer.parseInt(part);
+                if (idx < Byte.MIN_VALUE || idx > Byte.MAX_VALUE) {
+                    throw new IllegalArgumentException("device index out of byte range: " + idx);
+                }
+                parsed[i] = (byte) idx;
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(
+                        "Invalid smile.chat.devices entry '" + part
+                                + "' (expected integer or comma-separated list, e.g. 0 or 0,7)", e);
+            }
+        }
+        if (parsed.length > 1) {
+            return parsed;
+        }
+
+        // Single base device: expand to consecutive ranks when tp > 1.
+        int tp = Math.max(1, config.tensorParallelSize());
+        if (tp == 1) {
+            return parsed;
+        }
+        byte[] devices = new byte[tp];
+        for (int i = 0; i < tp; i++) {
+            devices[i] = (byte) (parsed[0] + i);
+        }
+        return devices;
+    }
+
+    /**
+     * Returns {@code true} when {@code config.json} identifies a Qwen3.5 hybrid checkpoint.
+     */
+    static boolean isQwenCheckpoint(Path checkpointDir) throws IOException {
+        Path configJson = checkpointDir.resolve("config.json");
+        if (!Files.isRegularFile(configJson)) {
+            return false;
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode root = mapper.readTree(configJson.toFile());
+        String modelType = root.has("model_type") ? root.get("model_type").asString() : "";
+        if (modelType.startsWith("qwen3_5")) {
+            return true;
+        }
+        if (root.has("architectures") && root.get("architectures").isArray()) {
+            for (JsonNode n : root.get("architectures")) {
+                String arch = n.asString();
+                if (arch != null && arch.startsWith("Qwen3_5")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Downloads HuggingFace-format model files and returns a loaded language model.
      *
      * <p>Downloads {@code config.json}, {@code model.safetensors.index.json} (when
-     * present), every safetensors shard listed in the index, and the SentencePiece
-     * tokenizer ({@code original/tokenizer.model} or {@code tokenizer.model}).
+     * present), every safetensors shard listed in the index, and the tokenizer
+     * files required by the architecture (SentencePiece for Llama, vocab/merges
+     * or {@code tokenizer.json} for Qwen).
      *
      * @param config the chat service configuration; {@code config.model()} is the HF repo ID.
-     * @param memFractionStatic fraction of free GPU memory for the KV cache pool.
+     * @param memFractionStatic static-region fraction of total GPU memory (SGLang-style).
      * @param kvCacheDtype optional KV-cache dtype override ({@code null} = auto).
-     * @return the loaded Llama model.
+     * @param pageSize tokens per radix / KV pool page.
+     * @return the loaded language model.
      * @throws Exception if a required file cannot be downloaded or the model fails to load.
      */
-    private Llama loadFromHuggingFace(ChatServiceConfig config, double memFractionStatic,
-                                      String kvCacheDtype) throws Exception {
+    private LanguageModel loadFromHuggingFace(ChatServiceConfig config, double memFractionStatic,
+                                              String kvCacheDtype, int pageSize) throws Exception {
         String repoId = config.model();
         logger.infof("Model directory '%s' not found locally. Downloading from Hugging Face Hub...", repoId);
 
@@ -327,15 +647,95 @@ public class ChatService {
         logger.infof("Downloaded config.json to %s", checkpointDir);
 
         Set<String> shards = resolveSafeTensorShards(repoId);
-        for (String shard : shards) {
-            logger.infof("Downloading safetensors shard: %s", shard);
-            HuggingFaceHub.download(repoId, shard);
+        downloadSafeTensorShards(repoId, shards, config.modelLoaderThreads());
+
+        Path checkpoint = Path.of(checkpointDir);
+        if (isQwenCheckpoint(checkpoint)) {
+            resolveHuggingFaceQwenTokenizer(repoId);
+            var parallel = parallelConfig(config);
+            return Qwen.build(checkpointDir,
+                    config.maxBatchSize(), config.maxSeqLen(), parallel.devices()[0],
+                    memFractionStatic, kvCacheDtype, pageSize, parallel,
+                    config.modelLoaderThreads());
         }
 
         String tokenizerPath = resolveHuggingFaceTokenizer(repoId);
         return Llama.build(checkpointDir, tokenizerPath,
-                config.maxBatchSize(), config.maxSeqLen(), config.device(),
-                memFractionStatic, kvCacheDtype);
+                config.maxBatchSize(), config.maxSeqLen(), parallelConfig(config).devices()[0],
+                memFractionStatic, kvCacheDtype, pageSize, config.modelLoaderThreads());
+    }
+
+    /**
+     * Downloads Qwen tokenizer files ({@code tokenizer.json}, and optionally
+     * {@code vocab.json}/{@code merges.txt}).
+     */
+    private void resolveHuggingFaceQwenTokenizer(String repoId) throws IOException {
+        String[] candidates = {"tokenizer.json", "vocab.json", "merges.txt"};
+        boolean any = false;
+        for (String name : candidates) {
+            try {
+                Path path = HuggingFaceHub.download(repoId, name);
+                logger.infof("Downloaded tokenizer file: %s", path);
+                any = true;
+            } catch (Exception ex) {
+                logger.debugf("Optional tokenizer file %s not found in %s", name, repoId);
+            }
+        }
+        if (!any) {
+            throw new IOException("No Qwen tokenizer files found in Hugging Face repository: " + repoId);
+        }
+    }
+
+    /**
+     * Downloads safetensors shards concurrently. Thread count matches
+     * {@link ChatServiceConfig#modelLoaderThreads()} via
+     * {@link SafeTensorsLoaderThreads#resolve(int, int)}.
+     */
+    private void downloadSafeTensorShards(String repoId, Set<String> shards, int modelLoaderThreads)
+            throws IOException {
+        if (shards == null || shards.isEmpty()) {
+            return;
+        }
+        List<String> shardList = new ArrayList<>(shards);
+        int threads = SafeTensorsLoaderThreads.resolve(modelLoaderThreads, shardList.size());
+        logger.infof("Downloading %d safetensors shard(s) with threads=%d (configured=%d)",
+                shardList.size(), threads, modelLoaderThreads);
+
+        if (threads <= 1 || shardList.size() == 1) {
+            for (String shard : shardList) {
+                logger.infof("Downloading safetensors shard: %s", shard);
+                HuggingFaceHub.download(repoId, shard);
+            }
+            return;
+        }
+
+        ExecutorService pool = Executors.newFixedThreadPool(threads);
+        try {
+            List<Future<?>> futures = new ArrayList<>(shardList.size());
+            for (String shard : shardList) {
+                futures.add(pool.submit(() -> {
+                    try {
+                        logger.infof("Downloading safetensors shard: %s", shard);
+                        HuggingFaceHub.download(repoId, shard);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }));
+            }
+            for (Future<?> f : futures) {
+                try {
+                    f.get();
+                } catch (Exception e) {
+                    Throwable c = e.getCause() != null ? e.getCause() : e;
+                    if (c instanceof RuntimeException re && re.getCause() instanceof IOException ioe) {
+                        throw ioe;
+                    }
+                    throw new IOException("Safetensors shard download failed", e);
+                }
+            }
+        } finally {
+            pool.shutdownNow();
+        }
     }
 
     /**

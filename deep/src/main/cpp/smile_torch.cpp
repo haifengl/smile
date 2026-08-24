@@ -47,12 +47,24 @@
 #include <unordered_set>
 #include <optional>
 #include <limits>
+#include <cmath>
+#include <cstring>
+#include <atomic>
 
 // ── CUDA introspection (compiled only when CUDA is present) ───────────────────
 #ifdef USE_CUDA
 #  include <cuda_runtime.h>
 #  include <c10/cuda/CUDACachingAllocator.h>
+#  include <c10/cuda/CUDAGuard.h>
 #  include <ATen/cuda/CUDAContext.h>
+#  include "smile_gated_delta.cuh"
+#  ifdef USE_FLASHINFER
+#    include "smile_flashinfer_cuda.h"
+#  endif
+#endif
+
+#ifdef USE_NCCL
+#  include <nccl.h>
 #endif
 
 // =============================================================================
@@ -70,6 +82,9 @@ static void set_error(const std::string &msg) {
 static void clear_error() {
     g_last_error.clear();
 }
+
+extern "C" void smile_torch_set_error(const char *msg) { set_error(msg); }
+extern "C" void smile_torch_clear_error(void) { clear_error(); }
 
 #ifndef USE_CUDA
 static void set_error_no_cuda_build() {
@@ -159,12 +174,10 @@ struct ST_Scalar_        { at::Scalar s; };
 struct ST_Device_        { c10::Device d; };
 struct ST_Module_        { std::shared_ptr<torch::nn::Module> m; };
 struct ST_ModuleList_    { std::shared_ptr<torch::nn::ModuleListImpl> ml; };
-struct ST_Linear_        { torch::nn::Linear mod; };
 struct ST_Conv2d_        { torch::nn::Conv2d mod; };
 struct ST_BatchNorm1d_   { torch::nn::BatchNorm1d mod; };
 struct ST_BatchNorm2d_   { torch::nn::BatchNorm2d mod; };
 struct ST_Dropout_       { torch::nn::Dropout mod; };
-struct ST_Embedding_     { torch::nn::Embedding mod; };
 struct ST_GroupNorm_     { torch::nn::GroupNorm mod; };
 struct ST_MaxPool2d_     { torch::nn::MaxPool2d mod; };
 struct ST_AvgPool2d_     { torch::nn::AvgPool2d mod; };
@@ -177,6 +190,86 @@ struct ST_TensorIndex_   { torch::indexing::TensorIndex idx; };
 struct ST_TensorIndexVec_{ std::vector<torch::indexing::TensorIndex> vec; };
 struct ST_TensorVec_     { std::vector<at::Tensor> vec; };
 struct ST_Slice_         { torch::indexing::Slice slice; };
+
+// Linear / Embedding shells that allocate with torch::empty and optionally skip
+// reset_parameters (Kaiming / normal). Used for inference weight load.
+struct EmptyLinearImpl : torch::nn::Cloneable<EmptyLinearImpl> {
+    torch::Tensor weight{nullptr};
+    torch::Tensor bias{nullptr};
+    int64_t in_features;
+    int64_t out_features;
+    bool with_bias;
+    c10::Device device;
+
+    EmptyLinearImpl(int64_t in_features_, int64_t out_features_, bool bias_,
+                    c10::Device device_ = c10::Device(c10::kCPU))
+        : in_features(in_features_),
+          out_features(out_features_),
+          with_bias(bias_),
+          device(device_) {
+        reset();
+    }
+
+    void reset() override {
+        auto opts = torch::TensorOptions().device(device);
+        weight = register_parameter(
+            "weight", torch::empty({out_features, in_features}, opts));
+        if (with_bias) {
+            bias = register_parameter("bias", torch::empty({out_features}, opts));
+        } else {
+            bias = register_parameter("bias", {}, /*requires_grad=*/false);
+        }
+    }
+
+    void reset_parameters() {
+        torch::nn::init::kaiming_uniform_(
+            weight, std::sqrt(5)); // NOLINT(cppcoreguidelines-avoid-magic-numbers)
+        if (bias.defined()) {
+            auto [fan_in, fan_out] =
+                torch::nn::init::_calculate_fan_in_and_fan_out(weight);
+            const auto bound = 1.0 / std::sqrt(static_cast<double>(fan_in));
+            torch::nn::init::uniform_(bias, -bound, bound);
+        }
+    }
+
+    torch::Tensor forward(const torch::Tensor& input) {
+        return torch::linear(input, weight, bias);
+    }
+};
+TORCH_MODULE(EmptyLinear);
+
+struct EmptyEmbeddingImpl : torch::nn::Cloneable<EmptyEmbeddingImpl> {
+    torch::Tensor weight{nullptr};
+    int64_t num_embeddings;
+    int64_t embedding_dim;
+    c10::Device device;
+
+    EmptyEmbeddingImpl(int64_t num_embeddings_, int64_t embedding_dim_,
+                       c10::Device device_ = c10::Device(c10::kCPU))
+        : num_embeddings(num_embeddings_),
+          embedding_dim(embedding_dim_),
+          device(device_) {
+        reset();
+    }
+
+    void reset() override {
+        auto opts = torch::TensorOptions().device(device);
+        weight = register_parameter(
+            "weight", torch::empty({num_embeddings, embedding_dim}, opts));
+    }
+
+    void reset_parameters() {
+        torch::nn::init::normal_(weight);
+    }
+
+    torch::Tensor forward(const torch::Tensor& input) {
+        return torch::embedding(weight, input);
+    }
+};
+TORCH_MODULE(EmptyEmbedding);
+
+struct ST_Linear_    { EmptyLinear mod; };
+struct ST_Embedding_ { EmptyEmbedding mod; };
 
 // =============================================================================
 // Helpers: build TensorOptions from handle (NULL → default)
@@ -351,9 +444,33 @@ int smile_cuda_mem_get_info(int device_index, int64_t *free_bytes, int64_t *tota
 void smile_cuda_empty_cache(void) {
 #ifdef USE_CUDA
     ST_TRY_BEGIN
+        // cuBLAS workspaces are DataPtrs in the caching allocator; clear them
+        // first or emptyCache cannot return that memory to the driver.
+        at::cuda::clearCublasWorkspaces();
         c10::cuda::CUDACachingAllocator::emptyCache();
     ST_TRY_END
 #endif
+}
+
+int smile_cuda_allocator_stats(int device_index, int64_t *allocated_bytes,
+                               int64_t *reserved_bytes) {
+    if (!allocated_bytes || !reserved_bytes) {
+        set_error("smile_cuda_allocator_stats: null output pointer");
+        return -1;
+    }
+#ifdef USE_CUDA
+    ST_TRY_BEGIN
+        auto stats = c10::cuda::CUDACachingAllocator::getDeviceStats(
+                static_cast<c10::DeviceIndex>(device_index));
+        // StatType::AGGREGATE == 0
+        *allocated_bytes = stats.allocated_bytes[0].current;
+        *reserved_bytes = stats.reserved_bytes[0].current;
+        return 0;
+    ST_TRY_END
+#else
+    set_error_no_cuda_build();
+#endif
+    return -1;
 }
 
 int smile_cuda_is_bf16_supported(void) {
@@ -602,6 +719,14 @@ int32_t *smile_tensor_data_ptr_int   (ST_Tensor t) { return t ? t->t.data_ptr<in
 int64_t *smile_tensor_data_ptr_long  (ST_Tensor t) { return t ? t->t.data_ptr<int64_t>() : nullptr; }
 float   *smile_tensor_data_ptr_float (ST_Tensor t) { return t ? t->t.data_ptr<float>()   : nullptr; }
 double  *smile_tensor_data_ptr_double(ST_Tensor t) { return t ? t->t.data_ptr<double>()  : nullptr; }
+
+int64_t smile_tensor_nbytes(ST_Tensor t) {
+    return t ? static_cast<int64_t>(t->t.nbytes()) : 0;
+}
+
+void *smile_tensor_data_ptr(ST_Tensor t) {
+    return t ? t->t.data_ptr() : nullptr;
+}
 
 // =============================================================================
 // Tensor — Item
@@ -1170,6 +1295,16 @@ int smile_module_is_training(ST_Module m) {
     return m ? (m->m->is_training() ? 1 : 0) : 0;
 }
 
+void smile_module_set_requires_grad(ST_Module m, int requires_grad) {
+    if (!m) return;
+    ST_TRY_BEGIN
+        const bool rg = requires_grad != 0;
+        for (auto &p : m->m->parameters(/*recurse=*/true)) {
+            p.set_requires_grad(rg);
+        }
+    ST_TRY_END
+}
+
 void smile_module_to_device(ST_Module m, ST_Device device, int non_blocking) {
     if (m && device) {
         ST_TRY_BEGIN m->m->to(device->d, static_cast<bool>(non_blocking)); ST_TRY_END
@@ -1329,11 +1464,23 @@ int smile_output_archive_save_to(ST_OutputArchive a, const char *path) {
 
 ST_Linear smile_linear_create(int64_t in, int64_t out, int bias) {
     ST_TRY_BEGIN
-        auto opts = torch::nn::LinearOptions(in, out).bias(static_cast<bool>(bias));
-        return new ST_Linear_{ torch::nn::Linear(opts) };
+        EmptyLinear linear(in, out, static_cast<bool>(bias), c10::Device(c10::kCPU));
+        linear->reset_parameters();
+        return new ST_Linear_{ std::move(linear) };
     ST_TRY_END
     return nullptr;
 }
+
+ST_Linear smile_linear_create_uninitialized(int64_t in, int64_t out, int bias,
+                                            int device_type, int8_t device_index) {
+    ST_TRY_BEGIN
+        // torch::empty only — no Kaiming fill (weights overwritten on load).
+        c10::Device device(to_device_type(device_type), device_index);
+        return new ST_Linear_{ EmptyLinear(in, out, static_cast<bool>(bias), device) };
+    ST_TRY_END
+    return nullptr;
+}
+
 void      smile_linear_free  (ST_Linear l) { delete l; }
 ST_Tensor smile_linear_forward(ST_Linear l, ST_Tensor input) {
     if (!l || !input) return nullptr;
@@ -1446,8 +1593,23 @@ ST_Module smile_dropout_as_module(ST_Dropout d) {
 // =============================================================================
 
 ST_Embedding smile_embedding_create(int64_t num, int64_t dim) {
-    ST_TRY_BEGIN return new ST_Embedding_{ torch::nn::Embedding(num, dim) }; ST_TRY_END return nullptr;
+    ST_TRY_BEGIN
+        EmptyEmbedding emb(num, dim, c10::Device(c10::kCPU));
+        emb->reset_parameters();
+        return new ST_Embedding_{ std::move(emb) };
+    ST_TRY_END
+    return nullptr;
 }
+
+ST_Embedding smile_embedding_create_uninitialized(int64_t num, int64_t dim,
+                                                  int device_type, int8_t device_index) {
+    ST_TRY_BEGIN
+        c10::Device device(to_device_type(device_type), device_index);
+        return new ST_Embedding_{ EmptyEmbedding(num, dim, device) };
+    ST_TRY_END
+    return nullptr;
+}
+
 void      smile_embedding_free   (ST_Embedding e) { delete e; }
 ST_Tensor smile_embedding_forward(ST_Embedding e, ST_Tensor i) {
     if (!e||!i) return nullptr; MAKE_TENSOR(e->mod->forward(i->t));
@@ -1649,6 +1811,480 @@ void smile_set_default_dtype(ST_DType dtype) {
 
 void smile_manual_seed(int64_t seed) {
     ST_TRY_BEGIN torch::manual_seed(static_cast<uint64_t>(seed)); ST_TRY_END
+}
+
+// =============================================================================
+// Tensor parallelism collectives (NCCL primary, peer-copy fallback)
+// =============================================================================
+
+#ifdef USE_NCCL
+struct ST_NcclComm_ {
+    int nRanks = 0;
+    ncclComm_t *comms = nullptr; // length nRanks
+};
+#endif
+
+ST_NcclComm smile_nccl_comm_create(int n, const int *device_indices) {
+#ifndef USE_NCCL
+    (void)n; (void)device_indices;
+    set_error("smile_torch was built without NCCL (USE_NCCL not enabled)");
+    return nullptr;
+#else
+    if (n < 1 || !device_indices) {
+        set_error("smile_nccl_comm_create: invalid args");
+        return nullptr;
+    }
+    ST_TRY_BEGIN
+        auto *c = new ST_NcclComm_();
+        c->nRanks = n;
+        c->comms = new ncclComm_t[static_cast<size_t>(n)];
+        ncclResult_t rc = ncclCommInitAll(c->comms, n, device_indices);
+        if (rc != ncclSuccess) {
+            delete[] c->comms;
+            delete c;
+            set_error(std::string("ncclCommInitAll: ") + ncclGetErrorString(rc));
+            return nullptr;
+        }
+        return c;
+    ST_TRY_END
+    return nullptr;
+#endif
+}
+
+void smile_nccl_comm_free(ST_NcclComm comm) {
+#ifdef USE_NCCL
+    if (!comm) return;
+    for (int i = 0; i < comm->nRanks; i++) {
+        if (comm->comms[i]) {
+            ncclCommDestroy(comm->comms[i]);
+        }
+    }
+    delete[] comm->comms;
+    delete comm;
+#else
+    (void)comm;
+#endif
+}
+
+#ifdef USE_NCCL
+static ncclDataType_t to_nccl_dtype(c10::ScalarType dt) {
+    switch (dt) {
+        case c10::ScalarType::Float: return ncclFloat32;
+        case c10::ScalarType::Half: return ncclFloat16;
+        case c10::ScalarType::BFloat16: return ncclBfloat16;
+        case c10::ScalarType::Double: return ncclFloat64;
+        case c10::ScalarType::Int: return ncclInt32;
+        case c10::ScalarType::Long: return ncclInt64;
+        default: return ncclFloat32;
+    }
+}
+#endif
+
+int smile_nccl_all_reduce_sum(ST_NcclComm comm, int rank, ST_Tensor local) {
+#ifndef USE_NCCL
+    (void)comm; (void)rank; (void)local;
+    set_error("smile_torch was built without NCCL");
+    return -1;
+#else
+    if (!comm || !local || !local->t.defined()) {
+        set_error("smile_nccl_all_reduce_sum: null args");
+        return -1;
+    }
+    if (rank < 0 || rank >= comm->nRanks) {
+        set_error("smile_nccl_all_reduce_sum: rank out of range");
+        return -1;
+    }
+    ST_TRY_BEGIN
+        auto t = local->t;
+        if (!t.is_cuda()) {
+            set_error("smile_nccl_all_reduce_sum: tensor must be CUDA");
+            return -1;
+        }
+        if (!t.is_contiguous()) {
+            set_error("smile_nccl_all_reduce_sum: tensor must be contiguous");
+            return -1;
+        }
+        c10::cuda::CUDAGuard guard(t.device());
+        cudaStream_t stream = at::cuda::getCurrentCUDAStream(t.device().index()).stream();
+        ncclDataType_t dt = to_nccl_dtype(t.scalar_type());
+        size_t count = static_cast<size_t>(t.numel());
+        ncclResult_t rc = ncclAllReduce(
+                t.data_ptr(), t.data_ptr(), count, dt, ncclSum,
+                comm->comms[rank], stream);
+        if (rc != ncclSuccess) {
+            set_error(std::string("ncclAllReduce: ") + ncclGetErrorString(rc));
+            return -1;
+        }
+        return 0;
+    ST_TRY_END
+    return -1;
+#endif
+}
+
+int smile_nccl_broadcast(ST_NcclComm comm, int rank, int root, ST_Tensor local) {
+#ifndef USE_NCCL
+    (void)comm; (void)rank; (void)root; (void)local;
+    set_error("smile_torch was built without NCCL");
+    return -1;
+#else
+    if (!comm || !local || !local->t.defined()) {
+        set_error("smile_nccl_broadcast: null args");
+        return -1;
+    }
+    if (rank < 0 || rank >= comm->nRanks || root < 0 || root >= comm->nRanks) {
+        set_error("smile_nccl_broadcast: rank/root out of range");
+        return -1;
+    }
+    ST_TRY_BEGIN
+        auto t = local->t;
+        if (!t.is_cuda() || !t.is_contiguous()) {
+            set_error("smile_nccl_broadcast: tensor must be contiguous CUDA");
+            return -1;
+        }
+        c10::cuda::CUDAGuard guard(t.device());
+        cudaStream_t stream = at::cuda::getCurrentCUDAStream(t.device().index()).stream();
+        ncclDataType_t dt = to_nccl_dtype(t.scalar_type());
+        size_t count = static_cast<size_t>(t.numel());
+        ncclResult_t rc = ncclBroadcast(
+                t.data_ptr(), t.data_ptr(), count, dt, root,
+                comm->comms[rank], stream);
+        if (rc != ncclSuccess) {
+            set_error(std::string("ncclBroadcast: ") + ncclGetErrorString(rc));
+            return -1;
+        }
+        return 0;
+    ST_TRY_END
+    return -1;
+#endif
+}
+
+int smile_tp_all_reduce_sum(ST_Tensor *tensors, int n) {
+    if (n <= 1) return 0;
+    if (!tensors) {
+        set_error("smile_tp_all_reduce_sum: null tensors");
+        return -1;
+    }
+    ST_TRY_BEGIN
+        for (int i = 0; i < n; i++) {
+            if (!tensors[i] || !tensors[i]->t.defined()) {
+                set_error("smile_tp_all_reduce_sum: null/undefined tensor");
+                return -1;
+            }
+        }
+        auto ref = tensors[0]->t;
+        for (int i = 1; i < n; i++) {
+            if (tensors[i]->t.sizes() != ref.sizes() || tensors[i]->t.dtype() != ref.dtype()) {
+                set_error("smile_tp_all_reduce_sum: shape/dtype mismatch");
+                return -1;
+            }
+        }
+        // Peer-copy fallback (used when NCCL path is not taken from Java).
+        auto& acc = tensors[0]->t;
+        for (int i = 1; i < n; i++) {
+            acc.add_(tensors[i]->t.to(acc.device(), /*non_blocking=*/true));
+        }
+        for (int i = 1; i < n; i++) {
+            tensors[i]->t.copy_(acc.to(tensors[i]->t.device(), /*non_blocking=*/true));
+        }
+#ifdef USE_CUDA
+        if (acc.is_cuda()) {
+            c10::cuda::CUDAGuard guard(acc.device());
+            AT_CUDA_CHECK(cudaStreamSynchronize(
+                    at::cuda::getCurrentCUDAStream(acc.device().index()).stream()));
+        }
+#endif
+        return 0;
+    ST_TRY_END
+    return -1;
+}
+
+int smile_tp_broadcast(ST_Tensor *tensors, int n, int root) {
+    if (n <= 1) return 0;
+    if (!tensors) {
+        set_error("smile_tp_broadcast: null tensors");
+        return -1;
+    }
+    if (root < 0 || root >= n) {
+        set_error("smile_tp_broadcast: root out of range");
+        return -1;
+    }
+    ST_TRY_BEGIN
+        if (!tensors[root] || !tensors[root]->t.defined()) {
+            set_error("smile_tp_broadcast: null/undefined root tensor");
+            return -1;
+        }
+        auto src = tensors[root]->t;
+        for (int i = 0; i < n; i++) {
+            if (i == root) continue;
+            if (!tensors[i] || !tensors[i]->t.defined()) {
+                set_error("smile_tp_broadcast: null/undefined tensor");
+                return -1;
+            }
+            tensors[i]->t.copy_(src.to(tensors[i]->t.device(), /*non_blocking=*/true));
+        }
+#ifdef USE_CUDA
+        if (src.is_cuda()) {
+            c10::cuda::CUDAGuard guard(src.device());
+            AT_CUDA_CHECK(cudaStreamSynchronize(
+                    at::cuda::getCurrentCUDAStream(src.device().index()).stream()));
+        }
+#endif
+        return 0;
+    ST_TRY_END
+    return -1;
+}
+
+// =============================================================================
+// Gated DeltaNet fused recurrent rule
+// =============================================================================
+
+#ifdef USE_CUDA
+namespace {
+std::atomic<bool> g_gated_delta_libtorch_warned{false};
+
+void warn_gated_delta_libtorch_once(const char *reason) {
+    if (!g_gated_delta_libtorch_warned.exchange(true)) {
+        fprintf(stderr,
+                "WARN smile: GatedDeltaNet recurrent falling back from fused CUDA to "
+                "libtorch GPU (%s); subsequent fallbacks suppressed\n",
+                reason ? reason : "unknown");
+        fflush(stderr);
+    }
+}
+} // namespace
+#endif
+
+static torch::Tensor l2norm_last(const torch::Tensor &x) {
+    auto s = x.mul(x).sum(-1, /*keepdim=*/true).add(1e-6).rsqrt();
+    return x.mul(s);
+}
+
+static torch::Tensor gated_delta_recurrent_libtorch(
+        torch::Tensor q, torch::Tensor k, torch::Tensor v,
+        torch::Tensor g, torch::Tensor beta, torch::Tensor state,
+        float scale) {
+    // q/k/v/g/beta/state/out all float contiguous; layouts [B,H,S,*] / [B,H,K,V]
+    q = q.mul(scale);
+    auto B = q.size(0), H = q.size(1), S = q.size(2), V = v.size(3);
+    auto out = torch::zeros({B, H, S, V}, q.options());
+    for (int64_t t = 0; t < S; ++t) {
+        auto q_t = q.select(2, t); // [B,H,K]
+        auto k_t = k.select(2, t);
+        auto v_t = v.select(2, t);
+        auto g_t = g.select(2, t).exp().view({B, H, 1, 1});
+        auto beta_t = beta.select(2, t).unsqueeze(-1); // [B,H,1]
+        state.mul_(g_t);
+        auto kv = at::matmul(k_t.unsqueeze(-2), state).squeeze(-2); // [B,H,V]
+        auto delta = v_t.sub(kv).mul(beta_t);
+        state.add_(k_t.unsqueeze(-1).mul(delta.unsqueeze(-2)));
+        auto y = at::matmul(q_t.unsqueeze(-2), state).squeeze(-2);
+        out.select(2, t).copy_(y);
+    }
+    return out;
+}
+
+ST_Tensor smile_recurrent_gated_delta_rule(
+        ST_Tensor query, ST_Tensor key, ST_Tensor value,
+        ST_Tensor g, ST_Tensor beta, ST_Tensor state,
+        int qk_l2norm) {
+    if (!query || !key || !value || !g || !beta || !state) {
+        set_error("smile_recurrent_gated_delta_rule: null tensor");
+        return nullptr;
+    }
+    ST_TRY_BEGIN
+        auto q0 = query->t;
+        auto k0 = key->t;
+        auto v0 = value->t;
+        auto g0 = g->t;
+        auto beta0 = beta->t;
+        auto st = state->t;
+        if (q0.dim() != 4 || k0.dim() != 4 || v0.dim() != 4
+                || g0.dim() != 3 || beta0.dim() != 3 || st.dim() != 4) {
+            set_error("smile_recurrent_gated_delta_rule: unexpected ranks");
+            return nullptr;
+        }
+        if (st.scalar_type() != c10::ScalarType::Float) {
+            set_error("smile_recurrent_gated_delta_rule: state must be float32");
+            return nullptr;
+        }
+
+        // [B,S,H,D] → [B,H,S,D] float contiguous
+        auto q = q0.transpose(1, 2).contiguous().to(c10::ScalarType::Float);
+        auto k = k0.transpose(1, 2).contiguous().to(c10::ScalarType::Float);
+        auto v = v0.transpose(1, 2).contiguous().to(c10::ScalarType::Float);
+        auto gf = g0.transpose(1, 2).contiguous().to(c10::ScalarType::Float);
+        auto bf = beta0.transpose(1, 2).contiguous().to(c10::ScalarType::Float);
+        if (qk_l2norm) {
+            q = l2norm_last(q);
+            k = l2norm_last(k);
+        }
+        const float scale = 1.0f / std::sqrt(static_cast<float>(k.size(3)));
+        auto B = k.size(0), H = k.size(1), S = k.size(2), Vdim = v.size(3);
+        auto out_f = torch::empty({B, H, S, Vdim}, q.options());
+
+#ifdef USE_CUDA
+        if (q.is_cuda()) {
+            c10::cuda::CUDAGuard guard(q.device());
+            cudaStream_t stream = at::cuda::getCurrentCUDAStream(q.device().index()).stream();
+            int64_t K = k.size(3);
+            int64_t Vdim = v.size(3);
+            // Fused kernel keeps full [K,V] state in shared mem (see smile_gated_delta.cu).
+            const size_t smem = static_cast<size_t>(
+                    (K * Vdim + K + K + Vdim + Vdim + Vdim + Vdim) * sizeof(float));
+            int dev = q.device().index();
+            int smem_limit = 0;
+            cudaDeviceGetAttribute(&smem_limit, cudaDevAttrMaxSharedMemoryPerBlockOptin, dev);
+            if (smem_limit <= 0) {
+                cudaDeviceGetAttribute(&smem_limit, cudaDevAttrMaxSharedMemoryPerBlock, dev);
+            }
+            bool fused_ok = false;
+            if (smem <= static_cast<size_t>(smem_limit)) {
+                // Kernel expects g already exponentiated; scale is folded into q.
+                auto g_exp = gf.exp();
+                auto q_scaled = q.mul(scale);
+                int rc = smile_gated_delta_recurrent_cuda(
+                        q_scaled.data_ptr<float>(),
+                        k.data_ptr<float>(),
+                        v.data_ptr<float>(),
+                        g_exp.data_ptr<float>(),
+                        bf.data_ptr<float>(),
+                        st.data_ptr<float>(),
+                        out_f.data_ptr<float>(),
+                        B, H, S, K, Vdim,
+                        /*scale already applied*/ 1.0f,
+                        stream);
+                fused_ok = (rc == 0);
+            }
+            if (!fused_ok) {
+                char reason[256];
+                if (smem > static_cast<size_t>(smem_limit)) {
+                    snprintf(reason, sizeof(reason),
+                             "fused kernel shared mem %zu bytes exceeds device limit %d",
+                             smem, smem_limit);
+                } else {
+                    const char *err = smile_gated_delta_last_error();
+                    snprintf(reason, sizeof(reason), "%s",
+                             (err && err[0]) ? err : "fused kernel launch failed");
+                }
+                warn_gated_delta_libtorch_once(reason);
+                out_f = gated_delta_recurrent_libtorch(q, k, v, gf, bf, st, scale);
+            }
+        } else
+#endif
+        {
+            out_f = gated_delta_recurrent_libtorch(q, k, v, gf, bf, st, scale);
+        }
+
+        auto out = out_f.transpose(1, 2).contiguous().to(q0.scalar_type());
+        return new ST_Tensor_{ out };
+    ST_TRY_END
+    return nullptr;
+}
+
+ST_Tensor smile_flashinfer_paged_attention(
+        ST_Tensor query,
+        ST_Tensor k_cache,
+        ST_Tensor v_cache,
+        ST_Tensor paged_kv_indptr,
+        ST_Tensor paged_kv_indices,
+        ST_Tensor paged_kv_last_page_len,
+        int page_size,
+        int num_kv_heads,
+        int head_dim,
+        int cache_len,
+        double scale,
+        int is_causal,
+        ST_Tensor attn_mask,
+        ST_FlashInferWorkspace workspace) {
+#if defined(USE_CUDA) && defined(USE_FLASHINFER)
+    if (!query || !k_cache || !v_cache || !paged_kv_indptr
+            || !paged_kv_indices || !paged_kv_last_page_len || !workspace) {
+        set_error("smile_flashinfer_paged_attention: null argument");
+        return nullptr;
+    }
+    ST_TRY_BEGIN
+        int dev = smile_flashinfer_workspace_device_index(workspace);
+        c10::cuda::CUDAGuard guard(dev);
+        auto q = query->t;
+        float sc = scale > 0
+                ? static_cast<float>(scale)
+                : (1.0f / std::sqrt(static_cast<float>(head_dim > 0 ? head_dim : 1)));
+        torch::Tensor out = torch::empty_like(q);
+        std::string err;
+        const torch::Tensor *mask_ptr = (attn_mask && attn_mask->t.defined())
+                ? &attn_mask->t
+                : nullptr;
+        int rc = smile_flashinfer_paged_attention_cuda(
+                q, k_cache->t, v_cache->t,
+                paged_kv_indptr->t, paged_kv_indices->t, paged_kv_last_page_len->t,
+                page_size, num_kv_heads, head_dim, cache_len,
+                sc, is_causal, mask_ptr, out, err);
+        if (rc != 0) {
+            set_error(err.empty() ? "flashinfer paged attention failed" : err);
+            return nullptr;
+        }
+        return new ST_Tensor_{ out };
+    ST_TRY_END
+    return nullptr;
+#else
+    (void)query; (void)k_cache; (void)v_cache;
+    (void)paged_kv_indptr; (void)paged_kv_indices; (void)paged_kv_last_page_len;
+    (void)page_size; (void)num_kv_heads; (void)head_dim; (void)cache_len;
+    (void)scale; (void)is_causal; (void)attn_mask; (void)workspace;
+#  ifdef USE_CUDA
+    set_error("smile_torch built without USE_FLASHINFER");
+#  else
+    set_error_no_cuda_build();
+#  endif
+    return nullptr;
+#endif
+}
+
+ST_Tensor smile_flashinfer_ragged_attention(
+        ST_Tensor query,
+        ST_Tensor key,
+        ST_Tensor value,
+        ST_Tensor indptr,
+        int num_kv_heads,
+        int head_dim,
+        double scale,
+        int is_causal,
+        ST_Tensor attn_mask) {
+#if defined(USE_CUDA) && defined(USE_FLASHINFER)
+    if (!query || !key || !value || !indptr) {
+        set_error("smile_flashinfer_ragged_attention: null argument");
+        return nullptr;
+    }
+    ST_TRY_BEGIN
+        auto q = query->t;
+        float sc = scale > 0
+                ? static_cast<float>(scale)
+                : (1.0f / std::sqrt(static_cast<float>(head_dim > 0 ? head_dim : 1)));
+        torch::Tensor out = torch::empty_like(q);
+        std::string err;
+        const torch::Tensor *mask_ptr = (attn_mask && attn_mask->t.defined())
+                ? &attn_mask->t
+                : nullptr;
+        int rc = smile_flashinfer_ragged_attention_cuda(
+                q, key->t, value->t, indptr->t, num_kv_heads, head_dim,
+                sc, is_causal, mask_ptr, out, err);
+        if (rc != 0) {
+            set_error(err.empty() ? "flashinfer ragged attention failed" : err);
+            return nullptr;
+        }
+        return new ST_Tensor_{ out };
+    ST_TRY_END
+    return nullptr;
+#else
+    (void)query; (void)key; (void)value; (void)indptr;
+    (void)num_kv_heads; (void)head_dim; (void)scale; (void)is_causal; (void)attn_mask;
+#  ifdef USE_CUDA
+    set_error("smile_torch built without USE_FLASHINFER");
+#  else
+    set_error_no_cuda_build();
+#  endif
+    return nullptr;
+#endif
 }
 
 } // extern "C"

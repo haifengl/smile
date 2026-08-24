@@ -5,7 +5,7 @@ title: Smile - Vector Quantization
 ---
 {% include "toc.njk" %}
 
-<div class="col-md-9 col-md-pull-3">
+<div class="col-md-9 order-md-first">
     <h1 id="vector-quantization-top" class="title">Vector Quantization</h1>
 
     <p>Originally used for data compression, Vector quantization (VQ)
@@ -85,14 +85,14 @@ title: Smile - Vector Quantization
         data set, as shown in the above. The SOM has <code>20 x 20</code>
         neurons.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_1" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_1" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_1" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_1">
+        <div class="tab-pane fade" role="tabpanel" id="scala_1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val x = read.csv("data/clustering/chameleon/t4.8k.txt", header=false, delimiter=" ").toArray
 
     val epochs = 20
@@ -111,9 +111,9 @@ title: Smile - Vector Quantization
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_1">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_1">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
+          <pre class="language-java"><code class="language-java">
     import smile.util.*;
     import smile.vq.*;
     var x = Read.csv("data/clustering/chameleon/t4.8k.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
@@ -156,14 +156,14 @@ title: Smile - Vector Quantization
         information can be used in other algorithms such as Guassian kernel smooth
         parameters, nearest neighbor range, etc.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_2" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_2" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_2">
+        <div class="tab-pane fade" role="tabpanel" id="scala_2">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val dist = som.umatrix.flatten
     val canvas = hist(dist, 100, true)
 
@@ -182,9 +182,9 @@ title: Smile - Vector Quantization
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_2">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_2">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var dist = Arrays.stream(som.umatrix()).flatMapToDouble(r -> Arrays.stream(r)).toArray();
     var canvas = smile.plot.swing.Histogram.of(dist, 100, true).canvas();
 
@@ -213,14 +213,14 @@ title: Smile - Vector Quantization
     <p>It is also common to visualize an SOM by mapping the neuron
         codebook vectors to a lower dimensional space (e.g. by Sammon's mapping).</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_3" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_3" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_3" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_3">
+        <div class="tab-pane fade" role="tabpanel" id="scala_3">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val codebook = som.neurons.flatten
     val codebook2d = sammon(pdist(codebook, false).toArray(), 2).coordinates
 
@@ -230,9 +230,9 @@ title: Smile - Vector Quantization
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_3">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_3">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var codebook = Arrays.stream(som.neurons()).flatMap(r -> Arrays.stream(r)).toArray(double[][]::new);
     var codebook2d = SammonMapping.of(MathEx.pdist(codebook, false).toArray(), 2).coordinates;
 
@@ -282,14 +282,14 @@ title: Smile - Vector Quantization
         compared to k-means clustering, a much more robust convergence of the
         algorithm can be achieved.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_4" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_4" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_4" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_4" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_4">
+        <div class="tab-pane fade" role="tabpanel" id="scala_4">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val epochs = 20
     val gas = new NeuralGas(NeuralGas.seed(400, x),
                 TimeFunction.exp(0.3, x.length * epochs / 2),
@@ -308,9 +308,9 @@ title: Smile - Vector Quantization
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_4">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_4">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var epochs = 20;
     var gas = new NeuralGas(NeuralGas.seed(400, x),
                 TimeFunction.exp(0.3, x.length * epochs / 2),
@@ -360,14 +360,14 @@ title: Smile - Vector Quantization
             not connected by edges).</li>
     </ul>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_5" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_5" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_5" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_5">
+        <div class="tab-pane fade" role="tabpanel" id="scala_5">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val gng = new GrowingNeuralGas(x(0).length)
 
     (1 to 10).foreach { _ =>
@@ -390,9 +390,9 @@ title: Smile - Vector Quantization
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_5">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_5">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
+          <pre class="language-java"><code class="language-java">
     var gng = new GrowingNeuralGas(x[0].length);
 
     for (int e = 0; e < epochs; e++) {
@@ -437,14 +437,14 @@ title: Smile - Vector Quantization
         (those clusters are not connected by edges). Neural Map employs Locality-Sensitive
         Hashing to speed up the learning while BIRCH uses balanced CF trees.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_6" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_6" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_6" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_6" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_6">
+        <div class="tab-pane fade" role="tabpanel" id="scala_6">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val cortex = new NeuralMap(x(0).length, 10, 0.01, 0.002, 50, 0.995)
 
     (1 to 5).foreach { _ =>
@@ -470,9 +470,9 @@ title: Smile - Vector Quantization
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_6">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_6">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code style="white-space: preserve nowrap;">
+          <pre class="language-java"><code class="language-java">
     var cortex = new NeuralMap(x[0].length, 10, 0.01, 0.002, 50, 0.995);
 
     for (int e = 0; e < 5; e++) {
@@ -534,14 +534,14 @@ title: Smile - Vector Quantization
         maximum number of children nodes and the parameter <code>radius</code>
         is the maximum radius of a sub-cluster.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_7" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_7" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_7" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_7" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_7">
+        <div class="tab-pane fade" role="tabpanel" id="scala_7">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val birch = new BIRCH(x(0).length, 6, 3, 10)
     x.foreach { xi =>
         birch.update(xi)
@@ -553,9 +553,9 @@ title: Smile - Vector Quantization
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_7">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_7">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var birch = new BIRCH(x[0].length, 6, 3, 10);
     for (double[] xi : x) {
         birch.update(xi);
@@ -581,7 +581,3 @@ title: Smile - Vector Quantization
         <span class="btn-arrow-right">&nbsp;&rarr;</span>
     </div>
 </div>
-
-<script type="text/javascript">
-    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
-</script>

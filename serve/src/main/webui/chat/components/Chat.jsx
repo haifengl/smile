@@ -27,6 +27,8 @@ export default function Chat({
     messages,
     onSendMessage,
     showTypingIndicator,
+    conversationId,
+    disabled = false,
     logo = ChatbotIcon,
     title = "Smile Assistant",
     placeholder = "Type prompt here",
@@ -44,6 +46,8 @@ export default function Chat({
                 />
                 <MessageInput
                     onSendMessage={onSendMessage}
+                    conversationId={conversationId}
+                    disabled={disabled}
                     placeholder={placeholder}
                     theme={theme}
                 />

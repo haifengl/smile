@@ -5,7 +5,7 @@ title: Smile - Feature Engineering
 ---
 {% include "toc.njk" %}
 
-<div class="col-md-9 col-md-pull-3">
+<div class="col-md-9 order-md-first">
     <h1 id="feature-top" class="title">Feature Engineering</h1>
 
     <p>We have gone through the classification and regression algorithms. In the examples,
@@ -66,13 +66,13 @@ title: Smile - Feature Engineering
         of each feature in the training set will be 1.0. It does not shift/center
         the data, and thus does not destroy any sparsity.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_1" type="button" role="tab">Java</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_1">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     import smile.base.mlp.Layer;
     var pendigits = Read.csv("data/classification/pendigits.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
     var df = pendigits.drop(16);
@@ -105,13 +105,13 @@ title: Smile - Feature Engineering
         A robust alternative is to subtract the median and divide by the IQR, which
         is implemented <code>RobustStandardizer</code>.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2" type="button" role="tab">Java</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_2">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_2">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     var zip = Read.csv("data/usps/zip.train", CSVFormat.DEFAULT.withDelimiter(' '));
     var df = zip.drop(0);
     var y = zip.column(0).toIntArray();
@@ -204,7 +204,7 @@ title: Smile - Feature Engineering
         which can be used as a feature selection criterion for binary classification
         problems. S2N is defined as</p>
 
-    <pre class="prettyprint lang-html"><code>
+    <pre class="language-markup"><code class="language-markup">
     |&mu;<sub>1</sub> - &mu;<sub>2</sub>| / (&sigma;<sub>1</sub> + &sigma;<sub>2</sub>)
     </code></pre>
 
@@ -221,7 +221,7 @@ title: Smile - Feature Engineering
         feature ranking metric, which can be used as a feature selection criterion
         for multi-class classification problems. For each variable j, this ratio is</p>
 
-    <pre class="prettyprint lang-html"><code>
+    <pre class="language-markup"><code class="language-markup">
     BSS(j) / WSS(j) = &Sigma;I(y<sub>i</sub> = k)(x<sub>kj</sub> - x<sub>&middot;j</sub>)<sup>2</sup> / &Sigma;I(y<sub>i</sub> = k)(x<sub>ij</sub> - x<sub>kj</sub>)<sup>2</sup>
     </code></pre>
 
@@ -233,13 +233,13 @@ title: Smile - Feature Engineering
     <p>Applying it to Iris data, we can find that the last two variables have much higher
         sum squares ratios (about 16 and 13 in contrast to 1.6 and 0.6 of the first two variables).</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_3" type="button" role="tab">Java</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_3">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_3">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var iris = Read.arff("data/weka/iris.arff");
     SumSquaresRatio.fit(iris, "class");
 
@@ -274,23 +274,23 @@ title: Smile - Feature Engineering
     <p>For these algorithms, there is a method <code>importance</code> returning
         the scores for feature selection (higher is better).</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_4" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_4" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_4" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_4" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_4">
+        <div class="tab-pane fade" role="tabpanel" id="scala_4">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val iris = read.arff("data/weka/iris.arff")
     val model = smile.classification.randomForest("class" ~ ".", iris)
     println(iris.names.slice(0, 4).zip(model.importance).mkString("\n"))
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_4">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_4">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var model = smile.classification.RandomForest.fit(Formula.lhs("class"), iris);
     for (int i = 0; i < 4; i++) {
         System.out.format("%s\t%.2f\n", iris.names()[i], model.importance()[i]);
@@ -332,14 +332,14 @@ title: Smile - Feature Engineering
         tree models and ensembles of trees, under several different possible
         assumptions about feature dependence. </p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_14" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_14" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_14" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_14" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_14">
+        <div class="tab-pane fade" role="tabpanel" id="scala_14">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
 smile&gt; val housing = read.arff("data/weka/regression/housing.arff")
 [main] INFO smile.io.Arff - Read ARFF relation housing
 housing: DataFrame = [CRIM: float, ZN: float, INDUS: float, CHAS: byte nominal[0, 1], NOX: float, RM: float, AGE: float, DIS: float, RAD: float, TAX: float, PTRATIO: float, B: float, LSTAT: float, class: float]
@@ -395,9 +395,9 @@ LSTAT                 2.6838
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_14">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_14">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
 smile&gt; import smile.io.*
 
 smile&gt; import smile.data.formula.*
@@ -499,13 +499,13 @@ LSTAT                 2.6772
     <p>In the below example, we use gradient boosted trees (100 tress)
         as the classifier, the accuracy of 5-fold cross validation as the fitness measure.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_5" type="button" role="tab">Java</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_5">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_5">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     var train = Read.csv("data/usps/zip.train", CSVFormat.DEFAULT.withDelimiter(' '));
     var test = Read.csv("data/usps/zip.test", CSVFormat.DEFAULT.withDelimiter(' '));
     var x = train.drop("V1").toArray();
@@ -526,14 +526,14 @@ LSTAT                 2.6772
         </div>
     </div>
 <!-- GAFE deadlock on scala
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_5" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_5" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_5" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_5">
+        <div class="tab-pane fade" role="tabpanel" id="scala_5">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     val train = read.csv("data/usps/zip.train", header=false, delimiter=' ')
     val test = read.csv("data/usps/zip.test", header=false, delimiter=' ')
     val x = train.drop("V1").toArray
@@ -553,9 +553,9 @@ LSTAT                 2.6772
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_5">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_5">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     var train = Read.csv("data/usps/zip.train", CSVFormat.DEFAULT.withDelimiter(' '));
     var test = Read.csv("data/usps/zip.test", CSVFormat.DEFAULT.withDelimiter(' '));
     var x = train.drop("V1").toArray();
@@ -606,21 +606,21 @@ LSTAT                 2.6772
         retaining the most important variance) to the space spanned by a few
         eigenvectors.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_6" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_6" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_6" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_6" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_6">
+        <div class="tab-pane fade" role="tabpanel" id="scala_6">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def pca(data: Array[Array[Double]], cor: Boolean = false): PCA
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_6">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_6">
             <div class="code" style="text-align: left;">
-              <pre class="prettyprint lang-java"><code>
+              <pre class="language-java"><code class="language-java">
     public class PCA {
         public static PCA fit(double[][] data);
         public static PCA cor(double[][] data);
@@ -636,14 +636,14 @@ LSTAT                 2.6772
         as the correlation matrix will lose information when standardizing the variance.
         The correlation matrix is recommended when variables are measured in different scales.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_7" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_7" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_7" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_7" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_7">
+        <div class="tab-pane fade" role="tabpanel" id="scala_7">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val pendigits = read.csv("data/classification/pendigits.txt", delimiter="\t", header = false)
     val formula: Formula = "V17" ~ "."
     val df = formula.x(pendigits)
@@ -658,9 +658,9 @@ LSTAT                 2.6772
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_7">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_7">
             <div class="code" style="text-align: left;">
-                  <pre class="prettyprint lang-java"><code>
+                  <pre class="language-java"><code class="language-java">
     var pendigits = Read.csv("data/classification/pendigits.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
     var formula = Formula.lhs("V17");
     var x = formula.x(pendigits).toArray();
@@ -702,7 +702,7 @@ LSTAT                 2.6772
     <p>Probabilistic principal component analysis is a simplified factor analysis
         that employs a latent variable model with linear relationship:
 
-    <pre class="prettyprint lang-html"><code>
+    <pre class="language-markup"><code class="language-markup">
     y &sim; W * x + &mu; + &epsilon;
     </code></pre>
 
@@ -712,21 +712,21 @@ LSTAT                 2.6772
         A close form of estimation of above parameters can be obtained
         by maximum likelihood method.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_8" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_8" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_8" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_8" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_8">
+        <div class="tab-pane fade" role="tabpanel" id="scala_8">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def ppca(data: Array[Array[Double]], k: Int): PPCA
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_8">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_8">
             <div class="code" style="text-align: left;">
-                  <pre class="prettyprint lang-java"><code>
+                  <pre class="language-java"><code class="language-java">
     public class PPCA {
         public static PPCA fit(double[][] data, int k);
     }
@@ -737,23 +737,23 @@ LSTAT                 2.6772
 
     <p>Similar to PCA example, we apply probabilistic PCA to the pen-digits data.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_9" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_9" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_9" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_9" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_9">
+        <div class="tab-pane fade" role="tabpanel" id="scala_9">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val pc = ppca(df, 3)
     val x2 = pc(x)
     show(plot(x2, y, '.'))
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_9">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_9">
             <div class="code" style="text-align: left;">
-                  <pre class="prettyprint lang-java"><code>
+                  <pre class="language-java"><code class="language-java">
     var pca = ProbabilisticPCA.fit(x, 3);
     var x2 = pca.apply(x);
     ScatterPlot.of(x2, y, '.').canvas().window();
@@ -785,21 +785,21 @@ LSTAT                 2.6772
         of those clusters. Since even this method may yield a relatively large K,
         it is common to compute only the top P eigenvalues and eigenvectors of <code>K</code>.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_10" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_10" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_10" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_10" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_10">
+        <div class="tab-pane fade" role="tabpanel" id="scala_10">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def kpca[T](data: Array[T], kernel: MercerKernel[T], k: Int, threshold: Double = 0.0001): KPCA[T]
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_10">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_10">
             <div class="code" style="text-align: left;">
-                  <pre class="prettyprint lang-java"><code>
+                  <pre class="language-java"><code class="language-java">
     public class KPCA {
         public static KPCA&lt;T&gt; fit(T[] data, MercerKernel&lt;T&gt; kernel, int k, double threshold);
     }
@@ -810,23 +810,23 @@ LSTAT                 2.6772
 
     <p>Here we apply kernel PCA to the pen-digits data.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_11" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_11" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_11" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_11" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_11">
+        <div class="tab-pane fade" role="tabpanel" id="scala_11">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val pc = kpca(df, new GaussianKernel(45), 3)
     val x2 = pc(x)
     show(plot(x2, y, '.'))
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_11">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_11">
             <div class="code" style="text-align: left;">
-                  <pre class="prettyprint lang-java"><code>
+                  <pre class="language-java"><code class="language-java">
     var pca = KernelPCA.fit(pendigits.drop("V17"), new GaussianKernel(45), 3);
     var x2 = pca.apply(x);
     ScatterPlot.of(x2, y, '.').canvas().window();
@@ -863,23 +863,23 @@ LSTAT                 2.6772
         shown that a larger learning rate &eta; leads to faster convergence
         and larger asymptotic mean-square error, which is intuitively satisfying.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_12" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_12" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_12" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_12" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_12">
+        <div class="tab-pane fade" role="tabpanel" id="scala_12">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     def gha(data: Array[Array[Double]], k: Int, r: Double): GHA
 
     def gha(data: Array[Array[Double]], w: Array[Array[Double]], r: Double): GHA
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_12">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_12">
             <div class="code" style="text-align: left;">
-                  <pre class="prettyprint lang-java"><code>
+                  <pre class="language-java"><code class="language-java">
     public class GHA {
         public GHA(int n, int p, double r);
         public double update(double[] x);
@@ -892,23 +892,23 @@ LSTAT                 2.6772
     <p>The first method starts with random initial projection matrix, while the second one
         starts with a given projection matrix.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_13" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_13" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_13" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_13" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_13">
+        <div class="tab-pane fade" role="tabpanel" id="scala_13">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val pc = gha(x, 3, TimeFunction.constant(0.00001))
     val x2 = pc(x)
     show(plot(x2, y, '.'))
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_13">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_13">
             <div class="code" style="text-align: left;">
-                  <pre class="prettyprint lang-java"><code>
+                  <pre class="language-java"><code class="language-java">
     var gha = new GHA(x[0].length, 3, TimeFunction.constant(0.00001));
     Arrays.stream(x).forEach(xi -> gha.update(xi));
     var x2 = gha.apply(x);
@@ -932,7 +932,3 @@ LSTAT                 2.6772
         <span class="btn-arrow-right">&nbsp;&rarr;</span>
     </div>
 </div>
-
-<script type="text/javascript">
-    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
-</script>

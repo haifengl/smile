@@ -1,0 +1,13 @@
+{
+  "model": {
+    "vocab": {
+      "a": 0,
+      "b": 1,
+      "<|endoftext|>": 10
+    }
+  },
+  "added_tokens": [
+    {"id": 11, "content": "<|im_start|>", "special": true},
+    {"id": 12, "content": "<|im_end|>", "special": true}
+  ]
+}

@@ -80,18 +80,6 @@ public class ChatServiceTest {
     }
 
     @Test
-    public void testGivenMaxCompletionTokensWhenResolvedThenTakesPrecedence() {
-        CompletionRequest request = new CompletionRequest();
-        assertEquals(2048, request.resolveMaxTokens());
-
-        request.maxTokens = 100;
-        assertEquals(100, request.resolveMaxTokens());
-
-        request.maxCompletionTokens = 50;
-        assertEquals(50, request.resolveMaxTokens());
-    }
-
-    @Test
     public void testGivenStreamFlagInBodyWhenParsedThenHonorsFalse() {
         assertFalse(ChatCompletionsStreamFlag.streamFlag("{}".getBytes()));
         assertTrue(ChatCompletionsStreamFlag.streamFlag("{\"stream\":true}".getBytes()));
@@ -131,13 +119,19 @@ public class ChatServiceTest {
     }
 
     @Test
-    public void testGivenModelSpecWhenPublicIdDerivedThenUsesRepoOrDirectoryName() {
+    public void testGivenModelSpecWhenPublicIdDerivedThenUsesRepoOrDirectoryName() throws Exception {
         assertEquals("meta-llama/Llama-3.1-8B-Instruct",
                 ChatService.publicModelId("meta-llama/Llama-3.1-8B-Instruct"));
         assertEquals("Qwen/Qwen2.5-7B-Instruct",
                 ChatService.publicModelId("Qwen/Qwen2.5-7B-Instruct"));
         assertEquals("unknown", ChatService.publicModelId(null));
         assertEquals("unknown", ChatService.publicModelId("  "));
+        Path dir = Files.createTempDirectory("smile-chat-model-id");
+        try {
+            assertEquals(dir.getFileName().toString(), ChatService.publicModelId(dir.toString()));
+        } finally {
+            Files.deleteIfExists(dir);
+        }
     }
 
     @Test

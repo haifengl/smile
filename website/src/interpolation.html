@@ -5,7 +5,7 @@ title: Smile - Interpolation
 ---
 {% include "toc.njk" %}
 
-<div class="col-md-9 col-md-pull-3">
+<div class="col-md-9 order-md-first">
 
     <h1 id="interpolation-top" class="title">Interpolation</h1>
 
@@ -28,14 +28,14 @@ title: Smile - Interpolation
     <p><code>LinearInterpolation</code> is quick and easy, but it is not very precise. Another disadvantage
         is that the interpolant is not differentiable at the control points.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_1" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_1" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_1" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_1">
+        <div class="tab-pane fade" role="tabpanel" id="scala_1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="language-scala"><code class="language-scala">
     val x = Array(0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0)
     val y = Array(0.0, 0.8415, 0.9093, 0.1411, -0.7568, -0.9589, -0.2794)
     val points = (0 until x.length).map(i => Array(x(i), y(i))).toArray
@@ -54,9 +54,9 @@ title: Smile - Interpolation
     </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_1">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_1">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     import java.awt.Color;
     import smile.interpolation.*;
     import smile.math.rbf.*;
@@ -111,14 +111,14 @@ title: Smile - Interpolation
         used in polynomial interpolation. It also does not suffer from Runge's
         phenomenon.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_2" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_2" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_2">
+        <div class="tab-pane fade" role="tabpanel" id="scala_2">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-scala"><code>
+          <pre class="language-scala"><code class="language-scala">
     val cubic = new CubicSplineInterpolation1D(x, y)
 
     val data = (0 to 60).map { i =>
@@ -133,9 +133,9 @@ title: Smile - Interpolation
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_2">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_2">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var cubic = new CubicSplineInterpolation1D(x, y);
 
     double[][] data = new double[61][2];
@@ -173,14 +173,14 @@ title: Smile - Interpolation
         <img src="images/grid-interpolation2d.png" class="enlarge" style="width: 480px;" />
     </div>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_3" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_3" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_3" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_3">
+        <div class="tab-pane fade" role="tabpanel" id="scala_3">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-scala"><code>
+          <pre class="language-scala"><code class="language-scala">
     val x1 = Array(1950.0, 1960, 1970, 1980, 1990)
     val x2 = Array(10.0, 20, 30)
     val y = Array(
@@ -216,9 +216,9 @@ title: Smile - Interpolation
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_3">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_3">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     double[] x1 = {1950.0, 1960, 1970, 1980, 1990};
     double[] x2 = {10.0, 20, 30};
     double[][] y = {
@@ -269,14 +269,14 @@ title: Smile - Interpolation
         also known as Gauss-Markov estimation or Gaussian process regression.
         We implement ordinary kriging for interpolation with power variogram.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_4" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_4" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_4" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_4" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_4">
+        <div class="tab-pane fade" role="tabpanel" id="scala_4">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-scala"><code>
+          <pre class="language-scala"><code class="language-scala">
     val kriging = new KrigingInterpolation1D(x, y)
 
     val data = Array.ofDim[Double](61, 2)
@@ -291,9 +291,9 @@ title: Smile - Interpolation
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_4">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_4">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var kriging = new KrigingInterpolation1D(x, y);
 
     double[][] data = new double[61][2];
@@ -353,14 +353,14 @@ title: Smile - Interpolation
         there is no evidence that either the NRBF method is consistently superior
         to the RBF method, or vice versa.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_5" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_5" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_5" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_5">
+        <div class="tab-pane fade" role="tabpanel" id="scala_5">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-scala"><code>
+          <pre class="language-scala"><code class="language-scala">
     val rbf = new RBFInterpolation1D(x, y, new smile.math.rbf.GaussianRadialBasis())
 
     val data = Array.ofDim[Double](61, 2)
@@ -375,9 +375,9 @@ title: Smile - Interpolation
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_5">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_5">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var rbf = new RBFInterpolation1D(x, y, new smile.math.rbf.GaussianRadialBasis());
 
     double[][] data = new double[61][2];
@@ -406,14 +406,14 @@ title: Smile - Interpolation
         equations, and thus it works for very large N. An example of such &phi;
         is &phi;(r) = r<sup>-p</sup> with (typically) 1 &lt; p &le; 3.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_6" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_6" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_6" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_6" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_6">
+        <div class="tab-pane fade" role="tabpanel" id="scala_6">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-scala"><code>
+          <pre class="language-scala"><code class="language-scala">
     val shepard = new ShepardInterpolation1D(x, y, 3)
 
     val data = Array.ofDim[Double](61, 2)
@@ -428,9 +428,9 @@ title: Smile - Interpolation
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_6">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_6">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     var shepard = new ShepardInterpolation1D(x, y, 3);
 
     double[][] data = new double[61][2];
@@ -466,14 +466,14 @@ title: Smile - Interpolation
         produces the smoothest possible interpolant, which are obtained by solving
         a very sparse linear equations with biconjugate gradient method.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_7" data-toggle="tab">Java</a></li>
-        <li><a href="#scala_7" data-toggle="tab">Scala</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_7" type="button" role="tab">Java</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_7" type="button" role="tab">Scala</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" id="scala_7">
+        <div class="tab-pane fade" role="tabpanel" id="scala_7">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-scala"><code>
+          <pre class="language-scala"><code class="language-scala">
     val zz = Array.ofDim[Double](101, 101)
     val ww = Array.ofDim[Double](101, 101)
     for (i <- 0 to 100; j <- 0 to 100) {
@@ -492,9 +492,9 @@ title: Smile - Interpolation
           </code></pre>
             </div>
         </div>
-        <div class="tab-pane active" id="java_7">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_7">
             <div class="code" style="text-align: left;">
-          <pre class="prettyprint lang-java"><code>
+          <pre class="language-java"><code class="language-java">
     double[][] zz = new double[101][101];
     double[][] ww = new double[101][101];
     for (int i = 0; i <= 100; i++) {
@@ -528,7 +528,3 @@ title: Smile - Interpolation
         <span class="btn-arrow-right">&nbsp;&rarr;</span>
     </div>
 </div>
-
-<script type="text/javascript">
-    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
-</script>

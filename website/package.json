@@ -9,6 +9,7 @@
   "author": "Haifeng Li",
   "license": "GPL-3",
   "devDependencies": {
-    "@11ty/eleventy": "^3.1.6"
+    "@11ty/eleventy": "^3.1.6",
+    "prismjs": "^1.29.0"
   }
 }
