@@ -5,7 +5,7 @@ title: Smile - Missing Value Imputation
 ---
 {% include "toc.njk" %}
 
-<div class="col-md-9 col-md-pull-3">
+<div class="col-md-9 order-md-first">
     <h1 id="missing-value-imputation-top" class="title">Missing Value Imputation</h1>
 
     <p>So far, we have been living in a prefect data world where we select features,
@@ -101,13 +101,13 @@ title: Smile - Missing Value Imputation
         columns with the mean of values in the range <code>[lower, upper]</code>,
         where lower and upper are in terms of percentiles of the original distribution.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_1" type="button" role="tab">Java</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_1">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     var format = CSVFormat.Builder.create().setDelimiter(' ').build();
     var data = Read.csv("data/clustering/synthetic_control.data", format);
     SimpleImputer imputer = SimpleImputer.fit(data);
@@ -127,13 +127,13 @@ title: Smile - Missing Value Imputation
         The average of values on attribute <code>i</code> from the <code>k</code> nearest
         neighbors is then used as an estimate for the missing value in instance <code>A</code>.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2" type="button" role="tab">Java</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_2">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_2">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     // KNN is a lazy algorithm. So no "training" is needed.
     var imputer = new KNNImputer(data, 5);
     </code></pre>
@@ -149,13 +149,13 @@ title: Smile - Missing Value Imputation
         at each iteration. The missing values of an instance are replaced
         the corresponding ones of the nearest medoid.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_3" type="button" role="tab">Java</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_3">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_3">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     Distance&lt;Tuple&gt; distance = (x, y) -> {
         double[] xd = x.toArray();
         double[] yd = y.toArray();
@@ -191,13 +191,13 @@ title: Smile - Missing Value Imputation
         matrix, where missing values are represented as <code>NaN</code>. The output is also
         a <code>double[][]</code> matrix with imputed values.</p>
 
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_5" type="button" role="tab">Java</button></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="java_5">
+        <div class="tab-pane fade show active" role="tabpanel" id="java_5">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-java"><code>
+    <pre class="language-java"><code class="language-java">
     var matrix = data.toArray();
     double[][] completeMatrix = SVDImputer.impute(matrix, 5, 10)
     </code></pre>
@@ -212,7 +212,3 @@ title: Smile - Missing Value Imputation
         <span class="btn-arrow-right">&nbsp;&rarr;</span>
     </div>
 </div>
-
-<script type="text/javascript">
-    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
-</script>
