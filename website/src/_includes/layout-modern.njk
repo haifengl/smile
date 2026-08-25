@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }}</title>
+  <meta name="description" content="Statistical Machine Intelligence and Learning Engine">
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem('smile-theme');
+        var theme = (stored === 'dark' || stored === 'light') ? stored : 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="css/site.css">
+  <link rel="stylesheet" href="css/prism.min.css" id="prism-light">
+  <link rel="stylesheet" href="css/prism-tomorrow.min.css" id="prism-dark" disabled>
+  <script>
+    (function () {
+      var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+      var lightSheet = document.getElementById('prism-light');
+      var darkSheet = document.getElementById('prism-dark');
+      if (lightSheet && darkSheet) {
+        lightSheet.disabled = dark;
+        darkSheet.disabled = !dark;
+      }
+    })();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-57GD08QCML"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-57GD08QCML');
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#content">Skip to content</a>
+  {% include "components/header.njk" %}
+  <div class="site-shell" id="content">
+    {{ content | safe }}
+  </div>
+  {% include "components/command-palette.njk" %}
+  <script src="js/vendor/prism/prism.min.js"></script>
+  <script src="js/vendor/prism/prism-clike.min.js"></script>
+  <script src="js/vendor/prism/prism-java.min.js"></script>
+  <script src="js/vendor/prism/prism-scala.min.js"></script>
+  <script src="js/vendor/prism/prism-kotlin.min.js"></script>
+  <script src="js/vendor/prism/prism-groovy.min.js"></script>
+  <script src="js/vendor/prism/prism-clojure.min.js"></script>
+  <script src="js/vendor/prism/prism-bash.min.js"></script>
+  <script src="js/vendor/prism/prism-markup.min.js"></script>
+  <script src="js/toc.js"></script>
+  <script src="js/site.js"></script>
+  <script src="js/search.js"></script>
+  <script src="js/playground.js"></script>
+</body>
+</html>

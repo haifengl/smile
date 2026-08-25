@@ -17,6 +17,27 @@ version: "6.3.0"
         and LibTorch (PyTorch C++) enables GPU-accelerated deep learning and LLM inference.
     </p>
 
+    <p>Edit the snippet below, then open it in Binder to run on a free JVM notebook.</p>
+
+    {% codePlayground "java", "https://mybinder.org/v2/gh/haifengl/smile/notebook?urlpath=lab%2Ftree%2Fshell%2Fsrc%2Funiversal%2Fnotebooks%2Findex.ipynb" %}
+var iris = Read.arff("data/weka/iris.arff");
+var formula = Formula.lhs("class");
+var rf = RandomForest.fit(formula, iris);
+System.out.println(rf.metrics());
+    {% endcodePlayground %}
+
+    {% codePlayground "scala", "https://mybinder.org/v2/gh/haifengl/smile/notebook?urlpath=lab%2Ftree%2Fshell%2Fsrc%2Funiversal%2Fnotebooks%2Findex.ipynb" %}
+val iris = read.arff("data/weka/iris.arff")
+val rf = randomForest("class" ~, iris)
+println(rf.metrics)
+    {% endcodePlayground %}
+
+    {% codePlayground "kotlin", "https://mybinder.org/v2/gh/haifengl/smile/notebook?urlpath=lab%2Ftree%2Fshell%2Fsrc%2Funiversal%2Fnotebooks%2Findex.ipynb" %}
+val iris = read.arff("data/weka/iris.arff")
+val rf = randomForest(Formula.lhs("class"), iris)
+println(rf.metrics())
+    {% endcodePlayground %}
+
     <h2 id="installation">Installation</h2>
 
     <p>Add the relevant artifact(s) to your build tool. All artifacts are published to
