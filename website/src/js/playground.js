@@ -37,7 +37,8 @@
     var source = visible || playground.querySelector('.playground-source');
     if (!source) return '';
     var code = source.querySelector('code');
-    return (code ? code.textContent : source.textContent) || '';
+    var text = (code ? code.textContent : source.textContent) || '';
+    return window.smileDedent ? window.smileDedent(text) : text;
   }
 
   function mapLang(lang) {
