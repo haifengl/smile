@@ -275,6 +275,9 @@
   .bento-card { padding: 1.1rem 1.15rem; height: 100%; }
   .bento-card h3 { margin-top: 0; font-size: 1.05rem; }
   .bento-card p { color: var(--text-muted); font-size: 0.92rem; margin-bottom: 0.5rem; }
+  .bento-viz #vegalite { width: 100%; margin-top: 0.5rem; }
+  .bento-viz .vega-embed,
+  .bento-viz .vega-embed summary { width: 100%; }
   .stat-value {
     font-size: 1.75rem;
     font-weight: 700;

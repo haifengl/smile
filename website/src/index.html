@@ -72,11 +72,38 @@ println(model.metrics())</code></pre>
         <h3>Deep Learning &amp; Vision</h3>
         <p>Build, train, and deploy neural nets with Conv2d, norms, optimizers, and pretrained EfficientNet-V2.</p>
       </a>
-      <a class="bento-card glass bento-full" href="classification.html" style="text-decoration:none;color:inherit">
+      <a class="bento-card glass bento-half" href="classification.html" style="text-decoration:none;color:inherit">
         <h3>Speed</h3>
         <p>Advanced data structures deliver state-of-the-art performance — often faster than R, Python, Spark, or H2O.</p>
-        <img src="images/benchm-ml.png" alt="Training time benchmark" style="width:100%;max-width:36rem;margin-top:0.75rem;border-radius:0.5rem">
+        <img src="images/benchm-ml.png" alt="Training time benchmark" style="width:100%;margin-top:0.75rem;border-radius:0.5rem">
       </a>
+      <div class="bento-card glass bento-half bento-viz">
+        <h3>Declarative visualization</h3>
+        <p>Interactive Swing plots and <a href="vegalite.html">Vega-Lite</a> charts in the browser.</p>
+        <div id="vegalite"></div>
+      </div>
+      <script>
+        vegaEmbed('#vegalite', {
+          "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+          "width": "container",
+          "height": 240,
+          "title": "Unemployment rate per county",
+          "data": {
+            "url": "https://vega.github.io/vega-lite/examples/data/us-10m.json",
+            "format": { "type": "topojson", "feature": "counties" }
+          },
+          "transform": [{
+            "lookup": "id",
+            "from": {
+              "data": { "url": "https://vega.github.io/vega-lite/examples/data/unemployment.tsv" },
+              "key": "id", "fields": ["rate"]
+            }
+          }],
+          "projection": { "type": "albersUsa" },
+          "mark": "geoshape",
+          "encoding": { "color": { "field": "rate", "type": "quantitative" } }
+        });
+      </script>
       <a class="bento-card glass bento-third" href="nlp.html" style="text-decoration:none;color:inherit">
         <h3>Classic ML &amp; NLP</h3>
         <p>Hundreds of algorithms — classification, regression, clustering, manifold learning, and classic NLP — behind a clean API.</p>
@@ -106,32 +133,6 @@ println(model.metrics())</code></pre>
       </blockquote>
     </section>
 
-    <section class="glass" style="padding:1.25rem;margin-top:1rem">
-      <h2 style="border:0;margin-top:0">Declarative visualization</h2>
-      <p class="lead">Interactive Swing plots and Vega-Lite charts in the browser.</p>
-      <div id="vegalite"></div>
-      <script>
-        vegaEmbed('#vegalite', {
-          "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-          "width": 400, "height": 260,
-          "title": "Unemployment rate per county",
-          "data": {
-            "url": "https://vega.github.io/vega-lite/examples/data/us-10m.json",
-            "format": { "type": "topojson", "feature": "counties" }
-          },
-          "transform": [{
-            "lookup": "id",
-            "from": {
-              "data": { "url": "https://vega.github.io/vega-lite/examples/data/unemployment.tsv" },
-              "key": "id", "fields": ["rate"]
-            }
-          }],
-          "projection": { "type": "albersUsa" },
-          "mark": "geoshape",
-          "encoding": { "color": { "field": "rate", "type": "quantitative" } }
-        });
-      </script>
-    </section>
   </div>
 
   <aside>
