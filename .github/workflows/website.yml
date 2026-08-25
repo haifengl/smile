@@ -1,0 +1,40 @@
+name: Website
+
+on:
+  push:
+    branches: [ "master" ]
+    paths:
+      - "website/**"
+      - ".github/workflows/website.yml"
+  pull_request:
+    branches: [ "master" ]
+    paths:
+      - "website/**"
+      - ".github/workflows/website.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build Eleventy site
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: website
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - name: Verify artifacts
+        run: |
+          test -f _site/index.html
+          test -f _site/css/site.css
+          test -f _site/search-index.json
+          test -f _site/js/site.js
+          grep -q 'data-theme' _site/index.html

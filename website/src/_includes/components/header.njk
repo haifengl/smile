@@ -1,0 +1,127 @@
+<header class="site-header" id="site-header">
+  <div class="masthead">
+    <a href="index.html" class="masthead-link">
+      <img src="images/smile.jpg" alt="SMILE logo" class="masthead-logo">
+      <span class="tagline">SMILE — Statistical Machine Intelligence and Learning Engine</span>
+    </a>
+  </div>
+  <nav class="nav-bar" aria-label="Primary">
+    <ul class="nav-links">
+      <li>
+        <button type="button" aria-expanded="false" aria-haspopup="true">Overview</button>
+        <ul class="nav-dropdown glass">
+          <li><a href="quickstart.html">Quick Start</a></li>
+          <li><a href="overview.html">What's Machine Learning</a></li>
+          <li><a href="data.html">Data Processing</a></li>
+          <li><a href="visualization.html">Data Visualization</a></li>
+          <li><a href="vegalite.html">Declarative Visualization</a></li>
+          <li><a href="gallery.html">Gallery</a></li>
+          <li><a href="faq.html">FAQ</a></li>
+        </ul>
+      </li>
+      <li>
+        <button type="button" aria-expanded="false" aria-haspopup="true">Supervised Learning</button>
+        <ul class="nav-dropdown glass">
+          <li><a href="classification.html">Classification</a></li>
+          <li><a href="regression.html">Regression</a></li>
+          <li><a href="deep-learning.html">Deep Learning</a></li>
+          <li><a href="feature.html">Feature Engineering</a></li>
+          <li><a href="validation.html">Model Validation</a></li>
+          <li><a href="missing-value-imputation.html">Missing Value Imputation</a></li>
+        </ul>
+      </li>
+      <li>
+        <button type="button" aria-expanded="false" aria-haspopup="true">Unsupervised Learning</button>
+        <ul class="nav-dropdown glass">
+          <li><a href="clustering.html">Clustering</a></li>
+          <li><a href="vector-quantization.html">Vector Quantization</a></li>
+          <li><a href="association-rule.html">Association Rule Mining</a></li>
+          <li><a href="mds.html">Multi-Dimensional Scaling</a></li>
+          <li><a href="manifold.html">Manifold Learning</a></li>
+        </ul>
+      </li>
+      <li>
+        <button type="button" aria-expanded="false" aria-haspopup="true">LLM &amp; NLP</button>
+        <ul class="nav-dropdown glass">
+          <li><a href="llm.html">Large Language Model (LLM)</a></li>
+          <li><a href="nlp.html">Natural Language Processing (NLP)</a></li>
+        </ul>
+      </li>
+      <li>
+        <button type="button" aria-expanded="false" aria-haspopup="true">Math</button>
+        <ul class="nav-dropdown glass">
+          <li><a href="linear-algebra.html">Linear Algebra</a></li>
+          <li><a href="statistics.html">Statistics</a></li>
+          <li><a href="wavelet.html">Wavelet</a></li>
+          <li><a href="interpolation.html">Interpolation</a></li>
+          <li><a href="graph.html">Graph Data Structure</a></li>
+        </ul>
+      </li>
+      <li>
+        <button type="button" aria-expanded="false" aria-haspopup="true">API</button>
+        <ul class="nav-dropdown glass">
+          <li><a href="api/java/index.html" target="_blank" rel="noopener">Java</a></li>
+          <li><a href="api/scala/index.html" target="_blank" rel="noopener">Scala</a></li>
+          <li><a href="api/kotlin/index.html" target="_blank" rel="noopener">Kotlin</a></li>
+          <li><a href="api/json/index.html" target="_blank" rel="noopener">JSON</a></li>
+          <li><a href="api/clojure/index.html" target="_blank" rel="noopener">Clojure</a></li>
+        </ul>
+      </li>
+      <li><a href="https://mybinder.org/v2/gh/haifengl/smile/notebook?urlpath=lab%2Ftree%2Fshell%2Fsrc%2Funiversal%2Fnotebooks%2Findex.ipynb" target="_blank" rel="noopener">Try It Online</a></li>
+      <li><a href="https://github.com/haifengl/smile" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+    <div class="nav-actions">
+      <button type="button" class="icon-btn" id="search-toggle" aria-label="Open search" title="Search (⌘K)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
+      </button>
+      {% include "components/theme-toggle.njk" %}
+      <button type="button" class="icon-btn menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="mobile-drawer" aria-label="Open menu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="mobile-drawer" id="mobile-drawer">
+    <details><summary>Overview</summary>
+      <a href="quickstart.html">Quick Start</a>
+      <a href="overview.html">What's Machine Learning</a>
+      <a href="data.html">Data Processing</a>
+      <a href="visualization.html">Data Visualization</a>
+      <a href="vegalite.html">Declarative Visualization</a>
+      <a href="gallery.html">Gallery</a>
+      <a href="faq.html">FAQ</a>
+    </details>
+    <details><summary>Supervised Learning</summary>
+      <a href="classification.html">Classification</a>
+      <a href="regression.html">Regression</a>
+      <a href="deep-learning.html">Deep Learning</a>
+      <a href="feature.html">Feature Engineering</a>
+      <a href="validation.html">Model Validation</a>
+      <a href="missing-value-imputation.html">Missing Value Imputation</a>
+    </details>
+    <details><summary>Unsupervised Learning</summary>
+      <a href="clustering.html">Clustering</a>
+      <a href="vector-quantization.html">Vector Quantization</a>
+      <a href="association-rule.html">Association Rule Mining</a>
+      <a href="mds.html">Multi-Dimensional Scaling</a>
+      <a href="manifold.html">Manifold Learning</a>
+    </details>
+    <details><summary>LLM &amp; NLP</summary>
+      <a href="llm.html">Large Language Model (LLM)</a>
+      <a href="nlp.html">Natural Language Processing (NLP)</a>
+    </details>
+    <details><summary>Math</summary>
+      <a href="linear-algebra.html">Linear Algebra</a>
+      <a href="statistics.html">Statistics</a>
+      <a href="wavelet.html">Wavelet</a>
+      <a href="interpolation.html">Interpolation</a>
+      <a href="graph.html">Graph Data Structure</a>
+    </details>
+    <details><summary>API</summary>
+      <a href="api/java/index.html" target="_blank" rel="noopener">Java</a>
+      <a href="api/scala/index.html" target="_blank" rel="noopener">Scala</a>
+      <a href="api/kotlin/index.html" target="_blank" rel="noopener">Kotlin</a>
+    </details>
+    <a href="https://mybinder.org/v2/gh/haifengl/smile/notebook?urlpath=lab%2Ftree%2Fshell%2Fsrc%2Funiversal%2Fnotebooks%2Findex.ipynb" target="_blank" rel="noopener">Try It Online</a>
+    <a href="https://github.com/haifengl/smile" target="_blank" rel="noopener">GitHub</a>
+  </div>
+</header>

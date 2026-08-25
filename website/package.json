@@ -3,13 +3,20 @@
   "version": "1.0.0",
   "description": "Statistical Machine Intelligence and Learning Engine",
   "scripts": {
-    "serve": "ELEVENTY_ENV=dev npx @11ty/eleventy --serve",
-    "deploy": "npx @11ty/eleventy"
+    "css:build": "npx @tailwindcss/cli -i ./src/css/input.css -o ./src/css/site.css --minify",
+    "css:watch": "npx @tailwindcss/cli -i ./src/css/input.css -o ./src/css/site.css --watch",
+    "build": "npm run css:build && npx @11ty/eleventy",
+    "deploy": "npm run build",
+    "serve": "npm run css:build && ELEVENTY_ENV=dev npx @11ty/eleventy --serve --port 8081"
   },
   "author": "Haifeng Li",
   "license": "GPL-3",
   "devDependencies": {
     "@11ty/eleventy": "^3.1.6",
-    "prismjs": "^1.29.0"
+    "@fontsource/ibm-plex-mono": "^5.2.7",
+    "@fontsource/ibm-plex-sans": "^5.2.8",
+    "@tailwindcss/cli": "^4.1.18",
+    "prismjs": "^1.29.0",
+    "tailwindcss": "^4.1.18"
   }
 }
