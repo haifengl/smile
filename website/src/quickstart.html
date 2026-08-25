@@ -19,24 +19,36 @@ version: "6.3.0"
 
     <p>Edit the snippet below, then open it in Binder to run on a free JVM notebook.</p>
 
-    {% codePlayground "java", "https://mybinder.org/v2/gh/haifengl/smile/notebook?urlpath=lab%2Ftree%2Fshell%2Fsrc%2Funiversal%2Fnotebooks%2Findex.ipynb" %}
-var iris = Read.arff("data/weka/iris.arff");
+    <div class="bento-playground bento-card glass">
+      <div class="code-playground" data-lang="java">
+        <div class="playground-toolbar">
+          <button type="button" class="lang-tab is-active" data-lang="java" data-pane="qs-java">Java</button>
+          <button type="button" class="lang-tab" data-lang="scala" data-pane="qs-scala">Scala</button>
+          <button type="button" class="lang-tab" data-lang="kotlin" data-pane="qs-kotlin">Kotlin</button>
+          <span class="toolbar-spacer"></span>
+          <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+          <button type="button" class="btn btn-ghost btn-sm playground-edit">Edit</button>
+          <a class="btn btn-primary btn-sm" href="https://mybinder.org/v2/gh/haifengl/smile/notebook?urlpath=lab%2Ftree%2Fshell%2Fsrc%2Funiversal%2Fnotebooks%2Findex.ipynb" target="_blank" rel="noopener">Open in Binder</a>
+        </div>
+        <div id="qs-java" class="hero-pane">
+          <pre class="playground-source language-java"><code class="language-java">var iris = Read.arff("data/weka/iris.arff");
 var formula = Formula.lhs("class");
 var rf = RandomForest.fit(formula, iris);
-System.out.println(rf.metrics());
-    {% endcodePlayground %}
-
-    {% codePlayground "scala", "https://mybinder.org/v2/gh/haifengl/smile/notebook?urlpath=lab%2Ftree%2Fshell%2Fsrc%2Funiversal%2Fnotebooks%2Findex.ipynb" %}
-val iris = read.arff("data/weka/iris.arff")
+System.out.println(rf.metrics());</code></pre>
+        </div>
+        <div id="qs-scala" class="hero-pane" hidden>
+          <pre class="playground-source language-scala"><code class="language-scala">val iris = read.arff("data/weka/iris.arff")
 val rf = randomForest("class" ~, iris)
-println(rf.metrics)
-    {% endcodePlayground %}
-
-    {% codePlayground "kotlin", "https://mybinder.org/v2/gh/haifengl/smile/notebook?urlpath=lab%2Ftree%2Fshell%2Fsrc%2Funiversal%2Fnotebooks%2Findex.ipynb" %}
-val iris = read.arff("data/weka/iris.arff")
+println(rf.metrics)</code></pre>
+        </div>
+        <div id="qs-kotlin" class="hero-pane" hidden>
+          <pre class="playground-source language-kotlin"><code class="language-kotlin">val iris = read.arff("data/weka/iris.arff")
 val rf = randomForest(Formula.lhs("class"), iris)
-println(rf.metrics())
-    {% endcodePlayground %}
+println(rf.metrics())</code></pre>
+        </div>
+        <div class="playground-editor" hidden></div>
+      </div>
+    </div>
 
     <h2 id="installation">Installation</h2>
 

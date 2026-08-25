@@ -20,9 +20,9 @@ title: SMILE - Statistical Machine Intelligence &amp; Learning Engine
 
       <div class="code-playground glass" data-lang="java">
         <div class="playground-toolbar">
-          <button type="button" class="lang-tab is-active" data-pane="hero-java">Java</button>
-          <button type="button" class="lang-tab" data-pane="hero-scala">Scala</button>
-          <button type="button" class="lang-tab" data-pane="hero-kotlin">Kotlin</button>
+          <button type="button" class="lang-tab is-active" data-lang="java" data-pane="hero-java">Java</button>
+          <button type="button" class="lang-tab" data-lang="scala" data-pane="hero-scala">Scala</button>
+          <button type="button" class="lang-tab" data-lang="kotlin" data-pane="hero-kotlin">Kotlin</button>
           <span class="toolbar-spacer"></span>
           <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
           <button type="button" class="btn btn-ghost btn-sm playground-edit">Edit</button>
@@ -212,19 +212,3 @@ println(model.metrics())</code></pre>
     </div>
   </aside>
 </div>
-<script>
-(function () {
-  var root = document.querySelector('.hero .code-playground');
-  if (!root) return;
-  root.querySelectorAll('.lang-tab[data-pane]').forEach(function (tab) {
-    tab.addEventListener('click', function () {
-      root.querySelectorAll('.lang-tab').forEach(function (t) { t.classList.remove('is-active'); });
-      root.querySelectorAll('.hero-pane').forEach(function (p) { p.hidden = true; });
-      tab.classList.add('is-active');
-      var pane = document.getElementById(tab.getAttribute('data-pane'));
-      if (pane) pane.hidden = false;
-      root.setAttribute('data-lang', tab.textContent.trim().toLowerCase());
-    });
-  });
-})();
-</script>
