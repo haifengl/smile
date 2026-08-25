@@ -110,17 +110,80 @@
     return monacoLoading;
   }
 
+  function hideSources(playground) {
+    var panes = playground.querySelectorAll('.hero-pane');
+    if (panes.length) {
+      panes.forEach(function (pane) {
+        pane.hidden = true;
+      });
+      return;
+    }
+    playground.querySelectorAll('.playground-source').forEach(function (source) {
+      source.hidden = true;
+    });
+  }
+
+  function showSources(playground) {
+    var panes = playground.querySelectorAll('.hero-pane');
+    if (panes.length) {
+      panes.forEach(function (pane) {
+        pane.hidden = true;
+      });
+      var activeTab = playground.querySelector('.lang-tab.is-active[data-pane]');
+      if (activeTab) {
+        var pane = document.getElementById(activeTab.getAttribute('data-pane'));
+        if (pane) pane.hidden = false;
+      }
+      return;
+    }
+    playground.querySelectorAll('.playground-source').forEach(function (source) {
+      source.hidden = false;
+    });
+  }
+
+  function initLangTabs(playground, editorRef) {
+    var tabs = playground.querySelectorAll('.lang-tab[data-pane]');
+    if (!tabs.length) return;
+
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        var paneId = tab.getAttribute('data-pane');
+        playground.querySelectorAll('.lang-tab').forEach(function (t) {
+          t.classList.remove('is-active');
+        });
+        playground.querySelectorAll('.hero-pane').forEach(function (pane) {
+          pane.hidden = true;
+        });
+        tab.classList.add('is-active');
+        var pane = document.getElementById(paneId);
+        if (pane) pane.hidden = false;
+
+        var lang = tab.getAttribute('data-lang') || tab.textContent.trim().toLowerCase();
+        playground.setAttribute('data-lang', lang);
+
+        if (editorRef.current && window.monaco) {
+          editorRef.current.setValue(sourceText(playground));
+          window.monaco.editor.setModelLanguage(
+            editorRef.current.getModel(),
+            mapLang(lang)
+          );
+        }
+      });
+    });
+  }
+
   function initPlayground(playground) {
     var copyBtn = playground.querySelector('.playground-copy');
     var editBtn = playground.querySelector('.playground-edit');
-    var source = playground.querySelector('.playground-source');
     var editorHost = playground.querySelector('.playground-editor');
-    var editor = null;
+    var editorRef = { current: null };
+
+    initLangTabs(playground, editorRef);
 
     if (copyBtn) {
       copyBtn.addEventListener('click', function () {
-        var text = editor
-          ? editor.getValue()
+        var text = editorRef.current
+          ? editorRef.current.getValue()
           : sourceText(playground);
         copyText(text).then(function () {
           var prev = copyBtn.textContent;
@@ -132,11 +195,12 @@
       });
     }
 
-    if (!editBtn || !source || !editorHost) return;
+    if (!editBtn || !editorHost) return;
+    if (!playground.querySelector('.playground-source')) return;
 
     editBtn.addEventListener('click', function () {
-      if (editor) {
-        editor.focus();
+      if (editorRef.current) {
+        editorRef.current.focus();
         return;
       }
 
@@ -151,10 +215,10 @@
               ? 'vs-dark'
               : 'vs';
 
-          source.hidden = true;
+          hideSources(playground);
           editorHost.hidden = false;
 
-          editor = monaco.editor.create(editorHost, {
+          editorRef.current = monaco.editor.create(editorHost, {
             value: sourceText(playground),
             language: lang,
             theme: theme,
@@ -168,11 +232,11 @@
 
           editBtn.textContent = 'Edit';
           editBtn.disabled = false;
-          editor.focus();
+          editorRef.current.focus();
         })
         .catch(function (err) {
           console.warn('SMILE playground: Monaco failed to load', err);
-          source.hidden = false;
+          showSources(playground);
           editorHost.hidden = true;
           editBtn.textContent = 'Edit unavailable';
           editBtn.disabled = true;

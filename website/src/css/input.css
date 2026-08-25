@@ -299,6 +299,17 @@
   .algo-panel dd a:hover { color: var(--accent); }
 
   .code-playground { overflow: hidden; }
+  .bento-playground {
+    padding: 0;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+  .bento-playground .code-playground {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    border-radius: 0;
+  }
   .playground-toolbar {
     display: flex;
     flex-wrap: wrap;
