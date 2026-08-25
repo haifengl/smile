@@ -1,0 +1,331 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+title: SMILE - Serve
+---
+{% include "toc.njk" %}
+
+<div class="col-md-9 order-md-first">
+
+    <h1 id="serve-top" class="title">SMILE Serve</h1>
+
+    <p>SMILE Serve is a production-ready inference server built on
+        <a href="https://quarkus.io/" target="_blank" rel="noopener">Quarkus</a>.
+        It exposes three complementary inference capabilities on the JVM through a unified
+        REST API and bundles a React web UI in the same process.</p>
+
+    <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>Capability</th>
+          <th>API prefix</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Classic ML</strong></td>
+          <td><code>/api/v1/ml/models</code></td>
+          <td>Serialized SMILE models (<code>.sml</code>) — classifiers and regressors</td>
+        </tr>
+        <tr>
+          <td><strong>ONNX Runtime</strong></td>
+          <td><code>/api/v1/onnx</code></td>
+          <td>Any model in the ONNX open format (<code>.onnx</code>)</td>
+        </tr>
+        <tr>
+          <td><strong>LLM Chat</strong></td>
+          <td><code>/api/v1/chat</code>, <code>/api/v1/models</code></td>
+          <td>OpenAI-compatible chat completions and model list/retrieve</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h2 id="quick-start">Quick Start</h2>
+
+    <h3 id="docker">Docker</h3>
+
+    <p>The fastest way to run SMILE Serve is via the pre-built Docker image.
+        Mount a local directory containing your model files and map the port:</p>
+
+    <div class="code" style="text-align: left;">
+    <pre class="language-bash"><code class="language-bash">docker run -it \
+  -v /path/to/model/folder:/model \
+  -p 8888:8080 \
+  ghcr.io/haifengl/smile-serve:latest</code></pre>
+    </div>
+
+    <p>The service listens on port 8080 inside the container (8888 on the host).
+        Place <code>.sml</code> and <code>.onnx</code> model files in the mounted folder;
+        they are discovered automatically at startup.</p>
+
+    <h3 id="dev-mode">Dev Mode</h3>
+
+    <p>From the project root, start Quarkus live-reload dev mode (HTTP port defaults to
+        <strong>8888</strong> in the <code>%dev</code> profile):</p>
+
+    <div class="code" style="text-align: left;">
+    <pre class="language-bash"><code class="language-bash">./gradlew :serve:quarkusDev \
+  --jvm-args="--add-opens java.base/java.lang=ALL-UNNAMED"</code></pre>
+    </div>
+
+    <p>The Quarkus Dev UI is available at <a href="http://localhost:8888/q/dev/">localhost:8888/q/dev/</a>.
+        The React dev server runs on port 5173 and proxies API requests to the backend.</p>
+
+    <h3 id="packaging">Packaging</h3>
+
+    <p>Build a layered Quarkus application:</p>
+
+    <div class="code" style="text-align: left;">
+    <pre class="language-bash"><code class="language-bash">./gradlew :serve:build
+
+java \
+  --add-opens java.base/java.lang=ALL-UNNAMED \
+  --add-opens java.base/java.nio=ALL-UNNAMED \
+  --enable-native-access ALL-UNNAMED \
+  -jar serve/build/quarkus-app/quarkus-run.jar</code></pre>
+    </div>
+
+    <p>For a single uber-JAR or GraalVM native executable, see the
+        <a href="https://github.com/haifengl/smile/blob/master/serve/README.md#2-building-and-running" target="_blank" rel="noopener">full user guide</a>.</p>
+
+    <h2 id="configuration">Configuration</h2>
+
+    <p>Configuration lives in <code>serve/src/main/resources/application.properties</code>.
+        Override at runtime with <code>-D</code> system properties, for example:</p>
+
+    <div class="code" style="text-align: left;">
+    <pre class="language-bash"><code class="language-bash">java ... -Dsmile.serve.model=/data/models -jar quarkus-run.jar</code></pre>
+    </div>
+
+    <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>Property</th>
+          <th>Default</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>quarkus.http.port</code></td>
+          <td><code>8080</code></td>
+          <td>HTTP listen port (<code>%dev</code> default: <code>8888</code>)</td>
+        </tr>
+        <tr>
+          <td><code>smile.serve.model</code></td>
+          <td><code>../model</code></td>
+          <td>Path to a <code>.sml</code> file or directory of SMILE models</td>
+        </tr>
+        <tr>
+          <td><code>smile.onnx.model</code></td>
+          <td><code>../model</code></td>
+          <td>Path to a <code>.onnx</code> file or directory of ONNX models</td>
+        </tr>
+        <tr>
+          <td><code>smile.chat.model</code></td>
+          <td><code>../model/Llama3.1-8B-Instruct</code></td>
+          <td>Local Hugging Face checkpoint directory, or Hugging Face repo id</td>
+        </tr>
+        <tr>
+          <td><code>smile.chat.max-seq-len</code></td>
+          <td><code>0</code> (auto)</td>
+          <td>Max context length (prompt + output); <code>0</code> uses model config</td>
+        </tr>
+        <tr>
+          <td><code>smile.chat.devices</code></td>
+          <td><code>0</code></td>
+          <td>CUDA device index, or comma-separated list for tensor parallelism</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p>See the
+        <a href="https://github.com/haifengl/smile/blob/master/serve/README.md#3-configuration-reference" target="_blank" rel="noopener">configuration reference</a>
+        for KV-cache, batching, memory fraction, and database settings.</p>
+
+    <h2 id="classic-ml">Classic ML Inference</h2>
+
+    <p>At startup, SMILE Serve scans <code>smile.serve.model</code> and loads every
+        <code>.sml</code> file. Each model carries its trained algorithm, input feature schema,
+        and optional metadata tags.</p>
+
+    <h3 id="ml-metadata">Model metadata</h3>
+
+    <div class="code" style="text-align: left;">
+    <pre class="language-bash"><code class="language-bash">curl http://localhost:8080/api/v1/ml/models/iris_random_forest-1</code></pre>
+    </div>
+
+    <p>Returns the algorithm name, input schema (field names and types), and tags.
+        Use <code>GET /api/v1/models</code> to list all loaded model IDs.</p>
+
+    <h3 id="ml-inference">Single inference</h3>
+
+    <p>Send one sample as a flat JSON object whose keys match the model schema:</p>
+
+    <div class="code" style="text-align: left;">
+    <pre class="language-bash"><code class="language-bash">curl -X POST http://localhost:8080/api/v1/ml/models/iris_random_forest-1 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sepallength": 5.1,
+    "sepalwidth":  3.5,
+    "petallength": 1.4,
+    "petalwidth":  0.2
+  }'</code></pre>
+    </div>
+
+    <p>Response:</p>
+
+    <div class="code" style="text-align: left;">
+    <pre class="language-json"><code class="language-json">{
+  "prediction": 0,
+  "probabilities": [0.960, 0.021, 0.019]
+}</code></pre>
+    </div>
+
+    <h3 id="ml-streaming">Streaming inference</h3>
+
+    <p>Process many samples via Server-Sent Events:</p>
+
+    <div class="code" style="text-align: left;">
+    <pre class="language-bash"><code class="language-bash">cat iris.csv | curl -X POST \
+  -H "Content-Type: text/plain" \
+  --data-binary @- \
+  http://localhost:8080/api/v1/ml/models/iris_random_forest-1/stream</code></pre>
+    </div>
+
+    <p>CSV rows follow the column order shown in the model schema (alphabetical by field name).
+        JSON-lines mode (<code>Content-Type: application/json</code>) accepts one JSON object per line.</p>
+
+    <h2 id="onnx">ONNX Inference</h2>
+
+    <p>ONNX models are loaded from <code>smile.onnx.model</code>. The model ID is the file name
+        without the <code>.onnx</code> extension. The ONNX Runtime native library must be on the
+        OS library search path.</p>
+
+    <h3 id="onnx-info">Model info</h3>
+
+    <div class="code" style="text-align: left;">
+    <pre class="language-bash"><code class="language-bash">curl http://localhost:8080/api/v1/onnx/resnet50</code></pre>
+    </div>
+
+    <p>Returns input/output tensor names, element types, and shapes (a <code>-1</code> dimension
+        is dynamic).</p>
+
+    <h3 id="onnx-inference">Single inference</h3>
+
+    <div class="code" style="text-align: left;">
+    <pre class="language-bash"><code class="language-bash">curl -X POST http://localhost:8080/api/v1/onnx/my_classifier \
+  -H "Content-Type: application/json" \
+  -d '{"input": [1.0, 2.0, 3.0, 4.0]}'</code></pre>
+    </div>
+
+    <p>The request body maps each input name to a flat JSON array of numbers. Streaming endpoints
+        mirror the classic ML API (<code>POST /api/v1/onnx/{id}/stream</code>).</p>
+
+    <h2 id="llm-chat">LLM Chat</h2>
+
+    <p>SMILE Serve includes native
+        <a href="llm.html">Llama inference</a> with an OpenAI-compatible chat API.
+        If <code>smile.chat.model</code> is not available, chat endpoints return
+        <strong>HTTP 503</strong>.</p>
+
+    <h3 id="list-models">List models</h3>
+
+    <div class="code" style="text-align: left;">
+    <pre class="language-bash"><code class="language-bash">curl http://localhost:8080/api/v1/models</code></pre>
+    </div>
+
+    <p>Returns an OpenAI-compatible catalog of all loaded models — LLMs, ONNX graphs, and
+        SMILE <code>.sml</code> models. Inference still uses type-specific paths.</p>
+
+    <h3 id="chat-completions">Chat completions</h3>
+
+    <div class="code" style="text-align: left;">
+    <pre class="language-bash"><code class="language-bash">curl http://localhost:8080/api/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "meta-llama/Llama-3.1-8B-Instruct",
+    "messages": [{"role": "user", "content": "What is SMILE?"}],
+    "stream": true
+  }'</code></pre>
+    </div>
+
+    <p>Set <code>"stream": true</code> for token-by-token Server-Sent Events output.
+        Conversation history can be persisted when a database is configured — see below.</p>
+
+    <h2 id="web-ui">Web UI</h2>
+
+    <p>A React web interface is bundled via
+        <a href="https://quarkiverse.github.io/quarkiverse-docs/quarkus-quinoa/dev/" target="_blank" rel="noopener">Quarkus Quinoa</a>
+        and served from the root URL:</p>
+
+    <ul>
+      <li><strong>Inference UI</strong> (<code>/infer</code>) — sidebar lists chat, SMILE
+          (<code>.sml</code>), and ONNX (<code>.onnx</code>) models. Selecting a chat model
+          embeds the chat module in the right pane; SMILE models get a schema-driven form;
+          ONNX models get a numeric or image-upload form.</li>
+      <li><strong>Chat UI</strong> (<code>/chat</code>) — standalone chat with streaming tokens
+          and Markdown/math rendering.</li>
+    </ul>
+
+    <h2 id="database">Database</h2>
+
+    <p>Chat conversation history requires a relational database. ML and ONNX inference work
+        without a database.</p>
+
+    <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>Profile</th>
+          <th>Backend</th>
+          <th>URL</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Production</td>
+          <td>PostgreSQL</td>
+          <td><code>jdbc:postgresql://localhost:5432/smile</code></td>
+        </tr>
+        <tr>
+          <td>Dev</td>
+          <td>SQLite</td>
+          <td><code>jdbc:sqlite:./smile_serve.db</code></td>
+        </tr>
+        <tr>
+          <td>Test</td>
+          <td>H2 (in-memory)</td>
+          <td><code>jdbc:h2:mem:test</code></td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p>Enable ORM in production:</p>
+
+    <div class="code" style="text-align: left;">
+    <pre class="language-properties"><code class="language-properties">quarkus.hibernate-orm.active=true
+quarkus.datasource.username=&lt;user&gt;
+quarkus.datasource.password=&lt;password&gt;</code></pre>
+    </div>
+
+    <h2 id="further-reading">Further Reading</h2>
+
+    <p>The
+        <a href="https://github.com/haifengl/smile/blob/master/serve/README.md" target="_blank" rel="noopener">SMILE Serve user guide</a>
+        in the repository covers streaming formats, conversation history API, native builds,
+        tensor shape resolution, and the full configuration reference.</p>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="llm.html" title="Previous Section: Large Language Model"><span>Large Language Model</span></a>
+        <a class="btn-next-text" href="faq.html" title="Next Section: FAQ"><span>FAQ</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>
