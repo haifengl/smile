@@ -92,7 +92,8 @@
     color: var(--accent);
     font-weight: 700;
     font-style: italic;
-    font-size: clamp(1.05rem, 2vw, 1.5rem);
+    font-size: clamp(1.25rem, 2.75vw, 2rem);
+    line-height: 1.25;
   }
 
   .nav-bar {
