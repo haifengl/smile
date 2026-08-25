@@ -418,7 +418,6 @@
       width: auto;
     }
   }
-  .w-100 { width: 100%; }
   .list-unstyled { list-style: none; padding: 0; margin: 0; }
   .lead { font-size: 1.1rem; color: var(--text-muted); }
   .caption { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 0.35rem; }
