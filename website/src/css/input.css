@@ -270,6 +270,7 @@
     .bento-wide { grid-column: span 4; }
     .bento-half { grid-column: span 3; }
     .bento-third { grid-column: span 2; }
+    .bento-full { grid-column: span 6; }
   }
   .bento-card { padding: 1.1rem 1.15rem; height: 100%; }
   .bento-card h3 { margin-top: 0; font-size: 1.05rem; }
