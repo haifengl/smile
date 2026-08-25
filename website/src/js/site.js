@@ -199,7 +199,21 @@
     });
   }
 
+  function normalizeCodeBlocks() {
+    var dedentFn = window.smileDedent;
+    if (!dedentFn) return;
+
+    document.querySelectorAll('pre > code').forEach(function (code) {
+        var cleaned = dedentFn(code.textContent);
+        if (cleaned !== code.textContent) {
+          code.textContent = cleaned;
+        }
+      });
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
+    normalizeCodeBlocks();
+
     if (window.Prism) {
       Prism.highlightAll();
     }

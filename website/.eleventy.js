@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const dedent = require("./scripts/dedent.js");
 
 module.exports = function (config) {
   config.addPassthroughCopy("./src/favicon.ico");
@@ -23,7 +24,7 @@ module.exports = function (config) {
     <button type="button" class="btn btn-ghost btn-sm playground-edit">Edit</button>
     <a class="btn btn-primary btn-sm" href="${binderUrl}" target="_blank" rel="noopener">Open in Binder</a>
   </div>
-  <pre class="playground-source language-${safeLang}"><code class="language-${safeLang}">${content.trim()}</code></pre>
+  <pre class="playground-source language-${safeLang}"><code class="language-${safeLang}">${dedent(content)}</code></pre>
   <div class="playground-editor" hidden></div>
 </div>`;
   });
