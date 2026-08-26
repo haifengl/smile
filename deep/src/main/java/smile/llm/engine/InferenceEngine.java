@@ -242,8 +242,9 @@ public final class InferenceEngine implements AutoCloseable {
                         waiting.add(peek);
                         queuedCount.incrementAndGet();
                     }
-                    // Do not emptyCache here: reclaim runs when the last in-flight
-                    // request finishes (see finishActive / failActive / drainAborted).
+                    // Idle: no emptyCache — keep caching-allocator HWM reserved
+                    // (see maybeEmptyDeviceCache). Scope drain runs when the last
+                    // in-flight request finishes.
                     continue;
                 }
                 runPrefills();
@@ -672,15 +673,15 @@ public final class InferenceEngine implements AutoCloseable {
     }
 
     /**
-     * Returns unused CUDA caching-allocator blocks to the driver when no
-     * requests remain in flight.
+     * Drains leftover tensor scopes when the last in-flight request finishes.
      *
-     * <p>Called only after the last active request finishes, fails, or is
-     * aborted — not from the idle poll loop. Under sustained continuous
-     * batching ({@code active} never empty) this is a no-op, which is
-     * intentional: the caching allocator should keep blocks reserved and reuse
-     * them across back-to-back batches. Reclaiming mid-load would thrash
-     * allocations for peer in-flight requests.
+     * <p>Does <em>not</em> call {@code emptyCache}. Returning free blocks to the
+     * driver between idle requests only thrashs the lead GPU's nvidia-smi
+     * footprint (sampling / logits scratch lives on rank 0): reserved memory
+     * drops, then the next request re-reserves a slightly different amount.
+     * Peer TP ranks already stay flat at their caching-allocator HWM because
+     * their live tensors (weights + KV) dominate. Keeping reserved blocks on
+     * rank 0 matches that behavior and avoids allocate/free churn.
      */
     private void maybeEmptyDeviceCache() {
         if (!active.isEmpty()) {
@@ -693,17 +694,15 @@ public final class InferenceEngine implements AutoCloseable {
         try {
             int leaked = smile.deep.tensor.Tensor.clearScopes();
             if (leaked > 0) {
-                logger.warn("InferenceEngine drained {} leftover Tensor AutoScope(s) before emptyCache",
+                logger.warn("InferenceEngine drained {} leftover Tensor AutoScope(s) after last request",
                         leaked);
             }
             smile.deep.tensor.Device device = pool.device();
             if (device != null) {
-                logCudaMemory(device, "before emptyCache");
-                device.emptyCache();
-                logCudaMemory(device, "after emptyCache");
+                logCudaMemory(device, "idle after last request");
             }
         } catch (Throwable t) {
-            logger.debug("emptyCache skipped: {}", t.toString());
+            logger.debug("post-request scope drain skipped: {}", t.toString());
         }
     }
 
