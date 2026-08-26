@@ -1881,26 +1881,32 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 }
             }
             Tensor[] tokenShards = new Tensor[models.length];
-            try (var guard = Tensor.noGradGuard()) {
-                for (int r = 0; r < models.length; r++) {
-                    tokenShards[r] = Tensor.of(toks).reshape(b, 1).to(models[r].device());
-                }
-                Tensor[] logits = forwardAllDecode(tokenShards, positions, ropePos, tpExecutor);
-                for (Tensor t : tokenShards) {
-                    t.close();
-                }
-                for (QwenModel m : models) {
-                    if (m.deltaNetStatePool() != null) {
-                        m.deltaNetStatePool().scatterActive();
+            try (var guard = Tensor.noGradGuard();
+                 var scope = new AutoScope()) {
+                Tensor.push(scope);
+                try {
+                    for (int r = 0; r < models.length; r++) {
+                        tokenShards[r] = Tensor.of(toks).reshape(b, 1).to(models[r].device());
                     }
-                }
-                try (var last = Index.of(-1)) {
-                    Tensor out = logits[0].get(Index.Colon, last).reshape(b, -1);
-                    out.promoteToParent();
-                    for (Tensor l : logits) {
-                        l.close();
+                    Tensor[] logits = forwardAllDecode(tokenShards, positions, ropePos, tpExecutor);
+                    for (Tensor t : tokenShards) {
+                        t.close();
                     }
-                    return out;
+                    for (QwenModel m : models) {
+                        if (m.deltaNetStatePool() != null) {
+                            m.deltaNetStatePool().scatterActive();
+                        }
+                    }
+                    try (var last = Index.of(-1)) {
+                        Tensor out = logits[0].get(Index.Colon, last).reshape(b, -1);
+                        out.promoteToParent();
+                        for (Tensor l : logits) {
+                            l.close();
+                        }
+                        return out;
+                    }
+                } finally {
+                    Tensor.pop();
                 }
             }
         }
@@ -1928,26 +1934,32 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             }
         }
         Tensor[] tokenShards = new Tensor[models.length];
-        try (var guard = Tensor.noGradGuard()) {
-            for (int r = 0; r < models.length; r++) {
-                tokenShards[r] = Tensor.of(toks).reshape(b, 1).to(models[r].device());
-            }
-            Tensor[] logits = forwardAllDecode(tokenShards, positions, ropePos, tpExecutor);
-            for (Tensor t : tokenShards) {
-                t.close();
-            }
-            for (QwenModel m : models) {
-                if (m.deltaNetStatePool() != null) {
-                    m.deltaNetStatePool().scatterActive();
+        try (var guard = Tensor.noGradGuard();
+             var scope = new AutoScope()) {
+            Tensor.push(scope);
+            try {
+                for (int r = 0; r < models.length; r++) {
+                    tokenShards[r] = Tensor.of(toks).reshape(b, 1).to(models[r].device());
                 }
-            }
-            try (var last = Index.of(-1)) {
-                Tensor out = logits[0].get(Index.Colon, last).reshape(b, -1);
-                out.promoteToParent();
-                for (Tensor l : logits) {
-                    l.close();
+                Tensor[] logits = forwardAllDecode(tokenShards, positions, ropePos, tpExecutor);
+                for (Tensor t : tokenShards) {
+                    t.close();
                 }
-                return out;
+                for (QwenModel m : models) {
+                    if (m.deltaNetStatePool() != null) {
+                        m.deltaNetStatePool().scatterActive();
+                    }
+                }
+                try (var last = Index.of(-1)) {
+                    Tensor out = logits[0].get(Index.Colon, last).reshape(b, -1);
+                    out.promoteToParent();
+                    for (Tensor l : logits) {
+                        l.close();
+                    }
+                    return out;
+                }
+            } finally {
+                Tensor.pop();
             }
         }
     }

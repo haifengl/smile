@@ -247,6 +247,10 @@ public final class InferenceEngine implements AutoCloseable {
                 }
                 runPrefills();
                 runDecodeStep();
+                // Prefill-only completions (e.g. short tool replies that stop on
+                // the first sampled token) finish in runPrefills; reclaim here so
+                // we do not wait for the next idle poll.
+                maybeEmptyDeviceCache();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 break;
@@ -514,6 +518,7 @@ public final class InferenceEngine implements AutoCloseable {
             }
         }
         if (decoding.isEmpty()) {
+            maybeEmptyDeviceCache();
             return;
         }
         int b = decoding.size();
@@ -659,6 +664,16 @@ public final class InferenceEngine implements AutoCloseable {
         }
     }
 
+    /**
+     * Returns unused CUDA caching-allocator blocks to the driver when the
+     * engine is idle (no in-flight or bound KV requests).
+     *
+     * <p>Mirrors the {@code finally} reclaim in {@code LanguageModel.generate}:
+     * drain any leaked {@link smile.util.AutoScope}s on the worker thread, then
+     * {@link smile.deep.tensor.Device#emptyCache()}. Without this, activation
+     * HWM stays reserved across chat / tool-calling turns and {@code nvidia-smi}
+     * appears to leak even though KV/DeltaNet pools were unbound.
+     */
     private void maybeEmptyDeviceCache() {
         if (!active.isEmpty()) {
             return;
@@ -668,12 +683,37 @@ public final class InferenceEngine implements AutoCloseable {
             return;
         }
         try {
+            int leaked = smile.deep.tensor.Tensor.clearScopes();
+            if (leaked > 0) {
+                logger.warn("InferenceEngine drained {} leftover Tensor AutoScope(s) before emptyCache",
+                        leaked);
+            }
             smile.deep.tensor.Device device = pool.device();
             if (device != null) {
+                logCudaMemory(device, "before emptyCache");
                 device.emptyCache();
+                logCudaMemory(device, "after emptyCache");
             }
         } catch (Throwable t) {
             logger.debug("emptyCache skipped: {}", t.toString());
+        }
+    }
+
+    private static void logCudaMemory(smile.deep.tensor.Device device, String when) {
+        if (device == null || !device.isCUDA()) {
+            return;
+        }
+        try {
+            int idx = device.index();
+            long[] mem = smile.torch.Native.cudaMemGetInfo(idx);
+            long[] alloc = smile.torch.Native.cudaAllocatorStats(idx);
+            logger.info("InferenceEngine {}: freeMiB={} allocatedMiB={} reservedMiB={}",
+                    when,
+                    mem[0] / (1024 * 1024),
+                    alloc[0] / (1024 * 1024),
+                    alloc[1] / (1024 * 1024));
+        } catch (RuntimeException e) {
+            logger.debug("InferenceEngine cuda memory log failed at {}: {}", when, e.toString());
         }
     }
 
