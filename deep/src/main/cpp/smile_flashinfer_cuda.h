@@ -30,6 +30,9 @@ int smile_flashinfer_paged_attention_cuda(
         float scale,
         int is_causal,
         const torch::Tensor *attn_mask,
+        torch::Tensor *float_workspace,       /* nullable → allocate locals */
+        torch::Tensor *int_workspace,         /* nullable */
+        torch::Tensor *pinned_int_workspace,  /* nullable */
         torch::Tensor &out,
         std::string &err);
 

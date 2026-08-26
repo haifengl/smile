@@ -128,9 +128,10 @@ public interface RotaryPositionalEncoding {
             throw new IllegalArgumentException("positions must be non-empty");
         }
         try (var idx = Index.of(positions)) {
-            Tensor gathered = cis.get(idx);
-            gathered.promoteToParent();
-            return gathered;
+            // Remain on the caller's AutoScope (e.g. LlamaModel.forward) so
+            // Tensor.pop() frees this gather; promoteToParent with a single
+            // scope would detach and leak every decode step.
+            return cis.get(idx);
         }
     }
 

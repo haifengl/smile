@@ -114,3 +114,19 @@ int smile_flashinfer_workspace_device_index(ST_FlashInferWorkspace ws) {
 }
 
 } // extern "C"
+
+#if defined(USE_CUDA) && defined(USE_FLASHINFER)
+int smile_flashinfer_workspace_get_tensors(
+        ST_FlashInferWorkspace ws,
+        at::Tensor **float_ws,
+        at::Tensor **int_ws,
+        at::Tensor **pinned_ws) {
+    if (ws == nullptr || float_ws == nullptr || int_ws == nullptr || pinned_ws == nullptr) {
+        return -1;
+    }
+    *float_ws = &ws->float_workspace;
+    *int_ws = &ws->int_workspace;
+    *pinned_ws = &ws->pinned_int_workspace;
+    return 0;
+}
+#endif

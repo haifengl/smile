@@ -60,6 +60,7 @@
 #  include "smile_gated_delta.cuh"
 #  ifdef USE_FLASHINFER
 #    include "smile_flashinfer_cuda.h"
+#    include "smile_flashinfer_workspace.h"
 #  endif
 #endif
 
@@ -2214,11 +2215,21 @@ ST_Tensor smile_flashinfer_paged_attention(
         const torch::Tensor *mask_ptr = (attn_mask && attn_mask->t.defined())
                 ? &attn_mask->t
                 : nullptr;
+        at::Tensor *float_ws = nullptr;
+        at::Tensor *int_ws = nullptr;
+        at::Tensor *pinned_ws = nullptr;
+        if (smile_flashinfer_workspace_get_tensors(
+                workspace, &float_ws, &int_ws, &pinned_ws) != 0) {
+            set_error("smile_flashinfer_paged_attention: invalid workspace");
+            return nullptr;
+        }
         int rc = smile_flashinfer_paged_attention_cuda(
                 q, k_cache->t, v_cache->t,
                 paged_kv_indptr->t, paged_kv_indices->t, paged_kv_last_page_len->t,
                 page_size, num_kv_heads, head_dim, cache_len,
-                sc, is_causal, mask_ptr, out, err);
+                sc, is_causal, mask_ptr,
+                float_ws, int_ws, pinned_ws,
+                out, err);
         if (rc != 0) {
             set_error(err.empty() ? "flashinfer paged attention failed" : err);
             return nullptr;

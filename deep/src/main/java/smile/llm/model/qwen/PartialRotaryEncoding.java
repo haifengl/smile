@@ -168,9 +168,8 @@ public final class PartialRotaryEncoding {
         try (var idx = Index.of(positions);
              Tensor rows = table.get(idx); // [B, R]
              Tensor unsqueezed = rows.unsqueeze(1)) { // [B, 1, R]
-            Tensor copy = unsqueezed.copy();
-            copy.promoteToParent();
-            return copy;
+            // Stay on caller's AutoScope — see RotaryPositionalEncoding.gather.
+            return unsqueezed.copy();
         }
     }
 
