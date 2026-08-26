@@ -76,12 +76,6 @@ public final class InferenceEngine implements AutoCloseable {
     private final AtomicInteger decodeBatchSamples = new AtomicInteger();
     private final Thread worker;
     private volatile boolean running = true;
-    /**
-     * When {@code true}, CUDA caching-allocator reclaim already ran for the
-     * current idle period; skip further {@link #maybeEmptyDeviceCache()} calls
-     * until work is admitted again.
-     */
-    private boolean deviceCacheClean;
 
     /**
      * @param executor   model execution surface.
@@ -241,9 +235,6 @@ public final class InferenceEngine implements AutoCloseable {
                 drainAborted();
                 failTimedOutWaiting();
                 admitWaiting();
-                if (!active.isEmpty()) {
-                    deviceCacheClean = false;
-                }
                 if (active.isEmpty()) {
                     Queued peek = waiting.poll(50, TimeUnit.MILLISECONDS);
                     if (peek != null) {
@@ -251,15 +242,12 @@ public final class InferenceEngine implements AutoCloseable {
                         waiting.add(peek);
                         queuedCount.incrementAndGet();
                     }
-                    maybeEmptyDeviceCache();
+                    // Do not emptyCache here: reclaim runs when the last in-flight
+                    // request finishes (see finishActive / failActive / drainAborted).
                     continue;
                 }
                 runPrefills();
                 runDecodeStep();
-                // Prefill-only completions (e.g. short tool replies that stop on
-                // the first sampled token) finish in runPrefills; reclaim here so
-                // we do not wait for the next idle poll.
-                maybeEmptyDeviceCache();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 break;
@@ -317,14 +305,19 @@ public final class InferenceEngine implements AutoCloseable {
     private void drainAborted() {
         drainAbortedFromQueue();
         Iterator<Active> it = active.iterator();
+        boolean removed = false;
         while (it.hasNext()) {
             Active a = it.next();
             if (a.handle.isAborted()) {
                 it.remove();
+                removed = true;
                 safeEvict(a);
                 completeCancel(a);
                 inFlight.decrementAndGet();
             }
+        }
+        if (removed) {
+            maybeEmptyDeviceCache();
         }
     }
 
@@ -514,6 +507,7 @@ public final class InferenceEngine implements AutoCloseable {
             }
         }
         active.removeIf(a -> a.phase == Phase.DONE);
+        maybeEmptyDeviceCache();
     }
 
     private void runDecodeStep() {
@@ -527,7 +521,6 @@ public final class InferenceEngine implements AutoCloseable {
             }
         }
         if (decoding.isEmpty()) {
-            maybeEmptyDeviceCache();
             return;
         }
         int b = decoding.size();
@@ -679,16 +672,18 @@ public final class InferenceEngine implements AutoCloseable {
     }
 
     /**
-     * Returns unused CUDA caching-allocator blocks to the driver when the
-     * engine is idle (no in-flight or bound KV requests).
+     * Returns unused CUDA caching-allocator blocks to the driver when no
+     * requests remain in flight.
      *
-     * <p>Mirrors the {@code finally} reclaim in {@code LanguageModel.generate}:
-     * drain any leaked {@link smile.util.AutoScope}s on the worker thread, then
-     * {@link smile.deep.tensor.Device#emptyCache()}. Runs at most once per idle
-     * period so the idle poll loop does not spam reclaim / logs.
+     * <p>Called only after the last active request finishes, fails, or is
+     * aborted — not from the idle poll loop. Under sustained continuous
+     * batching ({@code active} never empty) this is a no-op, which is
+     * intentional: the caching allocator should keep blocks reserved and reuse
+     * them across back-to-back batches. Reclaiming mid-load would thrash
+     * allocations for peer in-flight requests.
      */
     private void maybeEmptyDeviceCache() {
-        if (deviceCacheClean || !active.isEmpty()) {
+        if (!active.isEmpty()) {
             return;
         }
         KvCachePool pool = executor.kvCachePool();
@@ -707,7 +702,6 @@ public final class InferenceEngine implements AutoCloseable {
                 device.emptyCache();
                 logCudaMemory(device, "after emptyCache");
             }
-            deviceCacheClean = true;
         } catch (Throwable t) {
             logger.debug("emptyCache skipped: {}", t.toString());
         }
