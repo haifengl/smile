@@ -25,15 +25,18 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import smile.llm.AudioUrlPart;
 import smile.llm.ContentPart;
+import smile.llm.FunctionCall;
 import smile.llm.ImageUrlPart;
 import smile.llm.Message;
 import smile.llm.Role;
 import smile.llm.TextPart;
+import smile.llm.ToolCall;
 import smile.llm.VideoUrlPart;
 
 /**
  * Deserializes OpenAI-style chat messages: {@code content} may be a string or
  * an array of {@code text} / {@code image_url} / {@code video_url} parts.
+ * Also accepts {@code tool_calls}, {@code tool_call_id}, and {@code name}.
  *
  * @author Haifeng Li
  */
@@ -45,19 +48,38 @@ public class MessageDeserializer extends JsonDeserializer<Message> {
         Role role = switch (roleStr) {
             case "system" -> Role.system;
             case "assistant" -> Role.assistant;
-            case "ipython" -> Role.ipython;
+            case "tool", "ipython" -> Role.tool;
             default -> Role.user;
         };
+
+        List<ToolCall> toolCalls = parseToolCalls(node.get("tool_calls"));
+        String toolCallId = node.hasNonNull("tool_call_id") ? node.get("tool_call_id").asText() : null;
+        String name = node.hasNonNull("name") ? node.get("name").asText() : null;
+
         JsonNode content = node.get("content");
+        List<ContentPart> parts;
         if (content == null || content.isNull()) {
-            throw new IOException("message content required");
-        }
-        if (content.isTextual()) {
-            return new Message(role, content.asText());
-        }
-        if (!content.isArray()) {
+            if ((toolCalls != null && !toolCalls.isEmpty())
+                    || (toolCallId != null && !toolCallId.isBlank())) {
+                parts = List.of();
+            } else {
+                throw new IOException("message content required");
+            }
+        } else if (content.isTextual()) {
+            parts = List.of(new TextPart(content.asText()));
+        } else if (content.isArray()) {
+            parts = parseParts(content);
+            if (parts.isEmpty() && (toolCalls == null || toolCalls.isEmpty())
+                    && (toolCallId == null || toolCallId.isBlank())) {
+                throw new IOException("message content parts empty");
+            }
+        } else {
             throw new IOException("message content must be a string or array");
         }
+        return new Message(role, parts, toolCalls, toolCallId, name);
+    }
+
+    private static List<ContentPart> parseParts(JsonNode content) throws IOException {
         List<ContentPart> parts = new ArrayList<>();
         for (JsonNode part : content) {
             String type = part.path("type").asText("");
@@ -104,9 +126,32 @@ public class MessageDeserializer extends JsonDeserializer<Message> {
                 }
             }
         }
-        if (parts.isEmpty()) {
-            throw new IOException("message content parts empty");
+        return parts;
+    }
+
+    private static List<ToolCall> parseToolCalls(JsonNode node) throws IOException {
+        if (node == null || node.isNull() || !node.isArray() || node.isEmpty()) {
+            return null;
         }
-        return new Message(role, parts);
+        List<ToolCall> calls = new ArrayList<>();
+        for (JsonNode call : node) {
+            String id = call.path("id").asText(null);
+            if (id == null || id.isBlank()) {
+                throw new IOException("tool_calls[].id required");
+            }
+            String type = call.path("type").asText("function");
+            JsonNode fn = call.path("function");
+            String fnName = fn.path("name").asText(null);
+            if (fnName == null || fnName.isBlank()) {
+                throw new IOException("tool_calls[].function.name required");
+            }
+            String arguments = fn.has("arguments") && !fn.get("arguments").isNull()
+                    ? (fn.get("arguments").isTextual()
+                        ? fn.get("arguments").asText()
+                        : fn.get("arguments").toString())
+                    : "{}";
+            calls.add(new ToolCall(id, type, new FunctionCall(fnName, arguments)));
+        }
+        return calls;
     }
 }

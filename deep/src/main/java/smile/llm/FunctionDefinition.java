@@ -16,29 +16,30 @@
  */
 package smile.llm;
 
-import org.junit.jupiter.api.*;
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.Map;
 
 /**
- * Unit tests for {@link Role} enum.
+ * OpenAI-style function definition inside a {@link ToolDefinition}.
  *
+ * @param name        function name (required).
+ * @param description human-readable description; may be {@code null}.
+ * @param parameters  JSON Schema object as a map; may be {@code null}.
  * @author Haifeng Li
  */
-public class RoleTest {
-    @Test
-    public void testGivenRoleWhenAllValuesEnumeratedThenFourExist() {
-        assertEquals(4, Role.values().length);
-    }
+public record FunctionDefinition(
+        String name,
+        String description,
+        Map<String, Object> parameters) {
 
-    @Test
-    public void testGivenRoleSystemWhenNameCalledThenIsSystem() {
-        assertEquals("system", Role.system.name());
-    }
-
-    @Test
-    public void testGivenRoleValueOfWhenCalledThenReturnsCorrectEnum() {
-        assertEquals(Role.user, Role.valueOf("user"));
-        assertEquals(Role.assistant, Role.valueOf("assistant"));
-        assertEquals(Role.tool, Role.valueOf("tool"));
+    /**
+     * Compact canonical constructor.
+     */
+    public FunctionDefinition {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("function name must not be blank");
+        }
+        if (parameters != null) {
+            parameters = Map.copyOf(parameters);
+        }
     }
 }

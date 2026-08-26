@@ -17,15 +17,23 @@
 package smile.llm;
 
 /**
- * The reasons that the chat completions finish.
+ * Function invocation payload inside a {@link ToolCall}.
  *
- * @author Karl Li
+ * @param name      function name.
+ * @param arguments JSON object string of arguments (OpenAI wire form).
+ * @author Haifeng Li
  */
-public enum FinishReason {
-    /** A message terminated by one of the stop tokens. */
-    stop,
-    /** Incomplete model output due to token limit. */
-    length,
-    /** The model decided to call one or more tools. */
-    tool_calls
+public record FunctionCall(String name, String arguments) {
+
+    /**
+     * Compact canonical constructor.
+     */
+    public FunctionCall {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("function call name must not be blank");
+        }
+        if (arguments == null) {
+            arguments = "{}";
+        }
+    }
 }

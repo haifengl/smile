@@ -26,6 +26,9 @@ export default function IncomingMessage({
     text,
     timestamp,
     streaming = false,
+    toolCalls,
+    toolCallId,
+    role,
 }) {
     const [avatar, setAvatar] = React.useState(ProfileIcon)
 
@@ -56,6 +59,9 @@ export default function IncomingMessage({
                         text={text}
                         downloadable
                         streaming={streaming}
+                        toolCalls={toolCalls}
+                        toolCallId={toolCallId}
+                        role={role}
                     />
                 </div>
             </div>

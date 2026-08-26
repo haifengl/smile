@@ -23,8 +23,6 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import smile.llm.ChatCompletion;
 import smile.llm.FinishReason;
-import smile.llm.Message;
-import smile.llm.Role;
 
 /**
  * OpenAI-compatible non-streaming chat completion response
@@ -60,7 +58,6 @@ public record ChatCompletionObject(
      */
     public static ChatCompletionObject of(String id, long created, String modelName,
                                           ChatCompletion completion) {
-        String content = completion != null ? completion.content() : "";
         FinishReason reason = completion != null ? completion.reason() : FinishReason.stop;
         int promptTokens = completion != null && completion.promptTokens() != null
                 ? completion.promptTokens().length : 0;
@@ -69,7 +66,7 @@ public record ChatCompletionObject(
 
         Choice choice = new Choice(
                 0,
-                new Message(Role.assistant, content),
+                ChatMessageObject.of(completion),
                 null,
                 reason);
         Usage usage = new Usage(promptTokens, completionTokens, promptTokens + completionTokens);
@@ -97,7 +94,7 @@ public record ChatCompletionObject(
      * A single completion choice.
      *
      * @param index        zero-based index.
-     * @param message      assistant message.
+     * @param message      assistant message (OpenAI wire shape).
      * @param logprobs     log-probability payload, or {@code null}.
      * @param finishReason why generation stopped.
      */
@@ -105,7 +102,7 @@ public record ChatCompletionObject(
     @JsonInclude(JsonInclude.Include.ALWAYS)
     public record Choice(
             int index,
-            Message message,
+            ChatMessageObject message,
             Object logprobs,
             FinishReason finishReason) {}
 

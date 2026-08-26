@@ -14,18 +14,19 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.llm;
+import React from 'react'
+import './ToolResultContent.css'
 
 /**
- * The reasons that the chat completions finish.
- *
- * @author Karl Li
+ * Renders a tool-result message body.
  */
-public enum FinishReason {
-    /** A message terminated by one of the stop tokens. */
-    stop,
-    /** Incomplete model output due to token limit. */
-    length,
-    /** The model decided to call one or more tools. */
-    tool_calls
+export default function ToolResultContent({ toolCallId, content }) {
+  return (
+    <div className="tool-result-card">
+      {toolCallId ? (
+        <div className="tool-result-id">{toolCallId}</div>
+      ) : null}
+      <pre className="tool-result-body">{content ?? ''}</pre>
+    </div>
+  )
 }

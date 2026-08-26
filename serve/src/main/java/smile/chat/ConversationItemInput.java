@@ -18,32 +18,43 @@ package smile.chat;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * A simplified OpenAI conversation input item accepted on create.
  *
- * <p>Full OpenAI item unions (tool calls, computer use, etc.) are ignored;
- * only message-like payloads with a usable text {@code content} are stored.
+ * <p>Supports message-like payloads with text {@code content}, optional
+ * {@code tool_calls}, and {@code tool_call_id}.
  *
  * @author Haifeng Li
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ConversationItemInput {
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
     /** Item type; typically {@code "message"} when present. */
     public String type;
-    /** Message role ({@code user}, {@code assistant}, {@code system}, {@code developer}). */
+    /** Message role ({@code user}, {@code assistant}, {@code system}, {@code tool}). */
     public String role;
     /**
      * Message content: a string, or an array of content parts that include a
      * {@code text} field (OpenAI input_text / output_text shapes).
      */
     public JsonNode content;
+    /** Assistant tool calls (OpenAI shape). */
+    public JsonNode toolCalls;
+    /** Tool-result message id. */
+    public String toolCallId;
+    /** Optional participant / function name. */
+    public String name;
 
     /**
-     * Extracts plain text suitable for persistence.
+     * Extracts plain text suitable for persistence when no structured fields
+     * are present.
      *
      * @return the text content, or {@code null} when none can be derived.
      */
@@ -72,5 +83,37 @@ public class ConversationItemInput {
             return content.get("text").asText();
         }
         return null;
+    }
+
+    /**
+     * Serializes this item for storage (structured JSON when tool fields present).
+     *
+     * @return stored content string.
+     */
+    public String toStoredContent() {
+        boolean structured = (toolCalls != null && !toolCalls.isNull())
+                || (toolCallId != null && !toolCallId.isBlank());
+        if (!structured) {
+            return contentText();
+        }
+        ObjectNode node = MAPPER.createObjectNode();
+        if (role != null) {
+            node.put("role", role);
+        }
+        if (content != null && !content.isNull()) {
+            node.set("content", content);
+        } else {
+            node.putNull("content");
+        }
+        if (toolCalls != null && !toolCalls.isNull()) {
+            node.set("tool_calls", toolCalls);
+        }
+        if (toolCallId != null) {
+            node.put("tool_call_id", toolCallId);
+        }
+        if (name != null) {
+            node.put("name", name);
+        }
+        return node.toString();
     }
 }

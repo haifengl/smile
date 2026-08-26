@@ -58,6 +58,16 @@ public class ChatCompletionTest {
     }
 
     @Test
+    public void testGivenChatCompletionWithToolCallsWhenContentNullThenAllowed() {
+        ChatCompletion cc = new ChatCompletion(
+                "model", null, new int[]{1}, new int[]{2}, FinishReason.tool_calls, null,
+                java.util.List.of(smile.llm.ToolCall.function(
+                        "call_1", new smile.llm.FunctionCall("fn", "{}"))));
+        assertNull(cc.content());
+        assertTrue(cc.hasToolCalls());
+    }
+
+    @Test
     public void testGivenChatCompletionWithNullReasonWhenCreatedThenThrows() {
         assertThrows(IllegalArgumentException.class,
                 () -> new ChatCompletion("model", "text", new int[]{1}, new int[]{2}, null, null));

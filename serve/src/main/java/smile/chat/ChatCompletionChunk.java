@@ -63,19 +63,23 @@ public record ChatCompletionChunk(
             FinishReason finishReason) {}
 
     /**
-     * The incremental text delta for this chunk.
+     * The incremental text / tool-call delta for this chunk.
      *
      * <p>Fields are omitted from JSON when {@code null}, matching the
-     * OpenAI streaming format:
-     * <ul>
-     *   <li>First chunk: {@code {"role":"assistant","content":"<text>"}}</li>
-     *   <li>Middle chunks: {@code {"content":"<text>"}}</li>
-     *   <li>Final chunk: {@code {}}</li>
-     * </ul>
+     * OpenAI streaming format.
      *
-     * @param role    {@code "assistant"} on the first chunk, {@code null} thereafter.
-     * @param content the generated text fragment, {@code null} on the final chunk.
+     * @param role      {@code "assistant"} on the first chunk, {@code null} thereafter.
+     * @param content   the generated text fragment, {@code null} on the final chunk.
+     * @param toolCalls incremental tool-call deltas.
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public record Delta(String role, String content) {}
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+    public record Delta(String role, String content, List<ToolCallDelta> toolCalls) {
+        /**
+         * Text-only delta (no tool calls).
+         */
+        public Delta(String role, String content) {
+            this(role, content, null);
+        }
+    }
 }

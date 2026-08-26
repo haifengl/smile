@@ -218,7 +218,7 @@ public class ConversationResource {
         if (item == null || item.role == null || item.role.isBlank()) {
             return;
         }
-        String text = item.contentText();
+        String text = item.toStoredContent();
         if (text == null) {
             return;
         }

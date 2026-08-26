@@ -14,18 +14,25 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.llm;
+.tool-result-card {
+  border-left: 3px solid #6c757d;
+  padding: 0.5rem 0.75rem;
+  background: color-mix(in srgb, #6c757d 10%, transparent);
+  font-size: 0.875rem;
+  margin: 0.5rem 0;
+}
 
-/**
- * The reasons that the chat completions finish.
- *
- * @author Karl Li
- */
-public enum FinishReason {
-    /** A message terminated by one of the stop tokens. */
-    stop,
-    /** Incomplete model output due to token limit. */
-    length,
-    /** The model decided to call one or more tools. */
-    tool_calls
+.tool-result-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+  opacity: 0.75;
+  margin-bottom: 0.25rem;
+}
+
+.tool-result-body {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
 }

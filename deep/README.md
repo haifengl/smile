@@ -111,9 +111,9 @@ smile.llm
 │                  GroupedQueryAttention, LlamaModelArgs, Tokenizer
 ├── qwen/          Qwen3.5 hybrid text stack
 ├── Message.java   Immutable dialog message (role + content)
-├── Role.java      system / user / assistant / ipython
+├── Role.java      system / user / assistant / tool
 ├── ChatCompletion.java  Inference result record
-├── FinishReason.java    stop / length / function_call / content_filter
+├── FinishReason.java    stop / length / tool_calls
 
 smile.vision
 ├── transform/     Transform interface, ImageClassification pipeline
@@ -560,9 +560,9 @@ inference stack on top of the same FFM-backed LibTorch bridge.
 
 | Type | Kind | Purpose |
 |---|---|---|
-| `Role` | `enum` | `system`, `user`, `assistant`, `ipython` |
+| `Role` | `enum` | `system`, `user`, `assistant`, `tool` |
 | `Message` | `record` | A single dialog turn — `(Role role, String content)` |
-| `FinishReason` | `enum` | `stop`, `length`, `function_call`, `content_filter` |
+| `FinishReason` | `enum` | `stop`, `length`, `tool_calls` |
 | `ChatCompletion` | `record` | Inference result — generated text, token arrays, log-probs, finish reason |
 
 ```java

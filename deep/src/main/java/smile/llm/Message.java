@@ -19,28 +19,40 @@ package smile.llm;
 import java.util.List;
 
 /**
- * Dialog message with OpenAI-style multimodal content parts.
+ * Dialog message with OpenAI-style multimodal content parts and optional tool fields.
  *
  * <p>Text-only messages use a single {@link TextPart}. Multimodal turns may
- * interleave text with {@link ImageUrlPart} / {@link VideoUrlPart}.
+ * interleave text with {@link ImageUrlPart} / {@link VideoUrlPart}. Assistant
+ * turns may carry {@link #toolCalls()}; tool-result turns use {@link #toolCallId()}.
  *
- * @param role  speaker role.
- * @param parts ordered content parts (non-empty).
+ * @param role       speaker role.
+ * @param parts      ordered content parts (may be empty when tool fields are set).
+ * @param toolCalls  assistant tool calls; {@code null} or empty when absent.
+ * @param toolCallId id of the tool call this message answers ({@code role=tool}).
+ * @param name       optional function / participant name.
  * @author Haifeng Li
  */
-public record Message(Role role, List<ContentPart> parts) {
+public record Message(
+        Role role,
+        List<ContentPart> parts,
+        List<ToolCall> toolCalls,
+        String toolCallId,
+        String name) {
     /**
      * Compact canonical constructor that validates inputs.
-     *
-     * @param role  speaker role — must not be null.
-     * @param parts content parts — must be non-null and non-empty.
      */
     public Message {
         if (role == null) {
             throw new IllegalArgumentException("Message role must not be null");
         }
-        if (parts == null || parts.isEmpty()) {
-            throw new IllegalArgumentException("Message parts must not be null or empty");
+        boolean hasToolCalls = toolCalls != null && !toolCalls.isEmpty();
+        boolean hasToolCallId = toolCallId != null && !toolCallId.isBlank();
+        if (parts == null) {
+            parts = List.of();
+        }
+        if (parts.isEmpty() && !hasToolCalls && !hasToolCallId) {
+            throw new IllegalArgumentException(
+                    "Message parts must not be empty unless tool_calls or tool_call_id is set");
         }
         for (ContentPart part : parts) {
             if (part == null) {
@@ -48,6 +60,9 @@ public record Message(Role role, List<ContentPart> parts) {
             }
         }
         parts = List.copyOf(parts);
+        if (toolCalls != null) {
+            toolCalls = List.copyOf(toolCalls);
+        }
     }
 
     /**
@@ -57,7 +72,25 @@ public record Message(Role role, List<ContentPart> parts) {
      * @param content plain text body.
      */
     public Message(Role role, String content) {
-        this(role, List.of(new TextPart(content)));
+        this(role,
+                content == null
+                        ? throwNullContent()
+                        : List.of(new TextPart(content)),
+                null, null, null);
+    }
+
+    private static List<ContentPart> throwNullContent() {
+        throw new IllegalArgumentException("Message content must not be null");
+    }
+
+    /**
+     * Role + content parts (no tool fields).
+     *
+     * @param role  speaker role.
+     * @param parts content parts.
+     */
+    public Message(Role role, List<ContentPart> parts) {
+        this(role, parts, null, null, null);
     }
 
     /**
@@ -67,7 +100,7 @@ public record Message(Role role, List<ContentPart> parts) {
      * @param parts content parts.
      */
     public Message(Role role, ContentPart... parts) {
-        this(role, parts == null ? null : List.of(parts));
+        this(role, parts == null ? null : List.of(parts), null, null, null);
     }
 
     /**
@@ -111,6 +144,23 @@ public record Message(Role role, List<ContentPart> parts) {
     }
 
     /**
+     * @return {@code true} when this assistant message includes tool calls.
+     */
+    public boolean hasToolCalls() {
+        return toolCalls != null && !toolCalls.isEmpty();
+    }
+
+    /**
+     * Copy with replaced content parts, preserving tool metadata.
+     *
+     * @param newParts replacement parts.
+     * @return new message.
+     */
+    public Message withParts(List<ContentPart> newParts) {
+        return new Message(role, newParts, toolCalls, toolCallId, name);
+    }
+
+    /**
      * Factory method for a system message.
      *
      * @param content the message content.
@@ -148,5 +198,31 @@ public record Message(Role role, List<ContentPart> parts) {
      */
     public static Message assistant(String content) {
         return new Message(Role.assistant, content);
+    }
+
+    /**
+     * Assistant message with tool calls.
+     *
+     * @param content   optional text prefix; may be {@code null} or blank.
+     * @param toolCalls tool calls (required, non-empty).
+     * @return assistant message.
+     */
+    public static Message assistant(String content, List<ToolCall> toolCalls) {
+        List<ContentPart> parts = (content == null || content.isEmpty())
+                ? List.of()
+                : List.of(new TextPart(content));
+        return new Message(Role.assistant, parts, toolCalls, null, null);
+    }
+
+    /**
+     * Tool-result message.
+     *
+     * @param toolCallId id of the tool call being answered.
+     * @param content    tool result text.
+     * @return tool message.
+     */
+    public static Message tool(String toolCallId, String content) {
+        List<ContentPart> parts = content == null ? List.of() : List.of(new TextPart(content));
+        return new Message(Role.tool, parts, null, toolCallId, null);
     }
 }

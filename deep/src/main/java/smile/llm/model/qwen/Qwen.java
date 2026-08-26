@@ -244,6 +244,11 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
     @Override
     public int[] encodeChat(Message... dialog) {
+        return encodeChat(dialog, null);
+    }
+
+    @Override
+    public int[] encodeChat(Message[] dialog, smile.llm.ChatOptions options) {
         if (dialog != null) {
             for (Message m : dialog) {
                 if (m != null && m.hasMedia()) {
@@ -259,7 +264,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 }
             }
         }
-        return tokenizer.encodeDialog(dialog);
+        return tokenizer.encodeDialog(dialog, options);
     }
 
     /**
@@ -1232,7 +1237,8 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 }
             }
             var reason = stop ? FinishReason.stop : FinishReason.length;
-            ChatCompletion prediction = new ChatCompletion(name, tokenizer.decode(completion),
+            String decoded = tokenizer.decode(completion);
+            ChatCompletion prediction = new ChatCompletion(name, decoded,
                     prompt, completion, reason, probs);
 
             if (usePrefix) {

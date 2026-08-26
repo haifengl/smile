@@ -427,6 +427,20 @@ public class ChatService {
         Message[] messages = mediaService != null
                 ? mediaService.resolveInternalMedia(request.messages)
                 : request.messages;
+        smile.llm.ChatOptions chatOptions;
+        try {
+            chatOptions = request.toChatOptions();
+        } catch (IllegalArgumentException e) {
+            throw new jakarta.ws.rs.BadRequestException(e.getMessage());
+        }
+        if (chatOptions.hasTools() && messages != null) {
+            for (var m : messages) {
+                if (m != null && m.hasMedia()) {
+                    throw new jakarta.ws.rs.BadRequestException(
+                            "tools and multimodal content in the same request are not supported");
+                }
+            }
+        }
         boolean hasMedia = false;
         if (messages != null) {
             for (var m : messages) {
@@ -453,14 +467,14 @@ public class ChatService {
                 promptLen = mm.inputIds().length;
                 genReq = smile.llm.engine.GenerationRequest.ofMultimodal(
                         mm, maxGenLen, request.temperature, request.topP,
-                        request.logprobs, request.seed, listener);
+                        request.logprobs, request.seed, listener, chatOptions);
             } else {
-                int[] prompt = model.encodeChat(messages);
+                int[] prompt = model.encodeChat(messages, chatOptions);
                 int maxGenLen = request.resolveMaxTokens(model.maxSeqLen(), prompt.length);
                 promptLen = prompt.length;
                 genReq = smile.llm.engine.GenerationRequest.ofTokens(
                         prompt, maxGenLen, request.temperature, request.topP,
-                        request.logprobs, request.seed, listener);
+                        request.logprobs, request.seed, listener, chatOptions);
             }
         } catch (java.io.IOException e) {
             throw new IllegalArgumentException("Failed to process multimodal request", e);
@@ -494,6 +508,7 @@ public class ChatService {
             ChatCompletion result = model.generate(genReq.promptTokens(), genReq.maxGenLen(),
                     request.temperature, request.topP, request.logprobs, request.seed,
                     listener, handle::isAborted);
+            result = smile.llm.tool.ToolCallPostProcessor.apply(result, chatOptions);
             if (!handle.isAborted()) {
                 future.complete(result);
             } else {

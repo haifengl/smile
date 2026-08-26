@@ -176,4 +176,11 @@ public interface ChatServiceConfig {
      */
     @WithDefault("true")
     boolean flashinferAllowTorchFallback();
+
+    /**
+     * When {@code true}, parse Qwen3 XML tool calls from assistant output when
+     * the request includes {@code tools}.
+     */
+    @WithDefault("true")
+    boolean toolCallingEnabled();
 }

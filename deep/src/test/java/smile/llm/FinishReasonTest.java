@@ -26,9 +26,9 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class FinishReasonTest {
     @Test
-    public void testGivenFinishReasonWhenAllValuesEnumeratedThenFourExist() {
+    public void testGivenFinishReasonWhenAllValuesEnumeratedThenThreeExist() {
         FinishReason[] values = FinishReason.values();
-        assertEquals(4, values.length);
+        assertEquals(3, values.length);
     }
 
     @Test
@@ -42,12 +42,7 @@ public class FinishReasonTest {
     }
 
     @Test
-    public void testGivenFinishReasonFunctionCallWhenNameCalledThenCorrect() {
-        assertEquals("function_call", FinishReason.function_call.name());
-    }
-
-    @Test
-    public void testGivenFinishReasonContentFilterWhenNameCalledThenCorrect() {
-        assertEquals("content_filter", FinishReason.content_filter.name());
+    public void testGivenFinishReasonToolCallsWhenNameCalledThenCorrect() {
+        assertEquals("tool_calls", FinishReason.tool_calls.name());
     }
 }

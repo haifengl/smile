@@ -16,6 +16,7 @@
  */
 package smile.llm.engine;
 
+import smile.llm.ChatOptions;
 import smile.llm.GenerationListener;
 import smile.llm.Message;
 import smile.llm.model.qwen.QwenVlProcessor;
@@ -34,6 +35,7 @@ import smile.llm.model.qwen.QwenVlProcessor;
  * @param logprobs     whether to return log-probabilities.
  * @param seed         RNG seed; {@code 0} = non-deterministic.
  * @param listener     optional per-request listener.
+ * @param chatOptions  optional tool-calling options.
  *
  * @author Haifeng Li
  */
@@ -46,7 +48,8 @@ public record GenerationRequest(
         double topp,
         boolean logprobs,
         long seed,
-        GenerationListener listener) {
+        GenerationListener listener,
+        ChatOptions chatOptions) {
 
     /**
      * Builds a request from already-tokenized prompt ids.
@@ -55,11 +58,22 @@ public record GenerationRequest(
                                              double temperature, double topp,
                                              boolean logprobs, long seed,
                                              GenerationListener listener) {
+        return ofTokens(promptTokens, maxGenLen, temperature, topp, logprobs, seed, listener, null);
+    }
+
+    /**
+     * Builds a request from already-tokenized prompt ids with chat options.
+     */
+    public static GenerationRequest ofTokens(int[] promptTokens, int maxGenLen,
+                                             double temperature, double topp,
+                                             boolean logprobs, long seed,
+                                             GenerationListener listener,
+                                             ChatOptions chatOptions) {
         if (promptTokens == null) {
             throw new IllegalArgumentException("promptTokens must not be null");
         }
         return new GenerationRequest(promptTokens, null, null, maxGenLen, temperature, topp,
-                logprobs, seed, listener);
+                logprobs, seed, listener, chatOptions);
     }
 
     /**
@@ -69,11 +83,22 @@ public record GenerationRequest(
                                                  int maxGenLen, double temperature, double topp,
                                                  boolean logprobs, long seed,
                                                  GenerationListener listener) {
+        return ofMultimodal(multimodal, maxGenLen, temperature, topp, logprobs, seed, listener, null);
+    }
+
+    /**
+     * Builds a multimodal request with chat options.
+     */
+    public static GenerationRequest ofMultimodal(QwenVlProcessor.ProcessedMultimodal multimodal,
+                                                 int maxGenLen, double temperature, double topp,
+                                                 boolean logprobs, long seed,
+                                                 GenerationListener listener,
+                                                 ChatOptions chatOptions) {
         if (multimodal == null) {
             throw new IllegalArgumentException("multimodal must not be null");
         }
         return new GenerationRequest(multimodal.inputIds(), null, multimodal, maxGenLen,
-                temperature, topp, logprobs, seed, listener);
+                temperature, topp, logprobs, seed, listener, chatOptions);
     }
 
     /**
@@ -83,11 +108,21 @@ public record GenerationRequest(
                                              double temperature, double topp,
                                              boolean logprobs, long seed,
                                              GenerationListener listener) {
+        return ofDialog(dialog, null, maxGenLen, temperature, topp, logprobs, seed, listener);
+    }
+
+    /**
+     * Builds a request from a chat dialog with chat options.
+     */
+    public static GenerationRequest ofDialog(Message[] dialog, ChatOptions chatOptions,
+                                             int maxGenLen, double temperature, double topp,
+                                             boolean logprobs, long seed,
+                                             GenerationListener listener) {
         if (dialog == null) {
             throw new IllegalArgumentException("dialog must not be null");
         }
         return new GenerationRequest(null, dialog, null, maxGenLen, temperature, topp,
-                logprobs, seed, listener);
+                logprobs, seed, listener, chatOptions);
     }
 
     /** @return {@code true} when vision prefill is required. */

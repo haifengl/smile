@@ -692,8 +692,50 @@ stopping peer in-flight generations.
 | `logprobs` | `boolean` | `false` | Include log-probabilities |
 | `seed` | `long` | `0` | Random seed (0 = non-deterministic) |
 | `stream` | `boolean` | `false` | `true` → SSE chunks; `false`/omitted → single `chat.completion` JSON |
+| `tools` | `array` | — | OpenAI tool definitions (`type: function`) for Qwen3 / Qwen3.5 / Qwen3.8 |
+| `tool_choice` | `string\|object` | `auto` | `auto` / `none` / `required` / `{"type":"function","function":{"name":"…"}}` |
+| `parallel_tool_calls` | `boolean` | `true` | Allow multiple tool calls in one assistant turn |
 
-Each `Message` has a `role` (`system`, `user`, or `assistant`) and `content`.
+Each `Message` has a `role` (`system`, `user`, `assistant`, or `tool`) and `content`.
+Assistant turns may include `tool_calls`; tool-result turns use `role: "tool"` and `tool_call_id`.
+Legacy `"ipython"` is accepted as an alias for `"tool"`.
+
+#### Tool calling (Qwen3 / Qwen3.5 / Qwen3.8)
+
+OpenAI-compatible tool calling is supported for latest Qwen checkpoints (XML
+`<tool_call>` format). Clients run tools locally and continue the dialog:
+
+```shell
+curl -X POST http://localhost:8080/api/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messages": [{"role": "user", "content": "What is the weather in SF?"}],
+    "tools": [{
+      "type": "function",
+      "function": {
+        "name": "get_current_temperature",
+        "description": "Get temperature for a location",
+        "parameters": {
+          "type": "object",
+          "properties": {"location": {"type": "string"}},
+          "required": ["location"]
+        }
+      }
+    }],
+    "tool_choice": "auto"
+  }'
+```
+
+A successful tool-call response uses `finish_reason: "tool_calls"` and
+`message.tool_calls[]`. Append tool results as `{"role":"tool","tool_call_id":"…","content":"…"}`
+and call again for the final answer. Streaming (v1) buffers the completion and
+replays `delta.tool_calls` at the end (not token-true XML streaming).
+
+Smoke test with the OpenAI Python SDK:
+
+```shell
+python serve/scripts/test_tool_calling.py --base-url http://localhost:8888/api/v1
+```
 
 **Streaming example (`stream: true`):**
 
