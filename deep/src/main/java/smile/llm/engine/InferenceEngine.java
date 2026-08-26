@@ -76,6 +76,12 @@ public final class InferenceEngine implements AutoCloseable {
     private final AtomicInteger decodeBatchSamples = new AtomicInteger();
     private final Thread worker;
     private volatile boolean running = true;
+    /**
+     * When {@code true}, CUDA caching-allocator reclaim already ran for the
+     * current idle period; skip further {@link #maybeEmptyDeviceCache()} calls
+     * until work is admitted again.
+     */
+    private boolean deviceCacheClean;
 
     /**
      * @param executor   model execution surface.
@@ -235,6 +241,9 @@ public final class InferenceEngine implements AutoCloseable {
                 drainAborted();
                 failTimedOutWaiting();
                 admitWaiting();
+                if (!active.isEmpty()) {
+                    deviceCacheClean = false;
+                }
                 if (active.isEmpty()) {
                     Queued peek = waiting.poll(50, TimeUnit.MILLISECONDS);
                     if (peek != null) {
@@ -670,12 +679,11 @@ public final class InferenceEngine implements AutoCloseable {
      *
      * <p>Mirrors the {@code finally} reclaim in {@code LanguageModel.generate}:
      * drain any leaked {@link smile.util.AutoScope}s on the worker thread, then
-     * {@link smile.deep.tensor.Device#emptyCache()}. Without this, activation
-     * HWM stays reserved across chat / tool-calling turns and {@code nvidia-smi}
-     * appears to leak even though KV/DeltaNet pools were unbound.
+     * {@link smile.deep.tensor.Device#emptyCache()}. Runs at most once per idle
+     * period so the idle poll loop does not spam reclaim / logs.
      */
     private void maybeEmptyDeviceCache() {
-        if (!active.isEmpty()) {
+        if (deviceCacheClean || !active.isEmpty()) {
             return;
         }
         KvCachePool pool = executor.kvCachePool();
@@ -694,20 +702,21 @@ public final class InferenceEngine implements AutoCloseable {
                 device.emptyCache();
                 logCudaMemory(device, "after emptyCache");
             }
+            deviceCacheClean = true;
         } catch (Throwable t) {
             logger.debug("emptyCache skipped: {}", t.toString());
         }
     }
 
     private static void logCudaMemory(smile.deep.tensor.Device device, String when) {
-        if (device == null || !device.isCUDA()) {
+        if (device == null || !device.isCUDA() || !logger.isDebugEnabled()) {
             return;
         }
         try {
             int idx = device.index();
             long[] mem = smile.torch.Native.cudaMemGetInfo(idx);
             long[] alloc = smile.torch.Native.cudaAllocatorStats(idx);
-            logger.info("InferenceEngine {}: freeMiB={} allocatedMiB={} reservedMiB={}",
+            logger.debug("InferenceEngine {}: freeMiB={} allocatedMiB={} reservedMiB={}",
                     when,
                     mem[0] / (1024 * 1024),
                     alloc[0] / (1024 * 1024),
