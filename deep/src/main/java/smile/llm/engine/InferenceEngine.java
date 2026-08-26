@@ -626,8 +626,13 @@ public final class InferenceEngine implements AutoCloseable {
     private void finishActive(Active a, FinishReason reason) {
         int[] completion = a.completion.stream().mapToInt(Integer::intValue).toArray();
         a.streamer.maybeEmit(a.listener, true);
-        String text = executor.decode(completion);
-        // Prefer streamed text if non-empty decode of specials skipped differently.
+        String text;
+        try {
+            // Skip chat specials (<|im_end|>, …) so they never enter API content.
+            text = executor.tryDecode(completion, true);
+        } catch (Exception e) {
+            text = executor.decode(completion);
+        }
         ChatCompletion result = new ChatCompletion(
                 executor.model().name(), text, a.prompt, completion, reason, null);
         result = smile.llm.tool.ToolCallPostProcessor.apply(result, a.request.chatOptions());

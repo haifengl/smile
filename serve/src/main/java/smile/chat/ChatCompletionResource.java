@@ -198,6 +198,8 @@ public class ChatCompletionResource {
                             }
                         } else if (suppressContentDeltas && completion != null
                                 && completion.content() != null && !completion.content().isEmpty()) {
+                            // Final answer after a tools-enabled turn: emit cleaned
+                            // content only (think / tool XML / chat specials stripped).
                             var delta = new ChatCompletionChunk.Delta("assistant", completion.content());
                             var choice = new ChatCompletionChunk.Choice(0, delta, null, null);
                             var event = new ChatCompletionChunk(

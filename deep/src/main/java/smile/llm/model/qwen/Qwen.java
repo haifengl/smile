@@ -1237,7 +1237,12 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 }
             }
             var reason = stop ? FinishReason.stop : FinishReason.length;
-            String decoded = tokenizer.decode(completion);
+            String decoded;
+            try {
+                decoded = tokenizer.tryDecode(completion, true);
+            } catch (Exception e) {
+                decoded = tokenizer.decode(completion);
+            }
             ChatCompletion prediction = new ChatCompletion(name, decoded,
                     prompt, completion, reason, probs);
 

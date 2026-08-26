@@ -149,19 +149,24 @@ public final class Qwen3ChatTemplate implements ChatTemplate {
                     closeToolGroup(sb, inToolGroup);
                     inToolGroup = false;
                     sb.append("<|im_start|>assistant\n");
-                    if (!content.isEmpty()) {
-                        sb.append(content);
+                    String assistantText = message.hasToolCalls()
+                            ? smile.llm.tool.AssistantTextSanitizer.stripToolCalls(content)
+                            : content;
+                    // Drop any leaked chat specials from prior malformed history.
+                    assistantText = smile.llm.tool.AssistantTextSanitizer.sanitize(assistantText);
+                    if (assistantText == null) {
+                        assistantText = "";
                     }
                     if (message.hasToolCalls()) {
+                        // HF template: optional reasoning before tool XML.
+                        if (!assistantText.isEmpty()) {
+                            sb.append(assistantText).append("\n\n");
+                        }
                         boolean first = true;
                         for (ToolCall call : message.toolCalls()) {
                             FunctionCall fn = call.function();
                             if (first) {
-                                if (!content.isEmpty()) {
-                                    sb.append("\n\n<tool_call>\n<function=").append(fn.name()).append(">\n");
-                                } else {
-                                    sb.append("<tool_call>\n<function=").append(fn.name()).append(">\n");
-                                }
+                                sb.append("<tool_call>\n<function=").append(fn.name()).append(">\n");
                                 first = false;
                             } else {
                                 sb.append("\n<tool_call>\n<function=").append(fn.name()).append(">\n");
@@ -169,6 +174,8 @@ public final class Qwen3ChatTemplate implements ChatTemplate {
                             appendParameters(sb, fn.arguments());
                             sb.append("</function>\n</tool_call>");
                         }
+                    } else if (!assistantText.isEmpty()) {
+                        sb.append(assistantText);
                     }
                     sb.append("<|im_end|>\n");
                 }
