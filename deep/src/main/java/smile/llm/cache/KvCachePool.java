@@ -709,6 +709,12 @@ public class KvCachePool implements AutoCloseable {
         }
         freeBindingResources(binding, true);
         clearActivationIfPresent(requestId);
+        if (bindings.isEmpty()) {
+            // Drop activateStep leftovers so emptyCache is not blocked.
+            requestSlots = null;
+            requestCapacity = 0;
+            activeRequestIds = null;
+        }
     }
 
     /**
@@ -731,6 +737,11 @@ public class KvCachePool implements AutoCloseable {
         bindings.remove(requestId);
         freeBindingResources(binding, false);
         clearActivationIfPresent(requestId);
+        if (bindings.isEmpty()) {
+            requestSlots = null;
+            requestCapacity = 0;
+            activeRequestIds = null;
+        }
     }
 
     /**
@@ -774,7 +785,12 @@ public class KvCachePool implements AutoCloseable {
         if (!bindings.isEmpty()) {
             return bindings.size();
         }
-        return requestSlots == null ? 0 : requestSlots.length;
+        // Legacy exclusive bind: only count when activateStep is live.
+        // Stale requestSlots with null activeRequestIds must not block emptyCache.
+        if (activeRequestIds != null && requestSlots != null) {
+            return requestSlots.length;
+        }
+        return 0;
     }
 
     /**

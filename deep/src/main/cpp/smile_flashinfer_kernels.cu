@@ -633,6 +633,9 @@ extern "C" int smile_flashinfer_paged_attention_cuda(
         float scale,
         int is_causal,
         const torch::Tensor *attn_mask,
+        torch::Tensor *float_workspace,
+        torch::Tensor *int_workspace,
+        torch::Tensor *pinned_int_workspace,
         torch::Tensor &out,
         std::string &err) {
     try {
@@ -656,17 +659,47 @@ extern "C" int smile_flashinfer_paged_attention_cuda(
         auto k_pages = as_page_major(k_cache.contiguous(), page_size);
         auto v_pages = as_page_major(v_cache.contiguous(), page_size);
 
-        // Workspaces (decode). Prefer caller-provided via empty_like sizing in workspace object;
-        // allocate locals if needed so the C ABI stays simple.
-        auto float_ws = torch::empty(
-                {32LL << 20},
-                torch::TensorOptions().dtype(torch::kUInt8).device(query.device()));
-        auto int_ws = torch::empty(
-                {8LL << 20},
-                torch::TensorOptions().dtype(torch::kUInt8).device(query.device()));
-        auto pinned_int = torch::empty(
-                {8LL << 20},
-                torch::TensorOptions().dtype(torch::kUInt8).pinned_memory(true));
+        // Prefer caller-owned pooled workspace (KvCachePool). Fall back to
+        // locals only when null — locals are 32+8 MiB per call and used to
+        // inflate nvidia-smi by ~40 MiB/request when the pool was ignored.
+        torch::Tensor float_ws_local;
+        torch::Tensor int_ws_local;
+        torch::Tensor pinned_local;
+        torch::Tensor *float_ws_ptr;
+        torch::Tensor *int_ws_ptr;
+        torch::Tensor *pinned_ptr;
+        const bool use_pooled = float_workspace != nullptr && float_workspace->defined()
+                && int_workspace != nullptr && int_workspace->defined()
+                && pinned_int_workspace != nullptr && pinned_int_workspace->defined();
+        if (use_pooled) {
+            float_ws_ptr = float_workspace;
+            int_ws_ptr = int_workspace;
+            pinned_ptr = pinned_int_workspace;
+        } else {
+            static std::atomic<bool> warned{false};
+            if (!warned.exchange(true)) {
+                fprintf(stderr,
+                        "WARN smile: FlashInfer paged attention allocating local "
+                        "32+8 MiB workspace (pooled workspace missing); "
+                        "expect ~40 MiB/request GPU growth until fixed\n");
+                fflush(stderr);
+            }
+            float_ws_local = torch::empty(
+                    {32LL << 20},
+                    torch::TensorOptions().dtype(torch::kUInt8).device(query.device()));
+            float_ws_ptr = &float_ws_local;
+            int_ws_local = torch::empty(
+                    {8LL << 20},
+                    torch::TensorOptions().dtype(torch::kUInt8).device(query.device()));
+            int_ws_ptr = &int_ws_local;
+            pinned_local = torch::empty(
+                    {8LL << 20},
+                    torch::TensorOptions().dtype(torch::kUInt8).pinned_memory(true));
+            pinned_ptr = &pinned_local;
+        }
+        torch::Tensor &float_ws = *float_ws_ptr;
+        torch::Tensor &int_ws = *int_ws_ptr;
+        torch::Tensor &pinned_int = *pinned_ptr;
 
         if (S == 1) {
             if (head_dim == 64 || head_dim == 128 || head_dim == 256 || head_dim == 512) {
