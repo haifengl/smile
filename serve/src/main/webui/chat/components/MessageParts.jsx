@@ -17,6 +17,8 @@
 import React from 'react'
 import TextContent from './TextContent'
 import MediaContent from './MediaContent'
+import ToolCallContent from './ToolCallContent'
+import ToolResultContent from './ToolResultContent'
 import { messageText } from '../mediaUtils'
 import { splitThinking } from '../thinkingUtils'
 import './MessageParts.css'
@@ -61,14 +63,26 @@ export default function MessageParts({
   text,
   downloadable = false,
   streaming = false,
+  toolCalls,
+  toolCallId,
+  role,
 }) {
+  if (role === 'tool') {
+    return (
+      <ToolResultContent
+        toolCallId={toolCallId}
+        content={text ?? messageText({ parts, text })}
+      />
+    )
+  }
+
   const resolved = parts?.length
     ? parts
     : text != null
       ? [{ type: 'text', text }]
       : []
 
-  if (!resolved.length) {
+  if (!resolved.length && !toolCalls?.length) {
     return null
   }
 
@@ -80,7 +94,8 @@ export default function MessageParts({
   const { thinking, answer } = splitThinking(combinedText)
   const thinkingBody = thinking.replace(/^\n+/, '').replace(/\n+$/, '')
 
-  if (!thinkingBody && !answer && inlineMedia.length === 0 && fileAttachments.length === 0) {
+  if (!thinkingBody && !answer && inlineMedia.length === 0
+      && fileAttachments.length === 0 && !toolCalls?.length) {
     return null
   }
 
@@ -97,6 +112,8 @@ export default function MessageParts({
           {answer}
         </TextContent>
       ) : null}
+
+      {toolCalls?.length ? <ToolCallContent toolCalls={toolCalls} /> : null}
 
       {inlineMedia.map((part, index) => {
         const url = part.previewUrl || part.url

@@ -355,7 +355,7 @@ public final class InferenceEngine implements AutoCloseable {
             LanguageModel lm = executor.model();
             int[] prompt = next.request.promptTokens();
             if (prompt == null) {
-                prompt = lm.encodeChat(next.request.dialog());
+                prompt = lm.encodeChat(next.request.dialog(), next.request.chatOptions());
             }
             int promptLen = prompt.length;
             int maxGen = clampMaxGen(promptLen, next.request.maxGenLen(), lm.maxSeqLen());
@@ -616,6 +616,7 @@ public final class InferenceEngine implements AutoCloseable {
         // Prefer streamed text if non-empty decode of specials skipped differently.
         ChatCompletion result = new ChatCompletion(
                 executor.model().name(), text, a.prompt, completion, reason, null);
+        result = smile.llm.tool.ToolCallPostProcessor.apply(result, a.request.chatOptions());
         try {
             executor.finish(a.kvRequestId, concat(a.prompt, completion));
         } catch (Throwable t) {
@@ -700,11 +701,12 @@ public final class InferenceEngine implements AutoCloseable {
         GenerationRequest request = job.request;
         int[] tokens = request.promptTokens();
         if (tokens == null) {
-            tokens = lm.encodeChat(request.dialog());
+            tokens = lm.encodeChat(request.dialog(), request.chatOptions());
         }
-        return lm.generate(tokens, request.maxGenLen(), request.temperature(),
+        ChatCompletion result = lm.generate(tokens, request.maxGenLen(), request.temperature(),
                 request.topp(), request.logprobs(), request.seed(), request.listener(),
                 job.handle::isAborted);
+        return smile.llm.tool.ToolCallPostProcessor.apply(result, request.chatOptions());
     }
 
     @Override

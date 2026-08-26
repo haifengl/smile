@@ -39,6 +39,6 @@ public class RoleTest {
     public void testGivenRoleValueOfWhenCalledThenReturnsCorrectEnum() {
         assertEquals(Role.user, Role.valueOf("user"));
         assertEquals(Role.assistant, Role.valueOf("assistant"));
-        assertEquals(Role.ipython, Role.valueOf("ipython"));
+        assertEquals(Role.tool, Role.valueOf("tool"));
     }
 }

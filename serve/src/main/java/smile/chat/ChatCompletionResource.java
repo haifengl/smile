@@ -125,6 +125,13 @@ public class ChatCompletionResource {
 
         return Multi.createFrom().emitter(emitter -> {
             AtomicBoolean isFirst = new AtomicBoolean(true);
+            boolean toolsRequested;
+            try {
+                toolsRequested = request.toChatOptions().hasTools();
+            } catch (IllegalArgumentException e) {
+                toolsRequested = false;
+            }
+            final boolean suppressContentDeltas = toolsRequested;
             CompletableFuture<ChatCompletion> resultFuture = new CompletableFuture<>();
             SubmissionPublisher<String> publisher =
                     new SubmissionPublisher<>(Runnable::run, Flow.defaultBufferSize());
@@ -142,6 +149,10 @@ public class ChatCompletionResource {
                 public void onNext(String chunk) {
                     if (emitter.isCancelled()) {
                         publisher.close();
+                        return;
+                    }
+                    if (suppressContentDeltas) {
+                        // v1: buffer-and-replay tool_calls at end; skip raw XML text.
                         return;
                     }
                     boolean first = isFirst.compareAndSet(true, false);
@@ -174,6 +185,25 @@ public class ChatCompletionResource {
                         FinishReason reason = completion != null
                                 ? completion.reason()
                                 : FinishReason.stop;
+                        if (completion != null && completion.hasToolCalls()) {
+                            boolean firstTool = true;
+                            for (var deltas : StreamingToolCallAssembler.replayDeltas(completion)) {
+                                String role = firstTool ? "assistant" : null;
+                                firstTool = false;
+                                var delta = new ChatCompletionChunk.Delta(role, null, deltas);
+                                var choice = new ChatCompletionChunk.Choice(0, delta, null, null);
+                                var event = new ChatCompletionChunk(
+                                        id, "chat.completion.chunk", created, modelName, List.of(choice));
+                                emitter.emit(toJson(event));
+                            }
+                        } else if (suppressContentDeltas && completion != null
+                                && completion.content() != null && !completion.content().isEmpty()) {
+                            var delta = new ChatCompletionChunk.Delta("assistant", completion.content());
+                            var choice = new ChatCompletionChunk.Choice(0, delta, null, null);
+                            var event = new ChatCompletionChunk(
+                                    id, "chat.completion.chunk", created, modelName, List.of(choice));
+                            emitter.emit(toJson(event));
+                        }
                         var delta = new ChatCompletionChunk.Delta(null, null);
                         var choice = new ChatCompletionChunk.Choice(0, delta, null, reason);
                         var event = new ChatCompletionChunk(id, "chat.completion.chunk", created, modelName, List.of(choice));
@@ -232,6 +262,11 @@ public class ChatCompletionResource {
                 }
             }
         }
+        try {
+            request.toChatOptions();
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException(e.getMessage());
+        }
         if (!service.isAvailable()) {
             throw new ServiceUnavailableException();
         }
@@ -287,7 +322,15 @@ public class ChatCompletionResource {
             ConversationItem item = new ConversationItem();
             item.conversationId = conversationId;
             item.role = Role.assistant.toString();
-            item.content = completion.content();
+            if (completion.hasToolCalls()) {
+                try {
+                    item.content = objectMapper.writeValueAsString(ChatMessageObject.of(completion));
+                } catch (JsonProcessingException e) {
+                    item.content = completion.content() != null ? completion.content() : "";
+                }
+            } else {
+                item.content = completion.content() != null ? completion.content() : "";
+            }
             item.persist();
         }
     }

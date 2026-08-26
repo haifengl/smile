@@ -74,6 +74,19 @@ public interface LanguageModel {
     int[] encodeChat(Message... dialog);
 
     /**
+     * Encodes a dialog with optional tool-calling options.
+     *
+     * <p>Default ignores {@code options} and delegates to {@link #encodeChat(Message...)}.
+     *
+     * @param dialog  ordered conversation turns.
+     * @param options chat options; may be {@code null}.
+     * @return prompt token ids.
+     */
+    default int[] encodeChat(Message[] dialog, ChatOptions options) {
+        return encodeChat(dialog);
+    }
+
+    /**
      * Generates a completion from an already-tokenized prompt (no cancel).
      *
      * @see #generate(int[], int, double, double, boolean, long, GenerationListener, BooleanSupplier)

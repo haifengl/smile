@@ -107,14 +107,50 @@ public class Tokenizer extends Tiktoken {
      * @return token ids.
      */
     public int[] encodeDialog(Message... dialog) {
+        return encodeDialog(dialog, null);
+    }
+
+    /**
+     * Encodes a chat dialog with optional tool-calling options.
+     *
+     * @param dialog  conversation turns.
+     * @param options chat options; when tools are present (or the dialog
+     *                already contains tool turns), uses {@link smile.llm.template.Qwen3ChatTemplate}.
+     * @return token ids.
+     */
+    public int[] encodeDialog(Message[] dialog, smile.llm.ChatOptions options) {
+        if (needsToolTemplate(dialog, options)) {
+            String prompt = smile.llm.template.Qwen3ChatTemplate.encodeDialog(dialog, options);
+            return encode(prompt, false, false);
+        }
         IntArrayList tokens = new IntArrayList();
-        for (Message message : dialog) {
-            encodeMessage(message, tokens);
+        if (dialog != null) {
+            for (Message message : dialog) {
+                encodeMessage(message, tokens);
+            }
         }
         // Open assistant turn for the model to complete.
         tokens.add(specialToken("<|im_start|>"));
         tokens.add(encode("assistant\n", false, false));
         return tokens.toArray();
+    }
+
+    private static boolean needsToolTemplate(Message[] dialog, smile.llm.ChatOptions options) {
+        if (options != null && options.hasTools()) {
+            return true;
+        }
+        if (dialog == null) {
+            return false;
+        }
+        for (Message m : dialog) {
+            if (m == null) {
+                continue;
+            }
+            if (m.role() == smile.llm.Role.tool || m.hasToolCalls()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void encodeMessage(Message message, IntArrayList tokens) {

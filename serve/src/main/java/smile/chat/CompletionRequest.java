@@ -16,10 +16,20 @@
  */
 package smile.chat;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import smile.llm.ChatOptions;
+import smile.llm.FunctionDefinition;
 import smile.llm.Message;
+import smile.llm.ToolChoice;
+import smile.llm.ToolDefinition;
 
 /**
  * JSON body for a {@code POST /chat/completions} request.
@@ -67,6 +77,15 @@ public class CompletionRequest {
      * OpenAI {@code chat.completion} JSON body.
      */
     public Boolean stream = Boolean.FALSE;
+    /** OpenAI tools array; may be {@code null}. */
+    public JsonNode tools;
+    /**
+     * OpenAI {@code tool_choice}: {@code "auto"}|{@code "none"}|{@code "required"}
+     * or {@code {"type":"function","function":{"name":"…"}}}.
+     */
+    public JsonNode toolChoice;
+    /** Whether parallel tool calls are allowed. Default: {@code true}. */
+    public Boolean parallelToolCalls;
 
     /**
      * Returns {@code true} when the client set {@code max_completion_tokens}
@@ -115,5 +134,111 @@ public class CompletionRequest {
      */
     public boolean isStream() {
         return Boolean.TRUE.equals(stream);
+    }
+
+    /**
+     * Converts OpenAI tool fields into internal {@link ChatOptions}.
+     *
+     * @return chat options (never {@code null}).
+     */
+    public ChatOptions toChatOptions() {
+        ToolDefinition[] defs = parseTools(tools);
+        ToolChoice choice = parseToolChoice(toolChoice);
+        boolean parallel = parallelToolCalls == null || parallelToolCalls;
+        if ((defs == null || defs.length == 0)
+                && (choice instanceof ToolChoice.Required || choice instanceof ToolChoice.Named)) {
+            throw new IllegalArgumentException("tool_choice requires a non-empty tools array");
+        }
+        return new ChatOptions(defs, choice, parallel);
+    }
+
+    static ToolDefinition[] parseTools(JsonNode toolsNode) {
+        if (toolsNode == null || toolsNode.isNull() || !toolsNode.isArray() || toolsNode.isEmpty()) {
+            return null;
+        }
+        List<ToolDefinition> list = new ArrayList<>();
+        for (JsonNode tool : toolsNode) {
+            String type = tool.path("type").asText("function");
+            JsonNode fn = tool.path("function");
+            String name = fn.path("name").asText(null);
+            if (name == null || name.isBlank()) {
+                throw new IllegalArgumentException("tool.function.name required");
+            }
+            String description = fn.has("description") && !fn.get("description").isNull()
+                    ? fn.get("description").asText() : null;
+            Map<String, Object> parameters = null;
+            if (fn.has("parameters") && !fn.get("parameters").isNull()) {
+                parameters = jsonToMap(fn.get("parameters"));
+            }
+            list.add(new ToolDefinition(type, new FunctionDefinition(name, description, parameters)));
+        }
+        return list.toArray(ToolDefinition[]::new);
+    }
+
+    static ToolChoice parseToolChoice(JsonNode node) {
+        if (node == null || node.isNull()) {
+            return ToolChoice.AUTO;
+        }
+        if (node.isTextual()) {
+            return switch (node.asText()) {
+                case "none" -> ToolChoice.NONE;
+                case "required" -> ToolChoice.REQUIRED;
+                default -> ToolChoice.AUTO;
+            };
+        }
+        if (node.isObject()) {
+            String type = node.path("type").asText("");
+            if ("function".equals(type)) {
+                String name = node.path("function").path("name").asText(null);
+                if (name == null || name.isBlank()) {
+                    throw new IllegalArgumentException("tool_choice.function.name required");
+                }
+                return new ToolChoice.Named(name);
+            }
+        }
+        return ToolChoice.AUTO;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> jsonToMap(JsonNode node) {
+        if (node == null || !node.isObject()) {
+            return Map.of();
+        }
+        Map<String, Object> map = new LinkedHashMap<>();
+        Iterator<Map.Entry<String, JsonNode>> fields = node.properties().iterator();
+        while (fields.hasNext()) {
+            Map.Entry<String, JsonNode> e = fields.next();
+            map.put(e.getKey(), jsonToJava(e.getValue()));
+        }
+        return map;
+    }
+
+    private static Object jsonToJava(JsonNode node) {
+        if (node == null || node.isNull()) {
+            return null;
+        }
+        if (node.isTextual()) {
+            return node.asText();
+        }
+        if (node.isBoolean()) {
+            return node.asBoolean();
+        }
+        if (node.isIntegralNumber()) {
+            return node.asLong();
+        }
+        if (node.isFloatingPointNumber()) {
+            return node.asDouble();
+        }
+        if (node.isArray()) {
+            List<Object> list = new ArrayList<>();
+            for (JsonNode child : node) {
+                list.add(jsonToJava(child));
+            }
+            return list;
+        }
+        if (node.isObject()) {
+            return jsonToMap(node);
+        }
+        return node.asText();
     }
 }

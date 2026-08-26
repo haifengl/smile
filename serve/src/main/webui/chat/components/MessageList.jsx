@@ -61,7 +61,8 @@ export default function MessageList({
 
             <div style={{ "height" : "100%" }}>
                 <div className="scroll-container" ref={scrollContainerRef}>
-                    {messages && messages.map(({ user, parts, text, createdAt, streaming }, index) => {
+                    {messages && messages.map((msg, index) => {
+                        const { user, parts, text, createdAt, streaming, toolCalls, toolCallId, role } = msg
                         if (user.id == (userId && userId.toLowerCase())) {
                             return <OutgoingMessage key={index}
                                     user={user}
@@ -76,6 +77,9 @@ export default function MessageList({
                                     text={text}
                                     timestamp={createdAt}
                                     streaming={!!streaming}
+                                    toolCalls={toolCalls}
+                                    toolCallId={toolCallId}
+                                    role={role}
                                 />
                         }
                     })}

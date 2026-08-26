@@ -258,6 +258,34 @@ java \
     <p>Set <code>"stream": true</code> for token-by-token Server-Sent Events output.
         Conversation history can be persisted when a database is configured — see below.</p>
 
+    <h3 id="tool-calling">Tool calling (Qwen3+)</h3>
+
+    <p>For Qwen3 / Qwen3.5 / Qwen3.8 models, pass OpenAI-style <code>tools</code> and
+        receive <code>finish_reason: "tool_calls"</code> with structured
+        <code>message.tool_calls</code>. Clients execute tools locally and continue with
+        <code>role: "tool"</code> messages.</p>
+
+    <div class="code" style="text-align: left;">
+    <pre class="language-bash"><code class="language-bash">curl http://localhost:8080/api/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messages": [{"role": "user", "content": "Weather in SF?"}],
+    "tools": [{
+      "type": "function",
+      "function": {
+        "name": "get_current_temperature",
+        "description": "Get temperature",
+        "parameters": {
+          "type": "object",
+          "properties": {"location": {"type": "string"}},
+          "required": ["location"]
+        }
+      }
+    }],
+    "tool_choice": "auto"
+  }'</code></pre>
+    </div>
+
     <h2 id="web-ui">Web UI</h2>
 
     <p>A React web interface is bundled via

@@ -246,9 +246,25 @@ export function buildChatHistory(messages, userId, botId) {
   const history = []
   for (const msg of messages) {
     if (msg.streaming) continue
+    if (msg.role === 'tool') {
+      history.push({
+        role: 'tool',
+        content: messageText(msg) || '',
+        tool_call_id: msg.toolCallId,
+      })
+      continue
+    }
     const id = msg.user?.id
     if (id !== userId && id !== botId) continue
     const role = id === userId ? 'user' : 'assistant'
+    if (role === 'assistant' && msg.toolCalls?.length) {
+      history.push({
+        role: 'assistant',
+        content: messageText(msg) || null,
+        tool_calls: msg.toolCalls,
+      })
+      continue
+    }
     const content = buildApiContent(msg)
     if (content === '' || content === null) continue
     history.push({ role, content })

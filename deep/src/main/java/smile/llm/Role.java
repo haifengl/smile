@@ -28,6 +28,6 @@ public enum Role {
     user,
     /** AI assistant. */
     assistant,
-    /** Python code. */
-    ipython
+    /** Tool execution result. */
+    tool
 }

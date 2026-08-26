@@ -149,8 +149,9 @@ async function* withStreamIdleTimeout(stream, controller, timeouts) {
  * @param {string} [props.model] Public chat model id for completions (omit to use server default).
  * @param {string} [props.title] Header title; defaults to model id or "Smile Assistant".
  * @param {boolean} [props.embedded] When true, fills the parent pane (infer); otherwise standalone layout.
+ * @param {Array<object>} [props.tools] Optional OpenAI tools for tool calling demos.
  */
-export default function ChatApp({ model, title, embedded = false }) {
+export default function ChatApp({ model, title, embedded = false, tools }) {
   const [messages, setMessages] = useState([{ ...WELCOME, createdAt: new Date() }])
   const [showTypingIndicator, setShowTypingIndicator] = useState(false)
   const [conversationId, setConversationId] = useState(null)
@@ -247,6 +248,10 @@ export default function ChatApp({ model, title, embedded = false }) {
       if (model) {
         request.model = model
       }
+      if (tools?.length) {
+        request.tools = tools
+        request.tool_choice = 'auto'
+      }
 
       const controller = new AbortController()
       const stream = await client.chat.completions.create(request, {
@@ -254,6 +259,7 @@ export default function ChatApp({ model, title, embedded = false }) {
       })
 
       let receivedToken = false
+      const assembledToolCalls = []
       for await (const chunk of withStreamIdleTimeout(stream, controller, {
         firstMs: STREAM_FIRST_TOKEN_TIMEOUT_MS,
         idleMs: STREAM_IDLE_TIMEOUT_MS,
@@ -261,6 +267,44 @@ export default function ChatApp({ model, title, embedded = false }) {
         const choice = chunk.choices?.[0]
         if (choice?.finish_reason) {
           break
+        }
+        const toolDeltas = choice?.delta?.tool_calls
+        if (toolDeltas?.length) {
+          if (!receivedToken) {
+            receivedToken = true
+            setShowTypingIndicator(false)
+          }
+          for (const td of toolDeltas) {
+            const idx = td.index ?? 0
+            while (assembledToolCalls.length <= idx) {
+              assembledToolCalls.push({
+                id: '',
+                type: 'function',
+                function: { name: '', arguments: '' },
+              })
+            }
+            const target = assembledToolCalls[idx]
+            if (td.id) target.id = td.id
+            if (td.type) target.type = td.type
+            if (td.function?.name) {
+              target.function.name = (target.function.name || '') + td.function.name
+            }
+            if (td.function?.arguments) {
+              target.function.arguments =
+                (target.function.arguments || '') + td.function.arguments
+            }
+          }
+          setMessages((prev) => {
+            const next = prev.slice()
+            const last = next[next.length - 1]
+            if (last?.streaming && last.user?.id === bot.id) {
+              next[next.length - 1] = {
+                ...last,
+                toolCalls: assembledToolCalls.map((c) => ({ ...c, function: { ...c.function } })),
+              }
+            }
+            return next
+          })
         }
         const delta = choice?.delta?.content
         if (!delta) {
@@ -293,7 +337,12 @@ export default function ChatApp({ model, title, embedded = false }) {
         if (last?.streaming) {
           const finalText = messageText(last)
           const parts = partsFromAssistantText(finalText)
-          next[next.length - 1] = { ...last, parts, streaming: false }
+          next[next.length - 1] = {
+            ...last,
+            parts,
+            streaming: false,
+            toolCalls: assembledToolCalls.length ? assembledToolCalls : last.toolCalls,
+          }
         }
         return next
       })
@@ -320,7 +369,7 @@ export default function ChatApp({ model, title, embedded = false }) {
       sendingRef.current = false
       setSending(false)
     }
-  }, [conversationId, model, messages])
+  }, [conversationId, model, messages, tools])
 
   const headerTitle = title || model || 'Smile Assistant'
   const className = embedded

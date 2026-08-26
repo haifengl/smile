@@ -260,7 +260,7 @@ public class MediaService {
                 }
             }
             if (partChanged) {
-                out[i] = new Message(m.role(), parts);
+                out[i] = m.withParts(parts);
                 changed = true;
             } else {
                 out[i] = m;

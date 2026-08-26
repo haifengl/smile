@@ -52,4 +52,51 @@ public class MessageDeserializerTest {
         assertInstanceOf(AudioUrlPart.class, message.parts().getFirst());
         assertTrue(message.hasAudio());
     }
+
+    @Test
+    public void testGivenToolRoleWhenDeserializedThenMappedToTool() throws Exception {
+        Message message = mapper.readValue("""
+                {"role":"tool","content":"42"}
+                """, Message.class);
+        assertEquals(Role.tool, message.role());
+        assertEquals("42", message.content());
+    }
+
+    @Test
+    public void testGivenIpythonRoleWhenDeserializedThenMappedToTool() throws Exception {
+        Message message = mapper.readValue("""
+                {"role":"ipython","content":"42"}
+                """, Message.class);
+        assertEquals(Role.tool, message.role());
+        assertEquals("42", message.content());
+    }
+
+    @Test
+    public void testGivenAssistantToolCallsWhenDeserializedThenParsed() throws Exception {
+        Message message = mapper.readValue("""
+                {
+                  "role":"assistant",
+                  "content":null,
+                  "tool_calls":[{
+                    "id":"call_1",
+                    "type":"function",
+                    "function":{"name":"get_weather","arguments":"{\\"location\\":\\"SF\\"}"}
+                  }]
+                }
+                """, Message.class);
+        assertEquals(Role.assistant, message.role());
+        assertTrue(message.hasToolCalls());
+        assertEquals("get_weather", message.toolCalls().getFirst().function().name());
+        assertEquals("call_1", message.toolCalls().getFirst().id());
+    }
+
+    @Test
+    public void testGivenToolMessageWithIdWhenDeserializedThenParsed() throws Exception {
+        Message message = mapper.readValue("""
+                {"role":"tool","tool_call_id":"call_1","content":"72F"}
+                """, Message.class);
+        assertEquals(Role.tool, message.role());
+        assertEquals("call_1", message.toolCallId());
+        assertEquals("72F", message.content());
+    }
 }

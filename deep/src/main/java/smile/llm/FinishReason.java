@@ -26,8 +26,6 @@ public enum FinishReason {
     stop,
     /** Incomplete model output due to token limit. */
     length,
-    /** The model decided to call a function. */
-    function_call, 
-    /** Omitted content due to a flag from content filters. */
-    content_filter
+    /** The model decided to call one or more tools. */
+    tool_calls
 }
