@@ -106,6 +106,11 @@ public final class MarlinLinear implements LinearOp, AutoCloseable {
                 aFp16.close();
             }
         }
+        if (bias != null) {
+            Tensor withBias = outFlat.add(bias);
+            outFlat.close();
+            outFlat = withBias;
+        }
         // Match the rest of the model (often BF16).
         if (inDtype != ScalarType.Half && outFlat.dtype() != inDtype) {
             Tensor cast = outFlat.to(inDtype);
