@@ -46,9 +46,10 @@ import tools.jackson.databind.ObjectMapper;
  * Loads HuggingFace GPTQ / AWQ / FP8 / NVFP4 SafeTensors into Llama linears
  * (shard-then-pack for TP when {@code tpSize > 1}).
  *
- * <p>Marlin path: batch-reads each safetensors shard once, packs linears in
- * parallel on CPU, then installs on the model graph (main thread) with serial
- * H2D copies.
+ * <p>Marlin path: batch-reads each safetensors shard once, dequantizes AWQ/GPTQ
+ * on CPU (with HF→Meta RoPE rearrange on {@code q_proj}/{@code k_proj}), requants
+ * to Marlin layout in parallel, then installs on the model graph (main thread)
+ * with serial H2D copies.
  *
  * @author Haifeng Li
  */
@@ -113,12 +114,12 @@ public final class QuantizedHfLoader {
                                              Map<String, String> weightMap, QuantFormat format,
                                              Device device, int groupSize, int tpSize, int tpRank,
                                              int modelLoaderThreads) throws IOException {
-        List<LinearJob> jobs = buildJobs(model.numLayers());
+        List<LinearJob> jobs = buildJobs(model);
         List<String> keys = marlinKeys(jobs, weightMap, format);
         Map<String, Tensor> bank = batchReadCpu(dir, weightMap, keys, modelLoaderThreads);
         try {
             int packThreads = resolvePackThreads(modelLoaderThreads, jobs.size());
-            logger.info("Marlin pack: jobs={} packThreads={} tensors={}",
+            logger.info("Marlin pack: jobs={} packThreads={} tensors={} (AWQ/GPTQ→FP16→Marlin; q/k RoPE permute)",
                     jobs.size(), packThreads, bank.size());
 
             ExecutorService pool = Executors.newFixedThreadPool(packThreads);
@@ -182,7 +183,7 @@ public final class QuantizedHfLoader {
                                                 WeightGemmBackend backend, Device device,
                                                 int tpSize, int tpRank, ScalarType outDtype,
                                                 int modelLoaderThreads) throws IOException {
-        List<LinearJob> jobs = buildJobs(model.numLayers());
+        List<LinearJob> jobs = buildJobs(model);
         List<String> keys = new ArrayList<>();
         for (LinearJob job : jobs) {
             keys.add(job.base + ".weight");
@@ -277,7 +278,8 @@ public final class QuantizedHfLoader {
                 }
             }
             try {
-                return MarlinWeightPacker.packAwqDirect(qLocal, sLocal, zLocal, groupSize, Device.CPU());
+                return MarlinWeightPacker.packAwqDirect(
+                        qLocal, sLocal, zLocal, groupSize, Device.CPU(), job.ropeHeads());
             } finally {
                 qLocal.close();
                 sLocal.close();
@@ -298,7 +300,7 @@ public final class QuantizedHfLoader {
         Tensor gLocal = gIdx;
         try {
             return MarlinWeightPacker.packGptqDirect(qLocal, sLocal, qzeros, gLocal, groupSize,
-                    Device.CPU());
+                    Device.CPU(), job.ropeHeads());
         } finally {
             qLocal.close();
             sLocal.close();
@@ -325,12 +327,26 @@ public final class QuantizedHfLoader {
         }
     }
 
-    private static List<LinearJob> buildJobs(int numLayers) {
+    private static List<LinearJob> buildJobs(LlamaModel model) {
+        int numLayers = model.numLayers();
+        int numHeads = 0;
+        int numKvHeads = 0;
+        if (!model.layers().isEmpty()
+                && model.layers().getFirst().attention() instanceof GroupedQueryAttention gqa) {
+            numHeads = gqa.numQueryHeads();
+            numKvHeads = gqa.numKeyValueHeads();
+        }
         List<LinearJob> jobs = new ArrayList<>(numLayers * 7);
         for (int layer = 0; layer < numLayers; layer++) {
             for (String suffix : LINEAR_SUFFIXES) {
                 boolean column = !suffix.endsWith("o_proj") && !suffix.endsWith("down_proj");
-                jobs.add(new LinearJob(layer, prefix(layer, suffix), column));
+                Integer ropeHeads = null;
+                if (suffix.endsWith("q_proj") && numHeads > 0) {
+                    ropeHeads = numHeads;
+                } else if (suffix.endsWith("k_proj") && numKvHeads > 0) {
+                    ropeHeads = numKvHeads;
+                }
+                jobs.add(new LinearJob(layer, prefix(layer, suffix), column, ropeHeads));
             }
         }
         return jobs;
@@ -515,5 +531,8 @@ public final class QuantizedHfLoader {
         return map;
     }
 
-    private record LinearJob(int layer, String base, boolean columnParallel) {}
+    /**
+     * @param ropeHeads non-null for {@code q_proj}/{@code k_proj}: HF→Meta RoPE rearrange.
+     */
+    private record LinearJob(int layer, String base, boolean columnParallel, Integer ropeHeads) {}
 }
