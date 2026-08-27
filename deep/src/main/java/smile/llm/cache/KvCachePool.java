@@ -551,9 +551,10 @@ public class KvCachePool implements AutoCloseable {
     }
 
     /**
-     * Reserves a contiguous slot range for each item in a batch. Must be called
+     * Reserves a page-aligned slot map for each item in a batch. Must be called
      * before {@link #put}/{@link #get} for a request. Previously bound slots
      * (including multi-request bindings) are released without radix insert.
+     * Physical pages need not be contiguous (paged attention).
      *
      * <p>Capacity is page-aligned and <em>clamped</em> to free pages in the
      * static pool (after radix eviction). The pool never grows. Callers should
@@ -1214,16 +1215,25 @@ public class KvCachePool implements AutoCloseable {
      * Allocates {@code numTokens} slots (page-aligned) and returns their indices.
      * Used by the inference engine when inserting into the radix tree.
      *
+     * <p>Pages are packed from the free list and need not be physically contiguous.
+     * Within each page, slot indices remain {@code pageId * pageSize + offset}
+     * so FlashInfer / gather paths can treat the result as a standard page table.
+     *
      * @param numTokens number of tokens to allocate.
      * @return slot indices of length {@code alignedLen}.
      */
     public long[] alloc(int numTokens) {
         int pagesNeeded = (numTokens + pageSize - 1) / pageSize;
         int aligned = pagesNeeded * pageSize;
-        int base = allocContiguous(aligned);
+        ensureFreePages(pagesNeeded);
         long[] slots = new long[aligned];
-        for (int i = 0; i < aligned; i++) {
-            slots[i] = base + i;
+        for (int p = 0; p < pagesNeeded; p++) {
+            int page = freePages.removeFirst();
+            long base = (long) page * pageSize;
+            int offset = p * pageSize;
+            for (int i = 0; i < pageSize; i++) {
+                slots[offset + i] = base + i;
+            }
         }
         return slots;
     }
@@ -1267,8 +1277,8 @@ public class KvCachePool implements AutoCloseable {
     }
 
     /**
-     * Contiguous bind for one multi-request entry (like {@link #bindRequests}(1, …)
-     * without releasing other bindings).
+     * Full-capacity bind for one multi-request entry (like {@link #bindRequests}(1, …)
+     * without releasing other bindings). Physical pages may be non-contiguous.
      *
      * @param requireFull when {@code true}, fail instead of clamping below
      *                    {@code totalCapacity} (continuous-batching admission).
@@ -1523,77 +1533,28 @@ public class KvCachePool implements AutoCloseable {
         }
     }
 
-    private int allocContiguous(int numSlotsNeeded) {
-        int pagesNeeded = numSlotsNeeded / pageSize;
+    /**
+     * Ensures at least {@code pagesNeeded} pages are on the free list, evicting
+     * from the radix tree when necessary.
+     */
+    private void ensureFreePages(int pagesNeeded) {
+        if (freePages.size() >= pagesNeeded) {
+            return;
+        }
+        int tokensNeeded = (pagesNeeded - freePages.size()) * pageSize;
+        int evicted = radix.evict(tokensNeeded, value -> {
+            long[] slots = value.longArray();
+            prefixEvictTokens.addAndGet(slots.length);
+            free(slots);
+            value.close();
+        });
+        if (evicted > 0) {
+            logger.debug("KV radix evicted {} tokens", evicted);
+        }
         if (freePages.size() < pagesNeeded) {
-            // Try to reclaim from the radix tree.
-            int tokensNeeded = (pagesNeeded - freePages.size()) * pageSize;
-            int evicted = radix.evict(tokensNeeded, value -> {
-                long[] slots = value.longArray();
-                prefixEvictTokens.addAndGet(slots.length);
-                free(slots);
-                value.close();
-            });
-            if (evicted > 0) {
-                logger.debug("KV radix evicted {} tokens", evicted);
-            }
-            if (freePages.size() < pagesNeeded) {
-                throw new IllegalStateException(String.format(
-                        "KV cache OOM: need %d pages, have %d free", pagesNeeded, freePages.size()));
-            }
+            throw new IllegalStateException(String.format(
+                    "KV cache OOM: need %d pages, have %d free", pagesNeeded, freePages.size()));
         }
-
-        // Prefer contiguous pages when possible; otherwise pack from free list
-        // into a freshly coalesced range by sorting.
-        int[] pages = new int[pagesNeeded];
-        for (int i = 0; i < pagesNeeded; i++) {
-            pages[i] = freePages.removeFirst();
-        }
-        Arrays.sort(pages);
-
-        // If pages are contiguous, use them as-is; otherwise we still use the
-        // first page as "base" only when contiguous — for non-contiguous we
-        // require eviction/compaction. For simplicity require contiguous run.
-        boolean contiguous = true;
-        for (int i = 1; i < pages.length; i++) {
-            if (pages[i] != pages[0] + i) {
-                contiguous = false;
-                break;
-            }
-        }
-        if (!contiguous) {
-            // Put pages back and try to find a contiguous run in the free list.
-            for (int p : pages) freePages.addLast(p);
-            int basePage = findContiguousPages(pagesNeeded);
-            if (basePage < 0) {
-                throw new IllegalStateException("KV cache fragmented: cannot allocate "
-                        + pagesNeeded + " contiguous pages");
-            }
-            return basePage * pageSize;
-        }
-        return pages[0] * pageSize;
-    }
-
-    private int findContiguousPages(int pagesNeeded) {
-        int numPages = numSlots / pageSize;
-        boolean[] free = new boolean[numPages];
-        for (int p : freePages) free[p] = true;
-        for (int start = 0; start <= numPages - pagesNeeded; start++) {
-            boolean ok = true;
-            for (int i = 0; i < pagesNeeded; i++) {
-                if (!free[start + i]) {
-                    ok = false;
-                    break;
-                }
-            }
-            if (ok) {
-                for (int i = 0; i < pagesNeeded; i++) {
-                    freePages.remove(Integer.valueOf(start + i));
-                }
-                return start;
-            }
-        }
-        return -1;
     }
 
     /** Returns the element size in bytes for common floating dtypes. */

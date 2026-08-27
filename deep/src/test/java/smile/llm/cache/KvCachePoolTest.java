@@ -380,6 +380,49 @@ public class KvCachePoolTest {
     }
 
     @Test
+    public void testGivenFragmentedFreeListWhenBindRequestThenAllocSucceeds() {
+        // Given – four contiguous 64-slot binds fill a 256-slot pool (pageSize=16).
+        // Unbinding the odd ones leaves 8 free pages in two 4-page holes — not
+        // enough for a contiguous 6-page (96-slot) run, but enough in total.
+        try (var pool = new KvCachePool(1, 256, 2, 16, 16, Device.CPU(), ScalarType.Float)) {
+            pool.setPrefixReuseEnabled(false);
+            int id0 = pool.bindRequest(new int[]{1, 2, 3, 4}, 64);
+            int id1 = pool.bindRequest(new int[]{5, 6, 7, 8}, 64);
+            int id2 = pool.bindRequest(new int[]{9, 10, 11, 12}, 64);
+            int id3 = pool.bindRequest(new int[]{13, 14, 15, 16}, 64);
+            pool.unbindRequest(id0);
+            pool.unbindRequest(id2);
+            assertEquals(128, pool.freeSlots());
+
+            // When – allocate 96 slots across fragmented free pages
+            int id = pool.bindRequest(new int[]{20, 21, 22, 23}, 96);
+
+            // Then – bind succeeds; put/get still round-trip through the page table
+            assertTrue(id > 0);
+            assertEquals(32, pool.freeSlots());
+            pool.activateStep(id);
+            Tensor k = Tensor.ones(1, 4, 2, 16);
+            Tensor v = Tensor.full(7.0f, 1, 4, 2, 16);
+            try {
+                pool.put(0, 0, k, v);
+            } finally {
+                k.close();
+                v.close();
+            }
+            var cached = pool.get(0, 4);
+            assertEquals(7.0f, cached._2().getFloat(0, 0, 0, 0), 1e-5);
+            cached._1().close();
+            cached._2().close();
+
+            pool.unbindRequest(id);
+            pool.unbindRequest(id1);
+            pool.unbindRequest(id3);
+            assertEquals(0, pool.boundRequestCount());
+            assertEquals(256, pool.freeSlots());
+        }
+    }
+
+    @Test
     public void testGivenRaggedLengthsWhenBuildFlashInferMetadataThenIndptrMatches() {
         // Given – two multi-request bindings with different capacities
         try (var pool = new KvCachePool(1, 128, 2, 16, 16, Device.CPU(), ScalarType.Float)) {
