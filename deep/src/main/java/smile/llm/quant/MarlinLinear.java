@@ -85,10 +85,9 @@ public final class MarlinLinear implements LinearOp, AutoCloseable {
         Tensor aFp16 = flat.dtype() == ScalarType.Half
                 ? flat
                 : flat.to(ScalarType.Half);
-        // Marlin locks in workspace must be zero before each launch (C++ also zeros).
-        workspace.fill_(0);
         Tensor outFlat;
         try {
+            // Workspace locks are zeroed inside smile_marlin_mul (once per call).
             outFlat = Native.marlinMul(aFp16, qweight, scales, workspace, -1);
         } catch (RuntimeException e) {
             throw new IllegalStateException(
