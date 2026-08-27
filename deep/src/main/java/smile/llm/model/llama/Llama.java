@@ -391,12 +391,14 @@ public class Llama implements LanguageModel, smile.llm.engine.ModelExecutor {
                 smile.llm.quant.QuantizedHfLoader.installLlamaLinears(
                         model, Path.of(checkpointDir), quantPolicy.format(), quantPolicy.backend(),
                         device, groupSize, 1, 0, computeDtype, modelLoaderThreads);
-                loadHuggingFaceWeights(model, modelArgs, dir, modelLoaderThreads,
-                        /*nonLinearOnly=*/true);
+                // Move remaining shells (embed/norm/lm_head/cis) to GPU after dense
+                // linears were unregistered, then load non-linear weights in place.
                 long tTo = System.currentTimeMillis();
                 model.to(device);
                 logger.info("model.to({}) after quant install in {} ms",
                         device, System.currentTimeMillis() - tTo);
+                loadHuggingFaceWeights(model, modelArgs, dir, modelLoaderThreads,
+                        /*nonLinearOnly=*/true);
             } else {
                 loadHuggingFaceWeights(model, modelArgs, dir, modelLoaderThreads, false);
             }
