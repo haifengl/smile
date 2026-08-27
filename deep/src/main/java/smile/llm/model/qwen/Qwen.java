@@ -490,15 +490,28 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 : Device.CPU();
         var quantPolicy = smile.llm.quant.QuantPolicy.resolve(
                 Path.of(checkpointDir), policyDevice, null);
-        if (quantPolicy.backend() != smile.llm.quant.WeightGemmBackend.DENSE) {
+        if (quantPolicy.backend() == smile.llm.quant.WeightGemmBackend.FP8) {
+            logger.info("Qwen FP8 weight install: format={} backend={} tpSize={}",
+                    quantPolicy.format(), quantPolicy.backend(), parallelConfig.tpSize());
+            Path ckpt = Path.of(checkpointDir);
+            for (int r = 0; r < models.length; r++) {
+                smile.llm.quant.QuantizedQwenFp8Loader.install(
+                        models[r], ckpt, models[r].device(),
+                        parallelConfig.tpSize(), r, computeDtype, modelLoaderThreads);
+            }
+            loadHuggingFaceWeightsShared(models, dir, weightMap, modelLoaderThreads,
+                    /*skipInstalledFp8Linears=*/true);
+        } else if (quantPolicy.backend() == smile.llm.quant.WeightGemmBackend.DENSE) {
+            loadHuggingFaceWeightsShared(models, dir, weightMap, modelLoaderThreads, false);
+        } else {
             throw new IllegalStateException(
-                    "Quantized Qwen hybrid checkpoints (DeltaNet + full-attn) are not supported "
-                            + "for weight GEMM yet; detected format=" + quantPolicy.format()
+                    "Quantized Qwen hybrid checkpoints only support native FP8 on Hopper+ "
+                            + "(sm_90+); detected format=" + quantPolicy.format()
                             + " backend=" + quantPolicy.backend()
-                            + ". Use a dense BF16/FP16 Qwen checkpoint, or Llama with "
+                            + ". GPTQ/AWQ/Marlin and NVFP4 are not supported for Qwen yet. "
+                            + "Use a dense BF16/FP16 Qwen checkpoint, or Llama with "
                             + "native FP8 / GPTQ-AWQ (Marlin on Ampere).");
         }
-        loadHuggingFaceWeightsShared(models, dir, weightMap, modelLoaderThreads);
         logger.info("Shared safetensors load finished in {} ms",
                 System.currentTimeMillis() - tLoad);
 
@@ -674,12 +687,21 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
      * Loader concurrency is {@link SafeTensorsLoaderThreads#resolve}; per-rank
      * {@code loadStateDict} is serialized with a lock. Fan-out across ranks for one
      * shard runs in parallel with a deterministic stagger start index.
+     *
+     * @param skipInstalledFp8Linears when {@code true}, skip GEMM weights already
+     *                                installed by {@link smile.llm.quant.QuantizedQwenFp8Loader}.
      */
     private static void loadHuggingFaceWeightsShared(QwenModel[] models, File dir,
                                                      Map<String, String> weightMap,
-                                                     int modelLoaderThreads) throws IOException {
+                                                     int modelLoaderThreads,
+                                                     boolean skipInstalledFp8Linears)
+            throws IOException {
         Map<String, List<String>> shardToKeys = new LinkedHashMap<>();
         for (var entry : weightMap.entrySet()) {
+            if (skipInstalledFp8Linears
+                    && smile.llm.quant.QuantizedQwenFp8Loader.isInstalledProjectionKey(entry.getKey())) {
+                continue;
+            }
             shardToKeys.computeIfAbsent(entry.getValue(), k -> new ArrayList<>()).add(entry.getKey());
         }
         List<String> shardFiles = new ArrayList<>(shardToKeys.keySet());
@@ -687,8 +709,8 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
         int tpSize = models.length;
         int threads = SafeTensorsLoaderThreads.resolve(modelLoaderThreads, shardFiles.size());
-        logger.info("Safetensors loader threads={} (configured={}, shards={}, tpSize={})",
-                threads, modelLoaderThreads, shardFiles.size(), tpSize);
+        logger.info("Safetensors loader threads={} (configured={}, shards={}, tpSize={}, skipFp8Linears={})",
+                threads, modelLoaderThreads, shardFiles.size(), tpSize, skipInstalledFp8Linears);
 
         Object[] rankLocks = new Object[tpSize];
         for (int i = 0; i < tpSize; i++) {
@@ -733,13 +755,16 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         }
         logger.info("Loaded {} parameter names from HuggingFace safetensors (×{} ranks)",
                 loaded.size(), tpSize);
-        int minExpected = Math.max(32, models[0].params().numLayers() * 8);
+        int layers = models[0].params().numLayers();
+        int minExpected = skipInstalledFp8Linears
+                ? Math.max(16, layers * 4)  // norms + DeltaNet residual + embeds
+                : Math.max(32, layers * 8);
         if (loaded.size() < minExpected) {
             throw new IOException(String.format(
                     "Only loaded %d text parameters (expected at least %d for %d layers). "
                             + "Checkpoint keys are likely using an unsupported prefix; "
                             + "check remapHuggingFaceName for model.language_model.*",
-                    loaded.size(), minExpected, models[0].params().numLayers()));
+                    loaded.size(), minExpected, layers));
         }
     }
 
