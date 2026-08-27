@@ -837,36 +837,44 @@ public class ChatService {
     }
 
     /**
-     * Finds a SentencePiece tokenizer under a local HF-layout checkpoint directory.
+     * Finds a Llama tokenizer under a local HF-layout checkpoint directory.
      *
-     * <p>Tries {@code original/tokenizer.model} (Llama 3+) then {@code tokenizer.model}.
+     * <p>Tries {@code original/tokenizer.model} (Meta Llama 3+), {@code tokenizer.model},
+     * then HuggingFace {@code tokenizer.json} (AWQ/GPTQ repos).
      *
      * @param checkpointDir local model directory.
      * @return absolute path to the tokenizer file.
-     * @throws IOException if neither candidate exists.
+     * @throws IOException if no candidate exists.
      */
     static String resolveLocalTokenizer(Path checkpointDir) throws IOException {
-        String[] candidates = {"original/tokenizer.model", "tokenizer.model"};
+        String[] candidates = {
+                "original/tokenizer.model", "tokenizer.model", "tokenizer.json"
+        };
         for (String candidate : candidates) {
             Path path = checkpointDir.resolve(candidate);
             if (Files.isRegularFile(path)) {
                 return path.toAbsolutePath().normalize().toString();
             }
         }
-        throw new IOException("tokenizer.model not found under checkpoint directory: " + checkpointDir);
+        throw new IOException(
+                "No Llama tokenizer found under " + checkpointDir
+                        + " (tried original/tokenizer.model, tokenizer.model, tokenizer.json)");
     }
 
     /**
-     * Downloads a SentencePiece tokenizer from a Hugging Face repo.
+     * Downloads a Llama tokenizer from a Hugging Face repo.
      *
-     * <p>Tries {@code original/tokenizer.model} (Llama 3+) then {@code tokenizer.model}.
+     * <p>Tries {@code original/tokenizer.model}, {@code tokenizer.model}, then
+     * {@code tokenizer.json} (quantized Hub cards often ship only the latter).
      *
      * @param repoId Hugging Face repository id.
      * @return path to the downloaded tokenizer file.
-     * @throws IOException if neither candidate can be downloaded.
+     * @throws IOException if no candidate can be downloaded.
      */
     private String resolveHuggingFaceTokenizer(String repoId) throws IOException {
-        String[] candidates = {"original/tokenizer.model", "tokenizer.model"};
+        String[] candidates = {
+                "original/tokenizer.model", "tokenizer.model", "tokenizer.json"
+        };
         for (String candidate : candidates) {
             try {
                 Path path = HuggingFaceHub.download(repoId, candidate);
@@ -880,6 +888,8 @@ public class ChatService {
                 logger.debugf("Tokenizer not found at '%s'", candidate);
             }
         }
-        throw new IOException("tokenizer.model not found in Hugging Face repository: " + repoId);
+        throw new IOException(
+                "No Llama tokenizer found in Hugging Face repository: " + repoId
+                        + " (tried original/tokenizer.model, tokenizer.model, tokenizer.json)");
     }
 }
