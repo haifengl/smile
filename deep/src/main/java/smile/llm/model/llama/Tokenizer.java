@@ -161,11 +161,25 @@ public class Tokenizer extends Tiktoken {
         return tokens.toArray();
     }
 
+    /** Specials required for chat encode / stop; must exist in HF added_tokens. */
+    private static final String[] HF_CHAT_SPECIALS = {
+            "<|begin_of_text|>",
+            "<|end_of_text|>",
+            "<|finetune_right_pad_id|>",
+            "<|start_header_id|>",
+            "<|end_header_id|>",
+            "<|eom_id|>",
+            "<|eot_id|>",
+            "<|python_tag|>",
+    };
+
     /**
      * Loads a llama3 tokenizer model.
      *
      * <p>Supports Meta/OpenAI tiktoken text files ({@code tokenizer.model}) and
-     * HuggingFace {@code tokenizer.json} (common on AWQ/GPTQ repos).
+     * HuggingFace {@code tokenizer.json} (common on AWQ/GPTQ repos). For
+     * {@code tokenizer.json}, specials come from {@code added_tokens} — do not
+     * re-append Meta's reserved list or vocab size drifts past {@code config.json}.
      *
      * @param path The llama3 tiktoken file or HuggingFace {@code tokenizer.json}.
      * @return a llama3 tokenizer.
@@ -173,12 +187,12 @@ public class Tokenizer extends Tiktoken {
      */
     public static Tokenizer of(String path) throws IOException {
         Path p = Path.of(path);
-        Map<Bytes, Integer> encoder;
-        if (path.endsWith(".json") || p.getFileName().toString().equals("tokenizer.json")) {
-            encoder = smile.llm.tokenizer.HuggingFaceBpeVocab.loadTokenizerJson(p);
-        } else {
-            encoder = Tiktoken.load(path);
+        if (path.endsWith(".json") || "tokenizer.json".equals(p.getFileName().toString())) {
+            Map<Bytes, Integer> encoder =
+                    smile.llm.tokenizer.HuggingFaceBpeVocab.loadTokenizerJson(p);
+            return new Tokenizer(encoder, "<|begin_of_text|>", "<|end_of_text|>", HF_CHAT_SPECIALS);
         }
+        Map<Bytes, Integer> encoder = Tiktoken.load(path);
         return new Tokenizer(encoder);
     }
 }
