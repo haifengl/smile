@@ -39,15 +39,12 @@ public final class Sampling {
         if (temperature > 0) {
             try (var scaled = logits.div(temperature);
                  var probs = scaled.softmax(-1);
-                 Tensor sampled = probs.topp(topp);
-                 Tensor reshaped = sampled.reshape(-1)) {
-                // Copy so closing sampled/reshape cannot leave a dangling view.
-                return reshaped.copy();
+                 Tensor sampled = probs.topp(topp)) {
+                return sampled.reshape(-1);
             }
         }
-        try (Tensor arg = logits.argmax(-1, false);
-             Tensor reshaped = arg.reshape(-1)) {
-            return reshaped.copy();
+        try (Tensor arg = logits.argmax(-1, false)) {
+            return arg.reshape(-1);
         }
     }
 
