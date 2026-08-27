@@ -98,6 +98,12 @@ public final class Native {
         static final MethodHandle MODULE_SET_REQUIRES_GRAD = LINKER.downcallHandle(
                 smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_module_set_requires_grad"),
                 FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+        static final java.util.Optional<MemorySegment> MODULE_UNREGISTER_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_module_unregister_module");
+        static final MethodHandle MODULE_UNREGISTER = MODULE_UNREGISTER_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.ofVoid(
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
+                .orElse(null);
         static final MethodHandle TENSOR_NBYTES = LINKER.downcallHandle(
                 smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_tensor_nbytes"),
                 FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
@@ -451,6 +457,30 @@ public final class Native {
     public static void moduleSetRequiresGrad(MemorySegment module, boolean requiresGrad) {
         try {
             Bindings.MODULE_SET_REQUIRES_GRAD.invokeExact(module, requiresGrad ? 1 : 0);
+        } catch (Throwable t) {
+            throw new RuntimeException(lastError().isEmpty() ? t.getMessage() : lastError(), t);
+        }
+        String err = lastError();
+        if (!err.isEmpty()) {
+            throw new RuntimeException(err);
+        }
+    }
+
+    /**
+     * Unregisters a child module by name, dropping the parent's shared_ptr.
+     * Used when replacing dense {@code LinearLayer} shells with quantized ops
+     * so GPU storage is released before KV pool sizing.
+     *
+     * @param module parent {@code ST_Module}.
+     * @param name   registered child name (e.g. {@code "wq"}).
+     */
+    public static void unregisterModule(MemorySegment module, String name) {
+        if (Bindings.MODULE_UNREGISTER == null) {
+            throw new UnsupportedOperationException(
+                    "smile_module_unregister_module missing; rebuild libsmile_torch");
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            Bindings.MODULE_UNREGISTER.invokeExact(module, arena.allocateFrom(name));
         } catch (Throwable t) {
             throw new RuntimeException(lastError().isEmpty() ? t.getMessage() : lastError(), t);
         }
