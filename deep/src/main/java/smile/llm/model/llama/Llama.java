@@ -325,8 +325,17 @@ public class Llama implements LanguageModel, smile.llm.engine.ModelExecutor {
                 cacheDtype, kvCacheDtype, computeDtype);
 
         var tokenizer = Tokenizer.of(tokenizerPath);
-        if (tokenizer.size() != modelArgs.vocabSize()) {
-            throw new IllegalStateException("Tokenizer and LlamaModelArgs have different vocabulary size.");
+        // HF often pads embedding/lm_head to vocab_size above the highest
+        // tokenizer id; that is fine. Fail only if the tokenizer can emit ids
+        // the embedding table cannot hold.
+        if (tokenizer.size() > modelArgs.vocabSize()) {
+            throw new IllegalStateException(String.format(
+                    "Tokenizer vocabulary size %d exceeds model vocab_size %d",
+                    tokenizer.size(), modelArgs.vocabSize()));
+        }
+        if (tokenizer.size() > 0 && tokenizer.size() < modelArgs.vocabSize()) {
+            logger.info("Tokenizer size {} < config vocab_size {} (HF padded embedding)",
+                    tokenizer.size(), modelArgs.vocabSize());
         }
 
         var layout = modelArgs.kvCacheLayout();
